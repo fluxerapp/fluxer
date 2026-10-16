@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {Channel} from '@app/api/models/Channel';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildExplicitContentFilterTypes, GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
-import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {RelationshipTypes, SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {GuildID, UserID, WebhookID} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import type {Channel} from '../../../models/Channel';
-import type {PackService} from '../../../pack/PackService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import * as EmojiUtils from '../../../utils/EmojiUtils';
 
 export interface DmNsfwContext {
 	senderFilterLevel: number;
@@ -20,9 +20,8 @@ export interface DmNsfwContext {
 
 export class MessageContentService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private limitConfigService: LimitConfigService,
 	) {}
 
@@ -33,17 +32,36 @@ export class MessageContentService {
 		guildId: GuildID | null;
 		hasPermission?: (permission: bigint) => Promise<boolean>;
 	}): Promise<string> {
-		const packResolver = await this.packService.createPackExpressionAccessResolver({
-			userId: params.userId,
-			type: 'emoji',
-		});
 		return await EmojiUtils.sanitizeCustomEmojis({
 			...params,
 			userRepository: this.userRepository,
 			guildRepository: this.guildRepository,
-			packResolver,
 			limitConfigService: this.limitConfigService,
 		});
+	}
+
+	async resolveDmNsfwContext(channel: Channel, senderId: UserID): Promise<DmNsfwContext | undefined> {
+		if (channel.type !== ChannelTypes.DM) {
+			return undefined;
+		}
+		const recipientIds = Array.from(channel.recipientIds).filter((id) => id !== senderId);
+		if (recipientIds.length !== 1) {
+			return undefined;
+		}
+		const recipientId = recipientIds[0];
+		const [senderSettings, recipientSettings, friendship] = await Promise.all([
+			this.userRepository.findSettings(senderId),
+			this.userRepository.findSettings(recipientId),
+			this.userRepository.getRelationship(senderId, recipientId, RelationshipTypes.FRIEND),
+		]);
+		const areFriends = friendship != null;
+		const senderFilterLevel = areFriends
+			? (senderSettings?.sensitiveContentFriendDmFilter ?? SensitiveMediaFilterLevel.SHOW)
+			: (senderSettings?.sensitiveContentNonFriendDmFilter ?? SensitiveMediaFilterLevel.BLOCK);
+		const recipientFilterLevel = areFriends
+			? (recipientSettings?.sensitiveContentFriendDmFilter ?? SensitiveMediaFilterLevel.SHOW)
+			: (recipientSettings?.sensitiveContentNonFriendDmFilter ?? SensitiveMediaFilterLevel.BLOCK);
+		return {senderFilterLevel, recipientFilterLevel};
 	}
 
 	isNSFWContentAllowed(params: {
@@ -57,10 +75,17 @@ export class MessageContentService {
 		if (isBot) {
 			return true;
 		}
-		if (channel && GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && channel.isNsfw) {
+		if (
+			channel &&
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
+			channel.isNsfw
+		) {
 			return true;
 		}
 		if (channel?.type === ChannelTypes.DM_PERSONAL_NOTES) {
+			return true;
+		}
+		if (channel?.type === ChannelTypes.GROUP_DM && channel.isNsfw) {
 			return true;
 		}
 		if (!guild) {

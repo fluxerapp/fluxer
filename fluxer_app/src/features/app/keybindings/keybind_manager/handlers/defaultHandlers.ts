@@ -11,6 +11,11 @@ import {
 	YOU_CAN_T_UNMUTE_YOURSELF_BECAUSE_A_MODERATOR_DESCRIPTOR,
 } from '@app/features/app/keybindings/keybind_manager/shared';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
+import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {switcherAccounts} from '@app/features/auth/state/AccountSwitcherAccounts';
+import Accounts from '@app/features/auth/state/Accounts';
+import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/components/ChannelComposerDismissal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import Channels from '@app/features/channel/state/Channels';
@@ -21,8 +26,10 @@ import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {KeyboardShortcutsCheatsheetModal} from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
+import {ACCOUNT_SWITCHER_SLOT_ACTIONS} from '@app/features/input/state/input_keybind/KeybindCommands';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import {focusChannelTextareaFromKeybind} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -31,15 +38,17 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import type {Account} from '@app/features/platform/state/AuthSession';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import * as ThemeStudioCommands from '@app/features/theme_studio/commands/ThemeStudioCommands';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
+import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -62,7 +71,43 @@ function canOpenVoiceMessageComposerForChannel(channelId: string): boolean {
 }
 
 const KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY = 'keyboard-shortcuts-cheatsheet';
+const ACCOUNT_SWITCHER_MODAL_KEY = 'account-switcher';
 const PUSH_TO_TALK_DEAFENED_MODAL_KEY = 'push-to-talk-deafened';
+
+function openKeybindAccountSwitcher(initialReloginAccount: Account | null): void {
+	openAccountSwitcherModal(
+		{
+			closeCurrentAccountOnSelect: true,
+			initialReloginAccount,
+			redirectAfterLogin: null,
+			redirectAfterSwitch: Routes.ME,
+			switchAccount: null,
+		},
+		ACCOUNT_SWITCHER_MODAL_KEY,
+	);
+}
+
+function switchToAccountSwitcherSlot(slotIndex: number): void {
+	const account = switcherAccounts()[slotIndex];
+	if (account == null) {
+		return;
+	}
+	if (account.isValid === false) {
+		openKeybindAccountSwitcher(account);
+		return;
+	}
+	const accountKey = getAccountKey(account);
+	if (accountKey === Accounts.currentAccountKey) {
+		return;
+	}
+	void switchStoredAccountFromSwitcher({
+		accountKey,
+		onSessionExpired: (expiredAccount) => openKeybindAccountSwitcher(expiredAccount),
+		onSuccess: null,
+		redirectAfterSwitch: Routes.ME,
+		switchAccount: null,
+	});
+}
 
 function showPushToTalkDeafenedModalIfNeeded(host: HandlerHost, i18n: I18n): void {
 	const voiceState = MediaEngine.getVoiceState(MediaEngine.guildId);
@@ -122,13 +167,29 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 			KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY,
 		);
 	});
+	host.register('system_open_account_switcher', ({type}) => {
+		if (type !== 'press') return;
+		if (ModalCommands.getTopModalKey() === ACCOUNT_SWITCHER_MODAL_KEY) {
+			ModalCommands.popWithKey(ACCOUNT_SWITCHER_MODAL_KEY);
+			return;
+		}
+		openKeybindAccountSwitcher(null);
+	});
+	for (const [slotIndex, action] of ACCOUNT_SWITCHER_SLOT_ACTIONS.entries()) {
+		host.register(action, ({type}) => {
+			if (type !== 'press') return;
+			switchToAccountSwitcherSlot(slotIndex);
+		});
+	}
 	host.register('misc_help', ({type}) => {
 		if (type !== 'press') return;
-		openExternalUrlWithWarning(Routes.help());
+		const helpUrl = Routes.help();
+		if (!helpUrl) return;
+		openExternalUrlWithWarning(helpUrl);
 	});
 	host.register('misc_search', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('MESSAGE_SEARCH_OPEN');
+		ComponentBus.dispatch('MESSAGE_SEARCH_OPEN');
 	});
 	host.register('voice_toggle_mute', ({type}) => {
 		if (type !== 'press') return;
@@ -194,63 +255,51 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('system_toggle_settings', ({type}) => {
 		if (type !== 'press') return;
-		ModalCommands.push(modal(() => React.createElement(UserSettingsModal)));
+		openUserSettingsModal();
 	});
 	host.register('system_open_theme_studio_popout', ({type}) => {
 		if (type !== 'press') return;
 		ThemeStudioCommands.openThemeStudioPopout();
 	});
-	host.register('voice_push_to_talk', ({type}) => {
-		if (!Keybind.isPushToTalkEffective()) return;
-		if (type === 'press') {
-			showPushToTalkDeafenedModalIfNeeded(host, i18n);
-			if (host.pttReleaseTimer) {
-				clearTimeout(host.pttReleaseTimer);
-				host.pttReleaseTimer = null;
-			}
-			const shouldUnmute = Keybind.handlePushToTalkPress();
-			if (shouldUnmute) {
-				MediaEngine.applyPushToTalkHold(true);
-			}
-		} else {
-			const shouldMute = Keybind.handlePushToTalkRelease();
-			if (shouldMute) {
-				const delay = Keybind.pushToTalkReleaseDelay;
-				host.pttReleaseTimer = setTimeout(() => {
-					host.pttReleaseTimer = null;
-					MediaEngine.applyPushToTalkHold(false);
-				}, delay);
-			}
+	host.register('voice_push_to_talk', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_talk', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			return;
 		}
-	});
-	host.register('voice_push_to_mute', ({type}) => {
-		if (Keybind.isPushToTalkEffective()) return;
-		MediaEngine.applyPushToMuteHold(type === 'press');
-	});
-	host.register('voice_push_to_talk_priority', ({type}) => {
 		if (!Keybind.isPushToTalkEffective()) return;
-		if (type === 'press') {
-			showPushToTalkDeafenedModalIfNeeded(host, i18n);
-			if (host.pttReleaseTimer) {
-				clearTimeout(host.pttReleaseTimer);
-				host.pttReleaseTimer = null;
-			}
-			Keybind.handlePushToTalkPress();
-			Keybind.setPrioritySpeakerHeld(true);
+		showPushToTalkDeafenedModalIfNeeded(host, i18n);
+		if (Keybind.pressHoldSource('voice_push_to_talk', sourceId)) {
 			MediaEngine.applyPushToTalkHold(true);
-		} else {
-			Keybind.handlePushToTalkRelease();
-			Keybind.setPrioritySpeakerHeld(false);
-			const delay = Keybind.pushToTalkReleaseDelay;
-			host.pttReleaseTimer = setTimeout(() => {
-				host.pttReleaseTimer = null;
-				MediaEngine.applyPushToTalkHold(false);
-			}, delay);
 		}
 	});
-	host.register('voice_priority_vad', ({type}) => {
+	host.register('voice_push_to_mute', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_mute', sourceId, () => MediaEngine.applyPushToMuteHold(false));
+			return;
+		}
 		if (Keybind.isPushToTalkEffective()) return;
-		Keybind.setPrioritySpeakerHeld(type === 'press');
+		if (Keybind.pressHoldSource('voice_push_to_mute', sourceId)) {
+			MediaEngine.applyPushToMuteHold(true);
+		}
+	});
+	host.register('voice_push_to_talk_priority', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_talk_priority', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			return;
+		}
+		if (!Keybind.isPushToTalkEffective()) return;
+		showPushToTalkDeafenedModalIfNeeded(host, i18n);
+		if (Keybind.pressHoldSource('voice_push_to_talk_priority', sourceId)) {
+			MediaEngine.applyPushToTalkHold(true);
+		}
+	});
+	host.register('voice_priority_vad', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_priority_vad', sourceId);
+			return;
+		}
+		if (Keybind.isPushToTalkEffective()) return;
+		Keybind.pressHoldSource('voice_priority_vad', sourceId);
 	});
 	host.register('voice_toggle_vad', ({type}) => {
 		if (type !== 'press') return;
@@ -283,13 +332,13 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('voice_toggle_soundboard', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SOUNDBOARD_TOGGLE');
+		ComponentBus.dispatch('SOUNDBOARD_TOGGLE');
 	});
 	host.register('voice_toggle_compact_call_view', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', {channelId});
+		ComponentBus.dispatch('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', {channelId});
 	});
 	host.register('chat_copy_channel_link', ({type}) => {
 		if (type !== 'press') return;
@@ -304,15 +353,15 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	});
 	host.register('chat_scroll_up', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SCROLL_PAGE_UP');
+		ComponentBus.dispatch('SCROLL_PAGE_UP');
 	});
 	host.register('chat_scroll_down', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SCROLL_PAGE_DOWN');
+		ComponentBus.dispatch('SCROLL_PAGE_DOWN');
 	});
 	host.register('chat_jump_oldest_unread', ({type}) => {
 		if (type !== 'press') return;
@@ -328,7 +377,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!channelId) return;
 		if (requestChannelComposerAffordanceDismissal(channelId)) return;
 		if (ReadStates.hasUnread(channelId)) {
-			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId});
+			ComponentBus.dispatch('ESCAPE_PRESSED', {channelId});
 		}
 	});
 	host.register('chat_mark_guild_read', ({type}) => {
@@ -337,6 +386,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!guildId) return;
 		const channels = Channels.getGuildChannels(guildId);
 		const channelIds = channels.filter((channel) => ReadStates.hasUnread(channel.id)).map((channel) => channel.id);
+		channelIds.push(...getUnreadThreadIds(guildId));
 		if (channelIds.length > 0) {
 			void ReadStateCommands.bulkAckChannels(channelIds);
 		}
@@ -349,7 +399,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const inboxTab = Inbox.selectedTab;
 		if (inboxTab === 'unreadChannels') {
-			const unreadChannelId = ReadStates.getChannelIds().find((channelId) => ReadStates.hasUnreadOrMentions(channelId));
+			const unreadChannelId = ReadStates.getChannelIds().find((channelId) => ReadStates.isUnreadOrMentioned(channelId));
 			if (unreadChannelId) {
 				ReadStateCommands.ack(unreadChannelId, true, true);
 			}
@@ -465,15 +515,15 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('chat_toggle_pins', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('CHANNEL_PINS_OPEN');
+		ComponentBus.dispatch('CHANNEL_PINS_OPEN');
 	});
 	host.register('chat_toggle_inbox', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('INBOX_OPEN');
+		ComponentBus.dispatch('INBOX_OPEN');
 	});
 	host.register('chat_toggle_member_list', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('CHANNEL_MEMBER_LIST_TOGGLE');
+		ComponentBus.dispatch('CHANNEL_MEMBER_LIST_TOGGLE');
 	});
 	host.register('chat_toggle_emoji', ({type}) => {
 		if (type !== 'press') return;
@@ -481,38 +531,38 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!channelId) return;
 		const editingMessageId = MessageEdit.getEditingMessageId(channelId);
 		if (editingMessageId) {
-			ComponentDispatch.dispatch('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', {
+			ComponentBus.dispatch('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', {
 				channelId,
 				messageId: editingMessageId,
 				tab: 'emojis',
 			});
 			return;
 		}
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'emojis'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'emojis'});
 	});
 	host.register('chat_toggle_gif', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'gifs'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'gifs'});
 	});
 	host.register('chat_toggle_sticker', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'stickers'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'stickers'});
 	});
 	host.register('chat_toggle_saved_media', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'memes'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'memes'});
 	});
 	host.register('chat_send_voice_message', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId ?? Navigation.channelId;
 		if (!channelId) return;
-		const textareaResult = ComponentDispatch.dispatchToFirstResult(
+		const textareaResult = ComponentBus.dispatchToFirstResult(
 			'TEXTAREA_SEND_VOICE_MESSAGE',
 			{channelId},
 			(result) => result === true || result === false,
@@ -537,13 +587,13 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		focusChannelTextareaFromKeybind(channelId);
 	});
 	host.register('chat_upload', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('TEXTAREA_UPLOAD_FILE', {channelId});
+		ComponentBus.dispatch('TEXTAREA_UPLOAD_FILE', {channelId});
 	});
 	host.register('system_zoom_in', ({type}) => {
 		if (type !== 'press') return;

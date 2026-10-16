@@ -2,71 +2,50 @@
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, getNativePlatformSync, isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
-import {BACKGROUND_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+import {
+	BACKGROUND_DESCRIPTOR,
+	DESKTOP_WINDOW_DESCRIPTOR,
+	MINIMIZE_DESCRIPTOR as MINIMISE_DESCRIPTOR,
+	MINIMIZE_DESCRIPTOR,
+	SIZE_DESCRIPTOR,
+	TITLE_BAR_DESCRIPTOR,
+	TITLE_BAR_DESCRIPTOR as TITLEBAR_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+	LAUNCH_AT_LOGIN_DESCRIPTOR,
+	USE_NATIVE_TITLE_BAR_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'First click pass-through when unfocused',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const FIRST_CLICK_DESCRIPTOR = msg({
-	message: 'First click',
+const SOURCE_MAPS_DESCRIPTOR = msg({
+	message: 'Source maps',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const CLICK_THROUGH_DESCRIPTOR = msg({
-	message: 'Click through',
+const SOURCEMAPS_DESCRIPTOR = msg({
+	message: 'Sourcemaps',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Unfocused',
+const DEBUGGING_DESCRIPTOR = msg({
+	message: 'Debugging',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const WINDOW_FOCUS_DESCRIPTOR = msg({
-	message: 'Window focus',
+const STACK_TRACES_DESCRIPTOR = msg({
+	message: 'Stack traces',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const FOCUS_CLICK_DESCRIPTOR = msg({
-	message: 'Focus click',
+const SYMBOLS_DESCRIPTOR = msg({
+	message: 'Symbols',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const ACTIVATION_CLICK_DESCRIPTOR = msg({
-	message: 'Activation click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LET_THE_CLICK_THAT_FOCUSES_ALSO_ACTIVATE_THE_DESCRIPTOR = msg({
-	message: 'Let focus clicks activate controls.',
+const DOWNLOAD_SOURCE_MAPS_FOR_READABLE_STACK_TRACES_DESCRIPTOR = msg({
+	message: 'Download source maps so stack traces and the developer tools point at real source',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Stay fully interactive when unfocused',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Animations while unfocused',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ANIMATION_PLAYBACK_DESCRIPTOR = msg({
-	message: 'Animation playback',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const HOVER_EFFECTS_DESCRIPTOR = msg({
-	message: 'Hover effects',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TOOLTIPS_DESCRIPTOR = msg({
-	message: 'Tooltips',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const POWER_SAVING_DESCRIPTOR = msg({
-	message: 'Power saving',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR = msg({
-	message: 'Keep animations, GIFs, hover, and tooltips running unfocused',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
+
 const HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Hardware acceleration',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
@@ -91,10 +70,17 @@ const TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Toggle hardware acceleration',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const LAUNCH_AT_LOGIN_DESCRIPTOR = msg({
-	message: 'Launch {productName} at login',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+
+const UPDATES_DESCRIPTOR = msg({
+	message: 'Updates',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR = msg({
+	message:
+		"{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts.",
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+
 const AUTOMATIC_START_DESCRIPTOR = msg({
 	message: 'Automatic start',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -151,14 +137,7 @@ const REMEMBER_WINDOW_DESCRIPTOR = msg({
 	message: 'Remember window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DESKTOP_WINDOW_DESCRIPTOR = msg({
-	message: 'Desktop window',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SIZE_DESCRIPTOR = msg({
-	message: 'Size',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const POSITION_DESCRIPTOR = msg({
 	message: 'Position',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -171,18 +150,7 @@ const KEEP_WINDOW_DIMENSIONS_AND_PLACEMENT_BETWEEN_RELOADS_DESCRIPTOR = msg({
 	message: 'Keep window dimensions and placement between reloads',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Use native title bar',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Title bar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TITLEBAR_DESCRIPTOR = msg({
-	message: 'Titlebar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const NATIVE_TITLE_BAR_DESCRIPTOR = msg({
 	message: 'Native title bar',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -243,17 +211,18 @@ const MINIMIZE_TO_TRAY_DESCRIPTOR = msg({
 	message: 'Minimize to tray',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
-const MINIMIZE_DESCRIPTOR = msg({
-	message: 'Minimize',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const MINIMISE_DESCRIPTOR = msg({
-	message: 'Minimise',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const HIDE_WINDOW_DESCRIPTOR = msg({
 	message: 'Hide window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const START_MINIMIZED_DESCRIPTOR = msg({
+	message: 'Start minimized',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR = msg({
+	message: 'Start in the tray instead of opening the window when launched at login',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const HIDE_THE_WINDOW_WHEN_MINIMIZED_AND_REOPEN_FROM_DESCRIPTOR = msg({
 	message: 'Hide the window when minimized and reopen from the tray',
@@ -281,40 +250,6 @@ const KEEP_RUNNING_WHEN_THE_WINDOW_IS_CLOSED_DESCRIPTOR = msg({
 });
 export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
-		id: 'first-click-pass-through',
-		tabType: 'desktop_settings',
-		label: FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR,
-		keywords: [
-			FIRST_CLICK_DESCRIPTOR,
-			CLICK_THROUGH_DESCRIPTOR,
-			UNFOCUSED_DESCRIPTOR,
-			WINDOW_FOCUS_DESCRIPTOR,
-			FOCUS_CLICK_DESCRIPTOR,
-			ACTIVATION_CLICK_DESCRIPTOR,
-		],
-		description: LET_THE_CLICK_THAT_FOCUSES_ALSO_ACTIVATE_THE_DESCRIPTOR,
-		audience: 'advanced',
-		tags: ['desktop'],
-		isVisible: isDesktop,
-	},
-	{
-		id: 'advanced-stay-interactive-unfocused',
-		tabType: 'desktop_settings',
-		label: STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR,
-		keywords: [
-			UNFOCUSED_DESCRIPTOR,
-			WINDOW_FOCUS_DESCRIPTOR,
-			ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR,
-			ANIMATION_PLAYBACK_DESCRIPTOR,
-			HOVER_EFFECTS_DESCRIPTOR,
-			TOOLTIPS_DESCRIPTOR,
-			POWER_SAVING_DESCRIPTOR,
-		],
-		description: KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR,
-		tags: ['desktop'],
-		isVisible: isDesktop,
-	},
-	{
 		id: 'advanced-hardware-acceleration',
 		tabType: 'desktop_settings',
 		label: HARDWARE_ACCELERATION_DESCRIPTOR,
@@ -322,6 +257,15 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR,
 		tags: ['desktop'],
 		isVisible: () => isDesktop() && getElectronAPI()?.platform !== 'darwin',
+	},
+	{
+		id: 'advanced-automatic-updates',
+		tabType: 'desktop_settings',
+		label: DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+		keywords: [UPDATES_DESCRIPTOR],
+		description: {...INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		tags: ['desktop'],
+		isVisible: () => isDesktop() && getElectronAPI()?.setDesktopDisableModuleUpdates != null,
 	},
 	{
 		id: 'advanced-autostart',
@@ -337,6 +281,24 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 			BOOT_DESCRIPTOR,
 		],
 		description: {...RUN_AUTOMATICALLY_WHEN_YOUR_COMPUTER_STARTS_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		audience: 'primary',
+		tags: ['desktop'],
+		isVisible: isDesktop,
+	},
+	{
+		id: 'advanced-start-minimized',
+		tabType: 'desktop_settings',
+		label: START_MINIMIZED_DESCRIPTOR,
+		keywords: [
+			START_MINIMIZED_DESCRIPTOR,
+			MINIMIZE_DESCRIPTOR,
+			STARTUP_DESCRIPTOR,
+			LAUNCH_AT_LOGIN_2_DESCRIPTOR,
+			TRAY_DESCRIPTOR,
+			HIDE_WINDOW_DESCRIPTOR,
+			BACKGROUND_DESCRIPTOR,
+		],
+		description: START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR,
 		audience: 'primary',
 		tags: ['desktop'],
 		isVisible: isDesktop,
@@ -362,6 +324,22 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		isVisible: isDesktop,
 	},
 	{
+		id: 'desktop-source-maps',
+		tabType: 'desktop_settings',
+		label: DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+		keywords: [
+			SOURCE_MAPS_DESCRIPTOR,
+			SOURCEMAPS_DESCRIPTOR,
+			DEBUGGING_DESCRIPTOR,
+			STACK_TRACES_DESCRIPTOR,
+			SYMBOLS_DESCRIPTOR,
+		],
+		description: DOWNLOAD_SOURCE_MAPS_FOR_READABLE_STACK_TRACES_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['desktop', 'developer'],
+		isVisible: isDesktop,
+	},
+	{
 		id: 'advanced-native-title-bar',
 		tabType: 'desktop_settings',
 		label: USE_NATIVE_TITLE_BAR_DESCRIPTOR,
@@ -377,7 +355,7 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		],
 		description: USE_THE_OPERATING_SYSTEM_S_WINDOW_CHROME_DESCRIPTOR,
 		tags: ['desktop', 'appearance'],
-		isVisible: isDesktop,
+		isVisible: () => isDesktop() && !isNativeMacOS(getNativePlatformSync()),
 	},
 	{
 		id: 'advanced-tray-icon',

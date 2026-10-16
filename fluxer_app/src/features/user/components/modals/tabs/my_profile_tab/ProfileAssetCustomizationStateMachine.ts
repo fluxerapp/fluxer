@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {TransientUploadFieldValue} from '@app/lib/forms/TransientUploadFields';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ProfileAssetMode = 'inherit' | 'custom' | 'unset';
 
@@ -39,7 +39,7 @@ export type ProfileAssetCustomizationEvent =
 			remoteState: ProfileAssetRemoteState;
 	  };
 
-export type ProfileAssetCustomizationStateValue = 'unhydrated' | 'clean' | 'dirty' | 'committed';
+type ProfileAssetCustomizationStateValue = 'unhydrated' | 'clean' | 'dirty' | 'committed';
 
 export interface ProfileAssetCustomizationState extends ProfileAssetRemoteState {
 	readonly state: ProfileAssetCustomizationStateValue;
@@ -50,7 +50,7 @@ export interface ProfileAssetCustomizationState extends ProfileAssetRemoteState 
 	readonly isDirty: boolean;
 }
 
-export interface ProfileAssetUploadPatch {
+interface ProfileAssetUploadPatch {
 	readonly value: TransientUploadFieldValue;
 }
 
@@ -96,7 +96,7 @@ function remoteMatchesCurrent(
 	);
 }
 
-export function createProfileAssetRemoteState(params: {
+function createProfileAssetRemoteState(params: {
 	identityKey: string | null;
 	mode: ProfileAssetMode;
 	hasCustomAsset: boolean;
@@ -128,7 +128,7 @@ export function createGlobalProfileAssetRemoteState(params: {
 	});
 }
 
-export const profileAssetCustomizationStateMachine = setup({
+const profileAssetCustomizationStateMachine = setup({
 	types: {} as {
 		context: ProfileAssetCustomizationContext;
 		events: ProfileAssetCustomizationEvent;
@@ -244,7 +244,7 @@ export const profileAssetCustomizationStateMachine = setup({
 export type ProfileAssetCustomizationSnapshot = SnapshotFrom<typeof profileAssetCustomizationStateMachine>;
 
 export function createProfileAssetCustomizationSnapshot(): ProfileAssetCustomizationSnapshot {
-	return getInitialSnapshot(profileAssetCustomizationStateMachine);
+	return initialTransition(profileAssetCustomizationStateMachine)[0];
 }
 
 export function transitionProfileAssetCustomizationSnapshot(
@@ -254,7 +254,7 @@ export function transitionProfileAssetCustomizationSnapshot(
 	return transition(profileAssetCustomizationStateMachine, snapshot, event)[0] as ProfileAssetCustomizationSnapshot;
 }
 
-export function getProfileAssetCustomizationStateValue(
+function getProfileAssetCustomizationStateValue(
 	snapshot: ProfileAssetCustomizationSnapshot,
 ): ProfileAssetCustomizationStateValue {
 	return typeof snapshot.value === 'string' ? (snapshot.value as ProfileAssetCustomizationStateValue) : 'unhydrated';
@@ -272,7 +272,7 @@ export function selectProfileAssetCustomizationState(
 	};
 }
 
-export function getProfileAssetUploadPatch(state: ProfileAssetCustomizationState): ProfileAssetUploadPatch {
+function getProfileAssetUploadPatch(state: ProfileAssetCustomizationState): ProfileAssetUploadPatch {
 	if (state.hasCleared) return {value: null};
 	if (state.previewUrl !== null) return {value: state.previewUrl};
 	if ((state.mode === 'inherit' || state.mode === 'unset') && state.mode !== state.initialMode) {

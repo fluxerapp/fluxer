@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, EmojiID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createEmojiID} from '@app/api/BrandedTypes';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {ChannelPinRow, MessageReactionRow} from '@app/api/database/types/MessageTypes';
+import type {Message} from '@app/api/models/Message';
+import {MessageReaction} from '@app/api/models/MessageReaction';
+import {ChannelPins, MessageReactions, Messages} from '@app/api/Tables';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
-import {createEmojiID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {ChannelPinRow, MessageReactionRow} from '../../database/types/MessageTypes';
-import type {Message} from '../../models/Message';
-import {MessageReaction} from '../../models/MessageReaction';
-import {ChannelPins, MessageReactions, Messages} from '../../Tables';
-import {IMessageInteractionRepository} from './IMessageInteractionRepository';
-import type {MessageRepository} from './MessageRepository';
 
 const createFetchChannelPinsQuery = (limit: number) =>
 	ChannelPins.select({
@@ -66,11 +65,10 @@ const CHECK_USER_REACTION_EXISTS_QUERY = MessageReactions.selectCql({
 	limit: 1,
 });
 
-export class MessageInteractionRepository extends IMessageInteractionRepository {
+export class MessageInteractionRepository {
 	private messageRepository: MessageRepository;
 
 	constructor(messageRepository: MessageRepository) {
-		super();
 		this.messageRepository = messageRepository;
 	}
 
@@ -107,7 +105,7 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 
 	async removeChannelPin(channelId: ChannelID, messageId: MessageID): Promise<void> {
 		const message = await this.messageRepository.getMessage(channelId, messageId);
-		if (!message || !message.pinnedTimestamp) {
+		if (!message?.pinnedTimestamp) {
 			return;
 		}
 		await deleteOneOrMany(

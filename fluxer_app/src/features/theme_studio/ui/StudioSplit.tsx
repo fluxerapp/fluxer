@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import styles from '@app/features/theme_studio/ui/StudioSplit.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -8,7 +9,6 @@ import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import styles from './StudioSplit.module.css';
 
 const RESIZE_PANELS_DESCRIPTOR = msg({
 	message: 'Resize panels',

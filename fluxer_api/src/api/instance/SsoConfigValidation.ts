@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {Config} from '@app/api/Config';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {RequestUrlPolicy} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 
 interface SsoConfigValidationInput {
@@ -21,8 +24,22 @@ interface NormalizedSsoConfigValidationResult extends SsoConfigValidationInput {
 	ready: boolean;
 }
 
-const SSO_REQUEST_URL_POLICY = createPublicInternetRequestUrlPolicy();
+let ssoRequestUrlPolicy: RequestUrlPolicy | null = null;
+
+export function resetSsoRequestUrlPolicyForTesting(): void {
+	ssoRequestUrlPolicy = null;
+}
+
+export function getSsoRequestUrlPolicy(): RequestUrlPolicy {
+	if (ssoRequestUrlPolicy === null) {
+		ssoRequestUrlPolicy = createPublicInternetRequestUrlPolicy({
+			allowPrivateAddresses: Config.auth.ssoAllowPrivateAddresses,
+		});
+	}
+	return ssoRequestUrlPolicy;
+}
 const DOMAIN_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+const SsoAllowedDomainsSchema = InstanceConfigResponse.shape.sso.shape.allowed_domains;
 
 function normalizeOptionalSsoString(value: string | null): string | null {
 	if (typeof value !== 'string') {
@@ -47,16 +64,21 @@ export function isTestSsoProvider(
 	},
 	testModeEnabled: boolean,
 ): boolean {
+	if (!testModeEnabled) {
+		return false;
+	}
 	return (
 		config.authorizationUrl === 'test' ||
 		config.tokenUrl === 'test' ||
-		(testModeEnabled && (config.authorizationUrl?.startsWith('test-') ?? false))
+		(config.authorizationUrl?.startsWith('test-') ?? false)
 	);
 }
 
-export function normalizeSsoAllowedEmailDomains(domains: Array<string>): Array<string> {
+export function normalizeSsoAllowedEmailDomains(domains: unknown): Array<string> {
+	const result = SsoAllowedDomainsSchema.safeParse(domains);
+	if (!result.success) throwInvalidDomain();
 	const normalized = new Set<string>();
-	for (const rawDomain of domains) {
+	for (const rawDomain of result.data) {
 		const trimmed = rawDomain.trim().toLowerCase();
 		if (!trimmed) {
 			continue;
@@ -97,12 +119,12 @@ export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: st
 		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
 	}
 	try {
-		await SSO_REQUEST_URL_POLICY.validate(parsedUrl, {
+		await getSsoRequestUrlPolicy().validate(parsedUrl, {
 			phase: 'initial',
 			redirectCount: 0,
 		});
 	} catch {
-		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
+		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE);
 	}
 	// Return the caller's exact input rather than parsedUrl.toString(), which would normalize
 	// the URL (e.g. appending a trailing slash) and break exact-match comparisons such as the

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {Db, type DbOp} from '../../database/CassandraTypes';
-import {executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {PaymentBySubscriptionRow, PaymentRow} from '../../database/types/PaymentTypes';
-import {Payment} from '../../models/Payment';
-import {Payments, PaymentsByPaymentIntent, PaymentsBySubscription, PaymentsByUser} from '../../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
+import {Payment} from '@app/api/models/Payment';
+import {Payments, PaymentsByPaymentIntent, PaymentsBySubscription, PaymentsByUser} from '@app/api/Tables';
 
 const FETCH_PAYMENT_BY_CHECKOUT_SESSION_QUERY = Payments.selectCql({
 	where: Payments.where.eq('checkout_session_id'),
@@ -182,19 +182,6 @@ export class PaymentRepository {
 			subscription_id: subscriptionId,
 		});
 		return result ?? null;
-	}
-
-	async hasEverPaidSuccessfully(userId: UserID): Promise<boolean> {
-		const refs = await fetchMany<{
-			checkout_session_id: string;
-		}>(FETCH_PAYMENTS_BY_USER_QUERY, {
-			user_id: userId,
-		});
-		if (refs.length === 0) return false;
-		const rows = await fetchMany<PaymentRow>(FETCH_PAYMENTS_BY_IDS_QUERY, {
-			checkout_session_ids: refs.map((r) => r.checkout_session_id),
-		});
-		return rows.some((r) => r.status === 'completed');
 	}
 
 	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {

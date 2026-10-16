@@ -2,8 +2,9 @@
 
 import Navigation from '@app/features/navigation/state/Navigation';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {action, makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 
 const FAVORITES_ROUTE_ID = '@favorites';
 
@@ -15,10 +16,9 @@ class SelectedGuild {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
-	@action
 	private async initPersistence(): Promise<void> {
 		await makePersistent(this, 'SelectedGuild', ['lastSelectedGuildId']);
 		this.setupNavigationReaction();
@@ -47,24 +47,6 @@ class SelectedGuild {
 			return null;
 		}
 		return guildId;
-	}
-
-	@action
-	selectGuild(guildId: string, _forceSync = false): void {
-		if (!guildId) {
-			return;
-		}
-		this.setGuild(guildId, {forceNonce: true});
-	}
-
-	@action
-	syncCurrentGuild(): void {
-		this.bumpNonce();
-	}
-
-	@action
-	deselectGuild(): void {
-		this.clearSelection();
 	}
 
 	private applyNavigationGuild(guildId: string): void {

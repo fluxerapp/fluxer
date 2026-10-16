@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import type {KvQueryMeta, KvTableSpec} from './CassandraTypes';
+import {Config} from '@app/api/Config';
+import type {KvQueryMeta, KvTableSpec} from '@app/api/database/CassandraTypes';
 
 export function getIsDev(): boolean {
 	return Config.nodeEnv === 'development';
@@ -12,9 +12,11 @@ interface TableMetadata {
 	columns: ReadonlyArray<string>;
 	primaryKey: ReadonlyArray<string>;
 	partitionKey: ReadonlyArray<string>;
+	defaultTtlSeconds?: number;
 }
 
 const kvMetaRegistry = new Map<string, KvQueryMeta<Record<string, unknown>>>();
+const kvMetaKeyCache = new Map<string, string>();
 const tableRegistry = new Map<string, TableMetadata>();
 
 export function registerTableSpec<Row extends object>(tableSpec: KvTableSpec<Row>): void {
@@ -23,6 +25,7 @@ export function registerTableSpec<Row extends object>(tableSpec: KvTableSpec<Row
 		columns: tableSpec.columns as ReadonlyArray<string>,
 		primaryKey: tableSpec.primaryKey as ReadonlyArray<string>,
 		partitionKey: tableSpec.partitionKey as ReadonlyArray<string>,
+		defaultTtlSeconds: tableSpec.defaultTtlSeconds,
 	};
 	tableRegistry.set(tableSpec.name, metadata);
 }
@@ -32,10 +35,17 @@ function normalizeCqlForRegistry(cql: string): string {
 }
 
 export function registerKvMeta(cql: string, meta: KvQueryMeta): void {
-	kvMetaRegistry.set(normalizeCqlForRegistry(cql), meta);
+	let key = kvMetaKeyCache.get(cql);
+	if (key === undefined) {
+		key = normalizeCqlForRegistry(cql);
+		kvMetaKeyCache.set(cql, key);
+	}
+	kvMetaRegistry.set(key, meta);
 }
 
 export function getKvMeta(cql: string): KvQueryMeta | undefined {
+	const key = kvMetaKeyCache.get(cql);
+	if (key !== undefined) return kvMetaRegistry.get(key);
 	return kvMetaRegistry.get(normalizeCqlForRegistry(cql));
 }
 

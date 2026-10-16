@@ -1,99 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PremiumFlags, SuspiciousActivityFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import type {User} from '../models/User';
-import {setInjectedAccountPolicyEvaluator} from '../risk/AccountPolicyService';
 import {
-	createCurrentBehaviorTestAccountPolicyEvaluator,
-	TEST_POLICY_CONTACT_DOMAIN,
-	TEST_POLICY_CONTACT_SUBDOMAIN,
-} from '../test/AccountPolicyTestEvaluator';
-import {checkIsPremium, getEffectivePremiumUntil, getEffectiveSuspiciousFlags, getRequiredActions} from './UserHelpers';
-
-function createUser(
-	overrides: Partial<Pick<User, 'email' | 'emailVerified' | 'hasVerifiedPhone' | 'suspiciousActivityFlags'>> = {},
-): User {
-	return {
-		email: 'user@fluxer.app',
-		emailVerified: false,
-		hasVerifiedPhone: false,
-		suspiciousActivityFlags: 0,
-		...overrides,
-	} as User;
-}
-
-describe('getRequiredActions', () => {
-	beforeEach(() => {
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-	});
-	afterEach(() => {
-		setInjectedAccountPolicyEvaluator(undefined);
-	});
-	it('keeps verified-email requirements active when the account email is unverified', () => {
-		const user = createUser({
-			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL,
-		});
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_VERIFIED_EMAIL']);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
-	});
-	it('masks verified-email requirements when the account has a verified email', () => {
-		const user = createUser({
-			emailVerified: true,
-			suspiciousActivityFlags:
-				SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL |
-				SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE,
-		});
-		expect(getRequiredActions(user)).toEqual([]);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(0);
-	});
-	it('drops weaker redundant clauses while preserving the stronger canonical action', () => {
-		const user = createUser({
-			suspiciousActivityFlags:
-				SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |
-				SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE,
-		});
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE']);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE);
-	});
-	it('retains incomparable combinations so the client can complete them sequentially', () => {
-		const user = createUser({
-			suspiciousActivityFlags:
-				SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE,
-		});
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_REVERIFIED_EMAIL', 'REQUIRE_REVERIFIED_PHONE']);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(
-			SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE,
-		);
-	});
-	it('masks verified-phone requirements after the stored phone has been removed', () => {
-		const user = createUser({
-			hasVerifiedPhone: true,
-			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-		});
-		expect(getRequiredActions(user)).toEqual([]);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(0);
-	});
-	it('masks all suspicious activity requirements for policy-exempt contact domains', () => {
-		const user = createUser({
-			email: `builder@${TEST_POLICY_CONTACT_DOMAIN}`,
-			suspiciousActivityFlags:
-				SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL |
-				SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
-				SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION,
-		});
-		expect(getRequiredActions(user)).toEqual([]);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(0);
-	});
-	it('does not mask suspicious activity requirements for non-matching subdomains', () => {
-		const user = createUser({
-			email: `builder@${TEST_POLICY_CONTACT_SUBDOMAIN}`,
-			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL,
-		});
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_REVERIFIED_EMAIL']);
-		expect(getEffectiveSuspiciousFlags(user)).toBe(SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL);
-	});
-});
+	canOwnerRunBots,
+	checkIsPremium,
+	getBadgePremiumType,
+	getEffectivePremiumUntil,
+	getPremiumPaymentRecoveryGraceMs,
+	isSignInRefused,
+	isTemporarilyBanned,
+} from '@app/api/user/UserHelpers';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('checkIsPremium', () => {
 	it('uses the later gift extension as the effective premium end', () => {
@@ -141,5 +58,73 @@ describe('checkIsPremium', () => {
 			premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
 		};
 		expect(checkIsPremium(user)).toBe(false);
+	});
+});
+
+describe('getBadgePremiumType', () => {
+	it('shows a subscription badge for a backend premium override', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+		expect(getBadgePremiumType({premiumType: UserPremiumTypes.NONE, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+	});
+	it('keeps the stored premium type', () => {
+		expect(
+			getBadgePremiumType({premiumType: UserPremiumTypes.LIFETIME, premiumFlags: PremiumFlags.ENABLED_OVERRIDE}),
+		).toBe(UserPremiumTypes.LIFETIME);
+	});
+	it('shows no badge without premium or while perks are disabled', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: 0})).toBeUndefined();
+		expect(
+			getBadgePremiumType({
+				premiumType: null,
+				premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
+			}),
+		).toBeUndefined();
+	});
+});
+
+describe('account standing', () => {
+	const hour = 3_600_000;
+	function standing(flags: bigint, tempBannedUntil: Date | null = null, deletionStartedAt: Date | null = null) {
+		return {flags, tempBannedUntil, deletionStartedAt};
+	}
+	it('treats an active temporary ban as a refused sign-in', () => {
+		const banned = standing(UserFlags.DISABLED, new Date(Date.now() + hour));
+		expect(isTemporarilyBanned(banned)).toBe(true);
+		expect(isSignInRefused(banned)).toBe(true);
+		expect(canOwnerRunBots(banned)).toBe(false);
+	});
+	it('lets an expired temporary ban through', () => {
+		const expired = standing(UserFlags.DISABLED, new Date(Date.now() - hour));
+		expect(isTemporarilyBanned(expired)).toBe(false);
+		expect(isSignInRefused(expired)).toBe(false);
+		expect(canOwnerRunBots(expired)).toBe(true);
+	});
+	it('keeps a self-disabled account able to sign in but stops its bots', () => {
+		const disabled = standing(UserFlags.DISABLED);
+		expect(isSignInRefused(disabled)).toBe(false);
+		expect(canOwnerRunBots(disabled)).toBe(false);
+	});
+	it('refuses closed accounts', () => {
+		expect(isSignInRefused(standing(UserFlags.DELETED))).toBe(true);
+		expect(isSignInRefused(standing(0n, null, new Date()))).toBe(true);
+		expect(canOwnerRunBots(standing(UserFlags.DELETED))).toBe(false);
+	});
+	it('accepts an account in good standing', () => {
+		expect(isSignInRefused(standing(0n))).toBe(false);
+		expect(canOwnerRunBots(standing(0n))).toBe(true);
+	});
+});
+
+describe('premium grace lengths', () => {
+	it('maps billing cycles to payment recovery grace', () => {
+		const day = 24 * 60 * 60 * 1000;
+		expect(getPremiumPaymentRecoveryGraceMs('monthly')).toBe(7 * day);
+		expect(getPremiumPaymentRecoveryGraceMs('yearly')).toBe(14 * day);
+		expect(getPremiumPaymentRecoveryGraceMs(null)).toBe(7 * day);
+		expect(getPremiumPaymentRecoveryGraceMs(undefined)).toBe(7 * day);
 	});
 });

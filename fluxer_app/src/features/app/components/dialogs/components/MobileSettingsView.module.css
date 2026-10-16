@@ -95,10 +95,6 @@
 	white-space: nowrap;
 }
 
-.headerSpacer {
-	width: 2rem;
-}
-
 .headerActionSlot {
 	display: flex;
 	flex: 0 0 2rem;

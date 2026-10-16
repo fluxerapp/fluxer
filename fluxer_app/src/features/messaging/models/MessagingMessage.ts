@@ -13,7 +13,6 @@ import {emojiEquals} from '@app/features/messaging/utils/ReactionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import {User} from '@app/features/user/models/User';
-import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import {LRUMap} from '@app/lib/list/ListLruMap';
 import {MessageFlags, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -156,7 +155,6 @@ export class Message {
 	readonly embeds: ReadonlyArray<MessageEmbed>;
 	readonly attachments: ReadonlyArray<MessageAttachment>;
 	readonly stickerItems: ReadonlyArray<MessageStickerItem>;
-	readonly nsfwEmojis: ReadonlySet<string>;
 	readonly messageReference?: MessageReference;
 	readonly referencedMessage?: Message | null;
 	readonly messageSnapshots?: ReadonlyArray<MessageSnapshot>;
@@ -216,7 +214,6 @@ export class Message {
 		);
 		this.attachments = Object.freeze(message.attachments ?? []);
 		this.stickerItems = Object.freeze(message.stickers ?? []);
-		this.nsfwEmojis = Object.freeze(new Set(message.nsfw_emojis ?? []));
 		if (!options?.skipReactionHydration) {
 			if ('reactions' in message) {
 				MessageReactions.hydrateMessageReactions(this.id, message.reactions);
@@ -251,12 +248,16 @@ export class Message {
 		return this.hasFlag(MessageFlags.SUPPRESS_EMBEDS);
 	}
 
-	get suppressNotifications(): boolean {
-		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
+	get isCrossposted(): boolean {
+		return this.hasFlag(MessageFlags.CROSSPOSTED);
 	}
 
-	get isSilent(): boolean {
-		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
+	get isCrosspostCopy(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST);
+	}
+
+	get isCrosspostSourceDeleted(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST) && this.hasFlag(MessageFlags.SOURCE_MESSAGE_DELETED);
 	}
 
 	isUserMessage(): boolean {
@@ -287,10 +288,6 @@ export class Message {
 
 	get isSending(): boolean {
 		return this.state === MessageStates.SENDING;
-	}
-
-	get isSent(): boolean {
-		return this.state === MessageStates.SENT;
 	}
 
 	get hasFailed(): boolean {
@@ -343,34 +340,6 @@ export class Message {
 			},
 			{skipUserCache: true, instanceId: this.instanceId},
 		);
-	}
-
-	withReaction(emoji: ReactionEmoji, add = true, me = false): Message {
-		const existing = this.getReaction(emoji);
-		let newReactions: Array<MessageReaction>;
-		if (add) {
-			if (!existing) {
-				newReactions = [...this.reactions, {emoji, count: 1, me: me ? true : undefined}];
-			} else if (me && existing.me) {
-				return this;
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: r.count + 1, me: me || r.me ? true : undefined} : r,
-				);
-			}
-		} else {
-			if (!existing) return this;
-			if (me && !existing.me) return this;
-			const nextCount = Math.max(0, existing.count - 1);
-			if (nextCount === 0) {
-				newReactions = this.reactions.filter((r) => !emojiEquals(r.emoji, emoji));
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: nextCount, me: me ? undefined : r.me} : r,
-				);
-			}
-		}
-		return this.withUpdates({reactions: newReactions});
 	}
 
 	withoutReactionEmoji(emoji: ReactionEmoji): Message {
@@ -509,12 +478,6 @@ export class Message {
 		return true;
 	}
 
-	static hasRenderChanges(prev: Message | undefined, next: Message | undefined): boolean {
-		if (!prev && !next) return false;
-		if (!prev || !next) return true;
-		return !prev.equals(next);
-	}
-
 	toJSON(): WireMessage {
 		return {
 			id: this.id,
@@ -550,15 +513,23 @@ export class Message {
 	}
 }
 
-export const messageMentionsCurrentUser = (message: WireMessage): boolean => {
+interface MentionSuppression {
+	suppressEveryone?: boolean;
+	suppressRoles?: boolean;
+}
+
+export const messageMentionsCurrentUser = (
+	message: WireMessage,
+	{suppressEveryone = false, suppressRoles = false}: MentionSuppression = {},
+): boolean => {
 	const channel = Channels.getChannel(message.channel_id);
 	if (!channel) return false;
-	if (message.mention_everyone && !UserGuildSettings.isSuppressEveryoneEnabled(channel.guildId ?? null)) return true;
+	if (message.mention_everyone && !suppressEveryone) return true;
 	if (message.mentions?.some((user) => user.id === Authentication.currentUserId)) {
 		return true;
 	}
 	if (!channel.guildId) return false;
-	if (UserGuildSettings.isSuppressRolesEnabled(channel.guildId)) return false;
+	if (suppressRoles) return false;
 	const guild = Guilds.getGuild(channel.guildId);
 	if (!guild) return false;
 	const guildMember = GuildMembers.getMember(guild.id, Authentication.currentUserId);

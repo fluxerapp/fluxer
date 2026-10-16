@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_common::public_ip::{is_public_ip, is_valid_public_hostname};
 use reqwest::dns::{Addrs, Name, Resolve, Resolving};
 use std::fmt;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, SocketAddr};
 use tokio::net::lookup_host;
 use url::Url;
 
@@ -104,10 +105,10 @@ fn normalize_host(raw: &str) -> Result<String, Error> {
 }
 
 fn validate_ip(ip: IpAddr) -> Result<(), Error> {
-    match ip {
-        IpAddr::V4(ip) if blocked_ipv4(ip) => Err(Error::BlockedUrl),
-        IpAddr::V6(ip) if blocked_ipv6(ip) => Err(Error::BlockedUrl),
-        _ => Ok(()),
+    if is_public_ip(ip) {
+        Ok(())
+    } else {
+        Err(Error::BlockedUrl)
     }
 }
 
@@ -128,105 +129,6 @@ impl Resolve for PinnedDnsResolver {
             Ok(Box::new(resolved.into_iter()) as Addrs)
         })
     }
-}
-
-fn ipv4_to_u32(ip: Ipv4Addr) -> u32 {
-    u32::from_be_bytes(ip.octets())
-}
-
-fn ipv4_in(ip: Ipv4Addr, prefix: Ipv4Addr, bits: u32) -> bool {
-    let mask = if bits == 0 {
-        0
-    } else {
-        u32::MAX << (32 - bits)
-    };
-    (ipv4_to_u32(ip) & mask) == (ipv4_to_u32(prefix) & mask)
-}
-
-fn ipv6_to_u128(ip: Ipv6Addr) -> u128 {
-    u128::from_be_bytes(ip.octets())
-}
-
-fn ipv6_in(ip: Ipv6Addr, prefix: Ipv6Addr, bits: u32) -> bool {
-    let mask = if bits == 0 {
-        0
-    } else {
-        u128::MAX << (128 - bits)
-    };
-    (ipv6_to_u128(ip) & mask) == (ipv6_to_u128(prefix) & mask)
-}
-
-fn blocked_ipv4(ip: Ipv4Addr) -> bool {
-    ipv4_in(ip, Ipv4Addr::new(0, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(10, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(100, 64, 0, 0), 10)
-        || ipv4_in(ip, Ipv4Addr::new(127, 0, 0, 0), 8)
-        || ipv4_in(ip, Ipv4Addr::new(169, 254, 0, 0), 16)
-        || ipv4_in(ip, Ipv4Addr::new(172, 16, 0, 0), 12)
-        || ipv4_in(ip, Ipv4Addr::new(192, 0, 0, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 0, 2, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 88, 99, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(192, 168, 0, 0), 16)
-        || ipv4_in(ip, Ipv4Addr::new(198, 18, 0, 0), 15)
-        || ipv4_in(ip, Ipv4Addr::new(198, 51, 100, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(203, 0, 113, 0), 24)
-        || ipv4_in(ip, Ipv4Addr::new(224, 0, 0, 0), 4)
-        || ipv4_in(ip, Ipv4Addr::new(240, 0, 0, 0), 4)
-        || ip == Ipv4Addr::new(255, 255, 255, 255)
-}
-
-fn embedded_ipv4(ip: Ipv6Addr) -> Option<Ipv4Addr> {
-    let octets = ip.octets();
-    if ipv6_in(ip, Ipv6Addr::new(0x0064, 0xff9b, 0, 0, 0, 0, 0, 0), 96)
-        || ipv6_in(ip, Ipv6Addr::UNSPECIFIED, 96)
-    {
-        return Some(Ipv4Addr::new(
-            octets[12], octets[13], octets[14], octets[15],
-        ));
-    }
-    if ipv6_in(ip, Ipv6Addr::new(0x2002, 0, 0, 0, 0, 0, 0, 0), 16) {
-        return Some(Ipv4Addr::new(octets[2], octets[3], octets[4], octets[5]));
-    }
-    None
-}
-
-fn blocked_ipv6(ip: Ipv6Addr) -> bool {
-    if let Some(mapped) = ip.to_ipv4_mapped() {
-        return blocked_ipv4(mapped);
-    }
-    if let Some(embedded) = embedded_ipv4(ip) {
-        return blocked_ipv4(embedded);
-    }
-    ip.is_unspecified()
-        || ip.is_loopback()
-        || ipv6_in(ip, Ipv6Addr::new(0x2001, 0x0db8, 0, 0, 0, 0, 0, 0), 32)
-        || ipv6_in(ip, Ipv6Addr::new(0xfc00, 0, 0, 0, 0, 0, 0, 0), 7)
-        || ipv6_in(ip, Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 0), 10)
-        || ipv6_in(ip, Ipv6Addr::new(0xff00, 0, 0, 0, 0, 0, 0, 0), 8)
-}
-
-fn is_valid_public_hostname(host: &str) -> bool {
-    if host.is_empty() || host.len() > 253 || !host.contains('.') {
-        return false;
-    }
-    let mut last = "";
-    for label in host.split('.') {
-        if label.is_empty() || label.len() > 63 {
-            return false;
-        }
-        let bytes = label.as_bytes();
-        if !bytes[0].is_ascii_alphanumeric() || !bytes[bytes.len() - 1].is_ascii_alphanumeric() {
-            return false;
-        }
-        if !bytes
-            .iter()
-            .all(|b| b.is_ascii_alphanumeric() || *b == b'-')
-        {
-            return false;
-        }
-        last = label;
-    }
-    !last.bytes().all(|b| b.is_ascii_digit())
 }
 
 #[cfg(test)]
@@ -260,6 +162,29 @@ mod tests {
                 "{raw}"
             );
         }
+    }
+
+    #[tokio::test]
+    async fn checks_the_canonical_ipv4_host() {
+        for raw in [
+            "http://0x7f.0x0.0x0.0x1/",
+            "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+            "http://169.254.169.0xfe/",
+            "http://127.0.0.0x1/",
+            "http://0x7f000001/",
+            "http://2130706433/",
+            "http://0177.0.0.1/",
+            "http://127.1/",
+        ] {
+            assert_eq!(
+                validate_url(&url(raw)).await,
+                Err(Error::BlockedUrl),
+                "{raw}"
+            );
+        }
+        let base = url("https://example.com/start.gif");
+        let next = resolve_redirect(&base, "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/").unwrap();
+        assert_eq!(validate_url(&next).await, Err(Error::BlockedUrl));
     }
 
     #[tokio::test]

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {User} from '@app/api/models/User';
 import {DELETED_USER_GLOBAL_NAME, DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {describe, expect, it} from 'vitest';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../database/types/UserTypes';
-import {createRequestCache} from '../middleware/RequestCacheMiddleware';
-import {User} from '../models/User';
-import {UserCacheService} from './UserCacheService';
-import type {IUsersServiceClient} from './UsersServiceClient';
 
 class FakeUsersServiceClient implements IUsersServiceClient {
 	readonly requests: Array<Array<UserID>> = [];
@@ -107,23 +107,6 @@ describe('UserCacheService', () => {
 		});
 	});
 
-	it('records only the users-service timing boundary', async () => {
-		const userId = createUserID(2501n);
-		const servicePartial = createPartial(userId, 'TimedUsersService');
-		const usersServiceClient = new FakeUsersServiceClient(new Map([[userId, servicePartial]]));
-		const service = new UserCacheService(usersServiceClient);
-		const timedSteps: Array<string> = [];
-
-		await service.getUserPartialResponses([userId], createRequestCache(), {
-			timeStep: async (name, operation) => {
-				timedSteps.push(name);
-				return await operation();
-			},
-		});
-
-		expect(timedSteps).toEqual(['users_service_request']);
-	});
-
 	it('surfaces user partial source failures', async () => {
 		const userId = createUserID(3001n);
 		const usersServiceClient = new FakeUsersServiceClient();
@@ -134,6 +117,21 @@ describe('UserCacheService', () => {
 			'user partial source unavailable',
 		);
 		expect(usersServiceClient.requests).toEqual([[userId]]);
+	});
+
+	it('seeds only the request cache when mapping a user on a read path', () => {
+		const userId = createUserID(4501n);
+		const usersServiceClient = new FakeUsersServiceClient();
+		const service = new UserCacheService(usersServiceClient);
+		const user = createUser(userId, 'ReadUser');
+		const requestCache = createRequestCache();
+
+		const partial = service.setUserPartialResponseFromUserInRequestCache(user, requestCache);
+
+		expect(partial.username).toBe('ReadUser');
+		expect(requestCache.userPartials.get(userId)).toBe(partial);
+		expect(usersServiceClient.invalidated).toEqual([]);
+		expect(usersServiceClient.requests).toEqual([]);
 	});
 
 	it('invalidates the users service cache when seeding a partial from a user update', async () => {

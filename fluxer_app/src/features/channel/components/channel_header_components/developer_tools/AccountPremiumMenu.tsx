@@ -2,6 +2,10 @@
 
 import {showChannelErrorModal} from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
 import {
+	PREMIUM_TYPE_DESCRIPTOR,
+	UNREAD_GIFT_COUNT_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels';
+import {
 	DeveloperOptionCheckbox,
 	DeveloperOptionRadioItems,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
@@ -9,6 +13,8 @@ import {
 	translateDescriptor,
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {getPremiumTypeOptions} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import {
 	applyPremiumScenarioOption,
 	PREMIUM_SCENARIO_OPTIONS,
@@ -18,19 +24,16 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
 import {msg, plural} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {PREMIUM_TYPE_DESCRIPTOR, UNREAD_GIFT_COUNT_DESCRIPTOR} from './DeveloperOptionLabels';
-import {getPremiumTypeOptions} from './OptionPresets';
-import {updateOption} from './ResetOptions';
 
 const logger = new Logger('DeveloperToolsContextMenu/AccountPremiumMenu');
 const ACCOUNT_STATE_DESCRIPTOR = msg({

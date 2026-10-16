@@ -1,0 +1,69 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.groups,
+.group,
+.rows {
+	display: flex;
+	flex-direction: column;
+}
+
+.groupHeader {
+	display: flex;
+	align-items: flex-start;
+	box-sizing: border-box;
+	height: var(--member-list-group-header-height);
+	min-height: var(--member-list-group-header-height);
+	padding: 0.75rem var(--member-list-item-padding-inline) var(--member-list-item-padding-block);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: var(--member-list-item-height);
+	min-height: var(--member-list-item-height);
+	padding: var(--member-list-item-padding-block) var(--member-list-item-padding-inline);
+}
+
+.rowGroupDM {
+	height: auto;
+	min-height: var(--member-list-item-height-group-dm);
+}
+
+.rowContent {
+	display: flex;
+	align-items: center;
+	gap: var(--member-list-item-content-gap);
+	width: 100%;
+	min-width: 0;
+}
+
+.rowInfo {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.nameSlot,
+.statusSlot {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.nameSlot {
+	height: var(--member-list-item-name-line-height);
+}
+
+.statusSlot {
+	height: var(--member-list-item-status-line-height);
+}
+
+.rowsGroupDM {
+	gap: var(--member-list-row-gap);
+}
+
+.groupGroupDM {
+	padding-bottom: var(--member-list-group-spacer-height);
+}

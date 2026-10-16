@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {
 	type AutoAckWindowSnapshot,
@@ -18,7 +19,7 @@ import CompactVoiceCallHeight, {getGuildVoiceCallExpansionKey} from '@app/featur
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
 import Window from '@app/features/window/state/Window';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {action, makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 
 const logger = new Logger('AutoAck');
 
@@ -48,9 +49,9 @@ class AutoAck {
 					if (!channelId) {
 						return {windowId, channelId: null, isAtBottom: false, canAutoAck: false};
 					}
-					const isAtBottom = Dimension.isAtBottom(channelId) ?? false;
+					const isAtBottom = Dimension.channelPinnedToEnd(channelId) ?? false;
 					const readState = ReadStates.getIfExists(channelId);
-					const isManualAck = readState?.isManualAck ?? false;
+					const ackedManually = readState?.ackedManually ?? false;
 					const channel = Channels.getChannel(channelId);
 					const isGuildVoiceCallExpanded =
 						channel?.type === ChannelTypes.GUILD_VOICE
@@ -63,7 +64,7 @@ class AutoAck {
 						activeVoiceCallFullscreenScopeKey: VoiceCallFullscreen.activeScopeKey,
 					});
 					const isMediaViewerOpen = MediaViewer.isOpen;
-					const canAutoAck = !isManualAck && isWindowFocused && isTextChatVisible && !isMediaViewerOpen;
+					const canAutoAck = !ackedManually && isWindowFocused && isTextChatVisible && !isMediaViewerOpen;
 					return {windowId, channelId, isAtBottom, canAutoAck};
 				},
 				(conditions) => {
@@ -74,10 +75,26 @@ class AutoAck {
 					fireImmediately: true,
 				},
 			);
+			reaction(
+				() => {
+					const windowId = `${Window.windowId}:thread-panel`;
+					const channelId = Navigation.threadId;
+					if (!channelId) {
+						return {windowId, channelId: null, isAtBottom: false, canAutoAck: false};
+					}
+					const isAtBottom = Dimension.channelPinnedToEnd(channelId) ?? false;
+					const ackedManually = ReadStates.getIfExists(channelId)?.ackedManually ?? false;
+					const canAutoAck = !ackedManually && Window.focused && !MediaViewer.isOpen;
+					return {windowId, channelId, isAtBottom, canAutoAck};
+				},
+				(conditions) => {
+					this.updateAutoAckState(conditions);
+				},
+				{name: 'AutoAck.updateThreadPanelAutoAckState', fireImmediately: true},
+			);
 		});
 	}
 
-	@action
 	private updateAutoAckState(conditions: {
 		windowId: string;
 		channelId: string | null;
@@ -103,7 +120,6 @@ class AutoAck {
 		}
 	}
 
-	@action
 	private enableAutomaticAckInternal(channelId: string, windowId: string): void {
 		const channel = Channels.getChannel(channelId);
 		if (channel == null) {
@@ -121,7 +137,6 @@ class AutoAck {
 		}
 	}
 
-	@action
 	private disableAutomaticAckInternal(channelId: string, windowId: string): void {
 		const channels = this.windowChannels.get(windowId);
 		if (channels == null) return;
@@ -141,7 +156,6 @@ class AutoAck {
 		return false;
 	}
 
-	@action
 	disableForChannel(channelId: string): void {
 		for (const [windowId, channels] of this.windowChannels.entries()) {
 			if (channels.has(channelId)) {

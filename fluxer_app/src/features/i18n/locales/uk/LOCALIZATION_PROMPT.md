@@ -29,6 +29,7 @@ Use natural Ukrainian app language with friendly neutral tone. Follow Telegram, 
 - role, permission, invite, webhook, passkey, OAuth, and bot: use conventional app or developer terminology.
 - favorites: translate as saved or favorite items according to the locale's app convention, not as a romantic preference.
 - Discovery: keep as the named Fluxer area if that reads naturally. Otherwise translate as the app's discovery or explore area.
+- emoji: always use «емоджі», never «емодзі».
 
 ## Quality check
 

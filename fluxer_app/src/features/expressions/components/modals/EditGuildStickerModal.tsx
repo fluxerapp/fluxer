@@ -49,7 +49,7 @@ export const EditGuildStickerModal = observer(function EditGuildStickerModal({
 	onUpdate,
 }: EditGuildStickerModalProps) {
 	const {i18n} = useLingui();
-	const {shouldAnimate} = useStickerAnimation();
+	const {shouldAnimate} = useStickerAnimation({isAnimated: sticker.animated});
 	const form = useForm<FormInputs>({
 		defaultValues: {
 			name: sticker.name,
@@ -86,6 +86,7 @@ export const EditGuildStickerModal = observer(function EditGuildStickerModal({
 	const stickerUrl = AvatarUtils.getStickerURL({
 		id: sticker.id,
 		animated: shouldAnimate,
+		isAnimatable: sticker.animated,
 		size: 320,
 	});
 	return (

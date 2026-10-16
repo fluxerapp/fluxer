@@ -9,7 +9,7 @@ import {
 	renderVoiceDebugStatsHtml,
 	renderVoiceDebugStatsUnavailableHtml,
 } from '@app/features/voice/diagnostics/VoiceDebugStatsHtml';
-import voiceEngineV2AppDebugLoggingHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugLoggingHostAdapter';
+import voiceEngineV2AppDebugEventSinkHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugEventSinkHostAdapter';
 import {collectStatsForNerdsSnapshot} from '@app/features/voice/utils/StatsForNerdsCopy';
 
 export function canOpenVoiceDebugEventSinkPopout(): boolean {
@@ -41,5 +41,5 @@ function publishBrowserOpeningStatsSnapshot(): void {
 
 export async function openVoiceDebugEventSinkPopout(): Promise<void> {
 	publishBrowserOpeningStatsSnapshot();
-	await voiceEngineV2AppDebugLoggingHostAdapter.openEventSinkPopout();
+	await voiceEngineV2AppDebugEventSinkHostAdapter.openEventSinkPopout();
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::float_to_u64;
+
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -13,11 +15,10 @@ impl AdminApiClient {
     ) -> ApiResult<Vec<DiscoveryPendingApplication>> {
         let response = self
             .generated()
-            .list_pending_discovery_applications()
+            .list_admin_discovery_applications()
             .await
             .map_err(|e| self.generated_error(e))?;
-        response
-            .into_inner()
+        Vec::from(response.into_inner())
             .into_iter()
             .map(pending_discovery_application)
             .collect()
@@ -26,11 +27,10 @@ impl AdminApiClient {
     pub async fn list_discovery_listed_guilds(&self) -> ApiResult<Vec<DiscoveryListedGuild>> {
         let response = self
             .generated()
-            .list_discovery_listed_guilds()
+            .list_admin_discovery_listings()
             .await
             .map_err(|e| self.generated_error(e))?;
-        response
-            .into_inner()
+        Vec::from(response.into_inner())
             .into_iter()
             .map(listed_guild)
             .collect()
@@ -41,16 +41,16 @@ impl AdminApiClient {
         guild_id: &str,
         reason: Option<&str>,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminReviewRequest {
+        let guild_id = snowflake(guild_id);
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::Approved {
             reason: reason
-                .map(generated_types::DiscoveryAdminReviewRequestReason::try_from)
+                .map(generated_types::DiscoveryReviewReason::try_from)
                 .transpose()
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
         };
         let response = self
             .generated()
-            .approve_discovery_application(&guild_id, &body)
+            .update_admin_discovery_application(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -61,14 +61,14 @@ impl AdminApiClient {
         guild_id: &str,
         reason: &str,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminRejectRequest {
-            reason: generated_types::DiscoveryAdminRejectRequestReason::try_from(reason)
+        let guild_id = snowflake(guild_id);
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::Rejected {
+            reason: generated_types::DiscoveryRejectionReason::try_from(reason)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
         };
         let response = self
             .generated()
-            .reject_discovery_application(&guild_id, &body)
+            .update_admin_discovery_application(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -79,14 +79,14 @@ impl AdminApiClient {
         guild_id: &str,
         reason: &str,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
+        let guild_id = snowflake(guild_id);
         let body = generated_types::DiscoveryAdminRemoveRequest {
             reason: generated_types::DiscoveryAdminRemoveRequestReason::try_from(reason)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
         };
         let response = self
             .generated()
-            .remove_from_discovery(&guild_id, &body)
+            .delete_admin_discovery_listing(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -144,10 +144,6 @@ fn listed_guild(
         listed_at: None,
         category: None,
     })
-}
-
-fn float_to_u64(value: f64, field: &str) -> ApiResult<u64> {
-    crate::api::generated::number_to_u64(value, field).map_err(ApiError::Parse)
 }
 
 fn float_to_i32(value: f64, field: &str) -> ApiResult<i32> {

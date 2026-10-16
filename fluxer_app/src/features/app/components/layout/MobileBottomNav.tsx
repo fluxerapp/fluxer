@@ -2,6 +2,8 @@
 
 import {Routes} from '@app/app/Routes';
 import styles from '@app/features/app/components/layout/MobileBottomNav.module.css';
+import {reportSkeletonVoiceConnected} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import {PRIMARY_NAVIGATION_LANDMARK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -49,6 +51,9 @@ export const MobileBottomNav = observer(({currentUser}: MobileBottomNavProps) =>
 	const isDirectCallChannel = Boolean(
 		voiceChannel && (voiceChannel.type === ChannelTypes.DM || voiceChannel.type === ChannelTypes.GROUP_DM),
 	);
+	useSkeletonLayoutReport(() => {
+		reportSkeletonVoiceConnected(isConnectedToVoice);
+	}, `${isConnectedToVoice}`);
 	useEffect(() => {
 		if (Routes.isChannelRoute(location.pathname)) {
 			const channel = Navigation.channelId ? Channels.getChannel(Navigation.channelId) : undefined;

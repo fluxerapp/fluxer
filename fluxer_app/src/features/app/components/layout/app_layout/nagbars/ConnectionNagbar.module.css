@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.message {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.indicator {
+	flex-shrink: 0;
+	display: block;
+	width: var(--typing-indicator-animation-size);
+	height: var(--typing-indicator-animation-size);
+}

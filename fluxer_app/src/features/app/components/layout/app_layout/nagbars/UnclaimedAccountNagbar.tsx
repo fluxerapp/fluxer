@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Users from '@app/features/user/state/Users';
@@ -27,8 +28,8 @@ export const UnclaimedAccountNagbar = observer(({isMobile}: {isMobile: boolean})
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#ea580c"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.ALERT].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.ALERT].textColor}
 			data-flx="app.app-layout.nagbars.unclaimed-account-nagbar.nagbar"
 		>
 			<NagbarContent

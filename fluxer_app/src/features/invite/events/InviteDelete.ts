@@ -2,6 +2,7 @@
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import Invites from '@app/features/invite/state/Invites';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 
 interface InviteDeletePayload {
 	code: string;
@@ -9,5 +10,5 @@ interface InviteDeletePayload {
 }
 
 export function handleInviteDelete(data: InviteDeletePayload, _context: GatewayHandlerContext): void {
-	Invites.handleInviteDelete(data.code);
+	Invites.handleInviteDelete(data.code, currentInstanceTarget());
 }

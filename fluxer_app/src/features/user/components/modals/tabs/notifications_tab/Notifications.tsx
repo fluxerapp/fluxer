@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {ENABLE_NOTIFICATIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
@@ -13,6 +13,10 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/Notifications.module.css';
 import {PushSettings} from '@app/features/user/components/modals/tabs/notifications_tab/PushSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR,
+	UNKNOWN_DEVICE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -50,10 +54,7 @@ const GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR = msg({
 		'Get notified when you receive messages. You may need to allow notifications in your browser settings. For per-channel/per-community controls, right-click a community icon and open notification settings.',
 	comment: 'Label in the notifications.',
 });
-const ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR = msg({
-	message: 'Enable unread message badge',
-	comment: 'Button or menu action label in the notifications. Keep it concise.',
-});
+
 const PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 	message: 'Push subscriptions for this device',
 	comment: 'Label in the notifications.',
@@ -73,10 +74,6 @@ const ENABLE_PUSH_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 });
 const FORGET_SUBSCRIPTIONS_DESCRIPTOR = msg({
 	message: 'Forget subscriptions',
-	comment: 'Short label in the notifications. Keep it concise.',
-});
-const UNKNOWN_DEVICE_DESCRIPTOR = msg({
-	message: 'Unknown device',
 	comment: 'Short label in the notifications. Keep it concise.',
 });
 
@@ -161,7 +158,9 @@ export const Notifications: FC<NotificationsProps> = observer(
 							isDesktop()
 								? i18n._(USES_THE_OS_NOTIFICATION_CENTER_FOR_PER_CHANNEL_DESCRIPTOR)
 								: isPwa
-									? i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {productName: PRODUCT_NAME})
+									? i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {
+											productName: RuntimeConfig.productName,
+										})
 									: i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR)
 						}
 						value={browserNotificationsEnabled}
@@ -187,7 +186,9 @@ export const Notifications: FC<NotificationsProps> = observer(
 								{i18n._(PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR)}
 							</h3>
 							<p className={styles.pushDescription} data-flx="user.notifications-tab.notifications.push-description">
-								{i18n._(USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+								{i18n._(USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
 							</p>
 						</div>
 						<div className={styles.pushButtons} data-flx="user.notifications-tab.notifications.push-buttons">

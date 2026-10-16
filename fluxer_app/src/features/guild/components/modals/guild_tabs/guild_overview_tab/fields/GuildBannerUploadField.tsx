@@ -4,20 +4,21 @@ import {ImagePreviewField} from '@app/features/app/components/shared/ImagePrevie
 import {
 	ANIMATED_BANNER_FEATURE,
 	ANIMATED_IMAGE_FORMATS,
-	IMAGE_MAX_SIZE_LABEL,
 	STATIC_IMAGE_FORMATS,
 	WIDE_IMAGE_ASPECT_RATIO_LABEL,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {AssetType, getAssetConfig} from '@app/features/expressions/components/modals/AssetCropModal';
-import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
 import {getAspectRatioFromDimensions} from '@app/features/expressions/utils/AssetImageGeometry';
 import {formatImageUploadMinimumHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import styles from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTab.module.css';
 import type {GuildLike} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
 import {useGuildImageAssetField} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -77,7 +78,7 @@ export const GuildBannerUploadField: React.FC<{
 		fieldName: 'banner',
 		assetType: AssetType.GUILD_BANNER,
 		canManage: canManageGuild,
-		filePickerAccept: getAcceptStringFiltered('banner', canUseAnimatedBanner),
+		filePickerAccept: getAcceptString('banner', {animatedAllowed: canUseAnimatedBanner}),
 		previewUrl: previewBannerUrl,
 		setPreviewUrl: setPreviewBannerUrl,
 		setHasCleared: setHasClearedBanner,
@@ -96,7 +97,7 @@ export const GuildBannerUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_BANNER_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHint(i18n, {
 			formats: bannerFormats,
-			maxSize: IMAGE_MAX_SIZE_LABEL,
+			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 			minimumSize: bannerMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 		}),

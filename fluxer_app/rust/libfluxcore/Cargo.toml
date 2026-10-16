@@ -9,12 +9,8 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-wasm-bindgen = "=0.2.123"
-wee_alloc = {version = "0.4.5", default-features = false}
-zstd = {version = "0.13.3", default-features = false, features = ["no_asm", "thin", "wasm"]}
-
-[dev-dependencies]
-proptest = "1.11.0"
+wasm-bindgen = "=0.2.128"
+zstd = {version = "0.14.0", default-features = false, features = ["no_asm", "thin", "wasm"]}
 
 [profile.release]
 codegen-units = 1

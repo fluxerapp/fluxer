@@ -21,7 +21,7 @@ import type {Gif, GifFeatured} from '@app/features/expressions/commands/GifComma
 import * as GifCommands from '@app/features/expressions/commands/GifCommands';
 import type {DebouncedFunction} from '@app/features/platform/utils/scroll_manager/shared';
 import debounce from 'lodash/debounce';
-import {makeAutoObservable, observable, runInAction} from 'mobx';
+import {makeAutoObservable, observableRef, runInAction} from 'mobx';
 
 const EMPTY_FEATURED: GifFeatured = Object.freeze({categories: [], gifs: []});
 const TRENDING_CACHE_KEY = 'trending';
@@ -83,7 +83,7 @@ export class GifPickerState {
 				suggestDebounced: false,
 				disposed: false,
 				requestSequence: false,
-				snapshot: observable.ref,
+				snapshot: observableRef,
 				categoryResultCache: false,
 				loadingSkeletonTimerId: false,
 				pendingSearchSkeletonMode: false,
@@ -239,10 +239,6 @@ export class GifPickerState {
 		return this.model.searchTerm;
 	}
 
-	get previousSearchTerm(): string {
-		return this.model.committedSearchTerm;
-	}
-
 	get loading(): boolean {
 		return this.model.isLoading;
 	}
@@ -259,16 +255,8 @@ export class GifPickerState {
 		return this.model.initialFeaturedLoading;
 	}
 
-	get hasSearchResults(): boolean {
-		return this.model.isShowingResults && this.gifs.length > 0;
-	}
-
 	get shouldRenderSearchResults(): boolean {
 		return this.model.isShowingResults || this.model.isResultsLoading;
-	}
-
-	get pendingView(): View | null {
-		return this.model.isResultsLoading && this.model.resultKind === 'trending' ? 'trending' : null;
 	}
 
 	get isLandingPage(): boolean {

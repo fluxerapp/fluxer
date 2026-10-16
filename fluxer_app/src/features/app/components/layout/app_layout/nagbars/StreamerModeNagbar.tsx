@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -22,8 +23,8 @@ export const StreamerModeNagbar = observer(({isMobile}: {isMobile: boolean}) => 
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#5865f2"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.STREAMER].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.STREAMER].textColor}
 			dismissible
 			onDismiss={StreamerMode.dismissNagbar}
 			data-flx="app.app-layout.nagbars.streamer-mode-nagbar.nagbar"

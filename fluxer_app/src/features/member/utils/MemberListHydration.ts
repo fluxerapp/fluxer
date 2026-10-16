@@ -8,7 +8,6 @@ import {
 	type MemberListGroupSnapshot,
 } from '@app/features/member/utils/MemberListLayout';
 import {
-	areNormalizedMemberListRangesCovered,
 	type MemberListRange,
 	type MemberListRanges,
 	type NormalizedMemberListRanges,
@@ -22,6 +21,7 @@ interface MemberListHydrationItemIndexes {
 export interface MemberListHydrationInput {
 	memberCount: number;
 	groups: ReadonlyArray<MemberListGroupSnapshot>;
+	layouts?: ReadonlyArray<MemberListGroupLayout>;
 	itemIndexes: MemberListHydrationItemIndexes;
 }
 
@@ -61,6 +61,10 @@ function isHydratedMemberListRow(context: HydratedMemberListRowContext, rowIndex
 	return input.itemIndexes.has(rowIndex);
 }
 
+function resolveHydrationLayouts(input: MemberListHydrationInput): ReadonlyArray<MemberListGroupLayout> {
+	return input.layouts ?? buildMemberListLayout(input.groups);
+}
+
 function appendHydratedMemberListRange(request: AppendHydratedMemberListRangeRequest): void {
 	const {target, range, totalRows} = request;
 	const [rangeStart, rangeEnd] = range;
@@ -87,15 +91,14 @@ function appendHydratedMemberListRange(request: AppendHydratedMemberListRangeReq
 	}
 }
 
-export function getHydratedMemberListRanges(
+export function getHydratedMemberListRangesFromNormalized(
 	input: MemberListHydrationInput,
-	ranges: MemberListRanges,
+	normalizedRanges: NormalizedMemberListRanges,
 ): NormalizedMemberListRanges {
-	const normalizedRanges = normalizeMemberListRanges(ranges);
 	if (normalizedRanges.length === 0) {
 		return normalizedRanges;
 	}
-	const layouts = buildMemberListLayout(input.groups);
+	const layouts = resolveHydrationLayouts(input);
 	const totalRows = getHydrationTotalRows(input, layouts);
 	if (totalRows === 0) {
 		return normalizedRanges;
@@ -109,9 +112,4 @@ export function getHydratedMemberListRanges(
 		appendHydratedMemberListRange({target: hydratedRanges, input, layouts, totalRows, range});
 	}
 	return normalizeMemberListRanges(hydratedRanges);
-}
-
-export function isMemberListRangeHydrated(input: MemberListHydrationInput, ranges: MemberListRanges): boolean {
-	const normalizedRanges = normalizeMemberListRanges(ranges);
-	return areNormalizedMemberListRangesCovered(normalizedRanges, getHydratedMemberListRanges(input, normalizedRanges));
 }

@@ -2,6 +2,7 @@
 
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {LinuxAppearanceSnapshot} from '@app/types/electron.d';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
@@ -65,7 +66,7 @@ class Theme {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.initSystemThemeDetection();
 		this.initLinuxPortalThemeDetection();
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	get isHydrated(): boolean {
@@ -155,7 +156,7 @@ class Theme {
 
 	private initLinuxPortalThemeDetection(): void {
 		const electronApi = getElectronAPI();
-		if (!electronApi || electronApi.platform !== 'linux') {
+		if (electronApi?.platform !== 'linux') {
 			return;
 		}
 		if (!electronApi.getLinuxAppearance || !electronApi.onLinuxAppearanceChanged) {

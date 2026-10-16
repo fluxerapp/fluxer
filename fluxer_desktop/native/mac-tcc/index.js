@@ -62,5 +62,6 @@ module.exports = {
 	requestScreenRecording: binding ? binding.requestScreenRecording : stub,
 	inputMonitoringStatus: binding ? binding.inputMonitoringStatus : stub,
 	requestInputMonitoring: binding ? binding.requestInputMonitoring : stub,
+	probeInputMonitoringAccess: binding ? binding.probeInputMonitoringAccess : stub,
 	loadError,
 };

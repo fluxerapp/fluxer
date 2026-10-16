@@ -1,15 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createChannelID, createUserID} from '@app/api/BrandedTypes';
+import {GatedJsonValidator} from '@app/api/channel/threads/GatedJsonValidator';
+import {viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {GroupDmRecipientAddProtectionMiddleware} from '@app/api/middleware/GroupDmProtectionMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {Validator} from '@app/api/Validator';
+import {ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {TEXT_THREAD_PARENT_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
+import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
+	ChannelUpdateGatedRequest,
 	ChannelUpdateRequest,
+	ChannelUpdateRequestBody,
 	DeleteChannelQuery,
 	PermissionOverwriteCreateRequest,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {
 	ChannelResponse,
 	ChannelSlowmodeStateResponse,
-	RtcRegionResponse,
+	RtcRegionListResponse,
 } from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {
 	ChannelIdOverwriteIdParam,
@@ -17,22 +37,8 @@ import {
 	ChannelIdUserIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import type {Context} from 'hono';
-import {z} from 'zod';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createChannelID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {GroupDmRecipientAddProtectionMiddleware} from '../../middleware/GroupDmProtectionMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
-import {CLIENT_FEATURES_HEADER, parseClientFeaturesHeader} from '../../utils/featureUtils';
-import {Validator} from '../../Validator';
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const THREAD_PARENT_DEFAULT_KEYS = ['default_auto_archive_duration', 'default_thread_rate_limit_per_user'];
 
 export function ChannelController(app: HonoApp) {
 	app.get(
@@ -56,11 +62,7 @@ export function ChannelController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const channelRequestService = ctx.get('channelRequestService');
 			return ctx.json(
-				await channelRequestService.getChannelResponse({
-					userId,
-					channelId,
-					requestCache,
-				}),
+				await channelRequestService.getChannelResponse({viewer: viewerFromCtx(ctx), userId, channelId, requestCache}),
 			);
 		},
 	);
@@ -83,7 +85,7 @@ export function ChannelController(app: HonoApp) {
 			const user = ctx.get('user');
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const channelRequestService = ctx.get('channelRequestService');
-			return ctx.json(await channelRequestService.getSlowmodeState({user, channelId}));
+			return ctx.json(await channelRequestService.getSlowmodeState({viewer: viewerFromCtx(ctx), user, channelId}));
 		},
 	);
 	app.get(
@@ -97,7 +99,7 @@ export function ChannelController(app: HonoApp) {
 			summary: 'List RTC regions',
 			description:
 				'Returns available voice and video calling regions for the channel, used to optimise connection quality. Requires membership with call permissions.',
-			responseSchema: z.array(RtcRegionResponse),
+			responseSchema: RtcRegionListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: 'Channels',
@@ -106,7 +108,7 @@ export function ChannelController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const channelRequestService = ctx.get('channelRequestService');
-			return ctx.json(await channelRequestService.listRtcRegions({userId, channelId}));
+			return ctx.json(await channelRequestService.listRtcRegions({viewer: viewerFromCtx(ctx), userId, channelId}));
 		},
 	);
 	app.patch(
@@ -120,25 +122,55 @@ export function ChannelController(app: HonoApp) {
 				}
 				const channelId = createChannelID(result.data.channel_id);
 				const existing = await ctx.get('channelService').channelData.operations.getChannel({
+					viewer: viewerFromCtx(ctx),
 					userId: ctx.get('user').id,
 					channelId,
+					skipNsfwValidation: true,
 				});
 				ctx.set('channelUpdateType', existing.type);
+				ctx.set('channelUpdateGuildId', existing.guildId?.toString());
 				return undefined;
 			},
 		}),
-		Validator('json', ChannelUpdateRequest, {
+		GatedJsonValidator(ChannelUpdateRequest, ChannelUpdateGatedRequest, {
 			pre: async (raw: unknown, ctx: Context<HonoEnv>) => {
 				const channelType = ctx.get('channelUpdateType');
 				if (channelType === undefined) {
-					throw new Error('Missing channel type for update validation');
+					throw new UnknownChannelError();
 				}
-				const body = isPlainObject(raw) ? raw : {};
-				return {...body, type: channelType};
+				const body = isRecord(raw) ? raw : {};
+				const requestedType = body.type;
+				if (
+					requestedType === undefined ||
+					requestedType === null ||
+					requestedType === channelType ||
+					!ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(channelType)
+				) {
+					return {...body, type: channelType};
+				}
+				if (typeof requestedType !== 'number' || !ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(requestedType)) {
+					throw new ChannelTypeConversionNotSupportedError();
+				}
+				return {...body, type: requestedType};
+			},
+			touchesGate: (body, ctx) => {
+				const channelType = ctx.get('channelUpdateType');
+				if (channelType === undefined) return false;
+				if (THREAD_ONLY_CHANNEL_TYPES.has(channelType)) return true;
+				return (
+					TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channelType) &&
+					isRecord(body) &&
+					THREAD_PARENT_DEFAULT_KEYS.some((key) => body[key] !== undefined)
+				);
+			},
+			active: (ctx) => {
+				const guildId = ctx.get('channelUpdateGuildId');
+				return guildId !== undefined && viewerActive(viewerFromCtx(ctx), guildId);
 			},
 		}),
 		OpenAPI({
 			operationId: 'update_channel',
+			requestSchema: ChannelUpdateRequestBody,
 			summary: 'Update channel settings',
 			description:
 				'Modifies channel properties such as name, description, topic, nsfw flag, and slowmode. Requires management permissions in the channel.',
@@ -151,16 +183,25 @@ export function ChannelController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const data = ctx.req.valid('json');
-			const clientFeatures = parseClientFeaturesHeader(ctx.req.header(CLIENT_FEATURES_HEADER));
+			const existingType = ctx.get('channelUpdateType');
+			const typeConversion =
+				existingType !== undefined && data.type !== existingType ? {from: existingType, to: data.type} : null;
+			const clientFeatures = ctx.get('clientFeatures');
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const channelRequestService = ctx.get('channelRequestService');
+			const {countryCode} = await lookupGeoip(ctx.req.raw);
 			return ctx.json(
 				await channelRequestService.updateChannel({
+					viewer: viewerFromCtx(ctx),
 					userId,
 					channelId,
 					data,
 					clientFeatures,
 					requestCache,
+					auditLogReason,
+					typeConversion,
+					countryCode,
 				}),
 			);
 		},
@@ -192,15 +233,25 @@ export function ChannelController(app: HonoApp) {
 			const {silent, delete_messages} = ctx.req.valid('query');
 			const body = ctx.req.valid('json');
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const channelRequestService = ctx.get('channelRequestService');
-			await ctx.get('channelService').channelData.operations.getChannel({userId, channelId});
+			await ctx
+				.get('channelService')
+				.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId});
 			if (delete_messages) {
 				await requireSudoMode(ctx, user, body);
 				await ctx.get('channelService').userMessageDeletion.deleteUserMessagesInScope(userId, {
 					channelIds: [channelId],
 				});
 			}
-			await channelRequestService.deleteChannel({userId, channelId, requestCache, silent});
+			await channelRequestService.deleteChannel({
+				viewer: viewerFromCtx(ctx),
+				userId,
+				channelId,
+				requestCache,
+				silent,
+				auditLogReason,
+			});
 			return ctx.body(null, 204);
 		},
 	);
@@ -214,7 +265,7 @@ export function ChannelController(app: HonoApp) {
 			operationId: 'add_group_dm_recipient',
 			summary: 'Add recipient to group DM',
 			description:
-				'Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires CAPTCHA verification.',
+				'Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires a solved captcha challenge (X-Captcha-Token).',
 			responseSchema: null,
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
@@ -262,7 +313,9 @@ export function ChannelController(app: HonoApp) {
 			const body = ctx.req.valid('json');
 			const requestCache = ctx.get('requestCache');
 			if (delete_messages && recipientId === userId) {
-				await ctx.get('channelService').channelData.operations.getChannel({userId, channelId});
+				await ctx
+					.get('channelService')
+					.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId});
 				await requireSudoMode(ctx, ctx.get('user'), body);
 				await ctx.get('channelService').userMessageDeletion.deleteUserMessagesInScope(userId, {
 					channelIds: [channelId],
@@ -295,8 +348,9 @@ export function ChannelController(app: HonoApp) {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const overwriteId = ctx.req.valid('param').overwrite_id;
 			const data = ctx.req.valid('json');
-			const clientFeatures = parseClientFeaturesHeader(ctx.req.header(CLIENT_FEATURES_HEADER));
+			const clientFeatures = ctx.get('clientFeatures');
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').channelData.operations.setChannelPermissionOverwrite({
 				userId,
 				channelId,
@@ -307,7 +361,9 @@ export function ChannelController(app: HonoApp) {
 					deny_: data.deny ? data.deny : 0n,
 				},
 				clientFeatures,
+				viewer: viewerFromCtx(ctx),
 				requestCache,
+				auditLogReason,
 			});
 			return ctx.body(null, 204);
 		},
@@ -332,9 +388,16 @@ export function ChannelController(app: HonoApp) {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const overwriteId = ctx.req.valid('param').overwrite_id;
 			const requestCache = ctx.get('requestCache');
-			await ctx
-				.get('channelService')
-				.channelData.operations.deleteChannelPermissionOverwrite({userId, channelId, overwriteId, requestCache});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx.get('channelService').channelData.operations.deleteChannelPermissionOverwrite({
+				userId,
+				channelId,
+				overwriteId,
+				clientFeatures: ctx.get('clientFeatures'),
+				viewer: viewerFromCtx(ctx),
+				requestCache,
+				auditLogReason,
+			});
 			return ctx.body(null, 204);
 		},
 	);

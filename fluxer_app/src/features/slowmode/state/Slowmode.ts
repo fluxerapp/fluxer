@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {makeAutoObservable} from 'mobx';
 
 const MAX_TRACKED_CHANNELS = 512;
@@ -28,10 +30,6 @@ class InvalidSlowmodeRateLimitError extends RangeError {
 	}
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function isValidTimestamp(value: unknown, now: number): value is number {
 	return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 && value <= now + RETENTION_MS;
 }
@@ -43,7 +41,7 @@ class Slowmode {
 
 	constructor() {
 		makeAutoObservable<this, 'nextPruneAt'>(this, {nextPruneAt: false}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -52,7 +50,7 @@ class Slowmode {
 		this.pruneExpired(Date.now());
 	}
 
-	recordMessageSend(channelId: string): void {
+	recordMessageSend(channelId: string): number {
 		const now = Date.now();
 		this.pruneExpired(now);
 		const current = this.getEntry(channelId);
@@ -60,17 +58,22 @@ class Slowmode {
 			explicitExpiresAt: current.explicitExpiresAt,
 			lastSendTimestamp: now,
 		});
+		return now;
 	}
 
-	updateSlowmodeTimestamp(channelId: string, timestamp: number): void {
+	updateSlowmodeTimestamp(channelId: string, timestamp: number | null): void {
 		const now = Date.now();
-		if (!isValidTimestamp(timestamp, now)) return;
+		let nextTimestamp = timestamp;
+		if (nextTimestamp !== null) {
+			if (!isValidTimestamp(nextTimestamp, now)) return;
+			nextTimestamp = Math.min(nextTimestamp, now);
+		}
 		this.pruneExpired(now);
 		const current = this.getEntry(channelId);
-		if (current.lastSendTimestamp === timestamp) return;
+		if (current.lastSendTimestamp === nextTimestamp) return;
 		this.setEntry(channelId, {
 			explicitExpiresAt: current.explicitExpiresAt,
-			lastSendTimestamp: timestamp,
+			lastSendTimestamp: nextTimestamp,
 		});
 	}
 

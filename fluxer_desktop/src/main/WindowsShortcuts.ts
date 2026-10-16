@@ -10,6 +10,7 @@ import {
 	WINDOWS_SHORTCUT_AUTHOR,
 	WINDOWS_TOAST_ACTIVATOR_CLSID,
 } from '@electron/common/DesktopIdentity';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 
 const requireModule = createRequire(import.meta.url);
 
@@ -82,22 +83,6 @@ interface ShellLinkBinding {
 	loadError: Error | null;
 }
 
-let cachedBinding: ShellLinkBinding | null = null;
-
-function loadWinShell(): ShellLinkBinding | null {
-	if (cachedBinding) return cachedBinding;
-	try {
-		cachedBinding = requireModule('@fluxer/win-shell') as ShellLinkBinding;
-	} catch (error) {
-		console.warn('[WindowsShortcuts] Failed to load @fluxer/win-shell', error);
-		return null;
-	}
-	if (cachedBinding.loadError) {
-		console.warn('[WindowsShortcuts] @fluxer/win-shell load error', cachedBinding.loadError);
-	}
-	return cachedBinding;
-}
-
 function lnkContainsString(lnkPath: string, needle: string): boolean {
 	let buf: Buffer;
 	try {
@@ -141,25 +126,12 @@ async function repairOneShortcut(
 
 async function repairWindowsShortcutsAsync(repairPaths: WindowsShortcutRepairPaths): Promise<void> {
 	const binding = loadWinShell();
-	if (!binding || !binding.createShortcut) {
+	if (!binding?.createShortcut) {
 		console.warn('[WindowsShortcuts] @fluxer/win-shell unavailable; skipping shortcut repair');
 		return;
 	}
 	const {createShortcut} = binding;
-	try {
-		if (fs.existsSync(repairPaths.rootShortcut)) {
-			const authorDir = path.dirname(repairPaths.authorShortcut);
-			fs.mkdirSync(authorDir, {recursive: true});
-			if (fs.existsSync(repairPaths.authorShortcut)) {
-				fs.rmSync(repairPaths.rootShortcut, {force: true});
-			} else {
-				fs.renameSync(repairPaths.rootShortcut, repairPaths.authorShortcut);
-			}
-		}
-	} catch (error) {
-		console.warn('[WindowsShortcuts] Failed to migrate root Start-Menu shortcut', error);
-	}
-	const shortcutPaths: Array<string> = [repairPaths.authorShortcut];
+	const shortcutPaths: Array<string> = [repairPaths.authorShortcut, repairPaths.rootShortcut];
 	const desktopDir = process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'Desktop') : '';
 	if (desktopDir) shortcutPaths.push(path.join(desktopDir, `${DESKTOP_APP_NAME}.lnk`));
 	if (process.env.APPDATA) {
@@ -186,3 +158,11 @@ export function repairWindowsShortcuts(): void {
 		console.warn('[WindowsShortcuts] Failed to repair Fluxer shortcuts', error);
 	});
 }
+
+const loadWinShell = loadOptionalNativeAddon<ShellLinkBinding>({
+	platform: 'win32',
+	load: () => requireModule('@fluxer/win-shell'),
+	logger: console,
+	level: 'warn',
+	unavailableMessage: '[WindowsShortcuts] Failed to load @fluxer/win-shell',
+});

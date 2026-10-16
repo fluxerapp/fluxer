@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '../../../BrandedTypes';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Logger} from '../../../Logger';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {User} from '../../../models/User';
-import type {ReadStateService} from '../../../read_state/ReadStateService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {MessageDispatchService} from './MessageDispatchService';
-import {isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageMentionService} from './MessageMentionService';
-import type {MessagePersistenceService} from './MessagePersistenceService';
-import {incrementDmMentionCounts} from './ReadStateHelpers';
 
 interface RecipientOpenState {
 	recipientId: UserID;
@@ -33,10 +33,17 @@ interface MentionProcessingResult {
 	mentionChannels: Array<GatewayChannelMention>;
 }
 
+function channelWithLastMessageId(channel: Channel, messageId: MessageID): Channel {
+	if (channel.lastMessageId != null && channel.lastMessageId >= messageId) {
+		return channel;
+	}
+	return new Channel({...channel.toRow(), last_message_id: messageId});
+}
+
 export class MessageProcessingService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private userCacheService: UserCacheService,
 		private gatewayService: IGatewayService,
 		private readStateService: ReadStateService,
@@ -64,23 +71,26 @@ export class MessageProcessingService {
 	async updateDMRecipients({
 		channel,
 		channelId,
+		messageId,
 		requestCache,
 	}: {
 		channel: Channel;
 		channelId: ChannelID;
+		messageId: MessageID;
 		requestCache: RequestCache;
 	}): Promise<void> {
 		if (channel.guildId || channel.type !== ChannelTypes.DM) return;
-		if (!channel.recipientIds || channel.recipientIds.size !== 2) return;
+		if (channel.recipientIds?.size !== 2) return;
 		const recipientIds = Array.from(channel.recipientIds);
 		const openStates = await this.batchCheckDmChannelOpen(recipientIds, channelId);
 		const closedRecipients = openStates.filter((state) => !state.isOpen);
 		if (closedRecipients.length === 0) return;
+		const snapshotChannel = channelWithLastMessageId(channel, messageId);
 		await Promise.all(
 			closedRecipients.map((state) =>
 				this.openDmAndDispatch({
 					recipientId: state.recipientId,
-					channel,
+					channel: snapshotChannel,
 					requestCache,
 				}),
 			),
@@ -156,7 +166,7 @@ export class MessageProcessingService {
 	}): Promise<MentionProcessingResult> {
 		const {channel, message, referencedMessageOnSend, allowedMentions, guild, canMentionEveryone, canMentionRoles} =
 			params;
-		if (message.authorId != null && isPersonalNotesChannel({userId: message.authorId, channelId: channel.id})) {
+		if (message.authorId != null && isPersonalNotesChannelId({userId: message.authorId, channelId: channel.id})) {
 			return {message, mentionChannels: []};
 		}
 		const content = message.content ?? '';
@@ -194,6 +204,9 @@ export class MessageProcessingService {
 	}
 
 	async repairMentionsOnRead(message: Message, sourceChannel?: Channel): Promise<Message> {
+		if ((message.flags & MessageFlags.IS_CROSSPOST) !== 0) {
+			return message;
+		}
 		if (
 			message.mentionedUserIds.size === 0 &&
 			message.mentionedRoleIds.size === 0 &&
@@ -206,7 +219,7 @@ export class MessageProcessingService {
 			}
 		}
 		const referencedMessage =
-			message.reference && message.mentionedUserIds.size > 0
+			message.reference?.messageId && message.mentionedUserIds.size > 0
 				? await this.channelRepository.messages.getMessage(message.reference.channelId, message.reference.messageId)
 				: null;
 		const repair = await this.mentionService.buildReadRepairMentionData({message, referencedMessage});
@@ -258,9 +271,8 @@ export class MessageProcessingService {
 		channel: Channel;
 		requestCache: RequestCache;
 		persistenceService: MessagePersistenceService;
-		dispatchService: MessageDispatchService;
 	}): Promise<Message> {
-		const {message, data, guild, hasPermission, channel, requestCache, persistenceService, dispatchService} = params;
+		const {message, data, guild, hasPermission, channel, persistenceService} = params;
 		const editResult = await persistenceService.handleNonAuthorEdit({
 			message,
 			data,
@@ -276,7 +288,7 @@ export class MessageProcessingService {
 				updatedRowData.attachments = editResult.updatedAttachments;
 			}
 			const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
-			await dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+			await dispatchMessageUpdateBroadcast({gatewayService: this.gatewayService, channel, message: updatedMessage});
 			return updatedMessage;
 		}
 		throw new CannotEditOtherUserMessageError();

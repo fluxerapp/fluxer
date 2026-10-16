@@ -2,6 +2,7 @@
 
 pub mod auto;
 pub mod config;
+pub mod json_catalog;
 pub mod llm;
 pub mod locales;
 pub mod openrouter;

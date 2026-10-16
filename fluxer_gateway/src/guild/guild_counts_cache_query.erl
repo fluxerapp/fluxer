@@ -31,8 +31,6 @@
 
 -export_type([guild_id/0, counts/0]).
 
--define(REMOTE_CALL_TIMEOUT_MS, 1000).
-
 -spec safe_local_call(term(), term()) -> term().
 safe_local_call(Request, Fallback) ->
     case ensure_started() of

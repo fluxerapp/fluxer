@@ -13,7 +13,6 @@
     forget_room_key_if_channel_idle_guild/4,
     forget_room_key_if_channel_empty_dm/3,
     channel_is_e2ee_active/2,
-    channel_is_e2ee_active_dm/2,
     join_downgrades_e2ee/4,
     voice_state_e2ee_capable/1,
     is_e2ee_enabled_for_guild/1,
@@ -125,10 +124,6 @@ pending_e2ee_capable(PendingData) ->
         true -> true;
         _ -> false
     end.
-
--spec channel_is_e2ee_active_dm(integer(), map()) -> boolean().
-channel_is_e2ee_active_dm(ChannelId, VoiceStates) ->
-    channel_is_e2ee_active(ChannelId, VoiceStates).
 
 -spec join_downgrades_e2ee(integer(), boolean(), boolean(), map()) -> boolean().
 join_downgrades_e2ee(ChannelId, E2EECapable, Bot, VoiceStates) ->

@@ -17,6 +17,7 @@ import type {SpectatorEntry} from '@app/features/voice/components/useStreamSpect
 import {resolveVoiceParticipantAvatarEntryVoiceState} from '@app/features/voice/components/VoiceParticipantDisplayState';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {VIEW_PROFILE_FOR_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {
 	autoUpdate,
 	FloatingPortal,
@@ -40,9 +41,10 @@ const SPECTATORS_DESCRIPTOR = msg({
 	message: 'Spectators',
 	comment: 'Title of the screen-share spectators popout listing users watching the stream.',
 });
-const VIEW_PROFILE_FOR_DESCRIPTOR = msg({
-	message: 'View profile for {displayName}',
-	comment: "Aria label on an avatar in the spectators popout. {displayName} is the participant's display name.",
+const SPECTATORS_WITH_COUNT_DESCRIPTOR = msg({
+	message: 'Spectators - {count}',
+	comment:
+		'Header of the screen-share spectators popout. {count} is the number of people currently watching the stream.',
 });
 
 interface StreamSpectatorsPopoutProps {
@@ -157,7 +159,7 @@ export const StreamSpectatorsPopout = observer(function StreamSpectatorsPopout({
 						>
 							<div className={styles.card} data-flx="voice.stream-spectators-popout.card">
 								<div className={styles.header} data-flx="voice.stream-spectators-popout.header">
-									{i18n._(SPECTATORS_DESCRIPTOR)} - {count}
+									{i18n._(SPECTATORS_WITH_COUNT_DESCRIPTOR, {count: i18n.number(count)})}
 								</div>
 								<div
 									className={styles.list}
@@ -247,6 +249,8 @@ const SpectatorRow = observer(function SpectatorRow({
 					onClose={onClose}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="stream-spectator-list"
+					source={{kind: 'participant'}}
 					data-flx="voice.stream-spectators-popout.handle-context-menu.voice-participant-context-menu"
 				/>
 			));

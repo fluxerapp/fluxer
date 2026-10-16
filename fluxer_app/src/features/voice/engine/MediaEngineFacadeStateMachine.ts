@@ -2,7 +2,7 @@
 
 import type {GatewayErrorCode} from '@fluxer/constants/src/GatewayConstants';
 import {GatewayErrorCodes} from '@fluxer/constants/src/GatewayConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MediaEngineFacadeConnectionTarget {
 	guildId: string | null;
@@ -14,9 +14,9 @@ export interface MediaEngineFacadePendingSessionRestore extends MediaEngineFacad
 	restoreStream: boolean;
 }
 
-export type MediaEngineFacadeLocalCleanupReason = 'disconnect' | 'channelMove' | 'logout' | 'cleanup' | null;
+type MediaEngineFacadeLocalCleanupReason = 'disconnect' | 'channelMove' | 'logout' | 'cleanup' | null;
 
-export interface MediaEngineFacadeMachineContext {
+interface MediaEngineFacadeMachineContext {
 	activeConnection: MediaEngineFacadeConnectionTarget | null;
 	pendingUserMove: MediaEngineFacadeConnectionTarget | null;
 	pendingSessionRestore: MediaEngineFacadePendingSessionRestore | null;
@@ -51,9 +51,6 @@ export type MediaEngineFacadeEvent =
 	| {type: 'cleanup.cleanupStarted'}
 	| {type: 'cleanup.reset'}
 	| {type: 'cleanup.complete'};
-
-export type MediaEngineFacadeStateValue = 'idle' | 'disconnecting' | 'channelMoving' | 'loggingOut' | 'cleaningUp';
-
 export type MediaEngineFacadeConnectRequestDecision =
 	| {type: 'noop'; reason: 'same-channel'}
 	| {type: 'start'}
@@ -84,18 +81,6 @@ export interface MediaEngineFacadeGatewayErrorInput {
 	channelId: string | null;
 }
 
-export const VOICE_CAMERA_USER_LIMIT_ERROR_CODE = 'VOICE_CAMERA_USER_LIMIT';
-
-export interface MediaEngineFacadeVoiceStateAckRejectionInput {
-	status?: string;
-	errorCode?: string;
-}
-
-export function shouldNotifyCameraUserLimitRejection(input: MediaEngineFacadeVoiceStateAckRejectionInput): boolean {
-	if (input.status !== 'rejected') return false;
-	return input.errorCode === VOICE_CAMERA_USER_LIMIT_ERROR_CODE;
-}
-
 export type MediaEngineFacadeGatewayErrorDecision =
 	| {type: 'ignore'}
 	| {
@@ -107,7 +92,10 @@ export type MediaEngineFacadeGatewayErrorDecision =
 			showUnavailableToast: boolean;
 			disconnectReason: 'server' | null;
 			toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | null;
+			p2pRefusal: MediaEngineFacadeP2pRefusal | null;
 	  };
+
+export type MediaEngineFacadeP2pRefusal = 'consent-required' | 'unavailable' | 'channel-full';
 
 export interface MediaEngineFacadeDeferredDisconnectInput {
 	connectionId: string;
@@ -125,27 +113,7 @@ export interface MediaEngineFacadeServerVoiceStateRemovalInput {
 	connecting: boolean;
 }
 
-export const NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT = 16;
-
-export function hasPlayedNativeVoiceReadySounds(
-	playedConnectionIds: ReadonlySet<string>,
-	connectionId: string | null,
-): boolean {
-	if (!connectionId) return false;
-	return playedConnectionIds.has(connectionId);
-}
-
-export function rememberNativeVoiceReadySounds(playedConnectionIds: Set<string>, connectionId: string | null): void {
-	if (!connectionId) return;
-	playedConnectionIds.add(connectionId);
-	while (playedConnectionIds.size > NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT) {
-		const oldest = playedConnectionIds.values().next().value;
-		if (oldest === undefined) break;
-		playedConnectionIds.delete(oldest);
-	}
-}
-
-export function createInitialMediaEngineFacadeContext(): MediaEngineFacadeMachineContext {
+function createInitialMediaEngineFacadeContext(): MediaEngineFacadeMachineContext {
 	return {
 		activeConnection: null,
 		pendingUserMove: null,
@@ -215,7 +183,7 @@ function resetAll(localCleanupReason: MediaEngineFacadeLocalCleanupReason): Medi
 	};
 }
 
-export const mediaEngineFacadeStateMachine = setup({
+const mediaEngineFacadeStateMachine = setup({
 	types: {} as {
 		context: MediaEngineFacadeMachineContext;
 		events: MediaEngineFacadeEvent;
@@ -372,7 +340,7 @@ export const mediaEngineFacadeStateMachine = setup({
 export type MediaEngineFacadeSnapshot = SnapshotFrom<typeof mediaEngineFacadeStateMachine>;
 
 export function createMediaEngineFacadeSnapshot(): MediaEngineFacadeSnapshot {
-	return getInitialSnapshot(mediaEngineFacadeStateMachine);
+	return initialTransition(mediaEngineFacadeStateMachine)[0];
 }
 
 export function transitionMediaEngineFacadeSnapshot(
@@ -380,10 +348,6 @@ export function transitionMediaEngineFacadeSnapshot(
 	event: MediaEngineFacadeEvent,
 ): MediaEngineFacadeSnapshot {
 	return transition(mediaEngineFacadeStateMachine, snapshot, event)[0] as MediaEngineFacadeSnapshot;
-}
-
-export function getMediaEngineFacadeStateValue(snapshot: MediaEngineFacadeSnapshot): MediaEngineFacadeStateValue {
-	return snapshot.value as MediaEngineFacadeStateValue;
 }
 
 export function selectMediaEngineConnectRequestDecision(
@@ -450,6 +414,8 @@ const voiceGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_MISSING_CONNECTION_ID,
 	GatewayErrorCodes.VOICE_TOKEN_FAILED,
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
+	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
+	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
 ]);
 
 const unavailableGatewayErrorCodes = new Set<GatewayErrorCode>([
@@ -469,6 +435,14 @@ const preConnectAbortGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_CONNECTION_LIMIT_REACHED,
 	GatewayErrorCodes.VOICE_MEMBER_TIMED_OUT,
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
+	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
+	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
+]);
+
+const p2pRefusalsByGatewayErrorCode = new Map<GatewayErrorCode, MediaEngineFacadeP2pRefusal>([
+	[GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED, 'consent-required'],
+	[GatewayErrorCodes.VOICE_P2P_UNAVAILABLE, 'unavailable'],
+	[GatewayErrorCodes.VOICE_CHANNEL_FULL, 'channel-full'],
 ]);
 
 export function selectMediaEngineGatewayErrorDecision(
@@ -495,6 +469,7 @@ export function selectMediaEngineGatewayErrorDecision(
 				showUnavailableToast: unavailableChannelId !== null,
 				disconnectReason: null,
 				toast: null,
+				p2pRefusal: null,
 			};
 		}
 		if (unavailableChannelId && input.channelId === unavailableChannelId) {
@@ -520,6 +495,7 @@ export function selectMediaEngineGatewayErrorDecision(
 		showUnavailableToast: unavailableChannelId !== null,
 		disconnectReason,
 		toast,
+		p2pRefusal: p2pRefusalsByGatewayErrorCode.get(input.code) ?? null,
 	};
 }
 
@@ -547,7 +523,8 @@ export function shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval
 	input: MediaEngineFacadeServerVoiceStateRemovalInput,
 ): boolean {
 	if (!isCurrentServerVoiceStateRemoval(input)) return false;
-	return input.connected || input.connecting || input.currentChannelId != null;
+	if (input.connected) return false;
+	return input.connecting || input.currentChannelId != null;
 }
 
 export function shouldCancelMediaEngineReconnectForServerVoiceStateRemoval(

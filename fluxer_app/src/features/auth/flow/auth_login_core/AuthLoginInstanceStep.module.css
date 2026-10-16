@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.inlineStep {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.instanceSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}

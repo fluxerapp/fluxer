@@ -5,12 +5,6 @@
 -typing([eqwalizer]).
 
 -export([voice_state_update/2]).
--export([confirm_voice_connection_from_livekit/2]).
--export([request_voice_token/4]).
--export([request_voice_token/5]).
--export([request_voice_token/6]).
--export([request_voice_token/8]).
--export([sweep_expired_pending_joins/1]).
 
 -export_type([
     guild_state/0,
@@ -32,61 +26,35 @@ voice_state_update(Request, State) ->
             handle_with_member(Context, UserId, State)
     end.
 
--spec confirm_voice_connection_from_livekit(map(), guild_state()) -> voice_reply().
-confirm_voice_connection_from_livekit(Request, State) ->
-    guild_voice_connection_confirm:confirm_voice_connection_from_livekit(Request, State).
-
--spec request_voice_token(integer(), integer(), integer(), map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, VoicePermissions) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, VoicePermissions
-    ).
-
--spec request_voice_token(integer(), integer(), integer(), binary() | null, map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-    ).
-
--spec request_voice_token(
-    integer(), integer(), integer(), binary() | null, map(), binary() | null
-) -> {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, TokenNonce) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, TokenNonce
-    ).
-
--spec request_voice_token(
-    integer(),
-    integer(),
-    integer(),
-    binary() | null,
-    map(),
-    binary() | null,
-    binary() | undefined | null,
-    binary() | undefined | null
-) -> {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnId, Perms, Nonce, Lat, Long) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, ConnId, Perms, Nonce, Lat, Long
-    ).
-
--spec sweep_expired_pending_joins(guild_state()) -> guild_state().
-sweep_expired_pending_joins(State) ->
-    guild_voice_connection_pending:sweep_expired_pending_joins(State).
-
 -spec handle_with_member(map(), integer(), guild_state()) ->
     voice_reply().
 handle_with_member(Context, UserId, State) ->
     VoiceStates = voice_state_utils:voice_states(State),
-    case guild_voice_member:find_member_by_user_id(UserId, State) of
+    case is_targeted_disconnect(Context) of
+        true ->
+            handle_disconnect(Context, VoiceStates, State);
+        false ->
+            handle_member_lookup(Context, UserId, VoiceStates, State)
+    end.
+
+-spec handle_member_lookup(map(), integer(), voice_state_map(), guild_state()) ->
+    voice_reply().
+handle_member_lookup(Context, UserId, VoiceStates, State) ->
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             {reply, gateway_errors:error(voice_member_not_found), State};
         Member ->
             handle_member_voice(Context, Member, VoiceStates, State)
     end.
+
+-spec is_targeted_disconnect(map()) -> boolean().
+is_targeted_disconnect(Context) ->
+    maps:get(channel_id, Context, undefined) =:= null andalso
+        (maps:get(connection_id, Context, undefined) =/= undefined orelse
+            guild_voice_connection_normalize:normalize_session_id(
+                maps:get(session_id, Context, undefined)
+            ) =/=
+                undefined).
 
 -spec handle_member_voice(map(), map(), voice_state_map(), guild_state()) ->
     voice_reply().
@@ -103,8 +71,8 @@ handle_member_voice(Context, Member, VoiceStates, State) ->
 -spec handle_disconnect(map(), voice_state_map(), guild_state()) ->
     voice_reply().
 handle_disconnect(Context, VoiceStates, State) ->
-    guild_voice_disconnect:handle_voice_disconnect(
-        maps:get(raw_connection_id, Context),
+    guild_voice_disconnect_user:handle_voice_disconnect(
+        maps:get(connection_id, Context),
         maps:get(session_id, Context),
         maps:get(user_id, Context),
         VoiceStates,
@@ -114,7 +82,7 @@ handle_disconnect(Context, VoiceStates, State) ->
 -spec handle_connect_or_update(map(), integer(), map(), voice_state_map(), guild_state()) ->
     voice_reply().
 handle_connect_or_update(Context, ChannelIdValue, Member, VoiceStates, State) ->
-    Channel = guild_voice_member:find_channel_by_id(ChannelIdValue, State),
+    Channel = guild_permissions_check:find_channel_by_id(ChannelIdValue, State),
     case Channel of
         undefined ->
             {reply, gateway_errors:error(voice_channel_not_found), State};

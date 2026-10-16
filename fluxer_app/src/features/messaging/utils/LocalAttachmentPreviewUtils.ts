@@ -2,12 +2,12 @@
 
 import {isEmbeddableImageFile} from '@app/features/messaging/utils/EmbeddableImageTypes';
 
-export const LOCAL_MEDIA_PREVIEW_MAX_BYTES = 10 * 1024 * 1024;
-export const LOCAL_VIDEO_THUMBNAIL_MAX_EDGE = 640;
+const LOCAL_MEDIA_PREVIEW_MAX_BYTES = 10 * 1024 * 1024;
+const LOCAL_VIDEO_THUMBNAIL_MAX_EDGE = 640;
 
 type LocalPreviewFile = Pick<File, 'name' | 'size' | 'type'>;
 
-export function canEagerlyPreviewLocalMedia(file: Pick<File, 'size'>): boolean {
+function canEagerlyPreviewLocalMedia(file: Pick<File, 'size'>): boolean {
 	return file.size <= LOCAL_MEDIA_PREVIEW_MAX_BYTES;
 }
 
@@ -36,4 +36,18 @@ export function getScaledMediaDimensions(
 		width: Math.max(1, Math.round(width * scale)),
 		height: Math.max(1, Math.round(height * scale)),
 	};
+}
+
+export function hasRenderableLocalPreview(attachment: {
+	file: LocalPreviewFile;
+	previewURL: string | null;
+	thumbnailURL: string | null;
+}): boolean {
+	if (attachment.file.type.startsWith('video/')) {
+		return attachment.thumbnailURL !== null;
+	}
+	if (isEmbeddableImageFile(attachment.file)) {
+		return attachment.previewURL !== null;
+	}
+	return false;
 }

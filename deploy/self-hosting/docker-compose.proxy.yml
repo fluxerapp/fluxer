@@ -1,0 +1,17 @@
+# Overlay for running Fluxer behind your own reverse proxy.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# Or set this once in .env and keep using plain `docker compose up -d`:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml
+#
+# Fluxer stops binding 80 and 443 and serves plain HTTP on one port instead.
+# That port already does all internal routing, so the proxy in front needs a
+# single rule: send everything to it. Terminate TLS there.
+services:
+  edge:
+    ports: !override
+      - "${FLUXER_EDGE_BIND:-127.0.0.1:8080}:8080"
+    environment:
+      FLUXER_EDGE_SITE_ADDRESS: ":8080"

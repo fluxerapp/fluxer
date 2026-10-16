@@ -1,0 +1,183 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Helm chart
+
+on:
+  pull_request:
+    paths:
+      - deploy/helm/**
+      - deploy/self-hosting/Caddyfile
+      - .github/workflows/helm.yaml
+  push:
+    branches: [main]
+    paths:
+      - deploy/helm/**
+      - deploy/self-hosting/Caddyfile
+      - .github/workflows/helm.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    name: Lint and render with Helm ${{ matrix.helm }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - helm: v3.19.0
+            sha256: a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496
+          - helm: v4.2.4
+            sha256: c306b46f719b0a4da32d0f78ee21bf90ce8d602f15b22ab753f0674d1670a7f3
+    env:
+      CHART: deploy/helm/fluxer
+      KUBECONFORM_VERSION: v0.7.0
+      KUBECONFORM_SHA256: c31518ddd122663b3f3aa874cfe8178cb0988de944f29c74a0b9260920d115d3
+      CRD_CATALOG: https://raw.githubusercontent.com/datreeio/CRDs-catalog/63669a570e231d4f1f8396d229a1de512bcf0a34/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json
+    steps:
+      - name: Checkout fluxer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install Helm and kubeconform
+        env:
+          HELM_VERSION: ${{ matrix.helm }}
+          HELM_SHA256: ${{ matrix.sha256 }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bin"
+          cd "$RUNNER_TEMP"
+          curl -fsSLo helm.tgz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          echo "${HELM_SHA256}  helm.tgz" | sha256sum -c -
+          tar -xzf helm.tgz linux-amd64/helm
+          mv linux-amd64/helm bin/helm
+          curl -fsSLo kubeconform.tgz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tgz" | sha256sum -c -
+          tar -xzf kubeconform.tgz kubeconform
+          mv kubeconform bin/kubeconform
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Lint, render and validate every CI values file
+        run: |
+          set -euo pipefail
+          command -v helm kubeconform python3
+          python3 -c 'import yaml'
+          helm version --short
+          shopt -s nullglob
+          files=("$CHART"/ci/*.yaml)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error::no values files under $CHART/ci"
+            exit 1
+          fi
+          for values in "${files[@]}"; do
+            echo "::group::$values"
+            helm lint --strict "$CHART" -f "$values"
+            helm template fluxer "$CHART" -n fluxer -f "$values" \
+              --api-versions cert-manager.io/v1 --api-versions gateway.networking.k8s.io/v1 > rendered.yaml
+            kubeconform -strict -summary -kubernetes-version 1.29.0 \
+              -schema-location default -schema-location "$CRD_CATALOG" rendered.yaml
+            if grep -qi 'example\.com' rendered.yaml; then
+              echo "::error::$values renders example.com"
+              exit 1
+            fi
+            if grep -Eqi 'change_?me' rendered.yaml; then
+              echo "::error::$values renders a CHANGE_ME placeholder"
+              exit 1
+            fi
+            echo "::endgroup::"
+          done
+
+      - name: Check the guards
+        run: |
+          set -euo pipefail
+          expect_failure() {
+            local message=$1
+            shift
+            if output=$(helm template fluxer "$CHART" "$@" 2>&1); then
+              echo "::error::rendered with $*"
+              exit 1
+            fi
+            if ! grep -qF "$message" <<<"$output"; then
+              echo "::error::expected \"$message\" for $*, got: $output"
+              exit 1
+            fi
+          }
+          d=domain=chat.example.test
+          expect_failure "domain must be set"
+          expect_failure "is a placeholder" --set $d --set secrets.values.FLUXER_SUDO_MODE_SECRET=CHANGE_ME
+          expect_failure "is a placeholder" --set $d --set-string 'secrets.extra.FLUXER_STRIPE_SECRET_KEY=<change-me>'
+          expect_failure "at least 32 characters" --set $d --set secrets.values.FLUXER_GATEWAY_RPC_AUTH_TOKEN=short
+          expect_failure "letters and digits only" --set $d --set-string 'secrets.values.FLUXER_VALKEY_PASSWORD=0123456789abcdef0123456789abcd:@'
+          expect_failure "worker.replicas must be 1" --set $d --set worker.replicas=2
+          expect_failure "at least 32 bytes" --set $d --set secrets.values.FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=c2hvcnQ=
+          expect_failure "set postgres.external.host" --set $d --set postgres.enabled=false
+          expect_failure "set together" --set $d --set secrets.values.FLUXER_VAPID_PUBLIC_KEY=abc
+          expect_failure "is a secret and would be stored in plain text" --set $d --set env.FLUXER_EMAIL_SMTP_PASSWORD=not-a-real-password
+          expect_failure "is a secret and would be stored in plain text" --set $d --set api.env.FLUXER_STRIPE_SECRET_KEY=not-a-real-key
+          expect_failure "holds a password" --set $d --set-string 'env.FLUXER_SEARCH_URL=https://user:pass@search.example.test'
+          expect_failure "Set livekit.nodeCIDRs" --set $d --set networkPolicy.ingressNamespaceSelector.matchLabels.name=ingress
+          expect_failure "set livekit.external.publicUrl" --set $d --set livekit.enabled=false --set livekit.external.url=http://livekit.voice.svc:7880
+          expect_failure "reserve a public address" --set $d --set livekit.expose=loadBalancer
+
+      - name: Check that a chart version bump restarts nothing
+        run: |
+          set -euo pipefail
+          cp -R "$CHART" "$RUNNER_TEMP/bumped"
+          sed -e 's/^version: .*/version: 99.0.0/' -e 's/^appVersion: .*/appVersion: "bumped"/' "$CHART/Chart.yaml" > "$RUNNER_TEMP/bumped/Chart.yaml"
+          helm template fluxer "$CHART" -n fluxer -f "$CHART/ci/existing-secret-values.yaml" > before.yaml
+          helm template fluxer "$RUNNER_TEMP/bumped" -n fluxer -f "$CHART/ci/existing-secret-values.yaml" > after.yaml
+          python3 - before.yaml after.yaml <<'PY'
+          import sys, yaml
+          def pods(path):
+              out = {}
+              for doc in yaml.safe_load_all(open(path)):
+                  if doc and doc.get('kind') in ('Deployment', 'StatefulSet'):
+                      spec = doc['spec']
+                      out[f"{doc['kind']}/{doc['metadata']['name']}"] = (spec['template'], spec['selector'], spec.get('volumeClaimTemplates'))
+              return out
+          before, after = pods(sys.argv[1]), pods(sys.argv[2])
+          if len(before) < 20:
+              sys.exit(f'only {len(before)} workloads rendered')
+          changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
+          if changed:
+              sys.exit('a chart version bump changes the pod template of: ' + ', '.join(changed))
+          print(f'{len(before)} workloads keep their pod template across a chart version bump')
+          PY
+
+      - name: Check the default resource requests
+        run: |
+          set -euo pipefail
+          helm template fluxer "$CHART" -n fluxer -f "$CHART/ci/default-values.yaml" > rendered.yaml
+          python3 - rendered.yaml <<'PY'
+          import sys, yaml
+          def cpu(v):
+              v = str(v)
+              return float(v[:-1]) if v.endswith('m') else float(v) * 1000
+          units = {'Ki': 2**10, 'Mi': 2**20, 'Gi': 2**30}
+          def mem(v):
+              v = str(v)
+              for unit, factor in units.items():
+                  if v.endswith(unit):
+                      return float(v[:-len(unit)]) * factor
+              return float(v)
+          total_cpu = total_mem = 0
+          for doc in yaml.safe_load_all(open(sys.argv[1])):
+              if not doc or doc.get('kind') not in ('Deployment', 'StatefulSet'):
+                  continue
+              replicas = doc['spec'].get('replicas', 1)
+              for container in doc['spec']['template']['spec']['containers']:
+                  requests = (container.get('resources') or {}).get('requests') or {}
+                  if 'cpu' not in requests or 'memory' not in requests:
+                      sys.exit(f"{doc['kind']}/{doc['metadata']['name']} has a container without cpu and memory requests")
+                  total_cpu += replicas * cpu(requests['cpu'])
+                  total_mem += replicas * mem(requests['memory'])
+          print(f"requests: {total_cpu:.0f}m cpu, {total_mem / 2**30:.2f}Gi memory")
+          if total_cpu > 1200 or total_mem > 4.5 * 2**30:
+              sys.exit('the default install requests more than 1200m cpu or 4.5Gi memory')
+          PY

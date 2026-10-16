@@ -1,14 +1,11 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
-	--pins-popout-max-height: min(calc(100vh - 7.5rem), 45rem);
 	--pins-popout-header-height: 4.25rem;
 	position: relative;
 	display: flex;
-	width: 30rem;
 	flex-direction: column;
-	min-height: 12.5rem;
-	max-height: var(--pins-popout-max-height);
+	box-sizing: border-box;
 	overflow: hidden;
 	border-radius: 0.5rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
@@ -28,10 +25,8 @@
 	flex: 1 1 0%;
 	display: flex;
 	flex-direction: column;
-	height: 100%;
 	min-height: 0;
 	overflow: hidden;
-	max-height: calc(var(--pins-popout-max-height) - var(--pins-popout-header-height));
 }
 
 .title {
@@ -45,4 +40,11 @@
 	height: 1.5rem;
 	width: 1.5rem;
 	color: var(--text-primary-muted);
+}
+
+:global(html.channel-pins-popout-resizing),
+:global(html.channel-pins-popout-resizing) * {
+	cursor: var(--channel-pins-popout-resize-cursor, nwse-resize) !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
 }

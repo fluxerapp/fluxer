@@ -7,16 +7,16 @@ import styles from '@app/features/channel/components/MemberListItem.module.css';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import Guilds from '@app/features/guild/state/Guilds';
 import {useMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
+import {useMemberListMobile} from '@app/features/member/hooks/useMemberListMobile';
 import {useMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {GroupDMMemberContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
 import {GuildMemberContextMenu} from '@app/features/ui/action_menu/GuildMemberContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {FocusRingWrapper} from '@app/features/ui/components/FocusRingWrapper';
 import {ListStatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
-import ContextMenu from '@app/features/ui/state/ContextMenu';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {User} from '@app/features/user/models/User';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
@@ -30,10 +30,9 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CrownIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import {autorun} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useMemo, useRef, useState} from 'react';
 
 const COMMUNITY_OWNER_DESCRIPTOR = msg({
 	message: 'Community owner',
@@ -53,12 +52,11 @@ interface MemberListItemProps {
 	guildMember?: GuildMember;
 	status?: StatusType;
 	customStatus?: CustomStatus | null;
+	isMobile?: boolean;
 	isOwner?: boolean;
 	roleColor?: string;
 	displayName?: string;
 	disableBackdrop?: boolean;
-	deferAvatarLoad?: boolean;
-	deferCustomStatusMedia?: boolean;
 	avatarMediaSize?: MediaProxyImageSize;
 }
 
@@ -71,12 +69,11 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 		guildMember,
 		status: providedStatus,
 		customStatus: providedCustomStatus,
+		isMobile: providedIsMobile,
 		isOwner = false,
 		roleColor,
 		displayName,
 		disableBackdrop = false,
-		deferAvatarLoad = false,
-		deferCustomStatusMedia = false,
 		avatarMediaSize,
 	} = props;
 	const itemRef = useRef<HTMLButtonElement>(null);
@@ -84,9 +81,9 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 		guildId: guildId ?? '',
 		channelId,
 		userId: user.id,
-		enabled: guildId !== undefined && providedStatus === undefined,
+		enabled: providedStatus === undefined,
 	});
-	const status = providedStatus ?? hookStatus;
+	const status = providedStatus !== undefined ? providedStatus : hookStatus;
 	const hookCustomStatus = useMemberListCustomStatus({
 		guildId: guildId ?? '',
 		channelId,
@@ -95,53 +92,60 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 	});
 	const memberListCustomStatus = providedCustomStatus !== undefined ? providedCustomStatus : hookCustomStatus;
 	const [contextMenuOpen, setContextMenuOpen] = useState(false);
+	const contextMenuTicketRef = useRef(0);
 	const isCurrentUser = user.id === Authentication.currentUserId;
-	const isTyping = TypingIndicator.isMemberListTyping(channelId, user.id, Authentication.currentUserId);
-	useEffect(() => {
-		const disposer = autorun(() => {
-			const contextMenu = ContextMenu.contextMenu;
-			const targetElement = contextMenu?.target.target;
-			const isNodeTarget = typeof Node !== 'undefined' && targetElement instanceof Node;
-			const isOpen = Boolean(contextMenu && isNodeTarget && itemRef.current?.contains(targetElement));
-			setContextMenuOpen(isOpen);
-		});
-		return () => {
-			disposer();
-		};
-	}, []);
+	const hookIsMobile = useMemberListMobile({
+		guildId: guildId ?? '',
+		channelId,
+		userId: user.id,
+		enabled: guildId !== undefined && providedIsMobile === undefined && !isCurrentUser,
+	});
+	const isMobile = isCurrentUser ? undefined : (providedIsMobile ?? hookIsMobile);
+	const isTyping = RollingTypingStore.isMemberListTyping(channelId, user.id, Authentication.currentUserId);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
 			event.stopPropagation();
-			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<>
-					{guildId ? (
-						<GuildMemberContextMenu
-							user={user}
-							onClose={onClose}
-							guildId={guildId}
-							channelId={channelId}
-							member={guildMember}
-							data-flx="channel.member-list-item.handle-context-menu.guild-member-context-menu"
-						/>
-					) : (
-						<GroupDMMemberContextMenu
-							userId={user.id}
-							channelId={channelId}
-							onClose={onClose}
-							data-flx="channel.member-list-item.handle-context-menu.group-dm-member-context-menu"
-						/>
-					)}
-				</>
-			));
+			const ticket = contextMenuTicketRef.current + 1;
+			contextMenuTicketRef.current = ticket;
+			setContextMenuOpen(true);
+			ContextMenuCommands.openFromEvent(
+				event,
+				({onClose}) => (
+					<>
+						{guildId ? (
+							<GuildMemberContextMenu
+								user={user}
+								onClose={onClose}
+								guildId={guildId}
+								channelId={channelId}
+								member={guildMember}
+								data-flx="channel.member-list-item.handle-context-menu.guild-member-context-menu"
+							/>
+						) : (
+							<GroupDMMemberContextMenu
+								userId={user.id}
+								channelId={channelId}
+								onClose={onClose}
+								data-flx="channel.member-list-item.handle-context-menu.group-dm-member-context-menu"
+							/>
+						)}
+					</>
+				),
+				{
+					onClose: () => {
+						if (contextMenuTicketRef.current === ticket) {
+							setContextMenuOpen(false);
+						}
+					},
+				},
+			);
 		},
 		[user, guildId, channelId, guildMember],
 	);
-	const ownerTitle = guildId ? i18n._(COMMUNITY_OWNER_DESCRIPTOR) : i18n._(GROUP_OWNER_DESCRIPTOR);
-	const hideOwnerCrown = guildId
-		? (Guilds.getGuild(guildId)?.features.has(GuildFeatures.HIDE_OWNER_CROWN) ?? false)
-		: false;
-	const showOwnerCrown = isOwner && !hideOwnerCrown;
+	const showOwnerCrown =
+		isOwner &&
+		!(guildId !== undefined && (Guilds.getGuild(guildId)?.features.has(GuildFeatures.HIDE_OWNER_CROWN) ?? false));
 	const nickname = displayName || NicknameUtils.getNickname(user, guildId, channelId);
 	const nameRef = useRef<HTMLSpanElement>(null);
 	const isNameOverflowing = useTextOverflow(nameRef, {content: nickname, measureTextRange: true});
@@ -211,10 +215,10 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								showOffline={isCurrentUser || isTyping}
 								guildId={guildId}
 								status={status}
+								isMobile={isMobile}
 								avatarUrl={memberAvatarUrl}
 								hoverAvatarUrl={memberHoverAvatarUrl}
 								mediaSize={avatarMediaSize}
-								deferImageLoad={deferAvatarLoad}
 								data-flx="channel.member-list-item.status-aware-avatar"
 							/>
 						</div>
@@ -229,7 +233,10 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								)}
 								{showOwnerCrown && (
 									<div className={styles.ownerIcon} data-flx="channel.member-list-item.owner-icon">
-										<Tooltip text={ownerTitle} data-flx="channel.member-list-item.tooltip">
+										<Tooltip
+											text={i18n._(guildId ? COMMUNITY_OWNER_DESCRIPTOR : GROUP_OWNER_DESCRIPTOR)}
+											data-flx="channel.member-list-item.tooltip"
+										>
 											<CrownIcon className={styles.crownIcon} data-flx="channel.member-list-item.crown-icon" />
 										</Tooltip>
 									</div>
@@ -246,7 +253,6 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								customStatus={memberListCustomStatus}
 								userId={user.id}
 								className={styles.memberCustomStatus}
-								deferMediaLoad={deferCustomStatusMedia}
 								data-flx="channel.member-list-item.member-custom-status"
 							/>
 						</div>
@@ -263,7 +269,6 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 			guildId={guildId}
 			guildMember={guildMember}
 			channelId={channelId}
-			key={user.id}
 			disableContextMenu
 			disableBackdrop={disableBackdrop}
 			profilePopoutAnimationType="profile-slide-inverted"

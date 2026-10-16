@@ -3,102 +3,129 @@ name: Tests
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  CARGO_PROFILE_DEV_DEBUG: none
+  CARGO_PROFILE_TEST_DEBUG: none
+  CARGO_INCREMENTAL: '0'
 
 jobs:
   typecheck:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
+        with:
+          save: 'true'
+
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
 
       - name: Run typecheck
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step typecheck
+        run: |
+          "$FLUXER_CI_BIN" ci --step typecheck
 
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
+      PNPM_TEST_WORKSPACE_CONCURRENCY: '2'
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
+
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
+
+      - name: Restore fluxer_app wasm artifacts
+        id: app-wasm
+        uses: ./.github/actions/app-wasm-cache
+        with:
+          mode: restore
 
       - name: Run tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step test
+        run: |
+          "$FLUXER_CI_BIN" ci --step test
+
+      - name: Save fluxer_app wasm artifacts
+        if: always() && github.ref == 'refs/heads/main' && steps.app-wasm.outputs.cache-hit != 'true'
+        uses: ./.github/actions/app-wasm-cache
+        with:
+          mode: save
 
   rust:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: stable
+          toolchain: "1.98.1"
           components: clippy, rustfmt
+          targets: x86_64-pc-windows-msvc
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Cache cargo
@@ -108,21 +135,64 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: rust-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          key: rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            rust-${{ runner.os }}-
+            rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --version 0.20.2 --locked
+
+      - name: Check Rust dependencies
+        run: cargo deny --locked check -D warnings
+
+      - name: Check libfluxwebp dependencies
+        run: cargo deny --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml --config deny.toml --locked check licenses bans sources
+
+      - name: Check desktop native dependencies
+        run: tools/ci/check-desktop-native-workspaces.sh dependencies
+
+      - name: Cache native media dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: /opt/fluxer-native
+          key: media-native-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}
 
       - name: Install native dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pkg-config \
             build-essential \
-            libcurl4-openssl-dev \
-            libvips-dev \
+            binutils \
+            clang \
+            cmake \
+            curl \
+            libaom-dev \
             libavfilter-dev \
+            libclang-dev \
+            libcurl4-openssl-dev \
+            libdav1d-dev \
+            libde265-dev \
+            libfido2-dev \
             libheif-dev \
-            libwebp-dev
+            liblcms2-dev \
+            libpipewire-0.3-dev \
+            libspa-0.2-dev \
+            libssl-dev \
+            libudev-dev \
+            libvips-dev \
+            libwebp-dev \
+            libyuv-dev \
+            meson \
+            nasm \
+            ninja-build \
+            pkg-config \
+            xz-utils \
+            yasm \
+            zlib1g-dev
+          sudo fluxer_media_proxy/tools/install-native-deps.sh /opt/fluxer-native
+          echo "PKG_CONFIG_PATH=/opt/fluxer-native/lib/pkgconfig:/opt/fluxer-native/lib64/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=/opt/fluxer-native/lib:/opt/fluxer-native/lib64" >> "$GITHUB_ENV"
+          echo "/opt/fluxer-native/bin" >> "$GITHUB_PATH"
 
       - name: Install Node.js dependencies
         run: pnpm --filter fluxer_admin install
@@ -130,236 +200,261 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+      - name: Check formatting (libfluxwebp)
+        run: cargo fmt --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml -- --check
+
+      - name: Check formatting (desktop native workspaces)
+        run: tools/ci/check-desktop-native-workspaces.sh fmt
+
       - name: Clippy (warnings as errors)
-        run: cargo clippy --workspace -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Clippy (desktop native workspaces on Linux and Windows backends, warnings as errors)
+        run: tools/ci/check-desktop-native-workspaces.sh clippy
+
+      - name: Verify the source-built ffmpeg CLI is on PATH
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          test "$(command -v ffmpeg)" = /opt/fluxer-native/bin/ffmpeg
+          ffmpeg -hide_banner -version
 
       - name: Run tests
-        run: cargo test --workspace
+        env:
+          FLUXER_REQUIRE_MEDIA_FIXTURES: "1"
+        run: cargo test --workspace --all-features --locked
+
+      - name: Run tests (libfluxcore)
+        run: cargo test --locked --manifest-path fluxer_app/rust/libfluxcore/Cargo.toml
+
+      - name: Run desktop native workspace tests on Linux
+        run: tools/ci/check-desktop-native-workspaces.sh test
 
   gateway:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
+
+      - name: Cache cargo (gateway NIFs)
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        with:
+          workspaces: |
+            fluxer_gateway/native/guild_member_list_oset_nif -> target
+            fluxer_gateway/native/push_markdown_plaintext_nif -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
 
       - name: Set up Erlang
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
           otp-version: '28'
-          rebar3-version: '3.24.0'
+          rebar3-version: '3.27.0'
 
-      - name: Cache rebar3 dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      - name: Restore rebar3 dependencies
+        id: rebar3-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            fluxer_gateway/_build
             ~/.cache/rebar3
-          key: rebar3-${{ runner.os }}-${{ hashFiles('fluxer_gateway/rebar.lock') }}
+            fluxer_gateway/_build
+            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
+            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
+          key: >-
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-${{ hashFiles('fluxer_gateway/rebar.lock',
+            'fluxer_gateway/rebar.config') }}
           restore-keys: |
-            rebar3-${{ runner.os }}-
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-
+
+      - name: Drop restored gateway build output
+        run: rm -rf fluxer_gateway/_build/default/lib/fluxer_gateway fluxer_gateway/_build/test/lib/fluxer_gateway
 
       - name: Check formatting
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_fmt
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_fmt
 
       - name: Compile
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_compile
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_compile
 
       - name: Run dialyzer
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_dialyzer
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_dialyzer
 
       - name: Run eunit tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_eunit
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_eunit
+
+      - name: Save rebar3 dependencies
+        if: always() && github.ref == 'refs/heads/main' && steps.rebar3-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            ~/.cache/rebar3
+            fluxer_gateway/_build
+            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
+            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
+          key: >-
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-${{ hashFiles('fluxer_gateway/rebar.lock',
+            'fluxer_gateway/rebar.config') }}
 
   knip:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
+
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
+
+      - name: Restore fluxer_app wasm artifacts
+        id: app-wasm
+        uses: ./.github/actions/app-wasm-cache
+        with:
+          mode: restore
 
       - name: Run knip
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step knip
+        run: |
+          "$FLUXER_CI_BIN" ci --step knip
+
+      - name: Save fluxer_app wasm artifacts
+        if: always() && github.ref == 'refs/heads/main' && steps.app-wasm.outputs.cache-hit != 'true'
+        uses: ./.github/actions/app-wasm-cache
+        with:
+          mode: save
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting and lint
+        run: pnpm exec biome ci .
+
+      - name: Lint JSX for browser-translation safety
+        run: pnpm exec eslint . --max-warnings 0
+
+      - name: Check data-flx attributes
+        run: pnpm --filter fluxer_app theming:data-flx:check
+
+  i18n:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile locale catalogs
+        run: pnpm i18n:compile
+
+      - name: Check drift of synced catalogs
+        run: |
+          if ! git diff --exit-code -- \
+            packages/errors/src/i18n/weblate \
+            fluxer_api/pkgs/email/src/email_i18n/weblate \
+            fluxer_api/pkgs/email/src/email_i18n/EmailI18nTypes.generated.ts \
+            fluxer_api/src/api/content_i18n/weblate; then
+            echo "::error::Static catalogs are out of sync with their sources. Run 'pnpm i18n:compile' and commit the result."
+            exit 1
+          fi
+
+  docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter fluxer_docs...
+
+      - name: Verify documentation matches the live API
+        run: pnpm --filter fluxer_docs verify
+
+      - name: Build documentation
+        run: pnpm --filter fluxer_docs build
 
   fonts:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install font tooling
         run: python3 -m pip install -r tools/fonts/requirements.txt
 
       - name: Verify shipped fonts match the lockfile
         run: python3 tools/fonts/build_fonts.py --verify
-
-  ci-scripts:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: stable
-          components: rustfmt
-
-      - name: Sync ci helper dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
-          --step sync
-
-      - name: Run ci helper tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
-          --step test
-
-  helm-and-scripts:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-
-      - name: Install helm
-        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
-
-      - name: Resolve Helm test build version
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver
-          --github-env
-          --env-name HELM_TEST_BUILD_VERSION
-
-      - name: Helm dependency update (all charts)
-        run: |
-          set -euo pipefail
-          for chart_dir in deploy/helm/*/; do
-            if [[ -f "${chart_dir}Chart.yaml" ]]; then
-              helm dependency update "$chart_dir"
-            fi
-          done
-
-      - name: Helm lint (all charts)
-        run: |
-          set -euo pipefail
-          FAILED=0
-          for chart_dir in deploy/helm/*/; do
-            if [[ -f "${chart_dir}Chart.yaml" ]]; then
-              echo "--- Linting ${chart_dir} ---"
-              VALUES_ARGS=()
-              if [[ -f "${chart_dir}values.yaml" ]]; then
-                VALUES_ARGS=(-f "${chart_dir}values.yaml")
-              fi
-              EXTRA_SETS=(--set-string "global.registry=${GHCR_REGISTRY}")
-              case "${chart_dir}" in
-                *gateway*)
-                  EXTRA_SETS+=(--set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *api*)
-                  EXTRA_SETS+=(--set-string app.name=api --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *app-proxy*)
-                  EXTRA_SETS+=(--set-string app.name=app-proxy --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *admin*)
-                  EXTRA_SETS+=(--set-string app.name=admin --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *marketing*)
-                  EXTRA_SETS+=(--set-string app.name=marketing --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *docs*)
-                  EXTRA_SETS+=(--set-string app.name=docs --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *media-proxy*)
-                  EXTRA_SETS+=(--set-string "mediaProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "mediaProxy.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *uploads*)
-                  EXTRA_SETS+=(--set-string app.name=uploads --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *worker*)
-                  EXTRA_SETS+=(--set-string "workerRealtime.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerRealtime.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.build.version=${HELM_TEST_BUILD_VERSION}")
-                  ;;
-                *gifs*|*messages*|*snowflakes*|*unfurl*|*users*)
-                  EXTRA_SETS+=(--set-string "svc.tag=${HELM_TEST_BUILD_VERSION}" --set-string "svc.build.version=${HELM_TEST_BUILD_VERSION}" --set-string svc.build.channel=stable)
-                  ;;
-              esac
-              if ! helm lint "$chart_dir" "${VALUES_ARGS[@]}" "${EXTRA_SETS[@]}" --strict; then
-                FAILED=1
-              fi
-            fi
-          done
-          if [[ "$FAILED" -ne 0 ]]; then
-            echo "::error::One or more Helm charts failed linting"
-            exit 1
-          fi
-
-      - name: Helm template (gateway)
-        run: |
-          set -euo pipefail
-          helm template fluxer-gateway deploy/helm/gateway \
-            -f deploy/helm/gateway/values.yaml \
-            --set-string "global.registry=${GHCR_REGISTRY}" \
-            --set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" \
-            --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}" \
-            -n fluxer > /dev/null
-          echo "Gateway chart templates render successfully."
-
-      - name: Validate gateway manifests with kubeconform
-        run: |
-          set -euo pipefail
-          helm template fluxer-gateway deploy/helm/gateway \
-            -f deploy/helm/gateway/values.yaml \
-            --set-string "global.registry=${GHCR_REGISTRY}" \
-            --set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" \
-            --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}" \
-            -n fluxer \
-            | docker run -i --rm ghcr.io/yannh/kubeconform:v0.6.7 \
-                -strict -summary -kubernetes-version 1.31.0

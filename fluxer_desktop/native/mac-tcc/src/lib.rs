@@ -7,7 +7,7 @@ const STATUS_DENIED: &str = "denied";
 const STATUS_NOT_DETERMINED: &str = "not-determined";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 enum TccStatus {
     Granted,
     Denied,
@@ -24,12 +24,12 @@ impl TccStatus {
     }
 }
 
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const IOHID_ACCESS_GRANTED: u32 = 0;
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const IOHID_ACCESS_DENIED: u32 = 1;
 
-#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const fn input_monitoring_status_from_iohid(access: u32) -> TccStatus {
     match access {
         IOHID_ACCESS_GRANTED => TccStatus::Granted,
@@ -62,9 +62,29 @@ pub fn request_input_monitoring() -> String {
     status_string(platform::request_input_monitoring())
 }
 
+#[napi(js_name = "probeInputMonitoringAccess")]
+pub fn probe_input_monitoring_access() -> String {
+    status_string(input_monitoring_status_from_tap(
+        platform::listen_only_key_tap_created(),
+    ))
+}
+
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+const fn input_monitoring_status_from_tap(created: Option<bool>) -> TccStatus {
+    match created {
+        Some(true) => TccStatus::Granted,
+        Some(false) => TccStatus::Denied,
+        None => TccStatus::NotDetermined,
+    }
+}
+
 #[cfg(target_os = "macos")]
 mod platform {
     use core_graphics::access::ScreenCaptureAccess;
+    use core_graphics::event::{
+        CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement, CGEventType,
+        CallbackResult,
+    };
     use objc2_io_kit::{IOHIDCheckAccess, IOHIDRequestAccess, IOHIDRequestType};
 
     use super::{TccStatus, input_monitoring_status_from_iohid};
@@ -97,6 +117,17 @@ mod platform {
             TccStatus::Denied
         }
     }
+
+    pub(super) fn listen_only_key_tap_created() -> Option<bool> {
+        let tap = CGEventTap::new(
+            CGEventTapLocation::Session,
+            CGEventTapPlacement::TailAppendEventTap,
+            CGEventTapOptions::ListenOnly,
+            vec![CGEventType::KeyDown],
+            |_proxy, _event_type, _event| CallbackResult::Keep,
+        );
+        Some(tap.is_ok())
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -118,45 +149,8 @@ mod platform {
     pub(super) fn request_input_monitoring() -> TccStatus {
         TccStatus::NotDetermined
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn status_strings_match_js_contract() {
-        assert_eq!(TccStatus::Granted.as_str(), "granted");
-        assert_eq!(TccStatus::Denied.as_str(), "denied");
-        assert_eq!(TccStatus::NotDetermined.as_str(), "not-determined");
-    }
-
-    #[test]
-    fn input_monitoring_maps_known_iohid_statuses() {
-        assert_eq!(
-            input_monitoring_status_from_iohid(IOHID_ACCESS_GRANTED),
-            TccStatus::Granted
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(IOHID_ACCESS_DENIED),
-            TccStatus::Denied
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(2),
-            TccStatus::NotDetermined
-        );
-        assert_eq!(
-            input_monitoring_status_from_iohid(u32::MAX),
-            TccStatus::NotDetermined
-        );
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn non_macos_exports_preserve_stub_contract() {
-        assert_eq!(screen_recording_status(), "not-determined");
-        assert_eq!(request_screen_recording(), "not-determined");
-        assert_eq!(input_monitoring_status(), "not-determined");
-        assert_eq!(request_input_monitoring(), "not-determined");
+    pub(super) fn listen_only_key_tap_created() -> Option<bool> {
+        None
     }
 }

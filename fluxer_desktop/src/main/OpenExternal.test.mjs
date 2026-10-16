@@ -57,7 +57,7 @@ describe('OpenExternal URL validation', () => {
 
 		assert.equal(shouldOpenExternalUrl('https://fluxer.app'), true);
 		assert.equal(shouldOpenExternalUrl('http://fluxer.app'), true);
-		assert.equal(shouldOpenExternalUrl('mailto:support@fluxer.app'), true);
+		assert.equal(shouldOpenExternalUrl('mailto:support@fluxer.com'), true);
 		assert.equal(shouldOpenExternalUrl('tel:+15551234567'), true);
 		assert.equal(shouldOpenExternalUrl('fluxer://invite/test'), true);
 	});

@@ -1,42 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from '../core/reducer';
+import {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
 	type VoiceEngineV2Transition,
-} from '../core/state';
+} from '@fluxer/voice_engine_v2/src/core/state';
 import {
 	errorToVoiceEngineV2Error,
 	type VoiceEngineV2CommandResult,
 	type VoiceEngineV2Implementation,
-} from '../implementations';
-import {getVoiceEngineV2CommandResourceKey, type VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2Capabilities, VoiceEngineV2Error, VoiceEngineV2ResourceKey} from '../protocol/types';
-import {commandResultToEvent} from './commandEvents';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import {
+	getVoiceEngineV2CommandResourceKey,
+	type VoiceEngineV2Command,
+} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2Capabilities,
+	VoiceEngineV2Error,
+	VoiceEngineV2ResourceKey,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {commandResultToEvent} from '@fluxer/voice_engine_v2/src/runtime/commandEvents';
 import {
 	assertEventLogRingInvariants,
 	VOICE_ENGINE_V2_EVENT_LOG_CAP,
 	type VoiceEngineV2EventLogEntry,
 	VoiceEngineV2EventLogRing,
 	type VoiceEngineV2EventLogSpillSink,
-} from './eventLogRing';
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {
 	canCoalesceVoiceEngineV2Events,
 	isVoiceEngineV2FrameReceivedEvent,
 	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
-} from './frameCoalescing';
+} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 import {
 	createVoiceEngineV2SystemClockPort,
-	createVoiceEngineV2SystemRandomPort,
 	type VoiceEngineV2ClockPort,
-	type VoiceEngineV2RandomPort,
-} from './platformPort';
+} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
-export type {VoiceEngineV2EventLogEntry, VoiceEngineV2EventLogSpillSink} from './eventLogRing';
+export type {
+	VoiceEngineV2EventLogEntry,
+	VoiceEngineV2EventLogSpillSink,
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 
 export const VOICE_ENGINE_V2_QUEUED_COMMANDS_CAP = 4096;
 export const VOICE_ENGINE_V2_RESOURCE_QUEUES_CAP = 256;
@@ -69,7 +77,6 @@ export type VoiceEngineV2RuntimeClock = VoiceEngineV2ClockPort;
 export interface VoiceEngineV2RuntimeOptions {
 	capabilities?: VoiceEngineV2Capabilities;
 	clock?: VoiceEngineV2ClockPort;
-	random?: VoiceEngineV2RandomPort;
 	eventLogCap?: number;
 	eventLogSpillSink: VoiceEngineV2EventLogSpillSink;
 	queuedCommandsCap?: number;
@@ -92,7 +99,6 @@ export class VoiceEngineV2Runtime {
 	private readonly diagnosticListeners = new Set<VoiceEngineV2RuntimeDiagnosticListener>();
 	private readonly unsubscribeImplementationEvents: () => void;
 	private readonly clock: VoiceEngineV2ClockPort;
-	private readonly random: VoiceEngineV2RandomPort;
 	private readonly eventLogRing: VoiceEngineV2EventLogRing;
 	private readonly eventLogSpillSink: VoiceEngineV2EventLogSpillSink;
 	private readonly queuedCommandsById = new Map<number, VoiceEngineV2Command>();
@@ -115,7 +121,6 @@ export class VoiceEngineV2Runtime {
 		options: VoiceEngineV2RuntimeOptions,
 	) {
 		this.clock = options.clock ?? createVoiceEngineV2SystemClockPort();
-		this.random = options.random ?? createVoiceEngineV2SystemRandomPort();
 		const cap = options.eventLogCap ?? VOICE_ENGINE_V2_EVENT_LOG_CAP;
 		assert.ok(Number.isInteger(cap), 'eventLogCap must be an integer');
 		assert.ok(cap >= 1, 'eventLogCap must be >= 1');
@@ -174,22 +179,6 @@ export class VoiceEngineV2Runtime {
 
 	get commandQueueSize(): number {
 		return this.queuedCommandsById.size;
-	}
-
-	get platformRandom(): VoiceEngineV2RandomPort {
-		return this.random;
-	}
-
-	get platformClock(): VoiceEngineV2ClockPort {
-		return this.clock;
-	}
-
-	get queuedCommandsCapacity(): number {
-		return this.queuedCommandsCap;
-	}
-
-	get resourceQueuesCapacity(): number {
-		return this.resourceQueuesCap;
 	}
 
 	get queueFullDropTotal(): number {
@@ -565,5 +554,3 @@ export function assertEventLogInvariants(runtime: VoiceEngineV2Runtime): void {
 	assert.ok(runtime instanceof VoiceEngineV2Runtime, 'assertEventLogInvariants requires a runtime instance');
 	runtime.verifyEventLogInvariants();
 }
-
-export {commandResultToEvent} from './commandEvents';

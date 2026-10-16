@@ -20,6 +20,10 @@ export const isKeybindAllowedDuringVoiceCallFullscreen = (action: KeybindCommand
 
 const COMPACT_CALL_TEXTAREA_ACTIONS = new Set<KeybindCommand>([
 	'message_focus_textarea',
+	'message_reply_prev',
+	'message_reply_next',
+	'message_edit_prev',
+	'message_edit_next',
 	'chat_focus_textarea',
 	'chat_upload',
 	'chat_toggle_emoji',

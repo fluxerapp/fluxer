@@ -2,13 +2,10 @@
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use objc2::rc::Retained;
 use objc2_core_foundation::CGRect;
 use objc2_core_media::{CMTime, CMTimeFlags};
 use objc2_foundation::NSString;
-use objc2_screen_capture_kit::{
-    SCDisplay, SCRunningApplication, SCStream, SCStreamConfiguration, SCWindow,
-};
+use objc2_screen_capture_kit::SCStreamConfiguration;
 
 pub use objc2_screen_capture_kit::SCStreamOutputType;
 
@@ -54,58 +51,6 @@ pub fn cmtime_seconds(value: i64, timescale: i32) -> CMTime {
     }
 }
 
-pub fn sc_running_application_process_id(app: &SCRunningApplication) -> i32 {
-    unsafe { app.processID() }
-}
-
-pub fn sc_running_application_bundle_identifier(app: &SCRunningApplication) -> Retained<NSString> {
-    unsafe { app.bundleIdentifier() }
-}
-
-pub fn sc_running_application_name(app: &SCRunningApplication) -> Retained<NSString> {
-    unsafe { app.applicationName() }
-}
-
-pub fn sc_display_frame(display: &SCDisplay) -> CGRect {
-    unsafe { display.frame() }
-}
-
-pub fn sc_window_owning_application(win: &SCWindow) -> Option<Retained<SCRunningApplication>> {
-    unsafe { win.owningApplication() }
-}
-
-pub fn sc_window_frame(win: &SCWindow) -> CGRect {
-    unsafe { win.frame() }
-}
-
-pub fn cfg_set_captures_audio(cfg: &SCStreamConfiguration, v: bool) {
-    unsafe { cfg.setCapturesAudio(v) }
-}
-pub fn cfg_set_excludes_current_process_audio(cfg: &SCStreamConfiguration, v: bool) {
-    unsafe { cfg.setExcludesCurrentProcessAudio(v) }
-}
-pub fn cfg_set_sample_rate(cfg: &SCStreamConfiguration, v: isize) {
-    unsafe { cfg.setSampleRate(v) }
-}
-pub fn cfg_set_channel_count(cfg: &SCStreamConfiguration, v: isize) {
-    unsafe { cfg.setChannelCount(v) }
-}
-pub fn cfg_set_queue_depth(cfg: &SCStreamConfiguration, v: isize) {
-    unsafe { cfg.setQueueDepth(v) }
-}
-pub fn cfg_set_width(cfg: &SCStreamConfiguration, v: usize) {
-    unsafe { cfg.setWidth(v) }
-}
-pub fn cfg_set_height(cfg: &SCStreamConfiguration, v: usize) {
-    unsafe { cfg.setHeight(v) }
-}
-pub fn cfg_set_shows_cursor(cfg: &SCStreamConfiguration, v: bool) {
-    unsafe { cfg.setShowsCursor(v) }
-}
-pub fn cfg_set_minimum_frame_interval(cfg: &SCStreamConfiguration, t: CMTime) {
-    unsafe { cfg.setMinimumFrameInterval(t) }
-}
-
 pub fn cfg_set_capture_dynamic_range_sdr_if_available(cfg: &SCStreamConfiguration) {
     use objc2::runtime::NSObjectProtocol;
     use objc2::sel;
@@ -125,57 +70,5 @@ pub fn cfg_set_stream_name_if_available(cfg: &SCStreamConfiguration, name: &NSSt
         unsafe {
             cfg.setStreamName(Some(name));
         }
-    }
-}
-
-pub fn sc_stream_add_stream_output(
-    stream: &SCStream,
-    output: &objc2::runtime::ProtocolObject<dyn objc2_screen_capture_kit::SCStreamOutput>,
-    kind: SCStreamOutputType,
-    queue: Option<&dispatch2::DispatchQueue>,
-) -> Result<(), Retained<objc2_foundation::NSError>> {
-    unsafe { stream.addStreamOutput_type_sampleHandlerQueue_error(output, kind, queue) }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use objc2_core_foundation::{CGPoint, CGSize};
-
-    #[test]
-    fn cgrect_intersection_handles_negative_and_disjoint() {
-        let a = CGRect {
-            origin: CGPoint { x: 0.0, y: 0.0 },
-            size: CGSize {
-                width: 10.0,
-                height: 10.0,
-            },
-        };
-        let b = CGRect {
-            origin: CGPoint { x: 5.0, y: 5.0 },
-            size: CGSize {
-                width: 10.0,
-                height: 10.0,
-            },
-        };
-        assert_eq!(25.0, cgrect_intersection_area(a, b));
-
-        let c = CGRect {
-            origin: CGPoint { x: 10.0, y: 10.0 },
-            size: CGSize {
-                width: -5.0,
-                height: -5.0,
-            },
-        };
-        assert_eq!(25.0, cgrect_intersection_area(a, c));
-
-        let d = CGRect {
-            origin: CGPoint { x: 20.0, y: 20.0 },
-            size: CGSize {
-                width: 2.0,
-                height: 2.0,
-            },
-        };
-        assert_eq!(0.0, cgrect_intersection_area(a, d));
     }
 }

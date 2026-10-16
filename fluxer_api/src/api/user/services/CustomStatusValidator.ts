@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiID, type EmojiID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {CustomStatusPayload} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import type {z} from 'zod';
-import {createEmojiID, type EmojiID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-
-type CustomStatusInput = z.infer<typeof CustomStatusPayload>;
 
 interface ValidatedCustomStatus {
 	text: string | null;
@@ -24,12 +22,14 @@ interface ValidatedCustomStatus {
 
 export class CustomStatusValidator {
 	constructor(
-		private readonly userAccountRepository: IUserAccountRepository,
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly userAccountRepository: UserRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
-	async validate(userId: UserID, payload: CustomStatusInput): Promise<ValidatedCustomStatus> {
+	async validate(userId: UserID, payload: CustomStatusPayload): Promise<ValidatedCustomStatus> {
+		const user = await this.userAccountRepository.findUnique(userId);
+		if (user) assertAccountNotLimited(user);
 		const text = payload.text ?? null;
 		contentModerationService.scanText(text, {
 			userId,
@@ -48,7 +48,6 @@ export class CustomStatusValidator {
 			if (!emoji) {
 				throw InputValidationError.fromCode('custom_status.emoji_id', ValidationErrorCodes.CUSTOM_EMOJI_NOT_FOUND);
 			}
-			const user = await this.userAccountRepository.findUnique(userId);
 			const ctx = createLimitMatchContext({user});
 			const hasGlobalExpressions = resolveLimitSafe(
 				this.limitConfigService.getConfigSnapshot(),

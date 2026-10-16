@@ -5,24 +5,11 @@
 
 -export([
     rebalance_ownership/1,
-    handoff_all_to_target/2,
-    perform_anti_entropy/1,
-    handle_anti_entropy_request/3,
-    handle_anti_entropy_digest_request/3,
-    merge_anti_entropy_entries/2,
-    schedule_anti_entropy/0,
-    cancel_anti_entropy_timer/1,
+    evict_local/2,
     start_nodedown_grace/2,
     cancel_nodedown_grace/2,
     process_nodedown_grace_expiry/2,
     cancel_all_grace_timers/1,
-    sanitize_pending_operations/1,
-    queue_pending_operation/3,
-    clear_pending_operation/2,
-    ensure_pending_retry_timer/1,
-    cancel_pending_retry_timer/1,
-    ensure_pending_state/1,
-    count_pending_operations/1,
     increment_generation/1
 ]).
 
@@ -40,45 +27,6 @@ rebalance_ownership(State) ->
         true -> State;
         false -> rebalance_ownership_inner(State)
     end.
-
--spec handoff_all_to_target(node(), state()) -> state().
-handoff_all_to_target(TargetNode, State) ->
-    Snapshot = presence_cache:local_snapshot(State),
-    maps:fold(
-        fun(UserId, Presence, AccState) ->
-            handoff_entry_to_target(TargetNode, UserId, Presence, AccState)
-        end,
-        State,
-        Snapshot
-    ).
-
--spec schedule_anti_entropy() -> reference().
-schedule_anti_entropy() ->
-    presence_cache_anti_entropy:schedule_anti_entropy().
-
--spec cancel_anti_entropy_timer(state()) -> ok.
-cancel_anti_entropy_timer(State) ->
-    presence_cache_anti_entropy:cancel_anti_entropy_timer(State).
-
--spec perform_anti_entropy(state()) -> state().
-perform_anti_entropy(State) ->
-    presence_cache_anti_entropy:perform_anti_entropy(State).
-
--spec handle_anti_entropy_request(node(), non_neg_integer(), state()) -> {noreply, state()}.
-handle_anti_entropy_request(FromNode, RemoteGeneration, State) ->
-    presence_cache_anti_entropy:handle_anti_entropy_request(
-        FromNode, RemoteGeneration, State
-    ).
-
--spec handle_anti_entropy_digest_request(node(), binary(), state()) -> {noreply, state()}.
-handle_anti_entropy_digest_request(FromNode, RemoteDigest, State) ->
-    presence_cache_anti_entropy:handle_anti_entropy_digest_request(
-        FromNode, RemoteDigest, State
-    ).
-
--spec merge_anti_entropy_entries(#{integer() => map()}, state()) -> state().
-merge_anti_entropy_entries(Entries, State) ->
-    presence_cache_anti_entropy:merge_anti_entropy_entries(Entries, State).
 
 -spec start_nodedown_grace(node(), state()) -> state().
 start_nodedown_grace(Node, State) ->
@@ -117,33 +65,10 @@ cancel_all_grace_timers(State) ->
     ),
     ok.
 
--spec sanitize_pending_operations(term()) -> pending_operations().
-sanitize_pending_operations(PendingOperations) ->
-    presence_cache_pending:sanitize_pending_operations(PendingOperations).
-
--spec ensure_pending_state(state()) -> state().
-ensure_pending_state(State) ->
-    presence_cache_pending:ensure_pending_state(State).
-
--spec count_pending_operations(state()) -> non_neg_integer().
-count_pending_operations(State) ->
-    presence_cache_pending:count_pending_operations(State).
-
--spec queue_pending_operation(integer(), pending_operation(), state()) -> state().
-queue_pending_operation(UserId, Operation, State) ->
-    presence_cache_pending:queue_pending_operation(UserId, Operation, State).
-
--spec clear_pending_operation(integer(), state()) -> state().
-clear_pending_operation(UserId, State) ->
-    presence_cache_pending:clear_pending_operation(UserId, State).
-
--spec ensure_pending_retry_timer(state()) -> state().
-ensure_pending_retry_timer(State) ->
-    presence_cache_pending:ensure_pending_retry_timer(State).
-
--spec cancel_pending_retry_timer(state()) -> ok.
-cancel_pending_retry_timer(State) ->
-    presence_cache_pending:cancel_pending_retry_timer(State).
+-spec evict_local(integer(), state()) -> state().
+evict_local(UserId, State) ->
+    {_Reply, NewState} = presence_cache_shards:forward_delete(UserId, State),
+    increment_generation(NewState).
 
 -spec increment_generation(state()) -> state().
 increment_generation(State) ->
@@ -235,18 +160,6 @@ apply_op_to_node(TargetNode, UserId, delete, State) ->
             remote_apply_op(TargetNode, {delete_local, UserId}, State)
     end.
 
--spec handoff_entry_to_target(node(), integer(), map(), state()) -> state().
-handoff_entry_to_target(TargetNode, _UserId, _Presence, State) when TargetNode =:= node() ->
-    State;
-handoff_entry_to_target(TargetNode, UserId, Presence, State) ->
-    case remote_apply_op(TargetNode, {put_local, UserId, Presence}, State) of
-        {ok, State1} ->
-            {_Reply, State2} = presence_cache:delete_local(UserId, State1),
-            State2;
-        {error, State1} ->
-            State1
-    end.
-
 -spec remote_apply_op(node(), term(), state()) -> {ok | error, state()}.
 remote_apply_op(TargetNode, Request, State) ->
     case presence_cache_bulk:safe_remote_call(TargetNode, Request, {error, unavailable}) of
@@ -266,8 +179,7 @@ finalize_rebalance(UserId, {put, _Presence}, OwnerNodes, true, State) ->
         true ->
             {ok, State};
         false ->
-            {_Reply, State1} = presence_cache:delete_local(UserId, State),
-            {ok, State1}
+            {ok, evict_local(UserId, State)}
     end;
 finalize_rebalance(_UserId, {put, _Presence}, _OwnerNodes, false, State) ->
     {error, State}.

@@ -5,6 +5,9 @@ import type {BaseMediaProps} from '@app/features/channel/components/embeds/media
 import styles from '@app/features/channel/components/embeds/media/VoiceMessagePlayer.module.css';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -16,7 +19,6 @@ import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_p
 import {useMediaPlayer} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
 import {useMediaProgress} from '@app/features/voice/components/media_player/hooks/useMediaProgress';
 import {useMediaVolume} from '@app/features/voice/components/media_player/hooks/useMediaVolume';
-import {AUDIO_PLAYBACK_RATES} from '@app/features/voice/components/media_player/utils/MediaConstants';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -32,8 +34,11 @@ const VOICE_MESSAGE_PLAYER_DESCRIPTOR = msg({
 	comment: 'Short label in the channel and chat voice message player. Keep it concise.',
 });
 const logger = new Logger('VoiceMessagePlayer');
+const WAVEFORM_BAR_COUNT = 32;
+const VOICE_PLAYBACK_RATE_STEPS = [0.75, 1, 1.5, 2] as const;
+const voicePlaybackStops = new Map<object, () => void>();
 
-export interface VoiceMessagePlayerProps extends BaseMediaProps {
+interface VoiceMessagePlayerProps extends BaseMediaProps {
 	src: string;
 	title?: string;
 	duration?: number;
@@ -45,11 +50,12 @@ export interface VoiceMessagePlayerProps extends BaseMediaProps {
 }
 
 function decodeWaveform(waveform: string): Array<number> {
+	if (!waveform) return [];
 	try {
 		const decoded = atob(waveform);
 		const values: Array<number> = [];
 		for (let i = 0; i < decoded.length; i++) {
-			values.push(decoded.charCodeAt(i));
+			values.push(decoded.charCodeAt(i) / 255);
 		}
 		return values;
 	} catch (error) {
@@ -58,23 +64,44 @@ function decodeWaveform(waveform: string): Array<number> {
 	}
 }
 
-function normaliseWaveform(values: Array<number>): Array<number> {
-	if (values.length === 0) return values;
-	let maxValue = 0;
-	for (let i = 0; i < values.length; i++) {
-		if (values[i] > maxValue) {
-			maxValue = values[i];
-		}
+function resampleWaveform(samples: ReadonlyArray<number>, barCount: number): Array<number> {
+	if (samples.length === barCount) return [...samples];
+	if (samples.length < barCount) {
+		return [...samples, ...new Array<number>(barCount - samples.length).fill(0)];
 	}
-	if (maxValue <= 0) return values;
-	return values.map((value) => Math.min(255, Math.round((value / maxValue) * 255)));
+	const ratio = samples.length / barCount;
+	const resampled: Array<number> = [];
+	let cursor = 0;
+	while (resampled.length < barCount) {
+		const boundary = Math.round((resampled.length + 1) * ratio);
+		let total = 0;
+		let taken = 0;
+		for (let i = cursor; i < boundary && i < samples.length; i++) {
+			total += samples[i];
+			taken++;
+		}
+		resampled.push(taken > 0 ? total / taken : 0);
+		cursor = boundary;
+	}
+	return resampled;
 }
 
-function formatTime(time: number): string {
-	if (!Number.isFinite(time)) return '0:00';
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.floor(time % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+function countPlayedBars(progressPercent: number, barCount: number): number {
+	if (barCount <= 0) return 0;
+	return Math.max(0, Math.min(barCount, Math.round((progressPercent / 100) * barCount)));
+}
+
+function waveformBarHeightPercent(value: number): number {
+	const clamped = Math.max(0, Math.min(1, value));
+	return ((22 * clamped + 2) / 24) * 100;
+}
+
+function formatTime(time: number, locale: string): string {
+	const minutes = Number.isFinite(time) ? Math.floor(time / 60) : 0;
+	const seconds = Number.isFinite(time) ? Math.floor(time % 60) : 0;
+	const minutesLabel = getCachedNumberFormat(locale, {useGrouping: false}).format(minutes);
+	const secondsLabel = getCachedNumberFormat(locale, {minimumIntegerDigits: 2, useGrouping: false}).format(seconds);
+	return `${minutesLabel}:${secondsLabel}`;
 }
 
 const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
@@ -94,12 +121,15 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
+		const handleMediaError = useAttachmentRefreshOnError(effectiveSrc);
 		const [hasStarted, setHasStarted] = useState(false);
+		const [wantsMetadata, setWantsMetadata] = useState(false);
 		const [prePlayCurrentTime, setPrePlayCurrentTime] = useState(0);
 		const pendingPlayRef = useRef(false);
 		const pendingSeekPercentageRef = useRef<number | null>(null);
-		const {mediaRef, state, play, toggle, setPlaybackRate} = useMediaPlayer({
-			persistVolume: true,
+		const instanceKeyRef = useRef({});
+		const {mediaRef, state, play, pause, toggle, setPlaybackRate} = useMediaPlayer({
+			mediaKind: 'voice-message',
 		});
 		const {currentTime, duration, progress, seekToPercentage} = useMediaProgress({
 			mediaRef,
@@ -130,27 +160,26 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 			},
 			[message, messageViewContext?.channel, src, contentHash, attachmentId, onDelete, snapshotIndex],
 		);
-		const waveformBars = useMemo(() => normaliseWaveform(decodeWaveform(waveform)), [waveform]);
-		const waveformValues = waveformBars.length > 0 ? waveformBars : new Array(48).fill(128);
-		const MAX_WAVEFORM_BARS = 32;
-		const downsampledWaveform = useMemo(() => {
-			if (waveformValues.length <= MAX_WAVEFORM_BARS) return waveformValues;
-			const result: Array<number> = [];
-			const step = waveformValues.length / MAX_WAVEFORM_BARS;
-			for (let i = 0; i < MAX_WAVEFORM_BARS; i++) {
-				const start = Math.floor(i * step);
-				const end = Math.floor((i + 1) * step);
-				let sum = 0;
-				for (let j = start; j < end; j++) {
-					sum += waveformValues[j];
-				}
-				result.push(Math.round(sum / (end - start)));
-			}
-			return result;
-		}, [waveformValues]);
+		const waveformBars = useMemo(() => resampleWaveform(decodeWaveform(waveform), WAVEFORM_BAR_COUNT), [waveform]);
 		const displayDuration = duration > 0 ? duration : (initialDuration ?? 0);
 		const isLoading = hasStarted && state.isBuffering;
 		const isActive = state.isPlaying || isLoading;
+		useEffect(() => {
+			const instanceKey = instanceKeyRef.current;
+			voicePlaybackStops.set(instanceKey, pause);
+			return () => {
+				voicePlaybackStops.delete(instanceKey);
+			};
+		}, [pause]);
+		useEffect(() => {
+			if (!state.isPlaying) return;
+			const instanceKey = instanceKeyRef.current;
+			for (const [key, stop] of voicePlaybackStops) {
+				if (key !== instanceKey) {
+					stop();
+				}
+			}
+		}, [state.isPlaying]);
 		useEffect(() => {
 			if (hasStarted && pendingPlayRef.current) {
 				const timer = setTimeout(() => {
@@ -188,6 +217,9 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 				media.removeEventListener('durationchange', applyPendingSeek);
 			};
 		}, [hasStarted, mediaRef]);
+		const handleContainerMouseEnter = useCallback(() => {
+			setWantsMetadata(true);
+		}, []);
 		const handlePlayToggle = useCallback(
 			(e: React.MouseEvent) => {
 				e.preventDefault();
@@ -257,28 +289,31 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const displayCurrentTime = !hasStarted && displayDuration > 0 ? prePlayCurrentTime : currentTime;
 		const displayProgress =
 			!hasStarted && displayDuration > 0 ? (prePlayCurrentTime / displayDuration) * 100 : progress;
+		const playedBarCount = countPlayedBars(displayProgress, waveformBars.length);
 		const waveformElements = useMemo(
 			() =>
-				downsampledWaveform.map((value, index) => {
-					const height = Math.max(8, Math.round((value / 255) * 100));
-					const barProgress = ((index + 0.5) / downsampledWaveform.length) * 100;
-					const isPast = barProgress <= displayProgress;
-					return (
-						<span
-							key={`waveform-${index}`}
-							className={clsx(styles.waveformBar, isPast && styles.waveformBarPast)}
-							style={{height: `${height}%`}}
-							data-flx="channel.embeds.media.voice-message-player.waveform-elements.waveform-bar"
-						/>
-					);
-				}),
-			[displayProgress, downsampledWaveform],
+				waveformBars.map((value, index) => (
+					<span
+						key={`waveform-${index}`}
+						className={clsx(styles.waveformBar, index < playedBarCount && styles.waveformBarPast)}
+						style={{height: `${waveformBarHeightPercent(value)}%`}}
+						data-flx="channel.embeds.media.voice-message-player.waveform-elements.waveform-bar"
+					/>
+				)),
+			[playedBarCount, waveformBars],
 		);
+		const hasBegunPlayback = hasStarted || displayCurrentTime > 0;
+		const remainingSeconds = Math.max(0, Math.ceil(displayDuration - displayCurrentTime));
+		const readoutText =
+			displayDuration > 0
+				? formatTime(hasBegunPlayback ? remainingSeconds : Math.ceil(displayDuration), i18n.locale)
+				: '--:--';
 		const isMobile = MobileLayout.enabled;
 		return (
 			<motion.div
 				className={clsx(styles.container, isActive && styles.containerActive)}
 				onContextMenu={handleContextMenu}
+				onMouseEnter={handleContainerMouseEnter}
 				role="region"
 				aria-label={i18n._(VOICE_MESSAGE_PLAYER_DESCRIPTOR)}
 				initial={false}
@@ -290,8 +325,9 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 			>
 				<audio
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
-					src={hasStarted ? effectiveSrc : undefined}
-					preload="none"
+					src={hasStarted || wantsMetadata ? resolveDesktopCrossOriginMediaURL(effectiveSrc) : undefined}
+					preload={wantsMetadata ? 'metadata' : 'none'}
+					onError={handleMediaError}
 					data-flx="channel.embeds.media.voice-message-player.audio"
 				>
 					<track kind="captions" data-flx="channel.embeds.media.voice-message-player.track" />
@@ -351,6 +387,11 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					aria-valuenow={Math.round(displayProgress)}
 					aria-valuemin={0}
 					aria-valuemax={100}
+					aria-valuetext={
+						displayDuration > 0
+							? `${formatTime(displayCurrentTime, i18n.locale)} / ${formatTime(displayDuration, i18n.locale)}`
+							: undefined
+					}
 					data-flx="channel.embeds.media.voice-message-player.waveform-container.waveform-click"
 				>
 					{waveformElements}
@@ -366,28 +407,26 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: 'easeOut'}}
 					data-flx="channel.embeds.media.voice-message-player.timestamp"
 				>
-					{formatTime(displayCurrentTime)} / {formatTime(displayDuration)}
+					{readoutText}
 				</motion.span>
+				<MediaPlaybackRate
+					rate={state.playbackRate}
+					onRateChange={setPlaybackRate}
+					rates={VOICE_PLAYBACK_RATE_STEPS}
+					size="small"
+					className={styles.speedControl}
+					data-flx="channel.embeds.media.voice-message-player.speed-control"
+				/>
 				{!isMobile && (
-					<>
-						<MediaPlaybackRate
-							rate={state.playbackRate}
-							onRateChange={setPlaybackRate}
-							rates={AUDIO_PLAYBACK_RATES}
-							size="small"
-							className={styles.speedControl}
-							data-flx="channel.embeds.media.voice-message-player.speed-control"
-						/>
-						<MediaVerticalVolumeControl
-							volume={volume}
-							isMuted={isMuted}
-							onVolumeChange={setVolume}
-							onToggleMute={toggleMute}
-							iconSize={16}
-							className={styles.volumeControl}
-							data-flx="channel.embeds.media.voice-message-player.volume-control"
-						/>
-					</>
+					<MediaVerticalVolumeControl
+						volume={volume}
+						isMuted={isMuted}
+						onVolumeChange={setVolume}
+						onToggleMute={toggleMute}
+						iconSize={16}
+						className={styles.volumeControl}
+						data-flx="channel.embeds.media.voice-message-player.volume-control"
+					/>
 				)}
 			</motion.div>
 		);

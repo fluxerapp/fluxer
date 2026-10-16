@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const CAMERA_PERMISSION_DENIED_ERROR_NAME = 'VoiceEngineV2AppCameraPermissionDeniedError';
+const CAMERA_PERMISSION_DENIED_ERROR_NAME = 'VoiceEngineV2AppCameraPermissionDeniedError';
 
 export function buildVoiceEngineV2AppCameraPermissionDeniedError(): Error {
 	const error = new Error('Camera permission denied') as Error & {code: string; capability: string};

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface TooltipEnvironment {
 	disabled: boolean;
@@ -59,7 +59,7 @@ export interface TooltipModel {
 	shouldRender: boolean;
 }
 
-export const DEFAULT_TOOLTIP_ENVIRONMENT: TooltipEnvironment = {
+const DEFAULT_TOOLTIP_ENVIRONMENT: TooltipEnvironment = {
 	disabled: false,
 	mobileEnabled: false,
 	contextMenuOpen: false,
@@ -172,7 +172,7 @@ const tooltipStateTransitions = {
 	'tooltip.dismiss': {target: 'routing', actions: 'dismiss'},
 } as const;
 
-export const tooltipStateMachine = setup({
+const tooltipStateMachine = setup({
 	types: {} as {
 		context: TooltipMachineContext;
 		events: TooltipMachineEvent;
@@ -243,7 +243,7 @@ export const tooltipStateMachine = setup({
 export type TooltipSnapshot = SnapshotFrom<typeof tooltipStateMachine>;
 
 export function createTooltipSnapshot(input: TooltipMachineInput = {}): TooltipSnapshot {
-	return getInitialSnapshot(tooltipStateMachine, input);
+	return initialTransition(tooltipStateMachine, input)[0];
 }
 
 export function transitionTooltipSnapshot(snapshot: TooltipSnapshot, event: TooltipMachineEvent): TooltipSnapshot {

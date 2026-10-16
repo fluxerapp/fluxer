@@ -78,10 +78,6 @@
 	opacity: 1;
 }
 
-.mediaImageHidden {
-	opacity: 0;
-}
-
 .mediaBlurred {
 	filter: blur(0.75rem);
 	opacity: 0.15;
@@ -121,7 +117,7 @@
 }
 
 .playButton svg {
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 }
 
 .audioPlaceholder {
@@ -156,6 +152,6 @@
 	padding: 0.25rem 0.5rem;
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	line-height: 1;
 }

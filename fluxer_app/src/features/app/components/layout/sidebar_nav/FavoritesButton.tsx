@@ -3,6 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/app/components/layout/GuildsLayout.module.css';
+import {resolveGuildListIndicatorBarTarget} from '@app/features/app/components/layout/sidebar_nav/GuildListIndicator';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
@@ -15,7 +16,6 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {useLingui} from '@lingui/react/macro';
 import {StarIcon} from '@phosphor-icons/react';
@@ -63,12 +63,7 @@ export const FavoritesButton = observer(({className}: FavoritesButtonProps = {})
 		));
 	};
 	const shouldShowHoverState = isHovering || contextMenuOpen;
-	const indicatorHeight =
-		(() => {
-			if (isSelected) return 40;
-			if (shouldShowHoverState) return 20;
-			return 8;
-		})() * getAppZoomFactor();
+	const indicatorTarget = resolveGuildListIndicatorBarTarget({isSelected, showHoverState: shouldShowHoverState});
 	const isActive = shouldShowHoverState || isSelected;
 	if (!Accessibility.showFavorites) {
 		return null;
@@ -103,8 +98,8 @@ export const FavoritesButton = observer(({className}: FavoritesButtonProps = {})
 								<motion.span
 									className={styles.guildIndicatorBar}
 									initial={false}
-									animate={{opacity: 1, scale: 1, height: indicatorHeight}}
-									exit={{opacity: 0, scale: 0}}
+									animate={indicatorTarget}
+									exit={{opacity: 0}}
 									transition={{duration: 0.2, ease: [0.25, 0.1, 0.25, 1]}}
 									data-flx="app.sidebar-nav.favorites-button.guild-indicator-bar"
 								/>

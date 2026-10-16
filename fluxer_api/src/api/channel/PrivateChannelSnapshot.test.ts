@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, test} from 'vitest';
-import {createChannelID, createMessageID, createUserID} from '../BrandedTypes';
-import type {ChannelRow, PrivateChannelRow} from '../database/types/ChannelTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {
 	channelRowFromPrivateChannelSnapshot,
-	isPrivateChannelType,
 	privateChannelFanOutTargets,
 	privateChannelHydrationPatch,
 	privateChannelLastMessageIdPatch,
 	privateChannelMetadataPatch,
-} from './PrivateChannelSnapshot';
+} from '@app/api/channel/PrivateChannelSnapshot';
+import type {ChannelRow, PrivateChannelRow} from '@app/api/database/types/ChannelTypes';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, test} from 'vitest';
 
 const OWNER = createUserID(1n);
 const MEMBER_A = createUserID(2n);
@@ -40,6 +39,7 @@ function gdmRow(overrides: Partial<ChannelRow> = {}): ChannelRow {
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: LAST_MESSAGE,
 		last_pin_timestamp: null,
 		permission_overwrites: null,
@@ -56,15 +56,6 @@ function setValue<T>(op: unknown): T {
 	expect(typed.kind).toBe('set');
 	return typed.value;
 }
-
-describe('isPrivateChannelType', () => {
-	test('matches DM, GROUP_DM, and personal notes only', () => {
-		expect(isPrivateChannelType(ChannelTypes.DM)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.GROUP_DM)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.DM_PERSONAL_NOTES)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.GUILD_TEXT)).toBe(false);
-	});
-});
 
 describe('privateChannelFanOutTargets', () => {
 	test('returns recipients for a GDM', () => {
@@ -96,11 +87,6 @@ describe('privateChannelMetadataPatch', () => {
 		const patch = privateChannelMetadataPatch(gdmRow({recipient_ids: new Set(), nicks: new Map()}));
 		expect(setValue<Set<unknown> | null>(patch.channel_recipient_ids)).toBeNull();
 		expect(setValue<Map<unknown, unknown> | null>(patch.channel_nicks)).toBeNull();
-	});
-
-	test('missing version normalizes to zero', () => {
-		const patch = privateChannelMetadataPatch(gdmRow({version: undefined as unknown as number}));
-		expect(setValue<number>(patch.channel_version)).toBe(0);
 	});
 });
 

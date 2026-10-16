@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import type {BackupCodesChallenge} from '@app/features/auth/commands/MfaCommands';
 import styles from '@app/features/auth/components/modals/BackupCodesModal.module.css';
 import {BackupCodesRegenerateModal} from '@app/features/auth/components/modals/BackupCodesRegenerateModal';
+import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -22,9 +24,10 @@ const BACKUP_CODES_DESCRIPTOR = msg({
 interface BackupCodesModalProps {
 	backupCodes: ReadonlyArray<BackupCode>;
 	user: User;
+	challenge?: BackupCodesChallenge;
 }
 
-export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalProps) => {
+export const BackupCodesModal = observer(({backupCodes, user, challenge}: BackupCodesModalProps) => {
 	const {i18n} = useLingui();
 	return (
 		<Modal.Root size="small" centered data-flx="auth.backup-codes-modal.modal-root">
@@ -70,13 +73,10 @@ export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalP
 							leftIcon={<DownloadIcon className={styles.buttonIcon} data-flx="auth.backup-codes-modal.button-icon" />}
 							small={true}
 							onClick={() => {
-								const blob = new Blob([backupCodes.map(({code}) => code).join('\n')], {type: 'text/plain'});
-								const url = URL.createObjectURL(blob);
-								const a = document.createElement('a');
-								a.href = url;
-								a.download = `fluxer_${user.email}_backup_codes.txt`;
-								a.click();
-								URL.revokeObjectURL(url);
+								downloadTextFile(
+									backupCodes.map(({code}) => code).join('\n'),
+									`fluxer_${user.email ?? user.username}_backup_codes.txt`,
+								);
 							}}
 							data-flx="auth.backup-codes-modal.button.click"
 						>
@@ -101,6 +101,7 @@ export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalP
 									modal(() => (
 										<BackupCodesRegenerateModal
 											user={user}
+											challenge={challenge}
 											data-flx="auth.backup-codes-modal.backup-codes-regenerate-modal"
 										/>
 									)),

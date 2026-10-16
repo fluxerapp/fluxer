@@ -2,12 +2,16 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import layoutStyles from '@app/features/channel/components/textarea/MobileTextareaLayout.module.css';
 import styles from '@app/features/channel/components/VoiceMessageRecorder.module.css';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
-import {prepareVoiceMessageWav} from '@app/features/voice/utils/VoiceMessageRecordingUtils';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
+import {
+	computeVoiceWaveformFromAudioBuffer,
+	type PreparedVoiceMessage,
+	prepareVoiceMessageWav,
+} from '@app/features/voice/utils/VoiceMessageRecordingUtils';
 import {sendVoiceMessage} from '@app/features/voice/utils/VoiceMessageSendUtils';
 import {autoUpdate, FloatingPortal, flip, offset, shift, useFloating} from '@floating-ui/react';
 import {
@@ -68,6 +72,42 @@ const SEND_VOICE_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Accessible label and tooltip for the send button after recording a voice message.',
 });
 const logger = new Logger('VoiceMessageRecorder');
+const UNIVERSALLY_PLAYABLE_RECORDING_MIME = 'audio/mp4';
+const OPUS_RECORDING_MIME_CANDIDATES = ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus'] as const;
+
+function selectRecordingMimeType(isTypeSupported: (mimeType: string) => boolean): string | undefined {
+	if (isTypeSupported(UNIVERSALLY_PLAYABLE_RECORDING_MIME)) {
+		return UNIVERSALLY_PLAYABLE_RECORDING_MIME;
+	}
+	return OPUS_RECORDING_MIME_CANDIDATES.find((candidate) => isTypeSupported(candidate));
+}
+
+function isUniversallyPlayableContainer(mimeType: string): boolean {
+	return mimeType.split(';')[0].trim().toLowerCase() === UNIVERSALLY_PLAYABLE_RECORDING_MIME;
+}
+
+async function prepareUniversalUpload(blob: Blob, filename: string): Promise<PreparedVoiceMessage> {
+	const contextClass = resolveAudioContextConstructor();
+	if (!contextClass) {
+		throw new Error('AudioContext is unavailable; cannot measure voice message');
+	}
+	const audioContext = new contextClass();
+	try {
+		const audioBuffer = await audioContext.decodeAudioData(await blob.arrayBuffer());
+		const {duration, waveform} = computeVoiceWaveformFromAudioBuffer(audioBuffer);
+		return {file: new File([blob], filename, {type: blob.type}), duration, waveform};
+	} finally {
+		audioContext.close().catch(() => {});
+	}
+}
+
+async function prepareVoiceMessageUpload(blob: Blob): Promise<PreparedVoiceMessage> {
+	const stamp = Date.now();
+	if (isUniversallyPlayableContainer(blob.type)) {
+		return prepareUniversalUpload(blob, `voice-message-${stamp}.m4a`);
+	}
+	return prepareVoiceMessageWav(blob, `voice-message-${stamp}.wav`);
+}
 
 type StopAction = 'send' | 'discard';
 
@@ -126,7 +166,10 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 		[],
 	);
 	const maxRecordingMs = useMemo(() => maxRecordingSeconds * 1000, [maxRecordingSeconds]);
-	const formattedDuration = useMemo(() => formatDuration(recordingDurationMs / 1000), [recordingDurationMs]);
+	const formattedDuration = useMemo(
+		() => formatDuration(recordingDurationMs / 1000, i18n.locale),
+		[recordingDurationMs, i18n.locale],
+	);
 	const reducedMotion = Accessibility.useReducedMotion;
 	const voiceButtonAnimate = useMemo(() => (isRecording ? {scale: 1.05} : {scale: 1}), [isRecording]);
 	const resolvedVoiceButtonTransition = useMemo(
@@ -255,9 +298,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	}, []);
 	const startWaveform = useCallback(
 		(stream: MediaStream) => {
-			const contextClass =
-				window.AudioContext ||
-				(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+			const contextClass = resolveAudioContextConstructor();
 			if (!contextClass) return;
 			const audioContext = new contextClass();
 			const source = audioContext.createMediaStreamSource(stream);
@@ -323,13 +364,13 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 				resetState();
 				return;
 			}
-			const blob = new Blob(recordedChunks, {type: recorderMime || 'audio/ogg'});
+			const blob = new Blob(recordedChunks, {type: recorderMime || OPUS_RECORDING_MIME_CANDIDATES[0]});
 			setIsSending(true);
 			setIsRecording(false);
 			setIsLocked(false);
 			setLockPreview(false);
 			try {
-				const {file, duration, waveform} = await prepareVoiceMessageWav(blob, `voice-message-${Date.now()}.wav`);
+				const {file, duration, waveform} = await prepareVoiceMessageUpload(blob);
 				await sendVoiceMessage({
 					channelId,
 					file,
@@ -352,11 +393,15 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 			showTooltip(i18n._(VOICE_RECORDING_IS_NOT_SUPPORTED_IN_THIS_BROWSER_DESCRIPTOR));
 			return;
 		}
+		const preferredType = selectRecordingMimeType((candidate) => MediaRecorder.isTypeSupported(candidate));
+		if (preferredType === undefined) {
+			showTooltip(i18n._(VOICE_RECORDING_IS_NOT_SUPPORTED_IN_THIS_BROWSER_DESCRIPTOR));
+			return;
+		}
+		let acquiredStream: MediaStream | null = null;
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-			const preferredType = MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
-				? 'audio/ogg;codecs=opus'
-				: 'audio/webm;codecs=opus';
+			acquiredStream = stream;
 			const recorder = new MediaRecorder(stream, {mimeType: preferredType});
 			chunksRef.current = [];
 			recorder.addEventListener('dataavailable', handleDataAvailable);
@@ -380,6 +425,9 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 			startWaveform(stream);
 		} catch (error) {
 			logger.error('Failed to start voice recording', error);
+			if (acquiredStream !== null && streamRef.current !== acquiredStream) {
+				acquiredStream.getTracks().forEach((track) => track.stop());
+			}
 			showTooltip(i18n._(UNABLE_TO_START_RECORDING_PLEASE_ALLOW_MICROPHONE_ACCESS_DESCRIPTOR));
 		}
 	}, [
@@ -529,7 +577,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 			>
 				<motion.button
 					type="button"
-					className={layoutStyles.mobileVoiceButton}
+					className={styles.voiceButton}
 					onPointerDown={handlePointerDown}
 					onPointerUp={handlePointerUp}
 					onPointerMove={handlePointerMove}
@@ -541,7 +589,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 					data-flx="channel.voice-message-recorder.button.pointer-down"
 				>
 					<MicrophoneIcon
-						className={layoutStyles.mobileRightButtonIcon}
+						className={styles.voiceButtonIcon}
 						data-flx="channel.voice-message-recorder.microphone-icon"
 					/>
 				</motion.button>
@@ -578,10 +626,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 						transition={resolvedOverlayMotion.transition}
 						data-flx="channel.voice-message-recorder.recording-overlay"
 					>
-						<div
-							className={clsx(styles.overlayInner, layoutStyles.mobileTextareaWrapper)}
-							data-flx="channel.voice-message-recorder.overlay-inner"
-						>
+						<div className={styles.overlayInner} data-flx="channel.voice-message-recorder.overlay-inner">
 							<button
 								type="button"
 								className={clsx(styles.iconButton, styles.trashButton)}
@@ -610,7 +655,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 									</div>
 								</div>
 								<div
-									className={clsx(styles.lockIndicatorWrapper, layoutStyles.mobileRightButtonContainer)}
+									className={styles.lockIndicatorWrapper}
 									data-flx="channel.voice-message-recorder.lock-indicator-wrapper"
 								>
 									<button

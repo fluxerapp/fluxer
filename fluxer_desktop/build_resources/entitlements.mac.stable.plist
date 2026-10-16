@@ -27,6 +27,8 @@
     <array>
         <string>webcredentials:fluxer.app</string>
         <string>webcredentials:web.fluxer.app</string>
+        <string>webcredentials:fluxer.com</string>
+        <string>webcredentials:canary.fluxer.com</string>
     </array>
 </dict>
 </plist>

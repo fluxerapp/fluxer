@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AutocompleteOption} from '@app/features/channel/components/Autocomplete';
-import {isSticker} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
+import {isSticker} from '@app/features/channel/components/AutocompleteTypes';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
 
 const AutocompleteStickerIcon = observer(
-	({id, name, isInteracting}: {id: string; name: string; isInteracting: boolean}) => {
-		const {shouldAnimate} = useStickerAnimation({isInteracting});
+	({id, name, animated, isInteracting}: {id: string; name: string; animated: boolean; isInteracting: boolean}) => {
+		const {shouldAnimate} = useStickerAnimation({isInteracting, isAnimated: animated});
 		return (
 			<div className={styles.stickerIconWrapper} data-flx="channel.autocomplete-sticker.sticker-icon-wrapper">
 				<img
 					draggable={false}
 					className={styles.stickerIcon}
-					src={AvatarUtils.getStickerURL({id, animated: shouldAnimate, size: 320})}
+					src={AvatarUtils.getStickerURL({id, animated: shouldAnimate, isAnimatable: animated, size: 320})}
 					alt={name}
+					aria-hidden={true}
 					data-flx="channel.autocomplete-sticker.sticker-icon"
 				/>
 			</div>
@@ -35,16 +35,7 @@ export const AutocompleteSticker = observer(
 		onMouseLeave,
 		rowRefs,
 		getOptionId,
-	}: {
-		onSelect: (option: AutocompleteOption) => void;
-		keyboardFocusIndex: number;
-		hoverIndex: number;
-		options: Array<AutocompleteOption>;
-		onMouseEnter: (index: number) => void;
-		onMouseLeave: () => void;
-		rowRefs?: React.MutableRefObject<Array<HTMLButtonElement | null>>;
-		getOptionId?: (index: number) => string;
-	}) => {
+	}: AutocompleteListProps) => {
 		const stickers = options.filter(isSticker);
 		return stickers.map((option, index) => (
 			<AutocompleteItem
@@ -58,6 +49,7 @@ export const AutocompleteSticker = observer(
 					<AutocompleteStickerIcon
 						id={option.sticker.id}
 						name={option.sticker.name}
+						animated={option.sticker.animated}
 						isInteracting={index === keyboardFocusIndex || index === hoverIndex}
 						data-flx="channel.autocomplete-sticker.autocomplete-sticker-icon"
 					/>

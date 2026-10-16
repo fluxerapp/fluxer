@@ -4,8 +4,6 @@
 
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/voice_state.hrl").
-
 -export([handle_update_connection/6]).
 
 -export_type([
@@ -104,7 +102,7 @@ proceed_after_restore(
     ExistingChannelIdBin = maps:get(<<"channel_id">>, ExistingVS, null),
     NewChannelIdBin = integer_to_binary(ChannelIdValue),
     IsChannelChange = ExistingChannelIdBin =/= NewChannelIdBin,
-    GuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
+    GuildId = snowflake_id:parse_maybe(
         maps:get(id, UpdatedState, undefined)
     ),
     ViewerKeyResult = guild_voice_connection_util:resolve_viewer_stream_keys(
@@ -141,7 +139,7 @@ handle_existing_connection(
             ExistingChannelIdBin = maps:get(<<"channel_id">>, ExistingVoiceState, null),
             NewChannelIdBin = integer_to_binary(ChannelIdValue),
             IsChannelChange = ExistingChannelIdBin =/= NewChannelIdBin,
-            GuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
+            GuildId = snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             ),
             ViewerKeyResult = guild_voice_connection_util:resolve_viewer_stream_keys(
@@ -181,28 +179,17 @@ normal_update(
 ) ->
     ConnectionId = maps:get(connection_id, Context),
     ExistingVS = maps:get(ConnectionId, VoiceStates, #{}),
-    CurrentVersion = voice_state_utils:voice_state_version(ExistingVS),
-    MutationDecision = guild_voice_mutation:evaluate(
-        maps:get(base_version, Context, undefined), CurrentVersion, valid
-    ),
-    case MutationDecision of
-        {reject, Reason} ->
-            guild_voice_connection_util:rejected_mutation_reply(
-                Context, ExistingVS, State, ChannelIdValue, <<"rejected">>, Reason
-            );
-        apply ->
-            check_permissions(
-                Context,
-                ChannelIdValue,
-                Member,
-                Channel,
-                VoiceStates,
-                State,
-                IsChannelChange,
-                ViewerKeyResult,
-                ExistingVS
-            )
-    end.
+    check_permissions(
+        Context,
+        ChannelIdValue,
+        Member,
+        Channel,
+        VoiceStates,
+        State,
+        IsChannelChange,
+        ViewerKeyResult,
+        ExistingVS
+    ).
 
 -spec check_permissions(
     context(),

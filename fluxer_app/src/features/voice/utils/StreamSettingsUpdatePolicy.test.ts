@@ -1,41 +1,55 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {canSelectWindowsDesktopAudioSource} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {describe, expect, it} from 'vitest';
-import {
-	isLinuxDesktopAudioShare,
-	shouldReconfigureLinuxAudioForActiveStreamSettings,
-} from './StreamSettingsUpdatePolicy';
 
-describe('StreamSettingsUpdatePolicy', () => {
-	it('recognizes Linux app and display streams as desktop-audio shares', () => {
-		expect(isLinuxDesktopAudioShare({platform: 'linux', shareContext: 'display'})).toBe(true);
-		expect(isLinuxDesktopAudioShare({platform: 'linux', shareContext: 'app'})).toBe(true);
-		expect(isLinuxDesktopAudioShare({platform: 'linux', shareContext: 'device'})).toBe(false);
-		expect(isLinuxDesktopAudioShare({platform: 'win32', shareContext: 'display'})).toBe(false);
-	});
-	it('does not reconfigure Linux audio for video-only stream settings', () => {
+const withEndpointSelect: NativeAudioAvailability = {
+	available: true,
+	backend: 'windows-wasapi-loopback',
+	capabilities: {process: true, system: true, systemExcludesSelf: true, sessionMixer: true, endpointSelect: true},
+};
+const withoutEndpointSelect: NativeAudioAvailability = {
+	available: true,
+	backend: 'windows-wasapi-loopback',
+	capabilities: {process: true, system: true, systemExcludesSelf: true},
+};
+
+describe('canSelectWindowsDesktopAudioSource', () => {
+	it('offers device selection for Windows entire-screen shares', () => {
 		expect(
-			shouldReconfigureLinuxAudioForActiveStreamSettings({
-				platform: 'linux',
+			canSelectWindowsDesktopAudioSource({
+				platform: 'win32',
 				shareContext: 'display',
-				audioSettingsChanged: false,
-			}),
-		).toBe(false);
-	});
-	it('reconfigures Linux audio only when an audio setting changed', () => {
-		expect(
-			shouldReconfigureLinuxAudioForActiveStreamSettings({
-				platform: 'linux',
-				shareContext: 'display',
-				audioSettingsChanged: true,
+				nativeAudioAvailability: withEndpointSelect,
 			}),
 		).toBe(true);
+	});
+
+	it('hides device selection elsewhere', () => {
 		expect(
-			shouldReconfigureLinuxAudioForActiveStreamSettings({
-				platform: 'linux',
-				shareContext: 'device',
-				audioSettingsChanged: true,
+			canSelectWindowsDesktopAudioSource({
+				platform: 'darwin',
+				shareContext: 'display',
+				nativeAudioAvailability: withEndpointSelect,
 			}),
+		).toBe(false);
+		expect(
+			canSelectWindowsDesktopAudioSource({
+				platform: 'win32',
+				shareContext: 'app',
+				nativeAudioAvailability: withEndpointSelect,
+			}),
+		).toBe(false);
+		expect(
+			canSelectWindowsDesktopAudioSource({
+				platform: 'win32',
+				shareContext: 'display',
+				nativeAudioAvailability: withoutEndpointSelect,
+			}),
+		).toBe(false);
+		expect(
+			canSelectWindowsDesktopAudioSource({platform: 'win32', shareContext: 'display', nativeAudioAvailability: null}),
 		).toBe(false);
 	});
 });

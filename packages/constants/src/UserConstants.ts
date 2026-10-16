@@ -41,6 +41,9 @@ export const UserPremiumTypes = {
 
 export type UserPremiumType = ValueOf<typeof UserPremiumTypes>;
 
+export const PREMIUM_GRACE_PERIOD_DAYS = 3;
+export const PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS = {monthly: 7, yearly: 14} as const;
+
 export const UserPremiumTypesDescriptions: Record<keyof typeof UserPremiumTypes, string> = {
 	NONE: 'No premium subscription',
 	SUBSCRIPTION: 'Active premium subscription',
@@ -48,53 +51,49 @@ export const UserPremiumTypesDescriptions: Record<keyof typeof UserPremiumTypes,
 };
 export const UserFlags = {
 	STAFF: 1n << 0n,
-	CTP_MEMBER: 1n << 1n,
 	PARTNER: 1n << 2n,
 	BUG_HUNTER: 1n << 3n,
 	HIGH_GLOBAL_RATE_LIMIT: 1n << 33n,
 	FRIENDLY_BOT: 1n << 4n,
 	FRIENDLY_BOT_MANUAL_APPROVAL: 1n << 5n,
 	SPAMMER: 1n << 6n,
+	PROFILE_HIDDEN: 1n << 7n,
 	DELETED: 1n << 34n,
-	DISABLED_SUSPICIOUS_ACTIVITY: 1n << 35n,
 	SELF_DELETED: 1n << 36n,
 	DISABLED: 1n << 38n,
 	HAS_SESSION_STARTED: 1n << 39n,
 	RATE_LIMIT_BYPASS: 1n << 47n,
 	REPORT_BANNED: 1n << 48n,
 	VERIFIED_NOT_UNDERAGE: 1n << 49n,
+	ACCOUNT_LIMITED: 1n << 50n,
 	HAS_DISMISSED_PREMIUM_ONBOARDING: 1n << 51n,
 	APP_STORE_REVIEWER: 1n << 53n,
 	STAFF_HIDDEN: 1n << 57n,
 	AGE_VERIFIED_ADULT: 1n << 60n,
-	FORCE_INBOUND_PHONE_VERIFICATION: 1n << 61n,
-	NOT_SUSPICIOUS: 1n << 62n,
+	LIMIT_EXEMPT: 1n << 62n,
 } as const;
 export const UserFlagsDescriptions: Record<keyof typeof UserFlags, string> = {
 	STAFF: 'User is a staff member',
-	CTP_MEMBER: 'User is a CTP member',
 	PARTNER: 'User is a partner',
 	BUG_HUNTER: 'User is a bug hunter',
 	HIGH_GLOBAL_RATE_LIMIT: 'User has elevated global rate limits',
 	FRIENDLY_BOT: 'Bot accepts friend requests from users',
 	FRIENDLY_BOT_MANUAL_APPROVAL: 'Bot requires manual approval for friend requests',
 	SPAMMER: 'User is flagged as a spammer',
+	PROFILE_HIDDEN: 'User profile details are hidden from other users',
 	DELETED: 'User account has been deleted',
-	DISABLED_SUSPICIOUS_ACTIVITY: 'User account disabled due to suspicious activity',
 	SELF_DELETED: 'User account was self-deleted',
 	DISABLED: 'User account is disabled',
 	HAS_SESSION_STARTED: 'User has started a session',
 	RATE_LIMIT_BYPASS: 'User can bypass rate limits',
 	REPORT_BANNED: 'User is banned from reporting',
 	VERIFIED_NOT_UNDERAGE: 'User is verified as not underage',
+	ACCOUNT_LIMITED: 'User account is limited',
 	HAS_DISMISSED_PREMIUM_ONBOARDING: 'User has dismissed premium onboarding',
 	APP_STORE_REVIEWER: 'User is an app store reviewer',
 	STAFF_HIDDEN: 'User staff status is hidden from public flags',
 	AGE_VERIFIED_ADULT: 'User has verified their age as an adult via credit card verification',
-	FORCE_INBOUND_PHONE_VERIFICATION:
-		'User is forced through inbound (expensive-destination) phone verification regardless of phone prefix, for debugging',
-	NOT_SUSPICIOUS:
-		'User is permanently exempt from automatic suspicious-activity flagging on RPC session start (does not require a prior payment)',
+	LIMIT_EXEMPT: 'User is permanently exempt from account limitation',
 };
 export const PremiumFlags = {
 	DISCRIMINATOR: 1 << 0,
@@ -132,7 +131,8 @@ export const LEGACY_PREMIUM_FLAGS_MASK: bigint = LEGACY_PREMIUM_FLAG_BITS_TO_NEW
 	(mask, [legacy]) => mask | legacy,
 	0n,
 );
-export const LEGACY_DEAD_USER_FLAGS_MASK: bigint = (1n << 52n) | (1n << 54n) | (1n << 55n) | (1n << 56n) | (1n << 58n);
+export const LEGACY_DEAD_USER_FLAGS_MASK: bigint =
+	(1n << 35n) | (1n << 52n) | (1n << 54n) | (1n << 55n) | (1n << 56n) | (1n << 58n) | (1n << 61n);
 
 export function extractPremiumFlagsFromLegacyUserFlags(legacyFlags: bigint): number {
 	let result = 0;
@@ -146,7 +146,6 @@ export function extractPremiumFlagsFromLegacyUserFlags(legacyFlags: bigint): num
 
 export const PUBLIC_USER_FLAGS =
 	UserFlags.STAFF |
-	UserFlags.CTP_MEMBER |
 	UserFlags.PARTNER |
 	UserFlags.BUG_HUNTER |
 	UserFlags.FRIENDLY_BOT |
@@ -155,9 +154,9 @@ export const PUBLIC_USER_FLAGS =
 export const DELETED_USER_USERNAME = 'DeletedUser';
 export const DELETED_USER_GLOBAL_NAME = 'Deleted User';
 export const DELETED_USER_DISCRIMINATOR = 0;
+export const DELETED_USER_ID = 1n;
 export const PublicUserFlags = {
 	STAFF: Number(UserFlags.STAFF),
-	CTP_MEMBER: Number(UserFlags.CTP_MEMBER),
 	PARTNER: Number(UserFlags.PARTNER),
 	BUG_HUNTER: Number(UserFlags.BUG_HUNTER),
 	FRIENDLY_BOT: Number(UserFlags.FRIENDLY_BOT),
@@ -166,43 +165,12 @@ export const PublicUserFlags = {
 } as const;
 export const PublicUserFlagsDescriptions: Record<keyof typeof PublicUserFlags, string> = {
 	STAFF: 'User is a staff member',
-	CTP_MEMBER: 'User is a CTP member',
 	PARTNER: 'User is a partner',
 	BUG_HUNTER: 'User is a bug hunter',
 	FRIENDLY_BOT: 'Bot accepts friend requests from users',
 	FRIENDLY_BOT_MANUAL_APPROVAL: 'Bot requires manual approval for friend requests',
 	SPAMMER: 'User is flagged as a spammer',
 };
-export const SuspiciousActivityFlags = {
-	REQUIRE_VERIFIED_EMAIL: 1 << 0,
-	REQUIRE_REVERIFIED_EMAIL: 1 << 1,
-	REQUIRE_VERIFIED_PHONE: 1 << 2,
-	REQUIRE_REVERIFIED_PHONE: 1 << 3,
-	REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE: 1 << 4,
-	REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE: 1 << 5,
-	REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE: 1 << 6,
-	REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE: 1 << 7,
-	REQUIRE_INBOUND_PHONE_VERIFICATION: 1 << 8,
-} as const;
-export const SuspiciousActivityFlagsDescriptions: Record<keyof typeof SuspiciousActivityFlags, string> = {
-	REQUIRE_VERIFIED_EMAIL: 'Requires verified email address',
-	REQUIRE_REVERIFIED_EMAIL: 'Requires re-verified email address',
-	REQUIRE_VERIFIED_PHONE: 'Requires verified phone number',
-	REQUIRE_REVERIFIED_PHONE: 'Requires re-verified phone number',
-	REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE: 'Requires verified email or verified phone',
-	REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE: 'Requires re-verified email or re-verified phone',
-	REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE: 'Requires verified email or re-verified phone',
-	REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE: 'Requires re-verified email or re-verified phone',
-	REQUIRE_INBOUND_PHONE_VERIFICATION: 'Requires inbound SMS verification (user must text code to platform number)',
-};
-export const PHONE_ADD_CLEARABLE_FLAGS =
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
 export const ThemeTypes = {
 	DARK: 'dark',
 	DARK_LEGACY: 'dark_legacy',

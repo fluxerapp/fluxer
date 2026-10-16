@@ -1,60 +1,15 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.row {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.accountRows {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-}
-
-@media (min-width: 640px) {
-	.row {
-		flex-direction: row;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1.5rem;
-	}
-}
-
-.rowContent {
-	flex: 1;
-}
-
-.label {
-	display: block;
-	margin-bottom: 0.25rem;
-	font-weight: 500;
-	color: var(--text-primary);
-	font-size: 0.875rem;
-}
-
-.description {
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-}
-
 .emailRow {
-	display: flex;
-	flex-direction: column;
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5rem;
-}
-
-@media (min-width: 640px) {
-	.emailRow {
-		flex-direction: row;
-		align-items: center;
-		gap: 0.5rem;
-	}
 }
 
 .emailText {
 	color: var(--text-primary-muted);
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
 }
 
 .emailTextSelectable {
@@ -63,33 +18,11 @@
 }
 
 .toggleButton {
-	margin-top: 0.1em;
-	text-align: left;
 	color: var(--text-link);
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
 	cursor: pointer;
 }
 
 .toggleButton:hover {
 	text-decoration: underline;
-}
-
-@media (min-width: 640px) {
-	.toggleButton {
-		text-align: center;
-	}
-}
-
-.warningText {
-	color: var(--alert-warning-color);
-	font-size: 0.875rem;
-}
-
-.divider {
-	border-top: 0.0625rem solid var(--background-header-secondary);
-	padding-top: 1rem;
-}
-
-.claimButton {
-	align-self: flex-start;
 }

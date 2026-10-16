@@ -4,14 +4,16 @@ import styles from '@app/features/channel/components/ChannelSearchResults.module
 import {
 	ERROR_DESCRIPTOR,
 	INDEXING_CHANNEL_DESCRIPTOR,
+	NO_PART_OF_THIS_QUERY_APPLIED_DESCRIPTOR,
 	NO_RESULTS_DESCRIPTOR,
+	NOTHING_TO_SEARCH_FOR_DESCRIPTOR,
 	TRY_A_DIFFERENT_SEARCH_QUERY_DESCRIPTOR,
 	WE_RE_INDEXING_THIS_CHANNEL_FOR_THE_FIRST_DESCRIPTOR,
 } from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import {useLingui} from '@lingui/react/macro';
-import {CircleNotchIcon, MagnifyingGlassIcon} from '@phosphor-icons/react';
+import {CircleNotchIcon, MagnifyingGlassIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 export const SearchIndexingState: React.FC = () => {
@@ -89,6 +91,46 @@ export const SearchEmptyState: React.FC = () => {
 						data-flx="channel.channel-search-results.render-content.empty-state-text"
 					>
 						{i18n._(TRY_A_DIFFERENT_SEARCH_QUERY_DESCRIPTOR)}
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+};
+
+interface SearchUnappliedQueryStateProps {
+	query: string;
+}
+
+export const SearchUnappliedQueryState: React.FC<SearchUnappliedQueryStateProps> = ({query}) => {
+	const {i18n} = useLingui();
+	return (
+		<div className={styles.emptyState} data-flx="channel.channel-search-results.render-content.unapplied-state">
+			<div
+				className={styles.emptyStateContent}
+				data-flx="channel.channel-search-results.render-content.unapplied-state-content"
+			>
+				<WarningCircleIcon
+					className={styles.emptyStateIcon}
+					data-flx="channel.channel-search-results.render-content.unapplied-state-icon"
+				/>
+				<div
+					className={styles.emptyStateTextWrapper}
+					data-flx="channel.channel-search-results.render-content.unapplied-state-text-wrapper"
+				>
+					<h3
+						className={styles.emptyStateHeading}
+						role="status"
+						aria-live="polite"
+						data-flx="channel.channel-search-results.render-content.unapplied-state-heading"
+					>
+						{i18n._(NOTHING_TO_SEARCH_FOR_DESCRIPTOR)}
+					</h3>
+					<p
+						className={styles.emptyStateText}
+						data-flx="channel.channel-search-results.render-content.unapplied-state-text"
+					>
+						{i18n._(NO_PART_OF_THIS_QUERY_APPLIED_DESCRIPTOR, {query})}
 					</p>
 				</div>
 			</div>

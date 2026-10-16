@@ -4,7 +4,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
 import Presence from '@app/features/presence/state/Presence';
 
-interface PresenceUpdateBulkPayload {
+export interface PresenceUpdateBulkPayload {
 	presences: Array<PresenceRecord>;
 	guild_id?: string;
 }

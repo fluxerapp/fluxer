@@ -10,19 +10,6 @@ interface MessagePreviewOverrides {
 	displayName?: string;
 }
 
-export interface MessagePreviewPermissions {
-	isDM: boolean;
-	canSendMessages: boolean;
-	canAddReactions: boolean;
-	canEditMessage: boolean;
-	canDeleteMessage: boolean;
-	canDeleteAttachment: boolean;
-	canPinMessage: boolean;
-	canForwardMessage: boolean;
-	canSuppressEmbeds: boolean;
-	shouldRenderSuppressEmbeds: boolean;
-}
-
 export interface MessageViewContextValue {
 	channel: Channel;
 	message: Message;
@@ -31,10 +18,9 @@ export interface MessageViewContextValue {
 	messageDisplayCompact: boolean;
 	previewContext?: keyof typeof MessagePreviewContext;
 	previewOverrides?: MessagePreviewOverrides;
-	previewPermissions?: MessagePreviewPermissions;
 	handleDelete: (bypassConfirm?: boolean) => void;
 	onPopoutToggle?: (isOpen: boolean) => void;
-	readonlyPreview?: boolean;
+	suppressMessageActions?: boolean;
 	onHeadingActivate?: () => void;
 }
 

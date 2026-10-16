@@ -3,14 +3,14 @@
 .card {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
-	padding: 0.75rem 0.875rem;
-	border-radius: var(--radius-md, 0.375rem);
+	gap: var(--active-now-card-gap);
+	padding: var(--active-now-card-padding-block) var(--active-now-card-padding-inline);
+	border-radius: var(--active-now-card-radius);
 	background-color: var(--background-secondary);
 	border: 0.0625rem solid var(--border-color, rgba(255, 255, 255, 0.04));
 	width: 100%;
 	align-self: stretch;
-	box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.08);
+	box-shadow: var(--active-now-card-shadow);
 }
 
 .headerContextGroup {
@@ -28,7 +28,7 @@
 .headerLeft {
 	display: flex;
 	align-items: center;
-	gap: 0.375rem;
+	gap: var(--active-now-context-gap);
 	min-width: 0;
 	flex: 1;
 }
@@ -48,7 +48,7 @@
 .contextButton {
 	display: flex;
 	align-items: center;
-	gap: 0.375rem;
+	gap: var(--active-now-context-gap);
 	min-width: 0;
 	border: none;
 	padding: 0;

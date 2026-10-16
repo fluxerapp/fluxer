@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
 use crate::{
     acl,
     api::types::GuildInfo,
@@ -11,38 +12,15 @@ use crate::{
 };
 use maud::{Markup, html};
 
-const GUILD_FEATURES: &[&str] = &[
-    "ANIMATED_ICON",
-    "ANIMATED_BANNER",
-    "BANNER",
-    "CLONE_EMOJI_DISABLED",
-    "CLONE_STICKER_DISABLED",
-    "DETACHED_BANNER",
-    "INVITE_SPLASH",
-    "INVITES_DISABLED",
-    "RAID_DETECTED",
-    "TEXT_CHANNEL_FLEXIBLE_NAMES",
-    "HIDE_OWNER_CROWN",
-    "MORE_EMOJI",
-    "MORE_STICKERS",
-    "UNLIMITED_EMOJI",
-    "UNLIMITED_STICKERS",
-    "EXPRESSION_PURGE_ALLOWED",
-    "VANITY_URL",
-    "DISCOVERABLE",
-    "PARTNERED",
-    "VERIFIED",
-    "VIP_VOICE",
-    "VOICE_E2EE",
-    "UNAVAILABLE_FOR_EVERYONE",
-    "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
-    "UNAVAILABLE_HIDDEN",
-    "VISIONARY",
-    "LARGE_GUILD_OVERRIDE",
-    "VERY_LARGE_GUILD",
-];
-
 const HOSTED_ONLY: &[&str] = &["VISIONARY", "VIP_VOICE"];
+
+fn feature_label(feature: &str) -> String {
+    if DEPRECATED_GUILD_FEATURES.contains(&feature) {
+        format!("{feature} (deprecated, no longer enforced)")
+    } else {
+        feature.to_owned()
+    }
+}
 
 pub fn features_tab(
     config: &AdminConfig,
@@ -85,7 +63,7 @@ pub fn features_tab(
                             (checkbox(
                                 "features[]",
                                 feature,
-                                feature,
+                                &feature_label(feature),
                                 guild.features.iter().any(|f| f == feature),
                                 true,
                             ))
@@ -139,7 +117,7 @@ fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
                     @for feature in &enabled {
                         span class="inline-flex items-center rounded-full bg-green-100 \
                                     px-2.5 py-0.5 text-xs font-medium text-green-800" {
-                            (feature)
+                            (feature_label(feature))
                         }
                     }
                     @for feature in &custom {

@@ -1,44 +1,67 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import {useHashParam} from '@app/features/app/hooks/useHashParam';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/ResetPasswordPage.module.css';
+import {resolveMissingResetTokenRedirect} from '@app/features/auth/flow/AccountRecoveryRedirects';
 import FormField from '@app/features/auth/flow/AuthFormField';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
+import {resolveAuthBannerError, useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {resetPassword as resetPasswordFlow} from '@app/features/auth/state/AuthFlow';
-import {BACK_TO_SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
+import {
+	checkResetPasswordToken,
+	peekSettledResetPasswordTokenCheck,
+	takeSettledResetPasswordTokenCheck,
+} from '@app/features/auth/state/ResetPasswordTokenCheck';
+import {
+	BACK_TO_SIGN_IN_DESCRIPTOR,
+	CONFIRM_NEW_PASSWORD_DESCRIPTOR,
+	NEW_PASSWORD_DESCRIPTOR,
+	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useId, useState} from 'react';
+import {useEffect, useId, useMemo, useState} from 'react';
 
 const RESET_PASSWORD_DESCRIPTOR = msg({
 	message: 'Reset password',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
 });
-const NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'New password',
-	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
-});
-const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'Confirm new password',
-	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
+const INVALID_RESET_TOKEN_DESCRIPTOR = msg({
+	message: "This link isn't valid. Open the link from your email again.",
+	comment: 'Validation error shown when a password reset URL has no usable reset token.',
 });
 
 type TokenStatus = 'validating' | 'valid' | 'invalid';
 
 const API_RENDERED_FIELDS = new Set(['password']);
-const ResetPasswordPage = observer(function ResetPasswordPage() {
+
+interface ResetPasswordPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const ResetPasswordPageContent = observer(function ResetPasswordPageContent({
+	runtimeSnapshot,
+}: ResetPasswordPageContentProps) {
 	const {i18n} = useLingui();
 	const passwordId = useId();
 	const confirmPasswordId = useId();
-	useFluxerDocumentTitle(i18n._(RESET_PASSWORD_DESCRIPTOR));
 	const token = useHashParam('token');
-	const [tokenStatus, setTokenStatus] = useState<TokenStatus>('validating');
+	const requestTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const [tokenStatus, setTokenStatus] = useState<TokenStatus>(() =>
+		token === null ? 'validating' : (peekSettledResetPasswordTokenCheck(token, requestTarget) ?? 'validating'),
+	);
 	const {form, isLoading, error, fieldErrors} = useAuthForm({
 		initialValues: {
 			password: '',
@@ -46,52 +69,54 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 		},
 		onSubmit: async (values) => {
 			if (!token) {
-				form.setError('password', 'Invalid or missing reset token');
-				return;
+				form.setError('password', i18n._(INVALID_RESET_TOKEN_DESCRIPTOR));
+				return false;
 			}
 			if (values.password !== values.confirmPassword) {
-				form.setError('confirmPassword', 'Passwords do not match');
-				return;
+				form.setError('confirmPassword', i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR));
+				return false;
 			}
-			const response = await resetPasswordFlow(token, values.password);
+			const response = await resetPasswordFlow(token, values.password, requestTarget);
 			if (response.type === 'mfa') {
 				AuthenticationCommands.setMfaTicket({
 					ticket: response.challenge.ticket,
 					totp: response.challenge.totp,
 					webauthn: response.challenge.webauthn,
+					backupCodes: response.challenge.backupCodes,
+					runtimeSnapshot,
 				});
 				RouterUtils.replaceWith('/login');
-				return;
+				return undefined;
 			}
-			await AuthenticationCommands.completeLogin(response.payload);
+			await AuthenticationCommands.completeLogin({...response.payload, runtimeSnapshot});
+			return undefined;
 		},
 	});
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
 	useEffect(() => {
 		if (!token) {
-			RouterUtils.replaceWith('/forgot');
+			RouterUtils.replaceWith(resolveMissingResetTokenRedirect(runtimeSnapshot));
+			return;
+		}
+		const settled = takeSettledResetPasswordTokenCheck(token, requestTarget);
+		if (settled !== null) {
+			setTokenStatus(settled);
 			return;
 		}
 		let cancelled = false;
 		setTokenStatus('validating');
-		AuthenticationCommands.validateResetPasswordToken(token)
-			.then((valid) => {
-				if (cancelled) return;
-				setTokenStatus(valid ? 'valid' : 'invalid');
-			})
-			.catch(() => {
-				if (cancelled) return;
-				setTokenStatus('invalid');
-			});
+		void checkResetPasswordToken(token, requestTarget).then((status) => {
+			if (cancelled) return;
+			setTokenStatus(status);
+		});
 		return () => {
 			cancelled = true;
 		};
-	}, [token]);
-	const unrenderedFieldErrors = fieldErrors
-		? Object.entries(fieldErrors)
-				.filter(([field]) => !API_RENDERED_FIELDS.has(field))
-				.map(([, message]) => message)
-		: [];
-	const bannerError = error ?? unrenderedFieldErrors[0] ?? null;
+	}, [token, requestTarget, runtimeSnapshot]);
+	const bannerError = resolveAuthBannerError(error, fieldErrors, API_RENDERED_FIELDS);
+	if (!token) {
+		return null;
+	}
 	if (tokenStatus === 'validating') {
 		return (
 			<>
@@ -110,14 +135,35 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				<h1 className={styles.title} data-flx="auth.reset-password-page.title--2">
 					<Trans>Reset link invalid or expired</Trans>
 				</h1>
-				<p className={styles.description} data-flx="auth.reset-password-page.description">
-					<Trans>This reset link has expired. Reset links last 1 hour. Please request a new one.</Trans>
-				</p>
-				<div className={styles.footer} data-flx="auth.reset-password-page.footer">
-					<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.reset-password-page.link">
-						<Trans>Request a new reset link</Trans>
-					</AuthRouterLink>
-				</div>
+				{usernameSignIn ? (
+					<>
+						<p className={styles.description} data-flx="auth.reset-password-page.description--username">
+							<Trans>
+								This reset link has expired or was already used. Ask an admin for a new one, or use your recovery kit.
+							</Trans>
+						</p>
+						<div className={styles.footer} data-flx="auth.reset-password-page.footer--username">
+							<AuthRouterLink
+								to={Routes.RECOVER_ACCOUNT}
+								className={styles.link}
+								data-flx="auth.reset-password-page.link--recover"
+							>
+								<Trans>Use your recovery kit</Trans>
+							</AuthRouterLink>
+						</div>
+					</>
+				) : (
+					<>
+						<p className={styles.description} data-flx="auth.reset-password-page.description">
+							<Trans>This reset link has expired. Reset links last 1 hour. Please request a new one.</Trans>
+						</p>
+						<div className={styles.footer} data-flx="auth.reset-password-page.footer">
+							<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.reset-password-page.link">
+								<Trans>Request a new reset link</Trans>
+							</AuthRouterLink>
+						</div>
+					</>
+				)}
 			</>
 		);
 	}
@@ -144,7 +190,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					label={i18n._(NEW_PASSWORD_DESCRIPTOR)}
 					value={form.getValue('password')}
 					onChange={(value) => form.setValue('password', value)}
-					error={form.getError('password') || fieldErrors?.password}
+					error={form.getError('password') || fieldErrors?.get('password')}
 					data-flx="auth.reset-password-page.form-field.set-value.password"
 				/>
 				<FormField
@@ -174,6 +220,19 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				</AuthRouterLink>
 			</div>
 		</>
+	);
+});
+
+const ResetPasswordPage = observer(function ResetPasswordPage() {
+	const {i18n} = useLingui();
+	useFluxerDocumentTitle(i18n._(RESET_PASSWORD_DESCRIPTOR));
+	useAuthPresentation({variant: AuthCardVariant.STANDARD});
+	return (
+		<AuthRuntimeTargetGate data-flx="auth.reset-password-page.runtime-target-gate">
+			{(runtimeSnapshot) => (
+				<ResetPasswordPageContent runtimeSnapshot={runtimeSnapshot} data-flx="auth.reset-password-page.content" />
+			)}
+		</AuthRuntimeTargetGate>
 	);
 });
 

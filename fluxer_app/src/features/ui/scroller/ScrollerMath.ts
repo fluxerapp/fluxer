@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 export type ScrollAxis = 'vertical' | 'horizontal';
 
 export interface AxisScrollMetrics {
@@ -15,10 +17,6 @@ export interface ScrollbarThumbState {
 	thumbOffset: number;
 	trackSize: number;
 	maxScrollPosition: number;
-}
-
-export function clamp(value: number, minValue: number, maxValue: number): number {
-	return Math.max(minValue, Math.min(value, maxValue));
 }
 
 export function getAxisScrollMetrics(element: HTMLElement, orientation: ScrollAxis): AxisScrollMetrics {
@@ -95,13 +93,6 @@ export function getAxisPointerPosition(clientX: number, clientY: number, orienta
 		return clientY;
 	}
 	return clientX;
-}
-
-export function getAxisScrollPosition(element: HTMLElement, orientation: ScrollAxis): number {
-	if (orientation === 'vertical') {
-		return element.scrollTop;
-	}
-	return element.scrollLeft;
 }
 
 export function setAxisScrollPosition(element: HTMLElement, orientation: ScrollAxis, value: number): void {

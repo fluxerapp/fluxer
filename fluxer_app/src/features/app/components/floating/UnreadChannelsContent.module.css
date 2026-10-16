@@ -5,78 +5,46 @@
 	--inbox-scroller-padding-bottom: 0.75rem;
 	--inbox-section-gap: 0.25rem;
 	--inbox-card-gap: 1rem;
-	--inbox-heading-padding-x: 0.25rem;
-	--inbox-heading-padding-y: 0.75rem;
-	--inbox-sticky-bg: var(--form-surface-background);
-	--inbox-sticky-radius: 0.375rem;
-	--inbox-sticky-separator: 0 0.0625rem 0 var(--background-modifier-accent);
-	--inbox-sticky-group-heading-height: 2.25rem;
-	--inbox-sticky-channel-heading-height: 3rem;
-	--inbox-sticky-channel-top: var(--inbox-sticky-group-heading-height);
 	--inbox-icon-button-size: 1.75rem;
 	--inbox-icon-button-radius: 0.375rem;
 	--inbox-collapse-button-size: 1.375rem;
 	--inbox-collapse-button-radius: 0.375rem;
+	--inbox-sticky-header-height: 3.5rem;
 	flex: 1;
 	min-height: 0;
 	min-width: 0;
 	padding: 0 var(--inbox-scroller-padding-x) var(--inbox-scroller-padding-bottom);
-	scroll-padding-top: calc(
-		var(--inbox-sticky-group-heading-height) +
-		var(--inbox-sticky-channel-heading-height) +
-		0.5rem
-	);
+}
+
+.stickyChannelHeader {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background-color: var(--form-surface-background);
 }
 
 .guildGroup {
-	margin-bottom: var(--inbox-section-gap);
 	min-width: 0;
 }
 
-.guildGroup:last-child {
-	margin-bottom: 0;
+.list {
+	display: block;
+	min-width: 0;
 }
 
-.guildGroupHeading {
-	position: sticky;
-	top: 0;
-	z-index: 3;
-	display: flex;
-	align-items: center;
+.row {
+	display: block;
 	box-sizing: border-box;
-	min-height: var(--inbox-sticky-group-heading-height);
-	margin: 0;
-	padding: var(--inbox-heading-padding-y) var(--inbox-heading-padding-x) 0.5rem;
-	font-size: 0.6875rem;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--text-primary-muted);
-	border-radius: var(--inbox-sticky-radius);
-	background-color: var(--inbox-sticky-bg);
-	transition: color 0.12s ease;
+	padding-bottom: var(--inbox-card-gap);
+}
+
+.rowGroupEnd {
+	padding-bottom: calc(var(--inbox-card-gap) + var(--inbox-section-gap));
 }
 
 .channelCard {
-	margin-bottom: var(--inbox-card-gap);
-}
-
-.channelCard:focus {
+	min-width: 0;
 	outline: none;
-}
-
-.channelStickyHeader {
-	position: sticky;
-	top: var(--inbox-sticky-channel-top);
-	z-index: 2;
-	margin: 0 0 0.5rem;
-	padding: 0 var(--inbox-heading-padding-x);
-	border-radius: var(--inbox-sticky-radius);
-	background-color: var(--inbox-sticky-bg);
-	box-shadow: var(--inbox-sticky-separator);
-	transition:
-		background-color 0.12s ease,
-		box-shadow 0.12s ease;
 }
 
 .srOnly {
@@ -107,16 +75,13 @@
 }
 
 .messageStream {
-	--chat-horizontal-padding: 0.75rem;
-	padding: 0 0.5rem;
 	min-width: 0;
-	overflow: hidden;
 }
 
 .previewFooter {
 	display: flex;
 	justify-content: flex-start;
-	padding: 0.5rem 0.75rem 0.625rem;
+	padding: 0.375rem 0.5rem 0.25rem;
 }
 
 .viewAllButton {
@@ -143,13 +108,15 @@
 
 .messageRow {
 	position: relative;
+	isolation: isolate;
+	scroll-margin-top: var(--inbox-sticky-header-height);
 }
 
 .messageActions {
 	display: none;
 	position: absolute;
-	top: 0.5rem;
-	right: 0.75rem;
+	top: 0.375rem;
+	right: 0.5rem;
 	gap: 0.25rem;
 }
 
@@ -222,7 +189,7 @@
 }
 
 .previewDateDivider :global(.text) {
-	background-color: var(--inbox-sticky-bg);
+	background-color: var(--form-surface-background);
 	border-radius: 0.375rem;
 	padding: 0.125rem 0.625rem;
 }

@@ -4,6 +4,8 @@ export type InputEvent =
 	| {
 			type: 'keydown' | 'keyup';
 			keycode: number;
+			scanCode: number;
+			extended: boolean;
 			keyName: string;
 			ctrlKey: boolean;
 			altKey: boolean;
@@ -19,26 +21,6 @@ export type InputEvent =
 			metaKey: boolean;
 			x?: number;
 			y?: number;
-	  }
-	| {
-			type: 'mousemove';
-			x: number;
-			y: number;
-			ctrlKey: boolean;
-			altKey: boolean;
-			shiftKey: boolean;
-			metaKey: boolean;
-	  }
-	| {
-			type: 'wheel';
-			x?: number;
-			y?: number;
-			deltaX: number;
-			deltaY: number;
-			ctrlKey: boolean;
-			altKey: boolean;
-			shiftKey: boolean;
-			metaKey: boolean;
 	  };
 
 export declare class InputHook {

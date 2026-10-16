@@ -34,7 +34,7 @@ const ALREADY_CANCELING_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when a subscription is already scheduled to cancel.',
 });
 const NOT_CANCELING_TITLE_DESCRIPTOR = msg({
-	message: 'Subscription is not cancelling',
+	message: 'Subscription is not scheduled to cancel',
 	comment: 'Title of the error modal shown when reactivation is attempted but the subscription is not cancelling.',
 });
 const NOT_CANCELING_MESSAGE_DESCRIPTOR = msg({

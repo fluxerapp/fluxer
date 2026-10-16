@@ -6,11 +6,9 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0, publish_cross_node/2
-]).
+-export([start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
--export([select_shard/2, find_shard_by_ref/2, find_shard_by_pid/2]).
+-export([select_shard/2]).
 
 -type shard() :: #{pid := pid(), ref := reference()}.
 -type state() :: #{
@@ -40,16 +38,11 @@ diagnostic_info() ->
         _ -> #{}
     end.
 
--spec publish_cross_node(integer(), term()) -> ok.
-publish_cross_node(UserId, Payload) when is_integer(UserId) ->
-    safe_gen_server_cast(?MODULE, {publish_cross_node, UserId, Payload}),
-    ok.
-
 -spec init(list()) -> {ok, state(), hibernate}.
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 10),
-    {ShardCount, _Source} = determine_shard_count(presence_bus_shards),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([presence_bus_shards]),
     Shards = start_shards(ShardCount, #{}),
     {ok, #{shards => Shards, shard_count => ShardCount}, hibernate}.
 
@@ -92,23 +85,16 @@ merge_shard_diagnostic(Pid, Acc) ->
     end.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({publish_cross_node, UserId, Payload}, State) when is_integer(UserId) ->
-    {noreply, forward_publish(UserId, Payload, State)};
-handle_cast({remote_publish, UserId, Payload}, State) when is_integer(UserId) ->
-    {noreply, forward_publish(UserId, Payload, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
--spec forward_publish(integer(), term(), state()) -> state().
-forward_publish(UserId, Payload, State) ->
-    {_Reply, NewState} = forward_call(UserId, {publish, UserId, Payload}, State),
-    NewState.
-
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
-    {noreply, maybe_restart_shard(find_shard_by_ref(Ref, maps:get(shards, State)), State)};
+    {noreply,
+        maybe_restart_shard(shard_utils:find_shard_by_ref(Ref, maps:get(shards, State)), State)};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
-    {noreply, maybe_restart_shard(find_shard_by_pid(Pid, maps:get(shards, State)), State)};
+    {noreply,
+        maybe_restart_shard(shard_utils:find_shard_by_pid(Pid, maps:get(shards, State)), State)};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -140,22 +126,6 @@ terminate(_Reason, State) ->
 code_change(_OldVsn, State, _Extra) ->
     erlang:garbage_collect(),
     {ok, State}.
-
--spec determine_shard_count(atom()) -> {pos_integer(), configured | auto}.
-determine_shard_count(ConfigKey) ->
-    case fluxer_gateway_env:get(ConfigKey) of
-        Value when is_integer(Value), Value > 0 ->
-            {Value, configured};
-        _ ->
-            {default_shard_count(), auto}
-    end.
-
--spec default_shard_count() -> pos_integer().
-default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
 
 -spec start_shards(pos_integer(), #{}) -> #{non_neg_integer() => shard()}.
 start_shards(Count, Acc) ->
@@ -249,30 +219,6 @@ restart_shard_index(Index, State) ->
 select_shard(Key, Count) when Count > 0 ->
     rendezvous_router:select(Key, Count).
 
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
-
 -spec safe_gen_server_call(pid() | atom(), term(), timeout()) -> term().
 safe_gen_server_call(Server, Request, Timeout) ->
     try gen_server:call(Server, Request, Timeout) of
@@ -280,15 +226,6 @@ safe_gen_server_call(Server, Request, Timeout) ->
     catch
         error:Reason -> {gen_server_call_failed, error, Reason};
         exit:Reason -> {gen_server_call_failed, exit, Reason}
-    end.
-
--spec safe_gen_server_cast(pid() | atom(), term()) -> ok.
-safe_gen_server_cast(Server, Request) ->
-    try gen_server:cast(Server, Request) of
-        _ -> ok
-    catch
-        error:_Reason -> ok;
-        exit:_Reason -> ok
     end.
 
 -spec safe_gen_server_stop(pid()) -> ok.

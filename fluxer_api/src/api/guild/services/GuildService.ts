@@ -1,110 +1,84 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {
+	createChannelID,
+	createWebhookID,
+	type EmojiID,
+	type GuildID,
+	type StickerID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import {resolveExpressionSourceGuild} from '@app/api/guild/ExpressionSourceGuild';
+import {
+	collectAuditLogChannelIds,
+	collectGuildAuditLogUserIds,
+	isNoopGuildAuditLog,
+	isThreadScopedAuditLog,
+	mapGuildAuditLogEntry,
+	maskThreadAuditLog,
+	type StoredGuildAuditLogEntryResponse,
+	THREAD_AUDIT_LOG_ACTION_TYPES,
+} from '@app/api/guild/GuildAuditLogEntryMapper';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {withGuildUpdateLock} from '@app/api/guild/GuildUpdateLock';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
+import {GuildContentService} from '@app/api/guild/services/GuildContentService';
+import {GuildDataService} from '@app/api/guild/services/GuildDataService';
+import {GuildMemberService} from '@app/api/guild/services/GuildMemberService';
+import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
+import {GuildModerationService} from '@app/api/guild/services/GuildModerationService';
+import {GuildRoleService} from '@app/api/guild/services/GuildRoleService';
+import {GuildSearchService} from '@app/api/guild/services/GuildSearchService';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
+import type {Webhook} from '@app/api/models/Webhook';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures, GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGuildEmojiError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
+import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
+import type {
+	AuditLogWebhookResponse,
+	GuildAuditLogListResponse,
+} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {
 	GuildEmojiMetadataResponse,
+	GuildExpressionSourceGuildResponse,
 	GuildStickerMetadataResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type {ApiContext} from '../../ApiContext';
-import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '../../BrandedTypes';
-import {createUserID, createWebhookID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {AvatarService} from '../../infrastructure/AvatarService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {IAssetDeletionQueue} from '../../infrastructure/IAssetDeletionQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {InviteRepository} from '../../invite/InviteRepository';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {GuildAuditLog} from '../../models/GuildAuditLog';
-import type {Webhook} from '../../models/Webhook';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {getCachedUserPartialResponses} from '../../user/UserCacheHelpers';
-import type {IWebhookRepository} from '../../webhook/IWebhookRepository';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../GuildAuditLogTypes';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {GuildChannelService} from './GuildChannelService';
-import {GuildContentService} from './GuildContentService';
-import {GuildDataService} from './GuildDataService';
-import {GuildMemberService} from './GuildMemberService';
-import {GuildModerationService} from './GuildModerationService';
-import {GuildRoleService} from './GuildRoleService';
-import {GuildSearchService} from './GuildSearchService';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
-interface AuditLogOptions {
-	channel_id?: string;
-	count?: number;
-	delete_member_days?: string;
-	id?: string;
-	integration_type?: number;
-	message_id?: string;
-	members_removed?: number;
-	role_name?: string;
-	type?: number;
-	inviter_id?: string;
-	max_age?: number;
-	max_uses?: number;
-	temporary?: boolean;
-	uses?: number;
-}
-
-interface GuildAuditLogEntryResponse {
-	id: string;
-	action_type: number;
-	user_id: string | null;
-	target_id: string | null;
-	reason?: string;
-	options?: AuditLogOptions;
-	changes?: GuildAuditLogChange;
-}
-
-interface AuditLogWebhook {
-	id: string;
+interface StoredAuditLogWebhookResponse extends Omit<AuditLogWebhookResponse, 'type'> {
 	type: number;
-	guild_id: string | null;
-	channel_id: string | null;
-	name: string;
-	avatar_hash: string | null;
 }
 
-interface GuildAuth {
-	guildData: GuildResponse;
-	checkPermission: (permission: bigint) => Promise<void>;
-	checkTargetMember: (targetUserId: UserID) => Promise<void>;
-	getAssignableRoleIds: () => Promise<Array<RoleID>>;
-	getMaxRolePosition: () => Promise<number>;
-	getMyPermissions: () => Promise<bigint>;
-	hasPermission: (permission: bigint) => Promise<boolean>;
-	canManageRoles: (targetUserId: UserID, targetRoleId: RoleID) => Promise<boolean>;
+interface StoredGuildAuditLogListResponse extends Omit<GuildAuditLogListResponse, 'audit_log_entries' | 'webhooks'> {
+	audit_log_entries: Array<StoredGuildAuditLogEntryResponse>;
+	webhooks: Array<StoredAuditLogWebhookResponse>;
 }
-
-const ELEVATED_MFA_PERMISSIONS =
-	Permissions.KICK_MEMBERS |
-	Permissions.BAN_MEMBERS |
-	Permissions.ADMINISTRATOR |
-	Permissions.MANAGE_CHANNELS |
-	Permissions.MANAGE_GUILD |
-	Permissions.MANAGE_MESSAGES |
-	Permissions.MANAGE_ROLES |
-	Permissions.MANAGE_WEBHOOKS |
-	Permissions.MODERATE_MEMBERS;
 
 export class GuildService {
 	public readonly data: GuildDataService;
@@ -114,27 +88,27 @@ export class GuildService {
 	public readonly content: GuildContentService;
 	public readonly channels: GuildChannelService;
 	public readonly search: GuildSearchService;
-	private readonly guildRepository: IGuildRepositoryAggregate;
+	private readonly guildRepository: GuildRepository;
+	private readonly cacheService: ICacheService;
 	private readonly userCacheService: UserCacheService;
-	private readonly webhookRepository: IWebhookRepository;
+	private readonly webhookRepository: WebhookRepository;
 	private readonly guildAuditLogService: GuildAuditLogService;
 	private readonly gatewayService: IGatewayService;
-	private readonly userRepository: IUserRepository;
+	private readonly userRepository: UserRepository;
 
 	constructor(
 		apiContext: ApiContext,
-		guildRepository: IGuildRepositoryAggregate,
-		channelRepository: IChannelRepository,
+		guildRepository: GuildRepository,
+		private readonly channelRepository: ChannelRepository,
 		inviteRepository: InviteRepository,
 		channelService: ChannelService,
 		userCacheService: UserCacheService,
 		entityAssetService: EntityAssetService,
 		avatarService: AvatarService,
 		assetDeletionQueue: IAssetDeletionQueue,
-		webhookRepository: IWebhookRepository,
+		webhookRepository: WebhookRepository,
 		guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
-		ipInfoService: IpInfoService,
 	) {
 		const {
 			cache: cacheService,
@@ -146,6 +120,7 @@ export class GuildService {
 		} = apiContext.services;
 		this.gatewayService = gatewayService;
 		this.guildRepository = guildRepository;
+		this.cacheService = cacheService;
 		this.userCacheService = userCacheService;
 		this.webhookRepository = webhookRepository;
 		this.guildAuditLogService = guildAuditLogService;
@@ -162,6 +137,7 @@ export class GuildService {
 			webhookRepository,
 			guildAuditLogService,
 			limitConfigService,
+			workerService,
 		);
 		this.members = new GuildMemberService(
 			guildRepository,
@@ -173,7 +149,6 @@ export class GuildService {
 			rateLimitService,
 			guildAuditLogService,
 			limitConfigService,
-			ipInfoService,
 		);
 		this.roles = new GuildRoleService(
 			guildRepository,
@@ -182,6 +157,7 @@ export class GuildService {
 			gatewayService,
 			guildAuditLogService,
 			limitConfigService,
+			userRepository,
 		);
 		this.moderation = new GuildModerationService(
 			guildRepository,
@@ -190,7 +166,6 @@ export class GuildService {
 			userCacheService,
 			workerService,
 			guildAuditLogService,
-			ipInfoService,
 		);
 		this.content = new GuildContentService(
 			guildRepository,
@@ -211,6 +186,7 @@ export class GuildService {
 			snowflakeService,
 			guildAuditLogService,
 			limitConfigService,
+			userRepository,
 		);
 		this.search = new GuildSearchService(
 			channelRepository,
@@ -219,12 +195,6 @@ export class GuildService {
 			userRepository,
 			workerService,
 		);
-	}
-
-	async getGuildFeaturesForToggle(guildId: GuildID): Promise<Set<string>> {
-		const guild = await this.guildRepository.findUnique(guildId);
-		if (!guild) throw new UnknownGuildError();
-		return new Set(guild.features);
 	}
 
 	async updateGuild(
@@ -237,7 +207,10 @@ export class GuildService {
 		auditLogReason?: string | null,
 	): Promise<GuildResponse> {
 		const {guildId, requestCache} = params;
-		const {guild, previousFeatures, updatedFeatures} = await this.data.updateGuild(params, auditLogReason);
+		const {guild, previousFeatures, updatedFeatures} = await this.withUpdateLock(guildId, () => {
+			requestCache.guilds.delete(guildId);
+			return this.data.operations.updateGuild(params, auditLogReason);
+		});
 		if (
 			previousFeatures.has(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES) &&
 			!updatedFeatures.has(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES)
@@ -247,34 +220,58 @@ export class GuildService {
 		return guild;
 	}
 
+	withUpdateLock<T>(guildId: GuildID, fn: () => Promise<T>): Promise<T> {
+		return withGuildUpdateLock(this.cacheService, guildId, fn);
+	}
+
 	async getEmojiMetadata(emojiId: EmojiID): Promise<GuildEmojiMetadataResponse> {
 		const emoji = await this.guildRepository.getEmojiById(emojiId);
 		if (!emoji) throw new UnknownGuildEmojiError();
-		const guild = await this.data.getGuildSystem(emoji.guildId);
+		const guild = await this.data.operations.getGuildSystem(emoji.guildId);
 		return {
 			id: emoji.id.toString(),
 			guild_id: guild.id.toString(),
 			name: emoji.name,
 			animated: emoji.isAnimated,
-			allow_cloning: !guild.features.has(GuildFeatures.CLONE_EMOJI_DISABLED),
+			allow_cloning: guild.features.has(GuildFeatures.CLONE_EMOJI_ENABLED),
 		};
 	}
 
 	async getStickerMetadata(stickerId: StickerID): Promise<GuildStickerMetadataResponse> {
 		const sticker = await this.guildRepository.getStickerById(stickerId);
 		if (!sticker) throw new UnknownGuildStickerError();
-		const guild = await this.data.getGuildSystem(sticker.guildId);
+		const guild = await this.data.operations.getGuildSystem(sticker.guildId);
 		return {
 			id: sticker.id.toString(),
 			guild_id: guild.id.toString(),
 			name: sticker.name,
 			animated: sticker.animated,
-			allow_cloning: !guild.features.has(GuildFeatures.CLONE_STICKER_DISABLED),
+			allow_cloning: guild.features.has(GuildFeatures.CLONE_STICKER_ENABLED),
 		};
+	}
+
+	async getEmojiSource(emojiId: EmojiID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		const emoji = await this.guildRepository.getEmojiById(emojiId);
+		if (!emoji) throw new UnknownGuildEmojiError();
+		return this.resolveExpressionSourceGuild(emoji.guildId, userId);
+	}
+
+	async getStickerSource(stickerId: StickerID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		const sticker = await this.guildRepository.getStickerById(stickerId);
+		if (!sticker) throw new UnknownGuildStickerError();
+		return this.resolveExpressionSourceGuild(sticker.guildId, userId);
+	}
+
+	private resolveExpressionSourceGuild(guildId: GuildID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		return resolveExpressionSourceGuild({
+			loadGuild: () => this.gatewayService.getGuildData({guildId, userId, skipMembershipCheck: true}),
+			isMember: async () => (await this.gatewayService.getGuildMember({guildId, userId})).success,
+		});
 	}
 
 	async listGuildAuditLogs(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		guildId: GuildID;
 		requestCache: RequestCache;
 		limit?: number;
@@ -282,11 +279,7 @@ export class GuildService {
 		afterLogId?: bigint;
 		filterUserId?: UserID;
 		actionType?: AuditLogActionType;
-	}): Promise<{
-		audit_log_entries: Array<GuildAuditLogEntryResponse>;
-		users: Array<UserPartialResponse>;
-		webhooks: Array<AuditLogWebhook>;
-	}> {
+	}): Promise<StoredGuildAuditLogListResponse> {
 		const {userId, guildId} = params;
 		const [hasPermission, guild] = await Promise.all([
 			this.gatewayService.checkPermission({
@@ -313,12 +306,11 @@ export class GuildService {
 		afterLogId?: bigint;
 		filterUserId?: UserID;
 		actionType?: AuditLogActionType;
-	}): Promise<{
-		audit_log_entries: Array<GuildAuditLogEntryResponse>;
-		users: Array<UserPartialResponse>;
-		webhooks: Array<AuditLogWebhook>;
-	}> {
+		viewer?: ThreadViewer;
+	}): Promise<StoredGuildAuditLogListResponse> {
 		const {guildId, requestCache, limit = 50, beforeLogId, afterLogId, filterUserId, actionType} = params;
+		const threadsVisible = params.viewer === undefined || viewerActive(params.viewer, guildId);
+		const hideThreadEntries = !threadsVisible && (await isTainted(guildId));
 		if (beforeLogId !== undefined && afterLogId !== undefined) {
 			throw InputValidationError.fromCode('before', ValidationErrorCodes.CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER);
 		}
@@ -327,10 +319,7 @@ export class GuildService {
 		let processedLogs: Array<GuildAuditLog> = [];
 		let currentBeforeLogId = beforeLogId;
 		let currentAfterLogId = afterLogId;
-		const maxIterations = 5;
-		let iterations = 0;
-		while (processedLogs.length < effectiveLimit && iterations < maxIterations) {
-			iterations++;
+		while (processedLogs.length < effectiveLimit) {
 			const fetchLimit = Math.min(effectiveLimit * 2, 200);
 			const logs = await this.guildRepository.listAuditLogs({
 				guildId,
@@ -343,18 +332,15 @@ export class GuildService {
 			if (logs.length === 0) {
 				break;
 			}
-			if (shouldBatch) {
-				const batchResult = await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs);
-				for (const log of batchResult.processedLogs) {
-					if (processedLogs.length < effectiveLimit) {
-						processedLogs.push(log);
-					}
-				}
-			} else {
-				for (const log of logs) {
-					if (processedLogs.length < effectiveLimit) {
-						processedLogs.push(log);
-					}
+			const batchedLogs = shouldBatch
+				? (await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs)).processedLogs
+				: logs;
+			const visibleLogs = hideThreadEntries
+				? (await this.dropThreadScopedAuditLogs(batchedLogs)).map(maskThreadAuditLog)
+				: batchedLogs;
+			for (const log of visibleLogs) {
+				if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
+					processedLogs.push(log);
 				}
 			}
 			if (logs.length < fetchLimit) {
@@ -370,124 +356,91 @@ export class GuildService {
 		processedLogs = processedLogs.slice(0, effectiveLimit);
 		const userIdSet = new Set<UserID>();
 		for (const log of processedLogs) {
-			userIdSet.add(log.userId);
-			const targetUserId = this.getAuditLogTargetUserId(log);
-			if (targetUserId) {
-				userIdSet.add(targetUserId);
+			for (const referencedUserId of collectGuildAuditLogUserIds(log)) {
+				userIdSet.add(referencedUserId);
 			}
 		}
 		const [userPartials, webhookRecords] = await Promise.all([
-			getCachedUserPartialResponses({
-				userIds: Array.from(userIdSet),
-				userCacheService: this.userCacheService,
-				requestCache,
-			}),
+			this.userCacheService.getUserPartialResponses(Array.from(userIdSet), requestCache),
 			this.loadAuditLogWebhooks(processedLogs),
 		]);
-		const entries = processedLogs.map((log) => this.mapAuditLogToEntry(log));
+		const entries = processedLogs.map((log) => mapGuildAuditLogEntry(log));
 		const users = Array.from(userPartials.values());
-		const webhooks = this.buildAuditLogWebhookResponses(webhookRecords.webhooks);
-		return {
+		const webhooks = this.buildAuditLogWebhookResponses(
+			hideThreadEntries ? await this.dropForumWebhooks(webhookRecords.webhooks) : webhookRecords.webhooks,
+		);
+		const response: StoredGuildAuditLogListResponse = {
 			audit_log_entries: entries,
 			users,
 			webhooks,
 		};
-	}
-
-	private mapAuditLogToEntry(log: GuildAuditLog): GuildAuditLogEntryResponse {
-		return {
-			id: log.logId.toString(),
-			action_type: log.actionType,
-			user_id: log.userId.toString(),
-			target_id: log.targetId,
-			reason: log.reason ?? undefined,
-			options: this.buildAuditLogOptions(log.options),
-			changes: this.scrubSensitiveChanges(log.changes),
-		};
-	}
-
-	private scrubSensitiveChanges(changes: GuildAuditLogChange | null | undefined): GuildAuditLogChange | undefined {
-		if (!changes) {
-			return undefined;
+		if (params.viewer !== undefined && threadsVisible) {
+			response.threads = await this.loadAuditLogThreads(processedLogs);
 		}
-		const scrubbed = changes.filter((change) => change.key !== 'ip');
-		return scrubbed.length > 0 ? scrubbed : undefined;
+		return response;
 	}
 
-	private buildAuditLogOptions(options: Map<string, string>): AuditLogOptions | undefined {
-		if (!options.size) {
-			return undefined;
-		}
-		const mapped: AuditLogOptions = {};
-		for (const [key, value] of options) {
-			switch (key) {
-				case 'channel_id':
-					mapped.channel_id = value;
-					break;
-				case 'count':
-					this.assignNumericOption(mapped, 'count', value);
-					break;
-				case 'delete_member_days':
-					mapped.delete_member_days = value;
-					break;
-				case 'delete_message_days':
-					if (!mapped.delete_member_days) {
-						mapped.delete_member_days = value;
-					}
-					break;
-				case 'id':
-					mapped.id = value;
-					break;
-				case 'integration_type':
-					this.assignNumericOption(mapped, 'integration_type', value);
-					break;
-				case 'message_id':
-					mapped.message_id = value;
-					break;
-				case 'members_removed':
-					this.assignNumericOption(mapped, 'members_removed', value);
-					break;
-				case 'role_name':
-					mapped.role_name = value;
-					break;
-				case 'type':
-					this.assignNumericOption(mapped, 'type', value);
-					break;
-				case 'inviter_id':
-					mapped.inviter_id = value;
-					break;
-				case 'max_age':
-					this.assignNumericOption(mapped, 'max_age', value);
-					break;
-				case 'max_uses':
-					this.assignNumericOption(mapped, 'max_uses', value);
-					break;
-				case 'uses':
-					this.assignNumericOption(mapped, 'uses', value);
-					break;
-				case 'temporary':
-					mapped.temporary = this.parseBooleanOption(value);
-					break;
-				default:
-					break;
-			}
-		}
-		return Object.keys(mapped).length === 0 ? undefined : mapped;
+	private async dropThreadScopedAuditLogs(logs: Array<GuildAuditLog>): Promise<Array<GuildAuditLog>> {
+		const candidateIds = [...new Set(logs.flatMap((log) => collectAuditLogChannelIds(log)))].filter((id) =>
+			/^\d{1,20}$/.test(id),
+		);
+		const channels =
+			candidateIds.length > 0
+				? await this.channelRepository.channelData.listChannels(candidateIds.map((id) => createChannelID(BigInt(id))))
+				: [];
+		const gatedIds = new Set(
+			channels
+				.filter((channel) => THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))
+				.map((channel) => channel.id.toString()),
+		);
+		return logs.filter((log) => !isThreadScopedAuditLog(log, gatedIds));
 	}
 
-	private parseBooleanOption(value: string): boolean {
-		return value === 'true' || value === '1';
+	private async dropForumWebhooks(webhooks: Array<Webhook>): Promise<Array<Webhook>> {
+		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
+		if (channelIds.length === 0) return webhooks;
+		const forumIds = new Set(
+			(await this.channelRepository.channelData.listChannels(channelIds))
+				.filter((channel) => channel.isThreadOnly())
+				.map((channel) => channel.id),
+		);
+		return webhooks.filter((webhook) => !webhook.channelId || !forumIds.has(webhook.channelId));
 	}
 
-	private assignNumericOption(
-		target: AuditLogOptions,
-		key: 'count' | 'integration_type' | 'members_removed' | 'type' | 'max_age' | 'max_uses' | 'uses',
-		value: string,
-	): void {
-		const parsed = Number(value);
-		if (!Number.isNaN(parsed)) {
-			target[key] = parsed;
-		}
+	private async loadAuditLogThreads(logs: Array<GuildAuditLog>): Promise<Array<ThreadChannelResponse>> {
+		const threadIds = [
+			...new Set(
+				logs
+					.filter((log) => THREAD_AUDIT_LOG_ACTION_TYPES.has(log.actionType) && log.targetId)
+					.map((log) => log.targetId!),
+			),
+		]
+			.filter((id) => /^\d{1,20}$/.test(id))
+			.map((id) => createChannelID(BigInt(id)));
+		if (threadIds.length === 0) return [];
+		const [channels, states, stats] = await Promise.all([
+			this.channelRepository.channelData.listChannels(threadIds),
+			this.channelRepository.threads.getStates(threadIds),
+			this.channelRepository.threads.getStatsMany(threadIds),
+		]);
+		const stateById = new Map(states.map((state) => [state.threadId.toString(), state]));
+		const parents = await this.channelRepository.channelData.listChannels([
+			...new Set(states.map((state) => state.parentId)),
+		]);
+		const parentTypeById = new Map(parents.map((parent) => [parent.id.toString(), parent.type]));
+		return channels.flatMap((channel) => {
+			const state = stateById.get(channel.id.toString());
+			const threadStats = stats.get(channel.id);
+			if (!state || !threadStats || !channel.isThread()) return [];
+			return [
+				mapThreadToResponse({
+					channel,
+					state,
+					stats: threadStats,
+					parentType: parentTypeById.get(state.parentId.toString()) ?? null,
+				}),
+			];
+		});
 	}
 
 	private async loadAuditLogWebhooks(logs: Array<GuildAuditLog>): Promise<{
@@ -514,7 +467,7 @@ export class GuildService {
 		return {webhooks: foundWebhooks};
 	}
 
-	private buildAuditLogWebhookResponses(webhooks: Array<Webhook>): Array<AuditLogWebhook> {
+	private buildAuditLogWebhookResponses(webhooks: Array<Webhook>): Array<StoredAuditLogWebhookResponse> {
 		return webhooks.map((webhook) => ({
 			id: webhook.id.toString(),
 			type: webhook.type,
@@ -533,70 +486,7 @@ export class GuildService {
 		);
 	}
 
-	private getAuditLogTargetUserId(log: GuildAuditLog): UserID | null {
-		if (!log.targetId || !this.isUserTargetAction(log.actionType)) {
-			return null;
-		}
-		try {
-			return createUserID(BigInt(log.targetId));
-		} catch {
-			return null;
-		}
-	}
-
-	private isUserTargetAction(actionType: AuditLogActionType): boolean {
-		return (
-			actionType === AuditLogActionType.MEMBER_KICK ||
-			actionType === AuditLogActionType.MEMBER_PRUNE ||
-			actionType === AuditLogActionType.MEMBER_BAN_ADD ||
-			actionType === AuditLogActionType.MEMBER_BAN_REMOVE ||
-			actionType === AuditLogActionType.MEMBER_UPDATE ||
-			actionType === AuditLogActionType.MEMBER_ROLE_UPDATE ||
-			actionType === AuditLogActionType.MEMBER_MOVE ||
-			actionType === AuditLogActionType.MEMBER_DISCONNECT ||
-			actionType === AuditLogActionType.BOT_ADD
-		);
-	}
-
-	async getGuildAuthenticated({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildAuth> {
-		const guildData = await this.gatewayService.getGuildData({guildId, userId});
-		if (!guildData) throw new MissingAccessError();
-		const requiresGuildMfa = guildData.mfa_level === GuildMFALevel.ELEVATED && guildData.owner_id !== userId.toString();
-		let actorLacksMfa = false;
-		if (requiresGuildMfa) {
-			const actor = await this.userRepository.findUnique(userId);
-			actorLacksMfa = !actor || actor.authenticatorTypes.size === 0;
-		}
-		const enforceGuildMfa = (permission: bigint) => {
-			if (requiresGuildMfa && actorLacksMfa && (permission & ELEVATED_MFA_PERMISSIONS) !== 0n) {
-				throw new MfaNotEnabledError();
-			}
-		};
-		const checkPermission = async (permission: bigint) => {
-			const hasPermission = await this.gatewayService.checkPermission({guildId, userId, permission});
-			if (!hasPermission) throw new MissingPermissionsError();
-			enforceGuildMfa(permission);
-		};
-		const checkTargetMember = async (targetUserId: UserID) => {
-			const canManage = await this.gatewayService.checkTargetMember({guildId, userId, targetUserId});
-			if (!canManage) throw new MissingPermissionsError();
-		};
-		const getAssignableRoleIds = async () => this.gatewayService.getAssignableRoles({guildId, userId});
-		const getMaxRolePosition = async () => this.gatewayService.getUserMaxRolePosition({guildId, userId});
-		const getMyPermissions = async () => this.gatewayService.getUserPermissions({guildId, userId});
-		const hasPermission = async (permission: bigint) =>
-			this.gatewayService.checkPermission({guildId, userId, permission});
-		const canManageRoles = async (targetUserId: UserID, targetRoleId: RoleID) =>
-			this.gatewayService.canManageRoles({guildId, userId, targetUserId, roleId: targetRoleId});
-		return {
-			guildData,
-			checkPermission,
-			checkTargetMember,
-			getAssignableRoleIds,
-			getMaxRolePosition,
-			getMyPermissions,
-			hasPermission,
-			canManageRoles,
-		};
+	async getGuildAuthenticated(params: {userId: UserID; guildId: GuildID}) {
+		return getGuildAuth(this.gatewayService, this.userRepository, params);
 	}
 }

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {GroupDmCreateProtectionMiddleware} from '@app/api/middleware/GroupDmProtectionMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {DirectMessagesDisabledError} from '@fluxer/errors/src/domains/channel/DirectMessagesDisabledError';
-import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelListResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {ChannelIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {z} from 'zod';
-import {createChannelID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {GroupDmCreateProtectionMiddleware} from '../../middleware/GroupDmProtectionMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function UserChannelController(app: HonoApp) {
 	app.get(
@@ -22,7 +22,7 @@ export function UserChannelController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_private_channels',
 			summary: 'List private channels',
-			responseSchema: z.array(ChannelResponse),
+			responseSchema: ChannelListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Users'],
@@ -51,7 +51,7 @@ export function UserChannelController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires CAPTCHA verification. Returns the newly created channel object.',
+				'Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires a solved captcha challenge (X-Captcha-Token). Returns the newly created channel object.',
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
@@ -83,6 +83,7 @@ export function UserChannelController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			await ctx.get('userChannelRequestService').pinChannel({
+				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 			});
@@ -106,6 +107,7 @@ export function UserChannelController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			await ctx.get('userChannelRequestService').unpinChannel({
+				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 			});

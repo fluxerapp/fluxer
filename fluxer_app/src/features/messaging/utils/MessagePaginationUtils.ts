@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
+
 export interface AroundWindowCounts {
 	newer: number;
 	older: number;
@@ -48,4 +50,33 @@ export function calculateAroundPaginationState(input: AroundPaginationStateInput
 		hasMoreAfter: expectedNewer > 0 && messagesNewer >= expectedNewer && !isAtKnownLatest,
 		isAtKnownLatest,
 	};
+}
+
+export function mergeAscendingById<T extends {id: string}>(existing: Array<T>, incoming: Array<T>): Array<T> {
+	if (incoming.length === 0) return existing;
+	const tail = existing[existing.length - 1];
+	if (tail == null || compareSnowflakes(incoming[0].id, tail.id) > 0) {
+		return existing.concat(incoming);
+	}
+	const merged: Array<T> = [];
+	let left = 0;
+	let right = 0;
+	while (left < existing.length && right < incoming.length) {
+		if (compareSnowflakes(incoming[right].id, existing[left].id) < 0) {
+			merged.push(incoming[right]);
+			right += 1;
+		} else {
+			merged.push(existing[left]);
+			left += 1;
+		}
+	}
+	while (left < existing.length) {
+		merged.push(existing[left]);
+		left += 1;
+	}
+	while (right < incoming.length) {
+		merged.push(incoming[right]);
+		right += 1;
+	}
+	return merged;
 }

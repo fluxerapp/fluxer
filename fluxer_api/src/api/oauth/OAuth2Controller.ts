@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2BearerToken, requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ApplicationAuthorizationIdParam,
@@ -23,16 +34,6 @@ import {
 	RevokeRequestForm,
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import type {z} from 'zod';
-import {Config} from '../Config';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
-import {requireOAuth2BearerToken, requireOAuth2Scope} from '../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function OAuth2Controller(app: HonoApp) {
 	app.get(
@@ -52,7 +53,7 @@ export function OAuth2Controller(app: HonoApp) {
 					errorUrl.searchParams.set('error', 'login_required');
 					return ctx.redirect(errorUrl.toString(), 302);
 				}
-				const requestedScopes = new Set(q.scope.split(/[\s+]+/).filter(Boolean));
+				const requestedScopes = new Set(parseOAuth2Scope(q.scope));
 				const nonBotScopes = [...requestedScopes].filter((s) => s !== 'bot');
 				if (nonBotScopes.length > 0) {
 					const refreshTokens = await ctx.get('oauth2TokenRepository').listRefreshTokensForUser(user.id);
@@ -77,7 +78,6 @@ export function OAuth2Controller(app: HonoApp) {
 						state: q.state ?? undefined,
 						codeChallenge: q.code_challenge,
 						codeChallengeMethod: q.code_challenge_method as 'S256' | 'plain' | undefined,
-						responseType: (q.response_type ?? 'code') as 'code',
 						userId: user.id,
 					});
 					return ctx.redirect(redirectTo, 302);
@@ -105,7 +105,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/authorize/consent',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_AUTHORIZE),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('json', AuthorizeConsentRequest),
 		OpenAPI({
@@ -119,12 +119,14 @@ export function OAuth2Controller(app: HonoApp) {
 				'User grants permission for an OAuth2 application to access authorized scopes. Used in authorization code flow to complete the authorization process after user review.',
 		}),
 		async (ctx) => {
-			const body: z.infer<typeof AuthorizeConsentRequest> = ctx.req.valid('json');
+			const body: AuthorizeConsentRequest = ctx.req.valid('json');
 			const user = ctx.get('user');
 			return ctx.json(
 				await ctx.get('oauth2RequestService').authorizeConsent({
 					body,
 					userId: user.id,
+					clientFeatures: ctx.get('clientFeatures'),
+					viewer: viewerFromCtx(ctx),
 					requestCache: ctx.get('requestCache'),
 				}),
 			);
@@ -149,7 +151,6 @@ export function OAuth2Controller(app: HonoApp) {
 			const result = await ctx.get('oauth2RequestService').tokenExchange({
 				form,
 				authorizationHeader: ctx.req.header('authorization') ?? undefined,
-				logPrefix: 'OAuth2',
 			});
 			return ctx.json(result);
 		},
@@ -174,7 +175,7 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.post(
 		'/oauth2/token/revoke',
-		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_REVOKE),
 		Validator('form', RevokeRequestForm),
 		OpenAPI({
 			operationId: 'revoke_oauth2_token',
@@ -218,8 +219,9 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.get(
 		'/oauth2/@me',
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
 		requireOAuth2BearerToken(),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'get_current_user_oauth2',
@@ -259,15 +261,16 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.get(
 		'/applications/@me',
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENTS_LIST),
 		OpenAPI({
 			operationId: 'get_current_user_applications',
-			summary: 'List current user applications',
+			summary: 'Get current bot application',
 			responseSchema: ApplicationsMeResponse,
 			statusCode: 200,
-			security: [],
+			security: ['botToken'],
 			tags: ['OAuth2'],
 			description:
-				'Lists all OAuth2 applications registered by the authenticated user. Includes application credentials and metadata. Requires valid OAuth2 access token.',
+				'Retrieves the application associated with the authenticated bot, including its owner and bot profile. Requires a valid bot token.',
 		}),
 		async (ctx) => {
 			const response = await ctx
@@ -279,7 +282,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/applications/:id/bot/reset-token',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENT_ROTATE_SECRET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('param', ApplicationIdParam),
@@ -310,7 +313,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/applications/:id/client-secret/reset',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENT_ROTATE_SECRET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('param', ApplicationIdParam),
@@ -341,7 +344,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.get(
 		'/oauth2/@me/authorizations',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENTS_LIST),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'list_user_oauth2_authorizations',
@@ -362,7 +365,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.delete(
 		'/oauth2/@me/authorizations/:applicationId',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('param', ApplicationAuthorizationIdParam),
 		OpenAPI({
@@ -385,7 +388,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/@me/authorizations/revoke',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('json', OAuth2AuthorizationsBulkRevokeRequest),
 		OpenAPI({

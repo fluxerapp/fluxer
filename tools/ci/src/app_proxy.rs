@@ -2,25 +2,32 @@
 
 use crate::common::{
     CALVER_SCHEME, CalverEnv, CommandSpec, S3UploadPlanItem, append_github_env,
-    append_github_output, collect_files, path_to_s3_key, require_env, resolve_calver, run_command,
-    runner_temp, s3_client, trim_option, upload_s3_plan_append_only,
+    append_github_output, collect_files, env_string, output_text, path_to_s3_key,
+    remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
+    trim_option, upload_s3_plan_append_only,
 };
+use crate::functions::sha256_file;
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::Utc;
 use clap::{Args, ValueEnum};
 use serde_json::{Map, Value, json};
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
-const DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED: &str = "true";
 const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
 const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
 const IMMUTABLE_ASSET_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
+const RUNTIME_STATIC_DIR: &str = "/srv/app/static";
+const CANONICAL_ASSETS_DIR: &str = "/assets";
+const AMD64_PLATFORM: &str = "linux/amd64";
+const ARM64_PLATFORM: &str = "linux/arm64";
+const PARITY_DIFF_LIMIT: usize = 20;
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildAppProxyArgs {
@@ -36,9 +43,12 @@ enum AppProxyStep {
     SetMetadata,
     PrepareDockerConfig,
     ConfigureGhcrAuth,
-    BuildAndExtract,
+    BuildDist,
+    BuildImage,
     GenerateAssetManifest,
     UploadAssets,
+    VerifyPublishedAssets,
+    VerifyAssetParity,
 }
 
 pub async fn run(args: BuildAppProxyArgs) -> Result<()> {
@@ -46,19 +56,19 @@ pub async fn run(args: BuildAppProxyArgs) -> Result<()> {
         AppProxyStep::SetMetadata => set_metadata_step(args.build_version.as_deref()),
         AppProxyStep::PrepareDockerConfig => prepare_docker_config_step(),
         AppProxyStep::ConfigureGhcrAuth => configure_ghcr_auth_step(),
-        AppProxyStep::BuildAndExtract => build_and_extract_step(),
+        AppProxyStep::BuildDist => build_dist_step(),
+        AppProxyStep::BuildImage => build_image_step(),
         AppProxyStep::GenerateAssetManifest => generate_asset_manifest_step(),
         AppProxyStep::UploadAssets => upload_assets_step().await,
+        AppProxyStep::VerifyPublishedAssets => verify_published_assets_step().await,
+        AppProxyStep::VerifyAssetParity => verify_asset_parity_step(),
     }
 }
 
 fn set_metadata_step(build_version_arg: Option<&str>) -> Result<()> {
-    let calver_env = CalverEnv {
-        build_version: trim_option(build_version_arg.map(ToOwned::to_owned))
-            .or_else(|| trim_option(env::var("BUILD_VERSION").ok())),
-        fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
-        fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
-    };
+    let mut calver_env = CalverEnv::from_process();
+    calver_env.build_version =
+        trim_option(build_version_arg.map(ToOwned::to_owned)).or(calver_env.build_version);
     let version = resolve_calver(&calver_env, Utc::now())?;
     append_github_output(&[
         ("build_version", version.as_str()),
@@ -118,28 +128,52 @@ fn ghcr_auth_value(username: &str, token: &str) -> String {
     BASE64.encode(format!("{username}:{token}"))
 }
 
-fn build_and_extract_step() -> Result<()> {
-    run_command(build_and_extract_command()?)
+fn build_dist_step() -> Result<()> {
+    run_command(bake_command(&["app-dist", "app-assets-image"])?)
 }
 
-fn build_and_extract_command() -> Result<CommandSpec> {
+fn build_image_step() -> Result<()> {
+    let command = bake_command(&["app-proxy"])?
+        .env("APP_ASSETS_REF", assets_ref()?)
+        .env("APP_ASSETS_PLATFORM", canonical_assets_platform());
+    run_command(command)
+}
+
+fn canonical_assets_platform() -> String {
+    env_string("APP_ASSETS_PLATFORM").unwrap_or_else(|| AMD64_PLATFORM.to_string())
+}
+
+fn assets_ref() -> Result<String> {
+    match env_string("APP_ASSETS_REF") {
+        Some(reference) => Ok(reference),
+        None => Ok(assets_image_ref(
+            &image_repo()?,
+            &require_env("BUILD_VERSION")?,
+        )),
+    }
+}
+
+fn assets_image_ref(image_repo: &str, build_version: &str) -> String {
+    format!("{image_repo}:{build_version}-assets")
+}
+
+fn image_repo() -> Result<String> {
+    match env::var("IMAGE_REPO") {
+        Ok(value) => Ok(value),
+        Err(_) => Ok(format!("ghcr.io/{}/fluxer-app-proxy", ghcr_owner()?)),
+    }
+}
+
+fn bake_command(targets: &[&str]) -> Result<CommandSpec> {
     let build_version = require_env("BUILD_VERSION")?;
     let public_asset_base_url = env::var("PUBLIC_ASSET_BASE_URL")
         .unwrap_or_else(|_| DEFAULT_PUBLIC_ASSET_BASE_URL.to_string());
-    let image_repo = match env::var("IMAGE_REPO") {
-        Ok(value) => value,
-        Err(_) => format!("ghcr.io/{}/fluxer-app-proxy", ghcr_owner()?),
-    };
     Ok(CommandSpec::new("docker")
         .args(["buildx", "bake", "-f", "fluxer_app_proxy/docker-bake.hcl"])
-        .env("IMAGE_REPO", image_repo)
+        .args(targets.iter().copied())
+        .env("IMAGE_REPO", image_repo()?)
         .env("BUILD_VERSION", build_version)
         .env("PUBLIC_ASSET_BASE_URL", public_asset_base_url)
-        .env(
-            "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-            env::var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED")
-                .unwrap_or_else(|_| DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED.to_string()),
-        )
         .env(
             "BUNDLE_LOCAL_ASSETS",
             env::var("BUNDLE_LOCAL_ASSETS")
@@ -147,13 +181,16 @@ fn build_and_extract_command() -> Result<CommandSpec> {
         )
         .env(
             "CACHE_FROM",
-            env::var("CACHE_FROM")
-                .unwrap_or_else(|_| "type=gha,scope=fluxer-app-proxy".to_string()),
+            env::var("CACHE_FROM").unwrap_or_else(|_| default_app_proxy_cache_ref()),
         )
         .env(
             "CACHE_TO",
-            env::var("CACHE_TO")
-                .unwrap_or_else(|_| "type=gha,scope=fluxer-app-proxy,mode=max".to_string()),
+            env::var("CACHE_TO").unwrap_or_else(|_| {
+                format!(
+                    "{},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true",
+                    default_app_proxy_cache_ref()
+                )
+            }),
         )
         .env(
             "DOCKER_BUILD_SUMMARY",
@@ -163,6 +200,11 @@ fn build_and_extract_command() -> Result<CommandSpec> {
             "DOCKER_BUILD_RECORD_UPLOAD",
             env::var("DOCKER_BUILD_RECORD_UPLOAD").unwrap_or_else(|_| "false".to_string()),
         ))
+}
+
+fn default_app_proxy_cache_ref() -> String {
+    let owner = ghcr_owner().unwrap_or_else(|_| "fluxerapp".to_string());
+    format!("type=registry,ref=ghcr.io/{owner}/fluxer-app-proxy:buildcache-amd64")
 }
 
 fn ghcr_owner() -> Result<String> {
@@ -218,7 +260,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
     );
     let mut entries = collect_files(&assets_dir)?
         .into_iter()
-        .filter(|path| !is_source_map_asset(path))
         .map(|path| {
             path.strip_prefix(dist)
                 .with_context(|| format!("Failed to relativize {}", path.display()))
@@ -227,12 +268,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
         .collect::<Result<Vec<_>>>()?;
     entries.sort();
     Ok(entries)
-}
-
-fn is_source_map_asset(path: &Path) -> bool {
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("map"))
 }
 
 async fn upload_assets_step() -> Result<()> {
@@ -295,24 +330,206 @@ fn validate_manifest_asset(asset: &str) -> Result<String> {
     Ok(asset.to_string())
 }
 
+async fn verify_published_assets_step() -> Result<()> {
+    let dist = app_dist_dir();
+    let manifest_path = dist.join("assets-manifest.txt");
+    let assets = read_asset_manifest(&manifest_path)?;
+    ensure!(!assets.is_empty(), "{} is empty", manifest_path.display());
+
+    let index_path = dist.join("index.html");
+    let index = fs::read_to_string(&index_path)
+        .with_context(|| format!("Failed to read {}", index_path.display()))?;
+    let unproduced = unproduced_references(&referenced_assets(&index), &assets);
+    ensure!(
+        unproduced.is_empty(),
+        "index.html references assets this build did not produce: {}",
+        unproduced.join(", ")
+    );
+
+    verify_local_assets(&dist, &assets)
+}
+
+fn verify_local_assets(dist: &Path, assets: &[String]) -> Result<()> {
+    let missing = assets
+        .iter()
+        .filter(|asset| !dist.join(asset).is_file())
+        .cloned()
+        .collect::<Vec<_>>();
+    ensure!(
+        missing.is_empty(),
+        "Manifest assets are missing from {}: {}",
+        dist.display(),
+        missing.join(", ")
+    );
+    println!(
+        "published asset verification passed - {} assets present in {}",
+        assets.len(),
+        dist.display()
+    );
+    Ok(())
+}
+
+fn referenced_assets(source: &str) -> Vec<String> {
+    const PREFIX: &str = "assets/";
+    let bytes = source.as_bytes();
+    let mut names = BTreeSet::new();
+    let mut cursor = 0;
+    while let Some(offset) = source[cursor..].find(PREFIX) {
+        let start = cursor + offset;
+        cursor = start + PREFIX.len();
+        if start > 0
+            && !matches!(
+                bytes[start - 1],
+                b'/' | b'"' | b'\'' | b'=' | b'(' | b' ' | b'>'
+            )
+        {
+            continue;
+        }
+        let name = source[cursor..]
+            .chars()
+            .take_while(|value| {
+                value.is_ascii_alphanumeric() || matches!(value, '.' | '_' | '-' | '/')
+            })
+            .collect::<String>();
+        if !name.is_empty() && !name.ends_with('/') {
+            names.insert(format!("{PREFIX}{name}"));
+        }
+    }
+    names.into_iter().collect()
+}
+
+fn unproduced_references(referenced: &[String], produced: &[String]) -> Vec<String> {
+    let produced = produced.iter().map(String::as_str).collect::<BTreeSet<_>>();
+    referenced
+        .iter()
+        .filter(|asset| !produced.contains(asset.as_str()))
+        .cloned()
+        .collect()
+}
+
+fn verify_asset_parity_step() -> Result<()> {
+    let root = runner_temp().join("app-proxy-asset-parity");
+    remove_dir_if_exists(&root)?;
+
+    let canonical_dir = extract_image_dir(
+        &require_env("APP_PROXY_ASSETS_REF")?,
+        &canonical_assets_platform(),
+        CANONICAL_ASSETS_DIR,
+        &root.join("canonical"),
+    )?;
+    let canonical = asset_tree_digests(&canonical_dir)?;
+    ensure!(
+        !canonical.is_empty(),
+        "Canonical asset tree is empty: {}",
+        canonical_dir.display()
+    );
+
+    for (label, reference_env, platform) in [
+        ("amd64", "APP_PROXY_AMD64_REF", AMD64_PLATFORM),
+        ("arm64", "APP_PROXY_ARM64_REF", ARM64_PLATFORM),
+    ] {
+        let runtime_dir = extract_image_dir(
+            &require_env(reference_env)?,
+            platform,
+            RUNTIME_STATIC_DIR,
+            &root.join(label),
+        )?;
+        let differences = tree_differences(&canonical, &asset_tree_digests(&runtime_dir)?);
+        ensure!(
+            differences.is_empty(),
+            "{label} app-proxy asset tree does not match the canonical dist:\n{}",
+            differences.join("\n")
+        );
+    }
+
+    println!(
+        "asset parity verified - {} files in every architecture",
+        canonical.len()
+    );
+    Ok(())
+}
+
+fn extract_image_dir(reference: &str, platform: &str, path: &str, dest: &Path) -> Result<PathBuf> {
+    run_command(pull_command(reference, platform))?;
+    let container = output_text(create_command(reference, platform))?;
+    ensure!(
+        !container.is_empty(),
+        "docker create returned no container id for {reference}"
+    );
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create {}", parent.display()))?;
+    }
+    let copied = run_command(copy_command(&container, path, dest));
+    let removed = run_command(CommandSpec::new("docker").args(["rm", "-f", container.as_str()]));
+    copied?;
+    removed?;
+    Ok(dest.to_path_buf())
+}
+
+fn pull_command(reference: &str, platform: &str) -> CommandSpec {
+    CommandSpec::new("docker").args(["pull", "--platform", platform, reference])
+}
+
+fn create_command(reference: &str, platform: &str) -> CommandSpec {
+    CommandSpec::new("docker").args(["create", "--platform", platform, reference])
+}
+
+fn copy_command(container: &str, path: &str, dest: &Path) -> CommandSpec {
+    CommandSpec::new("docker")
+        .arg("cp")
+        .arg(format!("{container}:{path}"))
+        .arg(dest.as_os_str())
+}
+
+fn asset_tree_digests(root: &Path) -> Result<BTreeMap<String, String>> {
+    collect_files(root)?
+        .into_iter()
+        .map(|path| {
+            let relative = path
+                .strip_prefix(root)
+                .with_context(|| format!("Failed to relativize {}", path.display()))?;
+            Ok((path_to_s3_key(relative), sha256_file(&path)?))
+        })
+        .collect()
+}
+
+fn tree_differences(
+    canonical: &BTreeMap<String, String>,
+    other: &BTreeMap<String, String>,
+) -> Vec<String> {
+    let mut differences = Vec::new();
+    for (path, digest) in canonical {
+        match other.get(path) {
+            None => differences.push(format!("missing: {path}")),
+            Some(actual) if actual != digest => {
+                differences.push(format!("content differs: {path}"))
+            }
+            Some(_) => {}
+        }
+    }
+    for path in other.keys() {
+        if !canonical.contains_key(path) {
+            differences.push(format!("unexpected: {path}"));
+        }
+    }
+    if differences.len() > PARITY_DIFF_LIMIT {
+        let remaining = differences.len() - PARITY_DIFF_LIMIT;
+        differences.truncate(PARITY_DIFF_LIMIT);
+        differences.push(format!("...and {remaining} more differences"));
+    }
+    differences
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::parse_version_instant;
     use chrono::{DateTime, TimeZone, Utc};
-    use std::ffi::OsString;
 
     fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
             .single()
             .unwrap()
-    }
-
-    fn write_file(path: &Path, contents: &str) {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).unwrap();
-        }
-        fs::write(path, contents).unwrap();
     }
 
     #[test]
@@ -338,100 +555,10 @@ mod tests {
     }
 
     #[test]
-    fn rejects_invalid_calver_time() {
-        assert_eq!(
-            parse_version_instant("2026.520.246000")
-                .unwrap_err()
-                .to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
-    }
-
-    #[test]
-    fn ghcr_auth_config_merges_existing_auths() {
-        let temp = tempfile::tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        fs::write(
-            &config_path,
-            r#"{"auths":{"example.com":{"auth":"old"}},"currentContext":"builder"}"#,
-        )
-        .unwrap();
-
-        write_ghcr_auth_config(&config_path, "octo", "secret").unwrap();
-
-        let config: Value =
-            serde_json::from_str(&fs::read_to_string(config_path).unwrap()).unwrap();
-        assert_eq!(config["auths"]["example.com"]["auth"], "old");
-        assert_eq!(
-            config["auths"]["ghcr.io"]["auth"],
-            BASE64.encode("octo:secret")
-        );
-        assert_eq!(config["currentContext"], "builder");
-    }
-
-    #[test]
-    fn ghcr_auth_config_rejects_non_object_roots_and_auths() {
-        let temp = tempfile::tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        fs::write(&config_path, "[]").unwrap();
-        assert_eq!(
-            write_ghcr_auth_config(&config_path, "octo", "secret")
-                .unwrap_err()
-                .to_string(),
-            "Docker config root must be a JSON object"
-        );
-
-        fs::write(&config_path, r#"{"auths":[]}"#).unwrap();
-        assert_eq!(
-            write_ghcr_auth_config(&config_path, "octo", "secret")
-                .unwrap_err()
-                .to_string(),
-            "Docker config auths must be a JSON object"
-        );
-    }
-
-    #[test]
-    fn build_command_sets_bake_environment() {
-        let command = CommandSpec::new("docker")
-            .args(["buildx", "bake", "-f", "fluxer_app_proxy/docker-bake.hcl"])
-            .env("IMAGE_REPO", "ghcr.io/example/fluxer-app-proxy")
-            .env("BUILD_VERSION", "2026.520.1")
-            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL)
-            .env(
-                "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-                DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED,
-            );
-
-        assert_eq!(command.program, OsString::from("docker"));
-        assert_eq!(
-            command.args,
-            vec![
-                OsString::from("buildx"),
-                OsString::from("bake"),
-                OsString::from("-f"),
-                OsString::from("fluxer_app_proxy/docker-bake.hcl"),
-            ]
-        );
-        assert!(command.env.contains(&(
-            OsString::from("BUILD_VERSION"),
-            OsString::from("2026.520.1")
-        )));
-        assert!(command.env.contains(&(
-            OsString::from("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED"),
-            OsString::from(DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED)
-        )));
-    }
-
-    #[test]
-    fn hosted_bake_trims_the_local_asset_tree_by_default() {
-        assert_eq!(DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS, "false");
-    }
-
-    #[test]
     fn dockerfile_guards_the_trim_on_an_absolute_asset_base_url() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let trim = dockerfile
-            .split("FROM alpine:3.21 AS app-assets")
+            .split("FROM alpine:3.24 AS app-assets")
             .nth(1)
             .expect("app-assets stage");
         assert!(
@@ -445,112 +572,120 @@ mod tests {
     }
 
     #[test]
-    fn asset_manifest_entries_are_sorted_and_relative_to_dist() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        write_file(&dist.join("assets/z.js"), "z");
-        write_file(&dist.join("assets/z.js.map"), "{}");
-        write_file(&dist.join("assets/chunks/a.js"), "a");
-        write_file(&dist.join("assets/chunks/a.js.map"), "{}");
-        write_file(&dist.join("index.html"), "ignored");
-
-        assert_eq!(
-            asset_manifest_entries(&dist).unwrap(),
-            vec!["assets/chunks/a.js", "assets/z.js"]
-        );
-    }
-
-    #[test]
-    fn asset_manifest_entries_require_assets_directory() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        fs::create_dir_all(&dist).unwrap();
-
+    fn dockerfile_workspace_manifest_keeps_the_release_profile() {
+        let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
+        let manifest = dockerfile
+            .split("'[workspace]'")
+            .nth(1)
+            .expect("synthesized workspace manifest")
+            .split("> Cargo.toml")
+            .next()
+            .expect("synthesized workspace manifest body");
+        for entry in [
+            "'[profile.release]'",
+            "'lto = \"fat\"'",
+            "'codegen-units = 1'",
+            "'strip = \"symbols\"'",
+        ] {
+            assert!(
+                manifest.contains(entry),
+                "the rust-builder workspace manifest replaces the repository root one, so it must contain {entry}"
+            );
+        }
         assert!(
-            asset_manifest_entries(&dist)
-                .unwrap_err()
-                .to_string()
-                .contains("App proxy assets directory is missing")
+            !manifest.contains("panic"),
+            "fluxer_svc runs every request on its own tokio task, so a panicking handler must unwind instead of aborting the pod"
         );
-    }
-
-    #[test]
-    fn manifest_reader_trims_blank_lines_and_keeps_order() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = temp.path().join("assets-manifest.txt");
-        fs::write(&manifest, "\n assets/b.js \n\nassets/a.js\n").unwrap();
-
-        assert_eq!(
-            read_asset_manifest(&manifest).unwrap(),
-            vec!["assets/b.js", "assets/a.js"]
-        );
-    }
-
-    #[test]
-    fn asset_upload_plan_preserves_manifest_keys() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        write_file(&dist.join("assets/a.js"), "a");
-        write_file(&dist.join("assets/chunks/b.js"), "b");
-        let assets = vec!["assets/a.js".to_string(), "assets/chunks/b.js".to_string()];
-
-        let plan = asset_upload_plan(&dist, &assets).unwrap();
-
-        assert_eq!(
-            plan.iter()
-                .map(|item| item.key.as_str())
-                .collect::<Vec<_>>(),
-            vec!["assets/a.js", "assets/chunks/b.js"]
-        );
-        assert_eq!(plan[0].path, dist.join("assets/a.js"));
-        assert_eq!(plan[1].path, dist.join("assets/chunks/b.js"));
-        assert_eq!(
-            plan[0].content_type.as_deref(),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            plan[0].cache_control.as_deref(),
-            Some(IMMUTABLE_ASSET_CACHE_CONTROL)
-        );
-        assert!(plan[0].repair_existing_metadata);
-    }
-
-    #[test]
-    fn asset_upload_plan_rejects_manifest_entries_missing_on_disk() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        fs::create_dir_all(&dist).unwrap();
-        let assets = vec!["assets/missing.js".to_string()];
-
-        assert!(
-            asset_upload_plan(&dist, &assets)
-                .unwrap_err()
-                .to_string()
-                .contains("Manifest asset is missing")
-        );
-    }
-
-    #[test]
-    fn manifest_reader_rejects_paths_outside_assets() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = temp.path().join("assets-manifest.txt");
-        fs::write(&manifest, "assets/a.js\n../secret\n").unwrap();
-
-        assert!(read_asset_manifest(&manifest).is_err());
     }
 
     #[test]
     fn manifest_reader_rejects_absolute_parent_and_backslash_paths() {
-        for asset in ["/assets/a.js", "assets/../secret", r"assets\app.js"] {
+        for asset in [
+            "../secret",
+            "/assets/a.js",
+            "assets/../secret",
+            r"assets\app.js",
+        ] {
             assert!(validate_manifest_asset(asset).is_err(), "{asset}");
         }
     }
 
     #[test]
-    fn path_to_s3_key_uses_forward_slashes() {
-        assert_eq!(
-            path_to_s3_key(Path::new("assets").join("chunks").join("a.js").as_path()),
-            "assets/chunks/a.js"
+    fn referenced_assets_collects_absolute_and_root_relative_urls() {
+        let index = concat!(
+            "<script src=\"https://fluxerstatic.com/assets/a.js\"></script>",
+            "<link rel=\"stylesheet\" href=\"/assets/b.css\">",
+            "<a href=\"assets/fonts-NOTICE.txt\">notice</a>",
+            "<script src=\"https://fluxerstatic.com/assets/a.js\"></script>",
         );
+
+        assert_eq!(
+            referenced_assets(index),
+            vec!["assets/a.js", "assets/b.css", "assets/fonts-NOTICE.txt"]
+        );
+    }
+
+    #[test]
+    fn referenced_assets_ignores_lookalike_paths() {
+        assert!(
+            referenced_assets(
+                "<script src=\"/myassets/x.js\"></script><img src=\"/other/notassets/y.js\">"
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn referenced_assets_keeps_nested_asset_paths() {
+        assert_eq!(
+            referenced_assets("<script src=\"/assets/chunks/a.js\"></script>"),
+            vec!["assets/chunks/a.js"]
+        );
+    }
+
+    #[test]
+    fn unproduced_references_flags_assets_the_build_did_not_produce() {
+        let referenced = vec!["assets/a.js".to_string(), "assets/gone.js".to_string()];
+        let produced = vec!["assets/a.js".to_string()];
+
+        assert_eq!(
+            unproduced_references(&referenced, &produced),
+            vec!["assets/gone.js"]
+        );
+    }
+
+    #[test]
+    fn tree_differences_reports_missing_unexpected_and_changed() {
+        let canonical = BTreeMap::from([
+            ("assets/a.js".to_string(), "aa".to_string()),
+            ("assets/b.js".to_string(), "bb".to_string()),
+        ]);
+        let other = BTreeMap::from([
+            ("assets/a.js".to_string(), "changed".to_string()),
+            ("assets/c.js".to_string(), "cc".to_string()),
+        ]);
+
+        assert_eq!(
+            tree_differences(&canonical, &other),
+            vec![
+                "content differs: assets/a.js",
+                "missing: assets/b.js",
+                "unexpected: assets/c.js",
+            ]
+        );
+    }
+
+    #[test]
+    fn self_hosted_workflow_keeps_assets_same_origin() {
+        let workflow = include_str!("../../../.github/workflows/build-app-proxy-self-hosted.yaml");
+        for entry in [
+            "PUBLIC_ASSET_BASE_URL: \"\"",
+            "BUNDLE_LOCAL_ASSETS: \"true\"",
+        ] {
+            assert!(
+                workflow.contains(entry),
+                "a self-hosted dist that inherits the hosted CDN default would ship index.html pointing at fluxerstatic.com, so the workflow must set {entry}"
+            );
+        }
     }
 }

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import '@app/Instrument';
 import {initializeConfig} from '@app/api/Config';
 import {initializeLogger} from '@app/api/Logger';
 import {startWorkerMain} from '@app/api/worker/WorkerMain';

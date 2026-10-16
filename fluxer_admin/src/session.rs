@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::config::AdminConfig;
+use axum::{
+    http::{HeaderValue, header},
+    response::Response,
+};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, KeyInit, Mac};
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -78,9 +84,71 @@ fn verify_signature<'a>(signed_data: &'a str, secret_key: &str) -> Option<&'a st
     if diff == 0 { Some(data) } else { None }
 }
 
-pub const LEGACY_SESSION_COOKIE_NAME: &str = "session";
+pub fn create_csrf_token(user_id: &str, secret_key: &str) -> String {
+    let mut rng = rand::rng();
+    let nonce: [u8; 16] = rng.random();
+    let payload = URL_SAFE_NO_PAD.encode(format!(
+        "{}:{}",
+        URL_SAFE_NO_PAD.encode(user_id.as_bytes()),
+        URL_SAFE_NO_PAD.encode(nonce)
+    ));
+    sign_data(&payload, secret_key)
+}
+
+pub fn verify_csrf_token(token: &str, user_id: &str, secret_key: &str) -> bool {
+    let Some(data) = verify_signature(token, secret_key) else {
+        return false;
+    };
+    let Ok(decoded) = URL_SAFE_NO_PAD.decode(data.as_bytes()) else {
+        return false;
+    };
+    let Ok(payload) = String::from_utf8(decoded) else {
+        return false;
+    };
+    let Some((encoded_uid, _nonce)) = payload.split_once(':') else {
+        return false;
+    };
+    match URL_SAFE_NO_PAD.decode(encoded_uid.as_bytes()) {
+        Ok(uid_bytes) => uid_bytes == user_id.as_bytes(),
+        Err(_) => false,
+    }
+}
+
 pub const SESSION_COOKIE_NAME: &str = "admin_session";
 pub const SESSION_MAX_AGE: i64 = MAX_AGE_SECONDS as i64;
+
+pub(crate) fn admin_cookie_path(config: &AdminConfig) -> &str {
+    if config.base_path.is_empty() {
+        "/"
+    } else {
+        config.base_path.as_str()
+    }
+}
+
+pub(crate) fn clear_cookie_value(name: &str, path: &str) -> String {
+    format!("{name}=; Path={path}; HttpOnly; SameSite=Lax; Max-Age=0")
+}
+
+pub(crate) fn clear_cookie_values(name: &str, config: &AdminConfig) -> Vec<String> {
+    let admin_path = admin_cookie_path(config);
+    let mut cookies = vec![clear_cookie_value(name, admin_path)];
+    if admin_path != "/" {
+        cookies.push(clear_cookie_value(name, "/"));
+    }
+    cookies
+}
+
+pub(crate) fn append_cookie(response: &mut Response, cookie: &str) {
+    if let Ok(value) = HeaderValue::from_str(cookie) {
+        response.headers_mut().append(header::SET_COOKIE, value);
+    }
+}
+
+pub(crate) fn append_cookies(response: &mut Response, cookies: &[String]) {
+    for cookie in cookies {
+        append_cookie(response, cookie);
+    }
+}
 
 #[cfg(test)]
 mod tests {

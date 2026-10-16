@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {type SyntheticEvent, useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
@@ -121,9 +121,9 @@ export function useMediaLoading(
 	options: UseMediaLoadingOptions = {},
 ): MediaLoadingState {
 	const {enabled = true} = options;
-	const shouldForcePlaceholder = DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading;
 	const mediaElementRef = useRef<MediaLoadingElement | null>(null);
-	const loadEnabled = enabled && src.length > 0 && !shouldForcePlaceholder;
+	const refreshedSourceRef = useRef<string | null>(null);
+	const loadEnabled = enabled && src.length > 0;
 	const sourceIdentity = useMemo<MediaLoadingSourceIdentity>(() => ({src, loadEnabled}), [loadEnabled, src]);
 	const committedSourceIdentityRef = useRef(sourceIdentity);
 	const initialCached = loadEnabled && ImageCacheUtils.hasImage(src);
@@ -184,6 +184,10 @@ export function useMediaLoading(
 			if (mediaElementRef.current !== element) return;
 			if (!mediaElementMatchesSource(element, src)) return;
 			ImageCacheUtils.forgetImage(src);
+			if (refreshedSourceRef.current !== src) {
+				refreshedSourceRef.current = src;
+				void AttachmentUrlRefresher.refresh(src, {force: true});
+			}
 			setSourceState((currentState) => {
 				if (currentState.src === src && currentState.loadEnabled === loadEnabled && currentState.loaded) {
 					return {...currentState, cached: false};

@@ -2,7 +2,7 @@
 
 import type {VideoCodec} from 'livekit-client';
 
-export type ScreenShareRemoteMigrationPhase = 'breaking' | 'candidate' | 'committed';
+type ScreenShareRemoteMigrationPhase = 'breaking' | 'candidate' | 'committed';
 
 export interface ScreenShareRemoteMigrationState {
 	migrationId: string;
@@ -47,21 +47,6 @@ export type ScreenShareRemoteMigrationEvent =
 	| {type: 'migration.candidateUnpublished'; trackSid: string}
 	| {type: 'migration.committedUnpublished'; trackSid: string}
 	| {type: 'migration.readySent'};
-
-export interface ScreenShareLocalMigrationReadinessState {
-	targetIdentities: ReadonlySet<string>;
-	readyIdentities: ReadonlySet<string>;
-}
-
-export type ScreenShareLocalMigrationReadinessEvent =
-	| {type: 'watcher.ready'; participantIdentity: string}
-	| {type: 'watcher.timeout'};
-
-export interface ScreenShareMigrationReadinessResult {
-	readyIdentities: Array<string>;
-	missingIdentities: Array<string>;
-	timedOut: boolean;
-}
 
 function isSameMigration(state: ScreenShareRemoteMigrationState | null, event: {migrationId: string}): boolean {
 	return state?.migrationId === event.migrationId;
@@ -219,42 +204,4 @@ export function transitionRemoteScreenShareMigrationState(
 		default:
 			return state;
 	}
-}
-
-export function createLocalMigrationReadinessState(
-	targetIdentities: ReadonlyArray<string>,
-): ScreenShareLocalMigrationReadinessState {
-	return {
-		targetIdentities: new Set(targetIdentities.filter(Boolean)),
-		readyIdentities: new Set(),
-	};
-}
-
-export function transitionLocalMigrationReadinessState(
-	state: ScreenShareLocalMigrationReadinessState,
-	event: ScreenShareLocalMigrationReadinessEvent,
-): ScreenShareLocalMigrationReadinessState {
-	if (event.type === 'watcher.timeout') return state;
-	if (!state.targetIdentities.has(event.participantIdentity)) return state;
-	if (state.readyIdentities.has(event.participantIdentity)) return state;
-	return {
-		...state,
-		readyIdentities: new Set([...state.readyIdentities, event.participantIdentity]),
-	};
-}
-
-export function isLocalMigrationReadinessComplete(state: ScreenShareLocalMigrationReadinessState): boolean {
-	return state.readyIdentities.size >= state.targetIdentities.size;
-}
-
-export function selectLocalMigrationReadinessResult(
-	state: ScreenShareLocalMigrationReadinessState,
-	timedOut: boolean,
-): ScreenShareMigrationReadinessResult {
-	const readyIdentities = Array.from(state.readyIdentities);
-	return {
-		readyIdentities,
-		missingIdentities: Array.from(state.targetIdentities).filter((identity) => !state.readyIdentities.has(identity)),
-		timedOut,
-	};
 }

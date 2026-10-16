@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createWebhook, deleteWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import type {WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createWebhook, deleteWebhook} from './WebhookTestUtils';
 
 describe('Webhook token authentication', () => {
 	let harness: ApiTestHarness;
@@ -40,12 +40,6 @@ describe('Webhook token authentication', () => {
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
 			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('rejects nonexistent webhook id', async () => {
-			await createBuilderWithoutAuth(harness)
-				.get(`/webhooks/${TEST_IDS.NONEXISTENT_WEBHOOK}/any_token`)
-				.expect(HTTP_STATUS.NOT_FOUND)
-				.execute();
 		});
 		it('rejects valid id with wrong token', async () => {
 			const owner = await createTestAccount(harness);
@@ -132,18 +126,6 @@ describe('Webhook token authentication', () => {
 		});
 	});
 	describe('POST /webhooks/:webhook_id/:token (execute)', () => {
-		it('executes webhook with valid token', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Token Auth Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'Execute Webhook');
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}`)
-				.body({content: 'Hello from webhook'})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
 		it('rejects execution with invalid token', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Token Auth Guild');

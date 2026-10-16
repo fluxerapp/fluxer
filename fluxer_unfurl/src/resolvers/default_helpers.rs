@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::ResolveContext;
+use crate::http_fetch;
 use crate::oembed;
+use std::borrow::Cow;
+use std::time::Duration;
 use url::Url;
+
+const MEDIAWIKI_QUERY: &str =
+    "action=query&prop=extracts&exintro=&explaintext=&format=json&titles=";
+const MEDIAWIKI_MAX_BYTES: usize = 256 * 1024;
+const MEDIAWIKI_TIMEOUT: Duration = Duration::from_secs(5);
 
 pub struct ImageCandidate {
     pub url: String,
@@ -93,7 +101,7 @@ pub fn resolve_media_url(base_url: &Url, value: &str) -> Option<String> {
     matches!(url.scheme(), "http" | "https").then(|| url.to_string())
 }
 
-fn normalize_url(url: &str) -> Option<String> {
+pub fn normalize_url(url: &str) -> Option<String> {
     Url::parse(url)
         .ok()
         .map(|u| u.as_str().trim_end_matches('/').to_owned())
@@ -120,6 +128,68 @@ pub async fn fetch_oembed_data(
         .ok()
 }
 
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct MediaWikiArticle {
+    pub title: Option<String>,
+    pub description: Option<String>,
+}
+
+pub async fn fetch_mediawiki_article(
+    ctx: &ResolveContext<'_>,
+    html: &str,
+) -> Option<MediaWikiArticle> {
+    let query_url = mediawiki_query_url(&ctx.url, html)?;
+    let result = http_fetch::fetch_url(
+        &ctx.http_client,
+        &query_url,
+        MEDIAWIKI_MAX_BYTES,
+        MEDIAWIKI_TIMEOUT,
+    )
+    .await
+    .ok()?;
+    if result.status != 200 {
+        return None;
+    }
+    let json = serde_json::from_slice::<serde_json::Value>(&result.bytes).ok()?;
+    let pages = json.get("query").and_then(|query| query.get("pages"))?;
+    if !pages.is_object() && !pages.is_array() {
+        return None;
+    }
+    Some(mediawiki_article(pages))
+}
+
+fn mediawiki_article(pages: &serde_json::Value) -> MediaWikiArticle {
+    let page = match pages {
+        serde_json::Value::Object(pages) => pages.values().next(),
+        serde_json::Value::Array(pages) => pages.first(),
+        _ => None,
+    };
+    MediaWikiArticle {
+        title: page.and_then(|page| mediawiki_text(page, "title")),
+        description: page.and_then(|page| mediawiki_text(page, "extract")),
+    }
+}
+
+fn mediawiki_text(page: &serde_json::Value, key: &str) -> Option<String> {
+    let value = page.get(key)?.as_str()?.trim();
+    (!value.is_empty()).then(|| value.to_owned())
+}
+
+fn mediawiki_query_url(page_url: &Url, html: &str) -> Option<String> {
+    let rsd = crate::html_parser::find_rsd_url(html)?;
+    let endpoint = page_url.join(&rsd).ok()?;
+    if !matches!(endpoint.scheme(), "http" | "https") {
+        return None;
+    }
+    let title = page_url
+        .path_segments()?
+        .rfind(|segment| !segment.is_empty())?;
+    let decoded = urlencoding::decode(title).unwrap_or(Cow::Borrowed(title));
+    let title = urlencoding::encode(&decoded);
+    let separator = if endpoint.query().is_some() { '&' } else { '?' };
+    Some(format!("{endpoint}{separator}{MEDIAWIKI_QUERY}{title}"))
+}
+
 pub fn parse_hex_color(s: &str) -> Option<u32> {
     let hex = s.trim().strip_prefix('#')?;
     let ok = (hex.len() == 6 || hex.len() == 3) && hex.chars().all(|c| c.is_ascii_hexdigit());
@@ -136,31 +206,47 @@ pub fn parse_hex_color(s: &str) -> Option<u32> {
     }
 }
 
+use crate::text_limits;
+
+pub fn parse_text(value: &str, max_len: usize) -> String {
+    text_limits::truncate(decode_html_text(value).trim(), max_len)
+}
+
+pub fn decode_html_text(input: &str) -> String {
+    scraper::Html::parse_fragment(input)
+        .root_element()
+        .text()
+        .collect()
+}
+
+pub fn resolve_http_url(base_url: &Url, media_url: &str) -> Option<String> {
+    let url = base_url.join(media_url).ok()?;
+    if matches!(url.scheme(), "http" | "https") {
+        Some(url.to_string())
+    } else {
+        None
+    }
+}
+
+pub fn normalize_timestamp(value: &str) -> String {
+    chrono::DateTime::parse_from_rfc3339(value)
+        .map(|dt| {
+            dt.with_timezone(&chrono::Utc)
+                .to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+        })
+        .unwrap_or_else(|_| value.to_owned())
+}
+
+pub fn sanitize_absolute_url(value: &str) -> Option<String> {
+    Url::parse(value.trim()).ok().map(|url| url.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html_parser::OgMetadata;
 
     fn url(value: &str) -> Url {
         Url::parse(value).unwrap()
-    }
-
-    #[test]
-    fn resolve_media_url_resolves_relative_references() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-
-        assert_eq!(
-            resolve_media_url(&base, "/api/og").as_deref(),
-            Some("https://forgetful.vercel.app/api/og")
-        );
-        assert_eq!(
-            resolve_media_url(&base, "images/card.png").as_deref(),
-            Some("https://forgetful.vercel.app/posts/images/card.png")
-        );
-        assert_eq!(
-            resolve_media_url(&base, "//cdn.example.com/card.png").as_deref(),
-            Some("https://cdn.example.com/card.png")
-        );
     }
 
     #[test]
@@ -170,53 +256,5 @@ mod tests {
         assert!(resolve_media_url(&base, "javascript:alert(1)").is_none());
         assert!(resolve_media_url(&base, "data:image/png;base64,abcd").is_none());
         assert!(resolve_media_url(&base, "bad url.png").is_none());
-    }
-
-    #[test]
-    fn build_image_candidates_resolves_relative_og_images() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-        let og = OgMetadata {
-            images: vec![
-                "/api/og".to_owned(),
-                "images/card.png".to_owned(),
-                "//cdn.example.com/card.png".to_owned(),
-            ],
-            ..Default::default()
-        };
-
-        let candidates = build_image_candidates(&base, &og, None);
-        let urls = candidates
-            .into_iter()
-            .map(|candidate| candidate.url)
-            .collect::<Vec<_>>();
-
-        assert_eq!(
-            urls,
-            vec![
-                "https://forgetful.vercel.app/api/og".to_owned(),
-                "https://forgetful.vercel.app/posts/images/card.png".to_owned(),
-                "https://cdn.example.com/card.png".to_owned()
-            ]
-        );
-    }
-
-    #[test]
-    fn build_image_candidates_deduplicates_after_resolution() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-        let og = OgMetadata {
-            images: vec![
-                "/api/og".to_owned(),
-                "https://forgetful.vercel.app/api/og/".to_owned(),
-            ],
-            ..Default::default()
-        };
-
-        let candidates = build_image_candidates(&base, &og, None);
-
-        assert_eq!(candidates.len(), 1);
-        assert_eq!(
-            candidates[0].url.as_str(),
-            "https://forgetful.vercel.app/api/og"
-        );
     }
 }

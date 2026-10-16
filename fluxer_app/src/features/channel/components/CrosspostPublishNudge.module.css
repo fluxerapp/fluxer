@@ -1,0 +1,80 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.25rem 1rem;
+	margin-block-start: 0.25rem;
+	min-inline-size: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-inline-size: 0;
+	padding: 0.375rem 0.625rem;
+	border-radius: var(--radius-md);
+	background: var(--background-secondary);
+	color: var(--text-primary);
+}
+
+.icon {
+	width: 1rem;
+	height: 1rem;
+	flex: 0 0 auto;
+	color: var(--text-tertiary);
+}
+
+.label {
+	min-inline-size: 0;
+	font-weight: 400;
+}
+
+.publishButton,
+.dismissButton,
+.hideForeverButton {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	font: inherit;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.publishButton {
+	color: var(--text-link);
+	font-weight: 500;
+}
+
+.dismissButton {
+	color: var(--text-tertiary);
+}
+
+.dismissIcon {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+
+.hideForeverButton {
+	color: var(--text-chat-muted);
+}
+
+@media (hover: hover) {
+	.publishButton:hover,
+	.hideForeverButton:hover {
+		text-decoration: underline;
+	}
+
+	.dismissButton:hover {
+		color: var(--text-primary);
+	}
+}

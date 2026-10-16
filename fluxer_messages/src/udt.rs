@@ -152,7 +152,6 @@ pub struct StickerItemUdt {
     pub name: Option<String>,
     pub format_type: Option<i32>,
     pub animated: Option<bool>,
-    pub nsfw: Option<bool>,
 }
 
 #[cfg_attr(

@@ -22,30 +22,24 @@ function thresholdKey(threshold: number | Array<number> | undefined): string {
 	return threshold.join(',');
 }
 
+const rootIds = new WeakMap<Element, string>();
+let rootIdCounter = 0;
+
 function rootKey(root: Element | null | undefined): string {
 	if (!root) return 'document';
-	const id = (
-		root as Element & {
-			dataset?: DOMStringMap;
-		}
-	).dataset?.sharedIoId;
-	if (id) return `el:${id}`;
-	const generated = `gen-${++rootIdCounter}`;
-	(
-		root as Element & {
-			dataset: DOMStringMap;
-		}
-	).dataset.sharedIoId = generated;
-	return `el:${generated}`;
+	let id = rootIds.get(root);
+	if (id === undefined) {
+		id = `r${++rootIdCounter}`;
+		rootIds.set(root, id);
+	}
+	return `el:${id}`;
 }
-
-let rootIdCounter = 0;
 
 function buildKey(options: ObserverOptions): string {
 	return `${rootKey(options.root ?? null)}|${options.rootMargin ?? '0px'}|${thresholdKey(options.threshold)}`;
 }
 
-function getOrCreate(options: ObserverOptions): SharedObserverState {
+function acquirePooledObserver(options: ObserverOptions): SharedObserverState {
 	const key = buildKey(options);
 	let state = pool.get(key);
 	if (state) return state;
@@ -77,7 +71,7 @@ function getOrCreate(options: ObserverOptions): SharedObserverState {
 }
 
 export function observeIntersection(element: Element, callback: Callback, options: ObserverOptions = {}): () => void {
-	const state = getOrCreate(options);
+	const state = acquirePooledObserver(options);
 	let handlers = state.callbacks.get(element);
 	if (!handlers) {
 		handlers = new Set();

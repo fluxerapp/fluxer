@@ -2,27 +2,27 @@
 
 import assert from 'node:assert/strict';
 import {
-	getVoiceEngineV2MicrophoneOperationFailureAction,
-	type VoiceEngineV2MicrophoneOperationFailureAction,
-} from '../../policies/microphoneFailureAction';
-import type {VoiceEngineV2Event} from '../../protocol/events';
-import type {
-	VoiceEngineV2AudioControls,
-	VoiceEngineV2Error,
-	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2OperationId,
-	VoiceEngineV2PermissionResult,
-} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {
 	allocateOperation,
 	beginUnpublish,
 	failUnpublish,
 	isConnected,
 	markOperation,
 	unsupportedCapability,
-} from './_helpers';
-import {applyMediaFailure, completeUnpublish} from './_media';
+} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {applyMediaFailure, completeUnpublish} from '@fluxer/voice_engine_v2/src/core/reducers/_media';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import {
+	getVoiceEngineV2MicrophoneOperationFailureAction,
+	type VoiceEngineV2MicrophoneOperationFailureAction,
+} from '@fluxer/voice_engine_v2/src/policies/microphoneFailureAction';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2AudioControls,
+	VoiceEngineV2Error,
+	VoiceEngineV2MicrophoneOptions,
+	VoiceEngineV2OperationId,
+	VoiceEngineV2PermissionResult,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2MicrophoneEvent = Extract<
 	VoiceEngineV2Event,
@@ -42,8 +42,6 @@ function sameMicrophoneOptions(
 		a?.echoCancellation === b?.echoCancellation &&
 		a?.noiseSuppression === b?.noiseSuppression &&
 		a?.autoGainControl === b?.autoGainControl &&
-		a?.deepFilter === b?.deepFilter &&
-		a?.deepFilterNoiseReductionLevel === b?.deepFilterNoiseReductionLevel &&
 		a?.maxBitrateBps === b?.maxBitrateBps
 	);
 }
@@ -203,46 +201,6 @@ function microphoneOptionsWithAudioInputDevice(
 	return {...options, deviceId};
 }
 
-function nativeAudioDeviceModuleNotReadyError(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2Error {
-	assert.ok(snapshot != null, 'nativeAudioDeviceModuleNotReadyError snapshot must not be null');
-	assert.ok(
-		snapshot.nativeAudioDeviceModule.status === 'failed',
-		'nativeAudioDeviceModuleNotReadyError requires failed ADM status',
-	);
-	return {
-		code: 'deviceUnavailable',
-		capability: 'microphone',
-		message: snapshot.nativeAudioDeviceModule.detail ?? 'Native audio device module failed to become ready',
-	};
-}
-
-function planNativeAudioDeviceModuleGatedMicrophone(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2Transition | null {
-	assert.ok(snapshot != null, 'planNativeAudioDeviceModuleGatedMicrophone snapshot must not be null');
-	assert.ok(snapshot.nativeAudioDeviceModule != null, 'snapshot.nativeAudioDeviceModule must not be null');
-	switch (snapshot.nativeAudioDeviceModule.status) {
-		case 'unsupported':
-		case 'ready':
-			return null;
-		case 'unknown':
-		case 'warming':
-			return {
-				snapshot: {...snapshot, microphone: {...snapshot.microphone, status: 'idle', failure: null}},
-				commands: [],
-			};
-		case 'failed': {
-			const error = nativeAudioDeviceModuleNotReadyError(snapshot);
-			return {
-				snapshot: {
-					...snapshot,
-					microphone: {...snapshot.microphone, status: 'failed', published: null, operationId: null, failure: error},
-					lastFailure: error,
-				},
-				commands: [],
-			};
-		}
-	}
-}
-
 export function planMicrophoneDeviceChange(
 	snapshot: VoiceEngineV2Snapshot,
 	deviceId: string | null,
@@ -327,8 +285,6 @@ export function beginMicrophonePublish(snapshot: VoiceEngineV2Snapshot): VoiceEn
 		};
 	}
 	if (!isConnected(snapshot)) return {snapshot, commands: []};
-	const gated = planNativeAudioDeviceModuleGatedMicrophone(snapshot);
-	if (gated) return gated;
 	if (snapshot.microphone.status === 'publishing') return {snapshot, commands: []};
 	if (snapshot.microphone.status === 'published' && sameMicrophoneOptions(snapshot.microphone.published, desired)) {
 		return {snapshot, commands: []};

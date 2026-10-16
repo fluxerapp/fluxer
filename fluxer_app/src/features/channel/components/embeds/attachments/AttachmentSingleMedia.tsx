@@ -8,6 +8,7 @@ import EmbedVideo from '@app/features/channel/components/embeds/media/EmbedVideo
 import {getInlineVideoLayoutConstraints} from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getAttachmentMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
+import {resolveProxyRequestSize} from '@app/features/messaging/utils/MediaProxyRequestSize';
 import {
 	buildAnimatedImageProxyURL,
 	buildMediaProxyURL,
@@ -61,7 +62,7 @@ export const AttachmentSingleMedia: FC<AttachmentSingleMediaProps> = observer(
 			);
 		const naturalWidth = attachment.width!;
 		const naturalHeight = attachment.height!;
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const videoLayoutConstraints = getInlineVideoLayoutConstraints(attachmentDimensions);
 		const standaloneMediaCalculator = createCalculator({
 			maxWidth: attachmentDimensions.maxWidth,
@@ -72,13 +73,10 @@ export const AttachmentSingleMedia: FC<AttachmentSingleMediaProps> = observer(
 			'--attachment-media-max-height': remFromPx(attachmentDimensions.maxHeight),
 			'--attachment-media-max-width': remFromPx(attachmentDimensions.maxWidth),
 		};
-		const {dimensions} = standaloneMediaCalculator.calculate(
-			{
-				width: naturalWidth,
-				height: naturalHeight,
-			},
-			{forceScale: true},
-		);
+		const {dimensions} = standaloneMediaCalculator.calculate({
+			width: naturalWidth,
+			height: naturalHeight,
+		});
 		const safeProxy = attachment.proxy_url ?? attachment.url ?? '';
 		const safeUrl = attachment.url ?? '';
 		const commonProps = {
@@ -171,12 +169,11 @@ export const AttachmentSingleMedia: FC<AttachmentSingleMediaProps> = observer(
 				</div>,
 			);
 		}
-		const targetWidth = Math.round(dimensions.width * 2);
-		const targetHeight = Math.round(dimensions.height * 2);
+		const requestedSize = resolveProxyRequestSize(dimensions.width, dimensions.height, naturalWidth, naturalHeight);
 		const optimizedSrc = buildMediaProxyURL(attachment.proxy_url ?? attachment.url ?? '', {
 			format: resolvePreferredImageFormat(attachment.content_type),
-			width: targetWidth,
-			height: targetHeight,
+			width: requestedSize?.width,
+			height: requestedSize?.height,
 		});
 		return wrapSpoiler(
 			<div

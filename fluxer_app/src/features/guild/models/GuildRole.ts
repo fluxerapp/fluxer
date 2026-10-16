@@ -59,21 +59,6 @@ export class GuildRole {
 		return this.id === this.guildId;
 	}
 
-	equals(other: GuildRole): boolean {
-		return (
-			this.instanceId === other.instanceId &&
-			this.id === other.id &&
-			this.guildId === other.guildId &&
-			this.name === other.name &&
-			this.color === other.color &&
-			this.position === other.position &&
-			this.hoistPosition === other.hoistPosition &&
-			this.permissions === other.permissions &&
-			this.hoist === other.hoist &&
-			this.mentionable === other.mentionable
-		);
-	}
-
 	toJSON(): WireGuildRole {
 		return {
 			id: this.id,

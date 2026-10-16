@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, ReportID} from '../BrandedTypes';
-import type {IGuildDataRepository} from '../guild/repositories/IGuildDataRepository';
-import type {ILogger} from '../ILogger';
-import type {IReportRepository} from '../report/IReportRepository';
+import type {GuildID, ReportID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import {
 	getAuditLogSearchService,
 	getGuildSearchService,
 	getReportSearchService,
 	getUserSearchService,
-} from '../SearchFactory';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {IGuildSearchService} from './IGuildSearchService';
-import type {IReportSearchService} from './IReportSearchService';
-import type {IUserSearchService} from './IUserSearchService';
+} from '@app/api/SearchFactory';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 const BATCH_SIZE = 100;
 
 interface SearchWarmupDeps {
-	userRepository: IUserRepository;
-	guildRepository: IGuildDataRepository;
-	reportRepository: IReportRepository;
-	logger: ILogger;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
+	reportRepository: ReportRepository;
+	logger: LoggerInterface;
 }
 
 export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<void> {
@@ -44,7 +44,7 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 			logger.info({total: testResult.total}, 'Guild index already populated, skipping warmup');
 		}
 	}
-	if (userSearchService && 'indexUser' in userSearchService) {
+	if (userSearchService) {
 		const testResult = await userSearchService.searchUsers('', {}, {limit: 1});
 		if (testResult.total === 0) {
 			logger.info('User index is empty, populating from database');
@@ -66,9 +66,9 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 }
 
 async function warmupGuilds(
-	guildRepository: IGuildDataRepository,
+	guildRepository: GuildRepository,
 	guildSearchService: IGuildSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastGuildId: GuildID | undefined;
 	let hasMore = true;
@@ -87,32 +87,28 @@ async function warmupGuilds(
 }
 
 async function warmupUsers(
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 	userSearchService: IUserSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let pageState: string | null = null;
 	let totalIndexed = 0;
-	while (true) {
+	do {
 		const page = await userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
-		const users = page.users;
-		if (users.length > 0) {
-			await userSearchService.indexUsers(users);
-			totalIndexed += users.length;
-			logger.debug({count: users.length, total: totalIndexed}, 'Indexed user batch');
-		}
 		pageState = page.pageState;
-		if (!pageState) {
-			break;
-		}
-	}
+		const users = page.users;
+		if (users.length === 0) continue;
+		await userSearchService.indexUsers(users);
+		totalIndexed += users.length;
+		logger.debug({count: users.length, total: totalIndexed}, 'Indexed user batch');
+	} while (pageState);
 	logger.info({total: totalIndexed}, 'User warmup complete');
 }
 
 async function warmupReports(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	reportSearchService: IReportSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastReportId: ReportID | undefined;
 	let hasMore = true;
@@ -120,9 +116,7 @@ async function warmupReports(
 	while (hasMore) {
 		const reports = await reportRepository.listAllReportsPaginated(BATCH_SIZE, lastReportId);
 		if (reports.length > 0) {
-			if ('indexReports' in reportSearchService) {
-				await reportSearchService.indexReports(reports);
-			}
+			await reportSearchService.indexReports(reports);
 			totalIndexed += reports.length;
 			lastReportId = reports[reports.length - 1]!.reportId;
 			logger.debug({count: reports.length, total: totalIndexed}, 'Indexed report batch');

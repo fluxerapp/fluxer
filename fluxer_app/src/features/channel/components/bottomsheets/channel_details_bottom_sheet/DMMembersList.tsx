@@ -39,7 +39,7 @@ export const DMMembersList: React.FC<DMMembersListProps> = ({
 	const {i18n} = useLingui();
 	const isDM = channel.type === ChannelTypes.DM;
 	const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
-	const recipientDisplayName = recipient ? NicknameUtils.getNickname(recipient) : '';
+	const recipientDisplayName = recipient ? NicknameUtils.getNickname(recipient, null, channel.id) : '';
 	return (
 		<div className={styles.dmMembersContainer} data-flx="channel.channel-details-bottom-sheet.dm-members-container">
 			{isDM && recipient && (

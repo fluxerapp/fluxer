@@ -10,4 +10,6 @@ export declare function inputMonitoringStatus(): TccStatus;
 
 export declare function requestInputMonitoring(): TccStatus;
 
+export declare function probeInputMonitoringAccess(): TccStatus;
+
 export declare const loadError: Error | null;

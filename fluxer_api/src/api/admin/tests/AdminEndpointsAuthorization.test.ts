@@ -1,48 +1,55 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth, type TestRequestBuilder} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
-const adminEndpoints = [
-	{method: 'POST', path: '/admin/reports/list', requiredACL: 'report:manage'},
-	{method: 'GET', path: '/admin/reports/1', requiredACL: 'report:manage'},
-	{method: 'POST', path: '/admin/reports/resolve', requiredACL: 'report:manage'},
-	{method: 'POST', path: '/admin/bulk/update-user-flags', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/bulk/update-guild-features', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/bulk/add-guild-members', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/guilds/search', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/users/search', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/messages/lookup', requiredACL: 'message:lookup'},
-	{method: 'POST', path: '/admin/messages/delete', requiredACL: 'message:delete'},
-	{method: 'POST', path: '/admin/gateway/memory-stats', requiredACL: 'gateway:manage'},
-	{method: 'POST', path: '/admin/gateway/reload-all', requiredACL: 'gateway:manage'},
-	{method: 'GET', path: '/admin/gateway/stats', requiredACL: 'gateway:manage'},
-	{method: 'GET', path: '/admin/gateway/voice-state-counts', requiredACL: 'gateway:manage'},
-	{method: 'POST', path: '/admin/audit-logs', requiredACL: 'audit_log:view'},
-	{method: 'POST', path: '/admin/audit-logs/search', requiredACL: 'audit_log:view'},
-	{method: 'POST', path: '/admin/guilds/lookup', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/guilds/list-members', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/guilds/update-features', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-name', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-settings', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/transfer-ownership', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-vanity', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/force-add-user', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/reload', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/shutdown', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/users/lookup', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/users/list-guilds', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/users/list-dm-channels', requiredACL: 'user:list:dm_channels'},
-	{method: 'POST', path: '/admin/users/disable-mfa', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/list-webauthn-credentials', requiredACL: 'user:update:mfa'},
-	{method: 'POST', path: '/admin/users/delete-webauthn-credential', requiredACL: 'user:update:mfa'},
-	{method: 'POST', path: '/admin/users/clear-fields', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/set-bot-status', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/set-acls', requiredACL: 'acl:set:user'},
-	{method: 'POST', path: '/admin/users/schedule-deletion', requiredACL: 'user:delete'},
+function withMethod(builder: TestRequestBuilder, method: string, path: string, body: unknown = {}): TestRequestBuilder {
+	switch (method) {
+		case 'POST':
+			return builder.post(path).body(body);
+		case 'PATCH':
+			return builder.patch(path).body(body);
+		case 'PUT':
+			return builder.put(path).body(body);
+		case 'DELETE':
+			return builder.delete(path);
+		default:
+			return builder.get(path);
+	}
+}
+
+interface AdminEndpointCase {
+	method: string;
+	path: string;
+	body?: unknown;
+}
+
+const adminEndpoints: Array<AdminEndpointCase> = [
+	{method: 'GET', path: '/admin/reports'},
+	{method: 'GET', path: '/admin/reports/1'},
+	{method: 'PATCH', path: '/admin/reports/1'},
+	{method: 'DELETE', path: '/admin/reports/1'},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		body: {task: 'update_user_flags', user_ids: ['1']},
+	},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		body: {task: 'update_guild_features', guild_ids: ['1']},
+	},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		body: {task: 'add_guild_members', guild_id: '1', user_ids: ['2']},
+	},
+	{method: 'GET', path: '/admin/guilds'},
+	{method: 'GET', path: '/admin/users'},
+	{method: 'GET', path: '/admin/messages?channel_id=1'},
 ];
 
 describe('Admin Endpoints Authorization', () => {
@@ -52,40 +59,17 @@ describe('Admin Endpoints Authorization', () => {
 	});
 	test('admin endpoints require authentication', async () => {
 		for (const endpoint of adminEndpoints.slice(0, 5)) {
-			if (endpoint.method === 'POST') {
-				await createBuilderWithoutAuth(harness).post(endpoint.path).expect(HTTP_STATUS.UNAUTHORIZED).execute();
-			} else {
-				await createBuilderWithoutAuth(harness).get(endpoint.path).expect(HTTP_STATUS.UNAUTHORIZED).execute();
-			}
+			await withMethod(createBuilderWithoutAuth(harness), endpoint.method, endpoint.path, endpoint.body)
+				.expect(HTTP_STATUS.UNAUTHORIZED)
+				.execute();
 		}
 	});
 	test('admin endpoints require proper ACLs', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate']);
 		for (const endpoint of adminEndpoints.slice(0, 10)) {
-			if (endpoint.method === 'POST') {
-				await createBuilder(harness, `${admin.token}`)
-					.post(endpoint.path)
-					.body({})
-					.expect(HTTP_STATUS.FORBIDDEN)
-					.execute();
-			} else {
-				await createBuilder(harness, `${admin.token}`).get(endpoint.path).expect(HTTP_STATUS.FORBIDDEN).execute();
-			}
-		}
-	});
-	test('admin endpoints succeed with proper ACLs', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'guild:lookup']);
-		const endpointsToTest = [
-			{path: '/admin/users/lookup', body: {user_ids: ['123']}},
-			{path: '/admin/guilds/lookup', body: {guild_id: '123'}},
-		];
-		for (const endpoint of endpointsToTest) {
-			await createBuilder(harness, `${admin.token}`)
-				.post(endpoint.path)
-				.body(endpoint.body)
-				.expect(HTTP_STATUS.OK)
+			await withMethod(createBuilder(harness, `${admin.token}`), endpoint.method, endpoint.path, endpoint.body)
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		}
 	});
@@ -93,10 +77,7 @@ describe('Admin Endpoints Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -104,10 +85,7 @@ describe('Admin Endpoints Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/guilds/lookup')
-			.body({
-				guild_ids: ['123456789'],
-			})
+			.get('/admin/guilds/123456789')
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -115,10 +93,7 @@ describe('Admin Endpoints Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/audit-logs')
-			.body({
-				limit: 10,
-			})
+			.get('/admin/audit-logs?limit=10')
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});

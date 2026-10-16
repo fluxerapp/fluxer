@@ -10,6 +10,7 @@ type AnimatedMediaPlaybackListener = () => void;
 
 interface UseAnimatedMediaPlaybackAllowedOptions {
 	enabled?: boolean;
+	isAnimated?: boolean;
 }
 
 const listeners = new Set<AnimatedMediaPlaybackListener>();
@@ -17,8 +18,9 @@ const listeners = new Set<AnimatedMediaPlaybackListener>();
 let teardownGlobalListeners: (() => void) | null = null;
 let lastAllowedSnapshot = true;
 
-const subscribeAlwaysAllowed = (): (() => void) => () => {};
+const subscribeConstant = (): (() => void) => () => {};
 const getAlwaysAllowed = (): boolean => true;
+const getNeverAllowed = (): boolean => false;
 
 export function getAnimatedMediaPlaybackAllowed(root?: HTMLElement): boolean {
 	if (typeof document === 'undefined') return true;
@@ -66,19 +68,26 @@ export function subscribeAnimatedMediaPlaybackChange(listener: AnimatedMediaPlay
 
 export function useAnimatedMediaPlaybackAllowed({
 	enabled = true,
+	isAnimated = true,
 }: UseAnimatedMediaPlaybackAllowedOptions = {}): boolean {
+	const getConstant = isAnimated ? getAlwaysAllowed : getNeverAllowed;
+	const live = enabled && isAnimated;
 	return useSyncExternalStore(
-		enabled ? subscribeAnimatedMediaPlaybackChange : subscribeAlwaysAllowed,
-		enabled ? getAnimatedMediaPlaybackAllowed : getAlwaysAllowed,
-		getAlwaysAllowed,
+		live ? subscribeAnimatedMediaPlaybackChange : subscribeConstant,
+		live ? getAnimatedMediaPlaybackAllowed : getConstant,
+		getConstant,
 	);
 }
 
 export function useAnimatedMediaVideoPlayback(
 	videoRef: RefObject<HTMLVideoElement | null>,
-	{enabled = true, shouldPlay = true}: {enabled?: boolean; shouldPlay?: boolean} = {},
+	{
+		enabled = true,
+		shouldPlay = true,
+		isAnimated = true,
+	}: {enabled?: boolean; shouldPlay?: boolean; isAnimated?: boolean} = {},
 ): boolean {
-	const playbackAllowed = useAnimatedMediaPlaybackAllowed();
+	const playbackAllowed = useAnimatedMediaPlaybackAllowed({isAnimated});
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;

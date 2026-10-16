@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {getUnreadChannels} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {getMarkableUnreadChannels} from '@app/features/app/components/floating/UnreadChannelsContent';
 import {CANCEL_DESCRIPTOR, MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {InboxTab} from '@app/features/inbox/state/Inbox';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -46,20 +46,20 @@ export function revealBookmarksPopoutForFirstSave(): boolean {
 		return false;
 	}
 	const isInboxOpen = Popout.isOpen('inbox');
-	const canOpenInbox = isInboxOpen || ComponentDispatch.hasSubscribers('INBOX_OPEN');
+	const canOpenInbox = isInboxOpen || ComponentBus.hasSubscribers('INBOX_OPEN');
 	if (!canOpenInbox) {
 		return false;
 	}
 	Inbox.setTab('bookmarks');
 	if (!isInboxOpen) {
-		ComponentDispatch.dispatch('INBOX_OPEN');
+		ComponentBus.dispatch('INBOX_OPEN');
 	}
 	Inbox.markBookmarksPopoutAutoOpenedForFirstSave();
 	return true;
 }
 
 export function markAllInboxChannelsAsRead(i18n: I18n): void {
-	const channelIds = getUnreadChannels().map((channel) => channel.id);
+	const channelIds = getMarkableUnreadChannels().map((channel) => channel.id);
 	if (channelIds.length === 0) return;
 	if (Inbox.skipMarkAllAsReadConfirmation) {
 		void ReadStateCommands.bulkAckChannels(channelIds);

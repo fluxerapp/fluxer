@@ -1,45 +1,81 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
+import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
+import {ClientFeaturesMiddleware} from '@app/api/middleware/ClientFeaturesMiddleware';
+import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
+import ContentFilterMiddleware from '@app/api/middleware/ContentFilterMiddleware';
+import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailabilityMiddleware';
+import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
+import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
+import {RequestErrorTelemetry} from '@app/api/middleware/RequestErrorTelemetry';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import {UserMiddleware} from '@app/api/middleware/UserMiddleware';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {PeerAddressMiddleware} from '@app/api/utils/RequestClientIp';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
-import type {ILogger} from '../ILogger';
-import {ClientErrorAbuseSignalMiddleware} from '../middleware/AbusiveIpAutoBanner';
-import {AuditLogMiddleware} from '../middleware/AuditLogMiddleware';
-import ContentFilterMiddleware from '../middleware/ContentFilterMiddleware';
-import {GuildAvailabilityMiddleware} from '../middleware/GuildAvailabilityMiddleware';
-import {IpBanMiddleware} from '../middleware/IpBanMiddleware';
-import {LocaleMiddleware} from '../middleware/LocaleMiddleware';
-import {RequestCacheMiddleware} from '../middleware/RequestCacheMiddleware';
-import {RequireClientIpMiddleware} from '../middleware/RequireClientIpMiddleware';
-import {ServiceMiddleware} from '../middleware/ServiceMiddleware';
-import {TorExitMiddleware} from '../middleware/TorExitMiddleware';
-import {TrustedClientIpHeaderMiddleware} from '../middleware/TrustedClientIpHeaderMiddleware';
-import {UserMiddleware} from '../middleware/UserMiddleware';
-import type {HonoApp} from '../types/HonoEnv';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 interface MiddlewarePipelineOptions {
-	logger: ILogger;
+	logger: LoggerInterface;
 	nodeEnv: string;
 	corsOrigins: Array<string>;
 	trustClientIpHeader: boolean;
 	clientIpHeaderName?: string;
+	maxInflightRequests: number;
 }
 
 export function configureMiddleware(routes: HonoApp, options: MiddlewarePipelineOptions): void {
-	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName} = options;
+	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName, maxInflightRequests} = options;
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
+	routes.use(PeerAddressMiddleware);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
+	routes.use(
+		'/.well-known/fluxer',
+		cors({
+			origins: '*',
+			methods: ['GET', 'HEAD', 'OPTIONS'],
+			allowedHeaders: [
+				HttpHeaders.ACCEPT,
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.IF_MODIFIED_SINCE,
+				HttpHeaders.IF_NONE_MATCH,
+			],
+			exposedHeaders: [HttpHeaders.ETAG, HttpHeaders.LAST_MODIFIED],
+		}),
+	);
 	applyMiddlewareStack(routes, {
 		requestId: {},
-		cors: {origins: corsOrigins, exposedHeaders: [HttpHeaders.X_FLUXER_VERSION]},
-		skipLogger: true,
-		skipErrorHandler: true,
+		cors: {
+			origins: corsOrigins,
+			allowedHeaders: [
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.AUTHORIZATION,
+				HttpHeaders.X_REQUESTED_WITH,
+				HttpHeaders.ACCEPT_LANGUAGE,
+				HttpHeaders.X_REQUEST_ID,
+				HttpHeaders.IF_NONE_MATCH,
+				HttpHeaders.X_AUDIT_LOG_REASON,
+				HttpHeaders.X_CAPTCHA_ID,
+				HttpHeaders.X_CAPTCHA_TOKEN,
+				HttpHeaders.X_FLUXER_CLIENT_INSTALLATION_ID,
+				HttpHeaders.X_FLUXER_FEATURES,
+				HttpHeaders.X_FLUXER_PLATFORM,
+				HttpHeaders.X_FLUXER_SUDO_MODE_JWT,
+			],
+			exposedHeaders: [HttpHeaders.X_FLUXER_VERSION, HttpHeaders.ETAG],
+		},
 	});
+	routes.use(ConcurrencyLimitMiddleware({maxInflightRequests}));
 	routes.get('/_health', async (ctx) => ctx.text('OK'));
 	routes.use(IpBanMiddleware);
 	routes.use(
@@ -48,8 +84,9 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			skip: ['/_health'],
 		}),
 	);
-	routes.use(ClientErrorAbuseSignalMiddleware);
+	routes.use(RequestErrorTelemetry);
 	routes.use(RequestCacheMiddleware);
+	routes.use(ClientFeaturesMiddleware);
 	if (nodeEnv === 'production') {
 		routes.use('*', async (ctx, next) => {
 			const host = ctx.req.header('host');
@@ -72,13 +109,9 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			}),
 		);
 	}
-	routes.use(TorExitMiddleware);
 	routes.use(AuditLogMiddleware);
-	routes.use(
-		RequireClientIpMiddleware({
-			requiredHeaders: [resolvedHeader],
-		}),
-	);
+	routes.use(RequireClientIpMiddleware());
+	routes.use(ActivityContextMiddleware);
 	routes.use(ServiceMiddleware);
 	routes.use(UserMiddleware);
 	routes.use(ContentFilterMiddleware);

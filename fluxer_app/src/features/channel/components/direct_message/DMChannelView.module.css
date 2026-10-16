@@ -30,41 +30,6 @@
 	color: var(--text-tertiary);
 }
 
-.voiceCallContainer {
-	position: relative;
-	height: 100%;
-	width: 100%;
-}
-
-.minimizeButton {
-	position: absolute;
-	top: 1rem;
-	left: 1rem;
-	z-index: 50;
-	display: flex;
-	height: 2.5rem;
-	width: 2.5rem;
-	align-items: center;
-	justify-content: center;
-	border-radius: var(--radius-full);
-	background-color: rgb(0 0 0 / 0.5);
-	color: white;
-	backdrop-filter: blur(0.5rem);
-	transition-property: color, background-color;
-	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-	transition-duration: 150ms;
-	cursor: pointer;
-}
-
-.minimizeButton:hover {
-	background-color: rgb(0 0 0 / 0.7);
-}
-
-.minimizeButtonIcon {
-	height: 1.25rem;
-	width: 1.25rem;
-}
-
 .callParticipantsRow {
 	--call-participant-avatar-size: 4rem;
 	--call-participant-gap: 0.75rem;
@@ -247,23 +212,4 @@
 
 .compactCallResizeHandle:hover .compactCallResizePill {
 	opacity: 1;
-}
-
-.channelContainer {
-	display: grid;
-	grid-template-rows: auto 1fr;
-	height: 100%;
-	min-height: 0;
-	width: 100%;
-	min-width: 0;
-	background-color: var(--background-secondary-lighter);
-}
-
-.channelLayout {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	height: 100%;
-	min-height: 0;
-	width: 100%;
-	min-width: 0;
 }

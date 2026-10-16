@@ -14,16 +14,8 @@
 	color: var(--qs-text-primary, var(--text-primary));
 }
 
-.option:hover {
-	background-color: var(--qs-row-hover, var(--background-modifier-accent));
-}
-
 .optionActive {
 	background-color: var(--qs-row-hover, var(--background-modifier-accent));
-}
-
-:global(html.theme-light) .option:hover {
-	background-color: var(--qs-row-hover-light, var(--background-modifier-hover));
 }
 
 :global(html.theme-light) .optionActive {
@@ -123,21 +115,23 @@
 }
 
 .optionIcon {
+	box-sizing: content-box;
 	width: 1.25rem;
 	height: 1.25rem;
+	padding: 0.125rem;
 	flex-shrink: 0;
 	color: var(--qs-icon-colour, var(--text-secondary));
 }
 
 .avatar {
-	width: 1.25rem;
-	height: 1.25rem;
+	width: 1.5rem;
+	height: 1.5rem;
 	flex-shrink: 0;
 }
 
 .guildIcon {
-	height: 1.25rem;
-	width: 1.25rem;
+	height: 1.5rem;
+	width: 1.5rem;
 	border-radius: 624.9375rem;
 	flex-shrink: 0;
 }
@@ -332,102 +326,4 @@
 
 .optionIconHighlight {
 	color: var(--qs-icon-highlight-colour, var(--text-primary));
-}
-
-.mobileSheet {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	background-color: var(--background-secondary);
-	padding: 0 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
-}
-
-.mobileSearchContainer {
-	padding-top: 1.25rem;
-	padding-bottom: 1.25rem;
-}
-
-.mobilePanels {
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileSearchPanel,
-.mobileFriendsPanel {
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.mobilePanelHidden {
-	display: none;
-}
-
-.mobileScroller {
-	flex: 1;
-	min-height: 0;
-}
-
-.mobileSearchInput {
-	width: 100%;
-	min-height: 3.25rem;
-	padding-block: 0.6rem;
-}
-
-.mobileSearchClearButton {
-	background: transparent;
-	border: none;
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--text-tertiary);
-	cursor: pointer;
-	border-radius: 62.4375rem;
-}
-
-.mobileScrollContent {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	padding-bottom: 0.5rem;
-}
-
-.mobileFriendsContent {
-	height: 100%;
-}
-
-.mobileSection {
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileSectionHeader {
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--text-primary-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin-bottom: 0.35rem;
-}
-
-.mobileSectionList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.35rem;
-}
-
-.mobileOption {
-	display: flex;
-	align-items: center;
-	width: 100%;
-	border: none;
-	background: transparent;
-	color: var(--text-primary);
-	border-radius: var(--radius-md);
-	padding: 0.25rem 0.25rem;
 }

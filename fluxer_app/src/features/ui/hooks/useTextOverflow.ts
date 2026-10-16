@@ -11,12 +11,6 @@ interface UseTextOverflowOptions {
 
 const OVERFLOW_EPSILON_PX = 1;
 
-type FontFaceSetLike = {
-	ready?: Promise<unknown>;
-	addEventListener?: (type: 'loadingdone', listener: () => void) => void;
-	removeEventListener?: (type: 'loadingdone', listener: () => void) => void;
-};
-
 function isMeaningfullyGreater(measuredSize: number, availableSize: number): boolean {
 	return measuredSize - availableSize > OVERFLOW_EPSILON_PX;
 }
@@ -94,7 +88,8 @@ export function useTextOverflow(
 	const [isOverflowing, setIsOverflowing] = useState(false);
 	useEffect(() => {
 		const element = elementRef.current;
-		if (!element || !content) {
+		const ownerWindow = element?.ownerDocument.defaultView;
+		if (!element || !ownerWindow || !content) {
 			setIsOverflowing(false);
 			return;
 		}
@@ -112,7 +107,7 @@ export function useTextOverflow(
 				updateOverflowing(true);
 				return;
 			}
-			if (measureTextRange && typeof document !== 'undefined') {
+			if (measureTextRange) {
 				const availableWidth = getAvailableInlineSize(element);
 				if (isMeaningfullyGreater(measureRangeInlineSize(element), availableWidth)) {
 					updateOverflowing(true);
@@ -128,14 +123,14 @@ export function useTextOverflow(
 			if (disposed || frameId != null) {
 				return;
 			}
-			frameId = window.requestAnimationFrame(checkOverflow);
+			frameId = ownerWindow.requestAnimationFrame(checkOverflow);
 		};
 		scheduleOverflowCheck();
 		const unobserveResize =
 			typeof ResizeObserver !== 'undefined' ? observeResize(element, scheduleOverflowCheck) : undefined;
 		let mutationObserver: MutationObserver | null = null;
-		if (typeof MutationObserver !== 'undefined') {
-			mutationObserver = new MutationObserver(scheduleOverflowCheck);
+		if (typeof ownerWindow.MutationObserver !== 'undefined') {
+			mutationObserver = new ownerWindow.MutationObserver(scheduleOverflowCheck);
 			mutationObserver.observe(element, {
 				attributes: true,
 				attributeFilter: ['alt', 'class', 'src', 'style'],
@@ -145,14 +140,13 @@ export function useTextOverflow(
 			});
 		}
 		element.addEventListener('load', scheduleOverflowCheck, true);
-		const fontSet =
-			typeof document !== 'undefined' ? (document as Document & {fonts?: FontFaceSetLike}).fonts : undefined;
+		const fontSet = element.ownerDocument.fonts;
 		fontSet?.ready?.then(scheduleOverflowCheck);
 		fontSet?.addEventListener?.('loadingdone', scheduleOverflowCheck);
 		return () => {
 			disposed = true;
 			if (frameId != null) {
-				window.cancelAnimationFrame(frameId);
+				ownerWindow.cancelAnimationFrame(frameId);
 			}
 			unobserveResize?.();
 			mutationObserver?.disconnect();

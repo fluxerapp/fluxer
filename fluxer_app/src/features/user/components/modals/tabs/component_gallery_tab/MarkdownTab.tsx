@@ -10,6 +10,7 @@ import appearanceStyles from '@app/features/user/components/modals/tabs/Appearan
 import {SubsectionTitle} from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabSubsectionTitle';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.module.css';
 import Users from '@app/features/user/state/Users';
+import {LINKS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {MessagePreviewContext, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -26,10 +27,7 @@ const HEADINGS_DESCRIPTOR = msg({
 	message: 'Headings',
 	comment: 'Title in the markdown tab. Keep it concise.',
 });
-const LINKS_DESCRIPTOR = msg({
-	message: 'Links',
-	comment: 'Short label in the markdown tab. Keep it concise.',
-});
+
 const LISTS_DESCRIPTOR = msg({
 	message: 'Lists',
 	comment: 'Short label in the markdown tab. Keep it concise.',
@@ -187,7 +185,7 @@ export const MarkdownTab: React.FC = observer(() => {
 			{
 				title: i18n._(LINKS_DESCRIPTOR),
 				items: [
-					{label: '[text](url)', content: '[Masked Link](https://fluxer.app)'},
+					{label: '[text](url)', content: '[Masked link](https://fluxer.app)'},
 					{label: '<url>', content: '<https://fluxer.app>'},
 					{label: 'url', content: 'https://fluxer.app'},
 					{label: '<email>', content: '<contact@fluxer.app>'},
@@ -200,14 +198,14 @@ export const MarkdownTab: React.FC = observer(() => {
 					{label: i18n._(ORDERED_DESCRIPTOR), content: '1. First item\n2. Second item\n3. Third item'},
 					{
 						label: i18n._(NESTED_DESCRIPTOR),
-						content: '- Parent item\n  - Nested item\n  - Another nested\n- Another parent',
+						content: '- Parent item\n  - Nested item\n  - Another nested item\n- Another parent item',
 					},
 				],
 			},
 			{
 				title: i18n._(BLOCKQUOTES_DESCRIPTOR),
 				items: [
-					{label: i18n._(SINGLE_LINE_DESCRIPTOR), content: '> Single line quote'},
+					{label: i18n._(SINGLE_LINE_DESCRIPTOR), content: '> Single-line quote'},
 					{
 						label: i18n._(MULTI_LINE_DESCRIPTOR),
 						content: '> Multi-line quote\n> Spans multiple lines\n> Continues here',

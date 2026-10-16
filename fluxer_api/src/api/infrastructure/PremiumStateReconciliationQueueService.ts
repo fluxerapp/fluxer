@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
 
 const QUEUE_KEY = 'premium:reconcile:queue';
 const SECONDARY_KEY_PREFIX = 'premium:reconcile:queue:user:';
@@ -25,6 +25,16 @@ export class PremiumStateReconciliationQueueService {
 			await this.kvClient.scheduleBulkDeletion(QUEUE_KEY, secondaryKey, scheduledAt.getTime(), value);
 		} catch (error) {
 			Logger.error({error, userId: userId.toString()}, 'Failed to enqueue user for premium state reconciliation');
+			throw error;
+		}
+	}
+
+	async claimUser(userId: UserID, nowMs: number, leaseUntilMs: number): Promise<boolean> {
+		try {
+			const value = this.serializeQueueValue(userId);
+			return await this.kvClient.claimBulkDeletion(QUEUE_KEY, value, nowMs, leaseUntilMs);
+		} catch (error) {
+			Logger.error({error, userId: userId.toString()}, 'Failed to claim user for premium state reconciliation');
 			throw error;
 		}
 	}
@@ -63,6 +73,28 @@ export class PremiumStateReconciliationQueueService {
 		} catch (error) {
 			Logger.error({error}, 'Failed to get premium reconciliation queue size');
 			throw error;
+		}
+	}
+
+	async enqueueUserBestEffort(
+		userId: UserID,
+		context: {
+			reason: string;
+			subscriptionId?: string;
+		},
+	): Promise<void> {
+		try {
+			await this.enqueueUser(userId);
+		} catch (error) {
+			Logger.warn(
+				{
+					error,
+					userId: userId.toString(),
+					reason: context.reason,
+					subscriptionId: context.subscriptionId,
+				},
+				'Failed to enqueue premium reconciliation from Stripe webhook',
+			);
 		}
 	}
 }

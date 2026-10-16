@@ -14,10 +14,6 @@ export interface ProfileMutualGuild {
 	nick: string | null;
 }
 
-export type MiniGuildMember = Readonly<{
-	id: string;
-	nick: string | null;
-}>;
 export type ProfileWire = Readonly<{
 	user: UserPartial;
 	user_profile: UserProfile;
@@ -128,25 +124,6 @@ export class Profile {
 			pronouns: this.guildMemberProfile.pronouns ?? this.userProfile.pronouns,
 			accent_color: this.guildMemberProfile.accent_color ?? this.userProfile.accent_color,
 		};
-	}
-
-	equals(other: Profile): boolean {
-		return (
-			this.userId === other.userId &&
-			this.guildId === other.guildId &&
-			JSON.stringify(this.userProfile) === JSON.stringify(other.userProfile) &&
-			JSON.stringify(this.guildMemberProfile) === JSON.stringify(other.guildMemberProfile) &&
-			JSON.stringify(this.embeddedGuildMember?.toJSON() ?? null) ===
-				JSON.stringify(other.embeddedGuildMember?.toJSON() ?? null) &&
-			this.timezoneOffset === other.timezoneOffset &&
-			this.premiumType === other.premiumType &&
-			this.premiumSince === other.premiumSince &&
-			this.premiumLifetimeSequence === other.premiumLifetimeSequence &&
-			JSON.stringify(this.mutualFriends) === JSON.stringify(other.mutualFriends) &&
-			JSON.stringify(this.mutualGuilds) === JSON.stringify(other.mutualGuilds) &&
-			JSON.stringify(this.connectedAccounts) === JSON.stringify(other.connectedAccounts) &&
-			this.profileLimited === other.profileLimited
-		);
 	}
 
 	toJSON(): ProfileWire {

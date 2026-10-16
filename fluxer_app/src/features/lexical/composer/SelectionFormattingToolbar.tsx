@@ -113,7 +113,7 @@ export function SelectionFormattingToolbarPlugin({enabled = true}: {enabled?: bo
 					}
 					const activeElement = root.ownerDocument.activeElement;
 					const toolbar = toolbarRef.current;
-					const toolbarHasFocus = activeElement != null && toolbar != null && toolbar.contains(activeElement);
+					const toolbarHasFocus = activeElement && toolbar?.contains(activeElement);
 					if (!$isRangeSelection(selection) || selection.isCollapsed()) {
 						if (!toolbarHasFocus || savedSelectionRef.current == null) {
 							setRect(null);
@@ -228,6 +228,7 @@ export function SelectionFormattingToolbarPlugin({enabled = true}: {enabled?: bo
 			onDismiss={() => setRect(null)}
 			toolbarRef={toolbarRef}
 			savedSelectionRef={savedSelectionRef}
+			data-flx="lexical.composer.selection-formatting-toolbar.selection-formatting-toolbar-plugin.selection-toolbar-surface"
 		/>
 	);
 }
@@ -249,7 +250,7 @@ function SelectionToolbarSurface({
 	onFocusRequestHandled: () => void;
 	onDismiss: () => void;
 	toolbarRef: React.RefObject<HTMLElement | null>;
-	savedSelectionRef: React.MutableRefObject<ComposerSelectionOffsets | null>;
+	savedSelectionRef: React.RefObject<ComposerSelectionOffsets | null>;
 }) {
 	const {i18n} = useLingui();
 	const [focusIndex, setFocusIndex] = useState(0);
@@ -270,11 +271,10 @@ function SelectionToolbarSurface({
 		}),
 		[editor],
 	);
-	const {ref, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
+	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, {
 		placement: 'top',
 		offsetMainAxis: 8,
 		shouldAutoUpdate: true,
-		enableSmartBoundary: true,
 	});
 	useEffect(() => {
 		updatePosition();
@@ -374,10 +374,13 @@ function SelectionToolbarSurface({
 		[focusButton, focusIndex, returnFocusToEditor],
 	);
 	return (
-		<FloatingPortal root={portalRoot}>
+		<FloatingPortal
+			root={portalRoot}
+			data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.floating-portal"
+		>
 			<flx-lexical-selection-formatting-toolbar
 				ref={(element) => {
-					(ref as React.MutableRefObject<HTMLElement | null>).current = element;
+					setFloating(element);
 					toolbarRef.current = element;
 				}}
 				className={flxElementClassName(styles.toolbar)}
@@ -401,6 +404,7 @@ function SelectionToolbarSurface({
 					}
 				}}
 				onKeyDown={handleToolbarKeyDown}
+				data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.toolbar"
 			>
 				{FORMATS.map((format, index) => {
 					const label = i18n._(format.label);
@@ -421,8 +425,13 @@ function SelectionToolbarSurface({
 								event.preventDefault();
 							}}
 							onClick={() => apply(format.wrapper)}
+							data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.button.apply"
 						>
-							<format.icon weight="bold" className={styles.icon} />
+							<format.icon
+								weight="bold"
+								className={styles.icon}
+								data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.icon"
+							/>
 						</button>
 					);
 				})}

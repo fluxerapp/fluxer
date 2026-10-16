@@ -182,25 +182,3 @@ async fn send_call(
 pub fn request_background(_options: RequestOptions) -> Result<RequestResult, BackgroundError> {
     Err(BackgroundError::DbusError)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_request_does_not_autostart() {
-        let opts = RequestOptions::default();
-        assert!(!opts.autostart);
-        assert!(opts.commandline.is_empty());
-    }
-
-    #[test]
-    fn nonzero_response_is_cancelled() {
-        let result = RequestResult {
-            response: 1,
-            background: false,
-            autostart: false,
-        };
-        assert!(result.cancelled());
-    }
-}

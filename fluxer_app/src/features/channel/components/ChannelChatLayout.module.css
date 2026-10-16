@@ -1,15 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
-	--composer-surface-color: var(--background-secondary-lighter);
-	--composer-status-line-height: 1.125rem;
-	--composer-status-safe-gap: 0.5rem;
-	--composer-status-safe-area: calc(
-		var(--composer-status-line-height) +
-		var(--composer-status-safe-gap) +
-		var(--composer-status-safe-gap)
-	);
-	--messages-bottom-clearance: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
 	display: flex;
 	flex-direction: column;
 	height: 100%;

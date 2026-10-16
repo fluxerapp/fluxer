@@ -1,3 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-{{include "fluxer.pdb" (dict "name" .Values.app.name "minAvailable" .Values.pdb.minAvailable "context" .)}}

@@ -3,10 +3,10 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {EMOJI_CLAP} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
-import * as EmojiCommands from '@app/features/emoji/commands/EmojiCommands';
+
 import Emoji from '@app/features/emoji/state/Emoji';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {SKIN_TONE_SURROGATES} from '@fluxer/constants/src/EmojiConstants';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -21,8 +21,8 @@ interface SkinTonePickerProps {
 const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProps) => {
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const handleSelect = (surrogate: string) => {
-		EmojiCommands.setSkinTone(surrogate);
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		Emoji.setSkinTone(surrogate);
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 		onClose();
 	};
 	return (
@@ -96,11 +96,14 @@ export const SkinToneSelector = observer(() => {
 		}
 	}, []);
 	useEffect(() => {
+		if (!isOpen) {
+			return undefined;
+		}
 		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [handleClickOutside]);
+	}, [handleClickOutside, isOpen]);
 	return (
 		<div
 			ref={selectorRef}

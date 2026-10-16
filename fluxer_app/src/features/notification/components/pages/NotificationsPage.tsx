@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UnreadChannelsContent} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {getUnreadChannels, UnreadChannelsContent} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {
+	reportSkeletonSimplePageLayout,
+	SkeletonSimplePageBody,
+	SkeletonSimplePageRoute,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import styles from '@app/features/notification/components/pages/NotificationsPage.module.css';
+import MentionFeed from '@app/features/notification/state/MentionFeed';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -36,6 +43,17 @@ export const NotificationsPage = observer(({onBookmarksClick}: NotificationsPage
 		],
 		[i18n.locale],
 	);
+	const unreadChannelCount = getUnreadChannels().length;
+	const mentionCount = MentionFeed.getAccessibleMentions().length;
+	let body: SkeletonSimplePageBody = SkeletonSimplePageBody.CHANNEL_LIST;
+	let rowCount = unreadChannelCount;
+	if (filter === 'mentions') {
+		body = SkeletonSimplePageBody.MESSAGE_LIST;
+		rowCount = mentionCount;
+	}
+	useSkeletonLayoutReport(() => {
+		reportSkeletonSimplePageLayout(SkeletonSimplePageRoute.NOTIFICATIONS, body, rowCount);
+	}, `${body}:${rowCount}`);
 	return (
 		<div className={styles.container} data-flx="notification.notifications-page.container">
 			<div className={styles.header} data-flx="notification.notifications-page.header">

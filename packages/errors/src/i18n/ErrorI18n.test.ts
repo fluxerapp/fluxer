@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	getErrorMessage,
-	getErrorMessageResult,
-	getErrorMessageUnsafe,
-	hasErrorLocale,
-} from '@fluxer/errors/src/i18n/ErrorI18n';
-import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nTypes.generated';
+import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
+import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
 import {beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
 describe('ErrorI18n', () => {
@@ -15,129 +10,66 @@ describe('ErrorI18n', () => {
 		consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		consoleWarnSpy.mockClear();
 	});
-	describe('constructor and initialization', () => {
-		it('loads the default TypeScript catalog', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('initializes internal state correctly', () => {
-			expect(hasErrorLocale('en-US')).toBe(true);
-		});
-		it('handles missing default bundle gracefully', () => {
-			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US', undefined, 'Fallback message');
-			expect(message).toBe('Fallback message');
-		});
-	});
-	describe('getMessage() - basic retrieval', () => {
-		it('returns message for valid key in default locale', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('maps API error codes to localized messages', () => {
-			const message = getErrorMessageUnsafe('INVALID_FORM_BODY', 'en-US');
-			expect(message).toBe('Invalid form body.');
-			expect(consoleWarnSpy).not.toHaveBeenCalled();
-		});
-		it('returns message for valid key in supported locale', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'fr');
-			expect(message).toBe('Tu es soumis à une limitation de débit.');
-		});
-		it('returns key when translation missing', () => {
-			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US');
-			expect(message).toBe('nonexistent.key');
-			expect(consoleWarnSpy).toHaveBeenCalledWith(
-				'Missing translation for error message: nonexistent.key (locale: en-US)',
-			);
-		});
-		it('returns fallbackMessage when provided and key missing', () => {
-			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US', undefined, 'Custom fallback');
-			expect(message).toBe('Custom fallback');
-		});
-	});
-	describe('getMessage() - locale handling', () => {
-		it('normalizes en-GB locale to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-GB');
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('normalizes en-CA locale to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-CA');
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('falls back to en-US for unsupported locales', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'de-DE');
-			expect(message).toBe("You're being rate limited.");
-			expect(consoleWarnSpy).toHaveBeenCalledWith('Unsupported locale, falling back to en-US: de-DE');
-		});
-		it('handles null locale by defaulting to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', null);
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('handles undefined locale by defaulting to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', undefined);
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('loads locale on-demand when first accessed', () => {
-			expect(hasErrorLocale('fr')).toBe(true);
-			const message = getErrorMessage('account.disabled', 'fr');
-			expect(message).toBe('Ce compte a été désactivé.');
-		});
-	});
-	describe('getMessage() - variable interpolation', () => {
-		it('interpolates simple {variable} placeholders', () => {
-			const message = getErrorMessage('channels_and_guilds.invalid_channel_id', 'en-US', {
-				channelId: '123456789',
-			});
-			expect(message).toBe('Invalid channel ID: 123456789.');
-		});
-		it('handles MessageFormat plural syntax', () => {
-			const message = getErrorMessage('rate_limits.username_changed_too_often', 'en-US', {
-				minutes: 1,
-			});
-			expect(message).toBe("You've changed your username too often recently. Please try again in 1 minute.");
-		});
-		it('handles MessageFormat plural syntax for multiple values', () => {
-			const message = getErrorMessage('rate_limits.username_changed_too_often', 'en-US', {
-				minutes: 5,
-			});
-			expect(message).toBe("You've changed your username too often recently. Please try again in 5 minutes.");
-		});
-		it('falls back to simple interpolation on MessageFormat failure', () => {
-			const message = getErrorMessage('channels_and_guilds.invalid_channel_id', 'en-US', {
-				channelId: 'test-channel',
-			});
-			expect(message).toBe('Invalid channel ID: test-channel.');
-		});
-		it('returns raw message when no variables provided', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('handles complex nested error keys', () => {
-			const message = getErrorMessage('roles.invalid_role_id', 'en-US', {roleId: '999'});
-			expect(message).toBe('Invalid role ID: 999.');
-		});
-	});
-	describe('getMessage() - edge cases', () => {
-		it('returns key when source message does not exist', () => {
-			const message = getErrorMessageUnsafe('completely.made.up.key', 'en-US');
-			expect(message).toBe('completely.made.up.key');
-		});
-		it('uses fallback when both key and fallbackMessage provided', () => {
-			const message = getErrorMessageUnsafe('missing.key', 'en-US', {}, 'Fallback used');
-			expect(message).toBe('Fallback used');
-		});
-		it('returns source message when locale translation missing but source exists', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'xx-XX');
-			expect(message).toBe("You're being rate limited.");
-			expect(consoleWarnSpy).toHaveBeenCalledWith('Unsupported locale, falling back to en-US: xx-XX');
-		});
-	});
-	describe('getMessageResult()', () => {
-		it('returns error result for missing template', () => {
-			const result = getErrorMessageResult('missing.key' as ErrorI18nKey, 'en-US');
-			expect(result.ok).toBe(false);
-			if (!result.ok) {
-				expect(result.error.kind).toBe('missing-template');
+	describe('global IP block messages', () => {
+		const HOSTED = {
+			ipAddress: '203.0.113.20',
+			appealEmail: 'support@fluxer.com',
+			expiresAt: 'Jan 12, 2027, 9:00 AM UTC',
+			reason: 'none',
+			product_name: 'Fluxer',
+		};
+		const SELF_HOSTED = {...HOSTED, appealEmail: null, product_name: 'chat.example.org'};
+		const SHARED_NETWORK =
+			'If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off.';
+
+		it('names the instance and no mailbox in any locale when there is no appeal address', () => {
+			for (const locale of Object.keys(ERROR_I18N_LOCALE_MESSAGES)) {
+				for (const code of ['GLOBAL_IP_BANNED', 'GLOBAL_IP_TEMPORARILY_BANNED']) {
+					const neutral = getErrorMessageUnsafe(code, locale, SELF_HOSTED);
+					expect(neutral, `${locale} ${code}`).not.toMatch(/@|\bnull\b|\{/);
+					expect(neutral, `${locale} ${code}`).toContain('chat.example.org');
+					expect(neutral, `${locale} ${code}`).not.toContain('Fluxer');
+					const hosted = getErrorMessageUnsafe(code, locale, HOSTED);
+					expect(hosted, `${locale} ${code}`).toContain('support@fluxer.com');
+					expect(hosted, `${locale} ${code}`).toContain('203.0.113.20');
+					expect(hosted, `${locale} ${code}`).toContain('Fluxer');
+				}
 			}
+		});
+
+		it('leads with the shared-network advice and never blames the reader', () => {
+			const permanent = getErrorMessageUnsafe('GLOBAL_IP_BANNED', 'en-US', HOSTED);
+			expect(permanent).toBe(
+				`Fluxer blocked access from this network. ${SHARED_NETWORK} If you think this block is a mistake, email support@fluxer.com and include your IP address, 203.0.113.20.`,
+			);
+			expect(getErrorMessageUnsafe('GLOBAL_IP_TEMPORARILY_BANNED', 'en-US', SELF_HOSTED)).toBe(
+				`chat.example.org blocked access from this network. The block ends on Jan 12, 2027, 9:00 AM UTC. ${SHARED_NETWORK}`,
+			);
+			expect(getErrorMessageUnsafe('GLOBAL_IP_BANNED', 'en-US', {...HOSTED, reason: 'shown'})).toMatch(
+				/^Fluxer blocked access from this network because of activity that broke its rules\. /,
+			);
+			for (const message of [permanent, getErrorMessageUnsafe('GLOBAL_IP_TEMPORARILY_BANNED', 'en-US', HOSTED)]) {
+				expect(message).not.toMatch(/platform admin|sign in|\byou did\b/i);
+			}
+		});
+	});
+	describe('payment processing error', () => {
+		const HOSTED = {supportEmail: 'support@fluxer.com'};
+		const SELF_HOSTED = {supportEmail: null};
+		const ENGLISH_NEUTRAL =
+			'Payment processing encountered an error. Please try again or contact the administrators of this instance.';
+
+		it('has a translated neutral variant in every locale', () => {
+			for (const locale of Object.keys(ERROR_I18N_LOCALE_MESSAGES)) {
+				const hosted = getErrorMessageUnsafe('STRIPE_ERROR', locale, HOSTED);
+				const neutral = getErrorMessageUnsafe('STRIPE_ERROR', locale, SELF_HOSTED);
+				expect(neutral, locale).not.toBe(hosted);
+				expect(neutral, locale).not.toMatch(/@|\bnull\b|\{|support/i);
+				if (locale !== 'en-GB') {
+					expect(neutral, locale).not.toBe(ENGLISH_NEUTRAL);
+				}
+			}
+			expect(consoleWarnSpy).not.toHaveBeenCalled();
 		});
 	});
 });

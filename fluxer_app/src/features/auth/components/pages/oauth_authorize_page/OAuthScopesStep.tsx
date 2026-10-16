@@ -29,6 +29,7 @@ const REQUIRED_DESCRIPTOR = msg({
 interface OAuthScopesStepProps {
 	authParams: AuthorizeParams;
 	botInviteWithoutRedirect: boolean;
+	cannotSubmit: boolean;
 	clientLabel: string;
 	hasNextStep: boolean;
 	hasPreviousStep: boolean;
@@ -51,6 +52,7 @@ interface OAuthScopesStepProps {
 export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 	authParams,
 	botInviteWithoutRedirect,
+	cannotSubmit,
 	clientLabel,
 	hasNextStep,
 	hasPreviousStep,
@@ -151,10 +153,16 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 							})
 						)}
 					</div>
-					{scopesAdjusted && (
-						<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--2">
-							<Trans>Turning off scopes may prevent the app from working correctly.</Trans>
+					{scopes.length > 0 && selectedScopes.size === 0 ? (
+						<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--no-scopes">
+							<Trans>Turn on at least one scope to authorize this app.</Trans>
 						</div>
+					) : (
+						scopesAdjusted && (
+							<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--2">
+								<Trans>Turning off scopes may prevent the app from working correctly.</Trans>
+							</div>
+						)
 					)}
 				</div>
 			</div>
@@ -165,6 +173,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 				showRedirectNotice={showRedirectNotice}
 				hasPreviousStep={hasPreviousStep}
 				hasNextStep={hasNextStep}
+				authorizeDisabled={cannotSubmit}
 				onAuthorize={onAuthorize}
 				onBack={onBack}
 				onCancel={onCancel}

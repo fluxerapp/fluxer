@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {resolveClientIpWithOptions} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
-import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {createMiddleware} from 'hono/factory';
-import type {ILogger} from '../ILogger';
-import type {HonoEnv} from '../types/HonoEnv';
-import {stripApiPrefix} from '../utils/RequestPathUtils';
 
 interface TrustedClientIpHeaderOptions {
 	enabled: boolean;
-	logger: ILogger;
+	logger: LoggerInterface;
 	trustClientIpHeader: boolean;
 	clientIpHeaderName: string;
 	exemptPaths?: Array<string>;
@@ -46,8 +46,7 @@ export function TrustedClientIpHeaderMiddleware({
 			await next();
 			return;
 		}
-		const firstHop = clientIpHeaderValue.split(',')[0]?.trim() ?? clientIpHeaderValue;
-		if (!parseIpAddress(firstHop)) {
+		if (!resolveClientIpWithOptions(ctx, {trustClientIpHeader, clientIpHeaderName})) {
 			logger.warn({path, clientIpHeaderName}, 'Rejected request with invalid client IP header');
 			throw new ForbiddenError({code: APIErrorCodes.FORBIDDEN});
 		}

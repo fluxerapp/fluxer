@@ -7,22 +7,34 @@ import type {DesktopTroubleshootingSettings} from '@app/types/electron.d';
 const logger = new Logger('DesktopTroubleshootingUtils');
 
 let cachedSettings: DesktopTroubleshootingSettings | null = null;
+let pendingPromise: Promise<DesktopTroubleshootingSettings | null> | null = null;
+
+function fetchSettings(): Promise<DesktopTroubleshootingSettings | null> {
+	const electronApi = getElectronAPI();
+	if (!electronApi?.getDesktopTroubleshootingSettings) return Promise.resolve(null);
+	return electronApi
+		.getDesktopTroubleshootingSettings()
+		.then((settings) => {
+			cachedSettings = settings;
+			return settings;
+		})
+		.catch((error) => {
+			logger.error('Failed to read desktop troubleshooting settings', error);
+			return null;
+		});
+}
 
 export function getCachedDesktopTroubleshootingSettings(): DesktopTroubleshootingSettings | null {
 	return cachedSettings;
 }
 
-export async function getDesktopTroubleshootingSettings(): Promise<DesktopTroubleshootingSettings | null> {
-	const electronApi = getElectronAPI();
-	if (!electronApi?.getDesktopTroubleshootingSettings) return null;
-	try {
-		const settings = await electronApi.getDesktopTroubleshootingSettings();
-		cachedSettings = settings;
-		return settings;
-	} catch (error) {
-		logger.error('Failed to read desktop troubleshooting settings', error);
-		return null;
-	}
+export function getDesktopTroubleshootingSettings(): Promise<DesktopTroubleshootingSettings | null> {
+	if (cachedSettings) return Promise.resolve(cachedSettings);
+	if (pendingPromise) return pendingPromise;
+	pendingPromise = fetchSettings().finally(() => {
+		pendingPromise = null;
+	});
+	return pendingPromise;
 }
 
 export async function setDesktopDisableHardwareAcceleration(
@@ -40,6 +52,19 @@ export async function setDesktopDisableHardwareAcceleration(
 		return next;
 	} catch (error) {
 		logger.error('Failed to update desktop hardware-acceleration setting', error);
+		return null;
+	}
+}
+
+export async function setDesktopDisableModuleUpdates(disable: boolean): Promise<DesktopTroubleshootingSettings | null> {
+	const electronApi = getElectronAPI();
+	if (!electronApi?.setDesktopDisableModuleUpdates) return null;
+	try {
+		const next = await electronApi.setDesktopDisableModuleUpdates({disable});
+		cachedSettings = next;
+		return next;
+	} catch (error) {
+		logger.error('Failed to update desktop automatic-updates setting', error);
 		return null;
 	}
 }

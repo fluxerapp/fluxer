@@ -185,12 +185,12 @@
 .editProfileIcon {
 	height: 1.25rem;
 	width: 1.25rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .editProfileText {
 	font-weight: 500;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .actionButtonsContainer {
@@ -234,7 +234,7 @@
 .actionIcon {
 	height: 1.5rem;
 	width: 1.5rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .actionIconSecondary {

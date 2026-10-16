@@ -16,7 +16,10 @@ import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGr
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import type {SearchEngineMode} from '@app/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal';
-import {ConvertEmoticonsControl} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
+import {
+	ConvertEmoticonsControl,
+	KeepAttachmentsOnEmptyEditControl,
+} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
 import {
 	StripTrackingParametersControl,
 	TrustAllExternalLinksControl,
@@ -26,28 +29,31 @@ import {
 	TextSearchEnginesContent,
 	TranslatorsContent,
 } from '@app/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab';
+import {SHOW_DOWNLOAD_BUTTON_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR,
+	CONFIGURE_DESCRIPTOR,
+	HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR,
+	SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR,
+	SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR,
+	SEQUENTIAL_FILE_SEND_DESCRIPTOR as SEND_FILES_IN_SEQUENTIAL_ORDER_DESCRIPTOR,
+	SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR,
+	UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {GearIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
-const AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR = msg({
-	message: 'Automatically send GIFs when selected',
-	comment: 'Short label for an advanced GIF behavior preference.',
-});
-const SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR = msg({
-	message: 'Save GIF favorites as saved media',
-	comment: 'Short label for an advanced GIF storage preference.',
-});
 const SHOW_MESSAGE_ACTION_BAR_DESCRIPTOR = msg({
 	message: 'Show message action bar',
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_ONLY_MORE_BUTTON_DESCRIPTOR = msg({
-	message: 'Show only more button',
+	message: 'Show only the more button',
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_QUICK_REACTIONS_DESCRIPTOR = msg({
@@ -63,15 +69,11 @@ const SHOW_GIF_INDICATOR_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_ATTACHMENT_EXPIRY_INDICATOR_DESCRIPTOR = msg({
-	message: 'Show attachment expiry indicator',
+	message: 'Show attachment expiration indicator',
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_DELETE_BUTTON_DESCRIPTOR = msg({
 	message: 'Show delete button',
-	comment: 'Short label for an advanced media button preference.',
-});
-const SHOW_DOWNLOAD_BUTTON_DESCRIPTOR = msg({
-	message: 'Show download button',
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_FAVORITE_BUTTON_DESCRIPTOR = msg({
@@ -106,14 +108,7 @@ const SHOW_MEDIA_BUTTON_DESCRIPTOR = msg({
 	message: 'Show media button',
 	comment: 'Short label for an advanced message input preference.',
 });
-const UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR = msg({
-	message: 'Upload attachments before sending',
-	comment: 'Short label for an advanced message input privacy preference.',
-});
-const SEND_FILES_IN_SEQUENTIAL_ORDER_DESCRIPTOR = msg({
-	message: 'Send file messages in order',
-	comment: 'Short label for an advanced message input preference.',
-});
+
 const SHOW_STICKERS_BUTTON_DESCRIPTOR = msg({
 	message: 'Show stickers button',
 	comment: 'Short label for an advanced message input preference.',
@@ -126,22 +121,17 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 	message: 'Show send button',
 	comment: 'Short label for an advanced message input preference.',
 });
-const SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR = msg({
-	message: 'Scroll to bottom when sending a message',
-	comment: 'Short label for an advanced message input preference.',
-});
-const SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR = msg({
-	message: 'Skip "Mark all as read" confirmation',
-	comment: 'Short label for an advanced inbox preference.',
-});
+
 const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
 	message: 'Edit/Reply by double clicking on message',
 	comment: 'Short label for an advanced message double click preference.',
 });
+
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
 	message: 'Hide muted channels by default',
 	comment: 'Short label for an advanced sidebar preference.',
 });
+
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_PROMPT_DESCRIPTOR = msg({
 	message: 'Hide muted channels by default?',
 	comment: 'Confirmation prompt in advanced settings.',
@@ -161,10 +151,6 @@ const STOP_HIDING_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
 const SHOW_IN_ALL_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Show in all communities',
 	comment: 'Short confirmation button label in advanced settings.',
-});
-const CONFIGURE_DESCRIPTOR = msg({
-	message: 'Configure',
-	comment: 'Button label that opens a dedicated advanced settings modal.',
 });
 
 export const AutoSendGifsControl = observer(() => {
@@ -273,15 +259,19 @@ const MediaButtonsContent = observer(() => {
 });
 
 export const StripTrackingControl = observer(() => (
-	<StripTrackingParametersControl compact data-flx="user.advanced-settings-tab.strip-tracking-control" />
+	<StripTrackingParametersControl data-flx="user.advanced-settings-tab.strip-tracking-control" />
 ));
 
 export const TrustAllDomainsControl = observer(() => (
-	<TrustAllExternalLinksControl compact data-flx="user.advanced-settings-tab.trust-all-domains-control" />
+	<TrustAllExternalLinksControl data-flx="user.advanced-settings-tab.trust-all-domains-control" />
 ));
 
 export const ConvertEmoticonsAdvancedControl = observer(() => (
 	<ConvertEmoticonsControl compact data-flx="user.advanced-settings-tab.convert-emoticons-control" />
+));
+
+export const KeepAttachmentsOnEmptyEditAdvancedControl = observer(() => (
+	<KeepAttachmentsOnEmptyEditControl data-flx="user.advanced-settings-tab.keep-attachments-on-empty-edit-control" />
 ));
 
 interface SearchProviderSettingsModalProps {
@@ -717,7 +707,7 @@ export const HideMutedChannelsByDefaultControl = observer(() => {
 	return (
 		<Switch
 			ariaLabel={i18n._(HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR)}
-			value={UserSettings.getDefaultHideMutedChannels()}
+			value={UserSettings.defaultHideMutedChannels}
 			onChange={handleChange}
 			compact
 			data-flx="user.advanced-settings-tab.switch.hide-muted-channels"

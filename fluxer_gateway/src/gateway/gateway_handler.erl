@@ -8,7 +8,7 @@
 -export([new_state/0]).
 
 -ifdef(TEST).
--export([parse_forwarded_for/1, parse_version/1]).
+-export([parse_forwarded_for/1]).
 -endif.
 
 -type state() :: #{
@@ -26,7 +26,7 @@
     request_workers := map(),
     voice_queue_timer := reference() | undefined,
     pending_identify := {map(), pid()} | undefined,
-    pending_identify_retry_timer := {reference(), reference()} | reference() | undefined,
+    pending_identify_retry_timer := {reference(), reference()} | undefined,
     connection_acquired => boolean()
 }.
 
@@ -81,7 +81,7 @@ init(Req, _Opts) ->
 
 -spec websocket_init(state()) -> ws_result().
 websocket_init(#{version := 1} = State) ->
-    case gateway_handler_rate_limit:acquire_connection(maps:get(peer_ip, State, undefined)) of
+    case gateway_ip_connections:acquire(maps:get(peer_ip, State, undefined)) of
         ok ->
             do_websocket_init(State#{connection_acquired => true});
         {error, too_many_connections} ->
@@ -107,11 +107,11 @@ websocket_handle(_, State) ->
 -spec websocket_info(term(), state()) -> ws_result().
 websocket_info({heartbeat_check, Token}, State) when is_reference(Token) ->
     gateway_handler_heartbeat:handle_heartbeat_check(Token, State);
-websocket_info({heartbeat_check}, State) ->
-    gateway_handler_heartbeat:handle_legacy_heartbeat_check(State);
 websocket_info({dispatch, Event, Data, Seq}, State) when
     is_integer(Seq), is_atom(Event), is_map(Data);
-    is_integer(Seq), is_binary(Event), is_map(Data)
+    is_integer(Seq), is_binary(Event), is_map(Data);
+    is_integer(Seq), is_atom(Event), is_list(Data);
+    is_integer(Seq), is_binary(Event), is_list(Data)
 ->
     gateway_handler_dispatch:handle_dispatch(Event, Data, Seq, State);
 websocket_info({dispatch, Event, null, Seq}, State) when
@@ -123,14 +123,12 @@ websocket_info({dispatch, Event, {pre_encoded, Bin} = Data, Seq}, State) when
     is_integer(Seq), is_binary(Event), is_binary(Bin)
 ->
     gateway_handler_dispatch:handle_dispatch(Event, Data, Seq, State);
-websocket_info({session_backpressure_error, _Details}, State) ->
-    {ok, State};
+websocket_info({gateway_error, ErrorAtom}, State) when is_atom(ErrorAtom) ->
+    gateway_handler_dispatch:handle_gateway_error(ErrorAtom, State);
 websocket_info(rollout_config_changed, State) ->
     gateway_handler_identify:handle_rollout_config_changed(State);
 websocket_info({retry_pending_identify, Token}, State) when is_reference(Token) ->
     gateway_handler_identify:handle_pending_identify_retry(Token, State);
-websocket_info(retry_pending_identify, State) ->
-    gateway_handler_identify:handle_pending_identify_retry(State);
 websocket_info(session_reconnect, State) ->
     gateway_handler_dispatch:handle_session_reconnect(State);
 websocket_info({'DOWN', _, process, Pid, _}, #{session_pid := Pid} = State) ->
@@ -141,6 +139,8 @@ websocket_info({'DOWN', Ref, process, Pid, Reason}, State) when
     gateway_handler_dispatch:handle_request_worker_down(Ref, Pid, Reason, State);
 websocket_info({gateway_request_worker_timeout, Ref, Type}, State) when is_reference(Ref) ->
     gateway_handler_dispatch:handle_request_worker_timeout(Ref, Type, State);
+websocket_info(forum_unreads_unknown_opcode, State) ->
+    gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State);
 websocket_info({process_voice_queue}, State) ->
     QueueState = State#{voice_queue_timer => undefined},
     NewState = gateway_handler_voice:process_queued_voice_updates(QueueState),
@@ -149,9 +149,16 @@ websocket_info(_, State) ->
     {ok, State}.
 
 -spec terminate(term(), cowboy_req:req(), state() | term()) -> ok.
-terminate(_Reason, _Req, State) when is_map(State) ->
-    terminate_with_state(eqwalizer:dynamic_cast(State));
+terminate(Reason, _Req, State) when is_map(State) ->
+    terminate_with_state(eqwalizer:dynamic_cast(State)),
+    exit_on_client_close(Reason);
 terminate(_Reason, _Req, _State) ->
+    ok.
+
+-spec exit_on_client_close(term()) -> ok.
+exit_on_client_close({remote, Code, _Payload}) when Code =:= 1000; Code =:= 1001 ->
+    exit({shutdown, client_closed});
+exit_on_client_close(_Reason) ->
     ok.
 
 -spec terminate_with_state(state()) -> ok.
@@ -168,7 +175,7 @@ terminate_with_state(_) ->
 
 -spec maybe_release_connection(state()) -> ok.
 maybe_release_connection(#{connection_acquired := true} = State) ->
-    gateway_handler_rate_limit:note_disconnect(State);
+    gateway_ip_connections:note_disconnect(State);
 maybe_release_connection(_) ->
     ok.
 
@@ -254,11 +261,15 @@ handle_incoming_data(Data, #{encoding := Encoding, compress_ctx := CompressCtx0}
     ws_result().
 handle_decompressed_incoming_data(Data, Encoding, CompressCtx, State) ->
     MaxPayloadSize = constants:max_payload_size(),
-    case gateway_compress:decompress(Data, CompressCtx) of
+    case gateway_compress:decompress(Data, CompressCtx, MaxPayloadSize) of
         {ok, Decompressed, NewCompressCtx} when byte_size(Decompressed) =< MaxPayloadSize ->
             Decoded = gateway_codec:decode(Decompressed, Encoding),
             handle_decode(Decoded, State#{compress_ctx => NewCompressCtx});
         {ok, _Decompressed, _NewCompressCtx} ->
+            gateway_handler_encode:close_with_reason(
+                decode_error, <<"Payload too large">>, State
+            );
+        {error, decompression_too_large} ->
             gateway_handler_encode:close_with_reason(
                 decode_error, <<"Payload too large">>, State
             );
@@ -292,6 +303,13 @@ dispatch_after_rate_limit({rate_limited, RLState}, _OpAtom, _Payload) ->
 
 -spec extract_client_ip(cowboy_req:req()) -> binary().
 extract_client_ip(Req) ->
+    case fluxer_gateway_env:get(trust_client_ip_header) of
+        true -> extract_trusted_client_ip(Req);
+        _ -> peer_ip_to_binary(cowboy_req:peer(Req))
+    end.
+
+-spec extract_trusted_client_ip(cowboy_req:req()) -> binary().
+extract_trusted_client_ip(Req) ->
     ClientIpHeader = client_ip_header(),
     case cowboy_req:header(ClientIpHeader, Req) of
         undefined -> peer_ip_to_binary(cowboy_req:peer(Req));

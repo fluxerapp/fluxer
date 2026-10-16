@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n from '@app/app/I18n';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
+import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import type {SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import {
 	getSettingsAudience,
 	type SettingsCategoryTag,
-	type SettingsStatusBadgeKind,
 } from '@app/features/user/components/settings_utils/SettingsMetadata';
 import {
 	ACCOUNT_SETTINGS_TAB,
@@ -31,7 +30,6 @@ import {clientDeveloperSettingsIndex} from '@app/features/user/components/settin
 import {desktopSettingsIndex} from '@app/features/user/components/settings_utils/search_index/DesktopSettingsIndex';
 import {devicesIndex} from '@app/features/user/components/settings_utils/search_index/DevicesIndex';
 import {embedDebuggerIndex} from '@app/features/user/components/settings_utils/search_index/EmbedDebuggerIndex';
-import {expressionPacksIndex} from '@app/features/user/components/settings_utils/search_index/ExpressionPacksIndex';
 import {giftInventoryIndex} from '@app/features/user/components/settings_utils/search_index/GiftInventoryIndex';
 import {keybindsIndex} from '@app/features/user/components/settings_utils/search_index/KeybindsIndex';
 import {languageIndex} from '@app/features/user/components/settings_utils/search_index/LanguageIndex';
@@ -60,9 +58,12 @@ function translateSearchableKeyword(keyword: SearchableSettingKeyword, activeI18
 	if (typeof keyword === 'string') {
 		return keyword;
 	}
+	if (typeof keyword === 'function') {
+		return keyword();
+	}
 	return activeI18n._(keyword, {
-		premiumProductName: PREMIUM_PRODUCT_NAME,
-		premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+		premiumProductName: getPremiumProductName(),
+		premiumProductFullName: getPremiumProductFullName(),
 	});
 }
 
@@ -100,7 +101,6 @@ const ADDITIONAL_SEARCHABLE_ITEMS: Array<SearchableSettingDescriptor> = [
 	...devicesIndex,
 	...plutoniumIndex,
 	...giftInventoryIndex,
-	...expressionPacksIndex,
 	...appearanceIndex,
 	...notificationsIndex,
 	...chatSettingsIndex,
@@ -125,14 +125,14 @@ function createSearchableItems(): Array<SearchableSettingItem> {
 
 let cachedSearchableItems: Array<SearchableSettingItem> | null = null;
 
-export function getSearchableItems(): Array<SearchableSettingItem> {
+function getSearchableItems(): Array<SearchableSettingItem> {
 	if (!cachedSearchableItems) {
 		cachedSearchableItems = createSearchableItems();
 	}
 	return cachedSearchableItems;
 }
 
-export function invalidateSearchCache(): void {
+function invalidateSearchCache(): void {
 	cachedSearchableItems = null;
 }
 
@@ -168,16 +168,27 @@ function calculateKeywordMatchScore(keywords: Array<string>, word: string): numb
 
 function calculateMatchScore(item: SearchableSettingItem, queryWords: Array<string>): number {
 	let score = 0;
+
 	const labelLower = item.label.toLowerCase();
 	const descriptionLower = item.description?.toLowerCase() ?? '';
-	const keywordsLower = [...item.keywords, ...(item.tags ?? [])].map((k) => k.toLowerCase());
+	const keywordsLower = [...item.keywords, ...(item.tags ?? [])].map((value) => value.toLowerCase());
+
 	for (const word of queryWords) {
-		score += calculateTextMatchScore(labelLower, word, 100, 50, 25);
-		score += calculateKeywordMatchScore(keywordsLower, word);
+		let wordScore = calculateTextMatchScore(labelLower, word, 100, 50, 25);
+
+		wordScore += calculateKeywordMatchScore(keywordsLower, word);
+
 		if (descriptionLower.includes(word)) {
-			score += 10;
+			wordScore += 10;
 		}
+
+		if (wordScore === 0) {
+			return 0;
+		}
+
+		score += wordScore;
 	}
+
 	return score;
 }
 
@@ -273,22 +284,6 @@ export function filterAdvancedSettingItems(
 		.filter(({score}) => score > 0)
 		.sort((a, b) => b.score - a.score || a.item.label.localeCompare(b.item.label))
 		.map(({item}) => item);
-}
-
-export function getSearchableItemStatusBadges(item: SearchableSettingItem): ReadonlyArray<SettingsStatusBadgeKind> {
-	return item.badges ?? [];
-}
-
-export function getMatchedSectionIds(results: Array<SettingsSearchResult>): Set<string> {
-	const sectionIds = new Set<string>();
-	for (const result of results) {
-		for (const item of result.matchedItems) {
-			if (item.sectionId) {
-				sectionIds.add(item.sectionId);
-			}
-		}
-	}
-	return sectionIds;
 }
 
 export function getMatchedTabTypes(results: Array<SettingsSearchResult>): Set<UserSettingsTabType> {

@@ -4,29 +4,19 @@ import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import styles from '@app/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationDetail.module.css';
 import {SectionCard} from '@app/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationDetailSectionCard';
+import {
+	BOT_TOKEN_DESCRIPTOR,
+	CLIENT_SECRET_DESCRIPTOR,
+	REGENERATE_DESCRIPTOR,
+	SECRETS_TOKENS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 
-const SECRETS_TOKENS_DESCRIPTOR = msg({
-	message: 'Secrets & tokens',
-	comment: 'Short label in the secrets section. Keep it concise. Keep the tone plain and specific.',
-});
 const KEEP_THESE_SAFE_REGENERATING_WILL_BREAK_EXISTING_INTEGRATIONS_DESCRIPTOR = msg({
 	message: 'Keep these safe. Regenerating will break existing integrations.',
 	comment: 'Description text in the secrets section.',
-});
-const CLIENT_SECRET_DESCRIPTOR = msg({
-	message: 'Client secret',
-	comment: 'Short label in the secrets section. Keep it concise.',
-});
-const REGENERATE_DESCRIPTOR = msg({
-	message: 'Regenerate',
-	comment: 'Short label in the secrets section. Keep it concise.',
-});
-const BOT_TOKEN_DESCRIPTOR = msg({
-	message: 'Bot token',
-	comment: 'Short label in the secrets section. Keep it concise. Keep the tone plain and specific.',
 });
 
 interface SecretsSectionProps {

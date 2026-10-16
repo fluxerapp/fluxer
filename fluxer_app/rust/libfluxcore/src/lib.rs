@@ -2,21 +2,17 @@
 
 mod formats;
 mod rgba;
-mod zstd_frame;
 mod zstd_stream;
 
-use formats::is_animated_image_bytes;
-use rgba::{TransformRequest, crop_rotate_rgba_alloc};
+use formats::{is_animated_image_bytes, sniff_image_format_bytes};
+use rgba::{TransformRequest, crop_rotate_rgba_into};
 use wasm_bindgen::prelude::*;
-
-#[cfg(target_arch = "wasm32")]
-#[global_allocator]
-static WASM_ALLOCATOR: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 #[allow(clippy::too_many_arguments)]
-pub fn crop_rotate_rgba_raw(
+pub fn crop_rotate_rgba_into_buffer(
     input: &[u8],
+    output: &mut [u8],
     src_width: u32,
     src_height: u32,
     x: u32,
@@ -24,11 +20,12 @@ pub fn crop_rotate_rgba_raw(
     width: u32,
     height: u32,
     rotation_deg: u32,
-    resize_width: Option<u32>,
-    resize_height: Option<u32>,
-) -> Result<Vec<u8>, JsValue> {
-    crop_rotate_rgba_alloc(
+    output_width: u32,
+    output_height: u32,
+) -> Result<(), JsValue> {
+    crop_rotate_rgba_into(
         input,
+        output,
         TransformRequest {
             src_width,
             src_height,
@@ -37,16 +34,11 @@ pub fn crop_rotate_rgba_raw(
             width,
             height,
             rotation_deg,
-            resize_width: optional_dimension_to_abi(resize_width),
-            resize_height: optional_dimension_to_abi(resize_height),
+            resize_width: output_width,
+            resize_height: output_height,
         },
     )
     .map_err(|error| JsValue::from_str(error.message()))
-}
-
-#[wasm_bindgen]
-pub fn decompress_zstd_frame(input: &[u8]) -> Result<Vec<u8>, JsValue> {
-    zstd_frame::decompress(input).map_err(zstd_error_to_js)
 }
 
 #[wasm_bindgen]
@@ -110,11 +102,12 @@ pub fn is_animated_image(input: &[u8]) -> bool {
     is_animated_image_bytes(input)
 }
 
-fn optional_dimension_to_abi(value: Option<u32>) -> u32 {
-    value.filter(|dimension| *dimension > 0).unwrap_or(u32::MAX)
+#[wasm_bindgen]
+pub fn sniff_image_format(input: &[u8]) -> u8 {
+    sniff_image_format_bytes(input)
 }
 
-fn zstd_error_to_js(error: zstd_frame::ZstdError) -> JsValue {
+fn zstd_error_to_js(error: zstd_stream::ZstdError) -> JsValue {
     JsValue::from_str(error.message())
 }
 

@@ -4,7 +4,11 @@ import {Avatar} from '@app/features/ui/components/Avatar';
 import {LiveBadge} from '@app/features/ui/components/LiveBadge';
 import type {User} from '@app/features/user/models/User';
 import styles from '@app/features/voice/components/VoiceParticipantTile.module.css';
-import {TILE_AVATAR_BASE, TILE_AVATAR_STYLE} from '@app/features/voice/components/voice_participant_tile/shared';
+import {
+	TILE_AVATAR_BASE,
+	TILE_AVATAR_MEDIA_SIZE,
+	TILE_AVATAR_STYLE,
+} from '@app/features/voice/components/voice_participant_tile/shared';
 import {MonitorPlayIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
@@ -32,6 +36,7 @@ export function ScreenSharePlaceholder({guildId, participantUser, showLiveBadge,
 						<Avatar
 							user={participantUser}
 							size={TILE_AVATAR_BASE}
+							mediaSize={TILE_AVATAR_MEDIA_SIZE}
 							className={styles.avatarFlexShrink}
 							style={TILE_AVATAR_STYLE}
 							guildId={guildId}

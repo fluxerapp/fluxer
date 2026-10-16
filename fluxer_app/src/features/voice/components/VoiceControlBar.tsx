@@ -3,7 +3,7 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {MORE_OPTIONS_DESCRIPTOR, TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
@@ -19,6 +19,7 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {ActiveScreenShareMenu} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {
 	VoiceAudioSettingsBottomSheet,
 	VoiceCameraSettingsBottomSheet,
@@ -30,7 +31,6 @@ import {
 } from '@app/features/voice/components/modals/CameraPreviewModal';
 import {
 	openScreenSharePickerModal,
-	openScreenShareSourceSwitcherModal,
 	preloadScreenSharePickerSources,
 } from '@app/features/voice/components/modals/ScreenSharePickerModal';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
@@ -80,6 +80,12 @@ import {
 	VOICE_UNDEAFEN_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {
+	MUTE_DESCRIPTOR,
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR as NO_CAMERA_PERMISSION_DESCRIPTOR,
+	NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -105,10 +111,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-const CHANGE_SOURCE_DESCRIPTOR = msg({
-	message: 'Change source',
-	comment: 'Voice control menu action to choose a different screen-share source.',
-});
 const END_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'End screen share',
 	comment: 'Voice control menu action to stop sharing the screen.',
@@ -118,31 +120,13 @@ const PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR = msg({
 	comment:
 		'Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.',
 });
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	comment: "Voice control button label to turn the user's microphone back on.",
-	context: 'voice-control-action',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	comment: "Voice control button label to turn the user's microphone off.",
-	context: 'voice-control-action',
-});
-const NO_CAMERA_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment:
-		'Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.',
-});
+
 const CAMERAS_DISABLED_LIMIT_DESCRIPTOR = msg({
 	message: 'Cameras are off above {voiceChannelCameraUserLimit} participants',
 	comment:
 		'Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.',
 });
-const NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't share your screen in this channel",
-	comment:
-		'Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.',
-});
+
 const AUDIO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Audio settings',
 	comment: 'Voice control button label for microphone and speaker settings.',
@@ -257,8 +241,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		serverDeaf: voiceState?.deaf,
 	});
 	const effectiveMuted = effectiveAudioState.effectiveMute || muteReason !== null || isMuted || isPermissionMuted;
-	const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-	const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
+	const pushToTalkHoldLabel = getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR);
 	const displayShareEnvironment = resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const renderInputSettingsMenu = useCallback(
@@ -353,55 +336,10 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		}
 	}, [localParticipant, isCameraEnabled, isConnected]);
 	const renderScreenShareMenu = useCallback(
-		({onClose}: {onClose: () => void}) => (
-			<>
-				{isScreenShareEnabled && (
-					<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group">
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-control-bar.render-screen-share-menu.icon"
-								/>
-							}
-							onClick={async () => {
-								onClose();
-								try {
-									await openScreenShareSourceSwitcherModal();
-								} catch (error) {
-									logger.error('Failed to open screen share source switcher:', error);
-								}
-							}}
-							data-flx="voice.voice-control-bar.render-screen-share-menu.menu-item.close"
-						>
-							{i18n._(CHANGE_SOURCE_DESCRIPTOR)}
-						</MenuItem>
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-control-bar.render-screen-share-menu.icon--2"
-								/>
-							}
-							danger
-							onClick={async () => {
-								onClose();
-								await MediaEngine.setScreenShareEnabled(false);
-							}}
-							data-flx="voice.voice-control-bar.render-screen-share-menu.menu-item.close--2"
-						>
-							{i18n._(END_SCREEN_SHARE_DESCRIPTOR)}
-						</MenuItem>
-					</MenuGroup>
-				)}
-				<StreamSettingsMenuContent
-					applyToLiveStream={isScreenShareEnabled}
-					displayShareEnvironment={displayShareEnvironment}
-					shareContext={ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display'}
-					data-flx="voice.voice-control-bar.render-screen-share-menu.stream-settings-menu-content"
-				/>
+		({onClose}: {onClose: () => void}) => {
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
+			const screenShareSettingsMenu = (
 				<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group--2">
 					<MenuItem
 						icon={
@@ -417,8 +355,33 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 						{i18n._(VOICE_SCREEN_SHARE_SETTINGS_DESCRIPTOR)}
 					</MenuItem>
 				</MenuGroup>
-			</>
-		),
+			);
+			if (isScreenShareEnabled) {
+				return (
+					<ActiveScreenShareMenu
+						onClose={onClose}
+						displayShareEnvironment={displayShareEnvironment}
+						shareContext={shareContext}
+						shareContextResolved={shareContextResolved}
+						iconClassName={styles.icon}
+						tail={screenShareSettingsMenu}
+						data-flx="voice.voice-control-bar.render-screen-share-menu.active-screen-share-menu"
+					/>
+				);
+			}
+			return (
+				<>
+					<StreamSettingsMenuContent
+						applyToLiveStream={false}
+						displayShareEnvironment={displayShareEnvironment}
+						shareContext={shareContext}
+						shareContextResolved={shareContextResolved}
+						data-flx="voice.voice-control-bar.render-screen-share-menu.stream-settings-menu-content"
+					/>
+					{screenShareSettingsMenu}
+				</>
+			);
+		},
 		[displayShareEnvironment, isScreenShareEnabled, i18n],
 	);
 	const openScreenShareMenu = useCallback(
@@ -588,6 +551,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		isGuildDeafened,
 		isPermissionMuted,
 		isPushToTalkEffective,
+		isSelfMuted: effectiveAudioState.effectiveMute || muteReason === 'self',
 		effectiveMuted,
 		canStream,
 		isCameraEnabled,
@@ -606,14 +570,14 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 				case 'permissionMuted':
 					return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
 				case 'pushToTalkHoldHint':
-					return i18n._(PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR, {pushToTalkHint});
+					return pushToTalkHoldLabel;
 				case 'unmute':
 					return i18n._(UNMUTE_DESCRIPTOR);
 				default:
 					return i18n._(MUTE_DESCRIPTOR);
 			}
 		},
-		[i18n, pushToTalkHint],
+		[i18n, pushToTalkHoldLabel],
 	);
 	const getDeafenTooltipLabel = useCallback(
 		(label: VoiceControlBarDeafenLabel) => {

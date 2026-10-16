@@ -5,10 +5,7 @@ export const DEFAULT_ZOOM_SCALE = 2.5;
 export const MAX_ZOOM_SCALE = 5;
 export const ZOOM_STEP = 1.25;
 export const ZOOM_STATE_EPSILON = 0.015;
-export const TAP_MOVE_THRESHOLD = 8;
-export const WHEEL_ZOOM_SPEED = 0.0015;
-export const WHEEL_PINCH_ZOOM_SPEED = 0.0125;
-export const WHEEL_PINCH_MAX_EXPONENT = 0.22;
+export const TAP_MOVE_THRESHOLD = 20;
 
 export interface Point {
 	x: number;
@@ -25,14 +22,6 @@ export interface PanZoomMetrics {
 function clamp(value: number, min: number, max: number): number {
 	const clamped = Math.min(max, Math.max(min, value));
 	return Object.is(clamped, -0) ? 0 : clamped;
-}
-
-export function getWheelZoomFactor(deltaY: number, isPinchGesture: boolean): number {
-	const exponent = -deltaY * (isPinchGesture ? WHEEL_PINCH_ZOOM_SPEED : WHEEL_ZOOM_SPEED);
-	if (!isPinchGesture) {
-		return Math.exp(exponent);
-	}
-	return Math.exp(clamp(exponent, -WHEEL_PINCH_MAX_EXPONENT, WHEEL_PINCH_MAX_EXPONENT));
 }
 
 export function clampScale(value: number, minScale = MIN_ZOOM_SCALE, maxScale = MAX_ZOOM_SCALE): number {

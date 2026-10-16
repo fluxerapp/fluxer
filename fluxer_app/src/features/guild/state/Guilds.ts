@@ -44,7 +44,7 @@ class Guilds {
 		return Object.values(this.guilds).filter((guild) => guild.ownerId === userId);
 	}
 
-	handleConnectionOpen({guilds}: {guilds: Array<GuildReadyData>}): void {
+	handleGatewayReady({guilds}: {guilds: Array<GuildReadyData>}): void {
 		const availableGuilds = guilds.filter((guild) => !guild.unavailable);
 		if (availableGuilds.length === 0) {
 			this.guilds = {};
@@ -54,6 +54,10 @@ class Guilds {
 			acc[guildData.id] = Guild.fromGuildReadyData(guildData);
 			return acc;
 		}, {});
+	}
+
+	hydrateFromSnapshot(guilds: Array<GuildReadyData>): void {
+		this.handleGatewayReady({guilds});
 	}
 
 	handleGuildCreate(guild: GuildReadyData): void {
@@ -70,6 +74,7 @@ class Guilds {
 		}
 		this.guilds[guild.id] = new Guild({
 			...guild,
+			joined_at: guild.joined_at ?? existingGuild.joinedAt ?? undefined,
 			roles: existingGuild.roles,
 		});
 	}

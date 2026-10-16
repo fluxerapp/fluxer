@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createEmojiID, createStickerID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import {mapGuildEmojiToResponse, mapGuildStickerToResponse} from '@app/api/guild/GuildModel';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {GuildNSFWLevelValue} from '@fluxer/constants/src/GuildConstants';
 import type {
 	PurgeGuildAssetError,
 	PurgeGuildAssetResult,
 	PurgeGuildAssetsResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {createEmojiID, createStickerID, type GuildID, type UserID} from '../../BrandedTypes';
-import {mapGuildEmojiToResponse, mapGuildStickerToResponse} from '../../guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {ExpressionAssetPurger} from '../../guild/services/content/ExpressionAssetPurger';
-import type {IAssetDeletionQueue} from '../../infrastructure/IAssetDeletionQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminAssetPurgeServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	gatewayService: IGatewayService;
 	assetDeletionQueue: IAssetDeletionQueue;
 	auditService: AdminAuditService;
@@ -29,11 +29,12 @@ export class AdminAssetPurgeService {
 	}
 
 	async purgeGuildAssets(args: {
+		guildId: GuildID;
 		ids: Array<string>;
 		adminUserId: UserID;
 		auditLogReason: string | null;
 	}): Promise<PurgeGuildAssetsResponse> {
-		const {ids, adminUserId, auditLogReason} = args;
+		const {guildId, ids, adminUserId, auditLogReason} = args;
 		const processed: Array<PurgeGuildAssetResult> = [];
 		const errors: Array<PurgeGuildAssetError> = [];
 		const seen = new Set<string>();
@@ -51,7 +52,11 @@ export class AdminAssetPurgeService {
 				continue;
 			}
 			try {
-				const result = await this.processAssetId(numericId, trimmedId, adminUserId, auditLogReason);
+				const result = await this.processAssetId(guildId, numericId, trimmedId, adminUserId, auditLogReason);
+				if (result === null) {
+					errors.push({id: trimmedId, error: 'Asset belongs to another guild'});
+					continue;
+				}
 				processed.push(result);
 			} catch (error) {
 				const message = error instanceof Error && error.message !== '' ? error.message : 'Failed to purge asset';
@@ -62,20 +67,24 @@ export class AdminAssetPurgeService {
 	}
 
 	private async processAssetId(
+		guildId: GuildID,
 		numericId: bigint,
 		idString: string,
 		adminUserId: UserID,
 		auditLogReason: string | null,
-	): Promise<PurgeGuildAssetResult> {
+	): Promise<PurgeGuildAssetResult | null> {
 		const {guildRepository} = this.deps;
 		const emojiId = createEmojiID(numericId);
 		const emoji = await guildRepository.getEmojiById(emojiId);
 		if (emoji) {
+			if (emoji.guildId !== guildId) {
+				return null;
+			}
 			await guildRepository.deleteEmoji(emoji.guildId, emojiId);
 			await this.dispatchGuildEmojisUpdate(emoji.guildId);
 			await this.assetPurger.purgeEmoji(idString);
 			const guildNsfwLevel = await this.getGuildNsfwLevel(emoji.guildId);
-			await this.createAuditLog({
+			await this.deps.auditService.createAuditLog({
 				adminUserId,
 				targetType: 'guild_emoji',
 				targetId: numericId,
@@ -97,11 +106,14 @@ export class AdminAssetPurgeService {
 		const stickerId = createStickerID(numericId);
 		const sticker = await guildRepository.getStickerById(stickerId);
 		if (sticker) {
+			if (sticker.guildId !== guildId) {
+				return null;
+			}
 			await guildRepository.deleteSticker(sticker.guildId, stickerId);
 			await this.dispatchGuildStickersUpdate(sticker.guildId);
 			await this.assetPurger.purgeSticker(idString);
 			const guildNsfwLevel = await this.getGuildNsfwLevel(sticker.guildId);
-			await this.createAuditLog({
+			await this.deps.auditService.createAuditLog({
 				adminUserId,
 				targetType: 'guild_sticker',
 				targetId: numericId,
@@ -122,7 +134,7 @@ export class AdminAssetPurgeService {
 		}
 		await this.assetPurger.purgeEmoji(idString);
 		await this.assetPurger.purgeSticker(idString);
-		await this.createAuditLog({
+		await this.deps.auditService.createAuditLog({
 			adminUserId,
 			targetType: 'asset',
 			targetId: numericId,
@@ -162,25 +174,6 @@ export class AdminAssetPurgeService {
 			guildId,
 			event: 'GUILD_STICKERS_UPDATE',
 			data: {stickers: stickers.map(mapGuildStickerToResponse)},
-		});
-	}
-
-	private async createAuditLog(params: {
-		adminUserId: UserID;
-		targetType: string;
-		targetId: bigint;
-		action: string;
-		auditLogReason: string | null;
-		metadata: Map<string, string>;
-	}): Promise<void> {
-		const {auditService} = this.deps;
-		await auditService.createAuditLog({
-			adminUserId: params.adminUserId,
-			targetType: params.targetType,
-			targetId: params.targetId,
-			action: params.action,
-			auditLogReason: params.auditLogReason,
-			metadata: params.metadata,
 		});
 	}
 }

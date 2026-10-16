@@ -19,6 +19,11 @@
 	animation-delay: 500ms;
 }
 
+:global(html.reduced-motion) .dot {
+	animation-duration: 1s !important;
+	animation-iteration-count: infinite !important;
+}
+
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .dot {
 	animation-play-state: paused;
 	opacity: 1;

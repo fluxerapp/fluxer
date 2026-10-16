@@ -39,7 +39,7 @@ export function TextualAttachmentPreviewFooter({
 	const fileName = getAttachmentFileName(attachment);
 	let fileSizeLabel = '';
 	if (typeof attachment.size === 'number') {
-		fileSizeLabel = formatFileSize(attachment.size);
+		fileSizeLabel = formatFileSize(i18n.locale, attachment.size);
 	}
 	let expandButtonLabel: string;
 	if (countKind === 'row') {

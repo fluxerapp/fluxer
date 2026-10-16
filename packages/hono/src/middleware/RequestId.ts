@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {Headers} from '@fluxer/constants/src/Headers';
 import type {MiddlewareHandler} from 'hono';
 
-export type RequestIdGenerator = () => string;
+type RequestIdGenerator = () => string;
 
 export interface RequestIdOptions {
 	headerName?: string;
@@ -12,7 +12,7 @@ export interface RequestIdOptions {
 	setResponseHeader?: boolean;
 }
 
-export const REQUEST_ID_KEY = 'requestId';
+const REQUEST_ID_KEY = 'requestId';
 
 export function requestId(options: RequestIdOptions = {}): MiddlewareHandler {
 	const {headerName = Headers.X_REQUEST_ID, generator = randomUUID, setResponseHeader = true} = options;

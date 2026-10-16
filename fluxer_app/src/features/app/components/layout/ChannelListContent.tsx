@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ChannelItem} from '@app/features/app/components/layout/ChannelItem';
 import channelItemStyles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
@@ -14,16 +15,31 @@ import {GenericChannelItem} from '@app/features/app/components/layout/GenericCha
 import {GuildDetachedBanner} from '@app/features/app/components/layout/GuildDetachedBanner';
 import {NullSpaceDropIndicator} from '@app/features/app/components/layout/NullSpaceDropIndicator';
 import {ScrollIndicatorOverlay} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
-import {DND_TYPES, type DragItem, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {
+	shouldShowCategoryWhenHidingMutedChannels,
 	shouldShowChannelInCollapsedCategory,
 	shouldShowChannelWhenHidingMutedChannels,
 } from '@app/features/app/components/layout/utils/ChannelListVisibility';
 import {createChannelMoveOperation} from '@app/features/app/components/layout/utils/ChannelMoveOperation';
 import {organizeChannels} from '@app/features/app/components/layout/utils/ChannelOrganization';
-import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
+import {
+	type ChannelUnreadState,
+	getChannelUnreadState,
+} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {VoiceParticipantsList} from '@app/features/app/components/layout/VoiceParticipantsList';
+import {
+	type RememberedSkeletonGuildChannelGroup,
+	type RememberedSkeletonGuildChannelRow,
+	reportSkeletonGuildChannelList,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import type {GuildBannerPresentation} from '@app/features/app/hooks/useGuildBannerPresentation';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
+import {
+	measureSkeletonTextWidthPx,
+	useSkeletonLayoutReport,
+} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -35,6 +51,8 @@ import {useLocation} from '@app/features/platform/components/router/RouterReact'
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {SidebarThreadList} from '@app/features/threads/components/SidebarThreadList';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelListContextMenu} from '@app/features/ui/action_menu/ChannelListContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as DimensionCommands from '@app/features/ui/commands/DimensionCommands';
@@ -55,11 +73,10 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
+import type {MotionValue} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
-import type {MotionValue} from 'motion';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
-import {GenericErrorModal} from '../alerts/GenericErrorModal';
 
 const CATEGORY_FULL_DESCRIPTOR = msg({
 	message: 'Category full',
@@ -90,30 +107,98 @@ const MEMBERS_PAGE_PERMISSIONS =
 	Permissions.MODERATE_MEMBERS |
 	Permissions.KICK_MEMBERS;
 const EMPTY_ARRAY: ReadonlyArray<never> = Object.freeze([]);
-export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scrollY: MotionValue<number>}) => {
+
+interface ResolvedChannelGroup {
+	readonly key: string;
+	readonly category: Channel | undefined;
+	readonly isCollapsed: boolean;
+	readonly connectedChannelInGroup: boolean;
+	readonly filteredVoiceChannels: Array<Channel>;
+	readonly visibleTextChannels: ReadonlyArray<Channel>;
+	readonly visibleVoiceChannels: ReadonlyArray<Channel>;
+	readonly showTextChannels: boolean;
+	readonly showVoiceChannels: boolean;
+}
+
+function createChannelListProjectionKey(
+	groups: ReadonlyArray<ResolvedChannelGroup>,
+	membersRowVisible: boolean,
+): string {
+	const groupKeys = groups.map((group) => {
+		const channelKeys = [...group.visibleTextChannels, ...group.visibleVoiceChannels].map(
+			(channel) => `${channel.id}~${channel.name}`,
+		);
+		return `${group.category?.id ?? ''}~${group.category?.name ?? ''}~${group.isCollapsed}~${channelKeys.join(',')}`;
+	});
+	return `${membersRowVisible}|${groupKeys.join('|')}`;
+}
+
+function createRememberedChannelGroups(
+	groups: ReadonlyArray<ResolvedChannelGroup>,
+	container: HTMLElement | null,
+): ReadonlyArray<RememberedSkeletonGuildChannelGroup> {
+	const categoryNameElements = container?.querySelectorAll(`.${channelItemStyles.categoryName}`);
+	const channelNameElements = container?.querySelectorAll(`.${channelItemStyles.channelName}`);
+	let categoryNameIndex = 0;
+	let channelNameIndex = 0;
+	const readNextChannelWidth = (): number => {
+		const width = measureSkeletonTextWidthPx(channelNameElements?.item(channelNameIndex) ?? null);
+		channelNameIndex += 1;
+		return width;
+	};
+	return groups.map((group) => {
+		let categoryNameWidthPx = measureSkeletonTextWidthPx(null);
+		if (group.category != null) {
+			categoryNameWidthPx = measureSkeletonTextWidthPx(categoryNameElements?.item(categoryNameIndex) ?? null);
+			categoryNameIndex += 1;
+		}
+		const channels: Array<RememberedSkeletonGuildChannelRow> = [];
+		for (const _textChannel of group.visibleTextChannels) {
+			channels.push({voice: false, nameWidthPx: readNextChannelWidth()});
+		}
+		for (const _voiceChannel of group.visibleVoiceChannels) {
+			channels.push({voice: true, nameWidthPx: readNextChannelWidth()});
+		}
+		return {
+			categoryHeaderVisible: group.category != null,
+			collapsed: group.isCollapsed,
+			categoryNameWidthPx,
+			channels,
+		};
+	});
+}
+interface ChannelListContentProps {
+	readonly guild: Guild;
+	readonly scrollY: MotionValue<number>;
+	readonly banner: GuildBannerPresentation;
+}
+export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelListContentProps) => {
+	const threadsActive = ThreadGuilds.isActive(guild.id);
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
 	const location = useLocation();
-	const userGuildSettings = UserGuildSettings.getSettings(guild.id);
+	const userGuildSettings = UserGuildSettings.getSettingsForScope(guild.id);
 	const isDraggingAnything = useDragLayer((monitor) => {
 		if (!monitor.isDragging()) return false;
 		const itemType = monitor.getItemType();
 		return (
-			itemType === DND_TYPES.CHANNEL || itemType === DND_TYPES.CATEGORY || itemType === DND_TYPES.VOICE_PARTICIPANT
+			itemType === DragItemType.CHANNEL ||
+			itemType === DragItemType.CATEGORY ||
+			itemType === DragItemType.VOICE_PARTICIPANT
 		);
 	});
 	const [activeDragItem, setActiveDragItem] = useState<DragItem | null>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
+	const showIntegratedBanner = banner.collapsible;
+	const channelGroupsContainerRef = useRef<HTMLDivElement | null>(null);
 	const stickToBottomRef = useRef(false);
 	const pendingScrollTopRef = useRef<number | null>(null);
 	const scrollPersistRafRef = useRef<number | null>(null);
 	const channelListNavigationRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-channel-list-focus-item="true"]',
-		orientation: 'vertical',
-		loop: true,
+
 		enabled: KeyboardMode.keyboardModeEnabled,
 		restoreFocusOnWindowFocus: false,
-		manageTabIndex: true,
 	});
 	const connectedChannelId = MediaEngine.channelId;
 	const hideMutedChannels = userGuildSettings?.hide_muted_channels ?? false;
@@ -169,7 +254,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		() => [channels.length, ReadStates.version, userGuildSettings, hideMutedChannels, showFadedUnreadOnMutedChannels],
 		[channels.length, ReadStates.version, userGuildSettings, hideMutedChannels, showFadedUnreadOnMutedChannels],
 	);
-	const getChannelScrollContainer = useCallback(() => scrollerRef.current?.getScrollerNode() ?? null, [scrollerRef]);
+	const getChannelScrollContainer = useCallback(() => scrollerRef.current?.getViewportElement() ?? null, [scrollerRef]);
 	useDragAutoScroll({active: isDraggingAnything, getScrollElement: getChannelScrollContainer});
 	const handleChannelDrop = useCallback(
 		(item: DragItem, result: DropResult) => {
@@ -233,21 +318,22 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	}, [guild.id]);
 	const handleResize = useCallback((_entry: ResizeObserverEntry, _type: 'container' | 'content') => {
 		if (stickToBottomRef.current && scrollerRef.current) {
-			scrollerRef.current.scrollToBottom({animate: false});
+			scrollerRef.current.jumpToEndEdge({animate: false});
 		}
 	}, []);
-	useEffect(() => {
-		const guildDimensions = Dimension.getGuildDimensions(guild.id);
+	useLayoutEffect(() => {
+		const guildDimensions = Dimension.guildDimensionsFor(guild.id);
 		if (guildDimensions.scrollTo) {
 			const element = document.querySelector(`[data-channel-id="${guildDimensions.scrollTo}"]`);
 			if (element && scrollerRef.current) {
-				scrollerRef.current.scrollIntoViewNode({node: element as HTMLElement, shouldScrollToStart: false});
+				scrollerRef.current.revealElement({node: element as HTMLElement, preferStartEdge: false});
 			}
 			DimensionCommands.clearChannelListScrollTo(guild.id);
 		} else if (guildDimensions.scrollTop && guildDimensions.scrollTop > 0 && scrollerRef.current) {
 			scrollerRef.current.scrollTo({to: guildDimensions.scrollTop, animate: false});
 		}
-	}, [guild.id]);
+		scrollY.set(scrollerRef.current?.getViewportElement()?.scrollTop ?? 0);
+	}, [guild.id, scrollY]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
@@ -260,11 +346,11 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		},
 		[guild],
 	);
-	const hasVisibleUnreadInChannel = (channelId: string): boolean => {
+	const getUnreadStateInChannel = (channelId: string): ChannelUnreadState => {
 		const unreadCount = ReadStates.getUnreadCount(channelId);
+		const hasUnread = ReadStates.hasUnread(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
-		const isMuted =
-			UserGuildSettings.isCategoryMuted(guild.id, channelId) || UserGuildSettings.isChannelMuted(guild.id, channelId);
+		const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
 		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
@@ -274,15 +360,165 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 					type: channel.type,
 				})
 			: null;
-		const unreadState = getChannelUnreadState({
+		return getChannelUnreadState({
+			hasUnread,
 			unreadCount,
 			mentionCount,
 			isMuted,
 			showFadedUnreadOnMutedChannels,
 			unreadBadgesLevel,
 		});
-		return unreadState.hasVisibleUnread;
 	};
+	const resolvedGroups: Array<ResolvedChannelGroup> = [];
+	for (const group of channelGroups) {
+		const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
+		const isNullSpace = !group.category;
+		const isCategoryMuted = group.category
+			? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id)
+			: false;
+		let filteredTextChannels: Array<Channel>;
+		let filteredVoiceChannels: Array<Channel>;
+		if (hideMutedChannels) {
+			filteredTextChannels = [];
+			for (const ch of group.textChannels) {
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
+				if (
+					shouldShowChannelWhenHidingMutedChannels({
+						isCategoryMuted,
+						isChannelMuted,
+						isSelected: ch.id === selectedChannelInGuildId,
+						isConnected: false,
+						hasVisibleUnread: isMuted && getUnreadStateInChannel(ch.id).hasVisibleUnread,
+					})
+				) {
+					filteredTextChannels.push(ch);
+				}
+			}
+			filteredVoiceChannels = [];
+			for (const ch of group.voiceChannels) {
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
+				if (
+					shouldShowChannelWhenHidingMutedChannels({
+						isCategoryMuted,
+						isChannelMuted,
+						isSelected: ch.id === selectedChannelInGuildId,
+						isConnected: ch.id === connectedChannelId,
+						hasVisibleUnread: isMuted && getUnreadStateInChannel(ch.id).hasVisibleUnread,
+					})
+				) {
+					filteredVoiceChannels.push(ch);
+				}
+			}
+		} else {
+			filteredTextChannels = group.textChannels;
+			filteredVoiceChannels = group.voiceChannels;
+		}
+		let visibleTextChannels: ReadonlyArray<Channel> = filteredTextChannels;
+		let visibleVoiceChannels: ReadonlyArray<Channel> = filteredVoiceChannels;
+		let connectedChannelInGroup = false;
+		if (isCollapsed) {
+			const showTextSelected = selectedChannelInGuildId;
+			const showSet = new Set<string>();
+			for (const ch of filteredTextChannels) {
+				const unreadState = getUnreadStateInChannel(ch.id);
+				if (
+					shouldShowChannelInCollapsedCategory({
+						isCategoryMuted,
+						isSelected: ch.id === showTextSelected,
+						isConnected: false,
+						hasVisibleUnread: unreadState.hasVisibleUnread,
+						hasMentions: unreadState.hasMentions,
+					})
+				) {
+					showSet.add(ch.id);
+				}
+			}
+			if (showSet.size === 0) {
+				visibleTextChannels = EMPTY_ARRAY;
+			} else if (showSet.size === filteredTextChannels.length) {
+				visibleTextChannels = filteredTextChannels;
+			} else {
+				const next: Array<Channel> = [];
+				for (const ch of filteredTextChannels) if (showSet.has(ch.id)) next.push(ch);
+				visibleTextChannels = next;
+			}
+			const voiceSet = new Set<string>();
+			if (selectedChannelInGuildId) voiceSet.add(selectedChannelInGuildId);
+			if (connectedChannelId) {
+				for (const ch of filteredVoiceChannels) {
+					if (ch.id === connectedChannelId) {
+						connectedChannelInGroup = true;
+						voiceSet.add(connectedChannelId);
+						break;
+					}
+				}
+			}
+			for (const ch of filteredVoiceChannels) {
+				const unreadState = getUnreadStateInChannel(ch.id);
+				if (
+					shouldShowChannelInCollapsedCategory({
+						isCategoryMuted,
+						isSelected: ch.id === selectedChannelInGuildId,
+						isConnected: ch.id === connectedChannelId,
+						hasVisibleUnread: unreadState.hasVisibleUnread,
+						hasMentions: unreadState.hasMentions,
+					})
+				) {
+					voiceSet.add(ch.id);
+				}
+			}
+			if (voiceSet.size === 0) {
+				visibleVoiceChannels = EMPTY_ARRAY;
+			} else {
+				const next: Array<Channel> = [];
+				let connectedRow: Channel | null = null;
+				for (const ch of filteredVoiceChannels) {
+					if (!voiceSet.has(ch.id)) continue;
+					if (ch.id === connectedChannelId) {
+						connectedRow = ch;
+					} else {
+						next.push(ch);
+					}
+				}
+				visibleVoiceChannels = connectedRow ? [connectedRow, ...next] : next;
+			}
+		}
+		if (isNullSpace && filteredTextChannels.length === 0 && filteredVoiceChannels.length === 0) {
+			continue;
+		}
+		if (
+			hideMutedChannels &&
+			group.category &&
+			!shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: group.textChannels.length > 0 || group.voiceChannels.length > 0,
+				hasVisibleChannels: filteredTextChannels.length > 0 || filteredVoiceChannels.length > 0,
+			})
+		) {
+			continue;
+		}
+		resolvedGroups.push({
+			key: group.category?.id || 'null-space',
+			category: group.category,
+			isCollapsed,
+			connectedChannelInGroup,
+			filteredVoiceChannels,
+			visibleTextChannels,
+			visibleVoiceChannels,
+			showTextChannels: !isCollapsed || visibleTextChannels.length > 0,
+			showVoiceChannels: !isCollapsed || visibleVoiceChannels.length > 0,
+		});
+	}
+	useSkeletonLayoutReport(
+		() => {
+			reportSkeletonGuildChannelList(guild.id, {
+				membersRowVisible: canViewMembers,
+				groups: createRememberedChannelGroups(resolvedGroups, channelGroupsContainerRef.current),
+			});
+		},
+		`${guild.id}|${createChannelListProjectionKey(resolvedGroups, canViewMembers)}`,
+	);
 	return (
 		<div
 			className={styles.channelListScrollerWrapper}
@@ -290,7 +526,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		>
 			<Scroller
 				ref={scrollerRef}
-				className={styles.channelListScroller}
+				className={clsx(styles.channelListScroller, showIntegratedBanner && styles.channelListScrollerOverBanner)}
 				onScroll={handleScroll}
 				onResize={handleResize}
 				key={guild.id}
@@ -304,6 +540,14 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 					ref={channelListNavigationRef}
 					data-flx="app.channel-list-content.navigation-container.context-menu"
 				>
+					{showIntegratedBanner && (
+						<div
+							ref={banner.hoverRef}
+							className={styles.bannerSpacer}
+							style={{height: banner.collapseDistance}}
+							data-flx="app.channel-list-content.banner-spacer"
+						/>
+					)}
 					<GuildDetachedBanner guild={guild} data-flx="app.channel-list-content.guild-detached-banner" />
 					<div className={styles.topDropZone} data-flx="app.channel-list-content.top-drop-zone">
 						<NullSpaceDropIndicator
@@ -352,156 +596,77 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 							<div className={styles.membersSeparator} data-flx="app.channel-list-content.members-separator" />
 						</>
 					)}
-					<div className={styles.channelGroupsContainer} data-flx="app.channel-list-content.channel-groups-container">
-						{channelGroups.map((group) => {
-							const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
-							const isNullSpace = !group.category;
-							const isCategoryMuted = group.category
-								? UserGuildSettings.isChannelMuted(guild.id, group.category.id)
-								: false;
-							type ChannelRow = (typeof group.textChannels)[number];
-							let filteredTextChannels: Array<ChannelRow>;
-							let filteredVoiceChannels: Array<ChannelRow>;
-							if (hideMutedChannels) {
-								filteredTextChannels = [];
-								for (const ch of group.textChannels) {
-									const isMuted = UserGuildSettings.isChannelMuted(guild.id, ch.id);
-									if (
-										shouldShowChannelWhenHidingMutedChannels({
-											isMuted,
-											isSelected: ch.id === selectedChannelInGuildId,
-											isConnected: false,
-											hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
-										})
-									) {
-										filteredTextChannels.push(ch);
-									}
-								}
-								filteredVoiceChannels = [];
-								for (const ch of group.voiceChannels) {
-									const isMuted = UserGuildSettings.isChannelMuted(guild.id, ch.id);
-									if (
-										shouldShowChannelWhenHidingMutedChannels({
-											isMuted,
-											isSelected: ch.id === selectedChannelInGuildId,
-											isConnected: ch.id === connectedChannelId,
-											hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
-										})
-									) {
-										filteredVoiceChannels.push(ch);
-									}
-								}
-							} else {
-								filteredTextChannels = group.textChannels;
-								filteredVoiceChannels = group.voiceChannels;
-							}
-							let visibleTextChannels: ReadonlyArray<ChannelRow> = filteredTextChannels;
-							let visibleVoiceChannels: ReadonlyArray<ChannelRow> = filteredVoiceChannels;
-							let connectedChannelInGroup = false;
-							if (isCollapsed) {
-								const showTextSelected = selectedChannelInGuildId;
-								const showSet = new Set<string>();
-								for (const ch of filteredTextChannels) {
-									if (
-										shouldShowChannelInCollapsedCategory({
-											isCategoryMuted,
-											isSelected: ch.id === showTextSelected,
-											hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
-										})
-									) {
-										showSet.add(ch.id);
-									}
-								}
-								if (showSet.size === 0) {
-									visibleTextChannels = EMPTY_ARRAY;
-								} else if (showSet.size === filteredTextChannels.length) {
-									visibleTextChannels = filteredTextChannels;
-								} else {
-									const next: Array<ChannelRow> = [];
-									for (const ch of filteredTextChannels) if (showSet.has(ch.id)) next.push(ch);
-									visibleTextChannels = next;
-								}
-								const voiceSet = new Set<string>();
-								if (selectedChannelInGuildId) voiceSet.add(selectedChannelInGuildId);
-								if (connectedChannelId) {
-									for (const ch of filteredVoiceChannels) {
-										if (ch.id === connectedChannelId) {
-											connectedChannelInGroup = true;
-											voiceSet.add(connectedChannelId);
-											break;
-										}
-									}
-								}
-								for (const ch of filteredVoiceChannels) {
-									if (
-										shouldShowChannelInCollapsedCategory({
-											isCategoryMuted,
-											isSelected: ch.id === selectedChannelInGuildId,
-											hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
-										})
-									) {
-										voiceSet.add(ch.id);
-									}
-								}
-								if (voiceSet.size === 0) {
-									visibleVoiceChannels = EMPTY_ARRAY;
-								} else {
-									const next: Array<ChannelRow> = [];
-									let connectedRow: ChannelRow | null = null;
-									for (const ch of filteredVoiceChannels) {
-										if (!voiceSet.has(ch.id)) continue;
-										if (ch.id === connectedChannelId) {
-											connectedRow = ch;
-										} else {
-											next.push(ch);
-										}
-									}
-									visibleVoiceChannels = connectedRow ? [connectedRow, ...next] : next;
-								}
-							}
-							if (isNullSpace && filteredTextChannels.length === 0 && filteredVoiceChannels.length === 0) {
-								return null;
-							}
-							if (
-								hideMutedChannels &&
-								group.category &&
-								filteredTextChannels.length === 0 &&
-								filteredVoiceChannels.length === 0
-							) {
-								return null;
-							}
-							const showTextChannels = !isCollapsed || visibleTextChannels.length > 0;
-							const showVoiceChannels = !isCollapsed || visibleVoiceChannels.length > 0;
-							return (
-								<div
-									key={group.category?.id || 'null-space'}
-									className={styles.channelGroup}
-									data-flx="app.channel-list-content.channel-group"
-								>
-									{group.category && (
+					<div
+						ref={channelGroupsContainerRef}
+						className={styles.channelGroupsContainer}
+						data-flx="app.channel-list-content.channel-groups-container"
+					>
+						{resolvedGroups.map((group) => (
+							<div key={group.key} className={styles.channelGroup} data-flx="app.channel-list-content.channel-group">
+								{group.category && (
+									<ChannelItem
+										guild={guild}
+										channel={group.category}
+										isCollapsed={group.isCollapsed}
+										onToggle={() => toggleCategory(group.category!.id)}
+										isDraggingAnything={isDraggingAnything}
+										activeDragItem={activeDragItem}
+										onChannelDrop={handleChannelDrop}
+										onDragStateChange={setActiveDragItem}
+										isSelectedByPath={selectedChannelInGuildId === group.category.id}
+										isOnMembersRoute={isMembersSelected}
+										data-flx="app.channel-list-content.channel-item"
+									/>
+								)}
+								{group.isCollapsed && group.category && !group.connectedChannelInGroup && (
+									<CollapsedCategoryVoiceParticipants
+										guild={guild}
+										voiceChannels={group.filteredVoiceChannels}
+										data-flx="app.channel-list-content.collapsed-category-voice-participants"
+									/>
+								)}
+								{group.showTextChannels &&
+									!threadsActive &&
+									group.visibleTextChannels.map((ch) => (
 										<ChannelItem
+											key={ch.id}
 											guild={guild}
-											channel={group.category}
-											isCollapsed={isCollapsed}
-											onToggle={() => toggleCategory(group.category!.id)}
+											channel={ch}
 											isDraggingAnything={isDraggingAnything}
 											activeDragItem={activeDragItem}
 											onChannelDrop={handleChannelDrop}
 											onDragStateChange={setActiveDragItem}
-											isSelectedByPath={selectedChannelInGuildId === group.category.id}
+											isSelectedByPath={selectedChannelInGuildId === ch.id}
 											isOnMembersRoute={isMembersSelected}
-											data-flx="app.channel-list-content.channel-item"
+											data-flx="app.channel-list-content.channel-item--2"
 										/>
-									)}
-									{isCollapsed && group.category && !connectedChannelInGroup && (
-										<CollapsedCategoryVoiceParticipants
-											guild={guild}
-											voiceChannels={filteredVoiceChannels}
-											data-flx="app.channel-list-content.collapsed-category-voice-participants"
-										/>
-									)}
-									{showTextChannels &&
-										visibleTextChannels.map((ch) => (
+									))}
+								{group.showTextChannels &&
+									threadsActive &&
+									group.visibleTextChannels.map((ch) => (
+										<React.Fragment key={ch.id}>
+											<ChannelItem
+												guild={guild}
+												channel={ch}
+												isDraggingAnything={isDraggingAnything}
+												activeDragItem={activeDragItem}
+												onChannelDrop={handleChannelDrop}
+												onDragStateChange={setActiveDragItem}
+												isSelectedByPath={selectedChannelInGuildId === ch.id}
+												isOnMembersRoute={isMembersSelected}
+												data-flx="app.channel-list-content.channel-item--4"
+											/>
+											<SidebarThreadList
+												guildId={guild.id}
+												parentId={ch.id}
+												onlySelected={group.isCollapsed}
+												data-flx="app.channel-list-content.sidebar-thread-list"
+											/>
+										</React.Fragment>
+									))}
+								{group.showVoiceChannels &&
+									group.visibleVoiceChannels.map((ch) => {
+										const channelRow = (
 											<ChannelItem
 												key={ch.id}
 												guild={guild}
@@ -512,53 +677,36 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 												onDragStateChange={setActiveDragItem}
 												isSelectedByPath={selectedChannelInGuildId === ch.id}
 												isOnMembersRoute={isMembersSelected}
-												data-flx="app.channel-list-content.channel-item--2"
+												data-flx="app.channel-list-content.channel-item--3"
 											/>
-										))}
-									{showVoiceChannels &&
-										visibleVoiceChannels.map((ch) => {
-											const channelRow = (
-												<ChannelItem
-													key={ch.id}
-													guild={guild}
-													channel={ch}
-													isDraggingAnything={isDraggingAnything}
-													activeDragItem={activeDragItem}
-													onChannelDrop={handleChannelDrop}
-													onDragStateChange={setActiveDragItem}
-													isSelectedByPath={selectedChannelInGuildId === ch.id}
-													isOnMembersRoute={isMembersSelected}
-													data-flx="app.channel-list-content.channel-item--3"
-												/>
-											);
-											if (isCollapsed && connectedChannelId && ch.id === connectedChannelId) {
-												return (
-													<React.Fragment key={ch.id}>
-														{channelRow}
-														<CollapsedChannelAvatarStack
-															guild={guild}
-															channel={ch}
-															data-flx="app.channel-list-content.collapsed-channel-avatar-stack"
-														/>
-													</React.Fragment>
-												);
-											}
+										);
+										if (group.isCollapsed && connectedChannelId && ch.id === connectedChannelId) {
 											return (
 												<React.Fragment key={ch.id}>
 													{channelRow}
-													{!isCollapsed && (
-														<VoiceParticipantsList
-															guild={guild}
-															channel={ch}
-															data-flx="app.channel-list-content.voice-participants-list"
-														/>
-													)}
+													<CollapsedChannelAvatarStack
+														guild={guild}
+														channel={ch}
+														data-flx="app.channel-list-content.collapsed-channel-avatar-stack"
+													/>
 												</React.Fragment>
 											);
-										})}
-								</div>
-							);
-						})}
+										}
+										return (
+											<React.Fragment key={ch.id}>
+												{channelRow}
+												{!group.isCollapsed && (
+													<VoiceParticipantsList
+														guild={guild}
+														channel={ch}
+														data-flx="app.channel-list-content.voice-participants-list"
+													/>
+												)}
+											</React.Fragment>
+										);
+									})}
+							</div>
+						))}
 					</div>
 					{showTrailingDropZone && (
 						<div className={styles.bottomDropZone} data-flx="app.channel-list-content.bottom-drop-zone">

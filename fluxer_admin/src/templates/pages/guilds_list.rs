@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager;
+
+use crate::utils::plural::count_noun;
 use crate::{
     api::types::GuildInfo,
     config::AdminConfig,
@@ -14,13 +17,12 @@ use crate::{
         },
         layout::admin_layout,
     },
-    utils::forms::parse_comma_separated,
+    utils::{forms::parse_comma_separated, user_tag::display_with_tag},
 };
 use maud::{Markup, html};
 
 pub struct GuildsListParams {
     pub q: String,
-    pub ids: String,
     pub requested_ids: Vec<String>,
     pub limit: u32,
     pub page: u32,
@@ -37,7 +39,6 @@ impl GuildsListParams {
         Self {
             q: q.unwrap_or_default().trim().to_owned(),
             requested_ids: parse_comma_separated(&ids),
-            ids: ids.trim().to_owned(),
             limit: match limit.unwrap_or(50) {
                 25 => 25,
                 100 => 100,
@@ -64,7 +65,6 @@ impl GuildsListParams {
 pub struct GuildsListResults<'a> {
     pub guilds: Option<&'a [GuildInfo]>,
     pub total: Option<u64>,
-    pub has_more: bool,
 }
 
 pub fn guilds_list_page(
@@ -73,14 +73,12 @@ pub fn guilds_list_page(
     params: &GuildsListParams,
     results: Option<&[GuildInfo]>,
     total: Option<u64>,
-    has_more: bool,
     is_htmx: bool,
 ) -> Markup {
     let base = &config.base_path;
     let result_state = GuildsListResults {
         guilds: results,
         total,
-        has_more,
     };
     let has_results = results.is_some_and(|guilds| !guilds.is_empty());
     let header = html! {
@@ -100,7 +98,7 @@ pub fn guilds_list_page(
             } @else if let Some(count) = result_state.total {
                 (page_header_with_actions("Guilds", None, html! {
                     p class="text-sm font-normal text-neutral-500" {
-                        "Found " (count) " results (showing "
+                        "Found " (count_noun(count, "result", "results")) " (showing "
                         (result_state.guilds.map(|guilds| guilds.len()).unwrap_or_default())
                         ")"
                     }
@@ -164,44 +162,22 @@ fn render_results(
 fn pagination(config: &AdminConfig, params: &GuildsListParams, total: u64) -> Markup {
     let total_pages = total.div_ceil(u64::from(params.limit)).max(1);
     let has_previous = params.page > 0;
-    let has_next = u64::from(params.page) < total_pages.saturating_sub(1);
-    html! {
-        div class="mt-6 flex items-center justify-center gap-3" {
-            @if has_previous {
-                a href=(pagination_url(&config.base_path, params, params.page - 1))
-                    class="rounded-lg border border-neutral-300 bg-white px-6 py-2 \
-                           font-medium text-neutral-900 text-sm no-underline \
-                           transition-colors hover:bg-neutral-50" {
-                    "\u{2190} Previous"
-                }
-            } @else {
-                div class="cursor-not-allowed rounded-lg border border-neutral-200 \
-                           bg-neutral-100 px-6 py-2 font-medium text-neutral-400 text-sm" {
-                    "\u{2190} Previous"
-                }
-            }
-            span class="text-neutral-600 text-sm" {
-                "Page " (params.page + 1) " of " (total_pages)
-            }
-            @if has_next {
-                a href=(pagination_url(&config.base_path, params, params.page + 1))
-                    class="rounded-lg bg-neutral-900 px-6 py-2 font-medium text-sm \
-                           text-white no-underline transition-colors hover:bg-neutral-800" {
-                    "Next \u{2192}"
-                }
-            } @else {
-                div class="cursor-not-allowed rounded-lg bg-neutral-100 px-6 py-2 \
-                           font-medium text-neutral-400 text-sm" {
-                    "Next \u{2192}"
-                }
-            }
-        }
-    }
+    let next_page = params
+        .page
+        .checked_add(1)
+        .filter(|page| u64::from(*page) < total_pages);
+    pager(
+        has_previous.then(|| pagination_url(&config.base_path, params, params.page - 1)),
+        Some(format!(
+            "Page {} of {total_pages}",
+            u64::from(params.page) + 1
+        )),
+        next_page.map(|page| pagination_url(&config.base_path, params, page)),
+    )
 }
 
 fn pagination_url(base: &str, params: &GuildsListParams, page: u32) -> String {
-    let mut parts = Vec::new();
-    parts.push(format!("page={page}"));
+    let mut parts = vec![format!("page={page}"), format!("limit={}", params.limit)];
     if !params.q.is_empty() {
         parts.push(format!("q={}", urlencoding::encode(&params.q)));
     }
@@ -264,23 +240,19 @@ fn render_guilds_cards(config: &AdminConfig, guilds: &[GuildInfo]) -> Markup {
     }
 }
 
-fn owner_display(guild: &GuildInfo) -> String {
-    let Some(username) = guild.owner_username.as_deref() else {
+pub(crate) fn owner_display(guild: &GuildInfo) -> String {
+    let (Some(username), Some(discriminator)) = (
+        guild.owner_username.as_deref(),
+        guild.owner_discriminator.as_deref(),
+    ) else {
         return guild.owner_id.clone();
     };
-    let Some(discriminator) = guild.owner_discriminator.as_deref() else {
-        return guild.owner_id.clone();
-    };
-    let tag = format!("{username}#{discriminator}");
-    if let Some(global_name) = guild
-        .owner_global_name
-        .as_deref()
-        .filter(|name| !name.trim().is_empty())
-    {
-        format!("{global_name} ({tag})")
-    } else {
-        tag
-    }
+    display_with_tag(
+        guild.owner_global_name.as_deref(),
+        username,
+        discriminator,
+        false,
+    )
 }
 
 fn guild_icon(config: &AdminConfig, guild: &GuildInfo) -> Markup {

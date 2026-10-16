@@ -5,12 +5,14 @@ use crate::{
     middleware::auth::AuthContext,
     templates::{
         components::{
+            enforcement_fields::{INTERNAL_NOTE_MAX_CHARS, TakeAction},
             error_display::error_alert,
             form::{
                 FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, form_field_group,
                 submit_button,
             },
-            message_list::{Attachment, Message, message_deletion_script, message_list},
+            message_data::{Message, ordered_messages, value_id},
+            message_list::{message_delete_prefill_script, message_list},
             page_container::{card, page_header},
         },
         layout::LayoutOptions,
@@ -19,7 +21,6 @@ use crate::{
 };
 use maud::{Markup, html};
 use serde_json::Value;
-use std::cmp::Ordering;
 
 const MESSAGE_BROWSE_SCRIPT: &str = r#"
 (function () {
@@ -193,6 +194,7 @@ pub struct MessagesPageParams<'a> {
     pub prefill_channel_id: Option<&'a str>,
     pub can_lookup: bool,
     pub can_delete: bool,
+    pub can_take_action: bool,
     pub lookup_result: Option<&'a Value>,
     pub browse_result: Option<&'a Value>,
     pub search_result: Option<&'a Value>,
@@ -202,11 +204,32 @@ pub struct MessagesPageParams<'a> {
     pub error: Option<&'a str>,
 }
 
+#[derive(Clone, Copy)]
+pub struct MessageActions {
+    pub delete: bool,
+    pub take_action: bool,
+}
+
+impl MessageActions {
+    fn take_action(self) -> Option<&'static TakeAction<'static>> {
+        self.take_action.then_some(&ANY_AUTHOR)
+    }
+}
+
+const ANY_AUTHOR: TakeAction<'static> = TakeAction {
+    author_id: None,
+    report_id: None,
+};
+
 pub fn messages_page(
     config: &AdminConfig,
     auth: &AuthContext,
     params: &MessagesPageParams<'_>,
 ) -> Markup {
+    let actions = MessageActions {
+        delete: params.can_delete,
+        take_action: params.can_take_action,
+    };
     let content = html! {
         (page_header("Message Tools", None))
 
@@ -217,19 +240,19 @@ pub fn messages_page(
             @if let (Some(result), Some(channel_id), Some(query)) = (
                 params.search_result, params.browse_channel_id, params.search_query_text,
             ) {
-                (search_result_card(config, result, channel_id, query, params.can_delete))
+                (search_result_card(config, result, channel_id, query, actions))
             }
             @if params.search_result.is_none()
                 && let (Some(result), Some(channel_id)) = (
                     params.browse_result, params.browse_channel_id,
                 ) {
                 (browse_result_card(
-                    config, result, channel_id, params.can_delete,
+                    config, result, channel_id, actions,
                     params.csrf_token, params.context_limit,
                 ))
             }
             @if let Some(result) = params.lookup_result {
-                (lookup_result_card(config, result, params.can_delete, params.context_limit))
+                (lookup_result_card(config, result, actions, params.context_limit))
             }
             @if params.can_lookup {
                 (browse_channel_form(config, params.csrf_token, params.prefill_channel_id))
@@ -238,8 +261,8 @@ pub fn messages_page(
             }
             @if params.can_delete {
                 (delete_message_form(config, params.csrf_token))
+                (message_delete_prefill_script())
             }
-            (message_deletion_script(params.csrf_token))
         }
     };
     admin_layout_ext(
@@ -260,10 +283,10 @@ pub fn messages_page(
 pub fn browse_messages_fragment(
     config: &AdminConfig,
     result: &Value,
-    show_delete: bool,
+    actions: MessageActions,
     highlight_message_id: Option<&str>,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let has_more = result
         .get("has_more")
         .and_then(Value::as_bool)
@@ -280,8 +303,9 @@ pub fn browse_messages_fragment(
                 config,
                 &config.base_path,
                 &messages,
-                show_delete,
+                actions.delete,
                 highlight_message_id,
+                actions.take_action(),
             ))
         }
     }
@@ -291,11 +315,11 @@ fn browse_result_card(
     config: &AdminConfig,
     result: &Value,
     channel_id: &str,
-    show_delete: bool,
+    actions: MessageActions,
     csrf_token: &str,
     context_limit: u32,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let has_more = result
         .get("has_more")
         .and_then(Value::as_bool)
@@ -328,7 +352,7 @@ fn browse_result_card(
                 config,
                 channel_id,
                 messages: &messages,
-                show_delete,
+                actions,
                 has_more,
                 has_newer: false,
                 focus_message_id: None,
@@ -343,9 +367,9 @@ fn search_result_card(
     result: &Value,
     channel_id: &str,
     query_text: &str,
-    show_delete: bool,
+    actions: MessageActions,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let total = result
         .get("total")
         .and_then(Value::as_u64)
@@ -369,8 +393,9 @@ fn search_result_card(
                 config,
                 &config.base_path,
                 &messages,
-                show_delete,
+                actions.delete,
                 None,
+                actions.take_action(),
             ))
         }
     })
@@ -379,10 +404,10 @@ fn search_result_card(
 fn lookup_result_card(
     config: &AdminConfig,
     result: &Value,
-    show_delete: bool,
+    actions: MessageActions,
     context_limit: u32,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let channel_id = messages
         .first()
         .map(|m| m.channel_id.as_str())
@@ -401,7 +426,7 @@ fn lookup_result_card(
                 config,
                 channel_id,
                 messages: &messages,
-                show_delete,
+                actions,
                 has_more: true,
                 has_newer: true,
                 focus_message_id: message_id,
@@ -415,7 +440,7 @@ struct MessageScrollPane<'a> {
     config: &'a AdminConfig,
     channel_id: &'a str,
     messages: &'a [Message],
-    show_delete: bool,
+    actions: MessageActions,
     has_more: bool,
     has_newer: bool,
     focus_message_id: Option<&'a str>,
@@ -454,8 +479,9 @@ fn message_scroll_pane(pane: MessageScrollPane<'_>) -> Markup {
                             pane.config,
                             &pane.config.base_path,
                             pane.messages,
-                            pane.show_delete,
+                            pane.actions.delete,
                             pane.focus_message_id,
+                            pane.actions.take_action(),
                         ))
                     }
                 }
@@ -508,130 +534,12 @@ fn empty_state(text: &str) -> Markup {
     }
 }
 
-fn ordered_messages(result: &Value) -> Vec<Message> {
-    let mut messages: Vec<Message> = result
-        .get("messages")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(message_from_value)
-        .collect();
-    messages.sort_by(compare_message_ids);
-    messages
-}
-
-fn message_from_value(value: &Value) -> Message {
-    let attachments = value
-        .get("attachments")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(attachment_from_value)
-        .collect();
-    Message {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        content: value
-            .get("content")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        timestamp: value
-            .get("timestamp")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        author_id: value
-            .get("author_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        author_username: value
-            .get("author_username")
-            .and_then(Value::as_str)
-            .unwrap_or("Unknown")
-            .to_owned(),
-        author_global_name: value
-            .get("author_global_name")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        author_discriminator: value
-            .get("author_discriminator")
-            .and_then(value_id)
-            .unwrap_or_else(|| "0000".to_owned()),
-        author_avatar: value
-            .get("author_avatar")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        channel_id: value
-            .get("channel_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        channel_nsfw: value.get("channel_nsfw").and_then(Value::as_bool),
-        channel_content_warning_level: value
-            .get("channel_content_warning_level")
-            .and_then(Value::as_i64)
-            .map(|n| n as i32),
-        channel_content_warning_text: value
-            .get("channel_content_warning_text")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        guild_nsfw: value.get("guild_nsfw").and_then(Value::as_bool),
-        attachments,
-    }
-}
-
-fn attachment_from_value(value: &Value) -> Attachment {
-    Attachment {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        url: value
-            .get("url")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        filename: value
-            .get("filename")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        nsfw: value.get("nsfw").and_then(Value::as_bool),
-        content_type: value
-            .get("content_type")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        width: value.get("width").and_then(Value::as_u64).map(|n| n as u32),
-        height: value
-            .get("height")
-            .and_then(Value::as_u64)
-            .map(|n| n as u32),
-        size: value.get("size").and_then(Value::as_u64),
-        ncmec_status: value
-            .get("ncmec_status")
-            .and_then(Value::as_str)
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value
-            .get("ncmec_report_id")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        ncmec_failure_reason: value
-            .get("ncmec_failure_reason")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn value_id(value: &Value) -> Option<String> {
-    match value {
-        Value::String(s) => Some(s.clone()),
-        Value::Number(n) => Some(n.to_string()),
-        _ => None,
-    }
-}
-
-fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
-    match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
-        (Ok(l), Ok(r)) => l.cmp(&r),
-        _ => left.id.cmp(&right.id),
-    }
+fn response_messages(result: &Value) -> Vec<Message> {
+    let values = result["messages"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    ordered_messages(values)
 }
 
 fn browse_channel_form(config: &AdminConfig, csrf_token: &str, prefill: Option<&str>) -> Markup {
@@ -757,12 +665,13 @@ fn lookup_by_attachment_form(config: &AdminConfig, csrf_token: &str) -> Markup {
 fn delete_message_form(config: &AdminConfig, csrf_token: &str) -> Markup {
     let base = &config.base_path;
     card(html! {
-        h3 class="mb-4 text-base font-semibold text-neutral-900" {
-            "Delete Message"
-        }
-        form method="post" action={(base) "/messages?action=delete"} {
+        h3 class="mb-4 text-base font-semibold text-neutral-900" { "Delete message" }
+        form id="delete-message-form" method="post" action={(base) "/messages?action=delete"} {
             (csrf_input(csrf_token))
             div class="flex flex-col gap-4" {
+                p class="text-neutral-600 text-sm" {
+                    "For a message that broke a rule, use Take action instead, so a decision records the removal and the user is told."
+                }
                 (form_field_group(
                     "Channel ID", "delete-message-channel-id", true, None, None,
                     html! {
@@ -780,16 +689,26 @@ fn delete_message_form(config: &AdminConfig, csrf_token: &str) -> Markup {
                     },
                 ))
                 (form_field_group(
-                    "Audit Log Reason (optional)",
-                    "delete-message-audit-log-reason", false, None, None,
+                    "Basis", "delete-message-basis", true, None, None,
                     html! {
-                        input type="text" id="delete-message-audit-log-reason"
-                            name="audit_log_reason" placeholder="Reason for deletion"
+                        select id="delete-message-basis" name="basis" required class=(FORM_INPUT_CLASS) {
+                            option value="" disabled selected { "Choose a basis" }
+                            option value="holder_request" { "The account holder asked" }
+                            option value="housekeeping" { "Housekeeping" }
+                        }
+                    },
+                ))
+                (form_field_group(
+                    "Internal note (optional)",
+                    "delete-message-internal-note", false, None, None,
+                    html! {
+                        input type="text" id="delete-message-internal-note"
+                            name="internal_note" maxlength=(INTERNAL_NOTE_MAX_CHARS)
                             class=(FORM_INPUT_CLASS);
                     },
                 ))
                 (form_actions(html! {
-                    (danger_button("Delete Message"))
+                    (danger_button("Delete message"))
                 }))
             }
         }

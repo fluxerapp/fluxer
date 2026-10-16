@@ -3,11 +3,12 @@
 import {
 	calculateMediaDimensions,
 	type EmbedMediaRendererProps,
-	getOptimizedMediaURL,
 	getUrlHostname,
 	isMediaMatureContent,
 	isValidMedia,
 	mediaPropsEqual,
+	resolveEmbedImageSource,
+	THUMBNAIL_SIZE,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedGif} from '@app/features/channel/components/embeds/media/EmbedGifv';
 import {EmbedImage} from '@app/features/channel/components/embeds/media/EmbedImage';
@@ -15,10 +16,9 @@ import EmbedVideo from '@app/features/channel/components/embeds/media/EmbedVideo
 import {EmbedYouTube} from '@app/features/channel/components/embeds/media/EmbedYouTube';
 import {getInlineVideoLayoutConstraints} from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
-import {buildAnimatedImageProxyURL, buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {observer} from 'mobx-react-lite';
 import {type FC, memo} from 'react';
 
@@ -75,7 +75,6 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 		if (isValidMedia(image)) {
 			const {width, height} = calculateMediaDimensions(image);
 			const isGif = image.content_type === 'image/gif' || image.url.toLowerCase().endsWith('.gif');
-			const imageIsAnimated = (image.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
 			if (isGif) {
 				return (
 					<FocusRing
@@ -104,6 +103,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 					</FocusRing>
 				);
 			}
+			const resolvedImageSource = resolveEmbedImageSource(image, width, height);
 			return (
 				<FocusRing
 					within
@@ -111,7 +111,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 					data-flx="channel.embeds.embed.embed-media-renderer-inner.focus-ring--4"
 				>
 					<EmbedImage
-						src={getOptimizedMediaURL(image.proxy_url, width, height, image.content_type)}
+						src={resolvedImageSource.src}
 						originalSrc={image.url}
 						naturalWidth={image.width}
 						naturalHeight={image.height}
@@ -127,7 +127,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 						embedIndex={embedIndex}
 						onDelete={onDelete}
 						isPreview={isPreview}
-						animated={imageIsAnimated}
+						animated={resolvedImageSource.animated}
 						alt={image.description ?? undefined}
 						data-flx="channel.embeds.embed.embed-media-renderer-inner.embed-image"
 					/>
@@ -137,8 +137,6 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 		if (isValidMedia(thumbnail)) {
 			const {width, height} = calculateMediaDimensions(thumbnail);
 			const isGif = thumbnail.content_type === 'image/gif' || thumbnail.url.toLowerCase().endsWith('.gif');
-			const thumbnailIsAnimated =
-				(thumbnail.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
 			if (isGif) {
 				return (
 					<FocusRing
@@ -166,6 +164,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 					</FocusRing>
 				);
 			}
+			const thumbnailSource = resolveEmbedImageSource(thumbnail, width, height);
 			return (
 				<FocusRing
 					within
@@ -173,7 +172,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 					data-flx="channel.embeds.embed.embed-media-renderer-inner.focus-ring--6"
 				>
 					<EmbedImage
-						src={getOptimizedMediaURL(thumbnail.proxy_url, width, height, thumbnail.content_type)}
+						src={thumbnailSource.src}
 						originalSrc={thumbnail.url}
 						naturalWidth={thumbnail.width}
 						naturalHeight={thumbnail.height}
@@ -188,7 +187,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 						contentHash={thumbnail.content_hash}
 						embedIndex={embedIndex}
 						onDelete={onDelete}
-						animated={thumbnailIsAnimated}
+						animated={thumbnailSource.animated}
 						alt={thumbnail.description ?? undefined}
 						data-flx="channel.embeds.embed.embed-media-renderer-inner.embed-image--2"
 					/>
@@ -203,10 +202,8 @@ const InlineThumbnailRendererInner: FC<EmbedMediaRendererProps> = observer(
 	({embed, message, embedIndex, onDelete, isPreview}) => {
 		if (!embed.thumbnail || !isValidMedia(embed.thumbnail)) return null;
 		const thumbnail = embed.thumbnail;
-		const width = Math.min(80, Math.round((80 * thumbnail.width) / thumbnail.height));
-		const thumbnailIsAnimated =
-			thumbnail.content_type === 'image/gif' ||
-			(thumbnail.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
+		const width = Math.min(THUMBNAIL_SIZE, Math.round((THUMBNAIL_SIZE * thumbnail.width) / thumbnail.height));
+		const thumbnailSource = resolveEmbedImageSource(thumbnail, width, THUMBNAIL_SIZE);
 		return (
 			<FocusRing
 				within
@@ -214,16 +211,12 @@ const InlineThumbnailRendererInner: FC<EmbedMediaRendererProps> = observer(
 				data-flx="channel.embeds.embed.inline-thumbnail-renderer-inner.focus-ring"
 			>
 				<EmbedImage
-					src={
-						thumbnail.content_type === 'image/gif'
-							? buildAnimatedImageProxyURL(thumbnail.proxy_url, width * 2, 160)
-							: getOptimizedMediaURL(thumbnail.proxy_url, width, 80, thumbnail.content_type)
-					}
+					src={thumbnailSource.src}
 					originalSrc={thumbnail.url}
 					naturalWidth={thumbnail.width}
 					naturalHeight={thumbnail.height}
 					width={width}
-					height={80}
+					height={THUMBNAIL_SIZE}
 					placeholder={thumbnail.placeholder}
 					constrain={true}
 					isInline={true}
@@ -235,7 +228,7 @@ const InlineThumbnailRendererInner: FC<EmbedMediaRendererProps> = observer(
 					embedIndex={embedIndex}
 					onDelete={onDelete}
 					isPreview={isPreview}
-					animated={thumbnailIsAnimated}
+					animated={thumbnailSource.animated}
 					alt={thumbnail.description ?? undefined}
 					data-flx="channel.embeds.embed.inline-thumbnail-renderer-inner.embed-image"
 				/>

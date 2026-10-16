@@ -37,6 +37,16 @@ pub(crate) struct CalverEnv {
     pub(crate) fluxer_build_date: Option<String>,
 }
 
+impl CalverEnv {
+    pub(crate) fn from_process() -> Self {
+        Self {
+            build_version: trim_option(env::var("BUILD_VERSION").ok()),
+            fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
+            fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CommandSpec {
     pub(crate) program: OsString,
@@ -239,7 +249,7 @@ fn append_key_values(path_env_name: &str, pairs: &[(&str, &str)]) -> Result<()> 
 }
 
 pub(crate) fn run_command(spec: CommandSpec) -> Result<()> {
-    println!("+ {}", display_command(&spec));
+    println!("+ {}", display_command(&spec.program, &spec.args));
     let status = spec
         .to_command()
         .status()
@@ -248,7 +258,7 @@ pub(crate) fn run_command(spec: CommandSpec) -> Result<()> {
         status.success(),
         "Command failed with exit code {}: {}",
         status.code().unwrap_or(1),
-        display_command(&spec)
+        display_command(&spec.program, &spec.args)
     );
     Ok(())
 }
@@ -274,7 +284,7 @@ fn output(spec: CommandSpec) -> Result<CapturedOutput> {
         bail!(
             "Command failed with exit code {}: {}\n{}{}",
             captured.status,
-            display_command(&spec),
+            display_command(&spec.program, &spec.args),
             stdout,
             stderr
         );
@@ -282,7 +292,7 @@ fn output(spec: CommandSpec) -> Result<CapturedOutput> {
 }
 
 pub(crate) fn capture(spec: CommandSpec) -> Result<CapturedOutput> {
-    println!("+ {}", display_command(&spec));
+    println!("+ {}", display_command(&spec.program, &spec.args));
     let output = spec
         .to_command()
         .stdout(Stdio::piped())
@@ -306,9 +316,9 @@ pub(crate) fn command_succeeds(spec: CommandSpec) -> bool {
         .is_ok_and(|status| status.success())
 }
 
-fn display_command(spec: &CommandSpec) -> String {
-    std::iter::once(spec.program.to_string_lossy().to_string())
-        .chain(spec.args.iter().map(|arg| quote_arg(arg)))
+pub(crate) fn display_command(program: impl AsRef<OsStr>, args: &[impl AsRef<OsStr>]) -> String {
+    std::iter::once(program.as_ref().to_string_lossy().to_string())
+        .chain(args.iter().map(|arg| quote_arg(arg.as_ref())))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -365,20 +375,12 @@ fn format_calver(instant: DateTime<Utc>) -> String {
     )
 }
 
-fn month_day_segment(instant: DateTime<Utc>) -> String {
+pub(crate) fn month_day_segment(instant: DateTime<Utc>) -> String {
     format!("{}{:02}", instant.month(), instant.day())
 }
 
-fn micro_segment(instant: DateTime<Utc>) -> String {
-    format!(
-        "{:02}{:02}{:02}",
-        instant.hour(),
-        instant.minute(),
-        instant.second()
-    )
-    .parse::<u32>()
-    .expect("HHMMSS time segment should parse")
-    .to_string()
+pub(crate) fn micro_segment(instant: DateTime<Utc>) -> String {
+    (instant.hour() * 10_000 + instant.minute() * 100 + instant.second()).to_string()
 }
 
 pub(crate) fn parse_version_instant(version: &str) -> Result<DateTime<Utc>> {
@@ -450,44 +452,6 @@ pub(crate) async fn s3_client(default_endpoint: Option<&str>) -> Result<S3Client
     Ok(S3Client::from_conf(s3_config.build()))
 }
 
-pub(crate) async fn upload_directory_to_s3<F>(
-    client: &S3Client,
-    bucket: &str,
-    prefix: &str,
-    root: &Path,
-    include: F,
-) -> Result<()>
-where
-    F: Fn(&Path) -> bool,
-{
-    let plan = directory_upload_plan(prefix, root, include)?;
-    let stats = upload_s3_plan_append_only(client, bucket, plan).await?;
-    println!(
-        "Append-only upload complete for s3://{bucket}/{prefix}: uploaded {}, skipped existing {}",
-        stats.uploaded, stats.skipped_existing
-    );
-    Ok(())
-}
-
-pub(crate) async fn upload_directory_to_s3_overwrite<F>(
-    client: &S3Client,
-    bucket: &str,
-    prefix: &str,
-    root: &Path,
-    include: F,
-) -> Result<()>
-where
-    F: Fn(&Path) -> bool,
-{
-    let plan = directory_upload_plan(prefix, root, include)?;
-    let stats = upload_s3_plan_overwrite(client, bucket, plan).await?;
-    println!(
-        "Overwrite upload complete for s3://{bucket}/{prefix}: uploaded {}",
-        stats.uploaded
-    );
-    Ok(())
-}
-
 pub(crate) async fn upload_s3_plan_append_only(
     client: &S3Client,
     bucket: &str,
@@ -555,47 +519,6 @@ pub(crate) async fn upload_s3_plan_append_only(
     Ok(stats)
 }
 
-pub(crate) async fn upload_s3_plan_overwrite(
-    client: &S3Client,
-    bucket: &str,
-    plan: Vec<S3UploadPlanItem>,
-) -> Result<S3UploadStats> {
-    ensure_unique_s3_keys(&plan)?;
-    let concurrency = s3_write_concurrency();
-    let semaphore = Arc::new(Semaphore::new(concurrency));
-    let bucket = bucket.to_string();
-    let mut tasks = JoinSet::new();
-    for item in plan {
-        let permit = semaphore
-            .clone()
-            .acquire_owned()
-            .await
-            .context("S3 upload semaphore closed")?;
-        let client = client.clone();
-        let bucket = bucket.clone();
-        tasks.spawn(async move {
-            let _permit = permit;
-            put_file_to_s3_overwrite(&client, &bucket, &item)
-                .await
-                .with_context(|| {
-                    format!("Failed overwrite upload for s3://{}/{}", bucket, item.key)
-                })?;
-            Ok::<_, anyhow::Error>(S3UploadDisposition::Uploaded)
-        });
-    }
-
-    let mut stats = S3UploadStats::default();
-    while let Some(result) = tasks.join_next().await {
-        match result.context("S3 upload task failed")?? {
-            S3UploadDisposition::Uploaded => stats.uploaded += 1,
-            S3UploadDisposition::SkippedExisting => stats.skipped_existing += 1,
-            S3UploadDisposition::MetadataRepaired => stats.metadata_repaired += 1,
-        }
-    }
-
-    Ok(stats)
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct S3ObjectMetadata {
     pub(crate) e_tag: Option<String>,
@@ -649,7 +572,12 @@ pub(crate) fn split_append_only_upload_plan(
     let mut skipped = Vec::new();
     for item in plan {
         if let Some(remote) = existing_objects.get(&item.key) {
-            ensure_existing_s3_object_matches_local(bucket, &item, remote)?;
+            if let Err(error) = ensure_existing_s3_object_matches_local(bucket, &item, remote) {
+                if !item.key.ends_with(".map") {
+                    return Err(error);
+                }
+                println!("Keeping the published source map: {error}");
+            }
             skipped.push(item);
         } else {
             pending.push(item);
@@ -889,69 +817,6 @@ async fn repair_existing_s3_object_metadata(
     unreachable!("S3 retry attempts are always greater than zero")
 }
 
-async fn put_file_to_s3_overwrite(
-    client: &S3Client,
-    bucket: &str,
-    item: &S3UploadPlanItem,
-) -> Result<()> {
-    println!(
-        "Overwriting {} -> s3://{bucket}/{}",
-        item.path.display(),
-        item.key
-    );
-    let identity = s3_file_identity(&item.path)?;
-    let attempts = s3_retry_attempts();
-    for attempt in 1..=attempts {
-        let body = ByteStream::from_path(&item.path)
-            .await
-            .with_context(|| format!("Failed to read {}", item.path.display()))?;
-        let mut request = client
-            .put_object()
-            .bucket(bucket)
-            .key(&item.key)
-            .content_md5(identity.md5_base64.clone())
-            .body(body);
-        if let Some(content_type) = &item.content_type {
-            request = request.content_type(content_type);
-        }
-        if let Some(cache_control) = &item.cache_control {
-            request = request.cache_control(cache_control);
-        }
-        match request.send().await {
-            Ok(_) => return Ok(()),
-            Err(error) => {
-                let code = error
-                    .as_service_error()
-                    .and_then(|error| error.code())
-                    .map(ToOwned::to_owned);
-                let status = error
-                    .raw_response()
-                    .map(|response| response.status().as_u16());
-                if is_retryable_s3_error(code.as_deref(), status) && attempt < attempts {
-                    sleep_before_s3_retry(
-                        "overwrite upload",
-                        &format!("s3://{bucket}/{}", item.key),
-                        attempt,
-                        attempts,
-                        code.as_deref(),
-                        status,
-                    )
-                    .await;
-                    continue;
-                }
-                let summary = s3_error_summary(code.as_deref(), status);
-                return Err(error).with_context(|| {
-                    format!(
-                        "Failed to overwrite upload s3://{bucket}/{}{summary}",
-                        item.key
-                    )
-                });
-            }
-        }
-    }
-    unreachable!("S3 retry attempts are always greater than zero")
-}
-
 fn is_existing_object_error(code: Option<&str>, status: Option<u16>) -> bool {
     matches!(
         code,
@@ -1018,27 +883,6 @@ fn s3_write_concurrency() -> usize {
         .unwrap_or(DEFAULT_S3_WRITE_CONCURRENCY)
 }
 
-pub(crate) fn directory_upload_plan<F>(
-    prefix: &str,
-    root: &Path,
-    include: F,
-) -> Result<Vec<S3UploadPlanItem>>
-where
-    F: Fn(&Path) -> bool,
-{
-    Ok(collect_files(root)?
-        .into_iter()
-        .filter_map(|file| {
-            let relative = file.strip_prefix(root).ok()?;
-            if !include(relative) {
-                return None;
-            }
-            let key = join_s3_key(prefix, &path_to_s3_key(relative));
-            Some(S3UploadPlanItem::new(file, key).with_detected_content_type())
-        })
-        .collect::<Vec<_>>())
-}
-
 pub(crate) fn s3_content_type_for_key(key: &str) -> Option<&'static str> {
     let ext = key.rsplit('.').next()?.to_ascii_lowercase();
     match ext.as_str() {
@@ -1070,49 +914,6 @@ pub(crate) fn s3_content_type_for_key(key: &str) -> Option<&'static str> {
         "webmanifest" => Some("application/manifest+json"),
         _ => None,
     }
-}
-
-pub(crate) async fn download_s3_prefix(
-    client: &S3Client,
-    bucket: &str,
-    prefix: &str,
-    target: &Path,
-) -> Result<()> {
-    let list_prefix = s3_directory_prefix(prefix);
-    let keys = list_s3_keys(client, bucket, &list_prefix).await?;
-    for key in keys {
-        let relative = key
-            .strip_prefix(&list_prefix)
-            .unwrap_or(&key)
-            .trim_start_matches('/');
-        if relative.is_empty() {
-            continue;
-        }
-        let output = target.join(relative);
-        if let Some(parent) = output.parent() {
-            tokio::fs::create_dir_all(parent)
-                .await
-                .with_context(|| format!("Failed to create {}", parent.display()))?;
-        }
-        let bytes = get_s3_object_bytes(client, bucket, &key).await?;
-        tokio::fs::write(&output, bytes)
-            .await
-            .with_context(|| format!("Failed to write {}", output.display()))?;
-        println!("Downloaded s3://{bucket}/{key} -> {}", output.display());
-    }
-    Ok(())
-}
-
-pub(crate) async fn list_s3_keys(
-    client: &S3Client,
-    bucket: &str,
-    prefix: &str,
-) -> Result<Vec<String>> {
-    Ok(list_s3_objects(client, bucket, prefix)
-        .await?
-        .into_iter()
-        .map(|object| object.key)
-        .collect())
 }
 
 async fn list_s3_objects(
@@ -1185,78 +986,6 @@ async fn send_s3_list_objects_v2_page(
     unreachable!("S3 retry attempts are always greater than zero")
 }
 
-pub(crate) async fn get_s3_object_bytes(
-    client: &S3Client,
-    bucket: &str,
-    key: &str,
-) -> Result<bytes::Bytes> {
-    let object = send_s3_get_object(client, bucket, key).await?;
-    Ok(object
-        .body
-        .collect()
-        .await
-        .with_context(|| format!("Failed to collect s3://{bucket}/{key} body"))?
-        .into_bytes())
-}
-
-async fn send_s3_get_object(
-    client: &S3Client,
-    bucket: &str,
-    key: &str,
-) -> Result<aws_sdk_s3::operation::get_object::GetObjectOutput> {
-    let attempts = s3_retry_attempts();
-    for attempt in 1..=attempts {
-        match client.get_object().bucket(bucket).key(key).send().await {
-            Ok(response) => return Ok(response),
-            Err(error) => {
-                let code = error
-                    .as_service_error()
-                    .and_then(|error| error.code())
-                    .map(ToOwned::to_owned);
-                let status = error
-                    .raw_response()
-                    .map(|response| response.status().as_u16());
-                if is_retryable_s3_error(code.as_deref(), status) && attempt < attempts {
-                    sleep_before_s3_retry(
-                        "read",
-                        &format!("s3://{bucket}/{key}"),
-                        attempt,
-                        attempts,
-                        code.as_deref(),
-                        status,
-                    )
-                    .await;
-                    continue;
-                }
-                let summary = s3_error_summary(code.as_deref(), status);
-                return Err(error)
-                    .with_context(|| format!("Failed to read s3://{bucket}/{key}{summary}"));
-            }
-        }
-    }
-    unreachable!("S3 retry attempts are always greater than zero")
-}
-
-pub(crate) fn join_s3_key(prefix: &str, child: &str) -> String {
-    let prefix = prefix.trim_matches('/');
-    let child = child.trim_matches('/');
-    match (prefix.is_empty(), child.is_empty()) {
-        (true, true) => String::new(),
-        (true, false) => child.to_string(),
-        (false, true) => prefix.to_string(),
-        (false, false) => format!("{prefix}/{child}"),
-    }
-}
-
-pub(crate) fn s3_directory_prefix(prefix: &str) -> String {
-    let prefix = prefix.trim_matches('/');
-    if prefix.is_empty() {
-        String::new()
-    } else {
-        format!("{prefix}/")
-    }
-}
-
 pub(crate) fn path_to_s3_key(path: &Path) -> String {
     path.components()
         .filter_map(|component| match component {
@@ -1320,13 +1049,13 @@ pub(crate) fn collect_files(root: &Path) -> Result<Vec<PathBuf>> {
     if !root.exists() {
         return Ok(Vec::new());
     }
-    let mut files = WalkDir::new(root)
-        .into_iter()
-        .collect::<std::result::Result<Vec<_>, _>>()?
-        .into_iter()
-        .filter(|entry| entry.file_type().is_file())
-        .map(|entry| entry.into_path())
-        .collect::<Vec<_>>();
+    let mut files = Vec::new();
+    for entry in WalkDir::new(root) {
+        let entry = entry?;
+        if entry.file_type().is_file() {
+            files.push(entry.into_path());
+        }
+    }
     files.sort();
     Ok(files)
 }
@@ -1335,14 +1064,31 @@ pub(crate) fn count_files(root: &Path) -> Result<usize> {
     Ok(collect_files(root)?.len())
 }
 
-pub(crate) fn count_files_min_depth(root: &Path, min_depth: usize) -> Result<usize> {
-    Ok(WalkDir::new(root)
-        .min_depth(min_depth)
+pub(crate) fn remove_empty_dirs_below(root: &Path) -> Result<usize> {
+    if !root.exists() {
+        return Ok(0);
+    }
+    let mut dirs = WalkDir::new(root)
+        .min_depth(1)
         .into_iter()
         .collect::<std::result::Result<Vec<_>, _>>()?
         .into_iter()
-        .filter(|entry| entry.file_type().is_file())
-        .count())
+        .filter(|entry| entry.file_type().is_dir())
+        .map(|entry| entry.into_path())
+        .collect::<Vec<_>>();
+    dirs.sort();
+    let mut removed = 0usize;
+    for dir in dirs.into_iter().rev() {
+        let is_empty = fs::read_dir(&dir)
+            .with_context(|| format!("Failed to read {}", dir.display()))?
+            .next()
+            .is_none();
+        if is_empty {
+            fs::remove_dir(&dir).with_context(|| format!("Failed to remove {}", dir.display()))?;
+            removed += 1;
+        }
+    }
+    Ok(removed)
 }
 
 pub(crate) fn title_case(value: &str) -> String {
@@ -1356,50 +1102,6 @@ pub(crate) fn title_case(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
-            .single()
-            .unwrap()
-    }
-
-    #[test]
-    fn resolves_generated_calver_from_date_override() {
-        let calver_env = CalverEnv {
-            fluxer_build_date: Some("2026-05-20T01:02:03Z".to_string()),
-            ..CalverEnv::default()
-        };
-        assert_eq!(
-            resolve_calver(&calver_env, dt(2026, 1, 1, 0, 0, 0)).unwrap(),
-            "2026.520.10203"
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_explicit_time() {
-        assert_eq!(
-            parse_version_instant("2026.520.246000")
-                .unwrap_err()
-                .to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
-    }
-
-    #[test]
-    fn s3_key_helpers_are_platform_neutral() {
-        assert_eq!(
-            join_s3_key("/desktop/", "/canary/linux/"),
-            "desktop/canary/linux"
-        );
-        assert_eq!(
-            s3_directory_prefix("/_handoff/desktop/build/"),
-            "_handoff/desktop/build/"
-        );
-        assert_eq!(
-            path_to_s3_key(Path::new("assets").join("chunks").join("a.js").as_path()),
-            "assets/chunks/a.js"
-        );
-    }
 
     #[test]
     fn append_only_plan_skips_existing_keys_without_reordering_pending_uploads() {
@@ -1464,6 +1166,35 @@ mod tests {
     }
 
     #[test]
+    fn append_only_plan_keeps_a_published_source_map_that_differs() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("abc.worker.js.map");
+        fs::write(&path, "local").unwrap();
+        let plan = vec![S3UploadPlanItem::new(
+            path,
+            "assets/abc.worker.js.map".to_string(),
+        )];
+        let existing = BTreeMap::from([(
+            "assets/abc.worker.js.map".to_string(),
+            S3ObjectMetadata {
+                e_tag: Some("\"00000000000000000000000000000000\"".to_string()),
+                size: Some(9),
+            },
+        )]);
+
+        let (pending, skipped) = split_append_only_upload_plan("bucket", plan, &existing).unwrap();
+
+        assert!(pending.is_empty());
+        assert_eq!(
+            skipped
+                .iter()
+                .map(|item| item.key.as_str())
+                .collect::<Vec<_>>(),
+            vec!["assets/abc.worker.js.map"]
+        );
+    }
+
+    #[test]
     fn append_only_plan_rejects_existing_key_without_comparable_etag() {
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("asset.bin");
@@ -1494,145 +1225,6 @@ mod tests {
                 .unwrap_err()
                 .to_string(),
             "Duplicate S3 upload key in local plan: same/key"
-        );
-    }
-
-    #[test]
-    fn s3_conditional_put_errors_are_treated_as_existing_objects() {
-        assert!(is_existing_object_error(Some("PreconditionFailed"), None));
-        assert!(is_existing_object_error(
-            Some("ConditionalRequestConflict"),
-            None
-        ));
-        assert!(is_existing_object_error(Some("Error"), Some(412)));
-        assert!(is_existing_object_error(None, Some(409)));
-        assert!(!is_existing_object_error(Some("AccessDenied"), Some(403)));
-        assert!(!is_existing_object_error(None, None));
-    }
-
-    #[test]
-    fn s3_retryable_errors_include_unmodeled_429s() {
-        assert!(is_retryable_s3_error(Some("Error"), Some(429)));
-        assert!(is_retryable_s3_error(Some("TooManyRequests"), None));
-        assert!(is_retryable_s3_error(Some("RateLimitExceeded"), None));
-        assert!(!is_retryable_s3_error(None, Some(503)));
-        assert!(!is_retryable_s3_error(Some("AccessDenied"), Some(403)));
-        assert!(!is_retryable_s3_error(None, None));
-    }
-
-    #[test]
-    fn s3_etag_md5_accepts_only_single_part_md5_values() {
-        assert_eq!(
-            s3_etag_md5("\"D41D8CD98F00B204E9800998ECF8427E\"").as_deref(),
-            Some("d41d8cd98f00b204e9800998ecf8427e")
-        );
-        assert!(s3_etag_md5("\"d41d8cd98f00b204e9800998ecf8427e-2\"").is_none());
-        assert!(s3_etag_md5("\"not-md5\"").is_none());
-    }
-
-    #[test]
-    fn s3_list_prefixes_group_planned_keys_by_top_level_prefix() {
-        let plan = vec![
-            S3UploadPlanItem::new(PathBuf::from("index.html"), "index.html".to_string()),
-            S3UploadPlanItem::new(PathBuf::from("emoji/a.svg"), "emoji/a.svg".to_string()),
-            S3UploadPlanItem::new(
-                PathBuf::from("emoji/nested/b.svg"),
-                "emoji/nested/b.svg".to_string(),
-            ),
-            S3UploadPlanItem::new(PathBuf::from("assets/app.js"), "assets/app.js".to_string()),
-        ];
-
-        assert_eq!(
-            s3_list_prefixes_for_plan(&plan),
-            BTreeSet::from([
-                "assets/".to_string(),
-                "emoji/".to_string(),
-                "index.html".to_string()
-            ])
-        );
-    }
-
-    #[test]
-    fn s3_error_summary_includes_available_metadata() {
-        assert_eq!(
-            s3_error_summary(Some("Error"), Some(404)),
-            " (S3 code Error, HTTP status 404)"
-        );
-        assert_eq!(s3_error_summary(None, Some(500)), " (HTTP status 500)");
-    }
-
-    #[test]
-    fn directory_upload_plan_filters_and_prefixes_keys() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path();
-        fs::create_dir_all(root.join("nested")).unwrap();
-        fs::write(root.join("keep.txt"), "keep").unwrap();
-        fs::write(root.join("nested").join("skip.map"), "skip").unwrap();
-        fs::write(root.join("nested").join("keep.js"), "keep").unwrap();
-
-        let plan = directory_upload_plan("static", root, |relative| {
-            relative.extension().and_then(OsStr::to_str) != Some("map")
-        })
-        .unwrap();
-
-        assert_eq!(
-            plan.iter()
-                .map(|item| item.key.as_str())
-                .collect::<Vec<_>>(),
-            vec!["static/keep.txt", "static/nested/keep.js"]
-        );
-        assert_eq!(
-            plan[0].content_type.as_deref(),
-            Some("text/plain; charset=utf-8")
-        );
-        assert_eq!(
-            plan[1].content_type.as_deref(),
-            Some("application/javascript; charset=utf-8")
-        );
-    }
-
-    #[test]
-    fn s3_content_type_for_key_covers_browser_module_assets() {
-        assert_eq!(
-            s3_content_type_for_key("assets/app.js"),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/app.mjs"),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/voice_bg.wasm"),
-            Some("application/wasm")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/app.css"),
-            Some("text/css; charset=utf-8")
-        );
-        assert_eq!(s3_content_type_for_key("assets/blob.unknown"), None);
-    }
-
-    #[test]
-    fn collect_and_copy_dir_contents_are_sorted_and_recursive() {
-        let temp = tempfile::tempdir().unwrap();
-        let source = temp.path().join("source");
-        let dest = temp.path().join("dest");
-        fs::create_dir_all(source.join("b")).unwrap();
-        fs::write(source.join("b").join("two.txt"), "2").unwrap();
-        fs::write(source.join("one.txt"), "1").unwrap();
-
-        let relative_files = collect_files(&source)
-            .unwrap()
-            .into_iter()
-            .map(|path| path_to_s3_key(path.strip_prefix(&source).unwrap()))
-            .collect::<Vec<_>>();
-        assert_eq!(relative_files, vec!["b/two.txt", "one.txt"]);
-
-        copy_dir_contents(&source, &dest).unwrap();
-        assert_eq!(fs::read_to_string(dest.join("one.txt")).unwrap(), "1");
-        assert_eq!(
-            fs::read_to_string(dest.join("b").join("two.txt")).unwrap(),
-            "2"
         );
     }
 }

@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {acceptTerms} from '@app/features/terms/commands/TermsAcceptanceCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -72,7 +72,7 @@ export const TermsAcceptanceModal = observer(() => {
 	const kind = getUpdateKind(user.termsAgreedAt, user.privacyAgreedAt);
 	const termsUrl = Routes.terms();
 	const privacyUrl = Routes.privacy();
-	const productName = PRODUCT_NAME;
+	const productName = RuntimeConfig.productName;
 	return (
 		<Modal.Root
 			size="small"
@@ -165,9 +165,11 @@ export const TermsAcceptanceModal = observer(() => {
 					ref={primaryRef}
 					data-flx="auth.terms-acceptance-modal.button.accept"
 				>
-					{kind === 'terms' && i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)}
-					{kind === 'privacy' && i18n._(I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR)}
-					{kind === 'both' && i18n._(I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR)}
+					{kind === 'terms'
+						? i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)
+						: kind === 'privacy'
+							? i18n._(I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR)
+							: i18n._(I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

@@ -2,42 +2,16 @@
 
 use maud::{Markup, PreEscaped, html};
 
+use super::badge::{BadgeVariant, badge};
+use super::enforcement_fields::{TakeAction, take_action_href};
 use super::icons::paperclip_icon;
 use super::media::user_avatar_url;
 use super::nsfw_indicators::{attachment_nsfw_badge, channel_nsfw_state_badge};
 use super::user_display::format_user_display;
 use crate::config::AdminConfig;
+use crate::utils::timestamps::format_admin_timestamp;
 
-pub struct Attachment {
-    pub id: String,
-    pub url: String,
-    pub filename: String,
-    pub nsfw: Option<bool>,
-    pub content_type: Option<String>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub size: Option<u64>,
-    pub ncmec_status: String,
-    pub ncmec_report_id: Option<String>,
-    pub ncmec_failure_reason: Option<String>,
-}
-
-pub struct Message {
-    pub id: String,
-    pub content: String,
-    pub timestamp: String,
-    pub author_id: String,
-    pub author_username: String,
-    pub author_global_name: Option<String>,
-    pub author_discriminator: String,
-    pub author_avatar: Option<String>,
-    pub channel_id: String,
-    pub channel_nsfw: Option<bool>,
-    pub channel_content_warning_level: Option<i32>,
-    pub channel_content_warning_text: Option<String>,
-    pub guild_nsfw: Option<bool>,
-    pub attachments: Vec<Attachment>,
-}
+use super::message_data::{Attachment, Message};
 
 fn is_image(att: &Attachment) -> bool {
     att.content_type
@@ -45,36 +19,9 @@ fn is_image(att: &Attachment) -> bool {
         .is_some_and(|ct| ct.starts_with("image/"))
 }
 
-fn ncmec_badge(att: &Attachment) -> Markup {
-    match att.ncmec_status.as_str() {
-        "submitted" => {
-            let label = att
-                .ncmec_report_id
-                .as_deref()
-                .map(|id| format!("NCMEC {id}"))
-                .unwrap_or_else(|| "Reported to NCMEC".into());
-            html! {
-                span class="rounded bg-green-100 px-2 py-0.5 text-[11px] text-green-800"
-                     title=(label) { (label) }
-            }
-        }
-        "failed" => {
-            let title = att
-                .ncmec_failure_reason
-                .as_deref()
-                .unwrap_or("NCMEC report failed");
-            html! {
-                span class="rounded bg-red-100 px-2 py-0.5 text-[11px] text-red-800"
-                     title=(title) { "NCMEC Failed" }
-            }
-        }
-        _ => html! {},
-    }
-}
-
 fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
-    let images: Vec<&Attachment> = msg.attachments.iter().filter(|a| is_image(a)).collect();
-    if images.is_empty() {
+    let mut images = msg.attachments.iter().filter(|a| is_image(a)).peekable();
+    if images.peek().is_none() {
         return html! {};
     }
     let spacer = if !msg.content.is_empty() {
@@ -84,7 +31,7 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
     };
     html! {
         div class=(spacer) {
-            @for att in &images {
+            @for att in images {
                 div class="max-w-xl overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50" {
                     a href=(att.url) target="_blank" rel="noopener noreferrer"
                       class="block overflow-hidden bg-neutral-100" {
@@ -98,7 +45,6 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
                             a href=(att.url) target="_blank" rel="noopener noreferrer"
                               class="font-medium text-blue-600 hover:underline" { (att.filename) }
                             (attachment_nsfw_badge(att.nsfw.unwrap_or(false)))
-                            (ncmec_badge(att))
                         }
                         @if include_delete {
                             div class="flex flex-wrap gap-2" {
@@ -108,32 +54,6 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
                                            transition-colors hover:bg-red-50 hover:text-red-700"
                                     data-channel-id=(msg.channel_id)
                                     data-message-id=(msg.id) { "Delete" }
-                                button type="button"
-                                    class="ncmec-report-btn rounded bg-white px-2.5 py-1 text-xs \
-                                           shadow-sm ring-1 ring-neutral-200 transition-colors \
-                                           hover:bg-neutral-100 disabled:cursor-not-allowed \
-                                           disabled:opacity-70"
-                                    data-channel-id=(msg.channel_id)
-                                    data-message-id=(msg.id)
-                                    data-attachment-id=(att.id)
-                                    data-filename=(att.filename)
-                                    data-content-type=(att.content_type.as_deref().unwrap_or(""))
-                                    data-size=(att.size.map(|s| s.to_string()).unwrap_or_default())
-                                    data-author-id=(msg.author_id)
-                                    data-ncmec-status=(att.ncmec_status)
-                                    data-ncmec-report-id=(att.ncmec_report_id.as_deref().unwrap_or(""))
-                                    disabled[att.ncmec_status == "submitted"]
-                                    title=(if att.ncmec_status == "submitted" {
-                                        "Already reported to NCMEC"
-                                    } else {
-                                        "Report this image to NCMEC"
-                                    }) {
-                                    @if att.ncmec_status == "submitted" {
-                                        "Reported to NCMEC"
-                                    } @else {
-                                        "Report to NCMEC"
-                                    }
-                                }
                             }
                         }
                     }
@@ -144,8 +64,8 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
 }
 
 fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Markup {
-    let others: Vec<&Attachment> = msg.attachments.iter().filter(|a| !is_image(a)).collect();
-    if others.is_empty() {
+    let mut others = msg.attachments.iter().filter(|a| !is_image(a)).peekable();
+    if others.peek().is_none() {
         return html! {};
     }
     let spacer = if has_content_or_images {
@@ -155,17 +75,81 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
     };
     html! {
         div class=(spacer) {
-            @for att in &others {
+            @for att in others {
                 div class="flex flex-wrap items-center gap-2 text-xs" {
                     (paperclip_icon("text-neutral-400"))
                     a href=(att.url) target="_blank" rel="noopener noreferrer"
                       class="text-blue-600 hover:underline" { (att.filename) }
                     (attachment_nsfw_badge(att.nsfw.unwrap_or(false)))
-                    (ncmec_badge(att))
                 }
             }
         }
     }
+}
+
+fn render_missing_attachments(msg: &Message) -> Markup {
+    if msg.missing_attachments.is_empty() {
+        return html! {};
+    }
+    html! {
+        div class="mt-1.5 space-y-1" {
+            @for att in &msg.missing_attachments {
+                div class="flex flex-wrap items-center gap-2 text-amber-800 text-xs"
+                    data-missing-attachment=(att.id) {
+                    (paperclip_icon("text-amber-500"))
+                    span class="break-words" {
+                        @if att.filename.is_empty() {
+                            "An attachment was not preserved in the report snapshot"
+                        } @else {
+                            (att.filename) " was not preserved in the report snapshot"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn copy_button(value: &str, label: &str) -> Markup {
+    html! {
+        button type="button"
+            class="cursor-pointer text-blue-600 hover:underline"
+            data-copy-value=(value)
+            onclick="window.__adminCopyToClipboard && window.__adminCopyToClipboard(this.dataset.copyValue, this, 'Copied')" {
+            (label)
+        }
+    }
+}
+
+fn message_meta(msg: &Message, jump_link: Option<&str>, take_action: Option<&str>) -> Markup {
+    html! {
+        div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-neutral-400 text-xs" {
+            span class="select-all" { (msg.id) }
+            @if let Some(href) = take_action {
+                a href=(href) class="text-blue-600 hover:underline" { "Take action" }
+            }
+            @if let Some(link) = jump_link {
+                (copy_button(link, "Copy link"))
+            }
+            (copy_button(&msg.id, "Copy message ID"))
+            @if !msg.channel_id.is_empty() {
+                (copy_button(&msg.channel_id, "Copy channel ID"))
+            }
+        }
+    }
+}
+
+fn message_jump_link(web_app_endpoint: &str, msg: &Message) -> Option<String> {
+    if msg.channel_id.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "{}/channels/{}/{}/{}",
+        web_app_endpoint.trim_end_matches('/'),
+        msg.guild_id.as_deref().unwrap_or("@me"),
+        msg.channel_id,
+        msg.id
+    ))
 }
 
 fn message_row(
@@ -175,6 +159,7 @@ fn message_row(
     include_delete: bool,
     is_highlighted: bool,
     is_grouped: bool,
+    meta: &Markup,
 ) -> Markup {
     let hover = if is_highlighted {
         " hover:bg-amber-100"
@@ -207,6 +192,8 @@ fn message_row(
                         (render_image_attachments(msg, include_delete))
                         (render_other_attachments(msg, has_content_or_images))
                     }
+                    (render_missing_attachments(msg))
+                    (meta)
                     @if include_delete && !has_images {
                         div class="absolute top-0 right-2 hidden group-hover:block" {
                             button type="button"
@@ -226,6 +213,7 @@ fn message_row(
         msg.author_global_name.as_deref(),
         Some(&msg.author_username),
         None,
+        false,
     );
     let row_class = format!(
         "group relative mt-4 py-0.5 pr-4 pl-4 transition-colors first:mt-0{hover}{highlight}"
@@ -235,20 +223,39 @@ fn message_row(
             style="display:grid;grid-template-columns:16px 40px 16px minmax(0,1fr);"
             data-message-id=(msg.id) data-message-row="" {
             div style="grid-row:1;grid-column:1;" {}
-            a href={(base_path) "/users/" (msg.author_id)}
-              title=(msg.author_id) class="block flex-shrink-0"
-              style="grid-row:1;grid-column:2;align-self:start;" {
-                img src=(avatar_url) alt=(msg.author_username)
-                    class="rounded-full" style="width:40px;height:40px;";
+            @if let Some(webhook_id) = &msg.webhook_id {
+                span title=(webhook_id) class="block flex-shrink-0"
+                  style="grid-row:1;grid-column:2;align-self:start;" {
+                    img src=(avatar_url) alt=(msg.author_username)
+                        class="rounded-full" style="width:40px;height:40px;";
+                }
+            } @else {
+                a href={(base_path) "/users/" (msg.author_id)}
+                  title=(msg.author_id) class="block flex-shrink-0"
+                  style="grid-row:1;grid-column:2;align-self:start;" {
+                    img src=(avatar_url) alt=(msg.author_username)
+                        class="rounded-full" style="width:40px;height:40px;";
+                }
             }
             div style="grid-row:1;grid-column:3;" {}
             div class="min-w-0" style="grid-column:4;" {
                 div class="flex items-baseline gap-2" {
-                    a href={(base_path) "/users/" (msg.author_id)}
-                      class="font-medium text-neutral-900 text-sm hover:underline"
-                      title=(msg.author_id) { (tag) }
+                    @if let Some(webhook_id) = &msg.webhook_id {
+                        span class="font-medium text-neutral-900 text-sm"
+                          title=(webhook_id) data-message-webhook=(webhook_id) { (msg.author_username) }
+                        span class="self-center" { (badge("Webhook", BadgeVariant::Info)) }
+                    } @else {
+                        a href={(base_path) "/users/" (msg.author_id)}
+                          class="font-medium text-neutral-900 text-sm hover:underline"
+                          title=(msg.author_id) { (tag) }
+                        @if msg.author_bot == Some(true) {
+                            span class="self-center" data-message-author-bot=(msg.author_id) {
+                                (badge("Bot", BadgeVariant::Info))
+                            }
+                        }
+                    }
                     span class="text-neutral-400 text-xs" {
-                        " \u{2014} " (msg.timestamp)
+                        " \u{2014} " (format_admin_timestamp(&msg.timestamp))
                     }
                     (channel_nsfw_state_badge(
                         msg.channel_nsfw.unwrap_or(false),
@@ -266,9 +273,8 @@ fn message_row(
                     (render_image_attachments(msg, include_delete))
                     (render_other_attachments(msg, has_content_or_images))
                 }
-                div class="mt-1 text-neutral-400 text-xs" {
-                    span class="" { (msg.id) }
-                }
+                (render_missing_attachments(msg))
+                (meta)
             }
             @if include_delete && !has_images {
                 div class="absolute top-1 right-2 hidden group-hover:block" {
@@ -290,114 +296,107 @@ pub fn message_list(
     messages: &[Message],
     include_delete: bool,
     highlight_message_id: Option<&str>,
+    take_action: Option<&TakeAction<'_>>,
 ) -> Markup {
     html! {
         div class="divide-y-0" {
             @for (i, msg) in messages.iter().enumerate() {
-                @let is_grouped = i > 0 && messages[i - 1].author_id == msg.author_id;
+                @let is_grouped = i > 0
+                    && messages[i - 1].author_id == msg.author_id
+                    && messages[i - 1].author_username == msg.author_username;
                 @let is_highlighted = highlight_message_id == Some(msg.id.as_str());
                 @let avatar_url = user_avatar_url(
                     config, &msg.author_id, msg.author_avatar.as_deref(), 160, true,
                 );
+                @let take_action_href = take_action
+                    .filter(|action| {
+                        msg.webhook_id.is_none()
+                            && action.author_id.is_none_or(|author_id| author_id == msg.author_id)
+                    })
+                    .map(|action| take_action_href(
+                        base_path,
+                        &msg.author_id,
+                        action.report_id,
+                        Some((&msg.channel_id, &msg.id)),
+                    ));
+                @let jump_link = message_jump_link(&config.web_app_endpoint, msg);
+                @let meta = message_meta(msg, jump_link.as_deref(), take_action_href.as_deref());
                 (message_row(
                     base_path, &avatar_url, msg,
                     include_delete, is_highlighted, is_grouped,
+                    &meta,
                 ))
             }
         }
     }
 }
 
-pub fn message_deletion_script(csrf_token: &str) -> Markup {
-    let csrf = serde_json::to_string(csrf_token).unwrap_or_else(|_| "\"\"".into());
-    let script = r#"(function() {
-    var csrf = __CSRF__;
-    function bp() {
-        return document.documentElement.dataset.basePath || '';
+pub fn message_delete_prefill_script() -> Markup {
+    html! {
+        script defer { (PreEscaped(MESSAGE_DELETE_PREFILL_SCRIPT)) }
     }
-    function toast(level, message) {
-        document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
-    }
-    function post(action, fields) {
-        fields.append('_csrf', csrf);
-        return fetch(bp() + '/messages?action=' + action, {
-            method: 'POST',
-            body: fields,
-            credentials: 'same-origin',
-            headers: {'x-csrf-token': csrf}
-        });
-    }
-    function deleteMessage(b) {
-        var fields = new URLSearchParams();
-        fields.append('channel_id', b.dataset.channelId || '');
-        fields.append('message_id', b.dataset.messageId || '');
-        b.disabled = true;
-        b.textContent = 'Deleting...';
-        toast('info', 'Deleting message...');
-        post('delete', fields).then(function(r) {
-            if (!r.ok) throw new Error('Failed');
-            var row = b.closest('[data-message-id]');
-            if (row) {
-                row.style.opacity = '0.5';
-                row.style.pointerEvents = 'none';
-            }
-            b.textContent = 'Deleted';
-            toast('success', 'Message deleted.');
-        }).catch(function() {
-            b.disabled = false;
-            b.textContent = 'Delete';
-            toast('error', 'Failed to delete message.');
-        });
-    }
-    function reportNcmec(b) {
-        var name = prompt('Type your full name to confirm you personally viewed this image and want to submit it to NCMEC.');
-        if (!name || !name.trim()) return;
-        var fields = new URLSearchParams();
-        fields.append('channel_id', b.dataset.channelId || '');
-        fields.append('message_id', b.dataset.messageId || '');
-        fields.append('attachment_id', b.dataset.attachmentId || '');
-        fields.append('filename', b.dataset.filename || '');
-        fields.append('reporter_full_name', name.trim());
-        fields.append('confirmed_viewed', 'true');
-        b.disabled = true;
-        b.textContent = 'Reporting...';
-        toast('info', 'Submitting NCMEC report...');
-        post('report-to-ncmec', fields).then(function(r) {
-            return r.json().catch(function() {
-                return null;
-            }).then(function(data) {
-                if (!r.ok || !data || data.success !== true) throw new Error(data && (data.error || data.message) || 'Failed to report attachment to NCMEC');
-                return data;
-            });
-        }).then(function(data) {
-            b.textContent = 'Reported to NCMEC';
-            b.dataset.ncmecStatus = 'submitted';
-            if (data.ncmec_report_id) b.dataset.ncmecReportId = data.ncmec_report_id;
-            toast('success', 'NCMEC report submitted.');
-        }).catch(function(err) {
-            b.disabled = false;
-            b.textContent = 'Report to NCMEC';
-            toast('error', err && err.message ? err.message : 'Failed to report attachment to NCMEC.');
-        });
-    }
+}
+
+const MESSAGE_DELETE_PREFILL_SCRIPT: &str = r#"(function() {
+    if (window.__fluxerMessageDeletePrefill) return;
+    window.__fluxerMessageDeletePrefill = true;
     document.addEventListener('click', function(e) {
         var t = e.target;
         if (!(t instanceof HTMLElement)) return;
-        var d = t.closest('.delete-message-btn');
-        if (d instanceof HTMLButtonElement) {
-            e.preventDefault();
-            deleteMessage(d);
-            return;
-        }
-        var n = t.closest('.ncmec-report-btn');
-        if (n instanceof HTMLButtonElement && !n.disabled) {
-            e.preventDefault();
-            reportNcmec(n);
-        }
+        var button = t.closest('.delete-message-btn');
+        var form = document.getElementById('delete-message-form');
+        if (!(button instanceof HTMLButtonElement) || !form) return;
+        e.preventDefault();
+        form.querySelector('[name="channel_id"]').value = button.dataset.channelId || '';
+        form.querySelector('[name="message_id"]').value = button.dataset.messageId || '';
+        form.scrollIntoView({behavior: 'smooth', block: 'center'});
+        form.querySelector('[name="basis"]').focus({preventScroll: true});
     });
-})();"#
-    .replace("__CSRF__", &csrf);
-    html! {
-        script defer { (PreEscaped(script)) }
+})();"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::templates::components::message_data::ordered_messages;
+    use serde_json::json;
+
+    fn message(guild_id: serde_json::Value, channel_id: serde_json::Value) -> Message {
+        ordered_messages(&[json!({
+            "id": "1560373081531219968",
+            "channel_id": channel_id,
+            "guild_id": guild_id,
+            "author_id": "1",
+            "author_username": "someone",
+        })])
+        .remove(0)
+    }
+
+    #[test]
+    fn jump_link_uses_guild_id_and_web_app_endpoint() {
+        let msg = message(json!("42"), json!("7"));
+        assert_eq!(
+            message_jump_link("https://web.fluxer.example/", &msg).as_deref(),
+            Some("https://web.fluxer.example/channels/42/7/1560373081531219968")
+        );
+    }
+
+    #[test]
+    fn jump_link_falls_back_to_me_for_dms() {
+        let msg = message(json!(null), json!("7"));
+        assert_eq!(
+            message_jump_link("https://web.fluxer.example", &msg).as_deref(),
+            Some("https://web.fluxer.example/channels/@me/7/1560373081531219968")
+        );
+    }
+
+    #[test]
+    fn meta_without_channel_skips_link_and_channel_copy() {
+        let msg = message(json!(null), json!(null));
+        assert_eq!(message_jump_link("https://web.fluxer.example", &msg), None);
+        let html = message_meta(&msg, None, None).into_string();
+        assert!(html.contains(r#"data-copy-value="1560373081531219968""#));
+        assert!(html.contains("Copy message ID"));
+        assert!(!html.contains("Copy link"));
+        assert!(!html.contains("Copy channel ID"));
     }
 }

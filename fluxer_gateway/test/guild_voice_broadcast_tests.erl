@@ -46,6 +46,7 @@ broadcast_payload(VoiceState) ->
             <<"suppress">> => false,
             <<"viewer_stream_keys">> => [],
             <<"e2ee_capable">> => false,
+            <<"p2p">> => false,
             <<"version">> => 0
         },
         VoiceState
@@ -72,19 +73,30 @@ pump_relay_to_guild(GuildState) ->
     NewGuildState.
 
 collect_voice_state_dispatches() ->
+    [decoded_voice_state(Payload) || Payload <- collect_raw_voice_state_dispatches()].
+
+collect_raw_voice_state_dispatches() ->
     receive
         {'$gen_cast', {dispatch, voice_state_update, Payload}} ->
-            [Payload | collect_voice_state_dispatches()]
+            [Payload | collect_raw_voice_state_dispatches()]
     after 0 ->
         []
     end.
+
+decoded_voice_state({pre_encoded, Bin}) -> json:decode(Bin);
+decoded_voice_state(Payload) -> Payload.
+
+map_path_wire_bytes(VoiceState) ->
+    iolist_to_binary(
+        json:encode(guild_data_wire:payload(VoiceState), fun json:encode_value/2)
+    ).
 
 confirm_join(ConnId, GuildState) ->
     VoiceServerState = (voice_server_state(GuildState))#{
         pending_voice_connections => #{ConnId => pending_join(ConnId)}
     },
     {reply, #{success := true}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
             #{connection_id => ConnId}, VoiceServerState
         ),
     pump_relay_to_guild(GuildState).
@@ -158,3 +170,42 @@ broadcast_sanitizes_routing_metadata_test() ->
     ?assertEqual(
         [broadcast_payload(join_voice_state(<<"conn1">>))], collect_voice_state_dispatches()
     ).
+
+guild_fanout_pre_encodes_identical_wire_bytes_test() ->
+    VS = join_voice_state(<<"conn1">>),
+    ?assertEqual(
+        {pre_encoded, map_path_wire_bytes(broadcast_payload(VS))}, dispatch_payload_for(VS)
+    ).
+
+guild_fanout_payload_never_touches_dm_voice_states_test() ->
+    {pre_encoded, Bin} = dispatch_payload_for(join_voice_state(<<"conn1">>)),
+    State = #{dm_voice_states => #{}},
+    EventData = #{} = json:decode(Bin),
+    ?assertEqual(
+        State,
+        session_dispatch_guild:update_dm_voice_states_map(
+            voice_state_update, EventData, State
+        )
+    ).
+
+dm_scoped_voice_state_stays_a_map_and_updates_dm_voice_states_test() ->
+    DmVS = (join_voice_state(<<"conn1">>))#{<<"guild_id">> => null},
+    Payload = dispatch_payload_for(DmVS),
+    ?assertEqual(broadcast_payload(DmVS), Payload),
+    State = session_dispatch_guild:update_dm_voice_states_map(
+        voice_state_update, Payload, #{dm_voice_states => #{}}
+    ),
+    #{dm_voice_states := #{<<"conn1">> := StoredVoiceState}} = State,
+    ?assertEqual(
+        broadcast_payload(DmVS),
+        StoredVoiceState
+    ).
+
+dispatch_payload_for(VoiceState) ->
+    GuildState = base_guild_state(),
+    ok = guild_voice_broadcast:broadcast_voice_state_update(
+        VoiceState, voice_server_state(GuildState), null
+    ),
+    _ = pump_relay_to_guild(GuildState),
+    [Payload] = collect_raw_voice_state_dispatches(),
+    Payload.

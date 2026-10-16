@@ -22,15 +22,14 @@ const EXPERIMENTAL_DESCRIPTOR = msg({
 
 interface SettingsStatusBadgeProps {
 	kind: 'new' | SettingsStatusBadgeKind;
-	className?: string;
 }
 
-export function SettingsStatusBadge({kind, className}: SettingsStatusBadgeProps) {
+export function SettingsStatusBadge({kind}: SettingsStatusBadgeProps) {
 	const {i18n} = useLingui();
 	const label = kind === 'new' ? i18n._(NEW_DESCRIPTOR) : i18n._(EXPERIMENTAL_DESCRIPTOR);
 	return (
 		<span
-			className={clsx(styles.badge, kind === 'new' ? styles.new : styles.experimental, className)}
+			className={clsx(styles.badge, kind === 'new' ? styles.new : styles.experimental)}
 			data-flx="user.settings-status-badge.badge"
 		>
 			{label}
@@ -41,15 +40,14 @@ export function SettingsStatusBadge({kind, className}: SettingsStatusBadgeProps)
 interface SettingsItemStatusBadgesProps {
 	item: SettingsMetadata;
 	userCreatedAt?: Date | null;
-	className?: string;
 }
 
-export function SettingsItemStatusBadges({item, userCreatedAt, className}: SettingsItemStatusBadgesProps) {
+export function SettingsItemStatusBadges({item, userCreatedAt}: SettingsItemStatusBadgesProps) {
 	const showNew = isSettingsItemNew(item, Date.now(), userCreatedAt);
 	const showExperimental = isSettingsItemExperimental(item);
 	if (!showNew && !showExperimental) return null;
 	return (
-		<span className={clsx(styles.badges, className)} data-flx="user.settings-status-badge.badges">
+		<span className={styles.badges} data-flx="user.settings-status-badge.badges">
 			{showNew && <SettingsStatusBadge kind="new" data-flx="user.settings-status-badge.new" />}
 			{showExperimental && (
 				<SettingsStatusBadge kind="experimental" data-flx="user.settings-status-badge.experimental" />

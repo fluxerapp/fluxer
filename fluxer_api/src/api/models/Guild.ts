@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID, VanityURLCode} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {
 	type GuildExplicitContentFilterType,
 	type GuildMFALevelValue,
 	type GuildNSFWLevelValue,
 	GuildSplashCardAlignment,
 	type GuildSplashCardAlignmentValue,
+	GuildVerificationLevel,
 	type GuildVerificationLevelValue,
 	normalizeLegacyNsfwLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import type {GuildDefaultMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import type {ChannelID, GuildID, UserID, VanityURLCode} from '../BrandedTypes';
-import type {GuildRow} from '../database/types/GuildTypes';
 
 export class Guild {
 	readonly id: GuildID;
@@ -48,6 +49,7 @@ export class Guild {
 	readonly auditLogsIndexedAt: Date | null;
 	readonly membersIndexedAt: Date | null;
 	readonly messageHistoryCutoff: Date | null;
+	readonly invitesPausedUntil: Date | null;
 	readonly version: number;
 
 	constructor(row: GuildRow) {
@@ -67,7 +69,10 @@ export class Guild {
 		this.embedSplashWidth = row.embed_splash_width ?? null;
 		this.embedSplashHeight = row.embed_splash_height ?? null;
 		this.features = row.features ?? new Set();
-		this.verificationLevel = (row.verification_level ?? 0) as GuildVerificationLevelValue;
+		this.verificationLevel = Math.min(
+			row.verification_level ?? 0,
+			GuildVerificationLevel.HIGH,
+		) as GuildVerificationLevelValue;
 		this.mfaLevel = (row.mfa_level ?? 0) as GuildMFALevelValue;
 		this.nsfwLevel = normalizeLegacyNsfwLevel(row.nsfw_level ?? 0) as GuildNSFWLevelValue;
 		this.nsfw = row.nsfw ?? this.nsfwLevel === 3;
@@ -85,6 +90,7 @@ export class Guild {
 		this.auditLogsIndexedAt = row.audit_logs_indexed_at ?? null;
 		this.membersIndexedAt = row.members_indexed_at ?? null;
 		this.messageHistoryCutoff = row.message_history_cutoff ?? null;
+		this.invitesPausedUntil = row.invites_paused_until ?? null;
 		this.version = row.version;
 	}
 
@@ -124,6 +130,7 @@ export class Guild {
 			audit_logs_indexed_at: this.auditLogsIndexedAt,
 			members_indexed_at: this.membersIndexedAt,
 			message_history_cutoff: this.messageHistoryCutoff,
+			invites_paused_until: this.invitesPausedUntil,
 			version: this.version,
 		};
 	}

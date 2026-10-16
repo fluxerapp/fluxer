@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createApplicationID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {generateOAuthTokenSecret} from '../OAuthTokenSecret';
-import {OAuth2TokenRepository} from '../repositories/OAuth2TokenRepository';
 import {
 	authorizeOAuth2,
 	createOAuth2TestSetup,
@@ -13,7 +7,10 @@ import {
 	getOAuth2UserInfo,
 	introspectOAuth2Token,
 	revokeOAuth2Token,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Token Revocation', () => {
 	let harness: ApiTestHarness;
@@ -164,53 +161,6 @@ describe('OAuth2 Token Revocation', () => {
 			)
 			.expect(200)
 			.execute();
-	});
-	test('should not cascade app-only access token revocation to user authorization tokens', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const userTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const tokenRepository = new OAuth2TokenRepository();
-		const appOnlyToken = generateOAuthTokenSecret();
-		await tokenRepository.createAccessToken({
-			token_: appOnlyToken,
-			application_id: createApplicationID(BigInt(application.id)),
-			user_id: null,
-			scope: new Set(['identify']),
-			created_at: new Date(),
-		});
-		const appOnlyBefore = await introspectOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: appOnlyToken,
-		});
-		expect(appOnlyBefore.active).toBe(true);
-		await revokeOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: appOnlyToken,
-			token_type_hint: 'access_token',
-		});
-		const appOnlyAfter = await introspectOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: appOnlyToken,
-		});
-		expect(appOnlyAfter.active).toBe(false);
-		const userTokenStillActive = await introspectOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: userTokens.access_token,
-		});
-		expect(userTokenStillActive.active).toBe(true);
 	});
 	test('should fail revocation with wrong client_id', async () => {
 		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {VoiceRoomContext} from '@app/features/voice/components/VoiceRoomContext';
 import {type RoomAudioRendererProps, RoomContext} from '@livekit/components-react';
 import type {Room} from 'livekit-client';
 import type React from 'react';
@@ -43,13 +44,15 @@ export function VoiceLiveKitRoot({room, children}: VoiceLiveKitRootProps): React
 	}, [components, room]);
 
 	if (!room) {
-		return <>{children}</>;
+		return <VoiceRoomContext.Provider value={undefined}>{children}</VoiceRoomContext.Provider>;
 	}
 
 	return (
-		<RoomContext.Provider value={room}>
-			{children}
-			{components && <components.RoomAudioRenderer data-flx="app.app.app-wrapper.room-audio-renderer" />}
-		</RoomContext.Provider>
+		<VoiceRoomContext.Provider value={room}>
+			<RoomContext.Provider value={room}>
+				{children}
+				{components && <components.RoomAudioRenderer data-flx="app.app.app-wrapper.room-audio-renderer" />}
+			</RoomContext.Provider>
+		</VoiceRoomContext.Provider>
 	);
 }

@@ -1,5 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {addGiftCodeDuration} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import type {ProductInfo, RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {
+	buildGiftTrialMetadata,
+	getGiftTrialPaidUntil,
+	isGiftTrialRunning,
+} from '@app/api/stripe/StripeGiftTrialMetadata';
+import {mirrorSubscription} from '@app/api/stripe/StripeMirror';
+import {
+	getPrimarySubscriptionItem,
+	getSubscriptionEntitlementPeriodEndUnix,
+	getSubscriptionItemPeriodEndUnix,
+	getSubscriptionPremiumPeriodEnd,
+	loadSubscriptionSchedule,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {NoActiveSubscriptionError} from '@fluxer/errors/src/domains/payment/NoActiveSubscriptionError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -10,41 +36,94 @@ import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment
 import {StripeSubscriptionAlreadyCancelingError} from '@fluxer/errors/src/domains/payment/StripeSubscriptionAlreadyCancelingError';
 import {StripeSubscriptionNotCancelingError} from '@fluxer/errors/src/domains/payment/StripeSubscriptionNotCancelingError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {CurrentSubscriptionPriceResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {
+	CurrentSubscriptionPriceResponse,
+	SwitchToListPriceResponse,
+} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {GiftCodeDurationType} from '../../database/types/PaymentTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {addGiftCodeDuration} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import type {Currency} from '../../utils/CurrencyUtils';
-import type {RecurringBillingCycle} from '../ProductRegistry';
-import {
-	getPrimarySubscriptionItem,
-	getSubscriptionEntitlementPeriodEndUnix,
-	getSubscriptionItemPeriodEndUnix,
-	getSubscriptionPremiumPeriodEnd,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
 type BillingCycleChangeEffectiveAt = 'now' | 'period_end';
+
+const CHARGEABLE_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>(['active', 'trialing']);
+
+function mapStripeIds(values: Array<string | {id: string}> | null | undefined): Array<string> | null {
+	const ids = (values ?? []).map((value) => extractId(value)).filter((id): id is string => id !== null);
+	return ids.length > 0 ? ids : null;
+}
+
+function mapSchedulePhaseDiscounts(
+	discounts:
+		| Array<{
+				coupon: string | {id: string} | null;
+				discount: unknown;
+				promotion_code: string | {id: string} | null;
+		  }>
+		| null
+		| undefined,
+): Array<Stripe.SubscriptionScheduleUpdateParams.Phase.Discount> | null {
+	const mapped = (discounts ?? [])
+		.map((discount): Stripe.SubscriptionScheduleUpdateParams.Phase.Discount | null => {
+			const coupon = extractId(discount.coupon);
+			if (coupon) {
+				return {coupon};
+			}
+			const promotionCode = extractId(discount.promotion_code);
+			if (promotionCode) {
+				return {promotion_code: promotionCode};
+			}
+			return typeof discount.discount === 'string' ? {discount: discount.discount} : null;
+		})
+		.filter((discount): discount is Stripe.SubscriptionScheduleUpdateParams.Phase.Discount => discount !== null);
+	return mapped.length > 0 ? mapped : null;
+}
+
+function mapSchedulePhaseAddInvoiceItems(
+	addInvoiceItems: Array<Stripe.SubscriptionSchedule.Phase.AddInvoiceItem> | null | undefined,
+): Array<Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem> | null {
+	const mapped = (addInvoiceItems ?? [])
+		.map((addInvoiceItem) => {
+			const price = extractId(addInvoiceItem.price);
+			if (!price) {
+				return null;
+			}
+			const mappedItem: Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem = {
+				price,
+				quantity: addInvoiceItem.quantity ?? 1,
+				period: addInvoiceItem.period,
+			};
+			const taxRates = mapStripeIds(addInvoiceItem.tax_rates);
+			if (taxRates) {
+				mappedItem.tax_rates = taxRates;
+			}
+			const discounts = mapSchedulePhaseDiscounts(addInvoiceItem.discounts);
+			if (discounts) {
+				mappedItem.discounts = discounts;
+			}
+			if (addInvoiceItem.metadata) {
+				mappedItem.metadata = addInvoiceItem.metadata;
+			}
+			return mappedItem;
+		})
+		.filter(
+			(addInvoiceItem): addInvoiceItem is Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem =>
+				addInvoiceItem !== null,
+		);
+	return mapped.length > 0 ? mapped : null;
+}
 
 export class StripeSubscriptionService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: {
 			getRecurringSubscriptionPriceId: (billingCycle: RecurringBillingCycle, currency: string) => string | null;
+			getProduct: (priceId: string) => ProductInfo | null;
 		},
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async cancelSubscriptionAtPeriodEnd(userId: UserID): Promise<void> {
@@ -65,7 +144,7 @@ export class StripeSubscriptionService {
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
 				expand: ['items.data.price', 'schedule'],
 			});
-			const schedule = await this.loadSubscriptionSchedule(subscription.schedule);
+			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (schedule) {
 				await this.cancelScheduledSubscriptionAtPeriodEnd(user, subscription, schedule);
 				return;
@@ -73,17 +152,11 @@ export class StripeSubscriptionService {
 			const updatedSubscription = await this.stripe.subscriptions.update(user.stripeSubscriptionId, {
 				cancel_at_period_end: true,
 			});
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(updatedSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: updatedSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				updatedSubscription,
+				user.id,
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 			const updatedUser = await this.userRepository.patchUpsert(
 				userId,
 				{
@@ -91,7 +164,7 @@ export class StripeSubscriptionService {
 				},
 				user.toRow(),
 			);
-			await this.dispatchUser(updatedUser);
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 			Logger.debug({userId, subscriptionId: user.stripeSubscriptionId}, 'Subscription set to cancel at period end');
 		} catch (error: unknown) {
 			Logger.error(
@@ -103,7 +176,7 @@ export class StripeSubscriptionService {
 		}
 	}
 
-	async cancelSubscriptionImmediately(userId: UserID, reason?: string): Promise<void> {
+	async cancelSubscriptionImmediately(userId: UserID, reason?: string, expectedSubscriptionId?: string): Promise<void> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
@@ -113,6 +186,18 @@ export class StripeSubscriptionService {
 		}
 		if (!user.stripeSubscriptionId) {
 			throw new StripeNoActiveSubscriptionError();
+		}
+		if (expectedSubscriptionId && user.stripeSubscriptionId !== expectedSubscriptionId) {
+			Logger.info(
+				{
+					userId: user.id.toString(),
+					expectedSubscriptionId,
+					currentSubscriptionId: user.stripeSubscriptionId,
+					reason: reason ?? null,
+				},
+				'Skipping immediate cancellation because the target subscription is no longer the current one',
+			);
+			return;
 		}
 		try {
 			const canceledSubscription = await this.stripe.subscriptions.cancel(
@@ -130,17 +215,11 @@ export class StripeSubscriptionService {
 				},
 				{idempotencyKey: `admin-cancel-now:${user.id}:${user.stripeSubscriptionId}`},
 			);
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(canceledSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: canceledSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				canceledSubscription,
+				user.id,
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 			const patch: Partial<UserRow> = {
 				premium_will_cancel: false,
 				premium_billing_cycle: null,
@@ -148,14 +227,19 @@ export class StripeSubscriptionService {
 				premium_grace_ends_at: null,
 			};
 			if (user.premiumType !== UserPremiumTypes.LIFETIME) {
+				const now = new Date();
+				const paidUntil = getGiftTrialPaidUntil(canceledSubscription, now.getTime()) ?? user.premiumUntil;
+				const giftEnd = this.pullGiftExtensionBackToNow(user.premiumGiftExtensionEndsAt, paidUntil, now);
+				const hasActiveGift = giftEnd != null && giftEnd.getTime() > now.getTime();
 				Object.assign(patch, {
-					premium_type: UserPremiumTypes.NONE,
-					premium_since: null,
-					premium_until: null,
+					premium_type: hasActiveGift ? user.premiumType : UserPremiumTypes.NONE,
+					premium_since: hasActiveGift ? user.premiumSince : null,
+					premium_until: now,
+					premium_gift_extension_ends_at: giftEnd,
 				});
 			}
 			const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
-			await this.dispatchUser(updatedUser);
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 			Logger.debug({userId, subscriptionId: user.stripeSubscriptionId}, 'Subscription canceled immediately');
 		} catch (error: unknown) {
 			Logger.error(
@@ -165,6 +249,14 @@ export class StripeSubscriptionService {
 			const message = error instanceof Error ? error.message : 'Failed to cancel subscription immediately';
 			throw new StripeError(message);
 		}
+		await this.storeEntitlementService?.reapplyAfterStripeChange(userId);
+	}
+
+	private pullGiftExtensionBackToNow(giftEnd: Date | null, paidUntil: Date | null, now: Date): Date | null {
+		if (!giftEnd || !paidUntil || paidUntil.getTime() <= now.getTime() || giftEnd.getTime() < paidUntil.getTime()) {
+			return giftEnd;
+		}
+		return new Date(giftEnd.getTime() - (paidUntil.getTime() - now.getTime()));
 	}
 
 	async reactivateSubscription(userId: UserID): Promise<void> {
@@ -185,7 +277,7 @@ export class StripeSubscriptionService {
 			let subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
 				expand: ['schedule'],
 			});
-			const schedule = await this.loadSubscriptionSchedule(subscription.schedule);
+			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (schedule) {
 				await this.stripe.subscriptionSchedules.release(schedule.id, {
 					preserve_cancel_date: false,
@@ -198,17 +290,11 @@ export class StripeSubscriptionService {
 			const reactivatedSubscription = clearCancellationParams
 				? await this.stripe.subscriptions.update(user.stripeSubscriptionId, clearCancellationParams)
 				: subscription;
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(reactivatedSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: reactivatedSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				reactivatedSubscription,
+				user.id,
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 			const updatedUser = await this.userRepository.patchUpsert(
 				userId,
 				{
@@ -216,7 +302,7 @@ export class StripeSubscriptionService {
 				},
 				user.toRow(),
 			);
-			await this.dispatchUser(updatedUser);
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 			Logger.debug({userId, subscriptionId: user.stripeSubscriptionId}, 'Subscription reactivated');
 		} catch (error: unknown) {
 			Logger.error({error, userId, subscriptionId: user.stripeSubscriptionId}, 'Failed to reactivate subscription');
@@ -240,7 +326,7 @@ export class StripeSubscriptionService {
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
 				expand: ['items.data.price', 'schedule'],
 			});
-			const schedule = await this.loadSubscriptionSchedule(subscription.schedule);
+			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (!schedule || !this.subscriptionScheduleHasPendingBillingCycleChange(schedule, subscription)) {
 				Logger.debug(
 					{userId, subscriptionId: user.stripeSubscriptionId, scheduleId: schedule?.id ?? null},
@@ -249,24 +335,18 @@ export class StripeSubscriptionService {
 				return;
 			}
 			await this.stripe.subscriptionSchedules.release(schedule.id, {
-				preserve_cancel_date: false,
+				preserve_cancel_date: Boolean(subscription.cancel_at || subscription.cancel_at_period_end),
 			});
 			const releasedSubscription = await this.stripe.subscriptions.retrieve(subscription.id, {
 				expand: ['items.data.price'],
 			});
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(releasedSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: releasedSubscription.id},
-					'Mirror upsert failed after releasing pending billing-cycle schedule; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				releasedSubscription,
+				user.id,
+				'Mirror upsert failed after releasing pending billing-cycle schedule; reconciler will heal',
+			);
 			const patch: Record<string, unknown> = {
-				premium_will_cancel: false,
+				premium_will_cancel: Boolean(releasedSubscription.cancel_at || releasedSubscription.cancel_at_period_end),
 			};
 			const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(releasedSubscription);
 			if (computedPremiumUntil) {
@@ -277,7 +357,7 @@ export class StripeSubscriptionService {
 				patch['stripe_customer_id'] = updatedCustomerId;
 			}
 			const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
-			await this.dispatchUser(updatedUser);
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 			Logger.debug(
 				{userId, subscriptionId: user.stripeSubscriptionId, scheduleId: schedule.id},
 				'Pending subscription billing-cycle change canceled',
@@ -331,7 +411,7 @@ export class StripeSubscriptionService {
 			if (!targetPriceId) {
 				throw new StripeInvalidProductConfigurationError();
 			}
-			const scheduledChange = await this.loadSubscriptionSchedule(subscription.schedule);
+			const scheduledChange = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (scheduledChange && this.subscriptionScheduleHasFutureTargetPrice(scheduledChange, targetPriceId)) {
 				const patch: Record<string, unknown> = {
 					premium_will_cancel: false,
@@ -345,7 +425,7 @@ export class StripeSubscriptionService {
 					patch['stripe_customer_id'] = updatedCustomerId;
 				}
 				const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
-				await this.dispatchUser(updatedUser);
+				await dispatchUserUpdate(this.gatewayService, updatedUser);
 				Logger.debug(
 					{
 						userId,
@@ -382,17 +462,11 @@ export class StripeSubscriptionService {
 				payment_behavior: 'error_if_incomplete',
 				proration_behavior: 'always_invoice',
 			});
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(updatedSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: updatedSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				updatedSubscription,
+				user.id,
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 			const patch: Record<string, unknown> = {
 				premium_billing_cycle: billingCycle,
 				premium_will_cancel: false,
@@ -406,7 +480,7 @@ export class StripeSubscriptionService {
 				patch['stripe_customer_id'] = updatedCustomerId;
 			}
 			const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
-			await this.dispatchUser(updatedUser);
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 			Logger.debug(
 				{
 					userId,
@@ -431,6 +505,142 @@ export class StripeSubscriptionService {
 		}
 	}
 
+	async switchToCurrentListPrice(userId: UserID): Promise<SwitchToListPriceResponse> {
+		if (!this.stripe) {
+			throw new StripePaymentNotAvailableError();
+		}
+		const user = await this.userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		if (!user.stripeSubscriptionId) {
+			throw new StripeNoActiveSubscriptionError();
+		}
+		const lockKey = `list_price_switch_lock:${user.id}`;
+		const lockToken = await this.cacheService.acquireLock(
+			lockKey,
+			StripeSubscriptionService.LIST_PRICE_SWITCH_LOCK_TTL_SECONDS,
+		);
+		if (!lockToken) {
+			Logger.debug(
+				{userId, subscriptionId: user.stripeSubscriptionId, lockKey},
+				'List price switch skipped because another switch is already in flight',
+			);
+			return {status: 'ineligible', reason: 'switch_in_progress'};
+		}
+		try {
+			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
+				expand: ['items.data.price', 'schedule'],
+			});
+			const item = getPrimarySubscriptionItem(subscription);
+			if (!item?.id || !item.price?.recurring || !item.price.currency || item.price.unit_amount == null) {
+				return {status: 'ineligible', reason: 'unsupported_subscription'};
+			}
+			if (!CHARGEABLE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+				return {status: 'ineligible', reason: 'subscription_not_chargeable'};
+			}
+			if (subscription.cancel_at != null || subscription.cancel_at_period_end) {
+				return {status: 'ineligible', reason: 'subscription_cancelling'};
+			}
+			const billingCycle = this.getBillingCycleFromInterval(item.price.recurring.interval);
+			if (!billingCycle) {
+				return {status: 'ineligible', reason: 'unsupported_subscription'};
+			}
+			const currency = item.price.currency.toUpperCase() as Currency;
+			const targetPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+			if (!targetPriceId) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			if (targetPriceId === item.price.id) {
+				return {status: 'ineligible', reason: 'already_on_list_price'};
+			}
+			const targetProduct = this.productRegistry.getProduct(targetPriceId);
+			if (!targetProduct || targetProduct.currency !== currency) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			const targetAmountMinor = await this.getListPriceAmountMinor(targetPriceId);
+			const currentAmountMinor = item.price.unit_amount;
+			if (targetAmountMinor == null) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			if (targetAmountMinor >= currentAmountMinor) {
+				return {status: 'ineligible', reason: 'not_a_price_decrease'};
+			}
+			const periodEnd = getSubscriptionEntitlementPeriodEndUnix(subscription, item);
+			if (!periodEnd || periodEnd <= Math.floor(Date.now() / 1000)) {
+				return {status: 'ineligible', reason: 'missing_period_end'};
+			}
+			const switched = {
+				effective_at: new Date(periodEnd * 1000).toISOString(),
+				target_price_id: targetPriceId,
+				target_amount_minor: targetAmountMinor,
+				current_amount_minor: currentAmountMinor,
+				currency,
+			};
+			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
+			const pendingSchedule =
+				schedule && (schedule.status === 'active' || schedule.status === 'not_started') ? schedule : null;
+			if (pendingSchedule) {
+				if (this.subscriptionScheduleHasFutureTargetPrice(pendingSchedule, targetPriceId)) {
+					Logger.debug(
+						{userId, subscriptionId: subscription.id, scheduleId: pendingSchedule.id, targetPriceId},
+						'List price switch already scheduled for period end',
+					);
+					return {status: 'already_scheduled', ...switched};
+				}
+				if (pendingSchedule.end_behavior === 'cancel') {
+					return {status: 'ineligible', reason: 'cancellation_managed_by_schedule'};
+				}
+				if (this.subscriptionScheduleHasPendingBillingCycleChange(pendingSchedule, subscription)) {
+					return {status: 'ineligible', reason: 'conflicting_pending_change'};
+				}
+			}
+			await this.scheduleBillingCycleChangeAtPeriodEnd({
+				user,
+				subscription,
+				item,
+				currentBillingCycle: billingCycle,
+				targetBillingCycle: billingCycle,
+				targetPriceId,
+				clearCancellation: false,
+			});
+			Logger.debug(
+				{
+					userId,
+					subscriptionId: subscription.id,
+					billingCycle,
+					currency,
+					currentPriceId: item.price.id,
+					targetPriceId,
+					currentAmountMinor,
+					targetAmountMinor,
+					periodEnd,
+				},
+				'Subscription switch to current list price scheduled for period end',
+			);
+			return {status: 'scheduled', ...switched};
+		} catch (error: unknown) {
+			Logger.error(
+				{error, userId, subscriptionId: user.stripeSubscriptionId},
+				'Failed to switch subscription to the current list price',
+			);
+			if (error instanceof StripeError || error instanceof StripeInvalidProductConfigurationError) {
+				throw error;
+			}
+			const message = error instanceof Error ? error.message : 'Failed to switch subscription to the list price';
+			throw new StripeError(message);
+		} finally {
+			try {
+				const released = await this.cacheService.releaseLock(lockKey, lockToken);
+				if (!released) {
+					Logger.warn({userId, lockKey}, 'List price switch lock token no longer matched on release');
+				}
+			} catch (error) {
+				Logger.error({error, userId, lockKey}, 'Failed to release list price switch lock');
+			}
+		}
+	}
+
 	private async scheduleBillingCycleChangeAtPeriodEnd({
 		user,
 		subscription,
@@ -438,6 +648,7 @@ export class StripeSubscriptionService {
 		currentBillingCycle,
 		targetBillingCycle,
 		targetPriceId,
+		clearCancellation = true,
 	}: {
 		user: User;
 		subscription: Stripe.Subscription;
@@ -445,6 +656,7 @@ export class StripeSubscriptionService {
 		currentBillingCycle: RecurringBillingCycle;
 		targetBillingCycle: RecurringBillingCycle;
 		targetPriceId: string;
+		clearCancellation?: boolean;
 	}): Promise<void> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
@@ -454,22 +666,16 @@ export class StripeSubscriptionService {
 			throw new StripeError('Subscription is missing a future period end for scheduled billing cycle change');
 		}
 		let currentSubscription = subscription;
-		if (subscription.cancel_at || subscription.cancel_at_period_end) {
+		if (clearCancellation && (subscription.cancel_at || subscription.cancel_at_period_end)) {
 			currentSubscription = await this.stripe.subscriptions.update(
 				subscription.id,
 				this.getClearCancellationUpdateParams(subscription) ?? {proration_behavior: 'none'},
 			);
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(currentSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: currentSubscription.id},
-					'Mirror upsert failed after clearing cancellation for scheduled billing cycle change; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				currentSubscription,
+				user.id,
+				'Mirror upsert failed after clearing cancellation for scheduled billing cycle change; reconciler will heal',
+			);
 		}
 		const scheduleId = extractId(currentSubscription.schedule);
 		const schedule = scheduleId
@@ -489,7 +695,6 @@ export class StripeSubscriptionService {
 			firstInvoiceCredit?.price_data?.unit_amount != null ? -firstInvoiceCredit.price_data.unit_amount : null;
 		const targetPhase: Stripe.SubscriptionScheduleUpdateParams.Phase = {
 			start_date: periodEnd,
-			billing_cycle_anchor: 'phase_start',
 			items: [
 				{
 					price: targetPriceId,
@@ -498,6 +703,9 @@ export class StripeSubscriptionService {
 			],
 			proration_behavior: 'none',
 		};
+		if (currentBillingCycle !== targetBillingCycle) {
+			targetPhase.billing_cycle_anchor = 'phase_start';
+		}
 		if (firstInvoiceCredit) {
 			targetPhase.add_invoice_items = [firstInvoiceCredit];
 			targetPhase.metadata = {
@@ -506,7 +714,7 @@ export class StripeSubscriptionService {
 			};
 		}
 		await this.stripe.subscriptionSchedules.update(schedule.id, {
-			end_behavior: 'release',
+			end_behavior: clearCancellation ? 'release' : schedule.end_behavior,
 			proration_behavior: 'none',
 			metadata: {
 				user_id: user.id.toString(),
@@ -514,23 +722,36 @@ export class StripeSubscriptionService {
 			},
 			phases: [currentPhase, targetPhase],
 		});
+		let scheduledSubscription = currentSubscription;
+		if (!clearCancellation) {
+			scheduledSubscription = await this.stripe.subscriptions.retrieve(currentSubscription.id, {
+				expand: ['items.data.price'],
+			});
+			await mirrorSubscription(
+				scheduledSubscription,
+				user.id,
+				'Mirror upsert failed after scheduling a period-end price change; reconciler will heal',
+			);
+		}
 		const patch: Record<string, unknown> = {
-			premium_will_cancel: false,
+			premium_will_cancel: clearCancellation
+				? false
+				: Boolean(scheduledSubscription.cancel_at || scheduledSubscription.cancel_at_period_end),
 		};
-		const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(currentSubscription);
+		const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(scheduledSubscription);
 		if (computedPremiumUntil) {
 			patch['premium_until'] = computedPremiumUntil;
 		}
-		const updatedCustomerId = extractId(currentSubscription.customer);
+		const updatedCustomerId = extractId(scheduledSubscription.customer);
 		if (updatedCustomerId && updatedCustomerId !== user.stripeCustomerId) {
 			patch['stripe_customer_id'] = updatedCustomerId;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		Logger.debug(
 			{
 				userId: user.id,
-				subscriptionId: currentSubscription.id,
+				subscriptionId: scheduledSubscription.id,
 				scheduleId: schedule.id,
 				fromBillingCycle: currentBillingCycle,
 				toBillingCycle: targetBillingCycle,
@@ -570,17 +791,11 @@ export class StripeSubscriptionService {
 		const updatedSubscription = await this.stripe.subscriptions.retrieve(subscription.id, {
 			expand: ['items.data.price'],
 		});
-		try {
-			await getBillingRepository().subscriptions.upsertFromStripe(updatedSubscription, {
-				knownUserId: user.id,
-				snapshotCapturedAt: new Date(),
-			});
-		} catch (mirrorErr) {
-			Logger.error(
-				{mirrorErr, subId: updatedSubscription.id},
-				'Mirror upsert failed after schedule-managed cancellation; reconciler will heal',
-			);
-		}
+		await mirrorSubscription(
+			updatedSubscription,
+			user.id,
+			'Mirror upsert failed after schedule-managed cancellation; reconciler will heal',
+		);
 		const patch: Record<string, unknown> = {
 			premium_will_cancel: true,
 		};
@@ -593,7 +808,7 @@ export class StripeSubscriptionService {
 			patch['stripe_customer_id'] = updatedCustomerId;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		Logger.debug(
 			{userId: user.id, subscriptionId: subscription.id, scheduleId: schedule.id, periodEnd},
 			'Subscription schedule set to cancel at period end',
@@ -668,21 +883,6 @@ export class StripeSubscriptionService {
 		return null;
 	}
 
-	private async loadSubscriptionSchedule(
-		scheduleRef: Stripe.Subscription['schedule'],
-	): Promise<Stripe.SubscriptionSchedule | null> {
-		if (!scheduleRef) {
-			return null;
-		}
-		if (typeof scheduleRef === 'object') {
-			return scheduleRef;
-		}
-		if (!this.stripe) {
-			return null;
-		}
-		return this.stripe.subscriptionSchedules.retrieve(scheduleRef);
-	}
-
 	private subscriptionScheduleHasFutureTargetPrice(
 		schedule: Stripe.SubscriptionSchedule,
 		targetPriceId: string,
@@ -740,12 +940,28 @@ export class StripeSubscriptionService {
 					if (!price) {
 						return null;
 					}
-					return {
+					const mappedItem: Stripe.SubscriptionScheduleUpdateParams.Phase.Item = {
 						price,
 						quantity: phaseItem.quantity ?? 1,
 					};
+					const itemTaxRates = mapStripeIds(phaseItem.tax_rates);
+					if (itemTaxRates) {
+						mappedItem.tax_rates = itemTaxRates;
+					}
+					const itemDiscounts = mapSchedulePhaseDiscounts(phaseItem.discounts);
+					if (itemDiscounts) {
+						mappedItem.discounts = itemDiscounts;
+					}
+					if (phaseItem.metadata) {
+						mappedItem.metadata = phaseItem.metadata;
+					}
+					if (phaseItem.billing_thresholds?.usage_gte != null) {
+						mappedItem.billing_thresholds = {usage_gte: phaseItem.billing_thresholds.usage_gte};
+					}
+					return mappedItem;
 				})
-				.filter((phaseItem): phaseItem is {price: string; quantity: number} => phaseItem !== null) ?? [];
+				.filter((phaseItem): phaseItem is Stripe.SubscriptionScheduleUpdateParams.Phase.Item => phaseItem !== null) ??
+			[];
 		const currentPhase: Stripe.SubscriptionScheduleUpdateParams.Phase = {
 			start_date: phase?.start_date ?? subscription.start_date ?? subscription.created,
 			end_date: periodEnd,
@@ -760,6 +976,99 @@ export class StripeSubscriptionService {
 						],
 			proration_behavior: 'none',
 		};
+		if (phase) {
+			const phaseDiscounts = mapSchedulePhaseDiscounts(phase.discounts);
+			if (phaseDiscounts) {
+				currentPhase.discounts = phaseDiscounts;
+			}
+			const defaultTaxRates = mapStripeIds(phase.default_tax_rates);
+			if (defaultTaxRates) {
+				currentPhase.default_tax_rates = defaultTaxRates;
+			}
+			if (phase.metadata) {
+				currentPhase.metadata = phase.metadata;
+			}
+			if (phase.currency) {
+				currentPhase.currency = phase.currency;
+			}
+			if (phase.description != null) {
+				currentPhase.description = phase.description;
+			}
+			if (phase.collection_method) {
+				currentPhase.collection_method = phase.collection_method;
+			}
+			if (phase.application_fee_percent != null) {
+				currentPhase.application_fee_percent = phase.application_fee_percent;
+			}
+			const defaultPaymentMethod = extractId(phase.default_payment_method);
+			if (defaultPaymentMethod) {
+				currentPhase.default_payment_method = defaultPaymentMethod;
+			}
+			const onBehalfOf = extractId(phase.on_behalf_of);
+			if (onBehalfOf) {
+				currentPhase.on_behalf_of = onBehalfOf;
+			}
+			if (phase.automatic_tax) {
+				const automaticTax: Stripe.SubscriptionScheduleUpdateParams.Phase.AutomaticTax = {
+					enabled: phase.automatic_tax.enabled,
+				};
+				if (phase.automatic_tax.liability) {
+					automaticTax.liability = {type: phase.automatic_tax.liability.type};
+					const liabilityAccount = extractId(phase.automatic_tax.liability.account);
+					if (liabilityAccount) {
+						automaticTax.liability.account = liabilityAccount;
+					}
+				}
+				currentPhase.automatic_tax = automaticTax;
+			}
+			if (phase.invoice_settings) {
+				const invoiceSettings: Stripe.SubscriptionScheduleUpdateParams.Phase.InvoiceSettings = {};
+				const accountTaxIds = mapStripeIds(phase.invoice_settings.account_tax_ids);
+				if (accountTaxIds) {
+					invoiceSettings.account_tax_ids = accountTaxIds;
+				}
+				if (phase.invoice_settings.days_until_due != null) {
+					invoiceSettings.days_until_due = phase.invoice_settings.days_until_due;
+				}
+				if (phase.invoice_settings.issuer) {
+					invoiceSettings.issuer = {type: phase.invoice_settings.issuer.type};
+					const issuerAccount = extractId(phase.invoice_settings.issuer.account);
+					if (issuerAccount) {
+						invoiceSettings.issuer.account = issuerAccount;
+					}
+				}
+				if (Object.keys(invoiceSettings).length > 0) {
+					currentPhase.invoice_settings = invoiceSettings;
+				}
+			}
+			if (phase.billing_thresholds) {
+				const billingThresholds: Stripe.SubscriptionScheduleUpdateParams.Phase.BillingThresholds = {};
+				if (phase.billing_thresholds.amount_gte != null) {
+					billingThresholds.amount_gte = phase.billing_thresholds.amount_gte;
+				}
+				if (phase.billing_thresholds.reset_billing_cycle_anchor != null) {
+					billingThresholds.reset_billing_cycle_anchor = phase.billing_thresholds.reset_billing_cycle_anchor;
+				}
+				if (Object.keys(billingThresholds).length > 0) {
+					currentPhase.billing_thresholds = billingThresholds;
+				}
+			}
+			if (phase.transfer_data) {
+				const destination = extractId(phase.transfer_data.destination);
+				if (destination) {
+					currentPhase.transfer_data = {destination};
+					if (phase.transfer_data.amount_percent != null) {
+						currentPhase.transfer_data.amount_percent = phase.transfer_data.amount_percent;
+					}
+				}
+			}
+			if (phase.start_date > now) {
+				const addInvoiceItems = mapSchedulePhaseAddInvoiceItems(phase.add_invoice_items);
+				if (addInvoiceItems) {
+					currentPhase.add_invoice_items = addInvoiceItems;
+				}
+			}
+		}
 		const trialEnd = subscription.trial_end;
 		if (trialEnd != null && trialEnd > now) {
 			if (trialEnd >= periodEnd) {
@@ -767,6 +1076,10 @@ export class StripeSubscriptionService {
 			} else {
 				currentPhase.trial_end = trialEnd;
 			}
+		}
+		const phaseIsTrial = currentPhase.trial === true || currentPhase.trial_end != null;
+		if (phase?.billing_cycle_anchor && !(phaseIsTrial && phase.billing_cycle_anchor === 'phase_start')) {
+			currentPhase.billing_cycle_anchor = phase.billing_cycle_anchor;
 		}
 		return currentPhase;
 	}
@@ -788,6 +1101,7 @@ export class StripeSubscriptionService {
 				cacheKey,
 				async () => this.loadCurrentSubscriptionPrice(user.stripeSubscriptionId!),
 				StripeSubscriptionService.CURRENT_PRICE_CACHE_TTL_SECONDS,
+				StripeSubscriptionService.PRICE_CACHE_PRODUCE_TIMEOUT_MS,
 			);
 		} catch (error) {
 			Logger.warn(
@@ -841,6 +1155,7 @@ export class StripeSubscriptionService {
 					return price.unit_amount ?? null;
 				},
 				StripeSubscriptionService.LIST_PRICE_CACHE_TTL_SECONDS,
+				StripeSubscriptionService.PRICE_CACHE_PRODUCE_TIMEOUT_MS,
 			);
 		} catch (error) {
 			Logger.warn({error, priceId}, 'Failed to retrieve Stripe list price amount');
@@ -853,7 +1168,7 @@ export class StripeSubscriptionService {
 		durationType: GiftCodeDurationType,
 		durationQuantity: number,
 		idempotencyKey: string,
-	): Promise<void> {
+	): Promise<Stripe.Subscription | null> {
 		if (!this.stripe || !user.stripeSubscriptionId) {
 			Logger.debug(
 				{
@@ -884,11 +1199,11 @@ export class StripeSubscriptionService {
 		);
 		if (await this.cacheService.get<boolean>(appliedKey)) {
 			Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension already applied (idempotent hit)');
-			return;
+			return null;
 		}
 		if (await this.cacheService.get<boolean>(inflightKey)) {
 			Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension in-flight; skipping duplicate');
-			return;
+			return null;
 		}
 		await this.cacheService.set(inflightKey, true, seconds('1 minute'));
 		Logger.debug({userId: user.id, idempotencyKey, inflightKey}, 'Gift trial inflight sentinel set');
@@ -906,7 +1221,7 @@ export class StripeSubscriptionService {
 		try {
 			if (await this.cacheService.get<boolean>(appliedKey)) {
 				Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension already applied after lock acquisition');
-				return;
+				return null;
 			}
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId);
 			Logger.debug(
@@ -920,7 +1235,8 @@ export class StripeSubscriptionService {
 			const currentTrialEnd = subscription.trial_end;
 			const item = getPrimarySubscriptionItem(subscription);
 			const currentPeriodEnd = getSubscriptionItemPeriodEndUnix(item);
-			const baseUnix = currentTrialEnd ?? currentPeriodEnd;
+			const nowMs = Date.now();
+			const baseUnix = isGiftTrialRunning(subscription, nowMs) ? currentTrialEnd : currentPeriodEnd;
 			Logger.debug(
 				{
 					userId: user.id,
@@ -958,20 +1274,15 @@ export class StripeSubscriptionService {
 				{
 					trial_end: newTrialEndUnix,
 					proration_behavior: 'none',
+					metadata: buildGiftTrialMetadata(subscription, idempotencyKey, baseUnix, newTrialEndUnix, nowMs),
 				},
 				{idempotencyKey: stripeIdempotencyKey},
 			);
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(trialExtendedSubscription, {
-					knownUserId: user.id,
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: trialExtendedSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorSubscription(
+				trialExtendedSubscription,
+				user.id,
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 			Logger.debug(
 				{
 					userId: user.id,
@@ -995,6 +1306,7 @@ export class StripeSubscriptionService {
 				},
 				'Extended subscription with gift trial period',
 			);
+			return trialExtendedSubscription;
 		} catch (error: unknown) {
 			Logger.error(
 				{error, userId: user.id, subscriptionId: user.stripeSubscriptionId, idempotencyKey},
@@ -1021,6 +1333,8 @@ export class StripeSubscriptionService {
 
 	private static readonly CURRENT_PRICE_CACHE_TTL_SECONDS = seconds('5 minutes');
 	private static readonly LIST_PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
+	private static readonly PRICE_CACHE_PRODUCE_TIMEOUT_MS = 90000;
+	private static readonly LIST_PRICE_SWITCH_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly USER_TRIAL_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly USER_TRIAL_LOCK_MAX_WAIT_MS = 15000;
 	private static readonly USER_TRIAL_LOCK_RETRY_DELAY_MS = 100;
@@ -1050,14 +1364,6 @@ export class StripeSubscriptionService {
 		} catch (error) {
 			Logger.error({error, userId, lockKey}, 'Failed to release user trial extension lock');
 		}
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
 	}
 
 	private getBillingCycleFromInterval(interval: string): RecurringBillingCycle | null {

@@ -3,7 +3,20 @@
 .container {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 0.75rem;
+	container-type: inline-size;
+}
+
+.intro {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.rows {
+	display: flex;
+	flex-direction: column;
 }
 
 .row {
@@ -12,70 +25,68 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
-	padding: 0.25rem 0;
+	padding: 0.5rem 0;
+}
+
+.text {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 0%;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.textDisabled {
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .label {
-	display: flex;
-	min-width: 0;
-	max-width: 100%;
-	flex: 1 1 0%;
-	align-items: center;
-	gap: 0.5rem;
 	font-weight: 500;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 	color: var(--text-primary);
 }
 
-.labelDisabled {
-	cursor: not-allowed;
-	opacity: 0.5;
-}
-
-.choiceWrap {
-	flex: 0 0 14rem;
-	width: 14rem;
+.description {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
 }
 
 .choiceGroup {
 	position: relative;
-	display: flex;
-	width: 100%;
-	height: 2.125rem;
+	display: inline-grid;
+	flex-shrink: 0;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(4.75rem, 1fr);
+	height: 2.25rem;
 	border-radius: 0.5rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
 	background: var(--background-tertiary);
 	padding: 0.1875rem;
-	overflow: hidden;
 }
 
 .choiceGroupDisabled {
-	opacity: 0.55;
+	opacity: 0.5;
 }
 
 .choiceButton {
 	position: relative;
 	z-index: 1;
-	flex: 1 1 0;
 	min-width: 0;
 	border: 0;
 	border-radius: 0.375rem;
 	background: transparent;
-	padding: 0 0.5rem;
+	padding: 0 0.875rem;
 	color: var(--text-secondary);
 	font-weight: 600;
-	font-size: 0.8125rem;
-	line-height: 1rem;
+	font-size: 0.875rem;
+	line-height: 1.125rem;
 	text-align: center;
 	white-space: nowrap;
 	cursor: pointer;
 	transition: color 150ms ease;
-}
-
-.choiceButton:focus-visible {
-	outline: 0.125rem solid var(--background-modifier-accent-focus);
-	outline-offset: -0.125rem;
 }
 
 .choiceButton:enabled:hover {
@@ -86,8 +97,13 @@
 	cursor: not-allowed;
 }
 
-.choiceButtonActive {
-	color: var(--text-primary);
+.choiceButton:disabled:not(.choiceButtonActive) {
+	opacity: 0.5;
+}
+
+.choiceButtonActive,
+.choiceButtonActive:enabled:hover {
+	color: var(--text-on-brand-primary);
 }
 
 .choiceIndicator {
@@ -96,18 +112,25 @@
 	bottom: 0.1875rem;
 	z-index: 0;
 	border-radius: 0.375rem;
-	background: var(--background-secondary);
-	box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.08);
+	background: var(--brand-primary);
+	box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.16);
 }
 
-@media (max-width: 520px) {
+@media (prefers-reduced-motion: reduce) {
+	.choiceButton {
+		transition: none;
+	}
+}
+
+@container (max-width: 34rem) {
 	.row {
 		flex-direction: column;
-		align-items: flex-start;
+		align-items: stretch;
+		gap: 0.625rem;
 	}
 
-	.choiceWrap {
-		flex: none;
-		width: min(100%, 14rem);
+	.choiceGroup {
+		display: grid;
+		width: 100%;
 	}
 }

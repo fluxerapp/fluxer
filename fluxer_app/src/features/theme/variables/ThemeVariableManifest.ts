@@ -11,6 +11,480 @@ export interface ThemeVariableDefinition {
 	source: string;
 }
 
+export type ThemeVariableName =
+	| "--accent-danger"
+	| "--accent-info"
+	| "--accent-primary"
+	| "--accent-purple"
+	| "--accent-success"
+	| "--accent-warning"
+	| "--active-now-action-gap"
+	| "--active-now-action-height"
+	| "--active-now-action-padding-block"
+	| "--active-now-action-padding-inline"
+	| "--active-now-action-radius"
+	| "--active-now-card-gap"
+	| "--active-now-card-padding-block"
+	| "--active-now-card-padding-inline"
+	| "--active-now-card-radius"
+	| "--active-now-card-shadow"
+	| "--active-now-context-gap"
+	| "--active-now-sidebar-content-gap"
+	| "--active-now-sidebar-content-padding-block-end"
+	| "--active-now-sidebar-content-padding-inline"
+	| "--active-now-sidebar-header-padding-block-end"
+	| "--active-now-sidebar-header-padding-block-start"
+	| "--active-now-sidebar-header-padding-inline"
+	| "--active-now-sidebar-width"
+	| "--alert-caution-color"
+	| "--alert-important-color"
+	| "--alert-note-color"
+	| "--alert-tip-color"
+	| "--alert-warning-color"
+	| "--ansi-bg-black"
+	| "--ansi-bg-blue"
+	| "--ansi-bg-bright-black"
+	| "--ansi-bg-bright-blue"
+	| "--ansi-bg-bright-cyan"
+	| "--ansi-bg-bright-green"
+	| "--ansi-bg-bright-magenta"
+	| "--ansi-bg-bright-red"
+	| "--ansi-bg-bright-white"
+	| "--ansi-bg-bright-yellow"
+	| "--ansi-bg-cyan"
+	| "--ansi-bg-green"
+	| "--ansi-bg-magenta"
+	| "--ansi-bg-red"
+	| "--ansi-bg-white"
+	| "--ansi-bg-yellow"
+	| "--ansi-fg-black"
+	| "--ansi-fg-blue"
+	| "--ansi-fg-bright-black"
+	| "--ansi-fg-bright-blue"
+	| "--ansi-fg-bright-cyan"
+	| "--ansi-fg-bright-green"
+	| "--ansi-fg-bright-magenta"
+	| "--ansi-fg-bright-red"
+	| "--ansi-fg-bright-white"
+	| "--ansi-fg-bright-yellow"
+	| "--ansi-fg-cyan"
+	| "--ansi-fg-green"
+	| "--ansi-fg-magenta"
+	| "--ansi-fg-red"
+	| "--ansi-fg-white"
+	| "--ansi-fg-yellow"
+	| "--ansi-inverse-bg"
+	| "--ansi-inverse-text"
+	| "--avatar-stack-extra-height"
+	| "--background-channel-header"
+	| "--background-header-primary"
+	| "--background-header-primary-hover"
+	| "--background-header-secondary"
+	| "--background-modifier-accent"
+	| "--background-modifier-accent-focus"
+	| "--background-modifier-hover"
+	| "--background-modifier-selected"
+	| "--background-primary"
+	| "--background-secondary"
+	| "--background-secondary-alt"
+	| "--background-secondary-lighter"
+	| "--background-tertiary"
+	| "--background-textarea"
+	| "--bg-active"
+	| "--bg-blockquote"
+	| "--bg-code"
+	| "--bg-code-block"
+	| "--bg-hover"
+	| "--bg-primary"
+	| "--bg-secondary"
+	| "--bg-table-header"
+	| "--bg-table-row-even"
+	| "--bg-table-row-odd"
+	| "--bg-tertiary"
+	| "--border-color"
+	| "--border-color-focus"
+	| "--border-color-hover"
+	| "--brand-primary"
+	| "--brand-primary-fill"
+	| "--brand-primary-foreground"
+	| "--brand-primary-light"
+	| "--brand-primary-light-fill"
+	| "--brand-primary-pressed"
+	| "--brand-primary-shade"
+	| "--brand-secondary"
+	| "--brand-tint"
+	| "--brand-tint-border"
+	| "--brand-tint-hover"
+	| "--button-danger-active-fill"
+	| "--button-danger-fill"
+	| "--button-danger-outline-active-border"
+	| "--button-danger-outline-active-fill"
+	| "--button-danger-outline-border"
+	| "--button-danger-outline-text"
+	| "--button-danger-text"
+	| "--button-ghost-text"
+	| "--button-inverted-fill"
+	| "--button-inverted-text"
+	| "--button-outline-active-border"
+	| "--button-outline-active-fill"
+	| "--button-outline-border"
+	| "--button-outline-text"
+	| "--button-primary-active-fill"
+	| "--button-primary-fill"
+	| "--button-primary-text"
+	| "--button-secondary-active-fill"
+	| "--button-secondary-active-text"
+	| "--button-secondary-fill"
+	| "--button-secondary-text"
+	| "--channel-header-action-icon-size"
+	| "--channel-header-action-size"
+	| "--channel-header-action-size-mobile"
+	| "--channel-header-actions-gap"
+	| "--channel-header-back-button-gap"
+	| "--channel-header-back-button-size"
+	| "--channel-header-back-icon-size"
+	| "--channel-header-caret-gap"
+	| "--channel-header-caret-size"
+	| "--channel-header-gap"
+	| "--channel-header-icon-size"
+	| "--channel-header-name-gap"
+	| "--channel-header-name-gap-group-dm"
+	| "--channel-header-padding-inline"
+	| "--channel-header-topic-divider-gap"
+	| "--chat-horizontal-padding"
+	| "--chat-horizontal-padding-default"
+	| "--chat-mobile-horizontal-padding"
+	| "--code-block-bg"
+	| "--code-block-border"
+	| "--code-block-highlight"
+	| "--code-inline-bg"
+	| "--code-muted"
+	| "--code-text"
+	| "--composer-action-gap"
+	| "--composer-box-inset"
+	| "--composer-box-inset-inline"
+	| "--composer-box-padding-inline"
+	| "--composer-mobile-box-height"
+	| "--composer-mobile-padding-y"
+	| "--composer-status-line-height"
+	| "--composer-status-row-height"
+	| "--composer-status-safe-area"
+	| "--composer-status-safe-gap"
+	| "--composer-surface-color"
+	| "--content-padding"
+	| "--content-padding-lg"
+	| "--content-padding-sm"
+	| "--control-button-active-bg"
+	| "--control-button-active-text"
+	| "--control-button-danger-hover-bg"
+	| "--control-button-danger-text"
+	| "--control-button-hover-bg"
+	| "--control-button-hover-text"
+	| "--control-button-normal-bg"
+	| "--control-button-normal-text"
+	| "--count-indicator-gap"
+	| "--discovery-card-description-min-height"
+	| "--dm-sidebar-mobile-header-height"
+	| "--emoji-size-emoji"
+	| "--emoji-size-jumbo-emoji"
+	| "--floating-surface-ring-color"
+	| "--floating-surface-ring-color-strong"
+	| "--focus-primary"
+	| "--folder-radius"
+	| "--font-fallback-mono"
+	| "--font-fallback-sans"
+	| "--font-keybind"
+	| "--font-mono"
+	| "--font-sans"
+	| "--font-sans-primary"
+	| "--font-size"
+	| "--font-size-xs"
+	| "--footer-box-height"
+	| "--footer-box-inner-inset"
+	| "--footer-box-inset"
+	| "--footer-box-inset-inline"
+	| "--footer-box-padding-y"
+	| "--footer-box-radius"
+	| "--footer-row-height"
+	| "--form-surface-background"
+	| "--friend-row-action-gap"
+	| "--friend-row-action-size"
+	| "--friend-row-avatar-size"
+	| "--friend-row-content-gap"
+	| "--friend-row-name-line-height"
+	| "--friend-row-padding-block"
+	| "--friend-row-padding-inline"
+	| "--friend-row-separator-inset"
+	| "--friend-row-separator-radius"
+	| "--friend-row-subtext-line-height"
+	| "--friend-row-subtext-offset"
+	| "--guild-badge-surface"
+	| "--guild-folder-expanded-surface-size"
+	| "--guild-icon-gap"
+	| "--guild-icon-size"
+	| "--guild-list-divider-base-gap"
+	| "--guild-list-divider-line-size"
+	| "--guild-list-foreground"
+	| "--guild-list-indicator-bar-width"
+	| "--guild-list-indicator-inset"
+	| "--guild-list-indicator-track-width"
+	| "--guild-list-item-box-size"
+	| "--guild-list-item-gap"
+	| "--guild-list-item-target-half-extra"
+	| "--guild-list-item-target-size"
+	| "--guild-members-columns"
+	| "--guild-members-columns-selectable"
+	| "--guild-members-min-width"
+	| "--guild-members-min-width-selectable"
+	| "--guild-members-select-column-width"
+	| "--guild-members-table-row-border-width"
+	| "--guild-members-table-row-min-height"
+	| "--guilds-layout-item-bg"
+	| "--input-container-min-height"
+	| "--input-container-padding"
+	| "--input-wrapper-padding-bottom"
+	| "--input-wrapper-padding-x"
+	| "--interactive-active"
+	| "--interactive-muted"
+	| "--invite-verified-icon-color"
+	| "--layout-gap"
+	| "--layout-gap-lg"
+	| "--layout-gap-sm"
+	| "--layout-guild-list-width"
+	| "--layout-header-height"
+	| "--layout-header-height-mobile"
+	| "--layout-header-popout-width"
+	| "--layout-member-list-width"
+	| "--layout-mobile-bottom-nav-reserved-height"
+	| "--layout-sidebar-width"
+	| "--layout-user-area-height"
+	| "--layout-user-area-reserved-height"
+	| "--layout-voice-connection-height"
+	| "--link-decoration"
+	| "--list-row-min-height"
+	| "--macos-traffic-light-inset"
+	| "--markup-everyone-border"
+	| "--markup-everyone-fill"
+	| "--markup-everyone-text"
+	| "--markup-here-border"
+	| "--markup-here-fill"
+	| "--markup-here-text"
+	| "--markup-interactive-hover-fill"
+	| "--markup-interactive-hover-text"
+	| "--markup-jump-link-fill"
+	| "--markup-jump-link-hover-fill"
+	| "--markup-jump-link-text"
+	| "--markup-mention-border"
+	| "--markup-mention-fill"
+	| "--markup-mention-text"
+	| "--markup-restricted-inline-emoji-baseline-shift"
+	| "--markup-restricted-inline-emoji-size"
+	| "--markup-restricted-inline-icon-baseline-shift"
+	| "--markup-strikethrough-color"
+	| "--media-border-radius"
+	| "--member-list-group-spacer-height"
+	| "--member-list-item-content-gap"
+	| "--member-list-item-content-height"
+	| "--member-list-item-name-line-height"
+	| "--member-list-item-padding-block"
+	| "--member-list-item-padding-inline"
+	| "--member-list-item-status-line-height"
+	| "--member-list-row-gap"
+	| "--member-list-scroller-padding-block-end"
+	| "--member-list-scroller-padding-block-start"
+	| "--member-list-scroller-padding-inline"
+	| "--mention-badge-medium-size"
+	| "--mention-badge-small-size"
+	| "--message-action-bar-offset"
+	| "--message-avatar-align-offset"
+	| "--message-avatar-size"
+	| "--message-avatar-size-compact"
+	| "--message-compact-container-margin"
+	| "--message-compact-gap"
+	| "--message-compact-horizontal-padding"
+	| "--message-compact-indent"
+	| "--message-compact-markdown-alert-padding-block"
+	| "--message-compact-markdown-alert-padding-inline"
+	| "--message-compact-markdown-block-gap"
+	| "--message-compact-markdown-blockquote-divider-margin-end"
+	| "--message-compact-markdown-blockquote-gap"
+	| "--message-compact-table-max-inline-size"
+	| "--message-compact-table-min-cell-width"
+	| "--message-compact-text-indent-from-username"
+	| "--message-compact-timestamp-width"
+	| "--message-compact-username-gap"
+	| "--message-container-gap"
+	| "--message-container-padding-y"
+	| "--message-edited-font-size"
+	| "--message-edited-label-font-size"
+	| "--message-failed-indicator-font-size"
+	| "--message-failed-indicator-gap"
+	| "--message-failed-opacity"
+	| "--message-filler-padding-bottom"
+	| "--message-group-spacing"
+	| "--message-gutter"
+	| "--message-highlight-bar-width"
+	| "--message-icon-size-lg"
+	| "--message-icon-size-md"
+	| "--message-icon-size-sm"
+	| "--message-line-height"
+	| "--message-mention-bg"
+	| "--message-mention-bg-hover"
+	| "--message-mention-color"
+	| "--message-mobile-margin"
+	| "--message-preview-card-background"
+	| "--message-preview-card-border"
+	| "--message-preview-card-divider"
+	| "--message-replied-username-opacity"
+	| "--message-reply-bg"
+	| "--message-reply-color"
+	| "--message-reply-font-size"
+	| "--message-reply-height"
+	| "--message-reply-spacing"
+	| "--message-reply-spine-radius"
+	| "--message-reply-spine-width"
+	| "--message-search-bar-height"
+	| "--message-search-bar-icon-gap"
+	| "--message-search-bar-icon-size"
+	| "--message-search-bar-width"
+	| "--message-sending-link-opacity"
+	| "--message-sending-opacity"
+	| "--message-spacing-y"
+	| "--message-timestamp-color"
+	| "--message-timestamp-compact-font-size"
+	| "--message-timestamp-compact-height"
+	| "--message-timestamp-font-size"
+	| "--message-transition-highlight"
+	| "--message-typing-avatar-margin"
+	| "--message-typing-gap"
+	| "--message-typing-pill-gap"
+	| "--message-typing-pill-padding"
+	| "--message-typing-text-font-size"
+	| "--message-unknown-warning-color"
+	| "--messages-bottom-clearance"
+	| "--mobile-bottom-nav-height"
+	| "--native-titlebar-height"
+	| "--outline-frame-border-width"
+	| "--outline-frame-radius-native"
+	| "--panel-control-bg"
+	| "--panel-control-border"
+	| "--panel-control-divider"
+	| "--panel-control-highlight"
+	| "--plutonium"
+	| "--plutonium-hover"
+	| "--plutonium-icon"
+	| "--plutonium-text"
+	| "--radius-2xl"
+	| "--radius-full"
+	| "--radius-lg"
+	| "--radius-md"
+	| "--radius-sm"
+	| "--radius-xl"
+	| "--saturation-factor"
+	| "--scrollbar-thumb-bg"
+	| "--scrollbar-thumb-bg-hover"
+	| "--scrollbar-track-bg"
+	| "--scroller-spacer-height"
+	| "--shadow-lg"
+	| "--shadow-md"
+	| "--shadow-sm"
+	| "--shadow-xl"
+	| "--skeleton-chrome-border"
+	| "--skeleton-chrome-border-color"
+	| "--skeleton-opacity-default"
+	| "--skeleton-opacity-muted"
+	| "--skeleton-opacity-strong"
+	| "--slowmode-indicator-height"
+	| "--spacing-0"
+	| "--spacing-1"
+	| "--spacing-1-5"
+	| "--spacing-10"
+	| "--spacing-12"
+	| "--spacing-16"
+	| "--spacing-2"
+	| "--spacing-20"
+	| "--spacing-24"
+	| "--spacing-3"
+	| "--spacing-4"
+	| "--spacing-5"
+	| "--spacing-6"
+	| "--spacing-8"
+	| "--spoiler-border-radius"
+	| "--spoiler-overlay-color"
+	| "--spoiler-overlay-hover-color"
+	| "--status-danger"
+	| "--status-dnd"
+	| "--status-idle"
+	| "--status-offline"
+	| "--status-online"
+	| "--status-warning"
+	| "--surface-interactive-hover-bg"
+	| "--surface-interactive-selected-bg"
+	| "--surface-interactive-selected-color"
+	| "--system-message-icon-opacity"
+	| "--system-message-icon-size"
+	| "--text-chat"
+	| "--text-chat-muted"
+	| "--text-code"
+	| "--text-link"
+	| "--text-on-brand-primary"
+	| "--text-on-brand-primary-light"
+	| "--text-on-brand-tint"
+	| "--text-on-dark"
+	| "--text-primary"
+	| "--text-primary-muted"
+	| "--text-secondary"
+	| "--text-selection"
+	| "--text-tertiary"
+	| "--text-tertiary-muted"
+	| "--text-tertiary-secondary"
+	| "--text-warning"
+	| "--textarea-button-compact-height"
+	| "--textarea-button-compact-icon-size"
+	| "--textarea-button-height"
+	| "--textarea-button-icon-size"
+	| "--textarea-container-padding-x"
+	| "--textarea-content-offset"
+	| "--textarea-font-size"
+	| "--textarea-line-height"
+	| "--textarea-min-height"
+	| "--textarea-padding-y"
+	| "--textarea-side-button-padding"
+	| "--textarea-top-bar-height"
+	| "--textarea-upload-gap"
+	| "--theme-border"
+	| "--theme-border-width"
+	| "--transition-fast"
+	| "--transition-normal"
+	| "--transition-slow"
+	| "--typing-avatar-size"
+	| "--typing-indicator-animation-size"
+	| "--typing-indicator-gap"
+	| "--typing-indicator-height"
+	| "--typing-pill-height"
+	| "--user-area-avatar-lead"
+	| "--user-area-box-inset-block-end"
+	| "--user-area-content-height"
+	| "--user-area-divider-color"
+	| "--user-area-padding-x"
+	| "--user-area-padding-y"
+	| "--user-select"
+	| "--voice-connection-padding-x"
+	| "--voice-connection-padding-y"
+	| "--z-index-base"
+	| "--z-index-contextmenu"
+	| "--z-index-elevated-1"
+	| "--z-index-elevated-2"
+	| "--z-index-elevated-3"
+	| "--z-index-modal"
+	| "--z-index-modal-swap"
+	| "--z-index-overlay"
+	| "--z-index-popout"
+	| "--z-index-popout-above-swap"
+	| "--z-index-titlebar"
+	| "--z-index-toast"
+	| "--z-index-tooltip";
+
 export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--accent-danger", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--accent-info", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
@@ -18,6 +492,24 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--accent-purple", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--accent-success", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--accent-warning", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--active-now-action-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-action-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-action-padding-block", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-action-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-action-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--active-now-card-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-card-padding-block", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-card-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-card-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--active-now-card-shadow", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--active-now-context-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-content-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-content-padding-block-end", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-content-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-header-padding-block-end", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-header-padding-block-start", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-header-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--active-now-sidebar-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--alert-caution-color", kind: "color", groupId: "alerts", groupLabel: "Alerts & callouts", source: "color-system"},
 	{name: "--alert-important-color", kind: "color", groupId: "alerts", groupLabel: "Alerts & callouts", source: "color-system"},
 	{name: "--alert-note-color", kind: "color", groupId: "alerts", groupLabel: "Alerts & callouts", source: "color-system"},
@@ -57,6 +549,7 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--ansi-fg-yellow", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--ansi-inverse-bg", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--ansi-inverse-text", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
+	{name: "--avatar-stack-extra-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--background-channel-header", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "color-system"},
 	{name: "--background-header-primary", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "color-system"},
 	{name: "--background-header-primary-hover", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "color-system"},
@@ -87,8 +580,15 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--border-color-hover", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--brand-primary", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-primary-fill", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-foreground", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-primary-light", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-light-fill", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-pressed", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-shade", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-secondary", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint-border", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint-hover", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--button-danger-active-fill", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-danger-fill", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-danger-outline-active-border", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
@@ -110,7 +610,24 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--button-secondary-active-text", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-secondary-fill", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-secondary-text", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
+	{name: "--channel-header-action-icon-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-action-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-action-size-mobile", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-actions-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-back-button-gap", kind: "dimension", groupId: "buttons", groupLabel: "Buttons", source: "globals"},
+	{name: "--channel-header-back-button-size", kind: "dimension", groupId: "buttons", groupLabel: "Buttons", source: "globals"},
+	{name: "--channel-header-back-icon-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-caret-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-caret-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-icon-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-name-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-name-gap-group-dm", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--channel-header-topic-divider-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--chat-horizontal-padding", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "runtime-accessibility"},
+	{name: "--chat-horizontal-padding-default", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--chat-mobile-horizontal-padding", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--code-block-bg", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--code-block-border", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--code-block-highlight", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
@@ -123,6 +640,11 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--composer-box-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--composer-mobile-box-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--composer-mobile-padding-y", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--composer-status-line-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--composer-status-row-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--composer-status-safe-area", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--composer-status-safe-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--composer-surface-color", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
 	{name: "--content-padding", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--content-padding-lg", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--content-padding-sm", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
@@ -134,14 +656,21 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--control-button-hover-text", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--control-button-normal-bg", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--control-button-normal-text", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
+	{name: "--count-indicator-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--discovery-card-description-min-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--dm-sidebar-mobile-header-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--emoji-size-emoji", kind: "dimension", groupId: "emoji", groupLabel: "Emoji", source: "globals"},
 	{name: "--emoji-size-jumbo-emoji", kind: "dimension", groupId: "emoji", groupLabel: "Emoji", source: "globals"},
 	{name: "--floating-surface-ring-color", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
 	{name: "--floating-surface-ring-color-strong", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
 	{name: "--focus-primary", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--folder-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--font-fallback-mono", kind: "other", groupId: "typography", groupLabel: "Typography", source: "app/font-fallback.css"},
+	{name: "--font-fallback-sans", kind: "other", groupId: "typography", groupLabel: "Typography", source: "app/font-fallback.css"},
 	{name: "--font-keybind", kind: "other", groupId: "typography", groupLabel: "Typography", source: "globals"},
-	{name: "--font-mono", kind: "font", groupId: "typography", groupLabel: "Typography", source: "runtime-fonts"},
-	{name: "--font-sans", kind: "font", groupId: "typography", groupLabel: "Typography", source: "runtime-fonts"},
+	{name: "--font-mono", kind: "font", groupId: "typography", groupLabel: "Typography", source: "app/font-fallback.css"},
+	{name: "--font-sans", kind: "font", groupId: "typography", groupLabel: "Typography", source: "app/font-fallback.css"},
+	{name: "--font-sans-primary", kind: "other", groupId: "typography", groupLabel: "Typography", source: "app/font-fallback.css"},
 	{name: "--font-size", kind: "dimension", groupId: "typography", groupLabel: "Typography", source: "runtime-accessibility"},
 	{name: "--font-size-xs", kind: "dimension", groupId: "typography", groupLabel: "Typography", source: "globals"},
 	{name: "--footer-box-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
@@ -152,9 +681,39 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--footer-box-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
 	{name: "--footer-row-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--form-surface-background", kind: "color", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--friend-row-action-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-action-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-avatar-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-content-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-name-line-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-padding-block", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-separator-inset", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--friend-row-separator-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--friend-row-subtext-line-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--friend-row-subtext-offset", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--guild-badge-surface", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
+	{name: "--guild-folder-expanded-surface-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--guild-icon-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--guild-icon-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-divider-base-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-divider-line-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--guild-list-foreground", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "color-system"},
+	{name: "--guild-list-indicator-bar-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-indicator-inset", kind: "dimension", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
+	{name: "--guild-list-indicator-track-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-item-box-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-item-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-list-item-target-half-extra", kind: "dimension", groupId: "surfaces", groupLabel: "Surfaces", source: "globals"},
+	{name: "--guild-list-item-target-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-members-columns", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--guild-members-columns-selectable", kind: "dimension", groupId: "tables", groupLabel: "Tables", source: "globals"},
+	{name: "--guild-members-min-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-members-min-width-selectable", kind: "dimension", groupId: "tables", groupLabel: "Tables", source: "globals"},
+	{name: "--guild-members-select-column-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--guild-members-table-row-border-width", kind: "dimension", groupId: "tables", groupLabel: "Tables", source: "globals"},
+	{name: "--guild-members-table-row-min-height", kind: "dimension", groupId: "tables", groupLabel: "Tables", source: "globals"},
+	{name: "--guilds-layout-item-bg", kind: "color", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--input-container-min-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--input-container-padding", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--input-wrapper-padding-bottom", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
@@ -167,11 +726,14 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--layout-gap-sm", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-guild-list-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-header-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--layout-header-height-mobile", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-header-popout-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--layout-member-list-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-mobile-bottom-nav-reserved-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-sidebar-width", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-user-area-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--layout-user-area-reserved-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--layout-voice-connection-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--link-decoration", kind: "other", groupId: "other", groupLabel: "Other", source: "runtime-accessibility"},
 	{name: "--list-row-min-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--macos-traffic-light-inset", kind: "dimension", groupId: "other", groupLabel: "Other", source: "globals"},
@@ -194,12 +756,26 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--markup-restricted-inline-icon-baseline-shift", kind: "dimension", groupId: "markup", groupLabel: "Markup & mentions", source: "globals"},
 	{name: "--markup-strikethrough-color", kind: "color", groupId: "markup", groupLabel: "Markup & mentions", source: "runtime-accessibility"},
 	{name: "--media-border-radius", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--member-list-group-spacer-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-content-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-content-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-name-line-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-padding-block", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-item-status-line-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-row-gap", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-scroller-padding-block-end", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-scroller-padding-block-start", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--member-list-scroller-padding-inline", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--mention-badge-medium-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
+	{name: "--mention-badge-small-size", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--message-action-bar-offset", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-avatar-align-offset", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-avatar-size", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-avatar-size-compact", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-container-margin", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
+	{name: "--message-compact-horizontal-padding", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-compact-indent", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-markdown-alert-padding-block", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-markdown-alert-padding-inline", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
@@ -208,6 +784,7 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-compact-markdown-blockquote-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-table-max-inline-size", kind: "other", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-table-min-cell-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
+	{name: "--message-compact-text-indent-from-username", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-compact-timestamp-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-compact-username-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-container-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
@@ -217,6 +794,7 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-failed-indicator-font-size", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-failed-indicator-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-failed-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
+	{name: "--message-filler-padding-bottom", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-group-spacing", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "runtime-accessibility"},
 	{name: "--message-gutter", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-highlight-bar-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
@@ -228,6 +806,9 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-mention-bg-hover", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-mention-color", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-mobile-margin", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
+	{name: "--message-preview-card-background", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-preview-card-border", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-preview-card-divider", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-replied-username-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-reply-bg", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-reply-color", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
@@ -236,6 +817,10 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-reply-spacing", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-reply-spine-radius", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-reply-spine-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
+	{name: "--message-search-bar-height", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-search-bar-icon-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-search-bar-icon-size", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-search-bar-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-sending-link-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-sending-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-spacing-y", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
@@ -250,9 +835,11 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-typing-pill-padding", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-typing-text-font-size", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-unknown-warning-color", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
+	{name: "--messages-bottom-clearance", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--mobile-bottom-nav-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--native-titlebar-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--outline-frame-border-width", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--outline-frame-radius-native", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
 	{name: "--panel-control-bg", kind: "color", groupId: "surfaces", groupLabel: "Surfaces", source: "color-system"},
 	{name: "--panel-control-border", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--panel-control-divider", kind: "color", groupId: "other", groupLabel: "Other", source: "color-system"},
@@ -276,6 +863,11 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--shadow-md", kind: "shadow", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--shadow-sm", kind: "shadow", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--shadow-xl", kind: "shadow", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
+	{name: "--skeleton-chrome-border", kind: "other", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--skeleton-chrome-border-color", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
+	{name: "--skeleton-opacity-default", kind: "number", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--skeleton-opacity-muted", kind: "number", groupId: "other", groupLabel: "Other", source: "globals"},
+	{name: "--skeleton-opacity-strong", kind: "number", groupId: "other", groupLabel: "Other", source: "globals"},
 	{name: "--slowmode-indicator-height", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--spacing-0", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
 	{name: "--spacing-1", kind: "dimension", groupId: "layout", groupLabel: "Layout", source: "globals"},
@@ -310,6 +902,9 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--text-code", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--text-link", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-on-brand-primary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-brand-primary-light", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-brand-tint", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-dark", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-primary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-primary-muted", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-secondary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
@@ -318,22 +913,19 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--text-tertiary-muted", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-tertiary-secondary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-warning", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
-	{name: "--textarea-button-compact-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-button-compact-icon-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-button-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-button-icon-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-button-min-width", kind: "other", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-button-padding-x", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-container-padding-x", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-container-padding-y", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-content-offset", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-font-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
-	{name: "--textarea-line-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
+	{name: "--textarea-button-compact-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-button-compact-icon-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-button-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-button-icon-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-container-padding-x", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-content-offset", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-font-size", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
+	{name: "--textarea-line-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--textarea-min-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--textarea-padding-y", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
-	{name: "--textarea-side-button-padding", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
+	{name: "--textarea-side-button-padding", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--textarea-top-bar-height", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
-	{name: "--textarea-upload-gap", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "features/channel/components/textarea/TextareaInput.module.css"},
+	{name: "--textarea-upload-gap", kind: "dimension", groupId: "forms", groupLabel: "Forms", source: "globals"},
 	{name: "--theme-border", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--theme-border-width", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--transition-fast", kind: "transition", groupId: "motion", groupLabel: "Motion", source: "color-system"},
@@ -375,6 +967,24 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--accent-purple",
 	"--accent-success",
 	"--accent-warning",
+	"--active-now-action-gap",
+	"--active-now-action-height",
+	"--active-now-action-padding-block",
+	"--active-now-action-padding-inline",
+	"--active-now-action-radius",
+	"--active-now-card-gap",
+	"--active-now-card-padding-block",
+	"--active-now-card-padding-inline",
+	"--active-now-card-radius",
+	"--active-now-card-shadow",
+	"--active-now-context-gap",
+	"--active-now-sidebar-content-gap",
+	"--active-now-sidebar-content-padding-block-end",
+	"--active-now-sidebar-content-padding-inline",
+	"--active-now-sidebar-header-padding-block-end",
+	"--active-now-sidebar-header-padding-block-start",
+	"--active-now-sidebar-header-padding-inline",
+	"--active-now-sidebar-width",
 	"--alert-caution-color",
 	"--alert-important-color",
 	"--alert-note-color",
@@ -414,6 +1024,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--ansi-fg-yellow",
 	"--ansi-inverse-bg",
 	"--ansi-inverse-text",
+	"--avatar-stack-extra-height",
 	"--background-channel-header",
 	"--background-header-primary",
 	"--background-header-primary-hover",
@@ -444,8 +1055,15 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--border-color-hover",
 	"--brand-primary",
 	"--brand-primary-fill",
+	"--brand-primary-foreground",
 	"--brand-primary-light",
+	"--brand-primary-light-fill",
+	"--brand-primary-pressed",
+	"--brand-primary-shade",
 	"--brand-secondary",
+	"--brand-tint",
+	"--brand-tint-border",
+	"--brand-tint-hover",
 	"--button-danger-active-fill",
 	"--button-danger-fill",
 	"--button-danger-outline-active-border",
@@ -467,7 +1085,24 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--button-secondary-active-text",
 	"--button-secondary-fill",
 	"--button-secondary-text",
+	"--channel-header-action-icon-size",
+	"--channel-header-action-size",
+	"--channel-header-action-size-mobile",
+	"--channel-header-actions-gap",
+	"--channel-header-back-button-gap",
+	"--channel-header-back-button-size",
+	"--channel-header-back-icon-size",
+	"--channel-header-caret-gap",
+	"--channel-header-caret-size",
+	"--channel-header-gap",
+	"--channel-header-icon-size",
+	"--channel-header-name-gap",
+	"--channel-header-name-gap-group-dm",
+	"--channel-header-padding-inline",
+	"--channel-header-topic-divider-gap",
 	"--chat-horizontal-padding",
+	"--chat-horizontal-padding-default",
+	"--chat-mobile-horizontal-padding",
 	"--code-block-bg",
 	"--code-block-border",
 	"--code-block-highlight",
@@ -480,6 +1115,11 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--composer-box-padding-inline",
 	"--composer-mobile-box-height",
 	"--composer-mobile-padding-y",
+	"--composer-status-line-height",
+	"--composer-status-row-height",
+	"--composer-status-safe-area",
+	"--composer-status-safe-gap",
+	"--composer-surface-color",
 	"--content-padding",
 	"--content-padding-lg",
 	"--content-padding-sm",
@@ -491,14 +1131,21 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--control-button-hover-text",
 	"--control-button-normal-bg",
 	"--control-button-normal-text",
+	"--count-indicator-gap",
+	"--discovery-card-description-min-height",
+	"--dm-sidebar-mobile-header-height",
 	"--emoji-size-emoji",
 	"--emoji-size-jumbo-emoji",
 	"--floating-surface-ring-color",
 	"--floating-surface-ring-color-strong",
 	"--focus-primary",
+	"--folder-radius",
+	"--font-fallback-mono",
+	"--font-fallback-sans",
 	"--font-keybind",
 	"--font-mono",
 	"--font-sans",
+	"--font-sans-primary",
 	"--font-size",
 	"--font-size-xs",
 	"--footer-box-height",
@@ -509,9 +1156,39 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--footer-box-radius",
 	"--footer-row-height",
 	"--form-surface-background",
+	"--friend-row-action-gap",
+	"--friend-row-action-size",
+	"--friend-row-avatar-size",
+	"--friend-row-content-gap",
+	"--friend-row-name-line-height",
+	"--friend-row-padding-block",
+	"--friend-row-padding-inline",
+	"--friend-row-separator-inset",
+	"--friend-row-separator-radius",
+	"--friend-row-subtext-line-height",
+	"--friend-row-subtext-offset",
+	"--guild-badge-surface",
+	"--guild-folder-expanded-surface-size",
 	"--guild-icon-gap",
 	"--guild-icon-size",
+	"--guild-list-divider-base-gap",
+	"--guild-list-divider-line-size",
 	"--guild-list-foreground",
+	"--guild-list-indicator-bar-width",
+	"--guild-list-indicator-inset",
+	"--guild-list-indicator-track-width",
+	"--guild-list-item-box-size",
+	"--guild-list-item-gap",
+	"--guild-list-item-target-half-extra",
+	"--guild-list-item-target-size",
+	"--guild-members-columns",
+	"--guild-members-columns-selectable",
+	"--guild-members-min-width",
+	"--guild-members-min-width-selectable",
+	"--guild-members-select-column-width",
+	"--guild-members-table-row-border-width",
+	"--guild-members-table-row-min-height",
+	"--guilds-layout-item-bg",
 	"--input-container-min-height",
 	"--input-container-padding",
 	"--input-wrapper-padding-bottom",
@@ -524,11 +1201,14 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--layout-gap-sm",
 	"--layout-guild-list-width",
 	"--layout-header-height",
+	"--layout-header-height-mobile",
 	"--layout-header-popout-width",
+	"--layout-member-list-width",
 	"--layout-mobile-bottom-nav-reserved-height",
 	"--layout-sidebar-width",
 	"--layout-user-area-height",
 	"--layout-user-area-reserved-height",
+	"--layout-voice-connection-height",
 	"--link-decoration",
 	"--list-row-min-height",
 	"--macos-traffic-light-inset",
@@ -551,12 +1231,26 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--markup-restricted-inline-icon-baseline-shift",
 	"--markup-strikethrough-color",
 	"--media-border-radius",
+	"--member-list-group-spacer-height",
+	"--member-list-item-content-gap",
+	"--member-list-item-content-height",
+	"--member-list-item-name-line-height",
+	"--member-list-item-padding-block",
+	"--member-list-item-padding-inline",
+	"--member-list-item-status-line-height",
+	"--member-list-row-gap",
+	"--member-list-scroller-padding-block-end",
+	"--member-list-scroller-padding-block-start",
+	"--member-list-scroller-padding-inline",
+	"--mention-badge-medium-size",
+	"--mention-badge-small-size",
 	"--message-action-bar-offset",
 	"--message-avatar-align-offset",
 	"--message-avatar-size",
 	"--message-avatar-size-compact",
 	"--message-compact-container-margin",
 	"--message-compact-gap",
+	"--message-compact-horizontal-padding",
 	"--message-compact-indent",
 	"--message-compact-markdown-alert-padding-block",
 	"--message-compact-markdown-alert-padding-inline",
@@ -565,6 +1259,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-compact-markdown-blockquote-gap",
 	"--message-compact-table-max-inline-size",
 	"--message-compact-table-min-cell-width",
+	"--message-compact-text-indent-from-username",
 	"--message-compact-timestamp-width",
 	"--message-compact-username-gap",
 	"--message-container-gap",
@@ -574,6 +1269,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-failed-indicator-font-size",
 	"--message-failed-indicator-gap",
 	"--message-failed-opacity",
+	"--message-filler-padding-bottom",
 	"--message-group-spacing",
 	"--message-gutter",
 	"--message-highlight-bar-width",
@@ -585,6 +1281,9 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-mention-bg-hover",
 	"--message-mention-color",
 	"--message-mobile-margin",
+	"--message-preview-card-background",
+	"--message-preview-card-border",
+	"--message-preview-card-divider",
 	"--message-replied-username-opacity",
 	"--message-reply-bg",
 	"--message-reply-color",
@@ -593,6 +1292,10 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-reply-spacing",
 	"--message-reply-spine-radius",
 	"--message-reply-spine-width",
+	"--message-search-bar-height",
+	"--message-search-bar-icon-gap",
+	"--message-search-bar-icon-size",
+	"--message-search-bar-width",
 	"--message-sending-link-opacity",
 	"--message-sending-opacity",
 	"--message-spacing-y",
@@ -607,9 +1310,11 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-typing-pill-padding",
 	"--message-typing-text-font-size",
 	"--message-unknown-warning-color",
+	"--messages-bottom-clearance",
 	"--mobile-bottom-nav-height",
 	"--native-titlebar-height",
 	"--outline-frame-border-width",
+	"--outline-frame-radius-native",
 	"--panel-control-bg",
 	"--panel-control-border",
 	"--panel-control-divider",
@@ -633,6 +1338,11 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--shadow-md",
 	"--shadow-sm",
 	"--shadow-xl",
+	"--skeleton-chrome-border",
+	"--skeleton-chrome-border-color",
+	"--skeleton-opacity-default",
+	"--skeleton-opacity-muted",
+	"--skeleton-opacity-strong",
 	"--slowmode-indicator-height",
 	"--spacing-0",
 	"--spacing-1",
@@ -667,6 +1377,9 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--text-code",
 	"--text-link",
 	"--text-on-brand-primary",
+	"--text-on-brand-primary-light",
+	"--text-on-brand-tint",
+	"--text-on-dark",
 	"--text-primary",
 	"--text-primary-muted",
 	"--text-secondary",
@@ -679,10 +1392,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--textarea-button-compact-icon-size",
 	"--textarea-button-height",
 	"--textarea-button-icon-size",
-	"--textarea-button-min-width",
-	"--textarea-button-padding-x",
 	"--textarea-container-padding-x",
-	"--textarea-container-padding-y",
 	"--textarea-content-offset",
 	"--textarea-font-size",
 	"--textarea-line-height",
@@ -725,190 +1435,6 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--z-index-tooltip",
 ];
 
-export const THEME_COLOR_VARIABLES: ReadonlyArray<string> = [
-	"--accent-danger",
-	"--accent-info",
-	"--accent-primary",
-	"--accent-purple",
-	"--accent-success",
-	"--accent-warning",
-	"--alert-caution-color",
-	"--alert-important-color",
-	"--alert-note-color",
-	"--alert-tip-color",
-	"--alert-warning-color",
-	"--ansi-bg-black",
-	"--ansi-bg-blue",
-	"--ansi-bg-bright-black",
-	"--ansi-bg-bright-blue",
-	"--ansi-bg-bright-cyan",
-	"--ansi-bg-bright-green",
-	"--ansi-bg-bright-magenta",
-	"--ansi-bg-bright-red",
-	"--ansi-bg-bright-white",
-	"--ansi-bg-bright-yellow",
-	"--ansi-bg-cyan",
-	"--ansi-bg-green",
-	"--ansi-bg-magenta",
-	"--ansi-bg-red",
-	"--ansi-bg-white",
-	"--ansi-bg-yellow",
-	"--ansi-fg-black",
-	"--ansi-fg-blue",
-	"--ansi-fg-bright-black",
-	"--ansi-fg-bright-blue",
-	"--ansi-fg-bright-cyan",
-	"--ansi-fg-bright-green",
-	"--ansi-fg-bright-magenta",
-	"--ansi-fg-bright-red",
-	"--ansi-fg-bright-white",
-	"--ansi-fg-bright-yellow",
-	"--ansi-fg-cyan",
-	"--ansi-fg-green",
-	"--ansi-fg-magenta",
-	"--ansi-fg-red",
-	"--ansi-fg-white",
-	"--ansi-fg-yellow",
-	"--ansi-inverse-bg",
-	"--ansi-inverse-text",
-	"--background-channel-header",
-	"--background-header-primary",
-	"--background-header-primary-hover",
-	"--background-header-secondary",
-	"--background-modifier-accent",
-	"--background-modifier-accent-focus",
-	"--background-modifier-hover",
-	"--background-modifier-selected",
-	"--background-primary",
-	"--background-secondary",
-	"--background-secondary-alt",
-	"--background-secondary-lighter",
-	"--background-tertiary",
-	"--background-textarea",
-	"--bg-active",
-	"--bg-blockquote",
-	"--bg-code",
-	"--bg-code-block",
-	"--bg-hover",
-	"--bg-primary",
-	"--bg-secondary",
-	"--bg-table-header",
-	"--bg-table-row-even",
-	"--bg-table-row-odd",
-	"--bg-tertiary",
-	"--border-color",
-	"--border-color-focus",
-	"--border-color-hover",
-	"--brand-primary",
-	"--brand-primary-fill",
-	"--brand-primary-light",
-	"--brand-secondary",
-	"--button-danger-active-fill",
-	"--button-danger-fill",
-	"--button-danger-outline-active-border",
-	"--button-danger-outline-active-fill",
-	"--button-danger-outline-text",
-	"--button-danger-text",
-	"--button-ghost-text",
-	"--button-inverted-fill",
-	"--button-inverted-text",
-	"--button-outline-active-fill",
-	"--button-outline-text",
-	"--button-primary-active-fill",
-	"--button-primary-fill",
-	"--button-primary-text",
-	"--button-secondary-active-fill",
-	"--button-secondary-active-text",
-	"--button-secondary-fill",
-	"--button-secondary-text",
-	"--code-block-bg",
-	"--code-block-border",
-	"--code-block-highlight",
-	"--code-inline-bg",
-	"--code-muted",
-	"--code-text",
-	"--control-button-active-bg",
-	"--control-button-active-text",
-	"--control-button-danger-hover-bg",
-	"--control-button-danger-text",
-	"--control-button-hover-bg",
-	"--control-button-hover-text",
-	"--control-button-normal-bg",
-	"--control-button-normal-text",
-	"--floating-surface-ring-color",
-	"--floating-surface-ring-color-strong",
-	"--focus-primary",
-	"--form-surface-background",
-	"--guild-list-foreground",
-	"--interactive-active",
-	"--interactive-muted",
-	"--invite-verified-icon-color",
-	"--markup-everyone-border",
-	"--markup-everyone-fill",
-	"--markup-everyone-text",
-	"--markup-here-border",
-	"--markup-here-fill",
-	"--markup-here-text",
-	"--markup-interactive-hover-fill",
-	"--markup-interactive-hover-text",
-	"--markup-jump-link-fill",
-	"--markup-jump-link-hover-fill",
-	"--markup-jump-link-text",
-	"--markup-mention-border",
-	"--markup-mention-fill",
-	"--markup-mention-text",
-	"--markup-strikethrough-color",
-	"--message-mention-bg",
-	"--message-mention-bg-hover",
-	"--message-mention-color",
-	"--message-reply-bg",
-	"--message-reply-color",
-	"--message-timestamp-color",
-	"--message-unknown-warning-color",
-	"--panel-control-bg",
-	"--panel-control-border",
-	"--panel-control-divider",
-	"--panel-control-highlight",
-	"--plutonium",
-	"--plutonium-hover",
-	"--plutonium-icon",
-	"--plutonium-text",
-	"--scrollbar-thumb-bg",
-	"--scrollbar-thumb-bg-hover",
-	"--scrollbar-track-bg",
-	"--spoiler-overlay-color",
-	"--spoiler-overlay-hover-color",
-	"--status-danger",
-	"--status-dnd",
-	"--status-idle",
-	"--status-offline",
-	"--status-online",
-	"--status-warning",
-	"--surface-interactive-hover-bg",
-	"--surface-interactive-selected-bg",
-	"--surface-interactive-selected-color",
-	"--text-chat",
-	"--text-chat-muted",
-	"--text-code",
-	"--text-link",
-	"--text-on-brand-primary",
-	"--text-primary",
-	"--text-primary-muted",
-	"--text-secondary",
-	"--text-selection",
-	"--text-tertiary",
-	"--text-tertiary-muted",
-	"--text-tertiary-secondary",
-	"--text-warning",
-	"--theme-border",
-	"--user-area-divider-color",
-];
-
-export const THEME_FONT_VARIABLES: ReadonlyArray<string> = [
-	"--font-mono",
-	"--font-sans",
-];
-
 export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, string>> = {
 	"--accent-danger": "hsl(0, calc(84% * var(--saturation-factor)), 60%)",
 	"--accent-info": "hsl(198, calc(92% * var(--saturation-factor)), 70%)",
@@ -916,6 +1442,24 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--accent-purple": "hsl(278, calc(85% * var(--saturation-factor)), 65%)",
 	"--accent-success": "hsl(152, calc(72% * var(--saturation-factor)), 40%)",
 	"--accent-warning": "hsl(45, calc(93% * var(--saturation-factor)), 50%)",
+	"--active-now-action-gap": "0.375rem",
+	"--active-now-action-height": "2rem",
+	"--active-now-action-padding-block": "0.3125rem",
+	"--active-now-action-padding-inline": "0.625rem",
+	"--active-now-action-radius": "0.5rem",
+	"--active-now-card-gap": "0.75rem",
+	"--active-now-card-padding-block": "0.75rem",
+	"--active-now-card-padding-inline": "0.875rem",
+	"--active-now-card-radius": "0.375rem",
+	"--active-now-card-shadow": "0 0.375rem 1.125rem rgba(0, 0, 0, 0.08)",
+	"--active-now-context-gap": "0.375rem",
+	"--active-now-sidebar-content-gap": "0.5rem",
+	"--active-now-sidebar-content-padding-block-end": "0.75rem",
+	"--active-now-sidebar-content-padding-inline": "0.75rem",
+	"--active-now-sidebar-header-padding-block-end": "0.75rem",
+	"--active-now-sidebar-header-padding-block-start": "1rem",
+	"--active-now-sidebar-header-padding-inline": "1rem",
+	"--active-now-sidebar-width": "22rem",
 	"--alert-caution-color": "hsl(359, calc(75% * var(--saturation-factor)), 60%)",
 	"--alert-important-color": "hsl(278, calc(85% * var(--saturation-factor)), 65%)",
 	"--alert-note-color": "hsl(198, calc(92% * var(--saturation-factor)), 70%)",
@@ -955,6 +1499,7 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--ansi-fg-yellow": "color-mix(in srgb, hsl(41, calc(53% * var(--saturation-factor)), 67%) 92%, color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%) 8%)",
 	"--ansi-inverse-bg": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%)",
 	"--ansi-inverse-text": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 14.15%) 92%, hsl(258, calc(10% * var(--saturation-factor)), 5%) 8%)",
+	"--avatar-stack-extra-height": "0.375rem",
 	"--background-channel-header": "hsl(258, calc(10% * var(--saturation-factor)), 15.72%)",
 	"--background-header-primary": "hsl(258, calc(10% * var(--saturation-factor)), 19.25%)",
 	"--background-header-primary-hover": "hsl(258, calc(10% * var(--saturation-factor)), 23.57%)",
@@ -985,8 +1530,15 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--border-color-hover": "hsla(258, calc(10% * var(--saturation-factor)), 50%, 0.3)",
 	"--brand-primary": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-foreground": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-light": "hsl(242, calc(100% * var(--saturation-factor)), 84%)",
+	"--brand-primary-light-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-pressed": "color-mix(in srgb, hsl(242, calc(70% * var(--saturation-factor)), 55%) 90%, hsl(0, 0%, 0%))",
+	"--brand-primary-shade": "hsl(0, 0%, 0%)",
 	"--brand-secondary": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
+	"--brand-tint": "color-mix(in srgb, var(--brand-primary) 36%, var(--background-secondary) 64%)",
+	"--brand-tint-border": "var(--brand-primary)",
+	"--brand-tint-hover": "color-mix(in srgb, var(--brand-primary) 48%, var(--background-secondary) 52%)",
 	"--button-danger-active-fill": "hsl(359, calc(65% * var(--saturation-factor)), 45%)",
 	"--button-danger-fill": "hsl(359, calc(70% * var(--saturation-factor)), 54%)",
 	"--button-danger-outline-active-border": "transparent",
@@ -1008,7 +1560,24 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--button-secondary-active-text": "hsl(0, 0%, 100%)",
 	"--button-secondary-fill": "hsla(0, 0%, 100%, 0.1)",
 	"--button-secondary-text": "hsl(0, 0%, 100%)",
+	"--channel-header-action-icon-size": "1.5rem",
+	"--channel-header-action-size": "2rem",
+	"--channel-header-action-size-mobile": "2.5rem",
+	"--channel-header-actions-gap": "0.5rem",
+	"--channel-header-back-button-gap": "0.75rem",
+	"--channel-header-back-button-size": "2rem",
+	"--channel-header-back-icon-size": "1.5rem",
+	"--channel-header-caret-gap": "0.25rem",
+	"--channel-header-caret-size": "1rem",
+	"--channel-header-gap": "1rem",
+	"--channel-header-icon-size": "1.5rem",
+	"--channel-header-name-gap": "0.75rem",
+	"--channel-header-name-gap-group-dm": "0.5rem",
+	"--channel-header-padding-inline": "1rem",
+	"--channel-header-topic-divider-gap": "0.5rem",
 	"--chat-horizontal-padding": "1rem",
+	"--chat-horizontal-padding-default": "1rem",
+	"--chat-mobile-horizontal-padding": "0.75rem",
 	"--code-block-bg": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 14.15%) 92%, hsl(258, calc(10% * var(--saturation-factor)), 5%) 8%)",
 	"--code-block-border": "color-mix(in srgb, hsla(258, calc(10% * var(--saturation-factor)), 50%, 0.2) 90%, color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%) 10%)",
 	"--code-block-highlight": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 96%) 10%, transparent)",
@@ -1017,10 +1586,15 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--code-text": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%)",
 	"--composer-action-gap": "0.25rem",
 	"--composer-box-inset": "max(0rem, calc((calc(3.625rem + 0.375rem * 2) - 3.625rem) / 2))",
-	"--composer-box-inset-inline": "min(0.375rem, 1rem)",
-	"--composer-box-padding-inline": "max( 0rem, calc(1rem - min(0.375rem, 1rem)) )",
+	"--composer-box-inset-inline": "min( 0.375rem, 1rem )",
+	"--composer-box-padding-inline": "max( 0rem, calc(1rem - min( 0.375rem, 1rem )) )",
 	"--composer-mobile-box-height": "3rem",
 	"--composer-mobile-padding-y": "max( 0rem, calc((3rem - 2rem) / 2) )",
+	"--composer-status-line-height": "1.125rem",
+	"--composer-status-row-height": "1.5rem",
+	"--composer-status-safe-area": "calc(1.5rem + 0.5rem)",
+	"--composer-status-safe-gap": "0.5rem",
+	"--composer-surface-color": "hsl(258, calc(10% * var(--saturation-factor)), 12.44%)",
 	"--content-padding": "1rem",
 	"--content-padding-lg": "1.5rem",
 	"--content-padding-sm": "0.75rem",
@@ -1032,14 +1606,21 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--control-button-hover-text": "hsl(258, calc(10% * var(--saturation-factor)), 96%)",
 	"--control-button-normal-bg": "transparent",
 	"--control-button-normal-text": "hsl(258, calc(10% * var(--saturation-factor)), 81.42%)",
+	"--count-indicator-gap": "0.25rem",
+	"--discovery-card-description-min-height": "5.25rem",
+	"--dm-sidebar-mobile-header-height": "3.5rem",
 	"--emoji-size-emoji": "1.5em",
 	"--emoji-size-jumbo-emoji": "3rem",
 	"--floating-surface-ring-color": "color-mix(in srgb, hsla(258, calc(13% * var(--saturation-factor)), 80%, 0.15) 20%, transparent)",
 	"--floating-surface-ring-color-strong": "color-mix(in srgb, hsla(258, calc(13% * var(--saturation-factor)), 80%, 0.15) 45%, transparent)",
 	"--focus-primary": "#00b0f4",
-	"--font-keybind": "-apple-system, BlinkMacSystemFont, 'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
-	"--font-mono": "'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
-	"--font-sans": "'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+	"--folder-radius": "calc(3rem * 0.3)",
+	"--font-fallback-mono": "'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math'",
+	"--font-fallback-sans": "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math'",
+	"--font-keybind": "-apple-system, BlinkMacSystemFont, 'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', sans-serif",
+	"--font-mono": "'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', 'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', monospace",
+	"--font-sans": "'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', sans-serif",
+	"--font-sans-primary": "'Fluxer Sans'",
 	"--font-size": "1rem",
 	"--font-size-xs": "0.75rem",
 	"--footer-box-height": "3.625rem",
@@ -1050,9 +1631,39 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--footer-box-radius": "0.5rem",
 	"--footer-row-height": "calc(3.625rem + 0.375rem * 2)",
 	"--form-surface-background": "hsl(258, calc(10% * var(--saturation-factor)), 17.16%)",
+	"--friend-row-action-gap": "0.5rem",
+	"--friend-row-action-size": "2.25rem",
+	"--friend-row-avatar-size": "2.25rem",
+	"--friend-row-content-gap": "0.75rem",
+	"--friend-row-name-line-height": "1.25rem",
+	"--friend-row-padding-block": "0.75rem",
+	"--friend-row-padding-inline": "1rem",
+	"--friend-row-separator-inset": "0 0.4rem 0 0.5rem",
+	"--friend-row-separator-radius": "0.375rem",
+	"--friend-row-subtext-line-height": "1rem",
+	"--friend-row-subtext-offset": "-0.0625rem",
+	"--guild-badge-surface": "hsl(258, calc(10% * var(--saturation-factor)), 10.59%)",
+	"--guild-folder-expanded-surface-size": "3rem",
 	"--guild-icon-gap": "0.5rem",
 	"--guild-icon-size": "2.75rem",
+	"--guild-list-divider-base-gap": "0.375rem",
+	"--guild-list-divider-line-size": "0.125rem",
 	"--guild-list-foreground": "hsl(258, calc(10% * var(--saturation-factor)), 16.7%)",
+	"--guild-list-indicator-bar-width": "0.35rem",
+	"--guild-list-indicator-inset": "-0.15rem",
+	"--guild-list-indicator-track-width": "0.5rem",
+	"--guild-list-item-box-size": "3rem",
+	"--guild-list-item-gap": "0.375rem",
+	"--guild-list-item-target-half-extra": "calc((calc(3rem + 0.375rem) - 3rem) / 2)",
+	"--guild-list-item-target-size": "calc(3rem + 0.375rem)",
+	"--guild-members-columns": "minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr) minmax(10rem, 1.35fr) 4.5rem",
+	"--guild-members-columns-selectable": "2.75rem minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr) minmax(10rem, 1.35fr) 4.5rem",
+	"--guild-members-min-width": "calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem)",
+	"--guild-members-min-width-selectable": "calc(2.75rem + calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem))",
+	"--guild-members-select-column-width": "2.75rem",
+	"--guild-members-table-row-border-width": "0.0625rem",
+	"--guild-members-table-row-min-height": "3rem",
+	"--guilds-layout-item-bg": "hsl(258, calc(10% * var(--saturation-factor)), 16.7%)",
 	"--input-container-min-height": "calc(3.625rem + 0.375rem * 2)",
 	"--input-container-padding": "0.625rem",
 	"--input-wrapper-padding-bottom": "0.5rem",
@@ -1065,11 +1676,14 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--layout-gap-sm": "0.5rem",
 	"--layout-guild-list-width": "4.5rem",
 	"--layout-header-height": "3.5rem",
+	"--layout-header-height-mobile": "4rem",
 	"--layout-header-popout-width": "calc(20rem - (1rem * 2))",
+	"--layout-member-list-width": "16.5rem",
 	"--layout-mobile-bottom-nav-reserved-height": "0px",
 	"--layout-sidebar-width": "20rem",
 	"--layout-user-area-height": "3.625rem",
 	"--layout-user-area-reserved-height": "0px",
+	"--layout-voice-connection-height": "0px",
 	"--link-decoration": "none",
 	"--list-row-min-height": "4.5rem",
 	"--macos-traffic-light-inset": "78px",
@@ -1092,12 +1706,26 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--markup-restricted-inline-icon-baseline-shift": "-0.125em",
 	"--markup-strikethrough-color": "currentColor",
 	"--media-border-radius": "0.25rem",
+	"--member-list-group-spacer-height": "0.25rem",
+	"--member-list-item-content-gap": "0.625rem",
+	"--member-list-item-content-height": "2rem",
+	"--member-list-item-name-line-height": "1.25rem",
+	"--member-list-item-padding-block": "0.25rem",
+	"--member-list-item-padding-inline": "0.5rem",
+	"--member-list-item-status-line-height": "0.875rem",
+	"--member-list-row-gap": "0.125rem",
+	"--member-list-scroller-padding-block-end": "1rem",
+	"--member-list-scroller-padding-block-start": "0.25rem",
+	"--member-list-scroller-padding-inline": "0.5rem",
+	"--mention-badge-medium-size": "1.5rem",
+	"--mention-badge-small-size": "1.25rem",
 	"--message-action-bar-offset": "3rem",
 	"--message-avatar-align-offset": "clamp(0px, calc((1.375rem * 2 - 2.5rem) / 2), 0.5rem)",
 	"--message-avatar-size": "2.5rem",
 	"--message-avatar-size-compact": "1rem",
 	"--message-compact-container-margin": "calc(3.5rem + 0.25rem)",
 	"--message-compact-gap": "0.25rem",
+	"--message-compact-horizontal-padding": "min( 1rem, 1rem )",
 	"--message-compact-indent": "calc(3.5rem + 0.25rem)",
 	"--message-compact-markdown-alert-padding-block": "0.35rem",
 	"--message-compact-markdown-alert-padding-inline": "0.75rem",
@@ -1106,6 +1734,7 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-compact-markdown-blockquote-gap": "0.25rem",
 	"--message-compact-table-max-inline-size": "100%",
 	"--message-compact-table-min-cell-width": "5rem",
+	"--message-compact-text-indent-from-username": "2rem",
 	"--message-compact-timestamp-width": "3.5rem",
 	"--message-compact-username-gap": "0.45rem",
 	"--message-container-gap": "0.25rem",
@@ -1115,6 +1744,7 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-failed-indicator-font-size": "0.75rem",
 	"--message-failed-indicator-gap": "0.375rem",
 	"--message-failed-opacity": "0.5",
+	"--message-filler-padding-bottom": "0.75rem",
 	"--message-group-spacing": "1rem",
 	"--message-gutter": "0.75rem",
 	"--message-highlight-bar-width": "0.125rem",
@@ -1126,6 +1756,9 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-mention-bg-hover": "rgb(234 197 50 / 0.14)",
 	"--message-mention-color": "rgb(234 197 50)",
 	"--message-mobile-margin": "0.75rem",
+	"--message-preview-card-background": "hsla(0, 0%, 100%, 0.022)",
+	"--message-preview-card-border": "hsla(0, 0%, 100%, 0.07)",
+	"--message-preview-card-divider": "hsla(0, 0%, 100%, 0.05)",
 	"--message-replied-username-opacity": "0.64",
 	"--message-reply-bg": "rgb(59 130 246 / 0.1)",
 	"--message-reply-color": "rgb(59 130 246)",
@@ -1134,6 +1767,10 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-reply-spacing": "0.25rem",
 	"--message-reply-spine-radius": "0.375rem",
 	"--message-reply-spine-width": "0.125rem",
+	"--message-search-bar-height": "2.25rem",
+	"--message-search-bar-icon-gap": "0.5rem",
+	"--message-search-bar-icon-size": "1rem",
+	"--message-search-bar-width": "15.25rem",
 	"--message-sending-link-opacity": "0.7",
 	"--message-sending-opacity": "0.5",
 	"--message-spacing-y": "0.125rem",
@@ -1148,9 +1785,11 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-typing-pill-padding": "0.45rem",
 	"--message-typing-text-font-size": "0.6875rem",
 	"--message-unknown-warning-color": "#ff9933",
+	"--messages-bottom-clearance": "1.5rem",
 	"--mobile-bottom-nav-height": "3.75rem",
 	"--native-titlebar-height": "2rem",
 	"--outline-frame-border-width": "0.0625rem",
+	"--outline-frame-radius-native": "clamp(0.5rem, 1.2vw, 0.875rem)",
 	"--panel-control-bg": "color-mix( in srgb, hsl(258, calc(10% * var(--saturation-factor)), 14.15%) 90%, hsl(258, calc(10% * var(--saturation-factor)), 2%) 10% )",
 	"--panel-control-border": "hsla(258, calc(30% * var(--saturation-factor)), 65%, 0.45)",
 	"--panel-control-divider": "hsla(258, calc(30% * var(--saturation-factor)), 55%, 0.35)",
@@ -1174,6 +1813,11 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--shadow-md": "0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)",
 	"--shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.1)",
 	"--shadow-xl": "0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)",
+	"--skeleton-chrome-border": "0.0625rem solid color-mix(in srgb, hsla(258, calc(13% * var(--saturation-factor)), 80%, 0.15) 25%, transparent)",
+	"--skeleton-chrome-border-color": "color-mix(in srgb, hsla(258, calc(13% * var(--saturation-factor)), 80%, 0.15) 25%, transparent)",
+	"--skeleton-opacity-default": "0.45",
+	"--skeleton-opacity-muted": "0.35",
+	"--skeleton-opacity-strong": "0.55",
 	"--slowmode-indicator-height": "1rem",
 	"--spacing-0": "0px",
 	"--spacing-1": "0.25rem",
@@ -1208,6 +1852,9 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--text-code": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%)",
 	"--text-link": "hsl(198, calc(92% * var(--saturation-factor)), 70%)",
 	"--text-on-brand-primary": "hsl(0, 0%, 98%)",
+	"--text-on-brand-primary-light": "hsl(0, 0%, 98%)",
+	"--text-on-brand-tint": "var(--text-on-brand-primary)",
+	"--text-on-dark": "hsl(0, 0%, 98%)",
 	"--text-primary": "hsl(258, calc(10% * var(--saturation-factor)), 96%)",
 	"--text-primary-muted": "hsl(258, calc(10% * var(--saturation-factor)), 81.42%)",
 	"--text-secondary": "hsl(258, calc(10% * var(--saturation-factor)), 90.36%)",
@@ -1220,10 +1867,7 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--textarea-button-compact-icon-size": "1.25rem",
 	"--textarea-button-height": "2rem",
 	"--textarea-button-icon-size": "1.375rem",
-	"--textarea-button-min-width": "auto",
-	"--textarea-button-padding-x": "0px",
 	"--textarea-container-padding-x": "0px",
-	"--textarea-container-padding-y": "0px",
 	"--textarea-content-offset": "max(0rem, calc((2rem - calc(1rem * 1.375)) / 2))",
 	"--textarea-font-size": "1rem",
 	"--textarea-line-height": "calc(1rem * 1.375)",
@@ -1273,6 +1917,24 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--accent-purple": "hsl(278, calc(85% * var(--saturation-factor)), 65%)",
 	"--accent-success": "hsl(152, calc(70% * var(--saturation-factor)), 40%)",
 	"--accent-warning": "hsl(45, calc(90% * var(--saturation-factor)), 45%)",
+	"--active-now-action-gap": "0.375rem",
+	"--active-now-action-height": "2rem",
+	"--active-now-action-padding-block": "0.3125rem",
+	"--active-now-action-padding-inline": "0.625rem",
+	"--active-now-action-radius": "0.5rem",
+	"--active-now-card-gap": "0.75rem",
+	"--active-now-card-padding-block": "0.75rem",
+	"--active-now-card-padding-inline": "0.875rem",
+	"--active-now-card-radius": "0.375rem",
+	"--active-now-card-shadow": "0 0.375rem 1.125rem rgba(0, 0, 0, 0.08)",
+	"--active-now-context-gap": "0.375rem",
+	"--active-now-sidebar-content-gap": "0.5rem",
+	"--active-now-sidebar-content-padding-block-end": "0.75rem",
+	"--active-now-sidebar-content-padding-inline": "0.75rem",
+	"--active-now-sidebar-header-padding-block-end": "0.75rem",
+	"--active-now-sidebar-header-padding-block-start": "1rem",
+	"--active-now-sidebar-header-padding-inline": "1rem",
+	"--active-now-sidebar-width": "22rem",
 	"--alert-caution-color": "hsl(358, calc(80% * var(--saturation-factor)), 50%)",
 	"--alert-important-color": "hsl(278, calc(85% * var(--saturation-factor)), 50%)",
 	"--alert-note-color": "hsl(198, calc(92% * var(--saturation-factor)), 45%)",
@@ -1312,6 +1974,7 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--ansi-fg-yellow": "color-mix(in srgb, hsl(37, calc(52% * var(--saturation-factor)), 31%) 92%, color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%) 8%)",
 	"--ansi-inverse-bg": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%)",
 	"--ansi-inverse-text": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 98.5%) 88%, hsl(220, calc(10% * var(--saturation-factor)), 92.84%) 12%)",
+	"--avatar-stack-extra-height": "0.375rem",
 	"--background-channel-header": "hsl(220, calc(10% * var(--saturation-factor)), 89.13%)",
 	"--background-header-primary": "hsl(220, calc(10% * var(--saturation-factor)), 86.18%)",
 	"--background-header-primary-hover": "hsl(220, calc(10% * var(--saturation-factor)), 86%)",
@@ -1342,8 +2005,15 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--border-color-hover": "hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.25)",
 	"--brand-primary": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-foreground": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-light": "hsl(242, calc(100% * var(--saturation-factor)), 84%)",
+	"--brand-primary-light-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-pressed": "color-mix(in srgb, hsl(242, calc(70% * var(--saturation-factor)), 55%) 90%, hsl(0, 0%, 0%))",
+	"--brand-primary-shade": "hsl(0, 0%, 0%)",
 	"--brand-secondary": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
+	"--brand-tint": "color-mix(in srgb, var(--brand-primary) 12%, var(--background-primary) 88%)",
+	"--brand-tint-border": "color-mix(in srgb, var(--brand-primary) 45%, transparent 55%)",
+	"--brand-tint-hover": "color-mix(in srgb, var(--brand-primary) 18%, var(--background-primary) 82%)",
 	"--button-danger-active-fill": "hsl(359, calc(65% * var(--saturation-factor)), 45%)",
 	"--button-danger-fill": "hsl(359, calc(70% * var(--saturation-factor)), 54%)",
 	"--button-danger-outline-active-border": "transparent",
@@ -1365,7 +2035,24 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--button-secondary-active-text": "hsl(220, calc(10% * var(--saturation-factor)), 10%)",
 	"--button-secondary-fill": "hsla(220, calc(10% * var(--saturation-factor)), 10%, 0.1)",
 	"--button-secondary-text": "hsl(220, calc(10% * var(--saturation-factor)), 15%)",
+	"--channel-header-action-icon-size": "1.5rem",
+	"--channel-header-action-size": "2rem",
+	"--channel-header-action-size-mobile": "2.5rem",
+	"--channel-header-actions-gap": "0.5rem",
+	"--channel-header-back-button-gap": "0.75rem",
+	"--channel-header-back-button-size": "2rem",
+	"--channel-header-back-icon-size": "1.5rem",
+	"--channel-header-caret-gap": "0.25rem",
+	"--channel-header-caret-size": "1rem",
+	"--channel-header-gap": "1rem",
+	"--channel-header-icon-size": "1.5rem",
+	"--channel-header-name-gap": "0.75rem",
+	"--channel-header-name-gap-group-dm": "0.5rem",
+	"--channel-header-padding-inline": "1rem",
+	"--channel-header-topic-divider-gap": "0.5rem",
 	"--chat-horizontal-padding": "1rem",
+	"--chat-horizontal-padding-default": "1rem",
+	"--chat-mobile-horizontal-padding": "0.75rem",
 	"--code-block-bg": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 98.5%) 88%, hsl(220, calc(10% * var(--saturation-factor)), 92.84%) 12%)",
 	"--code-block-border": "color-mix(in srgb, hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.15) 92%, color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%) 8%)",
 	"--code-block-highlight": "color-mix(in srgb, hsl(0, 0%, 100%) 82%, transparent)",
@@ -1374,10 +2061,15 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--code-text": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%)",
 	"--composer-action-gap": "0.25rem",
 	"--composer-box-inset": "max(0rem, calc((calc(3.625rem + 0.375rem * 2) - 3.625rem) / 2))",
-	"--composer-box-inset-inline": "min(0.375rem, 1rem)",
-	"--composer-box-padding-inline": "max( 0rem, calc(1rem - min(0.375rem, 1rem)) )",
+	"--composer-box-inset-inline": "min( 0.375rem, 1rem )",
+	"--composer-box-padding-inline": "max( 0rem, calc(1rem - min( 0.375rem, 1rem )) )",
 	"--composer-mobile-box-height": "3rem",
 	"--composer-mobile-padding-y": "max( 0rem, calc((3rem - 2rem) / 2) )",
+	"--composer-status-line-height": "1.125rem",
+	"--composer-status-row-height": "1.5rem",
+	"--composer-status-safe-area": "calc(1.5rem + 0.5rem)",
+	"--composer-status-safe-gap": "0.5rem",
+	"--composer-surface-color": "hsl(220, calc(10% * var(--saturation-factor)), 94.61%)",
 	"--content-padding": "1rem",
 	"--content-padding-lg": "1.5rem",
 	"--content-padding-sm": "0.75rem",
@@ -1389,14 +2081,21 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--control-button-hover-text": "hsl(220, calc(10% * var(--saturation-factor)), 20%)",
 	"--control-button-normal-bg": "transparent",
 	"--control-button-normal-text": "hsl(220, calc(10% * var(--saturation-factor)), 50%)",
+	"--count-indicator-gap": "0.25rem",
+	"--discovery-card-description-min-height": "5.25rem",
+	"--dm-sidebar-mobile-header-height": "3.5rem",
 	"--emoji-size-emoji": "1.5em",
 	"--emoji-size-jumbo-emoji": "3rem",
 	"--floating-surface-ring-color": "color-mix(in srgb, hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.22) 20%, transparent)",
 	"--floating-surface-ring-color-strong": "color-mix(in srgb, hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.22) 45%, transparent)",
 	"--focus-primary": "#00b0f4",
-	"--font-keybind": "-apple-system, BlinkMacSystemFont, 'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
-	"--font-mono": "'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
-	"--font-sans": "'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+	"--folder-radius": "calc(3rem * 0.3)",
+	"--font-fallback-mono": "'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math'",
+	"--font-fallback-sans": "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math'",
+	"--font-keybind": "-apple-system, BlinkMacSystemFont, 'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', sans-serif",
+	"--font-mono": "'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', 'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', monospace",
+	"--font-sans": "'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math', 'Noto Sans', 'Nirmala UI', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Gujarati', 'Noto Sans Gurmukhi', 'Noto Sans Oriya', 'Noto Sans Sinhala', 'Noto Sans Khmer', 'Noto Sans Lao', 'Noto Sans Myanmar', 'Noto Sans Tibetan', 'Noto Sans Armenian', 'Noto Sans Georgian', 'Noto Sans Ethiopic', 'Noto Sans Cherokee', 'Noto Sans Canadian Aboriginal', 'Noto Sans Mongolian', 'Noto Sans Vai', 'Noto Sans NKo', 'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols', 'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math', sans-serif",
+	"--font-sans-primary": "'Fluxer Sans'",
 	"--font-size": "1rem",
 	"--font-size-xs": "0.75rem",
 	"--footer-box-height": "3.625rem",
@@ -1407,9 +2106,39 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--footer-box-radius": "0.5rem",
 	"--footer-row-height": "calc(3.625rem + 0.375rem * 2)",
 	"--form-surface-background": "hsl(220, calc(10% * var(--saturation-factor)), 98.5%)",
+	"--friend-row-action-gap": "0.5rem",
+	"--friend-row-action-size": "2.25rem",
+	"--friend-row-avatar-size": "2.25rem",
+	"--friend-row-content-gap": "0.75rem",
+	"--friend-row-name-line-height": "1.25rem",
+	"--friend-row-padding-block": "0.75rem",
+	"--friend-row-padding-inline": "1rem",
+	"--friend-row-separator-inset": "0 0.4rem 0 0.5rem",
+	"--friend-row-separator-radius": "0.375rem",
+	"--friend-row-subtext-line-height": "1rem",
+	"--friend-row-subtext-offset": "-0.0625rem",
+	"--guild-badge-surface": "hsl(220, calc(10% * var(--saturation-factor)), 92.84%)",
+	"--guild-folder-expanded-surface-size": "3rem",
 	"--guild-icon-gap": "0.5rem",
 	"--guild-icon-size": "2.75rem",
+	"--guild-list-divider-base-gap": "0.375rem",
+	"--guild-list-divider-line-size": "0.125rem",
 	"--guild-list-foreground": "hsl(220, calc(10% * var(--saturation-factor)), 87.53%)",
+	"--guild-list-indicator-bar-width": "0.35rem",
+	"--guild-list-indicator-inset": "-0.15rem",
+	"--guild-list-indicator-track-width": "0.5rem",
+	"--guild-list-item-box-size": "3rem",
+	"--guild-list-item-gap": "0.375rem",
+	"--guild-list-item-target-half-extra": "calc((calc(3rem + 0.375rem) - 3rem) / 2)",
+	"--guild-list-item-target-size": "calc(3rem + 0.375rem)",
+	"--guild-members-columns": "minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr) minmax(10rem, 1.35fr) 4.5rem",
+	"--guild-members-columns-selectable": "2.75rem minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr) minmax(10rem, 1.35fr) 4.5rem",
+	"--guild-members-min-width": "calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem)",
+	"--guild-members-min-width-selectable": "calc(2.75rem + calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem))",
+	"--guild-members-select-column-width": "2.75rem",
+	"--guild-members-table-row-border-width": "0.0625rem",
+	"--guild-members-table-row-min-height": "3rem",
+	"--guilds-layout-item-bg": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 87.53%) 72%, hsl(220, calc(10% * var(--saturation-factor)), 98.5%) 28%)",
 	"--input-container-min-height": "calc(3.625rem + 0.375rem * 2)",
 	"--input-container-padding": "0.625rem",
 	"--input-wrapper-padding-bottom": "0.5rem",
@@ -1422,11 +2151,14 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--layout-gap-sm": "0.5rem",
 	"--layout-guild-list-width": "4.5rem",
 	"--layout-header-height": "3.5rem",
+	"--layout-header-height-mobile": "4rem",
 	"--layout-header-popout-width": "calc(20rem - (1rem * 2))",
+	"--layout-member-list-width": "16.5rem",
 	"--layout-mobile-bottom-nav-reserved-height": "0px",
 	"--layout-sidebar-width": "20rem",
 	"--layout-user-area-height": "3.625rem",
 	"--layout-user-area-reserved-height": "0px",
+	"--layout-voice-connection-height": "0px",
 	"--link-decoration": "none",
 	"--list-row-min-height": "4.5rem",
 	"--macos-traffic-light-inset": "78px",
@@ -1449,12 +2181,26 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--markup-restricted-inline-icon-baseline-shift": "-0.125em",
 	"--markup-strikethrough-color": "currentColor",
 	"--media-border-radius": "0.25rem",
+	"--member-list-group-spacer-height": "0.25rem",
+	"--member-list-item-content-gap": "0.625rem",
+	"--member-list-item-content-height": "2rem",
+	"--member-list-item-name-line-height": "1.25rem",
+	"--member-list-item-padding-block": "0.25rem",
+	"--member-list-item-padding-inline": "0.5rem",
+	"--member-list-item-status-line-height": "0.875rem",
+	"--member-list-row-gap": "0.125rem",
+	"--member-list-scroller-padding-block-end": "1rem",
+	"--member-list-scroller-padding-block-start": "0.25rem",
+	"--member-list-scroller-padding-inline": "0.5rem",
+	"--mention-badge-medium-size": "1.5rem",
+	"--mention-badge-small-size": "1.25rem",
 	"--message-action-bar-offset": "3rem",
 	"--message-avatar-align-offset": "clamp(0px, calc((1.375rem * 2 - 2.5rem) / 2), 0.5rem)",
 	"--message-avatar-size": "2.5rem",
 	"--message-avatar-size-compact": "1rem",
 	"--message-compact-container-margin": "calc(3.5rem + 0.25rem)",
 	"--message-compact-gap": "0.25rem",
+	"--message-compact-horizontal-padding": "min( 1rem, 1rem )",
 	"--message-compact-indent": "calc(3.5rem + 0.25rem)",
 	"--message-compact-markdown-alert-padding-block": "0.35rem",
 	"--message-compact-markdown-alert-padding-inline": "0.75rem",
@@ -1463,6 +2209,7 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-compact-markdown-blockquote-gap": "0.25rem",
 	"--message-compact-table-max-inline-size": "100%",
 	"--message-compact-table-min-cell-width": "5rem",
+	"--message-compact-text-indent-from-username": "2rem",
 	"--message-compact-timestamp-width": "3.5rem",
 	"--message-compact-username-gap": "0.45rem",
 	"--message-container-gap": "0.25rem",
@@ -1472,6 +2219,7 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-failed-indicator-font-size": "0.75rem",
 	"--message-failed-indicator-gap": "0.375rem",
 	"--message-failed-opacity": "0.5",
+	"--message-filler-padding-bottom": "0.75rem",
 	"--message-group-spacing": "1rem",
 	"--message-gutter": "0.75rem",
 	"--message-highlight-bar-width": "0.125rem",
@@ -1483,6 +2231,9 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-mention-bg-hover": "rgb(234 197 50 / 0.14)",
 	"--message-mention-color": "rgb(234 197 50)",
 	"--message-mobile-margin": "0.75rem",
+	"--message-preview-card-background": "hsl(0, 0%, 100%)",
+	"--message-preview-card-border": "hsla(0, 0%, 0%, 0.07)",
+	"--message-preview-card-divider": "hsla(0, 0%, 0%, 0.05)",
 	"--message-replied-username-opacity": "0.64",
 	"--message-reply-bg": "rgb(59 130 246 / 0.1)",
 	"--message-reply-color": "rgb(59 130 246)",
@@ -1491,6 +2242,10 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-reply-spacing": "0.25rem",
 	"--message-reply-spine-radius": "0.375rem",
 	"--message-reply-spine-width": "0.125rem",
+	"--message-search-bar-height": "2.25rem",
+	"--message-search-bar-icon-gap": "0.5rem",
+	"--message-search-bar-icon-size": "1rem",
+	"--message-search-bar-width": "15.25rem",
 	"--message-sending-link-opacity": "0.7",
 	"--message-sending-opacity": "0.5",
 	"--message-spacing-y": "0.125rem",
@@ -1505,9 +2260,11 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-typing-pill-padding": "0.45rem",
 	"--message-typing-text-font-size": "0.6875rem",
 	"--message-unknown-warning-color": "#ff9933",
+	"--messages-bottom-clearance": "1.5rem",
 	"--mobile-bottom-nav-height": "3.75rem",
 	"--native-titlebar-height": "2rem",
 	"--outline-frame-border-width": "0.0625rem",
+	"--outline-frame-radius-native": "clamp(0.5rem, 1.2vw, 0.875rem)",
 	"--panel-control-bg": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 92.84%) 65%, hsl(0, 0%, 100%) 35%)",
 	"--panel-control-border": "hsla(220, calc(25% * var(--saturation-factor)), 45%, 0.25)",
 	"--panel-control-divider": "hsla(220, calc(30% * var(--saturation-factor)), 35%, 0.2)",
@@ -1531,6 +2288,11 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--shadow-md": "0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)",
 	"--shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.1)",
 	"--shadow-xl": "0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)",
+	"--skeleton-chrome-border": "0.0625rem solid color-mix(in srgb, hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.22) 25%, transparent)",
+	"--skeleton-chrome-border-color": "color-mix(in srgb, hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.22) 25%, transparent)",
+	"--skeleton-opacity-default": "0.45",
+	"--skeleton-opacity-muted": "0.35",
+	"--skeleton-opacity-strong": "0.55",
 	"--slowmode-indicator-height": "1rem",
 	"--spacing-0": "0px",
 	"--spacing-1": "0.25rem",
@@ -1565,6 +2327,9 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--text-code": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%)",
 	"--text-link": "hsl(198, calc(92% * var(--saturation-factor)), 45%)",
 	"--text-on-brand-primary": "hsl(0, 0%, 98%)",
+	"--text-on-brand-primary-light": "hsl(0, 0%, 98%)",
+	"--text-on-brand-tint": "var(--brand-primary)",
+	"--text-on-dark": "hsl(0, 0%, 98%)",
 	"--text-primary": "hsl(220, calc(10% * var(--saturation-factor)), 15%)",
 	"--text-primary-muted": "hsl(220, calc(10% * var(--saturation-factor)), 42.2%)",
 	"--text-secondary": "hsl(220, calc(10% * var(--saturation-factor)), 33.78%)",
@@ -1577,10 +2342,7 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--textarea-button-compact-icon-size": "1.25rem",
 	"--textarea-button-height": "2rem",
 	"--textarea-button-icon-size": "1.375rem",
-	"--textarea-button-min-width": "auto",
-	"--textarea-button-padding-x": "0px",
 	"--textarea-container-padding-x": "0px",
-	"--textarea-container-padding-y": "0px",
 	"--textarea-content-offset": "max(0rem, calc((2rem - calc(1rem * 1.375)) / 2))",
 	"--textarea-font-size": "1rem",
 	"--textarea-line-height": "calc(1rem * 1.375)",

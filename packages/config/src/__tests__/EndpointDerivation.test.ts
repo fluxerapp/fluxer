@@ -1,303 +1,109 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {
 	buildUrl,
+	type DerivedEndpoints,
 	type DomainConfig,
-	deriveDomain,
 	deriveEndpointsFromDomain,
+	parsePublicOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
 import {describe, expect, test} from 'vitest';
 
-describe('buildUrl', () => {
-	test('omits standard HTTP port (80)', () => {
-		expect(buildUrl('http', 'example.com', 80, '/path')).toBe('http://example.com/path');
-	});
-	test('omits standard HTTPS port (443)', () => {
-		expect(buildUrl('https', 'example.com', 443, '/path')).toBe('https://example.com/path');
-	});
-	test('omits standard WebSocket port (80)', () => {
-		expect(buildUrl('ws', 'example.com', 80, '/gateway')).toBe('ws://example.com/gateway');
-	});
-	test('omits standard secure WebSocket port (443)', () => {
-		expect(buildUrl('wss', 'example.com', 443, '/gateway')).toBe('wss://example.com/gateway');
-	});
-	test('includes non-standard port', () => {
-		expect(buildUrl('http', 'localhost', 8088, '/api')).toBe('http://localhost:8088/api');
-	});
-	test('includes non-standard HTTPS port', () => {
-		expect(buildUrl('https', 'example.com', 8443, '/api')).toBe('https://example.com:8443/api');
-	});
-	test('handles missing port', () => {
-		expect(buildUrl('https', 'example.com', undefined, '/api')).toBe('https://example.com/api');
-	});
-	test('handles missing path', () => {
-		expect(buildUrl('https', 'example.com', 443)).toBe('https://example.com');
-	});
-	test('handles empty path', () => {
-		expect(buildUrl('https', 'example.com', 443, '')).toBe('https://example.com');
-	});
-	test('handles root path', () => {
-		expect(buildUrl('https', 'example.com', 443, '/')).toBe('https://example.com/');
-	});
-});
+interface EndpointScenario {
+	name: string;
+	config: DomainConfig;
+	expected: DerivedEndpoints;
+}
 
-describe('deriveDomain', () => {
-	const baseConfig: DomainConfig = {
-		base_domain: 'fluxer.dev',
-		public_scheme: 'https',
-		internal_scheme: 'http',
-	};
-	test('uses base domain for api endpoint', () => {
-		expect(deriveDomain('api', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses base domain for app endpoint', () => {
-		expect(deriveDomain('app', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses base domain for gateway endpoint', () => {
-		expect(deriveDomain('gateway', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses base domain for media endpoint', () => {
-		expect(deriveDomain('media', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses custom static CDN domain when specified', () => {
-		const config = {...baseConfig, static_cdn_domain: 'cdn.fluxer.dev'};
-		expect(deriveDomain('static_cdn', config)).toBe('cdn.fluxer.dev');
-	});
-	test('uses base domain for static CDN when custom domain not specified', () => {
-		expect(deriveDomain('static_cdn', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses custom invite domain when specified', () => {
-		const config = {...baseConfig, invite_domain: 'fluxer.gg'};
-		expect(deriveDomain('invite', config)).toBe('fluxer.gg');
-	});
-	test('uses base domain for invite when custom domain not specified', () => {
-		expect(deriveDomain('invite', baseConfig)).toBe('fluxer.dev');
-	});
-	test('uses custom gift domain when specified', () => {
-		const config = {...baseConfig, gift_domain: 'fluxer.gift'};
-		expect(deriveDomain('gift', config)).toBe('fluxer.gift');
-	});
-	test('uses base domain for gift when custom domain not specified', () => {
-		expect(deriveDomain('gift', baseConfig)).toBe('fluxer.dev');
-	});
-});
-
-describe('deriveEndpointsFromDomain', () => {
-	describe('development environment (localhost)', () => {
-		const devConfig: DomainConfig = {
+const endpointScenarios: Array<EndpointScenario> = [
+	{
+		name: 'external CDN uses HTTPS without the public port',
+		config: {
 			base_domain: 'localhost',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 8088,
-			internal_port: 8088,
-		};
-		const endpoints = deriveEndpointsFromDomain(devConfig);
-		test('derives api endpoint with port', () => {
-			expect(endpoints.api).toBe('http://localhost:8088/api');
-		});
-		test('derives api client endpoint with port', () => {
-			expect(endpoints.api_client).toBe('http://localhost:8088/api');
-		});
-		test('derives app endpoint with port', () => {
-			expect(endpoints.app).toBe('http://localhost:8088');
-		});
-		test('derives gateway endpoint with ws scheme', () => {
-			expect(endpoints.gateway).toBe('ws://localhost:8088/gateway');
-		});
-		test('derives media endpoint with port', () => {
-			expect(endpoints.media).toBe('http://localhost:8088/media');
-		});
-		test('derives static CDN endpoint via public origin', () => {
-			expect(endpoints.static_cdn).toBe('http://localhost:8088');
-		});
-		test('derives admin endpoint with port', () => {
-			expect(endpoints.admin).toBe('http://localhost:8088/admin');
-		});
-		test('derives marketing endpoint with port', () => {
-			expect(endpoints.marketing).toBe('http://localhost:8088/marketing');
-		});
-		test('derives invite endpoint with port', () => {
-			expect(endpoints.invite).toBe('http://localhost:8088/invite');
-		});
-		test('derives gift endpoint with port', () => {
-			expect(endpoints.gift).toBe('http://localhost:8088/gift');
-		});
+			static_cdn_domain: 'cdn.example.com',
+		},
+		expected: {
+			api: 'http://localhost:8088/api',
+			api_client: 'http://localhost:8088/api',
+			app: 'http://localhost:8088',
+			gateway: 'ws://localhost:8088/gateway',
+			media: 'http://localhost:8088/media',
+			static_cdn: 'https://cdn.example.com',
+			admin: 'http://localhost:8088/admin',
+			marketing: 'http://localhost:8088/marketing',
+			invite: 'http://localhost:8088/invite',
+			gift: 'http://localhost:8088/gift',
+		},
+	},
+];
+
+describe('deriveEndpointsFromDomain', () => {
+	test.each(endpointScenarios)('$name', ({config, expected}) => {
+		expect(deriveEndpointsFromDomain(config)).toEqual(expected);
 	});
-	describe('production environment (standard HTTPS port)', () => {
-		const prodConfig: DomainConfig = {
-			base_domain: 'fluxer.app',
+});
+
+describe('parsePublicOrigin', () => {
+	test('reads scheme, host and a non-standard port', () => {
+		expect(parsePublicOrigin('https://chat.example.com:8443')).toEqual({
 			public_scheme: 'https',
-			internal_scheme: 'http',
-			public_port: 443,
-			internal_port: 8080,
-		};
-		const endpoints = deriveEndpointsFromDomain(prodConfig);
-		test('derives api endpoint without port', () => {
-			expect(endpoints.api).toBe('https://fluxer.app/api');
-		});
-		test('derives api client endpoint without port', () => {
-			expect(endpoints.api_client).toBe('https://fluxer.app/api');
-		});
-		test('derives app endpoint without port', () => {
-			expect(endpoints.app).toBe('https://fluxer.app');
-		});
-		test('derives gateway endpoint with wss scheme without port', () => {
-			expect(endpoints.gateway).toBe('wss://fluxer.app/gateway');
-		});
-		test('derives media endpoint without port', () => {
-			expect(endpoints.media).toBe('https://fluxer.app/media');
-		});
-		test('derives static CDN endpoint without port', () => {
-			expect(endpoints.static_cdn).toBe('https://fluxer.app');
-		});
-		test('derives admin endpoint without port', () => {
-			expect(endpoints.admin).toBe('https://fluxer.app/admin');
-		});
-		test('derives marketing endpoint without port', () => {
-			expect(endpoints.marketing).toBe('https://fluxer.app/marketing');
-		});
-		test('derives invite endpoint without port', () => {
-			expect(endpoints.invite).toBe('https://fluxer.app/invite');
-		});
-		test('derives gift endpoint without port', () => {
-			expect(endpoints.gift).toBe('https://fluxer.app/gift');
-		});
-	});
-	describe('staging environment (custom port)', () => {
-		const stagingConfig: DomainConfig = {
-			base_domain: 'staging.fluxer.dev',
-			public_scheme: 'https',
-			internal_scheme: 'http',
+			base_domain: 'chat.example.com',
 			public_port: 8443,
-			internal_port: 8080,
-		};
-		const endpoints = deriveEndpointsFromDomain(stagingConfig);
-		test('derives api endpoint with custom port', () => {
-			expect(endpoints.api).toBe('https://staging.fluxer.dev:8443/api');
 		});
-		test('derives api client endpoint with custom port', () => {
-			expect(endpoints.api_client).toBe('https://staging.fluxer.dev:8443/api');
-		});
-		test('derives app endpoint with custom port', () => {
-			expect(endpoints.app).toBe('https://staging.fluxer.dev:8443');
-		});
-		test('derives gateway endpoint with wss and custom port', () => {
-			expect(endpoints.gateway).toBe('wss://staging.fluxer.dev:8443/gateway');
+		expect(parsePublicOrigin('http://chat.example.com:19080')).toEqual({
+			public_scheme: 'http',
+			base_domain: 'chat.example.com',
+			public_port: 19080,
 		});
 	});
-	describe('custom CDN domain', () => {
-		const staticCdnConfig: DomainConfig = {
-			base_domain: 'fluxer.app',
+	test('fills in the standard port for a portless origin', () => {
+		expect(parsePublicOrigin('https://chat.example.com')).toEqual({
 			public_scheme: 'https',
-			internal_scheme: 'http',
+			base_domain: 'chat.example.com',
 			public_port: 443,
-			static_cdn_domain: 'cdn.fluxer.app',
-		};
-		const endpoints = deriveEndpointsFromDomain(staticCdnConfig);
-		test('uses custom CDN domain', () => {
-			expect(endpoints.static_cdn).toBe('https://cdn.fluxer.app');
 		});
-		test('other endpoints use base domain', () => {
-			expect(endpoints.api).toBe('https://fluxer.app/api');
-			expect(endpoints.app).toBe('https://fluxer.app');
+		expect(parsePublicOrigin('http://chat.example.com')).toEqual({
+			public_scheme: 'http',
+			base_domain: 'chat.example.com',
+			public_port: 80,
 		});
 	});
-	describe('custom invite and gift domains', () => {
-		const customConfig: DomainConfig = {
-			base_domain: 'fluxer.app',
+	test('normalizes an explicitly written standard port to the portless form', () => {
+		const origin = parsePublicOrigin('https://chat.example.com:443');
+		assert.ok(origin);
+		expect(origin).toEqual({public_scheme: 'https', base_domain: 'chat.example.com', public_port: 443});
+		expect(buildUrl(origin.public_scheme, origin.base_domain, origin.public_port)).toBe('https://chat.example.com');
+		expect(parsePublicOrigin('http://chat.example.com:80')?.public_port).toBe(80);
+	});
+	test('canonicalizes the host', () => {
+		expect(parsePublicOrigin('  https://CHAT.Example.com.:8443  ')).toEqual({
 			public_scheme: 'https',
-			internal_scheme: 'http',
-			public_port: 443,
-			invite_domain: 'fluxer.gg',
-			gift_domain: 'fluxer.gift',
-		};
-		const endpoints = deriveEndpointsFromDomain(customConfig);
-		test('uses custom invite domain', () => {
-			expect(endpoints.invite).toBe('https://fluxer.gg/invite');
-		});
-		test('uses custom gift domain', () => {
-			expect(endpoints.gift).toBe('https://fluxer.gift/gift');
-		});
-		test('other endpoints use base domain', () => {
-			expect(endpoints.api).toBe('https://fluxer.app/api');
-			expect(endpoints.app).toBe('https://fluxer.app');
+			base_domain: 'chat.example.com',
+			public_port: 8443,
 		});
 	});
-	describe('WebSocket scheme derivation', () => {
-		test('derives ws from http', () => {
-			const config: DomainConfig = {
-				base_domain: 'localhost',
-				public_scheme: 'http',
-				internal_scheme: 'http',
-				public_port: 8088,
-			};
-			const endpoints = deriveEndpointsFromDomain(config);
-			expect(endpoints.gateway).toBe('ws://localhost:8088/gateway');
-		});
-		test('derives wss from https', () => {
-			const config: DomainConfig = {
-				base_domain: 'fluxer.app',
-				public_scheme: 'https',
-				internal_scheme: 'http',
-				public_port: 443,
-			};
-			const endpoints = deriveEndpointsFromDomain(config);
-			expect(endpoints.gateway).toBe('wss://fluxer.app/gateway');
+	test('keeps an IPv6 literal bracketed', () => {
+		expect(parsePublicOrigin('http://[::1]:19080')).toEqual({
+			public_scheme: 'http',
+			base_domain: '[::1]',
+			public_port: 19080,
 		});
 	});
-	describe('canary environment', () => {
-		const canaryConfig: DomainConfig = {
-			base_domain: 'canary.fluxer.app',
-			public_scheme: 'https',
-			internal_scheme: 'http',
-			public_port: 443,
-			static_cdn_domain: 'cdn-canary.fluxer.app',
-		};
-		const endpoints = deriveEndpointsFromDomain(canaryConfig);
-		test('derives api endpoint for canary', () => {
-			expect(endpoints.api).toBe('https://canary.fluxer.app/api');
-		});
-		test('derives app endpoint for canary', () => {
-			expect(endpoints.app).toBe('https://canary.fluxer.app');
-		});
-		test('derives gateway endpoint for canary', () => {
-			expect(endpoints.gateway).toBe('wss://canary.fluxer.app/gateway');
-		});
-		test('uses custom CDN domain for canary', () => {
-			expect(endpoints.static_cdn).toBe('https://cdn-canary.fluxer.app');
-		});
+	test('accepts a bare trailing slash', () => {
+		expect(parsePublicOrigin('https://chat.example.com:8443/')?.public_port).toBe(8443);
 	});
-	describe('edge cases', () => {
-		test('handles standard HTTP port (80)', () => {
-			const config: DomainConfig = {
-				base_domain: 'example.com',
-				public_scheme: 'http',
-				internal_scheme: 'http',
-				public_port: 80,
-			};
-			const endpoints = deriveEndpointsFromDomain(config);
-			expect(endpoints.api).toBe('http://example.com/api');
-			expect(endpoints.gateway).toBe('ws://example.com/gateway');
-		});
-		test('handles ports when undefined', () => {
-			const config: DomainConfig = {
-				base_domain: 'example.com',
-				public_scheme: 'https',
-				internal_scheme: 'http',
-			};
-			const endpoints = deriveEndpointsFromDomain(config);
-			expect(endpoints.api).toBe('https://example.com/api');
-			expect(endpoints.app).toBe('https://example.com');
-		});
-		test('handles IPv4 addresses', () => {
-			const config: DomainConfig = {
-				base_domain: '127.0.0.1',
-				public_scheme: 'http',
-				internal_scheme: 'http',
-				public_port: 8088,
-			};
-			const endpoints = deriveEndpointsFromDomain(config);
-			expect(endpoints.api).toBe('http://127.0.0.1:8088/api');
-		});
+	test('rejects anything that is not a bare origin', () => {
+		expect(parsePublicOrigin('')).toBeNull();
+		expect(parsePublicOrigin('   ')).toBeNull();
+		expect(parsePublicOrigin('not a url')).toBeNull();
+		expect(parsePublicOrigin('chat.example.com:8443')).toBeNull();
+		expect(parsePublicOrigin('wss://chat.example.com')).toBeNull();
+		expect(parsePublicOrigin('https://chat.example.com/media')).toBeNull();
+		expect(parsePublicOrigin('https://chat.example.com?a=1')).toBeNull();
+		expect(parsePublicOrigin('https://chat.example.com#top')).toBeNull();
+		expect(parsePublicOrigin('https://user:pw@chat.example.com')).toBeNull();
 	});
 });

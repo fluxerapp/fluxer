@@ -2,6 +2,12 @@
 
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
 import {SavedMessageMissingCard} from '@app/features/app/components/shared/SavedMessageMissingCard';
+import {
+	reportSkeletonSimplePageLayout,
+	SkeletonSimplePageBody,
+	SkeletonSimplePageRoute,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {REMOVE_BOOKMARK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {MessageListPage} from '@app/features/messaging/components/pages/MessageListPage';
@@ -33,11 +39,23 @@ const THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR = msg({
 export const SavedMessagesPage = observer(() => {
 	const {i18n} = useLingui();
 	const {savedMessages, missingSavedMessages, fetched} = SavedMessages;
+	const hasMore = SavedMessages.getHasMore();
+	const isLoadingMore = SavedMessages.getIsLoadingMore();
 	useEffect(() => {
 		if (!fetched) {
 			SavedMessageCommands.fetch();
 		}
 	}, [fetched]);
+	useSkeletonLayoutReport(() => {
+		if (!fetched) {
+			return;
+		}
+		reportSkeletonSimplePageLayout(
+			SkeletonSimplePageRoute.BOOKMARKS,
+			SkeletonSimplePageBody.MESSAGE_LIST,
+			savedMessages.length,
+		);
+	}, `${fetched}|${savedMessages.length}`);
 	const renderActionButtons = (message: Message) => (
 		<button
 			type="button"
@@ -75,6 +93,9 @@ export const SavedMessagesPage = observer(() => {
 				emptyStateDescription={i18n._(BOOKMARK_MESSAGES_TO_SAVE_THEM_FOR_LATER_DESCRIPTOR)}
 				endStateDescription={i18n._(THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR)}
 				renderActionButtons={renderActionButtons}
+				hasMore={hasMore}
+				isLoadingMore={isLoadingMore}
+				onLoadMore={SavedMessageCommands.loadMore}
 				data-flx="messaging.saved-messages-page.message-list-page"
 			/>
 		</div>

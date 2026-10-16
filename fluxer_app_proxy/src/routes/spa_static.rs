@@ -1,57 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::discovery_cache::DiscoveryResponse;
-use crate::state::AppState;
-use crate::time_freeze::{
-    TimeFreezeConfig, describe_decision, load_time_freeze_config_for_request,
-    time_freeze_debug_header,
-};
+use crate::branding_images::BrandingSnapshot;
+use crate::config::HttpEndpoint;
+use crate::local_files::{LocalFileResponseOptions, serve_text_file};
+use crate::state::{AppState, MAX_STATIC_TEXT_FILE_BYTES};
+use crate::static_asset_policy::apply_static_resource_security_policy;
 use axum::{
     extract::State,
     http::{HeaderMap, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
-use std::path::Path;
 
-fn serve_frozen_file(
-    config: &TimeFreezeConfig,
-    pick: impl FnOnce(&crate::time_freeze::FrozenSnapshot) -> Option<(&[u8], &str)>,
-) -> (Option<Response>, Option<String>) {
-    let debug = describe_decision(config);
-    let debug_header = time_freeze_debug_header(config);
-
-    if debug.decision != crate::time_freeze::TimeFreezeDecision::Frozen {
-        return (None, debug_header);
-    }
-
-    if let Some(snapshot) = &config.snapshot
-        && let Some((bytes, content_type)) = pick(snapshot)
-    {
-        let mut response = bytes.to_vec().into_response();
-        if let Ok(ct) = HeaderValue::from_str(content_type) {
-            response.headers_mut().insert(header::CONTENT_TYPE, ct);
-        }
-        response
-            .headers_mut()
-            .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-        set_time_freeze_header(&mut response, debug_header.as_deref());
-        return (Some(response), None);
-    }
-
-    (None, debug_header)
-}
+const STATIC_TEXT_CACHE_CONTROL: &str = "no-cache";
 
 pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((snap.version_json.as_slice(), "application/json"))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-
     let mut result =
-        serve_static_text_file(&state.config.static_dir, "version.json", "application/json");
+        serve_static_text_file(&state, &headers, "version.json", "application/json").await;
 
     if result.status() == StatusCode::NOT_FOUND && !state.config.build_version.is_empty() {
         let body = serde_json::json!({ "version": state.config.build_version });
@@ -61,311 +25,454 @@ pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> 
             .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }
 
-    set_time_freeze_header(&mut result, debug_header.as_deref());
     result
 }
 
-pub async fn manifest_json(State(state): State<AppState>) -> Response {
-    let static_cdn_endpoint = runtime_static_cdn_endpoint(&state).await;
-    serve_static_text_file_with_cdn(
-        &state.config.static_dir,
+pub async fn manifest_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    let branding = state.config.self_hosted.then(|| state.branding.snapshot());
+    serve_static_text_file_with_substitutions(
+        &state,
+        &headers,
         "manifest.json",
         "application/manifest+json",
-        static_cdn_endpoint.as_deref(),
+        state.config.static_cdn_endpoint.as_ref(),
+        |text| {
+            finish_manifest(
+                text,
+                &state.config.manifest_scope_extensions,
+                branding.as_deref(),
+            )
+        },
     )
+    .await
 }
 
-pub async fn browserconfig_xml(State(state): State<AppState>) -> Response {
-    let static_cdn_endpoint = runtime_static_cdn_endpoint(&state).await;
+fn finish_manifest(
+    text: String,
+    scope_extension_origins: &[String],
+    branding: Option<&BrandingSnapshot>,
+) -> String {
+    if scope_extension_origins.is_empty() && branding.is_none() {
+        return text;
+    }
+    let Ok(serde_json::Value::Object(mut manifest)) = serde_json::from_str(&text) else {
+        return text;
+    };
+    if !scope_extension_origins.is_empty() {
+        let scope_extensions = scope_extension_origins
+            .iter()
+            .map(|origin| serde_json::json!({ "type": "origin", "origin": origin }))
+            .collect();
+        manifest.insert(
+            "scope_extensions".to_owned(),
+            serde_json::Value::Array(scope_extensions),
+        );
+    }
+    if let Some(branding) = branding {
+        apply_manifest_branding(&mut manifest, branding);
+    }
+    serde_json::to_string_pretty(&manifest).unwrap_or(text)
+}
+
+fn apply_manifest_branding(
+    manifest: &mut serde_json::Map<String, serde_json::Value>,
+    branding: &BrandingSnapshot,
+) {
+    manifest.remove("description");
+    if let Some(product_name) = &branding.product_name {
+        for key in ["name", "short_name"] {
+            manifest.insert(key.to_owned(), serde_json::json!(&**product_name));
+        }
+    }
+    if let Some(theme_color) = &branding.theme_color {
+        manifest.insert("theme_color".to_owned(), serde_json::json!(&**theme_color));
+    }
+    if let Some(icon_url) = &branding.icon_url {
+        manifest.insert(
+            "icons".to_owned(),
+            serde_json::json!([{ "src": &**icon_url, "sizes": "any", "purpose": "any" }]),
+        );
+    }
+}
+
+pub async fn browserconfig_xml(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if state.config.self_hosted {
+        return StatusCode::NOT_FOUND.into_response();
+    }
     serve_static_text_file_with_cdn(
-        &state.config.static_dir,
+        &state,
+        &headers,
         "browserconfig.xml",
         "application/xml; charset=utf-8",
-        static_cdn_endpoint.as_deref(),
+        state.config.static_cdn_endpoint.as_ref(),
     )
+    .await
+}
+
+pub async fn favicon_ico(State(state): State<AppState>) -> Response {
+    let location = match state.branding.snapshot().favicon_url.as_deref() {
+        Some(favicon_url) => favicon_url.to_owned(),
+        None => format!(
+            "{}/web/favicon.ico",
+            state
+                .config
+                .static_cdn_endpoint
+                .as_ref()
+                .map_or("", HttpEndpoint::as_str)
+                .trim_end_matches('/')
+        ),
+    };
+    match HeaderValue::from_str(&location) {
+        Ok(location) => (StatusCode::FOUND, [(header::LOCATION, location)]).into_response(),
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
 }
 
 pub async fn service_worker(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((
-            snap.sw_js.as_slice(),
-            "application/javascript; charset=utf-8",
-        ))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-    let mut result = serve_static_text_file(
-        &state.config.static_dir,
+    serve_static_text_file(
+        &state,
+        &headers,
         "sw.js",
         "application/javascript; charset=utf-8",
-    );
-    set_time_freeze_header(&mut result, debug_header.as_deref());
-    result
-}
-
-pub async fn service_worker_map(State(state): State<AppState>) -> Response {
-    serve_static_text_file(&state.config.static_dir, "sw.js.map", "application/json")
-}
-
-fn set_time_freeze_header(response: &mut Response, value: Option<&str>) {
-    #[cfg(feature = "time-freeze")]
-    {
-        if let Some(v) = value
-            && let Ok(hv) = HeaderValue::from_str(v)
-        {
-            response
-                .headers_mut()
-                .insert(axum::http::HeaderName::from_static("x-time-freeze"), hv);
-        }
-    }
-
-    #[cfg(not(feature = "time-freeze"))]
-    let _ = (response, value);
-}
-
-async fn runtime_static_cdn_endpoint(state: &AppState) -> Option<String> {
-    if let Some(discovery) = state.discovery_cache.get().await
-        && let Some(endpoint) = discovery_endpoint(&discovery, "static_cdn")
-    {
-        return Some(endpoint);
-    }
-
-    state.config.static_cdn_endpoint.clone()
-}
-
-fn discovery_endpoint(discovery: &DiscoveryResponse, key: &str) -> Option<String> {
-    discovery
-        .data
-        .get("endpoints")
-        .and_then(|endpoints| endpoints.get(key))
-        .and_then(|value| value.as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(ToOwned::to_owned)
-}
-
-fn serve_static_text_file(static_dir: &str, filename: &str, content_type: &str) -> Response {
-    serve_static_text_file_with_cdn(static_dir, filename, content_type, None)
-}
-
-fn serve_static_text_file_with_cdn(
-    static_dir: &str,
-    filename: &str,
-    content_type: &str,
-    static_cdn_endpoint: Option<&str>,
-) -> Response {
-    let file_path = Path::new(static_dir).join(filename);
-
-    let resolved = match file_path.canonicalize() {
-        Ok(p) => p,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
-    let base = match Path::new(static_dir).canonicalize() {
-        Ok(p) => p,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
-    if !resolved.starts_with(&base) {
-        return StatusCode::NOT_FOUND.into_response();
-    }
-
-    let content = match std::fs::read(&resolved) {
-        Ok(bytes) => bytes,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
-
-    let replacement = static_cdn_endpoint.unwrap_or("").trim_end_matches('/');
-    let body: axum::body::Body = match std::str::from_utf8(&content) {
-        Ok(text) => text
-            .replace("{{STATIC_CDN_ENDPOINT}}", replacement)
-            .into_bytes()
-            .into(),
-        Err(_) => content.into(),
-    };
-
-    let mut response = body.into_response();
-    if let Ok(ct) = HeaderValue::from_str(content_type) {
-        response.headers_mut().insert(header::CONTENT_TYPE, ct);
-    }
-    response
-        .headers_mut()
-        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-    response
-}
-
-pub fn guess_mime(path: &str) -> &'static str {
-    let ext = match path.rfind('.') {
-        Some(i) => &path[i..],
-        None => return "application/octet-stream",
-    };
-    match ext.to_ascii_lowercase().as_str() {
-        ".html" | ".htm" => "text/html; charset=utf-8",
-        ".js" | ".mjs" => "application/javascript; charset=utf-8",
-        ".css" => "text/css; charset=utf-8",
-        ".json" => "application/json; charset=utf-8",
-        ".png" => "image/png",
-        ".jpg" | ".jpeg" => "image/jpeg",
-        ".gif" => "image/gif",
-        ".webp" => "image/webp",
-        ".avif" => "image/avif",
-        ".svg" => "image/svg+xml",
-        ".ico" => "image/x-icon",
-        ".woff" => "font/woff",
-        ".woff2" => "font/woff2",
-        ".ttf" => "font/ttf",
-        ".otf" => "font/otf",
-        ".eot" => "application/vnd.ms-fontobject",
-        ".mp3" => "audio/mpeg",
-        ".mp4" => "video/mp4",
-        ".webm" => "video/webm",
-        ".ogg" => "audio/ogg",
-        ".wav" => "audio/wav",
-        ".pdf" => "application/pdf",
-        ".txt" => "text/plain; charset=utf-8",
-        ".xml" => "application/xml; charset=utf-8",
-        ".webmanifest" => "application/manifest+json",
-        ".map" => "application/json",
-        ".wasm" => "application/wasm",
-        _ => "application/octet-stream",
-    }
-}
-
-pub const CORS_ALLOW_ANY_VALUE: &str = "*";
-
-pub fn is_font_mime(mime_type: &str) -> bool {
-    matches!(
-        mime_type,
-        "font/woff" | "font/woff2" | "font/ttf" | "font/otf" | "application/vnd.ms-fontobject"
     )
+    .await
 }
 
-pub fn is_static_asset(path: &str) -> bool {
-    let filename = path.rsplit('/').next().unwrap_or(path);
-    filename.contains('.')
+pub async fn service_worker_map(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    serve_static_text_file(&state, &headers, "sw.js.map", "application/json").await
 }
 
-pub fn is_hashed_asset(path: &str) -> bool {
-    let filename = path.rsplit('/').next().unwrap_or(path);
-    let Some(last_dot) = filename.rfind('.') else {
-        return false;
-    };
-    let stem = &filename[..last_dot];
-    if is_content_hash(stem) {
-        return true;
-    }
-    ['.', '-'].iter().any(|sep| {
-        stem.rfind(*sep)
-            .is_some_and(|sep_pos| is_content_hash(&stem[sep_pos + 1..]))
-    })
+async fn serve_static_text_file(
+    state: &AppState,
+    headers: &HeaderMap,
+    filename: &str,
+    content_type: &'static str,
+) -> Response {
+    serve_static_text_file_with_cdn(state, headers, filename, content_type, None).await
 }
 
-fn is_content_hash(value: &str) -> bool {
-    value.len() >= 8 && value.chars().all(|c| c.is_ascii_hexdigit())
+async fn serve_static_text_file_with_cdn(
+    state: &AppState,
+    headers: &HeaderMap,
+    filename: &str,
+    content_type: &'static str,
+    static_cdn_endpoint: Option<&HttpEndpoint>,
+) -> Response {
+    serve_static_text_file_with_substitutions(
+        state,
+        headers,
+        filename,
+        content_type,
+        static_cdn_endpoint,
+        |text| text,
+    )
+    .await
+}
+
+async fn serve_static_text_file_with_substitutions(
+    state: &AppState,
+    headers: &HeaderMap,
+    filename: &str,
+    content_type: &'static str,
+    static_cdn_endpoint: Option<&HttpEndpoint>,
+    finish: impl FnOnce(String) -> String,
+) -> Response {
+    let replacement = static_cdn_endpoint.map_or("", HttpEndpoint::as_str);
+    let mut response = serve_text_file(
+        &state.local_files,
+        filename,
+        headers,
+        LocalFileResponseOptions {
+            content_type,
+            cache_control: STATIC_TEXT_CACHE_CONTROL,
+            allow_cross_origin: false,
+            max_bytes: MAX_STATIC_TEXT_FILE_BYTES,
+        },
+        &[("{{STATIC_CDN_ENDPOINT}}", replacement)],
+        finish,
+    )
+    .await;
+    apply_static_resource_security_policy(response.headers_mut(), state.csp.asset_header());
+    response
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn mime_html() {
-        assert_eq!(guess_mime("i.html"), "text/html; charset=utf-8");
+    fn substitute_placeholders(
+        text: &str,
+        static_cdn_endpoint: &str,
+        scope_extensions: Option<&[String]>,
+    ) -> String {
+        let text = text.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn_endpoint);
+        match scope_extensions {
+            Some(origins) => finish_manifest(text, origins, None),
+            None => text,
+        }
     }
-    #[test]
-    fn mime_js() {
-        assert_eq!(guess_mime("a.js"), "application/javascript; charset=utf-8");
+
+    const BUILT_MANIFEST: &str = r#"{
+  "id": "/",
+  "start_url": "/app",
+  "scope": "/",
+  "scope_extensions": [],
+  "icons": [
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-192x192.png"
     }
-    #[test]
-    fn mime_css() {
-        assert_eq!(guess_mime("s.css"), "text/css; charset=utf-8");
-    }
-    #[test]
-    fn mime_json() {
-        assert_eq!(guess_mime("d.json"), "application/json; charset=utf-8");
-    }
-    #[test]
-    fn mime_wasm() {
-        assert_eq!(guess_mime("m.wasm"), "application/wasm");
-    }
-    #[test]
-    fn mime_svg() {
-        assert_eq!(guess_mime("i.svg"), "image/svg+xml");
-    }
-    #[test]
-    fn mime_png() {
-        assert_eq!(guess_mime("p.png"), "image/png");
-    }
-    #[test]
-    fn mime_jpg() {
-        assert_eq!(guess_mime("p.jpg"), "image/jpeg");
-    }
-    #[test]
-    fn mime_webp() {
-        assert_eq!(guess_mime("p.webp"), "image/webp");
-    }
-    #[test]
-    fn mime_avif() {
-        assert_eq!(guess_mime("p.avif"), "image/avif");
-    }
-    #[test]
-    fn mime_ico() {
-        assert_eq!(guess_mime("f.ico"), "image/x-icon");
-    }
-    #[test]
-    fn mime_woff2() {
-        assert_eq!(guess_mime("f.woff2"), "font/woff2");
-    }
-    #[test]
-    fn mime_mp4() {
-        assert_eq!(guess_mime("c.mp4"), "video/mp4");
+  ]
+}"#;
+
+    fn substituted_manifest(origins: &[&str]) -> serde_json::Value {
+        let origins: Vec<String> = origins.iter().map(|origin| (*origin).to_owned()).collect();
+        let text =
+            substitute_placeholders(BUILT_MANIFEST, "https://fluxerstatic.com", Some(&origins));
+        serde_json::from_str(&text).expect("substituted manifest must stay valid JSON")
     }
 
     #[test]
-    fn mime_unknown() {
-        assert_eq!(guess_mime("f.xyz"), "application/octet-stream");
+    fn manifest_scope_extensions_default_to_the_built_empty_list() {
+        let manifest = substituted_manifest(&[]);
+        assert_eq!(manifest["scope_extensions"], serde_json::json!([]));
+        assert_eq!(
+            manifest["icons"][0]["src"],
+            "https://fluxerstatic.com/web/android-chrome-192x192.png"
+        );
     }
 
     #[test]
-    fn mime_no_ext() {
-        assert_eq!(guess_mime("LICENSE"), "application/octet-stream");
+    fn manifest_scope_extensions_list_each_configured_origin() {
+        let manifest = substituted_manifest(&["https://fluxer.com", "https://canary.fluxer.com"]);
+        assert_eq!(
+            manifest["scope_extensions"],
+            serde_json::json!([
+                { "type": "origin", "origin": "https://fluxer.com" },
+                { "type": "origin", "origin": "https://canary.fluxer.com" }
+            ])
+        );
+        assert_eq!(manifest["id"], "/");
+        assert_eq!(manifest["start_url"], "/app");
     }
 
     #[test]
-    fn mime_case_insensitive() {
-        assert_eq!(guess_mime("F.HTML"), "text/html; charset=utf-8");
-        assert_eq!(guess_mime("F.JS"), "application/javascript; charset=utf-8");
+    fn manifest_scope_extensions_are_added_when_the_build_has_none() {
+        let text = substitute_placeholders(
+            r#"{"id":"/"}"#,
+            "",
+            Some(&["https://fluxer.com".to_owned()]),
+        );
+        let manifest: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
+        assert_eq!(
+            manifest["scope_extensions"],
+            serde_json::json!([{ "type": "origin", "origin": "https://fluxer.com" }])
+        );
     }
 
     #[test]
-    fn static_asset_with_ext() {
-        assert!(is_static_asset("/assets/app.js"));
-        assert!(is_static_asset("style.css"));
+    fn other_text_files_are_left_alone() {
+        let origins = ["https://fluxer.com".to_owned()];
+        assert_eq!(
+            substitute_placeholders(
+                "not json {{STATIC_CDN_ENDPOINT}}",
+                "https://cdn",
+                Some(&origins)
+            ),
+            "not json https://cdn"
+        );
+        assert_eq!(
+            substitute_placeholders(BUILT_MANIFEST, "", None),
+            BUILT_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+    }
+
+    const GENERATED_MANIFEST: &str = r##"{
+  "name": "Fluxer",
+  "short_name": "Fluxer",
+  "description": "Fluxer is a free and open source instant messaging and VoIP platform built for friends, groups, and communities.",
+  "id": "/",
+  "start_url": "/app",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#4641D9",
+  "background_color": "#2b2d31",
+  "categories": ["social", "communication"],
+  "lang": "en",
+  "scope": "/",
+  "scope_extensions": [],
+  "icons": [
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}"##;
+
+    fn branded_manifest(branding: &BrandingSnapshot) -> serde_json::Value {
+        let text = finish_manifest(
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", ""),
+            &[],
+            Some(branding),
+        );
+        serde_json::from_str(&text).expect("a branded manifest must stay valid JSON")
+    }
+
+    fn assert_installable_shape(manifest: &serde_json::Value) {
+        for key in ["name", "short_name", "id", "start_url", "scope", "display"] {
+            assert!(
+                manifest[key]
+                    .as_str()
+                    .is_some_and(|value| !value.is_empty()),
+                "the manifest lost its {key}"
+            );
+        }
+        let icons = manifest["icons"]
+            .as_array()
+            .expect("the manifest lost its icons");
+        assert!(icons.iter().any(|icon| {
+            icon["src"].as_str().is_some_and(|src| !src.is_empty())
+                && icon["purpose"]
+                    .as_str()
+                    .is_some_and(|purpose| purpose.split(' ').any(|purpose| purpose == "any"))
+        }));
     }
 
     #[test]
-    fn static_asset_without_ext() {
-        assert!(!is_static_asset("/channels/me"));
-        assert!(!is_static_asset("/login"));
+    fn a_branded_product_name_stays_a_json_string() {
+        let product_name = "A \"quoted\" \\ name</script>\n\u{2028}";
+        let manifest = branded_manifest(&BrandingSnapshot {
+            product_name: Some(product_name.into()),
+            ..BrandingSnapshot::default()
+        });
+
+        assert_eq!(manifest["name"], product_name);
+        assert_eq!(manifest["short_name"], product_name);
     }
 
     #[test]
-    fn hashed_asset_positive() {
-        assert!(is_hashed_asset("app.a1b2c3d4.js"));
-        assert!(is_hashed_asset("style-abcdef01.css"));
+    fn the_official_manifest_is_left_byte_identical() {
+        let text =
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "https://fluxerstatic.com");
+        assert_eq!(finish_manifest(text.clone(), &[], None), text);
     }
 
-    #[test]
-    fn hashed_asset_accepts_bare_contenthash_filenames() {
-        assert!(is_hashed_asset("assets/469e0b8f10c496a1.css"));
-        assert!(is_hashed_asset("assets/a79f1c3119cd700d.woff2"));
-        assert!(is_hashed_asset("/assets/488b87159423ca35.js"));
+    fn static_dir_with_generated_files() -> std::path::PathBuf {
+        static NEXT_DIR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let unique = NEXT_DIR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let root =
+            std::env::temp_dir().join(format!("fluxer-spa-static-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("manifest.json"), GENERATED_MANIFEST).unwrap();
+        std::fs::write(root.join("browserconfig.xml"), GENERATED_BROWSERCONFIG).unwrap();
+        root
     }
 
-    #[test]
-    fn hashed_asset_negative() {
-        assert!(!is_hashed_asset("app.js"));
-        assert!(!is_hashed_asset("style.css"));
-        assert!(!is_hashed_asset("a79f1c3119cd700d/app.js"));
+    fn state_serving(root: &std::path::Path, self_hosted: bool) -> AppState {
+        let mut config = crate::config::AppProxyConfig::from_env();
+        config.static_dir = root.to_str().unwrap().to_owned();
+        config.static_cdn_endpoint = None;
+        config.manifest_scope_extensions = Vec::new();
+        config.self_hosted = self_hosted;
+        config.branding = BrandingSnapshot {
+            product_name: Some("Example".into()),
+            icon_url: Some("https://example.test/icon.png".into()),
+            favicon_url: Some("https://example.test/favicon.png".into()),
+            theme_color: Some("#7b2ce4".into()),
+            ..BrandingSnapshot::default()
+        };
+        let csp = std::sync::Arc::new(
+            crate::csp::CompiledCspPolicy::from_config(&config)
+                .expect("the test configuration must compile to a valid CSP"),
+        );
+        let budgets = crate::state::AppProxyBudgets::default();
+        let local_files = crate::local_files::LocalFileStore::load_blocking(root, &budgets)
+            .expect("the test static directory must load");
+        AppState {
+            branding: crate::branding_images::InstanceBranding::from_config(&config),
+            config: std::sync::Arc::new(config),
+            csp,
+            http_client: reqwest::Client::new(),
+            spa_index_source: crate::state::SpaIndexSource::bundled(""),
+            local_asset_prefixes: None,
+            budgets,
+            local_files,
+        }
+    }
+
+    async fn fetch(state: AppState, path: &str) -> Response {
+        use tower::ServiceExt as _;
+        crate::routes::build_router(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(path)
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap()
+    }
+
+    async fn body_of(response: Response) -> String {
+        let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        String::from_utf8(bytes.to_vec()).unwrap()
+    }
+
+    #[tokio::test]
+    async fn the_served_manifest_is_branded_only_on_a_self_hosted_instance() {
+        let root = static_dir_with_generated_files();
+
+        let official = fetch(state_serving(&root, false), "/manifest.json").await;
+        assert_eq!(official.status(), StatusCode::OK);
+        assert_eq!(
+            body_of(official).await,
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+
+        let self_hosted = fetch(state_serving(&root, true), "/manifest.json").await;
+        assert_eq!(self_hosted.status(), StatusCode::OK);
+        let manifest: serde_json::Value =
+            serde_json::from_str(&body_of(self_hosted).await).unwrap();
+        assert_eq!(manifest["name"], "Example");
+        assert_eq!(manifest["icons"][0]["src"], "https://example.test/icon.png");
+        assert_installable_shape(&manifest);
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    const GENERATED_BROWSERCONFIG: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square150x150logo src="{{STATIC_CDN_ENDPOINT}}/web/mstile-150x150.png"/>
+      <TileColor>#4641D9</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>"#;
+
+    #[tokio::test]
+    async fn the_fluxer_tile_is_served_only_on_the_official_instance() {
+        let root = static_dir_with_generated_files();
+
+        let official = fetch(state_serving(&root, false), "/browserconfig.xml").await;
+        assert_eq!(official.status(), StatusCode::OK);
+        assert_eq!(
+            body_of(official).await,
+            GENERATED_BROWSERCONFIG.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+
+        let self_hosted = fetch(state_serving(&root, true), "/browserconfig.xml").await;
+        assert_eq!(self_hosted.status(), StatusCode::NOT_FOUND);
+
+        std::fs::remove_dir_all(root).unwrap();
     }
 }

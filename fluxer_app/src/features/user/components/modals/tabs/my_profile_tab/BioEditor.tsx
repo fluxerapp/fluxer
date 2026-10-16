@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
-import type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -15,6 +15,7 @@ import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.c
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor.module.css';
+import {ABOUT_ME_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon} from '@phosphor-icons/react';
@@ -23,10 +24,16 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useRef, useState} from 'react';
 
-const ABOUT_ME_DESCRIPTOR = msg({message: 'About me'});
 const OPEN_EMOJI_PICKER_DESCRIPTOR = msg({message: 'Open emoji picker'});
-const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
-const BIO_ALLOWED_TRIGGERS: ReadonlyArray<TriggerType> = Object.freeze(['emoji']);
+export const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
+const ABOUT_ME_IS_TOO_LONG_DESCRIPTOR = msg({
+	message: 'About me is too long',
+	comment: 'Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.',
+});
+const SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR = msg({
+	message: 'Shorten your about me and try again.',
+	comment: 'Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.',
+});
 const COMPOSER_SURFACE_INTERACTIVE_SELECTOR =
 	'[data-channel-textarea], button, a, input, textarea, select, [role="button"]';
 
@@ -96,6 +103,13 @@ export const BioEditor = observer(
 			},
 			[onEmojiPickerOpenChange, onEmojiSelect],
 		);
+		const handleExceedMaxLength = useCallback(() => {
+			showGenericErrorModal({
+				title: i18n._(ABOUT_ME_IS_TOO_LONG_DESCRIPTOR),
+				message: i18n._(SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR),
+				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+			});
+		}, [i18n]);
 		let resolvedPlaceholder = '';
 		if (placeholder != null) {
 			resolvedPlaceholder = placeholder;
@@ -123,8 +137,9 @@ export const BioEditor = observer(
 					aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
 					aria-haspopup="dialog"
 					aria-expanded={emojiPickerOpen}
+					data-flx="user.my-profile-tab.bio-editor.emoji-button.emoji-picker-open-change"
 				>
-					<SmileyIcon size={remFromPx(20)} weight="fill" />
+					<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="user.my-profile-tab.bio-editor.smiley-icon" />
 				</button>
 			</FocusRing>
 		) : (
@@ -147,10 +162,12 @@ export const BioEditor = observer(
 						}}
 						onClose={onClose}
 						visibleTabs={['emojis']}
+						data-flx="user.my-profile-tab.bio-editor.expression-picker-popout"
 					/>
 				)}
+				data-flx="user.my-profile-tab.bio-editor.popout"
 			>
-				<FocusRing offset={-2} enabled={!disabled}>
+				<FocusRing offset={-2} enabled={!disabled} data-flx="user.my-profile-tab.bio-editor.focus-ring">
 					<button
 						type="button"
 						className={clsx(styles.emojiButton, emojiPickerOpen && styles.emojiButtonActive)}
@@ -158,16 +175,17 @@ export const BioEditor = observer(
 						aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
 						aria-haspopup="dialog"
 						aria-expanded={emojiPickerOpen}
+						data-flx="user.my-profile-tab.bio-editor.emoji-button"
 					>
-						<SmileyIcon size={remFromPx(20)} weight="fill" />
+						<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="user.my-profile-tab.bio-editor.smiley-icon--2" />
 					</button>
 				</FocusRing>
 			</Popout>
 		);
 		return (
-			<div className="flx-element">
-				<fieldset className={formStyles.fieldset}>
-					<div className={formStyles.labelContainer}>
+			<div className="flx-element" data-flx="user.my-profile-tab.bio-editor.flx-element">
+				<fieldset className={formStyles.fieldset} data-flx="user.my-profile-tab.bio-editor.fieldset">
+					<div className={formStyles.labelContainer} data-flx="user.my-profile-tab.bio-editor.div">
 						<label
 							id={labelId}
 							htmlFor={editableId}
@@ -182,12 +200,20 @@ export const BioEditor = observer(
 								}
 							}}
 							className={formStyles.label}
+							data-flx="user.my-profile-tab.bio-editor.label.prevent-default"
 						>
 							{i18n._(ABOUT_ME_DESCRIPTOR)}
 						</label>
 					</div>
-					<div className={formStyles.inputGroup}>
-						<FocusRing within={true} ringTarget={wrapperRef} focusTarget={wrapperRef} offset={-2} enabled={!disabled}>
+					<div className={formStyles.inputGroup} data-flx="user.my-profile-tab.bio-editor.div--2">
+						<FocusRing
+							within={true}
+							ringTarget={wrapperRef}
+							focusTarget={wrapperRef}
+							offset={-2}
+							enabled={!disabled}
+							data-flx="user.my-profile-tab.bio-editor.focus-ring--2"
+						>
 							<div
 								ref={wrapperRef}
 								className={clsx(formStyles.textareaWrapper, surfaceStyles.surface, surfaceInteractionClass)}
@@ -205,6 +231,7 @@ export const BioEditor = observer(
 										composer.focus();
 									}
 								}}
+								data-flx="user.my-profile-tab.bio-editor.div.prevent-default"
 							>
 								<LexicalRichInput
 									key={hydrationKey}
@@ -213,12 +240,12 @@ export const BioEditor = observer(
 									placeholder={resolvedPlaceholder}
 									disabled={disabled}
 									channel={null}
-									allowedTriggers={[...BIO_ALLOWED_TRIGGERS]}
 									markdown={true}
 									markdownParserFlags={BIO_MARKDOWN_PARSER_FLAGS}
 									singleLine={false}
 									size="form"
 									maxLength={actualMaxLength}
+									onExceedMaxLength={handleExceedMaxLength}
 									className={styles.editor}
 									autocompleteAnchor={wrapperRef.current}
 									id={editableId}
@@ -231,30 +258,35 @@ export const BioEditor = observer(
 									onFocus={() => setIsFocused(true)}
 									onBlur={() => setIsFocused(false)}
 									i18n={i18n}
+									data-flx="user.my-profile-tab.bio-editor.editor.change"
 								/>
-								<div className={formStyles.textareaActions}>
+								<div className={formStyles.textareaActions} data-flx="user.my-profile-tab.bio-editor.div--3">
 									{emojiButton}
-									<div className={styles.characterCountContainer}>
+									<div
+										className={styles.characterCountContainer}
+										data-flx="user.my-profile-tab.bio-editor.character-count-container"
+									>
 										<CharacterCounter
 											currentLength={actualLength}
 											maxLength={actualMaxLength}
 											canUpgrade={false}
 											premiumMaxLength={actualMaxLength}
 											onUpgradeClick={() => undefined}
+											data-flx="user.my-profile-tab.bio-editor.character-counter"
 										/>
 									</div>
 								</div>
 							</div>
 						</FocusRing>
 						{hasError && (
-							<span id={errorId} className={formStyles.errorText}>
+							<span id={errorId} className={formStyles.errorText} data-flx="user.my-profile-tab.bio-editor.span">
 								{errorMessage}
 							</span>
 						)}
 					</div>
 				</fieldset>
-				<div id={descriptionId} className={styles.description}>
-					<Trans>You can use links, emoji, and markdown.</Trans>
+				<div id={descriptionId} className={styles.description} data-flx="user.my-profile-tab.bio-editor.description">
+					<Trans>You can use links, emoji, and Markdown.</Trans>
 				</div>
 			</div>
 		);

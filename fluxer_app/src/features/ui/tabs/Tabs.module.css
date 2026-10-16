@@ -34,6 +34,6 @@
 }
 
 :global(.theme-light) .tab.selected {
-	color: var(--brand-primary);
-	border-bottom-color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
+	border-bottom-color: var(--brand-primary-foreground);
 }

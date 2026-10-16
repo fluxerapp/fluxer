@@ -12,6 +12,7 @@ import {
 	GIFT_NOT_FOUND_TITLE_DESCRIPTOR,
 } from '@app/features/gift/utils/GiftMessageDescriptors';
 import {extractGiftCode} from '@app/features/gift/utils/GiftUtils';
+import {type InstanceHTTPTarget, instanceRequest} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -116,7 +117,7 @@ function giftErrorModal(title: string, message: string): void {
 	);
 }
 
-function handleRedeemFailure(i18n: I18n, code: string, error: HttpError): void {
+function handleRedeemFailure(i18n: I18n, code: string, target: InstanceHTTPTarget, error: HttpError): void {
 	switch (errorCode(error)) {
 		case APIErrorCodes.CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY:
 			ModalCommands.push(
@@ -129,14 +130,14 @@ function handleRedeemFailure(i18n: I18n, code: string, error: HttpError): void {
 			);
 			break;
 		case APIErrorCodes.UNKNOWN_GIFT_CODE:
-			Gifts.markAsInvalid(code);
+			Gifts.markAsInvalid(code, target);
 			giftErrorModal(
 				i18n._(INVALID_GIFT_CODE_DESCRIPTOR),
 				i18n._(THIS_GIFT_CODE_IS_INVALID_OR_HAS_ALREADY_BEEN_REDEEMED_DESCRIPTOR),
 			);
 			break;
 		case APIErrorCodes.GIFT_CODE_ALREADY_REDEEMED:
-			Gifts.markAsRedeemed(code);
+			Gifts.markAsRedeemed(code, target);
 			giftErrorModal(
 				i18n._(GIFT_ALREADY_REDEEMED_TITLE_DESCRIPTOR),
 				i18n._(THIS_GIFT_CODE_HAS_ALREADY_BEEN_REDEEMED_DESCRIPTOR),
@@ -144,7 +145,7 @@ function handleRedeemFailure(i18n: I18n, code: string, error: HttpError): void {
 			break;
 		default:
 			if (error.status === 404) {
-				Gifts.markAsInvalid(code);
+				Gifts.markAsInvalid(code, target);
 				giftErrorModal(i18n._(GIFT_NOT_FOUND_TITLE_DESCRIPTOR), i18n._(THIS_GIFT_CODE_COULD_NOT_BE_FOUND_DESCRIPTOR));
 			} else {
 				giftErrorModal(
@@ -201,46 +202,45 @@ export interface GiftMetadata {
 	redeemed_by: UserPartial | null;
 }
 
-export async function fetch(rawCode: string): Promise<Gift> {
+export async function fetch(rawCode: string, target: InstanceHTTPTarget): Promise<Gift> {
 	const code = extractGiftCode(rawCode);
 	try {
-		const response = await http.get<Gift>(Endpoints.GIFT(code));
+		const response = await instanceRequest<Gift>({method: 'GET', path: Endpoints.GIFT(code), target});
 		const gift = response.body;
 		logger.debug('Gift fetched', {code});
 		return gift;
 	} catch (error) {
 		logger.error('Gift fetch failed', error);
-		if (error instanceof HttpError && error.status === 404) {
-			Gifts.markAsInvalid(code);
-		}
 		throw error;
 	}
 }
 
-export async function fetchWithCoalescing(rawCode: string): Promise<Gift> {
-	return Gifts.fetchGift(extractGiftCode(rawCode));
+export async function fetchWithCoalescing(rawCode: string, target: InstanceHTTPTarget): Promise<Gift> {
+	return Gifts.fetchGift(extractGiftCode(rawCode), target);
 }
 
-export async function openAcceptModal(rawCode: string): Promise<void> {
+export async function openAcceptModal(rawCode: string, target: InstanceHTTPTarget): Promise<void> {
 	const code = extractGiftCode(rawCode);
-	void fetchWithCoalescing(code).catch(() => {});
+	void fetchWithCoalescing(code, target).catch(() => {});
 	ModalCommands.pushWithKey(
-		modal(() => <GiftAcceptModal code={code} data-flx="gift.gift-commands.open-accept-modal.gift-accept-modal" />),
+		modal(() => (
+			<GiftAcceptModal code={code} target={target} data-flx="gift.gift-commands.open-accept-modal.gift-accept-modal" />
+		)),
 		`gift-accept-${code}`,
 	);
 }
 
-export async function redeem(i18n: I18n, rawCode: string): Promise<void> {
+export async function redeem(i18n: I18n, rawCode: string, target: InstanceHTTPTarget): Promise<void> {
 	const code = extractGiftCode(rawCode);
 	try {
-		await http.post(Endpoints.GIFT_REDEEM(code));
+		await instanceRequest({method: 'POST', path: Endpoints.GIFT_REDEEM(code), target});
 		logger.info('Gift redeemed', {code});
-		Gifts.markAsRedeemed(code);
+		Gifts.markAsRedeemed(code, target);
 		ToastCommands.success(i18n._(GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR));
 	} catch (error) {
 		logger.error('Gift redeem failed', error);
 		if (error instanceof HttpError) {
-			handleRedeemFailure(i18n, code, error);
+			handleRedeemFailure(i18n, code, target, error);
 		} else {
 			fallbackRedeemFailure(i18n);
 		}

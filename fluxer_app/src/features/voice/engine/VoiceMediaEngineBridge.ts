@@ -7,14 +7,13 @@ import {
 	buildVoiceParticipantIdentity,
 	parseVoiceParticipantIdentity,
 } from '@app/features/voice/utils/VoiceParticipantIdentity';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
 import type {
-	VoiceEngineV2Controller,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
-	VoiceEngineV2ScreenEncodingOptions,
-	VoiceEngineV2Snapshot,
 	VoiceEngineV2WatchedStream,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import type {Participant, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceMediaEngineBridge');
@@ -30,6 +29,7 @@ interface MediaEngineAccess {
 	voiceEngineV2Controller?: VoiceEngineV2Controller;
 	voiceEngineV2Model?: VoiceEngineV2Model;
 	voiceEngineV2Snapshot?: VoiceEngineV2Snapshot;
+	getAllVoiceStates?: () => VoiceMediaEngineVoiceStates;
 	getAllVoiceStatesInChannel?: (
 		guildId: string,
 		channelId: string,
@@ -110,6 +110,10 @@ export function getVoiceConnectionContextFromMediaEngine(): VoiceMediaEngineConn
 	};
 }
 
+type VoiceMediaEngineVoiceStates = Readonly<
+	Record<string, Readonly<Record<string, Readonly<Record<string, VoiceMediaEngineVoiceState>>>>>
+>;
+
 export function getAllVoiceStatesInChannelFromMediaEngine(
 	guildId: string,
 	channelId: string,
@@ -126,43 +130,6 @@ export function getVoiceStateByConnectionIdFromMediaEngine(
 
 export function getVoiceEngineV2SnapshotFromMediaEngine(): VoiceEngineV2Snapshot | null {
 	return getMediaEngine()?.voiceEngineV2Snapshot ?? null;
-}
-
-export interface VoiceEngineV2ScreenEncodingUpdateFromMediaEngine {
-	captureId?: string;
-	width: number;
-	height: number;
-	frameRate?: number;
-	maxBitrateBps?: number;
-}
-
-export function isVoiceEngineV2NativeProjectionActiveFromMediaEngine(): boolean {
-	const store = getMediaEngine();
-	if (!store) return false;
-	if (store.room) return false;
-	return store.connected === true || store.voiceEngineV2Model?.connection.connected === true;
-}
-
-function getVoiceEngineV2ActiveScreenCaptureId(controller: VoiceEngineV2Controller): string | null {
-	return controller.snapshot.screen.desired?.captureId ?? controller.snapshot.screen.published?.captureId ?? null;
-}
-
-export function updateVoiceEngineV2ScreenEncodingFromMediaEngine(
-	options: VoiceEngineV2ScreenEncodingUpdateFromMediaEngine,
-): boolean {
-	const controller = getMediaEngine()?.voiceEngineV2Controller;
-	if (!controller) return false;
-	const captureId = options.captureId ?? getVoiceEngineV2ActiveScreenCaptureId(controller);
-	if (!captureId) return false;
-	const update: VoiceEngineV2ScreenEncodingOptions = {
-		captureId,
-		width: options.width,
-		height: options.height,
-		frameRate: options.frameRate,
-		maxBitrateBps: options.maxBitrateBps,
-	};
-	controller.updateScreenEncoding(update);
-	return true;
 }
 
 export function setVoiceEngineV2ParticipantAudioLevelSpeaking(

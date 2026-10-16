@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {
+	assertAttachmentFileSizesWithinLimit,
+	MESSAGE_NONCE_TTL,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
 import {
 	isMessageTypeDeletable,
 	MessageFlags,
 	MessageTypes,
 	Permissions,
 	SENDABLE_MESSAGE_FLAGS,
-	TEXT_BASED_CHANNEL_TYPES,
 } from '@fluxer/constants/src/ChannelConstants';
 import {
 	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
@@ -19,34 +30,16 @@ import {
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
-import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {type ChannelID, createChannelID, type MessageID, type UserID} from '../../../BrandedTypes';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {User} from '../../../models/User';
-import {hasVisibleContent} from '../../../utils/StringUtils';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import {assertAttachmentFileSizesWithinLimit, MESSAGE_NONCE_TTL} from './MessageHelpers';
 
 export class MessageValidationService {
 	constructor(
 		private cacheService: ICacheService,
 		private limitConfigService: LimitConfigService,
 	) {}
-
-	ensureTextChannel(channel: Channel): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
-			throw new CannotSendMessageToNonTextChannelError();
-		}
-	}
 
 	validateMessageContent(
 		data: MessageRequest | MessageUpdateRequest,
@@ -91,10 +84,14 @@ export class MessageValidationService {
 		contentModerationService.scanText(data.content, modCtx);
 		if (data.embeds) {
 			for (const embed of data.embeds) {
+				if (embed.url) contentModerationService.scanUrl(embed.url, modCtx);
 				contentModerationService.scanText(embed.title ?? null, modCtx);
 				contentModerationService.scanText(embed.description ?? null, modCtx);
 				if (embed.footer) contentModerationService.scanText(embed.footer.text ?? null, modCtx);
-				if (embed.author) contentModerationService.scanText(embed.author.name ?? null, modCtx);
+				if (embed.author) {
+					contentModerationService.scanText(embed.author.name ?? null, modCtx);
+					if (embed.author.url) contentModerationService.scanUrl(embed.author.url, modCtx);
+				}
 				if (embed.fields) {
 					for (const field of embed.fields) {
 						contentModerationService.scanText(field.name ?? null, modCtx);
@@ -160,12 +157,8 @@ export class MessageValidationService {
 		}
 	}
 
-	calculateMessageFlags(data: {flags?: number; favorite_meme_id?: bigint | null}): number {
-		let flags = data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0;
-		if (data.favorite_meme_id) {
-			flags |= MessageFlags.COMPACT_ATTACHMENTS;
-		}
-		return flags;
+	calculateMessageFlags(data: {flags?: number}): number {
+		return data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0;
 	}
 
 	validateTotalAttachmentSize(
@@ -191,28 +184,6 @@ export class MessageValidationService {
 			attachments.map(({size}) => size),
 			maxFileSize,
 		);
-	}
-
-	async findExistingMessage({
-		userId,
-		nonce,
-		expectedChannelId,
-	}: {
-		userId: UserID;
-		nonce?: string;
-		expectedChannelId: ChannelID;
-	}): Promise<Message | null> {
-		if (!nonce) return null;
-		const existingNonce = await this.cacheService.get<{
-			channel_id: string;
-			message_id: string;
-		}>(`message-nonce:${userId}:${nonce}`);
-		if (!existingNonce) return null;
-		const cachedChannelId = createChannelID(BigInt(existingNonce.channel_id));
-		if (cachedChannelId !== expectedChannelId) {
-			throw new UnknownMessageError();
-		}
-		return null;
 	}
 
 	async cacheMessageNonce({
@@ -252,9 +223,8 @@ export class MessageValidationService {
 		}
 		const isAuthor = message.authorId === userId;
 		if (!guild) return isAuthor;
-		const canManageMessages =
-			(await hasPermission(Permissions.SEND_MESSAGES)) && (await hasPermission(Permissions.MANAGE_MESSAGES));
-		return isAuthor || canManageMessages;
+		if (isAuthor) return true;
+		return hasPermission(Permissions.MANAGE_MESSAGES);
 	}
 
 	private validateVoiceMessageConstraints(

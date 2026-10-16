@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {RecentMentionRow} from '@app/api/database/types/UserTypes';
+import {RecentMention} from '@app/api/models/RecentMention';
+import {RecentMentions, RecentMentionsByGuild} from '@app/api/Tables';
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import {createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import type {RecentMentionRow} from '../../database/types/UserTypes';
-import {RecentMention} from '../../models/RecentMention';
-import {RecentMentions, RecentMentionsByGuild} from '../../Tables';
 
 const FETCH_RECENT_MENTION_CQL = RecentMentions.selectCql({
 	where: [RecentMentions.where.eq('user_id'), RecentMentions.where.eq('message_id')],
@@ -66,23 +66,6 @@ export class RecentMentionRepository {
 		if (!includeRole && mention.is_role) return false;
 		if (!includeGuilds && mention.guild_id != null) return false;
 		return true;
-	}
-
-	async createRecentMention(mention: RecentMentionRow): Promise<RecentMention> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(RecentMentions.upsertAll(mention));
-		batch.addPrepared(
-			RecentMentionsByGuild.insert({
-				user_id: mention.user_id,
-				guild_id: mention.guild_id,
-				message_id: mention.message_id,
-				channel_id: mention.channel_id,
-				is_everyone: mention.is_everyone,
-				is_role: mention.is_role,
-			}),
-		);
-		await batch.execute();
-		return new RecentMention(mention);
 	}
 
 	async createRecentMentions(mentions: Array<RecentMentionRow>): Promise<void> {

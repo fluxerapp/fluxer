@@ -1,0 +1,102 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID, createWebhookID} from '@app/api/BrandedTypes';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {
+	createWebhook,
+	executeWebhook,
+	executeWebhookWithAttachments,
+	getChannelWebhooks,
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
+import {DELETED_USER_ID, DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+
+const VANISHED_CREATOR_ID = createUserID(999999999999999997n);
+
+describe('Webhook whose creating account cannot be resolved', () => {
+	let harness: ApiTestHarness;
+	beforeEach(async () => {
+		harness = await createApiTestHarness();
+	});
+	afterEach(async () => {
+		await harness?.shutdown();
+	});
+	it('lists a webhook with no creator id as the deleted user', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Null creator webhook guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Null Creator Webhook');
+		await new WebhookRepository().update(createWebhookID(BigInt(webhook.id)), {creatorId: null});
+		const webhooks = await getChannelWebhooks(harness, channelId, owner.token);
+		const listed = webhooks.find((entry) => entry.id === webhook.id);
+		expect(listed).toBeDefined();
+		expect(listed?.user.id).toBe(DELETED_USER_ID.toString());
+		expect(listed?.user.username).toBe(DELETED_USER_USERNAME);
+	});
+	it('lists a webhook whose creator row is gone as the deleted user', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Vanished creator webhook guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Vanished Creator Webhook');
+		await new WebhookRepository().update(createWebhookID(BigInt(webhook.id)), {creatorId: VANISHED_CREATOR_ID});
+		const webhooks = await getChannelWebhooks(harness, channelId, owner.token);
+		const listed = webhooks.find((entry) => entry.id === webhook.id);
+		expect(listed).toBeDefined();
+		expect(listed?.user.id).toBe(VANISHED_CREATOR_ID.toString());
+		expect(listed?.user.username).toBe(DELETED_USER_USERNAME);
+	});
+	it('executes a multipart payload for a webhook with no creator id', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Null creator multipart guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Null Creator Multipart Webhook');
+		await new WebhookRepository().update(createWebhookID(BigInt(webhook.id)), {creatorId: null});
+		const {response, json} = await executeWebhookWithAttachments(harness, {
+			webhookId: webhook.id,
+			webhookToken: webhook.token,
+			payload: {
+				attachments: [{id: 0, filename: 'orphaned.txt'}],
+			},
+			files: [{index: 0, filename: 'orphaned.txt', data: Buffer.from('uploaded by an orphaned webhook')}],
+		});
+		expect(response.status).toBe(HTTP_STATUS.OK);
+		expect(json?.attachments?.[0].filename).toBe('orphaned.txt');
+	});
+	it('executes a multipart payload for a webhook whose creator row is gone', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Vanished creator multipart guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Vanished Creator Multipart Webhook');
+		await new WebhookRepository().update(createWebhookID(BigInt(webhook.id)), {creatorId: VANISHED_CREATOR_ID});
+		const {response, json} = await executeWebhookWithAttachments(harness, {
+			webhookId: webhook.id,
+			webhookToken: webhook.token,
+			payload: {
+				attachments: [{id: 0, filename: 'vanished.txt'}],
+			},
+			files: [{index: 0, filename: 'vanished.txt', data: Buffer.from('uploaded by a vanished creator')}],
+		});
+		expect(response.status).toBe(HTTP_STATUS.OK);
+		expect(json?.attachments?.[0].filename).toBe('vanished.txt');
+	});
+	it('executes a json payload for a webhook with no creator id', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Null creator json guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Null Creator Json Webhook');
+		await new WebhookRepository().update(createWebhookID(BigInt(webhook.id)), {creatorId: null});
+		const {response, json} = await executeWebhook(
+			harness,
+			webhook.id,
+			webhook.token,
+			{content: 'sent by an orphaned webhook', wait: true},
+			200,
+		);
+		expect(response.status).toBe(HTTP_STATUS.OK);
+		expect(json?.content).toBe('sent by an orphaned webhook');
+	});
+});

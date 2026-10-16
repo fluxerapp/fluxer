@@ -1,16 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.dmIcon {
-	display: flex;
-	height: 1.25rem;
-	width: 1.25rem;
-	align-items: center;
-	justify-content: center;
-	border-radius: 624.9375rem;
-	background-color: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .filterButton {
 	display: flex;
 	height: 2rem;
@@ -43,82 +32,11 @@
 }
 
 .guildGroup {
-	margin-bottom: 0.25rem;
 	min-width: 0;
-}
-
-.guildGroup:last-child {
-	margin-bottom: 0;
-}
-
-.guildGroupHeading {
-	position: sticky;
-	top: 0;
-	z-index: 3;
-	display: flex;
-	align-items: center;
-	box-sizing: border-box;
-	min-height: 2.25rem;
-	margin: 0;
-	padding: 0.75rem 0.25rem 0.5rem;
-	font-size: 0.6875rem;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--text-primary-muted);
-	background-color: transparent;
-	transition: color 0.12s ease;
 }
 
 .messageCard {
 	margin-bottom: 1rem;
-}
-
-.groupContainer {
-	margin-bottom: 1rem;
-}
-
-.groupHeader {
-	margin-bottom: 0.5rem;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
-}
-
-.groupHeaderContent {
-	display: flex;
-	min-width: 0;
-	flex: 1 1 0%;
-	flex-direction: column;
-}
-
-.groupHeaderText {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.75rem;
-	line-height: 1rem;
-}
-
-.channelName {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-weight: 500;
-	color: var(--text-primary);
-}
-
-.guildName {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	color: var(--text-primary-muted);
-}
-
-.separator {
-	color: var(--text-primary-muted);
 }
 
 .iconMedium {

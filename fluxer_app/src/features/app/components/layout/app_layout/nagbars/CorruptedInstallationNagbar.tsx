@@ -3,7 +3,9 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -25,8 +27,8 @@ export const CorruptedInstallationNagbar = observer(({isMobile}: {isMobile: bool
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#b00000"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.CRITICAL].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.CRITICAL].textColor}
 			data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar"
 		>
 			<NagbarContent
@@ -38,7 +40,7 @@ export const CorruptedInstallationNagbar = observer(({isMobile}: {isMobile: bool
 						onClick={handleDownload}
 						data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar-button.download"
 					>
-						{i18n._(DOWNLOAD_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(DOWNLOAD_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar-content"

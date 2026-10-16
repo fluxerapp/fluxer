@@ -68,13 +68,17 @@ export function formatSlowmodeTime(ms: number, locale: string): string {
 	return `${formatTimeSegment(minutes, locale)}:${formatTimeSegment(seconds, locale)}`;
 }
 
-export function formatSlowmodeDuration(ms: number, locale: string): string {
+function formatSlowmodeDuration(ms: number, locale: string): string {
 	const totalSeconds = Math.max(1, Math.round(ms / MS_PER_SECOND));
 	if (totalSeconds < SECONDS_PER_MINUTE) {
 		return formatDurationPart(totalSeconds, 'second', locale);
 	}
 	if (totalSeconds < SECONDS_PER_HOUR) {
-		return formatDurationPart(Math.round(totalSeconds / SECONDS_PER_MINUTE), 'minute', locale);
+		const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
+		const remainingSeconds = totalSeconds % SECONDS_PER_MINUTE;
+		const minutePart = formatDurationPart(minutes, 'minute', locale);
+		if (remainingSeconds === 0) return minutePart;
+		return `${minutePart} ${formatDurationPart(remainingSeconds, 'second', locale)}`;
 	}
 	if (totalSeconds < SECONDS_PER_DAY) {
 		const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
@@ -111,15 +115,15 @@ export const SlowmodeIndicator = observer(({slowmodeRemaining, slowmodeDuration,
 				className={clsx(styles.container, onCooldown && styles.cooldown)}
 				data-flx="channel.slowmode-indicator.container"
 			>
-				<span className={styles.label} data-flx="channel.slowmode-indicator.label">
-					{statusLabel}
-				</span>
 				<ClockIcon
 					size={remFromPx(12)}
 					weight="fill"
 					className={styles.icon}
 					data-flx="channel.slowmode-indicator.clock-icon"
 				/>
+				<span className={styles.label} data-flx="channel.slowmode-indicator.label">
+					{statusLabel}
+				</span>
 			</div>
 		</Tooltip>
 	);

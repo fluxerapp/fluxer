@@ -92,76 +92,6 @@
 	}
 }
 
-.mobileWrapper {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	background: var(--settings-panel-background);
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileHeaderContainer {
-	position: relative;
-	flex-shrink: 0;
-	z-index: 10;
-	background: var(--background-primary);
-}
-
-.mobileHeaderContent {
-	width: 100%;
-}
-
-.mobileContentContainer {
-	position: relative;
-	flex: 1 1 auto;
-	overflow: hidden;
-}
-
-.mobileContentPane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	contain: layout style paint;
-}
-
-.mobileSlideContainer {
-	display: flex;
-	height: 100%;
-	width: 200%;
-	-webkit-backface-visibility: hidden;
-	backface-visibility: hidden;
-}
-
-.mobilePane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	-webkit-overflow-scrolling: touch;
-	overscroll-behavior-y: contain;
-	contain: layout style paint;
-}
-
-.mobilePaneActive {
-	z-index: 2;
-}
-
-.mobilePaneInactive {
-	z-index: 1;
-	pointer-events: none;
-}
-
 .desktopSidebar {
 	flex: 0 0 clamp(15.75rem, 24svw, 20rem);
 	display: flex;
@@ -406,9 +336,30 @@
 	border: 0;
 }
 
+.sidebarItemTrailing {
+	position: relative;
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	margin-inline-start: 0.25rem;
+	min-width: 1rem;
+	min-height: 1rem;
+}
+
+.sidebarItemAttentionDot {
+	position: absolute;
+}
+
+.sidebarItem[data-expandable='true'].sidebarItemSelected .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'][aria-expanded='true'] .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true']:hover .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'].sidebarItemFocused .sidebarItemAttentionDot {
+	visibility: hidden;
+}
+
 .sidebarItemChevron {
 	flex-shrink: 0;
-	margin-inline-start: 0.25rem;
 	color: var(--text-tertiary);
 	opacity: 0;
 	transform: rotate(0deg);
@@ -540,13 +491,6 @@
 	.closeButton:hover {
 	background: var(--settings-hover-background);
 	color: var(--text-primary);
-}
-
-.preloadContent {
-	position: absolute;
-	opacity: 0;
-	pointer-events: none;
-	visibility: hidden;
 }
 
 .desktopScrollSpacerTop {

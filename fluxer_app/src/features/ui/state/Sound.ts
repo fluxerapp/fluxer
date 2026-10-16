@@ -3,6 +3,7 @@
 import * as SoundUtils from '@app/features/notification/utils/SoundUtils';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {SoundSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
@@ -17,6 +18,7 @@ export interface SoundSettings {
 
 export interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
+	ignoreGroupCooldown?: boolean;
 }
 
 interface OneShotSoundPolicy {
@@ -46,8 +48,8 @@ interface PendingAutoplayBlockedOneShot {
 const DEFAULT_MASTER_VOLUME = 100;
 const MAX_VOLUME_PERCENT = 200;
 const GLOBAL_ONE_SHOT_MIN_INTERVAL_MS = 260;
-export const AUTOPLAY_BLOCKED_ONE_SHOT_TTL_MS = 3000;
-export const DEAFEN_SUPPRESSED_SOUND_TYPES: ReadonlySet<SoundType> = new Set([
+const AUTOPLAY_BLOCKED_ONE_SHOT_TTL_MS = 3000;
+const DEAFEN_SUPPRESSED_SOUND_TYPES: ReadonlySet<SoundType> = new Set([
 	SoundType.UserJoin,
 	SoundType.UserLeave,
 	SoundType.UserMove,
@@ -192,7 +194,7 @@ class Sound {
 			},
 			{autoBind: true},
 		);
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 		reaction(
 			() => StreamerMode.shouldDisableSounds,
 			(disabled) => {
@@ -294,6 +296,36 @@ class Sound {
 			});
 	}
 
+	async playOneShotSoundImmediately(
+		sound: SoundType,
+		options: SoundPlayOptions = {},
+		signal?: AbortSignal,
+	): Promise<boolean> {
+		if (StreamerMode.shouldDisableSounds) return false;
+		if (this.isSuppressedWhileSelfDeafened(sound, options)) return false;
+		if (!this.isSoundEnabled(sound)) return false;
+		const policy = getOneShotSoundPolicy(sound);
+		if (options.ignoreGroupCooldown !== true) {
+			const lastGroupPlayedAt = this.lastOneShotPlayedAtByGroup.get(policy.group);
+			if (lastGroupPlayedAt !== undefined && Date.now() < lastGroupPlayedAt + policy.cooldownMs) return false;
+		}
+		this.clearPendingOneShotSound(sound);
+		const effectiveVolume = this.volume * this.getEffectiveMultiplier(sound);
+		const played = await this.playOneShotSoundNow(
+			sound,
+			effectiveVolume,
+			options.bypassSelfDeafened === true,
+			signal,
+			false,
+		);
+		if (played) {
+			const playedAt = Date.now();
+			this.lastOneShotPlayedAt = playedAt;
+			this.lastOneShotPlayedAtByGroup.set(policy.group, playedAt);
+		}
+		return played;
+	}
+
 	previewSound(sound: SoundType): void {
 		if (StreamerMode.shouldDisableSounds) {
 			return;
@@ -358,16 +390,6 @@ class Sound {
 		return isDefaultDisabledSound(soundType);
 	}
 
-	toggleEnabled(): void {
-		this.settings = {
-			...this.settings,
-			allSoundsDisabled: !this.settings.allSoundsDisabled,
-		};
-		if (this.settings.allSoundsDisabled) {
-			this.stopAllSounds();
-		}
-	}
-
 	updateSettings(settings: {allSoundsDisabled?: boolean; soundType?: SoundType; enabled?: boolean}): void {
 		const {soundType, enabled, allSoundsDisabled} = settings;
 		if (allSoundsDisabled !== undefined) {
@@ -400,18 +422,6 @@ class Sound {
 		}
 	}
 
-	setVolume(volume: number): void {
-		this.volume = Math.max(0, Math.min(1, volume));
-	}
-
-	getSyncAcrossDevices(): boolean {
-		return this.syncAcrossDevices;
-	}
-
-	setSyncAcrossDevices(value: boolean): void {
-		this.syncAcrossDevices = value;
-	}
-
 	getMasterVolume(): number {
 		return this.settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
 	}
@@ -422,10 +432,6 @@ class Sound {
 			masterVolume: clampVolume(value),
 			soundOverrides: this.settings.soundOverrides ?? {},
 		};
-	}
-
-	getSoundOverride(soundType: SoundType): number | undefined {
-		return this.settings.soundOverrides?.[soundType];
 	}
 
 	setSoundOverride(soundType: SoundType, value: number): void {
@@ -460,10 +466,6 @@ class Sound {
 			masterVolume: this.settings.masterVolume ?? DEFAULT_MASTER_VOLUME,
 			soundOverrides: {},
 		};
-	}
-
-	hasAnyOverride(): boolean {
-		return Object.keys(this.settings.soundOverrides ?? {}).length > 0;
 	}
 
 	private getEffectiveMultiplier(soundType: SoundType): number {
@@ -553,7 +555,7 @@ class Sound {
 		) {
 			this.lastOneShotPlayedAt = now;
 			this.lastOneShotPlayedAtByGroup.set(selectedGroup, now);
-			this.playOneShotSoundNow(selectedSound.sound, selectedSound.volume, selectedSound.bypassSelfDeafened);
+			void this.playOneShotSoundNow(selectedSound.sound, selectedSound.volume, selectedSound.bypassSelfDeafened);
 		}
 		this.scheduleOneShotDrain();
 	}
@@ -579,23 +581,38 @@ class Sound {
 		if (Date.now() > pending.expiresAt) return;
 		if (!this.isSoundEnabled(pending.sound)) return;
 		if (this.isSuppressedWhileSelfDeafened(pending.sound, pending)) return;
-		this.playOneShotSoundNow(pending.sound, pending.volume, pending.bypassSelfDeafened);
+		void this.playOneShotSoundNow(pending.sound, pending.volume, pending.bypassSelfDeafened);
 	}
 
-	private playOneShotSoundNow(sound: SoundType, volume: number, bypassSelfDeafened: boolean): void {
-		SoundUtils.playSound(sound, false, volume, () =>
-			this.handleOneShotAutoplayBlocked(sound, volume, bypassSelfDeafened),
-		)
-			.then((result) => {
-				if (!result) return;
-				this.addCurrentlyPlayingSound(sound);
-				const remove = () => this.removeCurrentlyPlayingSound(sound);
-				result.addEventListener('ended', remove, {once: true});
-				result.addEventListener('error', remove, {once: true});
-			})
-			.catch((error) => {
-				this.logger.warn('Failed to play sound:', error);
-			});
+	private async playOneShotSoundNow(
+		sound: SoundType,
+		volume: number,
+		bypassSelfDeafened: boolean,
+		signal?: AbortSignal,
+		retryOnAutoplayBlocked = true,
+	): Promise<boolean> {
+		try {
+			const result = await SoundUtils.playSound(
+				sound,
+				false,
+				volume,
+				retryOnAutoplayBlocked ? () => this.handleOneShotAutoplayBlocked(sound, volume, bypassSelfDeafened) : undefined,
+				signal,
+			);
+			if (!result) return false;
+			this.addCurrentlyPlayingSound(sound);
+			const remove = (): void => {
+				signal?.removeEventListener('abort', remove);
+				this.removeCurrentlyPlayingSound(sound);
+			};
+			result.addEventListener('ended', remove, {once: true});
+			result.addEventListener('error', remove, {once: true});
+			signal?.addEventListener('abort', remove, {once: true});
+			return true;
+		} catch (error) {
+			this.logger.warn('Failed to play sound:', error);
+			return false;
+		}
 	}
 
 	private addCurrentlyPlayingSound(sound: SoundType): void {
@@ -636,16 +653,8 @@ class Sound {
 		return !this.settings.allSoundsDisabled;
 	}
 
-	getSoundSettings(): SoundSettings {
-		return this.settings;
-	}
-
 	isSoundTypeEnabled(soundType: SoundType): boolean {
 		return this.isSoundEnabled(soundType);
-	}
-
-	getVolume(): number {
-		return this.volume;
 	}
 
 	isIncomingCallActive(): boolean {

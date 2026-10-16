@@ -1,0 +1,97 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.meilisearch }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "meilisearch" "component" "search" "w" . }}
+{{- $health := dict "path" "/health" "port" "http" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: meilisearch
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 7700
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: meilisearch
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: meilisearch
+  podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 65532) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: meilisearch
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          env:
+            - name: MEILI_ENV
+              value: production
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: MEILI_UPGRADE_DB
+              value: "true"
+            - name: MEILI_MAX_INDEXING_MEMORY
+              value: {{ .maxIndexingMemory | quote }}
+            - name: MEILI_MAX_INDEXING_THREADS
+              value: {{ include "fluxer.string" .maxIndexingThreads | quote }}
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "MEILI_MASTER_KEY" "key" "FLUXER_SEARCH_API_KEY") | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 7700
+              protocol: TCP
+          startupProbe:
+            httpGet: {{ toJson $health }}
+            periodSeconds: 5
+            failureThreshold: 120
+          livenessProbe:
+            httpGet: {{ toJson $health }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet: {{ toJson $health }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /meili_data
+  volumeClaimTemplates:
+    {{- include "fluxer.pvc" .persistence | nindent 4 }}
+{{- end }}
+{{- end }}

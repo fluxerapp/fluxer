@@ -14,6 +14,7 @@ import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonM
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {msg} from '@lingui/core/macro';
 import {useCallback, useMemo, useRef, useState} from 'react';
@@ -37,7 +38,6 @@ interface State {
 	isGeneratingInvite: boolean;
 	currentMemberIds: Array<string>;
 	remainingSlotsCount: number;
-	availableFriendsCount: number;
 }
 
 interface Handlers {
@@ -58,7 +58,6 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 	const channel = Channels.getChannel(channelId);
 	const currentMemberIds = useMemo(() => Array.from(channel?.recipientIds ?? []), [channel?.recipientIds]);
 	const remainingSlotsCount = getGroupDmRemainingSlots(channel);
-	const availableFriendsCount = 0;
 	const handleToggle = useCallback(
 		(userId: string) => {
 			setSelectedUserIds((prev) => {
@@ -74,6 +73,7 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 		[remainingSlotsCount],
 	);
 	const handleAddFriends = useCallback(async () => {
+		if (blockIfAccountLimited()) return;
 		setIsAdding(true);
 		try {
 			const promises = selectedUserIds.map((userId) =>
@@ -109,7 +109,7 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 			return fullUrl;
 		} catch (error) {
 			logger.error('Failed to generate invite:', error);
-			showGroupInviteCreateFailedModal();
+			showGroupInviteCreateFailedModal(error);
 			return null;
 		} finally {
 			setIsGeneratingInvite(false);
@@ -138,7 +138,6 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 		isGeneratingInvite,
 		currentMemberIds,
 		remainingSlotsCount,
-		availableFriendsCount,
 		handleToggle,
 		handleAddFriends,
 		handleGenerateInvite,

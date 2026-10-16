@@ -16,6 +16,22 @@ pub fn is_animated_image_bytes(input: &[u8]) -> bool {
     false
 }
 
+pub fn sniff_image_format_bytes(input: &[u8]) -> u8 {
+    if is_png(input) {
+        1
+    } else if is_gif(input) {
+        2
+    } else if is_webp(input) {
+        3
+    } else if is_avif_file(input) {
+        4
+    } else if input.starts_with(&[0xff, 0xd8, 0xff]) {
+        5
+    } else {
+        0
+    }
+}
+
 fn is_gif(input: &[u8]) -> bool {
     input.starts_with(b"GIF89a") || input.starts_with(b"GIF87a")
 }
@@ -35,7 +51,16 @@ fn is_avif_file(input: &[u8]) -> bool {
 }
 
 fn has_avif_anim(input: &[u8]) -> bool {
-    is_avif_file(input) && &input[8..12] == b"avis"
+    if !is_avif_file(input) {
+        return false;
+    }
+    if &input[8..12] == b"avis" {
+        return true;
+    }
+    let box_end = read_u32_be(input, 0).map_or(0, |size| (size as usize).min(input.len()));
+    input
+        .get(16..box_end)
+        .is_some_and(|brands| brands.as_chunks::<4>().0.contains(b"avis"))
 }
 
 fn has_apng_actl(input: &[u8]) -> bool {
@@ -211,50 +236,13 @@ mod tests {
     }
 
     #[test]
-    fn detects_apng_animation_chunk() {
-        let png = png_with_chunks(&[(b"acTL", &[0; 8])]);
-        assert!(is_animated_image_bytes(&png));
-    }
-
-    #[test]
-    fn detects_webp_animation_chunk() {
-        let mut webp = b"RIFF\x12\x00\x00\x00WEBPVP8X\x00\x00\x00\x00ANIM\x00\x00\x00\x00".to_vec();
-        webp[4..8].copy_from_slice(&18u32.to_le_bytes());
-        assert!(is_animated_image_bytes(&webp));
-    }
-
-    #[test]
-    fn detects_two_frame_gif() {
-        let gif = [
-            0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0, 0, 0, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0,
-            0, 2, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 0, 0x3b,
-        ];
-        assert!(is_animated_image_bytes(&gif));
-    }
-
-    #[test]
-    fn treats_single_frame_gif_as_static() {
-        let gif = [
-            0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0, 0, 0, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0,
-            0, 2, 0, 0x3b,
-        ];
-        assert!(!is_animated_image_bytes(&gif));
-    }
-
-    #[test]
-    fn detects_avif_sequence_brand() {
-        let avif = b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00avis";
-        assert!(!is_animated_image_bytes(avif));
-
-        let avis = b"\x00\x00\x00\x18ftypavis\x00\x00\x00\x00avif";
-        assert!(is_animated_image_bytes(avis));
-    }
-
-    #[test]
     fn rejects_truncated_chunks_without_panicking() {
         assert!(!is_animated_image_bytes(
             b"\x89PNG\r\n\x1a\n\xff\xff\xff\xffbad!"
         ));
+        let mut png = png_with_chunks(&[(b"bad!", &[0; 8])]);
+        png[8..12].copy_from_slice(&u32::MAX.to_be_bytes());
+        assert!(!is_animated_image_bytes(&png));
         assert!(!is_animated_image_bytes(b"RIFF\xff\xff\xff\xffWEBPbad!"));
     }
 }

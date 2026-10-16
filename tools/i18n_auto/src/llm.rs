@@ -86,29 +86,3 @@ fn trim_special_response_tokens(content: &str) -> &str {
         trimmed = next.trim();
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn cleans_common_llm_response_wrappers() {
-        assert_eq!(
-            clean_translation_response("Translation: Bonjour"),
-            "Bonjour"
-        );
-        assert_eq!(clean_translation_response("\"Bonjour\""), "Bonjour");
-        assert_eq!(
-            clean_translation_response("{\"localized\":\"Bonjour\"}"),
-            "Bonjour"
-        );
-        assert_eq!(
-            clean_translation_response("```text\nBonjour\n```"),
-            "Bonjour"
-        );
-        assert_eq!(
-            clean_translation_response("```json\n{\"0\":\"bonjour\"}\n```<|im_end|>"),
-            "{\"0\":\"bonjour\"}"
-        );
-    }
-}

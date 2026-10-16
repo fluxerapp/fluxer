@@ -10,7 +10,9 @@ use crate::{
         media::user_avatar_url,
         user_profile_badges::user_profile_badges,
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    utils::{
+        bigint::format_discriminator, timestamps::snowflake_creation_date, user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -33,7 +35,12 @@ fn status_badge(user: &AdminUser) -> Markup {
     }
 }
 
-pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[String]) -> Markup {
+pub fn user_peek_fragment(
+    config: &AdminConfig,
+    user: &AdminUser,
+    admin_acls: &[String],
+    premium_badge_name: Option<&str>,
+) -> Markup {
     let base = &config.base_path;
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let display = user
@@ -62,11 +69,12 @@ pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[
                             user.premium_type,
                             user.premium_since.as_deref(),
                             config.self_hosted,
+                            premium_badge_name,
                             true,
                         ))
                     }
                     p class="break-words text-sm text-neutral-500" {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }
                     div class="flex flex-wrap items-center justify-center gap-2 \
                                 sm:justify-start" {

@@ -2,25 +2,21 @@
 
 import {
 	checkNativePermission,
+	MAC_PERMISSION_KINDS,
 	type NativePermissionResult,
+	openNativePermissionSettings,
 	type PermissionKind,
+	requestNativePermission,
+	settledPermissionKinds,
 } from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {makeAutoObservable, runInAction} from 'mobx';
 
-export type MacPermissionKind = Extract<PermissionKind, 'microphone' | 'camera' | 'screen' | 'input-monitoring'>;
-export type MacPermissionDecision = 'granted-seen' | 'declined' | null;
+export type MacPermissionKind = PermissionKind;
 
 const logger = new Logger('MacPermissions');
-
-export const MAC_PERMISSION_KINDS: ReadonlyArray<MacPermissionKind> = [
-	'microphone',
-	'camera',
-	'screen',
-	'input-monitoring',
-];
 
 const DEFAULT_STATUSES: Record<MacPermissionKind, NativePermissionResult> = {
 	microphone: 'not-determined',
@@ -29,78 +25,69 @@ const DEFAULT_STATUSES: Record<MacPermissionKind, NativePermissionResult> = {
 	'input-monitoring': 'not-determined',
 };
 
-const DEFAULT_DECISIONS: Record<MacPermissionKind, MacPermissionDecision> = {
-	microphone: null,
-	camera: null,
-	screen: null,
-	'input-monitoring': null,
+const KINDS_WITH_MACOS_QUIT_PROMPT: ReadonlySet<MacPermissionKind> = new Set(['screen', 'input-monitoring']);
+
+const reapplyGlobalShortcuts = async (): Promise<void> => {
+	const module = await import('@app/features/app/keybindings/KeybindManager');
+	await module.default.reapplyGlobalShortcuts();
 };
 
 class MacPermissions {
 	statuses: Record<MacPermissionKind, NativePermissionResult> = {...DEFAULT_STATUSES};
-	decisions: Record<MacPermissionKind, MacPermissionDecision> = {...DEFAULT_DECISIONS};
-	setupCompleted = false;
-	restartRequired: Record<MacPermissionKind, boolean> = {
+	isHydrated = false;
+	private changeRequested: Record<MacPermissionKind, boolean> = {
 		microphone: false,
 		camera: false,
 		screen: false,
 		'input-monitoring': false,
 	};
-	isHydrated = false;
-	onboardingOpenedThisSession = false;
+	screenStillBlockedAfterReturn = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initialize();
+		initializeStore(this, () => this.initialize());
 	}
 
 	private async initialize(): Promise<void> {
-		await makePersistent(this, 'MacPermissions', ['decisions', 'setupCompleted'], {version: 1});
 		await this.refreshAll();
 		runInAction(() => {
 			this.isHydrated = true;
 		});
+		if (this.isNativeMacDesktop) {
+			window.addEventListener('focus', () => void this.refreshAfterReturn());
+		}
 	}
 
 	get isNativeMacDesktop(): boolean {
 		return isDesktop() && getNativePlatformSync() === 'macos';
 	}
 
-	get shouldShowOnboarding(): boolean {
-		return this.isNativeMacDesktop && this.isHydrated && !this.setupCompleted;
+	get allGranted(): boolean {
+		return MAC_PERMISSION_KINDS.every((kind) => this.statuses[kind] === 'granted');
 	}
 
-	hasDeclined(kind: MacPermissionKind): boolean {
-		return this.decisions[kind] === 'declined';
+	get settledKinds(): Array<MacPermissionKind> {
+		return settledPermissionKinds(this.statuses);
 	}
 
-	markOnboardingOpenedThisSession(): void {
-		this.onboardingOpenedThisSession = true;
+	showsQuitPromptAdvice(kind: MacPermissionKind): boolean {
+		return KINDS_WITH_MACOS_QUIT_PROMPT.has(kind) && this.changeRequested[kind] && this.statuses[kind] !== 'granted';
+	}
+
+	get anyQuitPromptAdvice(): boolean {
+		return MAC_PERMISSION_KINDS.some((kind) => this.showsQuitPromptAdvice(kind));
 	}
 
 	private recordStatus(kind: MacPermissionKind, status: NativePermissionResult): void {
 		const previous = this.statuses[kind];
 		this.statuses[kind] = status;
-		if (!this.isHydrated) return;
-		if (status === 'granted' && previous !== 'granted' && this.restartApplies(kind)) {
-			this.restartRequired[kind] = true;
-		}
-	}
-
-	private restartApplies(kind: MacPermissionKind): boolean {
-		return kind === 'screen' || kind === 'input-monitoring';
-	}
-
-	private decisionFromStatus(status: NativePermissionResult): MacPermissionDecision {
-		return status === 'granted' ? 'granted-seen' : 'declined';
-	}
-
-	private completeSetupIfFullyGranted(): void {
-		const fullyGranted = MAC_PERMISSION_KINDS.every((kind) => this.statuses[kind] === 'granted');
-		if (!fullyGranted) return;
-		this.setupCompleted = true;
-		for (const kind of MAC_PERMISSION_KINDS) {
-			this.decisions[kind] = 'granted-seen';
+		if (status !== 'granted') return;
+		this.changeRequested[kind] = false;
+		if (kind === 'screen') this.screenStillBlockedAfterReturn = false;
+		if (kind === 'input-monitoring' && previous !== 'granted' && this.isHydrated) {
+			reapplyGlobalShortcuts().catch((error) => {
+				logger.warn('Failed to reapply global shortcuts after an Input Monitoring grant', error);
+			});
 		}
 	}
 
@@ -121,7 +108,6 @@ class MacPermissions {
 				for (const [kind, status] of entries) {
 					this.recordStatus(kind, status);
 				}
-				this.completeSetupIfFullyGranted();
 			});
 		} catch (error) {
 			logger.warn('Failed to refresh macOS permissions', error);
@@ -133,28 +119,35 @@ class MacPermissions {
 		const status = await checkNativePermission(kind);
 		runInAction(() => {
 			this.recordStatus(kind, status);
-			this.completeSetupIfFullyGranted();
 		});
 		return status;
 	}
 
-	applyPermissionResult(kind: MacPermissionKind, status: NativePermissionResult): void {
-		this.recordStatus(kind, status);
-		if (status === 'granted') {
-			this.decisions[kind] = 'granted-seen';
-		}
-		this.completeSetupIfFullyGranted();
+	async refreshAfterReturn(): Promise<void> {
+		if (this.allGranted) return;
+		await this.refreshAll();
+		runInAction(() => {
+			this.screenStillBlockedAfterReturn = this.changeRequested.screen && this.statuses.screen !== 'granted';
+		});
 	}
 
-	recordModalClosed(focus?: MacPermissionKind): void {
-		if (focus) {
-			this.decisions[focus] = this.decisionFromStatus(this.statuses[focus]);
-			return;
-		}
-		this.setupCompleted = true;
-		for (const kind of MAC_PERMISSION_KINDS) {
-			this.decisions[kind] = this.decisionFromStatus(this.statuses[kind]);
-		}
+	applyPermissionResult(kind: MacPermissionKind, status: NativePermissionResult): void {
+		this.recordStatus(kind, status);
+	}
+
+	async request(kind: MacPermissionKind): Promise<void> {
+		const status = await requestNativePermission(kind);
+		runInAction(() => {
+			this.changeRequested[kind] = true;
+			this.recordStatus(kind, status);
+		});
+	}
+
+	async openSettings(kind: MacPermissionKind): Promise<void> {
+		await openNativePermissionSettings(kind);
+		runInAction(() => {
+			if (this.statuses[kind] !== 'granted') this.changeRequested[kind] = true;
+		});
 	}
 }
 

@@ -11,6 +11,7 @@ interface UseAnimatedImageUrlOptions {
 	staticUrl: string | null;
 	animatedUrl?: string | null;
 	kind: ShouldAnimateKind;
+	isAnimated?: boolean;
 	isFocused?: boolean;
 }
 
@@ -23,6 +24,8 @@ interface AnimatedImageUrlState {
 
 type AnimatedImageLoadStatus = 'idle' | 'loading' | 'loaded' | 'failed';
 
+const NOOP_HOVER_REF: React.RefCallback<HTMLElement> = () => {};
+
 interface AnimatedImageLoadState {
 	url: string | null;
 	status: AnimatedImageLoadStatus;
@@ -32,13 +35,21 @@ export function useAnimatedImageUrl({
 	staticUrl,
 	animatedUrl: providedAnimatedUrl,
 	kind,
+	isAnimated,
 	isFocused,
 }: UseAnimatedImageUrlOptions): AnimatedImageUrlState {
 	const animatedUrl: string | null = providedAnimatedUrl == null ? null : providedAnimatedUrl;
 	const [hoverRef, isHovering] = useHover();
-	const shouldAnimate = useShouldAnimate({kind, isHovering, isFocused});
-	const gifAutoPlayEnabled = kind === 'gif' && UserSettings.getGifAutoPlay();
 	const hasAnimatedUrl = Boolean(animatedUrl && animatedUrl !== staticUrl);
+	const isAnimatable = isAnimated ?? hasAnimatedUrl;
+	const shouldAnimate = useShouldAnimate({
+		kind,
+		isAnimated: isAnimatable,
+		isHovering: isAnimatable && isHovering,
+		isFocused: isAnimatable && isFocused,
+	});
+	const autoplaysWithoutInteraction = useShouldAnimate({kind, isAnimated: isAnimatable});
+	const gifAutoPlayEnabled = kind === 'gif' && UserSettings.getGifAutoPlay();
 	const initialAnimatedLoadState: AnimatedImageLoadState = {
 		url: animatedUrl,
 		status: animatedUrl != null && ImageCacheUtils.hasImage(animatedUrl) ? 'loaded' : 'idle',
@@ -104,7 +115,9 @@ export function useAnimatedImageUrl({
 		animatedUrl != null &&
 		animatedLoadState.url === animatedUrl &&
 		animatedLoadState.status === 'loaded';
-	const imageUrl = animatedSourceReady ? animatedUrl : staticUrl;
-	const showGifIndicator = kind === 'gif' && hasAnimatedUrl && !gifAutoPlayEnabled && !shouldAnimate;
-	return {hoverRef, imageUrl, shouldAnimate, showGifIndicator};
+	const animatedSourceFailed = animatedLoadState.url === animatedUrl && animatedLoadState.status === 'failed';
+	const skipsStaticFirstPaint = autoplaysWithoutInteraction && !animatedSourceFailed;
+	const imageUrl = animatedUrl != null && (animatedSourceReady || skipsStaticFirstPaint) ? animatedUrl : staticUrl;
+	const showGifIndicator = kind === 'gif' && isAnimatable && !gifAutoPlayEnabled && !shouldAnimate;
+	return {hoverRef: isAnimatable ? hoverRef : NOOP_HOVER_REF, imageUrl, shouldAnimate, showGifIndicator};
 }

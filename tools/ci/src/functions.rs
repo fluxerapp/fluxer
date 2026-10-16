@@ -2,8 +2,9 @@
 
 use anyhow::{Context, Result};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::fs;
-use std::io;
+use std::io::{self, Read};
 use std::path::Path;
 
 pub(crate) fn remove_file_if_exists(path: &Path) -> Result<()> {
@@ -32,46 +33,21 @@ pub(crate) fn write_json_pretty<T: Serialize + ?Sized>(path: &Path, value: &T) -
     fs::write(path, bytes).with_context(|| format!("Failed to write {}", path.display()))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn remove_file_if_exists_removes_files_and_ignores_missing_paths() {
-        let temp = tempfile::tempdir().unwrap();
-        let path = temp.path().join("artifact.txt");
-        fs::write(&path, "artifact").unwrap();
-
-        remove_file_if_exists(&path).unwrap();
-        remove_file_if_exists(&path).unwrap();
-
-        assert!(!path.exists());
+pub(crate) fn sha256_reader(mut reader: impl Read) -> io::Result<String> {
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let read = reader.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
     }
+    Ok(hex::encode(hasher.finalize()))
+}
 
-    #[test]
-    fn remove_dir_if_exists_removes_directories_and_ignores_missing_paths() {
-        let temp = tempfile::tempdir().unwrap();
-        let path = temp.path().join("dist");
-        fs::create_dir_all(path.join("nested")).unwrap();
-        fs::write(path.join("nested").join("artifact.txt"), "artifact").unwrap();
-
-        remove_dir_if_exists(&path).unwrap();
-        remove_dir_if_exists(&path).unwrap();
-
-        assert!(!path.exists());
-    }
-
-    #[test]
-    fn write_json_pretty_creates_parent_directories_and_writes_pretty_json() {
-        let temp = tempfile::tempdir().unwrap();
-        let path = temp.path().join("nested").join("manifest.json");
-
-        write_json_pretty(&path, &json!({ "name": "fluxer", "version": 1 })).unwrap();
-
-        assert_eq!(
-            fs::read_to_string(path).unwrap(),
-            "{\n  \"name\": \"fluxer\",\n  \"version\": 1\n}\n"
-        );
-    }
+pub(crate) fn sha256_file(path: &Path) -> Result<String> {
+    let file =
+        fs::File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
 }

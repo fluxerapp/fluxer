@@ -307,10 +307,6 @@
 	}
 }
 
-.controlButtonDisabled {
-	opacity: 0.5;
-}
-
 .languagePositioner {
 	z-index: 99999;
 	outline: none;
@@ -407,11 +403,15 @@
 
 .languageItemSelected {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .languageItemSelected.languageItemHighlighted {
 	background-color: var(--brand-primary);
+}
+
+.languageItemSelected .languageOptionCanonical {
+	color: inherit;
 }
 
 .languageItemIndicator {

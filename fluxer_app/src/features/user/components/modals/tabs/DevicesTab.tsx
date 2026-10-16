@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Slate} from '@app/features/app/components/dialogs/components/Slate';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {
 	SettingsTabContainer,
 	SettingsTabContent,
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {DESKTOP_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {useElementOverflow} from '@app/features/app/hooks/useTextOverflow';
 import * as AuthSessionCommands from '@app/features/auth/commands/AuthSessionCommands';
 import {DeviceRevokeModal} from '@app/features/auth/components/modals/DeviceRevokeModal';
@@ -17,10 +15,10 @@ import AuthSessionState from '@app/features/auth/state/AuthSession';
 import {TRY_AGAIN_DESCRIPTOR, UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormatter';
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
+import {currentInstanceTarget, type InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
@@ -32,6 +30,11 @@ import {
 	useSelectableSettingsList,
 } from '@app/features/user/components/modals/tabs/components/SelectableSettingsList';
 import styles from '@app/features/user/components/modals/tabs/DevicesTab.module.css';
+import {
+	CLEAR_SELECTION_DESCRIPTOR,
+	REVOKE_DEVICE_DESCRIPTOR,
+	UNKNOWN_DEVICE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -41,12 +44,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-const DEVICES_TAB_ID = 'devices';
-
-const REVOKE_DEVICE_DESCRIPTOR = msg({
-	message: 'Revoke device',
-	comment: 'Short label in the devices tab. Keep it concise.',
-});
 const VIEW_DEVICE_DETAILS_DESCRIPTOR = msg({
 	message: 'View details',
 	comment: 'Tooltip and accessibility label for opening a linked device details modal.',
@@ -59,23 +56,11 @@ const WE_RE_HAVING_TROUBLE_CONNECTING_TO_THE_SPACE_DESCRIPTOR = msg({
 	message: "We're having trouble connecting to the space-time continuum. Check your connection and try again.",
 	comment: 'Error message in the devices tab.',
 });
-const CLEAR_SELECTION_DESCRIPTOR = msg({
-	message: 'Clear selection',
-	comment: 'Button or menu action label in the devices tab. Keep it concise.',
-});
-const UNKNOWN_DEVICE_DESCRIPTOR = msg({
-	message: 'Unknown device',
-	comment: 'Fallback device or operating-system label in the devices tab when session client data is unavailable.',
-});
+
 const SIGN_OUT_SELECTED_DEVICES_DESCRIPTOR = msg({
 	message: 'Sign out {deviceCount, plural, one {# device} other {# devices}}',
 	comment: 'Danger button in the devices tab. Signs out the currently selected devices.',
 });
-const SELECTED_DEVICES_FOR_LOGOUT_DESCRIPTOR = msg({
-	message: '{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}',
-	comment: 'Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.',
-});
-const MOBILE_DEVICE_REGEX = /iOS|Android|Windows Phone|BlackBerry|Mobile/i;
 
 const StatusDot = observer(() => (
 	<div aria-hidden={true} className={styles.statusDot} data-flx="user.devices-tab.status-dot.status-dot" />
@@ -127,8 +112,7 @@ const DeviceDetailRow = ({
 const DeviceDetailsModal = observer(({authSession, isCurrent}: {authSession: AuthSession; isCurrent: boolean}) => {
 	const {i18n} = useLingui();
 	const clientOs = authSession.clientOs ?? i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
-	const clientPlatform = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
-	const platformLabel = authSession.clientPlatform === DESKTOP_PRODUCT_NAME ? DESKTOP_PRODUCT_NAME : clientPlatform;
+	const platformLabel = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
 	return (
 		<Modal.Root size="small" centered data-flx="user.devices-tab.device-details-modal.modal-root">
 			<Modal.Header title={<Trans>Device details</Trans>} data-flx="user.devices-tab.device-details-modal.header" />
@@ -185,6 +169,7 @@ const DeviceDetailsModal = observer(({authSession, isCurrent}: {authSession: Aut
 
 interface AuthSessionProps {
 	authSession: AuthSession;
+	target: InstanceHTTPTarget;
 	isCurrent?: boolean;
 	isSelected?: boolean;
 	onSelect?: SelectionToggleHandler;
@@ -193,17 +178,18 @@ interface AuthSessionProps {
 }
 
 const AuthSessionItem: React.FC<AuthSessionProps> = observer(
-	({authSession, isCurrent = false, isSelected, onSelect, index, selectionMode}) => {
+	({authSession, target, isCurrent = false, isSelected, onSelect, index, selectionMode}) => {
 		const {i18n} = useLingui();
 		const clientOs = authSession.clientOs ?? i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
-		const clientPlatform = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
-		const isMobile = MOBILE_DEVICE_REGEX.test(authSession.clientOs ?? '');
+		const platformLabel = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
+		const isMobile = authSession.clientDevice === 'mobile';
 		const isSelectionInteractive = Boolean(selectionMode && !isCurrent && onSelect && index !== undefined);
 		const openRevokeModal = () => {
 			ModalCommands.push(
 				modal(() => (
 					<DeviceRevokeModal
 						sessionIdHashes={[authSession.id]}
+						target={target}
 						data-flx="user.devices-tab.auth-session-item.device-revoke-modal"
 					/>
 				)),
@@ -234,7 +220,6 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 			selected: isSelected,
 			onSelect,
 		});
-		const platformLabel = authSession.clientPlatform === DESKTOP_PRODUCT_NAME ? DESKTOP_PRODUCT_NAME : clientPlatform;
 		const metadataLine = [authSession.clientLocation, isCurrent ? null : formatAuthSessionLastUsed(authSession, i18n)]
 			.filter((value): value is string => Boolean(value))
 			.join(' · ');
@@ -254,9 +239,15 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 					</div>
 					<div className={styles.authSessionInfo} data-flx="user.devices-tab.auth-session-item.auth-session-info">
 						<span className={styles.authSessionTitle} data-flx="user.devices-tab.auth-session-item.auth-session-title">
-							{clientOs}
-							<StatusDot data-flx="user.devices-tab.auth-session-item.status-dot" />
-							{platformLabel}
+							{authSession.clientBrowser === null ? (
+								platformLabel
+							) : (
+								<>
+									{clientOs}
+									<StatusDot data-flx="user.devices-tab.auth-session-item.status-dot" />
+									{platformLabel}
+								</>
+							)}
 						</span>
 						{metadataLine && (
 							<div
@@ -331,13 +322,10 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 		);
 	},
 );
-interface DevicesTabContentProps {
-	presentation?: 'settings' | 'modal';
-}
 
-export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({presentation = 'settings'}) => {
+const DevicesTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const isModalPresentation = presentation === 'modal';
+	const [authSessionTarget] = useState(currentInstanceTarget);
 	const authSessionIdHash = AuthSessionState.authSessionIdHash;
 	const authSessions = AuthSessionState.authSessions;
 	const fetchStatus = AuthSessionState.fetchStatus;
@@ -358,75 +346,63 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 		getId: getAuthSessionSelectionId,
 	});
 	useEffect(() => {
-		AuthSessionCommands.fetch();
-	}, []);
+		AuthSessionCommands.fetch(authSessionTarget);
+	}, [authSessionTarget]);
 	const openSelectedDevicesRevokeModal = useCallback(() => {
 		if (selectedDeviceIds.length === 0) return;
 		ModalCommands.push(
 			modal(() => (
 				<DeviceRevokeModal
 					sessionIdHashes={selectedDeviceIds}
+					target={authSessionTarget}
 					data-flx="user.devices-tab.selected-device-revoke-modal"
 				/>
 			)),
 		);
-	}, [selectedDeviceIds]);
+	}, [authSessionTarget, selectedDeviceIds]);
 	const openAllOtherDevicesRevokeModal = useCallback(() => {
 		if (otherDeviceIds.length === 0) return;
 		ModalCommands.push(
 			modal(() => (
 				<DeviceRevokeModal
 					sessionIdHashes={otherDeviceIds}
+					target={authSessionTarget}
 					data-flx="user.devices-tab.all-other-devices-revoke-modal"
 				/>
 			)),
 		);
-	}, [otherDeviceIds]);
-	useEffect(() => {
-		if (isModalPresentation) return;
-		if (selectedDeviceIds.length === 0) {
-			UnsavedChangesCommands.clearUnsavedChanges(DEVICES_TAB_ID);
-			return;
-		}
-		UnsavedChangesCommands.setUnsavedChanges(DEVICES_TAB_ID, true);
-		UnsavedChangesCommands.setTabData(DEVICES_TAB_ID, {
-			onReset: clearSelection,
-			onSave: openSelectedDevicesRevokeModal,
-			bannerText: i18n._(SELECTED_DEVICES_FOR_LOGOUT_DESCRIPTOR, {deviceCount: selectedDeviceIds.length}),
-			resetLabel: i18n._(CLEAR_SELECTION_DESCRIPTOR),
-			saveLabel: i18n._(SIGN_OUT_SELECTED_DEVICES_DESCRIPTOR, {deviceCount: selectedDeviceIds.length}),
-			saveVariant: 'danger',
-		});
-		return () => UnsavedChangesCommands.clearUnsavedChanges(DEVICES_TAB_ID);
-	}, [clearSelection, i18n, isModalPresentation, openSelectedDevicesRevokeModal, selectedDeviceIds.length]);
+	}, [authSessionTarget, otherDeviceIds]);
 	if (fetchStatus === 'idle' || fetchStatus === 'pending') {
 		const loadingState = (
 			<div className={styles.loadingContainer} data-flx="user.devices-tab.loading-container">
 				<Spinner data-flx="user.devices-tab.spinner" />
 			</div>
 		);
-		if (!isModalPresentation) return loadingState;
 		return <Modal.Content data-flx="user.devices-tab.modal-content.loading">{loadingState}</Modal.Content>;
 	}
 	const currentSession = authSessions.find((authSession) => authSession.id === authSessionIdHash);
 	if (fetchStatus === 'error' || !currentSession) {
 		const errorState = (
-			<Slate
-				icon={WifiSlashIcon}
+			<StatusSlate
+				Icon={WifiSlashIcon}
 				title={i18n._(NETWORK_ERROR_DESCRIPTOR)}
 				description={i18n._(WE_RE_HAVING_TROUBLE_CONNECTING_TO_THE_SPACE_DESCRIPTOR)}
-				buttonText={i18n._(TRY_AGAIN_DESCRIPTOR)}
-				onClick={() => AuthSessionCommands.fetch()}
+				actions={[{text: i18n._(TRY_AGAIN_DESCRIPTOR), onClick: () => AuthSessionCommands.fetch(authSessionTarget)}]}
+				fullHeight
 				data-flx="user.devices-tab.slate.fetch"
 			/>
 		);
-		if (!isModalPresentation) return errorState;
 		return <Modal.Content data-flx="user.devices-tab.modal-content.error">{errorState}</Modal.Content>;
 	}
 	const devicesContent = (
 		<>
 			<SettingsTabSection title={<Trans>Current device</Trans>} data-flx="user.devices-tab.current-device">
-				<AuthSessionItem authSession={currentSession} isCurrent={true} data-flx="user.devices-tab.auth-session-item" />
+				<AuthSessionItem
+					authSession={currentSession}
+					target={authSessionTarget}
+					isCurrent={true}
+					data-flx="user.devices-tab.auth-session-item"
+				/>
 			</SettingsTabSection>
 			{otherDevices.length > 0 && (
 				<SettingsTabSection
@@ -437,7 +413,7 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 					<div className={styles.deviceListBody} data-flx="user.devices-tab.device-list-body">
 						<p className={styles.selectionHint} data-flx="user.devices-tab.selection-hint">
 							<Trans>
-								Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all.
+								Hold Shift and press X to mark devices for sign-out. Press {selectAllShortcutLabel} to select all.
 							</Trans>
 						</p>
 						<div className={styles.devicesGrid} data-flx="user.devices-tab.devices-grid">
@@ -445,6 +421,7 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 								<AuthSessionItem
 									key={authSession.id}
 									authSession={authSession}
+									target={authSessionTarget}
 									isSelected={selectedDevices.has(authSession.id)}
 									onSelect={toggleDevice}
 									index={index}
@@ -453,72 +430,47 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 								/>
 							))}
 						</div>
-						{!isModalPresentation && !selectionMode && otherDevices.length > 1 && (
-							<div className={styles.logoutSection} data-flx="user.devices-tab.logout-section">
-								<Button variant="danger" onClick={openAllOtherDevicesRevokeModal} data-flx="user.devices-tab.button">
-									<Trans>Sign out all other devices</Trans>
-								</Button>
-								<p className={styles.logoutDescription} data-flx="user.devices-tab.logout-description">
-									<Trans>You'll have to sign back in on all signed-out devices</Trans>
-								</p>
-							</div>
-						)}
 					</div>
 				</SettingsTabSection>
 			)}
 		</>
 	);
-	if (isModalPresentation) {
-		return (
-			<>
-				<Modal.Content data-flx="user.devices-tab.modal-content">
-					<SettingsTabContainer data-flx="user.devices-tab.modal-settings-tab-container">
-						<SettingsTabContent data-flx="user.devices-tab.modal-settings-tab-content">
-							{devicesContent}
-						</SettingsTabContent>
-					</SettingsTabContainer>
-				</Modal.Content>
-				{(selectionMode || otherDeviceIds.length > 1) && (
-					<Modal.Footer data-flx="user.devices-tab.modal-footer">
-						{selectionMode && (
-							<Button variant="secondary" onClick={clearSelection} data-flx="user.devices-tab.button.clear-selection">
-								{i18n._(CLEAR_SELECTION_DESCRIPTOR)}
-							</Button>
-						)}
-						{selectionMode ? (
-							<Button
-								variant="danger"
-								onClick={openSelectedDevicesRevokeModal}
-								data-flx="user.devices-tab.button.sign-out-selected"
-							>
-								{i18n._(SIGN_OUT_SELECTED_DEVICES_DESCRIPTOR, {deviceCount: selectedDeviceIds.length})}
-							</Button>
-						) : otherDeviceIds.length > 1 ? (
-							<Button
-								variant="danger"
-								onClick={openAllOtherDevicesRevokeModal}
-								data-flx="user.devices-tab.button.sign-out-all-other"
-							>
-								<Trans>Sign out all other devices</Trans>
-							</Button>
-						) : null}
-					</Modal.Footer>
-				)}
-			</>
-		);
-	}
 	return (
-		<SettingsTabContainer data-flx="user.devices-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.devices-tab.settings-tab-content">
-				<SettingsSection
-					id="signed-in-devices"
-					title={<Trans>Signed-in devices</Trans>}
-					data-flx="user.devices-tab.signed-in-devices"
-				>
-					{devicesContent}
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
+		<>
+			<Modal.Content data-flx="user.devices-tab.modal-content">
+				<SettingsTabContainer data-flx="user.devices-tab.modal-settings-tab-container">
+					<SettingsTabContent data-flx="user.devices-tab.modal-settings-tab-content">
+						{devicesContent}
+					</SettingsTabContent>
+				</SettingsTabContainer>
+			</Modal.Content>
+			{(selectionMode || otherDeviceIds.length > 1) && (
+				<Modal.Footer data-flx="user.devices-tab.modal-footer">
+					{selectionMode && (
+						<Button variant="secondary" onClick={clearSelection} data-flx="user.devices-tab.button.clear-selection">
+							{i18n._(CLEAR_SELECTION_DESCRIPTOR)}
+						</Button>
+					)}
+					{selectionMode ? (
+						<Button
+							variant="danger"
+							onClick={openSelectedDevicesRevokeModal}
+							data-flx="user.devices-tab.button.sign-out-selected"
+						>
+							{i18n._(SIGN_OUT_SELECTED_DEVICES_DESCRIPTOR, {deviceCount: selectedDeviceIds.length})}
+						</Button>
+					) : otherDeviceIds.length > 1 ? (
+						<Button
+							variant="danger"
+							onClick={openAllOtherDevicesRevokeModal}
+							data-flx="user.devices-tab.button.sign-out-all-other"
+						>
+							<Trans>Sign out all other devices</Trans>
+						</Button>
+					) : null}
+				</Modal.Footer>
+			)}
+		</>
 	);
 });
 
@@ -528,13 +480,6 @@ export const LinkedDevicesManagementModal = observer(() => (
 			title={<Trans>Devices</Trans>}
 			data-flx="user.devices-tab.linked-devices-management-modal.modal-header"
 		/>
-		<DevicesTabContent
-			presentation="modal"
-			data-flx="user.devices-tab.linked-devices-management-modal.devices-tab-content"
-		/>
+		<DevicesTabContent data-flx="user.devices-tab.linked-devices-management-modal.devices-tab-content" />
 	</Modal.Root>
 ));
-
-const DevicesTab: React.FC = observer(() => <DevicesTabContent data-flx="user.devices-tab.devices-tab-content" />);
-
-export default DevicesTab;

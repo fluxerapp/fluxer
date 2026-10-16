@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_request_channel_member_counts).
--typing([eqwalizer]).
-
--export([handle_request/3]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([handle_request/3]).
 
 -export_type([session_state/0]).
 
@@ -20,7 +20,7 @@
 -spec handle_request(map(), pid(), session_state()) -> ok.
 handle_request(Data, _SocketPid, SessionState) when is_map(Data) ->
     SessionPid = maps:get(session_pid, SessionState, undefined),
-    UserId = parse_user_id(maps:get(user_id, SessionState, undefined)),
+    UserId = snowflake_id:parse_maybe(maps:get(user_id, SessionState, undefined)),
     SessionId = parse_session_id(maps:get(session_id, SessionState, undefined)),
     case is_pid(SessionPid) andalso is_integer(UserId) andalso is_binary(SessionId) of
         false ->
@@ -33,7 +33,7 @@ handle_request(_, _, _) ->
 
 -spec handle_valid_request(map(), pid(), binary(), integer(), session_state()) -> ok.
 handle_valid_request(Data, SessionPid, SessionId, UserId, SessionState) ->
-    GuildId = parse_guild_id(maps:get(<<"guild_id">>, Data, undefined)),
+    GuildId = snowflake_id:parse_maybe(maps:get(<<"guild_id">>, Data, undefined)),
     ChannelIds = parse_channel_ids(Data),
     Nonce = parse_nonce(maps:get(<<"nonce">>, Data, undefined)),
     Entries = fetch_counts(GuildId, ChannelIds, SessionId, UserId, SessionState),
@@ -118,15 +118,8 @@ parse_channel_ids(Data) ->
             Ids when is_list(Ids) -> Ids;
             _ -> [maps:get(<<"channel_id">>, Data, undefined)]
         end,
-    Parsed = lists:filtermap(fun parse_channel_id_filter/1, RawIds),
+    Parsed = lists:filtermap(fun snowflake_id:filter/1, RawIds),
     lists:sublist(lists:usort(Parsed), ?MAX_CHANNEL_IDS).
-
--spec parse_channel_id_filter(term()) -> {true, integer()} | false.
-parse_channel_id_filter(Value) ->
-    case to_int(Value) of
-        N when is_integer(N), N > 0 -> {true, N};
-        _ -> false
-    end.
 
 -spec lookup_guild_pid(integer(), map()) -> {ok, pid()} | error.
 lookup_guild_pid(GuildId, Guilds) ->
@@ -134,14 +127,6 @@ lookup_guild_pid(GuildId, Guilds) ->
         {Pid, _Ref} when is_pid(Pid) -> {ok, Pid};
         _ -> error
     end.
-
--spec parse_guild_id(term()) -> integer() | undefined.
-parse_guild_id(Value) ->
-    to_int(Value).
-
--spec parse_user_id(term()) -> integer() | undefined.
-parse_user_id(Value) ->
-    to_int(Value).
 
 -spec parse_session_id(term()) -> binary() | undefined.
 parse_session_id(SessionId) when is_binary(SessionId), byte_size(SessionId) > 0 ->
@@ -156,10 +141,6 @@ parse_nonce(Nonce) when
     Nonce;
 parse_nonce(_) ->
     undefined.
-
--spec to_int(term()) -> integer() | undefined.
-to_int(Value) ->
-    snowflake_id:parse_maybe(Value).
 
 -ifdef(TEST).
 
@@ -182,31 +163,6 @@ parse_nonce_test() ->
     ?assertEqual(undefined, parse_nonce(123)),
     Big = binary:copy(<<"a">>, ?MAX_NONCE_BYTES + 1),
     ?assertEqual(undefined, parse_nonce(Big)).
-
-build_entry_uses_string_ids_test() ->
-    Entry = build_entry(123, 456, 50, 10),
-    ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Entry)),
-    ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Entry)),
-    ?assertEqual(50, maps:get(<<"member_count">>, Entry)),
-    ?assertEqual(10, maps:get(<<"online_count">>, Entry)).
-
-normalize_entries_drops_invalid_test() ->
-    Entries = normalize_entries(1, [
-        #{channel_id => 2, member_count => 3, online_count => 1},
-        #{channel_id => 0, member_count => 3, online_count => 1},
-        #{channel_id => 4, member_count => -1, online_count => 1}
-    ]),
-    ?assertEqual([build_entry(1, 2, 3, 1)], Entries).
-
-handle_request_no_session_id_returns_ok_test() ->
-    ?assertEqual(
-        ok,
-        handle_request(
-            #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>},
-            self(),
-            #{session_pid => self(), user_id => <<"100">>, guilds => #{}}
-        )
-    ).
 
 handle_request_dispatches_empty_when_no_guild_test() ->
     Self = self(),

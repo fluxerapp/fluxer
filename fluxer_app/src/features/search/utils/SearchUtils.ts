@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EXAMPLE_DOMAIN} from '@app/features/app/config/I18nDisplayConstants';
-import {Channel} from '@app/features/channel/models/Channel';
+import {Channel, type ChannelWire} from '@app/features/channel/models/Channel';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import SearchHistory from '@app/features/search/state/SearchHistory';
-import {parseQuery} from '@app/features/search/utils/SearchQueryParser';
+import {addUniqueSearchParam as addUnique, parseQuery} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
+import {ingestSearchThreads} from '@app/features/threads/commands/ThreadCommands';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -22,73 +24,37 @@ const STILL_INDEXING_DESCRIPTOR = msg({
 	comment:
 		'Status message returned by search when results are unavailable because the server is still building the index.',
 });
-const VALUE_LINK_LABEL_DESCRIPTOR = msg({
-	message: 'link',
-	comment: 'has:link chip label. Always lowercase; matches the typed query value 1:1.',
-});
 const VALUE_LINK_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'a URL typed in the message text',
 	comment: 'Description for has:link. Sentence case, no trailing punctuation.',
-});
-const VALUE_EMBED_LABEL_DESCRIPTOR = msg({
-	message: 'embed',
-	comment: 'has:embed chip label. Always lowercase; matches the typed query value 1:1.',
 });
 const VALUE_EMBED_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'a rich embed or link preview (not an uploaded file)',
 	comment: 'Description for has:embed. Sentence case, no trailing punctuation.',
 });
-const VALUE_FILE_LABEL_DESCRIPTOR = msg({
-	message: 'file',
-	comment: 'has:file chip label. Always lowercase; matches the typed query value 1:1.',
-});
 const VALUE_FILE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'any uploaded attachment',
 	comment: 'Description for has:file. Sentence case, no trailing punctuation.',
-});
-const VALUE_IMAGE_LABEL_DESCRIPTOR = msg({
-	message: 'image',
-	comment: 'has:image chip label. Always lowercase; matches the typed query value 1:1.',
 });
 const VALUE_IMAGE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'an uploaded image file',
 	comment: 'Description for has:image. Sentence case, no trailing punctuation.',
 });
-const VALUE_VIDEO_LABEL_DESCRIPTOR = msg({
-	message: 'video',
-	comment: 'has:video chip label. Always lowercase; matches the typed query value 1:1.',
-});
 const VALUE_VIDEO_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'an uploaded video file',
 	comment: 'Description for has:video. Sentence case, no trailing punctuation.',
-});
-const VALUE_SOUND_LABEL_DESCRIPTOR = msg({
-	message: 'sound',
-	comment: 'has:sound chip label. Always lowercase; matches the typed query value 1:1.',
 });
 const VALUE_SOUND_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'an uploaded audio file',
 	comment: 'Description for has:sound. Sentence case, no trailing punctuation.',
 });
-const VALUE_STICKER_LABEL_DESCRIPTOR = msg({
-	message: 'sticker',
-	comment: 'has:sticker chip label. Always lowercase; matches the typed query value 1:1.',
-});
 const VALUE_STICKER_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'a sticker',
 	comment: 'Description for has:sticker. Sentence case, no trailing punctuation.',
 });
-const VALUE_POLL_LABEL_DESCRIPTOR = msg({
-	message: 'poll',
-	comment: 'has:poll chip label. Always lowercase; matches the typed query value 1:1.',
-});
 const VALUE_POLL_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'a poll',
 	comment: 'Description for has:poll. Sentence case, no trailing punctuation.',
-});
-const VALUE_FORWARD_LABEL_DESCRIPTOR = msg({
-	message: 'forward',
-	comment: 'has:forward chip label. Always lowercase; matches the typed query value 1:1.',
 });
 const VALUE_FORWARD_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'a forwarded message',
@@ -102,12 +68,8 @@ const HINT_EXCLUDE_USER_DESCRIPTOR = msg({
 	message: 'exclude a user',
 	comment: 'Hint shown beside -from: and -mentions: (negation). Sentence case, no trailing punctuation.',
 });
-const HINT_HAS_VALUES_DESCRIPTOR = msg({
-	message: 'link, embed, image, video, sound, file, sticker, poll, or forward',
-	comment: 'Hint shown beside has:. Lists all supported content categories in lowercase.',
-});
 const HINT_EXCLUDE_HAS_VALUES_DESCRIPTOR = msg({
-	message: 'exclude link, embed, image, video, sound, file, sticker, poll, or forward',
+	message: 'exclude {values}',
 	comment: 'Hint shown beside -has: (negation). Lists all supported content categories in lowercase.',
 });
 const HINT_DATE_DESCRIPTOR = msg({
@@ -121,14 +83,6 @@ const HINT_CHANNEL_DESCRIPTOR = msg({
 const HINT_EXCLUDE_CHANNEL_DESCRIPTOR = msg({
 	message: 'exclude a channel',
 	comment: 'Hint shown beside -in: (negation). Sentence case, no trailing punctuation.',
-});
-const HINT_TRUE_OR_FALSE_DESCRIPTOR = msg({
-	message: 'true or false',
-	comment: 'Hint shown beside pinned:. Lowercase boolean values.',
-});
-const HINT_AUTHOR_TYPE_DESCRIPTOR = msg({
-	message: 'user, bot, or webhook',
-	comment: 'Hint shown beside author-type:. Lowercase categories.',
 });
 const HINT_LINK_HOSTNAME_DESCRIPTOR = msg({
 	message: 'a hostname, e.g. {exampleDomain}',
@@ -154,21 +108,6 @@ const HINT_EXCLUDE_EXT_DESCRIPTOR = msg({
 	message: 'exclude a file extension, e.g. png',
 	comment: 'Hint shown beside -ext: (negation). Sentence case, no trailing punctuation.',
 });
-const HINT_SORT_DESCRIPTOR = msg({
-	message: 'timestamp or relevance',
-	comment: 'Hint shown beside sort:. Lowercase values.',
-});
-const HINT_ORDER_DESCRIPTOR = msg({
-	message: 'asc or desc',
-	comment: 'Hint shown beside order:. Lowercase values.',
-});
-
-export interface SearchOption {
-	value: string;
-	label: string;
-	description?: string;
-	isDefault?: boolean;
-}
 
 export interface SearchValueOption {
 	value: string;
@@ -218,6 +157,8 @@ export interface MessageSearchParams {
 interface ApiMessageSearchResponse {
 	messages: Array<WireMessage>;
 	channels?: Array<WireChannel>;
+	threads?: Array<ChannelWire>;
+	members?: Array<ThreadMemberResponse>;
 	total: number;
 	hits_per_page?: number;
 	page?: number;
@@ -245,7 +186,7 @@ export interface SearchContext {
 }
 
 interface SearchQueryExecutionContext {
-	channelId?: string;
+	historyKey?: string;
 	guildId?: string | null;
 }
 
@@ -282,6 +223,9 @@ export async function searchMessages(
 		return {indexing: true, message: i18n._(STILL_INDEXING_DESCRIPTOR)};
 	}
 	const searchResponse = body as ApiMessageSearchResponse;
+	if (searchResponse.threads) {
+		ingestSearchThreads(searchResponse.threads, searchResponse.members ?? []);
+	}
 	return {
 		messages: searchResponse.messages?.map((msg) => new Message(msg)) ?? [],
 		channels: searchResponse.channels?.map((channel) => new Channel(channel)) ?? [],
@@ -299,56 +243,59 @@ export interface SearchFilterOption {
 	values?: Array<SearchValueOption>;
 	requiresValue?: boolean;
 	requiresGuild?: boolean;
+	dmEligible?: boolean;
 }
 
 export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
+	const valuesListFormatter = new Intl.ListFormat(i18n.locale, {type: 'disjunction'});
 	const hasContentValues: Array<SearchValueOption> = [
 		{
-			value: 'link',
-			label: i18n._(VALUE_LINK_LABEL_DESCRIPTOR),
-			description: i18n._(VALUE_LINK_DESCRIPTION_DESCRIPTOR),
-		},
-		{
-			value: 'embed',
-			label: i18n._(VALUE_EMBED_LABEL_DESCRIPTOR),
-			description: i18n._(VALUE_EMBED_DESCRIPTION_DESCRIPTOR),
-		},
-		{
 			value: 'image',
-			label: i18n._(VALUE_IMAGE_LABEL_DESCRIPTOR),
+			label: 'image',
 			description: i18n._(VALUE_IMAGE_DESCRIPTION_DESCRIPTOR),
 		},
 		{
 			value: 'video',
-			label: i18n._(VALUE_VIDEO_LABEL_DESCRIPTOR),
+			label: 'video',
 			description: i18n._(VALUE_VIDEO_DESCRIPTION_DESCRIPTOR),
 		},
 		{
-			value: 'sound',
-			label: i18n._(VALUE_SOUND_LABEL_DESCRIPTOR),
-			description: i18n._(VALUE_SOUND_DESCRIPTION_DESCRIPTOR),
+			value: 'link',
+			label: 'link',
+			description: i18n._(VALUE_LINK_DESCRIPTION_DESCRIPTOR),
 		},
 		{
 			value: 'file',
-			label: i18n._(VALUE_FILE_LABEL_DESCRIPTOR),
+			label: 'file',
 			description: i18n._(VALUE_FILE_DESCRIPTION_DESCRIPTOR),
 		},
 		{
-			value: 'sticker',
-			label: i18n._(VALUE_STICKER_LABEL_DESCRIPTOR),
-			description: i18n._(VALUE_STICKER_DESCRIPTION_DESCRIPTOR),
+			value: 'embed',
+			label: 'embed',
+			description: i18n._(VALUE_EMBED_DESCRIPTION_DESCRIPTOR),
+		},
+		{
+			value: 'sound',
+			label: 'sound',
+			description: i18n._(VALUE_SOUND_DESCRIPTION_DESCRIPTOR),
 		},
 		{
 			value: 'poll',
-			label: i18n._(VALUE_POLL_LABEL_DESCRIPTOR),
+			label: 'poll',
 			description: i18n._(VALUE_POLL_DESCRIPTION_DESCRIPTOR),
 		},
 		{
+			value: 'sticker',
+			label: 'sticker',
+			description: i18n._(VALUE_STICKER_DESCRIPTION_DESCRIPTOR),
+		},
+		{
 			value: 'forward',
-			label: i18n._(VALUE_FORWARD_LABEL_DESCRIPTOR),
+			label: 'forward',
 			description: i18n._(VALUE_FORWARD_DESCRIPTION_DESCRIPTOR),
 		},
 	];
+	const contentValuesLabel = valuesListFormatter.format(hasContentValues.map(({value}) => value));
 	return [
 		{
 			key: 'from',
@@ -381,14 +328,14 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 		{
 			key: 'has',
 			label: 'has:',
-			description: i18n._(HINT_HAS_VALUES_DESCRIPTOR),
+			description: contentValuesLabel,
 			syntax: 'has:',
 			values: hasContentValues,
 		},
 		{
 			key: '-has',
 			label: '-has:',
-			description: i18n._(HINT_EXCLUDE_HAS_VALUES_DESCRIPTOR),
+			description: i18n._(HINT_EXCLUDE_HAS_VALUES_DESCRIPTOR, {values: contentValuesLabel}),
 			syntax: '-has:',
 			values: hasContentValues,
 		},
@@ -427,6 +374,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 			syntax: 'in:',
 			requiresValue: true,
 			requiresGuild: true,
+			dmEligible: true,
 		},
 		{
 			key: '-in',
@@ -435,11 +383,12 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 			syntax: '-in:',
 			requiresValue: true,
 			requiresGuild: true,
+			dmEligible: true,
 		},
 		{
 			key: 'pinned',
 			label: 'pinned:',
-			description: i18n._(HINT_TRUE_OR_FALSE_DESCRIPTOR),
+			description: valuesListFormatter.format(['true', 'false']),
 			syntax: 'pinned:',
 			values: [
 				{value: 'true', label: 'true'},
@@ -449,7 +398,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 		{
 			key: 'authorType',
 			label: 'author-type:',
-			description: i18n._(HINT_AUTHOR_TYPE_DESCRIPTOR),
+			description: valuesListFormatter.format(['user', 'bot', 'webhook']),
 			syntax: 'author-type:',
 			values: [
 				{value: 'user', label: 'user'},
@@ -502,7 +451,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 		{
 			key: 'sort',
 			label: 'sort:',
-			description: i18n._(HINT_SORT_DESCRIPTOR),
+			description: valuesListFormatter.format(['timestamp', 'relevance']),
 			syntax: 'sort:',
 			values: [
 				{value: 'timestamp', label: 'timestamp', isDefault: true},
@@ -512,7 +461,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 		{
 			key: 'order',
 			label: 'order:',
-			description: i18n._(HINT_ORDER_DESCRIPTOR),
+			description: valuesListFormatter.format(['asc', 'desc']),
 			syntax: 'order:',
 			values: [
 				{value: 'desc', label: 'desc', isDefault: true},
@@ -522,7 +471,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 	];
 }
 
-export function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
+function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
 	const hitsPerPage = params.hitsPerPage ?? 25;
 	const page = params.page ?? 1;
 	const apiParams: MessageSearchApiParams = {
@@ -603,10 +552,6 @@ function buildHintsFromSegments(segments: Array<SearchSegment>) {
 	};
 }
 
-function addUnique<T>(values: Array<T> | undefined, value: T): Array<T> {
-	return values?.includes(value) ? values : [...(values ?? []), value];
-}
-
 function segmentMatchesQuery(query: string, segment: SearchSegment): boolean {
 	return (
 		segment.start >= 0 && segment.end <= query.length && query.slice(segment.start, segment.end) === segment.displayText
@@ -654,12 +599,21 @@ function applySegmentsToParams(
 	return params;
 }
 
+export function hasSearchableParams(params: MessageSearchParams): boolean {
+	for (const value of Object.values(params)) {
+		if (value !== undefined) {
+			return true;
+		}
+	}
+	return false;
+}
+
 export function parseSearchQueryWithSegments(
 	query: string,
 	segments: Array<SearchSegment>,
 	ctx?: SearchQueryExecutionContext,
 ): MessageSearchParams {
-	const entry = SearchHistory.recent(ctx?.channelId).find((historyEntry) => historyEntry.query === query);
+	const entry = SearchHistory.recent(ctx?.historyKey).find((historyEntry) => historyEntry.query === query);
 	const segmentHints = buildHintsFromSegments(segments);
 	const segmentUserValues = new Set<string>();
 	for (const segment of segments) {

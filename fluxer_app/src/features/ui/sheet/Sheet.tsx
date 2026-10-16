@@ -2,6 +2,8 @@
 
 import {useBottomSheetBackHandler} from '@app/features/app/hooks/useBottomSheetBackHandler';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useAccountTransitionDismissal} from '@app/features/platform/hooks/useAccountTransitionDismissal';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import {resolvePortalHost, usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import styles from '@app/features/ui/sheet/Sheet.module.css';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
@@ -56,11 +58,7 @@ interface RootProps {
 	initialSnap?: number;
 	snapPoints?: Array<number>;
 	surface?: Surface;
-	showHandle?: boolean;
 	zIndex?: number;
-	modalEffectRootId?: string;
-	backdropOpacity?: number;
-	showBackdrop?: boolean;
 	className?: string;
 	role?: 'dialog' | 'alertdialog';
 	ariaLabel?: string;
@@ -110,10 +108,6 @@ let scrollLockState: {
 	documentOverscrollBehavior: string;
 	scrollY: number;
 } | null = null;
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(max, Math.max(min, value));
-}
 
 function getViewportHeight(): number {
 	if (typeof window === 'undefined') return 0;
@@ -289,9 +283,6 @@ const RootComponent: React.FC<RootProps> = ({
 	snapPoints = [0, 0.6, 1],
 	surface = 'secondary',
 	zIndex: explicitZIndex,
-	modalEffectRootId = DEFAULT_MODAL_EFFECT_ROOT_ID,
-	backdropOpacity = 0.7,
-	showBackdrop = true,
 	className,
 	role = 'dialog',
 	ariaLabel,
@@ -317,8 +308,6 @@ const RootComponent: React.FC<RootProps> = ({
 	const isOpenRef = useRef(isOpen);
 	const initialSnapRef = useRef(initialSnap);
 	const snapPointsPropRef = useRef(snapPoints);
-	const backdropOpacityRef = useRef(backdropOpacity);
-	const modalEffectRootIdRef = useRef(modalEffectRootId);
 	const titleId = useId();
 	const [hasTitle, setHasTitle] = useState(false);
 	const a11yContext = useMemo(() => ({titleId, setHasTitle}), [titleId]);
@@ -330,10 +319,9 @@ const RootComponent: React.FC<RootProps> = ({
 	isOpenRef.current = isOpen;
 	initialSnapRef.current = initialSnap;
 	snapPointsPropRef.current = snapPoints;
-	backdropOpacityRef.current = backdropOpacity;
-	modalEffectRootIdRef.current = modalEffectRootId;
+
 	const applyModalEffect = useCallback((y: number, sheetHeight: number) => {
-		const rootId = modalEffectRootIdRef.current;
+		const rootId = DEFAULT_MODAL_EFFECT_ROOT_ID;
 		if (!rootId || typeof document === 'undefined' || sheetHeight <= 0) return;
 		const modalRoot = document.getElementById(rootId);
 		if (!modalRoot) return;
@@ -377,7 +365,7 @@ const RootComponent: React.FC<RootProps> = ({
 			sheetYRef.current = y;
 			root.style.setProperty('--sheet-y', `${y}px`);
 			root.style.setProperty('--sheet-open-progress', `${progress}`);
-			root.style.setProperty('--sheet-backdrop-alpha', `${progress * backdropOpacityRef.current}`);
+			root.style.setProperty('--sheet-backdrop-alpha', `${progress * 0.7}`);
 			applyModalEffect(y, sheetHeight);
 		},
 		[applyModalEffect],
@@ -653,6 +641,7 @@ const RootComponent: React.FC<RootProps> = ({
 		if (!isMounted) return undefined;
 		return lockDocumentScroll();
 	}, [isMounted]);
+	useAccountTransitionDismissal(isOpen, onClose);
 	useEffect(() => {
 		if (!isOpen) return undefined;
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -679,7 +668,7 @@ const RootComponent: React.FC<RootProps> = ({
 		animateClosed();
 		closeTimerRef.current = window.setTimeout(() => {
 			setIsMounted(false);
-			cleanupModalEffect(modalEffectRootIdRef.current);
+			cleanupModalEffect(DEFAULT_MODAL_EFFECT_ROOT_ID);
 			const previousFocus = previousFocusRef.current;
 			if (previousFocus && document.contains(previousFocus)) {
 				previousFocus.focus({preventScroll: true});
@@ -737,7 +726,7 @@ const RootComponent: React.FC<RootProps> = ({
 			if (closeTimerRef.current != null) {
 				window.clearTimeout(closeTimerRef.current);
 			}
-			cleanupModalEffect(modalEffectRootIdRef.current);
+			cleanupModalEffect(DEFAULT_MODAL_EFFECT_ROOT_ID);
 			document.removeEventListener('touchmove', handleTouchMove);
 			document.removeEventListener('touchend', endTouchDrag);
 			document.removeEventListener('touchcancel', endTouchDrag);
@@ -758,7 +747,7 @@ const RootComponent: React.FC<RootProps> = ({
 			style={{zIndex}}
 			data-flx="ui.sheet.sheet.overlay-root"
 		>
-			{showBackdrop && (
+			{
 				<div
 					className={styles.backdrop}
 					data-rsbs-backdrop=""
@@ -766,7 +755,7 @@ const RootComponent: React.FC<RootProps> = ({
 					aria-hidden="true"
 					data-flx="ui.sheet.sheet.backdrop"
 				/>
-			)}
+			}
 			{/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: RootProps restricts role to dialog or alertdialog. */}
 			<div
 				ref={containerRef}
@@ -898,30 +887,19 @@ const SheetTitleContent: React.FC<TitleProps> = ({children, as: Component = 'h2'
 	);
 };
 
-interface SubtitleProps {
-	children: React.ReactNode;
-}
-
-export const Subtitle: React.FC<SubtitleProps> = ({children}) => (
-	<p className={styles.subtitle} data-flx="ui.sheet.sheet.subtitle.subtitle">
-		{children}
-	</p>
-);
-
 interface ContentProps {
 	children: React.ReactNode;
 	padding?: 'none' | 'md';
-	scrollable?: boolean;
 	className?: string;
 }
 
-export const Content: React.FC<ContentProps> = ({children, padding = 'md', scrollable = true, className}) => (
+export const Content: React.FC<ContentProps> = ({children, padding = 'md', className}) => (
 	<div
 		className={clsx(styles.content, padding === 'none' && styles.contentNoPadding, className)}
 		data-flx="ui.sheet.sheet.content.content"
 	>
 		<div
-			className={clsx(styles.contentInner, !scrollable && styles.contentStatic)}
+			className={styles.contentInner}
 			tabIndex={-1}
 			data-sheet-scroll-region="true"
 			data-flx="ui.sheet.sheet.content.content-inner"
@@ -929,51 +907,6 @@ export const Content: React.FC<ContentProps> = ({children, padding = 'md', scrol
 			{children}
 		</div>
 	</div>
-);
-
-interface SectionProps {
-	children: React.ReactNode;
-	className?: string;
-}
-
-export const Section: React.FC<SectionProps> = ({children, className}) => (
-	<div className={clsx(styles.section, className)} data-flx="ui.sheet.sheet.section.section">
-		{children}
-	</div>
-);
-
-interface FooterProps {
-	children: React.ReactNode;
-	border?: boolean;
-	className?: string;
-}
-
-export const Footer: React.FC<FooterProps> = ({children, border = true, className}) => (
-	<div
-		className={clsx(styles.footer, !border && styles.footerNoBorder, className)}
-		data-flx="ui.sheet.sheet.footer.footer"
-	>
-		{children}
-	</div>
-);
-
-interface ActionsProps {
-	children: React.ReactNode;
-	className?: string;
-}
-
-export const Actions: React.FC<ActionsProps> = ({children, className}) => (
-	<div className={clsx(styles.actions, className)} data-flx="ui.sheet.sheet.actions.actions">
-		{children}
-	</div>
-);
-
-interface DividerProps {
-	className?: string;
-}
-
-export const Divider: React.FC<DividerProps> = ({className}) => (
-	<div className={clsx(styles.divider, className)} aria-hidden="true" data-flx="ui.sheet.sheet.divider.divider" />
 );
 
 interface CloseButtonProps {

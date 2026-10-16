@@ -33,7 +33,6 @@ export const DesktopMediaViewer = memo(
 				zoomState={zoomState}
 				zoomedScale={2.5}
 				maxScale={5}
-				preferNaturalZoomScale
 				tapToToggleZoom
 				doubleClickEnabled={false}
 				resetKey={resetKey}
@@ -67,11 +66,10 @@ export const MobileMediaViewer = memo(
 				className={styles.mobileViewerContainer}
 				contentClassName={styles.mobileViewerContent}
 				zoomState={zoomState}
-				zoomedScale={2.4}
+				zoomedScale={2.5}
 				maxScale={5}
-				preferNaturalZoomScale
-				doubleClickEnabled
-				tapToToggleZoom={false}
+				tapToToggleZoom
+				doubleClickEnabled={false}
 				resetKey={resetKey}
 				onZoomStateChange={onZoomStateChange}
 				onTransformChange={onTransformChange}

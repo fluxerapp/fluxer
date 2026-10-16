@@ -1,26 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import {tryExtractGifProviderSlug} from '@app/api/gif/GifProviderUtils';
+import type {NatsGifProvider} from '@app/api/gif/NatsGifProvider';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {Logger} from '@fluxer/logger/src/Logger';
 import type {ResolvedGifEntrySchema} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
+import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 import type {GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
-import type {EmbedMediaResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
-import {tryExtractGifProviderSlug} from '../gif/GifProviderUtils';
-import type {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
-import type {IMediaService, MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
-import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
+import type {EmbedMediaResponse, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 
-const PREVIEW_FORMAT_PRIORITY = ['webm', 'mp4', 'tinywebm', 'tinymp4', 'webp', 'gif', 'tinygif', 'nanogif'] as const;
-const FORMAT_CONTENT_TYPES: Record<string, string> = {
-	webm: 'video/webm',
-	tinywebm: 'video/webm',
-	mp4: 'video/mp4',
-	tinymp4: 'video/mp4',
-	webp: 'image/webp',
-	gif: 'image/gif',
-	tinygif: 'image/gif',
-	nanogif: 'image/gif',
-};
 const logger = new Logger('FavoriteGifResolver');
 
 function pickFavoriteGifPreviewFormat(
@@ -62,7 +52,7 @@ export async function resolveFavoriteGifEntry({
 	url: string;
 	locale: string;
 	country: string;
-	gifService: GifService;
+	gifService: NatsGifProvider;
 	mediaService: IMediaService;
 	unfurlerService: IUnfurlerService;
 }): Promise<ResolvedGifEntrySchema> {
@@ -90,15 +80,15 @@ async function resolveProviderGifUrl({
 	url: string;
 	locale: string;
 	country: string;
-	gifService: GifService;
+	gifService: NatsGifProvider;
 }): Promise<GifResponse | null> {
-	const provider = gifService.getProvider();
+	const provider = gifService;
 	if (!(await tryExtractGifProviderSlug(provider, url))) return null;
 	return resolveProviderUrl(provider, {url, locale, country});
 }
 
 async function resolveProviderUrl(
-	provider: IGifProvider,
+	provider: NatsGifProvider,
 	params: {url: string; locale: string; country: string},
 ): Promise<GifResponse | null> {
 	try {
@@ -118,10 +108,11 @@ function favoriteGifEntryFromExternalMedia({
 	mediaService: IMediaService;
 	metadata: MediaProxyMetadataResponse | null;
 }): ResolvedGifEntrySchema {
-	const proxyUrl = mediaService.getExternalMediaProxyURL(url);
-	const media = directMediaFormatFromMetadata({url, proxyUrl, metadata});
+	const signedUrl = signAttachmentUrl(url);
+	const proxyUrl = signAttachmentUrl(mediaService.getExternalMediaProxyURL(url));
+	const media = directMediaFormatFromMetadata({url: signedUrl, proxyUrl, metadata});
 	return {
-		url,
+		url: signedUrl,
 		proxy_url: proxyUrl,
 		width: metadata?.width ?? 0,
 		height: metadata?.height ?? 0,
@@ -140,7 +131,10 @@ async function resolveUnfurledFavoriteGifEntry({
 	unfurlerService: IUnfurlerService;
 	mediaService: IMediaService;
 }): Promise<ResolvedGifEntrySchema | null> {
-	const embeds = await unfurlerService.unfurl(url, 'allow');
+	const embeds = await unfurlerService.unfurl(url, 'allow').catch((error: unknown) => {
+		logger.warn({error, url}, 'Failed to unfurl favorite GIF URL');
+		return [] as Array<MessageEmbedResponse>;
+	});
 	for (const embed of embeds) {
 		const media = [embed.video, embed.image, embed.thumbnail].find((candidate) =>
 			isRenderableMediaType(candidate?.content_type),
@@ -160,16 +154,16 @@ function favoriteGifEntryFromEmbedMedia({
 	mediaService: IMediaService;
 	media: EmbedMediaResponse;
 }): ResolvedGifEntrySchema {
-	const proxyUrl = media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url);
+	const proxyUrl = signAttachmentUrl(media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url));
 	const width = media.width ?? 0;
 	const height = media.height ?? 0;
 	const contentType = media.content_type ?? '';
 	return {
-		url,
+		url: signAttachmentUrl(url),
 		proxy_url: proxyUrl,
 		width,
 		height,
-		media: directMediaFormatFromDetails({url: media.url, proxyUrl, contentType, width, height}),
+		media: directMediaFormatFromDetails({url: signAttachmentUrl(media.url), proxyUrl, contentType, width, height}),
 		content_type: contentType,
 		placeholder: media.placeholder ?? null,
 	};
@@ -219,10 +213,6 @@ function directMediaFormatFromDetails({
 
 function isUsableGifMediaFormat(format: GifMediaFormat | undefined): format is GifMediaFormat {
 	return Boolean(format?.src && format.proxy_src && format.width > 0 && format.height > 0);
-}
-
-function inferFormatContentType(formatKey: string): string {
-	return FORMAT_CONTENT_TYPES[formatKey] ?? '';
 }
 
 function isRenderableMediaType(contentType: string | null | undefined): boolean {

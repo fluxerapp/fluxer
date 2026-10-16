@@ -13,6 +13,11 @@ export const EmbedAuthorResponse = z.object({
 
 export type EmbedAuthorResponse = z.infer<typeof EmbedAuthorResponse>;
 
+export const EmbedProviderResponse = z.object({
+	name: z.string().describe('The name of the provider'),
+	url: z.url().nullish().describe('The URL of the provider'),
+});
+
 export const EmbedFooterResponse = z.object({
 	text: z.string().describe('The footer text'),
 	icon_url: z.url().nullish().describe('The URL of the footer icon'),
@@ -49,31 +54,6 @@ export const EmbedFieldResponse = z.object({
 
 export type EmbedFieldResponse = z.infer<typeof EmbedFieldResponse>;
 
-interface MessageEmbedChildResponseData {
-	type: string;
-	url?: string | null;
-	title?: string | null;
-	color?: number | null;
-	timestamp?: string | null;
-	description?: string | null;
-	author?: EmbedAuthorResponse | null;
-	image?: EmbedMediaResponse | null;
-	thumbnail?: EmbedMediaResponse | null;
-	footer?: EmbedFooterResponse | null;
-	fields?: Array<EmbedFieldResponse> | null;
-	provider?: EmbedAuthorResponse | null;
-	video?: EmbedMediaResponse | null;
-	audio?: EmbedMediaResponse | null;
-	html?: string | null;
-	html_width?: number | null;
-	html_height?: number | null;
-	nsfw?: boolean | null;
-}
-
-interface MessageEmbedResponseData extends MessageEmbedChildResponseData {
-	children?: Array<MessageEmbedChildResponseData> | null;
-}
-
 export const MessageEmbedChildResponse = z.object({
 	type: z.string().describe('The type of embed (e.g., rich, image, video, gifv, article, link)'),
 	url: z.url().nullish().describe('The URL of the embed'),
@@ -86,7 +66,7 @@ export const MessageEmbedChildResponse = z.object({
 	thumbnail: EmbedMediaResponse.nullish().describe('The thumbnail of the embed'),
 	footer: EmbedFooterResponse.nullish().describe('The footer of the embed'),
 	fields: z.array(EmbedFieldResponse).nullish().describe('The fields of the embed'),
-	provider: EmbedAuthorResponse.nullish().describe('The provider of the embed (e.g., YouTube, Twitter)'),
+	provider: EmbedProviderResponse.nullish().describe('The provider of the embed (e.g., YouTube, Twitter)'),
 	video: EmbedMediaResponse.nullish().describe('The video of the embed'),
 	audio: EmbedMediaResponse.nullish().describe('The audio of the embed'),
 	html: z.string().nullish().describe('Sanitized oEmbed HTML for trusted specialized embed renderers'),
@@ -97,7 +77,7 @@ export const MessageEmbedChildResponse = z.object({
 
 export type MessageEmbedChildResponse = z.infer<typeof MessageEmbedChildResponse>;
 
-export const MessageEmbedResponse: z.ZodType<MessageEmbedResponseData> = MessageEmbedChildResponse.extend({
+export const MessageEmbedResponse = MessageEmbedChildResponse.extend({
 	children: z
 		.array(MessageEmbedChildResponse)
 		.max(1)
@@ -112,6 +92,11 @@ export interface EmbedAuthor {
 	readonly url?: string;
 	readonly icon_url?: string;
 	readonly proxy_icon_url?: string;
+}
+
+interface EmbedProvider {
+	readonly name: string;
+	readonly url?: string;
 }
 
 export interface EmbedFooter {
@@ -134,37 +119,13 @@ export interface EmbedMedia {
 	readonly nsfw?: boolean;
 }
 
-export interface EmbedField {
-	readonly name: string;
-	readonly value: string;
-	readonly inline: boolean;
-}
+export type EmbedField = Readonly<EmbedFieldResponse>;
 
-export interface MessageEmbed {
-	readonly id?: string;
-	readonly type: string;
-	readonly url?: string;
-	readonly title?: string;
-	readonly color?: number;
-	readonly timestamp?: string;
-	readonly description?: string;
-	readonly author?: EmbedAuthor;
-	readonly image?: EmbedMedia;
-	readonly thumbnail?: EmbedMedia;
-	readonly footer?: EmbedFooter;
-	readonly fields?: ReadonlyArray<EmbedField>;
-	readonly provider?: EmbedAuthor;
-	readonly video?: EmbedMedia;
-	readonly audio?: EmbedMedia;
-	readonly html?: string;
-	readonly html_width?: number;
-	readonly html_height?: number;
+export interface MessageEmbed extends MessageEmbedChild {
 	readonly children?: ReadonlyArray<MessageEmbedChild>;
-	readonly flags?: number;
-	readonly nsfw?: boolean;
 }
 
-export interface MessageEmbedChild {
+interface MessageEmbedChild {
 	readonly id?: string;
 	readonly type: string;
 	readonly url?: string;
@@ -177,7 +138,7 @@ export interface MessageEmbedChild {
 	readonly thumbnail?: EmbedMedia;
 	readonly footer?: EmbedFooter;
 	readonly fields?: ReadonlyArray<EmbedField>;
-	readonly provider?: EmbedAuthor;
+	readonly provider?: EmbedProvider;
 	readonly video?: EmbedMedia;
 	readonly audio?: EmbedMedia;
 	readonly html?: string;

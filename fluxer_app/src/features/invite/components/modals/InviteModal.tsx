@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {CopyLinkSection} from '@app/features/app/components/dialogs/shared/CopyLinkSection';
-import type {RecipientItem} from '@app/features/app/components/dialogs/shared/RecipientList';
-import {RecipientList, useRecipientItems} from '@app/features/app/components/dialogs/shared/RecipientList';
+import {
+	RecipientList,
+	useRecipientItems,
+	useSendLinkToRecipients,
+} from '@app/features/app/components/dialogs/shared/RecipientList';
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
@@ -30,8 +33,7 @@ import {
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteModal.module.css';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
-import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
-import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -45,7 +47,6 @@ import {useCopyLinkHandler} from '@app/lib/copy-link';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_INVITE_AGE_SECONDS, MAX_INVITE_USES} from '@fluxer/constants/src/LimitConstants';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, WarningCircleIcon, WarningIcon} from '@phosphor-icons/react';
@@ -104,7 +105,7 @@ const EXPIRE_AFTER_DESCRIPTOR = msg({
 	comment: 'Label above the expiration duration dropdown in the invite link settings.',
 });
 const CUSTOM_EXPIRY_SECONDS_DESCRIPTOR = msg({
-	message: 'Custom expiry (seconds)',
+	message: 'Custom expiration (seconds)',
 	comment:
 		'Label of the numeric input shown after choosing "Custom..." in the invite expiration dropdown. The unit is seconds.',
 });
@@ -147,7 +148,24 @@ const INVITE_LINK_HIDDEN_LABEL_DESCRIPTOR = msg({
 	message: 'Invite link is hidden while sharing:',
 	comment: 'Label above a masked invite link while streaming privacy is active.',
 });
-const logger = new Logger('InviteModal');
+const YOUR_INVITE_LINK_EXPIRES_IN_SECONDS_DESCRIPTOR = msg({
+	message:
+		'{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}',
+	comment: 'Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_MINUTES_DESCRIPTOR = msg({
+	message:
+		'{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}',
+	comment: 'Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_HOURS_DESCRIPTOR = msg({
+	message: '{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}',
+	comment: 'Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_DAYS_DESCRIPTOR = msg({
+	message: '{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}',
+	comment: 'Text under a generated invite link. {days} is how long the link stays valid, in whole days.',
+});
 
 type InviteModalView = 'recipients' | 'advanced';
 
@@ -190,8 +208,7 @@ const InviteModalContent = observer(function InviteModalContent({
 	const [invite, setInvite] = useState<Invite | null>(null);
 	const [loading, setLoading] = useState(!isUsingVanityUrl);
 	const [showAdvanced, setShowAdvanced] = useState(false);
-	const [sentInvites, setSentInvites] = useState(new Map<string, boolean>());
-	const [sendingTo, setSendingTo] = useState(new Set<string>());
+
 	const [maxAge, setMaxAge] = useState('604800');
 	const [maxUses, setMaxUses] = useState('0');
 	const [temporary, setTemporary] = useState(false);
@@ -266,38 +283,24 @@ const InviteModalContent = observer(function InviteModalContent({
 	const hideInviteLinks = StreamerMode.shouldHideInviteLinks;
 	const displayedInviteUrl = hideInviteLinks && inviteUrl ? i18n._(LINK_HIDDEN_WHILE_SHARING_DESCRIPTOR) : inviteUrl;
 	const handleCopy = useCopyLinkHandler(inviteUrl, true);
-	const handleSendInvite = async (item: RecipientItem) => {
-		const userId = item.type === 'group_dm' ? item.id : item.user.id;
-		setSendingTo((prev) => new Set(prev).add(userId));
-		let targetChannelId: string;
-		if (item.channelId) {
-			targetChannelId = item.channelId;
-		} else {
-			targetChannelId = await PrivateChannelCommands.ensureDMChannel(item.user.id);
-		}
-		try {
-			const result = await MessageCommands.send(targetChannelId, {
-				content: inviteUrl,
-				nonce: SnowflakeUtils.fromTimestamp(Date.now()),
-			});
-			if (result) {
-				setSentInvites((prev) => new Map(prev).set(userId, true));
+	const {
+		sendingTo,
+		sentTo: sentInvites,
+		send: handleSendInvite,
+	} = useSendLinkToRecipients(
+		() => inviteUrl,
+		(error: unknown) => {
+			if (failureCode(error)) {
+				showDmActionErrorModal(error);
+				return;
 			}
-		} catch (error) {
-			logger.error('Failed to send invite:', error);
 			showGenericErrorModal({
 				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 				message: () => i18n._(FAILED_TO_SEND_INVITE_DESCRIPTOR),
 				dataFlx: 'invite.invite-modal.send-invite-error-modal',
 			});
-		} finally {
-			setSendingTo((prev) => {
-				const next = new Set(prev);
-				next.delete(userId);
-				return next;
-			});
-		}
-	};
+		},
+	);
 	const handleGenerateNew = () => {
 		loadInvite({
 			maxAge: parseInt(maxAge, 10),
@@ -307,14 +310,28 @@ const InviteModalContent = observer(function InviteModalContent({
 		setShowAdvanced(false);
 	};
 	const getExpirationText = () => {
-		const option = maxAgeOptions.find((opt) => opt.value === maxAge);
-		if (option) {
-			return option.label;
+		const seconds = Number.parseInt(maxAge, 10);
+		const minutes = seconds / 60;
+		const hours = minutes / 60;
+		const days = hours / 24;
+		if (days >= 1 && days % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_DAYS_DESCRIPTOR, {days});
 		}
-		return maxAge;
+		if (hours >= 1 && hours % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_HOURS_DESCRIPTOR, {hours});
+		}
+		if (minutes >= 1 && minutes % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_MINUTES_DESCRIPTOR, {minutes});
+		}
+		return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_SECONDS_DESCRIPTOR, {seconds});
 	};
 	return (
-		<Modal.Root size="small" centered data-flx="invite.invite-modal.modal-root--2">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="invite.invite-modal.modal-root--2"
+		>
 			<Modal.Header
 				title={!showAdvanced ? title : i18n._(INVITE_LINK_SETTINGS_DESCRIPTOR)}
 				data-flx="invite.invite-modal.modal-header--2"
@@ -500,7 +517,7 @@ const InviteModalContent = observer(function InviteModalContent({
 							</p>
 						) : (
 							<p className={styles.expirationText} data-flx="invite.invite-modal.expiration-text--2">
-								<Trans>Your invite link expires in {getExpirationText()}.</Trans>{' '}
+								{getExpirationText()}{' '}
 								<FocusRing offset={-2} data-flx="invite.invite-modal.focus-ring--2">
 									<button
 										type="button"

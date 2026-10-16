@@ -2,15 +2,22 @@
 
 import crypto from 'node:crypto';
 import {promisify} from 'node:util';
+import type {ApiContext} from '@app/api/ApiContext';
+import {createNoticeLookupDeps, loadAccountNotice} from '@app/api/enforcement/EnforcementAccountNotice';
+import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
+import {createNetworkBlockError} from '@app/api/enforcement/NetworkBlockError';
+import {clearExpiredSuspension} from '@app/api/enforcement/SuspensionState';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {isAccountClosed, isSignInRefused} from '@app/api/user/UserHelpers';
+import * as AgeUtils from '@app/api/utils/AgeUtils';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {AccountPermanentlySuspendedError} from '@fluxer/errors/src/domains/user/AccountPermanentlySuspendedError';
 import {AccountTemporarilySuspendedError} from '@fluxer/errors/src/domains/user/AccountTemporarilySuspendedError';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import type {User} from '../models/User';
-import * as AgeUtils from '../utils/AgeUtils';
-import * as RandomUtils from '../utils/RandomUtils';
 
 const randomBytesAsync = promisify(crypto.randomBytes);
 const ALPHANUMERIC_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -18,12 +25,6 @@ const ALPHANUMERIC_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 interface ValidateAgeParams {
 	dateOfBirth: string;
 	minAge: number;
-}
-
-interface AccountBanStatus {
-	isPermanentlyBanned: boolean;
-	isTempBanned: boolean;
-	tempBanExpired: boolean;
 }
 
 function base62Encode(buffer: Uint8Array): string {
@@ -36,10 +37,6 @@ function base62Encode(buffer: Uint8Array): string {
 		num = num / base;
 	}
 	return encoded;
-}
-
-export async function generateSecureToken(_ctx: ApiContext, length = 64): Promise<string> {
-	return RandomUtils.randomString(length);
 }
 
 export async function generateAuthToken(_ctx: ApiContext): Promise<string> {
@@ -80,46 +77,67 @@ export function assertNonBotUser(_ctx: ApiContext, user: User): void {
 	}
 }
 
-export async function authorizeIpByToken(
+export function assertNetworkAllowed(ctx: ApiContext): void {
+	const block = ctx.request.blockedNetworkSignIn;
+	if (block) throw createNetworkBlockError(block, ctx.request.locale);
+}
+
+export function assertMfaTicketAllowed(ctx: ApiContext, user: User): void {
+	if (!isSignInRefused(user)) assertNetworkAllowed(ctx);
+}
+
+const HOLDER_OR_HOUSEKEEPING_DELETION_REASONS: ReadonlySet<number> = new Set([
+	DeletionReasons.USER_REQUESTED,
+	DeletionReasons.INACTIVITY,
+]);
+
+function isHolderOrHousekeepingDeletion(user: User): boolean {
+	if (user.enforcementDecisionId !== null) return false;
+	return (
+		(user.flags & UserFlags.SELF_DELETED) !== 0n ||
+		(user.deletionReasonCode !== null && HOLDER_OR_HOUSEKEEPING_DELETION_REASONS.has(user.deletionReasonCode))
+	);
+}
+
+async function refuseRestrictedSignIn(ctx: ApiContext, user: User): Promise<never> {
+	if (isAccountClosed(user) && isHolderOrHousekeepingDeletion(user)) throw new AccountPermanentlySuspendedError(null);
+	const notice = await loadAccountNotice(createNoticeLookupDeps(), user, ctx.request.locale);
+	throw isAccountClosed(user) || notice.permanent
+		? new AccountPermanentlySuspendedError(notice)
+		: new AccountTemporarilySuspendedError(notice);
+}
+
+export async function assertSignInAllowed(ctx: ApiContext, user: User): Promise<User> {
+	if (isSignInRefused(user)) await refuseRestrictedSignIn(ctx, user);
+	assertNetworkAllowed(ctx);
+	const expiry = await clearExpiredSuspension(
+		{users: ctx.services.users, repository: new EnforcementDecisionRepository()},
+		user,
+	);
+	return expiry?.cleared ?? user;
+}
+
+export async function reactivateOnSignIn(
 	ctx: ApiContext,
-	token: string,
-): Promise<{
-	userId: UserID;
-	email: string;
-} | null> {
+	user: User,
+	deletionQueue: Pick<KVAccountDeletionQueueService, 'removeFromQueue'>,
+): Promise<User> {
 	const {users} = ctx.services;
-	return users.authorizeIpByToken(token);
-}
-
-function checkAccountBanStatus(_ctx: ApiContext, user: User): AccountBanStatus {
-	const isPermanentlyBanned = !!(user.flags & UserFlags.DELETED);
-	const hasTempBan = !!(user.flags & UserFlags.DISABLED && user.tempBannedUntil);
-	const tempBanExpired = hasTempBan && user.tempBannedUntil! <= new Date();
-	return {
-		isPermanentlyBanned,
-		isTempBanned: hasTempBan && !tempBanExpired,
-		tempBanExpired,
-	};
-}
-
-export async function handleBanStatus(ctx: ApiContext, user: User): Promise<User> {
-	const {users} = ctx.services;
-	const banStatus = checkAccountBanStatus(ctx, user);
-	if (banStatus.isPermanentlyBanned) {
-		throw new AccountPermanentlySuspendedError();
+	let currentUser = user;
+	if ((currentUser.flags & UserFlags.DISABLED) !== 0n && !currentUser.tempBannedUntil) {
+		currentUser = (await users.updateFlags(currentUser.id, (flags) => flags & ~UserFlags.DISABLED)) ?? currentUser;
+		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on sign-in');
 	}
-	if (banStatus.isTempBanned) {
-		throw new AccountTemporarilySuspendedError();
+	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
+		currentUser = await users.updateDeletionSchedule(currentUser, {
+			flags: currentUser.flags & ~UserFlags.SELF_DELETED,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
+		await deletionQueue.removeFromQueue(currentUser.id);
+		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on sign-in');
 	}
-	if (banStatus.tempBanExpired) {
-		return users.patchUpsert(
-			user.id,
-			{
-				flags: user.flags & ~UserFlags.DISABLED,
-				temp_banned_until: null,
-			},
-			user.toRow(),
-		);
-	}
-	return user;
+	return currentUser;
 }

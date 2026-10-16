@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createUserID} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {CallRingBodySchema, CallUpdateBodySchema} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {CallEligibilityResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {ChannelIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createChannelID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function CallController(app: HonoApp) {
 	app.get(
@@ -55,9 +55,9 @@ export function CallController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const {region, latitude, longitude} = ctx.req.valid('json');
+			const {region} = ctx.req.valid('json');
 			const channelService = ctx.get('channelService');
-			await channelService.calls.updateCall({userId, channelId, region, latitude, longitude});
+			await channelService.calls.updateCall({userId, channelId, region});
 			return ctx.body(null, 204);
 		},
 	);
@@ -81,7 +81,7 @@ export function CallController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const {recipients, latitude, longitude} = ctx.req.valid('json');
+			const {recipients} = ctx.req.valid('json');
 			const channelService = ctx.get('channelService');
 			const requestCache = ctx.get('requestCache');
 			const recipientIds = recipients ? recipients.map(createUserID) : undefined;
@@ -89,8 +89,6 @@ export function CallController(app: HonoApp) {
 				userId,
 				channelId,
 				recipients: recipientIds,
-				latitude,
-				longitude,
 				requestCache,
 			});
 			return ctx.body(null, 204);

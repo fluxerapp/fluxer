@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod bluesky;
-mod default_helpers;
+pub(crate) mod default_helpers;
 pub mod default_resolver;
 pub mod fxtwitter;
 pub mod hacker_news;
@@ -18,26 +18,15 @@ use std::future::Future;
 use std::pin::Pin;
 use url::Url;
 
-#[allow(dead_code)]
 pub struct ResolveContext<'mp> {
     pub url: Url,
     pub original_url: Url,
     pub http_client: reqwest::Client,
     pub nsfw_mode: NsfwMode,
     pub media_proxy: &'mp MediaProxyClient,
-    pub static_cdn_endpoint: &'mp str,
+    pub self_hosted: bool,
     pub youtube_api_key: Option<String>,
     pub klipy_api_key: Option<String>,
-}
-
-impl ResolveContext<'_> {
-    pub fn static_asset_url(&self, path: &str) -> Option<String> {
-        let endpoint = self.static_cdn_endpoint.trim().trim_end_matches('/');
-        if endpoint.is_empty() {
-            return None;
-        }
-        Some(format!("{}/{}", endpoint, path.trim_start_matches('/')))
-    }
 }
 
 pub struct ResolverResult {

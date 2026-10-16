@@ -16,11 +16,12 @@
     serialize_state/1,
     serialize_transfer_state/1,
     handle_token_verify/2,
+    handle_is_staff/1,
     handle_heartbeat_ack/2,
     handle_resume/3,
     handle_resume_offline_timeout/2,
     handle_presence_update_cast/2,
-    handle_initial_global_presences/2
+    send_guild_push_hold/2
 ]).
 
 -export_type([session_state/0, channel_id/0, user_id/0, session_id/0, seq/0, status/0]).
@@ -32,6 +33,9 @@
 -type seq() :: session:seq().
 -type status() :: session:status().
 -type voice_state_entry() :: {binary(), map()}.
+
+-define(MAX_INLINE_RESUME_REPLAY, 256).
+-define(MAX_TRANSFER_PRE_ENCODED_BYTES, 4194304).
 
 -spec handle_terminate_call([binary()], session_state()) ->
     {stop, normal, terminated, session_state()} | {reply, ignored, session_state()}.
@@ -51,10 +55,14 @@ handle_terminate_cast(Hashes, #{auth_session_id_hash := AuthHash} = State) ->
 
 -spec any_hash_matches(binary(), [binary()]) -> boolean().
 any_hash_matches(AuthHash, Hashes) ->
-    lists:any(fun(Hash) -> base64url:decode(Hash) =:= AuthHash end, Hashes).
+    lists:any(
+        fun(Hash) -> base64:decode(Hash, #{mode => urlsafe, padding => false}) =:= AuthHash end,
+        Hashes
+    ).
 
 -spec terminate(term(), session_state()) -> ok.
 terminate(_Reason, State) ->
+    try_decrement_user_sessions(State),
     maybe_release_transferred_resources(State),
     try_cleanup_guild_monitors(State),
     try_cleanup_call_monitors(State),
@@ -65,7 +73,6 @@ terminate(_Reason, State) ->
 maybe_release_transferred_resources(#{fenced := true}) ->
     ok;
 maybe_release_transferred_resources(State) ->
-    try_decrement_user_sessions(State),
     try_voice_disconnect(State),
     try_cleanup_presence(State),
     ok.
@@ -268,20 +275,42 @@ token_hash_matches(HashedInput, TokenHash) when
 token_hash_matches(_HashedInput, _TokenHash) ->
     false.
 
+-spec handle_is_staff(session_state()) -> {reply, boolean(), session_state()}.
+handle_is_staff(#{is_staff := true} = State) ->
+    {reply, true, State};
+handle_is_staff(State) ->
+    {reply, false, State}.
+
 -spec handle_heartbeat_ack(seq(), session_state()) ->
     {reply, boolean(), session_state()}.
 handle_heartbeat_ack(Seq, #{ack_seq := AckSeq} = State) when Seq < AckSeq ->
     {reply, true, State};
 handle_heartbeat_ack(Seq, #{buffer := Buffer} = State) ->
-    NewBuffer = drop_acked_buffer(Seq, Buffer),
+    AckedSeq = min(Seq, maps:get(seq, State, Seq)),
+    NewBuffer = drop_acked_buffer(AckedSeq, Buffer),
     NewBytes =
         case is_list(NewBuffer) of
             true -> session_init:replay_buffer_bytes(NewBuffer);
             false -> limited_deque:bytes(NewBuffer)
         end,
-    NewState0 = State#{ack_seq => Seq, buffer => NewBuffer, buffer_bytes => NewBytes},
+    NewState0 = ack_state(State, AckedSeq, NewBuffer, NewBytes),
     NewState = session_connection_guild:repair_stalled_guild_connects(NewState0),
     {reply, true, NewState}.
+
+-spec ack_state(session_state(), seq(), term(), non_neg_integer()) -> session_state().
+ack_state(State, AckedSeq, NewBuffer, NewBytes) ->
+    Base = State#{ack_seq => AckedSeq, buffer => NewBuffer, buffer_bytes => NewBytes},
+    Base#{replay_payload_bytes => buffer_payload_bytes(NewBuffer)}.
+
+-spec buffer_payload_bytes(term()) -> non_neg_integer().
+buffer_payload_bytes(Buffer) when is_list(Buffer) ->
+    lists:foldl(fun(Entry, Acc) -> trunc(Acc + entry_payload_bytes(Entry)) end, 0, Buffer);
+buffer_payload_bytes(Buffer) ->
+    try limited_deque:to_list(Buffer) of
+        Entries -> buffer_payload_bytes(Entries)
+    catch
+        _:_ -> 0
+    end.
 
 -spec drop_acked_buffer(
     seq(), eqwalizer:dynamic(limited_deque:deque() | [map()])
@@ -298,13 +327,17 @@ buffer_event_acked(_Seq, _Event) ->
     false.
 
 -spec handle_resume(seq(), pid(), session_state()) ->
-    {reply, invalid_seq | {ok, [map()], seq()}, session_state()}.
+    {reply, invalid_seq | not_resumable | {ok, [map()], seq()}, session_state()}.
 handle_resume(Seq, _SocketPid, #{seq := CurrentSeq} = State) when Seq > CurrentSeq ->
     {reply, invalid_seq, State};
 handle_resume(Seq, _SocketPid, #{ack_seq := AckSeq} = State) when
     is_integer(AckSeq), Seq < AckSeq
 ->
     {reply, invalid_seq, State};
+handle_resume(Seq, _SocketPid, #{replay_floor := Floor} = State) when
+    is_integer(Floor), Seq < Floor
+->
+    {reply, not_resumable, State};
 handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
     #{buffer := Buffer, id := SessionId, status := Status, afk := Afk, mobile := Mobile} =
         State,
@@ -317,11 +350,42 @@ handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
     MissedEvents = events_after_seq(Seq, BufferList),
     NewState0 = cancel_offline_timer(cancel_resume_timer(State)),
     NewState1 = replace_socket(SocketPid, NewState0),
+    ReplyEvents = replay_missed_events_inline(MissedEvents, SocketPid),
     NewState = NewState1#{status => ResumeStatus, resume_status => ResumeStatus},
+    ok = sync_guild_push_hold(State, NewState),
     NewState2 = ensure_presence_attached_on_resume(
         NewState, SessionId, ResumeStatus, Afk, Mobile
     ),
-    {reply, {ok, MissedEvents, CurrentSeq}, NewState2}.
+    {reply, {ok, ReplyEvents, CurrentSeq}, NewState2}.
+
+-spec replay_missed_events_inline([map()], pid()) -> [map()].
+replay_missed_events_inline(MissedEvents, SocketPid) ->
+    case inline_replay_allowed(MissedEvents) of
+        true ->
+            lists:foreach(fun(Event) -> send_missed_event(SocketPid, Event) end, MissedEvents),
+            [];
+        false ->
+            MissedEvents
+    end.
+
+-spec inline_replay_allowed([map()]) -> boolean().
+inline_replay_allowed(MissedEvents) ->
+    within_inline_replay_limit(MissedEvents, ?MAX_INLINE_RESUME_REPLAY).
+
+-spec within_inline_replay_limit([map()], non_neg_integer()) -> boolean().
+within_inline_replay_limit([], _Remaining) ->
+    true;
+within_inline_replay_limit(_MissedEvents, 0) ->
+    false;
+within_inline_replay_limit([_Event | Rest], Remaining) ->
+    within_inline_replay_limit(Rest, Remaining - 1).
+
+-spec send_missed_event(pid(), map()) -> ok.
+send_missed_event(SocketPid, #{event := Event, data := Data, seq := EventSeq}) ->
+    SocketPid ! {dispatch, Event, guild_data_wire:payload(Data), EventSeq},
+    ok;
+send_missed_event(_SocketPid, _Event) ->
+    ok.
 
 -spec ensure_presence_attached_on_resume(
     session_state(), session_id(), status(), boolean(), boolean()
@@ -414,21 +478,22 @@ handle_resume_offline_timeout(_Msg, State) ->
     ok.
 notify_presence_on_resume(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob) ->
     ok;
-notify_presence_on_resume(#{presence_pid := Pid}, SessionId, Status, Afk, Mobile) ->
-    spawn(fun() -> notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) end),
+notify_presence_on_resume(#{presence_pid := Pid} = State, SessionId, Status, Afk, Mobile) ->
+    Request = #{
+        session_id => SessionId,
+        session_pid => self(),
+        socket_pid => maps:get(socket_pid, State, undefined),
+        status => Status,
+        afk => Afk,
+        mobile => Mobile
+    },
+    spawn(fun() -> notify_presence_on_resume_worker(Pid, Request) end),
     ok.
 
--spec notify_presence_on_resume_worker(pid(), session_id(), status(), boolean(), boolean()) ->
-    ok.
-notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) ->
+-spec notify_presence_on_resume_worker(pid(), map()) -> ok.
+notify_presence_on_resume_worker(Pid, Request) ->
     try
-        gen_server:call(
-            Pid,
-            {session_connect, #{
-                session_id => SessionId, status => Status, afk => Afk, mobile => Mobile
-            }},
-            10000
-        ),
+        gen_server:call(Pid, {session_connect, Request}, 10000),
         ok
     catch
         error:_Reason -> ok;
@@ -445,7 +510,39 @@ handle_presence_update_cast(Update, State) ->
         NewStatus, State#{status => NewStatus, afk => NewAfk, mobile => NewMobile}
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
+    ok = sync_guild_push_hold(State, NewState),
     {noreply, NewState}.
+
+-spec sync_guild_push_hold(session_state(), session_state()) -> ok.
+sync_guild_push_hold(OldState, NewState) ->
+    notify_guild_push_hold(guild_push_hold(OldState), guild_push_hold(NewState), NewState).
+
+-spec notify_guild_push_hold(boolean(), boolean(), session_state()) -> ok.
+notify_guild_push_hold(Hold, Hold, _State) ->
+    ok;
+notify_guild_push_hold(_OldHold, _NewHold, State) ->
+    maps:foreach(
+        fun(_GuildId, GuildRef) -> send_guild_push_hold(GuildRef, State) end,
+        maps:get(guilds, State, #{})
+    ).
+
+-spec send_guild_push_hold(term(), session_state()) -> ok.
+send_guild_push_hold({GuildPid, _Ref}, #{id := SessionId} = State) when is_pid(GuildPid) ->
+    case maps:get(bot, State, false) of
+        true ->
+            ok;
+        false ->
+            gen_server:cast(
+                GuildPid, {set_session_push_hold, SessionId, guild_push_hold(State)}
+            )
+    end;
+send_guild_push_hold(_GuildRef, _State) ->
+    ok.
+
+-spec guild_push_hold(session_state()) -> boolean().
+guild_push_hold(State) ->
+    lists:member(maps:get(status, State, online), [online, dnd, invisible]) andalso
+        not maps:get(afk, State, false) andalso not maps:get(mobile, State, false).
 
 -spec maybe_update_resume_status(status(), session_state()) -> session_state().
 maybe_update_resume_status(offline, State) ->
@@ -471,20 +568,6 @@ send_presence_update(#{presence_pid := Pid}, SessionId, NewStatus, NewAfk, NewMo
     gen_server:cast(Pid, {presence_update, Msg}),
     ok.
 
--spec handle_initial_global_presences([map()], session_state()) -> {noreply, session_state()}.
-handle_initial_global_presences(Presences, State) ->
-    NewState = lists:foldl(
-        fun(Presence, AccState) ->
-            {noreply, Updated} = session_dispatch:handle_dispatch(
-                presence_update, Presence, AccState
-            ),
-            Updated
-        end,
-        State,
-        Presences
-    ),
-    {noreply, NewState}.
-
 -spec serialize_state(session_state()) -> map().
 serialize_state(State) ->
     #{
@@ -495,21 +578,24 @@ serialize_state(State) ->
         version => maps:get(version, State),
         seq => maps:get(seq, State),
         ack_seq => maps:get(ack_seq, State),
+        replay_floor => maps:get(replay_floor, State, 0),
         properties => maps:get(properties, State),
         status => maps:get(status, State),
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
-        buffer => maps:get(buffer, State),
         ready => maps:get(ready, State),
         bot => maps:get(bot, State, false),
         shard => maps:get(shard, State, undefined),
         e2ee_capable => maps:get(e2ee_capable, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false),
+        geoip_country_code => maps:get(geoip_country_code, State, undefined),
         guilds => maps:get(guilds, State, #{}),
         active_guilds => maps:get(active_guilds, State, sets:new()),
         collected_guild_states => maps:get(collected_guild_states, State),
         collected_sessions => maps:get(collected_sessions, State),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
 
@@ -538,22 +624,350 @@ serialize_transfer_identity(State) ->
         bot => maps:get(bot, State, false),
         shard => maps:get(shard, State, undefined),
         e2ee_capable => maps:get(e2ee_capable, State, false),
+        geoip_country_code => maps:get(geoip_country_code, State, undefined),
         ignored_events => maps:keys(maps:get(ignored_events, State, #{})),
         initial_guild_id => maps:get(initial_guild_id, State, undefined),
         active_guilds => maps:get(active_guilds, State, sets:new()),
-        debounce_reactions => maps:get(debounce_reactions, State, false)
+        debounce_reactions => maps:get(debounce_reactions, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false)
     }.
 
 -spec serialize_transfer_runtime(session_state()) -> map().
 serialize_transfer_runtime(State) ->
+    {Buffer, AckSeq} = transfer_buffer(
+        maps:get(buffer, State, []), maps:get(ack_seq, State, 0)
+    ),
     #{
         channels => maps:get(channels, State, #{}),
         relationships => maps:get(relationships, State, #{}),
         seq => maps:get(seq, State, 0),
-        ack_seq => maps:get(ack_seq, State, 0),
-        buffer => maps:get(buffer, State, []),
+        ack_seq => AckSeq,
+        replay_floor => max(maps:get(replay_floor, State, 0), AckSeq),
+        buffer => Buffer,
         collected_guild_states => maps:get(collected_guild_states, State, []),
         collected_sessions => maps:get(collected_sessions, State, []),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
+
+%% Always normalises to a list before trimming: a limited_deque left in the transfer
+%% map does not survive the handoff to the receiving node's session_init.
+-spec transfer_buffer(
+    eqwalizer:dynamic(limited_deque:deque() | [map()]), seq()
+) -> {[map()], seq()}.
+transfer_buffer(Buffer, AckSeq) when is_list(Buffer) ->
+    trim_transfer_list(Buffer, transfer_payload_bytes(Buffer), AckSeq);
+transfer_buffer(Buffer, AckSeq) ->
+    ListBuffer = limited_deque:to_list(Buffer),
+    trim_transfer_list(ListBuffer, transfer_payload_bytes(ListBuffer), AckSeq).
+
+-spec trim_transfer_list([map()], non_neg_integer(), seq()) -> {[map()], seq()}.
+trim_transfer_list(Buffer, Bytes, AckSeq) when Bytes =< ?MAX_TRANSFER_PRE_ENCODED_BYTES ->
+    {Buffer, AckSeq};
+trim_transfer_list([], _Bytes, AckSeq) ->
+    {[], AckSeq};
+trim_transfer_list([Dropped | Rest], Bytes, AckSeq) ->
+    trim_transfer_list(
+        Rest,
+        max(0, Bytes - entry_payload_bytes(Dropped)),
+        dropped_ack_seq(Dropped, AckSeq)
+    ).
+
+-spec transfer_payload_bytes([term()]) -> non_neg_integer().
+transfer_payload_bytes(Entries) ->
+    lists:foldl(fun(Entry, Acc) -> trunc(Acc + entry_payload_bytes(Entry)) end, 0, Entries).
+
+-spec entry_payload_bytes(term()) -> non_neg_integer().
+entry_payload_bytes(#{data := {pre_encoded, Payload}}) when is_binary(Payload) ->
+    byte_size(Payload);
+entry_payload_bytes(_Entry) ->
+    0.
+
+-spec dropped_ack_seq(term(), seq()) -> seq().
+dropped_ack_seq(#{seq := Seq}, AckSeq) when is_integer(Seq), Seq > AckSeq ->
+    Seq;
+dropped_ack_seq(_Dropped, AckSeq) ->
+    AckSeq.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+resume_flag_state(Overrides) ->
+    maps:merge(
+        #{
+            id => <<"session-resume-flag-test">>,
+            status => online,
+            afk => false,
+            mobile => false,
+            presence_pid => undefined,
+            presence_mref => undefined,
+            socket_pid => undefined,
+            socket_mref => undefined,
+            resume_timer => undefined,
+            offline_timer => undefined,
+            ack_seq => 0,
+            buffer => [],
+            seq => 0
+        },
+        Overrides
+    ).
+
+buffered_event(Seq) ->
+    #{seq => Seq, event => message_create, data => #{<<"id">> => Seq}}.
+
+with_env(Key, Value, Fun) ->
+    Previous = application:get_env(fluxer_gateway, Key),
+    application:set_env(fluxer_gateway, Key, Value),
+    try
+        Fun()
+    after
+        restore_env(Key, Previous)
+    end.
+
+restore_env(Key, {ok, Previous}) ->
+    application:set_env(fluxer_gateway, Key, Previous);
+restore_env(Key, undefined) ->
+    application:unset_env(fluxer_gateway, Key).
+
+next_dispatch() ->
+    receive
+        {dispatch, _Event, _Data, _Seq} = Msg -> Msg
+    after 200 -> no_dispatch
+    end.
+
+drain_dispatches() ->
+    receive
+        {dispatch, _Event, _Data, _Seq} -> drain_dispatches()
+    after 0 -> ok
+    end.
+
+count_dispatches() ->
+    count_dispatches(0).
+
+count_dispatches(Count) ->
+    receive
+        {dispatch, _Event, _Data, _Seq} -> count_dispatches(Count + 1)
+    after 0 -> Count
+    end.
+
+inline_replay_sends_backlog_and_replies_empty_test() ->
+    drain_dispatches(),
+    State0 = resume_flag_state(#{seq => 2, buffer => [buffered_event(1), buffered_event(2)]}),
+    {reply, {ok, [], 2}, _State1} = handle_resume(0, self(), State0),
+    First = next_dispatch(),
+    Second = next_dispatch(),
+    ?assertEqual(
+        {dispatch, message_create, guild_data_wire:payload(#{<<"id">> => 1}), 1}, First
+    ),
+    ?assertEqual(
+        {dispatch, message_create, guild_data_wire:payload(#{<<"id">> => 2}), 2}, Second
+    ),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+inline_replay_sends_wire_payload_test() ->
+    drain_dispatches(),
+    State0 = resume_flag_state(#{seq => 1, buffer => [buffered_event(1)]}),
+    {reply, {ok, [], 1}, _State1} = handle_resume(0, self(), State0),
+    {dispatch, message_create, Data, 1} = next_dispatch(),
+    ?assertEqual(#{<<"id">> => <<"1">>}, Data).
+
+inline_replay_skips_malformed_buffer_entry_test() ->
+    drain_dispatches(),
+    State0 = resume_flag_state(#{seq => 2, buffer => [#{seq => 1}, buffered_event(2)]}),
+    {reply, {ok, [], 2}, _State1} = handle_resume(0, self(), State0),
+    ?assertEqual(
+        {dispatch, message_create, guild_data_wire:payload(#{<<"id">> => 2}), 2},
+        next_dispatch()
+    ),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+inline_replay_sends_nothing_when_backlog_empty_test() ->
+    drain_dispatches(),
+    State0 = resume_flag_state(#{seq => 1, ack_seq => 1, buffer => [buffered_event(1)]}),
+    {reply, {ok, [], 1}, _State1} = handle_resume(1, self(), State0),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+inline_replay_bounded_batch_is_sent_inline_test() ->
+    drain_dispatches(),
+    Events = [buffered_event(Seq) || Seq <- lists:seq(1, ?MAX_INLINE_RESUME_REPLAY)],
+    State0 = resume_flag_state(#{seq => ?MAX_INLINE_RESUME_REPLAY, buffer => Events}),
+    {reply, {ok, [], ?MAX_INLINE_RESUME_REPLAY}, _State1} = handle_resume(0, self(), State0),
+    ?assertEqual(?MAX_INLINE_RESUME_REPLAY, count_dispatches()).
+
+inline_replay_oversized_batch_falls_back_to_reply_test() ->
+    drain_dispatches(),
+    Over = ?MAX_INLINE_RESUME_REPLAY + 1,
+    Events = [buffered_event(Seq) || Seq <- lists:seq(1, Over)],
+    State0 = resume_flag_state(#{seq => Over, buffer => Events}),
+    {reply, {ok, Missed, Over}, _State1} = handle_resume(0, self(), State0),
+    ?assertEqual(Over, length(Missed)),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+inline_replay_oversized_batch_still_attaches_socket_test() ->
+    drain_dispatches(),
+    Over = ?MAX_INLINE_RESUME_REPLAY + 1,
+    Events = [buffered_event(Seq) || Seq <- lists:seq(1, Over)],
+    State0 = resume_flag_state(#{seq => Over, buffer => Events}),
+    {reply, {ok, _Missed, Over}, State1} = handle_resume(0, self(), State0),
+    ?assertEqual(self(), maps:get(socket_pid, State1)).
+
+pre_encoded_buffered_event(Seq) ->
+    #{seq => Seq, event => message_create, data => {pre_encoded, <<"{}">>}}.
+
+heartbeat_ack_trims_pre_encoded_entries_test() ->
+    Buffer = limited_deque:from_list(
+        [pre_encoded_buffered_event(1), pre_encoded_buffered_event(2)], 4096, 16777216
+    ),
+    State0 = resume_flag_state(#{seq => 2, buffer => Buffer}),
+    {reply, true, State1} = handle_heartbeat_ack(1, State0),
+    Remaining = limited_deque:to_list(maps:get(buffer, State1)),
+    ?assertEqual([2], [maps:get(seq, Event) || Event <- Remaining]).
+
+heartbeat_ack_keeps_trimming_pre_encoded_head_test() ->
+    Buffer = limited_deque:from_list(
+        [pre_encoded_buffered_event(Seq) || Seq <- lists:seq(1, 4)], 4096, 16777216
+    ),
+    State0 = resume_flag_state(#{seq => 4, buffer => Buffer}),
+    {reply, true, State1} = handle_heartbeat_ack(4, State0),
+    ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
+
+inline_replay_sends_pre_encoded_entry_unchanged_test() ->
+    drain_dispatches(),
+    Entry = pre_encoded_buffered_event(1),
+    State0 = resume_flag_state(#{seq => 1, buffer => [Entry]}),
+    {reply, {ok, [], 1}, _State1} = handle_resume(0, self(), State0),
+    ?assertEqual({dispatch, message_create, maps:get(data, Entry), 1}, next_dispatch()).
+
+oversized_replay_returns_pre_encoded_entries_unchanged_test() ->
+    drain_dispatches(),
+    Over = ?MAX_INLINE_RESUME_REPLAY + 1,
+    Entries = [pre_encoded_buffered_event(Seq) || Seq <- lists:seq(1, Over)],
+    State0 = resume_flag_state(#{seq => Over, buffer => Entries}),
+    {reply, {ok, Missed, Over}, _State1} = handle_resume(0, self(), State0),
+    ?assertEqual(Entries, Missed),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+resume_ignores_withdrawn_buffer_floor_env_test() ->
+    drain_dispatches(),
+    State0 = resume_flag_state(#{seq => 5, buffer => [buffered_event(4), buffered_event(5)]}),
+    with_env(session_resume_buffer_floor, true, fun() ->
+        {reply, {ok, [], 5}, _State1} = handle_resume(2, self(), State0),
+        ?assertMatch({dispatch, _, _, 4}, next_dispatch()),
+        ?assertMatch({dispatch, _, _, 5}, next_dispatch()),
+        ?assertEqual(no_dispatch, next_dispatch())
+    end).
+
+serialize_state_omits_replay_buffer_test() ->
+    State = resume_flag_state(#{
+        user_id => 12345,
+        user_data => #{},
+        version => 9,
+        properties => #{},
+        ready => undefined,
+        guilds => #{},
+        collected_guild_states => [],
+        collected_sessions => [],
+        buffer => [buffered_event(1)]
+    }),
+    Serialized = serialize_state(State),
+    ?assertEqual(false, maps:is_key(buffer, Serialized)),
+    ?assertEqual(false, maps:is_key(buffer_bytes, Serialized)),
+    ?assertEqual(0, maps:get(seq, Serialized)).
+
+transfer_entry(Seq, PayloadBytes) ->
+    #{
+        seq => Seq,
+        event => message_create,
+        data => {pre_encoded, binary:copy(<<"x">>, PayloadBytes)}
+    }.
+
+transfer_deque(Entries) ->
+    limited_deque:from_list(Entries, 4096, 16777216).
+
+transfer_runtime_state(Buffer, AckSeq) ->
+    #{
+        channels => #{},
+        relationships => #{},
+        seq => 4,
+        ack_seq => AckSeq,
+        buffer => Buffer,
+        collected_guild_states => [],
+        collected_sessions => [],
+        collected_presences => [],
+        guild_subscription_state => #{}
+    }.
+
+oversized_transfer_entries() ->
+    [transfer_entry(Seq, 1500000) || Seq <- lists:seq(1, 4)].
+
+transfer_buffer_is_bounded_test() ->
+    Deque = transfer_deque(oversized_transfer_entries()),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    Entries = maps:get(buffer, Runtime),
+    ?assert(transfer_payload_bytes(Entries) =< ?MAX_TRANSFER_PRE_ENCODED_BYTES),
+    ?assertEqual([3, 4], [maps:get(seq, Entry) || Entry <- Entries]),
+    ?assertEqual(2, maps:get(ack_seq, Runtime)).
+
+transfer_buffer_admits_one_full_size_event_test() ->
+    Single = transfer_entry(1, 2097152),
+    Deque = transfer_deque([Single]),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    ?assertEqual([Single], maps:get(buffer, Runtime)),
+    ?assertEqual(0, maps:get(ack_seq, Runtime)).
+
+transfer_buffer_bound_keeps_entry_representation_test() ->
+    Deque = transfer_deque(oversized_transfer_entries()),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    Entries = maps:get(buffer, Runtime),
+    ?assertEqual(Entries, session_init:normalize_buffer(Entries)),
+    ?assertEqual([transfer_entry(3, 1500000), transfer_entry(4, 1500000)], Entries).
+
+transfer_buffer_bound_leaves_small_buffers_alone_test() ->
+    Deque = transfer_deque([buffered_event(1), buffered_event(2)]),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    ?assertEqual(limited_deque:to_list(Deque), maps:get(buffer, Runtime)),
+    ?assertEqual(0, maps:get(ack_seq, Runtime)).
+
+fat_map_entry(Seq) ->
+    #{
+        seq => Seq,
+        event => message_create,
+        data => #{<<"content">> => lists:duplicate(200000, $x)}
+    }.
+
+transfer_buffer_bound_never_truncates_map_entries_test() ->
+    Entries = [fat_map_entry(Seq) || Seq <- lists:seq(1, 2)],
+    Deque = transfer_deque(Entries),
+    ?assert(limited_deque:bytes(Deque) > ?MAX_TRANSFER_PRE_ENCODED_BYTES),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    ?assertEqual(limited_deque:to_list(Deque), maps:get(buffer, Runtime)),
+    ?assertEqual(0, maps:get(ack_seq, Runtime)).
+
+transfer_buffer_bound_never_lowers_ack_seq_test() ->
+    Deque = transfer_deque([buffered_event(9)]),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 8)),
+    ?assertEqual(8, maps:get(ack_seq, Runtime)).
+
+transfer_buffer_bounds_list_buffers_test() ->
+    Entries = oversized_transfer_entries(),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Entries, 0)),
+    ?assertEqual([3, 4], [maps:get(seq, Entry) || Entry <- maps:get(buffer, Runtime)]),
+    ?assertEqual(2, maps:get(ack_seq, Runtime)).
+
+transfer_buffer_bound_makes_stale_resume_invalid_test() ->
+    Deque = transfer_deque(oversized_transfer_entries()),
+    Runtime = serialize_transfer_runtime(transfer_runtime_state(Deque, 0)),
+    Restored = resume_flag_state(#{
+        seq => 4,
+        ack_seq => maps:get(ack_seq, Runtime),
+        buffer => maps:get(buffer, Runtime)
+    }),
+    ?assertMatch({reply, invalid_seq, _}, handle_resume(1, self(), Restored)),
+    drain_dispatches(),
+    {reply, {ok, [], 4}, _} = handle_resume(2, self(), Restored),
+    ?assertMatch({dispatch, _, _, 3}, next_dispatch()),
+    ?assertMatch({dispatch, _, _, 4}, next_dispatch()),
+    ?assertEqual(no_dispatch, next_dispatch()).
+
+-endif.

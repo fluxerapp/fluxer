@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {getOAuth2ScopeDescription} from '@app/features/app/constants/AppConstants';
@@ -26,6 +25,7 @@ import {
 } from '@app/features/user/components/modals/tabs/components/SelectableSettingsList';
 import {getUserAvatarURL} from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {CLEAR_SELECTION_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
 import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
@@ -43,10 +43,7 @@ const FAILED_TO_LOAD_AUTHORIZED_APPLICATIONS_DESCRIPTOR = msg({
 	message: 'Failed to load authorized applications',
 	comment: 'Error message in the authorized apps tab. Keep the tone plain and specific.',
 });
-const CLEAR_SELECTION_DESCRIPTOR = msg({
-	message: 'Clear selection',
-	comment: 'Button or menu action label in the authorized apps tab. Keep it concise.',
-});
+
 const VIEW_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'View permissions',
 	comment: 'Tooltip and accessibility label for opening an authorized app permissions modal.',
@@ -64,7 +61,8 @@ const REVOKE_ALL_APPS_DESCRIPTOR = msg({
 	comment: 'Danger button in the authorized apps management modal. Revokes every authorized application.',
 });
 const SELECTED_APPS_FOR_REVOKE_DESCRIPTOR = msg({
-	message: '{appCount, plural, one {# app selected for revoke} other {# apps selected for revoke}}',
+	message:
+		'{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}',
 	comment: 'Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.',
 });
 const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({
@@ -496,21 +494,3 @@ export const AuthorizedAppsContent = observer(function AuthorizedAppsContent({
 	}
 	return authorizedAppsContent;
 });
-
-const AuthorizedAppsTab = observer(function AuthorizedAppsTab() {
-	return (
-		<SettingsTabContainer data-flx="user.authorized-apps-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.authorized-apps-tab.settings-tab-content">
-				<SettingsSection
-					id={AUTHORIZED_APPS_TAB_ID}
-					title={<Trans>Authorized apps</Trans>}
-					data-flx="user.authorized-apps-tab.settings-section"
-				>
-					<AuthorizedAppsContent data-flx="user.authorized-apps-tab.authorized-apps-content" />
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
-	);
-});
-
-export default AuthorizedAppsTab;

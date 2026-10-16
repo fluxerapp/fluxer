@@ -1,19 +1,21 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_public_online).
--typing([eqwalizer]).
-
--export([compute_count/1]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([compute_count/1]).
 
 -export_type([guild_state/0]).
 
 -type guild_state() :: map().
 -type channel() :: map().
 -type user_id() :: integer().
+
+-define(ALL_PERMS_VIEWER_KEY, public_online_all_perms_viewer).
 
 -spec compute_count(guild_state()) -> non_neg_integer().
 compute_count(State) ->
@@ -26,9 +28,14 @@ compute_count(State) ->
 
 -spec compute_count_for_data(map(), guild_state()) -> non_neg_integer().
 compute_count_for_data(Data, State) ->
-    Channels = [C || C <- ensure_list(maps:get(<<"channels">>, Data, [])), is_map(C)],
+    Channels = [
+        C
+     || C <- ensure_list(maps:get(<<"channels">>, Data, [])),
+        is_map(C),
+        not guild_thread_gate:is_thread_only_type(maps:get(<<"type">>, C, undefined))
+    ],
     case classify_everyone_viewable(Channels, State) of
-        {open, _ChannelIds} -> guild_member_list:get_online_count(State);
+        {open, _ChannelIds} -> guild_member_list_read:get_online_count(State);
         {restricted, ChannelIdSet} -> count_online_with_access(ChannelIdSet, State);
         empty -> 0
     end.
@@ -57,7 +64,15 @@ classify_everyone_viewable(Channels, State) ->
     case {OpenAcc, RestrictedAcc} of
         {[], []} -> empty;
         {[_ | _], _} -> {open, OpenAcc};
-        {[], _} -> {restricted, sets:from_list(RestrictedAcc)}
+        {[], _} -> classify_restricted(RestrictedAcc)
+    end.
+
+-spec classify_restricted([integer()]) ->
+    {open, [integer()]} | {restricted, sets:set(integer())}.
+classify_restricted(RestrictedIds) ->
+    case application:get_env(fluxer_gateway, ?ALL_PERMS_VIEWER_KEY, false) of
+        true -> {open, RestrictedIds};
+        _ -> {restricted, sets:from_list(RestrictedIds)}
     end.
 
 -spec classify_channel_visibility(
@@ -78,7 +93,9 @@ classify_channel_visibility(Channel, EveryoneMember, ViewBit, State, {OpenIds, R
 ) -> {[integer()], [integer()]}.
 classify_valid_channel(ChannelId, Channel, EveryoneMember, ViewBit, State, Acc) ->
     case
-        guild_permissions:can_view_channel_by_permissions(0, ChannelId, EveryoneMember, State)
+        guild_permissions_check:can_view_channel_by_permissions(
+            0, ChannelId, EveryoneMember, State
+        )
     of
         true -> classify_visible_channel(ChannelId, Channel, ViewBit, Acc);
         false -> Acc
@@ -102,9 +119,9 @@ channel_has_view_restricting_overrides(Channel, ViewBit) ->
     lists:any(
         fun
             (OW) when is_map(OW) ->
-                Deny = permission_bits:parse(maps:get(<<"deny">>, OW, undefined)),
+                Deny = bitset:parse(maps:get(<<"deny">>, OW, undefined)),
                 Type = map_utils:get_integer(OW, <<"type">>, undefined),
-                is_integer(Deny) andalso permission_bits:has(Deny, ViewBit) andalso
+                is_integer(Deny) andalso bitset:has(Deny, ViewBit) andalso
                     (Type =:= 0 orelse Type =:= 1);
             (_) ->
                 false
@@ -116,12 +133,13 @@ channel_has_view_restricting_overrides(Channel, ViewBit) ->
 count_online_with_access(ChannelIdSet, State) ->
     TargetMap = maps:from_list([{Ch, true} || Ch <- sets:to_list(ChannelIdSet)]),
     Tab = maps:get(member_presence, State),
-    ets:foldl(
-        fun({UserId, Presence}, Acc) ->
+    sets:fold(
+        fun(UserId, Acc) ->
+            Presence = guild_state_member:lookup_presence(Tab, UserId),
             maybe_count_online_user(UserId, Presence, TargetMap, State, Acc)
         end,
         0,
-        Tab
+        guild_member_list_connected:connected_session_user_ids(State)
     ).
 
 -spec maybe_count_online_user(term(), term(), map(), guild_state(), non_neg_integer()) ->
@@ -146,7 +164,7 @@ count_user_with_access(UserId, TargetMap, State, Acc) ->
 
 -spec user_has_access(user_id(), map(), guild_state()) -> boolean().
 user_has_access(UserId, TargetMap, State) ->
-    UserChannels = guild_visibility:get_user_viewable_channels(UserId, State),
+    UserChannels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     lists:any(fun(Ch) -> maps:is_key(Ch, TargetMap) end, UserChannels).
 
 -spec is_online(map()) -> boolean().
@@ -200,15 +218,70 @@ build_state(Channels, Members, Roles, Presences) ->
             <<"channels">> => Channels
         },
         member_presence => Tab,
+        member_list_engine => build_engine(Presences),
+        connected_user_ids => sets:from_list([UserId || {UserId, _} <- Presences]),
         sessions => #{}
     }.
+
+build_engine(Presences) ->
+    Online = length([S || {_UserId, S} <- Presences, S =/= <<"offline">>, S =/= <<"invisible">>]),
+    Ref = ets:new(test_member_list_engine, [set, public]),
+    ets:insert(Ref, [{total_count, length(Presences)}, {online_count, Online}]),
+    Ref.
+
+deny_view_overwrite(Id, Type) ->
+    #{
+        <<"id">> => integer_to_binary(Id),
+        <<"type">> => Type,
+        <<"allow">> => <<"0">>,
+        <<"deny">> => integer_to_binary(view_perm())
+    }.
+
+channel(ChannelId, Overwrites) ->
+    #{
+        <<"id">> => integer_to_binary(ChannelId),
+        <<"type">> => 0,
+        <<"permission_overwrites">> => Overwrites
+    }.
+
+role(RoleId) ->
+    #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => <<"0">>}.
+
+with_all_perms_viewer(Fun) ->
+    Previous = application:get_env(fluxer_gateway, ?ALL_PERMS_VIEWER_KEY),
+    application:set_env(fluxer_gateway, ?ALL_PERMS_VIEWER_KEY, true),
+    try
+        Fun()
+    after
+        restore_all_perms_viewer(Previous)
+    end.
+
+restore_all_perms_viewer(undefined) ->
+    application:unset_env(fluxer_gateway, ?ALL_PERMS_VIEWER_KEY);
+restore_all_perms_viewer({ok, Value}) ->
+    application:set_env(fluxer_gateway, ?ALL_PERMS_VIEWER_KEY, Value).
+
+verify_gate_state() ->
+    VerifiedRoleId = 4242,
+    Channels = [channel(400, [deny_view_overwrite(VerifiedRoleId, 0)])],
+    Members = [{1, [VerifiedRoleId]}, {2, [VerifiedRoleId]}, {3, [VerifiedRoleId]}, {4, []}],
+    Presences = [
+        {1, <<"online">>},
+        {2, <<"online">>},
+        {3, <<"idle">>},
+        {4, <<"online">>}
+    ],
+    build_state(Channels, Members, [role(VerifiedRoleId)], Presences).
+
+user_deny_state() ->
+    Channels = [channel(700, [deny_view_overwrite(42, 1)])],
+    Members = [{41, []}, {42, []}, {43, []}],
+    Presences = [{41, <<"online">>}, {42, <<"online">>}, {43, <<"online">>}],
+    build_state(Channels, Members, [], Presences).
 
 returns_zero_when_no_channels_test() ->
     State = build_state([], [], [], []),
     ?assertEqual(0, compute_count(State)).
-
-returns_zero_when_data_missing_test() ->
-    ?assertEqual(0, compute_count(#{})).
 
 slow_path_with_role_view_deny_test() ->
     GuildId = guild_id(),
@@ -273,34 +346,41 @@ returns_zero_when_no_everyone_viewable_test() ->
     State = State0#{data => OldData#{<<"roles">> => Roles}},
     ?assertEqual(0, compute_count(State)).
 
-channel_has_view_restricting_overrides_detects_user_deny_test() ->
-    Channel = #{
-        <<"permission_overwrites">> => [
-            #{
-                <<"id">> => <<"42">>,
-                <<"type">> => 1,
-                <<"allow">> => <<"0">>,
-                <<"deny">> => integer_to_binary(view_perm())
-            }
-        ]
-    },
-    ?assert(channel_has_view_restricting_overrides(Channel, view_perm())).
+verify_gate_collapses_count_without_flag_test() ->
+    ?assertEqual(1, compute_count(verify_gate_state())).
 
-channel_has_view_restricting_overrides_ignores_allow_only_test() ->
-    Channel = #{
-        <<"permission_overwrites">> => [
-            #{
-                <<"id">> => <<"42">>,
-                <<"type">> => 0,
-                <<"allow">> => integer_to_binary(view_perm()),
-                <<"deny">> => <<"0">>
-            }
-        ]
-    },
-    ?assertNot(channel_has_view_restricting_overrides(Channel, view_perm())).
+verify_gate_reports_full_count_with_flag_test() ->
+    State = verify_gate_state(),
+    ?assertEqual(4, with_all_perms_viewer(fun() -> compute_count(State) end)).
 
-channel_has_view_restricting_overrides_no_overwrites_test() ->
-    Channel = #{<<"permission_overwrites">> => []},
-    ?assertNot(channel_has_view_restricting_overrides(Channel, view_perm())).
+everyone_deny_channel_stays_excluded_with_flag_test() ->
+    GuildId = guild_id(),
+    Channels = [channel(500, [deny_view_overwrite(GuildId, 0)])],
+    State = build_state(Channels, [{1, []}, {2, []}], [], [{1, <<"online">>}, {2, <<"idle">>}]),
+    ?assertEqual(0, compute_count(State)),
+    ?assertEqual(0, with_all_perms_viewer(fun() -> compute_count(State) end)).
+
+no_channels_stays_zero_with_flag_test() ->
+    State = build_state([], [{1, []}], [], [{1, <<"online">>}]),
+    ?assertEqual(0, with_all_perms_viewer(fun() -> compute_count(State) end)).
+
+plain_open_channel_unchanged_by_flag_test() ->
+    Members = [{1, []}, {2, []}, {3, []}],
+    Presences = [{1, <<"online">>}, {2, <<"idle">>}, {3, <<"offline">>}],
+    State = build_state([channel(600, [])], Members, [], Presences),
+    ?assertEqual(2, compute_count(State)),
+    ?assertEqual(2, with_all_perms_viewer(fun() -> compute_count(State) end)).
+
+user_deny_collapses_count_without_flag_test() ->
+    ?assertEqual(2, compute_count(user_deny_state())).
+
+restricted_count_skips_disconnected_online_rows_test() ->
+    State = user_deny_state(),
+    ?assertEqual(1, compute_count(State#{connected_user_ids => sets:from_list([41, 42])})),
+    ?assertEqual(0, compute_count(State#{connected_user_ids => sets:new()})).
+
+user_deny_reports_full_count_with_flag_test() ->
+    State = user_deny_state(),
+    ?assertEqual(3, with_all_perms_viewer(fun() -> compute_count(State) end)).
 
 -endif.

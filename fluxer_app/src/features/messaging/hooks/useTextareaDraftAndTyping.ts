@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
-import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
+import {segmentsEqual} from '@app/features/messaging/state/MessagingDrafts';
 import type {MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import {onBeforeAppStorageScopeChange} from '@app/features/platform/state/PersistentStorage';
+import {flushPendingPersistWrites} from '@app/features/platform/utils/MobXPersistence';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import {useEffect, useRef} from 'react';
 
 interface UseTextareaDraftAndTypingOptions {
+	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	draft: string | null;
 	draftSegments?: ReadonlyArray<MentionSegment> | null;
-	previousValueRef: React.MutableRefObject<string>;
-	segmentManagerRef?: React.MutableRefObject<TextareaSegmentManager>;
-	isAutocompleteAttached: boolean;
+	previousValueRef: React.RefObject<string>;
+	segmentManagerRef?: React.RefObject<TextareaSegmentManager>;
 	enabled: boolean;
 	typingEnabled?: boolean;
 	isEditingMessageInComposer: boolean;
@@ -24,26 +26,8 @@ function cloneSegments(segments: ReadonlyArray<MentionSegment> | null | undefine
 	return segments?.map((segment) => ({...segment})) ?? [];
 }
 
-function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
-	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) {
-		const left = a[i];
-		const right = b[i];
-		if (
-			left.type !== right.type ||
-			left.id !== right.id ||
-			left.displayText !== right.displayText ||
-			left.actualText !== right.actualText ||
-			left.start !== right.start ||
-			left.end !== right.end
-		) {
-			return false;
-		}
-	}
-	return true;
-}
-
 export const useTextareaDraftAndTyping = ({
+	draftOwner,
 	channelId,
 	value,
 	setValue,
@@ -51,12 +35,13 @@ export const useTextareaDraftAndTyping = ({
 	draftSegments,
 	previousValueRef,
 	segmentManagerRef,
-	isAutocompleteAttached,
 	enabled,
 	typingEnabled = enabled,
 	isEditingMessageInComposer,
 }: UseTextareaDraftAndTypingOptions) => {
 	const isRestoringDraftRef = useRef(false);
+	const isEditingMessageInComposerRef = useRef(isEditingMessageInComposer);
+	const typingPreviousValueRef = useRef<{channelId: string; value: string} | null>(null);
 	const currentDraftRef = useRef(draft);
 	const currentDraftSegmentsRef = useRef<ReadonlyArray<MentionSegment>>(draftSegments ?? []);
 	const pendingDraftRef = useRef<{
@@ -69,18 +54,16 @@ export const useTextareaDraftAndTyping = ({
 		currentDraftSegmentsRef.current = draftSegments ?? [];
 	}, [draft, draftSegments]);
 	useEffect(() => {
-		return () => {
-			TypingUtils.clear(channelId);
-		};
-	}, [channelId]);
+		isEditingMessageInComposerRef.current = isEditingMessageInComposer;
+	}, [isEditingMessageInComposer]);
 	useEffect(() => {
 		if (enabled) {
 			return;
 		}
-		TypingUtils.clear(channelId);
+		RollingTypingSender.stopTyping(channelId);
 		pendingDraftRef.current = null;
 		if (currentDraftRef.current) {
-			DraftCommands.deleteDraft(channelId);
+			DraftCommands.deleteDraft(draftOwner, channelId);
 		}
 		segmentManagerRef?.current.clear();
 		isRestoringDraftRef.current = true;
@@ -95,12 +78,12 @@ export const useTextareaDraftAndTyping = ({
 			clearTimeout(timer);
 			isRestoringDraftRef.current = false;
 		};
-	}, [channelId, enabled, setValue, previousValueRef]);
+	}, [draftOwner, channelId, enabled, setValue, previousValueRef]);
 	useEffect(() => {
 		if (isEditingMessageInComposer) {
 			return;
 		}
-		if (!draft || previousValueRef.current === undefined) {
+		if (!draft || previousValueRef.current === undefined || !DraftCommands.ownsActiveDrafts(draftOwner)) {
 			return;
 		}
 		isRestoringDraftRef.current = true;
@@ -118,7 +101,7 @@ export const useTextareaDraftAndTyping = ({
 			clearTimeout(timer);
 			isRestoringDraftRef.current = false;
 		};
-	}, [draft, draftSegments, previousValueRef, setValue, isEditingMessageInComposer]);
+	}, [draftOwner, draft, draftSegments, previousValueRef, setValue, isEditingMessageInComposer]);
 	const flushDraftRef = useRef<() => void>(() => {});
 	useEffect(() => {
 		const flush = () => {
@@ -135,16 +118,16 @@ export const useTextareaDraftAndTyping = ({
 			}
 			if (pending.value) {
 				if (pending.segments === null) {
-					DraftCommands.createDraft(pending.channelId, pending.value);
+					DraftCommands.createDraft(draftOwner, pending.channelId, pending.value);
 				} else {
-					DraftCommands.createDraft(pending.channelId, pending.value, pending.segments);
+					DraftCommands.createDraft(draftOwner, pending.channelId, pending.value, pending.segments);
 				}
 			} else {
-				DraftCommands.deleteDraft(pending.channelId);
+				DraftCommands.deleteDraft(draftOwner, pending.channelId);
 			}
 		};
 		flushDraftRef.current = flush;
-		if (isEditingMessageInComposer || isRestoringDraftRef.current) {
+		if (isEditingMessageInComposer || isRestoringDraftRef.current || !DraftCommands.ownsActiveDrafts(draftOwner)) {
 			return;
 		}
 		pendingDraftRef.current = {
@@ -156,27 +139,39 @@ export const useTextareaDraftAndTyping = ({
 		return () => {
 			clearTimeout(timer);
 		};
-	}, [channelId, value, isEditingMessageInComposer]);
+	}, [draftOwner, channelId, value, isEditingMessageInComposer]);
 	useEffect(() => {
 		return () => {
 			flushDraftRef.current();
 		};
 	}, [channelId, isEditingMessageInComposer]);
 	useEffect(() => {
+		const flushBeforeUnload = (): void => {
+			flushDraftRef.current();
+			flushPendingPersistWrites();
+		};
+		const stopScopeChange = onBeforeAppStorageScopeChange(flushBeforeUnload);
+		window.addEventListener('pagehide', flushBeforeUnload);
+		window.addEventListener('beforeunload', flushBeforeUnload);
+		return () => {
+			stopScopeChange();
+			window.removeEventListener('pagehide', flushBeforeUnload);
+			window.removeEventListener('beforeunload', flushBeforeUnload);
+		};
+	}, []);
+	useEffect(() => {
+		const typingPreviousValue = typingPreviousValueRef.current;
+		typingPreviousValueRef.current = {channelId, value};
 		if (isRestoringDraftRef.current) {
 			return;
 		}
-		if (!enabled || !typingEnabled) {
-			TypingUtils.clear(channelId);
-			return;
-		}
-		const content = value.trim();
-		const isInReplaceMode = ReplaceCommandUtils.isReplaceCommand(content);
-		const isSlashCommand = content.startsWith('/');
-		if (content && !isAutocompleteAttached && !isInReplaceMode && !isSlashCommand) {
-			TypingUtils.typing(channelId);
-		} else {
-			TypingUtils.clear(channelId);
-		}
-	}, [channelId, value, isAutocompleteAttached, enabled, typingEnabled]);
+		RollingTypingSender.handleComposerChange({
+			channelId,
+			value,
+			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,
+			enabled,
+			typingEnabled,
+			isEditingMessageInComposer: isEditingMessageInComposerRef.current,
+		});
+	}, [channelId, value, enabled, typingEnabled]);
 };

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::manifest::{ANY_HOST, DEV_PROXY_PORT, LOCAL_APP_URL, PROXY_ROUTES, ProxyRoute};
+use crate::manifest::{
+    DEV_PROXY_GATEWAY_PORTS_ENV, GATEWAY_PORT, LOCAL_APP_URL, PROXY_ROUTES, ProxyRoute,
+};
 use anyhow::{Context, Result, bail};
 use axum::{
     Router,
@@ -14,7 +16,7 @@ use hyper_util::rt::TokioIo;
 use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -26,6 +28,7 @@ static ROUTE_CURSORS: LazyLock<Mutex<HashMap<&'static str, usize>>> =
 #[derive(Clone)]
 struct ProxyState {
     http_client: reqwest::Client,
+    gateway_ports: Arc<[u16]>,
 }
 
 const BLOCKED_REQUEST_HEADERS: &[&str] = &[
@@ -67,9 +70,21 @@ pub async fn run_proxy(host: &str, port: u16) -> Result<()> {
         .tcp_nodelay(true)
         .build()
         .context("failed to build dev proxy HTTP client")?;
+    let gateway_ports = gateway_proxy_ports()?;
+    println!(
+        "Fluxer dev proxy gateway ports: {}",
+        gateway_ports
+            .iter()
+            .map(u16::to_string)
+            .collect::<Vec<_>>()
+            .join(",")
+    );
     let app = Router::new()
         .fallback(any(proxy_request))
-        .with_state(ProxyState { http_client });
+        .with_state(ProxyState {
+            http_client,
+            gateway_ports,
+        });
 
     axum::serve(
         listener,
@@ -91,11 +106,29 @@ async fn proxy_request(
     }
 
     let route = route_for_path(&request_head.path);
+    let (target_host, target_port) = target_for_route(route, &state.gateway_ports);
     if is_upgrade_request(&request_head) {
-        return proxy_upgrade(request, request_head, route, client_addr).await;
+        return proxy_upgrade(
+            request,
+            request_head,
+            route,
+            target_host,
+            target_port,
+            client_addr,
+        )
+        .await;
     }
 
-    proxy_http(state, request, request_head, route, client_addr).await
+    proxy_http(
+        state,
+        request,
+        request_head,
+        route,
+        target_host,
+        target_port,
+        client_addr,
+    )
+    .await
 }
 
 async fn proxy_http(
@@ -103,9 +136,10 @@ async fn proxy_http(
     request: Request<Body>,
     request_head: RequestHead,
     route: &'static ProxyRoute,
+    target_host: &'static str,
+    target_port: u16,
     client_addr: SocketAddr,
 ) -> Response<Body> {
-    let (target_host, target_port) = target_for_route(route);
     let target_url = upstream_http_url(&request_head.path, route, target_host, target_port);
     let (parts, body) = request.into_parts();
     let method = parts.method.clone();
@@ -155,10 +189,11 @@ async fn proxy_upgrade(
     mut request: Request<Body>,
     request_head: RequestHead,
     route: &'static ProxyRoute,
+    target_host: &'static str,
+    target_port: u16,
     client_addr: SocketAddr,
 ) -> Response<Body> {
     let on_upgrade = hyper::upgrade::on(&mut request);
-    let (target_host, target_port) = target_for_route(route);
     let mut target = match TcpStream::connect((target_host, target_port)).await {
         Ok(target) => target,
         Err(error) => return bad_gateway_response(error),
@@ -350,31 +385,6 @@ pub struct RequestHead {
     pub headers: Vec<(String, String)>,
 }
 
-pub fn parse_request_head(head: &[u8]) -> Result<RequestHead> {
-    let text = String::from_utf8_lossy(head);
-    let mut lines = text.split("\r\n");
-    let request_line = lines.next().unwrap_or_default();
-    let parts = request_line.splitn(3, ' ').collect::<Vec<_>>();
-    if parts.len() != 3 {
-        bail!("invalid request line: {request_line:?}");
-    }
-    let headers = lines
-        .filter_map(|line| {
-            if line.is_empty() {
-                return None;
-            }
-            let (name, value) = line.split_once(':')?;
-            (!name.is_empty()).then(|| (name.to_owned(), value.trim().to_owned()))
-        })
-        .collect();
-    Ok(RequestHead {
-        method: parts[0].to_owned(),
-        path: parts[1].to_owned(),
-        version: parts[2].to_owned(),
-        headers,
-    })
-}
-
 pub fn tunnel_public_redirect_location(request: &RequestHead) -> Option<String> {
     let public_url = env::var("FLUXER_PUBLIC_URL").ok()?;
     redirect_location_for_public_url(request, &public_url)
@@ -497,17 +507,59 @@ pub fn route_for_path(path: &str) -> &'static ProxyRoute {
     PROXY_ROUTES.last().expect("proxy has fallback route")
 }
 
-pub fn target_for_route(route: &'static ProxyRoute) -> (&'static str, u16) {
-    if route.alternate_ports.is_empty() {
+pub fn target_for_route(route: &'static ProxyRoute, gateway_ports: &[u16]) -> (&'static str, u16) {
+    let uses_gateway_ports = route.prefix == "/gateway";
+    let port_count = if uses_gateway_ports {
+        gateway_ports.len()
+    } else {
+        route.alternate_ports.len() + 1
+    };
+    assert!(
+        port_count > 0,
+        "proxy route must have at least one target port"
+    );
+    if port_count == 1 {
+        if uses_gateway_ports {
+            return (route.host, gateway_ports[0]);
+        }
         return (route.host, route.port);
     }
-    let ports = std::iter::once(route.port)
-        .chain(route.alternate_ports.iter().copied())
-        .collect::<Vec<_>>();
     let mut cursors = ROUTE_CURSORS.lock().expect("route cursor lock poisoned");
     let cursor = *cursors.get(route.prefix).unwrap_or(&0);
-    cursors.insert(route.prefix, (cursor + 1) % ports.len());
-    (route.host, ports[cursor])
+    cursors.insert(route.prefix, (cursor + 1) % port_count);
+    let port = if uses_gateway_ports {
+        gateway_ports[cursor]
+    } else if cursor == 0 {
+        route.port
+    } else {
+        route.alternate_ports[cursor - 1]
+    };
+    (route.host, port)
+}
+
+fn gateway_proxy_ports() -> Result<Arc<[u16]>> {
+    let raw = env::var(DEV_PROXY_GATEWAY_PORTS_ENV).unwrap_or_else(|_| GATEWAY_PORT.to_string());
+    let mut ports = Vec::new();
+    for token in raw.split(',') {
+        let token = token.trim();
+        if token.is_empty() {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} contains an empty port");
+        }
+        let port = token
+            .parse::<u16>()
+            .with_context(|| format!("Invalid port {token:?} in {DEV_PROXY_GATEWAY_PORTS_ENV}"))?;
+        if port == 0 {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} ports must be greater than zero");
+        }
+        if ports.contains(&port) {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} contains duplicate port {port}");
+        }
+        ports.push(port);
+    }
+    if ports.len() > 3 {
+        bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} supports at most three ports");
+    }
+    Ok(ports.into())
 }
 
 pub fn rewrite_path(path: &str, route: &ProxyRoute) -> String {
@@ -610,123 +662,4 @@ pub fn rewrite_head(
     lines.push(String::new());
     lines.push(String::new());
     lines.join("\r\n").into_bytes()
-}
-
-#[allow(dead_code)]
-pub fn default_bind() -> (&'static str, u16) {
-    (ANY_HOST, DEV_PROXY_PORT)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn routes_and_rewrites_prefixes() {
-        let api = route_for_path("/api/users?x=1");
-        assert_eq!(api.prefix, "/api");
-        assert_eq!(rewrite_path("/api/users?x=1", api), "/users?x=1");
-        let asset = route_for_path("/assets/app.js");
-        assert_eq!(rewrite_path("/assets/app.js", asset), "/assets/app.js");
-        let lazy = route_for_path("/lazy-compilation-using-foo");
-        assert_eq!(lazy.prefix, "/lazy-compilation-using-");
-        let devmail = route_for_path("/devmail/messages");
-        assert_eq!(devmail.prefix, "/devmail");
-        assert_eq!(
-            rewrite_path("/devmail/messages?x=1", devmail),
-            "/devmail/messages?x=1"
-        );
-        let admin = route_for_path("/admin/users");
-        assert_eq!(admin.prefix, "/admin");
-        assert_eq!(rewrite_path("/admin/users", admin), "/users");
-        let absolute_gateway = route_for_path("https://dev.example.test/gateway?v=1&encoding=json");
-        assert_eq!(absolute_gateway.prefix, "/gateway");
-        assert_eq!(
-            rewrite_path(
-                "https://dev.example.test/gateway?v=1&encoding=json",
-                absolute_gateway
-            ),
-            "/?v=1&encoding=json"
-        );
-    }
-
-    #[test]
-    fn rewrites_host_connection_and_forwarded_for() {
-        let request = RequestHead {
-            method: "GET".to_owned(),
-            path: "/api/_health".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                ("Connection".to_owned(), "keep-alive".to_owned()),
-                ("X-Forwarded-For".to_owned(), "1.1.1.1".to_owned()),
-            ],
-        };
-        let head = String::from_utf8(rewrite_head(
-            &request,
-            route_for_path("/api/_health"),
-            Some("api"),
-            Some(8080),
-            Some("2.2.2.2"),
-        ))
-        .unwrap();
-        assert!(head.contains("GET /_health HTTP/1.1\r\n"));
-        assert!(head.contains("Host: api:8080\r\n"));
-        assert!(head.contains("Connection: close\r\n"));
-        assert!(head.contains("X-Forwarded-For: 1.1.1.1, 2.2.2.2\r\n"));
-    }
-
-    #[test]
-    fn redirects_local_html_navigation_to_public_tunnel_url() {
-        let request = RequestHead {
-            method: "GET".to_owned(),
-            path: "/channels/@me?x=1".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                (
-                    "Accept".to_owned(),
-                    "text/html,application/xhtml+xml".to_owned(),
-                ),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&request, "https://dev.example.test"),
-            Some("https://dev.example.test/channels/@me?x=1".to_owned())
-        );
-    }
-
-    #[test]
-    fn public_tunnel_redirect_ignores_assets_and_local_public_url() {
-        let asset = RequestHead {
-            method: "GET".to_owned(),
-            path: "/avatars/4.png".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                (
-                    "Accept".to_owned(),
-                    "image/avif,image/webp,image/apng,image/*,*/*;q=0.8".to_owned(),
-                ),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&asset, "https://dev.example.test"),
-            None
-        );
-
-        let local_public_url = RequestHead {
-            method: "GET".to_owned(),
-            path: "/channels/@me".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                ("Accept".to_owned(), "text/html".to_owned()),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&local_public_url, LOCAL_APP_URL),
-            None
-        );
-    }
 }

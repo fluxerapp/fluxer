@@ -3,8 +3,12 @@
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import {resolveChannelIncomingMessageDecision} from '@app/features/messaging/state/ChannelIncomingMessageStateMachine';
-import {resolveChannelMessagesLoadDecision} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
+import {
+	resolveChannelMessagesLoadDecision,
+	selectChannelMessagesLoadRestoresTrust,
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
+import {mergeAscendingById} from '@app/features/messaging/utils/MessagePaginationUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
 import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
@@ -24,7 +28,7 @@ export interface JumpOptions {
 	offset?: number;
 	present?: boolean;
 	flash?: boolean;
-	returnMessageId?: MessageId | null;
+	returnToMessageId?: MessageId | null;
 	returnChannelId?: string | null;
 	returnGuildId?: string | null;
 	jumpType?: JumpType;
@@ -34,14 +38,14 @@ interface JumpToMessageOptions {
 	messageId: string;
 	flash?: boolean;
 	offset?: number;
-	returnTargetId?: MessageId | null;
+	returnToMessageId?: MessageId | null;
 	returnChannelId?: string | null;
 	returnGuildId?: string | null;
 	jumpType?: JumpType;
 }
 
 interface LoadCompleteOptions {
-	newMessages: Array<MessageInput>;
+	windowMessages: Array<MessageInput>;
 	isBefore?: boolean;
 	isAfter?: boolean;
 	jump?: JumpOptions | null;
@@ -59,6 +63,10 @@ function toWireMessage(message: MessageInput): WireMessage {
 
 function isUploadPlaceholder(message: Message): boolean {
 	return UploadingAttachment.isInSendingMessage(message);
+}
+
+function unsentCorrelationKey(message: Message): string {
+	return `${message.author.id}\u0000${message.messageReference?.message_id ?? ''}\u0000${message.content}`;
 }
 
 function embedsEqualIgnoringId(a: unknown, b: unknown): boolean {
@@ -182,7 +190,7 @@ class MessageBufferSegment {
 		this.items = this.items.filter((m) => m.id !== id);
 	}
 
-	removeMany(ids: Array<string>): void {
+	removeIds(ids: Array<string>): void {
 		if (!ids.length) return;
 		const idSet = ids.length > 1 ? new Set(ids) : null;
 		for (const id of ids) {
@@ -219,9 +227,7 @@ class MessageBufferSegment {
 		if (this.items.length === 0) {
 			this.reachedBoundary = boundaryAtInsert;
 		}
-		const combinedSize = this.items.length + batch.length;
-		const truncated = combinedSize > MAX_MESSAGE_CACHE_SIZE;
-		if (truncated) {
+		if (this.items.length + batch.length > MAX_MESSAGE_CACHE_SIZE) {
 			this.reachedBoundary = false;
 			if (batch.length >= MAX_MESSAGE_CACHE_SIZE) {
 				this.items = this.fromOlderSide
@@ -229,27 +235,27 @@ class MessageBufferSegment {
 					: batch.slice(0, MAX_MESSAGE_CACHE_SIZE);
 			} else {
 				const available = MAX_MESSAGE_CACHE_SIZE - batch.length;
-				this.items = this.fromOlderSide
+				const kept = this.fromOlderSide
 					? this.items.slice(Math.max(this.items.length - available, 0))
 					: this.items.slice(0, available);
+				this.items = this.fromOlderSide ? kept.concat(batch) : batch.concat(kept);
 			}
-		}
-		if (truncated) {
-			this.items = this.fromOlderSide ? this.items.concat(batch) : batch.concat(this.items);
 			this.keyedById = {};
 			for (const msg of this.items) {
 				this.keyedById[msg.id] = msg;
 			}
-		} else if (this.fromOlderSide) {
+			return;
+		}
+		if (this.fromOlderSide) {
 			for (const msg of batch) {
 				this.items.push(msg);
 				this.keyedById[msg.id] = msg;
 			}
-		} else {
-			this.items.unshift(...batch);
-			for (const msg of batch) {
-				this.keyedById[msg.id] = msg;
-			}
+			return;
+		}
+		this.items.unshift(...batch);
+		for (const msg of batch) {
+			this.keyedById[msg.id] = msg;
 		}
 	}
 
@@ -279,6 +285,8 @@ class MessageBufferSegment {
 	}
 }
 
+let nextLoadGeneration = 0;
+
 export class ChannelMessages {
 	private static readonly channelCache = new Map<string, ChannelMessages>();
 	private static readonly maxChannelsInMemory = 50;
@@ -287,19 +295,20 @@ export class ChannelMessages {
 	readonly channelId: string;
 	ready = false;
 	jumpType: JumpType = JumpTypes.ANIMATED;
-	jumpTargetId: string | null = null;
-	jumpTargetOffset = 0;
-	jumpSequenceId = 1;
-	jumped = false;
-	jumpedToPresent = false;
-	jumpFlash = true;
-	jumpReturnTargetId: string | null = null;
+	jumpDestinationId: string | null = null;
+	jumpDestinationOffset = 0;
+	jumpTicket = 1;
+	loadGeneration = 0;
+	hasJumped = false;
+	landedAtLiveEdge = false;
+	jumpHighlight = true;
+	jumpReturnMessageId: string | null = null;
 	jumpReturnChannelId: string | null = null;
 	jumpReturnGuildId: string | null = null;
 	hasMoreBefore = true;
 	hasMoreAfter = false;
 	loadingMore = false;
-	revealedMessageId: string | null = null;
+	unblurredMessageId: string | null = null;
 	cached = false;
 	error = false;
 	version = 0;
@@ -316,10 +325,6 @@ export class ChannelMessages {
 
 	static get(channelId: string): ChannelMessages | undefined {
 		return ChannelMessages.channelCache.get(channelId);
-	}
-
-	static hasPresent(channelId: string): boolean {
-		return ChannelMessages.get(channelId)?.hasPresent() ?? false;
 	}
 
 	static getOrCreate(channelId: string): ChannelMessages {
@@ -350,22 +355,14 @@ export class ChannelMessages {
 		ChannelMessages.retainedChannelIds.delete(channelId);
 	}
 
-	static clearCache(channelId: string): void {
-		const instance = ChannelMessages.channelCache.get(channelId);
-		if (!instance) return;
-		instance.beforeBuffer.clear();
-		instance.afterBuffer.clear();
-		ChannelMessages.save(instance);
+	static isRetained(channelId: string): boolean {
+		return ChannelMessages.retainedChannelIds.has(channelId);
 	}
 
 	static commit(instance: ChannelMessages): ChannelMessages {
 		ChannelMessages.channelCache.set(instance.channelId, instance);
 		ChannelMessages.markTouched(instance.channelId);
 		return instance;
-	}
-
-	static save(instance: ChannelMessages): void {
-		ChannelMessages.channelCache.set(instance.channelId, instance);
 	}
 
 	private static markTouched(channelId: string): void {
@@ -419,7 +416,7 @@ export class ChannelMessages {
 		this.afterBuffer = new MessageBufferSegment(false);
 	}
 
-	mutate(patch: Partial<ChannelMessages>): ChannelMessages {
+	withPatch(patch: Partial<ChannelMessages>): ChannelMessages {
 		return this.cloneAnd(patch);
 	}
 
@@ -447,25 +444,13 @@ export class ChannelMessages {
 		this.messageList.forEach(callback, thisArg);
 	}
 
-	reduce<T>(reducer: (memo: T, message: Message, index: number, array: Array<Message>) => T, initial: T): T {
-		return this.messageList.reduce(reducer, initial);
-	}
-
-	forAll(callback: (m: Message, idx: number, arr: Array<Message>) => void, thisArg?: unknown): void {
+	forEachBuffered(callback: (m: Message, idx: number, arr: Array<Message>) => void, thisArg?: unknown): void {
 		this.beforeBuffer.forEach(callback, thisArg);
 		this.messageList.forEach(callback, thisArg);
 		this.afterBuffer.forEach(callback, thisArg);
 	}
 
-	findOldest(predicate: (m: Message) => boolean): Message | undefined {
-		return (
-			this.beforeBuffer.messages.find(predicate) ??
-			this.messageList.find(predicate) ??
-			this.afterBuffer.messages.find(predicate)
-		);
-	}
-
-	findNewest(predicate: (m: Message) => boolean): Message | undefined {
+	searchFromNewest(predicate: (m: Message) => boolean): Message | undefined {
 		const after = this.afterBuffer.messages;
 		for (let i = after.length - 1; i >= 0; i--) {
 			if (predicate(after[i])) return after[i];
@@ -498,11 +483,11 @@ export class ChannelMessages {
 		return this.beforeBuffer.get(id) ?? this.afterBuffer.get(id);
 	}
 
-	getByIndex(index: number): Message | undefined {
+	atIndex(index: number): Message | undefined {
 		return this.messageList[index];
 	}
 
-	getAfter(id: string): Message | null {
+	nextAfter(id: string): Message | null {
 		const current = this.get(id);
 		if (!current) return null;
 		const idx = this.messageList.indexOf(current);
@@ -520,11 +505,11 @@ export class ChannelMessages {
 		return this.messageList.findIndex((m) => m.id === id);
 	}
 
-	hasPresent(): boolean {
+	hasNewestMessages(): boolean {
 		return (this.afterBuffer.size > 0 && this.afterBuffer.isBoundary) || !this.hasMoreAfter;
 	}
 
-	hasBeforeCached(beforeId: string): boolean {
+	canServeOlderFrom(beforeId: string): boolean {
 		if (this.messageList.length === 0 || this.beforeBuffer.size === 0) {
 			return false;
 		}
@@ -532,7 +517,7 @@ export class ChannelMessages {
 		return Boolean(first && first.id === beforeId);
 	}
 
-	hasAfterCached(afterId: string): boolean {
+	canServeNewerFrom(afterId: string): boolean {
 		if (this.messageList.length === 0 || this.afterBuffer.size === 0) {
 			return false;
 		}
@@ -587,7 +572,7 @@ export class ChannelMessages {
 		}, true);
 	}
 
-	removeMany(ids: Array<string>): ChannelMessages {
+	removeIds(ids: Array<string>): ChannelMessages {
 		if (!ids.some((id) => this.has(id))) return this;
 		const idSet = ids.length > 1 ? new Set(ids) : null;
 		return this.cloneAnd((draft) => {
@@ -598,14 +583,14 @@ export class ChannelMessages {
 				idSet !== null
 					? draft.messageList.filter((m) => !idSet.has(m.id))
 					: draft.messageList.filter((m) => m.id !== ids[0]);
-			draft.beforeBuffer.removeMany(ids);
-			draft.afterBuffer.removeMany(ids);
+			draft.beforeBuffer.removeIds(ids);
+			draft.afterBuffer.removeIds(ids);
 		}, true);
 	}
 
-	merge(records: Array<Message>, prepend = false, clearBuffer = false): ChannelMessages {
+	merge(records: Array<Message>, prepend = false, clearBuffer = false, ordered = false): ChannelMessages {
 		return this.cloneAnd((draft) => {
-			draft.mergeInto(records, prepend, clearBuffer);
+			draft.mergeInto(records, prepend, clearBuffer, ordered);
 		}, true);
 	}
 
@@ -651,7 +636,7 @@ export class ChannelMessages {
 		}, true);
 	}
 
-	truncateTop(maxCount: number, deepCopy = true): ChannelMessages {
+	trimOldest(maxCount: number, deepCopy = true): ChannelMessages {
 		const overflow = this.messageList.length - maxCount;
 		if (overflow <= 0) return this;
 		return this.cloneAnd((draft) => {
@@ -664,7 +649,7 @@ export class ChannelMessages {
 		}, deepCopy);
 	}
 
-	truncateBottom(maxCount: number, deepCopy = true): ChannelMessages {
+	trimNewest(maxCount: number, deepCopy = true): ChannelMessages {
 		if (this.messageList.length <= maxCount) return this;
 		return this.cloneAnd((draft) => {
 			for (let i = maxCount; i < this.messageList.length; i++) {
@@ -676,18 +661,18 @@ export class ChannelMessages {
 		}, deepCopy);
 	}
 
-	truncate(trimBottom: boolean, trimTop: boolean): ChannelMessages {
+	trimToWindow(trimBottom: boolean, trimTop: boolean): ChannelMessages {
 		if (this.length <= MAX_LOADED_MESSAGES) return this;
 		if (trimBottom) {
-			return this.truncateBottom(TRUNCATED_MESSAGE_VIEW_SIZE);
+			return this.trimNewest(TRUNCATED_MESSAGE_VIEW_SIZE);
 		}
 		if (trimTop) {
-			return this.truncateTop(TRUNCATED_MESSAGE_VIEW_SIZE);
+			return this.trimOldest(TRUNCATED_MESSAGE_VIEW_SIZE);
 		}
 		return this;
 	}
 
-	jumpToPresent(limit: number): ChannelMessages {
+	jumpToLiveEdge(limit: number): ChannelMessages {
 		return this.cloneAnd((draft) => {
 			const allAfter = draft.afterBuffer.takeAll();
 			draft.hasMoreAfter = false;
@@ -699,15 +684,15 @@ export class ChannelMessages {
 			draft.clearAllMessages();
 			draft.mergeInto(visible);
 			draft.hasMoreBefore = draft.beforeBuffer.size > 0;
-			draft.jumped = true;
-			draft.jumpTargetId = null;
-			draft.jumpTargetOffset = 0;
-			draft.jumpedToPresent = true;
-			draft.jumpFlash = false;
-			draft.jumpReturnTargetId = null;
+			draft.hasJumped = true;
+			draft.jumpDestinationId = null;
+			draft.jumpDestinationOffset = 0;
+			draft.landedAtLiveEdge = true;
+			draft.jumpHighlight = false;
+			draft.jumpReturnMessageId = null;
 			draft.jumpReturnChannelId = null;
 			draft.jumpReturnGuildId = null;
-			draft.jumpSequenceId += 1;
+			draft.jumpTicket += 1;
 			draft.ready = true;
 			draft.loadingMore = false;
 		}, true);
@@ -717,22 +702,22 @@ export class ChannelMessages {
 		messageId,
 		flash = true,
 		offset,
-		returnTargetId,
+		returnToMessageId,
 		returnChannelId,
 		returnGuildId,
 		jumpType,
 	}: JumpToMessageOptions): ChannelMessages {
 		return this.cloneAnd((draft) => {
-			draft.jumped = true;
-			draft.jumpedToPresent = false;
+			draft.hasJumped = true;
+			draft.landedAtLiveEdge = false;
 			draft.jumpType = jumpType ?? JumpTypes.ANIMATED;
-			draft.jumpTargetId = messageId;
-			draft.jumpTargetOffset = messageId && offset != null ? offset : 0;
-			draft.jumpSequenceId += 1;
-			draft.jumpFlash = flash;
-			draft.jumpReturnTargetId = returnTargetId ?? null;
-			draft.jumpReturnChannelId = returnTargetId ? (returnChannelId ?? draft.channelId) : null;
-			draft.jumpReturnGuildId = returnTargetId ? (returnGuildId ?? null) : null;
+			draft.jumpDestinationId = messageId;
+			draft.jumpDestinationOffset = messageId && offset != null ? offset : 0;
+			draft.jumpTicket += 1;
+			draft.jumpHighlight = flash;
+			draft.jumpReturnMessageId = returnToMessageId ?? null;
+			draft.jumpReturnChannelId = returnToMessageId ? (returnChannelId ?? draft.channelId) : null;
+			draft.jumpReturnGuildId = returnToMessageId ? (returnGuildId ?? null) : null;
 			draft.ready = true;
 			draft.loadingMore = false;
 		}, false);
@@ -740,20 +725,20 @@ export class ChannelMessages {
 
 	clearJumpTarget(options: {clearReturnTarget?: boolean} = {}): ChannelMessages {
 		const patch: Partial<ChannelMessages> = {
-			jumped: false,
-			jumpedToPresent: false,
-			jumpTargetId: null,
-			jumpTargetOffset: 0,
+			hasJumped: false,
+			landedAtLiveEdge: false,
+			jumpDestinationId: null,
+			jumpDestinationOffset: 0,
 		};
 		if (options.clearReturnTarget) {
-			patch.jumpReturnTargetId = null;
+			patch.jumpReturnMessageId = null;
 			patch.jumpReturnChannelId = null;
 			patch.jumpReturnGuildId = null;
 		}
 		return this.cloneAnd(patch);
 	}
 
-	loadFromCache(before: boolean, limit: number): ChannelMessages {
+	drainBufferedSide(before: boolean, limit: number): ChannelMessages {
 		let next = this.cloneAnd((draft) => {
 			const buffer = before ? draft.beforeBuffer : draft.afterBuffer;
 			draft.mergeInto(buffer.take(limit), before);
@@ -764,14 +749,14 @@ export class ChannelMessages {
 			draft.loadingMore = false;
 		}, true);
 		if (before) {
-			next = next.truncate(true, false);
+			next = next.trimToWindow(true, false);
 		} else {
-			next = next.truncate(false, true);
+			next = next.trimToWindow(false, true);
 		}
 		return next;
 	}
 
-	receiveMessage(message: MessageInput, truncateFromTop = true): ChannelMessages {
+	applyIncomingMessage(message: MessageInput, truncateFromTop = true): ChannelMessages {
 		const wire = toWireMessage(message);
 		const possibleNonce = wire.nonce ?? null;
 		const previous = possibleNonce ? this.get(possibleNonce, true) : null;
@@ -804,39 +789,32 @@ export class ChannelMessages {
 	private appendIncomingMessage(message: MessageInput, truncateFromTop: boolean): ChannelMessages {
 		const merged = this.merge([hydrateMessage(this, message, 'preserve')]);
 		if (truncateFromTop) {
-			return merged.truncateTop(IS_MOBILE_CLIENT ? MAX_MESSAGES_PER_CHANNEL : TRUNCATED_MESSAGE_VIEW_SIZE, false);
+			return merged.trimOldest(IS_MOBILE_CLIENT ? MAX_MESSAGES_PER_CHANNEL : TRUNCATED_MESSAGE_VIEW_SIZE, false);
 		}
 		if (this.length > MAX_LOADED_MESSAGES) {
-			return merged.truncateBottom(IS_MOBILE_CLIENT ? MAX_MESSAGES_PER_CHANNEL : TRUNCATED_MESSAGE_VIEW_SIZE, false);
+			return merged.trimNewest(IS_MOBILE_CLIENT ? MAX_MESSAGES_PER_CHANNEL : TRUNCATED_MESSAGE_VIEW_SIZE, false);
 		}
 		return merged;
 	}
 
-	receivePushNotification(message: MessageInput): ChannelMessages {
-		const wire = toWireMessage(message);
-		const possibleNonce = wire.nonce ?? null;
-		const existing = possibleNonce ? this.get(possibleNonce, true) : null;
-		if (existing) return this;
-		return this.cloneAnd({ready: true, cached: true}).merge([hydrateMessage(this, wire, 'preserve')]);
-	}
-
-	loadStart(jump?: JumpOptions): ChannelMessages {
+	beginLoad(jump?: JumpOptions): ChannelMessages {
 		return this.cloneAnd({
+			loadGeneration: ++nextLoadGeneration,
 			loadingMore: true,
-			jumped: jump != null,
-			jumpedToPresent: jump?.present ?? false,
-			jumpTargetId: jump?.messageId ?? null,
-			jumpTargetOffset: jump?.offset ?? 0,
-			jumpReturnTargetId: jump?.returnMessageId ?? null,
-			jumpReturnChannelId: jump?.returnMessageId ? (jump.returnChannelId ?? this.channelId) : null,
-			jumpReturnGuildId: jump?.returnMessageId ? (jump.returnGuildId ?? null) : null,
+			hasJumped: jump != null,
+			landedAtLiveEdge: jump?.present ?? false,
+			jumpDestinationId: jump?.messageId ?? null,
+			jumpDestinationOffset: jump?.offset ?? 0,
+			jumpReturnMessageId: jump?.returnToMessageId ?? null,
+			jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
+			jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
 			ready: jump ? false : this.ready,
 		});
 	}
 
-	loadComplete(options: LoadCompleteOptions): ChannelMessages {
+	applyLoadedWindow(options: LoadCompleteOptions): ChannelMessages {
 		const {
-			newMessages,
+			windowMessages,
 			isBefore = false,
 			isAfter = false,
 			jump = null,
@@ -844,7 +822,7 @@ export class ChannelMessages {
 			hasMoreAfter = false,
 			cached = false,
 		} = options;
-		const records = [...newMessages].reverse().map((m) => hydrateMessage(this, m, 'empty'));
+		const records = [...windowMessages].reverse().map((m) => hydrateMessage(this, m, 'empty'));
 		const loadDecision = resolveChannelMessagesLoadDecision({
 			isBefore,
 			isAfter,
@@ -853,34 +831,66 @@ export class ChannelMessages {
 		});
 		let next: ChannelMessages;
 		if (loadDecision.mode === 'replace') {
+			const isWindowReplacement = !isBefore && !isAfter && jump?.messageId == null && jump?.offset == null;
+			const unsent = isWindowReplacement ? this.collectUnsentMessages(records) : null;
 			next = this.reset(records);
+			if (unsent && unsent.length > 0) {
+				next = next.merge(unsent);
+			}
 		} else {
-			next = this.merge(records, loadDecision.prepend, true);
+			next = this.merge(records, loadDecision.prepend, true, true);
 			if (loadDecision.trimBottom) {
-				next = next.truncate(true, false);
+				next = next.trimToWindow(true, false);
 			} else if (loadDecision.trimTop) {
-				next = next.truncate(false, true);
+				next = next.trimToWindow(false, true);
 			}
 		}
+		const jumpPatch = {
+			jumpType: jump?.jumpType ?? JumpTypes.ANIMATED,
+			jumpHighlight: jump?.flash ?? false,
+			hasJumped: jump != null,
+			landedAtLiveEdge: jump?.present ?? false,
+			jumpDestinationId: jump?.messageId ?? null,
+			jumpDestinationOffset: jump && jump.messageId != null && jump.offset != null ? jump.offset : 0,
+			jumpTicket: jump ? next.jumpTicket + 1 : next.jumpTicket,
+			jumpReturnMessageId: jump?.returnToMessageId ?? null,
+			jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
+			jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
+		};
+		const reachesLiveEdge = selectChannelMessagesLoadRestoresTrust({
+			mode: loadDecision.mode,
+			isAfter,
+			hasMoreAfter,
+		});
 		next = next.cloneAnd({
 			ready: true,
 			loadingMore: false,
-			jumpType: jump?.jumpType ?? JumpTypes.ANIMATED,
-			jumpFlash: jump?.flash ?? false,
-			jumped: jump != null,
-			jumpedToPresent: jump?.present ?? false,
-			jumpTargetId: jump?.messageId ?? null,
-			jumpTargetOffset: jump && jump.messageId != null && jump.offset != null ? jump.offset : 0,
-			jumpSequenceId: jump ? next.jumpSequenceId + 1 : next.jumpSequenceId,
-			jumpReturnTargetId: jump?.returnMessageId ?? null,
-			jumpReturnChannelId: jump?.returnMessageId ? (jump.returnChannelId ?? this.channelId) : null,
-			jumpReturnGuildId: jump?.returnMessageId ? (jump.returnGuildId ?? null) : null,
+			...jumpPatch,
 			hasMoreBefore: loadDecision.preserveHasMoreBefore ? next.hasMoreBefore : hasMoreBefore,
 			hasMoreAfter: loadDecision.preserveHasMoreAfter ? next.hasMoreAfter : hasMoreAfter,
-			cached,
+			cached: reachesLiveEdge ? cached : next.cached || cached,
 			error: false,
 		});
 		return next;
+	}
+
+	private collectUnsentMessages(records: Array<Message>): Array<Message> {
+		const unsent = this.messageList.filter((message) => message.hasFailed || message.isSending);
+		if (unsent.length === 0) return unsent;
+		const unseenByKey = new Map<string, number>();
+		for (const record of records) {
+			if (this.has(record.id)) continue;
+			const key = unsentCorrelationKey(record);
+			unseenByKey.set(key, (unseenByKey.get(key) ?? 0) + 1);
+		}
+		if (unseenByKey.size === 0) return unsent;
+		return unsent.filter((message) => {
+			const key = unsentCorrelationKey(message);
+			const available = unseenByKey.get(key) ?? 0;
+			if (available === 0) return true;
+			unseenByKey.set(key, available - 1);
+			return false;
+		});
 	}
 
 	private clearAllMessages(): void {
@@ -888,7 +898,7 @@ export class ChannelMessages {
 		this.messageIndex = {};
 	}
 
-	private mergeInto(incoming: Array<Message>, prepend = false, clearSideBuffer = false): void {
+	private mergeInto(incoming: Array<Message>, prepend = false, clearSideBuffer = false, ordered = false): void {
 		const newItems: Array<Message> = [];
 		for (const msg of incoming) {
 			const existing = this.messageIndex[msg.id];
@@ -911,7 +921,11 @@ export class ChannelMessages {
 			buffer.clear();
 		}
 		if (newItems.length === 0) return;
-		this.messageList = prepend ? newItems.concat(this.messageList) : this.messageList.concat(newItems);
+		if (prepend) {
+			this.messageList = newItems.concat(this.messageList);
+			return;
+		}
+		this.messageList = ordered ? mergeAscendingById(this.messageList, newItems) : this.messageList.concat(newItems);
 	}
 
 	private cloneAnd(
@@ -927,19 +941,20 @@ export class ChannelMessages {
 		if (typeof mutator === 'function') {
 			clone.ready = this.ready;
 			clone.jumpType = this.jumpType;
-			clone.jumpTargetId = this.jumpTargetId;
-			clone.jumpTargetOffset = this.jumpTargetOffset;
-			clone.jumpSequenceId = this.jumpSequenceId;
-			clone.jumped = this.jumped;
-			clone.jumpedToPresent = this.jumpedToPresent;
-			clone.jumpFlash = this.jumpFlash;
-			clone.jumpReturnTargetId = this.jumpReturnTargetId;
+			clone.jumpDestinationId = this.jumpDestinationId;
+			clone.jumpDestinationOffset = this.jumpDestinationOffset;
+			clone.jumpTicket = this.jumpTicket;
+			clone.loadGeneration = this.loadGeneration;
+			clone.hasJumped = this.hasJumped;
+			clone.landedAtLiveEdge = this.landedAtLiveEdge;
+			clone.jumpHighlight = this.jumpHighlight;
+			clone.jumpReturnMessageId = this.jumpReturnMessageId;
 			clone.jumpReturnChannelId = this.jumpReturnChannelId;
 			clone.jumpReturnGuildId = this.jumpReturnGuildId;
 			clone.hasMoreBefore = this.hasMoreBefore;
 			clone.hasMoreAfter = this.hasMoreAfter;
 			clone.loadingMore = this.loadingMore;
-			clone.revealedMessageId = this.revealedMessageId;
+			clone.unblurredMessageId = this.unblurredMessageId;
 			clone.cached = this.cached;
 			clone.error = this.error;
 			mutator(clone);
@@ -947,14 +962,17 @@ export class ChannelMessages {
 			const patch = mutator as Partial<ChannelMessages>;
 			clone.ready = 'ready' in patch ? !!patch.ready : this.ready;
 			clone.jumpType = patch.jumpType ?? this.jumpType;
-			clone.jumpTargetId = 'jumpTargetId' in patch ? (patch.jumpTargetId ?? null) : this.jumpTargetId;
-			clone.jumpTargetOffset = patch.jumpTargetOffset !== undefined ? patch.jumpTargetOffset : this.jumpTargetOffset;
-			clone.jumpSequenceId = patch.jumpSequenceId !== undefined ? patch.jumpSequenceId : this.jumpSequenceId;
-			clone.jumped = 'jumped' in patch ? !!patch.jumped : this.jumped;
-			clone.jumpedToPresent = 'jumpedToPresent' in patch ? !!patch.jumpedToPresent : this.jumpedToPresent;
-			clone.jumpFlash = 'jumpFlash' in patch ? !!patch.jumpFlash : this.jumpFlash;
-			clone.jumpReturnTargetId =
-				'jumpReturnTargetId' in patch ? (patch.jumpReturnTargetId ?? null) : this.jumpReturnTargetId;
+			clone.jumpDestinationId =
+				'jumpDestinationId' in patch ? (patch.jumpDestinationId ?? null) : this.jumpDestinationId;
+			clone.jumpDestinationOffset =
+				patch.jumpDestinationOffset !== undefined ? patch.jumpDestinationOffset : this.jumpDestinationOffset;
+			clone.jumpTicket = patch.jumpTicket !== undefined ? patch.jumpTicket : this.jumpTicket;
+			clone.loadGeneration = patch.loadGeneration !== undefined ? patch.loadGeneration : this.loadGeneration;
+			clone.hasJumped = 'hasJumped' in patch ? !!patch.hasJumped : this.hasJumped;
+			clone.landedAtLiveEdge = 'landedAtLiveEdge' in patch ? !!patch.landedAtLiveEdge : this.landedAtLiveEdge;
+			clone.jumpHighlight = 'jumpHighlight' in patch ? !!patch.jumpHighlight : this.jumpHighlight;
+			clone.jumpReturnMessageId =
+				'jumpReturnMessageId' in patch ? (patch.jumpReturnMessageId ?? null) : this.jumpReturnMessageId;
 			clone.jumpReturnChannelId =
 				'jumpReturnChannelId' in patch ? (patch.jumpReturnChannelId ?? null) : this.jumpReturnChannelId;
 			clone.jumpReturnGuildId =
@@ -962,8 +980,8 @@ export class ChannelMessages {
 			clone.hasMoreBefore = 'hasMoreBefore' in patch ? !!patch.hasMoreBefore : this.hasMoreBefore;
 			clone.hasMoreAfter = 'hasMoreAfter' in patch ? !!patch.hasMoreAfter : this.hasMoreAfter;
 			clone.loadingMore = patch.loadingMore !== undefined ? patch.loadingMore : this.loadingMore;
-			clone.revealedMessageId =
-				'revealedMessageId' in patch ? (patch.revealedMessageId ?? null) : this.revealedMessageId;
+			clone.unblurredMessageId =
+				'unblurredMessageId' in patch ? (patch.unblurredMessageId ?? null) : this.unblurredMessageId;
 			clone.cached = patch.cached ?? this.cached;
 			clone.error = patch.error ?? this.error;
 		}

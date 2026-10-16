@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {compare as compareSnowflakes, extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-
-export const OLD_MESSAGE_AGE_THRESHOLD = 7 * MS_PER_DAY;
-export const RECENT_MESSAGE_THRESHOLD = 3 * MS_PER_DAY;
 export const ACK_BATCH_DELAY_MS = 3000;
 export const ACK_BATCH_SIZE = 100;
 export const ACK_RETRY_BASE_DELAY_MS = 5000;
@@ -25,11 +20,6 @@ export interface ReadStateAckRequestEntry {
 	message_id: string;
 	mention_count?: number;
 	manual?: boolean;
-}
-
-export interface ReadStateAckResponse {
-	read_states: Array<GatewayReadState>;
-	read_state_proto?: string;
 }
 
 export interface ChannelPayload {
@@ -60,12 +50,12 @@ export interface PendingAck {
 	messageId: string;
 	deadline: number;
 	attempt: number;
+	userId: string | null;
 }
 
 export interface ArchivedReadState {
 	ackMessageId: string | null;
-	ackPinTimestamp: number;
-	readStateKnown: boolean;
+	acknowledgedPinTimestamp: number;
 }
 
 export function parseTimestamp(timestamp?: string | null): number {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {deleteOneOrMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import type {EmailChangeTicketRow, EmailChangeTokenRow} from '../../../database/types/AuthTypes';
-import {EmailChangeTickets, EmailChangeTokens} from '../../../Tables';
+import {deleteOneOrMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {EmailChangeTicketRow, EmailChangeTokenRow} from '@app/api/database/types/AuthTypes';
+import {EmailChangeTickets, EmailChangeTokens} from '@app/api/Tables';
 
 const FETCH_TICKET_CQL = EmailChangeTickets.selectCql({
 	where: EmailChangeTickets.where.eq('ticket'),
@@ -24,10 +24,6 @@ export class EmailChangeRepository {
 
 	async findTicket(ticket: string): Promise<EmailChangeTicketRow | null> {
 		return await fetchOne<EmailChangeTicketRow>(FETCH_TICKET_CQL, {ticket});
-	}
-
-	async deleteTicket(ticket: string): Promise<void> {
-		await deleteOneOrMany(EmailChangeTickets.deleteByPk({ticket}));
 	}
 
 	async createToken(row: EmailChangeTokenRow): Promise<void> {

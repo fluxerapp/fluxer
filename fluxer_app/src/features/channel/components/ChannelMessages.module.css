@@ -14,6 +14,8 @@
 }
 
 .scrollerContainer {
+	--scroller-track-block-end-inset: var(--composer-status-safe-area, 0px);
+	--messages-bottom-fade-fill: var(--composer-surface-color, var(--background-secondary-lighter));
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -22,6 +24,34 @@
 	min-width: 0;
 	height: 100%;
 	width: 100%;
+}
+
+.bottomFade {
+	position: absolute;
+	inset-block-end: 0;
+	inset-inline: 0 1rem;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.bottomFadeStatusAtBottom {
+	height: 1rem;
+	background: linear-gradient(
+		to bottom,
+		transparent,
+		var(--messages-bottom-fade-fill) var(--composer-status-safe-gap),
+		var(--messages-bottom-fade-fill) 100%
+	);
+}
+
+.bottomFadeStatusScrolled {
+	height: 5rem;
+	background: linear-gradient(
+		to bottom,
+		transparent,
+		var(--messages-bottom-fade-fill) calc(4rem + var(--composer-status-safe-gap)),
+		var(--messages-bottom-fade-fill) 100%
+	);
 }
 
 .scrollerContent {
@@ -40,7 +70,11 @@
 	flex-shrink: 0;
 }
 
-.placeholderSpacer {
+.scrollerSpacerAfterFiller {
+	height: calc(var(--messages-bottom-clearance, var(--scroller-spacer-height)) - var(--message-filler-padding-bottom));
+}
+
+.fillerBuffer {
 	flex: 0 0 auto;
 	height: 1rem;
 }
@@ -63,8 +97,8 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	min-height: 100%;
-	padding-left: 0.75rem;
-	padding-right: 0.75rem;
+	padding-left: var(--chat-mobile-horizontal-padding);
+	padding-right: var(--chat-mobile-horizontal-padding);
 	position: relative;
 }
 
@@ -121,7 +155,7 @@
 	background: none;
 	border: none;
 	padding: 0 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-size: 0.875rem;
 	font-weight: 500;
 	overflow: hidden;
@@ -138,7 +172,7 @@
 	background: none;
 	border: none;
 	padding: 0 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-size: 0.875rem;
 	font-weight: 600;
 	flex-shrink: 0;
@@ -198,29 +232,6 @@
 		max-width: min(45vw, 14rem);
 		font-size: 0.8125rem;
 	}
-}
-
-.loadMoreContainer {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0.75rem 0;
-}
-
-.loadMoreTopPadding {
-	padding-top: 1.25rem;
-}
-
-.loadMoreBottomPadding {
-	padding-bottom: 1.25rem;
-}
-
-.unreadOverlay {
-	position: absolute;
-	left: 0;
-	right: 0;
-	z-index: 1;
-	pointer-events: none;
 }
 
 .unreadSlot {

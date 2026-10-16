@@ -17,14 +17,6 @@
 	container-type: size;
 }
 
-.channelIconInitials {
-	overflow: hidden;
-	white-space: nowrap;
-	font-size: clamp(0.5rem, 40cqi, 1.25rem);
-	line-height: 1;
-	color: inherit;
-}
-
 :global(.theme-light) .channelIcon {
 	--channel-welcome-icon-bg: color-mix(in srgb, var(--guild-list-foreground) 55%, var(--background-primary) 45%);
 }

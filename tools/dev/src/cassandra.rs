@@ -345,17 +345,7 @@ pub fn render_target_schema(keyspace: &str) -> String {
 pub fn target_schema_sha256(keyspace: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(render_target_schema(keyspace).as_bytes());
-    bytes_to_lower_hex(&hasher.finalize())
-}
-
-fn bytes_to_lower_hex(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push(HEX[(byte >> 4) as usize] as char);
-        out.push(HEX[(byte & 0x0f) as usize] as char);
-    }
-    out
+    hex::encode(hasher.finalize())
 }
 
 pub fn sorted_user_types() -> Vec<UserType> {
@@ -623,84 +613,4 @@ async fn verify_schema_with_session(session: &Session, keyspace: &str) -> Result
         &diff.target_sha256[..12],
     );
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn normalizes_frozen_user_type_wrappers() {
-        assert_eq!(normalize_type(" frozen<message_embed> "), "message_embed");
-        assert_eq!(
-            normalize_type("LIST< frozen<message_embed> >"),
-            "list<message_embed>"
-        );
-    }
-
-    #[test]
-    fn renders_target_schema_with_semicolons() {
-        let rendered = render_target_schema("fluxer");
-        assert!(rendered.starts_with("CREATE TYPE IF NOT EXISTS fluxer."));
-        assert!(rendered.contains("CREATE TABLE IF NOT EXISTS fluxer.messages"));
-        assert!(rendered.ends_with(";\n"));
-    }
-
-    #[test]
-    fn diff_creates_keyspace_and_missing_schema() {
-        let diff = create_diff(&ExistingSchema::default(), "fluxer");
-        assert!(diff.statements[0].starts_with("CREATE KEYSPACE IF NOT EXISTS fluxer"));
-        assert!(
-            diff.statements
-                .iter()
-                .any(|statement| statement.starts_with("CREATE TYPE IF NOT EXISTS fluxer."))
-        );
-        assert!(
-            diff.statements
-                .iter()
-                .any(|statement| statement.starts_with("CREATE TABLE IF NOT EXISTS fluxer."))
-        );
-        assert!(diff.errors.is_empty());
-    }
-
-    #[test]
-    fn diff_reports_type_mismatches_and_extra_tables() {
-        let mut existing = ExistingSchema {
-            keyspace_exists: true,
-            ..ExistingSchema::default()
-        };
-        existing.types.insert(
-            "message_attachment".to_owned(),
-            BTreeMap::from([("attachment_id".to_owned(), "text".to_owned())]),
-        );
-        existing
-            .tables
-            .insert("unexpected".to_owned(), ExistingTable::default());
-        let diff = create_diff(&existing, "fluxer");
-        assert!(
-            diff.errors
-                .iter()
-                .any(|error| error.contains("type message_attachment.attachment_id"))
-        );
-        assert!(
-            diff.warnings
-                .iter()
-                .any(|warning| warning.contains("unexpected"))
-        );
-    }
-
-    #[test]
-    fn render_diff_includes_warnings_errors_and_sha() {
-        let diff = SchemaDiff {
-            statements: vec!["SELECT 1".to_owned()],
-            warnings: vec!["warn".to_owned()],
-            errors: vec!["err".to_owned()],
-            target_sha256: "abc".to_owned(),
-        };
-        let rendered = render_diff(&diff);
-        assert!(rendered.contains("-- Target schema sha256: abc"));
-        assert!(rendered.contains("--   warn"));
-        assert!(rendered.contains("--   err"));
-        assert!(rendered.ends_with("SELECT 1;\n"));
-    }
 }

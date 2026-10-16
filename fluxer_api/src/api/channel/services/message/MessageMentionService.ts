@@ -1,5 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type ChannelID,
+	createChannelID,
+	createRoleID,
+	createUserID,
+	type GuildID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import {ChannelTypes, MessageTypes, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -11,23 +31,6 @@ import {
 	type AllowedMentionsRequest,
 } from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {
-	type ChannelID,
-	createChannelID,
-	createRoleID,
-	createUserID,
-	type GuildID,
-	type RoleID,
-	type UserID,
-} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {WorkerTaskName} from '../../../worker/WorkerLaneConfig';
-import {isOperationDisabled, isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageResponseDataService} from './MessageResponseDataService';
 
 interface MentionData {
 	userMentions: Set<UserID>;
@@ -53,8 +56,8 @@ interface MentionableUser {
 
 export class MessageMentionService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private gatewayService: IGatewayService,
 		private workerService: IWorkerService<WorkerTaskName>,
 		private responseDataService: MessageResponseDataService,
@@ -88,11 +91,15 @@ export class MessageMentionService {
 		const roleMentions = allMentions.roles;
 		const channelMentions = allMentions.channels;
 		const isDMChannel = channelType === ChannelTypes.DM || channelType === ChannelTypes.DM_PERSONAL_NOTES;
+		if (isDMChannel) {
+			mentionsEveryone = false;
+			mentionsHere = false;
+		}
 		const shouldAddReferencedUser =
 			referencedMessage?.authorId &&
 			referencedMessage.authorId !== message.authorId &&
 			!isDMChannel &&
-			(!allowedMentions || allowedMentions.replied_user !== false);
+			allowedMentions?.replied_user !== false;
 		if (shouldAddReferencedUser) {
 			userMentions.add(referencedMessage!.authorId!);
 		}
@@ -441,8 +448,7 @@ export class MessageMentionService {
 			return validUserIds;
 		}
 		const authorHasStaffFlag = (author.flags & UserFlags.STAFF) === UserFlags.STAFF;
-		const authorHasCtpFlag = (author.flags & UserFlags.CTP_MEMBER) === UserFlags.CTP_MEMBER;
-		if (authorHasStaffFlag || authorHasCtpFlag) {
+		if (authorHasStaffFlag) {
 			return validUserIds;
 		}
 		const staffTargets = validUsers.filter((user) => (user.flags & UserFlags.STAFF) === UserFlags.STAFF);
@@ -478,7 +484,7 @@ export class MessageMentionService {
 		mentionHere?: boolean;
 	}): Promise<void> {
 		const {guildId, message, authorId, mentionHere = false} = params;
-		if (isPersonalNotesChannel({userId: authorId, channelId: message.channelId})) return;
+		if (isPersonalNotesChannelId({userId: authorId, channelId: message.channelId})) return;
 		const mentionUserIds = Array.from(message.mentionedUserIds ?? []);
 		const mentionRoleIds = Array.from(message.mentionedRoleIds ?? []);
 		const mentionEveryone = message.mentionEveryone && !mentionHere;
@@ -498,8 +504,19 @@ export class MessageMentionService {
 			mentionHere ||
 			mentionEveryone ||
 			(message.reference && message.type === MessageTypes.REPLY);
-		if (hasMentions) {
-			await this.workerService.addJob('handleMentions', taskData);
+		if (!hasMentions) {
+			return;
+		}
+		try {
+			await this.workerService.addJob('handleMentions', taskData, {skipLedger: true});
+		} catch (error) {
+			if (!(error instanceof WorkerQueueOverflowError)) {
+				throw error;
+			}
+			Logger.warn(
+				{channelId: message.channelId.toString(), messageId: message.id.toString()},
+				'Dropped mention fanout, jobs stream is at its limit',
+			);
 		}
 	}
 }

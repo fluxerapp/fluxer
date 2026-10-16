@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import type {User} from '@app/api/models/User';
+import type {PasswordChangeRepository} from '@app/api/user/repositories/auth/PasswordChangeRepository';
 import {
 	assertChangeCooldown,
 	checkChangeRateLimit,
 	generateChangeVerificationCode,
 	getActiveChangeTicketForUser,
 } from '@app/api/user/services/UserChangeChallengeUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthPassword from '../../auth/AuthPassword';
-import type {User} from '../../models/User';
-import type {PasswordChangeRepository} from '../repositories/auth/PasswordChangeRepository';
 
 interface StartPasswordChangeResult {
 	ticket: string;
@@ -127,7 +128,7 @@ export class PasswordChangeService {
 		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
 			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
-		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		const newPasswordHash = await hashPassword(newPassword);
 		await users.patchUpsert(user.id, {
 			password_hash: newPasswordHash,
 			password_last_changed_at: new Date(),
@@ -136,5 +137,21 @@ export class PasswordChangeService {
 		row.status = 'completed';
 		row.updated_at = now;
 		await this.repo.updateTicket(row);
+	}
+
+	async setPassword(user: User, newPassword: string): Promise<User> {
+		const {users} = this.apiContext.services;
+		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
+			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
+		}
+		const newPasswordHash = await hashPassword(newPassword);
+		return await users.patchUpsert(
+			user.id,
+			{
+				password_hash: newPasswordHash,
+				password_last_changed_at: new Date(),
+			},
+			user.toRow(),
+		);
 	}
 }

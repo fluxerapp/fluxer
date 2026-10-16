@@ -48,11 +48,13 @@ export const AutocompleteOption: React.FC<AutocompleteOptionProps> = observer(
 				data-flx="channel.message-search-bar.autocomplete-option.option.select"
 			>
 				{children}
-				<PlusIcon
-					weight="bold"
-					className={`${styles.optionMetaIcon} ${showIcon ? '' : styles.optionMetaIconInactive}`}
-					data-flx="channel.message-search-bar.autocomplete-option.option-meta-icon"
-				/>
+				{
+					<PlusIcon
+						weight="bold"
+						className={`${styles.optionMetaIcon} ${showIcon ? '' : styles.optionMetaIconInactive}`}
+						data-flx="channel.message-search-bar.autocomplete-option.option-meta-icon"
+					/>
+				}
 			</div>
 		);
 	},

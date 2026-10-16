@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/flow/IpAuthorizationScreen.module.css';
 import type {IpAuthorizationChallenge, LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -16,6 +19,7 @@ type PollingState = 'polling' | 'error';
 
 interface IpAuthorizationScreenProps {
 	challenge: IpAuthorizationChallenge;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 	onAuthorized: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onBack?: () => void;
 }
@@ -27,7 +31,7 @@ const CHECK_INBOX_FOR_AUTHORIZATION_LINK_DESCRIPTOR = msg({
 	comment: 'Instruction on the IP authorization screen. emailAddress is the address that received the login email.',
 });
 const logger = new Logger('IpAuthorizationScreen');
-const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizationScreenProps) => {
+const IpAuthorizationScreen = ({challenge, runtimeSnapshot, onAuthorized, onBack}: IpAuthorizationScreenProps) => {
 	const {i18n} = useLingui();
 	const [resendUsed, setResendUsed] = useState(false);
 	const [resendIn, setResendIn] = useState(challenge.resendAvailableIn);
@@ -46,7 +50,10 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 		const poll = async () => {
 			if (!isMounted) return;
 			try {
-				const result = await AuthenticationCommands.pollIpAuthorization(challenge.ticket);
+				const result = await AuthenticationCommands.pollIpAuthorization({
+					ticket: challenge.ticket,
+					target: instanceTargetFromSnapshot(runtimeSnapshot),
+				});
 				if (!isMounted) return;
 				if (result.completed && result.token && result.user_id) {
 					const userData = AuthenticationCommands.authResponseUserToUserData(result.user);
@@ -77,7 +84,7 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 				clearTimeout(pollTimeout);
 			}
 		};
-	}, [challenge.ticket, pollingState]);
+	}, [challenge.ticket, pollingState, runtimeSnapshot]);
 	useEffect(() => {
 		if (resendIn <= 0) return;
 		const interval = setInterval(() => {
@@ -88,13 +95,16 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 	const handleResend = useCallback(async () => {
 		if (resendIn > 0 || resendUsed) return;
 		try {
-			await AuthenticationCommands.resendIpAuthorization(challenge.ticket);
+			await AuthenticationCommands.resendIpAuthorization({
+				ticket: challenge.ticket,
+				target: instanceTargetFromSnapshot(runtimeSnapshot),
+			});
 			setResendUsed(true);
 			setResendIn(30);
 		} catch (error) {
 			logger.error('Failed to resend IP authorization email', error);
 		}
-	}, [challenge.ticket, resendIn, resendUsed]);
+	}, [challenge.ticket, resendIn, resendUsed, runtimeSnapshot]);
 	const handleRetry = useCallback(() => {
 		setPollingState('polling');
 	}, []);
@@ -142,7 +152,11 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 						data-flx="auth.flow.ip-authorization-screen.button.resend"
 					>
 						{resendUsed ? <Trans>Resent</Trans> : <Trans>Resend email</Trans>}
-						{resendIn > 0 ? ` (${resendIn}s)` : ''}
+						<flx-i18n data-flx="auth.flow.ip-authorization-screen.flx-i18n">
+							{resendIn > 0
+								? ` (${getCachedNumberFormat(i18n.locale, {style: 'unit', unit: 'second', unitDisplay: 'narrow', maximumFractionDigits: 0}).format(resendIn)})`
+								: ''}
+						</flx-i18n>
 					</Button>
 				)}
 				{onBack ? (

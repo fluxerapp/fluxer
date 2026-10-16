@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import {
 	$captureSelectionOffsets,
 	$getComposerNodeDisplayStart,
 	$selectComposerNodeBoundary,
 	$selectComposerRange,
 } from '@app/features/lexical/composer/composerOffsets';
+import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {$createComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {
 	$createComposerStandardEmojiNode,
 	$isComposerStandardEmojiNode,
 } from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
-import {findTypedEmojiShortcode} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
+import {findTypedEmojiShortcode, type TypedEmojiMatch} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
+import {isReactionShorthandText} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import type {ResolvedTypedEmoji} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
-import {type LexicalEditor, TextNode} from 'lexical';
+import {$getRoot, type LexicalEditor, TextNode} from 'lexical';
 
 export type ComposerEmojiResolver = (shortcodeName: string) => ResolvedTypedEmoji | null;
 
@@ -26,24 +29,85 @@ export function registerComposerEmojiShortcode(editor: LexicalEditor, resolve: C
 	});
 }
 
-export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
-	if ($isSyntaxMarkerNode(node) || node.hasFormat('code')) {
+function findUnicodeEmoji(text: string, startIndex: number): TypedEmojiMatch | null {
+	const matches = UnicodeEmojis.matchEmojiSurrogates(text, startIndex);
+	let match = matches.next().value;
+	if (match && UnicodeEmojis.isInsideRegionalIndicatorPair(text, match.end)) {
+		match = matches.next().value;
+	}
+	if (!match) {
+		return null;
+	}
+	const name = match.name;
+	if (!name) {
+		return null;
+	}
+	return {start: match.start, end: match.end, name};
+}
+
+interface EmojiToken extends TypedEmojiMatch {
+	surrogate: boolean;
+}
+
+function findNextEmojiToken(text: string, startIndex: number): EmojiToken | null {
+	const shortcode = findTypedEmojiShortcode(text, startIndex);
+	const surrogate = findUnicodeEmoji(text, startIndex);
+	if (shortcode == null) {
+		return surrogate == null ? null : {...surrogate, surrogate: true};
+	}
+	if (surrogate == null) {
+		return {...shortcode, surrogate: false};
+	}
+	return surrogate.start < shortcode.start ? {...surrogate, surrogate: true} : {...shortcode, surrogate: false};
+}
+
+interface EmojiTokenEdit {
+	start: number;
+	end: number;
+	replacement: ResolvedTypedEmoji | string;
+}
+
+function isEscapedAt(text: string, index: number): boolean {
+	let backslashes = 0;
+	let cursor = index - 1;
+	while (cursor >= 0 && text[cursor] === '\\') {
+		backslashes += 1;
+		cursor -= 1;
+	}
+	return backslashes % 2 === 1;
+}
+
+function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
+	if ($isSyntaxMarkerNode(node) || node.hasFormat('code') || isReactionShorthandText($getRoot().getTextContent())) {
 		return;
 	}
 	const parent = node.getParent();
-	if (parent == null || parent.getType() !== 'paragraph') {
+	if (parent == null || (parent.getType() !== 'paragraph' && !$isComposerBlockquoteLineNode(parent))) {
 		return;
 	}
 	const text = node.getTextContent();
+	const edits: Array<EmojiTokenEdit> = [];
 	let searchFrom = 0;
+	let backticks = 0;
 	while (true) {
-		const match = findTypedEmojiShortcode(text, searchFrom);
+		const match = findNextEmojiToken(text, searchFrom);
 		if (match == null) {
-			return;
+			break;
 		}
-		const codeMarkers = text.slice(0, match.start).match(/`/g);
-		if ((codeMarkers == null ? 0 : codeMarkers.length) % 2 === 1) {
-			return;
+		for (let index = searchFrom; index < match.start; index++) {
+			if (text[index] === '`') {
+				backticks += 1;
+			}
+		}
+		searchFrom = match.end;
+		if (backticks % 2 === 1) {
+			continue;
+		}
+		if (isEscapedAt(text, match.start)) {
+			if (match.surrogate) {
+				edits.push({start: match.start, end: match.end, replacement: `:${match.name}:`});
+			}
+			continue;
 		}
 		const previous = match.start === 0 ? node.getPreviousSibling() : null;
 		if (/^skin-tone-[1-5]$/.test(match.name) && $isComposerStandardEmojiNode(previous)) {
@@ -82,27 +146,47 @@ export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiRes
 			}
 		}
 		const resolved = resolve(match.name);
-		if (resolved == null) {
-			searchFrom = match.end;
-			continue;
+		if (resolved != null) {
+			edits.push({start: match.start, end: match.end, replacement: resolved});
 		}
-		const selection = $captureSelectionOffsets();
-		const nodeDisplayStart = $getComposerNodeDisplayStart(node);
-		const emojiNode =
-			resolved.kind === 'standard'
-				? $createComposerStandardEmojiNode(resolved.name, resolved.surrogate, resolved.url, resolved.display)
-				: $createComposerCustomEmojiNode(resolved.emojiId, resolved.animated, resolved.display, resolved.wire);
-		const segments = node.splitText(match.start, match.end);
-		const target = segments[match.start > 0 ? 1 : 0];
-		if (target == null) {
-			return;
-		}
-		target.replace(emojiNode);
-		if (selection != null) {
-			const adjusted = $adjustEmbedCaret(selection, nodeDisplayStart, match.start, match.end, resolved.display.length);
-			$selectComposerRange(adjusted.anchor, adjusted.focus);
-		}
+	}
+	if (edits.length === 0) {
 		return;
+	}
+	let selection = $captureSelectionOffsets();
+	const nodeDisplayStart = $getComposerNodeDisplayStart(node);
+	for (let index = edits.length - 1; index >= 0; index--) {
+		const {start, end, replacement} = edits[index]!;
+		if (typeof replacement === 'string') {
+			node.spliceText(start, end - start, replacement);
+		} else {
+			const emojiNode =
+				replacement.kind === 'standard'
+					? $createComposerStandardEmojiNode(
+							replacement.name,
+							replacement.surrogate,
+							replacement.url,
+							replacement.display,
+						)
+					: $createComposerCustomEmojiNode(
+							replacement.emojiId,
+							replacement.animated,
+							replacement.display,
+							replacement.wire,
+						);
+			const target = node.splitText(start, end)[start > 0 ? 1 : 0];
+			if (target == null) {
+				break;
+			}
+			target.replace(emojiNode);
+		}
+		if (selection != null) {
+			const newLen = typeof replacement === 'string' ? replacement.length : replacement.display.length;
+			selection = $adjustEmbedCaret(selection, nodeDisplayStart, start, end, newLen);
+		}
+	}
+	if (selection != null) {
+		$selectComposerRange(selection.anchor, selection.focus);
 	}
 }
 

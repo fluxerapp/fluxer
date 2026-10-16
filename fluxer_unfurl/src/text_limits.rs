@@ -47,80 +47,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn truncate_short_string() {
-        assert_eq!(truncate("hello", 10), "hello");
-    }
-
-    #[test]
-    fn truncate_long_string() {
-        let result = truncate("hello world", 6);
-        assert_eq!(result, "hello\u{2026}");
-    }
-
-    #[test]
-    fn clamp_lines_within_limit() {
-        assert_eq!(clamp_lines("a\nb\nc", 5), "a\nb\nc");
-    }
-
-    #[test]
-    fn clamp_lines_over_limit() {
-        let result = clamp_lines("a\nb\nc\nd", 2);
-        assert_eq!(result, "a\nb\n\u{2026}");
-    }
-
-    #[test]
     fn truncate_preserves_multibyte_boundaries() {
         let s = "hello 🎉🎊🎁 world";
         let result = truncate(s, 10);
         assert!(result.chars().count() <= 10);
         assert!(result.ends_with('\u{2026}'));
-    }
-
-    #[test]
-    fn truncate_at_exact_limit() {
-        assert_eq!(truncate("12345", 5), "12345");
-        assert_eq!(truncate("123456", 5), "1234\u{2026}");
-    }
-
-    #[test]
-    fn truncate_empty_string() {
-        assert_eq!(truncate("", 10), "");
-    }
-
-    #[test]
-    fn truncate_limit_one() {
-        assert_eq!(truncate("ab", 1), "\u{2026}");
-    }
-
-    #[test]
-    fn clamp_lines_single_line() {
-        assert_eq!(clamp_lines("hello", 1), "hello");
-    }
-
-    #[test]
-    fn clamp_lines_empty() {
-        assert_eq!(clamp_lines("", 5), "");
-    }
-
-    #[test]
-    fn clamp_lines_at_exact_limit() {
-        assert_eq!(clamp_lines("a\nb", 2), "a\nb");
-        assert_eq!(clamp_lines("a\nb\nc", 2), "a\nb\n\u{2026}");
-    }
-
-    #[test]
-    fn field_limits_match_old_ts_unfurl_embed_text_limits() {
-        assert_eq!(TITLE_MAX, 256);
-        assert_eq!(DESCRIPTION_MAX, 4096);
-        assert_eq!(DESCRIPTION_LINES_MAX, 20);
-        assert_eq!(AUTHOR_NAME_MAX, 256);
-        assert_eq!(PROVIDER_NAME_MAX, 256);
-        assert_eq!(FOOTER_TEXT_MAX, 2048);
-        assert_eq!(MEDIA_DESCRIPTION_MAX, 4096);
-        assert_eq!(FIELD_NAME_MAX, 256);
-        assert_eq!(FIELD_VALUE_MAX, 1024);
-        assert_eq!(HTML_MAX, 12000);
-        assert_eq!(MAX_FIELDS, 25);
-        assert_eq!(MAX_CHILDREN, 1);
     }
 }

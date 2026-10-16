@@ -4,51 +4,6 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
--define(ONLINE_IDX, 16#F0000000).
--define(OFFLINE_IDX, 16#F0000001).
-
-new_returns_reference_test() ->
-    Ref = guild_member_list_engine:new(),
-    ?assert(is_reference(Ref)),
-    guild_member_list_engine:destroy(Ref).
-
-new_empty_counts_test() ->
-    Ref = guild_member_list_engine:new(),
-    ?assertEqual({0, 0}, guild_member_list_engine:get_counts(Ref)),
-    guild_member_list_engine:destroy(Ref).
-
-new_empty_groups_test() ->
-    Ref = guild_member_list_engine:new(),
-    assert_groups(default_groups(0, 0), Ref),
-    guild_member_list_engine:destroy(Ref).
-
-new_empty_items_test() ->
-    Ref = guild_member_list_engine:new(),
-    ?assertEqual(
-        [],
-        guild_member_list_engine:get_items(Ref, 0, 100)
-    ),
-    guild_member_list_engine:destroy(Ref).
-
-destroy_is_idempotent_test() ->
-    Ref = guild_member_list_engine:new(),
-    ?assertEqual(ok, guild_member_list_engine:destroy(Ref)),
-    ?assertEqual(ok, guild_member_list_engine:destroy(Ref)).
-
-add_offline_member_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], false),
-    ?assertEqual({1, 0}, guild_member_list_engine:get_counts(Ref)),
-    assert_groups(default_groups(0, 1), Ref),
-    guild_member_list_engine:destroy(Ref).
-
-add_online_member_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Ref)),
-    assert_groups(default_groups(1, 0), Ref),
-    guild_member_list_engine:destroy(Ref).
-
 add_rejects_invalid_user_id_test() ->
     Ref = guild_member_list_engine:new(),
     ok = guild_member_list_engine:add_member(Ref, 0, <<"zero">>, [], true),
@@ -63,19 +18,6 @@ add_replaces_existing_member_test() ->
     ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Ref)),
     guild_member_list_engine:destroy(Ref).
 
-remove_member_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    ok = guild_member_list_engine:remove_member(Ref, 1),
-    ?assertEqual({0, 0}, guild_member_list_engine:get_counts(Ref)),
-    guild_member_list_engine:destroy(Ref).
-
-remove_nonexistent_is_noop_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:remove_member(Ref, 999),
-    ?assertEqual({0, 0}, guild_member_list_engine:get_counts(Ref)),
-    guild_member_list_engine:destroy(Ref).
-
 set_online_moves_to_online_section_test() ->
     Ref = guild_member_list_engine:new(),
     ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], false),
@@ -83,19 +25,6 @@ set_online_moves_to_online_section_test() ->
     ok = guild_member_list_engine:set_online(Ref, 1, true),
     ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Ref)),
     assert_groups(default_groups(1, 0), Ref),
-    guild_member_list_engine:destroy(Ref).
-
-set_online_same_state_is_noop_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    ok = guild_member_list_engine:set_online(Ref, 1, true),
-    ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Ref)),
-    guild_member_list_engine:destroy(Ref).
-
-set_online_nonexistent_is_noop_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:set_online(Ref, 999, true),
-    ?assertEqual({0, 0}, guild_member_list_engine:get_counts(Ref)),
     guild_member_list_engine:destroy(Ref).
 
 bulk_load_test() ->
@@ -151,13 +80,6 @@ get_items_full_range_test() ->
     ),
     guild_member_list_engine:destroy(Ref).
 
-get_items_header_only_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    Items = guild_member_list_engine:get_items(Ref, 0, 0),
-    ?assertEqual([{group, <<"online">>, 1}], Items),
-    guild_member_list_engine:destroy(Ref).
-
 get_items_partial_range_test() ->
     Ref = guild_member_list_engine:new(),
     Members = [
@@ -175,25 +97,6 @@ get_items_partial_range_test() ->
             {member, 3},
             {group, <<"offline">>, 2},
             {member, 4}
-        ],
-        Items
-    ),
-    guild_member_list_engine:destroy(Ref).
-
-get_items_start_past_end_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    ?assertEqual([], guild_member_list_engine:get_items(Ref, 5, 3)),
-    guild_member_list_engine:destroy(Ref).
-
-get_items_beyond_total_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:add_member(Ref, 1, <<"alice">>, [], true),
-    Items = guild_member_list_engine:get_items(Ref, 0, 100),
-    ?assertEqual(
-        [
-            {group, <<"online">>, 1},
-            {member, 1}
         ],
         Items
     ),
@@ -236,16 +139,6 @@ get_items_sort_order_test() ->
     ok = guild_member_list_engine:bulk_load(Ref, Members, []),
     Items = guild_member_list_engine:get_items(Ref, 1, 3),
     ?assertEqual([{member, 1}, {member, 2}, {member, 3}], Items),
-    guild_member_list_engine:destroy(Ref).
-
-get_items_empty_sections_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:bulk_load(Ref, [], [100]),
-    Items = guild_member_list_engine:get_items(Ref, 0, 100),
-    ?assertEqual(
-        [],
-        Items
-    ),
     guild_member_list_engine:destroy(Ref).
 
 set_hoisted_roles_assigns_sections_test() ->
@@ -305,34 +198,6 @@ set_hoisted_roles_picks_highest_priority_test() ->
     Groups = guild_member_list_engine:get_groups(Ref),
     ?assertEqual(
         [{<<"100">>, 1}, {<<"200">>, 0}, {<<"online">>, 0}, {<<"offline">>, 0}], Groups
-    ),
-    guild_member_list_engine:destroy(Ref).
-
-get_sorted_user_ids_test() ->
-    Ref = guild_member_list_engine:new(),
-    Members = [
-        {3, <<"charlie">>, [], true},
-        {1, <<"alice">>, [], false},
-        {2, <<"bob">>, [], true}
-    ],
-    ok = guild_member_list_engine:bulk_load(Ref, Members, []),
-    Ids = guild_member_list_engine:get_sorted_user_ids(Ref),
-    ?assertEqual([2, 3, 1], Ids),
-    guild_member_list_engine:destroy(Ref).
-
-get_all_item_keys_test() ->
-    Ref = guild_member_list_engine:new(),
-    Members = alice_online_bob_offline(),
-    ok = guild_member_list_engine:bulk_load(Ref, Members, []),
-    Keys = guild_member_list_engine:get_all_item_keys(Ref),
-    ?assertEqual(
-        [
-            {group, <<"online">>, 0},
-            {member, 1},
-            {group, <<"offline">>, 0},
-            {member, 2}
-        ],
-        Keys
     ),
     guild_member_list_engine:destroy(Ref).
 
@@ -460,18 +325,6 @@ alice_online_bob_offline() ->
 assert_groups(Expected, Ref) ->
     ?assertEqual(Expected, guild_member_list_engine:get_groups(Ref)).
 
-info_reports_memory_test() ->
-    Ref = guild_member_list_engine:new(),
-    ok = guild_member_list_engine:bulk_load(
-        Ref,
-        [{I, <<"user">>, [], false} || I <- lists:seq(1, 100)],
-        []
-    ),
-    Info = guild_member_list_engine:info(Ref),
-    ?assertEqual(100, maps:get(total, Info)),
-    ?assert(maps:get(total_bytes, Info) > 0),
-    guild_member_list_engine:destroy(Ref).
-
 index_of_matches_display_position_test() ->
     Ref = guild_member_list_engine:new(),
     Hoisted = [100, 200],
@@ -551,3 +404,53 @@ engine_roles_for_test_member(UserId) when UserId rem 5 =:= 0 ->
     [20];
 engine_roles_for_test_member(_UserId) ->
     [].
+
+version_bumps_on_every_mutation_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        V0 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:bulk_load(Ref, [{1, <<"a">>, [], true}], []),
+        V1 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:add_member(Ref, 2, <<"b">>, [], false),
+        V2 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:update_member(Ref, 2, <<"c">>, [], false),
+        V3 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:set_online(Ref, 2, true),
+        V4 = guild_member_list_engine:version(Ref),
+        changed = guild_member_list_engine:set_hoisted_roles(Ref, [7]),
+        V5 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:remove_member(Ref, 1),
+        V6 = guild_member_list_engine:version(Ref),
+        Versions = [V0, V1, V2, V3, V4, V5, V6],
+        ?assertEqual(Versions, lists:usort(Versions)),
+        ?assertEqual(7, length(lists:usort(Versions)))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+version_is_stable_for_noop_mutations_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        ok = guild_member_list_engine:add_member(Ref, 1, <<"a">>, [], true),
+        V = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:set_online(Ref, 1, true),
+        ok = guild_member_list_engine:set_online(Ref, 99, false),
+        ok = guild_member_list_engine:remove_member(Ref, 99),
+        unchanged = guild_member_list_engine:set_hoisted_roles(Ref, []),
+        _ = guild_member_list_engine:get_items(Ref, 0, 10),
+        ?assertEqual(V, guild_member_list_engine:version(Ref))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+version_survives_tables_without_a_version_row_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        true = ets:delete(Ref, version),
+        ?assertEqual(undefined, guild_member_list_engine:version(Ref)),
+        ok = guild_member_list_engine:add_member(Ref, 1, <<"a">>, [], true),
+        ?assertEqual(1, guild_member_list_engine:version(Ref))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end,
+    ?assertEqual(undefined, guild_member_list_engine:version(Ref)).

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {createSimulatorRandom, type VoiceEngineV2SimulatorRandom} from './SimulatorPorts';
+import {
+	createSimulatorRandom,
+	type VoiceEngineV2SimulatorRandom,
+} from '@fluxer/voice_engine_v2/src/simulation/SimulatorPorts';
 
 const SIMULATOR_FAULTS_MAX = 128;
 const SIMULATOR_PEERS_PER_FAULT_MAX = 16;

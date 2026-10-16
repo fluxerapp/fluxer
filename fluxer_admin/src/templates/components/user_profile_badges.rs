@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::admin_flags::user_flag_bits;
+use crate::utils::timestamps::format_admin_timestamp;
 use maud::{Markup, html};
 
 pub mod premium_types {
@@ -13,12 +14,42 @@ struct BadgeDef {
     tooltip: String,
 }
 
+fn premium_tooltip(
+    premium_type: i32,
+    premium_since: Option<&str>,
+    is_self_hosted: bool,
+    self_hosted_premium_name: Option<&str>,
+) -> Option<String> {
+    if is_self_hosted {
+        let name = self_hosted_premium_name?;
+        return Some(match premium_since {
+            Some(since) => format!("{name} subscriber since {}", format_admin_timestamp(since)),
+            None => name.to_owned(),
+        });
+    }
+    Some(if premium_type == premium_types::LIFETIME {
+        match premium_since {
+            Some(since) => format!("Fluxer Visionary since {}", format_admin_timestamp(since)),
+            None => "Fluxer Visionary".into(),
+        }
+    } else {
+        match premium_since {
+            Some(since) => format!(
+                "Fluxer Plutonium subscriber since {}",
+                format_admin_timestamp(since)
+            ),
+            None => "Fluxer Plutonium".into(),
+        }
+    })
+}
+
 pub fn user_profile_badges(
     static_cdn_endpoint: &str,
     flags: u64,
     premium_type: Option<i32>,
     premium_since: Option<&str>,
     is_self_hosted: bool,
+    self_hosted_premium_name: Option<&str>,
     size_sm: bool,
 ) -> Markup {
     let cdn = static_cdn_endpoint.trim_end_matches('/');
@@ -28,12 +59,6 @@ pub fn user_profile_badges(
         badges.push(BadgeDef {
             icon_url: format!("{cdn}/badges/staff.svg?v=2"),
             tooltip: "Fluxer Staff".into(),
-        });
-    }
-    if !is_self_hosted && flags & user_flag_bits::CTP_MEMBER != 0 {
-        badges.push(BadgeDef {
-            icon_url: format!("{cdn}/badges/ctp.svg"),
-            tooltip: "Fluxer Community Team".into(),
         });
     }
     if !is_self_hosted && flags & user_flag_bits::PARTNER != 0 {
@@ -48,23 +73,11 @@ pub fn user_profile_badges(
             tooltip: "Fluxer Bug Hunter".into(),
         });
     }
-    if !is_self_hosted
-        && let Some(pt) = premium_type
+    if let Some(pt) = premium_type
         && pt != premium_types::NONE
+        && let Some(tooltip) =
+            premium_tooltip(pt, premium_since, is_self_hosted, self_hosted_premium_name)
     {
-        let tooltip = if pt == premium_types::LIFETIME {
-            match premium_since {
-                Some(since) => format!("Fluxer Visionary since {since}"),
-                None => "Fluxer Visionary".into(),
-            }
-        } else {
-            match premium_since {
-                Some(since) => {
-                    format!("Fluxer Plutonium subscriber since {since}")
-                }
-                None => "Fluxer Plutonium".into(),
-            }
-        };
         badges.push(BadgeDef {
             icon_url: format!("{cdn}/badges/plutonium.svg"),
             tooltip,

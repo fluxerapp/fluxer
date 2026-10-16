@@ -8,10 +8,6 @@ export function usePopoutKeyContext(): PopoutKey | null {
 	return useContext(PopoutKeyContext);
 }
 
-export function usePopoutKey(): PopoutKey | null {
-	return usePopoutKeyContext();
-}
-
 export type PopoutKey = string | number;
 export type PopoutAnimationType = 'smooth' | 'none' | 'profile-slide' | 'profile-slide-inverted';
 export type PopoutPosition =
@@ -48,7 +44,6 @@ export interface Popout {
 	render: (props: {popoutKey: PopoutKey; onClose: () => void}) => React.ReactNode;
 	zIndexBoost?: number;
 	shouldAutoUpdate?: boolean;
-	shouldReposition?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
 	animationType?: PopoutAnimationType;
@@ -58,10 +53,6 @@ export interface Popout {
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;
 	returnFocusRef?: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement>;
-	lastPosition?: {
-		x: number;
-		y: number;
-	};
 	clickPos?: number;
 	preventInvert?: boolean;
 	disableBackdrop?: boolean;

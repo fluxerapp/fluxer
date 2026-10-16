@@ -5,7 +5,35 @@
 
 -export([
     maybe_send_push_notifications/4,
-    collect_and_send_push_notifications/3
+    collect_and_send_push_notifications/3,
+    push_counters/0
+]).
+
+-define(MAX_FORMAT_MEMBERS, 50).
+-define(MAX_ROLE_MENTION_THREAD_ADDS, 250).
+-define(MAX_THREAD_MEMBERS, 1000).
+-define(CONCURRENCY_LIMIT_KEY, guild_push_concurrency_limit).
+-define(DEFAULT_PUSH_CONCURRENCY, 2).
+-define(MAX_PUSH_CONCURRENCY, 8).
+-define(QUEUE_LIMIT_KEY, guild_push_queue_limit).
+-define(DEFAULT_PUSH_QUEUE_LIMIT, 64).
+-define(MAX_PUSH_QUEUE_LIMIT, 1024).
+-define(PUSH_WORKER_MAX_AGE_MS, 60000).
+-define(GRACE_RECHECK_KEY, guild_push_offline_grace_recheck_ms).
+-define(DEFAULT_GRACE_RECHECK_MS, 7000).
+-define(GRACE_HOLD_CALL_TIMEOUT_MS, 5000).
+-define(PUSH_COUNTERS, guild_push_counters).
+-define(PUSH_COUNTER_KEYS, [
+    worker_started,
+    worker_completed,
+    worker_failed,
+    queued,
+    dropped_at_limit,
+    spawn_failed,
+    slot_reclaimed,
+    slot_deduped,
+    members_table_missing,
+    scan_table_unavailable
 ]).
 
 -type event() :: atom().
@@ -13,11 +41,20 @@
 -type guild_state() :: map().
 -type guild_id() :: integer().
 -type user_id() :: integer().
+-type push_worker() :: {integer(), pid(), integer()}.
+-type push_gate() :: push_worker() | undefined.
+-type grace_sessions() :: #{user_id() => [{binary(), pid()}]}.
+-type grace_hold() :: {grace_sessions(), integer()} | none.
+-type held_push() :: {[user_id()], grace_hold(), term(), pid() | undefined}.
+-type member_source() :: {ets, ets:tid()} | {map, map()}.
 -export_type([event/0, event_data/0, guild_state/0, guild_id/0]).
 
 -spec maybe_send_push_notifications(event(), event_data(), guild_id(), guild_state()) -> ok.
 maybe_send_push_notifications(message_create, FinalData, GuildId, UpdatedState) ->
-    case maps:get(disable_push_notifications, UpdatedState, false) of
+    case
+        maps:get(disable_push_notifications, UpdatedState, false) orelse
+            push_message_params:suppresses_notifications(FinalData)
+    of
         true -> ok;
         false -> maybe_spawn_push(FinalData, GuildId, UpdatedState)
     end;
@@ -26,31 +63,879 @@ maybe_send_push_notifications(_Event, _FinalData, _GuildId, _UpdatedState) ->
 
 -spec maybe_spawn_push(event_data(), guild_id(), guild_state()) -> ok.
 maybe_spawn_push(FinalData, GuildId, UpdatedState) ->
-    case push_inflight_alive() of
-        true -> ok;
-        false -> spawn_push(FinalData, GuildId, UpdatedState)
+    Limit = push_concurrency_limit(),
+    QueueLimit = push_queue_limit(),
+    Workers = live_push_workers(),
+    put(push_inflight_workers, Workers),
+    case push_admission(length(Workers), Limit, QueueLimit) of
+        run ->
+            spawn_push(FinalData, GuildId, UpdatedState, undefined);
+        queue ->
+            count_push_event(queued),
+            spawn_push(FinalData, GuildId, UpdatedState, lists:nth(Limit, Workers));
+        overflow ->
+            push_queue_overflow(GuildId, Limit, QueueLimit)
     end.
 
--spec push_inflight_alive() -> boolean().
-push_inflight_alive() ->
-    case get(push_inflight) of
-        Pid when is_pid(Pid) -> is_process_alive(Pid);
-        _ -> false
+-spec push_admission(non_neg_integer(), pos_integer(), non_neg_integer()) ->
+    run | queue | overflow.
+push_admission(Tracked, Limit, _QueueLimit) when Tracked < Limit -> run;
+push_admission(Tracked, Limit, QueueLimit) when Tracked - Limit < QueueLimit -> queue;
+push_admission(_Tracked, _Limit, _QueueLimit) -> overflow.
+
+-spec push_queue_overflow(guild_id(), pos_integer(), non_neg_integer()) -> ok.
+push_queue_overflow(GuildId, Limit, QueueLimit) ->
+    count_push_event(dropped_at_limit),
+    logger:warning(
+        "guild_push_dropped_at_limit: guild_id=~p concurrency=~p queue_limit=~p",
+        [GuildId, Limit, QueueLimit]
+    ).
+
+-spec push_queue_limit() -> non_neg_integer().
+push_queue_limit() ->
+    case application:get_env(fluxer_gateway, ?QUEUE_LIMIT_KEY, undefined) of
+        Value when is_integer(Value), Value >= 0 -> min(Value, ?MAX_PUSH_QUEUE_LIMIT);
+        _ -> ?DEFAULT_PUSH_QUEUE_LIMIT
     end.
 
--spec spawn_push(event_data(), guild_id(), guild_state()) -> ok.
-spawn_push(FinalData, GuildId, UpdatedState) ->
-    PushState = #{
+-spec push_counters() -> #{atom() => non_neg_integer()}.
+push_counters() ->
+    try ets:tab2list(?PUSH_COUNTERS) of
+        Rows ->
+            maps:from_list([
+                {Key, Count}
+             || {Key, Count} <- Rows, is_atom(Key), is_integer(Count)
+            ])
+    catch
+        error:badarg -> #{}
+    end.
+
+-spec local_process_alive(pid()) -> boolean().
+local_process_alive(Pid) ->
+    node(Pid) =:= node() andalso erlang:is_process_alive(Pid).
+
+-spec push_concurrency_limit() -> pos_integer().
+push_concurrency_limit() ->
+    case application:get_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, undefined) of
+        Value when is_integer(Value), Value > 0 -> min(Value, ?MAX_PUSH_CONCURRENCY);
+        _ -> ?DEFAULT_PUSH_CONCURRENCY
+    end.
+
+-spec live_push_workers() -> [push_worker()].
+live_push_workers() ->
+    Now = erlang:monotonic_time(millisecond),
+    prune_push_workers(tracked_push_workers(Now), Now, #{}, []).
+
+-spec tracked_push_workers(integer()) -> [term()].
+tracked_push_workers(Now) ->
+    merge_inflight_push_worker(get(push_inflight), tracked_worker_list(), Now).
+
+-spec tracked_worker_list() -> [term()].
+tracked_worker_list() ->
+    case get(push_inflight_workers) of
+        Workers when is_list(Workers) -> Workers;
+        _ -> []
+    end.
+
+-spec merge_inflight_push_worker(term(), [term()], integer()) -> [term()].
+merge_inflight_push_worker(Pid, Workers, Now) when is_pid(Pid) ->
+    case lists:any(fun(Worker) -> push_worker_pid(Worker) =:= Pid end, Workers) of
+        true -> Workers;
+        false -> Workers ++ [{0, Pid, Now}]
+    end;
+merge_inflight_push_worker(_Inflight, Workers, _Now) ->
+    Workers.
+
+-spec push_worker_pid(term()) -> pid() | undefined.
+push_worker_pid({_Gen, Pid, _StartedMs}) when is_pid(Pid) -> Pid;
+push_worker_pid(_Worker) -> undefined.
+
+-spec prune_push_workers([term()], integer(), map(), [push_worker()]) -> [push_worker()].
+prune_push_workers([], _Now, _Seen, Acc) ->
+    lists:reverse(Acc);
+prune_push_workers([Worker | Rest], Now, Seen, Acc) ->
+    case keep_push_worker(Worker, Now, Seen) of
+        {keep, {_Gen, Pid, _StartedMs} = Kept} ->
+            prune_push_workers(Rest, Now, Seen#{Pid => true}, [Kept | Acc]);
+        drop ->
+            prune_push_workers(Rest, Now, Seen, Acc)
+    end.
+
+-spec keep_push_worker(term(), integer(), map()) -> {keep, push_worker()} | drop.
+keep_push_worker({Gen, Pid, StartedMs} = Worker, Now, Seen) when
+    is_integer(Gen), is_pid(Pid), is_integer(StartedMs)
+->
+    case maps:is_key(Pid, Seen) of
+        true -> drop_duplicate_push_worker();
+        false -> keep_live_push_worker(Worker, Now - StartedMs, local_process_alive(Pid))
+    end;
+keep_push_worker(_Worker, _Now, _Seen) ->
+    drop.
+
+-spec drop_duplicate_push_worker() -> drop.
+drop_duplicate_push_worker() ->
+    count_push_event(slot_deduped),
+    drop.
+
+-spec keep_live_push_worker(push_worker(), integer(), boolean()) ->
+    {keep, push_worker()} | drop.
+keep_live_push_worker(_Worker, _AgeMs, false) ->
+    drop;
+keep_live_push_worker(Worker, AgeMs, true) when AgeMs < ?PUSH_WORKER_MAX_AGE_MS ->
+    {keep, Worker};
+keep_live_push_worker(_Worker, _AgeMs, true) ->
+    count_push_event(slot_reclaimed),
+    drop.
+
+-spec note_push_worker(pid()) -> ok.
+note_push_worker(Pid) ->
+    Gen = erlang:unique_integer([monotonic, positive]),
+    StartedMs = erlang:monotonic_time(millisecond),
+    put(push_inflight_workers, [{Gen, Pid, StartedMs} | tracked_worker_list()]),
+    ok.
+
+-spec count_push_event(atom()) -> ok.
+count_push_event(Key) ->
+    bump_push_counter(Key, true).
+
+-spec bump_push_counter(atom(), boolean()) -> ok.
+bump_push_counter(Key, Retry) ->
+    try ets:update_counter(?PUSH_COUNTERS, Key, {2, 1}) of
+        _ -> ok
+    catch
+        error:badarg -> retry_push_counter(Key, Retry)
+    end.
+
+-spec retry_push_counter(atom(), boolean()) -> ok.
+retry_push_counter(Key, true) ->
+    ok = ensure_push_counters(),
+    bump_push_counter(Key, false);
+retry_push_counter(_Key, false) ->
+    ok.
+
+-spec ensure_push_counters() -> ok.
+ensure_push_counters() ->
+    case ets:whereis(?PUSH_COUNTERS) of
+        undefined -> create_push_counters();
+        _ -> ensure_push_counter_keys()
+    end.
+
+-spec create_push_counters() -> ok.
+create_push_counters() ->
+    ok = guild_ets_utils:ensure_table(?PUSH_COUNTERS, push_counter_table_options()),
+    ensure_push_counter_keys().
+
+-spec push_counter_table_options() -> [term()].
+push_counter_table_options() ->
+    [named_table, public, set, {read_concurrency, true}, {write_concurrency, true}].
+
+-spec ensure_push_counter_keys() -> ok.
+ensure_push_counter_keys() ->
+    lists:foreach(fun ensure_push_counter_key/1, ?PUSH_COUNTER_KEYS).
+
+-spec ensure_push_counter_key(atom()) -> ok.
+ensure_push_counter_key(Key) ->
+    try
+        _ = ets:insert_new(?PUSH_COUNTERS, {Key, 0}),
+        ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec spawn_push(event_data(), guild_id(), guild_state(), push_gate()) -> ok.
+spawn_push(FinalData, GuildId, UpdatedState, Gate) ->
+    Data = maps:get(data, UpdatedState, #{}),
+    case maps:get(members_ets, Data, undefined) of
+        MembersTab when is_reference(MembersTab) ->
+            CompactState = compact_push_state(
+                eqwalizer:dynamic_cast(MembersTab), Data, GuildId, UpdatedState
+            ),
+            spawn_compact_push(FinalData, GuildId, CompactState, Gate);
+        _ ->
+            missing_members_table(FinalData, GuildId, UpdatedState, Gate)
+    end.
+
+-spec compact_push_state(ets:tid(), map(), guild_id(), guild_state()) -> guild_state().
+compact_push_state(MembersTab, Data, GuildId, UpdatedState) ->
+    Sessions = maps:get(sessions, UpdatedState, #{}),
+    {SessionEligibility, Hold} = build_push_session_eligibility(Sessions, UpdatedState),
+    #{
+        id => maps:get(id, UpdatedState, GuildId),
+        data => compact_push_data(Data),
+        virtual_channel_access => maps:get(virtual_channel_access, UpdatedState, #{}),
+        members_ets => MembersTab,
+        member_presence => maps:get(member_presence, UpdatedState, undefined),
+        guild_pid => grace_guild_pid(),
+        session_eligibility => SessionEligibility,
+        grace_hold => Hold,
+        member_count => maps:get(member_count, UpdatedState, undefined)
+    }.
+
+-spec compact_push_data(map()) -> map().
+compact_push_data(Data) ->
+    maps:with(
+        [
+            <<"guild">>,
+            <<"roles">>,
+            <<"role_index">>,
+            role_perms_cache,
+            <<"channels">>,
+            <<"channel_index">>,
+            overwrite_perms_cache,
+            members_ets,
+            thread_gate,
+            thread_store
+        ],
+        Data
+    ).
+
+-spec spawn_compact_push(event_data(), guild_id(), guild_state(), push_gate()) -> ok.
+spawn_compact_push(FinalData, GuildId, CompactState, Gate) ->
+    spawn_push_worker(
+        fun() ->
+            collect_and_send_compact_push_notifications(FinalData, GuildId, CompactState)
+        end,
+        GuildId,
+        Gate
+    ).
+
+-spec missing_members_table(event_data(), guild_id(), guild_state(), push_gate()) -> ok.
+missing_members_table(FinalData, GuildId, UpdatedState, Gate) ->
+    count_push_event(members_table_missing),
+    logger:warning(
+        "guild_push_members_table_unavailable: guild_id=~p phase=spawn",
+        [GuildId]
+    ),
+    spawn_legacy_push(FinalData, GuildId, UpdatedState, Gate).
+
+-spec spawn_legacy_push(event_data(), guild_id(), guild_state(), push_gate()) -> ok.
+spawn_legacy_push(FinalData, GuildId, UpdatedState, Gate) ->
+    LegacyState = legacy_push_state(GuildId, UpdatedState),
+    spawn_push_worker(
+        fun() ->
+            collect_and_send_push_notifications(FinalData, GuildId, LegacyState)
+        end,
+        GuildId,
+        Gate
+    ).
+
+-spec legacy_push_state(guild_id(), guild_state()) -> guild_state().
+legacy_push_state(GuildId, UpdatedState) ->
+    #{
         id => maps:get(id, UpdatedState, GuildId),
         data => maps:get(data, UpdatedState, #{}),
         sessions => maps:get(sessions, UpdatedState, #{}),
-        virtual_channel_access => maps:get(virtual_channel_access, UpdatedState, #{})
-    },
-    Pid = spawn(fun() ->
-        collect_and_send_push_notifications(FinalData, GuildId, PushState)
-    end),
-    put(push_inflight, Pid),
+        member_presence => maps:get(member_presence, UpdatedState, undefined),
+        guild_pid => grace_guild_pid(),
+        virtual_channel_access => maps:get(virtual_channel_access, UpdatedState, #{}),
+        member_count => maps:get(member_count, UpdatedState, undefined)
+    }.
+
+-spec spawn_push_worker(fun(() -> ok), guild_id(), push_gate()) -> ok.
+spawn_push_worker(Worker, GuildId, Gate) ->
+    Counted = fun() ->
+        ok = wait_for_push_slot(Gate),
+        run_counted_push_worker(Worker)
+    end,
+    case try_spawn_push_worker(Counted, GuildId) of
+        {ok, Pid} ->
+            put(push_inflight, Pid),
+            note_push_worker(Pid),
+            count_push_event(worker_started);
+        error ->
+            count_push_event(spawn_failed)
+    end.
+
+-spec wait_for_push_slot(push_gate()) -> ok.
+wait_for_push_slot(undefined) ->
+    ok;
+wait_for_push_slot({_Gen, Pid, _StartedMs}) ->
+    Ref = erlang:monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after ?PUSH_WORKER_MAX_AGE_MS ->
+        erlang:demonitor(Ref, [flush]),
+        ok
+    end.
+
+-spec run_counted_push_worker(fun(() -> ok)) -> ok.
+run_counted_push_worker(Worker) ->
+    try Worker() of
+        _ -> count_push_event(worker_completed)
+    catch
+        _Class:_Reason -> count_push_event(worker_failed)
+    end.
+
+-spec try_spawn_push_worker(fun(() -> ok), guild_id()) -> {ok, pid()} | error.
+try_spawn_push_worker(Worker, GuildId) ->
+    try
+        {ok, spawn(fun() -> run_deprioritised_push_worker(Worker) end)}
+    catch
+        error:system_limit ->
+            logger:warning(
+                "guild_push_worker_spawn_failed: guild_id=~p reason=system_limit",
+                [GuildId]
+            ),
+            error
+    end.
+
+-spec run_deprioritised_push_worker(fun(() -> ok)) -> ok.
+run_deprioritised_push_worker(Worker) ->
+    ok = apply_push_worker_priority(),
+    Worker().
+
+-spec apply_push_worker_priority() -> ok.
+apply_push_worker_priority() ->
+    _ = erlang:process_flag(priority, low),
     ok.
+
+-spec large_guild_meta(guild_state()) -> map() | undefined.
+large_guild_meta(State) ->
+    case maps:get(member_count, State, undefined) of
+        MemberCount when is_integer(MemberCount), MemberCount >= 0 ->
+            #{member_count => MemberCount, features => guild_features(State)};
+        _ ->
+            undefined
+    end.
+
+-spec guild_features(guild_state()) -> [binary()].
+guild_features(State) ->
+    Data = maps:get(data, State, #{}),
+    Guild = maps:get(<<"guild">>, Data, #{}),
+    case maps:get(<<"features">>, Guild, []) of
+        Features when is_list(Features) -> Features;
+        _ -> []
+    end.
+
+-spec collect_and_send_compact_push_notifications(event_data(), guild_id(), guild_state()) ->
+    ok.
+collect_and_send_compact_push_notifications(MessageData, GuildId, State) ->
+    case guild_dispatch_config:should_send_push_notifications(State) of
+        false -> ok;
+        true -> send_compact_push_notifications(MessageData, GuildId, State)
+    end.
+
+-spec send_compact_push_notifications(event_data(), guild_id(), guild_state()) -> ok.
+send_compact_push_notifications(MessageData, GuildId, State) ->
+    ChannelIdBin = maps:get(<<"channel_id">>, MessageData, undefined),
+    case guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin) of
+        undefined -> ok;
+        ChannelId -> scan_and_send_compact_push(MessageData, GuildId, ChannelId, State)
+    end.
+
+-spec scan_and_send_compact_push(event_data(), guild_id(), integer(), guild_state()) -> ok.
+scan_and_send_compact_push(MessageData, GuildId, ChannelId, State) ->
+    Context = compact_scan_context(MessageData, ChannelId, State),
+    MembersTab = eqwalizer:dynamic_cast(maps:get(members_ets, State)),
+    case scan_push_members(MembersTab, Context, State) of
+        {ok, #{eligible_user_ids := [], held_user_ids := []} = Scan} ->
+            send_compact_forum_thread_created(
+                MessageData, GuildId, ChannelId, MembersTab, Scan, State
+            );
+        {ok, Scan} ->
+            ok = send_compact_scanned_push(MessageData, GuildId, Scan, State),
+            send_compact_forum_thread_created(
+                MessageData, GuildId, ChannelId, MembersTab, Scan, State
+            );
+        {error, table_unavailable} ->
+            scan_table_unavailable(GuildId)
+    end.
+
+-spec send_compact_forum_thread_created(
+    event_data(), guild_id(), integer(), ets:tid(), map(), guild_state()
+) -> ok.
+send_compact_forum_thread_created(MessageData, GuildId, ChannelId, MembersTab, Scan, State) ->
+    send_forum_thread_created(
+        MessageData,
+        GuildId,
+        ChannelId,
+        {ets, MembersTab},
+        fun() -> compact_format_data(maps:get(data, State), maps:get(format_members, Scan)) end,
+        maps:get(session_eligibility, State, #{}),
+        maps:get(grace_hold, State, none),
+        State
+    ).
+
+-spec send_forum_thread_created(
+    event_data(),
+    guild_id(),
+    integer(),
+    member_source(),
+    fun(() -> map()),
+    map(),
+    grace_hold(),
+    guild_state()
+) -> ok.
+send_forum_thread_created(
+    MessageData, GuildId, ChannelId, Source, FormatData, SessionEligibility, Hold, State
+) ->
+    case guild_thread_push:forum_starter(MessageData, ChannelId, maps:get(data, State, #{})) of
+        undefined ->
+            ok;
+        {ForumId, ThreadMembers} ->
+            Skip = maps:merge(
+                maps:put(message_author_id(MessageData), true, ThreadMembers),
+                direct_mention_id_set(MessageData)
+            ),
+            MentionRoles = mention_role_id_set(maps:get(<<"mention_roles">>, MessageData, [])),
+            Recipient = guild_thread_gate:recipient_active(ChannelId, State),
+            HeldSessions = held_sessions(Hold),
+            CanView = fun guild_permissions_check:can_view_channel/4,
+            Recipients = fold_members(
+                fun(UserId, Member, Acc) ->
+                    Route =
+                        case maps:is_key(UserId, Skip) of
+                            true -> skip;
+                            false -> forum_push_route(UserId, SessionEligibility, HeldSessions)
+                        end,
+                    case
+                        Route =/= skip andalso
+                            not member_has_mentioned_role(Member, MentionRoles) andalso
+                            not guild_members_common:is_member_bot(Member) andalso
+                            Recipient(UserId) andalso
+                            CanView(UserId, ForumId, Member, State)
+                    of
+                        true -> [{Route, UserId, extract_role_ids(Member)} | Acc];
+                        false -> Acc
+                    end
+                end,
+                [],
+                Source
+            ),
+            send_forum_thread_created_push(
+                MessageData, GuildId, Recipients, SessionEligibility, Hold, FormatData(), State
+            )
+    end.
+
+-spec forum_push_route(user_id(), map(), grace_sessions()) ->
+    eligible_user_ids | held_user_ids | skip.
+forum_push_route(UserId, SessionEligibility, HeldSessions) ->
+    case maps:get(UserId, SessionEligibility, true) of
+        true -> eligible_user_ids;
+        false -> grace_member_route(maps:is_key(UserId, HeldSessions))
+    end.
+
+-spec send_forum_thread_created_push(
+    event_data(),
+    guild_id(),
+    [{eligible_user_ids | held_user_ids, user_id(), [integer()]}],
+    map(),
+    grace_hold(),
+    map(),
+    guild_state()
+) -> ok.
+send_forum_thread_created_push(
+    _MessageData, _GuildId, [], _SessionEligibility, _Hold, _Data, _State
+) ->
+    ok;
+send_forum_thread_created_push(
+    MessageData, GuildId, Recipients, SessionEligibility, Hold, Data, State
+) ->
+    send_push_to_eligible_users(
+        guild_thread_push:mark_forum_thread_created(MessageData),
+        GuildId,
+        [UserId || {eligible_user_ids, UserId, _RoleIds} <- Recipients],
+        maps:from_list([{UserId, RoleIds} || {_, UserId, RoleIds} <- Recipients]),
+        SessionEligibility,
+        Data,
+        large_guild_meta(State),
+        {
+            [UserId || {held_user_ids, UserId, _RoleIds} <- Recipients],
+            Hold,
+            maps:get(member_presence, State, undefined),
+            maps:get(guild_pid, State, undefined)
+        }
+    ).
+
+-spec scan_table_unavailable(guild_id()) -> ok.
+scan_table_unavailable(GuildId) ->
+    count_push_event(scan_table_unavailable),
+    logger:warning(
+        "guild_push_members_table_unavailable: guild_id=~p phase=scan",
+        [GuildId]
+    ),
+    ok.
+
+-spec compact_scan_context(event_data(), integer(), guild_state()) -> map().
+compact_scan_context(MessageData, ChannelId, State) ->
+    MentionRoles = maps:get(<<"mention_roles">>, MessageData, []),
+    #{
+        mention_everyone => maps:get(<<"mention_everyone">>, MessageData, false) =:= true,
+        direct_mentions => direct_mention_id_set(MessageData),
+        mention_roles => mention_role_id_set(MentionRoles),
+        author_id => message_author_id(MessageData),
+        format_members => format_member_id_set(MessageData),
+        channel_id => ChannelId,
+        thread_recipient => guild_thread_gate:recipient_active(ChannelId, State),
+        thread_scope => guild_thread_push:scope(ChannelId, State),
+        session_eligibility => maps:get(session_eligibility, State),
+        grace_sessions => held_sessions(maps:get(grace_hold, State, none))
+    }.
+
+-spec scan_push_members(ets:tid(), map(), guild_state()) ->
+    {ok, map()} | {error, table_unavailable}.
+scan_push_members(MembersTab, Context, State) ->
+    try
+        Context1 = with_thread_role_adds(MembersTab, Context, State),
+        {ok,
+            fold_push_members(scan_user_ids(MembersTab, Context1), MembersTab, Context1, State)}
+    catch
+        error:badarg -> {error, table_unavailable}
+    end.
+
+-spec initial_scan_acc() -> map().
+initial_scan_acc() ->
+    #{
+        eligible_user_ids => [],
+        held_user_ids => [],
+        user_roles => #{},
+        format_members => #{}
+    }.
+
+-spec scan_user_ids(ets:tid(), map()) -> [user_id()].
+scan_user_ids(_MembersTab, #{thread_scope := #{members := Members}} = Context) ->
+    lists:usort(
+        maps:keys(Members) ++
+            maps:keys(maps:get(direct_mentions, Context)) ++
+            maps:keys(maps:get(format_members, Context)) ++
+            maps:keys(maps:get(role_adds, Context))
+    );
+scan_user_ids(MembersTab, _Context) ->
+    member_id_snapshot(MembersTab).
+
+-spec member_id_snapshot(ets:tid()) -> [user_id()].
+member_id_snapshot(MembersTab) ->
+    ets:select(MembersTab, [{{'$1', '_'}, [], ['$1']}]).
+
+-spec fold_push_members([user_id()], ets:tid(), map(), guild_state()) -> map().
+fold_push_members(UserIds, MembersTab, Context, State) ->
+    lists:foldl(
+        fun(UserId, Acc) -> scan_push_member_id(UserId, MembersTab, Context, State, Acc) end,
+        initial_scan_acc(),
+        UserIds
+    ).
+
+-spec scan_push_member_id(user_id(), ets:tid(), map(), guild_state(), map()) -> map().
+scan_push_member_id(UserId, MembersTab, Context, State, Acc) ->
+    case ets:lookup(MembersTab, UserId) of
+        [Row] -> scan_push_member(Row, Context, State, Acc);
+        _ -> Acc
+    end.
+
+-spec scan_push_member(term(), map(), guild_state(), map()) -> map().
+scan_push_member({UserId, Member}, Context, State, Acc) when
+    is_integer(UserId), UserId > 0, is_map(Member)
+->
+    Acc1 = maybe_collect_format_member(UserId, Member, Context, Acc),
+    case scanned_member_route(UserId, Member, Context, State) of
+        skip -> Acc1;
+        Key -> add_scanned_member(Key, UserId, Member, Acc1)
+    end;
+scan_push_member(_Row, _Context, _State, Acc) ->
+    Acc.
+
+-spec scanned_member_route(user_id(), map(), map(), guild_state()) ->
+    eligible_user_ids | held_user_ids | skip.
+scanned_member_route(UserId, Member, Context, State) ->
+    case
+        thread_push_candidate(
+            UserId, Member, maps:get(thread_scope, Context, undefined), Context
+        )
+    of
+        true -> member_route(UserId, Member, Context, State);
+        false -> skip
+    end.
+
+-spec thread_push_candidate(user_id(), map(), guild_thread_push:scope(), map()) -> boolean().
+thread_push_candidate(_UserId, _Member, undefined, _Mentions) ->
+    true;
+thread_push_candidate(UserId, _Member, #{members := Members}, Mentions) ->
+    maps:is_key(UserId, Members) orelse
+        maps:is_key(UserId, maps:get(direct_mentions, Mentions)) orelse
+        maps:is_key(UserId, maps:get(role_adds, Mentions)).
+
+-spec with_thread_role_adds(ets:tid(), map(), guild_state()) -> map().
+with_thread_role_adds(MembersTab, #{thread_scope := Scope} = Context, State) when
+    Scope =/= undefined
+->
+    Context#{
+        role_adds => thread_role_adds(
+            Scope,
+            Context,
+            {ets, MembersTab},
+            thread_role_visible(maps:get(channel_id, Context), State)
+        )
+    };
+with_thread_role_adds(_MembersTab, Context, _State) ->
+    Context.
+
+-spec fold_members(fun((user_id(), map(), Acc) -> Acc), Acc, member_source()) -> Acc.
+fold_members(Fun, Acc0, {ets, MembersTab}) ->
+    ets:foldl(
+        fun
+            ({UserId, Member}, Acc) when is_integer(UserId), is_map(Member) ->
+                Fun(UserId, Member, Acc);
+            (_Row, Acc) ->
+                Acc
+        end,
+        Acc0,
+        MembersTab
+    );
+fold_members(Fun, Acc0, {map, Members}) ->
+    maps:fold(
+        fun
+            (UserId, Member, Acc) when is_integer(UserId), is_map(Member) ->
+                Fun(UserId, Member, Acc);
+            (_UserId, _Member, Acc) ->
+                Acc
+        end,
+        Acc0,
+        Members
+    ).
+
+-spec lookup_member(user_id(), member_source()) -> map() | undefined.
+lookup_member(UserId, {ets, MembersTab}) ->
+    case ets:lookup(MembersTab, UserId) of
+        [{_, Member}] when is_map(Member) -> Member;
+        _ -> undefined
+    end;
+lookup_member(UserId, {map, Members}) ->
+    case maps:get(UserId, Members, undefined) of
+        Member when is_map(Member) -> Member;
+        _ -> undefined
+    end.
+
+-spec thread_role_visible(integer(), guild_state()) -> fun((user_id(), map()) -> boolean()).
+thread_role_visible(ChannelId, State) ->
+    Recipient = guild_thread_gate:recipient_active(ChannelId, State),
+    fun(UserId, Member) ->
+        Recipient(UserId) andalso
+            guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
+    end.
+
+-spec thread_role_adds(
+    map(), map(), member_source(), fun((user_id(), map()) -> boolean())
+) -> #{user_id() => true}.
+thread_role_adds(#{thread := Thread, members := Members}, Mentions, Source, Visible) ->
+    MentionRoles = maps:get(mention_roles, Mentions),
+    case map_size(MentionRoles) > 0 andalso thread_accepts_role_adds(Thread) of
+        false ->
+            #{};
+        true ->
+            Direct = maps:get(direct_mentions, Mentions),
+            AuthorId = maps:get(author_id, Mentions),
+            Candidates = fold_members(
+                fun(UserId, Member, Acc) ->
+                    case
+                        UserId =/= AuthorId andalso
+                            not maps:is_key(UserId, Members) andalso
+                            not maps:is_key(UserId, Direct) andalso
+                            member_has_mentioned_role(Member, MentionRoles) andalso
+                            not guild_members_common:is_member_bot(Member)
+                    of
+                        true -> [UserId | Acc];
+                        false -> Acc
+                    end
+                end,
+                [],
+                Source
+            ),
+            Room = max(0, ?MAX_THREAD_MEMBERS - map_size(Members)),
+            take_role_adds(
+                lists:sort(Candidates),
+                Source,
+                Visible,
+                min(?MAX_ROLE_MENTION_THREAD_ADDS, Room),
+                #{}
+            )
+    end.
+
+-spec thread_accepts_role_adds(map()) -> boolean().
+thread_accepts_role_adds(#{<<"type">> := 12}) -> false;
+thread_accepts_role_adds(#{<<"thread_metadata">> := #{<<"archived">> := true}}) -> false;
+thread_accepts_role_adds(_Thread) -> true.
+
+-spec take_role_adds(
+    [user_id()],
+    member_source(),
+    fun((user_id(), map()) -> boolean()),
+    non_neg_integer(),
+    map()
+) -> #{user_id() => true}.
+take_role_adds([], _Source, _Visible, _Left, Acc) ->
+    Acc;
+take_role_adds(_UserIds, _Source, _Visible, 0, Acc) ->
+    Acc;
+take_role_adds([UserId | Rest], Source, Visible, Left, Acc) ->
+    case lookup_member(UserId, Source) of
+        Member when is_map(Member) ->
+            case Visible(UserId, Member) of
+                true -> take_role_adds(Rest, Source, Visible, Left - 1, Acc#{UserId => true});
+                false -> take_role_adds(Rest, Source, Visible, Left, Acc)
+            end;
+        undefined ->
+            take_role_adds(Rest, Source, Visible, Left, Acc)
+    end.
+
+-spec message_author_id(event_data()) -> user_id() | undefined.
+message_author_id(MessageData) ->
+    case maps:get(<<"author">>, MessageData, undefined) of
+        #{<<"id">> := Id} -> snowflake_id:parse_optional(Id);
+        _ -> undefined
+    end.
+
+-spec member_route(user_id(), map(), map(), guild_state()) ->
+    eligible_user_ids | held_user_ids | skip.
+member_route(UserId, Member, Context, State) ->
+    case member_push_route(UserId, Member, Context) of
+        skip ->
+            skip;
+        Key ->
+            ThreadRecipient = maps:get(thread_recipient, Context, fun all_recipients/1),
+            visible_member_route(
+                Key,
+                guild_permissions_check:can_view_channel(
+                    UserId, maps:get(channel_id, Context), Member, State
+                ) andalso ThreadRecipient(UserId)
+            )
+    end.
+
+-spec all_recipients(user_id()) -> true.
+all_recipients(_UserId) ->
+    true.
+
+-spec member_push_route(user_id(), map(), map()) ->
+    eligible_user_ids | held_user_ids | skip.
+member_push_route(UserId, Member, Context) ->
+    case is_push_candidate(UserId, Member, Context) of
+        true -> eligible_user_ids;
+        false -> grace_member_route(maps:is_key(UserId, maps:get(grace_sessions, Context, #{})))
+    end.
+
+-spec grace_member_route(boolean()) -> held_user_ids | skip.
+grace_member_route(true) -> held_user_ids;
+grace_member_route(false) -> skip.
+
+-spec visible_member_route(eligible_user_ids | held_user_ids, boolean()) ->
+    eligible_user_ids | held_user_ids | skip.
+visible_member_route(Key, true) -> Key;
+visible_member_route(_Key, false) -> skip.
+
+-spec add_scanned_member(eligible_user_ids | held_user_ids, user_id(), map(), map()) -> map().
+add_scanned_member(Key, UserId, Member, Acc) ->
+    UserIds = maps:get(Key, Acc),
+    UserRoles = maps:get(user_roles, Acc),
+    Acc#{
+        Key := [UserId | UserIds],
+        user_roles := UserRoles#{UserId => extract_role_ids(Member)}
+    }.
+
+-spec maybe_collect_format_member(user_id(), map(), map(), map()) -> map().
+maybe_collect_format_member(UserId, Member, Context, Acc) ->
+    case maps:is_key(UserId, maps:get(format_members, Context)) of
+        true ->
+            Members = maps:get(format_members, Acc),
+            Acc#{format_members := Members#{UserId => Member}};
+        false ->
+            Acc
+    end.
+
+-spec is_push_candidate(user_id(), map(), map()) -> boolean().
+is_push_candidate(UserId, Member, Context) ->
+    maps:get(UserId, maps:get(session_eligibility, Context), true) orelse
+        (not mentions_respect_active_session() andalso
+            is_mention_candidate(UserId, Member, Context)).
+
+-spec is_mention_candidate(user_id(), map(), map()) -> boolean().
+is_mention_candidate(UserId, Member, Context) ->
+    maps:get(mention_everyone, Context) orelse
+        maps:is_key(UserId, maps:get(direct_mentions, Context)) orelse
+        member_has_mentioned_role(Member, maps:get(mention_roles, Context)).
+
+-spec mentions_respect_active_session() -> boolean().
+mentions_respect_active_session() ->
+    application:get_env(fluxer_gateway, push_mentions_respect_active_session, true) =:= true.
+
+-spec send_compact_scanned_push(event_data(), guild_id(), map(), guild_state()) -> ok.
+send_compact_scanned_push(MessageData, GuildId, Scan, State) ->
+    FormatData = compact_format_data(maps:get(data, State), maps:get(format_members, Scan)),
+    send_push_to_eligible_users(
+        MessageData,
+        GuildId,
+        lists:reverse(maps:get(eligible_user_ids, Scan)),
+        maps:get(user_roles, Scan),
+        maps:get(session_eligibility, State),
+        FormatData,
+        large_guild_meta(State),
+        {
+            lists:reverse(maps:get(held_user_ids, Scan, [])),
+            maps:get(grace_hold, State, none),
+            maps:get(member_presence, State, undefined),
+            maps:get(guild_pid, State, undefined)
+        }
+    ).
+
+-spec compact_format_data(map(), map()) -> map().
+compact_format_data(Data, FormatMembers) ->
+    WithoutRevision = maps:remove(member_list_revision, Data),
+    WithoutRevision#{
+        <<"members">> => FormatMembers,
+        members_normalized => FormatMembers,
+        members_sorted_ids => lists:sort(maps:keys(FormatMembers)),
+        <<"member_role_index">> =>
+            guild_data_index_members:build_member_role_index(FormatMembers)
+    }.
+
+-spec direct_mention_id_set(event_data()) -> map().
+direct_mention_id_set(MessageData) ->
+    lists:foldl(
+        fun add_direct_mention_id/2,
+        #{},
+        maps:get(<<"mentions">>, MessageData, [])
+    ).
+
+-spec add_direct_mention_id(term(), map()) -> map().
+add_direct_mention_id(Mention, Acc) ->
+    case direct_mention_user_id(Mention) of
+        {true, UserId} -> Acc#{UserId => true};
+        false -> Acc
+    end.
+
+-spec format_member_id_set(event_data()) -> map().
+format_member_id_set(MessageData) ->
+    AuthorSet = author_format_id_set(maps:get(<<"author">>, MessageData, undefined)),
+    collect_format_mention_ids(
+        maps:get(<<"mentions">>, MessageData, []),
+        ?MAX_FORMAT_MEMBERS,
+        AuthorSet
+    ).
+
+-spec author_format_id_set(term()) -> map().
+author_format_id_set(Author) when is_map(Author) ->
+    case direct_mention_user_id(Author) of
+        {true, UserId} -> #{UserId => true};
+        false -> #{}
+    end;
+author_format_id_set(_Author) ->
+    #{}.
+
+-spec collect_format_mention_ids([term()], non_neg_integer(), map()) -> map().
+collect_format_mention_ids(_Mentions, 0, Acc) ->
+    Acc;
+collect_format_mention_ids([], _Remaining, Acc) ->
+    Acc;
+collect_format_mention_ids([Mention | Rest], Remaining, Acc) ->
+    case direct_mention_user_id(Mention) of
+        {true, UserId} -> collect_format_mention_id(UserId, Rest, Remaining, Acc);
+        false -> collect_format_mention_ids(Rest, Remaining, Acc)
+    end.
+
+-spec collect_format_mention_id(user_id(), [term()], non_neg_integer(), map()) -> map().
+collect_format_mention_id(UserId, Rest, Remaining, Acc) ->
+    case maps:is_key(UserId, Acc) of
+        true -> collect_format_mention_ids(Rest, Remaining, Acc);
+        false -> collect_format_mention_ids(Rest, Remaining - 1, Acc#{UserId => true})
+    end.
 
 -spec collect_and_send_push_notifications(event_data(), guild_id(), guild_state()) -> ok.
 collect_and_send_push_notifications(MessageData, GuildId, State) ->
@@ -62,23 +947,34 @@ collect_and_send_push_notifications(MessageData, GuildId, State) ->
 -spec send_push_notifications(event_data(), guild_id(), guild_state()) -> ok.
 send_push_notifications(MessageData, GuildId, State) ->
     Data = maps:get(data, State),
-    Members = guild_data_index:member_map(Data),
+    Members = guild_data_index_members:member_map(Data),
     Sessions = maps:get(sessions, State, #{}),
-    SessionEligibility = build_push_session_eligibility(Sessions),
+    {SessionEligibility, Hold} = build_push_session_eligibility(Sessions, State),
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
     ChannelIdBin = maps:get(<<"channel_id">>, MessageData, undefined),
     case guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin) of
         undefined ->
             ok;
         ChannelId ->
-            send_to_eligible(
+            ok = send_to_eligible(
                 MessageData,
                 GuildId,
                 Members,
                 CandidateUserIds,
                 ChannelId,
                 SessionEligibility,
+                Hold,
                 Data,
+                State
+            ),
+            send_forum_thread_created(
+                MessageData,
+                GuildId,
+                ChannelId,
+                {map, Members},
+                fun() -> Data end,
+                SessionEligibility,
+                Hold,
                 State
             )
     end.
@@ -90,6 +986,7 @@ send_push_notifications(MessageData, GuildId, State) ->
     [user_id()],
     integer(),
     map(),
+    grace_hold(),
     map(),
     guild_state()
 ) -> ok.
@@ -100,23 +997,81 @@ send_to_eligible(
     CandidateUserIds,
     ChannelId,
     SessionEligibility,
+    Hold,
     Data,
     State
 ) ->
-    case find_eligible_users_for_push(Members, CandidateUserIds, ChannelId, State) of
-        [] ->
+    ThreadCandidates = thread_candidate_filter(ChannelId, Members, MessageData, State),
+    EligibleUserIds = find_eligible_users_for_push(
+        Members, ThreadCandidates(CandidateUserIds), ChannelId, State
+    ),
+    HeldUserIds = find_eligible_users_for_push(
+        Members,
+        ThreadCandidates(held_candidate_user_ids(Hold, CandidateUserIds)),
+        ChannelId,
+        State
+    ),
+    case {EligibleUserIds, HeldUserIds} of
+        {[], []} ->
             ok;
-        EligibleUserIds ->
-            UserRolesMap = build_user_roles_map(Members, EligibleUserIds),
+        _ ->
+            UserRolesMap = build_user_roles_map(Members, EligibleUserIds ++ HeldUserIds),
             send_push_to_eligible_users(
                 MessageData,
                 GuildId,
                 EligibleUserIds,
                 UserRolesMap,
                 SessionEligibility,
-                Data
+                Data,
+                large_guild_meta(State),
+                {
+                    HeldUserIds,
+                    Hold,
+                    maps:get(member_presence, State, undefined),
+                    maps:get(guild_pid, State, undefined)
+                }
             )
     end.
+
+-spec thread_candidate_filter(integer(), map(), event_data(), guild_state()) ->
+    fun(([user_id()]) -> [user_id()]).
+thread_candidate_filter(ChannelId, Members, MessageData, State) ->
+    case guild_thread_push:scope(ChannelId, State) of
+        undefined ->
+            fun(UserIds) -> UserIds end;
+        Scope ->
+            Mentions0 = #{
+                direct_mentions => direct_mention_id_set(MessageData),
+                mention_roles => mention_role_id_set(
+                    maps:get(<<"mention_roles">>, MessageData, [])
+                ),
+                author_id => message_author_id(MessageData)
+            },
+            Mentions = Mentions0#{
+                role_adds => thread_role_adds(
+                    Scope,
+                    Mentions0,
+                    {map, Members},
+                    thread_role_visible(ChannelId, State)
+                )
+            },
+            fun(UserIds) ->
+                [
+                    UserId
+                 || UserId <- UserIds,
+                    thread_push_candidate(
+                        UserId, maps:get(UserId, Members, #{}), Scope, Mentions
+                    )
+                ]
+            end
+    end.
+
+-spec held_candidate_user_ids(grace_hold(), [user_id()]) -> [user_id()].
+held_candidate_user_ids(none, _CandidateUserIds) ->
+    [];
+held_candidate_user_ids({Held, _RecheckAt}, CandidateUserIds) ->
+    Candidates = maps:from_keys(CandidateUserIds, true),
+    [UserId || UserId <- maps:keys(Held), not maps:is_key(UserId, Candidates)].
 
 -spec push_candidate_user_ids(map(), map(), event_data()) -> [user_id()].
 push_candidate_user_ids(Members, SessionEligibility, MessageData) ->
@@ -128,8 +1083,9 @@ push_candidate_user_ids(Members, SessionEligibility, MessageData) ->
     ).
 
 -spec push_candidate_user_ids(term(), map(), map(), event_data()) -> [user_id()].
-push_candidate_user_ids(true, Members, _SessionEligibility, _MessageData) ->
-    maps:keys(Members);
+push_candidate_user_ids(true, Members, SessionEligibility, _MessageData) ->
+    {CandidateUserIds, _Seen} = base_candidate_acc(Members, SessionEligibility),
+    lists:reverse(CandidateUserIds);
 push_candidate_user_ids(_MentionEveryone, Members, SessionEligibility, MessageData) ->
     BaseAcc = base_candidate_acc(Members, SessionEligibility),
     {CandidateUserIds, _Seen} =
@@ -253,8 +1209,11 @@ member_roles_include_mentioned([Role | Rest], MentionRoleSet) ->
 
 -spec find_eligible_users_for_push(map(), [user_id()], integer(), guild_state()) -> [user_id()].
 find_eligible_users_for_push(Members, CandidateUserIds, ChannelId, State) ->
+    ThreadRecipient = guild_thread_gate:recipient_active(ChannelId, State),
     lists:filtermap(
-        fun(UserId) -> is_push_eligible(UserId, Members, ChannelId, State) end,
+        fun(UserId) ->
+            ThreadRecipient(UserId) andalso is_push_eligible(UserId, Members, ChannelId, State)
+        end,
         CandidateUserIds
     ).
 
@@ -271,10 +1230,115 @@ is_push_eligible(UserId, Members, ChannelId, State) ->
     user_id(), integer(), map(), guild_state()
 ) -> {true, user_id()} | false.
 view_to_filtermap(UserId, ChannelId, Member, State) ->
-    case guild_permissions:can_view_channel(UserId, ChannelId, Member, State) of
+    case guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State) of
         true -> {true, UserId};
         false -> false
     end.
+
+-spec build_push_session_eligibility(map(), guild_state()) ->
+    {#{user_id() => boolean()}, grace_hold()}.
+build_push_session_eligibility(Sessions, State) ->
+    case presence_eligibility_enabled() of
+        true -> build_push_presence_eligibility(Sessions, State);
+        false -> build_legacy_session_eligibility(Sessions)
+    end.
+
+-spec grace_guild_pid() -> pid() | undefined.
+grace_guild_pid() ->
+    case presence_eligibility_enabled() of
+        true -> self();
+        false -> undefined
+    end.
+
+-spec presence_eligibility_enabled() -> boolean().
+presence_eligibility_enabled() ->
+    application:get_env(fluxer_gateway, push_presence_eligibility, true) =:= true.
+
+-spec build_legacy_session_eligibility(map()) -> {#{user_id() => boolean()}, grace_hold()}.
+build_legacy_session_eligibility(Sessions) ->
+    Eligibility = build_push_session_eligibility(Sessions),
+    {Eligibility, grace_hold(suppressed_sessions(Sessions, Eligibility))}.
+
+-spec build_push_presence_eligibility(map(), guild_state()) ->
+    {#{user_id() => boolean()}, grace_hold()}.
+build_push_presence_eligibility(Sessions, State) ->
+    Engaged = engaged_sessions(Sessions, maps:get(member_presence, State, undefined)),
+    {engagement_eligibility(Sessions, Engaged), grace_hold(held_engaged_sessions(Engaged))}.
+
+-spec engaged_sessions(map(), term()) -> grace_sessions().
+engaged_sessions(Sessions, Presences) ->
+    maps:fold(
+        fun(Sid, Session, Acc) -> maybe_add_engaged_session(Sid, Session, Presences, Acc) end,
+        #{},
+        Sessions
+    ).
+
+-spec maybe_add_engaged_session(term(), term(), term(), grace_sessions()) -> grace_sessions().
+maybe_add_engaged_session(Sid, #{user_id := UserId} = Session, Presences, Acc) when
+    is_integer(UserId)
+->
+    case session_engaged(Session, UserId, Presences) of
+        true -> Acc#{UserId => session_pids(Sid, Session) ++ maps:get(UserId, Acc, [])};
+        false -> Acc
+    end;
+maybe_add_engaged_session(_Sid, _Session, _Presences, Acc) ->
+    Acc.
+
+-spec session_engaged(map(), user_id(), term()) -> boolean().
+session_engaged(#{push_hold := Hold}, _UserId, _Presences) ->
+    Hold =:= true;
+session_engaged(_Session, UserId, Presences) ->
+    actively_engaged(UserId, Presences).
+
+-spec session_pids(term(), map()) -> [{binary(), pid()}].
+session_pids(Sid, #{pid := Pid}) when is_binary(Sid), is_pid(Pid) -> [{Sid, Pid}];
+session_pids(_Sid, _Session) -> [].
+
+-spec engagement_eligibility(map(), grace_sessions()) -> #{user_id() => boolean()}.
+engagement_eligibility(Sessions, Engaged) ->
+    maps:fold(
+        fun
+            (_Sid, #{user_id := UserId}, Acc) when is_integer(UserId) ->
+                Acc#{UserId => not maps:is_key(UserId, Engaged)};
+            (_Sid, _Session, Acc) ->
+                Acc
+        end,
+        #{},
+        Sessions
+    ).
+
+-spec held_engaged_sessions(grace_sessions()) -> grace_sessions().
+held_engaged_sessions(Engaged) ->
+    maps:filter(fun(_UserId, Pids) -> Pids =/= [] end, Engaged).
+
+-spec actively_engaged(user_id(), term()) -> boolean().
+actively_engaged(_UserId, undefined) ->
+    false;
+actively_engaged(UserId, Presences) ->
+    case lookup_presence_safe(UserId, Presences) of
+        undefined -> false;
+        Presence -> presence_is_active(Presence)
+    end.
+
+-spec lookup_presence_safe(user_id(), term()) -> map() | undefined.
+lookup_presence_safe(UserId, Presences) ->
+    try guild_state_member:lookup_presence(Presences, UserId) of
+        Presence -> Presence
+    catch
+        error:badarg -> undefined
+    end.
+
+-spec presence_is_active(map()) -> boolean().
+presence_is_active(Presence) ->
+    Status = maps:get(<<"status">>, Presence, <<"offline">>),
+    Afk = maps:get(<<"afk">>, Presence, false) =:= true,
+    Mobile = maps:get(<<"mobile">>, Presence, false) =:= true,
+    is_engaged_status(Status) andalso not Afk andalso not Mobile.
+
+-spec is_engaged_status(term()) -> boolean().
+is_engaged_status(<<"online">>) -> true;
+is_engaged_status(<<"dnd">>) -> true;
+is_engaged_status(_Status) -> false.
 
 -spec build_push_session_eligibility(map()) -> #{user_id() => boolean()}.
 build_push_session_eligibility(Sessions) ->
@@ -299,68 +1363,86 @@ accumulate_session_eligibility(Session, Acc) ->
             Acc
     end.
 
--spec send_push_to_eligible_users(event_data(), guild_id(), [user_id()], map(), map(), map()) ->
-    ok.
+-spec send_push_to_eligible_users(
+    event_data(), guild_id(), [user_id()], map(), map(), map(), map() | undefined, held_push()
+) -> ok.
 send_push_to_eligible_users(
     MessageData,
     GuildId,
     EligibleUserIds,
     UserRolesMap,
     ConnectedUsers,
-    Data
+    Data,
+    LargeGuildMeta,
+    Held
 ) ->
     AuthorIdBin = maps:get(<<"id">>, maps:get(<<"author">>, MessageData, #{}), undefined),
     case guild_dispatch_decorate:parse_snowflake(<<"author.id">>, AuthorIdBin) of
         undefined ->
             ok;
         AuthorId ->
-            Guild = maps:get(<<"guild">>, Data),
             ChannelIdBin = maps:get(<<"channel_id">>, MessageData),
-            ChannelName = find_channel_name(ChannelIdBin, Data),
+            {PushMessageData, ChannelName} = push_message_data(
+                MessageData, ChannelIdBin, EligibleUserIds ++ element(1, Held), Data
+            ),
             RoleNames = build_role_names_map(Data),
-            do_send_push(
-                MessageData,
+            Params = push_params(
+                PushMessageData,
                 GuildId,
-                EligibleUserIds,
                 UserRolesMap,
                 ConnectedUsers,
-                Guild,
                 ChannelName,
                 RoleNames,
                 Data,
-                AuthorId
-            )
+                AuthorId,
+                LargeGuildMeta
+            ),
+            ok = send_push_now(EligibleUserIds, Params),
+            hold_push_through_grace(Held, Params)
     end.
 
--spec do_send_push(
+-spec push_message_data(event_data(), term(), [user_id()], map()) -> {event_data(), binary()}.
+push_message_data(MessageData, ChannelIdBin, UserIds, Data) ->
+    ChannelId = guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin),
+    case thread_push_message_data(MessageData, ChannelId, UserIds, Data) of
+        undefined -> {MessageData, find_channel_name(ChannelIdBin, Data)};
+        ThreadPush -> ThreadPush
+    end.
+
+-spec thread_push_message_data(event_data(), integer() | undefined, [user_id()], map()) ->
+    {event_data(), binary()} | undefined.
+thread_push_message_data(_MessageData, undefined, _UserIds, _Data) ->
+    undefined;
+thread_push_message_data(MessageData, ChannelId, UserIds, Data) ->
+    guild_thread_push:push_message_data(MessageData, ChannelId, UserIds, Data).
+
+-spec push_params(
     event_data(),
     guild_id(),
-    [user_id()],
-    map(),
     map(),
     map(),
     binary(),
     map(),
     map(),
-    integer()
-) -> ok.
-do_send_push(
+    integer(),
+    map() | undefined
+) -> map().
+push_params(
     MessageData,
     GuildId,
-    EligibleUserIds,
     UserRolesMap,
     ConnectedUsers,
-    Guild,
     ChannelName,
     RoleNames,
     Data,
-    AuthorId
+    AuthorId,
+    LargeGuildMeta
 ) ->
+    Guild = maps:get(<<"guild">>, Data),
     DefaultMessageNotifications = maps:get(<<"default_message_notifications">>, Guild, 0),
     GuildName = maps:get(<<"name">>, Guild, <<"Unknown">>),
-    push:handle_message_create(#{
+    #{
         message_data => MessageData,
-        user_ids => EligibleUserIds,
         guild_id => GuildId,
         author_id => AuthorId,
         guild_default_notifications => DefaultMessageNotifications,
@@ -372,8 +1454,169 @@ do_send_push(
                 MessageData, GuildId, RoleNames, Data
             ),
         user_roles => UserRolesMap,
-        connected_users => ConnectedUsers
-    }).
+        connected_users => ConnectedUsers,
+        guild_member_count => meta_member_count(LargeGuildMeta),
+        guild_features => meta_features(LargeGuildMeta)
+    }.
+
+-spec send_push_now([user_id()], map()) -> ok.
+send_push_now([], _Params) ->
+    ok;
+send_push_now(UserIds, Params) ->
+    push:handle_message_create(Params#{user_ids => UserIds}).
+
+-spec hold_push_through_grace(held_push(), map()) -> ok.
+hold_push_through_grace(
+    {[_ | _] = UserIds, {Sessions, RecheckAt}, Presences, GuildPid}, Params
+) ->
+    HeldParams = Params#{
+        user_roles => maps:with(UserIds, maps:get(user_roles, Params)),
+        connected_users => maps:with(UserIds, maps:get(connected_users, Params))
+    },
+    HeldSessions = maps:with(UserIds, Sessions),
+    _ = spawn(fun() ->
+        deliver_after_grace(HeldParams, HeldSessions, RecheckAt, {Presences, GuildPid})
+    end),
+    ok;
+hold_push_through_grace(_Held, _Params) ->
+    ok.
+
+-spec deliver_after_grace(map(), grace_sessions(), integer(), {term(), pid() | undefined}) ->
+    ok.
+deliver_after_grace(Params, Sessions, RecheckAt, {Presences, GuildPid}) ->
+    ok = apply_push_worker_priority(),
+    HeldUserIds = maps:keys(Sessions),
+    AlreadyOffline = users_left_offline(HeldUserIds, Presences),
+    LiveSessions = maps:values(
+        await_grace_recheck(monitor_grace_sessions(Sessions), RecheckAt)
+    ),
+    Holding = still_holding(LiveSessions, released_push_holds(GuildPid, LiveSessions)),
+    send_push_now(grace_recipients(HeldUserIds, Holding, Presences, AlreadyOffline), Params).
+
+-spec still_holding([{user_id(), binary()}], [binary()]) -> [user_id()].
+still_holding(LiveSessions, Released) ->
+    ReleasedSet = maps:from_keys(Released, true),
+    [UserId || {UserId, Sid} <- LiveSessions, not maps:is_key(Sid, ReleasedSet)].
+
+-spec released_push_holds(pid() | undefined, [{user_id(), binary()}]) -> [binary()].
+released_push_holds(GuildPid, [_ | _] = LiveSessions) when is_pid(GuildPid) ->
+    SessionIds = [Sid || {_UserId, Sid} <- LiveSessions],
+    try
+        gen_server:call(
+            GuildPid, {released_push_holds, SessionIds}, ?GRACE_HOLD_CALL_TIMEOUT_MS
+        )
+    of
+        Released when is_list(Released) -> Released;
+        _ -> []
+    catch
+        exit:_ -> []
+    end;
+released_push_holds(_GuildPid, _LiveSessions) ->
+    [].
+
+-spec grace_recipients([user_id()], [user_id()], term(), [user_id()]) -> [user_id()].
+grace_recipients(HeldUserIds, LiveUserIds, Presences, AlreadyOffline) ->
+    Live = lists:usort(LiveUserIds),
+    Gone = lists:usort(HeldUserIds) -- Live,
+    lists:usort(Gone ++ (users_left_offline(Live, Presences) -- AlreadyOffline)).
+
+-spec monitor_grace_sessions(grace_sessions()) -> #{reference() => {user_id(), binary()}}.
+monitor_grace_sessions(Sessions) ->
+    maps:fold(fun monitor_user_sessions/3, #{}, Sessions).
+
+-spec monitor_user_sessions(
+    user_id(), [{binary(), pid()}], #{reference() => {user_id(), binary()}}
+) ->
+    #{reference() => {user_id(), binary()}}.
+monitor_user_sessions(UserId, Held, Monitors) ->
+    lists:foldl(
+        fun({Sid, Pid}, Acc) -> Acc#{erlang:monitor(process, Pid) => {UserId, Sid}} end,
+        Monitors,
+        Held
+    ).
+
+-spec await_grace_recheck(#{reference() => {user_id(), binary()}}, integer()) ->
+    #{reference() => {user_id(), binary()}}.
+await_grace_recheck(Monitors, RecheckAt) ->
+    Remaining = max(0, RecheckAt - erlang:monotonic_time(millisecond)),
+    receive
+        {'DOWN', Ref, process, _Pid, _Reason} when is_map_key(Ref, Monitors) ->
+            await_grace_recheck(maps:remove(Ref, Monitors), RecheckAt)
+    after Remaining ->
+        Monitors
+    end.
+
+-spec users_left_offline([user_id()], term()) -> [user_id()].
+users_left_offline(UserIds, Presences) ->
+    [UserId || UserId <- UserIds, presence_is_offline(UserId, Presences)].
+
+-spec presence_is_offline(user_id(), term()) -> boolean().
+presence_is_offline(UserId, Presences) ->
+    case lookup_presence_safe(UserId, Presences) of
+        undefined -> false;
+        Presence -> maps:get(<<"status">>, Presence, <<"offline">>) =:= <<"offline">>
+    end.
+
+-spec grace_hold(grace_sessions()) -> grace_hold().
+grace_hold(Held) when map_size(Held) =:= 0 ->
+    none;
+grace_hold(Held) ->
+    {Held, erlang:monotonic_time(millisecond) + grace_recheck_ms()}.
+
+-spec held_sessions(grace_hold()) -> grace_sessions().
+held_sessions(none) -> #{};
+held_sessions({Held, _RecheckAt}) -> Held.
+
+-spec suppressed_sessions(map(), #{user_id() => boolean()}) -> grace_sessions().
+suppressed_sessions(Sessions, SessionEligibility) ->
+    maps:fold(
+        fun(Sid, Session, Acc) -> maybe_hold_session(Sid, Session, SessionEligibility, Acc) end,
+        #{},
+        Sessions
+    ).
+
+-spec maybe_hold_session(term(), term(), #{user_id() => boolean()}, grace_sessions()) ->
+    grace_sessions().
+maybe_hold_session(Sid, Session, SessionEligibility, Acc) when is_map(Session) ->
+    hold_suppressed_session(
+        maps:get(user_id, Session, undefined),
+        session_pids(Sid, Session),
+        SessionEligibility,
+        Acc
+    );
+maybe_hold_session(_Sid, _Session, _SessionEligibility, Acc) ->
+    Acc.
+
+-spec hold_suppressed_session(
+    term(), [{binary(), pid()}], #{user_id() => boolean()}, grace_sessions()
+) ->
+    grace_sessions().
+hold_suppressed_session(UserId, [_ | _] = Held, SessionEligibility, Acc) when
+    is_integer(UserId)
+->
+    case maps:get(UserId, SessionEligibility, true) of
+        false ->
+            Acc#{UserId => Held ++ maps:get(UserId, Acc, [])};
+        true ->
+            Acc
+    end;
+hold_suppressed_session(_UserId, _Held, _SessionEligibility, Acc) ->
+    Acc.
+
+-spec grace_recheck_ms() -> pos_integer().
+grace_recheck_ms() ->
+    case application:get_env(fluxer_gateway, ?GRACE_RECHECK_KEY, undefined) of
+        Value when is_integer(Value), Value > 0 -> Value;
+        _ -> ?DEFAULT_GRACE_RECHECK_MS
+    end.
+
+-spec meta_member_count(map() | undefined) -> non_neg_integer() | undefined.
+meta_member_count(#{member_count := MemberCount}) -> MemberCount;
+meta_member_count(_Meta) -> undefined.
+
+-spec meta_features(map() | undefined) -> [binary()] | undefined.
+meta_features(#{features := Features}) -> Features;
+meta_features(_Meta) -> undefined.
 
 -spec find_channel_name(binary(), map()) -> binary().
 find_channel_name(ChannelIdBin, Data) ->
@@ -386,7 +1629,7 @@ find_channel_name(ChannelIdBin, Data) ->
 
 -spec lookup_channel_name(integer(), map()) -> binary().
 lookup_channel_name(ChannelId, Data) ->
-    Channels = guild_data_index:channel_index(Data),
+    Channels = guild_data_index_channels:channel_index(Data),
     case maps:get(ChannelId, Channels, undefined) of
         undefined -> <<"unknown">>;
         Channel -> maps:get(<<"name">>, Channel, <<"unknown">>)
@@ -397,7 +1640,7 @@ build_role_names_map(Data) ->
     maps:fold(
         fun add_role_name/3,
         #{},
-        guild_data_index:role_index(Data)
+        guild_data_index_roles:role_index(Data)
     ).
 
 -spec add_role_name(term(), term(), #{integer() => binary()}) -> #{integer() => binary()}.
@@ -444,6 +1687,278 @@ collect_role_id(Role, Acc) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+presence_eligibility_suppresses_active_desktop_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ets:insert(
+            Tab, {1, #{<<"status">> => <<"online">>, <<"mobile">> => false, <<"afk">> => false}}
+        ),
+        ?assertEqual(
+            #{1 => false},
+            presence_eligibility(#{<<"s1">> => #{user_id => 1}}, #{
+                member_presence => Tab
+            })
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+presence_eligibility_allows_mobile_only_session_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ets:insert(
+            Tab, {1, #{<<"status">> => <<"online">>, <<"mobile">> => true, <<"afk">> => false}}
+        ),
+        ?assertEqual(
+            #{1 => true},
+            presence_eligibility(#{<<"s1">> => #{user_id => 1}}, #{
+                member_presence => Tab
+            })
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+presence_eligibility_allows_idle_and_afk_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ets:insert(
+            Tab, {1, #{<<"status">> => <<"idle">>, <<"mobile">> => false, <<"afk">> => false}}
+        ),
+        ets:insert(
+            Tab, {2, #{<<"status">> => <<"online">>, <<"mobile">> => false, <<"afk">> => true}}
+        ),
+        ?assertEqual(
+            #{1 => true, 2 => true},
+            presence_eligibility(
+                #{<<"s1">> => #{user_id => 1}, <<"s2">> => #{user_id => 2}},
+                #{member_presence => Tab}
+            )
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+presence_eligibility_allows_unknown_presence_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ?assertEqual(
+            #{7 => true},
+            presence_eligibility(#{<<"s1">> => #{user_id => 7}}, #{
+                member_presence => Tab
+            })
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+presence_eligibility_allows_when_presence_table_missing_test() ->
+    ?assertEqual(
+        #{1 => true},
+        presence_eligibility(#{<<"s1">> => #{user_id => 1}}, #{})
+    ).
+
+presence_eligibility(Sessions, State) ->
+    {Eligibility, _Hold} = build_push_presence_eligibility(Sessions, State),
+    Eligibility.
+
+session_push_hold_keeps_an_active_desktop_engaged_beside_a_backgrounded_phone_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    Desktop = spawn(fun() -> ok end),
+    Phone = spawn(fun() -> ok end),
+    try
+        ets:insert(
+            Tab, {1, #{<<"status">> => <<"online">>, <<"mobile">> => true, <<"afk">> => false}}
+        ),
+        Sessions = #{
+            <<"desktop">> => #{user_id => 1, pid => Desktop, push_hold => true},
+            <<"phone">> => #{user_id => 1, pid => Phone, push_hold => false}
+        },
+        {Eligibility, {Held, _RecheckAt}} =
+            build_push_presence_eligibility(Sessions, #{member_presence => Tab}),
+        ?assertEqual(#{1 => false}, Eligibility),
+        ?assertEqual(#{1 => [{<<"desktop">>, Desktop}]}, Held)
+    after
+        ets:delete(Tab)
+    end.
+
+session_push_hold_engages_a_user_published_as_offline_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ets:insert(Tab, {1, #{<<"status">> => <<"offline">>}}),
+        ?assertEqual(
+            #{1 => false},
+            presence_eligibility(
+                #{<<"s1">> => #{user_id => 1, push_hold => true}}, #{member_presence => Tab}
+            )
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+session_push_hold_false_overrides_an_active_published_presence_test() ->
+    Tab = ets:new(test_member_presence, [set, public]),
+    try
+        ets:insert(
+            Tab, {1, #{<<"status">> => <<"online">>, <<"mobile">> => false, <<"afk">> => false}}
+        ),
+        ?assertEqual(
+            {#{1 => true}, none},
+            build_push_presence_eligibility(
+                #{<<"s1">> => #{user_id => 1, pid => self(), push_hold => false}},
+                #{member_presence => Tab}
+            )
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+released_push_holds_treat_an_old_guild_reply_as_nothing_released_test() ->
+    GuildPid = spawn(fun() ->
+        receive
+            {'$gen_call', From, {released_push_holds, _SessionIds}} ->
+                gen_server:reply(From, ok)
+        end
+    end),
+    ?assertEqual([], released_push_holds(GuildPid, [{1, <<"s1">>}])).
+
+released_push_holds_treat_a_dead_guild_as_nothing_released_test() ->
+    {GuildPid, MRef} = spawn_monitor(fun() -> ok end),
+    receive
+        {'DOWN', MRef, process, GuildPid, _} -> ok
+    end,
+    ?assertEqual([], released_push_holds(GuildPid, [{1, <<"s1">>}])).
+
+push_states_include_the_guild_pid_for_the_grace_recheck_test() ->
+    ?assertEqual({self(), self()}, push_state_guild_pids()).
+
+push_states_skip_the_grace_recheck_while_presence_eligibility_is_off_test() ->
+    ok = application:set_env(fluxer_gateway, push_presence_eligibility, false),
+    try
+        ?assertEqual({undefined, undefined}, push_state_guild_pids())
+    after
+        ok = application:unset_env(fluxer_gateway, push_presence_eligibility)
+    end.
+
+push_state_guild_pids() ->
+    Tab = ets:new(push_state_members, []),
+    try
+        Compact = compact_push_state(Tab, #{}, 7, #{sessions => #{}}),
+        Legacy = legacy_push_state(7, #{}),
+        {maps:get(guild_pid, Compact), maps:get(guild_pid, Legacy)}
+    after
+        ets:delete(Tab)
+    end.
+
+grace_recipients_keep_holding_a_user_already_offline_when_held_test() ->
+    Presences = #{1 => #{<<"status">> => <<"offline">>}},
+    ?assertEqual([], grace_recipients([1], [1], Presences, [1])),
+    ?assertEqual([1], grace_recipients([1], [], Presences, [1])).
+
+grace_recipients_push_a_user_whose_held_sessions_all_ended_test() ->
+    Presences = #{1 => #{<<"status">> => <<"online">>}},
+    ?assertEqual([1], grace_recipients([1], [], Presences, [])).
+
+grace_recipients_skip_a_user_still_online_on_a_held_session_test() ->
+    Presences = #{1 => #{<<"status">> => <<"online">>}},
+    ?assertEqual([], grace_recipients([1], [1], Presences, [])).
+
+grace_recipients_push_a_user_whose_live_session_went_offline_test() ->
+    Presences = #{1 => #{<<"status">> => <<"offline">>}},
+    ?assertEqual([1], grace_recipients([1], [1], Presences, [])).
+
+grace_recipients_mix_users_test() ->
+    Presences = #{
+        1 => #{<<"status">> => <<"online">>},
+        2 => #{<<"status">> => <<"online">>},
+        3 => #{<<"status">> => <<"offline">>}
+    },
+    ?assertEqual([1, 3], grace_recipients([1, 2, 3], [2, 3, 3], Presences, [])).
+
+deliver_after_grace_pushes_a_user_whose_session_exits_inside_the_window_test() ->
+    Self = self(),
+    ok = meck:new(push, [passthrough, non_strict]),
+    try
+        ok = meck:expect(push, handle_message_create, fun(Params) ->
+            Self ! {pushed, maps:get(user_ids, Params)},
+            ok
+        end),
+        Session = spawn(fun() ->
+            receive
+                stop -> ok
+            end
+        end),
+        Held = #{42 => [{<<"s1">>, Session}]},
+        Presences = #{42 => #{<<"status">> => <<"online">>}},
+        RecheckAt = erlang:monotonic_time(millisecond) + 300,
+        _ = spawn(fun() -> deliver_after_grace(#{}, Held, RecheckAt, {Presences, undefined}) end),
+        timer:sleep(50),
+        Session ! stop,
+        receive
+            {pushed, UserIds} -> ?assertEqual([42], UserIds)
+        after 2000 -> erlang:error(no_push_after_session_exit)
+        end
+    after
+        meck:unload(push)
+    end.
+
+legacy_session_eligibility_suppresses_every_real_session_test() ->
+    RealSession = #{
+        session_id => <<"s1">>,
+        user_id => 1,
+        pid => self(),
+        active_guilds => sets:new(),
+        bot => false,
+        is_staff => false,
+        pending_connect => false,
+        viewable_channels => #{}
+    },
+    ?assertEqual(#{1 => false}, build_push_session_eligibility(#{<<"s1">> => RealSession})).
+
+is_push_candidate_suppresses_mention_for_active_user_test() ->
+    Context = #{
+        session_eligibility => #{1 => false},
+        mention_everyone => true,
+        direct_mentions => #{1 => true},
+        mention_roles => #{}
+    },
+    ?assertEqual(false, is_push_candidate(1, #{}, Context)).
+
+is_push_candidate_allows_eligible_user_test() ->
+    Context = #{
+        session_eligibility => #{1 => true},
+        mention_everyone => false,
+        direct_mentions => #{},
+        mention_roles => #{}
+    },
+    ?assertEqual(true, is_push_candidate(1, #{}, Context)).
+
+is_push_candidate_allows_sessionless_user_test() ->
+    Context = #{
+        session_eligibility => #{},
+        mention_everyone => false,
+        direct_mentions => #{},
+        mention_roles => #{}
+    },
+    ?assertEqual(true, is_push_candidate(9, #{}, Context)).
+
+push_candidate_user_ids_everyone_respects_active_sessions_test() ->
+    Members = #{1 => #{}, 2 => #{}, 3 => #{}},
+    ?assertEqual(
+        [],
+        push_candidate_user_ids(
+            Members, #{1 => false, 2 => false, 3 => false}, #{<<"mention_everyone">> => true}
+        )
+    ),
+    ?assertEqual(
+        [1, 3],
+        lists:sort(
+            push_candidate_user_ids(
+                Members, #{1 => true, 2 => false}, #{<<"mention_everyone">> => true}
+            )
+        )
+    ).
+
 build_push_session_eligibility_test() ->
     Sessions = #{
         <<"s1">> => #{user_id => 1, mobile => false, afk => true},
@@ -477,14 +1992,6 @@ push_candidate_user_ids_includes_connected_mentioned_users_test() ->
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
     ?assertEqual([1, 3], lists:sort(CandidateUserIds)).
 
-push_candidate_user_ids_includes_everyone_even_when_connected_test() ->
-    Members = #{1 => #{}, 2 => #{}, 3 => #{}},
-    SessionEligibility = #{1 => false, 2 => false, 3 => false},
-    CandidateUserIds = push_candidate_user_ids(
-        Members, SessionEligibility, #{<<"mention_everyone">> => true}
-    ),
-    ?assertEqual([1, 2, 3], lists:sort(CandidateUserIds)).
-
 push_candidate_user_ids_deduplicates_mentions_test() ->
     Members = #{1 => #{<<"roles">> => [<<"10">>]}, 2 => #{<<"roles">> => []}},
     SessionEligibility = #{1 => false, 2 => false},
@@ -495,111 +2002,667 @@ push_candidate_user_ids_deduplicates_mentions_test() ->
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
     ?assertEqual([1], CandidateUserIds).
 
-build_user_roles_map_uses_member_map_test() ->
-    Members = #{
-        1 => #{<<"roles">> => [<<"10">>, <<"11">>]},
-        2 => #{<<"roles">> => [<<"20">>]}
-    },
-    Result = build_user_roles_map(Members, [2, 1]),
-    ?assertEqual([10, 11], lists:sort(maps:get(1, Result))),
-    ?assertEqual([20], maps:get(2, Result)).
+compact_push_state_drops_members_and_keeps_member_count_test() ->
+    Tab = ets:new(test_members, [set, public]),
+    try
+        Data = compact_test_data(Tab),
+        UpdatedState = #{
+            id => 7,
+            data => Data,
+            sessions => #{<<"s1">> => #{user_id => 1}},
+            virtual_channel_access => #{},
+            member_count => 49435
+        },
+        Compact = compact_push_state(Tab, Data, 7, UpdatedState),
+        CompactData = maps:get(data, Compact),
+        ?assertEqual(49435, maps:get(member_count, Compact)),
+        ?assertEqual(Tab, maps:get(members_ets, Compact)),
+        ?assertNot(maps:is_key(sessions, Compact)),
+        ?assertEqual(#{1 => true}, maps:get(session_eligibility, Compact)),
+        ?assertNot(maps:is_key(<<"members">>, CompactData)),
+        ?assertNot(maps:is_key(members_normalized, CompactData)),
+        ?assertNot(maps:is_key(<<"member_role_index">>, CompactData)),
+        ?assertEqual(
+            #{member_count => 49435, features => [<<"COMMUNITY">>]},
+            large_guild_meta(Compact)
+        )
+    after
+        ets:delete(Tab)
+    end.
 
-find_channel_name_found_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>},
-            #{<<"id">> => <<"101">>, <<"name">> => <<"random">>}
-        ]
-    },
-    ?assertEqual(<<"general">>, find_channel_name(<<"100">>, Data)).
+legacy_push_state_includes_member_count_test() ->
+    UpdatedState = #{id => 7, data => #{}, sessions => #{}, member_count => 1234},
+    Legacy = legacy_push_state(7, UpdatedState),
+    ?assertEqual(1234, maps:get(member_count, Legacy)),
+    ?assertEqual(#{}, maps:get(sessions, Legacy)),
+    ?assertEqual(#{member_count => 1234, features => []}, large_guild_meta(Legacy)).
 
-find_channel_name_not_found_test() ->
-    Data = #{<<"channels">> => []},
-    ?assertEqual(<<"unknown">>, find_channel_name(<<"100">>, Data)).
+compact_scan_collects_eligible_users_and_format_members_test() ->
+    Tab = ets:new(test_members, [set, public]),
+    try
+        true = ets:insert(Tab, {1, #{<<"roles">> => []}}),
+        true = ets:insert(Tab, {2, #{<<"roles">> => []}}),
+        true = ets:insert(Tab, {3, #{<<"roles">> => [<<"200">>]}}),
+        State = compact_scan_state(Tab),
+        MessageData = #{<<"mentions">> => [#{<<"id">> => <<"3">>}]},
+        Context = compact_scan_context(MessageData, 10, State),
+        {ok, Scan} = scan_push_members(Tab, Context, State),
+        ?assertEqual([1], lists:sort(maps:get(eligible_user_ids, Scan))),
+        ?assertEqual(#{3 => #{<<"roles">> => [<<"200">>]}}, maps:get(format_members, Scan)),
+        ?assertNot(maps:is_key(3, maps:get(user_roles, Scan))),
+        ?assertEqual([], maps:get(1, maps:get(user_roles, Scan)))
+    after
+        ets:delete(Tab)
+    end.
 
-find_channel_name_uses_index_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-        ],
-        <<"channel_index">> => #{100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}}
-    },
-    ?assertEqual(<<"general">>, find_channel_name(<<"100">>, Data)).
+compact_scan_includes_mentioned_user_when_bypass_is_re_enabled_test() ->
+    Tab = ets:new(test_members, [set, public]),
+    application:set_env(fluxer_gateway, push_mentions_respect_active_session, false),
+    try
+        true = ets:insert(Tab, {1, #{<<"roles">> => []}}),
+        true = ets:insert(Tab, {3, #{<<"roles">> => [<<"200">>]}}),
+        State = compact_scan_state(Tab),
+        MessageData = #{<<"mentions">> => [#{<<"id">> => <<"3">>}]},
+        Context = compact_scan_context(MessageData, 10, State),
+        {ok, Scan} = scan_push_members(Tab, Context, State),
+        ?assertEqual([1, 3], lists:sort(maps:get(eligible_user_ids, Scan)))
+    after
+        application:unset_env(fluxer_gateway, push_mentions_respect_active_session),
+        ets:delete(Tab)
+    end.
 
-send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
+scan_push_members_reports_unavailable_table_test() ->
+    Tab = ets:new(test_members, [set, public]),
+    State = compact_scan_state(Tab),
+    Context = compact_scan_context(#{}, 10, State),
+    true = ets:delete(Tab),
+    ?assertEqual({error, table_unavailable}, scan_push_members(Tab, Context, State)).
+
+collect_format_mention_ids_is_bounded_test() ->
+    Mentions = [#{<<"id">> => integer_to_binary(Id)} || Id <- lists:seq(1, 80)],
+    Result = collect_format_mention_ids(Mentions, ?MAX_FORMAT_MEMBERS, #{}),
+    ?assertEqual(?MAX_FORMAT_MEMBERS, map_size(Result)).
+
+spawn_push_without_members_table_falls_back_to_legacy_push_test() ->
+    reset_push_worker_state(),
+    try
+        ?assertEqual(
+            ok, spawn_push(#{}, 7, #{id => 7, data => #{}, sessions => #{}}, undefined)
+        ),
+        ?assert(is_pid(get(push_inflight)))
+    after
+        reset_push_worker_state()
+    end.
+
+compact_push_includes_large_guild_metadata_test() ->
     Self = self(),
+    Tab = ets:new(test_members, [set, public]),
     ok = meck:new(push, [passthrough, no_link]),
     try
         ok = meck:expect(push, handle_message_create, fun(Params) ->
             Self ! {push_params, Params},
             ok
         end),
+        State = compact_scan_state(Tab),
+        Scan = #{
+            eligible_user_ids => [1],
+            user_roles => #{1 => []},
+            format_members => #{1 => #{<<"nick">> => <<"one">>}}
+        },
         MessageData = #{
-            <<"channel_id">> => <<"100">>,
+            <<"channel_id">> => <<"10">>,
             <<"author">> => #{<<"id">> => <<"42">>}
         },
-        Data = #{
-            <<"guild">> => #{
-                <<"name">> => <<"Test Guild">>,
-                <<"default_message_notifications">> => 0
-            },
-            <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-            ],
-            <<"channel_index">> => #{
-                100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-            },
-            <<"roles">> => [
-                #{<<"id">> => <<"200">>, <<"name">> => <<"Alerts">>}
-            ],
-            <<"role_index">> => #{
-                200 => #{<<"id">> => <<"200">>, <<"name">> => <<"Alerts">>}
-            }
-        },
-        ?assertEqual(
-            ok, send_push_to_eligible_users(MessageData, 10, [1], #{1 => []}, #{}, Data)
-        ),
+        ?assertEqual(ok, send_compact_scanned_push(MessageData, 7, Scan, State)),
         receive
             {push_params, Params} ->
-                ?assertEqual(<<"general">>, maps:get(channel_name, Params)),
-                ?assertEqual(<<"Test Guild">>, maps:get(guild_name, Params)),
-                ?assertEqual(#{200 => <<"Alerts">>}, maps:get(role_names, Params))
+                ?assertEqual(49435, maps:get(guild_member_count, Params)),
+                ?assertEqual([<<"COMMUNITY">>], maps:get(guild_features, Params)),
+                ?assertEqual([1], maps:get(user_ids, Params)),
+                ?assertEqual(<<"general">>, maps:get(channel_name, Params))
         after 1000 ->
             ?assert(false)
         end,
         ?assert(meck:validate(push))
     after
-        meck:unload(push)
+        meck:unload(push),
+        ets:delete(Tab)
     end.
 
-find_channel_name_invalid_id_test() ->
-    Data = #{<<"channels">> => []},
-    ?assertEqual(<<"unknown">>, find_channel_name(<<"invalid">>, Data)).
+thread_scope_context() ->
+    #{
+        thread_scope => #{thread => #{<<"id">> => 500}, members => #{1 => #{}}},
+        direct_mentions => #{2 => true},
+        mention_roles => #{},
+        role_adds => #{},
+        author_id => 99,
+        format_members => #{4 => true}
+    }.
 
-build_role_names_map_uses_role_index_test() ->
+thread_scan_visits_members_mentions_and_format_ids_only_test() ->
+    Tab = ets:new(test_members, [set, public]),
+    try
+        true = ets:insert(Tab, [{Id, #{}} || Id <- [1, 2, 3, 4, 5]]),
+        Context = thread_scope_context(),
+        ?assertEqual([1, 2, 4], scan_user_ids(Tab, Context)),
+        ?assertEqual([1, 2, 3, 4], scan_user_ids(Tab, Context#{role_adds => #{3 => true}})),
+        ?assertEqual(
+            [1, 2, 3, 4, 5], lists:sort(scan_user_ids(Tab, Context#{thread_scope => undefined}))
+        )
+    after
+        ets:delete(Tab)
+    end.
+
+thread_push_candidates_are_members_and_mentioned_users_test() ->
+    Context = thread_scope_context(),
+    Scope = maps:get(thread_scope, Context),
+    RoleMember = #{<<"roles">> => [<<"9">>]},
+    ?assert(thread_push_candidate(1, #{}, Scope, Context)),
+    ?assert(thread_push_candidate(2, #{}, Scope, Context)),
+    ?assertNot(thread_push_candidate(3, #{}, Scope, Context)),
+    ?assertNot(thread_push_candidate(3, RoleMember, Scope, Context)),
+    ?assertNot(
+        thread_push_candidate(3, RoleMember, Scope, Context#{mention_roles => #{9 => true}})
+    ),
+    ?assert(thread_push_candidate(3, RoleMember, Scope, Context#{role_adds => #{3 => true}})),
+    ?assert(thread_push_candidate(3, #{}, undefined, Context)).
+
+thread_role_adds_cap_at_first_visible_role_holders_test() ->
+    Scope = #{thread => #{<<"id">> => 500, <<"type">> => 11}, members => #{1 => #{}}},
+    Context = (thread_scope_context())#{mention_roles => #{9 => true}},
+    RoleMember = #{<<"roles">> => [<<"9">>]},
+    Bot = RoleMember#{<<"user">> => #{<<"bot">> => true}},
+    Extra = [{Id, RoleMember} || Id <- lists:seq(1000, 1000 + ?MAX_ROLE_MENTION_THREAD_ADDS)],
+    Rows = maps:from_list(
+        lists:reverse(Extra) ++
+            [
+                {1, RoleMember},
+                {2, RoleMember},
+                {5, RoleMember},
+                {6, #{}},
+                {7, Bot},
+                {8, RoleMember},
+                {99, RoleMember}
+            ]
+    ),
+    Visible = fun(UserId, _Member) -> UserId =/= 8 end,
+    Adds = thread_role_adds(Scope, Context, {map, Rows}, Visible),
+    ?assertEqual(?MAX_ROLE_MENTION_THREAD_ADDS, map_size(Adds)),
+    ?assert(maps:is_key(5, Adds)),
+    ?assert(maps:is_key(1000, Adds)),
+    ?assertNot(maps:is_key(1000 + ?MAX_ROLE_MENTION_THREAD_ADDS - 1, Adds)),
+    ?assertNot(maps:is_key(1000 + ?MAX_ROLE_MENTION_THREAD_ADDS, Adds)),
+    [
+        ?assertNot(maps:is_key(Id, Adds))
+     || Id <- [1, 2, 6, 7, 8, 99]
+    ],
+    ?assertNot(
+        thread_push_candidate(1000 + ?MAX_ROLE_MENTION_THREAD_ADDS, RoleMember, Scope, Context#{
+            role_adds => Adds
+        })
+    ),
+    ?assert(thread_push_candidate(5, RoleMember, Scope, Context#{role_adds => Adds})).
+
+thread_role_adds_cap_at_thread_member_room_test() ->
+    Existing = maps:from_list([{Id, #{}} || Id <- lists:seq(1, ?MAX_THREAD_MEMBERS - 5)]),
+    Scope = #{thread => #{<<"id">> => 500, <<"type">> => 11}, members => Existing},
+    Context = (thread_scope_context())#{mention_roles => #{9 => true}},
+    RoleMember = #{<<"roles">> => [<<"9">>]},
+    Rows = maps:from_list([{Id, RoleMember} || Id <- lists:seq(5000, 5099)]),
+    Visible = fun(_UserId, _Member) -> true end,
+    Adds = thread_role_adds(Scope, Context, {map, Rows}, Visible),
+    ?assertEqual(lists:seq(5000, 5004), lists:sort(maps:keys(Adds))),
+    Full = maps:from_list([{Id, #{}} || Id <- lists:seq(1, ?MAX_THREAD_MEMBERS)]),
+    ?assertEqual(
+        #{}, thread_role_adds(Scope#{members => Full}, Context, {map, Rows}, Visible)
+    ).
+
+thread_role_adds_skip_private_and_archived_threads_test() ->
+    Context = (thread_scope_context())#{mention_roles => #{9 => true}},
+    Rows = {map, #{5 => #{<<"roles">> => [<<"9">>]}}},
+    Visible = fun(_UserId, _Member) -> true end,
+    Scope = fun(Thread) -> #{thread => Thread, members => #{}} end,
+    ?assertEqual(
+        #{5 => true}, thread_role_adds(Scope(#{<<"type">> => 11}), Context, Rows, Visible)
+    ),
+    ?assertEqual(#{}, thread_role_adds(Scope(#{<<"type">> => 12}), Context, Rows, Visible)),
+    ?assertEqual(
+        #{},
+        thread_role_adds(
+            Scope(#{<<"type">> => 11, <<"thread_metadata">> => #{<<"archived">> => true}}),
+            Context,
+            Rows,
+            Visible
+        )
+    ),
+    ?assertEqual(
+        #{},
+        thread_role_adds(
+            Scope(#{<<"type">> => 11}), Context#{mention_roles => #{}}, Rows, Visible
+        )
+    ).
+
+compact_format_data_restricts_member_map_test() ->
     Data = #{
-        <<"roles">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"Fallback">>}
-        ],
-        <<"role_index">> => #{
-            100 => #{<<"id">> => <<"100">>, <<"name">> => <<"Mods">>},
-            200 => #{<<"id">> => <<"200">>, <<"name">> => <<>>},
-            bad => #{<<"id">> => <<"300">>, <<"name">> => <<"Bad">>}
-        }
+        <<"guild">> => #{},
+        <<"members">> => #{1 => #{}, 2 => #{}, 3 => #{}},
+        member_list_revision => make_ref()
     },
-    ?assertEqual(#{100 => <<"Mods">>}, build_role_names_map(Data)).
+    FormatMembers = #{2 => #{<<"roles">> => [<<"200">>]}},
+    Result = compact_format_data(Data, FormatMembers),
+    ?assertNot(maps:is_key(member_list_revision, Result)),
+    ?assertEqual(FormatMembers, maps:get(<<"members">>, Result)),
+    ?assertEqual(FormatMembers, maps:get(members_normalized, Result)),
+    ?assertEqual([2], maps:get(members_sorted_ids, Result)),
+    ?assertEqual(#{200 => #{2 => true}}, maps:get(<<"member_role_index">>, Result)).
 
-extract_role_ids_test() ->
-    Member = #{<<"roles">> => [<<"10">>, <<"20">>, <<"invalid">>]},
-    Result = lists:sort(extract_role_ids(Member)),
-    ?assertEqual([10, 20], Result).
+inflight_pid_without_a_slot_still_counts_against_the_limit_test() ->
+    reset_push_worker_state(),
+    Blocker = blocking_push_worker(),
+    put(push_inflight, Blocker),
+    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 1),
+    ok = application:set_env(fluxer_gateway, ?QUEUE_LIMIT_KEY, 0),
+    try
+        ?assertEqual([Blocker], worker_pids(live_push_workers())),
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertEqual(Blocker, get(push_inflight)),
+        ?assertEqual([Blocker], worker_pids(get(push_inflight_workers)))
+    after
+        stop_push_worker(Blocker),
+        reset_push_worker_state()
+    end.
 
-extract_role_ids_empty_test() ->
-    Member = #{<<"roles">> => []},
-    ?assertEqual([], extract_role_ids(Member)).
+unknown_worker_entries_are_dropped_test() ->
+    reset_push_worker_state(),
+    Blocker = blocking_push_worker(),
+    put(push_inflight_workers, [Blocker, {Blocker, 0}, not_a_worker]),
+    try
+        ?assertEqual([], live_push_workers())
+    after
+        stop_push_worker(Blocker),
+        reset_push_worker_state()
+    end.
 
-extract_role_ids_missing_key_test() ->
-    Member = #{},
-    ?assertEqual([], extract_role_ids(Member)).
+remote_worker_pid_is_dropped_without_badarg_test() ->
+    reset_push_worker_state(),
+    Remote = remote_test_pid(),
+    put(push_inflight_workers, [{1, Remote, erlang:monotonic_time(millisecond)}]),
+    try
+        ?assertNotEqual(node(), node(Remote)),
+        ?assertError(badarg, erlang:is_process_alive(Remote)),
+        ?assertEqual(false, local_process_alive(Remote)),
+        ?assertEqual([], live_push_workers())
+    after
+        reset_push_worker_state()
+    end.
+
+reused_worker_pid_consumes_only_one_slot_test() ->
+    reset_push_worker_state(),
+    Blocker = blocking_push_worker(),
+    Now = erlang:monotonic_time(millisecond),
+    put(push_inflight_workers, [{2, Blocker, Now}, {1, Blocker, Now - 10}]),
+    Before = read_push_counter(slot_deduped),
+    try
+        ?assertEqual([{2, Blocker, Now}], live_push_workers()),
+        ?assertEqual(Before + 1, read_push_counter(slot_deduped))
+    after
+        stop_push_worker(Blocker),
+        reset_push_worker_state()
+    end.
+
+stale_push_worker_slot_is_reclaimed_and_counted_test() ->
+    reset_push_worker_state(),
+    Stale = blocking_push_worker(),
+    Aged = erlang:monotonic_time(millisecond) - ?PUSH_WORKER_MAX_AGE_MS - 1,
+    put(push_inflight_workers, [{1, Stale, Aged}]),
+    Before = read_push_counter(slot_reclaimed),
+    try
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertEqual(Before + 1, read_push_counter(slot_reclaimed)),
+        ?assertEqual(1, length(get(push_inflight_workers))),
+        ?assertNot(lists:member(Stale, worker_pids(get(push_inflight_workers))))
+    after
+        stop_push_worker(Stale),
+        reset_push_worker_state()
+    end.
+
+bounded_scan_leaves_the_members_table_unfixed_test() ->
+    reset_push_worker_state(),
+    Tab = ets:new(test_members, [set, public]),
+    try
+        true = ets:insert(Tab, {1, #{<<"roles">> => []}}),
+        true = ets:insert(Tab, {2, #{<<"roles">> => []}}),
+        State = compact_scan_state(Tab),
+        Context = compact_scan_context(#{}, 10, State),
+        ?assertEqual(false, ets:info(Tab, fixed)),
+        {ok, Scan} = scan_push_members(Tab, Context, State),
+        ?assertEqual([1], lists:sort(maps:get(eligible_user_ids, Scan))),
+        ?assertEqual(false, ets:info(Tab, fixed)),
+        ?assertEqual(false, ets:info(Tab, safe_fixed_monotonic_time))
+    after
+        ets:delete(Tab),
+        reset_push_worker_state()
+    end.
+
+bounded_push_concurrency_spawns_second_worker_under_limit_test() ->
+    reset_push_worker_state(),
+    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 3),
+    Blocker = blocking_push_worker(),
+    put(push_inflight, Blocker),
+    put(push_inflight_workers, [{1, Blocker, erlang:monotonic_time(millisecond)}]),
+    try
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertNotEqual(Blocker, get(push_inflight)),
+        ?assertEqual(2, length(get(push_inflight_workers))),
+        ?assert(lists:member(Blocker, worker_pids(get(push_inflight_workers))))
+    after
+        stop_push_worker(Blocker),
+        reset_push_worker_state()
+    end.
+
+bounded_push_concurrency_counts_drops_at_limit_test() ->
+    reset_push_worker_state(),
+    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 2),
+    ok = application:set_env(fluxer_gateway, ?QUEUE_LIMIT_KEY, 0),
+    First = blocking_push_worker(),
+    Second = blocking_push_worker(),
+    Now = erlang:monotonic_time(millisecond),
+    put(push_inflight, Second),
+    put(push_inflight_workers, [{2, Second, Now}, {1, First, Now}]),
+    Before = read_push_counter(dropped_at_limit),
+    try
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertEqual(Second, get(push_inflight)),
+        ?assertEqual([Second, First], worker_pids(get(push_inflight_workers))),
+        ?assertEqual(Before + 1, read_push_counter(dropped_at_limit)),
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertEqual(Before + 2, read_push_counter(dropped_at_limit)),
+        ?assertEqual([Second, First], worker_pids(get(push_inflight_workers)))
+    after
+        stop_push_worker(First),
+        stop_push_worker(Second),
+        reset_push_worker_state()
+    end.
+
+bounded_push_concurrency_reaps_finished_workers_test() ->
+    reset_push_worker_state(),
+    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 1),
+    Finished = blocking_push_worker(),
+    stop_push_worker(Finished),
+    put(push_inflight, Finished),
+    put(push_inflight_workers, [{1, Finished, erlang:monotonic_time(millisecond)}]),
+    try
+        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
+        ?assertNot(lists:member(Finished, worker_pids(get(push_inflight_workers))))
+    after
+        reset_push_worker_state()
+    end.
+
+bounded_worker_list_stays_bounded_by_the_limit_test() ->
+    reset_push_worker_state(),
+    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 2),
+    ok = application:set_env(fluxer_gateway, ?QUEUE_LIMIT_KEY, 0),
+    Blockers = [blocking_push_worker() || _ <- lists:seq(1, 6)],
+    Now = erlang:monotonic_time(millisecond),
+    put(push_inflight_workers, [
+        {Gen, Pid, Now}
+     || {Gen, Pid} <- lists:zip(lists:seq(1, 6), Blockers)
+    ]),
+    try
+        lists:foreach(
+            fun(_) -> ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())) end,
+            lists:seq(1, 20)
+        ),
+        ?assert(length(get(push_inflight_workers)) =< 6)
+    after
+        lists:foreach(fun stop_push_worker/1, Blockers),
+        reset_push_worker_state()
+    end.
+
+push_concurrency_limit_defaults_and_clamps_test() ->
+    reset_push_worker_state(),
+    try
+        ?assertEqual(?DEFAULT_PUSH_CONCURRENCY, push_concurrency_limit()),
+        ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 0),
+        ?assertEqual(?DEFAULT_PUSH_CONCURRENCY, push_concurrency_limit()),
+        ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, not_a_number),
+        ?assertEqual(?DEFAULT_PUSH_CONCURRENCY, push_concurrency_limit()),
+        ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 1000),
+        ?assertEqual(?MAX_PUSH_CONCURRENCY, push_concurrency_limit()),
+        ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 6),
+        ?assertEqual(6, push_concurrency_limit())
+    after
+        reset_push_worker_state()
+    end.
+
+legacy_test_state() ->
+    #{id => 7, data => #{}, sessions => #{}}.
+
+worker_pids(Workers) ->
+    [Pid || {_Gen, Pid, _StartedMs} <- Workers].
+
+remote_test_pid() ->
+    binary_to_term(<<131, 88, 119, 12, "fake@nowhere", 1:32, 0:32, 1:32>>).
+
+read_push_counter(Key) ->
+    try ets:lookup(?PUSH_COUNTERS, Key) of
+        [{Key, Value}] when is_integer(Value) -> Value;
+        _ -> 0
+    catch
+        error:badarg -> 0
+    end.
+
+blocking_push_worker() ->
+    spawn(fun() ->
+        receive
+            stop -> ok
+        end
+    end).
+
+stop_push_worker(Pid) ->
+    Ref = monitor(process, Pid),
+    Pid ! stop,
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 5000 -> error(push_worker_did_not_stop)
+    end.
+
+reset_push_worker_state() ->
+    erase(push_inflight),
+    erase(push_inflight_workers),
+    ok = application:unset_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY).
+
+forum_thread_created_state(Tab, Store) ->
+    Forum = #{<<"id">> => <<"300">>, <<"name">> => <<"ideas">>, <<"type">> => 15},
+    Base = compact_test_data(Tab),
+    #{
+        id => 7,
+        data => compact_push_data(Base#{
+            <<"channels">> => [Forum],
+            <<"channel_index">> => #{300 => Forum},
+            thread_gate => #{active => true, version => 1},
+            thread_store => Store
+        }),
+        virtual_channel_access => maps:from_list([
+            {UserId, sets:from_list([300])}
+         || UserId <- [1, 2, 3, 4, 6, 42]
+        ]),
+        members_ets => Tab,
+        session_eligibility => #{3 => false},
+        member_count => 10
+    }.
+
+collect_push_params(Acc) ->
+    receive
+        {push_params, Params} -> collect_push_params([Params | Acc])
+    after 100 -> lists:reverse(Acc)
+    end.
+
+forum_thread_created_pushes_forum_watchers_outside_the_thread_test() ->
+    Self = self(),
+    Tab = ets:new(test_members, [set, public]),
+    Store = guild_thread_store:new(),
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    {ok, Config} = channel_threads_config:validate_config(#{
+        <<"enabled">> => true, <<"user_basis_points">> => 10000
+    }),
+    persistent_term:put(channel_threads_config, Config),
+    ok = meck:new(push, [passthrough, no_link]),
+    try
+        ok = meck:expect(push, handle_message_create, fun(Params) ->
+            Self ! {push_params, Params},
+            ok
+        end),
+        Bot = #{<<"roles">> => [], <<"user">> => #{<<"bot">> => true}},
+        true = ets:insert(
+            Tab, [{Id, #{<<"roles">> => []}} || Id <- [1, 2, 3, 4, 5, 42]] ++ [{6, Bot}]
+        ),
+        guild_thread_store:load(
+            Store,
+            [
+                #{
+                    <<"id">> => 700,
+                    <<"parent_id">> => 300,
+                    <<"type">> => 11,
+                    <<"name">> => <<"post">>
+                }
+            ],
+            [#{<<"id">> => <<"700">>, <<"user_id">> => <<"1">>, <<"flags">> => 0}]
+        ),
+        State = forum_thread_created_state(Tab, Store),
+        Starter = #{
+            <<"id">> => <<"700">>,
+            <<"channel_id">> => <<"700">>,
+            <<"author">> => #{<<"id">> => <<"42">>},
+            <<"mentions">> => [#{<<"id">> => <<"4">>}]
+        },
+        ok = scan_and_send_compact_push(Starter, 7, 700, State),
+        Forum = [
+            Params
+         || #{message_data := #{<<"__thread_push">> := #{<<"forum_thread_created">> := true}}} =
+                Params <- collect_push_params([])
+        ],
+        ?assertMatch([#{user_ids := [2], channel_name := <<"post">>}], Forum),
+        [#{message_data := ForumMessage}] = Forum,
+        ?assertNot(maps:is_key(<<"__forum_thread_created">>, ForumMessage)),
+        ?assertMatch(
+            #{<<"parent_id">> := 300, <<"parent_name">> := <<"ideas">>},
+            maps:get(<<"__thread_push">>, ForumMessage)
+        ),
+        Reply = Starter#{<<"id">> => <<"701">>},
+        ok = scan_and_send_compact_push(Reply, 7, 700, State),
+        ?assertEqual(
+            [],
+            [
+                P
+             || #{
+                    message_data := #{
+                        <<"__thread_push">> := #{<<"forum_thread_created">> := true}
+                    }
+                } =
+                    P <- collect_push_params([])
+            ]
+        )
+    after
+        meck:unload(push),
+        restore_threads_config(Previous),
+        guild_thread_store:destroy(Store),
+        ets:delete(Tab)
+    end.
+
+forum_thread_created_holds_suppressed_members_through_grace_test() ->
+    Self = self(),
+    Tab = ets:new(test_members, [set, public]),
+    Store = guild_thread_store:new(),
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    {ok, Config} = channel_threads_config:validate_config(#{
+        <<"enabled">> => true, <<"user_basis_points">> => 10000
+    }),
+    persistent_term:put(channel_threads_config, Config),
+    ok = meck:new(push, [passthrough, no_link]),
+    try
+        ok = meck:expect(push, handle_message_create, fun(Params) ->
+            Self ! {push_params, Params},
+            ok
+        end),
+        true = ets:insert(Tab, [{Id, #{<<"roles">> => []}} || Id <- [2, 3, 4, 42]]),
+        guild_thread_store:load(
+            Store,
+            [
+                #{
+                    <<"id">> => 700,
+                    <<"parent_id">> => 300,
+                    <<"type">> => 11,
+                    <<"name">> => <<"post">>
+                }
+            ],
+            []
+        ),
+        {Ended, EndedRef} = spawn_monitor(fun() -> ok end),
+        receive
+            {'DOWN', EndedRef, process, Ended, _} -> ok
+        end,
+        Base = forum_thread_created_state(Tab, Store),
+        State = Base#{
+            session_eligibility => #{3 => false, 4 => false},
+            grace_hold => {#{3 => [{<<"s3">>, Ended}]}, erlang:monotonic_time(millisecond) + 20}
+        },
+        Starter = #{
+            <<"id">> => <<"700">>,
+            <<"channel_id">> => <<"700">>,
+            <<"author">> => #{<<"id">> => <<"42">>}
+        },
+        ok = scan_and_send_compact_push(Starter, 7, 700, State),
+        Forum = [
+            UserIds
+         || #{
+                user_ids := UserIds,
+                message_data := #{<<"__thread_push">> := #{<<"forum_thread_created">> := true}}
+            } <- collect_push_params([])
+        ],
+        ?assertEqual([[2], [3]], Forum)
+    after
+        meck:unload(push),
+        restore_threads_config(Previous),
+        guild_thread_store:destroy(Store),
+        ets:delete(Tab)
+    end.
+
+restore_threads_config(undefined) ->
+    _ = persistent_term:erase(channel_threads_config),
+    ok;
+restore_threads_config(Previous) ->
+    persistent_term:put(channel_threads_config, Previous).
+
+compact_test_data(Tab) ->
+    #{
+        <<"guild">> => #{
+            <<"id">> => <<"7">>,
+            <<"owner_id">> => <<"999">>,
+            <<"features">> => [<<"COMMUNITY">>],
+            <<"default_message_notifications">> => 0
+        },
+        <<"roles">> => [],
+        <<"role_index">> => #{},
+        <<"channels">> => [#{<<"id">> => <<"10">>, <<"name">> => <<"general">>}],
+        <<"channel_index">> => #{10 => #{<<"id">> => <<"10">>, <<"name">> => <<"general">>}},
+        <<"members">> => #{1 => #{}, 2 => #{}, 3 => #{}},
+        members_normalized => #{1 => #{}, 2 => #{}, 3 => #{}},
+        <<"member_role_index">> => #{},
+        members_ets => Tab
+    }.
+
+compact_scan_state(Tab) ->
+    #{
+        id => 7,
+        data => compact_push_data(compact_test_data(Tab)),
+        virtual_channel_access => #{
+            1 => sets:from_list([10]),
+            3 => sets:from_list([10])
+        },
+        members_ets => Tab,
+        session_eligibility => #{1 => true, 2 => true, 3 => false},
+        member_count => 49435
+    }.
 
 -endif.

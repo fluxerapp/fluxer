@@ -1,32 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import type {ElectronAPI} from '@app/types/electron.d';
 import Bowser from 'bowser';
 
+export {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/ElectronRuntime';
+
 const logger = new Logger('NativeUtils');
-
-export function isElectron(): boolean {
-	if (typeof window === 'undefined') return false;
-	return (
-		(
-			window as {
-				electron?: ElectronAPI;
-			}
-		).electron !== undefined
-	);
-}
-
-export function hasUnavailableElectronNativeContext(): boolean {
-	if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-	return (
-		(
-			window as {
-				electron?: ElectronAPI | null;
-			}
-		).electron == null && /\bElectron\/\d+(?:\.\d+)*/.test(navigator.userAgent)
-	);
-}
 
 export function getElectronAPI(): ElectronAPI | null {
 	if (!isElectron()) return null;
@@ -109,7 +91,7 @@ export async function getNativePlatform(): Promise<NativePlatform> {
 
 export async function isLinuxWaylandDesktopSession(): Promise<boolean> {
 	const electronApi = getElectronAPI();
-	if (!electronApi || electronApi.platform !== 'linux') {
+	if (electronApi?.platform !== 'linux') {
 		return false;
 	}
 	try {
@@ -168,8 +150,6 @@ export function supportsDesktopScreenShareAudioCapture(): boolean {
 	return electronApi.platform === 'win32' || electronApi.platform === 'linux' || electronApi.platform === 'darwin';
 }
 
-let externalLinkHandlerAttached = false;
-
 const BLOCKED_EXTERNAL_URL_PROTOCOLS = new Set([
 	'file:',
 	'javascript:',
@@ -183,9 +163,9 @@ const BLOCKED_EXTERNAL_URL_PROTOCOLS = new Set([
 ]);
 const EXPLICIT_URL_PROTOCOL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
-const getSafeExternalUrl = (href: string | null): string | null => {
+export function getSafeExternalUrl(href: string | null): string | null {
 	if (!href) return null;
-	const trimmed = href.trim();
+	const trimmed = unwrapDesktopLocalResourceURL(href.trim());
 	if (!EXPLICIT_URL_PROTOCOL_PATTERN.test(trimmed)) return null;
 	try {
 		const url = new URL(trimmed);
@@ -194,22 +174,44 @@ const getSafeExternalUrl = (href: string | null): string | null => {
 	} catch {
 		return null;
 	}
-};
+}
+
+export async function navigateToExternalURL(url: string): Promise<void> {
+	const safeUrl = getSafeExternalUrl(url);
+	if (!safeUrl) {
+		throw new Error('External navigation URL is invalid');
+	}
+	const electronApi = getElectronAPI();
+	if (electronApi) {
+		await electronApi.openExternal(safeUrl);
+		return;
+	}
+	if (hasUnavailableElectronNativeContext()) {
+		throw new Error('Desktop external navigation bridge is unavailable');
+	}
+	window.location.assign(safeUrl);
+}
+
+async function refreshAttachmentUrl(url: string): Promise<string> {
+	const {default: AttachmentUrlRefresher} = await import('@app/features/messaging/state/AttachmentUrlRefresher');
+	return AttachmentUrlRefresher.refresh(url);
+}
 
 export async function openExternalUrl(url: string, target: string = '_blank') {
 	const safeUrl = getSafeExternalUrl(url);
 	if (!safeUrl) return;
+	const refreshedUrl = await refreshAttachmentUrl(safeUrl);
 	const electronApi = getElectronAPI();
 	if (electronApi) {
 		try {
-			await electronApi.openExternal(safeUrl);
+			await electronApi.openExternal(refreshedUrl);
 			return;
 		} catch (error) {
 			logger.error(' Failed to open external URL via Electron', error);
 			return;
 		}
 	}
-	window.open(safeUrl, target, 'noopener,noreferrer');
+	window.open(refreshedUrl, target, 'noopener,noreferrer');
 }
 
 interface ExternalLinkClickEvent {
@@ -233,55 +235,27 @@ export function handleExternalLinkClick(
 	void openExternalUrl(url);
 }
 
-export function attachExternalLinkInterceptor() {
-	if (!isDesktop() || externalLinkHandlerAttached) return () => undefined;
-	const handler = (event: MouseEvent) => {
-		if (event.defaultPrevented) return;
-		if (event.button !== 0) return;
-		const target = event.target as HTMLElement | null;
-		const anchor = target?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
-		if (!anchor) return;
-		const href = anchor.getAttribute('href');
-		if (!getSafeExternalUrl(href)) return;
-		event.preventDefault();
-		void openExternalUrl(href ?? '');
-	};
-	const auxHandler = (event: MouseEvent) => {
-		if (event.defaultPrevented) return;
-		if (event.button !== 1) return;
-		const target = event.target as HTMLElement | null;
-		const anchor = target?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
-		if (!anchor) return;
-		const href = anchor.getAttribute('href');
-		if (!getSafeExternalUrl(href)) return;
-		event.preventDefault();
-		void openExternalUrl(href ?? '');
-	};
-	document.addEventListener('click', handler);
-	document.addEventListener('auxclick', auxHandler);
-	externalLinkHandlerAttached = true;
-	return () => {
-		document.removeEventListener('click', handler);
-		document.removeEventListener('auxclick', auxHandler);
-		externalLinkHandlerAttached = false;
-	};
-}
-
-export type NativeDownloadOutcome = 'success' | 'canceled' | 'failed' | 'unavailable';
+export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';
 
 export async function downloadWithNative(options: {
 	url: string;
 	suggestedName?: string;
 	title?: string;
+	sha256?: string | null;
 }): Promise<NativeDownloadOutcome> {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
 		return 'unavailable';
 	}
 	try {
-		const result = await electronApi.downloadFile(options.url, options.suggestedName ?? 'download');
+		const result = await electronApi.downloadFile(
+			options.url,
+			options.suggestedName ?? 'download',
+			options.sha256 ?? null,
+		);
 		if (result.success) return 'success';
 		if (result.canceled) return 'canceled';
+		if (result.checksumMismatch) return 'checksum-mismatch';
 		return 'failed';
 	} catch (error) {
 		logger.error(' Native download failed, falling back to browser', error);

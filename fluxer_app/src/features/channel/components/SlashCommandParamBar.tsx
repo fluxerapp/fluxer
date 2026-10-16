@@ -35,30 +35,50 @@ export const SlashCommandParamBar = ({activeSlot, onClear}: SlashCommandParamBar
 				wrapperStyles.roundedTop,
 				wrapperStyles.noBottomBorder,
 			)}
+			data-flx="channel.slash-command-param-bar.flx-channel-slash-command-param-bar"
 		>
-			<flx-channel-slash-command-param-bar-body className={flxElementClassName(styles.inner)}>
-				<flx-channel-slash-command-param-bar-text className={flxElementClassName(styles.text)}>
-					<span className={styles.name}>{activeSlot.optionName}</span>
+			<flx-channel-slash-command-param-bar-body
+				className={flxElementClassName(styles.inner)}
+				data-flx="channel.slash-command-param-bar.inner"
+			>
+				<flx-channel-slash-command-param-bar-text
+					className={flxElementClassName(styles.text)}
+					data-flx="channel.slash-command-param-bar.text"
+				>
+					<span className={styles.name} data-flx="channel.slash-command-param-bar.name">
+						{activeSlot.optionName}
+					</span>
 					{showRequiredError ? (
-						<span className={styles.requiredError}>{i18n._(OPTION_IS_REQUIRED_DESCRIPTOR)}</span>
+						<span className={styles.requiredError} data-flx="channel.slash-command-param-bar.required-error">
+							{i18n._(OPTION_IS_REQUIRED_DESCRIPTOR)}
+						</span>
 					) : showDescription ? (
-						<span className={styles.description}>{activeSlot.description}</span>
+						<span className={styles.description} data-flx="channel.slash-command-param-bar.description">
+							{activeSlot.description}
+						</span>
 					) : null}
 				</flx-channel-slash-command-param-bar-text>
-				<flx-channel-slash-command-param-bar-controls className={flxElementClassName(styles.controls)}>
-					<FocusRing offset={-2}>
+				<flx-channel-slash-command-param-bar-controls
+					className={flxElementClassName(styles.controls)}
+					data-flx="channel.slash-command-param-bar.controls"
+				>
+					<FocusRing offset={-2} data-flx="channel.slash-command-param-bar.focus-ring">
 						<button
 							type="button"
 							className={styles.button}
 							onClick={onClear}
 							aria-label={i18n._(CLEAR_COMMAND_DESCRIPTOR)}
+							data-flx="channel.slash-command-param-bar.button.clear"
 						>
-							<XCircleIcon className={styles.icon} />
+							<XCircleIcon className={styles.icon} data-flx="channel.slash-command-param-bar.icon" />
 						</button>
 					</FocusRing>
 				</flx-channel-slash-command-param-bar-controls>
 			</flx-channel-slash-command-param-bar-body>
-			<flx-channel-slash-command-param-bar-separator className={flxElementClassName(wrapperStyles.separator)} />
+			<flx-channel-slash-command-param-bar-separator
+				className={flxElementClassName(wrapperStyles.separator)}
+				data-flx="channel.slash-command-param-bar.flx-channel-slash-command-param-bar-separator"
+			/>
 		</flx-channel-slash-command-param-bar>
 	);
 };

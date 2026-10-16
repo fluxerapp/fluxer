@@ -28,7 +28,7 @@ base_test_state() ->
 confirm_voice_connection_missing_id_test() ->
     State = base_test_state(),
     {reply, {error, validation_error, voice_missing_connection_id}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(#{}, State).
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(#{}, State).
 
 confirm_voice_connection_moves_pending_to_voice_states_test() ->
     VoiceState = #{
@@ -116,7 +116,7 @@ confirm_voice_connection_validates_nonce_test() ->
         pending_voice_connections => #{<<"conn1">> => PendingData}, voice_states => #{}
     }),
     {reply, {error, validation_error, voice_nonce_mismatch}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
             #{connection_id => <<"conn1">>, token_nonce => <<"wrong-nonce">>}, State
         ).
 
@@ -129,7 +129,7 @@ confirm_voice_connection_validates_expiry_test() ->
         pending_voice_connections => #{<<"conn1">> => PendingData}, voice_states => #{}
     }),
     {reply, {error, validation_error, voice_pending_expired}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
             #{connection_id => <<"conn1">>, token_nonce => <<"valid-nonce">>}, State
         ).
 
@@ -152,7 +152,7 @@ confirm_voice_connection_rejects_missing_nonce_test() ->
         pending_voice_connections => #{<<"conn1">> => PendingData}, voice_states => #{}
     }),
     {reply, {error, validation_error, voice_nonce_mismatch}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
             #{connection_id => <<"conn1">>}, State
         ).
 
@@ -171,9 +171,9 @@ pending_data_with_nonce(Now) ->
 
 confirm_success(Data, State) ->
     {reply, #{success := true}, NewState} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(Data, State),
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(Data, State),
     NewState.
 
 assert_not_found(Data, State) ->
     {reply, {error, not_found, voice_connection_not_found}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(Data, State).
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(Data, State).

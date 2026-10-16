@@ -18,6 +18,8 @@ export const IV_LENGTH = 12;
 
 export const E2EE_FLAG = 'lk_e2ee';
 
+export const E2EE_TRACK_ID = 'lk_e2ee_track_id';
+
 export const SALT = 'LKFrameEncryptionKey';
 
 export const KEY_PROVIDER_DEFAULTS: KeyProviderOptions = {
@@ -26,6 +28,7 @@ export const KEY_PROVIDER_DEFAULTS: KeyProviderOptions = {
 	ratchetWindowSize: 8,
 	failureTolerance: DECRYPTION_FAILURE_TOLERANCE,
 	keyringSize: 16,
+	keySize: 128,
 } as const;
 
 export const MAX_SIF_COUNT = 100;

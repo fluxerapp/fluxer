@@ -6,6 +6,8 @@ import MentionFeed from '@app/features/notification/state/MentionFeed';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
+import {loadThreadsForMessages} from '@app/features/threads/commands/ThreadCommands';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -41,6 +43,9 @@ async function runMentionFetch(label: string, options: MentionFetchOptions = {})
 	try {
 		logger.debug(label);
 		const data = await requestMentions(options);
+		if (ThreadGuilds.anyActive) {
+			await loadThreadsForMessages(data);
+		}
 		MentionFeed.handleRecentMentionsFetchSuccess(requestId, data);
 		logger.debug(`Successfully loaded ${data.length} mentions`);
 		return data;

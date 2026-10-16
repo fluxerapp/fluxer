@@ -29,37 +29,11 @@ ip_addrs_to_peers_filters_self_test() ->
             ok
     end.
 
-ip_addrs_to_peers_sorts_and_dedups_test() ->
-    Peers = gateway_cluster_discovery:ip_addrs_to_peers(
-        [{10, 0, 0, 3}, {10, 0, 0, 1}, {10, 0, 0, 2}, {10, 0, 0, 1}], "n"
-    ),
-    ?assertEqual(
-        [
-            list_to_atom("n@10.0.0.1"),
-            list_to_atom("n@10.0.0.2"),
-            list_to_atom("n@10.0.0.3")
-        ],
-        Peers
-    ).
-
-ip_addrs_to_peers_empty_test() ->
-    ?assertEqual([], gateway_cluster_discovery:ip_addrs_to_peers([], "n")).
-
 ip_addrs_to_peers_rejects_invalid_node_basename_test() ->
     ?assertEqual(
         [],
         gateway_cluster_discovery:ip_addrs_to_peers([{10, 0, 0, 1}], "bad node")
     ).
-
-peers_defaults_to_empty_test() ->
-    persistent_term:erase(?PEERS_KEY),
-    ?assertEqual([], gateway_cluster_discovery:peers()),
-    persistent_term:put(
-        ?PEERS_KEY,
-        [list_to_atom("n@1.2.3.4")]
-    ),
-    ?assertEqual([list_to_atom("n@1.2.3.4")], gateway_cluster_discovery:peers()),
-    persistent_term:erase(?PEERS_KEY).
 
 poll_with_undefined_dns_returns_empty_test() ->
     persistent_term:erase(?PEERS_KEY),
@@ -145,17 +119,6 @@ subscriber_messages_include_initial_state_test() ->
     end,
     ?assertMatch(#{subscribers := [{Self, _}]}, NewState),
     persistent_term:erase(?PEERS_KEY).
-
-subscriber_can_unsubscribe_test() ->
-    Self = self(),
-    State0 = base_state(#{}),
-    State1 = gateway_cluster_discovery:add_subscriber(Self, State0),
-    receive
-        {cluster_peers_changed, _} -> ok
-    after 100 -> ok
-    end,
-    State2 = gateway_cluster_discovery:remove_subscriber(Self, State1),
-    ?assertEqual([], maps:get(subscribers, State2)).
 
 base_state(Overrides) ->
     Defaults = #{

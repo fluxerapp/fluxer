@@ -20,21 +20,22 @@ export const GuildDetachedBanner = observer(function GuildDetachedBanner({guild}
 				: undefined,
 		[guild.bannerHeight, guild.bannerWidth],
 	);
+	const isDetachedBanner = guild.features.has(GuildFeatures.DETACHED_BANNER);
 	const staticBannerURL = useMemo(
-		() => AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, false) || null,
-		[guild.banner, guild.id],
+		() =>
+			isDetachedBanner ? AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, false) || null : null,
+		[guild.banner, guild.id, isDetachedBanner],
 	);
 	const animatedBannerURL = useMemo(
-		() => AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, true) || null,
-		[guild.banner, guild.id],
+		() => (isDetachedBanner ? AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, true) || null : null),
+		[guild.banner, guild.id, isDetachedBanner],
 	);
 	const {hoverRef: bannerHoverRef, imageUrl: bannerURL} = useAnimatedImageUrl({
 		staticUrl: staticBannerURL,
 		animatedUrl: animatedBannerURL,
 		kind: 'gif',
 	});
-	const isDetachedBanner = guild.features.has(GuildFeatures.DETACHED_BANNER);
-	if (!bannerURL || !isDetachedBanner) return null;
+	if (!bannerURL) return null;
 	const maxHeight = `${MAX_VIEWPORT_HEIGHT_FRACTION * 100}vh`;
 	const bannerHeight = guild.bannerHeight ?? DEFAULT_BANNER_HEIGHT;
 	return (

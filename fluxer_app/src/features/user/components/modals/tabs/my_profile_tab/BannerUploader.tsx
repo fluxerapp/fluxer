@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
 	ANIMATED_IMAGE_FORMATS,
 	BANNER_ASPECT_RATIO_LABEL,
 	BANNER_MINIMUM_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
-	PREMIUM_PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
+import {showAnimatedAvifUnsupportedModal} from '@app/features/expressions/utils/AnimatedAvifModalUtils';
+import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {formatImageUploadMinimumHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
@@ -24,42 +25,39 @@ import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
+import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader.module.css';
 import type {ProfileAssetMode} from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileAssetCustomizationStateMachine';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
+import {
+	DON_T_SHOW_DESCRIPTOR,
+	USE_CUSTOM_IMAGE_DESCRIPTOR,
+	USE_GLOBAL_PROFILE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
-const USE_GLOBAL_PROFILE_DESCRIPTOR = msg({
-	message: 'Use global profile',
-	comment: 'Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.',
-});
 const SHOW_YOUR_GLOBAL_PROFILE_BANNER_IN_THIS_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Show your global profile banner in this community',
 	comment: 'Label in the banner uploader. Keep the tone plain and specific.',
 });
-const USE_CUSTOM_IMAGE_DESCRIPTOR = msg({
-	message: 'Use custom image',
-	comment: 'Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.',
-});
+
 const UPLOAD_A_CUSTOM_BANNER_FOR_THIS_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Upload a custom banner for this community',
 	comment: 'Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.',
 });
-const DON_T_SHOW_DESCRIPTOR = msg({
-	message: "Don't show",
-	comment: 'Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.',
-});
+
 const PROFILE_BANNERS_REQUIRE_PREMIUM_DESCRIPTOR = msg({
 	message: 'Profile banners require {premiumProductName}.',
 	comment: 'Profile banner uploader notice shown when profile banners require premium.',
@@ -125,6 +123,7 @@ export const BannerUploader = observer(
 		bannerMode = 'inherit',
 		onBannerModeChange,
 	}: BannerUploaderProps) => {
+		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const {i18n} = useLingui();
 		const hasPremiumBannerEntitlement = isLimitToggleEnabled(
 			{feature_animated_banner: LimitResolver.resolve({key: 'feature_animated_banner', fallback: 0})},
@@ -157,14 +156,14 @@ export const BannerUploader = observer(
 			ModalCommands.push(
 				modal(() => (
 					<ConfirmModal
-						title={i18n._(PROFILE_BANNERS_REQUIRE_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						title={i18n._(PROFILE_BANNERS_REQUIRE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						description={
 							<Trans>
 								Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your
 								profile.
 							</Trans>
 						}
-						primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						primaryVariant="primary"
 						secondaryText={i18n._(CANCEL_DESCRIPTOR)}
 						onPrimary={() => {
@@ -179,40 +178,50 @@ export const BannerUploader = observer(
 		}, [i18n]);
 		const processBannerFile = useCallback(
 			async (file: File) => {
-				if (file.size > 10 * 1024 * 1024) {
-					showUserErrorModal(
-						i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
-						i18n._(BANNER_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+				if (file.size > GlobalLimits.getAvatarMaxSize()) {
+					showGenericErrorModal({
+						title: i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
+						message: i18n._(BANNER_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
+							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						}),
-					);
+						dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+					});
 					return;
 				}
 				const svg = isSvgFile(file);
-				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
+				const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
+				const isAnimatedAvif = animated && format === 'avif';
+				if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
+					showAnimatedAvifUnsupportedModal({i18n});
+					return;
+				}
+				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
 				ModalCommands.push(
 					modal(() => (
 						<AssetCropModal
 							imageUrl={base64}
-							sourceMimeType={svg ? 'image/svg+xml' : file.type}
 							assetType={AssetType.PROFILE_BANNER}
 							onCropComplete={(croppedBlob) => {
-								const reader = new FileReader();
-								reader.onload = () => {
-									const croppedBase64 = reader.result as string;
-									onBannerChange(croppedBase64);
-								};
-								reader.onerror = () => {
-									showUserErrorModal(
-										i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
-										i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
-									);
-								};
-								reader.readAsDataURL(croppedBlob);
+								void readBlobAsDataUrl(croppedBlob).then(
+									(croppedBase64) => {
+										onBannerChange(croppedBase64);
+									},
+									() => {
+										showGenericErrorModal({
+											title: i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
+											message: i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
+											dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+										});
+									},
+								);
 							}}
-							onSkip={() => {
-								onBannerChange(base64);
-							}}
+							onSkip={
+								isAnimatedAvif
+									? undefined
+									: () => {
+											onBannerChange(base64);
+										}
+							}
 							data-flx="user.my-profile-tab.banner-uploader.handle-banner-upload.asset-crop-modal"
 						/>
 					)),
@@ -221,7 +230,11 @@ export const BannerUploader = observer(
 			[i18n, onBannerChange],
 		);
 		const showBannerUploadError = useCallback(() => {
-			showUserErrorModal(i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR), i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR));
+			showGenericErrorModal({
+				title: i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
+				message: i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR),
+				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+			});
 		}, [i18n]);
 		const handlePickBannerFile = useCallback(async () => {
 			try {
@@ -251,7 +264,7 @@ export const BannerUploader = observer(
 				title: i18n._(CHANGE_BANNER_DESCRIPTOR),
 				uploadHint: formatImageUploadMinimumHint(i18n, {
 					formats: ANIMATED_IMAGE_FORMATS,
-					maxSize: IMAGE_MAX_SIZE_LABEL,
+					maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 					minimumSize: BANNER_MINIMUM_SIZE_LABEL,
 					aspectRatio: BANNER_ASPECT_RATIO_LABEL,
 				}),
@@ -357,7 +370,7 @@ export const BannerUploader = observer(
 				{!canUploadBanner && (
 					<div className={styles.description} data-flx="user.my-profile-tab.banner-uploader.description--3">
 						{shouldShowPremiumFeatures()
-							? i18n._(PROFILE_BANNERS_REQUIRE_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})
+							? i18n._(PROFILE_BANNERS_REQUIRE_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
 							: i18n._(PROFILE_BANNERS_NOT_ENABLED_DESCRIPTOR)}
 					</div>
 				)}

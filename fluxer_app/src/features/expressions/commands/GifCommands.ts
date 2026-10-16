@@ -11,7 +11,7 @@ import {GIF_PROVIDER_ATTRIBUTION_HEADER, GIF_PROVIDER_HEADER} from '@fluxer/sche
 const logger = new Logger('GIF');
 const getLocale = (): string => LocaleUtils.getCurrentLocale();
 
-export interface GifMediaFormat {
+interface GifMediaFormat {
 	src: string;
 	proxy_src: string;
 	width: number;
@@ -44,7 +44,7 @@ export interface GifFeatured {
 	gifs: Array<Gif>;
 }
 
-let featuredCache: Record<string, GifFeatured> = {};
+const featuredCache: Record<string, GifFeatured> = {};
 
 function localizedQuery(extra: Record<string, string> = {}): Record<string, string> {
 	return {...extra, locale: getLocale()};
@@ -139,8 +139,4 @@ export async function suggest(q: string): Promise<Array<string>> {
 		logger.error({q, error}, 'Failed to get GIF search suggestions');
 		throw error;
 	}
-}
-
-export function resetFeaturedCache(): void {
-	featuredCache = {};
 }

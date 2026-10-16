@@ -18,7 +18,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 const logger = new Logger('Router');
 
-export class RouterImpl implements Router {
+class RouterImpl implements Router {
 	private readonly routes: Array<Route>;
 	private readonly routeById: Map<string, Route>;
 	private readonly history;
@@ -64,10 +64,6 @@ export class RouterImpl implements Router {
 
 	getState(): RouterState {
 		return this.state;
-	}
-
-	getRoutes(): Array<Route> {
-		return this.routes;
 	}
 
 	subscribe(listener: () => void): () => void {

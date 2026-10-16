@@ -68,7 +68,7 @@
 }
 
 .optionSelected {
-	box-shadow: inset 0 0 0 0.0625rem var(--brand-primary);
+	box-shadow: inset 0 0 0 0.0625rem var(--brand-primary-foreground);
 }
 
 .emptyState {

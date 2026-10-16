@@ -1,17 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {
 	PremiumFlags,
 	PremiumFlagsDescriptions,
-	SuspiciousActivityFlags,
-	SuspiciousActivityFlagsDescriptions,
 	UserFlags,
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
+import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
+import {
+	BulkModerationBasis,
+	ModerationBasis,
+	NetworkBlockRequest,
+	SkippedNetworkBlock,
+} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
+import {CalendarDateType} from '@fluxer/schema/src/primitives/DateValidators';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
+import {createQueryIntegerType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createBitflagInt32Type,
 	createBitflagStringType,
+	createInt32EnumType,
 	createNamedStringLiteralUnion,
 	createStringType,
 	Int32Type,
@@ -20,6 +29,12 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {DiscriminatorType, EmailType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
+
+const DeletionReasonCodeType = createInt32EnumType(
+	Object.entries(DeletionReasons).map(([name, value]) => [value, name] as const),
+	'Reason the account was scheduled for deletion',
+	'DeletionReasonCode',
+);
 
 export const UserAdminResponseSchema = z.object({
 	id: SnowflakeStringType,
@@ -43,7 +58,6 @@ export const UserAdminResponseSchema = z.object({
 	email: z.string().nullable(),
 	email_verified: z.boolean(),
 	email_bounced: z.boolean(),
-	has_verified_phone: z.boolean(),
 	date_of_birth: z.string().nullable(),
 	locale: z.string().nullable(),
 	premium_type: Int32Type.nullable(),
@@ -51,18 +65,26 @@ export const UserAdminResponseSchema = z.object({
 	premium_until: z.string().nullable(),
 	premium_grace_ends_at: z.string().nullable(),
 	premium_lifetime_sequence: Int32Type.nullable(),
-	suspicious_activity_flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Suspicious activity indicators',
-		'SuspiciousActivityFlags',
-	),
 	temp_banned_until: z.string().nullable(),
 	pending_deletion_at: z.string().nullable(),
 	pending_bulk_message_deletion_at: z.string().nullable(),
-	deletion_reason_code: Int32Type.nullable(),
-	deletion_public_reason: z.string().nullable(),
-	acls: z.array(z.string()).max(100),
+	deletion_reason_code: DeletionReasonCodeType.nullable(),
+	deletion_public_reason: z
+		.string()
+		.nullable()
+		.describe('Public reason of a deletion scheduled before enforcement decisions existed. No longer written'),
+	deletion_audit_log_reason: z
+		.string()
+		.nullable()
+		.describe('Private reason recorded with the pending deletion, null without the audit log view permission'),
+	deletion_scheduled_by: SnowflakeStringType.nullable().describe(
+		'ID of the account that scheduled the pending deletion, null when it was not recorded',
+	),
+	deletion_scheduled_at: z.string().nullable().describe('ISO 8601 timestamp when the pending deletion was scheduled'),
+	enforcement_decision_id: SnowflakeStringType.nullable().describe(
+		'The enforcement decision behind the current suspension or closure, null when none owns it',
+	),
+	acls: z.array(z.string()).max(ADMIN_ACL_COUNT),
 	traits: z.array(z.string()).max(100),
 	has_totp: z.boolean(),
 	authenticator_types: z.array(Int32Type).max(10),
@@ -86,22 +108,6 @@ export const LookupUserRequest = z.union([LookupUserByQueryRequest, LookupUserBy
 
 export type LookupUserRequest = z.infer<typeof LookupUserRequest>;
 
-export const SearchUsersRequest = z.object({
-	query: createStringType(1, 1024).optional(),
-	email: createStringType(1, 320).optional(),
-	last_active_ip: createStringType(1, 64).optional(),
-	limit: z.number().int().min(1).max(200).default(50),
-	offset: z.number().int().min(0).default(0),
-});
-
-export type SearchUsersRequest = z.infer<typeof SearchUsersRequest>;
-
-export const ListUserSessionsRequest = z.object({
-	user_id: SnowflakeType,
-});
-
-export type ListUserSessionsRequest = z.infer<typeof ListUserSessionsRequest>;
-
 const UserContactChangeLogEntrySchema = z.object({
 	event_id: z.string(),
 	field: z.string(),
@@ -119,6 +125,7 @@ export const ListUserChangeLogResponseSchema = z.object({
 
 export const AdminUsersMeResponse = z.object({
 	user: UserAdminResponseSchema,
+	pending_registration_count: Int32Type.nullable(),
 });
 
 export type AdminUsersMeResponse = z.infer<typeof AdminUsersMeResponse>;
@@ -128,6 +135,12 @@ export const UserMutationResponse = z.object({
 });
 
 export type UserMutationResponse = z.infer<typeof UserMutationResponse>;
+
+export const UserRestrictionResponse = UserMutationResponse.extend({
+	skipped_ips: z.array(SkippedNetworkBlock).describe('Requested network blocks that were not written, with the reason'),
+});
+
+export type UserRestrictionResponse = z.infer<typeof UserRestrictionResponse>;
 
 export const LookupUserResponse = z.object({
 	users: z.array(UserAdminResponseSchema),
@@ -161,10 +174,12 @@ export const ListUserDmChannelsRequest = z
 		limit: z.number().int().min(1).max(200).default(50).describe('Maximum number of DM channels to return'),
 	})
 	.refine((value) => value.before === undefined || value.after === undefined, {
-		message: 'before and after cannot both be provided',
+		error: 'before and after cannot both be provided',
 	});
 
 export type ListUserDmChannelsRequest = z.infer<typeof ListUserDmChannelsRequest>;
+
+export type AdminResolvedUser = z.infer<typeof AdminResolvedUserSchema>;
 
 const AdminResolvedUserSchema = z.object({
 	id: SnowflakeStringType,
@@ -188,7 +203,7 @@ const AdminUserDmChannelSchema = z.object({
 	owner_id: SnowflakeStringType.nullable(),
 });
 
-export const ListUserDmChannelsResponse = z.object({
+const ListUserDmChannelsResponse = z.object({
 	channels: z.array(AdminUserDmChannelSchema).max(200),
 });
 export const ListUserGroupDmChannelsRequest = z.object({
@@ -197,12 +212,9 @@ export const ListUserGroupDmChannelsRequest = z.object({
 
 export type ListUserGroupDmChannelsRequest = z.infer<typeof ListUserGroupDmChannelsRequest>;
 
-export const ListUserGroupDmChannelsResponse = z.object({
+const ListUserGroupDmChannelsResponse = z.object({
 	channels: z.array(AdminUserDmChannelSchema).max(500),
 });
-
-export type ListUserGroupDmChannelsResponse = z.infer<typeof ListUserGroupDmChannelsResponse>;
-export type ListUserDmChannelsResponse = z.infer<typeof ListUserDmChannelsResponse>;
 
 export const TerminateSessionsResponse = z.object({
 	terminated_count: Int32Type,
@@ -222,21 +234,17 @@ const PremiumFlagValueType = createBitflagInt32Type(
 	'A single premium flag value to add or remove',
 	'PremiumFlags',
 );
-export const UpdateUserFlagsRequest = z.object({
+const UpdateUserFlagsRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to update'),
 	add_flags: z.array(UserFlagValueType).max(64).default([]).describe('User flags to add'),
 	remove_flags: z.array(UserFlagValueType).max(64).default([]).describe('User flags to remove'),
 });
 
-export type UpdateUserFlagsRequest = z.infer<typeof UpdateUserFlagsRequest>;
-
-export const UpdatePremiumFlagsRequest = z.object({
+const UpdatePremiumFlagsRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to update'),
 	add_flags: z.array(PremiumFlagValueType).max(64).default([]).describe('Premium flags to add'),
 	remove_flags: z.array(PremiumFlagValueType).max(64).default([]).describe('Premium flags to remove'),
 });
-
-export type UpdatePremiumFlagsRequest = z.infer<typeof UpdatePremiumFlagsRequest>;
 
 export const DisableMfaRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to disable MFA for'),
@@ -260,12 +268,7 @@ const UserProfileFieldEnum = createNamedStringLiteralUnion(
 	],
 	'User profile field that can be cleared',
 );
-export const ClearUserFieldsRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to clear fields for'),
-	fields: z.array(UserProfileFieldEnum).max(10).describe('List of profile fields to clear'),
-});
-
-export type ClearUserFieldsRequest = z.infer<typeof ClearUserFieldsRequest>;
+export type UserProfileField = z.infer<typeof UserProfileFieldEnum>;
 
 export const SetUserBotStatusRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to update'),
@@ -299,6 +302,13 @@ export const SendPasswordResetRequest = z.object({
 
 export type SendPasswordResetRequest = z.infer<typeof SendPasswordResetRequest>;
 
+export const AdminPasswordResetLinkResponse = z.object({
+	url: z.string().describe('Password reset link to hand to the user. It is shown only once'),
+	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when the link stops working'),
+});
+
+export type AdminPasswordResetLinkResponse = z.infer<typeof AdminPasswordResetLinkResponse>;
+
 export const ChangeUsernameRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change username for'),
 	username: UsernameType.describe('New username for the user'),
@@ -320,103 +330,37 @@ export const TerminateSessionsRequest = z.object({
 
 export type TerminateSessionsRequest = z.infer<typeof TerminateSessionsRequest>;
 
-export const TempBanUserRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to temporarily ban'),
-	duration_hours: z
-		.number()
-		.int()
-		.min(0)
-		.max(8760)
-		.describe('Duration of the ban in hours. Use 0 for a permanent ban (until manually unbanned).'),
-	reason: createStringType(0, 512).optional().describe('Reason for the temporary ban'),
-});
-
-export type TempBanUserRequest = z.infer<typeof TempBanUserRequest>;
-
-export const ScheduleAccountDeletionRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to schedule deletion for'),
-	reason_code: Int32Type.describe('Code indicating the reason for deletion'),
-	public_reason: createStringType(0, 512).optional().describe('Public-facing reason for the deletion'),
-	days_until_deletion: z
-		.number()
-		.int()
-		.min(1)
-		.max(365)
-		.default(60)
-		.describe('Number of days until the account is deleted'),
-});
-
-export type ScheduleAccountDeletionRequest = z.infer<typeof ScheduleAccountDeletionRequest>;
+const DaysUntilDeletionType = z
+	.number()
+	.int()
+	.min(1)
+	.max(365)
+	.describe(
+		'Days until the account is deleted. Raised to 14, or to 74 when a rule was broken so an appeal can be reviewed first. Self-hosted instances have no appeals and raise every basis to 14',
+	);
 
 export const SetUserAclsRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to set ACLs for'),
-	acls: z.array(createStringType(1, 64)).max(100).describe('List of access control permissions to assign'),
+	acls: z.array(AdminAclType).max(ADMIN_ACL_COUNT).describe('List of access control permissions to assign'),
 });
 
 export type SetUserAclsRequest = z.infer<typeof SetUserAclsRequest>;
 
 export const SetUserTraitsRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to set traits for'),
-	traits: z.array(createStringType(1, 64)).max(100).describe('List of traits to assign to the user'),
+	traits: z.array(createStringType(1, 128)).max(100).describe('List of traits to assign to the user'),
 });
 
 export type SetUserTraitsRequest = z.infer<typeof SetUserTraitsRequest>;
 
-export const UpdateHasVerifiedPhoneRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update'),
-	has_verified_phone: z.boolean().describe('Whether the user should be treated as having completed phone verification'),
-});
-
-export type UpdateHasVerifiedPhoneRequest = z.infer<typeof UpdateHasVerifiedPhoneRequest>;
-
 export const ChangeDobRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change date of birth for'),
 	date_of_birth: createStringType(10, 10)
-		.refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value), 'Invalid date format')
+		.refine((value) => CalendarDateType.safeParse(value).success, 'Invalid date format')
 		.describe('New date of birth in YYYY-MM-DD format'),
 });
 
 export type ChangeDobRequest = z.infer<typeof ChangeDobRequest>;
-
-export const UpdateSuspiciousActivityFlagsRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update suspicious activity flags for'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags',
-		'SuspiciousActivityFlags',
-	),
-});
-
-export type UpdateSuspiciousActivityFlagsRequest = z.infer<typeof UpdateSuspiciousActivityFlagsRequest>;
-
-export const DisableForSuspiciousActivityRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to disable for suspicious activity'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags that triggered the disable',
-		'SuspiciousActivityFlags',
-	),
-});
-
-export type DisableForSuspiciousActivityRequest = z.infer<typeof DisableForSuspiciousActivityRequest>;
-
-export const BulkUpdateSuspiciousActivityFlagsRequest = z.object({
-	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
-	add_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to add to all specified users'),
-	remove_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to remove from all specified users'),
-});
-
-export type BulkUpdateSuspiciousActivityFlagsRequest = z.infer<typeof BulkUpdateSuspiciousActivityFlagsRequest>;
 
 export const BulkUpdateUserFlagsRequest = z.object({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
@@ -432,15 +376,8 @@ export type BulkUpdateUserFlagsRequest = z.infer<typeof BulkUpdateUserFlagsReque
 
 export const BulkScheduleUserDeletionRequest = z.object({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to schedule deletion for'),
-	reason_code: Int32Type.describe('Code indicating the reason for deletion'),
-	public_reason: createStringType(0, 512).optional().describe('Public-facing reason for the deletion'),
-	days_until_deletion: z
-		.number()
-		.int()
-		.min(1)
-		.max(365)
-		.default(60)
-		.describe('Number of days until the accounts are deleted'),
+	days_until_deletion: DaysUntilDeletionType,
+	basis: BulkModerationBasis,
 });
 
 export type BulkScheduleUserDeletionRequest = z.infer<typeof BulkScheduleUserDeletionRequest>;
@@ -487,10 +424,10 @@ export const AdminRelationshipEntrySchema = z.object({
 export type AdminRelationshipEntry = z.infer<typeof AdminRelationshipEntrySchema>;
 
 export const ListUserRelationshipsResponse = z.object({
-	friends: z.array(AdminRelationshipEntrySchema).max(10000),
-	incoming_requests: z.array(AdminRelationshipEntrySchema).max(10000),
-	outgoing_requests: z.array(AdminRelationshipEntrySchema).max(10000),
-	blocked: z.array(AdminRelationshipEntrySchema).max(10000),
+	friends: z.array(AdminRelationshipEntrySchema),
+	incoming_requests: z.array(AdminRelationshipEntrySchema),
+	outgoing_requests: z.array(AdminRelationshipEntrySchema),
+	blocked: z.array(AdminRelationshipEntrySchema),
 });
 
 export type ListUserRelationshipsResponse = z.infer<typeof ListUserRelationshipsResponse>;
@@ -517,3 +454,175 @@ export const RemoveUserRelationshipsResponse = z.object({
 });
 
 export type RemoveUserRelationshipsResponse = z.infer<typeof RemoveUserRelationshipsResponse>;
+
+export const AdminAclListResponse = z.object({
+	acls: z
+		.array(createStringType(1, 64))
+		.max(ADMIN_ACL_COUNT)
+		.describe('Every admin access control permission the admin API recognises'),
+});
+
+export type AdminAclListResponse = z.infer<typeof AdminAclListResponse>;
+
+export const AdminUserListQuery = z.object({
+	q: createStringType(1, 1024).optional().describe('Restrict the results to the users matching this free-text query'),
+	user_id: z
+		.union([SnowflakeStringType, z.array(SnowflakeStringType).max(100)])
+		.optional()
+		.describe('Restrict the results to these users. Repeat the parameter to pass more than one.'),
+	resolve: createStringType(1, 1024)
+		.optional()
+		.describe(
+			'Resolve one exact identifier: a username#discriminator tag, a user ID, an email address, or a Stripe subscription ID',
+		),
+	email: createStringType(1, 320).optional().describe('Restrict the results to the user with this exact email address'),
+	last_active_ip: createStringType(1, 64)
+		.optional()
+		.describe('Restrict the results to the users whose last active IP address matches this one exactly'),
+	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
+		'Maximum number of users to return',
+	),
+	offset: createQueryIntegerType({defaultValue: 0, minValue: 0, maxValue: 100000}).describe(
+		'Number of users to skip before returning results',
+	),
+});
+
+export type AdminUserListQuery = z.infer<typeof AdminUserListQuery>;
+
+export const AdminUserGuildListQuery = z.object({
+	before: SnowflakeType.optional().describe('Return guilds with IDs lower than this guild ID'),
+	after: SnowflakeType.optional().describe('Return guilds with IDs higher than this guild ID'),
+	limit: createQueryIntegerType({defaultValue: 200, minValue: 1, maxValue: 200}).describe(
+		'Maximum number of guilds to return',
+	),
+	with_counts: QueryBooleanType.describe('Whether to resolve live member and presence counts from the gateway'),
+});
+
+export type AdminUserGuildListQuery = z.infer<typeof AdminUserGuildListQuery>;
+
+export const AdminUserDmChannelType = createNamedStringLiteralUnion(
+	[
+		['dm', 'DM', 'One-to-one direct message channels'],
+		['group_dm', 'GROUP_DM', 'Group direct message channels'],
+	],
+	'Kind of direct message channel to list',
+);
+
+export const AdminUserDmChannelListQuery = z
+	.object({
+		type: AdminUserDmChannelType.optional()
+			.default('dm')
+			.describe('The kind of direct message channel to list. Defaults to the one-to-one direct message channels.'),
+		before: SnowflakeType.optional().describe('Return channels with IDs lower than this channel ID'),
+		after: SnowflakeType.optional().describe('Return channels with IDs higher than this channel ID'),
+		limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
+			'Maximum number of DM channels to return',
+		),
+	})
+	.refine((value) => value.before === undefined || value.after === undefined, {
+		error: 'before and after cannot both be provided',
+	});
+
+export type AdminUserDmChannelListQuery = z.infer<typeof AdminUserDmChannelListQuery>;
+
+export const AdminUserChangeLogQuery = z.object({
+	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
+		'Maximum number of entries to return',
+	),
+	page_token: createStringType(1, 64).optional().describe('Pagination token for the next page of results'),
+});
+
+export type AdminUserChangeLogQuery = z.infer<typeof AdminUserChangeLogQuery>;
+
+export const AdminUserRelationshipCategoryQuery = z.object({
+	category: RelationshipCategoryEnum.describe('Category of relationships the operation applies to'),
+});
+
+export type AdminUserRelationshipCategoryQuery = z.infer<typeof AdminUserRelationshipCategoryQuery>;
+
+export const AdminUserRelationshipParam = z.object({
+	user_id: SnowflakeType.describe('The ID of the user'),
+	target_user_id: SnowflakeType.describe('The ID of the target user'),
+});
+
+export type AdminUserRelationshipParam = z.infer<typeof AdminUserRelationshipParam>;
+
+export const AdminUserWebAuthnCredentialParam = z.object({
+	user_id: SnowflakeType.describe('The ID of the user'),
+	credential_id: createStringType(1, 512).describe('The ID of the WebAuthn credential'),
+});
+
+export type AdminUserWebAuthnCredentialParam = z.infer<typeof AdminUserWebAuthnCredentialParam>;
+
+export const AdminUserClearFieldsRequest = z.object({
+	fields: z.array(UserProfileFieldEnum).min(1).max(10).describe('List of profile fields to clear'),
+	basis: ModerationBasis,
+});
+
+export type AdminUserClearFieldsRequest = z.infer<typeof AdminUserClearFieldsRequest>;
+
+export const AdminUserBotStatusRequest = SetUserBotStatusRequest.omit({user_id: true});
+
+export type AdminUserBotStatusRequest = z.infer<typeof AdminUserBotStatusRequest>;
+
+export const AdminUserSystemStatusRequest = SetUserSystemStatusRequest.omit({user_id: true});
+
+export type AdminUserSystemStatusRequest = z.infer<typeof AdminUserSystemStatusRequest>;
+
+export const AdminUserUsernameUpdateRequest = ChangeUsernameRequest.omit({user_id: true});
+
+export type AdminUserUsernameUpdateRequest = z.infer<typeof AdminUserUsernameUpdateRequest>;
+
+export const AdminUserEmailUpdateRequest = ChangeEmailRequest.omit({user_id: true});
+
+export type AdminUserEmailUpdateRequest = z.infer<typeof AdminUserEmailUpdateRequest>;
+
+export const AdminUserDeletionScheduleRequest = z.object({
+	days_until_deletion: DaysUntilDeletionType,
+	replace_pending_deletion_at: z.iso
+		.datetime()
+		.optional()
+		.describe(
+			'pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account',
+		),
+	basis: ModerationBasis,
+	remove_evidence: z
+		.boolean()
+		.optional()
+		.describe('Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only'),
+	block_networks: NetworkBlockRequest.optional(),
+});
+
+export type AdminUserDeletionScheduleRequest = z.infer<typeof AdminUserDeletionScheduleRequest>;
+
+export const AdminUserDeletionCancelRequest = z.object({
+	expected_pending_deletion_at: z.iso
+		.datetime()
+		.describe('pending_deletion_at of the deletion being cancelled, as shown on the account'),
+});
+
+export type AdminUserDeletionCancelRequest = z.infer<typeof AdminUserDeletionCancelRequest>;
+
+export const AdminUserAclsRequest = SetUserAclsRequest.omit({user_id: true});
+
+export type AdminUserAclsRequest = z.infer<typeof AdminUserAclsRequest>;
+
+export const AdminUserTraitsRequest = SetUserTraitsRequest.omit({user_id: true});
+
+export type AdminUserTraitsRequest = z.infer<typeof AdminUserTraitsRequest>;
+
+export const AdminUserFlagsUpdateRequest = UpdateUserFlagsRequest.omit({user_id: true});
+
+export type AdminUserFlagsUpdateRequest = z.infer<typeof AdminUserFlagsUpdateRequest>;
+
+export const AdminUserPremiumFlagsUpdateRequest = UpdatePremiumFlagsRequest.omit({user_id: true});
+
+export type AdminUserPremiumFlagsUpdateRequest = z.infer<typeof AdminUserPremiumFlagsUpdateRequest>;
+
+export const AdminUserDobUpdateRequest = ChangeDobRequest.omit({user_id: true});
+
+export type AdminUserDobUpdateRequest = z.infer<typeof AdminUserDobUpdateRequest>;
+
+export const AdminUserDmChannelListResponse = z.union([ListUserDmChannelsResponse, ListUserGroupDmChannelsResponse]);
+
+export type AdminUserDmChannelListResponse = z.infer<typeof AdminUserDmChannelListResponse>;

@@ -2,7 +2,7 @@
 
 import type {FieldValues, Path, PathValue, UseFormSetValue} from 'react-hook-form';
 
-export function getMeaningfulFormValue<TValue>(
+function getMeaningfulFormValue<TValue>(
 	currentValue: TValue,
 	cleanValue: TValue,
 	isMeaningfullyDirty: boolean,

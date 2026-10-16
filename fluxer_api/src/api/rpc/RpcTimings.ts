@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {hostname} from 'node:os';
+import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
 import type {RpcSessionTimings, RpcTimingNode} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 
 export type RpcTimingSteps = Record<string, RpcTimingNode>;
@@ -20,18 +21,8 @@ export function createRpcTimingNode(startedAtNs: bigint, steps?: RpcTimingSteps)
 	};
 }
 
-function firstRuntimeName(names: Array<string>, fallback: string): string {
-	for (const name of names) {
-		const value = process.env[name];
-		if (value && value.length > 0) {
-			return value;
-		}
-	}
-	return fallback;
-}
-
 function apiPodName(): string {
-	return firstRuntimeName(['POD_NAME', 'HOSTNAME'], hostname());
+	return readOptionalEnv('POD_NAME') ?? readOptionalEnv('HOSTNAME') ?? hostname();
 }
 
 export async function timeRpcStep<T>(steps: RpcTimingSteps, name: string, operation: () => Promise<T>): Promise<T> {
@@ -66,10 +57,6 @@ export class RpcTimingRecorder {
 
 	record(name: string, startedAtNs: bigint, steps?: RpcTimingSteps): void {
 		this.steps[name] = createRpcTimingNode(startedAtNs, steps);
-	}
-
-	recordNode(name: string, node: RpcTimingNode): void {
-		this.steps[name] = node;
 	}
 
 	finalize(): RpcSessionTimings {

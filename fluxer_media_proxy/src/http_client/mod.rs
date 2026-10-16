@@ -1,0 +1,210 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+mod retry;
+
+use crate::metrics::http_client::HTTPClientMetrics;
+use crate::public_net_policy::PinnedDnsResolver;
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
+pub(crate) use retry::is_dropped_connection;
+use retry::{MediaProxyRetryStrategy, ObservableRetryPolicy};
+use std::num::{NonZeroU32, NonZeroU64};
+use std::sync::Arc;
+use std::time::Duration;
+
+pub type HttpClient = ClientWithMiddleware;
+
+const EXTERNAL_CONNECT_TIMEOUT_MS: u64 = 3_000;
+const EXTERNAL_READ_TIMEOUT_MS: u64 = 10_000;
+const EXTERNAL_RETRY_WINDOW_MS: u64 = 15_000;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct HTTPClientOptions {
+    connect_timeout_ms: NonZeroU64,
+    request_timeout_ms: NonZeroU64,
+    read_timeout_ms: Option<NonZeroU64>,
+    retries: HTTPRetryPolicy,
+    address_policy: HTTPAddressPolicy,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct HTTPRetryPolicy {
+    max_retries: NonZeroU32,
+    min_delay_ms: NonZeroU64,
+    max_delay_ms: NonZeroU64,
+    window_ms: Option<NonZeroU64>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum HTTPAddressPolicy {
+    Any,
+    PublicOnly,
+}
+
+impl HTTPClientOptions {
+    pub fn new(connect_timeout_ms: NonZeroU64, timeout_ms: NonZeroU64) -> Self {
+        Self {
+            connect_timeout_ms,
+            request_timeout_ms: timeout_ms,
+            ..Self::default()
+        }
+    }
+
+    pub fn external(request_timeout_ms: NonZeroU64) -> Self {
+        let mut options = Self::new(
+            NonZeroU64::new(EXTERNAL_CONNECT_TIMEOUT_MS)
+                .expect("external connection timeout must be nonzero"),
+            request_timeout_ms,
+        )
+        .restrict_to_public();
+        options.read_timeout_ms = NonZeroU64::new(EXTERNAL_READ_TIMEOUT_MS);
+        options.retries.window_ms = NonZeroU64::new(EXTERNAL_RETRY_WINDOW_MS);
+        options
+    }
+
+    pub fn restrict_to_public(mut self) -> Self {
+        self.address_policy = HTTPAddressPolicy::PublicOnly;
+        self
+    }
+}
+
+impl Default for HTTPClientOptions {
+    fn default() -> Self {
+        Self {
+            connect_timeout_ms: NonZeroU64::new(1_500)
+                .expect("default connection timeout must be nonzero"),
+            request_timeout_ms: NonZeroU64::new(30_000)
+                .expect("default request timeout must be nonzero"),
+            read_timeout_ms: None,
+            retries: HTTPRetryPolicy {
+                max_retries: NonZeroU32::new(2)
+                    .expect("default maximum retry count must be nonzero"),
+                min_delay_ms: NonZeroU64::new(25)
+                    .expect("default minimum retry delay must be nonzero"),
+                max_delay_ms: NonZeroU64::new(500)
+                    .expect("default maximum retry delay must be nonzero"),
+                window_ms: None,
+            },
+            address_policy: HTTPAddressPolicy::Any,
+        }
+    }
+}
+
+pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest::Error> {
+    // System proxy discovery stays on. HTTP_PROXY, HTTPS_PROXY, ALL_PROXY and NO_PROXY are part
+    // of the deployment's egress configuration, so an operator who funnels egress through a
+    // gateway gets storage reads and external fetches routed through it. The healthcheck probe
+    // is the one client that opts out, because it only ever dials this process on loopback.
+    let mut builder = reqwest::Client::builder()
+        .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
+        .timeout(Duration::from_millis(options.request_timeout_ms.get()))
+        .redirect(reqwest::redirect::Policy::none())
+        .user_agent(crate::constants::OUTBOUND_USER_AGENT);
+    if let Some(read_timeout_ms) = options.read_timeout_ms {
+        builder = builder.read_timeout(Duration::from_millis(read_timeout_ms.get()));
+    }
+    if options.address_policy == HTTPAddressPolicy::PublicOnly {
+        builder = builder.dns_resolver(Arc::new(PinnedDnsResolver));
+    }
+    builder.build()
+}
+
+pub fn build(
+    options: HTTPClientOptions,
+    metrics: Arc<HTTPClientMetrics>,
+) -> Result<HttpClient, reqwest::Error> {
+    let client = build_raw(options)?;
+    let builder = ClientBuilder::new(client);
+    let HTTPRetryPolicy {
+        max_retries,
+        min_delay_ms,
+        max_delay_ms,
+        window_ms,
+    } = options.retries;
+    let retry_policy = ExponentialBackoff::builder()
+        .retry_bounds(
+            Duration::from_millis(min_delay_ms.get()),
+            Duration::from_millis(max_delay_ms.max(min_delay_ms).get()),
+        )
+        .build_with_max_retries(max_retries.get());
+    Ok(builder
+        .with(RetryTransientMiddleware::new_with_policy_and_strategy(
+            ObservableRetryPolicy::new(
+                retry_policy,
+                window_ms.map(|window| Duration::from_millis(window.get())),
+                Arc::clone(&metrics),
+            ),
+            MediaProxyRetryStrategy::new(metrics),
+        ))
+        .build())
+}
+
+#[cfg(test)]
+pub fn build_default(metrics: Arc<HTTPClientMetrics>) -> HttpClient {
+    build(HTTPClientOptions::default(), metrics)
+        .expect("default HTTP client configuration is valid")
+}
+
+#[cfg(test)]
+pub fn build_raw_default() -> reqwest::Client {
+    build_raw(HTTPClientOptions::default()).expect("default HTTP client configuration is valid")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn millis(value: u64) -> NonZeroU64 {
+        NonZeroU64::new(value).expect("test timeout must be nonzero")
+    }
+
+    #[test]
+    fn every_transport_client_keeps_system_proxy_discovery() {
+        // reqwest hands out no accessor for a built client's proxy matchers and renders the
+        // field only while one survives, so Debug is the only way to catch a stray no_proxy().
+        for options in [
+            HTTPClientOptions::default(),
+            HTTPClientOptions::default().restrict_to_public(),
+            HTTPClientOptions::new(millis(250), millis(4_000)),
+        ] {
+            let client = build_raw(options).expect("transport client builds");
+            assert!(
+                format!("{client:?}").contains("proxies"),
+                "outbound clients must honour HTTP_PROXY/HTTPS_PROXY/ALL_PROXY: {client:?}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn a_pinned_resolver_rejection_survives_the_transport_error_chain() {
+        let client =
+            build_raw(HTTPClientOptions::new(millis(250), millis(1_000)).restrict_to_public())
+                .expect("the public-only client configuration is valid");
+        let error = client
+            .get("http://localhost/")
+            .send()
+            .await
+            .expect_err("the pinned resolver rejects a loopback host");
+        assert!(crate::public_net_policy::is_pinned_dns_failure(&error));
+    }
+
+    #[test]
+    fn the_external_client_fails_fast_on_slow_hosts() {
+        let options = HTTPClientOptions::external(millis(30_000));
+        assert_eq!(
+            EXTERNAL_CONNECT_TIMEOUT_MS,
+            options.connect_timeout_ms.get()
+        );
+        assert_eq!(30_000, options.request_timeout_ms.get());
+        assert_eq!(
+            Some(EXTERNAL_READ_TIMEOUT_MS),
+            options.read_timeout_ms.map(NonZeroU64::get)
+        );
+        assert_eq!(
+            Some(EXTERNAL_RETRY_WINDOW_MS),
+            options.retries.window_ms.map(NonZeroU64::get)
+        );
+        assert_eq!(HTTPAddressPolicy::PublicOnly, options.address_policy);
+        build_raw(options).expect("the external client configuration is valid");
+    }
+}

@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
+import {isValidOAuthState, storeSsoPendingContext} from '@app/features/auth/state/SsoPendingContext';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
+import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
+
+const logger = new Logger('AuthFlow');
 
 export interface LoginSuccessPayload {
 	token: string;
@@ -14,9 +20,9 @@ export interface LoginSuccessPayload {
 
 export interface MfaChallenge {
 	ticket: string;
-	sms?: boolean;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
 export interface IpAuthorizationChallenge {
@@ -28,10 +34,18 @@ export interface IpAuthorizationChallenge {
 export type LoginResult =
 	| {type: 'success'; payload: LoginSuccessPayload}
 	| {type: 'mfa'; challenge: MfaChallenge}
-	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge}
-	| {type: 'suspended'; banViewToken: string};
+	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge};
 
-function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
+function mfaChallengeFromResponse(response: AuthenticationCommands.MfaLoginResponse): MfaChallenge {
+	return {
+		ticket: response.ticket,
+		totp: response.totp,
+		webauthn: response.webauthn,
+		backupCodes: response.backup_codes ?? false,
+	};
+}
+
+export function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
 	const userData = AuthenticationCommands.authResponseUserToUserData(response.user);
 	return {
 		token: response.token,
@@ -41,18 +55,16 @@ function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenRespons
 }
 
 export async function loginWithPassword({
-	email,
-	password,
-	inviteCode,
-}: {
-	email: string;
+	runtimeSnapshot,
+	...params
+}: AuthenticationCommands.LoginIdentifier & {
 	password: string;
 	inviteCode?: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }): Promise<LoginResult> {
 	const response = await AuthenticationCommands.login({
-		email,
-		password,
-		inviteCode,
+		...params,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	if (AuthenticationCommands.isIpAuthorizationRequiredResponse(response)) {
 		return {
@@ -64,21 +76,10 @@ export async function loginWithPassword({
 			},
 		};
 	}
-	if ('ban_view_token' in response) {
-		return {
-			type: 'suspended',
-			banViewToken: (response as {ban_view_token: string}).ban_view_token,
-		};
-	}
 	if (response.mfa) {
 		return {
 			type: 'mfa',
-			challenge: {
-				ticket: response.ticket,
-				sms: (response as {sms?: boolean}).sms ?? false,
-				totp: response.totp,
-				webauthn: response.webauthn,
-			},
+			challenge: mfaChallengeFromResponse(response),
 		};
 	}
 	return {
@@ -87,29 +88,31 @@ export async function loginWithPassword({
 	};
 }
 
-export async function completeLoginSession(payload: LoginSuccessPayload): Promise<void> {
-	await AuthenticationCommands.completeLogin(payload);
-}
-
-export async function startSession(token: string): Promise<void> {
-	AuthenticationCommands.startSession(token, {startGateway: true});
-}
-
 export async function loginWithMfaCode({
 	code,
 	ticket,
 	inviteCode,
+	runtimeSnapshot,
 }: {
 	code: string;
 	ticket: string;
 	inviteCode?: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }): Promise<LoginSuccessPayload> {
-	const response = await AuthenticationCommands.loginMfaTotp(code, ticket, inviteCode);
+	const response = await AuthenticationCommands.loginMfaTotp({
+		code,
+		ticket,
+		inviteCode,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+	});
 	return toLoginSuccessPayload(response);
 }
 
-export async function getWebAuthnMfaOptions(ticket: string): Promise<PublicKeyCredentialRequestOptionsJSON> {
-	return AuthenticationCommands.getWebAuthnMfaOptions(ticket);
+export async function getWebAuthnMfaOptions(
+	ticket: string,
+	runtimeSnapshot: RuntimeConfigSnapshot,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
+	return AuthenticationCommands.getWebAuthnMfaOptions({ticket, target: instanceTargetFromSnapshot(runtimeSnapshot)});
 }
 
 export async function authenticateMfaWithWebAuthn({
@@ -117,143 +120,125 @@ export async function authenticateMfaWithWebAuthn({
 	challenge,
 	ticket,
 	inviteCode,
+	runtimeSnapshot,
 }: {
 	response: AuthenticationResponseJSON;
 	challenge: string;
 	ticket: string;
 	inviteCode?: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }): Promise<LoginSuccessPayload> {
-	const result = await AuthenticationCommands.loginMfaWebAuthn(response, challenge, ticket, inviteCode);
+	const result = await AuthenticationCommands.loginMfaWebAuthn({
+		response,
+		challenge,
+		ticket,
+		inviteCode,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+	});
 	return toLoginSuccessPayload(result);
 }
 
-export async function getWebAuthnAuthenticationOptions(): Promise<PublicKeyCredentialRequestOptionsJSON> {
-	return AuthenticationCommands.getWebAuthnAuthenticationOptions();
+export async function getWebAuthnAuthenticationOptions(
+	runtimeSnapshot: RuntimeConfigSnapshot,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
+	return AuthenticationCommands.getWebAuthnAuthenticationOptions({target: instanceTargetFromSnapshot(runtimeSnapshot)});
 }
 
 export async function authenticateWithWebAuthn({
 	response,
 	challenge,
 	inviteCode,
+	runtimeSnapshot,
 }: {
 	response: AuthenticationResponseJSON;
 	challenge: string;
 	inviteCode?: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }): Promise<LoginSuccessPayload> {
-	const result = await AuthenticationCommands.authenticateWithWebAuthn(response, challenge, inviteCode);
+	const result = await AuthenticationCommands.authenticateWithWebAuthn({
+		response,
+		challenge,
+		inviteCode,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+	});
 	return toLoginSuccessPayload(result);
 }
 
-const SSO_REDIRECT_TO_STORAGE_KEY = 'fluxer:sso:redirect_to';
-
-function storeSsoRedirectTo(redirectTo?: string): void {
+function ssoStateFromAuthorizationUrl(authorizationUrl: string): string | null {
 	try {
-		if (redirectTo) {
-			window.sessionStorage.setItem(SSO_REDIRECT_TO_STORAGE_KEY, redirectTo);
-		} else {
-			window.sessionStorage.removeItem(SSO_REDIRECT_TO_STORAGE_KEY);
-		}
-	} catch {}
-}
-
-export function clearPendingSsoRedirectTo(): void {
-	storeSsoRedirectTo(undefined);
-}
-
-export function getPendingSsoRedirectTo(): string | undefined {
-	try {
-		return window.sessionStorage.getItem(SSO_REDIRECT_TO_STORAGE_KEY) ?? undefined;
+		return new URL(authorizationUrl).searchParams.get('state');
 	} catch {
-		return undefined;
+		return null;
 	}
 }
 
-export async function startSsoLogin({redirectTo, redirectUri}: {redirectTo?: string; redirectUri?: string}): Promise<{
+export interface StartSsoLoginRequest {
+	redirectTo?: string | null;
+	redirectUri?: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+export interface StartSsoLoginResult {
 	authorizationUrl: string;
 	redirectUri: string;
-}> {
+	state: string | null;
+}
+
+export async function startSsoLogin({
+	redirectTo,
+	redirectUri,
+	runtimeSnapshot,
+}: StartSsoLoginRequest): Promise<StartSsoLoginResult> {
 	const safeRedirectTo = safeRedirectTarget(redirectTo);
 	const result = await AuthenticationCommands.startSso({
 		redirectTo: safeRedirectTo ?? undefined,
 		redirectUri,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
-	storeSsoRedirectTo(safeRedirectTo ?? undefined);
-	return {authorizationUrl: result.authorization_url, redirectUri: result.redirect_uri};
+	const state = result.state ?? ssoStateFromAuthorizationUrl(result.authorization_url);
+	if (state != null && isValidOAuthState(state)) {
+		try {
+			await storeSsoPendingContext(state, {
+				redirectTo: safeRedirectTo,
+				runtimeSnapshot,
+			});
+		} catch (error) {
+			logger.warn('Failed to persist the SSO pending context, continuing without it', error);
+		}
+	}
+	return {authorizationUrl: result.authorization_url, redirectUri: result.redirect_uri, state};
 }
 
-export async function completeSsoLogin({code, state}: {code: string; state: string}): Promise<LoginSuccessPayload> {
-	const result = await AuthenticationCommands.completeSso({code, state});
+export async function completeSsoLogin({
+	code,
+	state,
+	runtimeSnapshot,
+}: {
+	code: string;
+	state: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
+}): Promise<LoginSuccessPayload> {
+	const result = await AuthenticationCommands.completeSso({
+		code,
+		state,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+	});
 	return {
 		...toLoginSuccessPayload(result),
 		redirect_to: result.redirect_to,
 	};
 }
 
-interface RegisterSuccessResult {
-	type: 'success';
-	payload: LoginSuccessPayload;
-}
-
-interface RegisterPendingApprovalResult {
-	type: 'pending_approval';
-	userId: string;
-}
-
-export type RegisterResult = RegisterSuccessResult | RegisterPendingApprovalResult;
-
-export async function registerAccount({
-	email,
-	globalName,
-	username,
-	password,
-	dateOfBirth,
-	consent,
-	inviteCode,
-	giftCode,
-	registrationUrlCode,
-}: {
-	email: string;
-	globalName?: string;
-	username?: string;
-	password: string;
-	dateOfBirth: string;
-	consent: boolean;
-	inviteCode?: string;
-	giftCode?: string;
-	registrationUrlCode?: string;
-}): Promise<RegisterResult> {
-	const response = await AuthenticationCommands.register({
-		email,
-		global_name: globalName,
-		username,
-		password,
-		date_of_birth: dateOfBirth,
-		consent,
-		invite_code: inviteCode ?? giftCode,
-		registration_url_code: registrationUrlCode,
-	});
-	if (AuthenticationCommands.isRegistrationPendingApprovalResponse(response)) {
-		return {
-			type: 'pending_approval',
-			userId: response.user_id,
-		};
-	}
-	return {
-		type: 'success',
-		payload: toLoginSuccessPayload(response),
-	};
-}
-
-export async function requestPasswordReset(email: string): Promise<void> {
-	return AuthenticationCommands.forgotPassword(email);
-}
-
 export type PasswordResetResult =
 	| {type: 'success'; payload: LoginSuccessPayload}
 	| {type: 'mfa'; challenge: MfaChallenge};
 
-export async function resetPassword(token: string, password: string): Promise<PasswordResetResult> {
-	const response = await AuthenticationCommands.resetPassword(token, password);
+export async function resetPassword(
+	token: string,
+	password: string,
+	target: InstanceHTTPTarget,
+): Promise<PasswordResetResult> {
+	const response = await AuthenticationCommands.resetPassword(token, password, target);
 	if ('token' in response) {
 		return {
 			type: 'success',
@@ -262,41 +247,46 @@ export async function resetPassword(token: string, password: string): Promise<Pa
 	}
 	return {
 		type: 'mfa',
-		challenge: {
-			ticket: response.ticket,
-			sms: (response as {sms?: boolean}).sms ?? false,
-			totp: response.totp,
-			webauthn: response.webauthn,
-		},
+		challenge: mfaChallengeFromResponse(response),
 	};
 }
 
-export async function verifyEmail(token: string): Promise<AuthenticationCommands.VerificationResult> {
-	return AuthenticationCommands.verifyEmail(token);
+interface IssuedRecoveryKit {
+	recoveryKey: string;
+	createdAt: string;
 }
 
-export async function resendVerificationEmail(): Promise<AuthenticationCommands.VerificationResult> {
-	return AuthenticationCommands.resendVerificationEmail();
-}
+export type AccountRecoveryResult = PasswordResetResult & {kit: IssuedRecoveryKit};
 
-export async function authorizeIp(token: string): Promise<AuthenticationCommands.VerificationResult> {
-	return AuthenticationCommands.authorizeIp(token);
-}
-
-export const VerificationResult = AuthenticationCommands.VerificationResult;
-
-export async function resendIpAuthorization(ticket: string): Promise<void> {
-	return AuthenticationCommands.resendIpAuthorization(ticket);
-}
-
-export async function pollIpAuthorization(ticket: string): Promise<AuthenticationCommands.IpAuthorizationPollResult> {
-	return AuthenticationCommands.pollIpAuthorization(ticket);
-}
-
-export async function initiateDesktopHandoff() {
-	return AuthenticationCommands.initiateDesktopHandoff();
-}
-
-export async function completeDesktopHandoff(params: {code: string; token: string; userId: string}) {
-	return AuthenticationCommands.completeDesktopHandoff(params);
+export async function recoverAccount({
+	login,
+	recoveryKey,
+	password,
+	runtimeSnapshot,
+}: {
+	login: string;
+	recoveryKey: string;
+	password: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
+}): Promise<AccountRecoveryResult> {
+	const response = await AuthenticationCommands.recoverAccount({
+		login,
+		recoveryKey,
+		password,
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
+	});
+	const kit = {recoveryKey: response.recovery_key, createdAt: response.recovery_kit_created_at};
+	if ('token' in response) {
+		return {type: 'success', payload: toLoginSuccessPayload(response), kit};
+	}
+	return {
+		type: 'mfa',
+		challenge: {
+			ticket: response.ticket,
+			totp: response.totp,
+			webauthn: response.webauthn,
+			backupCodes: response.backup_codes ?? false,
+		},
+		kit,
+	};
 }

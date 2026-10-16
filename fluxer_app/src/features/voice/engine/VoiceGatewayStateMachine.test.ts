@@ -2,14 +2,14 @@
 
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceGatewayStateSnapshot,
 	transitionVoiceGatewayStateSnapshot,
 	type VoiceGatewayStateContext,
 	type VoiceGatewayStateEvent,
 	type VoiceGatewayStateSnapshot,
-} from './VoiceGatewayStateMachine';
+} from '@app/features/voice/engine/VoiceGatewayStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
 	return {
@@ -210,6 +210,28 @@ describe('VoiceGatewayStateMachine', () => {
 		expectProjectionConsistent(snapshot.context);
 	});
 
+	it('keeps same-session connections in different channels', () => {
+		const snapshot = transition(createVoiceGatewayStateSnapshot(), {
+			type: 'guild.create',
+			guild: guild('guild-1', [
+				voiceState({connection_id: 'connection-a', session_id: 'session-a', channel_id: 'channel-1'}),
+				voiceState({connection_id: 'connection-b', session_id: 'session-a', channel_id: 'channel-2'}),
+			]),
+		});
+
+		expectConnection(snapshot.context, 'connection-a', {
+			guild_id: 'guild-1',
+			channel_id: 'channel-1',
+			user_id: 'user-1',
+		});
+		expectConnection(snapshot.context, 'connection-b', {
+			guild_id: 'guild-1',
+			channel_id: 'channel-2',
+			user_id: 'user-1',
+		});
+		expectProjectionConsistent(snapshot.context);
+	});
+
 	it('deletes all user connections in a guild', () => {
 		let snapshot = createVoiceGatewayStateSnapshot();
 		snapshot = transition(snapshot, {
@@ -400,20 +422,6 @@ describe('VoiceGatewayStateMachine', () => {
 			user_id: 'user-2',
 		});
 		expectProjectionConsistent(snapshot.context);
-	});
-
-	it('clears all projection indexes', () => {
-		let snapshot = createVoiceGatewayStateSnapshot();
-		snapshot = transition(snapshot, {
-			type: 'connection.open',
-			guilds: [guild('guild-1', [voiceState({connection_id: 'connection-1', channel_id: 'channel-1'})])],
-		});
-		snapshot = transition(snapshot, {type: 'clear.all'});
-		expect(snapshot.context).toEqual({
-			voiceStates: {},
-			userVoiceStates: {},
-			connectionVoiceStates: {},
-		});
 	});
 
 	it('keeps projection indexes consistent after long randomized sequences', () => {

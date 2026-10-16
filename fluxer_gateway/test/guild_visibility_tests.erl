@@ -12,13 +12,17 @@ preserves_connected_channel_visibility_on_permission_loss_test() ->
     ViewPerm = constants:view_channel_permission(),
     OldState = visibility_state(GuildId, UserId, ChannelId, ViewPerm, true),
     NewState = visibility_state(GuildId, UserId, ChannelId, 0, true),
-    UpdatedState = guild_visibility:compute_and_dispatch_visibility_changes(OldState, NewState),
+    UpdatedState = guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
+        OldState, NewState
+    ),
     ?assert(guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, UpdatedState)),
     ?assertEqual(
         false,
         guild_virtual_channel_access:is_pending_join(UserId, ChannelId, UpdatedState)
     ),
-    ?assert(guild_permissions:can_view_channel(UserId, ChannelId, undefined, UpdatedState)).
+    ?assert(
+        guild_permissions_check:can_view_channel(UserId, ChannelId, undefined, UpdatedState)
+    ).
 
 does_not_add_virtual_access_when_not_connected_test() ->
     UserId = 20,
@@ -27,7 +31,9 @@ does_not_add_virtual_access_when_not_connected_test() ->
     ViewPerm = constants:view_channel_permission(),
     OldState = visibility_state(GuildId, UserId, ChannelId, ViewPerm, false),
     NewState = visibility_state(GuildId, UserId, ChannelId, 0, false),
-    UpdatedState = guild_visibility:compute_and_dispatch_visibility_changes(OldState, NewState),
+    UpdatedState = guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
+        OldState, NewState
+    ),
     ?assertNot(
         guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, UpdatedState)
     ).
@@ -39,7 +45,9 @@ does_not_add_virtual_access_when_permission_remains_test() ->
     ViewPerm = constants:view_channel_permission(),
     OldState = visibility_state(GuildId, UserId, ChannelId, ViewPerm, true),
     NewState = visibility_state(GuildId, UserId, ChannelId, ViewPerm, true),
-    UpdatedState = guild_visibility:compute_and_dispatch_visibility_changes(OldState, NewState),
+    UpdatedState = guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
+        OldState, NewState
+    ),
     ?assertNot(
         guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, UpdatedState)
     ).
@@ -51,7 +59,7 @@ compute_and_dispatch_visibility_changes_for_users_targets_selected_users_test() 
     ViewPerm = constants:view_channel_permission(),
     OldState = users_visibility_state(GuildId, ChannelId, RoleId, ViewPerm, role, role),
     NewState = users_visibility_state(GuildId, ChannelId, RoleId, ViewPerm, none, role),
-    UpdatedState = guild_visibility:compute_and_dispatch_visibility_changes_for_users(
+    UpdatedState = guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_users(
         [10], OldState, NewState
     ),
     UpdatedSessions = maps:get(sessions, UpdatedState),
@@ -84,7 +92,7 @@ compute_and_dispatch_visibility_changes_for_channels_limits_test() ->
     NewState = channels_visibility_state(
         GuildId, UserId, BaseRole, ChannelA, ChannelB, NewChannels
     ),
-    UpdatedState = guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
+    UpdatedState = guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_channels(
         [ChannelA], OldState, NewState
     ),
     UpdatedSession = maps:get(<<"s10">>, maps:get(sessions, UpdatedState)),

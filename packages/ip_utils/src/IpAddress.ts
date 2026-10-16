@@ -21,6 +21,23 @@ const SAME_IP_DECISION_KEY_OPTIONS: Readonly<IpNetworkKeyOptions> = {
 	ipv6PrefixLength: 64,
 };
 
+const RESERVED_IPV4_RANGES: ReadonlyArray<readonly [base: number, prefixLength: number]> = [
+	[0x00000000, 8],
+	[0x0a000000, 8],
+	[0x64400000, 10],
+	[0x7f000000, 8],
+	[0xa9fe0000, 16],
+	[0xac100000, 12],
+	[0xc0000000, 24],
+	[0xc0000200, 24],
+	[0xc0a80000, 16],
+	[0xc6120000, 15],
+	[0xc6336400, 24],
+	[0xcb007100, 24],
+	[0xe0000000, 4],
+	[0xf0000000, 4],
+];
+
 function stripIpv6Brackets(value: string): string {
 	if (value.startsWith('[') && value.endsWith(']')) {
 		return value.slice(1, -1);
@@ -85,6 +102,17 @@ export function parseIpAddress(value: string): ParsedIpAddress | null {
 	};
 }
 
+export function canonicalizeIpAddress(value: string): string | null {
+	const parsed = parseIpAddress(value);
+	if (!parsed) {
+		return null;
+	}
+	if (parsed.family === 'ipv4') {
+		return parsed.normalized;
+	}
+	return getIpv4MappedIpv6(expandIpv6ToGroups(parsed.normalized)) ?? parsed.normalized;
+}
+
 export function isValidIp(value: string): boolean {
 	return parseIpAddress(value) !== null;
 }
@@ -112,7 +140,7 @@ function expandIpv6ToGroups(address: string): Array<string> {
 	return address.split(':').map((g) => g.padStart(4, '0'));
 }
 
-function isIpv4MappedIpv6Groups(groups: Array<string>): boolean {
+function isIpv4MappedIpv6Groups(groups: ReadonlyArray<string>): boolean {
 	return (
 		groups[0] === '0000' &&
 		groups[1] === '0000' &&
@@ -123,7 +151,7 @@ function isIpv4MappedIpv6Groups(groups: Array<string>): boolean {
 	);
 }
 
-function ipv4FromMappedIpv6Groups(groups: Array<string>): string {
+function ipv4FromMappedIpv6Groups(groups: ReadonlyArray<string>): string {
 	const hi = parseInt(groups[6], 16);
 	const lo = parseInt(groups[7], 16);
 	const a = (hi >> 8) & 0xff;
@@ -237,72 +265,28 @@ function isPublicIpv4Address(address: string): boolean {
 	if (!octets) {
 		return false;
 	}
-	const reservedRanges: Array<[base: number, prefixLength: number]> = [
-		[0x00000000, 8],
-		[0x0a000000, 8],
-		[0x64400000, 10],
-		[0x7f000000, 8],
-		[0xa9fe0000, 16],
-		[0xac100000, 12],
-		[0xc0000000, 24],
-		[0xc0000200, 24],
-		[0xc0a80000, 16],
-		[0xc6120000, 15],
-		[0xc6336400, 24],
-		[0xcb007100, 24],
-		[0xe0000000, 4],
-		[0xf0000000, 4],
-	];
-	return !reservedRanges.some(([base, prefixLength]) => isIpv4InCidr(octets, base, prefixLength));
+	return !RESERVED_IPV4_RANGES.some(([base, prefixLength]) => isIpv4InCidr(octets, base, prefixLength));
 }
 
-function getIpv4MappedIpv6(address: string): string | null {
-	const groups = expandIpv6ToGroups(address);
+function getIpv4MappedIpv6(groups: ReadonlyArray<string>): string | null {
 	if (!isIpv4MappedIpv6Groups(groups)) {
 		return null;
 	}
 	return ipv4FromMappedIpv6Groups(groups);
 }
 
-function ipv6GroupValue(group: string): number {
-	return Number.parseInt(group, 16);
-}
-
 function isPublicIpv6Address(address: string): boolean {
-	const mappedIpv4 = getIpv4MappedIpv6(address);
+	const groups = expandIpv6ToGroups(address);
+	const mappedIpv4 = getIpv4MappedIpv6(groups);
 	if (mappedIpv4) {
 		return isPublicIpv4Address(mappedIpv4);
 	}
-	const groups = expandIpv6ToGroups(address);
-	const first = ipv6GroupValue(groups[0]);
-	const second = ipv6GroupValue(groups[1]);
-	const last = ipv6GroupValue(groups[7]);
-	const isUnspecifiedOrLoopback = groups.slice(0, 7).every((group) => group === '0000') && (last === 0 || last === 1);
-	if (isUnspecifiedOrLoopback) {
-		return false;
-	}
+	const first = Number.parseInt(groups[0], 16);
+	const second = Number.parseInt(groups[1], 16);
 	if ((first & 0xe000) !== 0x2000) {
 		return false;
 	}
-	if ((first & 0xffc0) === 0xfe80) {
-		return false;
-	}
-	if ((first & 0xfe00) === 0xfc00) {
-		return false;
-	}
-	if ((first & 0xff00) === 0xff00) {
-		return false;
-	}
-	if (first === 0x2001 && second === 0x0db8) {
-		return false;
-	}
-	if (first === 0x0064 && second === 0xff9b) {
-		return false;
-	}
-	if (first === 0x0100 && second === 0x0000) {
-		return false;
-	}
-	return true;
+	return first !== 0x2001 || second !== 0x0db8;
 }
 
 export function isPublicIpAddress(ip: string): boolean {
@@ -314,6 +298,30 @@ export function isPublicIpAddress(ip: string): boolean {
 		return isPublicIpv4Address(parsed.normalized);
 	}
 	return isPublicIpv6Address(parsed.normalized);
+}
+
+function isLoopbackIpv4Address(address: string): boolean {
+	const octets = parseIpv4Octets(address);
+	if (!octets) {
+		return false;
+	}
+	return isIpv4InCidr(octets, 0x7f000000, 8);
+}
+
+export function isLoopbackIpAddress(ip: string): boolean {
+	const parsed = parseIpAddress(ip);
+	if (!parsed) {
+		return false;
+	}
+	if (parsed.family === 'ipv4') {
+		return isLoopbackIpv4Address(parsed.normalized);
+	}
+	const groups = expandIpv6ToGroups(parsed.normalized);
+	const mappedIpv4 = getIpv4MappedIpv6(groups);
+	if (mappedIpv4) {
+		return isLoopbackIpv4Address(mappedIpv4);
+	}
+	return groups.length === 8 && groups.slice(0, 7).every((group) => group === '0000') && groups[7] === '0001';
 }
 
 export function isSameIpDecisionMatch(left: string | null | undefined, right: string | null | undefined): boolean {
@@ -333,4 +341,62 @@ export function getSubnet(ip: string): string | null {
 		ipv4PrefixLength: 24,
 		ipv6PrefixLength: 48,
 	});
+}
+
+export function ipToBytes(address: string): {family: IpAddressFamily; bytes: Uint8Array} | null {
+	const normalized = stripIpv6Brackets(address.trim().toLowerCase());
+	if (isIPv4(normalized)) return {family: 'ipv4', bytes: Uint8Array.from(normalized.split('.').map(Number))};
+	if (!isIPv6(normalized)) {
+		return null;
+	}
+	let head = normalized;
+	let embeddedIpv4Octets: Array<number> | null = null;
+	const lastColonIndex = head.lastIndexOf(':');
+	const trailing = head.slice(lastColonIndex + 1);
+	if (trailing.includes('.')) {
+		if (!isIPv4(trailing)) {
+			return null;
+		}
+		embeddedIpv4Octets = trailing.split('.').map((part) => Number.parseInt(part, 10));
+		head = `${head.slice(0, lastColonIndex + 1)}0:0`;
+	}
+	let groups: Array<string>;
+	if (head.indexOf('::') === -1) {
+		groups = head.split(':');
+		if (groups.length !== 8) {
+			return null;
+		}
+	} else {
+		const [beforePart, afterPart] = head.split('::');
+		const before = beforePart.length > 0 ? beforePart.split(':') : [];
+		const after = afterPart.length > 0 ? afterPart.split(':') : [];
+		const missing = 8 - before.length - after.length;
+		if (missing < 1) {
+			return null;
+		}
+		groups = [...before, ...new Array(missing).fill('0'), ...after];
+	}
+	const bytes = new Uint8Array(16);
+	for (let index = 0; index < 8; index += 1) {
+		const value = parseHexGroup(groups[index]);
+		if (value === null) {
+			return null;
+		}
+		bytes[index * 2] = (value >> 8) & 0xff;
+		bytes[index * 2 + 1] = value & 0xff;
+	}
+	if (embeddedIpv4Octets) {
+		bytes[12] = embeddedIpv4Octets[0];
+		bytes[13] = embeddedIpv4Octets[1];
+		bytes[14] = embeddedIpv4Octets[2];
+		bytes[15] = embeddedIpv4Octets[3];
+	}
+	return {family: 'ipv6', bytes};
+}
+
+function parseHexGroup(value: string | undefined): number | null {
+	if (!value || !/^[0-9a-f]{1,4}$/.test(value)) {
+		return null;
+	}
+	return Number.parseInt(value, 16);
 }

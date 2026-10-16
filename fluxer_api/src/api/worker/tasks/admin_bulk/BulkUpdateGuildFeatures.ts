@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
+import {createAdminBulkServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminGuildUpdatePropagator} from '../../../admin/services/guild/AdminGuildUpdatePropagator';
-import {createGuildID, createUserID} from '../../../BrandedTypes';
-import {getGuildDiscoveryRepository} from '../../../middleware/ServiceSingletons';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	guild_ids: Array<string>;
@@ -24,73 +22,36 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		admin_user_id: rawPayload.admin_user_id as string,
 		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
 	};
-	const deps = getWorkerDependencies();
-	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
-	const propagator = new AdminGuildUpdatePropagator({
-		gatewayService: deps.gatewayService,
-		discoveryRepository: getGuildDiscoveryRepository(),
-	});
+	const {auditService, guildService} = createAdminBulkServices(getWorkerDependencies());
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
-	const guildIds = payload.guild_ids.map((id) => BigInt(id));
-	const total = guildIds.length;
-	const successful: Array<string> = [];
-	const failed: Array<{
-		id: string;
-		error: string;
-	}> = [];
-	await helpers.setContextLink(`/guilds?ids=${guildIds.slice(0, 50).join(',')}`);
+	const total = payload.guild_ids.length;
+	await helpers.setContextLink(`/guilds?ids=${payload.guild_ids.slice(0, 50).join(',')}`);
 	await helpers.reportProgress(0, total, `Updating features on ${total} guilds`);
-	for (let i = 0; i < guildIds.length; i++) {
-		if (await helpers.shouldCancel()) throw new JobCancelledError();
-		const guildIdBigInt = guildIds[i]!;
-		const guildId = createGuildID(guildIdBigInt);
-		try {
-			const guild = await deps.guildRepository.findUnique(guildId);
-			if (!guild) throw new Error('guild_not_found');
-			const newFeatures = new Set(guild.features);
-			for (const f of payload.add_features) newFeatures.add(f);
-			for (const f of payload.remove_features) newFeatures.delete(f);
-			const updatedGuild = await deps.guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
-			await propagator.dispatchGuildUpdate(guildId, updatedGuild, {
+	return await runAdminBulkJob({
+		helpers,
+		ids: payload.guild_ids,
+		progressEvery: 25,
+		apply: async (id) => {
+			await guildService.updateService.updateGuildFeatures({
+				guildId: createGuildID(BigInt(id)),
+				addFeatures: payload.add_features,
+				removeFeatures: payload.remove_features,
 				adminUserId,
-				reconcileDiscoveryFeature: true,
+				auditLogReason: payload.audit_log_reason,
 			});
-			await auditService.createAuditLog({
-				adminUserId,
-				targetType: 'guild',
-				targetId: BigInt(guildId),
-				action: 'update_features',
-				auditLogReason: null,
-				metadata: new Map([
-					['add_features', payload.add_features.join(',')],
-					['remove_features', payload.remove_features.join(',')],
-					['new_features', Array.from(newFeatures).join(',')],
-				]),
-			});
-			successful.push(guildId.toString());
-		} catch (err) {
-			failed.push({id: guildIdBigInt.toString(), error: err instanceof Error ? err.message : String(err)});
-		}
-		if ((i + 1) % 25 === 0) {
-			await helpers.reportProgress(i + 1, total, null);
-		}
-	}
-	await auditService.createAuditLog({
-		adminUserId,
-		targetType: 'guild',
-		targetId: BigInt(0),
-		action: 'bulk_update_guild_features',
-		auditLogReason: payload.audit_log_reason,
-		metadata: new Map([
-			['guild_count', total.toString()],
-			['add_features', payload.add_features.join(',')],
-			['remove_features', payload.remove_features.join(',')],
-			['successful', successful.length.toString()],
-			['failed', failed.length.toString()],
-		]),
+		},
+		summary: {
+			auditService,
+			adminUserId,
+			action: 'bulk_update_guild_features',
+			auditLogReason: payload.audit_log_reason,
+			metadata: [
+				['guild_count', total.toString()],
+				['add_features', payload.add_features.join(',')],
+				['remove_features', payload.remove_features.join(',')],
+			],
+		},
 	});
-	await helpers.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-	helpers.logger.info({successful: successful.length, failed: failed.length}, 'bulkUpdateGuildFeatures complete');
 };
 
 export default handler;

@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, StickerID, UserID} from '@app/api/BrandedTypes';
+import type {MessageStickerItem} from '@app/api/database/types/MessageTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {checkUserGlobalExpressions} from '@app/api/utils/EmojiUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
-import type {GuildID, StickerID, UserID} from '../../../BrandedTypes';
-import type {MessageStickerItem} from '../../../database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {PackService} from '../../../pack/PackService';
-import type {IUserRepository} from '../../../user/IUserRepository';
 
 export class MessageStickerService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
@@ -27,24 +23,11 @@ export class MessageStickerService {
 		userId: UserID | null;
 		guildId: GuildID | null;
 		hasPermission?: (permission: bigint) => Promise<boolean>;
-		isNSFWAllowed?: boolean;
 	}): Promise<Array<MessageStickerItem>> {
-		const {stickerIds, userId, guildId, hasPermission, isNSFWAllowed = true} = params;
-		const packResolver = await this.packService.createPackExpressionAccessResolver({
-			userId,
-			type: 'sticker',
-		});
-		let hasGlobalExpressions = 0;
-		if (userId) {
-			const user = await this.userRepository.findUnique(userId);
-			const ctx = createLimitMatchContext({user});
-			hasGlobalExpressions = resolveLimitSafe(
-				this.limitConfigService.getConfigSnapshot(),
-				ctx,
-				'feature_global_expressions',
-				0,
-			);
-		}
+		const {stickerIds, userId, guildId, hasPermission} = params;
+		const hasGlobalExpressions = userId
+			? await checkUserGlobalExpressions(userId, this.userRepository, this.limitConfigService)
+			: 0;
 		return Promise.all(
 			stickerIds.map(async (stickerId) => {
 				if (!guildId) {
@@ -55,30 +38,18 @@ export class MessageStickerService {
 					if (!stickerFromAnyGuild) {
 						throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
 					}
-					const packAccess = await packResolver.resolve(stickerFromAnyGuild.guildId);
-					if (packAccess === 'not-accessible') {
-						throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
-					}
-					if (!isNSFWAllowed && stickerFromAnyGuild.isNsfw) {
-						throw new NsfwEmojiStickerBlockedError();
-					}
 					return {
 						sticker_id: stickerFromAnyGuild.id,
 						name: stickerFromAnyGuild.name,
 						animated: stickerFromAnyGuild.animated,
-						...(stickerFromAnyGuild.isNsfw ? {nsfw: true} : {}),
 					};
 				}
 				const guildSticker = await this.guildRepository.getSticker(stickerId, guildId);
 				if (guildSticker) {
-					if (!isNSFWAllowed && guildSticker.isNsfw) {
-						throw new NsfwEmojiStickerBlockedError();
-					}
 					return {
 						sticker_id: guildSticker.id,
 						name: guildSticker.name,
 						animated: guildSticker.animated,
-						...(guildSticker.isNsfw ? {nsfw: true} : {}),
 					};
 				}
 				const stickerFromOtherGuild = await this.guildRepository.getStickerById(stickerId);
@@ -97,18 +68,10 @@ export class MessageStickerService {
 						throw new MissingPermissionsError();
 					}
 				}
-				const packAccess = await packResolver.resolve(stickerFromOtherGuild.guildId);
-				if (packAccess === 'not-accessible') {
-					throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
-				}
-				if (!isNSFWAllowed && stickerFromOtherGuild.isNsfw) {
-					throw new NsfwEmojiStickerBlockedError();
-				}
 				return {
 					sticker_id: stickerFromOtherGuild.id,
 					name: stickerFromOtherGuild.name,
 					animated: stickerFromOtherGuild.animated,
-					...(stickerFromOtherGuild.isNsfw ? {nsfw: true} : {}),
 				};
 			}),
 		);

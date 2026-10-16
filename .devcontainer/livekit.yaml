@@ -1,11 +1,10 @@
 port: 7880
 
 keys:
-  devkey: secret
+  devkey: fluxer-livekit-development-secret
 
 rtc:
   tcp_port: 7881
-  udp_port: 7882-7892
   node_ip: 127.0.0.1
   use_mdns: true
   stun_servers:

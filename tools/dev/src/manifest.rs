@@ -7,14 +7,14 @@ pub const LOOPBACK_HOST: &str = "127.0.0.1";
 pub const ANY_HOST: &str = "0.0.0.0";
 
 pub const DEV_PROXY_PORT: u16 = 8088;
+pub const DEV_PROXY_GATEWAY_PORTS_ENV: &str = "FLUXER_DEV_PROXY_GATEWAY_PORTS";
 pub const APP_PORT: u16 = 3000;
 pub const APP_PROXY_PORT: u16 = 8773;
 pub const ADMIN_PORT: u16 = 3020;
 pub const API_PORT: u16 = 8080;
 pub const GATEWAY_PORT: u16 = 8771;
-pub const GATEWAY_WEBSOCKET_PORTS: &[u16] = &[8771, 8772, 8774];
 pub const MEDIA_PROXY_PORT: u16 = 8082;
-pub const MARKETING_PORT: u16 = 3010;
+pub const PUSH_PORT: u16 = 8126;
 pub const LIVEKIT_PORT: u16 = 7880;
 pub const DEVMAIL_PORT: u16 = 8025;
 
@@ -76,41 +76,6 @@ pub const PROXY_ROUTES: &[ProxyRoute] = &[
         prefix: "/admin",
         host: LOOPBACK_HOST,
         port: ADMIN_PORT,
-        strip_prefix: true,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/branding",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/flags",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/pwa-install",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/screenshots",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing",
-        host: LOOPBACK_HOST,
-        port: MARKETING_PORT,
         strip_prefix: true,
         alternate_ports: &[],
     },

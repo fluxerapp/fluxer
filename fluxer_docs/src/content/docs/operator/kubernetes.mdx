@@ -1,0 +1,401 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Kubernetes
+description: Run a complete Fluxer instance on Kubernetes with one Helm chart.
+---
+
+:::tip[The Operator Pass is coming]
+The [Operator Pass](https://fluxer.app/pass) gives you a direct line to the Fluxer team. It goes on sale in early November 2026 for $199 or €199, paid once. The price goes up on 1 January 2027. Pass holders get these perks for life.
+
+- A private channel in Fluxer Labs where the team answers questions about your instance
+- The Operator role in Fluxer Labs
+- An Operator Pass profile badge
+- Invitations to test new features on your instance
+- Your avatar and name on the Fluxer website, if you want
+
+The pass unlocks nothing in the software, and self-hosting stays free. If you have Visionary, you already have the pass.
+
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer).
+:::
+
+The Helm chart in `deploy/helm/fluxer` runs the same services as the Docker Compose stack in [Get started](/operator/get-started/): the Fluxer services, Postgres, Valkey, NATS, Meilisearch, SeaweedFS, LiveKit and the Caddy edge that routes every path. It generates its own secrets, so a hostname is the only value an install needs.
+
+Run one release per namespace. Every object has a fixed name, such as `api` or `postgres`, so the services find each other the same way they do under Compose.
+
+## What you need
+
+| Requirement | Value |
+| --- | --- |
+| Kubernetes | 1.29 or newer |
+| Helm | Helm 3 or Helm 4. CI checks 3.19 and 4.2 |
+| Nodes | 2 vCPU and 8 GB RAM free for the release. The defaults request 0.8 vCPU and 4.4 GiB |
+| Storage | A default StorageClass with `ReadWriteOnce` volumes. The defaults request 61 GiB |
+| Traffic | An ingress controller and cert-manager with the default values. See [Exposure](#exposure) for the other ways in |
+| Client IP | The controller sees the real client address. See [Client IP](#client-ip) |
+| DNS | An `A` record for the hostname pointing at the controller or the load balancer |
+| Voice | 7881/tcp and 7882/udp reachable on a node, and outbound STUN |
+| Processor | `amd64` or `arm64`. Every image ships for both |
+
+The chart installs nothing outside its namespace. A cluster with no ingress controller needs one first, such as [Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/), and [cert-manager](https://cert-manager.io/docs/installation/helm/) for the certificate. `edge.expose: loadBalancer` needs neither, because the edge then takes the traffic and obtains the certificate itself.
+
+The install stops with a message when the cluster has no default StorageClass, no IngressClass, more than one default IngressClass, or no cert-manager while the values ask for it. `clusterChecks: false` turns those checks off for an account that cannot read namespaces, StorageClasses and IngressClasses.
+
+The volume sizes are upper bounds for most provisioners. Lower the `persistence.size` of each bundled service for a small instance. SeaweedFS keeps working on a small volume because the chart sets `seaweedfs.volumeGrowth` to `1`.
+
+## Install
+
+Get the chart from the repository and write a values file with the hostname:
+
+```bash
+git clone --depth 1 https://github.com/fluxerapp/fluxer.git
+cat > fluxer-values.yaml <<'EOF'
+domain: chat.example.com
+EOF
+```
+
+Install it into its own namespace:
+
+```bash
+helm install fluxer ./fluxer/deploy/helm/fluxer \
+  --namespace fluxer --create-namespace \
+  -f fluxer-values.yaml --wait --timeout 15m
+```
+
+The first install pulls every image, creates the volumes and the buckets, and takes a few minutes. `helm test fluxer -n fluxer` then checks that the edge answers and serves the discovery document for the hostname. Keep `fluxer-values.yaml`, because every later upgrade passes it again.
+
+The setup wizard asks for the setup token, as [Create the first admin](/operator/get-started/#first-run) describes. The chart keeps it in the Secret:
+
+```bash
+kubectl -n fluxer get secret fluxer-env -o jsonpath='{.data.FLUXER_SETUP_TOKEN}' | base64 -d
+```
+
+## Exposure
+
+`edge.expose` decides how traffic reaches the edge. The edge routes every path to the right service, so whatever sits in front of it needs one rule that sends the whole hostname to the Service `edge` on port `8080`.
+
+| `edge.expose` | What the chart renders |
+| --- | --- |
+| `ingress` | An Ingress named `fluxer` for the hostname. The default |
+| `gateway` | An HTTPRoute named `fluxer` attached to `edge.gateway.parentRefs` |
+| `loadBalancer` | A `LoadBalancer` Service named `edge-public`, with Caddy obtaining its own certificate |
+| `none` | Only the `ClusterIP` Service `edge`, for a tunnel or a proxy of your own |
+
+Whatever is in front has to forward WebSocket upgrades, allow request bodies of at least 512 MB, and keep idle connections open for an hour. [Behind your own reverse proxy](/operator/reverse-proxy/) explains each requirement.
+
+### Ingress
+
+The Ingress uses the cluster default IngressClass unless `edge.ingress.className` names one. The chart always adds the ingress-nginx annotations for the body size and the timeouts, which other controllers ignore. Other controllers need their equivalents in `edge.ingress.annotations`, or in their own configuration.
+
+`edge.ingress.tls.mode` picks the certificate:
+
+| Mode | Certificate |
+| --- | --- |
+| `certManager` | A namespaced ACME `Issuer` named `fluxer-acme` issues one into the Secret `fluxer-tls`. The default |
+| `existingSecret` | The TLS Secret named in `edge.ingress.tls.secretName` |
+| `none` | No TLS on the Ingress, for a controller that terminates TLS elsewhere |
+
+`certManager` needs cert-manager in the cluster and the hostname reachable on port 80 for the HTTP challenge. `email` becomes the ACME account address when set.
+
+### Gateway API
+
+Set `edge.expose` to `gateway` and point `edge.gateway.parentRefs` at a Gateway that terminates TLS for the hostname. Gateways built on Envoy end requests after 15 seconds by default, which breaks large uploads. Set `edge.gateway.timeouts` to `{request: 0s}` on those, when the implementation supports route timeouts.
+
+### Load balancer
+
+Set `edge.expose` to `loadBalancer` on a cluster with no ingress controller. Caddy then obtains and renews the certificate itself, keeps it on a 1 GiB volume, and binds ports 80 and 443 through the namespaced `net.ipv4.ip_unprivileged_port_start` sysctl. `edge.loadBalancer.http3` adds UDP 443 for HTTP/3 on clouds that allow TCP and UDP on one Service. The Service uses `externalTrafficPolicy: Local`, so Caddy sees the client address.
+
+### Client IP
+
+Fluxer limits registrations and logins per client address, which it reads from `X-Forwarded-For`. The controller in front must see the real client address. Give its Service `externalTrafficPolicy: Local`, or turn on the PROXY protocol between the load balancer and the controller. Otherwise every client shares the address of a node, and three registrations an hour fill the limit for everyone.
+
+## Voice
+
+Voice and video media reach LiveKit on its own ports, never through the edge. Signalling goes through the edge under `/livekit`. `livekit.expose` decides how clients reach the media ports:
+
+| `livekit.expose` | Ports | Notes |
+| --- | --- | --- |
+| `hostNetwork` | 7881/tcp and 7882/udp on the node running LiveKit | The default. Needs a namespace that allows privileged pods |
+| `loadBalancer` | 7881/tcp and 7882/udp on the Service `livekit-rtc` | Needs an address reserved before the install |
+| `nodePort` | `livekit.nodePorts`, 30881/tcp and 30882/udp by default | LiveKit advertises the node ports |
+
+With `hostNetwork`, LiveKit also listens on 7880 on the node. Open only the two media ports in the firewall. LiveKit finds its public address over STUN. Set `livekit.nodeIP` when the node cannot reach a STUN server or has several addresses, and pin the pod with `livekit.nodeSelector` so the address stays right. `livekit.extraConfig` merges more [LiveKit configuration](https://docs.livekit.io/home/self-hosting/deployment/) over the chart's.
+
+With `loadBalancer`, LiveKit advertises one address for both ports, so the chart renders one Service that serves TCP and UDP. Reserve a static public address with your provider first, set `livekit.nodeIP` to it, and ask for it with `livekit.loadBalancerIP` or with your provider's annotation in `livekit.serviceAnnotations`, such as `metallb.io/loadBalancerIPs` on MetalLB. Use `hostNetwork` or `nodePort` where the load balancer cannot serve TCP and UDP on one address.
+
+### A LiveKit server of your own
+
+Set `livekit.enabled` to `false` and name your server. `url` is the address the api calls, and `publicUrl` is the one browsers connect to:
+
+```yaml
+livekit:
+  enabled: false
+  external:
+    url: http://livekit.voice.svc:7880
+    publicUrl: wss://livekit.example.com
+secrets:
+  values:
+    FLUXER_LIVEKIT_API_KEY: the-livekit-key
+    FLUXER_LIVEKIT_API_SECRET: the-livekit-secret
+```
+
+Point the webhook of that server at `https://chat.example.com/api/webhooks/livekit`, signed with the same key. Fluxer tracks who is in a call from those webhooks. `livekit.enabled: false` with no `external.url` turns voice off.
+
+## Secrets
+
+The chart keeps every secret in one Secret named `fluxer-env`. Each key below takes its value from `secrets.values`. An empty value is generated on the first install and kept on every upgrade, because the chart reads the existing Secret back. `helm uninstall` leaves the Secret in place, so a reinstall under the same release name and namespace finds the old values and the existing volumes still open.
+
+| Key | Chart default |
+| --- | --- |
+| `FLUXER_POSTGRES_PASSWORD` | Generated, 64 letters and digits |
+| `FLUXER_SEARCH_API_KEY` | Generated, 64 letters and digits |
+| `FLUXER_S3_ACCESS_KEY_ID` | The fixed value `fluxer` |
+| `FLUXER_S3_SECRET_ACCESS_KEY` | Generated, 64 letters and digits |
+| `FLUXER_SUDO_MODE_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_CONNECTION_INITIATION_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_PROFILE_PSEUDONYM_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_GATEWAY_RPC_AUTH_TOKEN` | Generated, 64 letters and digits |
+| `FLUXER_VALKEY_PASSWORD` | Generated, 64 letters and digits |
+| `FLUXER_NATS_AUTH_TOKEN` | Generated, 64 letters and digits |
+| `FLUXER_ERLANG_COOKIE` | Generated, 64 letters and digits |
+| `FLUXER_MEDIA_PROXY_SECRET_KEY` | Generated, 64 letters and digits |
+| `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` | Generated, 32 random bytes in base64 |
+| `FLUXER_ADMIN_SECRET_KEY_BASE` | Generated, 64 letters and digits |
+| `FLUXER_ADMIN_OAUTH_CLIENT_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_SETUP_TOKEN` | Generated, 64 letters and digits |
+| `FLUXER_LIVEKIT_API_KEY` | The fixed value `fluxer` |
+| `FLUXER_LIVEKIT_API_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_VAPID_PUBLIC_KEY` | Generated P-256 pair |
+| `FLUXER_VAPID_PRIVATE_KEY` | Generated P-256 pair |
+
+[Secrets you must generate](/operator/configuration/#secrets-you-must-generate) explains what each one protects and what changing it does. `FLUXER_VALKEY_PASSWORD` and `FLUXER_NATS_AUTH_TOKEN` exist only in the chart, which gives the bundled Valkey and NATS a login. Every Fluxer service reads the whole Secret, as every service does under Compose.
+
+The chart refuses any value that contains `CHANGE_ME`, a signing secret, token or cookie under 32 characters, a relay secret that does not decode to 32 bytes, the Postgres password `fluxer`, half a VAPID pair, and anything but letters and digits in the credentials of the bundled SeaweedFS, Valkey and NATS. A value set in `secrets.values` after the first install replaces the stored one, except that the Postgres role keeps its old password until you change it inside the database:
+
+```bash
+kubectl -n fluxer exec postgres-0 -- psql -U fluxer -c "ALTER ROLE fluxer PASSWORD 'the-new-password'"
+```
+
+`secrets.extra` adds optional secret-bearing settings to the same Secret, such as `FLUXER_EMAIL_SMTP_PASSWORD`, `FLUXER_STRIPE_SECRET_KEY` or `FLUXER_POSTGRES_URL`. The chart's `values.yaml` lists each one with a line on what it does.
+
+### A Secret you manage
+
+Set `secrets.existingSecret` to the name of a Secret you create, holding every key in the table above. `FLUXER_SETUP_TOKEN` is the one optional key. Without it the API makes a token on its first start and writes it to its log once. The chart then renders no Secret and never changes yours. The install stops when the Secret does not exist, lacks a key, or holds a setting that disagrees with one the chart sets itself, and it names the Secret and the keys. After editing it, restart the release so the pods read the new values:
+
+```bash
+kubectl -n fluxer rollout restart deployment,statefulset -l app.kubernetes.io/instance=fluxer
+```
+
+### GitOps
+
+Argo CD renders the chart with `helm template`, which cannot read the existing Secret, so generated values would change on every sync. Under Argo CD, set `secrets.generate: false` and either use `secrets.existingSecret` or give every key in `secrets.values`. Flux and Helmfile run a real `helm upgrade` and keep generated values. A render without a cluster skips the checks that read the cluster and the existing Secret.
+
+## Settings
+
+`env` passes settings to every Fluxer service as `NAME: value`. The names and their meanings are on [Configuration](/operator/configuration/), and an empty value is left out. For example:
+
+```yaml
+env:
+  FLUXER_EMAIL_ENABLED: "true"
+  FLUXER_EMAIL_PROVIDER: smtp
+  FLUXER_EMAIL_FROM_EMAIL: noreply@chat.example.com
+  FLUXER_EMAIL_SMTP_HOST: smtp.example.com
+  FLUXER_EMAIL_SMTP_PORT: "587"
+  FLUXER_EMAIL_SMTP_USERNAME: fluxer
+secrets:
+  extra:
+    FLUXER_EMAIL_SMTP_PASSWORD: the-smtp-password
+```
+
+`env` lands in a ConfigMap, so the chart refuses a secret there, by name or as a URL that holds a password, and points at `secrets.extra`.
+
+Each workload also takes its own `env`, which wins over the shared one for that workload alone. `appProxy.config` holds the branding and Content Security Policy names that only `app-proxy` reads. The chart derives every public URL from `domain`, `scheme`, `port` and `publicOrigin` the way Compose does, and sets the [fixed wiring](/operator/configuration/#fixed-wiring) itself.
+
+Every workload takes `replicas`, `resources`, `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`, `pdb` and `hpa`. `worker` stays at one replica, because it runs the scheduled jobs. `svc.<name>.shard.replicas` sets the shard count of each internal service.
+
+Every image can come from a mirror. `image.registry` moves the Fluxer images, and each bundled service and `initImage` takes a `repository`, a `tag` and a `digest`.
+
+## External services
+
+Each bundled backing service can be swapped for your own. Turn the bundled one off and say where yours is:
+
+```yaml
+postgres:
+  enabled: false
+  external:
+    host: db.example.com
+    ssl: "true"
+valkey:
+  enabled: false
+  external:
+    url: redis://cache.example.com:6379/0
+nats:
+  enabled: false
+  external:
+    url: nats://mq.example.com:4222
+meilisearch:
+  enabled: false
+  external:
+    url: https://search.example.com
+seaweedfs:
+  enabled: false
+s3:
+  endpoint: https://s3.eu-central-1.amazonaws.com
+  publicEndpoint: https://cdn.example.com
+  region: eu-central-1
+  forcePathStyle: false
+secrets:
+  values:
+    FLUXER_POSTGRES_PASSWORD: the-database-password
+    FLUXER_SEARCH_API_KEY: the-search-key
+    FLUXER_S3_ACCESS_KEY_ID: the-access-key
+    FLUXER_S3_SECRET_ACCESS_KEY: the-secret-key
+    FLUXER_NATS_AUTH_TOKEN: the-nats-token
+```
+
+The chart generates no password, search key or S3 secret for a service it does not run, so those three are required. `FLUXER_NATS_AUTH_TOKEN` is for a NATS server that asks for a token. An outside Postgres needs the database and the role to exist, and an outside S3 store needs the four buckets in `s3.buckets`. A URL that holds a password goes in `secrets.extra` as `FLUXER_KV_URL` or `FLUXER_POSTGRES_URL` instead. [A LiveKit server of your own](#a-livekit-server-of-your-own) covers voice.
+
+## Network policy
+
+The chart renders NetworkPolicies by default. They admit traffic to the release pods only from the release itself, to the edge on port 8080 from anywhere, and to the LiveKit media ports. No other namespace reaches Postgres, Valkey, NATS, Meilisearch, SeaweedFS or a Fluxer service directly. Network plugins without NetworkPolicy support ignore them, and `networkPolicy.enabled: false` leaves them out.
+
+The bundled services also check a login of their own, which holds on any network plugin. Postgres, Valkey, NATS, Meilisearch and the S3 port of SeaweedFS each ask for the credential in the Secret, and the other SeaweedFS ports listen only inside its pod.
+
+`networkPolicy.ingressNamespaceSelector` narrows the edge to the namespace of your ingress controller. LiveKit on the host network sends its webhook to the edge from a node address, so that selector also needs the address of the LiveKit node in `livekit.nodeCIDRs`, and the install stops without it. To let something else in, such as a metrics scraper or a backup job in another namespace, add a NetworkPolicy of your own beside the chart's.
+
+## Upgrade
+
+Pull the repository so the chart matches the images, then upgrade with the same values file. A new `image.revision` restarts every Fluxer pod, which pulls the current `v1` images:
+
+```bash
+git -C fluxer pull
+helm upgrade fluxer ./fluxer/deploy/helm/fluxer -n fluxer -f fluxer-values.yaml \
+  --set-string image.revision=$(date +%s) --wait --timeout 15m
+```
+
+Pass the values file every time and leave out `--reuse-values`, which keeps the defaults of the chart version you installed and fails once a newer chart adds a setting. Generated secrets survive either way, because the chart reads them back from the Secret.
+
+An upgrade restarts only the pods whose settings changed. A new chart version alone restarts nothing, a changed setting in `env` restarts the Fluxer pods, and each backing service restarts only when its own settings or image change. `helm rollback` returns to the previous values, and never undoes a schema change.
+
+### Pin the images
+
+`v1` is a moving tag and the chart pulls it whenever a pod starts. A pod that restarts by itself, after a node drain or a crash, therefore runs the newest `v1` build beside older ones, and a rollback cannot return to an earlier build. Pin the builds that are running once an upgrade has settled:
+
+```bash
+{
+  echo "image:"
+  echo "  digests:"
+  kubectl -n fluxer get pods -l app.kubernetes.io/part-of=fluxer \
+    -o jsonpath='{range .items[*].status.containerStatuses[*]}{.imageID}{"\n"}{end}' \
+    | sed -n 's|.*/\(fluxer-[a-z-]*\)@\(sha256:[0-9a-f]*\)$|    \1: \2|p' | sort -u
+} > fluxer-images.yaml
+```
+
+Pass `-f fluxer-images.yaml` after the values file on the next upgrade. Every pod then stays on those builds until you upgrade without the file and write a new one. `image.tags` pins one image to a release tag instead, keyed by image name such as `fluxer-api`.
+
+### Grow a volume
+
+`persistence.size` and `storageClassName` take effect only when a volume is first created, and Kubernetes refuses an upgrade that changes them afterwards. To grow a volume, edit the claim on a StorageClass that allows expansion, then let the chart catch up:
+
+```bash
+kubectl -n fluxer patch pvc data-postgres-0 -p '{"spec":{"resources":{"requests":{"storage":"50Gi"}}}}'
+kubectl -n fluxer delete statefulset postgres --cascade=orphan
+```
+
+Set `postgres.persistence.size` to the same size in the values file and upgrade. The upgrade creates the StatefulSet again around the running pod and its claim, and the pod may restart once.
+
+### A new Postgres major
+
+A new Postgres major does not read the old data directory, and the `postgres` pod stops with a message naming both majors. Setting `postgres.image.tag` back to the old major replaces the stopped pod by itself. Dump the database first, then move to the new major as [Move to a new Postgres major version](/operator/upgrading/#move-to-a-new-postgres-major-version) describes, with `kubectl exec postgres-0` in place of `docker compose exec postgres`. `postgres.runAsUser` is `70` for the Alpine images and `999` for the Debian ones.
+
+## Backups
+
+Back up the Secret, the database and the uploads. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) says what each of the other volumes holds. The claims are named `data-<service>-0`.
+
+```bash
+kubectl -n fluxer get secret fluxer-env -o yaml > fluxer-env.yaml
+kubectl -n fluxer exec postgres-0 -- sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > fluxer.dump
+```
+
+Keep `fluxer-env.yaml` as safe as the database. Without it a restored database has no matching Postgres password, and every signed session and token stops working.
+
+Uploads are on the volume `data-seaweedfs-0`. Snapshot it with your storage provider's VolumeSnapshot class. Without one, stop the store and copy the volume out through a helper pod:
+
+```bash
+kubectl -n fluxer scale statefulset seaweedfs --replicas=0
+kubectl -n fluxer wait pod/seaweedfs-0 --for=delete --timeout=2m
+kubectl -n fluxer apply -f - <<'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: uploads-copy
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  containers:
+    - name: copy
+      image: busybox:1.37
+      command: ["sleep", "86400"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-seaweedfs-0
+EOF
+kubectl -n fluxer wait pod/uploads-copy --for=condition=Ready --timeout=2m
+kubectl -n fluxer exec uploads-copy -- tar czf - -C /data . > seaweedfs-data.tgz
+kubectl -n fluxer delete pod uploads-copy
+kubectl -n fluxer scale statefulset seaweedfs --replicas=1
+```
+
+Uploads and downloads fail while the store is stopped.
+
+### Restore
+
+Restore into a fresh install. Put the Secret back first, so the chart adopts it and the new database takes the old password:
+
+```bash
+kubectl create namespace fluxer
+kubectl apply -f fluxer-env.yaml
+helm install fluxer ./fluxer/deploy/helm/fluxer -n fluxer -f fluxer-values.yaml --wait --timeout 15m
+```
+
+Stop everything but Postgres, so nothing writes while the data is replaced, and restore the dump:
+
+```bash
+kubectl -n fluxer scale deployment,statefulset --replicas=0 \
+  -l 'app.kubernetes.io/part-of=fluxer,app.kubernetes.io/name notin (postgres)'
+kubectl -n fluxer exec -i postgres-0 -- sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' < fluxer.dump
+```
+
+Start the `uploads-copy` pod from [Backups](#backups) again and unpack the uploads over the volume:
+
+```bash
+kubectl -n fluxer exec -i uploads-copy -- sh -c 'find /data -mindepth 1 -delete && tar xzf - -C /data' < seaweedfs-data.tgz
+kubectl -n fluxer delete pod uploads-copy
+```
+
+An upgrade with the same values then puts every replica count back:
+
+```bash
+helm upgrade fluxer ./fluxer/deploy/helm/fluxer -n fluxer -f fluxer-values.yaml --wait --timeout 15m
+```
+
+A workload with an `hpa` has no replica count in the chart, so scale it back with `kubectl scale`. [Restore a backup](/operator/upgrading/#restore-a-backup) has the reasoning behind each step, and [Volumes and buckets](/operator/configuration/#volumes-and-buckets) covers rebuilding the search index.
+
+## Uninstall
+
+```bash
+helm uninstall fluxer -n fluxer
+```
+
+The Secret `fluxer-env` and the volumes stay, so a later install under the same release name and namespace picks up the same data. A release with another name cannot adopt the kept Secret. Pass `secrets.existingSecret: fluxer-env` to that release to reuse it. To remove everything, delete them too:
+
+```bash
+kubectl -n fluxer delete secret fluxer-env
+kubectl -n fluxer delete pvc -l app.kubernetes.io/instance=fluxer
+kubectl delete namespace fluxer
+```

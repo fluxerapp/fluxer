@@ -24,14 +24,12 @@ import {
 	SettingsModalSidebarSubItems,
 	SettingsTreeProvider,
 } from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
-import {hasWhatsNewEntries} from '@app/features/app/components/whats_new/WhatsNewEntries';
-import {openWhatsNewModal} from '@app/features/app/components/whats_new/WhatsNewModal';
 import {
 	BACK_TO_SETTINGS_DESCRIPTOR,
 	SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR,
 	SIGN_OUT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -54,6 +52,7 @@ import {
 	getSectionIdsForTab,
 	getSectionsForTab,
 	getUserSettingsTabLabel,
+	PRIVACY_REVIEW_NEEDED_DESCRIPTOR,
 	tabHasMultipleLinkableSections,
 	USER_SETTINGS_LABEL_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/SettingsConstants';
@@ -79,6 +78,7 @@ import {buildUserSettingsDeepLink} from '@app/features/user/components/settings_
 import {useSettingsContentKey} from '@app/features/user/hooks/useSettingsContentKey';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
 import {ScrollSpyProvider, useScrollSpyContext} from '@app/features/user/state/ScrollSpyContext';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {
 	collapseSettingsTreeTab,
@@ -89,7 +89,7 @@ import {
 } from '@app/features/user/utils/SettingsModalLayoutUtils';
 import type {I18n} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, ArrowRightIcon, CaretRightIcon, MegaphoneIcon, SignOutIcon} from '@phosphor-icons/react';
+import {ArrowLeftIcon, ArrowRightIcon, CaretRightIcon, SignOutIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -98,10 +98,6 @@ import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 const BACK_TO_OVERRIDES_DESCRIPTOR = msg({
 	message: 'Back to overrides',
 	comment: 'Back-navigation label that returns from permission overrides to the main settings pane.',
-});
-const WHAT_S_NEW_DESCRIPTOR = msg({
-	message: "What's new",
-	comment: 'Sidebar item in settings that opens the app update notes modal.',
 });
 const SEARCH_RESULTS_DESCRIPTOR = msg({
 	message: 'Search results',
@@ -223,7 +219,7 @@ const SidebarSections: React.FC<SidebarSectionsProps> = observer(
 				scrollSpyContext.scrollToSection(sectionId);
 				return;
 			}
-			ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: tabType, section: sectionId});
+			ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: tabType, section: sectionId});
 		};
 		return (
 			<SettingsModalSidebarSubItems
@@ -379,7 +375,7 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 		const useOverride = SettingsSidebar.useOverride;
 		const activeTabPanelId = selectedTab ? `settings-tabpanel-${selectedTab}` : undefined;
 		const activeTabId = selectedTab ? `settings-tab-${selectedTab}` : undefined;
-		const shouldShowWhatsNew = hasWhatsNewEntries();
+		const privacySetupPending = UserSettings.isPrivacySetupPending();
 		const scrollKey = useMemo(() => {
 			const subtabKey = contentKey ?? initialSubtab ?? 'root';
 			if (isSearchActive) {
@@ -585,6 +581,11 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 																		</div>
 																	}
 																	selected={isSelected}
+																	attentionLabel={
+																		tab.type === 'privacy_safety' && privacySetupPending
+																			? i18n._(PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
+																			: undefined
+																	}
 																	onClick={() => handleTabSelect(tab.type)}
 																	onRequestContentFocus={focusContentPanel}
 																	id={tabId}
@@ -608,14 +609,6 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 													})}
 												</SettingsModalSidebarCategory>
 											))}
-											{shouldShowWhatsNew && (
-												<SettingsModalSidebarItem
-													icon={MegaphoneIcon}
-													label={i18n._(WHAT_S_NEW_DESCRIPTOR)}
-													onClick={openWhatsNewModal}
-													data-flx="app.desktop-settings-view.settings-modal-sidebar-item.open-whats-new-modal"
-												/>
-											)}
 											<SettingsModalSidebarItem
 												icon={SignOutIcon}
 												label={i18n._(SIGN_OUT_DESCRIPTOR)}

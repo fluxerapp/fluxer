@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import type {SubscriptionError, TrackInfo, UpdateSubscription, UpdateTrackSettings} from '@livekit/protocol';
 import {Encryption_Type} from '@livekit/protocol';
 import {EventEmitter} from 'events';

@@ -4,12 +4,12 @@ import styles from '@app/features/channel/components/modals/channel_tabs/Channel
 import {
 	type FormInputs,
 	MAX_TOPIC_LENGTH,
-	TOPIC_AUTOCOMPLETE_TRIGGERS,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
@@ -31,9 +31,20 @@ import {observer} from 'mobx-react-lite';
 import {forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState} from 'react';
 import type {UseFormReturn} from 'react-hook-form';
 
-const TOPIC_DESCRIPTOR = msg({message: 'Topic'});
-const ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR = msg({message: 'Add a topic to this channel'});
-const INSERT_EMOJI_DESCRIPTOR = msg({message: 'Insert emoji'});
+const TOPIC_DESCRIPTOR = msg({
+	message: 'Topic',
+	context: 'channel-topic-field',
+	comment:
+		'Label of the input in channel settings where a moderator writes the channel description shown in the channel header. Not an agenda item or a subject line.',
+});
+const ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR = msg({
+	message: 'Add a topic to this channel',
+	comment: 'Placeholder inside the empty channel topic input in channel settings.',
+});
+const INSERT_EMOJI_DESCRIPTOR = msg({
+	message: 'Insert emoji',
+	comment: 'Accessible label for the smiley button that opens the emoji picker beside the channel topic input.',
+});
 const TOPIC_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO);
 const COMPOSER_SURFACE_INTERACTIVE_SELECTOR =
 	'[data-channel-textarea], button, a, input, textarea, select, [role="button"]';
@@ -146,7 +157,7 @@ export const ChannelOverviewTopicEditor = observer(
 				});
 			}, [actualTopic, form, isTopicInitialized]);
 			const handleTopicChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
-				setActualTopic(wire);
+				setActualTopic(dropTrailingEmptyBlockquoteLines(wire, TOPIC_MARKDOWN_PARSER_FLAGS));
 			}, []);
 			const handleTopicEmojiSelect = useCallback((emoji: FlatEmoji, shiftKey: boolean) => {
 				const composer = composerRef.current;
@@ -160,7 +171,10 @@ export const ChannelOverviewTopicEditor = observer(
 				return didInsert;
 			}, []);
 			const emojiButton = isMobile ? (
-				<FocusRing offset={-2}>
+				<FocusRing
+					offset={-2}
+					data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.focus-ring"
+				>
 					<button
 						type="button"
 						onClick={() => setTopicExpressionPickerOpen(true)}
@@ -171,8 +185,13 @@ export const ChannelOverviewTopicEditor = observer(
 						aria-label={i18n._(INSERT_EMOJI_DESCRIPTOR)}
 						aria-haspopup="dialog"
 						aria-expanded={topicExpressionPickerOpen}
+						data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.emoji-button.set-topic-expression-picker-open"
 					>
-						<SmileyIcon size={remFromPx(20)} weight="fill" />
+						<SmileyIcon
+							size={remFromPx(20)}
+							weight="fill"
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.smiley-icon"
+						/>
 					</button>
 				</FocusRing>
 			) : (
@@ -195,10 +214,15 @@ export const ChannelOverviewTopicEditor = observer(
 							}}
 							onClose={onClose}
 							visibleTabs={['emojis']}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.expression-picker-popout"
 						/>
 					)}
+					data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.popout"
 				>
-					<FocusRing offset={-2}>
+					<FocusRing
+						offset={-2}
+						data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.focus-ring--2"
+					>
 						<button
 							type="button"
 							className={clsx(
@@ -208,16 +232,27 @@ export const ChannelOverviewTopicEditor = observer(
 							aria-label={i18n._(INSERT_EMOJI_DESCRIPTOR)}
 							aria-haspopup="dialog"
 							aria-expanded={topicExpressionPickerOpen}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.emoji-button"
 						>
-							<SmileyIcon size={remFromPx(20)} weight="fill" />
+							<SmileyIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.smiley-icon--2"
+							/>
 						</button>
 					</FocusRing>
 				</Popout>
 			);
 			return (
 				<>
-					<fieldset className={formStyles.fieldset}>
-						<div className={formStyles.labelContainer}>
+					<fieldset
+						className={formStyles.fieldset}
+						data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.fieldset"
+					>
+						<div
+							className={formStyles.labelContainer}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.div"
+						>
 							<label
 								id={topicLabelId}
 								className={formStyles.label}
@@ -229,12 +264,22 @@ export const ChannelOverviewTopicEditor = observer(
 										composer.focus();
 									}
 								}}
+								data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.label.prevent-default"
 							>
 								{i18n._(TOPIC_DESCRIPTOR)}
 							</label>
 						</div>
-						<div className={formStyles.inputGroup}>
-							<FocusRing within={true} ringTarget={wrapperRef} focusTarget={wrapperRef} offset={-2}>
+						<div
+							className={formStyles.inputGroup}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.div--2"
+						>
+							<FocusRing
+								within={true}
+								ringTarget={wrapperRef}
+								focusTarget={wrapperRef}
+								offset={-2}
+								data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.focus-ring--3"
+							>
 								<div
 									ref={wrapperRef}
 									className={clsx(formStyles.textareaWrapper, surfaceStyles.surface, topicFieldClass)}
@@ -249,6 +294,7 @@ export const ChannelOverviewTopicEditor = observer(
 											composer.focus();
 										}
 									}}
+									data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.div.prevent-default"
 								>
 									<LexicalRichInput
 										key={topicHydration.key}
@@ -257,7 +303,7 @@ export const ChannelOverviewTopicEditor = observer(
 										placeholder={i18n._(ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR)}
 										disabled={false}
 										channel={channel}
-										allowedTriggers={[...TOPIC_AUTOCOMPLETE_TRIGGERS]}
+										allowSpecialMentions={false}
 										markdown={true}
 										markdownParserFlags={TOPIC_MARKDOWN_PARSER_FLAGS}
 										singleLine={false}
@@ -274,23 +320,35 @@ export const ChannelOverviewTopicEditor = observer(
 										richInputRef={composerRef}
 										onChange={handleTopicChange}
 										i18n={i18n}
+										data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.topic-input.topic-change"
 									/>
-									<div className={formStyles.textareaActions}>
+									<div
+										className={formStyles.textareaActions}
+										data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.div--3"
+									>
 										{emojiButton}
-										<div className={formStyles.characterCountContainer}>
+										<div
+											className={formStyles.characterCountContainer}
+											data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.div--4"
+										>
 											<CharacterCounter
 												currentLength={actualTopic.length}
 												maxLength={MAX_TOPIC_LENGTH}
 												canUpgrade={false}
 												premiumMaxLength={MAX_TOPIC_LENGTH}
 												onUpgradeClick={() => undefined}
+												data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.character-counter"
 											/>
 										</div>
 									</div>
 								</div>
 							</FocusRing>
 							{hasTopicError && (
-								<span id={topicErrorId} className={formStyles.errorText}>
+								<span
+									id={topicErrorId}
+									className={formStyles.errorText}
+									data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.span"
+								>
 									{topicErrorMessage}
 								</span>
 							)}
@@ -305,6 +363,7 @@ export const ChannelOverviewTopicEditor = observer(
 							}}
 							visibleTabs={['emojis']}
 							channelId={channel.id}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor.expression-picker-sheet"
 						/>
 					)}
 				</>

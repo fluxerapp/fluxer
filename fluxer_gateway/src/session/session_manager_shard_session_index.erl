@@ -71,8 +71,18 @@ cleanup_indexed_down(SessionId, Ref, Pid, Sessions0, Refs1, State) ->
     end.
 
 -spec cleanup_down_fallback(pid(), session_map(), map()) -> map().
-cleanup_down_fallback(Pid, Sessions0, State) ->
-    Sessions1 = process_registry:cleanup_on_down(session, Pid, Sessions0),
+cleanup_down_fallback(DeadPid, Sessions0, State) ->
+    Sessions1 = maps:fold(
+        fun
+            (SessionId, {SessionPid, _Ref}, Acc) when SessionPid =:= DeadPid ->
+                ok = process_registry:safe_unregister({session, SessionId}, DeadPid),
+                Acc;
+            (SessionId, SessionRef, Acc) ->
+                Acc#{SessionId => SessionRef}
+        end,
+        #{},
+        Sessions0
+    ),
     replace_sessions(Sessions1, State).
 
 -spec ref_index(map()) -> ref_index().

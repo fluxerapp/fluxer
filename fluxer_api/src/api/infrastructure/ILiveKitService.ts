@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface CreateTokenParams {
 	userId: UserID;
@@ -30,6 +30,16 @@ interface UpdateParticipantParams {
 	canSpeak?: boolean;
 	canStream?: boolean;
 	canVideo?: boolean;
+}
+
+interface MuteMicrophoneTrackParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	trackSid: string;
 }
 
 interface UpdateParticipantPermissionsParams {
@@ -61,21 +71,14 @@ interface ListParticipantsParams {
 	serverId: string;
 }
 
-export interface LiveKitServerError {
-	regionId: string;
-	serverId: string;
-	errorCode: string;
-	retryable: boolean;
-}
-
-export interface ListParticipantsSuccess {
+interface ListParticipantsSuccess {
 	status: 'ok';
 	participants: Array<{
 		identity: string;
 	}>;
 }
 
-export interface ListParticipantsError {
+interface ListParticipantsError {
 	status: 'error';
 	errorCode: string;
 	retryable: boolean;
@@ -83,19 +86,6 @@ export interface ListParticipantsError {
 }
 
 export type ListParticipantsResult = ListParticipantsSuccess | ListParticipantsError;
-
-export interface LiveKitRoomLocation {
-	roomName: string;
-	regionId: string;
-	serverId: string;
-}
-
-export interface ListActiveRoomsResult {
-	rooms: Array<LiveKitRoomLocation>;
-	errors: Array<LiveKitServerError>;
-	searchedServers: number;
-	completed: boolean;
-}
 
 export abstract class ILiveKitService {
 	abstract createToken(params: CreateTokenParams): Promise<{
@@ -107,11 +97,11 @@ export abstract class ILiveKitService {
 
 	abstract updateParticipantPermissions(params: UpdateParticipantPermissionsParams): Promise<void>;
 
+	abstract muteMicrophoneTrack(params: MuteMicrophoneTrackParams): Promise<void>;
+
 	abstract disconnectParticipant(params: DisconnectParticipantParams): Promise<void>;
 
 	abstract listParticipants(params: ListParticipantsParams): Promise<ListParticipantsResult>;
-
-	abstract listActiveRooms(): Promise<ListActiveRoomsResult>;
 
 	abstract getDefaultRegionId(): string | null;
 

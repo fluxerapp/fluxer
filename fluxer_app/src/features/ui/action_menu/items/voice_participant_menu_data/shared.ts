@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-
 import {msg} from '@lingui/core/macro';
 
 export const COPY_DEVICE_ID_DESCRIPTOR = msg({
@@ -17,18 +15,48 @@ export const STREAM_VOLUME_DESCRIPTOR = msg({
 	message: 'Stream volume',
 	comment: 'Voice menu slider label that controls volume of an incoming screen share with audio.',
 });
-export const MUTE_DESCRIPTOR = msg({
+export const STOP_STREAMING_DESCRIPTOR = msg({
+	message: 'Stop streaming',
+	comment: 'Voice screen share menu action that stops the current user stream.',
+});
+export const CHANGE_STREAM_DESCRIPTOR = msg({
+	message: 'Change stream',
+	comment: 'Voice screen share menu action that changes the shared source.',
+});
+export const PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR = msg({
+	message: 'Pause preview when {productName} isn’t focused',
+	comment:
+		'Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.',
+});
+export const SCREEN_SHARE_PRIVACY_DESCRIPTOR = msg({
+	message: 'Screen share privacy',
+	comment: 'Voice screen share menu action that opens the screen share preview privacy controls.',
+});
+export const MUTE_MICROPHONE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'voice-control-action',
 	comment:
 		'Voice menu toggle label. Mutes the current user microphone or, for a stream, mutes that stream audio locally.',
+});
+export const MUTE_PLAYBACK_DESCRIPTOR = msg({
+	message: 'Mute',
+	context: 'playback-control-action',
 });
 export const UNFOCUS_DESCRIPTOR = msg({
 	message: 'Unfocus',
 	comment: 'Voice call layout action that removes focus from the currently pinned participant.',
 });
 export const POP_OUT_CAMERA_DESCRIPTOR = msg({
-	message: 'Pop out camera',
-	comment: 'Voice menu action on desktop that opens the participant camera feed in a separate window.',
+	message: 'Pop out video',
+	comment: 'Voice menu action on desktop that opens the active participant camera feed in a separate window.',
+});
+export const POP_OUT_USER_DESCRIPTOR = msg({
+	message: 'Pop out user',
+	comment: 'Voice menu action on desktop that opens the participant placeholder tile in a separate window.',
+});
+export const PREVIEW_CAMERA_DESCRIPTOR = msg({
+	message: 'Preview camera',
+	comment: 'Voice menu action that opens a preview of the current user camera.',
 });
 export const POP_OUT_STREAM_DESCRIPTOR = msg({
 	message: 'Pop out stream',
@@ -48,6 +76,7 @@ export const MENTION_DESCRIPTOR = msg({
 });
 export const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment: 'Voice participant menu action that opens a DM conversation with the selected user.',
 });
 export const MUTE_DEVICE_DESCRIPTOR = msg({
@@ -65,10 +94,6 @@ export const TURN_OFF_DEVICE_STREAM_DESCRIPTOR = msg({
 export const TURN_OFF_STREAM_DESCRIPTOR = msg({
 	message: 'Turn off stream',
 	comment: 'Voice menu action that ends the current user screen share.',
-});
-export const SHOW_MY_OWN_CAMERA_DESCRIPTOR = msg({
-	message: 'Show my own camera',
-	comment: 'Voice display preference checkbox that controls whether the current user sees their own camera tile.',
 });
 export const SHOW_MY_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'Show my screen share',

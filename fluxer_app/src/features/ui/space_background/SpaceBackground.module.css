@@ -1,0 +1,108 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.starfield {
+	position: relative;
+	isolation: isolate;
+}
+
+.starfield::before,
+.starfield::after {
+	content: '';
+	position: var(--starfield-position, absolute);
+	top: 0;
+	left: 0;
+	border-radius: 999rem;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.starfield::before {
+	width: 1px;
+	height: 1px;
+	background: rgb(255 255 255 / 0.7);
+	box-shadow:
+		4vw 12vh 0 0 rgb(255 255 255 / 0.36),
+		6vw 8vh 0 1px rgb(238 232 255 / 0.42),
+		9vw 68vh 0 0 rgb(213 202 255 / 0.34),
+		11vw 88vh 0 0 rgb(255 255 255 / 0.3),
+		14vw 28vh 0 0 rgb(226 218 255 / 0.38),
+		18vw 58vh 0 1px rgb(255 255 255 / 0.28),
+		21vw 15vh 0 0 rgb(255 255 255 / 0.36),
+		24vw 34vh 0 0 rgb(211 199 255 / 0.28),
+		26vw 53vh 0 0 rgb(255 255 255 / 0.3),
+		29vw 74vh 0 1px rgb(237 231 255 / 0.34),
+		33vw 7vh 0 0 rgb(255 255 255 / 0.34),
+		35vw 38vh 0 0 rgb(226 218 255 / 0.38),
+		39vw 66vh 0 0 rgb(255 255 255 / 0.28),
+		42vw 9vh 0 1px rgb(255 255 255 / 0.36),
+		46vw 48vh 0 0 rgb(211 199 255 / 0.28),
+		48vw 82vh 0 0 rgb(255 255 255 / 0.3),
+		53vw 24vh 0 0 rgb(226 218 255 / 0.34),
+		58vw 92vh 0 0 rgb(211 199 255 / 0.3),
+		61vw 62vh 0 1px rgb(255 255 255 / 0.34),
+		64vw 31vh 0 0 rgb(211 199 255 / 0.26),
+		68vw 18vh 0 0 rgb(255 255 255 / 0.32),
+		71vw 86vh 0 0 rgb(255 255 255 / 0.28),
+		73vw 47vh 0 0 rgb(226 218 255 / 0.34),
+		81vw 11vh 0 1px rgb(255 255 255 / 0.38),
+		87vw 78vh 0 0 rgb(255 255 255 / 0.34),
+		91vw 64vh 0 0 rgb(255 255 255 / 0.34),
+		94vw 35vh 0 0 rgb(226 218 255 / 0.3),
+		97vw 92vh 0 1px rgb(255 255 255 / 0.28);
+	filter: drop-shadow(0 0 0.18rem rgb(210 199 255 / 0.2));
+	animation: starDrift 90s ease-in-out infinite alternate;
+}
+
+.starfield::after {
+	width: 2px;
+	height: 2px;
+	background: rgb(226 218 255 / 0.52);
+	box-shadow:
+		7vw 36vh 0 0 rgb(226 218 255 / 0.3),
+		9vw 42vh 0 1px rgb(226 218 255 / 0.34),
+		16vw 80vh 0 0 rgb(255 255 255 / 0.24),
+		19vw 66vh 0 0 rgb(255 255 255 / 0.28),
+		27vw 24vh 0 1px rgb(213 202 255 / 0.26),
+		32vw 20vh 0 0 rgb(226 218 255 / 0.34),
+		37vw 90vh 0 0 rgb(255 255 255 / 0.24),
+		45vw 70vh 0 1px rgb(255 255 255 / 0.26),
+		51vw 14vh 0 0 rgb(237 231 255 / 0.28),
+		57vw 33vh 0 0 rgb(226 218 255 / 0.32),
+		66vw 52vh 0 1px rgb(213 202 255 / 0.24),
+		72vw 86vh 0 0 rgb(255 255 255 / 0.3),
+		84vw 25vh 0 0 rgb(226 218 255 / 0.32),
+		89vw 46vh 0 1px rgb(237 231 255 / 0.26),
+		96vw 56vh 0 0 rgb(255 255 255 / 0.26);
+	filter: drop-shadow(0 0 0.3rem rgb(210 199 255 / 0.28));
+	animation: starDrift 120s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes starDrift {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+
+	to {
+		transform: translate3d(-1rem, 0.75rem, 0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.starfield::before,
+	.starfield::after {
+		animation: none;
+	}
+}
+
+:global(html.reduced-motion) .starfield::before,
+:global(html.reduced-motion) .starfield::after {
+	animation: none;
+}
+
+.spaceBackground {
+	composes: starfield;
+	background:
+		radial-gradient(ellipse 46rem 28rem at 28% 10%, rgb(122 87 191 / 0.16), transparent 70%),
+		radial-gradient(ellipse 36rem 24rem at 82% 84%, rgb(91 65 151 / 0.14), transparent 72%),
+		linear-gradient(145deg, #05040d 0%, #080616 46%, #0d0a1c 100%);
+}

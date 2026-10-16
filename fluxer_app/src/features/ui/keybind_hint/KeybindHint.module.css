@@ -42,5 +42,5 @@
 
 :global(.theme-light) {
 	--keybind-hint-default-background: hsl(0, 0%, 18%);
-	--keybind-hint-default-color: var(--text-on-brand-primary);
+	--keybind-hint-default-color: var(--text-on-dark);
 }

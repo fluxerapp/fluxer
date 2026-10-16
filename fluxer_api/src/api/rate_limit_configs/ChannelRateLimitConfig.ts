@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const ChannelRateLimitConfigs = {
 	CHANNEL_GET: {
@@ -56,17 +56,21 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:message:ack::channel_id',
 		config: {limit: 100, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	CHANNEL_SEARCH: {
-		bucket: 'channel:search::channel_id',
+	CHANNEL_MESSAGE_CROSSPOST: {
+		bucket: 'channel:message:crosspost::channel_id',
+		config: {limit: 5, windowMs: ms('5 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_MESSAGE_CROSSPOST_SOURCE: {
+		bucket: 'channel:message:crosspost_source::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	CHANNEL_ATTACHMENT_UPLOAD: {
 		bucket: 'channel:attachment:upload::channel_id',
 		config: {limit: 10, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	ATTACHMENT_DELETE: {
-		bucket: 'attachment:delete',
-		config: {limit: 40, windowMs: ms('10 seconds')},
+	ATTACHMENT_URLS_REFRESH: {
+		bucket: 'attachment:refresh_urls',
+		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	CHANNEL_TYPING: {
 		bucket: 'channel:typing::channel_id',
@@ -96,22 +100,6 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:call:stop_ringing::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	CHANNEL_VOICE_DEBUG_LOGGING_STATUS: {
-		bucket: 'channel:voice_debug_logging:status::channel_id',
-		config: {limit: 60, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	CHANNEL_VOICE_DEBUG_LOGGING_TOGGLE: {
-		bucket: 'channel:voice_debug_logging:toggle::channel_id',
-		config: {limit: 10, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	CHANNEL_VOICE_DEBUG_LOGGING_EVENTS: {
-		bucket: 'channel:voice_debug_logging:events::channel_id::user_id',
-		config: {limit: 60, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	CHANNEL_VOICE_PRESENCE_HEARTBEAT: {
-		bucket: 'channel:voice_presence:heartbeat::channel_id::user_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	CHANNEL_STREAM_UPDATE: {
 		bucket: 'channel:stream:update::stream_key',
 		config: {limit: 20, windowMs: ms('10 seconds')},
@@ -132,8 +120,60 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:stream:preview:delete::stream_key',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_FOLLOW: {
+		bucket: 'channel:follow::channel_id',
+		config: {limit: 5, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_FOLLOWER_STATS: {
+		bucket: 'channel:follower_stats::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_CREATE: {
+		bucket: 'channel:thread:create::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_PUT: {
+		bucket: 'channel:thread:member:put::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_DELETE: {
+		bucket: 'channel:thread:member:delete::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_SETTINGS: {
+		bucket: 'channel:thread:member:settings::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBERS_LIST: {
+		bucket: 'channel:thread:members:list::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_GET: {
+		bucket: 'channel:thread:member:get::channel_id',
+		config: {limit: 40, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREADS_ARCHIVED_LIST: {
+		bucket: 'channel:threads:archived:list::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREADS_SEARCH: {
+		bucket: 'channel:threads:search::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_POST_DATA: {
+		bucket: 'channel:post_data::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_FORUM_TAGS: {
+		bucket: 'channel:forum_tags::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	VOICE_ENTRANCE_SOUND_PLAY: {
 		bucket: 'voice:entrance_sound:play::user_id::channel_id',
 		config: {limit: 3, windowMs: ms('30 seconds')},
+	} as RouteRateLimitConfig,
+	VOICE_P2P_CONNECTION_REPORTS: {
+		bucket: 'voice:p2p:connection_reports',
+		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 } as const;

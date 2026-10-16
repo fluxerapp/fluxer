@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2CommandResult, VoiceEngineV2Implementation} from '../implementations';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation, waitForRuntime} from '../testing';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from './eventLogRing';
+import type {
+	VoiceEngineV2CommandResult,
+	VoiceEngineV2Implementation,
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {
 	assertEventLogInvariants,
 	isVoiceEngineV2ProgrammerError,
@@ -16,7 +17,11 @@ import {
 	VOICE_ENGINE_V2_RESOURCE_QUEUES_CAP,
 	VoiceEngineV2Runtime,
 	type VoiceEngineV2RuntimeDiagnostic,
-} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import {waitForRuntime} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
+import {describe, expect, it} from 'vitest';
 
 class DeferredAllResolveImplementation implements VoiceEngineV2Implementation {
 	readonly kind = 'js' as const;

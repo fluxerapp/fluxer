@@ -35,20 +35,10 @@
 	color: var(--text-primary-muted);
 }
 
-.networkErrorLinks {
-	margin-top: var(--spacing-2);
-	max-width: 22rem;
-}
-
 .errorFallbackActions {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-3);
-}
-
-.errorFallbackCopyAction {
-	display: flex;
-	justify-content: center;
 }
 
 @media (min-width: 768px) {

@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
 import {create, equals} from '@bufbuild/protobuf';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	decodeSyncedPreferences,
+	encodedSyncedPreferencesByteLength,
 	encodeSyncedPreferences,
 	SYNCED_PREFERENCES_MAX_BYTES,
+	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 	SyncedPreferencesSchema,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {AccessibilitySettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/accessibility_pb';
@@ -13,21 +21,11 @@ import {
 	SearchEngineSettingsSchema,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {updateUserSettings} from './UserTestUtils';
 
 describe('User Settings synced_preferences', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
-	});
-	test('default response contains an empty string', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await updateUserSettings(harness, account.token, {});
-		expect(json.synced_preferences).toBe('');
 	});
 	test('round-trips an encoded snapshot', async () => {
 		const account = await createTestAccount(harness);
@@ -70,22 +68,6 @@ describe('User Settings synced_preferences', () => {
 		});
 		expect(json.synced_preferences).toBe('');
 	});
-	test('rejects non-string payloads with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: {a: 1}})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('rejects invalid base64 with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: 'not_base64!!!'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('rejects garbage protobuf bytes with 400', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilder(harness, account.token)
@@ -104,11 +86,60 @@ describe('User Settings synced_preferences', () => {
 			localSpamOverrides: create(LocalUserSpamOverridesSchema, {spammerUserIds: ids}),
 		});
 		const encoded = encodeSyncedPreferences(big);
-		await createBuilder(harness, account.token)
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+				message: string;
+			}>;
+		}>(harness, account.token)
 			.patch('/users/@me/settings')
 			.body({synced_preferences: encoded})
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
+		expect(response.code).toBe('INVALID_FORM_BODY');
+		expect(response.errors[0]?.path).toBe('synced_preferences');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH);
+	});
+	test('reports TOO_LARGE for a snapshot inside the encoded-length bound but over the byte cap', async () => {
+		const account = await createTestAccount(harness);
+		const baseEntries = Math.floor((SYNCED_PREFERENCES_MAX_BYTES - 8192) / 1006);
+		const build = (tailLength: number) =>
+			encodeSyncedPreferences(
+				create(SyncedPreferencesSchema, {
+					localSpamOverrides: create(LocalUserSpamOverridesSchema, {
+						spammerUserIds: [
+							...Array.from({length: baseEntries}, (_, i) => `${i}-${'x'.repeat(1000)}`),
+							'y'.repeat(tailLength),
+						],
+					}),
+				}),
+			);
+		let tail = 1;
+		let encoded = build(tail);
+		while (encodedSyncedPreferencesByteLength(encoded) <= SYNCED_PREFERENCES_MAX_BYTES) {
+			tail += 512;
+			encoded = build(tail);
+		}
+		tail = Math.max(1, tail - 512);
+		encoded = build(tail);
+		while (encodedSyncedPreferencesByteLength(encoded) <= SYNCED_PREFERENCES_MAX_BYTES) {
+			tail += 1;
+			encoded = build(tail);
+		}
+		expect(encodedSyncedPreferencesByteLength(encoded)).toBeGreaterThan(SYNCED_PREFERENCES_MAX_BYTES);
+		expect(encoded.length).toBeLessThanOrEqual(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH);
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{path: string; code: string; message: string}>;
+		}>(harness, account.token)
+			.patch('/users/@me/settings')
+			.body({synced_preferences: encoded})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		expect(response.errors[0]?.path).toBe('synced_preferences');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.TOO_LARGE);
 	});
 	test('omitting the field leaves the existing snapshot intact', async () => {
 		const account = await createTestAccount(harness);

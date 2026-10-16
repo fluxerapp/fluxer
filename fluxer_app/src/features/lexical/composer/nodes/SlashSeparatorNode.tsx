@@ -49,7 +49,11 @@ export class SlashSeparatorNode extends DecoratorNode<JSX.Element> {
 
 	override decorate(): JSX.Element {
 		return (
-			<span className={styles.slashSlotSeparator} aria-hidden="true">
+			<span
+				className={styles.slashSlotSeparator}
+				aria-hidden="true"
+				data-flx="lexical.composer.nodes.slash-separator-node.slash-slot-separator"
+			>
 				{' '}
 			</span>
 		);

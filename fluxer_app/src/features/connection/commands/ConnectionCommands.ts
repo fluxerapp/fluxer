@@ -10,7 +10,9 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FailureInspect from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
+import type {BlueskyAuthorizeResponse} from '@fluxer/schema/src/domains/connection/BlueskyOAuthSchemas';
 import type {
 	ConnectionListResponse,
 	ConnectionResponse,
@@ -28,7 +30,7 @@ const FAILED_TO_INITIATE_CONNECTION_DESCRIPTOR = msg({
 	comment: 'Toast error shown when creating a new account connection fails.',
 });
 const FAILED_TO_START_AUTHORISATION_DESCRIPTOR = msg({
-	message: "Couldn't start {blueskyProviderName} authorisation",
+	message: "Couldn't start {blueskyProviderName} authorization",
 	comment:
 		'Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.',
 });
@@ -53,10 +55,6 @@ const CONNECTIONS_REORDERED_DESCRIPTOR = msg({
 	comment: 'Short label in the connection connection commands.',
 });
 const logger = new Logger('Connections');
-
-interface BlueskyAuthorizeResponse {
-	authorize_url: string;
-}
 
 function connectionCreateRequest(type: ConnectionType, identifier: string): CreateConnectionRequest {
 	return {
@@ -86,6 +84,7 @@ function successToast(i18n: I18n, message: MessageDescriptor): void {
 }
 
 function showErrorModal(i18n: I18n, error: unknown, fallbackMessage: MessageDescriptor): void {
+	if (handleAccountLimitedError(error)) return;
 	const errorMessage = FailureInspect.failureMessage(error);
 	showGenericErrorModal({
 		title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
@@ -185,21 +184,6 @@ export async function deleteConnection(i18n: I18n, type: string, connectionId: s
 		logger.debug(`Successfully deleted connection: ${type}/${connectionId}`);
 	} catch (error) {
 		logger.error(`Failed to delete connection ${type}/${connectionId}:`, error);
-		throw error;
-	}
-}
-
-export async function verifyConnection(i18n: I18n, type: string, connectionId: string): Promise<void> {
-	try {
-		const response = await http.post<ConnectionResponse>(Endpoints.CONNECTION_VERIFY(type, connectionId), {
-			body: {},
-		});
-		UserConnection.updateConnection(connectionId, response.body);
-		UserProfileCommands.clearCurrentUserProfiles();
-		successToast(i18n, CONNECTION_VERIFIED_DESCRIPTOR);
-		logger.debug(`Successfully verified connection: ${type}/${connectionId}`);
-	} catch (error) {
-		logger.error(`Failed to verify connection ${type}/${connectionId}:`, error);
 		throw error;
 	}
 }

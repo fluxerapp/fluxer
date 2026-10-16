@@ -22,7 +22,7 @@
 }.
 -type sessions() :: #{session_id() => session_entry()}.
 -type push_buffer_entry() :: #{
-    channel_id := integer(), message_id := integer(), params := map()
+    channel_id := integer(), message_id := integer(), params := map(), buffered_at => integer()
 }.
 -type state() :: #{
     user_id := user_id(),
@@ -59,7 +59,7 @@ init(PresenceData) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 20),
     State = build_initial_state(PresenceData),
-    StateWithSubs = presence_broadcast:ensure_initial_global_subscriptions(State),
+    StateWithSubs = presence_broadcast_subscriptions:ensure_initial_global_subscriptions(State),
     {ok, StateWithSubs}.
 
 -spec terminate(term(), state() | term()) -> ok.
@@ -84,17 +84,23 @@ code_change(_OldVsn, State, _Extra) ->
 -spec handle_call(term(), gen_server:from(), state()) ->
     {reply, term(), state()} | {stop, normal, ok, state()}.
 handle_call({session_connect, Request}, {Pid, _}, State) when is_map(Request), is_pid(Pid) ->
-    {reply, Reply, NewState} = presence_session:handle_session_connect(Request, Pid, State),
+    SessionPid = session_connect_pid(Request, Pid),
+    {reply, Reply, NewState} = presence_session:handle_session_connect(
+        Request, SessionPid, State
+    ),
     FinalState = presence_broadcast:publish_global_presence(
         maps:get(sessions, NewState), NewState
     ),
-    presence_broadcast:send_cached_presences_to_session(Pid, FinalState),
+    presence_broadcast_subscriptions:send_cached_presences_to_session(SessionPid, FinalState),
     {reply, Reply, FinalState};
 handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
 handle_call({terminate_session, SessionIdHashes}, _From, State) when is_list(SessionIdHashes) ->
     presence_connect:handle_terminate_session_call(binary_list(SessionIdHashes), State);
-handle_call({dispatch, EventAtom, Data}, _From, State) when is_atom(EventAtom), is_map(Data) ->
+handle_call({dispatch, EventAtom, Data}, _From, State) when
+    is_atom(EventAtom), is_map(Data);
+    is_atom(EventAtom), is_list(Data)
+->
     handle_dispatch_call(EventAtom, Data, State);
 handle_call({join_guild, GuildId}, _From, State) when is_integer(GuildId) ->
     presence_connect:handle_join_guild(GuildId, State);
@@ -111,7 +117,10 @@ handle_call(_, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({dispatch, Event, Data}, State) when is_atom(Event), is_map(Data) ->
+handle_cast({dispatch, Event, Data}, State) when
+    is_atom(Event), is_map(Data);
+    is_atom(Event), is_list(Data)
+->
     handle_dispatch_cast(Event, Data, State);
 handle_cast(presence_rejoin, State) ->
     handle_presence_rejoin(State);
@@ -137,14 +146,23 @@ handle_cast({sync_friends, FriendIds, FlushedIds}, State) when
 handle_cast({sync_group_dm_recipients, RecipientsByChannel}, State) when
     is_map(RecipientsByChannel)
 ->
-    {noreply, presence_broadcast:sync_group_dm_subscriptions(RecipientsByChannel, State)};
+    {noreply,
+        presence_broadcast_subscriptions:sync_group_dm_subscriptions(
+            RecipientsByChannel, State
+        )};
 handle_cast(Msg, State) ->
     handle_cast_guild(Msg, State).
+
+-spec session_connect_pid(map(), pid()) -> pid().
+session_connect_pid(#{session_pid := Pid}, _CallerPid) when is_pid(Pid) ->
+    Pid;
+session_connect_pid(_Request, CallerPid) ->
+    CallerPid.
 
 -spec handle_sync_friends_cast([term()], [term()], state()) -> {noreply, state()}.
 handle_sync_friends_cast(FriendIds, FlushedIds, State) ->
     {noreply,
-        presence_broadcast:sync_friend_subscriptions(
+        presence_broadcast_subscriptions:sync_friend_subscriptions(
             user_ids(FriendIds), user_ids(FlushedIds), State
         )}.
 
@@ -163,11 +181,11 @@ handle_cast_guild(_, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
 handle_info({presence, TargetId, Payload}, State) when is_integer(TargetId), is_map(Payload) ->
     presence_broadcast:dispatch_global_presence(TargetId, Payload, State);
-handle_info({initial_presences, Presences}, State) when is_list(Presences) ->
-    presence_broadcast:dispatch_initial_presences(map_list(Presences), State),
-    {noreply, State};
 handle_info({'DOWN', Ref, process, _Pid, Reason}, State) when is_reference(Ref) ->
     presence_connect:handle_process_down(Ref, Reason, State);
+handle_info({thread_user_flip, Version} = Flip, State) when is_integer(Version) ->
+    lists:foreach(fun(Pid) -> Pid ! Flip end, presence_connect:collect_session_pids(State)),
+    {noreply, State};
 handle_info(_, State) ->
     {noreply, State}.
 
@@ -223,12 +241,12 @@ cast_guild_op(Fun, GuildId, State) ->
     {reply, _Reply, NewState} = Fun(GuildId, State),
     NewState.
 
--spec handle_dispatch_call(atom(), map(), state()) -> {reply, ok, state()}.
+-spec handle_dispatch_call(atom(), map() | list(), state()) -> {reply, ok, state()}.
 handle_dispatch_call(EventAtom, Data, State) ->
     presence_broadcast:dispatch_to_all_sessions(EventAtom, Data, State),
     {reply, ok, process_dispatch_event(EventAtom, Data, State)}.
 
--spec handle_dispatch_cast(atom(), map(), state()) -> {noreply, state()}.
+-spec handle_dispatch_cast(atom(), map() | list(), state()) -> {noreply, state()}.
 handle_dispatch_cast(Event, Data, State) ->
     presence_broadcast:dispatch_to_all_sessions(Event, Data, State),
     {noreply, process_dispatch_event(Event, Data, State)}.
@@ -265,10 +283,6 @@ binary_list(Items) ->
 user_ids(Items) ->
     [Item || Item <- Items, is_integer(Item)].
 
--spec map_list([term()]) -> [map()].
-map_list(Items) ->
-    [Item || Item <- Items, is_map(Item)].
-
 -spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
 normalize_start_link({ok, Pid}) ->
     {ok, Pid};
@@ -292,30 +306,12 @@ presence_rejoin_notifies_all_sessions_test() ->
     ?assert(received_rejoin_ack(one)),
     ?assert(received_rejoin_ack(two)).
 
-presence_rejoin_with_no_sessions_is_noop_test() ->
-    State = test_state(#{}),
-    ?assertEqual({noreply, State}, handle_cast(presence_rejoin, State)).
-
-reconcile_flattened_presence_uses_current_session_state_test() ->
-    State = test_state(#{}),
-    PublishedState = State#{last_published_presence => #{status => <<"offline">>}},
-    meck:new(presence_broadcast, [passthrough]),
-    meck:expect(
-        presence_broadcast,
-        publish_global_presence,
-        fun(Sessions, ReceivedState) ->
-            ?assertEqual(#{}, Sessions),
-            ?assertEqual(State, ReceivedState),
-            PublishedState
-        end
-    ),
-    try
-        ?assertEqual(
-            {noreply, PublishedState},
-            handle_cast(reconcile_flattened_presence, State)
-        )
-    after
-        meck:unload(presence_broadcast)
+thread_user_flip_is_forwarded_to_every_session_test() ->
+    State = test_state(#{<<"s1">> => test_session_entry(self())}),
+    ?assertEqual({noreply, State}, handle_info({thread_user_flip, 4}, State)),
+    receive
+        {thread_user_flip, 4} -> ok
+    after 1000 -> ?assert(false)
     end.
 
 -spec test_state(sessions()) -> state().

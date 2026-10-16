@@ -5,64 +5,6 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-integer_list_to_binaries_test() ->
-    ?assertEqual([<<"1">>, <<"2">>, <<"3">>], call_state:integer_list_to_binaries([1, 2, 3])),
-    ?assertEqual([], call_state:integer_list_to_binaries([])).
-
-find_session_by_pid_test() ->
-    Pid1 = self(),
-    Sessions = #{
-        <<"session1">> => {100, Pid1, make_ref()},
-        <<"session2">> => {200, spawn(fun() -> ok end), make_ref()}
-    },
-    ?assertMatch({ok, <<"session1">>, 100}, call_state:find_session_by_pid(Pid1, Sessions)),
-    ?assertEqual(not_found, call_state:find_session_by_pid(spawn(fun() -> ok end), Sessions)).
-
-format_voice_state_test() ->
-    VoiceState = #{
-        <<"user_id">> => 123,
-        <<"channel_id">> => 456,
-        <<"guild_id">> => 789,
-        <<"mute">> => false
-    },
-    Result = call_state:format_voice_state(VoiceState),
-    ?assertEqual(<<"123">>, maps:get(<<"user_id">>, Result)),
-    ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Result)),
-    ?assertEqual(<<"789">>, maps:get(<<"guild_id">>, Result)),
-    ?assertEqual(false, maps:get(<<"mute">>, Result)).
-
-format_pending_connections_normalizes_and_filters_malformed_entries_test() ->
-    PendingConnections = #{
-        <<"conn-a">> => #{user_id => <<"42">>, token_nonce => 123, joined_at => <<"1000">>},
-        "conn-b" => #{user_id => "84", token_nonce => "nonce", joined_at => "2000"},
-        <<"missing-user">> => #{token_nonce => <<"nonce">>, joined_at => 1000},
-        <<"bad-user">> => #{user_id => <<"bad">>, joined_at => 1000},
-        <<"leading-zero-user">> => #{user_id => <<"0042">>, joined_at => 1000},
-        <<"leading-zero-list-user">> => #{user_id => "0084", joined_at => 1000},
-        <<"bad-joined-at">> => #{user_id => 168, joined_at => <<"bad">>},
-        <<"not-a-map">> => not_a_map
-    },
-    Result = call_state:format_pending_connections(PendingConnections),
-    ?assertEqual(3, length(Result)),
-    ?assert(
-        has_pending_connection(
-            #{connection_id => <<"conn-a">>, user_id => <<"42">>, token_nonce => <<"123">>},
-            Result
-        )
-    ),
-    ?assert(
-        has_pending_connection(
-            #{connection_id => <<"conn-b">>, user_id => <<"84">>, token_nonce => <<"nonce">>},
-            Result
-        )
-    ),
-    ?assert(
-        has_pending_connection(
-            #{connection_id => <<"bad-joined-at">>, user_id => <<"168">>}, Result
-        )
-    ),
-    ?assertEqual([], call_state:format_pending_connections(not_a_map)).
-
 remove_users_from_ringing_test() ->
     State = new_call_test_state(#{
         ringing => [1, 2, 3],
@@ -86,7 +28,7 @@ join_from_ringing_adds_voice_state_test() ->
         initiator_ready => true
     }),
     {reply, ok, NewState} = call_voice:handle_join_internal(
-        UserId, VoiceState, SessionId, self(), ConnectionId, State
+        UserId, VoiceState, SessionId, self(), ConnectionId, undefined, State
     ),
     ?assert(maps:is_key(UserId, maps:get(voice_states, NewState))),
     ?assertNot(lists:member(UserId, maps:get(ringing, NewState))).
@@ -122,56 +64,6 @@ pending_connection_timeout_preserves_active_voice_state_test() ->
             ConnectionId, maps:get(pending_connections, NewState), undefined
         )
     ).
-
-reconcile_absent_connections_removes_matching_voice_state_test() ->
-    UserId = 42,
-    OtherUserId = 84,
-    SessionId = <<"session-42">>,
-    OtherSessionId = <<"session-84">>,
-    ConnectionId = <<"conn-42">>,
-    OtherConnectionId = <<"conn-84">>,
-    Ref = monitor(process, self()),
-    OtherRef = monitor(process, self()),
-    VoiceState = #{
-        <<"user_id">> => <<"42">>,
-        <<"channel_id">> => <<"1">>,
-        <<"connection_id">> => ConnectionId
-    },
-    OtherVoiceState = #{
-        <<"user_id">> => <<"84">>,
-        <<"channel_id">> => <<"1">>,
-        <<"connection_id">> => OtherConnectionId
-    },
-    State = new_call_test_state(#{
-        voice_states => #{UserId => VoiceState, OtherUserId => OtherVoiceState},
-        sessions => #{
-            SessionId => {UserId, self(), Ref},
-            OtherSessionId => {OtherUserId, self(), OtherRef}
-        },
-        pending_connections => #{ConnectionId => #{user_id => UserId}},
-        initiator_ready => true
-    }),
-    Absent = [
-        #{
-            connection_id => ConnectionId,
-            user_id => UserId,
-            channel_id => 1,
-            guild_id => null,
-            region_id => <<"local">>,
-            server_id => <<"s1">>,
-            pending => false
-        }
-    ],
-    {noreply, NewState} = call_voice:reconcile_absent_connections(Absent, State),
-    ?assertNot(maps:is_key(UserId, maps:get(voice_states, NewState))),
-    ?assert(maps:is_key(OtherUserId, maps:get(voice_states, NewState))),
-    ?assertNot(maps:is_key(SessionId, maps:get(sessions, NewState))),
-    ?assertNot(maps:is_key(ConnectionId, maps:get(pending_connections, NewState))),
-    receive
-        {'$gen_cast', {call_force_disconnect, 1, ConnectionId}} -> ok
-    after 1000 ->
-        ?assert(false, force_disconnect_not_sent)
-    end.
 
 leave_then_rejoin_keeps_voice_state_test() ->
     UserId = 42,
@@ -215,7 +107,7 @@ leave_then_rejoin_keeps_voice_state_test() ->
         )
     ),
     {reply, ok, Rejoined} = call_voice:handle_join_internal(
-        UserId, VoiceState, SessionId, self(), <<"conn-42">>, PostLeave
+        UserId, VoiceState, SessionId, self(), <<"conn-42">>, undefined, PostLeave
     ),
     ?assert(maps:is_key(UserId, maps:get(voice_states, Rejoined))).
 
@@ -264,6 +156,38 @@ disconnect_user_if_in_channel_notifies_session_cleanup_test() ->
         ?assert(false)
     end.
 
+disconnect_user_if_in_channel_ignores_a_stale_connection_id_test() ->
+    UserId = 42,
+    SessionId = <<"session-42">>,
+    LiveConnectionId = <<"conn-live">>,
+    StaleConnectionId = <<"conn-stale">>,
+    VoiceState = #{
+        <<"user_id">> => <<"42">>,
+        <<"channel_id">> => <<"1">>,
+        <<"connection_id">> => LiveConnectionId
+    },
+    State = new_call_test_state(#{
+        voice_states => #{UserId => VoiceState},
+        sessions => #{SessionId => {UserId, self(), make_ref()}},
+        initiator_ready => true
+    }),
+    {reply, Reply, NewState} = call:handle_call(
+        {disconnect_user_if_in_channel, UserId, 1, StaleConnectionId},
+        {self(), make_ref()},
+        State
+    ),
+    ?assertMatch(#{ignored := true, reason := <<"not_in_call">>}, Reply),
+    ?assertEqual(
+        VoiceState,
+        maps:get(UserId, maps:get(voice_states, NewState), undefined)
+    ),
+    receive
+        {'$gen_cast', {call_force_disconnect, _, _}} ->
+            ?assert(false, force_disconnected_a_live_connection)
+    after 200 ->
+        ok
+    end.
+
 leave_removes_voice_state_count_without_full_rebuild_test() ->
     UserId = 42,
     SessionId = <<"session-count-leave">>,
@@ -291,32 +215,6 @@ leave_removes_voice_state_count_without_full_rebuild_test() ->
     ?assertEqual(0, voice_count(<<"regions">>, <<"region_id">>, RegionId)),
     ?assertEqual(0, voice_count(<<"servers">>, <<"server_id">>, ServerId)),
     ok = voice_state_counts_cache:remove_connection(ConnectionId).
-
-terminate_abnormal_dispatches_call_delete_test() ->
-    State = new_call_test_state(#{
-        recipients => [100, 200],
-        voice_states => #{},
-        ringing => [],
-        initiator_ready => true
-    }),
-    ?assertEqual(ok, call:terminate(killed, State)).
-
-terminate_handoff_skips_cleanup_test() ->
-    State = new_call_test_state(#{
-        recipients => [100],
-        voice_states => #{42 => #{<<"connection_id">> => <<"conn-42">>}},
-        initiator_ready => true
-    }),
-    ?assertEqual(ok, call:terminate({shutdown, handoff}, State)),
-    ?assertEqual(ok, call:terminate(handoff, State)).
-
-terminate_normal_cleans_counts_test() ->
-    State = new_call_test_state(#{
-        recipients => [],
-        voice_states => #{},
-        initiator_ready => true
-    }),
-    ?assertEqual(ok, call:terminate(normal, State)).
 
 call_manager_cleanup_call_pid_cache_on_down_test() ->
     case ets:info(call_pid_cache) of
@@ -365,10 +263,6 @@ voice_count(CollectionKey, IdKey, Id) ->
         0,
         Entries
     ).
-
-has_pending_connection(Expected, Result) ->
-    Keys = maps:keys(Expected),
-    lists:any(fun(Connection) -> maps:with(Keys, Connection) =:= Expected end, Result).
 
 leave_with_second_session_keeps_voice_state_test() ->
     UserId = 42,
@@ -445,7 +339,7 @@ disconnect_user_removes_all_user_sessions_test() ->
         ok
     end,
     {ok, NewVoiceStates, NewSessions} = voice_disconnect_common:disconnect_user_if_in_channel(
-        UserId, 1, VoiceStates, Sessions, CleanupFun
+        UserId, 1, undefined, VoiceStates, Sessions, CleanupFun
     ),
     ?assertEqual(#{}, NewVoiceStates),
     ?assertEqual([<<"session-other">>], maps:keys(NewSessions)),

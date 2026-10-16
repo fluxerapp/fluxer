@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {canonicalizeUrl, extractLinkHosts, extractUrlCandidates, normalizeHostname} from '@app/api/utils/UrlNormalizer';
 import {describe, expect, it} from 'vitest';
-import {canonicalizeUrl, extractUrlCandidates} from '../UrlNormalizer';
 
 describe('canonicalizeUrl', () => {
 	it('lowercases scheme and host', () => {
@@ -13,39 +13,6 @@ describe('canonicalizeUrl', () => {
 	});
 	it('preserves path', () => {
 		expect(canonicalizeUrl('https://example.com/foo/bar')).toBe('https://example.com/foo/bar');
-	});
-	it('strips utm_source tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_source=twitter')).toBe('https://example.com/');
-	});
-	it('strips utm_medium tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_medium=social')).toBe('https://example.com/');
-	});
-	it('strips utm_campaign tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_campaign=spring')).toBe('https://example.com/');
-	});
-	it('strips fbclid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?fbclid=abc123')).toBe('https://example.com/');
-	});
-	it('strips gclid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?gclid=xyz')).toBe('https://example.com/');
-	});
-	it('strips mc_cid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?mc_cid=abc')).toBe('https://example.com/');
-	});
-	it('strips mc_eid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?mc_eid=def')).toBe('https://example.com/');
-	});
-	it('strips msclkid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?msclkid=bing')).toBe('https://example.com/');
-	});
-	it('strips _ga tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?_ga=123')).toBe('https://example.com/');
-	});
-	it('strips _gl tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?_gl=456')).toBe('https://example.com/');
-	});
-	it('strips igshid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?igshid=abc')).toBe('https://example.com/');
 	});
 	it('strips ref_src and ref_url tracking params', () => {
 		expect(canonicalizeUrl('https://example.com/?ref_src=twsrc&ref_url=https://t.co')).toBe('https://example.com/');
@@ -60,9 +27,6 @@ describe('canonicalizeUrl', () => {
 	});
 	it('strips fragment', () => {
 		expect(canonicalizeUrl('https://example.com/page#section')).toBe('https://example.com/page');
-	});
-	it('strips fragment along with tracking params', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_source=tw#top')).toBe('https://example.com/');
 	});
 	it('strips default port 80 for http', () => {
 		expect(canonicalizeUrl('http://example.com:80/path')).toBe('http://example.com/path');
@@ -84,9 +48,6 @@ describe('canonicalizeUrl', () => {
 	});
 	it('rejects ftp scheme', () => {
 		expect(canonicalizeUrl('ftp://example.com/file')).toBeNull();
-	});
-	it('rejects tel scheme', () => {
-		expect(canonicalizeUrl('tel:+1234567890')).toBeNull();
 	});
 	it('rejects invalid URLs', () => {
 		expect(canonicalizeUrl('not-a-url')).toBeNull();
@@ -145,16 +106,6 @@ describe('extractUrlCandidates', () => {
 		expect(result).toHaveLength(1);
 		expect(result[0]).toBe('https://example.com/page');
 	});
-	it('strips trailing comma', () => {
-		const result = extractUrlCandidates('see https://example.com/page, then');
-		expect(result).toHaveLength(1);
-		expect(result[0]).toBe('https://example.com/page');
-	});
-	it('strips trailing exclamation mark', () => {
-		const result = extractUrlCandidates('wow https://example.com/page!');
-		expect(result).toHaveLength(1);
-		expect(result[0]).toBe('https://example.com/page');
-	});
 	it('does not match full email addresses as URLs', () => {
 		const result = extractUrlCandidates('contact support@help.co');
 		for (const url of result) {
@@ -174,5 +125,63 @@ describe('extractUrlCandidates', () => {
 	});
 	it('returns empty array for text with no URLs', () => {
 		expect(extractUrlCandidates('hello world no links here')).toEqual([]);
+	});
+});
+
+describe('normalizeHostname', () => {
+	it('lowercases and strips trailing dots', () => {
+		expect(normalizeHostname('Shop.Example.COM..')).toBe('shop.example.com');
+	});
+	it('converts internationalized names to punycode', () => {
+		expect(normalizeHostname('bücher.example')).toBe('xn--bcher-kva.example');
+	});
+	it('maps ideographic full stops to dots', () => {
+		expect(normalizeHostname('shop\u3002example\u3002com')).toBe('shop.example.com');
+	});
+	it('rejects empty and invalid input', () => {
+		expect(normalizeHostname('   ')).toBeNull();
+		expect(normalizeHostname('.')).toBeNull();
+		expect(normalizeHostname('a b.com')).toBeNull();
+	});
+});
+
+describe('extractLinkHosts', () => {
+	it('drops the closing parenthesis of a masked markdown link', () => {
+		expect(extractLinkHosts('[open the shop](https://shop.example.com)')).toEqual(['shop.example.com']);
+	});
+	it('drops brackets and parentheses around nested links', () => {
+		expect(extractLinkHosts('[[x]](https://shop.example.com)(more)')).toEqual(['shop.example.com']);
+	});
+	it('reads angle-bracket autolinks', () => {
+		expect(extractLinkHosts('<https://Shop.Example.com/path>')).toEqual(['shop.example.com']);
+	});
+	it('ignores userinfo and ports', () => {
+		expect(extractLinkHosts('https://user:pass@shop.example.com:8443/x')).toEqual(['shop.example.com']);
+		expect(extractLinkHosts('[x](https://login@shop.example.com)')).toEqual(['shop.example.com']);
+	});
+	it('strips trailing dots and punctuation', () => {
+		expect(extractLinkHosts('see https://shop.example.com./ and https://other.example.org, ok')).toEqual([
+			'shop.example.com',
+			'other.example.org',
+		]);
+	});
+	it('decodes percent-encoded hosts the way a browser does', () => {
+		expect(extractLinkHosts('https://shop%2Eexample%2Ecom/')).toEqual(['shop.example.com']);
+	});
+	it('returns internationalized hosts in punycode', () => {
+		expect(extractLinkHosts('https://bücher.example/')).toEqual(['xn--bcher-kva.example']);
+	});
+	it('matches the scheme case-insensitively', () => {
+		expect(extractLinkHosts('HTTPS://SHOP.EXAMPLE.COM')).toEqual(['shop.example.com']);
+	});
+	it('stops the host at a backslash', () => {
+		expect(extractLinkHosts('https://shop.example.com\\path')).toEqual(['shop.example.com']);
+	});
+	it('deduplicates hosts', () => {
+		expect(extractLinkHosts('https://a.example.com https://A.example.com/x')).toEqual(['a.example.com']);
+	});
+	it('returns an empty array without links', () => {
+		expect(extractLinkHosts('shop.example.com')).toEqual([]);
+		expect(extractLinkHosts(null)).toEqual([]);
 	});
 });

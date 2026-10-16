@@ -5,23 +5,27 @@ import {YOUTUBE_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstan
 import styles from '@app/features/channel/components/embeds/media/EmbedYouTube.module.css';
 import {OverlayActionButton, OverlayPlayButton} from '@app/features/channel/components/embeds/media/MediaButtons';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import ActiveIframeEmbed from '@app/features/messaging/state/ActiveIframeEmbed';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
+import {
+	EMBED_MAX_HEIGHT,
+	EMBED_MAX_WIDTH,
+	EMBED_TALL_MAX_HEIGHT,
+} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {createCalculator} from '@app/features/ui/utils/DimensionUtils';
+import {createCalculator, mediaAspectRatioValue} from '@app/features/ui/utils/DimensionUtils';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon, PlayIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
-import {type FC, useCallback, useEffect, useMemo, useState} from 'react';
+import {type FC, useCallback, useEffect, useId, useMemo, useState} from 'react';
 
-const VIDEO_THUMBNAIL_DESCRIPTOR = msg({
-	message: 'Video thumbnail',
-	comment: 'Short label in the channel and chat embed you tube. Keep it concise.',
-});
+const VIDEO_THUMBNAIL_DESCRIPTOR = msg({message: 'Video thumbnail'});
+
 const PLAY_VIDEO_DESCRIPTOR = msg({
 	message: 'Play video',
 	comment: 'Short label in the channel and chat embed you tube. Keep it concise.',
@@ -37,11 +41,10 @@ const VIDEO_DESCRIPTOR = msg({
 });
 const YOUTUBE_CONFIG = {
 	DEFAULT_WIDTH: 400,
-	ANIMATION_DURATION: 0.3,
-	BUTTON_DELAY: 0.1,
 } as const;
 const youtubeCalculator = createCalculator({
-	maxWidth: YOUTUBE_CONFIG.DEFAULT_WIDTH,
+	maxWidth: EMBED_MAX_WIDTH,
+	maxHeight: EMBED_MAX_HEIGHT,
 	responsive: true,
 });
 
@@ -74,7 +77,8 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 								exit={{opacity: 0}}
 								transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
 								src={thumbHashURL}
-								alt={i18n._(VIDEO_THUMBNAIL_DESCRIPTOR)}
+								alt=""
+								aria-hidden={true}
 								className={styles.thumbnailPlaceholder}
 								data-flx="channel.embeds.media.embed-you-tube.thumbnail.thumbnail-placeholder"
 							/>
@@ -92,7 +96,7 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 				{posterSrc && (
 					<motion.img
 						src={posterSrc}
-						alt={title || 'Video thumbnail'}
+						alt={title || i18n._(VIDEO_THUMBNAIL_DESCRIPTOR)}
 						className={styles.posterImage}
 						initial={{opacity: posterCachedOnMount ? 1 : 0}}
 						animate={{opacity: posterLoaded ? 1 : 0}}
@@ -144,7 +148,8 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 );
 export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOUTUBE_CONFIG.DEFAULT_WIDTH}) => {
 	const {i18n} = useLingui();
-	const [hasInteracted, setHasInteracted] = useState(false);
+	const embedId = useId();
+	const hasInteracted = ActiveIframeEmbed.isActive(embedId);
 	const posterSrc = embed.thumbnail?.proxy_url || '';
 	const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: posterSrc});
 	const [posterCacheAtMount] = useState(() => ({src: posterSrc, cached: ImageCacheUtils.hasImage(posterSrc)}));
@@ -168,10 +173,14 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 		);
 		return cleanup;
 	}, [isNearViewport, loadedPosterSrc, posterSrc]);
-	const handleInitialPlay = useCallback((event: React.MouseEvent | React.KeyboardEvent) => {
-		event.stopPropagation();
-		setHasInteracted(true);
-	}, []);
+	const handleInitialPlay = useCallback(
+		(event: React.MouseEvent | React.KeyboardEvent) => {
+			event.stopPropagation();
+			ActiveIframeEmbed.claim(embedId);
+		},
+		[embedId],
+	);
+	useEffect(() => () => ActiveIframeEmbed.release(embedId), [embedId]);
 	const handleOpenInNewTab = useCallback(
 		(event: React.MouseEvent | React.KeyboardEvent) => {
 			event.stopPropagation();
@@ -185,17 +194,19 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 		() => decodeThumbHashDataURL(embed.thumbnail?.placeholder),
 		[embed.thumbnail?.placeholder],
 	);
-	if (!(embed.video && embed.thumbnail && embed.thumbnail.proxy_url)) {
+	if (!(embed.video && embed.thumbnail?.proxy_url)) {
 		return null;
 	}
+	const videoWidth = embed.video.width ?? YOUTUBE_CONFIG.DEFAULT_WIDTH;
+	const videoHeight = embed.video.height ?? YOUTUBE_CONFIG.DEFAULT_WIDTH;
 	const {style: containerStyle, dimensions} = youtubeCalculator.calculate(
+		{width: videoWidth, height: videoHeight},
 		{
-			width: embed.video.width!,
-			height: embed.video.height!,
+			maxWidth: width,
+			maxHeight: videoHeight > videoWidth ? EMBED_TALL_MAX_HEIGHT : EMBED_MAX_HEIGHT,
 		},
-		{maxWidth: width, forceScale: true},
 	);
-	const aspectRatio = `${dimensions.width} / ${dimensions.height}`;
+	const aspectRatio = mediaAspectRatioValue(dimensions);
 	if (!hasInteracted) {
 		return (
 			<div
@@ -233,7 +244,7 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 			className={styles.videoContainer}
 			style={{
 				...containerStyle,
-				width: `${dimensions.width}px`,
+				width: remFromPx(dimensions.width),
 				aspectRatio,
 				maxWidth: '100%',
 			}}
@@ -242,10 +253,10 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 			{/* biome-ignore lint/a11y/useIframeTitle: project policy forbids the native title attribute (NoNativeTitleAttribute test); aria-label provides the accessible name */}
 			<iframe
 				allow="autoplay; fullscreen"
-				allowFullScreen
 				sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
 				src={embedVideoUrl.toString()}
 				className={styles.iframe}
+				scrolling="no"
 				data-embed-media="true"
 				aria-label={embed.title || i18n._(VIDEO_DESCRIPTOR, {youtubeProviderName: YOUTUBE_PROVIDER_NAME})}
 				data-flx="channel.embeds.media.embed-you-tube.iframe"

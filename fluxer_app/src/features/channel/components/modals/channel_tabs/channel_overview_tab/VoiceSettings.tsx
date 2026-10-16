@@ -3,10 +3,10 @@
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelOverviewTab.module.css';
 import {SettingsControlRow} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SettingsControlRow';
 import {
-	BITRATE_KBPS_MARKERS,
-	BITRATE_KBPS_MAX,
+	BITRATE_KBPS_DEFAULT,
 	BITRATE_KBPS_MIN,
 	type FormInputs,
+	getBitrateKbpsMarkers,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
 import {
@@ -50,6 +50,7 @@ const CONNECTION_LIMIT_VALUE_DESCRIPTOR = msg({
 
 interface VoiceSettingsProps {
 	form: UseFormReturn<FormInputs>;
+	maxBitrateKbps: number;
 }
 
 const formatIntegerValue = (value: number): string => String(Math.round(value));
@@ -66,44 +67,48 @@ const formatConnectionLimitMarker = (value: number): string | null => {
 
 const VoiceBitrateSlider: React.FC<{
 	value: number | undefined;
+	maxBitrateKbps: number;
 	onChange: (value: number) => void;
-}> = ({value, onChange}) => {
+}> = ({value, maxBitrateKbps, onChange}) => {
 	const {i18n} = useLingui();
 	const voiceQualityLabel = i18n._(VOICE_QUALITY_DESCRIPTOR);
 	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
-	let currentValue = value;
-	if (typeof currentValue !== 'number') {
-		currentValue = 64;
-	}
+	const factoryDefaultValue = Math.min(BITRATE_KBPS_DEFAULT, maxBitrateKbps);
+	const currentValue = Math.min(typeof value === 'number' ? value : BITRATE_KBPS_DEFAULT, maxBitrateKbps);
 	return (
 		<SettingsControlRow
 			label={voiceQualityLabel}
 			dataFlx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider"
+			data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.settings-control-row"
 		>
-			<div className={styles.settingsSliderControl}>
+			<div
+				className={styles.settingsSliderControl}
+				data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.settings-slider-control"
+			>
 				<Slider
 					value={currentValue}
 					defaultValue={currentValue}
-					factoryDefaultValue={64}
+					factoryDefaultValue={factoryDefaultValue}
 					minValue={BITRATE_KBPS_MIN}
-					maxValue={BITRATE_KBPS_MAX}
+					maxValue={maxBitrateKbps}
 					step={1}
-					markers={[...BITRATE_KBPS_MARKERS]}
+					markers={getBitrateKbpsMarkers(maxBitrateKbps)}
 					ariaLabel={voiceQualityLabel}
 					ariaValueText={i18n._(KBPS_DESCRIPTOR, {kilobits: Math.round(currentValue)})}
 					onMarkerRender={formatIntegerValue}
 					onValueRender={(kilobits) => i18n._(KBPS_DESCRIPTOR, {kilobits: Math.round(kilobits)})}
 					onValueChange={(kilobits) => onChange(Math.round(kilobits))}
 					showResetButton={true}
-					onReset={() => onChange(64)}
+					onReset={() => onChange(factoryDefaultValue)}
 					resetTooltip={resetSliderLabel}
+					data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.slider"
 				/>
 			</div>
 		</SettingsControlRow>
 	);
 };
 
-export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
+export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form, maxBitrateKbps}) => {
 	const {i18n} = useLingui();
 	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
 	const participantLimitLabel = i18n._(PARTICIPANT_LIMIT_LABEL_DESCRIPTOR);
@@ -113,7 +118,14 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 				<Controller
 					name="bitrate"
 					control={form.control}
-					render={({field}) => <VoiceBitrateSlider value={field.value} onChange={field.onChange} />}
+					render={({field}) => (
+						<VoiceBitrateSlider
+							value={field.value}
+							maxBitrateKbps={maxBitrateKbps}
+							onChange={field.onChange}
+							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.change"
+						/>
+					)}
 					data-flx="channel.channel-tabs.channel-overview-tab.controller--2"
 				/>
 			</div>
@@ -127,6 +139,7 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 							<SettingsControlRow
 								label={participantLimitLabel}
 								dataFlx="channel.channel-tabs.channel-overview-tab.participant-limit"
+								data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.settings-control-row"
 							>
 								<div
 									className={styles.settingsSliderControl}
@@ -160,7 +173,7 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 	);
 };
 
-export const VoiceConnectionLimitControl: React.FC<VoiceSettingsProps> = ({form}) => {
+export const VoiceConnectionLimitControl: React.FC<{form: UseFormReturn<FormInputs>}> = ({form}) => {
 	const {i18n} = useLingui();
 	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
 	const connectionLimitLabel = i18n._(CONNECTION_LIMIT_LABEL_DESCRIPTOR);
@@ -177,6 +190,7 @@ export const VoiceConnectionLimitControl: React.FC<VoiceSettingsProps> = ({form}
 							label={connectionLimitLabel}
 							description={connectionLimitDescription}
 							dataFlx="channel.channel-tabs.channel-overview-tab.voice-connection-limit"
+							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-connection-limit-control.settings-control-row"
 						>
 							<div
 								className={styles.settingsSliderControl}

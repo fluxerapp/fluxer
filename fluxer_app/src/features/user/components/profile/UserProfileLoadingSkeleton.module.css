@@ -4,7 +4,7 @@
 	--profile-skeleton-bg: var(--background-primary);
 	--profile-skeleton-fill: var(--background-secondary-alt);
 	--profile-skeleton-fill-strong: var(--background-tertiary);
-	--profile-skeleton-border-color: var(--brand-primary);
+	--profile-skeleton-border-color: var(--brand-primary-foreground);
 	--profile-skeleton-radius: 0.375rem;
 	--profile-skeleton-border-width: 0px;
 	--profile-skeleton-width: 100%;

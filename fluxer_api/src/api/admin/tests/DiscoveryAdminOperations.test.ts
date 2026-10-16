@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuildID} from '@app/api/BrandedTypes';
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import {createGuild, getGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {DiscoveryApplicationStatus, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryAdminListedGuildResponse,
-	DiscoveryAdminPendingApplicationResponse,
 	DiscoveryApplicationResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import type {z} from 'zod';
-import {createTestAccount, setUserACLs, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild, getGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
 	await createBuilder(harness, '')
@@ -45,6 +45,30 @@ async function createGuildWithApplication(
 	return {owner, guild, application};
 }
 
+const SEEDED_LISTING_BASE_GUILD_ID = 900000000000000000n;
+
+async function seedApprovedListings(count: number): Promise<void> {
+	const discoveryRepository = new GuildDiscoveryRepository();
+	for (let i = 0; i < count; i++) {
+		const appliedAt = new Date(1700000000000 + i);
+		await discoveryRepository.upsert({
+			guild_id: createGuildID(SEEDED_LISTING_BASE_GUILD_ID + BigInt(i)),
+			status: DiscoveryApplicationStatus.APPROVED,
+			category_type: DiscoveryCategories.GAMING,
+			description: `Seeded discovery listing ${i}`,
+			primary_language: null,
+			custom_tags: [],
+			applied_at: appliedAt,
+			reviewed_at: appliedAt,
+			reviewed_by: null,
+			review_reason: null,
+			removed_at: null,
+			removed_by: null,
+			removal_reason: null,
+		});
+	}
+}
+
 async function createAdminWithACLs(harness: ApiTestHarness, acls: Array<string>): Promise<TestAccount> {
 	const admin = await createTestAccount(harness);
 	return setUserACLs(harness, admin, ['admin:authenticate', ...acls]);
@@ -58,134 +82,18 @@ describe('Discovery Admin Operations', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	describe('approve', () => {
-		test('should approve a pending application', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Approve Test Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({reason: 'Meets all requirements'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.status).toBe('approved');
-			expect(result.reviewed_at).toBeTruthy();
-			expect(result.review_reason).toBe('Meets all requirements');
-		});
-		test('should approve without a reason', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'No Reason Approve Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.status).toBe('approved');
-			expect(result.review_reason).toBeNull();
-		});
-		test('should add DISCOVERABLE feature to guild on approval', async () => {
-			const {owner, guild} = await createGuildWithApplication(harness, 'Feature Add Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const guildData = await getGuild(harness, owner.token, guild.id);
-			expect(guildData.features).toContain(GuildFeatures.DISCOVERABLE);
-		});
-		test('should not allow approving already approved application', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Double Approve Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_APPLICATION_ALREADY_REVIEWED)
-				.execute();
-		});
-		test('should not allow approving non-existent application', async () => {
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${TEST_IDS.NONEXISTENT_GUILD}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.DISCOVERY_APPLICATION_NOT_FOUND)
-				.execute();
-		});
-	});
-	describe('reject', () => {
-		test('should reject a pending application with reason', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Reject Test Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'Description is too vague'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.status).toBe('rejected');
-			expect(result.reviewed_at).toBeTruthy();
-			expect(result.review_reason).toBe('Description is too vague');
-		});
-		test('should require reason for rejection', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'No Reason Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should not allow rejecting already rejected application', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Double Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'First rejection'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'Second rejection'})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_APPLICATION_ALREADY_REVIEWED)
-				.execute();
-		});
-		test('should not allow rejecting approved application', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Approved Then Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'Changed my mind'})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_APPLICATION_ALREADY_REVIEWED)
-				.execute();
-		});
-		test('should not allow rejecting non-existent application', async () => {
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${TEST_IDS.NONEXISTENT_GUILD}/reject`)
-				.body({reason: 'Does not exist'})
-				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.DISCOVERY_APPLICATION_NOT_FOUND)
-				.execute();
-		});
-	});
 	describe('remove', () => {
 		test('should remove an approved guild from discovery', async () => {
 			const {owner, guild} = await createGuildWithApplication(harness, 'Remove Test Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove']);
+			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove', 'discovery:review']);
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
+				.patch(`/admin/discovery/applications/${guild.id}`)
+				.body({status: 'approved'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
+			expect((await getGuild(harness, owner.token, guild.id)).features).toContain(GuildFeatures.DISCOVERABLE);
 			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${guild.id}/remove`)
+				.delete(`/admin/discovery/listings/${guild.id}`)
 				.body({reason: 'Violated community guidelines'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
@@ -193,131 +101,21 @@ describe('Discovery Admin Operations', () => {
 			const guildData = await getGuild(harness, owner.token, guild.id);
 			expect(guildData.features).not.toContain(GuildFeatures.DISCOVERABLE);
 		});
-		test('should require reason for removal', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'No Reason Remove Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${guild.id}/remove`)
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should not allow removing a pending application', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Remove Pending Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${guild.id}/remove`)
-				.body({reason: 'Not approved yet'})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
-				.execute();
-		});
-		test('should not allow removing non-existent application', async () => {
-			const admin = await createAdminWithACLs(harness, ['discovery:remove']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${TEST_IDS.NONEXISTENT_GUILD}/remove`)
-				.body({reason: 'Does not exist'})
-				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.DISCOVERY_APPLICATION_NOT_FOUND)
-				.execute();
-		});
-	});
-	describe('list pending applications', () => {
-		test('returns all pending applications enriched with guild metadata', async () => {
-			const created = await createGuildWithApplication(harness, 'List Test Guild 1');
-			await createGuildWithApplication(harness, 'List Test Guild 2');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			const results = await createBuilder<Array<z.infer<typeof DiscoveryAdminPendingApplicationResponse>>>(
-				harness,
-				`${admin.token}`,
-			)
-				.get('/admin/discovery/applications')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(results.length).toBeGreaterThanOrEqual(2);
-			const found = results.find((r) => r.guild_id === created.guild.id);
-			expect(found).toBeDefined();
-			expect(found?.guild_name).toBe('List Test Guild 1');
-			expect(found?.guild_owner_id).toBe(created.owner.userId);
-			expect(found?.description).toBe('Valid discovery description');
-		});
-		test('excludes applications that are no longer pending', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Excluded From Pending');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const results = await createBuilder<Array<z.infer<typeof DiscoveryAdminPendingApplicationResponse>>>(
-				harness,
-				`${admin.token}`,
-			)
-				.get('/admin/discovery/applications')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(results.find((r) => r.guild_id === guild.id)).toBeUndefined();
-		});
-		test('returns empty list when no pending applications exist', async () => {
-			await harness.reset();
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			const results = await createBuilder<Array<z.infer<typeof DiscoveryAdminPendingApplicationResponse>>>(
-				harness,
-				`${admin.token}`,
-			)
-				.get('/admin/discovery/applications')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(results).toHaveLength(0);
-		});
 	});
 	describe('list listed guilds', () => {
-		test('returns all approved discovery guilds with approval timestamps', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'Listed Guild A');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+		test('returns every approved listing when there are more than a thousand', async () => {
+			await seedApprovedListings(1001);
+			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:review']);
 			const results = await createBuilder<Array<z.infer<typeof DiscoveryAdminListedGuildResponse>>>(
 				harness,
 				`${admin.token}`,
 			)
-				.get('/admin/discovery/listed')
+				.get('/admin/discovery/listings')
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			const found = results.find((r) => r.guild_id === guild.id);
-			expect(found).toBeDefined();
-			expect(found?.guild_name).toBe('Listed Guild A');
-			expect(found?.approved_at).not.toBeNull();
-		});
-		test('does not include pending or removed guilds', async () => {
-			const {guild: pendingGuild} = await createGuildWithApplication(harness, 'Still Pending');
-			const admin = await createAdminWithACLs(harness, ['discovery:review', 'discovery:remove']);
-			const {guild: removedGuild} = await createGuildWithApplication(harness, 'Will Be Removed');
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${removedGuild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${removedGuild.id}/remove`)
-				.body({reason: 'cleanup'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const results = await createBuilder<Array<z.infer<typeof DiscoveryAdminListedGuildResponse>>>(
-				harness,
-				`${admin.token}`,
-			)
-				.get('/admin/discovery/listed')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(results.find((r) => r.guild_id === pendingGuild.id)).toBeUndefined();
-			expect(results.find((r) => r.guild_id === removedGuild.id)).toBeUndefined();
+			expect(results).toHaveLength(1001);
+			const workerRows = await new GuildDiscoveryRepository().listByStatus(DiscoveryApplicationStatus.APPROVED);
+			expect(workerRows).toHaveLength(1001);
 		});
 	});
 	describe('ACL requirements', () => {
@@ -328,7 +126,7 @@ describe('Discovery Admin Operations', () => {
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/discovery/listed')
+				.get('/admin/discovery/listings')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -336,17 +134,8 @@ describe('Discovery Admin Operations', () => {
 			const {guild} = await createGuildWithApplication(harness, 'ACL Approve Guild');
 			const admin = await createAdminWithACLs(harness, ['user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('should require DISCOVERY_REVIEW ACL to reject', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'ACL Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['user:lookup']);
-			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'Not allowed'})
+				.patch(`/admin/discovery/applications/${guild.id}`)
+				.body({status: 'approved'})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -354,35 +143,38 @@ describe('Discovery Admin Operations', () => {
 			const {guild} = await createGuildWithApplication(harness, 'ACL Remove Guild');
 			const admin = await createAdminWithACLs(harness, ['discovery:review']);
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
+				.patch(`/admin/discovery/applications/${guild.id}`)
+				.body({status: 'approved'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/guilds/${guild.id}/remove`)
+				.delete(`/admin/discovery/listings/${guild.id}`)
 				.body({reason: 'Not allowed to remove'})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('should require authentication for admin endpoints', async () => {
-			await createBuilderWithoutAuth(harness)
-				.get('/admin/discovery/applications')
-				.expect(HTTP_STATUS.UNAUTHORIZED)
+		test('should require DISCOVERY_REVIEW ACL to read categories and category listings', async () => {
+			const admin = await createAdminWithACLs(harness, ['user:lookup']);
+			await createBuilder(harness, `${admin.token}`)
+				.get('/admin/discovery/categories')
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post(`/admin/discovery/applications/${TEST_IDS.NONEXISTENT_GUILD}/approve`)
-				.body({})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
+			await createBuilder(harness, `${admin.token}`)
+				.get(`/admin/discovery/categories/${DiscoveryCategories.GAMING}/listings`)
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post(`/admin/discovery/applications/${TEST_IDS.NONEXISTENT_GUILD}/reject`)
-				.body({reason: 'test'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
+		});
+		test('should require DISCOVERY_REVIEW ACL to edit and move listings', async () => {
+			const admin = await createAdminWithACLs(harness, ['user:lookup']);
+			await createBuilder(harness, `${admin.token}`)
+				.patch(`/admin/discovery/listings/${TEST_IDS.NONEXISTENT_GUILD}`)
+				.body({description: 'A corrected discovery description'})
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post(`/admin/discovery/guilds/${TEST_IDS.NONEXISTENT_GUILD}/remove`)
-				.body({reason: 'test'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
+			await createBuilder(harness, `${admin.token}`)
+				.patch('/admin/discovery/listings')
+				.body({guild_ids: [TEST_IDS.NONEXISTENT_GUILD], category_type: DiscoveryCategories.MUSIC})
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
 	});

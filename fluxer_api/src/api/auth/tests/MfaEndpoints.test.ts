@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	type BackupCodesResponse,
 	createAuthHarness,
@@ -10,7 +7,20 @@ import {
 	createTotpSecret,
 	totpCodeNow,
 	type UserMeResponse,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+
+interface ValidationErrorResponse {
+	code: string;
+	errors: Array<{
+		path: string;
+		code: string;
+		message: string;
+	}>;
+}
 
 describe('Auth MFA endpoints', () => {
 	let harness: ApiTestHarness;
@@ -82,5 +92,31 @@ describe('Auth MFA endpoints', () => {
 			})
 			.expect(204)
 			.execute();
+	});
+	it('expired MFA ticket reports SESSION_TIMEOUT on ticket for both completion routes', async () => {
+		const totpError = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
+			.post('/auth/login/mfa/totp')
+			.body({code: '000000', ticket: 'unknown'})
+			.expect(400, 'INVALID_FORM_BODY')
+			.execute();
+		expect(totpError.errors[0]?.path).toBe('ticket');
+		expect(totpError.errors[0]?.code).toBe(ValidationErrorCodes.SESSION_TIMEOUT);
+		const webauthnError = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
+			.post('/auth/login/mfa/webauthn')
+			.body({
+				response: {
+					id: 'unknown',
+					rawId: 'unknown',
+					type: 'public-key',
+					response: {clientDataJSON: '', authenticatorData: '', signature: ''},
+					clientExtensionResults: {},
+				},
+				challenge: 'unknown',
+				ticket: 'unknown',
+			})
+			.expect(400, 'INVALID_FORM_BODY')
+			.execute();
+		expect(webauthnError.errors[0]?.path).toBe('ticket');
+		expect(webauthnError.errors[0]?.code).toBe(ValidationErrorCodes.SESSION_TIMEOUT);
 	});
 });

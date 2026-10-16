@@ -2,18 +2,21 @@
 
 import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceEngineV2AppDiagnosticsAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import type {NativeScreenCaptureLifecycleMessage} from '@app/types/electron.d';
-import {
-	type DiagnosticsPort,
-	type SourceFault,
-	type SourceLifecycleClock,
-	type SourceLifecycleEvent,
-	SourceLifecycleRegistry,
-	type SourceLifecycleState,
-	type VoiceEngineV2Event,
-	type VoiceEngineV2SourceLifecycleTransitionedEvent,
-} from '@fluxer/voice_engine_v2';
-import {createVoiceEngineV2AppDiagnosticsAdapter} from './VoiceEngineV2AppDiagnosticsAdapter';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
+import type {DiagnosticsPort} from '@fluxer/voice_engine_v2/src/ports';
+import type {
+	VoiceEngineV2Event,
+	VoiceEngineV2SourceLifecycleTransitionedEvent,
+} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {SourceLifecycleRegistry} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleRegistry';
+import type {
+	SourceFault,
+	SourceLifecycleClock,
+	SourceLifecycleEvent,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 const VALID_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleMessage['kind']> = new Set([
 	'error',
@@ -29,11 +32,11 @@ const CLOSED_CLEAN_DEDUP_WINDOW_MS = 500;
 
 export type VoiceEngineV2AppSourceLifecycleDispatch = (event: VoiceEngineV2Event) => void;
 
-export type VoiceEngineV2AppSourceLifecycleSubscribe = (
+type VoiceEngineV2AppSourceLifecycleSubscribe = (
 	callback: (message: NativeScreenCaptureLifecycleMessage) => void,
 ) => () => void;
 
-export interface VoiceEngineV2AppSourceLifecycleClosedCleanInfo {
+interface VoiceEngineV2AppSourceLifecycleClosedCleanInfo {
 	captureId: string;
 	sourceId: string;
 	source: 'delegate' | 'programmatic' | 'unknown';
@@ -172,12 +175,17 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 	unbind(captureId: string): boolean {
 		assert.ok(!this.disposed, 'bridge must not be disposed');
 		assertValidString('captureId', captureId, MAX_SOURCE_ID_LENGTH);
+		return this.removeBinding(captureId);
+	}
+
+	private removeBinding(captureId: string): boolean {
 		const binding = this.bindingsByCapture.get(captureId);
 		if (!binding) return false;
 		this.bindingsByCapture.delete(captureId);
 		this.closedCleanLastAtMs.delete(captureId);
 		const removed = this.registry.remove(binding.sourceId);
 		assert.equal(removed, true, 'unbind must remove the registry entry');
+		this.dispatch({type: 'sourceLifecycle.removed', sourceId: binding.sourceId});
 		return true;
 	}
 
@@ -235,19 +243,6 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 			atMs: this.now(),
 		};
 		this.dispatch(event);
-	}
-
-	dispose(): void {
-		const wasDisposed = this.disposed;
-		if (wasDisposed) return;
-		this.disposed = true;
-		try {
-			this.unsubscribe();
-		} catch {}
-		this.bindingsByCapture.clear();
-		this.closedCleanLastAtMs.clear();
-		assert.equal(this.disposed, true, 'disposed flag must be true after dispose');
-		assert.equal(this.bindingsByCapture.size, 0, 'bindings must be cleared after dispose');
 	}
 
 	private handleNativeMessage(message: NativeScreenCaptureLifecycleMessage): void {
@@ -314,8 +309,4 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 			typeof message.message === 'string' && message.message.length > 0 ? message.message : 'native capture diagnostic';
 		void this.diagnostics.log('info', 'nativeCaptureDiagnostic', diagnosticMessage, detail).catch(() => undefined);
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

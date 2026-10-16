@@ -47,6 +47,30 @@ export function compareChannelOrdering<Id extends string | bigint>(
 	return idToString(a.id).localeCompare(idToString(b.id));
 }
 
+function channelLayoutRank(channel: {type: number}): number {
+	if (
+		channel.type === ChannelTypes.GUILD_TEXT ||
+		channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		channel.type === ChannelTypes.GUILD_LINK ||
+		channel.type === ChannelTypes.GUILD_FORUM ||
+		channel.type === ChannelTypes.GUILD_MEDIA
+	) {
+		return 0;
+	}
+	if (channel.type === ChannelTypes.GUILD_VOICE) return 1;
+	return 2;
+}
+
+function sortChannelListGroup<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>(
+	channels: ReadonlyArray<Channel>,
+): Array<Channel> {
+	return [...channels].sort((a, b) => {
+		const rankDelta = channelLayoutRank(a) - channelLayoutRank(b);
+		if (rankDelta !== 0) return rankDelta;
+		return compareChannelOrdering(a, b);
+	});
+}
+
 export function sortChannelsForOrdering<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>(
 	channels: ReadonlyArray<Channel>,
 ): Array<Channel> {
@@ -79,7 +103,7 @@ export function sortChannelsForOrdering<Id extends string | bigint, Channel exte
 		if (!children) {
 			continue;
 		}
-		for (const child of [...children].sort(compareChannelOrdering)) {
+		for (const child of sortChannelListGroup(children)) {
 			orderedChannels.push(child);
 			seen.add(child.id);
 		}
@@ -124,27 +148,6 @@ function findCategorySpanInOrderedList<Id extends string | bigint, Channel exten
 		end++;
 	}
 	return {start, end};
-}
-
-export function computePrecedingSiblingIdFromPosition<
-	Id extends string | bigint,
-	Channel extends ChannelOrderingChannel<Id>,
->({
-	channels,
-	targetId,
-	desiredParentId,
-	position,
-}: {
-	channels: ReadonlyArray<Channel>;
-	targetId: Id;
-	desiredParentId: Id | null;
-	position: number;
-}): Id | null {
-	const siblings = sortChannelsForOrdering(channels).filter((ch) => (ch.parentId ?? null) === desiredParentId);
-	const blockIds = computeChannelMoveBlockIds({channels, targetId});
-	const siblingsWithoutBlock = siblings.filter((ch) => !blockIds.has(ch.id));
-	const clamped = Math.min(Math.max(position, 0), siblingsWithoutBlock.length);
-	return clamped === 0 ? null : siblingsWithoutBlock[clamped - 1]!.id;
 }
 
 export function computePositionFromPrecedingSiblingId<

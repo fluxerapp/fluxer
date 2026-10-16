@@ -35,13 +35,13 @@
 guild_data(State) -> map_utils:ensure_map(map_utils:get_safe(State, data, #{})).
 
 -spec guild_members(guild_state()) -> [member()].
-guild_members(State) -> guild_data_index:member_values(guild_data(State)).
+guild_members(State) -> guild_data_index_members:member_values(guild_data(State)).
 
 -spec guild_roles(guild_state()) -> [map()].
-guild_roles(State) -> guild_data_index:role_list(guild_data(State)).
+guild_roles(State) -> guild_data_index_roles:role_list(guild_data(State)).
 
 -spec guild_channels(guild_state()) -> [map()].
-guild_channels(State) -> guild_data_index:channel_list(guild_data(State)).
+guild_channels(State) -> guild_data_index_channels:channel_list(guild_data(State)).
 
 -spec owner_id(guild_state()) -> user_id() | undefined.
 owner_id(State) ->
@@ -68,7 +68,7 @@ is_member_bot(Member) ->
 
 -spec member_can_view_channel(user_id(), channel_id(), member(), guild_state()) -> boolean().
 member_can_view_channel(UserId, ChannelId, Member, State) when is_integer(ChannelId) ->
-    guild_permissions:can_view_channel(UserId, ChannelId, Member, State);
+    guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State);
 member_can_view_channel(_, _, _, _) ->
     false.
 
@@ -111,7 +111,7 @@ role_id_from_role(Role) ->
     [user_id()], user_id(), channel_id(), guild_state(), fun((user_id(), member()) -> boolean())
 ) -> [user_id()].
 collect_mentions_for_user_ids(UserIds, AuthorId, ChannelId, State, Predicate) ->
-    MemberMap = guild_data_index:member_map(guild_data(State)),
+    MemberMap = guild_data_index_members:member_map(guild_data(State)),
     lists:filtermap(
         fun(UserId) ->
             collect_mention_for_user_id(

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
-import {CaptchaModal} from '@app/features/auth/components/modals/CaptchaModal';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {useSudo} from '@app/features/auth/hooks/useSudo';
 import NewDeviceMonitoring from '@app/features/auth/state/NewDeviceMonitoring';
@@ -13,15 +12,16 @@ import {
 	PendingMenuItem,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
 import {resetPremiumStateOverrides} from '@app/features/devtools/components/PremiumScenarioOptions';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
+
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {KeyboardModeIntroModal} from '@app/features/input/components/modals/KeyboardModeIntroModal';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
+
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
@@ -119,25 +119,8 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 	const [isForgettingAuthorizedIps, setIsForgettingAuthorizedIps] = useState(false);
 	const [isClearingTrustedDomains, setIsClearingTrustedDomains] = useState(false);
 	const [isResettingPremiumState, setIsResettingPremiumState] = useState(false);
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	const trustedDomainsCount = TrustedDomain.getTrustedDomainsCount();
-	const handleOpenCaptchaModal = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			ModalCommands.modal(() => (
-				<CaptchaModal
-					closeOnVerify={false}
-					onVerify={(token, captchaType) => {
-						logger.debug('Captcha solved from developer tools menu', {token, captchaType});
-					}}
-					onCancel={() => {
-						logger.debug('Captcha cancelled from developer tools menu');
-					}}
-					data-flx="channel.channel-header-components.developer-tools-context-menu.handle-open-captcha-modal.captcha-modal"
-				/>
-			)),
-		);
-	}, [onClose]);
 	const handleForgetAuthorizedIps = useCallback(async () => {
 		setIsForgettingAuthorizedIps(true);
 		try {
@@ -172,7 +155,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 	const handleClearTrustedDomains = useCallback(async () => {
 		setIsClearingTrustedDomains(true);
 		try {
-			await TrustedDomainCommands.clearAllTrustedDomains();
+			await TrustedDomain.clearAllTrustedDomains();
 			ToastCommands.createToast({type: 'success', children: i18n._(TRUSTED_DOMAINS_CLEARED_DESCRIPTOR)});
 		} catch (error) {
 			logger.error('Failed to clear trusted domains', error);
@@ -280,12 +263,6 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 						data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.menu-item.show-test-modal"
 					>
 						<Trans>Show new device modal</Trans>
-					</MenuItem>
-					<MenuItem
-						onClick={handleOpenCaptchaModal}
-						data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.menu-item.open-captcha-modal"
-					>
-						<Trans>Open captcha modal</Trans>
 					</MenuItem>
 					<MenuItem
 						icon={

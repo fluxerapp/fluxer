@@ -4,10 +4,123 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
-clear_channel_notifications_disabled_by_default_test() ->
+clear_channel_notifications_are_enabled_by_default_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{}),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([{clear_channel_notifications, 1, 2, 3}], Casts).
+
+the_clear_env_switch_turns_off_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{
+        push_enrolled_clear_notifications_enabled => false
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([], Casts).
+
+the_clear_operator_switch_turns_off_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(false, #{
+        push_enrolled_clear_notifications_enabled => true
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([], Casts).
+
+the_clear_operator_switch_turns_on_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(true, #{
+        push_enrolled_clear_notifications_enabled => false
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([{clear_channel_notifications, 1, 2, 3}], Casts).
+
+clears_do_nothing_while_push_is_disabled_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{push_enabled => false}),
+    ?assertEqual([], Truncates),
+    ?assertEqual([], Casts).
+
+capture_clear(OperatorChoice, Env) ->
+    Self = self(),
     erase_persistent_term(push_noop),
-    erase_persistent_term(push_clear_notifications_enabled),
-    ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3)).
+    erase_persistent_term(push_enrolled_clear_notifications_enabled),
+    put_operator_choice(OperatorChoice),
+    Stub = spawn(fun() -> push_stub(Self) end),
+    true = register(push, Stub),
+    Modules = [fluxer_gateway_env, push_outbox, gateway_node_router],
+    lists:foreach(fun(Module) -> ok = meck:new(Module, [passthrough, no_link]) end, Modules),
+    try
+        ok = meck:expect(fluxer_gateway_env, get, fun(Key) ->
+            maps:get(Key, maps:merge(#{push_enabled => true}, Env), undefined)
+        end),
+        ok = meck:expect(push_outbox, truncate_read, fun(UserId, ChannelId, MessageId) ->
+            Self ! {truncated, {UserId, ChannelId, MessageId}},
+            ok
+        end),
+        ok = meck:expect(gateway_node_router, owner_node_result, fun(_Key, push) ->
+            {ok, node()}
+        end),
+        ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3)),
+        Stub ! {flush, Self},
+        receive
+            flushed -> ok
+        after 5000 -> error(push_stub_timeout)
+        end,
+        {drain_tagged(truncated), drain_tagged(cast)}
+    after
+        lists:foreach(fun meck:unload/1, Modules),
+        unregister(push),
+        exit(Stub, kill),
+        erase_persistent_term(push_enrolled_clear_notifications_enabled)
+    end.
+
+put_operator_choice(undefined) ->
+    ok;
+put_operator_choice(Choice) ->
+    persistent_term:put(push_enrolled_clear_notifications_enabled, Choice).
+
+push_stub(Parent) ->
+    receive
+        {'$gen_cast', Msg} ->
+            Parent ! {cast, Msg},
+            push_stub(Parent);
+        {flush, From} ->
+            From ! flushed,
+            push_stub(Parent)
+    end.
+
+drain_tagged(Tag) ->
+    receive
+        {Tag, Value} -> [Value | drain_tagged(Tag)]
+    after 0 ->
+        []
+    end.
+
+a_clear_publishes_through_the_outbox_test() ->
+    State = #{max_entries => 10},
+    [Job] = with_captured_enqueues(fun() ->
+        ?assertEqual(
+            {noreply, State},
+            push:handle_cast({clear_channel_notifications, 1, 2, 3}, State)
+        )
+    end),
+    ?assertMatch(
+        #{
+            kind := clear,
+            subject := <<"push.job.clear">>,
+            user_ids := [1],
+            channel_id := 2,
+            message_id := 3,
+            job := #{
+                <<"v">> := 1,
+                <<"config_version">> := 0,
+                <<"user_id">> := <<"1">>,
+                <<"channel_id">> := <<"2">>,
+                <<"message_id">> := <<"3">>
+            }
+        },
+        Job
+    ).
+
+legacy_cache_invalidation_casts_are_ignored_test() ->
+    State = #{max_entries => 10},
+    ?assertEqual({noreply, State}, push:handle_cast({invalidate_user_subscriptions, 1}, State)),
+    ?assertEqual({noreply, State}, push:handle_cast({invalidate_user_badge_count, 1}, State)).
 
 push_owner_key_prefers_first_recipient_test() ->
     ?assertEqual(
@@ -113,6 +226,97 @@ message_params_context_requires_explicit_guild_id_test() ->
     ?assertEqual({error, invalid_guild_id}, push_message_params:context(Params)),
     {ok, Context} = push_message_params:context(DmParams),
     ?assertEqual(0, maps:get(guild_id, Context)).
+
+prefetch_user_guild_settings_batches_missing_users_into_one_rpc_test() ->
+    push_ets_cache:init(),
+    ok = push_ets_cache:put_user_guild_settings(9004, 4242, #{<<"muted">> => true}),
+    Response = #{<<"user_guild_settings">> => [#{<<"mobile_push">> => false}, null]},
+    with_rpc_client_stub({ok, Response}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings(
+            [9002, 9001, 9004, 9999, 9001], 9999, 4242
+        )
+    end),
+    ?assertEqual([{<<"4242">>, [<<"9001">>, <<"9002">>]}], settings_requests()),
+    ?assertEqual(
+        #{<<"mobile_push">> => false}, push_ets_cache:get_user_guild_settings(9001, 4242)
+    ),
+    ?assertEqual(#{}, push_ets_cache:get_user_guild_settings(9002, 4242)),
+    ?assertEqual(
+        #{<<"muted">> => true}, push_ets_cache:get_user_guild_settings(9004, 4242)
+    ),
+    lists:foreach(
+        fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 4242) end,
+        [9001, 9002, 9004]
+    ).
+
+prefetch_user_guild_settings_chunks_large_batches_test() ->
+    push_ets_cache:init(),
+    UserIds = lists:seq(90000, 90200),
+    with_rpc_client_stub({ok, #{<<"user_guild_settings">> => []}}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings(UserIds, 9999, 4243)
+    end),
+    ?assertEqual([200, 1], [length(Ids) || {_GuildId, Ids} <- settings_requests()]).
+
+prefetch_user_guild_settings_leaves_cache_cold_on_rpc_failure_test() ->
+    push_ets_cache:init(),
+    with_rpc_client_stub({error, timeout}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings([9007, 9008], 9999, 4244)
+    end),
+    ?assertEqual([{<<"4244">>, [<<"9007">>, <<"9008">>]}], settings_requests()),
+    ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(9007, 4244)),
+    ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(9008, 4244)).
+
+prefetch_user_guild_settings_skips_direct_messages_test() ->
+    push_ets_cache:init(),
+    with_rpc_client_stub({error, timeout}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings([9007, 9008], 9999, 0)
+    end),
+    ?assertEqual([], settings_requests()).
+
+with_captured_enqueues(Fun) ->
+    Self = self(),
+    ok = meck:new(push_outbox, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_outbox, enqueue, fun(OutboxJob) ->
+            Self ! {enqueued, OutboxJob},
+            ok
+        end),
+        Fun(),
+        drain_enqueued([])
+    after
+        meck:unload(push_outbox)
+    end.
+
+drain_enqueued(Acc) ->
+    receive
+        {enqueued, OutboxJob} -> drain_enqueued([OutboxJob | Acc])
+    after 0 ->
+        lists:reverse(Acc)
+    end.
+
+with_rpc_client_stub(Result, Fun) ->
+    Self = self(),
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun(Request) ->
+            Self ! {rpc_request, Request},
+            Result
+        end),
+        Fun()
+    after
+        meck:unload(rpc_client)
+    end.
+
+settings_requests() ->
+    receive
+        {rpc_request, #{<<"type">> := <<"get_user_guild_settings">>} = Request} ->
+            [
+                {maps:get(<<"guild_id">>, Request), maps:get(<<"user_ids">>, Request)}
+                | settings_requests()
+            ]
+    after 0 ->
+        []
+    end.
 
 erase_persistent_term(Key) ->
     try persistent_term:erase(Key) of

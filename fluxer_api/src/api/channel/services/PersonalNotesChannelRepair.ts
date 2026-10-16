@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {userIdToChannelId} from '@app/api/BrandedTypes';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {Channel} from '@app/api/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {userIdToChannelId} from '../../BrandedTypes';
-import type {ChannelRow} from '../../database/types/ChannelTypes';
-import type {Channel} from '../../models/Channel';
 
 interface PersonalNotesChannelRepository {
 	findUnique(channelId: ChannelID): Promise<Channel | null>;
@@ -36,6 +36,7 @@ function buildPersonalNotesChannelRow(userId: UserID): ChannelRow {
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: null,
 		last_pin_timestamp: null,
 		permission_overwrites: null,

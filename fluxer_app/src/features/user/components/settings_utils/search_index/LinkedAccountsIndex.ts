@@ -3,12 +3,9 @@
 import {VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/search_index/SearchIndexHelpers';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {CONNECTIONS_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const CONNECTIONS_DESCRIPTOR = msg({
-	message: 'Connections',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
 const LINKED_ACCOUNTS_DESCRIPTOR = msg({
 	message: 'Linked accounts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

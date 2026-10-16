@@ -1,122 +1,249 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {enforcementActor} from '@app/api/enforcement/EnforcementActor';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
-	BrowseChannelRequest,
+	AdminChannelMessageListQuery,
+	AdminMessageSearchQuery,
+	AdminMessageSearchResponse,
 	BrowseChannelResponse,
-	SearchChannelMessagesRequest,
-	SearchChannelMessagesResponse,
 } from '@fluxer/schema/src/domains/admin/AdminMessageBrowseSchemas';
 import {
-	DeleteAllUserMessagesRequest,
+	AdminMessageDeleteRequest,
+	AdminMessageDetailQuery,
+	AdminUserMessageDeleteQuery,
+	AdminUserMessageDeleteRequest,
+	AdminUserMessageShredRequest,
 	DeleteAllUserMessagesResponse,
-	DeleteMessageRequest,
-	LookupMessageByAttachmentRequest,
-	LookupMessageRequest,
-	MessageShredRequest,
+	MessageShredJobIdParam,
 	MessageShredResponse,
-	MessageShredStatusRequest,
-	ReportAttachmentToNcmecRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 import {
 	DeleteMessageResponse,
 	LookupMessageResponse,
 	MessageShredStatusResponse,
-	NcmecAttachmentSubmitResultResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {createAttachmentID, createChannelID, createMessageID, createReportID} from '../../BrandedTypes';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+import {
+	ChannelIdMessageIdParam,
+	ChannelIdParam,
+	UserIdParam,
+} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 export function MessageAdminController(app: HonoApp) {
-	app.post(
-		'/admin/messages/lookup',
+	app.get(
+		'/admin/messages',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
 		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
-		Validator('json', LookupMessageRequest),
+		Validator('query', AdminMessageSearchQuery),
 		OpenAPI({
-			operationId: 'lookup_message',
-			summary: 'Look up message details',
+			operationId: 'search_admin_messages',
+			summary: 'Search messages',
 			description:
-				'Retrieves complete message details including content, attachments, edits, and metadata. Look up by message ID and channel. Requires MESSAGE_LOOKUP permission.',
-			responseSchema: LookupMessageResponse,
+				'Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message with that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.',
+			responseSchema: AdminMessageSearchResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.messageService.lookupMessage(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/messages/lookup-by-attachment',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
-		Validator('json', LookupMessageByAttachmentRequest),
-		OpenAPI({
-			operationId: 'lookup_message_by_attachment',
-			summary: 'Look up message by attachment',
-			description:
-				'Finds and retrieves message containing a specific attachment by ID. Used to locate messages with sensitive or illegal content. Requires MESSAGE_LOOKUP permission.',
-			responseSchema: LookupMessageResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.messageService.lookupMessageByAttachment(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/messages/report-to-ncmec',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.CSAM_SUBMIT_NCMEC),
-		requireAdminACL(AdminACLs.MESSAGE_DELETE),
-		requireAdminACL(AdminACLs.USER_DELETE),
-		requireAdminACL(AdminACLs.ARCHIVE_TRIGGER_USER),
-		Validator('json', ReportAttachmentToNcmecRequest),
-		OpenAPI({
-			operationId: 'report_message_attachment_to_ncmec',
-			summary: 'Report an image attachment to NCMEC',
-			description:
-				'Submits a specific image attachment to NCMEC, creates an audit log entry, silently disables the user, triggers one archive for the user, and schedules content deletion after the archive completes.',
-			responseSchema: NcmecAttachmentSubmitResultResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const service = ctx.get('ncmecSubmissionService');
-			const adminUserId = ctx.get('adminUserId');
-			const body = ctx.req.valid('json');
-			const result = await service.submitAttachmentToNcmec({
-				channelId: createChannelID(body.channel_id),
-				messageId: createMessageID(body.message_id),
-				attachmentId: createAttachmentID(body.attachment_id),
-				filename: body.filename,
-				reporterFullName: body.reporter_full_name,
-				adminUserId,
-				sourceReportId: body.source_report_id ? createReportID(body.source_report_id) : null,
+			const query = ctx.req.valid('query');
+			if (query.message_id != null) {
+				const messageId = query.message_id;
+				const response = await adminService.messageService.lookupMessage({
+					channel_id: query.channel_id,
+					message_id: messageId,
+					context_limit: query.context_limit,
+				});
+				await recordAdminRead(ctx, {
+					targetType: 'message',
+					targetId: messageId,
+					action: AdminAuditReadActions.SEARCH_MESSAGES,
+					metadata: {
+						mode: 'message',
+						channel_id: query.channel_id,
+						context_limit: query.context_limit,
+						found: response.messages.some((message) => message.id === messageId.toString()),
+						result_count: response.messages.length,
+					},
+				});
+				return ctx.json(response);
+			}
+			if (query.attachment_id != null) {
+				if (query.filename == null) {
+					throw InputValidationError.fromCode('filename', ValidationErrorCodes.INVALID_FORMAT);
+				}
+				const response = await adminService.messageService.lookupMessageByAttachment({
+					channel_id: query.channel_id,
+					attachment_id: query.attachment_id,
+					filename: query.filename,
+					context_limit: query.context_limit,
+				});
+				await recordAdminRead(ctx, {
+					targetType: 'channel',
+					targetId: query.channel_id,
+					action: AdminAuditReadActions.SEARCH_MESSAGES,
+					metadata: {
+						mode: 'attachment',
+						attachment_id: query.attachment_id,
+						message_id: response.message_id,
+						context_limit: query.context_limit,
+						found: response.message_id !== null,
+						result_count: response.messages.length,
+					},
+				});
+				return ctx.json(response);
+			}
+			const response = await adminService.messageService.searchChannelMessages({
+				channel_id: query.channel_id,
+				query: query.q ?? '',
+				limit: query.limit,
 			});
-			return ctx.json(result);
+			await recordAdminRead(ctx, {
+				targetType: 'channel',
+				targetId: query.channel_id,
+				action: AdminAuditReadActions.SEARCH_MESSAGES,
+				metadata: {
+					mode: 'search',
+					has_query: query.q === undefined ? undefined : true,
+					limit: query.limit,
+					result_count: response.messages.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
-	app.post(
-		'/admin/messages/delete',
+	app.get(
+		'/admin/messages/shreds/:job_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
+		requireAdminACL(AdminACLs.MESSAGE_SHRED),
+		Validator('param', MessageShredJobIdParam),
+		OpenAPI({
+			operationId: 'get_admin_message_shred',
+			summary: 'Get message shred job',
+			description:
+				'Returns the progress of a queued message shred job, including whether it is complete. Requires MESSAGE_SHRED permission.',
+			responseSchema: MessageShredStatusResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {job_id} = ctx.req.valid('param');
+			const response = await adminService.messageShredService.getMessageShredStatus(job_id.toString());
+			await recordAdminRead(ctx, {
+				targetType: 'message_shred',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_MESSAGE_SHRED_STATUS,
+				metadata: {job_id, status: response.status},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.get(
+		'/admin/channels/:channel_id/messages',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
+		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
+		Validator('param', ChannelIdParam),
+		Validator('query', AdminChannelMessageListQuery),
+		OpenAPI({
+			operationId: 'list_admin_channel_messages',
+			summary: 'List channel messages',
+			description:
+				'Pages through the messages of a channel, newest first, with cursor-based pagination. Requires MESSAGE_LOOKUP permission.',
+			responseSchema: BrowseChannelResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {channel_id} = ctx.req.valid('param');
+			const {limit, before, after} = ctx.req.valid('query');
+			const response = await adminService.messageService.browseChannel({
+				channel_id,
+				before,
+				after,
+				limit,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'channel',
+				targetId: channel_id,
+				action: AdminAuditReadActions.LIST_CHANNEL_MESSAGES,
+				metadata: {
+					limit,
+					before,
+					after,
+					result_count: response.messages.length,
+					has_more: response.has_more,
+				},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.get(
+		'/admin/channels/:channel_id/messages/:message_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
+		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
+		Validator('param', ChannelIdMessageIdParam),
+		Validator('query', AdminMessageDetailQuery),
+		OpenAPI({
+			operationId: 'get_admin_message',
+			summary: 'Get message',
+			description:
+				'Retrieves complete message details including content, attachments, edits, and metadata, together with the messages surrounding it. Requires MESSAGE_LOOKUP permission.',
+			responseSchema: LookupMessageResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const {context_limit} = ctx.req.valid('query');
+			const response = await adminService.messageService.lookupMessage({
+				channel_id,
+				message_id,
+				context_limit,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'message',
+				targetId: message_id,
+				action: AdminAuditReadActions.GET_MESSAGE,
+				metadata: {
+					channel_id,
+					context_limit,
+					found: response.messages.some((message) => message.id === message_id.toString()),
+					result_count: response.messages.length,
+				},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.delete(
+		'/admin/channels/:channel_id/messages/:message_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
 		requireAdminACL(AdminACLs.MESSAGE_DELETE),
-		Validator('json', DeleteMessageRequest),
+		Validator('param', ChannelIdMessageIdParam),
+		Validator('json', AdminMessageDeleteRequest),
 		OpenAPI({
-			operationId: 'admin_delete_message',
-			summary: 'Delete single message',
+			operationId: 'delete_admin_message',
+			summary: 'Delete message',
 			description:
-				'Deletes a single message permanently. Used for removing inappropriate or harmful content. Logged to audit log. Requires MESSAGE_DELETE permission.',
+				'Deletes a single message permanently and purges its attachments. The basis is holder_request or housekeeping, such as cleanup of webhook or system messages. To remove a message for breaking a rule, shred it with an enforcement basis so a decision records it. Logged to audit log with the basis. Requires MESSAGE_DELETE permission.',
 			responseSchema: DeleteMessageResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -126,56 +253,11 @@ export function MessageAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
+			const {channel_id, message_id} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.messageService.deleteMessage(ctx.req.valid('json'), adminUserId, auditLogReason),
-			);
-		},
-	);
-	app.post(
-		'/admin/messages/shred',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.MESSAGE_SHRED),
-		Validator('json', MessageShredRequest),
-		OpenAPI({
-			operationId: 'queue_message_shred',
-			summary: 'Queue message shred operation',
-			description:
-				'Queues bulk message shredding with attachment deletion. Returns job ID to track progress asynchronously. Used for large-scale content removal. Requires MESSAGE_SHRED permission.',
-			responseSchema: MessageShredResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			return ctx.json(
-				await adminService.messageShredService.queueMessageShred(ctx.req.valid('json'), adminUserId, auditLogReason),
-			);
-		},
-	);
-	app.post(
-		'/admin/messages/delete-all',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.MESSAGE_DELETE_ALL),
-		Validator('json', DeleteAllUserMessagesRequest),
-		OpenAPI({
-			operationId: 'delete_all_user_messages',
-			summary: 'Delete all user messages',
-			description:
-				'Deletes all messages from a specific user across all channels. Permanent operation used for account suspension or policy violation. Requires MESSAGE_DELETE_ALL permission.',
-			responseSchema: DeleteAllUserMessagesResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			return ctx.json(
-				await adminService.messageDeletionService.deleteAllUserMessages(
+				await adminService.messageService.deleteMessage(
+					createChannelID(channel_id),
+					createMessageID(message_id),
 					ctx.req.valid('json'),
 					adminUserId,
 					auditLogReason,
@@ -184,63 +266,58 @@ export function MessageAdminController(app: HonoApp) {
 		},
 	);
 	app.post(
-		'/admin/messages/shred-status',
+		'/admin/users/:user_id/message-shreds',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
 		requireAdminACL(AdminACLs.MESSAGE_SHRED),
-		Validator('json', MessageShredStatusRequest),
+		Validator('param', UserIdParam),
+		Validator('json', AdminUserMessageShredRequest),
 		OpenAPI({
-			operationId: 'get_message_shred_status',
-			summary: 'Get message shred status',
+			operationId: 'shred_admin_user_messages',
+			summary: 'Shred user messages',
 			description:
-				'Polls status of a queued message shred operation. Returns progress percentage and whether the job is complete. Requires MESSAGE_SHRED permission.',
-			responseSchema: MessageShredStatusResponse,
+				'Queues bulk shredding of the given messages of a user, with attachment deletion. Returns a job ID to track progress asynchronously. With an enforcement basis the first 50 entries are snapshotted as the evidence of a content removal decision before the job is queued, every entry for child safety and violent extremism reasons, and the user is sent its notice. Requires MESSAGE_SHRED permission.',
+			responseSchema: MessageShredResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const body = ctx.req.valid('json');
-			return ctx.json(await adminService.messageShredService.getMessageShredStatus(body.job_id));
+			const {user_id} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx
+					.get('adminService')
+					.messageShredService.queueMessageShred(createUserID(user_id), ctx.req.valid('json'), enforcementActor(ctx)),
+			);
 		},
 	);
-	app.post(
-		'/admin/messages/browse',
+	app.delete(
+		'/admin/users/:user_id/messages',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
-		Validator('json', BrowseChannelRequest),
+		requireAdminACL(AdminACLs.MESSAGE_DELETE_ALL),
+		Validator('param', UserIdParam),
+		Validator('query', AdminUserMessageDeleteQuery),
+		Validator('json', AdminUserMessageDeleteRequest),
 		OpenAPI({
-			operationId: 'browse_channel_messages',
-			summary: 'Browse channel messages',
+			operationId: 'delete_admin_user_messages',
+			summary: 'Delete all user messages',
 			description:
-				'Browses messages in a channel with cursor-based pagination. Returns messages in reverse chronological order. Requires MESSAGE_LOOKUP permission.',
-			responseSchema: BrowseChannelResponse,
+				'Deletes all messages from a specific user across all channels. Pass dry_run=false to delete, with a basis in the body. The default counts without deleting and records nothing. An enforcement basis records a content removal decision and sends its notice, and is refused for child safety and violent extremism reasons, which must shred explicit entries instead. Requires MESSAGE_DELETE_ALL permission.',
+			responseSchema: DeleteAllUserMessagesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.messageService.browseChannel(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/messages/search',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.MESSAGE_LOOKUP),
-		Validator('json', SearchChannelMessagesRequest),
-		OpenAPI({
-			operationId: 'search_channel_messages',
-			summary: 'Search channel messages',
-			description: 'Searches messages within a channel by content. Requires MESSAGE_LOOKUP permission.',
-			responseSchema: SearchChannelMessagesResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.messageService.searchChannelMessages(ctx.req.valid('json')));
+			const {user_id} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx
+					.get('adminService')
+					.messageDeletionService.deleteAllUserMessages(
+						createUserID(user_id),
+						{dryRun: ctx.req.valid('query').dry_run, basis: ctx.req.valid('json').basis},
+						enforcementActor(ctx),
+					),
+			);
 		},
 	);
 }

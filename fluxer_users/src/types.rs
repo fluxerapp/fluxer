@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::pseudonym::pseudonym;
+use fluxer_common::user_flags::AccountStanding;
+#[cfg(test)]
+use fluxer_common::user_flags::USER_FLAG_STAFF;
+#[cfg(test)]
+use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
+pub use fluxer_common::user_partial::ApiUserPartial;
+#[cfg(test)]
+use fluxer_common::user_partial::FLUXER_SYSTEM_USERNAME;
+use fluxer_common::user_partial::{FLUXER_SYSTEM_USER_ID, UserPartialFields};
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op")]
 pub enum UserRequest {
-    GetById {
-        user_id: i64,
-    },
-    GetPartialById {
-        user_id: i64,
-    },
     GetPartialsByIds {
         user_ids: Vec<i64>,
-    },
-    GetApiPartialById {
-        user_id: String,
     },
     GetApiPartialsByIds {
         user_ids: Vec<String>,
@@ -29,75 +30,9 @@ pub enum UserRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum UserResponse {
-    Found(User),
-    FoundPartial(UserPartial),
     FoundPartials(Vec<UserPartial>),
-    FoundApiPartial(ApiUserPartial),
     FoundApiPartials(Vec<ApiUserPartial>),
-    NotFound,
     Invalidated,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct User {
-    pub user_id: i64,
-    pub username: String,
-    pub discriminator: i32,
-    pub bot: Option<bool>,
-    pub system: Option<bool>,
-    pub email: Option<String>,
-    pub email_verified: Option<bool>,
-    pub email_bounced: Option<bool>,
-    pub authenticator_types: Vec<i32>,
-    pub avatar_hash: Option<String>,
-    pub avatar_color: Option<i32>,
-    pub banner_hash: Option<String>,
-    pub banner_color: Option<i32>,
-    pub bio: Option<String>,
-    pub accent_color: Option<i32>,
-    pub date_of_birth: Option<String>,
-    pub locale: Option<String>,
-    pub flags: Option<i64>,
-    pub premium_flags: Option<i32>,
-    pub global_name: Option<String>,
-    pub pronouns: Option<String>,
-    pub traits: Vec<String>,
-    pub premium_type: Option<i32>,
-    pub premium_since: Option<i64>,
-    pub premium_until: Option<i64>,
-    pub premium_gift_extension_ends_at: Option<i64>,
-    pub premium_lifetime_sequence: Option<i32>,
-    pub premium_billing_cycle: Option<String>,
-    pub premium_will_cancel: Option<bool>,
-    pub premium_onboarding_dismissed_at: Option<i64>,
-    pub has_ever_purchased: Option<bool>,
-    pub stripe_subscription_id: Option<String>,
-    pub stripe_customer_id: Option<String>,
-    pub gift_inventory_server_seq: Option<i32>,
-    pub gift_inventory_client_seq: Option<i32>,
-    pub suspicious_activity_flags: Option<i32>,
-    pub terms_agreed_at: Option<i64>,
-    pub privacy_agreed_at: Option<i64>,
-    pub last_active_at: Option<i64>,
-    pub last_active_ip: Option<String>,
-    pub temp_banned_until: Option<i64>,
-    pub pending_deletion_at: Option<i64>,
-    pub pending_bulk_message_deletion_at: Option<i64>,
-    pub pending_bulk_message_deletion_channel_count: Option<i32>,
-    pub pending_bulk_message_deletion_message_count: Option<i32>,
-    pub password_last_changed_at: Option<i64>,
-    pub acls: Vec<String>,
-    pub deletion_reason_code: Option<i32>,
-    pub deletion_public_reason: Option<String>,
-    pub deletion_audit_log_reason: Option<String>,
-    pub first_refund_at: Option<i64>,
-    pub version: i32,
-    pub has_verified_phone: Option<bool>,
-    pub premium_grace_ends_at: Option<i64>,
-    pub mention_flags: Option<i32>,
-    pub last_voice_activity_sharing_change_at: Option<i64>,
-    pub timezone: Option<String>,
-    pub timezone_privacy_flags: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,107 +50,42 @@ pub struct UserPartial {
     pub accent_color: Option<i32>,
     pub avatar_color: Option<i32>,
     pub mention_flags: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_hidden_since: Option<i64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiUserPartial {
-    pub id: String,
-    pub username: String,
-    pub discriminator: String,
-    pub global_name: Option<String>,
-    pub avatar: Option<String>,
-    pub avatar_color: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub system: Option<bool>,
-    pub flags: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mention_flags: Option<i32>,
-}
-
-const USER_FLAG_STAFF: i64 = 1 << 0;
-const USER_FLAG_CTP_MEMBER: i64 = 1 << 1;
-const USER_FLAG_PARTNER: i64 = 1 << 2;
-const USER_FLAG_BUG_HUNTER: i64 = 1 << 3;
-const USER_FLAG_FRIENDLY_BOT: i64 = 1 << 4;
-const USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL: i64 = 1 << 5;
-const USER_FLAG_SPAMMER: i64 = 1 << 6;
-const USER_FLAG_STAFF_HIDDEN: i64 = 1 << 57;
-const PUBLIC_USER_FLAGS: i64 = USER_FLAG_STAFF
-    | USER_FLAG_CTP_MEMBER
-    | USER_FLAG_PARTNER
-    | USER_FLAG_BUG_HUNTER
-    | USER_FLAG_FRIENDLY_BOT
-    | USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL
-    | USER_FLAG_SPAMMER;
-const PUBLIC_USER_FLAGS_WITHOUT_STAFF: i64 = PUBLIC_USER_FLAGS & !USER_FLAG_STAFF;
-const FLUXER_SYSTEM_USER_ID: i64 = 0;
-const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
-const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
-
-impl User {
-    pub fn to_partial(&self) -> UserPartial {
+impl UserPartial {
+    pub fn visible_to_others(self, standing: &AccountStanding, now_ms: i64) -> UserPartial {
+        if self.user_id == FLUXER_SYSTEM_USER_ID || !standing.profile_hidden(now_ms) {
+            return self;
+        }
+        let pseudonym = pseudonym(self.user_id);
         UserPartial {
+            username: pseudonym.username,
+            discriminator: pseudonym.discriminator,
+            global_name: None,
+            avatar_hash: None,
+            banner_hash: None,
+            banner_color: None,
+            accent_color: None,
+            avatar_color: None,
+            ..self
+        }
+    }
+
+    pub fn to_api_partial(&self) -> ApiUserPartial {
+        ApiUserPartial::from(UserPartialFields {
             user_id: self.user_id,
             username: self.username.clone(),
             discriminator: self.discriminator,
             global_name: self.global_name.clone(),
             avatar_hash: self.avatar_hash.clone(),
+            avatar_color: self.avatar_color,
             bot: self.bot,
             system: self.system,
             flags: self.flags,
-            banner_hash: self.banner_hash.clone(),
-            banner_color: self.banner_color,
-            accent_color: self.accent_color,
-            avatar_color: self.avatar_color,
             mention_flags: self.mention_flags,
-        }
-    }
-
-    pub fn to_api_partial(&self) -> ApiUserPartial {
-        self.to_partial().to_api_partial()
-    }
-}
-
-impl UserPartial {
-    pub fn to_api_partial(&self) -> ApiUserPartial {
-        if self.user_id == FLUXER_SYSTEM_USER_ID {
-            return fluxer_system_user();
-        }
-        let flags = self.flags.unwrap_or_default();
-        let visible_flags = if (flags & USER_FLAG_STAFF_HIDDEN) != 0 {
-            PUBLIC_USER_FLAGS_WITHOUT_STAFF
-        } else {
-            PUBLIC_USER_FLAGS
-        };
-        ApiUserPartial {
-            id: self.user_id.to_string(),
-            username: self.username.clone(),
-            discriminator: format!("{:04}", self.discriminator),
-            global_name: self.global_name.clone(),
-            avatar: self.avatar_hash.clone(),
-            avatar_color: self.avatar_color,
-            bot: self.bot.filter(|bot| *bot),
-            system: self.system.filter(|system| *system),
-            flags: (flags & visible_flags) as i32,
-            mention_flags: self.mention_flags.filter(|flags| *flags != 0),
-        }
-    }
-}
-
-fn fluxer_system_user() -> ApiUserPartial {
-    ApiUserPartial {
-        id: FLUXER_SYSTEM_USER_ID.to_string(),
-        username: FLUXER_SYSTEM_USERNAME.to_owned(),
-        discriminator: FLUXER_SYSTEM_DISCRIMINATOR.to_owned(),
-        global_name: None,
-        avatar: None,
-        avatar_color: None,
-        bot: Some(true),
-        system: Some(true),
-        flags: USER_FLAG_STAFF as i32,
-        mention_flags: None,
+        })
     }
 }
 
@@ -258,6 +128,7 @@ mod tests {
             accent_color: None,
             avatar_color: Some(0x336699),
             mention_flags: Some(0),
+            content_hidden_since: None,
         }
     }
 

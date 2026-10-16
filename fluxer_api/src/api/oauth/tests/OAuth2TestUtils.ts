@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {ApplicationResponse} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface OAuth2CreateResult {
 	application: ApplicationResponse;
@@ -72,27 +72,6 @@ export async function listOAuth2Applications(
 ): Promise<Array<ApplicationResponse>> {
 	const {response, text, json} = await createBuilder<Array<ApplicationResponse>>(harness, token)
 		.get('/oauth2/applications/@me')
-		.executeRaw();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}: ${text}`);
-	}
-	return json;
-}
-
-export async function updateOAuth2Application(
-	harness: ApiTestHarness,
-	token: string,
-	applicationId: string,
-	params: {
-		name?: string;
-		redirect_uris?: Array<string> | null;
-		bot_public?: boolean;
-		bot_require_code_grant?: boolean;
-	},
-): Promise<ApplicationResponse> {
-	const {response, text, json} = await createBuilder<ApplicationResponse>(harness, token)
-		.patch(`/oauth2/applications/${applicationId}`)
-		.body(params)
 		.executeRaw();
 	if (response.status !== 200) {
 		throw new Error(`Expected 200, got ${response.status}: ${text}`);

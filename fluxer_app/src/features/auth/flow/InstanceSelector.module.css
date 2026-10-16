@@ -3,6 +3,13 @@
 .container {
 	display: flex;
 	flex-direction: column;
+	gap: 0.625rem;
+	width: 100%;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
 	gap: 0.5rem;
 	width: 100%;
 }
@@ -15,7 +22,8 @@
 .inputActions {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	justify-content: center;
+	min-width: 1.25rem;
 }
 
 .statusSpinner {
@@ -23,152 +31,208 @@
 	height: 1.125rem;
 }
 
-.statusSuccess {
-	color: var(--status-online);
-}
-
 .statusError {
 	color: var(--status-danger);
 }
 
-.dropdownToggle {
+.statusRow {
+	display: flex;
+	align-items: center;
+	min-height: 2rem;
+}
+
+.statusText {
+	min-width: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	color: var(--text-tertiary);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.statusTextError {
+	overflow: visible;
+	color: var(--status-danger);
+	text-overflow: clip;
+	white-space: normal;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	margin-top: 0.25rem;
+	padding-top: 0.875rem;
+	border-top: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+}
+
+.footer > * {
+	min-width: 7rem;
+	white-space: nowrap;
+}
+
+.instancePicker {
+	width: 100%;
+}
+
+.instanceGroup {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.instanceRow {
+	position: relative;
+	display: block;
+	min-width: 0;
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 78%, transparent);
+	background: color-mix(in srgb, var(--background-secondary) 84%, transparent);
+}
+
+.instanceRow + .instanceRow {
+	border-top: 0;
+}
+
+.instanceRow:first-child {
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+}
+
+.instanceRow:last-child {
+	border-bottom-right-radius: 0.5rem;
+	border-bottom-left-radius: 0.5rem;
+}
+
+.instanceOption {
+	display: grid;
+	grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+	gap: 0.625rem;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	min-height: 3.625rem;
+	padding: 0.625rem 0.75rem;
+	border: 0;
+	background: transparent;
+	color: var(--text-primary);
+	cursor: pointer;
+	outline: none;
+	text-align: left;
+}
+
+.instanceRow:first-child .instanceOption {
+	border-top-left-radius: 0.4375rem;
+	border-top-right-radius: 0.4375rem;
+}
+
+.instanceRow:last-child .instanceOption {
+	border-bottom-left-radius: 0.4375rem;
+	border-bottom-right-radius: 0.4375rem;
+}
+
+.instanceOption:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+}
+
+.instanceOption:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.instanceLogo {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.25rem;
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: var(--text-tertiary);
-	border-radius: 0.25rem;
-	transition:
-		color 0.15s ease,
-		background-color 0.15s ease;
-}
-
-.dropdownToggle:hover:not(:disabled) {
-	color: var(--text-primary);
-	background-color: var(--background-modifier-hover);
-}
-
-.dropdownToggle:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.caretIcon {
-	transition: transform 0.2s ease;
-}
-
-.caretIconOpen {
-	transform: rotate(180deg);
-}
-
-.dropdown {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	right: 0;
-	z-index: 100;
-	margin-top: 0.25rem;
-	background-color: var(--background-secondary);
-	border: 0.0625rem solid var(--background-modifier-accent);
+	width: 2.25rem;
+	height: 2.25rem;
+	overflow: visible;
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
 	border-radius: 0.5rem;
-	box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.2);
-	overflow: hidden;
+	background: color-mix(in srgb, var(--background-tertiary) 70%, transparent);
+	color: var(--text-secondary);
 }
 
-.dropdownHeader {
-	padding: 0.5rem 0.75rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	border-bottom: 0.0625rem solid var(--background-modifier-accent);
+.instanceLogo svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	object-fit: contain;
 }
 
-.dropdownList {
-	list-style: none;
-	margin: 0;
-	padding: 0.25rem;
+.instanceLogo img {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.25rem;
+	object-fit: cover;
 }
 
-.dropdownItem {
+.instanceMeta {
+	display: grid;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.instanceNameRow {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	width: 100%;
-	padding: 0.5rem;
-	background: none;
-	border: none;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	text-align: left;
-	color: var(--text-primary);
-	transition: background-color 0.15s ease;
-}
-
-.dropdownItem:hover {
-	background-color: var(--background-modifier-hover);
-}
-
-.instanceIcon {
-	flex-shrink: 0;
-	color: var(--text-tertiary);
-}
-
-.instanceDomain {
-	flex: 1;
-	font-size: 0.875rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	gap: 0.1875rem;
+	min-width: 0;
 }
 
 .instanceName {
-	font-size: 0.75rem;
-	color: var(--text-secondary);
 	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 700;
+	line-height: 1.25rem;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.removeButton {
-	display: flex;
+.instanceDomain {
+	overflow: hidden;
+	color: var(--text-tertiary);
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.instanceOfficialBadge {
+	display: inline-flex;
+	flex: 0 0 auto;
 	align-items: center;
 	justify-content: center;
-	padding: 0.25rem;
-	background: none;
-	border: none;
-	cursor: pointer;
+	color: var(--status-online);
+}
+
+.instanceArrow {
 	color: var(--text-tertiary);
-	border-radius: 0.25rem;
-	opacity: 0;
-	transition:
-		opacity 0.15s ease,
-		color 0.15s ease,
-		background-color 0.15s ease;
 }
 
-.dropdownItem:hover .removeButton {
-	opacity: 1;
-}
+@media (max-width: 30rem) {
+	.statusRow {
+		align-items: flex-start;
+	}
 
-.removeButton:hover {
-	color: var(--status-danger);
-	background-color: var(--background-modifier-hover);
-}
+	.statusText {
+		white-space: normal;
+	}
 
-.errorMessage {
-	padding: 0.5rem 0.75rem;
-	border-radius: 0.375rem;
-	background-color: hsla(0, calc(100% * var(--saturation-factor, 1)), 50%, 0.1);
-	border: 0.0625rem solid hsla(0, calc(100% * var(--saturation-factor, 1)), 50%, 0.2);
-	font-size: 0.8125rem;
-	color: var(--status-danger);
-}
+	.footer {
+		flex-direction: column;
+		align-items: stretch;
+	}
 
-.connectButton {
-	align-self: flex-start;
+	.footer > * {
+		width: 100%;
+	}
+
+	.instanceOption {
+		grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+	}
 }

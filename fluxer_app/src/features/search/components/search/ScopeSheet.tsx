@@ -9,14 +9,7 @@ import {Scroller} from '@app/features/ui/components/Scroller';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type {IconProps} from '@phosphor-icons/react';
-import {
-	ChatCenteredDotsIcon,
-	CheckIcon,
-	EnvelopeSimpleIcon,
-	GlobeIcon,
-	HashIcon,
-	UsersIcon,
-} from '@phosphor-icons/react';
+import {ChatCenteredDotsIcon, ChatCircleIcon, CheckIcon, GlobeIcon, HashIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 
@@ -26,7 +19,7 @@ const SEARCH_IN_DESCRIPTOR = msg({
 });
 const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentType<IconProps>> = {
 	current: HashIcon,
-	all_dms: EnvelopeSimpleIcon,
+	all_dms: ChatCircleIcon,
 	open_dms: ChatCenteredDotsIcon,
 	all_guilds: GlobeIcon,
 	all: UsersIcon,

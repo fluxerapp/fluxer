@@ -5,6 +5,7 @@ import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
+import {memo} from 'react';
 
 const TIME_OF_DESCRIPTOR = msg({
 	message: 'Time: {currentFormatted} of {durationFormatted}',
@@ -20,7 +21,17 @@ interface MediaTimeDisplayProps {
 	className?: string;
 }
 
-export function MediaTimeDisplay({
+function areTimeDisplayPropsEqualToTheSecond(previous: MediaTimeDisplayProps, next: MediaTimeDisplayProps): boolean {
+	return (
+		Math.trunc(previous.currentTime) === Math.trunc(next.currentTime) &&
+		Math.trunc(previous.duration) === Math.trunc(next.duration) &&
+		previous.size === next.size &&
+		previous.compact === next.compact &&
+		previous.className === next.className
+	);
+}
+
+function MediaTimeDisplayImpl({
 	currentTime,
 	duration,
 	size = 'medium',
@@ -53,3 +64,5 @@ export function MediaTimeDisplay({
 		</div>
 	);
 }
+
+export const MediaTimeDisplay = memo(MediaTimeDisplayImpl, areTimeDisplayPropsEqualToTheSecond);

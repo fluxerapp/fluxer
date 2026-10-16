@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {getSameIpDecisionKey, normalizeIpString, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
-import {createIpAuthorizationToken, type UserID} from '../../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
+import {createIpAuthorizationToken, type UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AuthorizedIpRow,
 	AuthorizedIpTrustKeyRow,
 	IpAuthorizationTokenRow,
-} from '../../../database/types/AuthTypes';
-import {AuthorizedIps, AuthorizedIpTrustKeys, IpAuthorizationTokens} from '../../../Tables';
-import type {IUserAccountRepository} from '../IUserAccountRepository';
+} from '@app/api/database/types/AuthTypes';
+import {AuthorizedIps, AuthorizedIpTrustKeys, IpAuthorizationTokens} from '@app/api/Tables';
+import type {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {getSameIpDecisionKey, normalizeIpString, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 
 const AUTHORIZE_IP_BY_TOKEN_CQL = IpAuthorizationTokens.selectCql({
 	where: IpAuthorizationTokens.where.eq('token_'),
@@ -40,7 +40,7 @@ function getAuthorizedIpTrustKey(ip: string): string | null {
 }
 
 export class IpAuthorizationRepository {
-	constructor(private userAccountRepository: IUserAccountRepository) {}
+	constructor(private userAccountRepository: UserAccountRepository) {}
 
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {
 		const normalizedIp = normalizeAuthorizedIp(ip);
@@ -109,15 +109,6 @@ export class IpAuthorizationRepository {
 			return null;
 		}
 		return {userId: result.user_id, email: result.email};
-	}
-
-	async updateUserActivity(userId: UserID, clientIp: string): Promise<void> {
-		const now = new Date();
-		await this.userAccountRepository.updateLastActiveAt({
-			userId,
-			lastActiveAt: now,
-			lastActiveIp: clientIp,
-		});
 	}
 
 	async getAuthorizedIps(userId: UserID): Promise<

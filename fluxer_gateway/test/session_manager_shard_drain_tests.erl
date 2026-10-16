@@ -15,6 +15,62 @@ should_debounce_reactions_test() ->
     ?assertEqual(false, session_manager_shard_drain:should_debounce_reactions(#{flags => -1})),
     ok.
 
+thread_channels_capable_reads_identify_flag_bit_two_test() ->
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => 0})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => 2})),
+    ?assertEqual(true, session_manager_shard_drain:thread_channels_capable(#{flags => 4})),
+    ?assertEqual(true, session_manager_shard_drain:thread_channels_capable(#{flags => 6})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => -4})),
+    ?assertEqual(
+        false, session_manager_shard_drain:thread_channels_capable(#{flags => <<"4">>})
+    ).
+
+build_session_data_carries_thread_channels_capability_test() ->
+    UserDataMap = #{
+        <<"id">> => <<"123">>,
+        <<"username">> => <<"tester">>,
+        <<"discriminator">> => <<"0001">>,
+        <<"avatar">> => null,
+        <<"flags">> => 0
+    },
+    Data = #{<<"guilds">> => [], <<"user">> => UserDataMap, <<"user_settings">> => null},
+    Base = #{properties => #{}, token => <<"token">>, presence => null},
+    Capable = build_test_session_data(Data, Base#{flags => 6}, UserDataMap),
+    Incapable = build_test_session_data(Data, Base#{flags => 2}, UserDataMap),
+    Unflagged = build_test_session_data(Data, Base, UserDataMap),
+    ?assertEqual(true, maps:get(thread_channels_capable, Capable)),
+    ?assertEqual(true, maps:get(debounce_reactions, Capable)),
+    ?assertEqual(false, maps:get(thread_channels_capable, Incapable)),
+    ?assertEqual(false, maps:get(thread_channels_capable, Unflagged)).
+
+session_rpc_sends_thread_channels_capable_only_when_flagged_test() ->
+    meck:new(rpc_client, [passthrough, no_link]),
+    Self = self(),
+    meck:expect(rpc_client, call_with_retry, fun(Request, _Config) ->
+        Self ! {session_rpc_request, Request},
+        {ok, #{}}
+    end),
+    try
+        Identify = #{token => <<"token">>, properties => #{}},
+        {ok, _} = session_manager_shard_drain:fetch_rpc_data(
+            #{identify_data => Identify#{flags => 4}, version => 1}, <<"127.0.0.1">>
+        ),
+        ?assertMatch(#{<<"thread_channels_capable">> := true}, receive_session_rpc_request()),
+        {ok, _} = session_manager_shard_drain:fetch_rpc_data(
+            #{identify_data => Identify#{flags => 2}, version => 1}, <<"127.0.0.1">>
+        ),
+        ?assertNot(maps:is_key(<<"thread_channels_capable">>, receive_session_rpc_request()))
+    after
+        meck:unload(rpc_client)
+    end.
+
+receive_session_rpc_request() ->
+    receive
+        {session_rpc_request, Request} -> Request
+    after 1000 -> erlang:error(session_rpc_request_not_sent)
+    end.
+
 reconnect_drain_casts_each_active_session_test() ->
     TestPid = self(),
     SessionPidA = spawn(fun() -> reconnect_drain_test_session(TestPid) end),
@@ -54,7 +110,7 @@ reconnect_drain_ignores_dead_sessions_test() ->
     ?assertEqual([LiveSessionPid], collect_reconnect_drain_pids(1, [])),
     ok.
 
-broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
+handoff_to_topology_skips_sessions_owned_by_local_node_test() ->
     with_session_state_transfer(fun() ->
         TestPid = self(),
         SessionId = <<"session-transfer-topology">>,
@@ -66,7 +122,8 @@ broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
             }
         },
         ?assertEqual(
-            0, session_manager_shard_drain:broadcast_transfer_to_topology([node()], State)
+            #{attempted => 0, handed_off => 0},
+            session_manager_shard_drain:handoff_to_topology([node()], State)
         ),
         ?assertEqual({error, not_found}, session_state_transfer:pop_state(SessionId)),
         receive
@@ -77,28 +134,6 @@ broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
         end,
         SessionPid ! stop
     end).
-
-broadcast_transfer_to_topology_keeps_session_when_state_push_fails_test() ->
-    TestPid = self(),
-    SessionId = <<"session-transfer-fail">>,
-    TransferState = #{token_hash => utils:hash_token(<<"resume-token">>), seq => 7},
-    SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to_topology(['missing@127.0.0.1'], State)
-    ),
-    receive
-        {transfer_reconnect_drain_cast, SessionPid} ->
-            ?assert(false, unexpected_transfer_reconnect_drain)
-    after 200 ->
-        ok
-    end,
-    SessionPid ! stop.
 
 handoff_to_topology_reports_failed_remote_transfer_test() ->
     TestPid = self(),
@@ -122,30 +157,7 @@ handoff_to_topology_reports_failed_remote_transfer_test() ->
     end,
     SessionPid ! stop.
 
-push_state_rpc_timeout_does_not_drain_session_test() ->
-    TestPid = self(),
-    SessionId = <<"session-push-timeout">>,
-    TransferState = #{token_hash => utils:hash_token(<<"tok">>), seq => 3},
-    SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to('nonexistent@127.0.0.1', State)
-    ),
-    receive
-        {transfer_reconnect_drain_cast, SessionPid} ->
-            ?assert(false, session_was_drained_despite_push_failure)
-    after 300 ->
-        ok
-    end,
-    ?assert(is_process_alive(SessionPid)),
-    SessionPid ! stop.
-
-broadcast_transfer_to_success_drains_session_test() ->
+push_and_drain_session_success_drains_session_test() ->
     with_session_state_transfer(fun() ->
         TestPid = self(),
         SessionId = <<"session-push-ok">>,
@@ -155,14 +167,9 @@ broadcast_transfer_to_success_drains_session_test() ->
             socket_pid => undefined
         },
         SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-        State = #{
-            sessions => #{
-                SessionId => {SessionPid, make_ref()}
-            }
-        },
         ?assertEqual(
-            1,
-            session_manager_shard_drain:broadcast_transfer_to(node(), State)
+            ok,
+            session_manager_shard_drain:push_and_drain_session(node(), SessionId, SessionPid)
         ),
         receive
             {transfer_reconnect_drain_cast, SessionPid} -> ok
@@ -178,14 +185,9 @@ export_state_failure_does_not_drain_session_test() ->
     TestPid = self(),
     SessionId = <<"session-export-fail">>,
     SessionPid = spawn(fun() -> export_failing_session_loop(TestPid) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to(node(), State)
+    ?assertMatch(
+        {error, _},
+        session_manager_shard_drain:push_and_drain_session(node(), SessionId, SessionPid)
     ),
     receive
         {transfer_reconnect_drain_cast, SessionPid} ->
@@ -227,6 +229,40 @@ build_session_data_normalizes_current_user_for_ready_test() ->
     ?assertEqual(null, maps:get(<<"global_name">>, UserData)),
     ?assertEqual(1, maps:get(<<"mention_flags">>, UserData)),
     ?assertEqual(false, maps:get(<<"is_staff">>, UserData)).
+
+build_session_data_stores_the_geoip_country_code_test() ->
+    UserDataMap = #{
+        <<"id">> => <<"123">>,
+        <<"username">> => <<"tester">>,
+        <<"discriminator">> => <<"0001">>,
+        <<"avatar">> => null,
+        <<"flags">> => 0
+    },
+    IdentifyData = #{properties => #{}, token => <<"token">>, presence => null},
+    Data = fun(CountryCode) ->
+        #{
+            <<"guilds">> => [],
+            <<"user">> => UserDataMap,
+            <<"user_settings">> => null,
+            <<"geoip_country_code">> => CountryCode
+        }
+    end,
+    CountryCode = fun(Value) ->
+        maps:get(
+            geoip_country_code, build_test_session_data(Data(Value), IdentifyData, UserDataMap)
+        )
+    end,
+    ?assertEqual(<<"SE">>, CountryCode(<<"SE">>)),
+    ?assertEqual(undefined, CountryCode(null)),
+    ?assertEqual(
+        undefined,
+        maps:get(
+            geoip_country_code,
+            build_test_session_data(
+                maps:remove(<<"geoip_country_code">>, Data(null)), IdentifyData, UserDataMap
+            )
+        )
+    ).
 
 build_session_data_filters_guilds_for_identify_shard_test() ->
     Guild0 = guild_id_for_shard(0, 4, 0),

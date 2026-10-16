@@ -17,6 +17,8 @@ interface ChannelPermissionsSidebarProps {
 	selectedOverwriteId: string | null;
 	canManageChannels: boolean;
 	canManageRoles: boolean;
+	canManageOverwrites: boolean;
+	onDeleteOverwrite: (overwriteId: string) => void;
 	isAddOverrideOpen: boolean;
 	setIsAddOverrideOpen: (open: boolean) => void;
 	existingOverwriteIds: Set<string>;
@@ -40,6 +42,8 @@ export const ChannelPermissionsSidebar: React.FC<ChannelPermissionsSidebarProps>
 	selectedOverwriteId,
 	canManageChannels,
 	canManageRoles,
+	canManageOverwrites,
+	onDeleteOverwrite,
 	isAddOverrideOpen,
 	setIsAddOverrideOpen,
 	existingOverwriteIds,
@@ -136,6 +140,8 @@ export const ChannelPermissionsSidebar: React.FC<ChannelPermissionsSidebarProps>
 							roleId={roleId}
 							isSelected={isSelected}
 							isEveryone={isEveryone}
+							canDelete={canManageOverwrites && !isEveryone}
+							onDelete={onDeleteOverwrite}
 							onClick={() => onSelectOverwrite(overwrite.id)}
 							guildId={guildId}
 							data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.overwrite-item.set-selected-overwrite-id"

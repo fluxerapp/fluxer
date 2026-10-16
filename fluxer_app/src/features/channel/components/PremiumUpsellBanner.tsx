@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/channel/components/PremiumUpsellBanner.module.css';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import DismissedUpsell from '@app/features/premium/state/DismissedUpsell';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {PlutoniumUpsell} from '@app/features/ui/plutonium_upsell/PlutoniumUpsell';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -66,7 +66,7 @@ export const PremiumUpsellBanner = observer(
 					<p className={styles.text} data-flx="channel.premium-upsell-banner.text">
 						{message ??
 							children ??
-							i18n._(PREMIUM_EMOJI_STICKER_UPSELL_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							i18n._(PREMIUM_EMOJI_STICKER_UPSELL_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 					</p>
 					{renderedCommunityIds.length > 0 && (
 						<div className={styles.communityRow} data-flx="channel.premium-upsell-banner.community-row">

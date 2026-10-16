@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {CompactAuthorPrefix, CompactMessageLayout} from '@app/features/channel/components/CompactMessageLayout';
 import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
@@ -33,7 +33,7 @@ export const UnknownMessage = observer(() => {
 	const formattedDate = DateUtils.getRelativeDateString(message.timestamp, i18n);
 	const guild = Guilds.getGuild(channel.guildId ?? '');
 	const member = GuildMembers.getMember(guild?.id ?? '', author?.id ?? '');
-	const updateMessage = i18n._(UPDATE_PRODUCT_TO_VIEW_MESSAGE_DESCRIPTOR, {productName: PRODUCT_NAME});
+	const updateMessage = i18n._(UPDATE_PRODUCT_TO_VIEW_MESSAGE_DESCRIPTOR, {productName: RuntimeConfig.productName});
 	if (messageDisplayCompact) {
 		return (
 			<CompactMessageLayout

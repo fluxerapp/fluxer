@@ -1,0 +1,47 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.methodChoiceLink {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 2.25rem;
+	padding: 0.4375rem 0.75rem;
+	box-sizing: border-box;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	background-color: var(--form-surface-background);
+	color: var(--button-secondary-text);
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.125rem;
+	text-align: center;
+	text-decoration: none;
+}
+
+.methodChoiceLink:hover {
+	text-decoration: none;
+}
+
+:global(.theme-light) .methodChoiceLink {
+	color: var(--button-ghost-text);
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.methodChoiceLink:hover {
+	background-color: color-mix(in srgb, var(--form-surface-background) 94%, var(--text-primary) 6%);
+	border-color: color-mix(in srgb, var(--background-modifier-accent) 88%, var(--text-tertiary) 12%);
+	color: var(--button-secondary-text);
+}
+
+:global(.theme-light:where(.window-focused, .unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.methodChoiceLink:hover {
+	color: var(--button-ghost-text);
+}
+
+.methodChoiceLink svg {
+	flex: 0 0 auto;
+}

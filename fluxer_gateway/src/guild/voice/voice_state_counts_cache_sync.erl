@@ -159,7 +159,7 @@ maybe_put_live_voice_state(FallbackConnId, DefaultChanId, VoiceState, Acc) ->
         VoiceState,
         maps:get(connection_id, VoiceState, FallbackConnId)
     ),
-    ConnectionId = normalize_optional_binary(RawConnId),
+    ConnectionId = guild_voice_connection_normalize:normalize_optional_binary(RawConnId),
     case ConnectionId of
         undefined ->
             Acc;
@@ -175,7 +175,7 @@ maybe_put_default_channel_id(VoiceState, DefaultChannelId) ->
         VoiceState,
         maps:get(channel_id, VoiceState, undefined)
     ),
-    case normalize_optional_binary(ExistingId) of
+    case guild_voice_connection_normalize:normalize_optional_binary(ExistingId) of
         undefined ->
             apply_default_channel_id(VoiceState, DefaultChannelId);
         ChannelId ->
@@ -184,26 +184,10 @@ maybe_put_default_channel_id(VoiceState, DefaultChannelId) ->
 
 -spec apply_default_channel_id(voice_state(), term()) -> voice_state().
 apply_default_channel_id(VoiceState, DefaultChannelId) ->
-    case normalize_optional_binary(DefaultChannelId) of
+    case guild_voice_connection_normalize:normalize_optional_binary(DefaultChannelId) of
         undefined -> VoiceState;
         ChannelId -> VoiceState#{<<"channel_id">> => ChannelId}
     end.
-
--spec normalize_optional_binary(term()) -> binary() | undefined.
-normalize_optional_binary(undefined) ->
-    undefined;
-normalize_optional_binary(null) ->
-    undefined;
-normalize_optional_binary(Value) when is_binary(Value), byte_size(Value) > 0 ->
-    Value;
-normalize_optional_binary(Value) when is_binary(Value) ->
-    undefined;
-normalize_optional_binary(Value) when is_integer(Value) ->
-    integer_to_binary(Value);
-normalize_optional_binary(Value) when is_list(Value) ->
-    guild_voice_connection_normalize:normalize_optional_binary(Value);
-normalize_optional_binary(_) ->
-    undefined.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

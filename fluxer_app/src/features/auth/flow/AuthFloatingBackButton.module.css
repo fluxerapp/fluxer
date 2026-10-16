@@ -1,0 +1,45 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.floatingBackButton {
+	position: absolute;
+	z-index: 2;
+	top: 0.875rem;
+	left: 0.875rem;
+	display: inline-flex;
+	width: 2.25rem;
+	height: 2.25rem;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+	border-radius: var(--radius-full);
+	background-color: color-mix(in srgb, var(--background-secondary) 88%, transparent);
+	color: var(--text-secondary);
+	cursor: pointer;
+	outline: none;
+	transition:
+		background-color 120ms ease,
+		border-color 120ms ease,
+		color 120ms ease,
+		transform 120ms ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.floatingBackButton:hover {
+	border-color: color-mix(in srgb, var(--text-primary) 26%, transparent);
+	background-color: color-mix(in srgb, var(--background-modifier-hover) 72%, var(--background-secondary));
+	color: var(--text-primary);
+	transform: translateY(-0.0625rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.floatingBackButton {
+		transition: none;
+	}
+
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.floatingBackButton:hover {
+		transform: none;
+	}
+}

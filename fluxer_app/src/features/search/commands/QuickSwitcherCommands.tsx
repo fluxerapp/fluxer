@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {goToMessage, parseMessagePath} from '@app/features/messaging/utils/MessageNavigator';
@@ -9,13 +10,11 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import type {QuickSwitcherExecutableResult} from '@app/features/search/state/QuickSwitcherTypes';
+import {QUICK_SWITCHER_OVERLAY_ID} from '@app/features/search/state/QuickSwitcherTypes';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-
-const QUICK_SWITCHER_MODAL_KEY = 'nav_quick_switcher';
 
 export function hide(): void {
 	QuickSwitcher.hide();
@@ -55,9 +54,7 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 				break;
 			}
 			case QuickSwitcherResultTypes.TEXT_CHANNEL: {
-				if (result.viewContext === FAVORITES_GUILD_ID) {
-					NavigationCommands.selectChannel(FAVORITES_GUILD_ID, result.channel.id);
-				} else if (result.guild) {
+				if (result.guild) {
 					NavigationCommands.selectChannel(result.guild.id, result.channel.id);
 				} else {
 					NavigationCommands.selectChannel(ME, result.channel.id);
@@ -66,9 +63,7 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 				break;
 			}
 			case QuickSwitcherResultTypes.VOICE_CHANNEL: {
-				if (result.viewContext === FAVORITES_GUILD_ID) {
-					NavigationCommands.selectChannel(FAVORITES_GUILD_ID, result.channel.id);
-				} else if (result.guild) {
+				if (result.guild) {
 					NavigationCommands.selectChannel(result.guild.id, result.channel.id);
 				}
 				break;
@@ -92,13 +87,16 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 				const initialTab = result.settingsTab.type;
 				const initialSubtab = result.settingsSubtab?.type;
 				ModalCommands.push(
-					modal(() => (
-						<UserSettingsModal
-							initialTab={initialTab}
-							initialSubtab={initialSubtab}
-							data-flx="search.quick-switcher-commands.switch-to.user-settings-modal"
-						/>
-					)),
+					modal(
+						() => (
+							<UserSettingsModal
+								initialTab={initialTab}
+								initialSubtab={initialSubtab}
+								data-flx="search.quick-switcher-commands.switch-to.user-settings-modal"
+							/>
+						),
+						'user-settings',
+					),
 				);
 				break;
 			}
@@ -124,5 +122,5 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 }
 
 export function getModalKey(): string {
-	return QUICK_SWITCHER_MODAL_KEY;
+	return QUICK_SWITCHER_OVERLAY_ID;
 }

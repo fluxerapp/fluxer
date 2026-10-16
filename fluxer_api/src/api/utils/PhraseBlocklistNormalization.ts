@@ -11,11 +11,11 @@ const WHITESPACE_REGEX = /\s+/gu;
 const MIN_AGGRESSIVE_FORM_LENGTH = 3;
 
 interface PhraseMatchForms {
-	raw: string;
-	words: string;
-	compact: string;
-	asciiWords: string;
-	asciiCompact: string;
+	readonly raw: string;
+	readonly words: string;
+	readonly compact: string;
+	readonly asciiWords: string;
+	readonly asciiCompact: string;
 }
 
 function collapseWhitespace(value: string): string {
@@ -46,21 +46,50 @@ function buildAsciiWordFormFromCanonical(value: string): string {
 	);
 }
 
+class LazyPhraseMatchForms implements PhraseMatchForms {
+	readonly raw: string;
+	private wordsForm: string | null = null;
+	private compactForm: string | null = null;
+	private asciiWordsForm: string | null = null;
+	private asciiCompactForm: string | null = null;
+
+	constructor(value: string) {
+		this.raw = canonicalizeStoredPhrase(value);
+	}
+
+	get words(): string {
+		if (this.wordsForm === null) {
+			this.wordsForm = maybeKeepAggressiveForm(buildWordFormFromCanonical(this.raw));
+		}
+		return this.wordsForm;
+	}
+
+	get compact(): string {
+		if (this.compactForm === null) {
+			this.compactForm = maybeKeepAggressiveForm(this.words.replace(WHITESPACE_REGEX, ''));
+		}
+		return this.compactForm;
+	}
+
+	get asciiWords(): string {
+		if (this.asciiWordsForm === null) {
+			this.asciiWordsForm = maybeKeepAggressiveForm(buildAsciiWordFormFromCanonical(this.raw));
+		}
+		return this.asciiWordsForm;
+	}
+
+	get asciiCompact(): string {
+		if (this.asciiCompactForm === null) {
+			this.asciiCompactForm = maybeKeepAggressiveForm(this.asciiWords.replace(WHITESPACE_REGEX, ''));
+		}
+		return this.asciiCompactForm;
+	}
+}
+
 export function canonicalizeStoredPhrase(value: string): string {
 	return stripIgnorableCharacters(value.normalize('NFKC')).toLowerCase().trim();
 }
 
 export function buildPhraseMatchForms(value: string): PhraseMatchForms {
-	const raw = canonicalizeStoredPhrase(value);
-	const words = maybeKeepAggressiveForm(buildWordFormFromCanonical(raw));
-	const compact = maybeKeepAggressiveForm(words.replace(WHITESPACE_REGEX, ''));
-	const asciiWords = maybeKeepAggressiveForm(buildAsciiWordFormFromCanonical(raw));
-	const asciiCompact = maybeKeepAggressiveForm(asciiWords.replace(WHITESPACE_REGEX, ''));
-	return {
-		raw,
-		words,
-		compact,
-		asciiWords,
-		asciiCompact,
-	};
+	return new LazyPhraseMatchForms(value);
 }

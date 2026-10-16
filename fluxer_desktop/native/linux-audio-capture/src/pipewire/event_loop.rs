@@ -2,7 +2,7 @@
 
 #![allow(dead_code)]
 
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use pipewire as pw;
@@ -28,9 +28,7 @@ use super::routing::{
     DirectRoutingState, RoutingState, clear_pinned_capture_targets, recompute_direct_links,
     recompute_routing, refresh_direct_sink_input_ports,
 };
-use super::stream_ops::{
-    BuildDirectStreamArgs, DirectStreamRuntime, ScreenAudioSinkSlot, build_direct_stream,
-};
+use super::stream_ops::{BuildDirectStreamArgs, DirectStreamRuntime, build_direct_stream};
 
 pub(crate) enum BridgeCommand {
     Apply(RoutingRule),
@@ -271,9 +269,7 @@ fn ensure_or_promote_direct_stream(core: &pw::core::CoreRc, runtime: &DirectStre
         samples: runtime.samples.clone(),
         target_sink_name: &runtime.sink_node_name,
         stream_node_name: &runtime.stream_node_name,
-        last_push_ns: runtime.last_push_ns.clone(),
         clock: runtime.clock.clone(),
-        screen_audio_sink: runtime.screen_audio_sink.clone(),
     };
     match build_direct_stream(args) {
         Ok((stream, listener)) => {
@@ -293,9 +289,7 @@ pub(crate) struct DirectWorkerInputs {
     pub(crate) owned_link_snapshot: Arc<Mutex<Vec<LinkKey>>>,
     pub(crate) running: Arc<AtomicBool>,
     pub(crate) sink_node_name: String,
-    pub(crate) last_push_ns: Arc<AtomicU64>,
     pub(crate) clock: Arc<dyn MonotonicClock>,
-    pub(crate) screen_audio_sink: ScreenAudioSinkSlot,
 }
 
 fn build_direct_runtime(inputs: &DirectWorkerInputs) -> std::rc::Rc<DirectStreamRuntime> {
@@ -310,9 +304,7 @@ fn build_direct_runtime(inputs: &DirectWorkerInputs) -> std::rc::Rc<DirectStream
         running: inputs.running.clone(),
         sink_node_name: inputs.sink_node_name.clone(),
         stream_node_name,
-        last_push_ns: inputs.last_push_ns.clone(),
         clock: inputs.clock.clone(),
-        screen_audio_sink: inputs.screen_audio_sink.clone(),
     })
 }
 

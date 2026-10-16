@@ -1,0 +1,188 @@
+diff --git a/lib/rules/no-conditional-text-nodes-with-siblings.js b/lib/rules/no-conditional-text-nodes-with-siblings.js
+index b8d1c57eabd898b1e9bef7ae0da62c9c789df478..1a4daed2faebeb43cc90d661fd8a92cc58bc68c6 100644
+--- a/lib/rules/no-conditional-text-nodes-with-siblings.js
++++ b/lib/rules/no-conditional-text-nodes-with-siblings.js
+@@ -6,6 +6,8 @@
+ 
+ const { ESLintUtils } = require('@typescript-eslint/utils');
+ 
++const DEFAULT_IGNORE_PARENTS = ['Trans', 'Plural', 'Select', 'SelectOrdinal'];
++
+ /** @type {import('eslint').Rule.RuleModule} */
+ module.exports = {
+   meta: {
+@@ -15,7 +17,19 @@ module.exports = {
+         'Conditionally rendered text nodes should be wrapped in an element (for example, a `<span>`), otherwise Google Translate can cause a browser error.',
+       url: 'https://github.com/getcouped/eslint-plugin-react-google-translate#eslint-plugin-react-google-translate',
+     },
+-    schema: [],
++    schema: [
++      {
++        type: 'object',
++        properties: {
++          ignoreParents: {
++            type: 'array',
++            items: { type: 'string' },
++            uniqueItems: true,
++          },
++        },
++        additionalProperties: false,
++      },
++    ],
+     messages: {
+       'conditional-text-node':
+         'Conditionally rendered text nodes with siblings (elements or nodes), when rendered as a direct child of a JSX element, should be wrapped in an element (for example, a `<span>`) to prevent Google Translate causing a browser error while manipulating the DOM. This also applies to return values from functions, so `getString()` should become `<span>{getString()}</span>`.',
+@@ -25,6 +39,45 @@ module.exports = {
+   },
+ 
+   create(context) {
++    const ignoreParents =
++      (context.options &&
++        context.options[0] &&
++        context.options[0].ignoreParents) ||
++      DEFAULT_IGNORE_PARENTS;
++
++    function getJSXElementName(node) {
++      const name = node.openingElement && node.openingElement.name;
++      if (!name) return null;
++      if (name.type === 'JSXIdentifier') return name.name;
++      if (name.type === 'JSXMemberExpression' && name.property) {
++        return name.property.name;
++      }
++      if (name.type === 'JSXNamespacedName' && name.name) {
++        return name.name.name;
++      }
++      return null;
++    }
++
++    function hasIgnoredAncestor(node) {
++      if (ignoreParents.length === 0) return false;
++      let current = node;
++      while (current) {
++        if (
++          current.type === 'JSXElement' &&
++          ignoreParents.includes(getJSXElementName(current))
++        ) {
++          return true;
++        }
++        current = current.parent;
++      }
++      return false;
++    }
++
++    function report(descriptor) {
++      if (hasIgnoredAncestor(descriptor.node)) return;
++      context.report(descriptor);
++    }
++
+     // when type checking is unavailable, `parserServices` will be `null`
+     let parserServices = null;
+     let checker = null;
+@@ -193,7 +246,7 @@ module.exports = {
+           !isWhitespace(node) &&
+           isProblematicConditional(node)
+         ) {
+-          context.report({
++          report({
+             node,
+             messageId: 'conditional-text-node',
+           });
+@@ -203,7 +256,7 @@ module.exports = {
+       // expressions
+       TemplateLiteral(node) {
+         if (!isWhitespace(node) && isProblematicConditional(node)) {
+-          context.report({
++          report({
+             node,
+             messageId: 'conditional-text-node',
+           });
+@@ -216,7 +269,7 @@ module.exports = {
+           hasSiblings(node) &&
+           conditionalSiblingsPrecedeNode(node)
+         ) {
+-          context.report({
++          report({
+             node,
+             messageId: 'text-node-preceded-by-conditional',
+           });
+@@ -230,7 +283,7 @@ module.exports = {
+             isProblematicConditional(node) &&
+             returnsStringifiableValue(node)
+           ) {
+-            context.report({
++            report({
+               node,
+               messageId: 'conditional-text-node',
+             });
+@@ -241,7 +294,7 @@ module.exports = {
+             conditionalSiblingsPrecedeNode(node.parent) &&
+             returnsStringifiableValue(node)
+           ) {
+-            context.report({
++            report({
+               node,
+               messageId: 'text-node-preceded-by-conditional',
+             });
+@@ -254,7 +307,7 @@ module.exports = {
+           node.arguments.length > 0 &&
+           isProblematicConditional(node)
+         ) {
+-          context.report({
++          report({
+             node,
+             messageId: 'conditional-text-node',
+           });
+@@ -267,7 +320,7 @@ module.exports = {
+           hasSiblings(node.parent) &&
+           conditionalSiblingsPrecedeNode(node.parent)
+         ) {
+-          context.report({
++          report({
+             node,
+             messageId: 'text-node-preceded-by-conditional',
+           });
+@@ -279,7 +332,7 @@ module.exports = {
+           return;
+         }
+         if (isProblematicConditional(node)) {
+-          context.report({
++          report({
+             node,
+             messageId: 'conditional-text-node',
+           });
+@@ -291,7 +344,7 @@ module.exports = {
+           return;
+         }
+         if (isProblematicConditional(node)) {
+-          context.report({
++          report({
+             node,
+             messageId: 'conditional-text-node',
+           });
+@@ -306,7 +359,7 @@ module.exports = {
+             isProblematicConditional(node) &&
+             returnsStringifiableValue(node)
+           ) {
+-            context.report({
++            report({
+               node,
+               messageId: 'conditional-text-node',
+             });
+@@ -317,7 +370,7 @@ module.exports = {
+             conditionalSiblingsPrecedeNode(node.parent) &&
+             returnsStringifiableValue(node)
+           ) {
+-            context.report({
++            report({
+               node,
+               messageId: 'text-node-preceded-by-conditional',
+             });
+@@ -332,7 +385,7 @@ module.exports = {
+         ) {
+           const callExpression = getCallExpression(node);
+           if (callExpression && isProblematicConditional(callExpression)) {
+-            context.report({
++            report({
+               node: callExpression,
+               messageId: 'conditional-text-node',
+             });

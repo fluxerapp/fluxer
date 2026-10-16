@@ -24,8 +24,10 @@
 		-Server
 	}
 
-	@hashed path /assets/*
-	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	header @health {
+		defer
+		Cache-Control "no-store"
+	}
 
 	file_server
 }

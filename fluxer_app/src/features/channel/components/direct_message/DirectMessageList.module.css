@@ -88,10 +88,9 @@
 	font-family: var(--font-keybind);
 }
 
-.theme-light .dmListHeaderShortcut kbd {
-	border-color: hsla(0, 0%, 100%, 0.15);
+:global(.theme-light) .dmListHeaderShortcut kbd {
 	background-color: hsl(220, calc(13% * var(--saturation-factor)), 18.44%);
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	box-shadow: 0 0.0625rem 0 rgba(0, 0, 0, 0.4);
 }
 
@@ -108,7 +107,7 @@
 
 .mobileHeader {
 	display: flex;
-	min-height: 3.5rem;
+	min-height: var(--dm-sidebar-mobile-header-height);
 	flex-shrink: 0;
 	align-items: center;
 	justify-content: space-between;
@@ -281,7 +280,7 @@
 
 .clickableItemSelected .clickableItemIcon {
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -290,11 +289,6 @@
 		background-color: var(--surface-interactive-hover-bg);
 		color: var(--text-primary);
 	}
-}
-
-.clickableItemPressed:not(.clickableItemSelected) {
-	background-color: var(--surface-interactive-hover-bg);
-	color: var(--text-primary);
 }
 
 .clickableItemSelected {
@@ -316,16 +310,10 @@
 	gap: 0.75rem;
 }
 
-.callIcon {
-	height: 1rem;
-	width: 1rem;
-	color: white;
-}
-
 .sendIcon {
 	height: 1.5rem;
 	width: 1.5rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .clickableItemText {
@@ -391,11 +379,6 @@
 
 .dmCreateButton:disabled:hover {
 	color: var(--text-primary-muted);
-}
-
-.dmCreateButtonActive {
-	composes: dmCreateButton;
-	color: var(--text-primary);
 }
 
 .dmChannelList {
@@ -634,17 +617,6 @@
 	color: var(--surface-interactive-selected-color);
 }
 
-.dmItemCallBadge {
-	display: flex;
-	height: 1.5rem;
-	width: 1.5rem;
-	flex-shrink: 0;
-	align-items: center;
-	justify-content: center;
-	border-radius: var(--radius-full);
-	background-color: var(--status-online);
-}
-
 .dmItemCloseButton {
 	display: flex;
 	height: 1.5rem;
@@ -709,11 +681,6 @@
 	color: var(--text-primary);
 }
 
-.dmItemPressed:not(.dmItemSelected) {
-	background-color: var(--surface-interactive-hover-bg);
-	color: var(--text-primary);
-}
-
 .contextMenuActive {
 	background-color: var(--surface-interactive-hover-bg);
 	color: var(--text-primary);
@@ -758,7 +725,7 @@
 
 .mobileSpecialButtonSelected .mobileSpecialButtonIcon {
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .mobileSpecialButtonText {

@@ -1,8 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {SudoVerificationBody} from '@app/api/auth/services/SudoVerificationService';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createApplicationID, createChannelID, createGuildID, createRoleID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {resolveProtectedBitActor, stripThreadPermissionBits} from '@app/api/guild/services/ThreadPermissionBits';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {ApplicationService} from '@app/api/oauth/ApplicationService';
+import type {BotAuthService} from '@app/api/oauth/BotAuthService';
+import {
+	findBotUser,
+	mapApplicationToResponse,
+	mapBotProfileToResponse,
+	mapBotTokenResetResponse,
+	mapBotUserToResponse,
+} from '@app/api/oauth/OAuth2Mappers';
+import {filterOAuth2Scopes, parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
+import type {OAuth2Service} from '@app/api/oauth/OAuth2Service';
+import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
+import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
+import {ALL_PERMISSIONS} from '@fluxer/constants/src/ChannelConstants';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
+import {THREAD_AWARE_ALL_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidPermissionsIntegerError} from '@fluxer/errors/src/domains/core/InvalidPermissionsIntegerError';
 import {InvalidPermissionsNegativeError} from '@fluxer/errors/src/domains/core/InvalidPermissionsNegativeError';
@@ -33,26 +62,6 @@ import type {
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import type {Context} from 'hono';
-import type {z} from 'zod';
-import type {ApiContext} from '../ApiContext';
-import type {SudoVerificationBody} from '../auth/services/SudoVerificationService';
-import {requireSudoMode} from '../auth/services/SudoVerificationService';
-import {createApplicationID, createChannelID, createGuildID, createRoleID, type UserID} from '../BrandedTypes';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildService} from '../guild/services/GuildService';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import {mapUserToOAuthResponse, mapUserToPartialResponse} from '../user/UserMappers';
-import {verifyPassword} from '../utils/PasswordUtils';
-import type {ApplicationService} from './ApplicationService';
-import {ApplicationNotOwnedError} from './ApplicationService';
-import type {BotAuthService} from './BotAuthService';
-import {mapApplicationToResponse, mapBotTokenResetResponse, mapBotUserToResponse} from './OAuth2Mappers';
-import {filterOAuth2Scopes} from './OAuth2ScopeUtils';
-import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from './OAuth2Service';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from './repositories/IOAuth2TokenRepository';
-import {parseClientCredentials} from './utils/ParseClientCredentials';
 
 const COMPAT_VERIFY_KEY_PLACEHOLDER = '0'.repeat(64);
 
@@ -60,21 +69,17 @@ export class OAuth2RequestService {
 	constructor(
 		private readonly apiContext: ApiContext,
 		private readonly oauth2Service: OAuth2Service,
-		private readonly applicationRepository: IApplicationRepository,
-		private readonly oauth2TokenRepository: IOAuth2TokenRepository,
+		private readonly applicationRepository: ApplicationRepository,
+		private readonly oauth2TokenRepository: OAuth2TokenRepository,
 		private readonly botAuthService: BotAuthService,
 		private readonly applicationService: ApplicationService,
 		private readonly guildService: GuildService,
 		private readonly channelService: ChannelService,
 	) {}
 
-	async tokenExchange(params: {
-		form: z.infer<typeof TokenRequest>;
-		authorizationHeader?: string;
-		logPrefix: string;
-	}): Promise<OAuth2TokenResponse> {
+	async tokenExchange(params: {form: TokenRequest; authorizationHeader?: string}): Promise<OAuth2TokenResponse> {
 		try {
-			const {form, authorizationHeader, logPrefix} = params;
+			const {form, authorizationHeader} = params;
 			const hasAuthHeader = !!authorizationHeader;
 			const isAuthorizationCodeRequest = form.grant_type === 'authorization_code';
 			const isRefreshRequest = form.grant_type === 'refresh_token';
@@ -87,7 +92,7 @@ export class OAuth2RequestService {
 					refresh_token_len: isRefreshRequest ? form.refresh_token.length : undefined,
 					auth_header_basic: hasAuthHeader && /^Basic\s+/i.test(authorizationHeader ?? ''),
 				},
-				`${logPrefix} token request received`,
+				'OAuth2 token request received',
 			);
 			if (form.grant_type === 'authorization_code') {
 				const response = await this.oauth2Service.tokenExchange({
@@ -111,7 +116,7 @@ export class OAuth2RequestService {
 			return this.requireTokenResponseFields(response);
 		} catch (err: unknown) {
 			if (err instanceof InvalidGrantError) {
-				Logger.warn({error: (err as Error).message}, `${params.logPrefix} token request failed`);
+				Logger.warn({error: (err as Error).message}, 'OAuth2 token request failed');
 			}
 			throw err;
 		}
@@ -130,9 +135,9 @@ export class OAuth2RequestService {
 		token_type: string;
 		expires_in: number;
 		scope?: string;
-		refresh_token?: string;
+		refresh_token: string;
 	}): OAuth2TokenResponse {
-		if (!response.refresh_token || !response.scope) {
+		if (!response.scope) {
 			throw new InvalidGrantError();
 		}
 		return {
@@ -144,7 +149,7 @@ export class OAuth2RequestService {
 		};
 	}
 
-	async revoke(params: {form: z.infer<typeof RevokeRequestForm>; authorizationHeader?: string}): Promise<void> {
+	async revoke(params: {form: RevokeRequestForm; authorizationHeader?: string}): Promise<void> {
 		const {clientId: clientIdStr, clientSecret: secret} = parseClientCredentials(
 			params.authorizationHeader,
 			params.form.client_id,
@@ -160,7 +165,7 @@ export class OAuth2RequestService {
 	}
 
 	async introspect(params: {
-		form: z.infer<typeof IntrospectRequestForm>;
+		form: IntrospectRequestForm;
 		authorizationHeader?: string;
 	}): Promise<OAuth2IntrospectResponse> {
 		const {clientId: clientIdStr, clientSecret: secret} = parseClientCredentials(
@@ -182,19 +187,18 @@ export class OAuth2RequestService {
 				throw new InvalidClientError();
 			}
 		}
-		return this.oauth2Service.introspect(params.form.token, {
-			clientId: applicationId,
-			clientSecret: secret,
-		});
+		return this.oauth2Service.introspect(params.form.token, applicationId);
 	}
 
 	async authorizeConsent(params: {
-		body: z.infer<typeof AuthorizeConsentRequest>;
+		body: AuthorizeConsentRequest;
 		userId: UserID;
+		clientFeatures: ReadonlySet<string>;
+		viewer: ThreadViewer;
 		requestCache: RequestCache;
 	}): Promise<OAuth2ConsentResponse> {
 		const scopeStr = params.body.scope;
-		const scopeSet = new Set(scopeStr.split(/[\s+]+/).filter(Boolean));
+		const scopeSet = new Set(parseOAuth2Scope(scopeStr));
 		const isBotOnly = scopeSet.size === 1 && scopeSet.has('bot');
 		const responseType = params.body.response_type ?? (isBotOnly ? undefined : 'code');
 		const guildId = params.body.guild_id ? createGuildID(params.body.guild_id) : null;
@@ -202,6 +206,7 @@ export class OAuth2RequestService {
 		if (guildId && channelId) {
 			throw InputValidationError.create('channel_id', 'channel_id cannot be used with guild_id');
 		}
+		const botPermissionMask = guildId ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
 		let requestedPermissions: bigint | null = null;
 		if (params.body.permissions !== undefined) {
 			try {
@@ -212,7 +217,17 @@ export class OAuth2RequestService {
 			if (requestedPermissions < 0) {
 				throw new InvalidPermissionsNegativeError();
 			}
-			requestedPermissions = normalizeBotInvitePermissions(requestedPermissions);
+			requestedPermissions = normalizeBotInvitePermissions(requestedPermissions, botPermissionMask);
+			if (guildId && botPermissionMask !== ALL_PERMISSIONS) {
+				const actor = await resolveProtectedBitActor({
+					guildId,
+					userId: params.userId,
+					clientFeatures: params.clientFeatures,
+					viewer: params.viewer,
+					isBot: async () => false,
+				});
+				if (!actor.threadBits?.writer) requestedPermissions = stripThreadPermissionBits(requestedPermissions);
+			}
 		}
 		if (!isBotOnly && responseType !== 'code') {
 			throw new InvalidResponseTypeForNonBotError();
@@ -227,7 +242,6 @@ export class OAuth2RequestService {
 			state: params.body.state ?? undefined,
 			codeChallenge: params.body.code_challenge,
 			codeChallengeMethod: params.body.code_challenge_method as 'S256' | 'plain' | undefined,
-			responseType: responseType as 'code' | undefined,
 			userId: params.userId,
 		});
 		const authCode = (() => {
@@ -242,7 +256,7 @@ export class OAuth2RequestService {
 			try {
 				const applicationId = createApplicationID(BigInt(params.body.client_id));
 				const application = await this.applicationRepository.getApplication(applicationId);
-				if (!application || !application.botUserId) {
+				if (!application?.botUserId) {
 					throw new NotABotApplicationError();
 				}
 				const botUserId = application.botUserId;
@@ -253,8 +267,10 @@ export class OAuth2RequestService {
 					});
 					if (
 						!canAuthorizeBotInvite({
-							userPermissions,
+							userPermissions:
+								botPermissionMask === ALL_PERMISSIONS ? userPermissions : withImplicitThreadBits(userPermissions),
 							requestedPermissions,
+							mask: botPermissionMask,
 						})
 					) {
 						throw new MissingPermissionsError();
@@ -277,6 +293,7 @@ export class OAuth2RequestService {
 						guildId,
 						skipGuildLimitCheck: true,
 						skipBanCheck: true,
+						skipAccountLimitCheck: true,
 						joinSourceType: JoinSourceTypes.BOT_INVITE,
 						inviterId: params.userId,
 						requestCache: params.requestCache,
@@ -315,7 +332,10 @@ export class OAuth2RequestService {
 				throw err;
 			}
 		}
-		Logger.info({redirectTo}, 'OAuth2 consent: returning redirect URL');
+		Logger.info(
+			{clientId: params.body.client_id.toString(), userId: params.userId.toString()},
+			'OAuth2 consent: returning redirect URL',
+		);
 		return {redirect_to: redirectTo};
 	}
 
@@ -348,11 +368,12 @@ export class OAuth2RequestService {
 				scopes,
 				expires: expiresAt.toISOString(),
 			};
-			if (tokenData.userId && tokenData.scope.has('identify')) {
-				const user = await this.apiContext.services.users.findUnique(tokenData.userId);
-				if (user) {
-					response.user = mapUserToOAuthResponse(user, {includeEmail: tokenData.scope.has('email')});
-				}
+			const user = await this.apiContext.services.users.findUnique(tokenData.userId);
+			if (user && isSignInRefused(user)) {
+				throw new InvalidTokenError();
+			}
+			if (user && tokenData.scope.has('identify')) {
+				response.user = mapUserToOAuthResponse(user, {includeEmail: tokenData.scope.has('email')});
 			}
 			return response;
 		} catch (err) {
@@ -368,13 +389,10 @@ export class OAuth2RequestService {
 		if (!application) {
 			throw new UnknownApplicationError();
 		}
-		let botUser = null;
-		if (application.hasBotUser() && application.getBotUserId()) {
-			botUser = await this.apiContext.services.users.findUnique(application.getBotUserId()!);
-		}
+		const botUser = await findBotUser(this.apiContext.services.users, application);
 		const requestingUser = requestingUserId ? await this.apiContext.services.users.findUnique(requestingUserId) : null;
 		const scopes: Array<string> = [];
-		if (application.hasBotUser()) {
+		if (application.botUserId !== null) {
 			scopes.push('bot');
 		}
 		const isOwner = requestingUserId !== undefined && requestingUserId === application.ownerUserId;
@@ -386,7 +404,7 @@ export class OAuth2RequestService {
 			redirect_uris: Array.from(application.oauth2RedirectUris),
 			scopes,
 			bot_public: application.botIsPublic || isOwner,
-			bot: botUser ? mapBotUserToResponse(botUser) : null,
+			bot: botUser ? mapBotProfileToResponse(botUser) : null,
 			current_user: requestingUser ? mapUserToPartialResponse(requestingUser) : null,
 		};
 	}
@@ -412,10 +430,7 @@ export class OAuth2RequestService {
 		if (!owner) {
 			throw new InvalidTokenError();
 		}
-		const botUser =
-			application.hasBotUser() && application.getBotUserId()
-				? await this.apiContext.services.users.findUnique(application.getBotUserId()!)
-				: null;
+		const botUser = await findBotUser(this.apiContext.services.users, application);
 		const response: ApplicationsMeResponse = {
 			id: application.applicationId.toString(),
 			name: application.name,
@@ -440,29 +455,19 @@ export class OAuth2RequestService {
 		applicationId: bigint;
 	}): Promise<BotTokenResetResponse> {
 		await requireSudoMode(params.ctx, params.ctx.get('user'), params.body);
-		try {
-			const {token} = await this.applicationService.rotateBotToken(
-				params.userId,
-				createApplicationID(params.applicationId),
-			);
-			const application = await this.applicationRepository.getApplication(createApplicationID(params.applicationId));
-			if (!application || !application.botUserId) {
-				throw new BotUserNotFoundError();
-			}
-			const botUser = await this.apiContext.services.users.findUnique(application.botUserId);
-			if (!botUser) {
-				throw new BotUserNotFoundError();
-			}
-			return mapBotTokenResetResponse(botUser, token);
-		} catch (err) {
-			if (err instanceof ApplicationNotOwnedError) {
-				throw new AccessDeniedError();
-			}
-			if (err instanceof InvalidClientError || err instanceof UnknownApplicationError) {
-				throw new UnknownApplicationError();
-			}
-			throw err;
+		const {token} = await this.applicationService.rotateBotToken(
+			params.userId,
+			createApplicationID(params.applicationId),
+		);
+		const application = await this.applicationRepository.getApplication(createApplicationID(params.applicationId));
+		if (!application?.botUserId) {
+			throw new BotUserNotFoundError();
 		}
+		const botUser = await this.apiContext.services.users.findUnique(application.botUserId);
+		if (!botUser) {
+			throw new BotUserNotFoundError();
+		}
+		return mapBotTokenResetResponse(botUser, token);
 	}
 
 	async resetClientSecret(params: {
@@ -472,25 +477,15 @@ export class OAuth2RequestService {
 		applicationId: bigint;
 	}): Promise<ApplicationResponse> {
 		await requireSudoMode(params.ctx, params.ctx.get('user'), params.body);
-		try {
-			const {clientSecret} = await this.applicationService.rotateClientSecret(
-				params.userId,
-				createApplicationID(params.applicationId),
-			);
-			const application = await this.applicationRepository.getApplication(createApplicationID(params.applicationId));
-			if (!application) {
-				throw new UnknownApplicationError();
-			}
-			return mapApplicationToResponse(application, {clientSecret});
-		} catch (err) {
-			if (err instanceof ApplicationNotOwnedError) {
-				throw new AccessDeniedError();
-			}
-			if (err instanceof InvalidClientError || err instanceof UnknownApplicationError) {
-				throw new UnknownApplicationError();
-			}
-			throw err;
+		const {clientSecret} = await this.applicationService.rotateClientSecret(
+			params.userId,
+			createApplicationID(params.applicationId),
+		);
+		const application = await this.applicationRepository.getApplication(createApplicationID(params.applicationId));
+		if (!application) {
+			throw new UnknownApplicationError();
 		}
+		return mapApplicationToResponse(application, {clientSecret});
 	}
 
 	async listAuthorizations(userId: UserID) {
@@ -525,10 +520,7 @@ export class OAuth2RequestService {
 				if (application) {
 					const nonBotScopes = new Set(filterOAuth2Scopes(token.scope).filter((s) => s !== 'bot'));
 					if (nonBotScopes.size > 0) {
-						let botUser = null;
-						if (application.hasBotUser() && application.getBotUserId()) {
-							botUser = await this.apiContext.services.users.findUnique(application.getBotUserId()!);
-						}
+						const botUser = await findBotUser(this.apiContext.services.users, application);
 						appMap.set(appIdStr, {
 							applicationId: appIdStr,
 							scopes: nonBotScopes,

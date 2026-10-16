@@ -19,25 +19,30 @@ import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
 import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
-import Initialization from '@app/features/app/state/Initialization';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
-import Authentication from '@app/features/auth/state/Authentication';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
+import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
+import {attachExternalLinkInterceptor} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
+import SessionManager from '@app/features/platform/state/AuthSession';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ensureAutostartDefaultEnabled} from '@app/features/platform/utils/Autostart';
 import {startDesktopJumpListBridge} from '@app/features/platform/utils/DesktopJumpListBridge';
 import {startDesktopLocaleBridge} from '@app/features/platform/utils/DesktopLocaleBridge';
 import {PremiumCheckoutReturnWatcher} from '@app/features/premium/components/PremiumCheckoutReturnWatcher';
 import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_switcher/QuickSwitcherConstants';
 import {useCustomThemeStyle} from '@app/features/theme/hooks/useCustomThemeStyle';
+import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import WindowsFont from '@app/features/theme/state/WindowsFont';
 import {useThemeStudioBroadcast} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
@@ -47,28 +52,20 @@ import {getActivePortalHost, setActivePortalHost} from '@app/features/ui/overlay
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
-import {
-	getDesktopWindowBehaviorSettings,
-	setDesktopWindowBehaviorSettings,
-} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {attachExternalLinkInterceptor, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import {
-	FIRST_CLICK_PASSTHROUGH_WHEN_UNFOCUSED_CLASS,
-	UNFOCUSED_FULLY_INTERACTIVE_CLASS,
-} from '@app/features/ui/utils/WindowFocusInteractionGuard';
+import {getDesktopWindowBehaviorSettings} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
+import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {UNFOCUSED_FULLY_INTERACTIVE_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {IncomingCallManager} from '@app/features/voice/components/IncomingCallManager';
 import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useElectronScreenSharePicker} from '@app/features/voice/hooks/useElectronScreenSharePicker';
 import {startScreenSharePiPController} from '@app/features/voice/state/ScreenSharePiPController';
-import {startMediaDeviceStartupPreload} from '@app/features/voice/utils/MediaDeviceStartupPreload';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
 import {useStopFlashFrameOnFocus} from '@app/features/window/hooks/useStopFlashFrameOnFocus';
 import {useWindowEventListeners} from '@app/features/window/hooks/useWindowEventListeners';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {I18nProvider} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import {IconContext} from '@phosphor-icons/react';
 import {reaction} from 'mobx';
@@ -80,15 +77,24 @@ const SKIP_TO_CONTENT_DESCRIPTOR = msg({
 	comment: 'Accessible skip-link label for keyboard users.',
 });
 
+const logger = new Logger('App');
+
 interface AppWrapperProps {
 	children: ReactNode;
+}
+
+function getInstanceThemeColor(): string | null {
+	const snapshot = RuntimeConfig.getSnapshotOrNull();
+	if (snapshot === null || !(DeveloperOptions.selfHostedModeOverride || snapshot.features.self_hosted)) {
+		return null;
+	}
+	return snapshot.appPublic.branding.theme_color ?? null;
 }
 
 export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	const {i18n} = useLingui();
 	const reducedMotion = Accessibility.useReducedMotion;
 	const stayInteractiveWhenUnfocused = Accessibility.stayInteractiveWhenUnfocused;
-	const firstClickPassThroughWhenUnfocused = Accessibility.firstClickPassThroughWhenUnfocused;
 	const {platform, isNative} = useNativePlatform();
 	const useSystemTitleBar = useNativeTitleBar();
 	const messageDisplayCompact = UserSettings.getMessageDisplayCompact();
@@ -98,9 +104,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		() => ({variant: layoutVariant, setVariant: setLayoutVariant}),
 		[layoutVariant],
 	);
-	const popouts = Popout.getPopouts();
-	const topPopout = popouts.length ? popouts[popouts.length - 1] : null;
-	const topPopoutRequiresBackdrop = Boolean(topPopout && !topPopout.disableBackdrop);
+	const topPopoutRequiresBackdrop = Popout.requiresBackdrop();
 	const hasBlockingModal = Modal.hasModalOpen();
 	const room = MediaEngine.room;
 	const ringsContainerRef = useRef<HTMLDivElement>(null);
@@ -127,20 +131,31 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		}, []),
 	);
 	const handleSkipLinkFocus = useTabKeyFocusGuard();
-	const isSplashScreenActive =
-		Authentication.isAuthenticated &&
-		!DeveloperOptions.bypassSplashScreen &&
-		(GatewayConnection.isConnectionInterrupted || !Initialization.canNavigateToProtectedRoutes);
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
-	useInertBackground(overlayScopeRef, isSplashScreenActive);
 	useEffect(() => {
 		showMyselfTypingHelper.start();
 		return () => showMyselfTypingHelper.stop();
 	}, []);
+	useEffect(() => {
+		let active = true;
+		void SessionManager.initialize()
+			.then(() => {
+				if (active) {
+					GatewaySessions.startRestoredSession();
+				}
+			})
+			.catch((error: unknown) => {
+				logger.error('Failed to initialize the restored gateway session', error);
+			});
+		return () => {
+			active = false;
+			GatewaySessions.dispose();
+		};
+	}, []);
 	useEffect(
 		() =>
 			reaction(
-				() => GatewayConnection.sessionId,
+				() => GatewaySessions.foregroundConnection.sessionId,
 				(sessionId) => MemberSidebar.synchronizeGatewaySession(sessionId),
 				{fireImmediately: true},
 			),
@@ -163,20 +178,16 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		};
 	}, []);
 	useEffect(() => startScreenSharePiPController(), []);
-	useEffect(() => startMediaDeviceStartupPreload(), []);
 	useServiceWorkerBadge();
 	useKeybindManager(i18n);
 	useDesktopElectronBridges();
 	useDocumentClassToggle('reduced-motion', reducedMotion);
 	useDocumentClassToggle('mobile-layout', MobileLayout.platformMobileDetected || MobileLayout.enabled);
 	useDocumentClassToggle(UNFOCUSED_FULLY_INTERACTIVE_CLASS, stayInteractiveWhenUnfocused);
-	useDocumentClassToggle(FIRST_CLICK_PASSTHROUGH_WHEN_UNFOCUSED_CLASS, firstClickPassThroughWhenUnfocused);
-	useEffect(() => {
-		if (!isNative) return;
-		void setDesktopWindowBehaviorSettings({firstClickPassThroughWhenUnfocused});
-	}, [isNative, firstClickPassThroughWhenUnfocused]);
+	useDocumentClassToggle('windows-fluxer-sans', WindowsFont.useFluxerSans);
 	useDesktopAllowTransparency(isNative);
-	useWindowEventListeners({preventDocumentScroll: !isNative});
+	useWindowEventListeners();
+	useRemScaleTracking();
 	usePlatformClasses(platform, isNative);
 	useThemeCssVariables({
 		effectiveTheme: Theme.effectiveTheme,
@@ -188,6 +199,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		messageGutter: Accessibility.messageGutter,
 		messageGroupSpacing: Accessibility.getMessageGroupSpacingValue(messageDisplayCompact),
 		hdrDisplayMode: Accessibility.hdrDisplayMode,
+		instanceThemeColor: getInstanceThemeColor(),
 	});
 	useCustomThemeStyle({
 		enabledThemeCss: ThemeLibrary.activeThemeCss,
@@ -257,7 +269,7 @@ export const App = observer((): React.ReactElement => {
 		return () => detach?.();
 	}, []);
 	return (
-		<I18nProvider i18n={i18n}>
+		<AppI18nProvider i18n={i18n}>
 			<IconContext.Provider value={{color: 'currentColor', weight: 'fill'}}>
 				<PremiumCheckoutReturnWatcher data-flx="app.app.premium-checkout-return-watcher" />
 				<DndContext data-flx="app.app.dnd-context">
@@ -268,6 +280,6 @@ export const App = observer((): React.ReactElement => {
 					</RouterProvider>
 				</DndContext>
 			</IconContext.Provider>
-		</I18nProvider>
+		</AppI18nProvider>
 	);
 });

@@ -8,7 +8,7 @@ const logger = new Logger('SoftwareEncoderWarning');
 const NEVER_SHOW_AGAIN_KEY = 'SoftwareEncoderWarning_neverShowAgain';
 
 interface EncoderInfo {
-	codec: string;
+	codec: string | null;
 	implementation: string;
 	source: 'encoder' | 'decoder';
 }
@@ -33,7 +33,7 @@ class SoftwareEncoderWarning {
 		logger.info('Software encoder warning triggered', {codec, implementation});
 	}
 
-	triggerDecoderWarning(codec: string, implementation: string): void {
+	triggerDecoderWarning(codec: string | null, implementation: string): void {
 		if (this.neverShowAgain) {
 			logger.debug('Software decoder warning suppressed by user preference', {codec, implementation});
 			return;

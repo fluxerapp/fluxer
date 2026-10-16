@@ -1,29 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import {execFileSync} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
 import * as fs from 'node:fs';
+import {createRequire} from 'node:module';
 import * as path from 'node:path';
-import type {OpenAPIDocument} from '@fluxer/openapi/src/Types';
-import prettier from 'prettier';
-export type WritableOpenAPISpec = OpenAPIDocument | Record<string, unknown>;
-async function formatSpec(spec: WritableOpenAPISpec, outputPath?: string): Promise<string> {
-	const prettierConfig = outputPath ? await prettier.resolveConfig(outputPath) : null;
-	return prettier.format(JSON.stringify(spec), {
-		...prettierConfig,
-		filepath: outputPath,
-		parser: 'json',
-	});
+import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
+export type WritableOpenAPISpec = OpenAPIDocument;
+const require = createRequire(import.meta.url);
+function formatSpec(spec: WritableOpenAPISpec): string {
+	return execFileSync(
+		process.execPath,
+		[
+			require.resolve('@biomejs/biome/bin/biome'),
+			'format',
+			'--stdin-file-path',
+			path.join(import.meta.dirname, 'openapi.json'),
+			'--files-max-size=16777216',
+		],
+		{input: JSON.stringify(spec), encoding: 'utf-8', maxBuffer: 16777216},
+	);
 }
-export async function writeSpec(spec: WritableOpenAPISpec, outputPath: string): Promise<void> {
+export function writeSpec(spec: WritableOpenAPISpec, outputPath: string): void {
 	const dir = path.dirname(outputPath);
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, {recursive: true});
 	}
-	const tempPath = `${outputPath}.tmp`;
-	fs.writeFileSync(tempPath, await formatSpec(spec, outputPath), 'utf-8');
-	fs.renameSync(tempPath, outputPath);
+	const formatted = formatSpec(spec);
+	const tempPath = `${outputPath}.${randomUUID()}.tmp`;
+	try {
+		fs.writeFileSync(tempPath, formatted, {encoding: 'utf-8', flag: 'wx'});
+		fs.renameSync(tempPath, outputPath);
+	} finally {
+		fs.rmSync(tempPath, {force: true});
+	}
 }
-export function readSpec(inputPath: string): OpenAPIDocument {
+export function readSpec(inputPath: string): unknown {
 	const content = fs.readFileSync(inputPath, 'utf-8');
-	return JSON.parse(content) as OpenAPIDocument;
+	return JSON.parse(content);
 }
 export function getApiPackageOutputPath(basePath: string): string {
 	return path.join(basePath, 'fluxer_api', 'src', 'api', 'openapi', 'openapi.json');

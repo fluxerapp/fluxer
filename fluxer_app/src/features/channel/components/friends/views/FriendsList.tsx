@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	reportSkeletonFriendsRowCount,
+	SkeletonFriendsTab,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {EmptyStateView} from '@app/features/channel/components/friends/EmptyStateView';
 import {FriendListItem} from '@app/features/channel/components/friends/FriendListItem';
 import {ListSection} from '@app/features/channel/components/friends/FriendsListSection';
@@ -16,6 +20,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useEffect} from 'react';
 
 const THIS_FRIENDS_LIST_NEEDS_MORE_POWER_DESCRIPTOR = msg({
 	message: 'This friends list needs more power',
@@ -65,7 +70,7 @@ export const FriendsList: React.FC<FriendsListProps> = observer(({showOnlineOnly
 			return true;
 		}
 		const user = Users.getUser(userId);
-		const nickname = user ? NicknameUtils.getNickname(user) : '';
+		const nickname = user ? NicknameUtils.getNickname(user, null) : '';
 		const username = user?.username ?? '';
 		return `${nickname} ${username}`.toLowerCase().includes(normalizedQuery);
 	};
@@ -79,8 +84,15 @@ export const FriendsList: React.FC<FriendsListProps> = observer(({showOnlineOnly
 		const userA = Users.getUser(a);
 		const userB = Users.getUser(b);
 		if (!userA || !userB) return 0;
-		return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+		return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 	});
+	const reportedTab = showOnlineOnly ? SkeletonFriendsTab.ONLINE : SkeletonFriendsTab.ALL;
+	useEffect(() => {
+		if (hasSearch) {
+			return;
+		}
+		reportSkeletonFriendsRowCount(reportedTab, visibleFriends.length);
+	}, [hasSearch, reportedTab, visibleFriends.length]);
 	if (friendIds.length === 0) {
 		return (
 			<EmptyStateView

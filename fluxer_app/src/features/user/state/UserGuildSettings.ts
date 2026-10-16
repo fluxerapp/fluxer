@@ -4,6 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
+import {resolveUnreadInboxVisibility} from '@app/features/user/state/UnreadInboxVisibility';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
@@ -24,9 +25,10 @@ export interface ChannelOverride {
 		end_time?: string;
 	} | null;
 	unread_badges?: number | null;
+	flags?: number;
 }
 
-interface GuildSettings {
+interface StoredGuildSettings {
 	guild_id: string;
 	suppress_everyone: boolean;
 	suppress_roles: boolean;
@@ -62,7 +64,7 @@ export interface GatewayGuildSettings {
 	unread_badges?: number | null;
 }
 
-const DEFAULT_GUILD_SETTINGS: Omit<GuildSettings, 'guild_id'> = {
+const DEFAULT_GUILD_SETTINGS: Omit<StoredGuildSettings, 'guild_id'> = {
 	suppress_everyone: false,
 	suppress_roles: false,
 	mute_scheduled_events: false,
@@ -94,7 +96,7 @@ function parseEndTime(end_time?: string): number | null {
 	return Number.isFinite(ms) ? ms : null;
 }
 
-function isMuted(config: {
+function isMuteActive(config: {
 	muted?: boolean;
 	mute_config?: {
 		end_time?: string;
@@ -113,8 +115,8 @@ interface UnreadInboxReadState {
 }
 
 class UserGuildSettings {
-	private readonly guildSettings = observable.map<GuildId, GuildSettings>();
-	private readonly mutedChannels = observable.map<GuildId, Set<ChannelId>>();
+	private readonly guildSettings = observable.map<GuildId, StoredGuildSettings>();
+	private readonly mutedChannelsByGuild = observable.map<GuildId, Set<ChannelId>>();
 	updateCounter = 0;
 	private readonly pendingGuildUpdates = new Set<GuildId | null>();
 	private readonly guildMuteTimers = new Map<GuildId, NodeJS.Timeout>();
@@ -126,8 +128,7 @@ class UserGuildSettings {
 			version: computed,
 			updateGuildSettings: action,
 			updateChannelOverride: action,
-			updateChannelOverrides: action,
-			handleConnectionOpen: action,
+			handleGatewayReady: action,
 			notifyChange: action,
 		});
 	}
@@ -148,7 +149,7 @@ class UserGuildSettings {
 		this.pendingGuildUpdates.add(guildId as GuildId | null);
 	}
 
-	private getDefaultSettings(guildId: string): GuildSettings {
+	private getDefaultSettings(guildId: string): StoredGuildSettings {
 		return {
 			...DEFAULT_GUILD_SETTINGS,
 			guild_id: guildId,
@@ -158,12 +159,12 @@ class UserGuildSettings {
 		};
 	}
 
-	private getStoredSettings(guildId: string | null): GuildSettings | undefined {
+	private getStoredSettings(guildId: string | null): StoredGuildSettings | undefined {
 		const key = this.storageKeyFor(guildId);
 		return this.guildSettings.get(key as GuildId);
 	}
 
-	private ensureGuildSettings(guildId: string | null): GuildSettings {
+	private ensureGuildSettings(guildId: string | null): StoredGuildSettings {
 		const key = this.storageKeyFor(guildId);
 		let settings = this.getStoredSettings(key);
 		if (settings == null) {
@@ -173,12 +174,12 @@ class UserGuildSettings {
 		return settings;
 	}
 
-	getGuildSettings(guildId: string | null): GuildSettings {
+	getGuildSettings(guildId: string | null): StoredGuildSettings {
 		const key = this.storageKeyFor(guildId);
 		return this.getStoredSettings(key) ?? this.getDefaultSettings(key);
 	}
 
-	getSettings(guildId: string | null): GuildSettings {
+	getSettingsForScope(guildId: string | null): StoredGuildSettings {
 		return this.getGuildSettings(guildId);
 	}
 
@@ -207,17 +208,17 @@ class UserGuildSettings {
 		return result as Record<ChannelId, ChannelOverride>;
 	}
 
-	private updateMutedChannelsCache(guildId: string, settings: GuildSettings): void {
+	private updateMutedChannelsCache(guildId: string, settings: StoredGuildSettings): void {
 		const set = new Set<ChannelId>();
 		for (const [channelId, override] of Object.entries(settings.channel_overrides)) {
-			if (isMuted(override)) {
+			if (isMuteActive(override)) {
 				set.add(channelId as ChannelId);
 			}
 		}
 		if (set.size > 0) {
-			this.mutedChannels.set(guildId as GuildId, set);
+			this.mutedChannelsByGuild.set(guildId as GuildId, set);
 		} else {
-			this.mutedChannels.delete(guildId as GuildId);
+			this.mutedChannelsByGuild.delete(guildId as GuildId);
 		}
 	}
 
@@ -250,7 +251,7 @@ class UserGuildSettings {
 		}
 	}
 
-	private setupMuteTimers(guildId: string, settings: GuildSettings): void {
+	private setupMuteTimers(guildId: string, settings: StoredGuildSettings): void {
 		this.clearGuildMuteTimer(guildId);
 		this.clearGuildChannelTimers(guildId);
 		if (settings.muted && settings.mute_config?.end_time) {
@@ -286,7 +287,7 @@ class UserGuildSettings {
 		}
 	}
 
-	private sanitizeGuildMute(settings: GuildSettings): GuildSettings {
+	private sanitizeGuildMute(settings: StoredGuildSettings): StoredGuildSettings {
 		if (!settings.muted) return settings;
 		const endMs = parseEndTime(settings.mute_config?.end_time);
 		if (endMs != null && endMs <= Date.now()) {
@@ -295,7 +296,7 @@ class UserGuildSettings {
 		return settings;
 	}
 
-	private sanitizeChannelMutes(settings: GuildSettings): GuildSettings {
+	private sanitizeChannelMutes(settings: StoredGuildSettings): StoredGuildSettings {
 		let changed = false;
 		const overrides: Record<string, ChannelOverride> = {...settings.channel_overrides};
 		for (const [channelId, override] of Object.entries(overrides)) {
@@ -313,7 +314,7 @@ class UserGuildSettings {
 		const key = this.storageKeyFor(guildId);
 		const existing = this.ensureGuildSettings(key);
 		const overridesInput = 'channel_overrides' in updates ? updates.channel_overrides : existing.channel_overrides;
-		const merged: GuildSettings = {
+		const merged: StoredGuildSettings = {
 			...existing,
 			...updates,
 			guild_id: key,
@@ -332,7 +333,7 @@ class UserGuildSettings {
 		const settings = this.ensureGuildSettings(key);
 		const existing = settings.channel_overrides[channelId as ChannelId] ?? DEFAULT_CHANNEL_OVERRIDE(channelId);
 		const updated = {...existing, ...updates, channel_id: channelId};
-		const next: GuildSettings = {
+		const next: StoredGuildSettings = {
 			...settings,
 			channel_overrides: {...settings.channel_overrides, [channelId]: updated} as Record<ChannelId, ChannelOverride>,
 		};
@@ -344,41 +345,16 @@ class UserGuildSettings {
 		this.notifyChange();
 	}
 
-	updateChannelOverrides(guildId: string | null, overrides: Record<ChannelId, Partial<ChannelOverride>>): void {
-		const key = this.storageKeyFor(guildId);
-		const settings = this.ensureGuildSettings(key);
-		const nextOverrides: Record<string, ChannelOverride> = {...settings.channel_overrides};
-		for (const [channelId, updates] of Object.entries(overrides)) {
-			const existing = nextOverrides[channelId] ?? DEFAULT_CHANNEL_OVERRIDE(channelId);
-			nextOverrides[channelId] = {...existing, ...updates, channel_id: channelId};
-		}
-		const next: GuildSettings = {...settings, channel_overrides: nextOverrides as Record<ChannelId, ChannelOverride>};
-		const sanitized = this.sanitizeChannelMutes(this.sanitizeGuildMute(next));
-		this.guildSettings.set(key as GuildId, sanitized);
-		this.updateMutedChannelsCache(key, sanitized);
-		this.setupMuteTimers(key, sanitized);
-		this.markGuildUpdated(guildId);
-		this.notifyChange();
-	}
-
-	isSuppressEveryoneEnabled(guildId: string | null): boolean {
+	isEveryoneMentionSuppressed(guildId: string | null): boolean {
 		return guildId != null && this.getGuildSettings(guildId).suppress_everyone;
 	}
 
-	isSuppressRolesEnabled(guildId: string | null): boolean {
+	isRoleMentionSuppressed(guildId: string | null): boolean {
 		return guildId != null && this.getGuildSettings(guildId).suppress_roles;
 	}
 
-	isMuteScheduledEventsEnabled(guildId: string | null): boolean {
-		return guildId != null && this.getGuildSettings(guildId).mute_scheduled_events;
-	}
-
-	isMobilePushEnabled(guildId: string | null): boolean {
-		return guildId == null || this.getGuildSettings(guildId).mobile_push;
-	}
-
-	isMuted(guildId: string | null): boolean {
-		return isMuted(this.getGuildSettings(guildId));
+	isWholeGuildMuted(guildId: string | null): boolean {
+		return isMuteActive(this.getGuildSettings(guildId));
 	}
 
 	getGuildMessageNotifications(guildId: string | null): number {
@@ -400,66 +376,59 @@ class UserGuildSettings {
 		return settings.message_notifications;
 	}
 
-	getGuildIds(): Array<GuildId> {
-		return Array.from(this.guildSettings.keys());
-	}
-
-	getStoredGuildMessageNotifications(guildId: string): number {
-		return this.getGuildSettings(guildId).message_notifications;
-	}
-
-	getChannelOverrides(guildId: string | null): Record<ChannelId, ChannelOverride> {
-		return this.getGuildSettings(guildId).channel_overrides;
-	}
-
 	getChannelOverride(guildId: string | null, channelId: string): ChannelOverride | undefined {
 		return this.getGuildSettings(guildId).channel_overrides[channelId as ChannelId];
 	}
 
-	getChannelMessageNotifications(guildId: string | null, channelId: string): number {
+	getChannelNotificationLevel(guildId: string | null, channelId: string): number {
 		return (
 			this.getGuildSettings(guildId).channel_overrides[channelId as ChannelId]?.message_notifications ??
 			MessageNotifications.NULL
 		);
 	}
 
-	isChannelMuted(guildId: string | null, channelId: string): boolean {
+	isChannelDirectlyMuted(guildId: string | null, channelId: string): boolean {
 		const override = this.getGuildSettings(guildId).channel_overrides[channelId as ChannelId];
-		return override != null && isMuted(override);
+		return override != null && isMuteActive(override);
 	}
 
-	isCategoryMuted(guildId: string | null, channelId: string): boolean {
+	isParentCategoryMuted(guildId: string | null, channelId: string): boolean {
 		if (guildId == null) return false;
 		const channel = Channels.getChannel(channelId);
-		return channel?.parentId != null && this.isChannelMuted(guildId, channel.parentId);
+		return channel?.parentId != null && this.isChannelDirectlyMuted(guildId, channel.parentId);
 	}
 
-	isGuildOrCategoryOrChannelMuted(guildId: string | null, channelId: string): boolean {
-		return this.isMuted(guildId) || this.isCategoryMuted(guildId, channelId) || this.isChannelMuted(guildId, channelId);
+	isMutedAtAnyLevel(guildId: string | null, channelId: string): boolean {
+		return (
+			this.isWholeGuildMuted(guildId) ||
+			this.isParentCategoryMuted(guildId, channelId) ||
+			this.isChannelDirectlyMuted(guildId, channelId)
+		);
 	}
 
 	isGuildOrChannelMuted(guildId: string | null, channelId: string): boolean {
-		return this.isMuted(guildId) || this.isChannelMuted(guildId, channelId);
+		return this.isWholeGuildMuted(guildId) || this.isChannelDirectlyMuted(guildId, channelId);
 	}
 
 	isCategoryOrChannelMuted(guildId: string | null, channelId: string): boolean {
-		return this.isCategoryMuted(guildId, channelId) || this.isChannelMuted(guildId, channelId);
+		return this.isParentCategoryMuted(guildId, channelId) || this.isChannelDirectlyMuted(guildId, channelId);
 	}
 
-	getMutedChannels(guildId: string): Set<ChannelId> {
-		return new Set(this.mutedChannels.get(guildId as GuildId) ?? []);
-	}
-
-	isChannelCollapsed(guildId: string | null, channelId: string): boolean {
+	isChannelSectionCollapsed(guildId: string | null, channelId: string): boolean {
 		return this.getChannelOverride(guildId, channelId)?.collapsed ?? false;
 	}
 
-	resolvedMessageNotifications(channel: {id: string; guildId?: string; parentId?: string; type: number}): number {
+	resolveEffectiveMessageNotifications(channel: {
+		id: string;
+		guildId?: string;
+		parentId?: string;
+		type: number;
+	}): number {
 		const guildId = channel.guildId ?? null;
-		const direct = this.getChannelMessageNotifications(guildId, channel.id);
+		const direct = this.getChannelNotificationLevel(guildId, channel.id);
 		if (direct !== MessageNotifications.NULL && direct !== MessageNotifications.INHERIT) return direct;
 		if (channel.parentId != null && guildId != null) {
-			const parent = this.getChannelMessageNotifications(guildId, channel.parentId);
+			const parent = this.getChannelNotificationLevel(guildId, channel.parentId);
 			if (parent !== MessageNotifications.NULL && parent !== MessageNotifications.INHERIT) return parent;
 		}
 		return this.getGuildMessageNotifications(guildId);
@@ -479,18 +448,10 @@ class UserGuildSettings {
 
 	private getLockedCommunityUnreadBadgesLevel(guildId: string | null): number | null {
 		if (guildId == null) return null;
-		if (this.isMuted(guildId)) return MessageNotifications.NO_MESSAGES;
+		if (this.isWholeGuildMuted(guildId)) return MessageNotifications.NO_MESSAGES;
 		const notificationLevel = this.getGuildMessageNotifications(guildId);
 		if (notificationLevel === MessageNotifications.ALL_MESSAGES) return MessageNotifications.ALL_MESSAGES;
 		if (notificationLevel === MessageNotifications.NO_MESSAGES) return MessageNotifications.NO_MESSAGES;
-		return null;
-	}
-
-	getCommunityUnreadBadgesLevel(guildId: string | null): number | null {
-		const lockedLevel = this.getLockedCommunityUnreadBadgesLevel(guildId);
-		if (lockedLevel != null) return lockedLevel;
-		const guildLevel = this.getGuildUnreadBadgesLevel(guildId);
-		if (isExplicitNotificationLevel(guildLevel)) return guildLevel;
 		return null;
 	}
 
@@ -519,71 +480,38 @@ class UserGuildSettings {
 		return this.resolvedUnreadBadgesLevel(channel);
 	}
 
-	private shouldShowUnreadInboxStateAtLevel(level: number, readState: UnreadInboxReadState): boolean {
-		if (level === MessageNotifications.NO_MESSAGES) return false;
-		if (level === MessageNotifications.ONLY_MENTIONS) return readState.hasMentions;
-		return readState.hasUnread || readState.hasMentions;
-	}
-
 	shouldShowChannelInUnreadInbox(
 		channel: {id: string; guildId?: string; parentId?: string; type: number},
 		readState: UnreadInboxReadState,
 	): boolean {
 		const guildId = channel.guildId ?? null;
-		const level = this.resolvedUnreadBadgesLevel(channel);
-		if (isExplicitNotificationLevel(level)) {
-			return this.shouldShowUnreadInboxStateAtLevel(level, readState);
-		}
-		if (guildId == null) {
-			if (this.isGuildOrChannelMuted(null, channel.id)) return false;
-		} else if (this.isGuildOrCategoryOrChannelMuted(guildId, channel.id)) {
-			return false;
-		}
-		return this.shouldShowUnreadInboxStateAtLevel(this.resolvedMessageNotifications(channel), readState);
+		return resolveUnreadInboxVisibility({
+			unreadBadgesLevel: this.resolvedUnreadBadgesLevel(channel),
+			isMuted: this.isMutedAtAnyLevel(guildId, channel.id),
+			hasUnread: readState.hasUnread,
+			hasMentions: readState.hasMentions,
+		});
 	}
 
-	resolveUnreadSetting(channel: {id: string; guildId?: string; parentId?: string; type: number}): string {
-		const level = this.resolvedMessageNotifications(channel);
-		return level === MessageNotifications.ALL_MESSAGES ? 'all_messages' : 'only_mentions';
-	}
-
-	allowNoMessages(channel: {id: string; guildId?: string; parentId?: string; type: number}): boolean {
+	resolvesToNoMessages(channel: {id: string; guildId?: string; parentId?: string; type: number}): boolean {
 		return (
 			this.isGuildOrChannelMuted(channel.guildId ?? null, channel.id) ||
-			this.resolvedMessageNotifications(channel) === MessageNotifications.NO_MESSAGES
+			this.resolveEffectiveMessageNotifications(channel) === MessageNotifications.NO_MESSAGES
 		);
 	}
 
-	allowAllMessages(channel: {id: string; guildId?: string; parentId?: string; type: number}): boolean {
-		return (
-			!this.isGuildOrChannelMuted(channel.guildId ?? null, channel.id) &&
-			this.resolvedMessageNotifications(channel) === MessageNotifications.ALL_MESSAGES
-		);
-	}
-
-	handleConnectionOpen(userGuildSettings: Array<GatewayGuildSettings>): void {
+	handleGatewayReady(userGuildSettings: Array<GatewayGuildSettings>): void {
 		this.clearAllTimers();
 		this.guildSettings.clear();
-		this.mutedChannels.clear();
+		this.mutedChannelsByGuild.clear();
 		for (const settings of userGuildSettings) {
 			this.updateGuildSettings(settings.guild_id, settings);
 		}
 		this.notifyChange();
 	}
 
-	handleGuildSettingsUpdate(action: {guildId: string; settings: Partial<GatewayGuildSettings>}): void {
-		this.updateGuildSettings(action.guildId, action.settings);
-	}
-
-	handleChannelSettingsUpdate(action: {guildId: string; channelId: string; settings: Partial<ChannelOverride>}): void {
-		this.updateChannelOverride(action.guildId, action.channelId, action.settings);
-	}
-
-	handleBulkChannelSettingsUpdate(action: {
-		guildId: string;
-		overrides: Record<ChannelId, Partial<ChannelOverride>>;
-	}): void {
-		this.updateChannelOverrides(action.guildId, action.overrides);
+	hydrateFromSnapshot(userGuildSettings: ReadonlyArray<GatewayGuildSettings>): void {
+		this.handleGatewayReady([...userGuildSettings]);
 	}
 
 	handleUserGuildSettingsUpdate(data: GatewayGuildSettings): void {

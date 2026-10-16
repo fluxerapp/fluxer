@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_availability_check).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([
@@ -22,10 +26,6 @@
     {unavailable_enabled, boolean()} | unavailable_disabled | no_change.
 
 -export_type([guild_state/0, user_id/0, unavailability_mode/0, transition_result/0]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec get_unavailability_mode_from_state(guild_state()) -> unavailability_mode().
 get_unavailability_mode_from_state(State) ->
@@ -99,7 +99,7 @@ check_session_staff(UserId, SessionData) ->
 
 -spec is_user_staff_from_member(user_id(), guild_state()) -> boolean().
 is_user_staff_from_member(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->

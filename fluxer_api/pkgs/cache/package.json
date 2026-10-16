@@ -7,13 +7,16 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@pkgs/kv_client": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "catalog:ts7",
+		"vitest": "catalog:"
 	}
 }

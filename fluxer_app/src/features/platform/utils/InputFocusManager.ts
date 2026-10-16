@@ -71,11 +71,7 @@ class InputFocusManager {
 	}
 }
 
-export const inputFocusManager = InputFocusManager.getInstance();
-
-export function isInputFocused(excludingElement?: FocusableElementType) {
-	return inputFocusManager.isInputFocused(excludingElement);
-}
+const inputFocusManager = InputFocusManager.getInstance();
 
 export function canFocusTextarea(textareaElement?: FocusableElementType) {
 	return inputFocusManager.canFocusTextarea(textareaElement);

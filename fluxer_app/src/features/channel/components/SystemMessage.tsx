@@ -38,7 +38,7 @@ export const SystemMessage = observer(
 					: DateUtils.getRelativeDateString(message.timestamp, i18n),
 			[messageDisplayCompact, message.timestamp, i18n.locale],
 		);
-		const showReactions = UserSettings.getRenderReactions() && reactions.length > 0;
+		const showReactions = UserSettings.renderReactions && reactions.length > 0;
 		if (messageDisplayCompact) {
 			return (
 				<div

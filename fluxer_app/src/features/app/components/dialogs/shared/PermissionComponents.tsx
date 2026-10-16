@@ -115,21 +115,6 @@ export const PermissionStateButtons: React.FC<{
 		</div>
 	);
 });
-export const PermissionHelpLink: React.FC<{onClick: () => void; children: React.ReactNode}> = ({onClick, children}) => {
-	return (
-		<button
-			type="button"
-			className={styles.permissionHelpLink}
-			onClick={(event) => {
-				event.stopPropagation();
-				onClick();
-			}}
-			data-flx="app.permission-components.permission-help-link.permission-help-link.stop-propagation.button"
-		>
-			{children}
-		</button>
-	);
-};
 const PermissionOverwriteToggle: React.FC<{
 	title: string;
 	description?: string;

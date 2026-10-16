@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	BulkIgnoreFriendRequestsRequest,
@@ -10,16 +17,9 @@ import {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {
 	BulkIgnoreFriendRequestsResponse,
+	RelationshipListResponse,
 	RelationshipResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {z} from 'zod';
-import {createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function UserRelationshipController(app: HonoApp) {
 	app.get(
@@ -30,7 +30,7 @@ export function UserRelationshipController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_user_relationships',
 			summary: 'List user relationships',
-			responseSchema: z.array(RelationshipResponse),
+			responseSchema: RelationshipListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],

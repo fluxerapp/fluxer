@@ -29,6 +29,6 @@ export declare class EvdevHook {
 	stop(): void;
 }
 
-export declare function nameToEvdevKeycode(name: string): number;
+export declare function isKeyboardReadable(): boolean;
 
 export declare const loadError: Error | null;

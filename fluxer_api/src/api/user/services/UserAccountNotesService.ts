@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {UserID} from '../../BrandedTypes';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
 
 interface UserAccountNotesServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	userRelationshipRepository: IUserRelationshipRepository;
+	userAccountRepository: UserRepository;
+
 	updatePropagator: UserAccountUpdatePropagator;
 }
 
@@ -19,12 +18,12 @@ export class UserAccountNotesService {
 		note: string;
 	} | null> {
 		const {userId, targetId} = params;
-		const note = await this.deps.userRelationshipRepository.getUserNote(userId, targetId);
+		const note = await this.deps.userAccountRepository.getUserNote(userId, targetId);
 		return note ? {note: note.note} : null;
 	}
 
 	async getUserNotes(userId: UserID): Promise<Record<string, string>> {
-		const notes = await this.deps.userRelationshipRepository.getUserNotes(userId);
+		const notes = await this.deps.userAccountRepository.getUserNotes(userId);
 		return Object.fromEntries(Array.from(notes.entries()).map(([k, v]) => [k.toString(), v]));
 	}
 
@@ -33,9 +32,9 @@ export class UserAccountNotesService {
 		const targetUser = await this.deps.userAccountRepository.findUnique(targetId);
 		if (!targetUser) throw new UnknownUserError();
 		if (note) {
-			await this.deps.userRelationshipRepository.upsertUserNote(userId, targetId, note);
+			await this.deps.userAccountRepository.upsertUserNote(userId, targetId, note);
 		} else {
-			await this.deps.userRelationshipRepository.clearUserNote(userId, targetId);
+			await this.deps.userAccountRepository.clearUserNote(userId, targetId);
 		}
 		await this.deps.updatePropagator.dispatchUserNoteUpdate({userId, targetId, note: note ?? ''});
 	}

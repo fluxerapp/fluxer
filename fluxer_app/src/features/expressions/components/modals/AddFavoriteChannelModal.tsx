@@ -87,6 +87,7 @@ export const AddFavoriteChannelModal = observer(({categoryId}: {categoryId?: str
 		for (const channel of guildChannels) {
 			if (
 				channel.type !== ChannelTypes.GUILD_TEXT &&
+				channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
 				channel.type !== ChannelTypes.GUILD_VOICE &&
 				channel.type !== ChannelTypes.GUILD_LINK
 			) {

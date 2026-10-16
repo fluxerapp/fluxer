@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {describe, expect, it} from 'vitest';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import type {GuildRow} from '../../database/types/GuildTypes';
-import {Guild} from '../../models/Guild';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {Guild} from '@app/api/models/Guild';
 import {
 	DISQUALIFIED_MUTUAL_GUILD_DM_ACCESS_GUILD_IDS,
 	getMutualGuildsForDmAccess,
 	guildQualifiesForMutualGuildDmAccess,
-} from '../MutualGuildDmAccess';
+} from '@app/api/utils/MutualGuildDmAccess';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {describe, expect, it} from 'vitest';
 
 function createGuild(overrides: Partial<GuildRow> = {}): Guild {
 	return new Guild({
@@ -47,6 +47,7 @@ function createGuild(overrides: Partial<GuildRow> = {}): Guild {
 		audit_logs_indexed_at: null,
 		members_indexed_at: null,
 		message_history_cutoff: null,
+		invites_paused_until: null,
 		version: 1,
 		...overrides,
 	});

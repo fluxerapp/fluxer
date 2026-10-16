@@ -3,11 +3,15 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import guildStyles from '@app/features/app/components/layout/GuildsLayout.module.css';
-import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import styles from '@app/features/app/components/layout/sidebar_nav/GuildListDMItem.module.css';
+import {resolveGuildListIndicatorBarTarget} from '@app/features/app/components/layout/sidebar_nav/GuildListIndicator';
 import {VoiceBadge, type VoiceBadgeActivity} from '@app/features/app/components/layout/sidebar_nav/VoiceBadge';
-import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
+import {
+	type ChannelUnreadState,
+	getChannelUnreadState,
+} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {DMBottomSheet} from '@app/features/channel/components/bottomsheets/DMBottomSheet';
@@ -25,7 +29,6 @@ import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -36,7 +39,6 @@ import {
 	sortVoiceParticipantItemsWithSnapshot,
 } from '@app/features/voice/components/VoiceParticipantSortUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {useVoiceGatewayStateVersion} from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import CallState from '@app/features/voice/state/CallState';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -65,6 +67,17 @@ const ACTIVE_CALL_DESCRIPTOR = msg({
 	message: 'active call',
 	comment: 'Lowercase screen-reader fragment in the sidebar navigation guild list DM item.',
 });
+
+export function resolveDMListItemUnreadState(channelId: string): ChannelUnreadState {
+	return getChannelUnreadState({
+		hasUnread: ReadStates.hasUnread(channelId),
+		unreadCount: ReadStates.getUnreadCount(channelId),
+		mentionCount: ReadStates.getMentionCount(channelId),
+		isMuted: UserGuildSettings.isChannelDirectlyMuted(null, channelId),
+		showFadedUnreadOnMutedChannels: Accessibility.showFadedUnreadOnMutedChannels,
+		unreadBadgesLevel: null,
+	});
+}
 
 interface DMListItemProps {
 	channel: Channel;
@@ -103,30 +116,19 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	recipient,
 }: ResolvedDMListItemProps) {
 	const {i18n} = useLingui();
-	useVoiceGatewayStateVersion();
 	const [hoverRef, isHovering] = useHover();
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const iconRef = useRef<HTMLDivElement | null>(null);
 	const mergedButtonRef = useMergeRefs([hoverRef, buttonRef]);
 	const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 	const isMobileExperience = isMobileExperienceEnabled();
+	const contextMenuOpen = useContextMenuHoverState(buttonRef, !isMobileExperience);
 	const [isFocused, setIsFocused] = useState(false);
 	const {keyboardModeEnabled} = KeyboardMode;
-	const isMuted = UserGuildSettings.isChannelMuted(null, channel.id);
+	const isMuted = UserGuildSettings.isChannelDirectlyMuted(null, channel.id);
 	const mentionCount = ReadStates.getMentionCount(channel.id);
-	const unreadState = getChannelUnreadState({
-		unreadCount: ReadStates.getUnreadCount(channel.id),
-		mentionCount,
-		isMuted,
-		showFadedUnreadOnMutedChannels: Accessibility.showFadedUnreadOnMutedChannels,
-	});
-	const dmScrollSeverity: ScrollIndicatorSeverity | undefined = (() => {
-		if (mentionCount > 0) return 'mention';
-		if (unreadState.shouldShowUnreadIndicator) return 'unread';
-		return undefined;
-	})();
-	const dmScrollId = `dm-${channel.id}`;
-	const directMessageName = recipient ? NicknameUtils.getNickname(recipient) : null;
+	const unreadState = resolveDMListItemUnreadState(channel.id);
+	const directMessageName = recipient ? NicknameUtils.getNickname(recipient, null, channel.id) : null;
 	const computedDisplayName = ChannelUtils.getDMDisplayName(channel);
 	const displayName = isGroupDM ? computedDisplayName : (directMessageName ?? computedDisplayName);
 	const hasActiveCall = CallState.hasActiveCall(channel.id);
@@ -270,12 +272,8 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		},
 		[channel, isGroupDM, recipient, isMobileExperience],
 	);
-	const indicatorHeight =
-		(() => {
-			if (isSelected) return 40;
-			if (isHovering) return 20;
-			return 8;
-		})() * getAppZoomFactor();
+	const shouldShowHoverState = isHovering || contextMenuOpen;
+	const indicatorTarget = resolveGuildListIndicatorBarTarget({isSelected, showHoverState: shouldShowHoverState});
 	const tooltipContent = useMemo<string | (() => React.ReactNode)>(() => {
 		if (!hasVoiceActivity) {
 			return displayName;
@@ -326,7 +324,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 			</div>
 		);
 	}, [channel.id, displayName, hasVoiceActivity, voiceRows]);
-	const showControls = isHovering || (keyboardModeEnabled && isFocused);
+	const showControls = shouldShowHoverState || (keyboardModeEnabled && isFocused);
 	return (
 		<>
 			<Tooltip
@@ -336,10 +334,13 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 				data-flx="app.sidebar-nav.guild-list-dm-item.dm-list-item.tooltip"
 			>
 				<LongPressable
-					className={clsx(guildStyles.dmListItem, className, isMuted && styles.muted)}
+					className={clsx(
+						guildStyles.dmListItem,
+						className,
+						contextMenuOpen && guildStyles.contextMenuHover,
+						isMuted && styles.muted,
+					)}
 					onLongPress={handleLongPress}
-					data-scroll-indicator={dmScrollSeverity}
-					data-scroll-id={dmScrollId}
 					data-flx="app.sidebar-nav.guild-list-dm-item.dm-list-item.muted"
 				>
 					<FocusRing
@@ -372,12 +373,8 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 										<motion.span
 											className={guildStyles.guildIndicatorBar}
 											initial={false}
-											animate={{opacity: 1, scale: 1, height: indicatorHeight}}
-											exit={
-												Accessibility.useReducedMotion
-													? {opacity: 1, scale: 1, height: indicatorHeight}
-													: {opacity: 0, scale: 0, height: 0}
-											}
+											animate={indicatorTarget}
+											exit={Accessibility.useReducedMotion ? indicatorTarget : {opacity: 0, height: 0}}
 											transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: [0.25, 0.1, 0.25, 1]}}
 											data-flx="app.sidebar-nav.guild-list-dm-item.dm-list-item.span"
 										/>

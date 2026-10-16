@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {CANCEL_DESCRIPTOR, KICK_MEMBER_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	KICK_MEMBER_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
-import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
+
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -30,12 +35,12 @@ export const KickMemberModal: React.FC<{guildId: string; targetUser: User}> = ob
 			});
 		} catch (error) {
 			logger.error('Failed to kick member:', error);
-			showModerationErrorModal(
-				i18n,
-				<Trans>Failed to kick member. Try again.</Trans>,
-				'moderation.kick-member-modal.kick-error-modal',
-				true,
-			);
+			showGenericErrorModal({
+				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
+				message: <Trans>Failed to kick member. Try again.</Trans>,
+				dataFlx: 'moderation.kick-member-modal.kick-error-modal',
+				defer: true,
+			});
 		}
 	};
 	return (

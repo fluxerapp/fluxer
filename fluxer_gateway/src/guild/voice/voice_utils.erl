@@ -5,11 +5,8 @@
 
 -export([
     build_voice_token_rpc_request/6,
-    build_voice_token_rpc_request/7,
     build_voice_token_rpc_request/8,
     build_force_disconnect_rpc_request/4,
-    build_list_participants_rpc_request/4,
-    build_update_participant_rpc_request/5,
     build_update_participant_rpc_request/6,
     build_update_participant_permissions_rpc_request/5,
     add_geolocation_to_request/3,
@@ -40,7 +37,21 @@ apply_voice_permissions_to_flags(Flags, VoicePermissions) ->
             false -> true;
             _ -> false
         end,
-    Flags#{suppress => Suppress}.
+    SelfStream =
+        case maps:get(can_stream, VoicePermissions, true) of
+            false -> false;
+            _ -> maps:get(self_stream, Flags, false) =:= true
+        end,
+    SelfVideo =
+        case maps:get(can_video, VoicePermissions, true) of
+            false -> false;
+            _ -> maps:get(self_video, Flags, false) =:= true
+        end,
+    Flags#{
+        suppress => Suppress,
+        self_stream => SelfStream,
+        self_video => SelfVideo
+    }.
 
 -spec build_voice_token_rpc_request(
     integer() | null,
@@ -134,36 +145,6 @@ build_force_disconnect_rpc_request(GuildId, ChannelId, UserId, ConnectionId) ->
             BaseReq#{<<"guild_id">> => integer_to_binary(GuildId)}
     end.
 
--spec build_list_participants_rpc_request(
-    integer() | null, integer(), binary(), binary()
-) -> map().
-build_list_participants_rpc_request(GuildId, ChannelId, RegionId, ServerId) ->
-    BaseReq = #{
-        <<"type">> => <<"voice_list_participants">>,
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"region_id">> => RegionId,
-        <<"server_id">> => ServerId
-    },
-    case GuildId of
-        null ->
-            BaseReq;
-        _ ->
-            BaseReq#{<<"guild_id">> => integer_to_binary(GuildId)}
-    end.
-
--spec build_update_participant_rpc_request(
-    integer() | null, integer(), integer(), boolean(), boolean()
-) -> map().
-build_update_participant_rpc_request(GuildId, ChannelId, UserId, Mute, Deaf) ->
-    build_update_participant_rpc_request(
-        GuildId,
-        ChannelId,
-        UserId,
-        Mute,
-        Deaf,
-        #{can_speak => true, can_stream => true, can_video => true}
-    ).
-
 -spec build_update_participant_rpc_request(
     integer() | null, integer(), integer(), boolean(), boolean(), voice_permissions()
 ) -> map().
@@ -214,10 +195,10 @@ compute_voice_permissions(UserId, ChannelId, State) ->
     SpeakPerm = constants:speak_permission(),
     StreamPerm = constants:stream_permission(),
     AdminPerm = constants:administrator_permission(),
-    IsAdmin = permission_bits:has(Permissions, AdminPerm),
-    CanSpeak = IsAdmin orelse permission_bits:has(Permissions, SpeakPerm),
-    CanStream = IsAdmin orelse permission_bits:has(Permissions, StreamPerm),
-    HasVirtualAccess = guild_virtual_channel_access:has_virtual_access(
+    IsAdmin = bitset:has(Permissions, AdminPerm),
+    CanSpeak = IsAdmin orelse bitset:has(Permissions, SpeakPerm),
+    CanStream = IsAdmin orelse bitset:has(Permissions, StreamPerm),
+    HasVirtualAccess = guild_virtual_channel_access:has_voice_access(
         UserId, ChannelId, State
     ),
     FinalCanSpeak = CanSpeak orelse HasVirtualAccess,
@@ -227,22 +208,6 @@ compute_voice_permissions(UserId, ChannelId, State) ->
         can_stream => FinalCanStream,
         can_video => FinalCanStream
     }.
-
--spec build_voice_token_rpc_request(
-    integer() | null,
-    integer(),
-    integer(),
-    binary() | integer() | null,
-    coordinate_input(),
-    coordinate_input(),
-    voice_permissions()
-) -> map().
-build_voice_token_rpc_request(
-    GuildId, ChannelId, UserId, ConnectionId, Latitude, Longitude, VoicePermissions
-) ->
-    build_voice_token_rpc_request(
-        GuildId, ChannelId, UserId, ConnectionId, Latitude, Longitude, VoicePermissions, null
-    ).
 
 -spec build_voice_token_rpc_request(
     integer() | null,

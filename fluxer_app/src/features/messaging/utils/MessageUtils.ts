@@ -10,14 +10,14 @@ import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 
 const logger = new Logger('MessageUtils');
 
-export function isMentioned(user: User, message: Message): boolean {
+export function isMentioned(user: User, message: Message, ignoreEveryone = false): boolean {
 	const channel = Channels.getChannel(message.channelId);
 	if (channel == null) {
 		logger.warn(`${message.channelId} does not exist!`);
 		return false;
 	}
-	const suppressEveryone = UserGuildSettings.isSuppressEveryoneEnabled(channel.guildId ?? null);
-	const mentionEveryone = message.mentionEveryone && !suppressEveryone;
+	const suppressEveryone = UserGuildSettings.isEveryoneMentionSuppressed(channel.guildId ?? null);
+	const mentionEveryone = message.mentionEveryone && !channel.isDM() && !suppressEveryone && !ignoreEveryone;
 	if (mentionEveryone) {
 		return true;
 	}
@@ -35,6 +35,6 @@ export function isMentioned(user: User, message: Message): boolean {
 	if (!guildMember) {
 		return false;
 	}
-	const suppressRoles = UserGuildSettings.isSuppressRolesEnabled(channel.guildId);
+	const suppressRoles = UserGuildSettings.isRoleMentionSuppressed(channel.guildId);
 	return !suppressRoles && message.mentionRoles.some((roleId) => guildMember.roles.has(roleId));
 }

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
+import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {
 	assetToExportDataUrl,
 	parseThemeMetadata,
@@ -22,13 +25,26 @@ import {
 	saveThemeLibraryLocalFile,
 	saveThemeLibraryTheme,
 	setEnabledThemeIds,
+	updateThemeLibraryThemes,
 } from '@app/features/theme/utils/ThemeLibraryDb';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
+import type {ThemeLinkedFileError} from '@app/types/electron.d';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+import {i18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
+import {compareShallow, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('ThemeLibrary');
+const DUPLICATE_THEME_NAME_DESCRIPTOR = msg({
+	message: '{themeName} Copy',
+	comment:
+		'Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.',
+});
 
-export type ThemeLibraryThemeSource = 'quick_css' | 'css_file' | 'desktop_directory' | 'shared_theme' | 'import';
+type ThemeLibraryThemeSource = 'quick_css' | 'css_file' | 'desktop_directory' | 'shared_theme' | 'import';
+
+type ThemeLinkedFileStatus = 'live' | ThemeLinkedFileError;
 
 export interface ThemeLibraryTheme {
 	id: string;
@@ -40,6 +56,7 @@ export interface ThemeLibraryTheme {
 	css: string;
 	fileName: string;
 	source: ThemeLibraryThemeSource;
+	linkedPath?: string;
 	createdAt: number;
 	updatedAt: number;
 }
@@ -65,18 +82,14 @@ export interface ThemeLibraryLocalFileReference {
 	updatedAt: number;
 }
 
-export interface ThemeDirectoryCssFile {
+interface ThemeDirectoryCssFile {
 	fileName: string;
 	path: string;
 	css: string;
 }
 
 function createThemeLibraryId(prefix: string): string {
-	const cryptoApi = globalThis.crypto;
-	if (cryptoApi?.randomUUID) {
-		return `${prefix}-${cryptoApi.randomUUID()}`;
-	}
-	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+	return `${prefix}-${randomUuid()}`;
 }
 
 function sanitizeFileName(name: string): string {
@@ -97,23 +110,16 @@ function getFallbackThemeName(fileName: string): string {
 		.replace(/^./, (letter) => letter.toUpperCase());
 }
 
-function readFileText(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onerror = () => reject(reader.error ?? new Error(`Failed to read ${file.name}`));
-		reader.onload = () => resolve(String(reader.result ?? ''));
-		reader.readAsText(file);
-	});
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
-
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 	const response = await fetch(dataUrl);
 	return await response.blob();
 }
+
+const THEME_LIBRARY_STORAGE_KEYS: ReadonlySet<string> = new Set([
+	AppStorageKey.THEME_LIBRARY_THEMES,
+	AppStorageKey.THEME_LIBRARY_LOCAL_FILES,
+	AppStorageKey.THEME_LIBRARY_ENABLED_IDS,
+]);
 
 function themeSortValue(theme: ThemeLibraryTheme): string {
 	return `${theme.name.toLowerCase()}\u0000${theme.updatedAt}`;
@@ -125,12 +131,23 @@ class ThemeLibrary {
 	localFiles: Array<ThemeLibraryLocalFileReference> = [];
 	enabledThemeIds: Array<string> = [];
 	isHydrated = false;
+	loadFailed = false;
 	isBusy = false;
 	revision = 0;
+	linkedFileStatus = new Map<string, ThemeLinkedFileStatus>();
+	focusedThemeId: string | null = null;
 	private initPromise: Promise<void> | null = null;
+	private loadGeneration = 0;
+	private storageSyncStarted = false;
+	private linkedFileCss = new Map<string, string>();
+	private linkedThemesChanged: (() => void) | null = null;
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
+		makeAutoObservable<this, 'linkedFileCss' | 'linkedThemesChanged' | 'loadGeneration' | 'storageSyncStarted'>(
+			this,
+			{linkedFileCss: false, linkedThemesChanged: false, loadGeneration: false, storageSyncStarted: false},
+			{autoBind: true},
+		);
 	}
 
 	get enabledThemes(): Array<ThemeLibraryTheme> {
@@ -143,6 +160,27 @@ class ThemeLibrary {
 			.map((theme) => theme.css.trim())
 			.filter(Boolean)
 			.join('\n\n');
+	}
+
+	get watchedLinkedPaths(): Array<string> {
+		const paths = new Set<string>();
+		for (const theme of this.enabledThemes) {
+			if (theme.linkedPath) paths.add(theme.linkedPath);
+		}
+		const focusedTheme = this.focusedThemeId
+			? this.themes.find((theme) => theme.id === this.focusedThemeId)
+			: undefined;
+		if (focusedTheme?.linkedPath) paths.add(focusedTheme.linkedPath);
+		return [...paths].sort();
+	}
+
+	get canWatchLinkedFiles(): boolean {
+		const electronApi = getElectronAPI();
+		return Boolean(electronApi?.watchThemeLinkedFiles && electronApi.onThemeLinkedFileChange);
+	}
+
+	setFocusedThemeId(id: string | null): void {
+		this.focusedThemeId = id;
 	}
 
 	async init(): Promise<void> {
@@ -159,7 +197,22 @@ class ThemeLibrary {
 		return nextLoad;
 	}
 
+	private followExternalStorageChanges(): void {
+		if (this.storageSyncStarted) return;
+		this.storageSyncStarted = true;
+		AppStorage.subscribe(
+			(event) => {
+				if (event.key === null || THEME_LIBRARY_STORAGE_KEYS.has(event.key)) {
+					void this.reload();
+				}
+			},
+			{source: 'external'},
+		);
+	}
+
 	private async load(): Promise<void> {
+		this.followExternalStorageChanges();
+		const generation = ++this.loadGeneration;
 		try {
 			const [themes, assets, localFiles, enabledThemeIds] = await Promise.all([
 				listThemeLibraryThemes(),
@@ -167,18 +220,26 @@ class ThemeLibrary {
 				listThemeLibraryLocalFiles(),
 				getEnabledThemeIds(),
 			]);
+			if (generation !== this.loadGeneration) {
+				return;
+			}
 			runInAction(() => {
 				this.themes = themes.sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
 				this.assets = assets.sort((a, b) => a.name.localeCompare(b.name));
 				this.localFiles = localFiles.sort((a, b) => a.name.localeCompare(b.name));
 				this.enabledThemeIds = enabledThemeIds.filter((id) => themes.some((theme) => theme.id === id));
 				this.isHydrated = true;
+				this.loadFailed = false;
 				this.revision += 1;
 			});
+			this.refreshLinkedThemes();
 		} catch (error) {
+			if (generation !== this.loadGeneration) {
+				return;
+			}
 			logger.error('Failed to hydrate theme library', error);
 			runInAction(() => {
-				this.isHydrated = true;
+				this.loadFailed = true;
 			});
 		}
 	}
@@ -239,16 +300,6 @@ class ThemeLibrary {
 		});
 	}
 
-	async saveCssAsTheme(css: string, name: string): Promise<ThemeLibraryTheme> {
-		const fileName = `${sanitizeFileName(name || 'quick-css').replace(/\.css$/i, '')}.css`;
-		const theme = {
-			...this.createThemeFromCss(css, fileName, 'quick_css'),
-			name: name.trim() || 'Quick CSS',
-		};
-		await this.saveTheme(theme);
-		return theme;
-	}
-
 	async importCssFiles(files: ReadonlyArray<File>): Promise<Array<ThemeLibraryTheme>> {
 		return await this.mutate(async () => {
 			const imported: Array<ThemeLibraryTheme> = [];
@@ -267,25 +318,209 @@ class ThemeLibrary {
 		});
 	}
 
+	async importDesktopCssFiles(): Promise<Array<ThemeLibraryTheme>> {
+		const pickThemeLinkedFiles = getElectronAPI()?.pickThemeLinkedFiles;
+		if (!pickThemeLinkedFiles) {
+			return [];
+		}
+		return await this.mutate(async () =>
+			this.upsertDesktopCssFiles(await pickThemeLinkedFiles({multiple: true}), 'css_file'),
+		);
+	}
+
 	async importDesktopThemeDirectory(): Promise<Array<ThemeLibraryTheme>> {
 		const electronApi = getElectronAPI();
 		const importThemeDirectory = electronApi?.importThemeDirectory;
 		if (!importThemeDirectory) {
 			return [];
 		}
-		return await this.mutate(async () => {
-			const files = await importThemeDirectory();
-			const imported: Array<ThemeLibraryTheme> = [];
-			for (const file of files) {
-				const theme = this.createThemeFromCss(file.css, file.fileName, 'desktop_directory');
+		return await this.mutate(async () => this.upsertDesktopCssFiles(await importThemeDirectory(), 'desktop_directory'));
+	}
+
+	private async upsertDesktopCssFiles(
+		files: ReadonlyArray<ThemeDirectoryCssFile>,
+		source: ThemeLibraryThemeSource,
+	): Promise<Array<ThemeLibraryTheme>> {
+		const link = this.canWatchLinkedFiles;
+		const imported: Array<ThemeLibraryTheme> = [];
+		for (const file of files) {
+			const linkedThemes = link ? this.themes.filter((theme) => theme.linkedPath === file.path) : [];
+			const targets: Array<ThemeLibraryTheme | undefined> = linkedThemes.length > 0 ? linkedThemes : [undefined];
+			for (const existing of targets) {
+				const theme: ThemeLibraryTheme = {
+					...this.createThemeFromCss(
+						file.css,
+						file.fileName,
+						existing?.source ?? source,
+						existing ? {id: existing.id, createdAt: existing.createdAt} : undefined,
+					),
+					...(link ? {linkedPath: file.path} : {}),
+				};
 				await saveThemeLibraryTheme(theme);
 				imported.push(theme);
 			}
-			runInAction(() => {
-				this.themes.push(...imported);
-				this.themes.sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
+		}
+		runInAction(() => {
+			for (const theme of imported) {
+				const existingIndex = this.themes.findIndex((item) => item.id === theme.id);
+				if (existingIndex >= 0) {
+					this.themes.splice(existingIndex, 1, theme);
+				} else {
+					this.themes.push(theme);
+				}
+			}
+			this.themes.sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
+		});
+		return imported;
+	}
+
+	async linkThemeToDesktopFile(id: string): Promise<ThemeLibraryTheme | null> {
+		const pickThemeLinkedFiles = getElectronAPI()?.pickThemeLinkedFiles;
+		if (!pickThemeLinkedFiles) {
+			return null;
+		}
+		const [file] = await pickThemeLinkedFiles({multiple: false});
+		const existing = this.themes.find((theme) => theme.id === id);
+		if (!file || !existing) {
+			return null;
+		}
+		const linkedTheme = this.themes.find((theme) => theme.id !== id && theme.linkedPath === file.path);
+		if (linkedTheme) {
+			return linkedTheme;
+		}
+		const theme: ThemeLibraryTheme = {
+			...this.createThemeFromCss(file.css, file.fileName, existing.source, {id, createdAt: existing.createdAt}),
+			linkedPath: file.path,
+		};
+		await this.saveTheme(theme);
+		return theme;
+	}
+
+	async unlinkTheme(id: string): Promise<void> {
+		await this.mutate(async () => {
+			const result = await updateThemeLibraryThemes(
+				(theme) => theme.id === id && theme.linkedPath !== undefined,
+				(theme) => ({...theme, linkedPath: undefined, updatedAt: now()}),
+			);
+			this.replaceStoredThemes(result.themes);
+		});
+	}
+
+	startLinkedFileSync(options?: {onThemesChanged?: () => void}): () => void {
+		const electronApi = getElectronAPI();
+		const watchThemeLinkedFiles = electronApi?.watchThemeLinkedFiles;
+		const onThemeLinkedFileChange = electronApi?.onThemeLinkedFileChange;
+		if (!watchThemeLinkedFiles || !onThemeLinkedFileChange) {
+			return () => {};
+		}
+		this.linkedThemesChanged = options?.onThemesChanged ?? null;
+		const watch = (paths: Array<string>): void => {
+			void watchThemeLinkedFiles(paths).catch((error) => {
+				logger.warn('Failed to update linked theme file watch', error);
+				runInAction(() => {
+					const watched = new Set(this.watchedLinkedPaths);
+					for (const path of paths) {
+						if (watched.has(path)) this.linkedFileStatus.set(path, 'read_failed');
+					}
+				});
 			});
-			return imported;
+		};
+		const unsubscribe = onThemeLinkedFileChange((change) => {
+			if (!this.watchedLinkedPaths.includes(change.path)) return;
+			runInAction(() => {
+				this.linkedFileStatus.set(change.path, change.css === undefined ? (change.error ?? 'read_failed') : 'live');
+			});
+			if (change.css === undefined) return;
+			this.linkedFileCss.set(change.path, change.css);
+			this.syncLinkedFileCss(change.path);
+		});
+		const disposeReaction = reaction(
+			() => this.watchedLinkedPaths,
+			(paths) => {
+				const watched = new Set(paths);
+				for (const path of [...this.linkedFileStatus.keys()]) {
+					if (!watched.has(path)) this.linkedFileStatus.delete(path);
+				}
+				for (const path of [...this.linkedFileCss.keys()]) {
+					if (!watched.has(path)) this.linkedFileCss.delete(path);
+				}
+				watch(paths);
+			},
+			{equals: compareShallow, fireImmediately: true},
+		);
+		return () => {
+			disposeReaction();
+			unsubscribe();
+			this.linkedFileCss.clear();
+			this.linkedThemesChanged = null;
+			watch([]);
+		};
+	}
+
+	private syncLinkedFileCss(path: string): void {
+		void this.applyLinkedFileCss(path).then(
+			(written) => {
+				if (written) this.linkedThemesChanged?.();
+			},
+			(error) => logger.warn('Failed to apply linked theme file', error),
+		);
+	}
+
+	private async applyLinkedFileCss(path: string): Promise<boolean> {
+		const result = await updateThemeLibraryThemes(
+			(theme) => theme.linkedPath === path,
+			(theme) => {
+				const css = this.linkedFileCss.get(path);
+				if (css === undefined || theme.css === css) return null;
+				const metadata = parseThemeMetadata(css, theme.name);
+				return {
+					...theme,
+					name: metadata.name,
+					description: metadata.description,
+					author: metadata.author,
+					version: metadata.version,
+					tags: metadata.tags,
+					css,
+					updatedAt: now(),
+				};
+			},
+		);
+		this.replaceStoredThemes(result.themes);
+		return result.written;
+	}
+
+	private refreshLinkedThemes(): void {
+		const paths = new Set(this.linkedFileCss.keys());
+		if (paths.size === 0) return;
+		void updateThemeLibraryThemes(
+			(theme) => theme.linkedPath !== undefined && paths.has(theme.linkedPath),
+			() => null,
+		).then(
+			(result) => this.replaceStoredThemes(result.themes),
+			(error) => logger.warn('Failed to refresh linked themes', error),
+		);
+	}
+
+	private replaceStoredThemes(themes: ReadonlyArray<ThemeLibraryTheme>): void {
+		runInAction(() => {
+			let changed = false;
+			for (const theme of themes) {
+				const existingIndex = this.themes.findIndex((item) => item.id === theme.id);
+				if (existingIndex < 0) continue;
+				const existing = this.themes[existingIndex];
+				if (
+					existing.updatedAt === theme.updatedAt &&
+					existing.css === theme.css &&
+					existing.linkedPath === theme.linkedPath
+				) {
+					continue;
+				}
+				this.themes.splice(existingIndex, 1, theme);
+				changed = true;
+			}
+			if (!changed) return;
+			this.themes.sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
+			this.revision += 1;
 		});
 	}
 
@@ -309,9 +544,10 @@ class ThemeLibrary {
 		const duplicate: ThemeLibraryTheme = {
 			...existing,
 			id: createThemeLibraryId('theme'),
-			name: `${existing.name} Copy`,
+			name: i18n._(DUPLICATE_THEME_NAME_DESCRIPTOR, {themeName: existing.name}),
 			fileName: sanitizeFileName(existing.fileName.replace(/\.css$/i, '-copy.css')),
 			source: 'import',
+			linkedPath: undefined,
 			createdAt: now(),
 			updatedAt: now(),
 		};
@@ -339,15 +575,6 @@ class ThemeLibrary {
 			await setEnabledThemeIds(next);
 			runInAction(() => {
 				this.enabledThemeIds = next;
-			});
-		});
-	}
-
-	async clearEnabledThemes(): Promise<void> {
-		await this.mutate(async () => {
-			await setEnabledThemeIds([]);
-			runInAction(() => {
-				this.enabledThemeIds = [];
 			});
 		});
 	}

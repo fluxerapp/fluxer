@@ -3,28 +3,70 @@
 import crypto, {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {
+	type IStorageService,
+	type ProcessedStorageObjectMetadata,
+	StorageObjectListingOverflowError,
+	StorageObjectRangeNotSatisfiableError,
+} from '@app/api/infrastructure/IStorageService';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {vi} from 'vitest';
-import type {IStorageService, ProcessedStorageObjectMetadata} from '../../infrastructure/IStorageService';
+
+const OBJECT_ID_SEPARATOR = '\u0000';
+const BYTE_RANGE_PATTERN = /^bytes=(\d*)-(\d*)$/u;
+
+interface StoredObject {
+	data: Uint8Array;
+	contentType?: string;
+	etag: string;
+	lastModified: Date;
+}
+
+type ParsedByteRange = {start: number; end: number} | 'ignored' | 'unsatisfiable';
 
 interface MockStorageServiceConfig {
 	fileData?: Uint8Array | null;
-	shouldFail?: boolean;
-	shouldFailRead?: boolean;
 	shouldFailUpload?: boolean;
 	shouldFailDelete?: boolean;
 	shouldFailCopy?: boolean;
 }
 
+function computeEtag(data: Uint8Array): string {
+	return `"${createHash('md5').update(data).digest('hex')}"`;
+}
+
+function parseByteRange(range: string, totalLength: number): ParsedByteRange {
+	const match = BYTE_RANGE_PATTERN.exec(range.trim());
+	if (!match) return 'ignored';
+	const rawStart = match[1] ?? '';
+	const rawEnd = match[2] ?? '';
+	if (rawStart === '' && rawEnd === '') return 'ignored';
+	if (rawStart === '') {
+		const suffixLength = Number(rawEnd);
+		if (suffixLength === 0 || totalLength === 0) return 'unsatisfiable';
+		return {start: Math.max(totalLength - suffixLength, 0), end: totalLength - 1};
+	}
+	const start = Number(rawStart);
+	if (start >= totalLength) return 'unsatisfiable';
+	if (rawEnd === '') return {start, end: totalLength - 1};
+	const end = Number(rawEnd);
+	if (end < start) return 'ignored';
+	return {start, end: Math.min(end, totalLength - 1)};
+}
+
+function noSuchKeyError(key: string): S3ServiceException {
+	return new S3ServiceException({
+		name: 'NoSuchKey',
+		$fault: 'client',
+		$metadata: {},
+		message: `The specified key does not exist: ${key}`,
+	});
+}
+
 export class MockStorageService implements IStorageService {
-	private objects: Map<
-		string,
-		{
-			data: Uint8Array;
-			contentType?: string;
-		}
-	> = new Map();
+	private objects: Map<string, StoredObject> = new Map();
 	private multipartUploads: Map<
 		string,
 		{
@@ -44,29 +86,9 @@ export class MockStorageService implements IStorageService {
 		destinationKey: string;
 	}> = [];
 	readonly uploadObjectSpy = vi.fn();
-	readonly uploadObjectFromFileSpy = vi.fn();
 	readonly deleteObjectSpy = vi.fn();
-	readonly getObjectMetadataSpy = vi.fn();
 	readonly readObjectSpy = vi.fn();
-	readonly computeObjectSha256Spy = vi.fn();
-	readonly streamObjectSpy = vi.fn();
-	readonly writeObjectToDiskSpy = vi.fn();
-	readonly copyObjectSpy = vi.fn();
-	readonly copyObjectWithMetadataStrippingSpy = vi.fn();
-	readonly moveObjectSpy = vi.fn();
 	readonly getPresignedDownloadURLSpy = vi.fn();
-	readonly getPresignedUploadURLSpy = vi.fn();
-	readonly getPresignedUploadPartURLSpy = vi.fn();
-	readonly listPartsSpy = vi.fn();
-	readonly purgeBucketSpy = vi.fn();
-	readonly uploadAvatarSpy = vi.fn();
-	readonly deleteAvatarSpy = vi.fn();
-	readonly listObjectsSpy = vi.fn();
-	readonly deleteObjectsSpy = vi.fn();
-	readonly createMultipartUploadSpy = vi.fn();
-	readonly uploadPartSpy = vi.fn();
-	readonly completeMultipartUploadSpy = vi.fn();
-	readonly abortMultipartUploadSpy = vi.fn();
 	private config: MockStorageServiceConfig;
 
 	constructor(config: MockStorageServiceConfig = {}) {
@@ -77,6 +99,19 @@ export class MockStorageService implements IStorageService {
 		this.config = {...this.config, ...config};
 	}
 
+	private objectId(bucket: string, key: string): string {
+		return `${bucket}${OBJECT_ID_SEPARATOR}${key}`;
+	}
+
+	private storeObject(bucket: string, key: string, data: Uint8Array, contentType?: string): void {
+		this.objects.set(this.objectId(bucket, key), {
+			data,
+			contentType,
+			etag: computeEtag(data),
+			lastModified: new Date(),
+		});
+	}
+
 	async uploadObject(params: {
 		bucket: string;
 		key: string;
@@ -85,11 +120,11 @@ export class MockStorageService implements IStorageService {
 		expiresAt?: Date;
 	}): Promise<void> {
 		this.uploadObjectSpy(params);
-		if (this.config.shouldFail || this.config.shouldFailUpload) {
+		if (this.config.shouldFailUpload) {
 			throw new Error('Mock storage upload failure');
 		}
 		const data = params.body instanceof Uint8Array ? params.body : await this.readableToBuffer(params.body);
-		this.objects.set(params.key, {data, contentType: params.contentType});
+		this.storeObject(params.bucket, params.key, data, params.contentType);
 	}
 
 	async uploadObjectFromFile(params: {
@@ -100,12 +135,11 @@ export class MockStorageService implements IStorageService {
 		contentLength?: number;
 		expiresAt?: Date;
 	}): Promise<void> {
-		this.uploadObjectFromFileSpy(params);
-		if (this.config.shouldFail || this.config.shouldFailUpload) {
+		if (this.config.shouldFailUpload) {
 			throw new Error('Mock storage upload failure');
 		}
 		const data = await fs.promises.readFile(params.filePath);
-		this.objects.set(params.key, {data: new Uint8Array(data), contentType: params.contentType});
+		this.storeObject(params.bucket, params.key, new Uint8Array(data), params.contentType);
 	}
 
 	private async readableToBuffer(stream: Readable): Promise<Uint8Array> {
@@ -125,11 +159,11 @@ export class MockStorageService implements IStorageService {
 
 	async deleteObject(bucket: string, key: string): Promise<void> {
 		this.deleteObjectSpy(bucket, key);
-		if (this.config.shouldFail || this.config.shouldFailDelete) {
+		if (this.config.shouldFailDelete) {
 			throw new Error('Mock storage delete failure');
 		}
 		this.deletedObjects.push({bucket, key});
-		this.objects.delete(key);
+		this.objects.delete(this.objectId(bucket, key));
 	}
 
 	async getObjectMetadata(
@@ -138,24 +172,26 @@ export class MockStorageService implements IStorageService {
 	): Promise<{
 		contentLength: number;
 		contentType: string;
+		etag?: string;
+		lastModified?: Date;
 	} | null> {
-		this.getObjectMetadataSpy(bucket, key);
-		const obj = this.objects.get(key);
+		const obj = this.objects.get(this.objectId(bucket, key));
 		if (!obj) return null;
-		return {contentLength: obj.data.length, contentType: obj.contentType ?? 'application/octet-stream'};
+		return {
+			contentLength: obj.data.length,
+			contentType: obj.contentType ?? 'application/octet-stream',
+			etag: obj.etag,
+			lastModified: obj.lastModified,
+		};
 	}
 
 	async computeObjectSha256(bucket: string, key: string): Promise<string> {
-		this.computeObjectSha256Spy(bucket, key);
-		const data = this.config.fileData ?? this.objects.get(key)?.data ?? new Uint8Array();
+		const data = this.config.fileData ?? this.objects.get(this.objectId(bucket, key))?.data ?? new Uint8Array();
 		return createHash('sha256').update(data).digest('hex');
 	}
 
 	async readObject(bucket: string, key: string, maxBytes?: number): Promise<Uint8Array> {
 		this.readObjectSpy(bucket, key, maxBytes);
-		if (this.config.shouldFail || this.config.shouldFailRead) {
-			throw new Error('Mock storage read failure');
-		}
 		function assertWithinLimit(data: Uint8Array): Uint8Array {
 			if (maxBytes !== undefined && data.length > maxBytes) {
 				throw new Error(`Stream exceeds maximum buffer size of ${maxBytes} bytes (got ${data.length} bytes)`);
@@ -164,25 +200,13 @@ export class MockStorageService implements IStorageService {
 		}
 		if (this.config.fileData !== undefined) {
 			if (this.config.fileData === null) {
-				const error = new S3ServiceException({
-					name: 'NoSuchKey',
-					$fault: 'client',
-					$metadata: {},
-					message: `The specified key does not exist: ${key}`,
-				});
-				throw error;
+				throw noSuchKeyError(key);
 			}
 			return assertWithinLimit(this.config.fileData);
 		}
-		const obj = this.objects.get(key);
+		const obj = this.objects.get(this.objectId(bucket, key));
 		if (!obj) {
-			const error = new S3ServiceException({
-				name: 'NoSuchKey',
-				$fault: 'client',
-				$metadata: {},
-				message: `The specified key does not exist: ${key}`,
-			});
-			throw error;
+			throw noSuchKeyError(key);
 		}
 		return assertWithinLimit(obj.data);
 	}
@@ -192,48 +216,43 @@ export class MockStorageService implements IStorageService {
 		contentLength: number;
 		contentRange?: string | null;
 		contentType?: string | null;
-		cacheControl?: string | null;
-		contentDisposition?: string | null;
-		expires?: Date | null;
 		etag?: string | null;
 		lastModified?: Date | null;
 	} | null> {
-		this.streamObjectSpy(params);
-		if (this.config.shouldFail || this.config.shouldFailRead) {
-			throw new Error('Mock storage read failure');
-		}
 		if (this.config.fileData === null) {
 			return null;
 		}
-		const obj = this.objects.get(params.key);
+		const obj = this.objects.get(this.objectId(params.bucket, params.key));
 		const data = this.config.fileData ?? obj?.data;
 		if (!data) {
 			return null;
 		}
+		let slice = data;
+		let contentRange: string | null = null;
+		if (params.range !== undefined) {
+			const parsedRange = parseByteRange(params.range, data.length);
+			if (parsedRange === 'unsatisfiable') {
+				throw new StorageObjectRangeNotSatisfiableError(params.bucket, params.key, params.range);
+			}
+			if (parsedRange !== 'ignored') {
+				slice = data.subarray(parsedRange.start, parsedRange.end + 1);
+				contentRange = `bytes ${parsedRange.start}-${parsedRange.end}/${data.length}`;
+			}
+		}
 		return {
-			body: Readable.from([Buffer.from(data)]),
-			contentLength: data.length,
-			contentRange: null,
+			body: Readable.from([Buffer.from(slice)]),
+			contentLength: slice.length,
+			contentRange,
 			contentType: obj?.contentType ?? 'application/octet-stream',
-			cacheControl: null,
-			contentDisposition: null,
-			expires: null,
-			etag: `"${createHash('md5').update(data).digest('hex')}"`,
-			lastModified: null,
+			etag: computeEtag(data),
+			lastModified: obj?.lastModified ?? null,
 		};
 	}
 
 	async writeObjectToDisk(bucket: string, key: string, filePath: string): Promise<void> {
-		this.writeObjectToDiskSpy(bucket, key, filePath);
-		const data = this.config.fileData ?? this.objects.get(key)?.data;
+		const data = this.config.fileData ?? this.objects.get(this.objectId(bucket, key))?.data;
 		if (!data) {
-			const error = new S3ServiceException({
-				name: 'NoSuchKey',
-				$fault: 'client',
-				$metadata: {},
-				message: `The specified key does not exist: ${key}`,
-			});
-			throw error;
+			throw noSuchKeyError(key);
 		}
 		await fs.promises.writeFile(filePath, data);
 	}
@@ -245,8 +264,7 @@ export class MockStorageService implements IStorageService {
 		destinationKey: string;
 		newContentType?: string;
 	}): Promise<void> {
-		this.copyObjectSpy(params);
-		if (this.config.shouldFail || this.config.shouldFailCopy) {
+		if (this.config.shouldFailCopy) {
 			throw new Error('Mock storage copy failure');
 		}
 		this.copiedObjects.push({
@@ -255,12 +273,14 @@ export class MockStorageService implements IStorageService {
 			destinationBucket: params.destinationBucket,
 			destinationKey: params.destinationKey,
 		});
-		const sourceObj = this.objects.get(params.sourceKey);
+		const sourceObj = this.objects.get(this.objectId(params.sourceBucket, params.sourceKey));
 		if (sourceObj) {
-			this.objects.set(params.destinationKey, {
-				data: sourceObj.data,
-				contentType: params.newContentType ?? sourceObj.contentType,
-			});
+			this.storeObject(
+				params.destinationBucket,
+				params.destinationKey,
+				sourceObj.data,
+				params.newContentType ?? sourceObj.contentType,
+			);
 		}
 	}
 
@@ -272,7 +292,6 @@ export class MockStorageService implements IStorageService {
 		contentType: string;
 		sourceLocalPath?: string;
 	}): Promise<ProcessedStorageObjectMetadata | null> {
-		this.copyObjectWithMetadataStrippingSpy(params);
 		await this.copyObject({
 			sourceBucket: params.sourceBucket,
 			sourceKey: params.sourceKey,
@@ -283,7 +302,8 @@ export class MockStorageService implements IStorageService {
 		if (!isSupportedMediaContentType(params.contentType)) {
 			return null;
 		}
-		const data = this.objects.get(params.destinationKey)?.data ?? new Uint8Array();
+		const data =
+			this.objects.get(this.objectId(params.destinationBucket, params.destinationKey))?.data ?? new Uint8Array();
 		return {
 			contentType: params.contentType,
 			contentLength: data.length,
@@ -293,19 +313,13 @@ export class MockStorageService implements IStorageService {
 		};
 	}
 
-	async moveObject(params: {
-		sourceBucket: string;
-		sourceKey: string;
-		destinationBucket: string;
-		destinationKey: string;
-		newContentType?: string;
-	}): Promise<void> {
-		this.moveObjectSpy(params);
-		await this.copyObject(params);
-		await this.deleteObject(params.sourceBucket, params.sourceKey);
-	}
-
-	async getPresignedDownloadURL(_params: {bucket: string; key: string; expiresIn?: number}): Promise<string> {
+	async getPresignedDownloadURL(_params: {
+		bucket: string;
+		key: string;
+		expiresIn?: number;
+		responseContentType?: string;
+		responseContentDisposition?: string;
+	}): Promise<string> {
 		this.getPresignedDownloadURLSpy(_params);
 		return 'https://presigned.url/test';
 	}
@@ -317,7 +331,6 @@ export class MockStorageService implements IStorageService {
 		contentLength?: number;
 		expiresIn?: number;
 	}): Promise<string> {
-		this.getPresignedUploadURLSpy(_params);
 		return 'https://presigned-upload.url/test';
 	}
 
@@ -328,69 +341,47 @@ export class MockStorageService implements IStorageService {
 		partNumber: number;
 		expiresIn?: number;
 	}): Promise<string> {
-		this.getPresignedUploadPartURLSpy(params);
 		return `https://presigned-upload.url/test?partNumber=${params.partNumber}&uploadId=${params.uploadId}`;
 	}
 
-	async purgeBucket(_bucket: string): Promise<void> {
-		this.purgeBucketSpy(_bucket);
-	}
-
 	async uploadAvatar(params: {prefix: string; key: string; body: Uint8Array}): Promise<void> {
-		this.uploadAvatarSpy(params);
-		await this.uploadObject({bucket: 'cdn', key: `${params.prefix}/${params.key}`, body: params.body});
+		await this.uploadObject({
+			bucket: Config.s3.buckets.cdn,
+			key: `${params.prefix}/${params.key}`,
+			body: params.body,
+		});
 	}
 
 	async deleteAvatar(params: {prefix: string; key: string}): Promise<void> {
-		this.deleteAvatarSpy(params);
-		await this.deleteObject('cdn', `${params.prefix}/${params.key}`);
+		await this.deleteObject(Config.s3.buckets.cdn, `${params.prefix}/${params.key}`);
 	}
 
-	async listObjects(_params: {bucket: string; prefix: string}): Promise<
+	async listObjects(params: {bucket: string; prefix: string; maxObjects?: number}): Promise<
 		ReadonlyArray<{
 			key: string;
 			lastModified?: Date;
 		}>
 	> {
-		this.listObjectsSpy(_params);
-		return [];
-	}
-
-	async deleteObjects(_params: {
-		bucket: string;
-		objects: ReadonlyArray<{
-			Key: string;
-		}>;
-	}): Promise<void> {
-		this.deleteObjectsSpy(_params);
+		if (params.maxObjects !== undefined && (!Number.isSafeInteger(params.maxObjects) || params.maxObjects <= 0)) {
+			throw new RangeError('maxObjects must be a positive safe integer');
+		}
+		const keyOffset = params.bucket.length + OBJECT_ID_SEPARATOR.length;
+		const matches = [...this.objects.entries()]
+			.filter(([id]) => id.startsWith(this.objectId(params.bucket, params.prefix)))
+			.map(([id, object]) => ({key: id.slice(keyOffset), lastModified: object.lastModified}))
+			.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+		if (params.maxObjects !== undefined && matches.length > params.maxObjects) {
+			throw new StorageObjectListingOverflowError(params.bucket, params.prefix, params.maxObjects);
+		}
+		return matches;
 	}
 
 	async createMultipartUpload(params: {bucket: string; key: string; contentType?: string}): Promise<{
 		uploadId: string;
 	}> {
-		this.createMultipartUploadSpy(params);
 		const uploadId = crypto.randomUUID();
 		this.multipartUploads.set(uploadId, {parts: new Map(), key: params.key, bucket: params.bucket});
 		return {uploadId};
-	}
-
-	async uploadPart(params: {
-		bucket: string;
-		key: string;
-		uploadId: string;
-		partNumber: number;
-		body: Uint8Array;
-	}): Promise<{
-		etag: string;
-	}> {
-		this.uploadPartSpy(params);
-		const upload = this.multipartUploads.get(params.uploadId);
-		if (!upload) {
-			throw new Error(`Mock: multipart upload ${params.uploadId} not found`);
-		}
-		upload.parts.set(params.partNumber, params.body);
-		const etag = `"etag-${params.partNumber}"`;
-		return {etag};
 	}
 
 	async listParts(params: {bucket: string; key: string; uploadId: string}): Promise<
@@ -400,7 +391,6 @@ export class MockStorageService implements IStorageService {
 			size?: number;
 		}>
 	> {
-		this.listPartsSpy(params);
 		const upload = this.multipartUploads.get(params.uploadId);
 		if (!upload) return [];
 		return [...upload.parts.entries()]
@@ -421,7 +411,6 @@ export class MockStorageService implements IStorageService {
 			etag: string;
 		}>;
 	}): Promise<void> {
-		this.completeMultipartUploadSpy(params);
 		const upload = this.multipartUploads.get(params.uploadId);
 		if (!upload) {
 			throw new Error(`Mock: multipart upload ${params.uploadId} not found`);
@@ -434,12 +423,11 @@ export class MockStorageService implements IStorageService {
 			combined.set(data, offset);
 			offset += data.length;
 		}
-		this.objects.set(upload.key, {data: combined});
+		this.storeObject(upload.bucket, upload.key, combined);
 		this.multipartUploads.delete(params.uploadId);
 	}
 
 	async abortMultipartUpload(params: {bucket: string; key: string; uploadId: string}): Promise<void> {
-		this.abortMultipartUploadSpy(params);
 		this.multipartUploads.delete(params.uploadId);
 	}
 
@@ -459,8 +447,16 @@ export class MockStorageService implements IStorageService {
 		return [...this.copiedObjects];
 	}
 
-	hasObject(_bucket: string, key: string): boolean {
-		return this.objects.has(key);
+	hasObject(bucket: string, key: string): boolean {
+		return this.objects.has(this.objectId(bucket, key));
+	}
+
+	setObjectLastModified(bucket: string, key: string, lastModified: Date): void {
+		const object = this.objects.get(this.objectId(bucket, key));
+		if (!object) {
+			throw new Error(`No stored object ${key} in ${bucket}`);
+		}
+		object.lastModified = lastModified;
 	}
 
 	reset(): void {
@@ -470,28 +466,8 @@ export class MockStorageService implements IStorageService {
 		this.copiedObjects = [];
 		this.config = {};
 		this.uploadObjectSpy.mockClear();
-		this.uploadObjectFromFileSpy.mockClear();
 		this.deleteObjectSpy.mockClear();
-		this.getObjectMetadataSpy.mockClear();
 		this.readObjectSpy.mockClear();
-		this.computeObjectSha256Spy.mockClear();
-		this.streamObjectSpy.mockClear();
-		this.writeObjectToDiskSpy.mockClear();
-		this.copyObjectSpy.mockClear();
-		this.copyObjectWithMetadataStrippingSpy.mockClear();
-		this.moveObjectSpy.mockClear();
 		this.getPresignedDownloadURLSpy.mockClear();
-		this.getPresignedUploadURLSpy.mockClear();
-		this.getPresignedUploadPartURLSpy.mockClear();
-		this.listPartsSpy.mockClear();
-		this.purgeBucketSpy.mockClear();
-		this.uploadAvatarSpy.mockClear();
-		this.deleteAvatarSpy.mockClear();
-		this.listObjectsSpy.mockClear();
-		this.deleteObjectsSpy.mockClear();
-		this.createMultipartUploadSpy.mockClear();
-		this.uploadPartSpy.mockClear();
-		this.completeMultipartUploadSpy.mockClear();
-		this.abortMultipartUploadSpy.mockClear();
 	}
 }

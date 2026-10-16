@@ -8,7 +8,6 @@
     extract_member_for_event/3,
     extract_and_remove_session_id/1,
     parse_snowflake/2,
-    require_snowflake/2,
     parse_snowflake_binary/2
 ]).
 
@@ -71,7 +70,7 @@ extract_member_for_event(Event, Data, State) ->
     UserId = extract_user_id_for_event(Event, Data),
     case UserId of
         undefined -> undefined;
-        Id -> guild_permissions:find_member_by_user_id(Id, State)
+        Id -> guild_permissions_check:find_member_by_user_id(Id, State)
     end.
 
 -spec extract_user_id_for_event(event(), event_data()) -> user_id() | undefined.
@@ -90,18 +89,12 @@ extract_author_id(Data) ->
             undefined -> maps:get(<<"author_id">>, Data, undefined);
             _ -> AuthorId
         end,
-    validate_snowflake_or_undefined(<<"author_id">>, RawAuthorId).
+    parse_snowflake(<<"author_id">>, RawAuthorId).
 
 -spec extract_user_id_field(event_data()) -> user_id() | undefined.
 extract_user_id_field(Data) ->
     UserId = maps:get(<<"user_id">>, Data, undefined),
-    validate_snowflake_or_undefined(<<"user_id">>, UserId).
-
--spec validate_snowflake_or_undefined(binary(), term()) -> user_id() | undefined.
-validate_snowflake_or_undefined(_FieldName, undefined) ->
-    undefined;
-validate_snowflake_or_undefined(FieldName, Value) ->
-    parse_snowflake(FieldName, Value).
+    parse_snowflake(<<"user_id">>, UserId).
 
 -spec parse_snowflake(binary(), term()) -> integer() | undefined.
 parse_snowflake(FieldName, Value) ->
@@ -110,42 +103,12 @@ parse_snowflake(FieldName, Value) ->
         {error, _, _} -> undefined
     end.
 
--spec require_snowflake(binary(), term()) -> integer().
-require_snowflake(FieldName, Value) ->
-    validation:snowflake_or_throw(FieldName, Value).
-
 -spec parse_snowflake_binary(binary(), term()) -> binary().
 parse_snowflake_binary(FieldName, Value) ->
-    integer_to_binary(require_snowflake(FieldName, Value)).
+    integer_to_binary(validation:snowflake_or_throw(FieldName, Value)).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-extract_and_remove_session_id_present_test() ->
-    Data = #{<<"session_id">> => <<"abc123">>, <<"other">> => <<"value">>},
-    {SessionId, CleanData} = extract_and_remove_session_id(Data),
-    ?assertEqual(<<"abc123">>, SessionId),
-    ?assertEqual(#{<<"other">> => <<"value">>}, CleanData).
-
-extract_and_remove_session_id_absent_test() ->
-    Data = #{<<"other">> => <<"value">>},
-    {SessionId, CleanData} = extract_and_remove_session_id(Data),
-    ?assertEqual(undefined, SessionId),
-    ?assertEqual(Data, CleanData).
-
-is_message_event_test() ->
-    ?assertEqual(true, is_message_event(message_create)),
-    ?assertEqual(true, is_message_event(message_update)),
-    ?assertEqual(true, is_message_event(message_delete)),
-    ?assertEqual(true, is_message_event(message_delete_bulk)),
-    ?assertEqual(false, is_message_event(typing_start)).
-
-is_user_event_test() ->
-    ?assertEqual(true, is_user_event(typing_start)),
-    ?assertEqual(true, is_user_event(message_reaction_add)),
-    ?assertEqual(false, is_user_event(message_reaction_remove_all)),
-    ?assertEqual(false, is_user_event(message_reaction_remove_emoji)),
-    ?assertEqual(false, is_user_event(message_create)).
 
 decorate_member_data_message_delete_author_id_test() ->
     Member = #{<<"user">> => #{<<"id">> => <<"123">>}, <<"roles">> => []},

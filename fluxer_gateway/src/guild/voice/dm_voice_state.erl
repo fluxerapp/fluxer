@@ -1,19 +1,20 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_state).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([handle_dm_disconnect/4, disconnect_voice_user/2]).
 -export([resolve_call_region/1, resolve_call_region/2, voice_region_for_rpc/1]).
--export([normalize_session_id/1, resolve_effective_session_id/2]).
+-export([call_voice_states/1]).
+-export([resolve_effective_session_id/2]).
 -export([validate_dm_viewer_stream_keys/3]).
 -export([maybe_attach_voice_routing_metadata/3]).
 -export([clear_dm_e2ee_room_key_if_channel_empty/3]).
 -export([clear_dm_e2ee_room_keys_for_removed_voice_states/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -55,7 +56,7 @@ leave_call_if_needed(null, _SessionId, ConnectionId, _State) ->
     _ = voice_state_counts_cache:remove_connection(ConnectionId),
     ok;
 leave_call_if_needed(ChannelId, SessionId, ConnectionId, State) ->
-    case guild_voice_connection_normalize:normalize_positive_snowflake(ChannelId) of
+    case snowflake_id:parse_maybe(ChannelId) of
         undefined ->
             _ = voice_state_counts_cache:remove_connection(ConnectionId),
             ok;
@@ -97,15 +98,33 @@ broadcast_disconnect_if_needed(OldChannelId, DisconnectVS, State) ->
 -spec disconnect_voice_user(integer(), dm_state()) -> {reply, map(), dm_state()}.
 disconnect_voice_user(UserId, State) ->
     VoiceStates = maps:get(dm_voice_states, State, #{}),
+    SessionId = guild_voice_connection_normalize:normalize_session_id(
+        maps:get(id, State, undefined)
+    ),
     UserVoiceStates = maps:filter(
         fun(_ConnId, VS) ->
-            snowflake_id:equal(UserId, maps:get(<<"user_id">>, VS, undefined))
+            snowflake_id:equal(UserId, maps:get(<<"user_id">>, VS, undefined)) andalso
+                voice_state_session_matches(VS, SessionId)
         end,
         VoiceStates
     ),
     case maps:size(UserVoiceStates) of
         0 -> {reply, #{success => true}, State};
         _ -> do_disconnect_voice_user(UserVoiceStates, VoiceStates, State)
+    end.
+
+-spec voice_state_session_matches(voice_state(), binary() | undefined) -> boolean().
+voice_state_session_matches(_VoiceState, undefined) ->
+    true;
+voice_state_session_matches(VoiceState, SessionId) ->
+    case
+        guild_voice_connection_normalize:normalize_session_id(
+            maps:get(<<"session_id">>, VoiceState, undefined)
+        )
+    of
+        undefined -> true;
+        SessionId -> true;
+        _ -> false
     end.
 
 -spec do_disconnect_voice_user(voice_state_map(), voice_state_map(), dm_state()) ->
@@ -151,7 +170,7 @@ broadcast_user_disconnect(ConnId, VoiceState, NewState) ->
 -spec clear_dm_e2ee_room_key_if_channel_empty(term(), voice_state_map(), dm_state()) ->
     dm_state().
 clear_dm_e2ee_room_key_if_channel_empty(ChannelId, VoiceStates, State) ->
-    case guild_voice_connection_normalize:normalize_positive_snowflake(ChannelId) of
+    case snowflake_id:parse_maybe(ChannelId) of
         undefined ->
             State;
         ChannelIdInt ->
@@ -200,19 +219,31 @@ call_region_from_pid(CallPid, Timeout) ->
             null
     end.
 
+-spec call_voice_states(integer()) -> [voice_state()].
+call_voice_states(ChannelId) ->
+    case call_manager:lookup(ChannelId) of
+        {ok, CallPid} -> call_voice_states_from_pid(CallPid);
+        _ -> []
+    end.
+
+-spec call_voice_states_from_pid(pid()) -> [voice_state()].
+call_voice_states_from_pid(CallPid) ->
+    case gateway_rpc_call_lookup:safe_gen_server_call(CallPid, {get_state}, 5000) of
+        {ok, {ok, #{voice_states := VoiceStates}}} when is_list(VoiceStates) -> VoiceStates;
+        _ -> []
+    end.
+
 -spec voice_region_for_rpc(term()) -> binary() | null.
 voice_region_for_rpc(<<"automatic">>) -> null;
 voice_region_for_rpc(Region) when is_binary(Region) -> Region;
 voice_region_for_rpc(_) -> null.
 
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
-
 -spec resolve_effective_session_id(term(), term()) -> binary() | undefined.
 resolve_effective_session_id(ExistingSessionId, RequestSessionId) ->
-    ExistingNormalized = normalize_session_id(ExistingSessionId),
-    RequestNormalized = normalize_session_id(RequestSessionId),
+    ExistingNormalized = guild_voice_connection_normalize:normalize_session_id(
+        ExistingSessionId
+    ),
+    RequestNormalized = guild_voice_connection_normalize:normalize_session_id(RequestSessionId),
     case ExistingNormalized of
         undefined -> RequestNormalized;
         RequestNormalized -> RequestNormalized;
@@ -289,23 +320,59 @@ normalize_optional_binary(Value) ->
 
 -ifdef(TEST).
 
-normalize_session_id_test() ->
-    ?assertEqual(undefined, normalize_session_id(undefined)),
-    ?assertEqual(<<"abc">>, normalize_session_id(<<"abc">>)),
-    ?assertEqual(<<"123">>, normalize_session_id(123)),
-    ?assertEqual(<<"test">>, normalize_session_id("test")).
+session_voice_state(UserId, ChannelId, ConnId, SessionId) ->
+    #{
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId),
+        <<"connection_id">> => ConnId,
+        <<"session_id">> => SessionId
+    }.
 
-validate_dm_viewer_stream_keys_null_test() ->
-    ?assertEqual({ok, []}, validate_dm_viewer_stream_keys(undefined, 123, #{})),
-    ?assertEqual({ok, []}, validate_dm_viewer_stream_keys(null, 123, #{})).
+disconnect_voice_user_keeps_other_session_connections_test() ->
+    State = #{
+        id => <<"session-1">>,
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-own">> => session_voice_state(5, 100, <<"conn-own">>, <<"session-1">>),
+            <<"conn-other">> => session_voice_state(5, 100, <<"conn-other">>, <<"session-2">>),
+            <<"conn-peer">> => session_voice_state(6, 100, <<"conn-peer">>, <<"session-3">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    VoiceStates = maps:get(dm_voice_states, NewState),
+    ?assertNot(maps:is_key(<<"conn-own">>, VoiceStates)),
+    ?assert(maps:is_key(<<"conn-other">>, VoiceStates)),
+    ?assert(maps:is_key(<<"conn-peer">>, VoiceStates)).
 
-validate_dm_viewer_stream_keys_invalid_type_test() ->
-    ?assertEqual({error, voice_invalid_state}, validate_dm_viewer_stream_keys(123, 456, #{})).
+disconnect_voice_user_without_session_id_test() ->
+    State = #{
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-a">> => session_voice_state(5, 100, <<"conn-a">>, <<"session-1">>),
+            <<"conn-b">> => session_voice_state(5, 100, <<"conn-b">>, <<"session-2">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    ?assertEqual(#{}, maps:get(dm_voice_states, NewState)).
 
-resolve_effective_session_id_test() ->
-    ?assertEqual(<<"req">>, resolve_effective_session_id(undefined, <<"req">>)),
-    ?assertEqual(<<"existing">>, resolve_effective_session_id(<<"existing">>, <<"req">>)),
-    ?assertEqual(<<"same">>, resolve_effective_session_id(<<"same">>, <<"same">>)).
+disconnect_voice_user_keeps_unattributed_connections_test() ->
+    State = #{
+        id => <<"session-1">>,
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-legacy">> => #{
+                <<"user_id">> => <<"5">>,
+                <<"channel_id">> => <<"100">>,
+                <<"connection_id">> => <<"conn-legacy">>
+            },
+            <<"conn-own">> => session_voice_state(5, 100, <<"conn-own">>, <<"session-1">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    ?assertEqual(#{}, maps:get(dm_voice_states, NewState)).
 
 call_region_from_dead_pid_returns_null_test() ->
     DeadPid = spawn(fun() -> ok end),

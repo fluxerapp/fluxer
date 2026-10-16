@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {User} from '@app/api/models/User';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+
+import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
+import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_RELATIONSHIPS} from '@fluxer/constants/src/LimitConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -21,36 +40,25 @@ import type {
 	FriendRequestByTagRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import type {ApiContext} from '../../ApiContext';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {Relationship} from '../../models/Relationship';
-import type {User} from '../../models/User';
-import type {UserPermissionUtils} from '../../utils/UserPermissionUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import type {DirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 
-interface UserRelationshipRepository
-	extends IUserAccountRepository,
-		IUserRelationshipRepository,
-		IUserSettingsRepository {}
+function emitUserBlocked(userId: UserID, targetId: UserID): void {
+	void emitActivity('user_blocked', targetId.toString(), {
+		blocker_id: userId.toString(),
+		blocked_id: targetId.toString(),
+	});
+}
+
+function emitFriendRequest(userId: UserID, targetId: UserID, delivered: boolean): void {
+	void emitActivity('friend_request', userId.toString(), {
+		user_id: userId.toString(),
+		target_id: targetId.toString(),
+		delivered,
+	});
+}
 
 export class UserRelationshipService {
-	private readonly userRepository: UserRelationshipRepository;
+	private readonly userRepository: UserRepository;
 	private readonly gatewayService: IGatewayService;
-	private readonly dmSpamMitigationService: DirectMessageSpamMitigationService;
 
 	constructor(
 		apiContext: ApiContext,
@@ -60,7 +68,6 @@ export class UserRelationshipService {
 		const {users, gateway} = apiContext.services;
 		this.userRepository = users;
 		this.gatewayService = gateway;
-		this.dmSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, this.userRepository);
 	}
 
 	async getRelationship(params: {userId: UserID; targetId: UserID; type: number}): Promise<Relationship | null> {
@@ -118,20 +125,19 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
-		if (!staffForceAccept && (await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled) {
+		const requesterUser = await this.userRepository.findUnique(userId);
+		const requesterIsStaff = requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
+		if (!requesterIsStaff && (await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled) {
 			throw new DirectMessagesDisabledError();
 		}
-		const requesterUser = await this.userRepository.findUnique(userId);
-		if (staffForceAccept) {
-			const requesterIsStaff = requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
-			if (requesterIsStaff) {
-				return await this.forceCreateFriendship({userId, targetId, userCacheService, requestCache});
-			}
+		if (staffForceAccept && requesterIsStaff) {
+			return await this.forceCreateFriendship({userId, targetId, userCacheService, requestCache});
 		}
 		if (!requesterUser) {
 			throw new UnknownUserError();
 		}
-		if (this.dmSpamMitigationService.shouldSuppressDirectMessageDelivery(requesterUser)) {
+		if (isDirectDeliverySuppressed(requesterUser)) {
+			emitFriendRequest(userId, targetId, false);
 			return await this.createShadowFriendRequest({
 				requesterUser,
 				userId,
@@ -171,22 +177,11 @@ export class UserRelationshipService {
 				return relationship;
 			}
 		}
-		const spamDecision = await this.dmSpamMitigationService.recordFriendRequestSend({
-			requester: requesterUser,
-			targetId,
-		});
-		if (spamDecision.shouldSuppressRecipientDelivery) {
-			return await this.createShadowFriendRequest({
-				requesterUser,
-				userId,
-				targetId,
-				userCacheService,
-				requestCache,
-			});
-		}
 		const targetUser = await this.validateFriendRequest({userId, targetId});
+		await assertMayStartConversation({user: requesterUser, targetId, users: this.userRepository});
 		await this.validateRelationshipCounts({userId, targetId});
 		const requestRelationship = await this.createFriendRequest({userId, targetId, userCacheService, requestCache});
+		emitFriendRequest(userId, targetId, true);
 		const targetIsFriendlyBot =
 			targetUser.isBot && (targetUser.flags & UserFlags.FRIENDLY_BOT) === UserFlags.FRIENDLY_BOT;
 		const manualApprovalFlag = UserFlags.FRIENDLY_BOT_MANUAL_APPROVAL;
@@ -343,6 +338,7 @@ export class UserRelationshipService {
 			userCacheService,
 			requestCache,
 		});
+		emitUserBlocked(userId, targetId);
 		return blockRelationship;
 	}
 
@@ -762,8 +758,7 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const userPartialResolver = (userId: UserID) =>
-			getCachedUserPartialResponse({userId, userCacheService, requestCache});
+		const userPartialResolver = (userId: UserID) => userCacheService.getUserPartialResponse(userId, requestCache);
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'RELATIONSHIP_ADD',
@@ -782,8 +777,7 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const userPartialResolver = (userId: UserID) =>
-			getCachedUserPartialResponse({userId, userCacheService, requestCache});
+		const userPartialResolver = (userId: UserID) => userCacheService.getUserPartialResponse(userId, requestCache);
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'RELATIONSHIP_UPDATE',
@@ -806,6 +800,9 @@ export class UserRelationshipService {
 
 	private isDeletedUser(user: User | null | undefined): boolean {
 		if (!user) {
+			return false;
+		}
+		if (user.pendingDeletionAt !== null) {
 			return false;
 		}
 		return (user.flags & UserFlags.DELETED) === UserFlags.DELETED;

@@ -10,7 +10,7 @@ import {
 	getAvailableTabs,
 	getGroupedSettingsTabs,
 } from '@app/features/channel/utils/ChannelSettingsModalUtils';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -48,7 +48,7 @@ export const ChannelSettingsModal: React.FC<ChannelSettingsModalProps> = observe
 	const unsavedChangesState = UnsavedChanges;
 	useEffect(() => {
 		if (guildId) {
-			GatewayConnection.syncGuildIfNeeded(guildId, 'channel-settings-modal');
+			GatewaySessions.foregroundConnection.syncGuildIfNeeded(guildId, 'channel-settings-modal');
 		}
 	}, [guildId]);
 	useEffect(() => {

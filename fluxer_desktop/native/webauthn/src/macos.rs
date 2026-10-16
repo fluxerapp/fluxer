@@ -4,7 +4,7 @@
 
 use std::ptr;
 use std::sync::Mutex;
-use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::mpsc::{Sender, channel};
 
 use dispatch2::{
     DispatchQueue, DispatchRetained, DispatchSemaphore, DispatchTime, MainThreadBound, WaitError,
@@ -45,13 +45,9 @@ use objc2_foundation::{
 };
 
 use crate::common::{
-    ATTACHMENT_CROSS_PLATFORM, ATTACHMENT_PLATFORM, CREATE_PREFIX, CreateInput, CreateResult,
-    DescriptorInput, GET_PREFIX, GetInput, GetResult, TRANSPORT_INTERNAL, TRANSPORT_USB,
-    ceremony_error,
+    CREATE_PREFIX, CreateInput, CreateResult, DescriptorInput, GET_PREFIX, GetInput, GetResult,
+    TRANSPORT_INTERNAL, TRANSPORT_USB, ceremony_error,
 };
-
-#[allow(dead_code)]
-const _: u32 = ATTACHMENT_PLATFORM + ATTACHMENT_CROSS_PLATFORM;
 
 pub fn is_supported() -> bool {
     AnyClass::get(c"ASAuthorizationPlatformPublicKeyCredentialProvider").is_some()
@@ -1105,6 +1101,3 @@ fn build_get_controller(
         },
     ))
 }
-
-#[allow(dead_code)]
-const _: Option<&Receiver<CompletionPayload>> = None;

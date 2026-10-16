@@ -1,16 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import path from 'node:path';
-import {
-	getAppUrl,
-	getCustomAppUrl,
-	getDesktopTroubleshootingSettings,
-	getDesktopWindowBehaviorSettings,
-} from '@electron/common/DesktopConfig';
+import {APP_PROTOCOL, DESKTOP_APP_URL} from '@electron/common/Constants';
+import {getDesktopTroubleshootingSettings, getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
 import type {DesktopInfo, DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import {isPortableMode} from '@electron/common/UserDataPath';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {
+	type DesktopAccountStoreCounts,
+	formatDesktopAccountStoreTelemetry,
+	readDesktopAccountStoreTelemetry,
+} from '@electron/main/DesktopAccountStoreTelemetry';
+import {type DesktopAppStoreState, readDesktopAppStoreState} from '@electron/main/DesktopAppStoreHealth';
+import {
+	getArgValue,
+	hasFlag,
+	isSafeModeLaunch,
+	shouldDisableModuleUpdatesForLaunch,
+} from '@electron/main/LaunchOptions';
 import {getDesktopInfo} from '@electron/main/PlatformInfo';
+import {
+	formatDesktopOsName,
+	formatReleaseChannelLabel,
+	normalizeArchitectureValue,
+} from '@fluxer/desktop_ipc/src/DesktopLabels';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -18,20 +31,19 @@ const DEBUG_INFO_ARGS = new Set(['--fluxer-debug-info', '--fluxer-client-info', 
 const DISABLE_HARDWARE_ACCELERATION_ARGS = new Set(['--fluxer-disable-gpu', '--fluxer-disable-hardware-acceleration']);
 const OPEN_DEVTOOLS_ARGS = new Set(['--fluxer-devtools', '--fluxer-open-devtools']);
 const RESET_WINDOW_STATE_ARGS = new Set(['--fluxer-reset-window-state']);
-const SAFE_MODE_ARGS = new Set(['--fluxer-safe-mode']);
 const RENDERER_CONSOLE_LOG_ARGS = new Set(['--fluxer-log-renderer-console']);
 const NET_LOG_ARGS = new Set(['--fluxer-net-log']);
-const APP_URL_ARGS = new Set(['--fluxer-app-url']);
 
 interface DesktopDebugInfo {
 	clientInfo: string;
 	desktopInfo: DesktopInfo;
 	appUrl: string;
-	customAppUrl: string | null;
 	userDataPath: string;
 	logsPath: string | null;
 	logFilePath: string | null;
 	configPath: string;
+	accountStore: DesktopAppStoreState | null;
+	accountStoreTelemetry: DesktopAccountStoreCounts;
 	windowBehavior: DesktopWindowBehaviorSettings;
 	troubleshooting: DesktopTroubleshootingSettings;
 	packaged: boolean;
@@ -69,6 +81,35 @@ export function shouldDisableHardwareAccelerationForLaunch(argv: ReadonlyArray<s
 	return hasFlag(argv, DISABLE_HARDWARE_ACCELERATION_ARGS) || isSafeModeLaunch(argv);
 }
 
+export function resolveEffectiveDesktopTroubleshootingSettings(
+	settings: DesktopTroubleshootingSettings,
+	argv: ReadonlyArray<string>,
+	platform: NodeJS.Platform,
+): DesktopTroubleshootingSettings {
+	return {
+		...settings,
+		disableHardwareAcceleration:
+			platform !== 'darwin' &&
+			(settings.disableHardwareAcceleration || shouldDisableHardwareAccelerationForLaunch(argv)),
+		disableModuleUpdates: settings.disableModuleUpdates || shouldDisableModuleUpdatesForLaunch(argv),
+	};
+}
+
+let launchTroubleshootingSettings: DesktopTroubleshootingSettings | null = null;
+
+export function getLaunchDesktopTroubleshootingSettings(): DesktopTroubleshootingSettings {
+	launchTroubleshootingSettings ??= resolveEffectiveDesktopTroubleshootingSettings(
+		getDesktopTroubleshootingSettings(),
+		process.argv,
+		process.platform,
+	);
+	return launchTroubleshootingSettings;
+}
+
+export function isUpdateOnDemandLaunch(): boolean {
+	return getLaunchDesktopTroubleshootingSettings().disableModuleUpdates && !shouldDisableModuleUpdatesForLaunch();
+}
+
 export function shouldOpenDevToolsOnLaunch(argv: ReadonlyArray<string>): boolean {
 	return hasFlag(argv, OPEN_DEVTOOLS_ARGS);
 }
@@ -83,47 +124,6 @@ export function shouldIgnoreWindowStateForLaunch(argv: ReadonlyArray<string>): b
 
 export function shouldForwardRendererConsoleToMainLog(argv: ReadonlyArray<string>): boolean {
 	return hasFlag(argv, RENDERER_CONSOLE_LOG_ARGS);
-}
-
-function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
-	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
-}
-
-function isSafeModeLaunch(argv: ReadonlyArray<string>): boolean {
-	return hasFlag(argv, SAFE_MODE_ARGS);
-}
-
-function getArgValue(argv: ReadonlyArray<string>, names: ReadonlySet<string>): string | null {
-	for (let index = 0; index < argv.length; index += 1) {
-		const arg = argv[index];
-		for (const name of names) {
-			if (arg === name) {
-				const next = argv[index + 1];
-				return next && !next.startsWith('--') ? next : '';
-			}
-			if (arg.startsWith(`${name}=`)) {
-				return arg.slice(name.length + 1);
-			}
-		}
-	}
-	return null;
-}
-
-export function getLaunchAppUrlOverride(argv: ReadonlyArray<string>): string | null {
-	const value = getArgValue(argv, APP_URL_ARGS);
-	if (value === null) {
-		return null;
-	}
-	const trimmed = value.trim();
-	if (!trimmed) {
-		throw new Error('--fluxer-app-url requires a URL');
-	}
-	const candidate = /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
-	const url = new URL(candidate);
-	if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-		throw new Error('--fluxer-app-url must use http or https');
-	}
-	return url.toString();
 }
 
 export function getLaunchNetLogPath(userDataPath: string, argv: ReadonlyArray<string>): string | null {
@@ -156,11 +156,8 @@ function getLogFilePath(): string | null {
 }
 
 function sanitizeLaunchArg(arg: string): string {
-	if (/^fluxer:\/\//i.test(arg)) {
-		return 'fluxer://<redacted>';
-	}
-	if (arg.startsWith('--fluxer-app-url=')) {
-		return `--fluxer-app-url=${sanitizeUrlForDiagnostics(arg.slice('--fluxer-app-url='.length))}`;
+	if (arg.toLowerCase().startsWith(`${APP_PROTOCOL}://`)) {
+		return `${APP_PROTOCOL}://<redacted>`;
 	}
 	if (/^(--[^=]*(?:token|secret|password|key|code)[^=]*)=/i.test(arg)) {
 		return `${arg.slice(0, arg.indexOf('='))}=<redacted>`;
@@ -169,45 +166,7 @@ function sanitizeLaunchArg(arg: string): string {
 }
 
 function sanitizeLaunchArgs(argv: ReadonlyArray<string>): Array<string> {
-	const sanitized: Array<string> = [];
-	for (let index = 0; index < argv.length; index += 1) {
-		const arg = argv[index];
-		if (arg === '--fluxer-app-url') {
-			sanitized.push(arg);
-			const next = argv[index + 1];
-			if (next && !next.startsWith('--')) {
-				sanitized.push(sanitizeUrlForDiagnostics(next));
-				index += 1;
-			}
-			continue;
-		}
-		sanitized.push(sanitizeLaunchArg(arg));
-	}
-	return sanitized;
-}
-
-function sanitizeUrlForDiagnostics(rawUrl: string): string {
-	try {
-		const candidate = /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
-		const url = new URL(candidate);
-		url.username = '';
-		url.password = '';
-		url.search = '';
-		url.hash = '';
-		return url.toString();
-	} catch {
-		return '<invalid-url>';
-	}
-}
-
-function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
-	if (!value) return undefined;
-	const trimmed = value.trim();
-	if (/\barm64\b|\baarch64\b|\barmv8\b|\barm64e\b/i.test(trimmed)) return 'arm64';
-	if (/\barm\b|\barmv7\b|\barmv6\b/i.test(trimmed)) return 'arm';
-	if (/\bx86_64\b|\bx64\b|\bamd64\b|\bwin64\b|\bwow64\b/i.test(trimmed)) return 'x64';
-	if (/\bx86\b|\bi[3-6]86\b/i.test(trimmed)) return 'x86';
-	return trimmed || undefined;
+	return argv.map(sanitizeLaunchArg);
 }
 
 function formatSystemArchitecture(desktopInfo: DesktopInfo): string {
@@ -216,37 +175,6 @@ function formatSystemArchitecture(desktopInfo: DesktopInfo): string {
 		desktopInfo.hardwareArch ??
 		desktopInfo.arch
 	);
-}
-
-function getWindowsVersionName(osVersion: string): string {
-	const parts = osVersion.split('.');
-	const majorVersion = parseInt(parts[0], 10);
-	const buildNumber = parseInt(parts[2], 10);
-	if (majorVersion === 10) {
-		if (buildNumber >= 22000) {
-			return 'Windows 11';
-		}
-		return 'Windows 10';
-	}
-	return 'Windows';
-}
-
-function formatOsName(desktopInfo: DesktopInfo): string {
-	switch (desktopInfo.os) {
-		case 'darwin':
-			return 'macOS';
-		case 'win32':
-			return desktopInfo.osVersion ? getWindowsVersionName(desktopInfo.osVersion) : 'Windows';
-		case 'linux':
-			return 'Linux';
-		default:
-			return desktopInfo.os;
-	}
-}
-
-function formatReleaseChannelLabel(value: string): string {
-	const normalized = value.trim().toLowerCase();
-	return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
 function getBuildString(desktopInfo: DesktopInfo): string {
@@ -268,7 +196,7 @@ function safeGetLocale(): string {
 
 function formatDesktopClientInfo(desktopInfo: DesktopInfo, options: DesktopClientInfoOptions = {}): string {
 	const osVersion = desktopInfo.systemVersion || desktopInfo.osVersion;
-	const osDescription = `${[formatOsName(desktopInfo), osVersion].filter(Boolean).join(' ')} (${formatSystemArchitecture(
+	const osDescription = `${[formatDesktopOsName(desktopInfo), osVersion].filter(Boolean).join(' ')} (${formatSystemArchitecture(
 		desktopInfo,
 	)})`;
 	const parts = [
@@ -290,14 +218,15 @@ export async function getDesktopDebugInfo(
 	return {
 		clientInfo: formatDesktopClientInfo(desktopInfo, {locale: safeGetLocale()}),
 		desktopInfo,
-		appUrl: getAppUrl(),
-		customAppUrl: getCustomAppUrl(),
+		appUrl: DESKTOP_APP_URL,
 		userDataPath,
 		logsPath: safeGetLogsPath(),
 		logFilePath: getLogFilePath(),
 		configPath: path.join(userDataPath, 'settings.json'),
+		accountStore: readDesktopAppStoreState(userDataPath),
+		accountStoreTelemetry: readDesktopAccountStoreTelemetry(userDataPath),
 		windowBehavior: getDesktopWindowBehaviorDebugSettings(),
-		troubleshooting: getDesktopTroubleshootingSettings(),
+		troubleshooting: getLaunchDesktopTroubleshootingSettings(),
 		packaged: app.isPackaged,
 		portable: isPortableMode(),
 		pid: process.pid,
@@ -312,8 +241,11 @@ export async function getDesktopDebugInfo(
 function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 	return [
 		`showTrayIcon=${settings.showTrayIcon}`,
+		`coloredTrayIcon=${settings.coloredTrayIcon}`,
+		`darkTaskbarBadge=${settings.darkTaskbarBadge}`,
 		`minimizeToTray=${settings.minimizeToTray}`,
 		`closeToTray=${settings.closeToTray}`,
+		`startMinimized=${settings.startMinimized}`,
 		`useNativeTitleBar=${settings.useNativeTitleBar}`,
 		`rememberWindowState=${settings.rememberWindowState}`,
 		`allowTransparency=${settings.allowTransparency}`,
@@ -322,8 +254,16 @@ function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 		`activeSmoothScrolling=${settings.activeSmoothScrolling}`,
 		`middleClickAutoscroll=${settings.middleClickAutoscroll}`,
 		`activeMiddleClickAutoscroll=${settings.activeMiddleClickAutoscroll}`,
-		`firstClickPassThroughWhenUnfocused=${settings.firstClickPassThroughWhenUnfocused}`,
 	].join(', ');
+}
+
+function formatAccountStoreState(state: DesktopAppStoreState | null): string {
+	if (state === null) {
+		return 'never opened successfully on this device';
+	}
+	return `firstSuccessAt=${new Date(state.firstSuccessAt).toISOString()}, lastSuccessAt=${new Date(
+		state.lastSuccessAt,
+	).toISOString()}, schemaVersion=${state.lastSchemaVersion}`;
 }
 
 export function formatDesktopDebugInfo(info: DesktopDebugInfo): string {
@@ -331,11 +271,12 @@ export function formatDesktopDebugInfo(info: DesktopDebugInfo): string {
 		'Fluxer desktop debug info',
 		info.clientInfo,
 		`App URL: ${info.appUrl}`,
-		`Custom app URL: ${info.customAppUrl ?? '(none)'}`,
 		`User data: ${info.userDataPath}`,
 		`Config: ${info.configPath}`,
+		`Account store: ${formatAccountStoreState(info.accountStore)}`,
+		`Account store telemetry: ${formatDesktopAccountStoreTelemetry(info.accountStoreTelemetry)}`,
 		`Logs: ${info.logFilePath ?? info.logsPath ?? '(unavailable)'}`,
-		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}`,
+		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}, disableModuleUpdates=${info.troubleshooting.disableModuleUpdates}`,
 		`Window behavior: ${formatWindowBehavior(info.windowBehavior)}`,
 		`Runtime: packaged=${info.packaged}, portable=${info.portable}, pid=${info.pid}, cwd=${info.cwd}`,
 		`Sandbox: flatpak=${info.desktopInfo.flatpak}, flatpakAppId=${info.desktopInfo.flatpakAppId ?? '(none)'}`,
@@ -349,9 +290,10 @@ export function logDesktopDebugInfo(info: DesktopDebugInfo): void {
 	log.info('[DebugInfo] Client info:', info.clientInfo);
 	log.info('[DebugInfo] Runtime:', {
 		appUrl: info.appUrl,
-		customAppUrl: info.customAppUrl,
 		userDataPath: info.userDataPath,
 		configPath: info.configPath,
+		accountStore: info.accountStore,
+		accountStoreTelemetry: info.accountStoreTelemetry,
 		logsPath: info.logsPath,
 		logFilePath: info.logFilePath,
 		troubleshooting: info.troubleshooting,

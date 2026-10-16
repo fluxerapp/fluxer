@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const UiohookKeycode = {
+const UiohookKeycode = {
 	Escape: 1,
 	F1: 59,
 	F2: 60,

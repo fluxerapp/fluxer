@@ -8,8 +8,6 @@ import {showChannelErrorModal} from '@app/features/channel/components/alerts/Cha
 import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
 import type {InviteCandidate} from '@app/features/channel/components/direct_message/DMListHelpers';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
-import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
-import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
@@ -31,6 +29,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import {ChangeFriendNicknameModal} from '@app/features/relationship/components/modals/ChangeFriendNicknameModal';
 import * as RelationshipActionUtils from '@app/features/relationship/utils/RelationshipActionUtils';
+import {INVITE_SENT_FOR_DESCRIPTOR} from '@app/features/ui/action_menu/items/dm_menu_data/shared';
 import * as LayoutCommands from '@app/features/ui/commands/LayoutCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -58,10 +57,6 @@ const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
 	message: 'Close your DM with {username}? You can reopen it anytime.',
 	comment: 'Body of the close confirmation alert for a one-on-one DM. username is the recipient display name.',
 });
-const INVITE_SENT_FOR_DESCRIPTOR = msg({
-	message: 'Invite sent for {name}',
-	comment: 'Toast confirmation shown after sending a community invite to the DM recipient. name is the community name.',
-});
 const FAILED_TO_SEND_INVITE_TITLE_DESCRIPTOR = msg({
 	message: "Couldn't send invite",
 	comment: 'Title of the error modal shown when sending a community invite through a DM fails.',
@@ -80,13 +75,10 @@ interface UseDMListItemHandlersParams {
 	channel: Channel;
 	recipient: User | null;
 	isGroupDM: boolean;
-	isMobile: boolean;
 	relationshipType: number | undefined;
 	restrictRecipientActions: boolean;
 	closeAllSheets: () => void;
 	setMenuOpen: (open: boolean) => void;
-	setEditGroupSheetOpen: (open: boolean) => void;
-	setInvitesSheetOpen: (open: boolean) => void;
 	leaveGroup: (channelId: string) => void;
 	i18n: I18n;
 }
@@ -113,8 +105,6 @@ export interface DMListItemHandlers {
 	handleBlockUser: () => void;
 	handleUnblockUser: () => void;
 	handleSendInvite: (candidate: InviteCandidate) => Promise<void>;
-	handleEditGroup: () => void;
-	handleShowInvites: () => void;
 	handleLeaveGroup: () => void;
 	handleDeleteMyMessagesInChannel: () => void;
 	handlePinChannel: () => Promise<void>;
@@ -125,13 +115,10 @@ export function useDMListItemHandlers({
 	channel,
 	recipient,
 	isGroupDM,
-	isMobile,
 	relationshipType,
 	restrictRecipientActions,
 	closeAllSheets,
 	setMenuOpen,
-	setEditGroupSheetOpen,
-	setInvitesSheetOpen,
 	leaveGroup,
 	i18n,
 }: UseDMListItemHandlersParams): DMListItemHandlers {
@@ -175,7 +162,7 @@ export function useDMListItemHandlers({
 		closeAllSheets();
 	}, [channel.id, closeAllSheets]);
 	const handleCloseDm = useCallback(() => {
-		const username = recipient ? NicknameUtils.getNickname(recipient) : '';
+		const username = recipient ? NicknameUtils.getNickname(recipient, null) : '';
 		const description = isGroupDM
 			? i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_THIS_DESCRIPTOR)
 			: i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {username});
@@ -257,7 +244,7 @@ export function useDMListItemHandlers({
 				channel.id,
 				{
 					muted: true,
-					mute_config: duration ? createMuteConfig(duration) : null,
+					mute_config: createMuteConfig(duration),
 				},
 				{persistImmediately: true},
 			);
@@ -362,7 +349,7 @@ export function useDMListItemHandlers({
 				});
 				ToastCommands.createToast({
 					type: 'success',
-					children: i18n._(INVITE_SENT_FOR_DESCRIPTOR, {name: candidate.guild.name}),
+					children: i18n._(INVITE_SENT_FOR_DESCRIPTOR, {guildName: candidate.guild.name}),
 				});
 			} catch (error) {
 				logger.error('Failed to send invite via DM sheet:', error);
@@ -375,42 +362,6 @@ export function useDMListItemHandlers({
 		},
 		[recipient, closeAllSheets, i18n],
 	);
-	const handleEditGroup = useCallback(() => {
-		if (isMobile) {
-			ModalCommands.runAfterBottomSheetClose(
-				() => setMenuOpen(false),
-				() => setEditGroupSheetOpen(true),
-			);
-		} else {
-			setMenuOpen(false);
-			ModalCommands.push(
-				modal(() => (
-					<EditGroupModal
-						channelId={channel.id}
-						data-flx="channel.direct-message.use-dm-list-item-handlers.handle-edit-group.edit-group-modal"
-					/>
-				)),
-			);
-		}
-	}, [channel.id, isMobile, setMenuOpen, setEditGroupSheetOpen]);
-	const handleShowInvites = useCallback(() => {
-		if (isMobile) {
-			ModalCommands.runAfterBottomSheetClose(
-				() => setMenuOpen(false),
-				() => setInvitesSheetOpen(true),
-			);
-		} else {
-			setMenuOpen(false);
-			ModalCommands.push(
-				modal(() => (
-					<GroupInvitesModal
-						channelId={channel.id}
-						data-flx="channel.direct-message.use-dm-list-item-handlers.handle-show-invites.group-invites-modal"
-					/>
-				)),
-			);
-		}
-	}, [channel.id, isMobile, setMenuOpen, setInvitesSheetOpen]);
 	const handleLeaveGroup = useCallback(() => {
 		ModalCommands.runAfterBottomSheetClose(
 			() => setMenuOpen(false),
@@ -470,8 +421,6 @@ export function useDMListItemHandlers({
 		handleBlockUser,
 		handleUnblockUser,
 		handleSendInvite,
-		handleEditGroup,
-		handleShowInvites,
 		handleLeaveGroup,
 		handleDeleteMyMessagesInChannel,
 		handlePinChannel,

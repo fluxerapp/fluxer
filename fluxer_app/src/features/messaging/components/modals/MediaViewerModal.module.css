@@ -20,7 +20,7 @@
 	pointer-events: none;
 }
 
-.imageSpinnerOverlay {
+.placeholder {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
@@ -32,18 +32,6 @@
 }
 
 .imagePending {
-	opacity: 0;
-}
-
-.sharpCanvasLayer {
-	position: fixed;
-	z-index: 2147483000;
-	background: transparent;
-	pointer-events: none;
-	contain: strict;
-}
-
-.sharpCanvasSourceHidden {
 	opacity: 0;
 }
 

@@ -11,22 +11,25 @@ import {
 	selectEffectiveGifAutoPlay,
 } from '@app/features/accessibility/state/MotionPreferencesMachine';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import AppStorage, {flushAppStorageWrites} from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import LocalPresence, {setLocalPresenceUserSettings} from '@app/features/presence/state/LocalPresence';
 import Theme from '@app/features/theme/state/Theme';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {PRIVACY_SETUP_VERSION} from '@app/features/user/constants/PrivacySetupConstants';
 import {
 	type CustomStatus,
 	normalizeCustomStatus,
 	toApiCustomStatusPayload,
 } from '@app/features/user/state/CustomStatus';
+import {setSyncedFieldUserSettings} from '@app/features/user/state/SyncedField';
 import {
 	changedSyncedPreferenceFields,
-	createEmptySyncedPreferences,
-	decodeSyncedPreferencesLenient,
-	encodeSyncedPreferences,
 	isSyncedPreferencesField,
 	mergeIncomingSyncedPreferences as mergeIncomingSyncedPreferencesWithEngine,
 	preferencesFromBytes,
@@ -34,6 +37,7 @@ import {
 	SYNCED_PREFERENCES_FIELDS,
 	type SyncedPreferences,
 	type SyncedPreferencesField,
+	syncedPreferencesEqual,
 } from '@app/features/user/state/SyncedPreferencesEngine';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -48,13 +52,27 @@ import {
 	ThemeTypes,
 	TimeFormatTypes,
 } from '@fluxer/constants/src/UserConstants';
+import {
+	createEmptySyncedPreferences,
+	decodeSyncedPreferencesLenient,
+	encodeSyncedPreferences,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
 import snakeCase from 'lodash/snakeCase';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
-type SyncedPreferencesSubField = Exclude<SyncedPreferencesField, 'sanitizeUrls'>;
+export interface UserSettingsAccountTransitionCheckpoint {
+	readonly accountEpoch: number;
+	readonly hydrated: boolean;
+	readonly syncedPreferences: SyncedPreferences;
+	readonly wireSyncedPreferences: SyncedPreferences;
+	readonly dirtySyncedPreferenceFields: ReadonlyArray<SyncedPreferencesField>;
+	readonly recentlyAckedSyncedPreferenceFields: ReadonlyArray<readonly [SyncedPreferencesField, number]>;
+	readonly syncConsecutive429s: number;
+	readonly hadPendingFlush: boolean;
+}
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -96,6 +114,7 @@ export interface UserSettings {
 	groupDmAddPermissionFlags: number;
 	profilePrivacy: ProfilePrivacyLevel;
 	defaultShareVoiceActivity: boolean;
+	privacySetupVersion: number | null;
 	guildFolders: Array<GuildFolder>;
 	customStatus: CustomStatus | null;
 	afkTimeout: number;
@@ -258,7 +277,7 @@ class UserSettingsState {
 	status: StatusType = StatusTypes.ONLINE;
 	statusResetsAt: string | null = null;
 	statusResetsTo: string | null = null;
-	theme: string = ThemeTypes.SYSTEM;
+	theme: string = ThemeTypes.DARK;
 	timeFormat: number = TimeFormatTypes.AUTO;
 	locale: string = 'en-US';
 	restrictedGuilds: Array<string> = [];
@@ -280,6 +299,7 @@ class UserSettingsState {
 	groupDmAddPermissionFlags: number = 0;
 	profilePrivacy: ProfilePrivacyLevel = ProfilePrivacyLevels.ALL_GUILDS;
 	defaultShareVoiceActivity: boolean = true;
+	privacySetupVersion: number | null = null;
 	guildFolders: Array<GuildFolder> = [];
 	customStatus: CustomStatus | null = null;
 	afkTimeout: number = 600;
@@ -307,6 +327,7 @@ class UserSettingsState {
 	private inFlightSyncedPreferences: SyncedPreferences | null = null;
 	private recentlyAckedSyncedPreferenceFields: Map<SyncedPreferencesField, number> = readPersistedRecentAck();
 	private accountEpoch = 0;
+	private syncFlushGeneration = 0;
 
 	constructor() {
 		makeAutoObservable<
@@ -322,6 +343,7 @@ class UserSettingsState {
 			| 'inFlightSyncedPreferences'
 			| 'recentlyAckedSyncedPreferenceFields'
 			| 'accountEpoch'
+			| 'syncFlushGeneration'
 		>(
 			this,
 			{
@@ -336,6 +358,7 @@ class UserSettingsState {
 				inFlightSyncedPreferences: false,
 				recentlyAckedSyncedPreferenceFields: false,
 				accountEpoch: false,
+				syncFlushGeneration: false,
 			},
 			{autoBind: true},
 		);
@@ -368,14 +391,6 @@ class UserSettingsState {
 		writePersistedSyncedPreferences(SYNCED_PREFERENCES_WIRE_KEY, this.wireSyncedPreferences);
 	}
 
-	getFlags(): number {
-		return this.flags;
-	}
-
-	getStatus(): StatusType {
-		return this.status;
-	}
-
 	getStatusResetsAt(): string | null {
 		return this.statusResetsAt;
 	}
@@ -384,44 +399,8 @@ class UserSettingsState {
 		return this.statusResetsTo;
 	}
 
-	getTimeFormat(): number {
-		return this.timeFormat;
-	}
-
-	getGuildPositions(): ReadonlyArray<string> {
-		return this.guildFolders.flatMap((folder) => folder.guildIds);
-	}
-
-	getLocale(): string {
-		return this.locale;
-	}
-
 	applyLocalLocale(locale: string): void {
 		this.locale = applyLocaleChange(locale);
-	}
-
-	getRestrictedGuilds(): ReadonlyArray<string> {
-		return this.restrictedGuilds;
-	}
-
-	getBotRestrictedGuilds(): ReadonlyArray<string> {
-		return this.botRestrictedGuilds;
-	}
-
-	getBotDefaultGuildsRestricted(): boolean {
-		return this.botDefaultGuildsRestricted;
-	}
-
-	getDefaultGuildsRestricted(): boolean {
-		return this.defaultGuildsRestricted;
-	}
-
-	getInlineAttachmentMedia(): boolean {
-		return this.inlineAttachmentMedia;
-	}
-
-	getInlineEmbedMedia(): boolean {
-		return this.inlineEmbedMedia;
 	}
 
 	getMotionPreferencesInput(): MotionPreferencesInput {
@@ -450,24 +429,12 @@ class UserSettingsState {
 		return selectEffectiveGifAutoPlay(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
 
-	getRenderEmbeds(): boolean {
-		return this.renderEmbeds;
-	}
-
-	getRenderReactions(): boolean {
-		return this.renderReactions;
-	}
-
 	getAnimateEmoji(): boolean {
 		return selectEffectiveAnimateEmoji(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
 
 	getAnimateStickers(): number {
 		return selectEffectiveAnimateStickers(createMotionPreferencesContext(this.getMotionPreferencesInput()));
-	}
-
-	getRenderSpoilers(): number {
-		return this.renderSpoilers;
 	}
 
 	getMessageDisplayCompact(): boolean {
@@ -477,28 +444,8 @@ class UserSettingsState {
 		return this.messageDisplayCompact;
 	}
 
-	getFriendSourceFlags(): number {
-		return this.friendSourceFlags;
-	}
-
-	getIncomingCallFlags(): number {
-		return this.incomingCallFlags;
-	}
-
-	getGroupDmAddPermissionFlags(): number {
-		return this.groupDmAddPermissionFlags;
-	}
-
-	getProfilePrivacy(): ProfilePrivacyLevel {
-		return this.profilePrivacy;
-	}
-
-	getDefaultShareVoiceActivity(): boolean {
-		return this.defaultShareVoiceActivity;
-	}
-
-	getGuildFolders(): ReadonlyArray<GuildFolder> {
-		return this.guildFolders;
+	isPrivacySetupPending(): boolean {
+		return this.hydrated && this.privacySetupVersion !== null && this.privacySetupVersion < PRIVACY_SETUP_VERSION;
 	}
 
 	getCustomStatus(): CustomStatus | null {
@@ -509,62 +456,85 @@ class UserSettingsState {
 		return this.afkTimeout;
 	}
 
-	getDeveloperMode(): boolean {
-		return this.developerMode;
-	}
-
-	getTrustedDomains(): ReadonlyArray<string> {
-		return this.trustedDomains;
-	}
-
 	trustAllDomains(): boolean {
 		return this.trustedDomains.includes('*');
-	}
-
-	getDefaultHideMutedChannels(): boolean {
-		return this.defaultHideMutedChannels;
-	}
-
-	getSensitiveContentFriendDmFilter(): number {
-		return this.sensitiveContentFriendDmFilter;
-	}
-
-	getSensitiveContentNonFriendDmFilter(): number {
-		return this.sensitiveContentNonFriendDmFilter;
-	}
-
-	getSensitiveContentGuildFilter(): number {
-		return this.sensitiveContentGuildFilter;
-	}
-
-	getSuppressUnprivilegedSelfMentions(): boolean {
-		return this.suppressUnprivilegedSelfMentions;
-	}
-
-	getSuppressUnprivilegedSelfMentionsBypassUserIds(): ReadonlyArray<string> {
-		return this.suppressUnprivilegedSelfMentionsBypassUserIds;
-	}
-
-	getSuppressUnprivilegedSelfMentionBypassUserIds(): ReadonlyArray<string> {
-		return this.getSuppressUnprivilegedSelfMentionsBypassUserIds();
-	}
-
-	getStaffDmAccessUserIds(): ReadonlyArray<string> {
-		return this.staffDmAccessUserIds;
 	}
 
 	isHydrated(): boolean {
 		return this.hydrated;
 	}
 
-	@action
 	markSessionChanging(): void {
 		this.hydrated = false;
 	}
 
-	@action
+	captureAccountTransitionCheckpoint(): UserSettingsAccountTransitionCheckpoint {
+		return {
+			accountEpoch: this.accountEpoch,
+			hydrated: this.hydrated,
+			syncedPreferences: cloneSyncedPreferences(this.syncedPreferences),
+			wireSyncedPreferences: cloneSyncedPreferences(this.wireSyncedPreferences),
+			dirtySyncedPreferenceFields: [...this.dirtySyncedPreferenceFields],
+			recentlyAckedSyncedPreferenceFields: [...this.recentlyAckedSyncedPreferenceFields.entries()],
+			syncConsecutive429s: this.syncConsecutive429s,
+			hadPendingFlush:
+				this.syncFlushTimer !== null ||
+				this.syncFlushInFlight ||
+				this.syncFlushPendingPromise !== null ||
+				this.syncFlushPendingResolvers.length > 0,
+		};
+	}
+
+	async restoreAccountTransitionCheckpoint(checkpoint: UserSettingsAccountTransitionCheckpoint): Promise<void> {
+		this.syncFlushGeneration += 1;
+		if (this.syncFlushTimer != null && this.syncFlushTimer !== 'microtask') {
+			clearTimeout(this.syncFlushTimer);
+		}
+		const resolvers = this.syncFlushPendingResolvers;
+		runInAction(() => {
+			this.accountEpoch = Math.max(this.accountEpoch, checkpoint.accountEpoch);
+			this.hydrated = checkpoint.hydrated;
+			this.syncedPreferences = cloneSyncedPreferences(checkpoint.syncedPreferences);
+			this.wireSyncedPreferences = cloneSyncedPreferences(checkpoint.wireSyncedPreferences);
+			this.dirtySyncedPreferenceFields = new Set(checkpoint.dirtySyncedPreferenceFields);
+			this.recentlyAckedSyncedPreferenceFields = new Map(checkpoint.recentlyAckedSyncedPreferenceFields);
+			this.syncConsecutive429s = checkpoint.syncConsecutive429s;
+			this.syncFlushTimer = null;
+			this.syncFlushInFlight = false;
+			this.inFlightSyncedPreferenceFields.clear();
+			this.inFlightSyncedPreferences = null;
+			this.syncFlushPendingResolvers = [];
+			this.syncFlushPendingPromise = null;
+		});
+		for (const resolver of resolvers) {
+			resolver.resolve();
+		}
+		this.persistLocalSyncedPreferences();
+		this.persistWireSyncedPreferences();
+		writeDirtySyncedPreferenceFields(this.dirtySyncedPreferenceFields);
+		writePersistedRecentAck(this.recentlyAckedSyncedPreferenceFields);
+		await flushAppStorageWrites();
+		if (
+			checkpoint.hydrated &&
+			(checkpoint.hadPendingFlush ||
+				this.dirtySyncedPreferenceFields.size > 0 ||
+				changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences).length > 0)
+		) {
+			void this.scheduleSyncedPreferencesFlush();
+		}
+		LocalPresence.updatePresence();
+	}
+
 	handleAccountTransition(): void {
+		const unsyncedFields = new Set([
+			...this.dirtySyncedPreferenceFields,
+			...changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences),
+		]);
+		if (unsyncedFields.size > 0) {
+			logger.info(`Clearing ${unsyncedFields.size} unsynced synced preference field(s) left by the previous account`);
+		}
 		this.accountEpoch += 1;
+		this.syncFlushGeneration += 1;
 		this.hydrated = false;
 		this.syncedPreferences = createEmptySyncedPreferences();
 		this.wireSyncedPreferences = createEmptySyncedPreferences();
@@ -580,6 +550,7 @@ class UserSettingsState {
 			clearTimeout(this.syncFlushTimer);
 		}
 		this.syncFlushTimer = null;
+		this.syncFlushInFlight = false;
 		this.syncConsecutive429s = 0;
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
@@ -589,13 +560,12 @@ class UserSettingsState {
 		}
 	}
 
-	@action
 	setStatus(status: StatusType): void {
 		this.status = status;
 		LocalPresence.updatePresence();
 	}
 
-	handleConnectionOpen(userSettings: unknown): void {
+	handleGatewayReady(userSettings: unknown): void {
 		this.updateUserSettings(userSettings);
 	}
 
@@ -608,6 +578,7 @@ class UserSettingsState {
 		const {hydrate = true} = options;
 		const previousStatus = this.status;
 		const previousCustomStatus = this.customStatus;
+		const previousAfkTimeout = this.afkTimeout;
 		const wasHydrated = this.hydrated;
 		if (userSettings === null || userSettings === undefined) {
 			return;
@@ -654,6 +625,7 @@ class UserSettingsState {
 		if (camelCaseSettings.defaultShareVoiceActivity !== undefined) {
 			this.defaultShareVoiceActivity = camelCaseSettings.defaultShareVoiceActivity;
 		}
+		this.privacySetupVersion = camelCaseSettings.privacySetupVersion ?? null;
 		this.guildFolders = camelCaseSettings.guildFolders.map((folder) => ({
 			...folder,
 			flags: folder.flags ?? 0,
@@ -700,13 +672,11 @@ class UserSettingsState {
 		) {
 			this.mergeIncomingSyncedPreferences(decodeSyncedPreferencesLenient(incomingSyncedPreferences));
 		}
-		if (normalizedStatus !== previousStatus) {
-			const presence = LocalPresence.getPresence();
-			if (!presence.afk) {
-				LocalPresence.updatePresence();
-			}
-		}
-		if (!isEqual(this.customStatus, previousCustomStatus)) {
+		if (
+			normalizedStatus !== previousStatus ||
+			!isEqual(this.customStatus, previousCustomStatus) ||
+			this.afkTimeout !== previousAfkTimeout
+		) {
 			LocalPresence.updatePresence();
 		}
 		if (hydrate && !wasHydrated) {
@@ -745,6 +715,7 @@ class UserSettingsState {
 			groupDmAddPermissionFlags: this.groupDmAddPermissionFlags,
 			profilePrivacy: this.profilePrivacy,
 			defaultShareVoiceActivity: this.defaultShareVoiceActivity,
+			privacySetupVersion: this.privacySetupVersion,
 			guildFolders: this.guildFolders.map((folder) => ({
 				...folder,
 				guildIds: [...folder.guildIds],
@@ -781,12 +752,12 @@ class UserSettingsState {
 		);
 	}
 
-	getSubPreference<F extends SyncedPreferencesSubField>(field: F): SyncedPreferences[F] | undefined {
+	getSubPreference<F extends SyncedPreferencesField>(field: F): SyncedPreferences[F] | undefined {
 		const value = this.syncedPreferences[field];
 		return value === undefined ? undefined : value;
 	}
 
-	async setSubPreference<F extends SyncedPreferencesSubField>(
+	async setSubPreference<F extends SyncedPreferencesField>(
 		field: F,
 		value: NonNullable<SyncedPreferences[F]>,
 	): Promise<void> {
@@ -876,8 +847,8 @@ class UserSettingsState {
 		for (const field of dirtyFields) {
 			this.markSyncedPreferenceFieldDirty(field);
 		}
-		const wireChanged = changedSyncedPreferenceFields(nextWire, this.wireSyncedPreferences).length > 0;
-		const localChanged = changedSyncedPreferenceFields(merged, this.syncedPreferences).length > 0;
+		const wireChanged = !syncedPreferencesEqual(nextWire, this.wireSyncedPreferences);
+		const localChanged = !syncedPreferencesEqual(merged, this.syncedPreferences);
 		if (!wireChanged && !localChanged) {
 			if (shouldSyncMigratedMessageGroupSpacing) {
 				this.markSyncedPreferenceFieldDirty('accessibility');
@@ -936,8 +907,19 @@ class UserSettingsState {
 		return this.syncFlushPendingPromise;
 	}
 
+	resumeSyncedPreferencesFlush(): void {
+		if (!this.hydrated || this.syncFlushInFlight || this.syncFlushTimer != null) return;
+		if (
+			this.syncFlushPendingResolvers.length > 0 ||
+			this.dirtySyncedPreferenceFields.size > 0 ||
+			changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences).length > 0
+		) {
+			void this.scheduleSyncedPreferencesFlush();
+		}
+	}
+
 	private async runSyncedPreferencesFlush(): Promise<void> {
-		if (this.syncFlushInFlight) return;
+		if (this.syncFlushInFlight || AccountScopedWork.isSuspended) return;
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
 		const pendingPromise = this.syncFlushPendingPromise;
@@ -964,6 +946,7 @@ class UserSettingsState {
 		);
 		this.syncFlushInFlight = true;
 		const epochAtFlush = this.accountEpoch;
+		const generationAtFlush = ++this.syncFlushGeneration;
 		const snapshotAtFlush = cloneSyncedPreferences(this.syncedPreferences);
 		this.inFlightSyncedPreferenceFields = new Set(fieldsInRequest);
 		this.inFlightSyncedPreferences = cloneSyncedPreferences(snapshotAtFlush);
@@ -972,8 +955,7 @@ class UserSettingsState {
 			const response = await http.patch(Endpoints.USER_SETTINGS, {
 				body: {synced_preferences: encoded === '' ? null : encoded},
 			});
-			if (this.accountEpoch !== epochAtFlush) {
-				this.syncFlushInFlight = false;
+			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
 				completeAll();
 				return;
 			}
@@ -1012,16 +994,16 @@ class UserSettingsState {
 				void this.scheduleSyncedPreferencesFlush();
 			}
 		} catch (error) {
-			this.syncFlushInFlight = false;
-			this.inFlightSyncedPreferenceFields.clear();
-			this.inFlightSyncedPreferences = null;
-			if (this.accountEpoch !== epochAtFlush) {
+			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
 				completeAll();
 				return;
 			}
+			this.syncFlushInFlight = false;
+			this.inFlightSyncedPreferenceFields.clear();
+			this.inFlightSyncedPreferences = null;
 			if (this.isRateLimitError(error)) {
 				this.syncConsecutive429s += 1;
-				const retryAfterMs = this.extractRetryAfterMs(error) ?? this.syncBackoffMs();
+				const retryAfterMs = this.syncRetryDelayMs(error);
 				logger.warn(
 					`synced_preferences PATCH rate-limited; retry in ${Math.round(retryAfterMs / 1000)}s ` +
 						`(attempt ${this.syncConsecutive429s})`,
@@ -1034,6 +1016,17 @@ class UserSettingsState {
 					this.syncFlushTimer = null;
 					void this.runSyncedPreferencesFlush();
 				}, retryAfterMs);
+				return;
+			}
+			if (isAbortError(error)) {
+				logger.debug('Synced preferences save was cancelled and will retry once account work resumes');
+				if (this.syncFlushPendingPromise == null) {
+					this.syncFlushPendingPromise = pendingPromise ?? new Promise<void>(() => undefined);
+				}
+				this.syncFlushPendingResolvers.unshift(...resolvers);
+				if (!AccountScopedWork.isSuspended) {
+					void this.scheduleSyncedPreferencesFlush();
+				}
 				return;
 			}
 			logger.error('Failed to save synced preferences:', error);
@@ -1056,23 +1049,9 @@ class UserSettingsState {
 		return status === 429;
 	}
 
-	private extractRetryAfterMs(error: unknown): number | null {
-		if (error == null || typeof error !== 'object') return null;
-		const candidate =
-			(
-				error as {
-					retryAfter?: unknown;
-				}
-			).retryAfter ??
-			(
-				error as {
-					body?: {
-						retry_after?: unknown;
-					};
-				}
-			).body?.retry_after;
-		if (typeof candidate !== 'number' || !Number.isFinite(candidate) || candidate < 0) return null;
-		return Math.min(60000, Math.max(250, candidate * 1000));
+	private syncRetryDelayMs(error: unknown): number {
+		const advertisedMs = error instanceof HttpError ? resolveRetryAfterMs(error) : null;
+		return Math.min(60000, Math.max(advertisedMs ?? 0, this.syncBackoffMs()));
 	}
 
 	async saveSettings(settings: Partial<UserSettings>): Promise<void> {
@@ -1119,5 +1098,11 @@ class UserSettingsState {
 
 const UserSettings = new UserSettingsState();
 setLocalPresenceUserSettings(UserSettings);
+setSyncedFieldUserSettings(UserSettings);
+AccountScopedWork.registerTransition({
+	suspend: () => {},
+	resume: () => {},
+	released: () => UserSettings.resumeSyncedPreferencesFlush(),
+});
 
 export default UserSettings;

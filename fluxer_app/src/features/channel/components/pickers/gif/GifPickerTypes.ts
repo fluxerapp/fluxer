@@ -4,12 +4,13 @@ import type {Gif} from '@app/features/expressions/commands/GifCommands';
 
 export type View = 'default' | 'trending' | 'favorites';
 
-export interface FavoriteGifLookup {
+interface FavoriteGifLookup {
 	url: string;
 }
 
-export type FavoriteAwareGif = Gif & {
+type FavoriteAwareGif = Gif & {
 	favoriteGifLookup?: FavoriteGifLookup;
+	contentType?: string;
 };
 export type GifPickerGridItemData =
 	| {
@@ -20,6 +21,7 @@ export type GifPickerGridItemData =
 			categoryKind: 'favorites' | 'trending' | 'category';
 			previewUrl: string;
 			previewProxySrc: string;
+			previewContentType?: string;
 			width: number;
 			height: number;
 	  }

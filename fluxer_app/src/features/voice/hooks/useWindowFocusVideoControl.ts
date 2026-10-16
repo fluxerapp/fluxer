@@ -16,37 +16,23 @@ interface VideoPoolControl {
 interface UseWindowFocusVideoControlOptions {
 	scrollerRef: React.RefObject<ScrollerHandle | null>;
 	videoPool: VideoPoolControl;
-	gifAutoPlay?: boolean;
 }
 
-export function useWindowFocusVideoControl({
-	scrollerRef,
-	videoPool,
-	gifAutoPlay = true,
-}: UseWindowFocusVideoControlOptions): void {
+export function useWindowFocusVideoControl({scrollerRef, videoPool}: UseWindowFocusVideoControlOptions): void {
 	const poolRef = useRef(videoPool);
 	poolRef.current = videoPool;
 	const scrollerRefRef = useRef(scrollerRef);
 	scrollerRefRef.current = scrollerRef;
-	const gifAutoPlayRef = useRef(gifAutoPlay);
-	gifAutoPlayRef.current = gifAutoPlay;
-	useEffect(() => {
-		if (gifAutoPlay && getAnimatedMediaPlaybackAllowed()) {
-			poolRef.current.resumeAll();
-		} else {
-			poolRef.current.pauseAll();
-		}
-	}, [gifAutoPlay]);
 	useEffect(() => {
 		const updatePlayback = () => {
-			if (gifAutoPlayRef.current && getAnimatedMediaPlaybackAllowed()) {
+			if (getAnimatedMediaPlaybackAllowed()) {
 				poolRef.current.resumeAll();
 			} else {
 				poolRef.current.pauseAll();
 			}
 		};
 		const handleBlur = () => {
-			const node = scrollerRefRef.current.current?.getScrollerNode();
+			const node = scrollerRefRef.current.current?.getViewportElement();
 			if (document.activeElement instanceof HTMLElement && node?.contains(document.activeElement)) {
 				const scrollTop = node.scrollTop;
 				document.activeElement.blur();

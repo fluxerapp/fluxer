@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeEach, describe, expect, it} from 'vitest';
-import {ipBanCache} from '../IpBanMiddleware';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 beforeEach(() => {
 	ipBanCache.resetCaches();
+});
+
+afterEach(() => {
+	vi.useRealTimers();
 });
 
 describe('IpBanCache', () => {
@@ -43,5 +47,22 @@ describe('IpBanCache', () => {
 		const match = ipBanCache.getMatch('203.0.113.51');
 		expect(match?.kind).toBe('permanent');
 		expect(match?.expiresAt).toBe(null);
+	});
+	it('stops matching a temporary ban once it has expired', () => {
+		vi.useFakeTimers({toFake: ['Date']});
+		ipBanCache.banTemp('203.0.113.52', 3600);
+		ipBanCache.banTemp('203.0.113.0/24', 3600);
+		expect(ipBanCache.isBanned('203.0.113.52')).toBe(true);
+		expect(ipBanCache.isBanned('203.0.113.53')).toBe(true);
+		vi.advanceTimersByTime(3_600_001);
+		expect(ipBanCache.getMatch('203.0.113.52')).toBe(null);
+		expect(ipBanCache.getMatch('203.0.113.53')).toBe(null);
+	});
+	it('keeps matching a permanent ban that shares an address with an expired temporary one', () => {
+		vi.useFakeTimers({toFake: ['Date']});
+		ipBanCache.banTemp('203.0.113.54', 3600);
+		ipBanCache.ban('203.0.113.54');
+		vi.advanceTimersByTime(3_600_001);
+		expect(ipBanCache.getMatch('203.0.113.54')?.kind).toBe('permanent');
 	});
 });

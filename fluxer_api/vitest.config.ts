@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {availableParallelism} from 'node:os';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import {configDefaults, defineConfig} from 'vitest/config';
 
 function parseParallelInteger(value: string | undefined, fallback: number): number {
@@ -16,52 +15,83 @@ function parseParallelInteger(value: string | undefined, fallback: number): numb
 }
 
 function resolveDefaultParallelWorkers(): number {
-	const halfCoreCountMinusOne = Math.floor(availableParallelism() / 2) - 1;
-	return Math.max(2, halfCoreCountMinusOne);
+	return Math.max(2, availableParallelism() - 1);
 }
 
 const DEFAULT_PARALLEL_WORKERS = resolveDefaultParallelWorkers();
 const configuredMaxWorkers = parseParallelInteger(process.env.API_TEST_MAX_WORKERS, DEFAULT_PARALLEL_WORKERS);
 const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_CONCURRENCY, configuredMaxWorkers);
 
+const MODULE_REGISTRY_TEST_FILES = [
+	'src/api/channel/tests/MessageCrosspostFanout.test.ts',
+	'src/api/experiment/tests/ExperimentController.test.ts',
+	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
+	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
+	'src/api/worker/tests/CrosspostTasks.test.ts',
+	'src/api/search/tests/ThreadSearchScopeCap.test.ts',
+	'src/api/search/ThreadSearchScope.test.ts',
+	'src/api/worker/tests/HandleMentionsThread.test.ts',
+	'src/api/search/tests/GuildSearchThreadScope.test.ts',
+	'src/api/worker/tasks/HarvestUserData.test.ts',
+	'src/api/voice/tests/VoiceP2pConnectionReports.test.ts',
+];
+
+const INSTANCE_POLICY_TEST_FILES = ['src/api/admin/tests/InstanceConfigPendingRegistrationApproval.test.ts'];
+
+const sharedExclude = [...configDefaults.exclude, 'pkgs/**', '../fluxer_desktop/**', '**/target/**'];
+
+const sharedTestConfig = {
+	globals: true,
+	environment: 'node' as const,
+	setupFiles: ['./src/api/test/Setup.ts'],
+	pool: 'threads' as const,
+	testTimeout: 40000,
+	hookTimeout: 20000,
+	maxConcurrency: configuredMaxConcurrency,
+	execArgv: ['--no-experimental-webstorage', '--disable-warning=ExperimentalWarning'],
+};
+
 export default defineConfig({
 	root: process.cwd(),
-	plugins: [tsconfigPaths()],
 	cacheDir: './node_modules/.vitest',
 	test: {
-		globals: true,
-		environment: 'node',
-		setupFiles: ['./src/api/test/Setup.ts'],
-		include: ['src/**/*.{test,spec}.{ts,tsx}'],
-		exclude: [
-			...configDefaults.exclude,
-			'pkgs/**',
-			'../fluxer_desktop/**',
-			'**/target/**',
-			'**/*Integration.test.ts',
-			'**/*ExttestIntegration.test.ts',
-		],
-		pool: 'threads',
-		fileParallelism: true,
 		maxWorkers: configuredMaxWorkers,
 		maxConcurrency: configuredMaxConcurrency,
-		isolate: true,
-		testTimeout: 40000,
-		hookTimeout: 20000,
+		fileParallelism: true,
 		reporters: ['default', 'json'],
 		outputFile: './test-results.json',
-		coverage: {
-			provider: 'v8',
-			reporter: ['text', 'text-summary', 'json', 'html'],
-			reportsDirectory: './coverage',
-			exclude: [
-				'**/node_modules/tests/test*.test.tsx',
-				'**/*.test.ts',
-				'**/Setup.tsx',
-				'**/TestConstants.tsx',
-				'**/TestRequestBuilder.tsx',
-				'**/TestHelpers.tsx',
-			],
-		},
+
+		projects: [
+			{
+				resolve: {tsconfigPaths: true},
+				test: {
+					...sharedTestConfig,
+					name: 'api',
+					include: ['src/**/*.{test,spec}.{ts,tsx}'],
+					exclude: [...sharedExclude, ...MODULE_REGISTRY_TEST_FILES, ...INSTANCE_POLICY_TEST_FILES],
+					isolate: false,
+				},
+			},
+			{
+				resolve: {tsconfigPaths: true},
+				test: {
+					...sharedTestConfig,
+					name: 'api-module-registry',
+					include: MODULE_REGISTRY_TEST_FILES,
+					exclude: sharedExclude,
+					isolate: true,
+				},
+			},
+			{
+				resolve: {tsconfigPaths: true},
+				test: {
+					...sharedTestConfig,
+					name: 'api-instance-policy',
+					include: INSTANCE_POLICY_TEST_FILES,
+					exclude: sharedExclude,
+					isolate: true,
+				},
+			},
+		],
 	},
 });

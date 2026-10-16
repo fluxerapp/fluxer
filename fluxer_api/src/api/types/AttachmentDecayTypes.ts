@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID} from '../BrandedTypes';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
 
 export interface AttachmentDecayRow {
 	attachment_id: AttachmentID;

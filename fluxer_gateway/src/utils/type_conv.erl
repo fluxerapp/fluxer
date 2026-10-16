@@ -6,12 +6,10 @@
 -export([
     to_integer/1,
     to_binary/1,
-    to_list/1,
     ensure_binary/1,
     ensure_binary/2,
     unicode_to_binary/1,
-    extract_id/2,
-    extract_id_required/2
+    extract_id/2
 ]).
 
 -export_type([
@@ -88,18 +86,6 @@ to_binary(Value) when is_atom(Value) ->
 to_binary(_) ->
     undefined.
 
--spec to_list(term()) -> list() | undefined.
-to_list(undefined) ->
-    undefined;
-to_list(Value) when is_list(Value) ->
-    Value;
-to_list(Value) when is_binary(Value) ->
-    binary_to_list(Value);
-to_list(Value) when is_atom(Value) ->
-    atom_to_list(Value);
-to_list(_) ->
-    undefined.
-
 -spec extract_id(term(), term()) -> pos_integer() | undefined.
 extract_id(Map, Field) when is_map(Map), is_atom(Field) ->
     extract_id_value(maps:get(Field, Map, undefined));
@@ -107,10 +93,6 @@ extract_id(Map, Field) when is_map(Map), is_binary(Field) ->
     extract_id_value(maps:get(Field, Map, undefined));
 extract_id(_, _) ->
     undefined.
-
--spec extract_id_required(term(), term()) -> pos_integer() | undefined.
-extract_id_required(Map, Field) ->
-    extract_id(Map, Field).
 
 -spec extract_id_value(term()) -> pos_integer() | undefined.
 extract_id_value(undefined) ->

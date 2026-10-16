@@ -1,0 +1,482 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.sl-markdown-content {
+	color: var(--flx-content-text);
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
+	color: var(--flx-content-heading);
+}
+
+.sl-markdown-content :is(h1, .sl-heading-wrapper.level-h1):not(:where(.not-content *)) {
+	--sl-line-height-headings: 1.25;
+	margin-top: 0.75rem;
+	margin-bottom: 0.5rem;
+	font-size: var(--sl-text-h1);
+	font-weight: 700;
+	line-height: var(--sl-line-height-headings);
+}
+
+.sl-markdown-content :is(h2, .sl-heading-wrapper.level-h2):not(:where(.not-content *)) {
+	--sl-line-height-headings: 1.625;
+	margin-top: 1.5rem;
+	margin-bottom: 1rem;
+	font-size: var(--sl-text-h2);
+	font-weight: 600;
+	line-height: var(--sl-line-height-headings);
+}
+
+.sl-markdown-content :is(h3, .sl-heading-wrapper.level-h3):not(:where(.not-content *)) {
+	--sl-line-height-headings: 1.5;
+	margin-top: 1.5rem;
+	margin-bottom: 0.5rem;
+	font-size: var(--sl-text-h3);
+	font-weight: 500;
+	line-height: var(--sl-line-height-headings);
+}
+
+.sl-markdown-content :is(h4, .sl-heading-wrapper.level-h4):not(:where(.not-content *)) {
+	--sl-line-height-headings: 1.5;
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+	font-size: var(--sl-text-h4);
+	font-weight: 500;
+	line-height: var(--sl-line-height-headings);
+}
+
+.sl-markdown-content
+	:is(h5, h6, .sl-heading-wrapper.level-h5, .sl-heading-wrapper.level-h6):not(:where(.not-content *)) {
+	--sl-line-height-headings: 1.5;
+	margin-top: 1.5rem;
+	margin-bottom: 1rem;
+	font-size: var(--sl-text-h5);
+	font-weight: 500;
+	line-height: var(--sl-line-height-headings);
+}
+
+@media (min-width: 40rem) {
+	.sl-markdown-content :is(h1, .sl-heading-wrapper.level-h1):not(:where(.not-content *)) {
+		--sl-line-height-headings: 2;
+	}
+}
+
+.sl-markdown-content
+	.sl-heading-wrapper:is(.level-h1, .level-h2, .level-h3, .level-h4, .level-h5, .level-h6):has(+ flx-route-header) {
+	margin-bottom: 0;
+}
+
+.sl-markdown-content p:not(:where(.not-content *)) {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	font-size: var(--sl-text-base);
+	line-height: 1.5rem;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+	color: var(--flx-link);
+	text-decoration: none;
+}
+
+.sl-markdown-content a:hover:not(:where(.not-content *)) {
+	color: var(--flx-link);
+	text-decoration: underline;
+}
+
+.sl-markdown-content :is(ul, ol):not(:where(.not-content *)) {
+	margin-block: 0.25rem 1rem;
+	margin-inline: 0;
+	padding-inline-start: 1.75em;
+	list-style-position: outside;
+}
+
+.sl-markdown-content ol:not(:where(.not-content *)) {
+	list-style-type: decimal;
+}
+
+.sl-markdown-content ol:not(:where(.not-content *)) > li::marker {
+	content: counter(list-item) '.\2002';
+	font-variant-numeric: proportional-nums;
+}
+
+.sl-markdown-content ul:not(:where(.not-content *)) {
+	list-style-type: disc;
+}
+
+.sl-markdown-content li:not(:where(.not-content *)) {
+	margin-bottom: 0.25rem;
+}
+
+.sl-markdown-content li:last-child:not(:where(.not-content *)) {
+	margin-bottom: 0;
+}
+
+.sl-markdown-content li > :is(ul, ol):not(:where(.not-content *)) {
+	margin-top: 0.25rem;
+	margin-bottom: 0;
+}
+
+.sl-markdown-content ul ul:not(:where(.not-content *)) {
+	list-style-type: circle;
+}
+
+.sl-markdown-content ul ul ul:not(:where(.not-content *)) {
+	list-style-type: square;
+}
+
+.sl-markdown-content ol ol:not(:where(.not-content *)) {
+	list-style-type: lower-alpha;
+}
+
+.sl-markdown-content ol ol ol:not(:where(.not-content *)) {
+	list-style-type: lower-roman;
+}
+
+.sl-markdown-content code:not(:where(.not-content *)) {
+	margin-block: 0;
+	border-radius: var(--flx-radius);
+	padding: 0.125em 0.375em;
+	font-family: var(--__sl-font-mono);
+	font-size: var(--flx-code-inline-font-size);
+	font-variant-ligatures: none;
+	font-feature-settings:
+		'calt' 0,
+		'liga' 0,
+		'dlig' 0;
+	font-weight: 400;
+	background-color: var(--flx-inline-code-bg);
+	color: var(--flx-inline-code-text);
+	overflow-wrap: break-word;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) code:not(:where(.not-content *)) {
+	font-size: 0.9em;
+	font-weight: inherit;
+	color: inherit;
+}
+
+.sl-markdown-content a code:not(:where(.not-content *)) {
+	color: var(--flx-inline-code-link);
+}
+
+.sl-markdown-content a:hover code:not(:where(.not-content *)) {
+	text-decoration: underline;
+}
+
+.sl-markdown-content :is(th, td) code:not(:where(.not-content *)) {
+	padding: 0.0625em 0.3125em;
+}
+
+.sl-markdown-content pre:not(:where(.not-content *)) {
+	border: 1px solid var(--flx-code-border);
+	border-radius: var(--flx-radius-lg);
+	padding: 0.875rem 1.125rem;
+	background-color: var(--flx-code-bg);
+	color: var(--flx-code-fg);
+	font-family: var(--__sl-font-mono);
+	font-size: var(--flx-code-block-font-size);
+	font-variant-ligatures: none;
+	font-feature-settings:
+		'calt' 0,
+		'liga' 0,
+		'dlig' 0;
+	line-height: 1.6;
+}
+
+.sl-markdown-content pre code:not(:where(.not-content *)) {
+	padding: 0;
+	font-size: inherit;
+	background-color: transparent;
+	color: inherit;
+}
+
+.expressive-code code {
+	font-variant-ligatures: none;
+	font-feature-settings:
+		'calt' 0,
+		'liga' 0,
+		'dlig' 0;
+}
+
+.sl-markdown-content .expressive-code:not(:where(.not-content *)) {
+	margin-top: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.sl-markdown-content .expressive-code .copy button,
+.sl-markdown-content .expressive-code .frame:hover .copy button:not(:hover),
+.sl-markdown-content .expressive-code .frame:focus-within :focus-visible ~ .copy button:not(:hover),
+.sl-markdown-content .expressive-code .frame .copy .feedback.show ~ button:not(:hover) {
+	width: 1.5rem;
+	height: 1.5rem;
+	opacity: 1;
+}
+
+.sl-markdown-content .expressive-code .copy button::after {
+	margin: 0.3125rem;
+}
+
+.sl-markdown-content {
+	container-type: inline-size;
+	container-name: flx-content;
+}
+
+.sl-markdown-content table:not(:where(.not-content *)) {
+	display: table;
+	width: 100%;
+	max-width: 100%;
+	margin-top: 0;
+	margin-bottom: 0;
+
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0;
+	border-radius: var(--flx-radius);
+	overflow: visible;
+
+	overflow-wrap: break-word;
+	vertical-align: middle;
+	font-size: var(--sl-text-sm);
+	line-height: 1.25rem;
+	color: var(--flx-table-text);
+}
+
+.sl-markdown-content th:not(:where(.not-content *)) {
+	border: 0;
+	border-bottom: 2px solid var(--flx-table-head-border);
+	padding: 0.5rem 0.75rem;
+	background-color: var(--flx-table-head-bg);
+	font-weight: 700;
+	text-align: left;
+	text-transform: uppercase;
+	color: var(--flx-content-heading);
+	vertical-align: middle;
+}
+
+.sl-markdown-content td:not(:where(.not-content *)) {
+	border: 0;
+	padding: 0.5rem 0.75rem;
+	vertical-align: middle;
+}
+
+@container flx-content (min-width: 30rem) and (max-width: 59.99rem) {
+	.sl-markdown-content table:not(:where(.not-content *)) > colgroup > col {
+		width: var(--flx-col-width);
+	}
+
+	.sl-markdown-content
+		table:not(:where(.not-content *)):not(:has(> colgroup))
+		thead
+		tr:first-child
+		> th:nth-child(2):last-child {
+		width: 70%;
+	}
+
+	.sl-markdown-content
+		table:not(:where(.not-content *)):not(:has(> colgroup))
+		thead
+		tr:first-child:has(> th:nth-child(3):last-child)
+		> th:first-child {
+		width: 26%;
+	}
+
+	.sl-markdown-content
+		table:not(:where(.not-content *)):not(:has(> colgroup))
+		thead
+		tr:first-child:has(> th:nth-child(3):last-child)
+		> th:nth-child(2) {
+		width: 20%;
+	}
+}
+
+@container flx-content (min-width: 45rem) and (max-width: 59.99rem) {
+	.sl-markdown-content table:not(:where(.not-content *)) > colgroup > col {
+		width: var(--flx-col-width-mid, var(--flx-col-width));
+	}
+}
+
+@container flx-content (min-width: 60rem) {
+	.sl-markdown-content table:not(:where(.not-content *)) {
+		table-layout: fixed;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) > colgroup > col {
+		width: var(--flx-col-width-wide, var(--flx-col-width));
+	}
+}
+
+@container flx-content (max-width: 29.99rem) {
+	.sl-markdown-content table:not(:where(.not-content *)) {
+		display: block;
+		table-layout: fixed;
+		border-radius: 0;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) :is(thead, tbody, tr, th, td) {
+		display: block;
+		width: auto;
+		max-width: 100%;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		border: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) tbody tr {
+		margin-bottom: 0.5rem;
+		border-radius: var(--flx-radius);
+		padding: 0.25rem 0;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) tbody td {
+		padding: 0.25rem 0.75rem;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) tbody td:first-child {
+		padding-top: 0.5rem;
+		font-weight: 600;
+		color: var(--flx-content-heading);
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) tbody td:last-child {
+		padding-bottom: 0.5rem;
+	}
+
+	.sl-markdown-content table:not(:where(.not-content *)) tbody td[data-label]::before {
+		display: block;
+		font-size: var(--sl-text-xs);
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--flx-content-heading);
+		content: attr(data-label);
+	}
+}
+
+.sl-markdown-content tbody tr:not(:where(.not-content *)) {
+	background-color: var(--flx-table-row-bg);
+}
+
+.sl-markdown-content tbody tr:nth-child(even):not(:where(.not-content *)) {
+	background-color: var(--flx-table-row-alt-bg);
+}
+
+.sl-markdown-content thead tr:first-child th:first-child:not(:where(.not-content *)) {
+	border-start-start-radius: var(--flx-radius);
+}
+
+.sl-markdown-content thead tr:first-child th:last-child:not(:where(.not-content *)) {
+	border-start-end-radius: var(--flx-radius);
+}
+
+.sl-markdown-content tbody tr:last-child td:first-child:not(:where(.not-content *)) {
+	border-end-start-radius: var(--flx-radius);
+}
+
+.sl-markdown-content tbody tr:last-child td:last-child:not(:where(.not-content *)) {
+	border-end-end-radius: var(--flx-radius);
+}
+
+.sl-markdown-content blockquote:not(:where(.not-content *)) {
+	border-inline-start: 2px solid var(--sl-color-gray-5);
+	padding-inline-start: 1rem;
+	color: var(--flx-content-text);
+}
+
+.sl-markdown-content details:not(:where(.not-content *)) {
+	margin-top: 0;
+	margin-bottom: 1.5rem;
+	border-inline-start: 0;
+	border-radius: var(--flx-radius);
+	padding: 0 1.5rem;
+	background-color: var(--flx-collapsible-bg);
+}
+
+.sl-markdown-content details[open]:not(:where(.not-content *)) {
+	padding-bottom: 0.5rem;
+}
+
+.sl-markdown-content summary:not(:where(.not-content *)) {
+	padding-block: 1.25rem;
+	font-size: var(--sl-text-h3);
+	font-weight: 500;
+	line-height: 1.5;
+	color: var(--flx-content-heading);
+}
+
+.sl-markdown-content details[open] > summary:not(:where(.not-content *)) {
+	margin-bottom: 0.5rem;
+}
+
+.starlight-aside {
+	display: block;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	border: 2px solid var(--flx-aside-border);
+	border-radius: var(--flx-radius-lg);
+	padding: 0 0.5rem;
+
+	overflow: clip;
+	background-color: var(--flx-aside-bg);
+	color: var(--flx-content-text);
+}
+
+.starlight-aside--note {
+	--flx-aside-border: var(--flx-aside-note-border);
+	--flx-aside-bg: var(--flx-aside-note-bg);
+	--flx-aside-text: var(--flx-aside-note-text);
+}
+
+.starlight-aside--tip {
+	--flx-aside-border: var(--flx-aside-tip-border);
+	--flx-aside-bg: var(--flx-aside-tip-bg);
+	--flx-aside-text: var(--flx-aside-tip-text);
+}
+
+.starlight-aside--caution {
+	--flx-aside-border: var(--flx-aside-caution-border);
+	--flx-aside-bg: var(--flx-aside-caution-bg);
+	--flx-aside-text: var(--flx-aside-caution-text);
+}
+
+.starlight-aside--danger {
+	--flx-aside-border: var(--flx-aside-danger-border);
+	--flx-aside-bg: var(--flx-aside-danger-bg);
+	--flx-aside-text: var(--flx-aside-danger-text);
+}
+
+.sl-markdown-content .starlight-aside p:not(:where(.not-content *)) {
+	margin-top: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.starlight-aside__title {
+	gap: 0.5rem;
+	font-size: var(--sl-text-base);
+	font-weight: 600;
+	line-height: 1.5rem;
+	color: var(--flx-aside-text);
+}
+
+.starlight-aside__icon {
+	font-size: 1.15em;
+	color: var(--flx-aside-text);
+}
+
+.starlight-aside__title + .starlight-aside__content {
+	margin-top: 0.5rem;
+}
+
+.starlight-aside__content a {
+	color: var(--flx-link);
+}
+
+.sl-markdown-content .starlight-aside :is(th, td, hr, blockquote):not(:where(.not-content *)) {
+	border-color: var(--flx-aside-border);
+}

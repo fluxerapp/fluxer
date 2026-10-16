@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
-import type {VoiceEngineV2AppDiagnosticsLogger} from './VoiceEngineV2AppDiagnosticsAdapter';
+import type {VoiceEngineV2AppDiagnosticsLogger} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
+import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
-export const LIFECYCLE_OPERATION_CAP = 4096;
-export const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;
+const LIFECYCLE_OPERATION_CAP = 4096;
+const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;
 
 type VoiceEngineV2AppLifecycleTimeoutHandle = number | NodeJS.Timeout;
 
@@ -24,13 +24,6 @@ export interface VoiceEngineV2AppLifecycleAdapterOptions {
 	readonly logger: VoiceEngineV2AppDiagnosticsLogger;
 	readonly clock: VoiceEngineV2ClockPort;
 	readonly teardownPerDisposableTimeoutMs?: number;
-}
-
-function buildOperatingError(method: string, code: string, reason: string): Error {
-	const error = new Error(`VoiceEngineV2AppLifecycleAdapter.${method}: ${reason}`);
-	error.name = 'VoiceEngineV2AppLifecycleOperatingError';
-	(error as Error & {code?: string}).code = code;
-	return error;
 }
 
 function isPositiveInteger(value: unknown): value is number {
@@ -75,48 +68,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		this.registry = new Map();
 		this.teardownTimeoutMs = timeoutMs;
 		this.tornDown = false;
-	}
-
-	get isTornDown(): boolean {
-		return this.tornDown;
-	}
-
-	get registrySize(): number {
-		return this.registry.size;
-	}
-
-	register(operationId: number, controller: AbortController, sourceAdapter: string): void {
-		assert.ok(isPositiveInteger(operationId), 'lifecycle register operationId must be a positive integer');
-		assert.ok(
-			controller !== null && typeof controller === 'object',
-			'lifecycle register controller must be an AbortController',
-		);
-		assert.equal(typeof controller.abort, 'function', 'lifecycle register controller must implement abort()');
-		assert.ok(isNonEmptyString(sourceAdapter), 'lifecycle register sourceAdapter must be a non-empty string');
-		if (this.tornDown) {
-			throw buildOperatingError('register', 'lifecycleTornDown', 'cannot register after teardown');
-		}
-		if (this.registry.has(operationId)) {
-			throw buildOperatingError(
-				'register',
-				'lifecycleOperationAlreadyRegistered',
-				`operationId ${operationId} already registered`,
-			);
-		}
-		if (this.registry.size >= LIFECYCLE_OPERATION_CAP) {
-			throw buildOperatingError(
-				'register',
-				'lifecycleRegistryFull',
-				`registry exceeded cap ${LIFECYCLE_OPERATION_CAP}`,
-			);
-		}
-		this.registry.set(operationId, {abort: controller, sourceAdapter});
-	}
-
-	unregister(operationId: number): boolean {
-		assert.ok(isPositiveInteger(operationId), 'lifecycle unregister operationId must be a positive integer');
-		assert.ok(this.registry.size <= LIFECYCLE_OPERATION_CAP, 'lifecycle registry overflow before unregister');
-		return this.registry.delete(operationId);
 	}
 
 	async cancelOperation(operationId: number, reason: string): Promise<void> {

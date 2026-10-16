@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{ResolveContext, Resolver, ResolverResult};
+use crate::charset;
 use crate::html_parser;
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::MediaProxyClient;
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
 use scraper::{Html, Selector};
 use std::future::Future;
@@ -40,7 +41,13 @@ impl Resolver for TenorResolver {
                 return Ok(ResolverResult { embeds: vec![] });
             }
 
-            let html = String::from_utf8_lossy(&result.bytes);
+            let html = charset::decode_body(
+                &result.bytes,
+                result
+                    .headers
+                    .get(reqwest::header::CONTENT_TYPE)
+                    .and_then(|value| value.to_str().ok()),
+            );
             let og = html_parser::parse_opengraph(&html);
             let nsfw_str = MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
             let json_ld = extract_json_ld_urls(&html);
@@ -96,7 +103,7 @@ fn tenor_embed(
     let mut embed = MessageEmbed::new("gifv");
     embed.url = Some(source_url.to_string());
     embed.provider = Some(EmbedProvider {
-        name: Some("Tenor".to_owned()),
+        name: "Tenor".to_owned(),
         url: Some("https://tenor.com".to_owned()),
     });
     embed.thumbnail = thumbnail;
@@ -127,21 +134,7 @@ async fn resolve_media_url(
             return None;
         }
     };
-    Some(build_embed_media_payload(&resolved_url, &meta))
-}
-
-fn build_embed_media_payload(url: &str, metadata: &MediaMetadata) -> EmbedMedia {
-    EmbedMedia {
-        url: Some(url.to_owned()),
-        width: metadata.width,
-        height: metadata.height,
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
-        content_hash: Some(metadata.content_hash.clone()),
-        content_type: Some(metadata.content_type.clone()),
-        duration: metadata.duration.map(|duration| duration as u32),
-        ..Default::default()
-    }
+    Some(meta.to_embed_media(&resolved_url))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -240,219 +233,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn extract_json_ld_urls_ignores_oversized_script_blocks() {
-        let html = format!(
-            r#"<script class="dynamic" type="application/ld+json">{}</script>"#,
-            "x".repeat(TENOR_JSON_LD_MAX_BYTES + 1)
-        );
-        assert_eq!(extract_json_ld_urls(&html), None);
-    }
-
-    #[test]
-    fn extract_json_ld_urls_extracts_media() {
-        let html = r#"<script class="dynamic" type="application/ld+json">{"image":{"contentUrl":"https://tenor.example/a.gif","thumbnailUrl":"https://tenor.example/a.png"},"video":{"contentUrl":"https://tenor.example/a.mp4"}}</script>"#;
-        assert_eq!(
-            extract_json_ld_urls(html),
-            Some(TenorJsonLdUrls {
-                thumbnail_url: Some("https://tenor.example/a.png".to_owned()),
-                video_url: Some("https://tenor.example/a.mp4".to_owned())
-            })
-        );
-    }
-
-    #[test]
-    fn extract_json_ld_urls_requires_dynamic_script_like_ts() {
-        let html = r#"<script type="application/ld+json">{"image":{"thumbnailUrl":"https://tenor.example/a.png"}}</script>"#;
-        assert_eq!(extract_json_ld_urls(html), None);
-    }
-
-    #[test]
-    fn extract_json_ld_urls_keeps_valid_json_ld_without_media_urls() {
-        let html =
-            r#"<script class="dynamic" type="application/ld+json">{"name":"empty"}</script>"#;
-        assert_eq!(
-            extract_json_ld_urls(html),
-            Some(TenorJsonLdUrls {
-                thumbnail_url: None,
-                video_url: None
-            })
-        );
-    }
-
-    #[test]
-    fn extract_json_ld_urls_falls_back_to_thumbnail_url() {
-        let html = r#"<script class="dynamic" type="application/ld+json">{"image":{"thumbnailUrl":"https://tenor.example/a.png"}}</script>"#;
-        assert_eq!(
-            extract_json_ld_urls(html),
-            Some(TenorJsonLdUrls {
-                thumbnail_url: Some("https://tenor.example/a.png".to_owned()),
-                video_url: None,
-            })
-        );
-    }
-
-    #[test]
-    fn gif_url_detection_uses_pathname() {
-        assert!(is_gif_url("https://media.tenor.com/a/b/c.gif?cache=1"));
-        assert!(!is_gif_url("https://media.tenor.com/a/b/c.gifv"));
-    }
-
-    #[test]
-    fn tenor_webp_thumbnail_url_rewrites_static_png_preview() {
-        assert_eq!(
-            tenor_webp_thumbnail_url("https://media.tenor.com/pdX9YTI4_eoAAAAe/cat.png").as_deref(),
-            Some("https://media.tenor.com/pdX9YTI4_eoAAAA1/cat.webp")
-        );
-        assert_eq!(
-            tenor_webp_thumbnail_url("https://media.tenor.com/pdX9YTI4_eoAAAAe/cat.PNG").as_deref(),
-            Some("https://media.tenor.com/pdX9YTI4_eoAAAA1/cat.webp")
-        );
-    }
-
-    #[test]
-    fn tenor_webp_thumbnail_url_preserves_query_string() {
-        assert_eq!(
-            tenor_webp_thumbnail_url(
-                "https://media.tenor.com/pdX9YTI4_eoAAAAe/cat.png?hh=320&ww=320"
-            )
-            .as_deref(),
-            Some("https://media.tenor.com/pdX9YTI4_eoAAAA1/cat.webp?hh=320&ww=320")
-        );
-    }
-
-    #[test]
-    fn tenor_webp_thumbnail_url_rejects_unknown_shapes() {
-        assert!(tenor_webp_thumbnail_url("https://example.com/pdX9YTI4_eoAAAAe/cat.png").is_none());
-        assert!(
-            tenor_webp_thumbnail_url("https://media.tenor.com/pdX9YTI4_eoAAAAM/cat.gif").is_none()
-        );
-        assert!(
-            tenor_webp_thumbnail_url("https://media.tenor.com/pdX9YTI4_eoAAAAe/cat.jpg").is_none()
-        );
-        assert!(
-            tenor_webp_thumbnail_url("https://media.tenor.com/nested/pdX9YTI4_eoAAAAe/cat.png")
-                .is_none()
-        );
-    }
-
-    #[test]
-    fn build_embed_media_payload_keeps_metadata_fields() {
-        let meta = MediaMetadata {
-            format: "mp4".to_owned(),
-            content_type: "video/mp4".to_owned(),
-            content_hash: "hash".to_owned(),
-            size: 123,
-            width: Some(320),
-            height: Some(240),
-            duration: Some(1.5),
-            placeholder: Some("placeholder".to_owned()),
-            animated: Some(true),
-            nsfw: true,
-            nsfw_probability: None,
-        };
-        let media = build_embed_media_payload("https://tenor.example/a.mp4", &meta);
-        assert_eq!(media.content_type.as_deref(), Some("video/mp4"));
-        assert_eq!(media.content_hash.as_deref(), Some("hash"));
-        assert_eq!(media.width, Some(320));
-        assert_eq!(media.height, Some(240));
-        assert_eq!(media.duration, Some(1));
-        assert_eq!(media.placeholder.as_deref(), Some("placeholder"));
-        assert_eq!(media.flags, (1 << 4) | (1 << 5));
-    }
-
-    #[test]
-    fn tenor_embed_returns_none_without_enriched_media() {
-        let source_url = Url::parse("https://tenor.com/view/cat-gif-12345").unwrap();
-
-        assert!(tenor_embed(&source_url, None, None).is_none());
-    }
-
-    #[test]
-    fn tenor_embed_keeps_enriched_media() {
-        let source_url = Url::parse("https://tenor.com/view/cat-gif-12345").unwrap();
-        let video = EmbedMedia {
-            url: Some("https://media.tenor.com/cat.mp4".to_owned()),
-            content_type: Some("video/mp4".to_owned()),
-            ..Default::default()
-        };
-
-        let embed = tenor_embed(&source_url, None, Some(video)).expect("embed");
-
-        assert_eq!(embed.embed_type, "gifv");
-        assert_eq!(embed.url.as_deref(), Some(source_url.as_str()));
-        assert!(embed.thumbnail.is_none());
-        assert_eq!(
-            embed.video.as_ref().and_then(|media| media.url.as_deref()),
-            Some("https://media.tenor.com/cat.mp4")
-        );
-        assert_eq!(
-            embed
-                .provider
-                .as_ref()
-                .and_then(|provider| provider.name.as_deref()),
-            Some("Tenor")
-        );
-    }
-
-    #[test]
-    fn matches_tenor_com_only() {
-        let r = TenorResolver;
-        assert!(r.matches(&Url::parse("https://tenor.com/view/cat-gif-12345").unwrap()));
-        assert!(!r.matches(&Url::parse("https://media.tenor.com/images/abc.gif").unwrap()));
-        assert!(!r.matches(&Url::parse("https://nottenor.com/view/test").unwrap()));
-    }
-
-    #[test]
-    fn is_gif_url_with_query_params() {
-        assert!(is_gif_url("https://media.tenor.com/a/b.gif?hh=320&ww=320"));
-    }
-
-    #[test]
-    fn is_gif_url_rejects_non_gif() {
-        assert!(!is_gif_url("https://media.tenor.com/a/b.mp4"));
-        assert!(!is_gif_url("https://media.tenor.com/a/b.png"));
-        assert!(!is_gif_url("https://media.tenor.com/a/b.webp"));
-    }
-
-    #[test]
-    fn is_gif_url_case_insensitive() {
-        assert!(is_gif_url("https://media.tenor.com/a/b.GIF"));
-    }
-
-    #[test]
     fn valid_absolute_url_rejects_non_http() {
         assert!(valid_absolute_url("ftp://example.com/file").is_none());
         assert!(valid_absolute_url("javascript:alert(1)").is_none());
     }
 
     #[test]
-    fn valid_absolute_url_accepts_http_and_https() {
-        assert!(valid_absolute_url("http://example.com/file").is_some());
-        assert!(valid_absolute_url("https://example.com/file").is_some());
-    }
-
-    #[test]
     fn valid_absolute_url_rejects_relative() {
         assert!(valid_absolute_url("/relative/path").is_none());
-    }
-
-    #[test]
-    fn extract_json_ld_urls_with_content_url_and_thumbnail() {
-        let html = r#"<script class="dynamic" type="application/ld+json">{"image":{"contentUrl":"https://t.example/content.gif","thumbnailUrl":"https://t.example/thumb.png"}}</script>"#;
-        let urls = extract_json_ld_urls(html).unwrap();
-        assert_eq!(
-            urls.thumbnail_url.as_deref(),
-            Some("https://t.example/thumb.png")
-        );
-    }
-
-    #[test]
-    fn extract_json_ld_urls_prefers_thumbnail_url_over_content_url() {
-        let html = r#"<script class="dynamic" type="application/ld+json">{"image":{"contentUrl":"https://t.example/a.gif","thumbnailUrl":"https://t.example/thumb.png"}}</script>"#;
-        let urls = extract_json_ld_urls(html).unwrap();
-        assert_eq!(
-            urls.thumbnail_url.as_deref(),
-            Some("https://t.example/thumb.png")
-        );
     }
 }

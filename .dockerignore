@@ -9,7 +9,6 @@
 **/.git/**
 /.github/
 /.pnpm-store/
-/fluxer_marketing
 
 **/.env
 **/.env.*.local
@@ -29,14 +28,19 @@
 **/node_modules/
 **/target/
 **/test-results.json
-/fluxer_docs/site/
+/fluxer_docs/dist/
+/fluxer_docs/.astro/
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
+/fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
 /fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
+/fluxer_static/desktop/spellcheck/dictionaries/*/*
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
 /fluxer_gateway/priv/
 
 /fluxer_media_proxy/fuzz/artifacts/
@@ -44,16 +48,13 @@
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
+/desktop-shared-assets/
+/desktop-modules/
 /s3_payload/
 /upload_staging/
 
-/deploy/helm/**/Chart.lock
-/deploy/helm/**/charts/
 
 /fluxer_desktop/
 

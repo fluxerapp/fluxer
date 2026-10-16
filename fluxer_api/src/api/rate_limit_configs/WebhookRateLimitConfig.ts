@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const WebhookRateLimitConfigs = {
 	WEBHOOK_LIST_GUILD: {
@@ -50,6 +50,10 @@ export const WebhookRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	WEBHOOK_INSTATUS: {
 		bucket: 'webhook:instatus::webhook_id',
+		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},
+	} as RouteRateLimitConfig,
+	WEBHOOK_LIBREDESK: {
+		bucket: 'webhook:libredesk::webhook_id',
 		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},
 	} as RouteRateLimitConfig,
 } as const;

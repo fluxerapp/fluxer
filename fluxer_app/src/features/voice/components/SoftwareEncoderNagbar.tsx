@@ -3,7 +3,8 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
-import {DISMISS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
+import {DISMISS_DESCRIPTOR, UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import {msg} from '@lingui/core/macro';
@@ -37,15 +38,15 @@ export const SoftwareEncoderNagbar = observer(() => {
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#b45309"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.ENCODER].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.ENCODER].textColor}
 			dismissible
 			onDismiss={SoftwareEncoderWarning.dismiss}
 			data-flx="voice.software-encoder-nagbar.nagbar"
 		>
 			<NagbarContent
 				isMobile={isMobile}
-				message={i18n._(descriptor, {codec: codec.toUpperCase()})}
+				message={i18n._(descriptor, {codec: codec === null ? i18n._(UNKNOWN_DESCRIPTOR) : codec.toUpperCase()})}
 				onDismiss={SoftwareEncoderWarning.dismiss}
 				actions={
 					<>

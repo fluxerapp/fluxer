@@ -1,42 +1,19 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_user_data).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
--export([
-    update_user_data/2,
-    maybe_update_cached_user_data/3,
-    handle_user_data_update/3,
-    check_user_data_differs/2
-]).
+-export([maybe_update_cached_user_data/3, handle_user_data_update/3]).
 
 -export_type([guild_state/0, user_id/0]).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
 -type member() :: map().
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
--spec update_user_data(map(), guild_state()) -> {noreply, guild_state()}.
-update_user_data(EventData, State) ->
-    case snowflake_id:parse_optional(maps:get(<<"id">>, EventData, undefined)) of
-        undefined ->
-            {noreply, State};
-        UserId ->
-            Data = maps:get(data, State),
-            Members = guild_data_index:member_map(Data),
-            Raw = guild_data_normalize:member(#{<<"user">> => EventData}),
-            NormalizedUserData = ensure_map(Raw),
-            #{<<"user">> := UserData} = NormalizedUserData,
-            UpdatedMembers = update_members_user_data(Members, UserId, ensure_map(UserData)),
-            UpdatedData = guild_data_index:put_member_map(UpdatedMembers, Data),
-            UpdatedState = State#{data => UpdatedData},
-            dispatch_member_update_if_found(UserId, UpdatedState),
-            {noreply, UpdatedState}
-    end.
 
 -spec update_members_user_data(map(), user_id(), map()) -> map().
 update_members_user_data(Members, UserId, UserData) ->
@@ -60,16 +37,9 @@ maybe_update_member_user(Member, UserId, EventData) ->
         false -> Member
     end.
 
--spec dispatch_member_update_if_found(user_id(), guild_state()) -> ok.
-dispatch_member_update_if_found(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
-        undefined -> ok;
-        M -> gen_server:cast(self(), {dispatch, #{event => guild_member_update, data => M}})
-    end.
-
 -spec handle_user_data_update(user_id(), map(), guild_state()) -> guild_state().
 handle_user_data_update(UserId, UserData, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             State;
         Member ->
@@ -79,7 +49,7 @@ handle_user_data_update(UserId, UserData, State) ->
 -spec maybe_apply_changed_user_data(user_id(), map(), member(), guild_state()) -> guild_state().
 maybe_apply_changed_user_data(UserId, UserData, Member, State) ->
     CurrentUserData = maps:get(<<"user">>, Member, #{}),
-    case check_user_data_differs(CurrentUserData, UserData) of
+    case utils:check_user_data_differs(CurrentUserData, UserData) of
         false -> State;
         true -> apply_user_data_update(UserId, UserData, State)
     end.
@@ -87,18 +57,22 @@ maybe_apply_changed_user_data(UserId, UserData, Member, State) ->
 -spec apply_user_data_update(user_id(), map(), guild_state()) -> guild_state().
 apply_user_data_update(UserId, UserData, State) ->
     Data = maps:get(data, State),
-    Members = guild_data_index:member_map(Data),
-    NormalizedUserData = ensure_map(guild_data_normalize:member(#{<<"user">> => UserData})),
+    Members = guild_data_index_members:member_map(Data),
+    NormalizedUserData = map_utils:ensure_map(
+        guild_data_normalize:member(#{<<"user">> => UserData})
+    ),
     #{<<"user">> := UpdatedUserData} = NormalizedUserData,
-    UpdatedMembers = update_members_user_data(Members, UserId, ensure_map(UpdatedUserData)),
-    UpdatedData = guild_data_index:put_member_map(UpdatedMembers, Data),
+    UpdatedMembers = update_members_user_data(
+        Members, UserId, map_utils:ensure_map(UpdatedUserData)
+    ),
+    UpdatedData = guild_data_index_members:put_member_map(UpdatedMembers, Data),
     UpdatedState = State#{data => UpdatedData},
     dispatch_guild_member_update(UserId, UpdatedState),
     UpdatedState.
 
 -spec dispatch_guild_member_update(user_id(), guild_state()) -> ok.
 dispatch_guild_member_update(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             ok;
         M ->
@@ -109,10 +83,6 @@ dispatch_guild_member_update(UserId, State) ->
                 {dispatch, #{event => guild_member_update, data => MemberUpdateData}}
             )
     end.
-
--spec check_user_data_differs(map(), map()) -> boolean().
-check_user_data_differs(CurrentUserData, NewUserData) ->
-    utils:check_user_data_differs(CurrentUserData, NewUserData).
 
 -spec maybe_update_cached_user_data(atom(), map(), guild_state()) -> guild_state().
 maybe_update_cached_user_data(Event, EventData, State) when
@@ -138,7 +108,7 @@ maybe_update_author_data(AuthorData, State) ->
 
 -spec maybe_update_known_member(user_id(), map(), guild_state()) -> guild_state().
 maybe_update_known_member(UserId, AuthorData, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             State;
         Member ->
@@ -149,25 +119,12 @@ maybe_update_known_member(UserId, AuthorData, State) ->
     guild_state().
 maybe_handle_changed_author_data(UserId, AuthorData, Member, State) ->
     CurrentUserData = maps:get(<<"user">>, Member, #{}),
-    case check_user_data_differs(CurrentUserData, AuthorData) of
+    case utils:check_user_data_differs(CurrentUserData, AuthorData) of
         true -> handle_user_data_update(UserId, AuthorData, State);
         false -> State
     end.
 
--spec ensure_map(term()) -> map().
-ensure_map(M) when is_map(M) -> M;
-ensure_map(_) -> #{}.
-
 -ifdef(TEST).
-
-update_user_data_updates_member_test() ->
-    State = test_state(),
-    EventData = #{<<"id">> => <<"100">>, <<"username">> => <<"updated">>},
-    {noreply, UpdatedState} = update_user_data(EventData, State),
-    Data = maps:get(data, UpdatedState),
-    Member = maps:get(100, maps:get(<<"members">>, Data)),
-    User = maps:get(<<"user">>, Member),
-    ?assertEqual(<<"updated">>, maps:get(<<"username">>, User)).
 
 handle_user_data_update_no_change_test() ->
     State = test_state(),
@@ -191,13 +148,6 @@ message_create_equivalent_author_data_does_not_dispatch_member_update_test() ->
     ?assertEqual(State, NewState),
     assert_no_member_update_dispatch().
 
-check_user_data_differs_test() ->
-    Current = #{<<"username">> => <<"alice">>},
-    Same = #{<<"username">> => <<"alice">>},
-    Different = #{<<"username">> => <<"bob">>},
-    ?assertEqual(false, check_user_data_differs(Current, Same)),
-    ?assertEqual(true, check_user_data_differs(Current, Different)).
-
 test_state() ->
     #{
         id => 42,
@@ -211,7 +161,7 @@ test_state() ->
 normalized_test_state() ->
     #{
         id => 42,
-        data => guild_data_index:put_member(
+        data => guild_data_index_members:put_member(
             #{
                 <<"user">> => #{
                     <<"id">> => <<"100">>,

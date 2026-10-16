@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {makeAutoObservable} from 'mobx';
 
-export interface ChannelMemberCounts {
+interface ChannelMemberCounts {
 	memberCount: number;
 	onlineCount: number;
 	fetchedAt: number;
@@ -138,8 +139,8 @@ class ChannelMemberCount {
 
 	private flushPending(): void {
 		if (this.pending.size === 0) return;
-		const socket = GatewayConnection.socket;
-		if (!socket || !GatewayConnection.isReady) {
+		const socket = GatewaySessions.foregroundConnection.socket;
+		if (!socket || !GatewaySessions.foregroundConnection.isReady) {
 			this.pending.clear();
 			return;
 		}
@@ -171,4 +172,6 @@ class ChannelMemberCount {
 	}
 }
 
-export default new ChannelMemberCount();
+const channelMemberCount = new ChannelMemberCount();
+ResettableStates.register(channelMemberCount, channelMemberCount.handleSessionInvalidated);
+export default channelMemberCount;

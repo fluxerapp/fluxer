@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserSettingsRow} from '@app/api/database/types/UserTypes';
+import {UserCustomStatus} from '@app/api/models/UserCustomStatus';
+import {UserGuildFolder} from '@app/api/models/UserGuildFolder';
 import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -21,11 +26,6 @@ import {
 	UserExplicitContentFilterTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {decodeSyncedPreferences} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import type {GuildID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {UserSettingsRow} from '../database/types/UserTypes';
-import {UserCustomStatus} from './UserCustomStatus';
-import {UserGuildFolder} from './UserGuildFolder';
 
 export class UserSettings {
 	readonly userId: UserID;
@@ -68,6 +68,8 @@ export class UserSettings {
 	readonly syncedPreferences: string;
 	readonly profilePrivacy: ProfilePrivacyLevel;
 	readonly defaultShareVoiceActivity: boolean;
+	readonly privacySetupVersion: number;
+	readonly privacySetupCompletedAt: Date | null;
 	readonly version: number;
 
 	constructor(row: UserSettingsRow) {
@@ -115,15 +117,9 @@ export class UserSettings {
 		this.syncedPreferences = normalizeStoredSyncedPreferences(row.synced_preferences);
 		this.profilePrivacy = (row.profile_privacy ?? ProfilePrivacyLevels.ALL_GUILDS) as ProfilePrivacyLevel;
 		this.defaultShareVoiceActivity = row.default_share_voice_activity ?? true;
+		this.privacySetupVersion = row.privacy_setup_version ?? 0;
+		this.privacySetupCompletedAt = row.privacy_setup_completed_at ?? null;
 		this.version = row.version;
-	}
-
-	getUncategorizedFolder(): UserGuildFolder | null {
-		return this.guildFolders.find((folder) => folder.folderId === UNCATEGORIZED_FOLDER_ID) ?? null;
-	}
-
-	getOrderedGuildIds(): Array<GuildID> {
-		return this.guildFolders.flatMap((folder) => folder.guildIds);
 	}
 
 	toRow(): UserSettingsRow {
@@ -171,6 +167,8 @@ export class UserSettings {
 			synced_preferences: this.syncedPreferences === '' ? null : this.syncedPreferences,
 			profile_privacy: this.profilePrivacy,
 			default_share_voice_activity: this.defaultShareVoiceActivity,
+			privacy_setup_version: this.privacySetupVersion,
+			privacy_setup_completed_at: this.privacySetupCompletedAt,
 			version: this.version,
 		};
 	}
@@ -197,7 +195,7 @@ export class UserSettings {
 		return {
 			user_id: userId,
 			locale,
-			theme: theme ?? ThemeTypes.SYSTEM,
+			theme: theme ?? ThemeTypes.DARK,
 			status: 'online',
 			status_resets_at: null,
 			status_resets_to: null,
@@ -244,6 +242,8 @@ export class UserSettings {
 			synced_preferences: null,
 			profile_privacy: ProfilePrivacyLevels.ALL_GUILDS,
 			default_share_voice_activity: true,
+			privacy_setup_version: 0,
+			privacy_setup_completed_at: null,
 			version: 1,
 		};
 	}
@@ -254,7 +254,7 @@ function normalizeStoredSyncedPreferences(raw: string | null | undefined): strin
 	try {
 		decodeSyncedPreferences(raw);
 	} catch {
-		return '';
+		return raw;
 	}
 	return raw;
 }

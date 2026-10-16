@@ -3,6 +3,7 @@
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
+import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import Presence from '@app/features/presence/state/Presence';
 import Relationships from '@app/features/relationship/state/Relationships';
 import styles from '@app/features/relationship/utils/FriendsListUtils.module.css';
@@ -58,19 +59,22 @@ interface FriendsListContentProps {
 }
 
 const useFriendGroups = (friendIds: Array<string>, searchQuery: string) => {
+	const {i18n} = useLingui();
 	return useMemo(() => {
+		const locale = i18n.locale || undefined;
+		const collator = getCachedCollator(locale);
 		const filtered = friendIds.filter((userId) => {
 			const user = Users.getUser(userId);
 			if (!user) return false;
 			if (!searchQuery) return true;
-			const nickname = NicknameUtils.getNickname(user).toLowerCase();
+			const nickname = NicknameUtils.getNickname(user, null).toLowerCase();
 			return nickname.includes(searchQuery.toLowerCase());
 		});
 		const groups: Record<string, Array<string>> = {};
 		for (const userId of filtered) {
 			const user = Users.getUser(userId);
 			if (!user) continue;
-			const firstLetter = NicknameUtils.getNickname(user)[0].toUpperCase();
+			const firstLetter = NicknameUtils.getNickname(user, null)[0].toLocaleUpperCase(locale);
 			if (!groups[firstLetter]) {
 				groups[firstLetter] = [];
 			}
@@ -81,17 +85,17 @@ const useFriendGroups = (friendIds: Array<string>, searchQuery: string) => {
 				const userA = Users.getUser(a);
 				const userB = Users.getUser(b);
 				if (!userA || !userB) return 0;
-				return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+				return collator.compare(NicknameUtils.getNickname(userA, null), NicknameUtils.getNickname(userB, null));
 			});
 		}
 		const groupArray: Array<FriendGroup> = Object.keys(groups)
-			.sort()
+			.sort((a, b) => collator.compare(a, b))
 			.map((letter) => ({
 				letter,
 				friendIds: groups[letter],
 			}));
 		return groupArray;
-	}, [friendIds, searchQuery]);
+	}, [friendIds, searchQuery, i18n.locale]);
 };
 const FriendItem = observer(({userId}: {userId: string}) => {
 	const {i18n} = useLingui();
@@ -143,7 +147,7 @@ const FriendItem = observer(({userId}: {userId: string}) => {
 								className={styles.friendItemName}
 								data-flx="relationship.friends-list-utils.friend-item.friend-item-name"
 							>
-								{NicknameUtils.getNickname(user)}
+								{NicknameUtils.getNickname(user, null)}
 							</div>
 							{statusLabel && (
 								<div

@@ -1,35 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import AccountManager from '@app/features/auth/state/AccountManager';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {parseAccountRestriction} from '@app/features/auth/state/AccountRestriction';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
+import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {http} from '@app/features/platform/transport/RestTransport';
+import {type InstanceHTTPTarget, instanceRequest} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
-import {isDesktop} from '@app/features/ui/utils/NativeUtils';
-import UserSettings from '@app/features/user/state/UserSettings';
+import {failureCode, ipAuthorizationRequiredResponseFromError} from '@app/features/platform/utils/ResponseInspection';
+import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {
 	AuthRegistrationPendingApprovalResponse,
+	DesktopHandoffReturnMethod,
 	RegisterRequest,
 	SsoCompleteResponse,
 	SsoStartRequest,
 	SsoStartResponse,
+	UsernameAvailabilityResponse,
+	UsernameSuggestionsResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
 
 const logger = new Logger('AuthService');
-const getPlatformHeaderValue = (): 'web' | 'desktop' | 'mobile' => (isDesktop() ? 'desktop' : 'web');
-const withPlatformHeader = (headers?: Record<string, string>): Record<string, string> => ({
-	'X-Fluxer-Platform': getPlatformHeaderValue(),
-	'Accept-Language': UserSettings.getLocale(),
+const withAuthLocaleHeader = (headers?: Record<string, string>): Record<string, string> => ({
+	'Accept-Language': getCurrentOrDetectedLocale(),
 	...(headers ?? {}),
 });
+
+function isRouteUnimplemented(error: unknown): boolean {
+	return error instanceof HttpError && (error.status === 404 || error.status === 405);
+}
+
 export const VerificationResult = {
 	SUCCESS: 'SUCCESS',
 	EXPIRED_TOKEN: 'EXPIRED_TOKEN',
@@ -38,13 +44,6 @@ export const VerificationResult = {
 } as const;
 
 export type VerificationResult = ValueOf<typeof VerificationResult>;
-
-type CaptchaType = 'turnstile' | 'hcaptcha';
-
-type RegisterData = RegisterRequest & {
-	captchaToken?: string;
-	captchaType?: CaptchaType;
-};
 
 export type AuthResponseUser = UserPartial & {
 	email?: string | null;
@@ -62,11 +61,12 @@ interface StandardLoginResponse extends AuthTokenResponse {
 	mfa?: false;
 }
 
-interface MfaLoginResponse {
+export interface MfaLoginResponse {
 	mfa: true;
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes?: boolean;
 	allowed_methods?: Array<string>;
 }
 
@@ -79,7 +79,12 @@ export interface IpAuthorizationRequiredResponse {
 	resend_available_in: number;
 }
 
-export function authResponseUserToUserData(user?: AuthResponseUser | null): UserData | undefined {
+export type AuthResponseUserIdentity = Pick<
+	AuthResponseUser,
+	'username' | 'discriminator' | 'global_name' | 'avatar' | 'email'
+>;
+
+export function authResponseUserToUserData(user?: AuthResponseUserIdentity | null): UserData | undefined {
 	if (!user) {
 		return undefined;
 	}
@@ -113,13 +118,22 @@ export function isRegistrationPendingApprovalResponse(
 
 export type ResetPasswordResponse = AuthTokenResponse | MfaLoginResponse;
 
+interface RecoveryKitIssued {
+	recovery_key: string;
+	recovery_kit_created_at: string;
+}
+
+export type RecoverAccountResponse = (AuthTokenResponse | MfaLoginResponse) & RecoveryKitIssued;
+
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
+	poll_secret?: string;
+	return_method?: DesktopHandoffReturnMethod;
 }
 
 interface DesktopHandoffStatusResponse {
-	status: 'pending' | 'completed' | 'expired';
+	status: 'pending' | 'completed' | 'denied' | 'expired';
 	token?: string;
 	user_id?: string;
 	user?: AuthResponseUser | null;
@@ -128,6 +142,7 @@ interface DesktopHandoffStatusResponse {
 interface DesktopHandoffInfoClientInfo {
 	platform?: string | null;
 	os?: string | null;
+	device?: 'mobile' | 'desktop';
 	location?: {
 		city?: string | null;
 		region?: string | null;
@@ -138,41 +153,71 @@ interface DesktopHandoffInfoClientInfo {
 export interface DesktopHandoffInfoResponse {
 	status: 'pending' | 'expired';
 	client_info?: DesktopHandoffInfoClientInfo | null;
+	return_method?: DesktopHandoffReturnMethod;
 }
 
-interface LoginParams {
-	email: string;
+interface DesktopHandoffCompleteResponse {
+	return_url?: string;
+}
+
+export type LoginIdentifier = {email: string; login?: undefined} | {login: string; email?: undefined};
+
+type LoginParams = LoginIdentifier & {
 	password: string;
-	captchaToken?: string;
 	inviteCode?: string;
-	captchaType?: CaptchaType;
+	target: InstanceHTTPTarget;
+};
+
+interface MfaCodeLoginRequest {
+	code: string;
+	ticket: string;
+	inviteCode?: string;
+	target: InstanceHTTPTarget;
 }
 
-interface CaptchaParams {
-	captchaToken?: string;
-	captchaType?: CaptchaType;
+interface MfaWebAuthnLoginRequest {
+	response: AuthenticationResponseJSON;
+	challenge: string;
+	ticket: string;
+	inviteCode?: string;
+	target: InstanceHTTPTarget;
 }
 
-function captchaHeaders({captchaToken, captchaType}: CaptchaParams): Record<string, string> {
-	if (!captchaToken) {
-		return {};
-	}
-	return {
-		'X-Captcha-Token': captchaToken,
-		'X-Captcha-Type': captchaType || 'hcaptcha',
-	};
+interface MfaWebAuthnOptionsRequest {
+	ticket: string;
+	target: InstanceHTTPTarget;
+}
+
+interface WebAuthnOptionsRequest {
+	target: InstanceHTTPTarget;
+}
+
+interface WebAuthnLoginRequest {
+	response: AuthenticationResponseJSON;
+	challenge: string;
+	inviteCode?: string;
+	target: InstanceHTTPTarget;
+}
+
+interface IpAuthorizationTicketRequest {
+	ticket: string;
+	target: InstanceHTTPTarget;
 }
 
 function withInviteCode<T extends object>(body: T, inviteCode?: string): T & {invite_code?: string} {
 	return inviteCode ? {...body, invite_code: inviteCode} : body;
 }
 
-function loginBody({email, password, inviteCode}: Pick<LoginParams, 'email' | 'password' | 'inviteCode'>): {
-	email: string;
+function loginBody(params: LoginParams): {
+	email?: string;
+	login?: string;
 	password: string;
 	invite_code?: string;
 } {
-	return withInviteCode({email, password}, inviteCode);
+	if (params.login !== undefined) {
+		return withInviteCode({login: params.login, password: params.password}, params.inviteCode);
+	}
+	return withInviteCode({email: params.email, password: params.password}, params.inviteCode);
 }
 
 function mfaTotpBody(
@@ -200,11 +245,6 @@ function webAuthnBody(
 	return withInviteCode({response, challenge}, inviteCode);
 }
 
-function registerBody(data: RegisterData): RegisterRequest {
-	const {captchaToken: _, captchaType: __, ...bodyData} = data;
-	return bodyData;
-}
-
 function ticketBody(ticket: string): {ticket: string} {
 	return {ticket};
 }
@@ -213,17 +253,28 @@ function tokenBody(token: string): {token: string} {
 	return {token};
 }
 
+class MalformedIpAuthorizationChallengeError extends HttpError {
+	constructor(error: HttpError) {
+		super({
+			method: error.method,
+			path: error.path,
+			status: error.status,
+			body: error.body,
+			responseHeaders: error.responseHeaders,
+		});
+		this.name = 'MalformedIpAuthorizationChallengeError';
+	}
+}
+
 function loginIpAuthorizationResponse(error: HttpError): IpAuthorizationRequiredResponse | null {
 	if (error.status !== 403 || failureCode(error) !== APIErrorCodes.IP_AUTHORIZATION_REQUIRED) {
 		return null;
 	}
-	const body = error.body as Record<string, unknown> | undefined;
-	return {
-		ip_authorization_required: true,
-		ticket: body?.ticket as string,
-		email: body?.email as string,
-		resend_available_in: (body?.resend_available_in as number) ?? 30,
-	};
+	const challenge = ipAuthorizationRequiredResponseFromError(error);
+	if (challenge === null) {
+		throw new MalformedIpAuthorizationChallengeError(error);
+	}
+	return challenge;
 }
 
 function verificationResultFromError(
@@ -237,17 +288,14 @@ function verificationResultFromError(
 	return responseErr.status === invalidStatus ? invalidResult : VerificationResult.SERVER_ERROR;
 }
 
-export async function login({
-	email,
-	password,
-	captchaToken,
-	inviteCode,
-	captchaType,
-}: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
+export async function login(params: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
 	try {
-		const response = await http.post<LoginResponse>(Endpoints.AUTH_LOGIN, {
-			body: loginBody({email, password, inviteCode}),
-			headers: withPlatformHeader(captchaHeaders({captchaToken, captchaType})),
+		const response = await instanceRequest<LoginResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_LOGIN,
+			target: params.target,
+			body: loginBody(params),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.debug('Login successful', {mfa: response.body?.mfa});
 		return response.body;
@@ -255,7 +303,7 @@ export async function login({
 		if (error instanceof HttpError) {
 			const ipAuthorization = loginIpAuthorizationResponse(error);
 			if (ipAuthorization) {
-				logger.info('Login requires IP authorization', {email});
+				logger.info('Login requires IP authorization', {email: params.email});
 				return ipAuthorization;
 			}
 		}
@@ -264,11 +312,14 @@ export async function login({
 	}
 }
 
-export async function loginMfaTotp(code: string, ticket: string, inviteCode?: string): Promise<TokenResponse> {
+export async function loginMfaTotp({code, ticket, inviteCode, target}: MfaCodeLoginRequest): Promise<TokenResponse> {
 	try {
-		const response = await http.post<TokenResponse>(Endpoints.AUTH_LOGIN_MFA_TOTP, {
+		const response = await instanceRequest<TokenResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_LOGIN_MFA_TOTP,
+			target,
 			body: mfaTotpBody(code, ticket, inviteCode),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.debug('MFA TOTP authentication successful');
@@ -279,16 +330,20 @@ export async function loginMfaTotp(code: string, ticket: string, inviteCode?: st
 	}
 }
 
-export async function loginMfaWebAuthn(
-	response: AuthenticationResponseJSON,
-	challenge: string,
-	ticket: string,
-	inviteCode?: string,
-): Promise<TokenResponse> {
+export async function loginMfaWebAuthn({
+	response,
+	challenge,
+	ticket,
+	inviteCode,
+	target,
+}: MfaWebAuthnLoginRequest): Promise<TokenResponse> {
 	try {
-		const httpResponse = await http.post<TokenResponse>(Endpoints.AUTH_LOGIN_MFA_WEBAUTHN, {
+		const httpResponse = await instanceRequest<TokenResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_LOGIN_MFA_WEBAUTHN,
+			target,
 			body: mfaWebAuthnBody(response, challenge, ticket, inviteCode),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = httpResponse.body;
 		logger.debug('MFA WebAuthn authentication successful');
@@ -299,11 +354,17 @@ export async function loginMfaWebAuthn(
 	}
 }
 
-export async function getWebAuthnMfaOptions(ticket: string): Promise<PublicKeyCredentialRequestOptionsJSON> {
+export async function getWebAuthnMfaOptions({
+	ticket,
+	target,
+}: MfaWebAuthnOptionsRequest): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	try {
-		const response = await http.post<PublicKeyCredentialRequestOptionsJSON>(Endpoints.AUTH_LOGIN_MFA_WEBAUTHN_OPTIONS, {
+		const response = await instanceRequest<PublicKeyCredentialRequestOptionsJSON>({
+			method: 'POST',
+			path: Endpoints.AUTH_LOGIN_MFA_WEBAUTHN_OPTIONS,
+			target,
 			body: ticketBody(ticket),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.debug('WebAuthn MFA options retrieved');
@@ -314,10 +375,15 @@ export async function getWebAuthnMfaOptions(ticket: string): Promise<PublicKeyCr
 	}
 }
 
-export async function getWebAuthnAuthenticationOptions(): Promise<PublicKeyCredentialRequestOptionsJSON> {
+export async function getWebAuthnAuthenticationOptions({
+	target,
+}: WebAuthnOptionsRequest): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	try {
-		const response = await http.post<PublicKeyCredentialRequestOptionsJSON>(Endpoints.AUTH_WEBAUTHN_OPTIONS, {
-			headers: withPlatformHeader(),
+		const response = await instanceRequest<PublicKeyCredentialRequestOptionsJSON>({
+			method: 'POST',
+			path: Endpoints.AUTH_WEBAUTHN_OPTIONS,
+			target,
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.debug('WebAuthn authentication options retrieved');
@@ -328,15 +394,19 @@ export async function getWebAuthnAuthenticationOptions(): Promise<PublicKeyCrede
 	}
 }
 
-export async function authenticateWithWebAuthn(
-	response: AuthenticationResponseJSON,
-	challenge: string,
-	inviteCode?: string,
-): Promise<TokenResponse> {
+export async function authenticateWithWebAuthn({
+	response,
+	challenge,
+	inviteCode,
+	target,
+}: WebAuthnLoginRequest): Promise<TokenResponse> {
 	try {
-		const httpResponse = await http.post<TokenResponse>(Endpoints.AUTH_WEBAUTHN_AUTHENTICATE, {
+		const httpResponse = await instanceRequest<TokenResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_WEBAUTHN_AUTHENTICATE,
+			target,
 			body: webAuthnBody(response, challenge, inviteCode),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = httpResponse.body;
 		logger.debug('WebAuthn authentication successful');
@@ -347,11 +417,14 @@ export async function authenticateWithWebAuthn(
 	}
 }
 
-export async function register(data: RegisterData): Promise<RegisterResponse> {
+export async function register(data: RegisterRequest, target: InstanceHTTPTarget): Promise<RegisterResponse> {
 	try {
-		const response = await http.post<RegisterResponse>(Endpoints.AUTH_REGISTER, {
-			body: registerBody(data),
-			headers: withPlatformHeader(captchaHeaders(data)),
+		const response = await instanceRequest<RegisterResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_REGISTER,
+			target: target,
+			body: data,
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.info('Registration successful');
@@ -362,15 +435,14 @@ export async function register(data: RegisterData): Promise<RegisterResponse> {
 	}
 }
 
-interface UsernameSuggestionsResponse {
-	suggestions: Array<string>;
-}
-
-export async function getUsernameSuggestions(globalName: string): Promise<Array<string>> {
+export async function getUsernameSuggestions(globalName: string, target: InstanceHTTPTarget): Promise<Array<string>> {
 	try {
-		const response = await http.post<UsernameSuggestionsResponse>(Endpoints.AUTH_USERNAME_SUGGESTIONS, {
+		const response = await instanceRequest<UsernameSuggestionsResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_USERNAME_SUGGESTIONS,
+			target,
 			body: {global_name: globalName},
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.debug('Username suggestions retrieved', {count: responseBody?.suggestions?.length || 0});
@@ -381,28 +453,44 @@ export async function getUsernameSuggestions(globalName: string): Promise<Array<
 	}
 }
 
-export async function forgotPassword(
-	email: string,
-	captchaToken?: string,
-	captchaType?: 'turnstile' | 'hcaptcha',
-): Promise<void> {
+export async function checkUsernameAvailability(
+	username: string,
+	target: InstanceHTTPTarget,
+	signal?: AbortSignal,
+): Promise<boolean> {
+	const response = await instanceRequest<UsernameAvailabilityResponse>({
+		method: 'GET',
+		path: `${Endpoints.AUTH_USERNAME_AVAILABILITY}?${new URLSearchParams({username}).toString()}`,
+		target,
+		headers: withAuthLocaleHeader(),
+		signal,
+	});
+	return response.body.available;
+}
+
+export async function forgotPassword(email: string, target: InstanceHTTPTarget): Promise<void> {
 	try {
-		await http.post(Endpoints.AUTH_FORGOT_PASSWORD, {
+		await instanceRequest({
+			method: 'POST',
+			path: Endpoints.AUTH_FORGOT_PASSWORD,
+			target: target,
 			body: {email},
-			headers: withPlatformHeader(captchaHeaders({captchaToken, captchaType})),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.debug('Password reset email sent');
 	} catch (error) {
-		logger.warn('Password reset request failed, but returning success to user', error);
+		logger.error('Password reset request failed', error);
+		throw error;
 	}
 }
 
-export async function validateResetPasswordToken(token: string): Promise<boolean> {
+export async function validateResetPasswordToken(token: string, target: InstanceHTTPTarget): Promise<boolean> {
 	try {
-		const response = await http.get<{
-			valid: boolean;
-		}>(Endpoints.AUTH_VALIDATE_RESET_PASSWORD_TOKEN(token), {
-			headers: withPlatformHeader(),
+		const response = await instanceRequest<{valid: boolean}>({
+			method: 'GET',
+			path: Endpoints.AUTH_VALIDATE_RESET_PASSWORD_TOKEN(token),
+			target: target,
+			headers: withAuthLocaleHeader(),
 		});
 		return response.body.valid;
 	} catch (error) {
@@ -411,11 +499,18 @@ export async function validateResetPasswordToken(token: string): Promise<boolean
 	}
 }
 
-export async function resetPassword(token: string, password: string): Promise<ResetPasswordResponse> {
+export async function resetPassword(
+	token: string,
+	password: string,
+	target: InstanceHTTPTarget,
+): Promise<ResetPasswordResponse> {
 	try {
-		const response = await http.post<ResetPasswordResponse>(Endpoints.AUTH_RESET_PASSWORD, {
+		const response = await instanceRequest<ResetPasswordResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_RESET_PASSWORD,
+			target: target,
 			body: {token, password},
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.info('Password reset successful');
@@ -426,11 +521,45 @@ export async function resetPassword(token: string, password: string): Promise<Re
 	}
 }
 
-export async function revertEmailChange(token: string, password: string): Promise<TokenResponse> {
+export async function recoverAccount({
+	login,
+	recoveryKey,
+	password,
+	target,
+}: {
+	login: string;
+	recoveryKey: string;
+	password: string;
+	target: InstanceHTTPTarget;
+}): Promise<RecoverAccountResponse> {
 	try {
-		const response = await http.post<TokenResponse>(Endpoints.AUTH_EMAIL_REVERT, {
+		const response = await instanceRequest<RecoverAccountResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_RECOVER,
+			target: target,
+			body: {login, recovery_key: recoveryKey, password},
+			headers: withAuthLocaleHeader(),
+		});
+		logger.info('Account recovery successful');
+		return response.body;
+	} catch (error) {
+		logger.error('Account recovery failed', error);
+		throw error;
+	}
+}
+
+export async function revertEmailChange(
+	token: string,
+	password: string,
+	target: InstanceHTTPTarget,
+): Promise<TokenResponse> {
+	try {
+		const response = await instanceRequest<TokenResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_EMAIL_REVERT,
+			target: target,
 			body: {token, password},
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.info('Email revert successful');
@@ -441,11 +570,14 @@ export async function revertEmailChange(token: string, password: string): Promis
 	}
 }
 
-export async function verifyEmail(token: string): Promise<VerificationResult> {
+export async function verifyEmail(token: string, target: InstanceHTTPTarget): Promise<VerificationResult> {
 	try {
-		await http.post(Endpoints.AUTH_VERIFY_EMAIL, {
+		await instanceRequest({
+			method: 'POST',
+			path: Endpoints.AUTH_VERIFY_EMAIL,
+			target: target,
 			body: tokenBody(token),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.info('Email verification successful');
 		return VerificationResult.SUCCESS;
@@ -460,10 +592,13 @@ export async function verifyEmail(token: string): Promise<VerificationResult> {
 	}
 }
 
-export async function resendVerificationEmail(): Promise<VerificationResult> {
+export async function resendVerificationEmail(target: InstanceHTTPTarget): Promise<VerificationResult> {
 	try {
-		await http.post(Endpoints.AUTH_RESEND_VERIFICATION, {
-			headers: withPlatformHeader(),
+		await instanceRequest({
+			method: 'POST',
+			path: Endpoints.AUTH_RESEND_VERIFICATION,
+			target,
+			headers: withAuthLocaleHeader(),
 		});
 		logger.info('Verification email resent');
 		return VerificationResult.SUCCESS;
@@ -479,14 +614,17 @@ export async function resendVerificationEmail(): Promise<VerificationResult> {
 }
 
 export async function logout(): Promise<void> {
-	await AccountManager.logout();
+	await Accounts.logout();
 }
 
-export async function authorizeIp(token: string): Promise<VerificationResult> {
+export async function authorizeIp(token: string, target: InstanceHTTPTarget): Promise<VerificationResult> {
 	try {
-		await http.post(Endpoints.AUTH_AUTHORIZE_IP, {
+		await instanceRequest({
+			method: 'POST',
+			path: Endpoints.AUTH_AUTHORIZE_IP,
+			target: target,
 			body: tokenBody(token),
-			headers: withPlatformHeader(),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.info('IP authorization successful');
 		return VerificationResult.SUCCESS;
@@ -501,10 +639,13 @@ export async function authorizeIp(token: string): Promise<VerificationResult> {
 	}
 }
 
-export async function resendIpAuthorization(ticket: string): Promise<void> {
-	await http.post(Endpoints.AUTH_IP_AUTHORIZATION_RESEND, {
+export async function resendIpAuthorization({ticket, target}: IpAuthorizationTicketRequest): Promise<void> {
+	await instanceRequest({
+		method: 'POST',
+		path: Endpoints.AUTH_IP_AUTHORIZATION_RESEND,
+		target,
 		body: ticketBody(ticket),
-		headers: withPlatformHeader(),
+		headers: withAuthLocaleHeader(),
 	});
 }
 
@@ -515,143 +656,197 @@ export interface IpAuthorizationPollResult {
 	user?: AuthResponseUser | null;
 }
 
-export async function pollIpAuthorization(ticket: string): Promise<IpAuthorizationPollResult> {
-	const response = await http.get<IpAuthorizationPollResult>(Endpoints.AUTH_IP_AUTHORIZATION_POLL(ticket), {
-		headers: withPlatformHeader(),
+export async function pollIpAuthorization({
+	ticket,
+	target,
+}: IpAuthorizationTicketRequest): Promise<IpAuthorizationPollResult> {
+	const response = await instanceRequest<IpAuthorizationPollResult>({
+		method: 'GET',
+		path: Endpoints.AUTH_IP_AUTHORIZATION_POLL(ticket),
+		target,
+		headers: withAuthLocaleHeader(),
 	});
 	return response.body;
 }
 
-export async function initiateDesktopHandoff(): Promise<DesktopHandoffInitiateResponse> {
-	const response = await http.post<DesktopHandoffInitiateResponse>(Endpoints.AUTH_HANDOFF_INITIATE, {
+export async function initiateDesktopHandoff(target: InstanceHTTPTarget): Promise<DesktopHandoffInitiateResponse> {
+	const response = await instanceRequest<DesktopHandoffInitiateResponse>({
+		method: 'POST',
+		path: Endpoints.AUTH_HANDOFF_INITIATE,
+		target,
 		auth: 'none',
 	});
 	return response.body;
 }
 
-export async function pollDesktopHandoffStatus(code: string): Promise<DesktopHandoffStatusResponse> {
-	const response = await http.get<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
+async function readDesktopHandoffStatus(
+	code: string,
+	target: InstanceHTTPTarget,
+): Promise<DesktopHandoffStatusResponse> {
+	const response = await instanceRequest<DesktopHandoffStatusResponse>({
+		method: 'GET',
+		path: Endpoints.AUTH_HANDOFF_STATUS(code),
+		target,
 		auth: 'none',
 	});
 	return response.body;
+}
+
+export async function pollDesktopHandoffStatus(
+	code: string,
+	pollSecret: string | null | undefined,
+	target: InstanceHTTPTarget,
+): Promise<DesktopHandoffStatusResponse> {
+	if (pollSecret == null || pollSecret.length === 0) {
+		return readDesktopHandoffStatus(code, target);
+	}
+	try {
+		const response = await instanceRequest<DesktopHandoffStatusResponse>({
+			method: 'POST',
+			path: Endpoints.AUTH_HANDOFF_STATUS(code),
+			target,
+			body: {poll_secret: pollSecret},
+			auth: 'none',
+		});
+		return response.body;
+	} catch (error) {
+		if (!isRouteUnimplemented(error)) {
+			throw error;
+		}
+		return readDesktopHandoffStatus(code, target);
+	}
 }
 
 export async function completeDesktopHandoff({
 	code,
 	token,
 	userId,
+	returnMethod,
+	target,
 }: {
 	code: string;
 	token: string;
 	userId: string;
-}): Promise<void> {
-	await http.post(Endpoints.AUTH_HANDOFF_COMPLETE, {
-		body: {code, user_id: userId},
-		headers: withPlatformHeader({Authorization: token}),
+	returnMethod: DesktopHandoffReturnMethod;
+	target: InstanceHTTPTarget;
+}): Promise<string | null> {
+	const response = await instanceRequest<DesktopHandoffCompleteResponse | null>({
+		method: 'POST',
+		path: Endpoints.AUTH_HANDOFF_COMPLETE,
+		target,
+		body: {code, user_id: userId, return_method: returnMethod},
+		headers: withAuthLocaleHeader({Authorization: token}),
+		auth: 'none',
+	});
+	return response.body?.return_url ?? null;
+}
+
+export async function denyDesktopHandoff({code, target}: {code: string; target: InstanceHTTPTarget}): Promise<void> {
+	await instanceRequest({
+		method: 'POST',
+		path: Endpoints.AUTH_HANDOFF_DENY(code),
+		target,
+		headers: withAuthLocaleHeader(),
 		auth: 'none',
 	});
 }
 
-export async function fetchDesktopHandoffInfo(code: string): Promise<DesktopHandoffInfoResponse> {
-	const response = await http.get<DesktopHandoffInfoResponse>(Endpoints.AUTH_HANDOFF_INFO(code), {
+export async function fetchDesktopHandoffInfo({
+	code,
+	token,
+	target,
+}: {
+	code: string;
+	token: string;
+	target: InstanceHTTPTarget;
+}): Promise<DesktopHandoffInfoResponse> {
+	const response = await instanceRequest<DesktopHandoffInfoResponse>({
+		method: 'GET',
+		path: Endpoints.AUTH_HANDOFF_INFO(code),
+		target,
+		headers: withAuthLocaleHeader({Authorization: token}),
 		auth: 'none',
 	});
 	return response.body;
 }
 
-export function startSession(
-	token: string,
-	options: {
-		startGateway?: boolean;
-	} = {},
-): void {
-	const {startGateway = true} = options;
-	logger.info('Starting new session');
-	Authentication.handleSessionStart({token});
-	if (!startGateway) {
-		return;
-	}
-	GatewayConnection.startSession(token);
-}
-
-let sessionStartInProgress = false;
-
-export async function ensureSessionStarted(): Promise<void> {
-	if (sessionStartInProgress) {
-		return;
-	}
-	if (AccountManager.isSwitching) {
-		return;
-	}
-	if (!Authentication.isAuthenticated) {
-		return;
-	}
-	if (GatewayConnection.isConnected || GatewayConnection.isConnecting) {
-		return;
-	}
-	if (GatewayConnection.socket) {
-		return;
-	}
-	sessionStartInProgress = true;
-	try {
-		logger.info('Ensuring session is started');
-		const token = Authentication.authToken;
-		if (token) {
-			GatewayConnection.startSession(token);
-		}
-	} finally {
-		setTimeout(() => {
-			sessionStartInProgress = false;
-		}, 100);
-	}
-}
-
-export interface CompleteLoginOptions {
+interface CompleteLoginOptions {
 	redirectPath?: string | null;
 }
 
+interface CompleteLoginPayload {
+	token: string;
+	userId: string;
+	userData?: UserData;
+	runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+export class InvalidLoginCredentialsError extends Error {
+	constructor(field: 'token' | 'userId') {
+		super(`Login response ${field} must be a non-empty string`);
+		this.name = 'InvalidLoginCredentialsError';
+	}
+}
+
+function requireLoginCredential(value: string, field: 'token' | 'userId'): string {
+	if (value.trim().length === 0) {
+		throw new InvalidLoginCredentialsError(field);
+	}
+	return value;
+}
+
 export async function completeLogin(
-	{
-		token,
-		userId,
-		userData,
-	}: {
-		token: string;
-		userId: string;
-		userData?: UserData;
-	},
+	{token, userId, userData, runtimeSnapshot}: CompleteLoginPayload,
 	options: CompleteLoginOptions = {},
 ): Promise<void> {
 	logger.info('Completing login process');
-	if (userId && token) {
-		await AccountManager.switchToNewAccount(userId, token, userData, options.redirectPath);
-	} else {
-		startSession(token, {startGateway: true});
-	}
+	await Accounts.switchToNewAccount({
+		userId: requireLoginCredential(userId, 'userId'),
+		token: requireLoginCredential(token, 'token'),
+		userData,
+		runtimeSnapshot,
+		redirectPath: options.redirectPath,
+	});
 }
 
 export async function startSso({
 	redirectTo,
 	redirectUri,
+	target,
 }: {
 	redirectTo?: string;
 	redirectUri?: string;
-} = {}): Promise<SsoStartResponse> {
+	target: InstanceHTTPTarget;
+}): Promise<SsoStartResponse> {
 	const body: SsoStartRequest = {
 		redirect_to: redirectTo,
 		redirect_uri: redirectUri,
 	};
-	const response = await http.post<SsoStartResponse>(Endpoints.AUTH_SSO_START, {
+	const response = await instanceRequest<SsoStartResponse>({
+		method: 'POST',
+		path: Endpoints.AUTH_SSO_START,
+		target,
 		body,
-		headers: withPlatformHeader(),
+		headers: withAuthLocaleHeader(),
 	});
 	return response.body;
 }
 
-export async function completeSso({code, state}: {code: string; state: string}): Promise<SsoCompleteResponse> {
-	const response = await http.post<SsoCompleteResponse>(Endpoints.AUTH_SSO_COMPLETE, {
+export async function completeSso({
+	code,
+	state,
+	target,
+}: {
+	code: string;
+	state: string;
+	target: InstanceHTTPTarget;
+}): Promise<SsoCompleteResponse> {
+	const response = await instanceRequest<SsoCompleteResponse>({
+		method: 'POST',
+		path: Endpoints.AUTH_SSO_COMPLETE,
+		target,
 		body: {code, state},
-		headers: withPlatformHeader(),
+		headers: withAuthLocaleHeader(),
 	});
 	return response.body;
 }
@@ -660,14 +855,29 @@ interface SetMfaTicketPayload {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }
 
-export function setMfaTicket({ticket, totp, webauthn}: SetMfaTicketPayload): void {
+export function setMfaTicket({ticket, totp, webauthn, backupCodes, runtimeSnapshot}: SetMfaTicketPayload): void {
 	logger.debug('Setting MFA ticket');
-	Authentication.handleMfaTicketSet({ticket, totp, webauthn});
+	Authentication.handleMfaTicketSet({ticket, totp, webauthn, backupCodes, runtimeSnapshot});
 }
 
 export function clearMfaTicket(): void {
 	logger.debug('Clearing MFA ticket');
 	Authentication.handleMfaTicketClear();
+}
+
+export function showAccountRestriction(error: unknown): boolean {
+	const restriction = parseAccountRestriction(error);
+	if (restriction == null) {
+		return false;
+	}
+	Authentication.handleAccountRestriction(restriction);
+	return true;
+}
+
+export function clearAccountRestriction(): void {
+	Authentication.handleAccountRestrictionClear();
 }

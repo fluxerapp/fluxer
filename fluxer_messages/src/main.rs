@@ -9,7 +9,8 @@ use fluxer_svc::transport::NatsTransport;
 async fn main() -> anyhow::Result<()> {
     fluxer_svc::init_tracing();
     let config = ServiceConfig::from_env()?;
-    let transport = NatsTransport::connect(&config.nats_url).await?;
+    let transport =
+        NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref()).await?;
 
     tracing::info!(
         service = config.service_name,
@@ -31,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
                     let postgres_config =
                         fluxer_svc::postgres::PostgresConfig::from_service_config(&config);
                     let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
-                    let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config.kv_table)?;
+                    let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
                     MessagesShard::new_postgres(kv, transport.clone())?
                 }
                 DatabaseBackend::Cassandra => {

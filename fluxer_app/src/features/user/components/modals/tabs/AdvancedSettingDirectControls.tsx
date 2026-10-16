@@ -3,15 +3,19 @@
 import {
 	MiddleClickAutoscrollControl,
 	SmoothScrollingControl,
+	StayInteractiveUnfocusedControl,
 	TextSelectionControl,
 	VideoSeekThumbnailsControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls';
 import {
+	DownloadButtonControl,
 	FavoritesControl,
+	HelpCenterButtonControl,
 	HideKeyboardHintsControl,
 	KeepNekoStillControl,
 	ShowNekoControl,
 	VoiceChannelJoinBehaviorControl,
+	WindowsFluxerSansControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls';
 import {
 	AutoSendGifsControl,
@@ -19,6 +23,7 @@ import {
 	ExpressionAutocompleteControl,
 	HideMutedChannelsByDefaultControl,
 	InputButtonsControl,
+	KeepAttachmentsOnEmptyEditAdvancedControl,
 	MediaButtonsControl,
 	MessageActionBarControl,
 	PreuploadMessageAttachmentsControl,
@@ -35,17 +40,20 @@ import {
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls';
 import {DeveloperModeControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedClientDeveloperControls';
 import {
-	FirstClickPassThroughControl,
+	AutomaticUpdatesControl,
 	HardwareAccelerationControl,
 	NativeTitleBarControl,
-	StayInteractiveUnfocusedControl,
+	SourceMapsControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
-import {UnreadBadgeCustomizationControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
-	EmulatedDecodeCodecCapControl,
-	OpenH264Control,
+	ExpressionCloneShortcutsControl,
+	UnreadBadgeCustomizationControl,
+} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
+import {
+	ScreenShareAv1OptInControl,
 	ScreenShareCodecControl,
 	ScreenShareEncoderControls,
+	ScreenShareHevcOptInControl,
 	ScreenSharePreviewBehaviorControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls';
 import {
@@ -56,6 +64,7 @@ import type {SearchableSettingItem} from '@app/features/user/components/settings
 import {observer} from 'mobx-react-lite';
 
 export const DIRECT_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -65,6 +74,8 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'appearance-hide-keyboard-hints',
 	'appearance-voice-channel-join-behavior',
 	'appearance-enable-favorites',
+	'appearance-show-help-center-button',
+	'appearance-show-download-button',
 	'chat-settings-auto-send-gifs',
 	'chat-settings-save-gif-favorites',
 	'chat-settings-message-action-bar',
@@ -77,6 +88,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-expression-autocomplete',
 	'chat-settings-input-buttons',
 	'chat-settings-convert-emoticons',
+	'chat-settings-keep-attachments-on-empty-edit',
 	'chat-settings-preupload-attachments',
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
@@ -86,25 +98,27 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
 	'voice-video-screen-share-codec',
-	'voice-video-emulated-decode-codec-cap',
-	'voice-video-openh264-codec',
+	'voice-video-screen-share-av1-opt-in',
+	'voice-video-screen-share-hevc-opt-in',
 	'voice-video-screen-share-preview-behavior',
 	'voice-video-screen-share-encoder-controls',
 	'advanced-unread-badge-customization',
+	'advanced-expression-clone-shortcuts',
 	'client-developer-mode',
-	'advanced-stay-interactive-unfocused',
-	'first-click-pass-through',
+	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'advanced-automatic-updates',
+	'desktop-source-maps',
 ]);
 
 export const FULL_WIDTH_CONTROL_ITEM_IDS = new Set([
 	'appearance-voice-channel-join-behavior',
-	'voice-video-screen-share-codec',
 	'voice-video-screen-share-preview-behavior',
 ]);
 
 export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -113,11 +127,14 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'appearance-keep-neko-still',
 	'appearance-hide-keyboard-hints',
 	'appearance-enable-favorites',
+	'appearance-show-help-center-button',
+	'appearance-show-download-button',
 	'chat-settings-auto-send-gifs',
 	'chat-settings-save-gif-favorites',
 	'chat-settings-strip-tracking',
 	'chat-settings-trust-domains',
 	'chat-settings-convert-emoticons',
+	'chat-settings-keep-attachments-on-empty-edit',
 	'chat-settings-preupload-attachments',
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
@@ -126,17 +143,24 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
-	'voice-video-openh264-codec',
+	'voice-video-screen-share-av1-opt-in',
+	'voice-video-screen-share-hevc-opt-in',
 	'advanced-unread-badge-customization',
+	'advanced-expression-clone-shortcuts',
 	'client-developer-mode',
-	'advanced-stay-interactive-unfocused',
-	'first-click-pass-through',
+	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'advanced-automatic-updates',
+	'desktop-source-maps',
 ]);
 
 export const AdvancedSettingControl = observer(({item}: {item: SearchableSettingItem}) => {
 	switch (item.id) {
+		case 'advanced-windows-fluxer-sans':
+			return (
+				<WindowsFluxerSansControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.windows-fluxer-sans-control" />
+			);
 		case 'accessibility-text-selection':
 			return (
 				<TextSelectionControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.text-selection-control" />
@@ -172,6 +196,14 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'appearance-enable-favorites':
 			return (
 				<FavoritesControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.favorites-control" />
+			);
+		case 'appearance-show-help-center-button':
+			return (
+				<HelpCenterButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.help-center-button-control" />
+			);
+		case 'appearance-show-download-button':
+			return (
+				<DownloadButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.download-button-control" />
 			);
 		case 'chat-settings-auto-send-gifs':
 			return (
@@ -242,6 +274,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<ConvertEmoticonsAdvancedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.convert-emoticons-advanced-control" />
 			);
+		case 'chat-settings-keep-attachments-on-empty-edit':
+			return (
+				<KeepAttachmentsOnEmptyEditAdvancedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.keep-attachments-on-empty-edit-advanced-control" />
+			);
 		case 'chat-settings-preupload-attachments':
 			return (
 				<PreuploadMessageAttachmentsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.preupload-message-attachments-control" />
@@ -278,13 +314,13 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<ScreenShareCodecControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.screen-share-codec-control" />
 			);
-		case 'voice-video-emulated-decode-codec-cap':
+		case 'voice-video-screen-share-av1-opt-in':
 			return (
-				<EmulatedDecodeCodecCapControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.emulated-decode-codec-cap-control" />
+				<ScreenShareAv1OptInControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.screen-share-av1-opt-in-control" />
 			);
-		case 'voice-video-openh264-codec':
+		case 'voice-video-screen-share-hevc-opt-in':
 			return (
-				<OpenH264Control data-flx="user.advanced-setting-direct-controls.advanced-setting-control.open-h264-control" />
+				<ScreenShareHevcOptInControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.screen-share-hevc-opt-in-control" />
 			);
 		case 'voice-video-screen-share-preview-behavior':
 			return (
@@ -301,17 +337,21 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<UnreadBadgeCustomizationControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.unread-badge-customization-control" />
 			);
+		case 'advanced-expression-clone-shortcuts':
+			return (
+				<ExpressionCloneShortcutsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.expression-clone-shortcuts-control" />
+			);
 		case 'client-developer-mode':
 			return (
 				<DeveloperModeControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.developer-mode-control" />
 			);
-		case 'advanced-stay-interactive-unfocused':
+		case 'accessibility-stay-interactive-unfocused':
 			return (
 				<StayInteractiveUnfocusedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.stay-interactive-unfocused-control" />
 			);
-		case 'first-click-pass-through':
+		case 'desktop-source-maps':
 			return (
-				<FirstClickPassThroughControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.first-click-pass-through-control" />
+				<SourceMapsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.source-maps-control" />
 			);
 		case 'advanced-native-title-bar':
 			return (
@@ -320,6 +360,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'advanced-hardware-acceleration':
 			return (
 				<HardwareAccelerationControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.hardware-acceleration-control" />
+			);
+		case 'advanced-automatic-updates':
+			return (
+				<AutomaticUpdatesControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.automatic-updates-control" />
 			);
 		default:
 			return null;

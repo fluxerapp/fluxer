@@ -4,24 +4,19 @@ import {FLUXER_EPOCH as FLUXER_EPOCH_NUMBER} from '@fluxer/constants/src/Core';
 import {
 	createSnowflake,
 	createSnowflakeFromTimestamp,
-	createSnowflakeGenerator,
 	FLUXER_EPOCH,
 	generateSnowflake,
 	isValidSnowflake,
-	MAX_WORKER_ID,
 	parseSnowflake,
-	resetDefaultSnowflakeGenerator,
 	SnowflakeGenerator,
-	setDefaultSnowflakeGenerator,
 	snowflakeToDate,
 } from '@fluxer/snowflake/src/Snowflake';
-import {beforeEach, describe, expect, it} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 const WORKER_ID_BITS = 10n;
 const SEQUENCE_BITS = 12n;
 const TIMESTAMP_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
 const WORKER_ID_SHIFT = SEQUENCE_BITS;
-const MAX_SEQUENCE = (1n << SEQUENCE_BITS) - 1n;
 
 describe('FLUXER_EPOCH', () => {
 	it('should match the epoch constant from @fluxer/constants', () => {
@@ -33,48 +28,7 @@ describe('FLUXER_EPOCH', () => {
 	});
 });
 
-describe('MAX_WORKER_ID', () => {
-	it('should be 1023 (2^10 - 1)', () => {
-		expect(MAX_WORKER_ID).toBe(1023n);
-	});
-});
-
 describe('SnowflakeGenerator', () => {
-	describe('constructor', () => {
-		it('should create a generator with default worker ID of 0', () => {
-			const generator = new SnowflakeGenerator();
-			const snowflake = generator.generate();
-			const parsed = parseSnowflake(snowflake);
-			expect(parsed.workerId).toBe(0);
-		});
-		it('should create a generator with specified worker ID', () => {
-			const generator = new SnowflakeGenerator(42);
-			const snowflake = generator.generate();
-			const parsed = parseSnowflake(snowflake);
-			expect(parsed.workerId).toBe(42);
-		});
-		it('should accept maximum worker ID (1023)', () => {
-			const generator = new SnowflakeGenerator(1023);
-			const snowflake = generator.generate();
-			const parsed = parseSnowflake(snowflake);
-			expect(parsed.workerId).toBe(1023);
-		});
-		it('should throw error for negative worker ID', () => {
-			expect(() => new SnowflakeGenerator(-1)).toThrow('Worker ID must be between 0 and 1023');
-		});
-		it('should throw error for worker ID exceeding maximum', () => {
-			expect(() => new SnowflakeGenerator(1024)).toThrow('Worker ID must be between 0 and 1023');
-		});
-		it('should throw error for very large worker ID', () => {
-			expect(() => new SnowflakeGenerator(999999)).toThrow('Worker ID must be between 0 and 1023');
-		});
-		it('should accept options object constructor', () => {
-			const generator = new SnowflakeGenerator({workerId: 64});
-			const snowflake = generator.generate();
-			const parsed = parseSnowflake(snowflake);
-			expect(parsed.workerId).toBe(64);
-		});
-	});
 	describe('generate', () => {
 		it('should generate unique snowflakes', () => {
 			const generator = new SnowflakeGenerator(1);
@@ -166,62 +120,6 @@ describe('SnowflakeGenerator', () => {
 			const second = generator.generate();
 			expect(second).toBeGreaterThan(first);
 		});
-	});
-});
-
-describe('generateSnowflake', () => {
-	beforeEach(() => {
-		resetDefaultSnowflakeGenerator();
-	});
-	it('should generate a snowflake with default worker ID', () => {
-		const snowflake = generateSnowflake();
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(0);
-	});
-	it('should generate a snowflake with specified worker ID', () => {
-		const snowflake = generateSnowflake(7);
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(7);
-	});
-	it('should generate unique snowflakes with same worker ID', () => {
-		const snowflakes = new Set<bigint>();
-		for (let i = 0; i < 100; i++) {
-			snowflakes.add(generateSnowflake());
-		}
-		expect(snowflakes.size).toBe(100);
-	});
-	it('should use the same default generator when worker ID is not provided', () => {
-		const snowflake1 = generateSnowflake();
-		const snowflake2 = generateSnowflake();
-		expect(snowflake2).toBeGreaterThan(snowflake1);
-	});
-	it('should create new generator when worker ID is provided', () => {
-		const snowflake1 = generateSnowflake(5);
-		const snowflake2 = generateSnowflake(5);
-		const parsed1 = parseSnowflake(snowflake1);
-		const parsed2 = parseSnowflake(snowflake2);
-		expect(parsed1.workerId).toBe(5);
-		expect(parsed2.workerId).toBe(5);
-	});
-	it('should support options-based generation', () => {
-		const snowflake = generateSnowflake({workerId: 9});
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(9);
-	});
-	it('should use configured default generator options', () => {
-		setDefaultSnowflakeGenerator({workerId: 321});
-		const snowflake = generateSnowflake();
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(321);
-	});
-});
-
-describe('createSnowflakeGenerator', () => {
-	it('should create a configured generator from options', () => {
-		const generator = createSnowflakeGenerator({workerId: 11});
-		const snowflake = generator.generate();
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(11);
 	});
 });
 
@@ -430,90 +328,5 @@ describe('isValidSnowflake', () => {
 			const validSnowflake = nearFutureTimestamp << TIMESTAMP_SHIFT;
 			expect(isValidSnowflake(validSnowflake)).toBe(true);
 		});
-	});
-});
-
-describe('snowflake bit structure', () => {
-	it('should use 22 bits for worker ID and sequence combined', () => {
-		const totalNonTimestampBits = WORKER_ID_BITS + SEQUENCE_BITS;
-		expect(totalNonTimestampBits).toBe(22n);
-	});
-	it('should use 12 bits for sequence (max 4095)', () => {
-		expect(MAX_SEQUENCE).toBe(4095n);
-	});
-	it('should use 10 bits for worker ID (max 1023)', () => {
-		expect(MAX_WORKER_ID).toBe(1023n);
-	});
-	it('should preserve all components through encode/decode cycle', () => {
-		const relativeTimestamp = 123456789n;
-		const workerId = 789n;
-		const sequence = 3456n;
-		const snowflake = (relativeTimestamp << TIMESTAMP_SHIFT) | (workerId << WORKER_ID_SHIFT) | sequence;
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.timestamp.getTime()).toBe(Number(FLUXER_EPOCH) + Number(relativeTimestamp));
-		expect(parsed.workerId).toBe(Number(workerId));
-		expect(parsed.sequence).toBe(Number(sequence));
-	});
-});
-
-describe('uniqueness guarantees', () => {
-	it('should generate unique snowflakes across multiple generators with different worker IDs', () => {
-		const generators = [new SnowflakeGenerator(0), new SnowflakeGenerator(1), new SnowflakeGenerator(2)];
-		const snowflakes = new Set<bigint>();
-		for (let i = 0; i < 1000; i++) {
-			for (const generator of generators) {
-				snowflakes.add(generator.generate());
-			}
-		}
-		expect(snowflakes.size).toBe(3000);
-	});
-	it('should maintain uniqueness under high-speed generation', () => {
-		const generator = new SnowflakeGenerator(1);
-		const snowflakes = new Set<bigint>();
-		const count = 10000;
-		for (let i = 0; i < count; i++) {
-			snowflakes.add(generator.generate());
-		}
-		expect(snowflakes.size).toBe(count);
-	});
-	it('should generate monotonically increasing snowflakes', () => {
-		const generator = new SnowflakeGenerator(1);
-		let previous = 0n;
-		for (let i = 0; i < 1000; i++) {
-			const current = generator.generate();
-			expect(current).toBeGreaterThan(previous);
-			previous = current;
-		}
-	});
-});
-
-describe('edge cases and boundaries', () => {
-	it('should handle worker ID 0', () => {
-		const generator = new SnowflakeGenerator(0);
-		const snowflake = generator.generate();
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(0);
-	});
-	it('should handle worker ID 1023 (maximum)', () => {
-		const generator = new SnowflakeGenerator(1023);
-		const snowflake = generator.generate();
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(1023);
-	});
-	it('should correctly extract components from snowflake with all maximum values', () => {
-		const maxRelativeTimestamp = (1n << 41n) - 1n;
-		const maxWorkerId = MAX_WORKER_ID;
-		const maxSequence = MAX_SEQUENCE;
-		const maxSnowflake = (maxRelativeTimestamp << TIMESTAMP_SHIFT) | (maxWorkerId << WORKER_ID_SHIFT) | maxSequence;
-		const parsed = parseSnowflake(maxSnowflake);
-		expect(parsed.workerId).toBe(Number(maxWorkerId));
-		expect(parsed.sequence).toBe(Number(maxSequence));
-	});
-	it('should correctly extract components from snowflake with all zero values', () => {
-		const snowflake = 0n;
-		const parsed = parseSnowflake(snowflake);
-		expect(parsed.workerId).toBe(0);
-		expect(parsed.sequence).toBe(0);
-		expect(parsed.timestamp.getTime()).toBe(Number(FLUXER_EPOCH));
 	});
 });

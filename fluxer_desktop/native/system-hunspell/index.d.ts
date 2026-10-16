@@ -22,6 +22,4 @@ export declare class Hunspell {
 
 export declare function discoverSystemDictionaries(): Array<SystemDictionary>;
 
-export declare function hashFile(path: string): Promise<string>;
-
 export declare const loadError: Error | null;

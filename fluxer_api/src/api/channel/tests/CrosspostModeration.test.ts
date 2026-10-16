@@ -1,0 +1,412 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createMessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {CrosspostTaskNames} from '@app/api/channel/services/message/CrosspostPropagation';
+import {
+	type AnnouncementTargetGuild,
+	type AnnouncementWorld,
+	addGuildMember,
+	announcementWorld,
+	createAnnouncementTargetGuild,
+	crosspostTaskHandlers,
+	follow,
+	publish,
+} from '@app/api/channel/tests/AnnouncementTestUtils';
+import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
+import {sendChannelMessage} from '@app/api/channel/tests/ChannelTestUtils';
+import {readMessageRow, writeMessageRow} from '@app/api/channel/tests/CrosspostTestUtils';
+import type {MessageEmbed} from '@app/api/database/types/MessageTypes';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import {
+	getGatewayService,
+	getKVClient,
+	getSnowflakeService,
+	setInjectedWorkerService,
+} from '@app/api/middleware/ServiceRegistry';
+import {
+	getCacheService,
+	getChannelRepository,
+	getPurgeQueue,
+	getStorageService,
+} from '@app/api/middleware/ServiceSingletons';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {createTestWorkerHelpers, SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {createWebhook, executeWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
+import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
+import messageShred from '@app/api/worker/tasks/MessageShred';
+import {
+	clearWorkerDependencies,
+	setWorkerDependencies,
+	setWorkerDependenciesForTest,
+} from '@app/api/worker/WorkerContext';
+import {initializeWorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {MessageFlags, MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+
+const SERVER_BITS = MessageFlags.CROSSPOSTED | MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED;
+const BLOCKED_DOMAIN = 'crosspost-blocked.example';
+
+async function fabricateCopy(params: {
+	harness: ApiTestHarness;
+	owner: TestAccount;
+	target: string;
+	world: AnnouncementWorld;
+	sourceId: string;
+	extraFlags?: number;
+}): Promise<{copyId: string}> {
+	const webhook = await createWebhook(params.harness, params.target, params.owner.token, 'Follower');
+	const {json: message} = await executeWebhook(
+		params.harness,
+		webhook.id,
+		webhook.token,
+		{content: 'copied update', wait: true},
+		200,
+	);
+	const row = await readMessageRow(params.target, message!.id);
+	await writeMessageRow(row!, {
+		flags: MessageFlags.IS_CROSSPOST | (params.extraFlags ?? 0),
+		attachments: null,
+		message_reference: {
+			channel_id: createChannelID(BigInt(params.world.a.ann.id)),
+			guild_id: createGuildID(BigInt(params.world.a.guild.id)),
+			message_id: createMessageID(BigInt(params.sourceId)),
+			type: MessageReferenceTypes.DEFAULT,
+		},
+	});
+	return {copyId: message!.id};
+}
+
+async function createAdmin(harness: ApiTestHarness): Promise<TestAccount> {
+	return setUserACLs(harness, await createTestAccount(harness), [
+		AdminACLs.AUTHENTICATE,
+		AdminACLs.MESSAGE_DELETE,
+		AdminACLs.MESSAGE_SHRED,
+	]);
+}
+
+async function adminDeleteMessage(harness: ApiTestHarness, admin: TestAccount, channelId: string, messageId: string) {
+	await createBuilder(harness, admin.token)
+		.delete(`/admin/channels/${channelId}/messages/${messageId}`)
+		.body({basis: {type: 'housekeeping'}})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+}
+
+function blockedEmbedService(): EmbedService {
+	return {
+		processUrlWithCachePolicy: async (url: string) => ({
+			embeds: [{toMessageEmbed: (): MessageEmbed => ({type: 'link', url}) as MessageEmbed}],
+		}),
+	} as unknown as EmbedService;
+}
+
+async function listCopies(channelId: string, sourceId: string): Promise<Array<string>> {
+	const messages = await new ChannelRepository().messages.listMessages(
+		createChannelID(BigInt(channelId)),
+		undefined,
+		100,
+	);
+	return messages
+		.filter(
+			(message) =>
+				(message.flags & MessageFlags.IS_CROSSPOST) !== 0 && message.reference?.messageId?.toString() === sourceId,
+		)
+		.map((message) => message.id.toString());
+}
+
+describe('Crosspost moderation', () => {
+	let harness: ApiTestHarness;
+	let worker: SyncTaskWorkerService;
+	let world: AnnouncementWorld;
+
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+		worker = new SyncTaskWorkerService(crosspostTaskHandlers, {deferred: true});
+		setInjectedWorkerService(worker);
+	});
+
+	beforeEach(async () => {
+		await harness.reset();
+		harness.storageService.reset();
+		worker.clear();
+		world = await announcementWorld(harness);
+	});
+
+	afterEach(() => {
+		clearWorkerDependencies();
+		urlBlocklistCache.removeDomain(BLOCKED_DOMAIN);
+	});
+
+	afterAll(async () => {
+		setInjectedWorkerService(new NoopWorkerService());
+		await harness?.shutdown();
+	});
+
+	function deletedKeys(): Array<string> {
+		return harness.storageService.getDeletedObjects().map((entry) => entry.key);
+	}
+
+	describe('takedown hooks', () => {
+		test('an admin delete of a copy enqueues a purge of the whole family', async () => {
+			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
+			const {copyId} = await fabricateCopy({
+				harness,
+				owner: world.b.owner,
+				target: world.b.t1.id,
+				world,
+				sourceId: source.id,
+			});
+			const admin = await createAdmin(harness);
+			await adminDeleteMessage(harness, admin, world.b.t1.id, copyId);
+			expect(await readMessageRow(world.b.t1.id, copyId)).toBeNull();
+			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
+			expect(jobs).toHaveLength(1);
+			expect(jobs[0]!.payload).toEqual({
+				channelId: world.a.ann.id,
+				messageId: source.id,
+				mode: 'purge',
+				deleteSource: true,
+			});
+			expect(jobs[0]!.options?.jobKey).toBe(`crosspost-sync:${source.id}:purge`);
+			expect(jobs[0]!.options?.skipLedger).toBe(true);
+		});
+
+		test('an admin delete of a published source purges its copies and leaves others alone', async () => {
+			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
+			await publish(harness, world.a.member.token, world.a.ann.id, source.id);
+			const plain = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'not published');
+			const admin = await createAdmin(harness);
+			await adminDeleteMessage(harness, admin, world.a.ann.id, plain.id);
+			expect(worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE)).toHaveLength(0);
+			await adminDeleteMessage(harness, admin, world.a.ann.id, source.id);
+			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
+			expect(jobs).toHaveLength(1);
+			expect(jobs[0]!.payload).toEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
+		});
+
+		test('a message shred of a published source purges its copies', async () => {
+			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
+			await publish(harness, world.a.member.token, world.a.ann.id, source.id);
+			const plain = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'plain');
+			worker.clear();
+			setWorkerDependenciesForTest({
+				kvClient: getKVClient(),
+				channelRepository: getChannelRepository(),
+				gatewayService: getGatewayService(),
+				storageService: getStorageService(),
+				purgeQueue: getPurgeQueue(),
+				workerService: worker,
+			});
+			await messageShred(
+				{
+					job_id: 'crosspost-shred',
+					admin_user_id: '1',
+					target_user_id: world.a.member.userId,
+					entries: [
+						{channel_id: world.a.ann.id, message_id: source.id},
+						{channel_id: world.a.ann.id, message_id: plain.id},
+					],
+				},
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => worker.addJob(taskType, payload, options),
+				}),
+			);
+			expect(await readMessageRow(world.a.ann.id, source.id)).toBeNull();
+			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
+			expect(jobs).toHaveLength(1);
+			expect(jobs[0]!.payload).toEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
+		});
+
+		test('a blocked unfurl on a published source deletes it and purges its copies', async () => {
+			const source = await sendChannelMessage(
+				harness,
+				world.a.member.token,
+				world.a.ann.id,
+				`see https://${BLOCKED_DOMAIN}/page`,
+			);
+			await publish(harness, world.a.member.token, world.a.ann.id, source.id);
+			urlBlocklistCache.addDomain(BLOCKED_DOMAIN);
+			worker.clear();
+			setWorkerDependenciesForTest({
+				channelRepository: getChannelRepository(),
+				gatewayService: getGatewayService(),
+				embedService: blockedEmbedService(),
+				cacheService: getCacheService(),
+				workerService: worker,
+			});
+			await extractEmbeds(
+				{channelId: world.a.ann.id, messageId: source.id, guildId: world.a.guild.id, nsfwMode: 'allow'},
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => worker.addJob(taskType, payload, options),
+				}),
+			);
+			expect(await readMessageRow(world.a.ann.id, source.id)).toBeNull();
+			const jobs = worker.byTask(CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
+			expect(jobs).toHaveLength(1);
+			expect(jobs[0]!.payload).toEqual({channelId: world.a.ann.id, messageId: source.id, mode: 'purge'});
+		});
+	});
+
+	describe('forwarding', () => {
+		function forward(token: string, targetChannelId: string, channelId: string, guildId: string, messageId: string) {
+			return createBuilder<MessageResponse>(harness, token)
+				.post(`/channels/${targetChannelId}/messages`)
+				.body({
+					message_reference: {
+						type: MessageReferenceTypes.FORWARD,
+						message_id: messageId,
+						channel_id: channelId,
+						guild_id: guildId,
+					},
+				});
+		}
+
+		test('forwarding a published source keeps none of the server bits', async () => {
+			const source = await sendChannelMessage(harness, world.b.owner.token, world.a.ann.id, 'forward me');
+			await publish(harness, world.b.owner.token, world.a.ann.id, source.id);
+			const forwarded = await forward(world.b.owner.token, world.b.t2.id, world.a.ann.id, world.a.guild.id, source.id)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(forwarded.message_snapshots?.[0]?.flags ?? 0).toBe(0);
+		});
+
+		test('forwarding a copy keeps none of the server bits', async () => {
+			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
+			const {copyId} = await fabricateCopy({
+				harness,
+				owner: world.b.owner,
+				target: world.b.t1.id,
+				world,
+				sourceId: source.id,
+				extraFlags: MessageFlags.SUPPRESS_NOTIFICATIONS,
+			});
+			const forwarded = await forward(world.b.owner.token, world.b.t2.id, world.b.t1.id, world.b.guild.id, copyId)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const flags = forwarded.message_snapshots?.[0]?.flags ?? 0;
+			expect(flags & SERVER_BITS).toBe(0);
+			expect(flags & MessageFlags.SUPPRESS_NOTIFICATIONS).toBe(MessageFlags.SUPPRESS_NOTIFICATIONS);
+		});
+
+		test('forwarding a source-deleted copy is refused', async () => {
+			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
+			const {copyId} = await fabricateCopy({
+				harness,
+				owner: world.b.owner,
+				target: world.b.t1.id,
+				world,
+				sourceId: source.id,
+				extraFlags: MessageFlags.SOURCE_MESSAGE_DELETED,
+			});
+			await forward(world.b.owner.token, world.b.t2.id, world.b.t1.id, world.b.guild.id, copyId)
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
+				.execute();
+		});
+	});
+
+	describe('takedown cascade after delivery', () => {
+		let c: AnnouncementTargetGuild;
+
+		beforeEach(async () => {
+			const deps = await initializeWorkerDependencies(getSnowflakeService());
+			deps.workerService = worker;
+			setWorkerDependencies(deps);
+			c = await createAnnouncementTargetGuild(harness, 'Announcement Target C');
+			await addGuildMember(harness, world.a.owner, world.a.guild, c.owner);
+			await follow(harness, world.b.owner.token, world.a.ann.id, world.b.t1.id);
+			await follow(harness, world.b.owner.token, world.a.ann.id, world.b.t2.id);
+			await follow(harness, c.owner.token, world.a.ann.id, c.t1.id);
+		});
+
+		async function publishAndDeliver(content: string, withImage = false): Promise<string> {
+			let sourceId: string;
+			if (withImage) {
+				const filename = 'yeah.png';
+				const {json} = await sendMessageWithAttachments(
+					harness,
+					world.a.member.token,
+					world.a.ann.id,
+					{content, attachments: [{id: 0, filename}]},
+					[{index: 0, filename, data: loadFixture(filename)}],
+				);
+				sourceId = json.id;
+			} else {
+				sourceId = (await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, content)).id;
+			}
+			await publish(harness, world.a.member.token, world.a.ann.id, sourceId);
+			expect(await worker.drain()).toMatchObject({remaining: 0});
+			expect(worker.deadLetters).toEqual([]);
+			return sourceId;
+		}
+
+		async function sourceAttachmentKey(sourceId: string): Promise<string> {
+			const [attachment] = (await readMessageRow(world.a.ann.id, sourceId))!.attachments;
+			const key = `attachments/${world.a.ann.id}/${attachment!.id}/${attachment!.filename}`;
+			expect(harness.storageService.hasObject(Config.s3.buckets.cdn, key)).toBe(true);
+			return key;
+		}
+
+		function expectNoTargetObjectsDeleted(): void {
+			for (const channelId of [world.b.t1.id, world.b.t2.id, c.t1.id]) {
+				expect(deletedKeys().some((key) => key.startsWith(`attachments/${channelId}/`))).toBe(false);
+			}
+		}
+
+		async function expectFamilyGone(sourceId: string): Promise<void> {
+			expect(await readMessageRow(world.a.ann.id, sourceId)).toBeNull();
+			expect(await listCopies(world.b.t1.id, sourceId)).toEqual([]);
+			expect(await listCopies(world.b.t2.id, sourceId)).toEqual([]);
+			expect(await listCopies(c.t1.id, sourceId)).toEqual([]);
+		}
+
+		test('an admin delete of one copy removes the source and every sibling copy', async () => {
+			const sourceId = await publishAndDeliver('family update', true);
+			const sourceKey = await sourceAttachmentKey(sourceId);
+			const [copyId] = await listCopies(world.b.t1.id, sourceId);
+			expect(copyId).toBeDefined();
+			expect(await listCopies(world.b.t2.id, sourceId)).toHaveLength(1);
+			expect(await listCopies(c.t1.id, sourceId)).toHaveLength(1);
+			const admin = await createAdmin(harness);
+			await adminDeleteMessage(harness, admin, world.b.t1.id, copyId!);
+			expect(deletedKeys()).not.toContain(sourceKey);
+			expect(await worker.drain()).toMatchObject({remaining: 0});
+			expect(worker.deadLetters).toEqual([]);
+			await expectFamilyGone(sourceId);
+			expect(deletedKeys().filter((key) => key === sourceKey)).toHaveLength(1);
+			expect(harness.storageService.hasObject(Config.s3.buckets.cdn, sourceKey)).toBe(false);
+			expectNoTargetObjectsDeleted();
+		});
+
+		test('a blocked unfurl of a published source deletes every copy', async () => {
+			const sourceId = await publishAndDeliver(`see https://${BLOCKED_DOMAIN}/page`);
+			expect(await listCopies(c.t1.id, sourceId)).toHaveLength(1);
+			urlBlocklistCache.addDomain(BLOCKED_DOMAIN);
+			const deps = await initializeWorkerDependencies(getSnowflakeService());
+			deps.workerService = worker;
+			deps.embedService = blockedEmbedService();
+			setWorkerDependencies(deps);
+			await extractEmbeds(
+				{channelId: world.a.ann.id, messageId: sourceId, guildId: world.a.guild.id, nsfwMode: 'allow'},
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => worker.addJob(taskType, payload, options),
+				}),
+			);
+			expect(await worker.drain()).toMatchObject({remaining: 0});
+			expect(worker.deadLetters).toEqual([]);
+			await expectFamilyGone(sourceId);
+		});
+	});
+});

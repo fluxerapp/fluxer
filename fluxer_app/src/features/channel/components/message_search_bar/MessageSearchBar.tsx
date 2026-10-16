@@ -5,8 +5,12 @@ import {DateSection} from '@app/features/channel/components/message_search_bar/D
 import {FiltersSection} from '@app/features/channel/components/message_search_bar/FilterOption';
 import {HistorySection} from '@app/features/channel/components/message_search_bar/HistorySection';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
-import type {SearchBarProps} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
+import type {
+	PlaintextAutocompleteRow,
+	SearchBarProps,
+} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
 import {SCOPE_ICON_COMPONENTS} from '@app/features/channel/components/message_search_bar/MessageSearchBarUtils';
+import {PlaintextSection} from '@app/features/channel/components/message_search_bar/PlaintextSection';
 import {UsersSection} from '@app/features/channel/components/message_search_bar/UsersSection';
 import {useMessageSearchAutocomplete} from '@app/features/channel/components/message_search_bar/useMessageSearchAutocomplete';
 import {ValuesSection} from '@app/features/channel/components/message_search_bar/ValuesSection';
@@ -15,14 +19,17 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch, {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
 import {CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {LexicalSearchInput} from '@app/features/lexical/search/LexicalSearchInput';
+import {SEARCH_INPUT_MAX_LENGTH, shouldShowSearchInputCounter} from '@app/features/lexical/search/SearchEditorModel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {useParams} from '@app/features/platform/components/router/RouterReact';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
+import type {SearchHistoryEntry} from '@app/features/search/state/SearchHistory';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ContextMenuCloseProvider} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
+import {CharacterCounter} from '@app/features/ui/character_counter/CharacterCounter';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -59,12 +66,8 @@ const SEARCH_SHORTCUTS_HINT_DESCRIPTOR = msg({
 	comment:
 		'Screen-reader-only instructions describing the keyboard shortcuts for the message search autocomplete. Announced when the input is focused. Sentence case.',
 });
-const ONE_SUGGESTION_AVAILABLE_DESCRIPTOR = msg({
-	message: '1 suggestion available',
-	comment: 'Screen-reader live-region announcement when exactly one message search suggestion is available.',
-});
 const SUGGESTIONS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{count} suggestions available',
+	message: '{count, plural, one {# suggestion available} other {# suggestions available}}',
 	comment:
 		'Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.',
 });
@@ -73,6 +76,8 @@ const ACTIVE_SUGGESTION_POSITION_DESCRIPTOR = msg({
 	comment:
 		'Screen-reader live-region announcement of the currently highlighted message search suggestion position. Preserve {position} and {total}; they are inserted by code.',
 });
+const noopUpgradeClick = () => {};
+
 export const MessageSearchBar = observer(
 	({
 		channel,
@@ -177,7 +182,7 @@ export const MessageSearchBar = observer(
 			inputRef,
 			setInputRefs,
 			setSuppressAutoOpen,
-			filterOptions,
+			historyFilterRows,
 			listboxId,
 			keyboardFocusIndex,
 			hoverIndexForRender,
@@ -208,6 +213,7 @@ export const MessageSearchBar = observer(
 			contextId,
 			inputRefExternal,
 			isResultsOpen,
+			onCloseResults,
 		});
 		const portalHost = usePortalHost();
 		const {refs, floatingStyles, isPositioned} = useFloating({
@@ -254,8 +260,6 @@ export const MessageSearchBar = observer(
 							onMouseEnter={handleOptionMouseEnter}
 							onMouseLeave={handleOptionMouseLeave}
 							listboxId={listboxId}
-							isInGuild={isInGuildChannel}
-							channelId={channel?.id}
 							onHistoryClear={handleHistoryClear}
 							onFilterSelect={handleFilterSelect}
 							onFilterMouseEnter={(index) => {
@@ -263,7 +267,8 @@ export const MessageSearchBar = observer(
 								setHasInteracted(true);
 							}}
 							onFilterMouseLeave={handleOptionMouseLeave}
-							filterOptions={filterOptions}
+							filterRows={historyFilterRows}
+							historyOptions={getAutocompleteOptions() as Array<SearchHistoryEntry>}
 							data-flx="channel.message-search-bar.message-search-bar.render-autocomplete-content.history-section.autocomplete-select"
 						/>
 					);
@@ -308,6 +313,19 @@ export const MessageSearchBar = observer(
 							data-flx="channel.message-search-bar.message-search-bar.render-autocomplete-content.values-section.autocomplete-select"
 						/>
 					);
+				case 'plaintext':
+					return (
+						<PlaintextSection
+							rows={getAutocompleteOptions() as Array<PlaintextAutocompleteRow>}
+							selectedIndex={keyboardFocusIndex}
+							hoverIndex={hoverIndexForRender}
+							onSelect={handleAutocompleteSelect}
+							onMouseEnter={handleOptionMouseEnter}
+							onMouseLeave={handleOptionMouseLeave}
+							listboxId={listboxId}
+							data-flx="channel.message-search-bar.message-search-bar.render-autocomplete-content.plaintext-section.autocomplete-select"
+						/>
+					);
 				case 'date':
 					return (
 						<DateSection
@@ -332,11 +350,9 @@ export const MessageSearchBar = observer(
 		const activeSuggestionStatusId = `${listboxId}-active-status`;
 		const totalOptions = getTotalOptions();
 		const isPopoutOpen = isFocused && autocompleteType !== null && totalOptions > 0;
-		const suggestionsAvailableStatus = !isPopoutOpen
-			? ''
-			: totalOptions === 1
-				? i18n._(ONE_SUGGESTION_AVAILABLE_DESCRIPTOR)
-				: i18n._(SUGGESTIONS_AVAILABLE_DESCRIPTOR, {count: totalOptions});
+		const suggestionsAvailableStatus = isPopoutOpen
+			? i18n._(SUGGESTIONS_AVAILABLE_DESCRIPTOR, {count: totalOptions})
+			: '';
 		const activeSuggestionStatus =
 			isPopoutOpen && keyboardFocusIndex >= 0
 				? i18n._(ACTIVE_SUGGESTION_POSITION_DESCRIPTOR, {position: keyboardFocusIndex + 1, total: totalOptions})
@@ -413,7 +429,18 @@ export const MessageSearchBar = observer(
 								'aria-keyshortcuts': 'ArrowDown ArrowUp Enter Escape',
 								'aria-describedby': `${suggestionsStatusId} ${activeSuggestionStatusId} ${hintId}`,
 							}}
+							data-flx="channel.message-search-bar.message-search-bar.combobox.key-down"
 						/>
+						{shouldShowSearchInputCounter(value.length) && (
+							<CharacterCounter
+								currentLength={value.length}
+								maxLength={SEARCH_INPUT_MAX_LENGTH}
+								canUpgrade={false}
+								premiumMaxLength={SEARCH_INPUT_MAX_LENGTH}
+								onUpgradeClick={noopUpgradeClick}
+								data-flx="channel.message-search-bar.message-search-bar.character-counter"
+							/>
+						)}
 						{hasValue && (
 							<button
 								type="button"

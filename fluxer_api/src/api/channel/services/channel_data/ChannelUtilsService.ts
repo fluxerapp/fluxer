@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MessageID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import type {MessageID, UserID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import {dispatchMessageCreateBroadcast} from '../message/MessageGatewayDispatch';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../message/MessageHelpers';
+import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {withThreadParentFields} from '@app/api/channel/services/thread/ThreadParentSettings';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
 
 export class ChannelUtilsService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
+		private channelRepository: ChannelRepository,
 		private userCacheService: UserCacheService,
 		private storageService: IStorageService,
 		private gatewayService: IGatewayService,
@@ -44,30 +43,21 @@ export class ChannelUtilsService {
 	}
 
 	private async purgeMessageAttachments(message: Message): Promise<void> {
-		const cdnUrls: Array<string> = [];
-		await Promise.all(
-			message.attachments.map(async (attachment) => {
-				const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
-				await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-				if (Config.bunny.purgeEnabled) {
-					const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
-					cdnUrls.push(cdnUrl);
-				}
-			}),
-		);
-		if (Config.bunny.purgeEnabled && cdnUrls.length > 0) {
-			await this.purgeQueue.addUrls(cdnUrls);
-		}
+		await purgeMessageAttachments(message, this.storageService, this.purgeQueue);
 	}
 
 	async dispatchChannelUpdate({channel, requestCache}: {channel: Channel; requestCache: RequestCache}): Promise<void> {
 		if (channel.guildId) {
-			const channelResponse = await mapChannelToResponse({
+			const channelResponse = await withThreadParentFields(
+				this.channelRepository.threads,
 				channel,
-				currentUserId: null,
-				userCacheService: this.userCacheService,
-				requestCache,
-			});
+				await mapChannelToResponse({
+					channel,
+					currentUserId: null,
+					userCacheService: this.userCacheService,
+					requestCache,
+				}),
+			);
 			await dispatchChannelEvent({
 				gatewayService: this.gatewayService,
 				channel,
@@ -89,56 +79,5 @@ export class ChannelUtilsService {
 				data: channelResponse,
 			});
 		}
-	}
-
-	async dispatchChannelDelete({channel, requestCache}: {channel: Channel; requestCache: RequestCache}): Promise<void> {
-		const channelResponse = await mapChannelToResponse({
-			channel,
-			currentUserId: null,
-			userCacheService: this.userCacheService,
-			requestCache,
-		});
-		await dispatchChannelEvent({
-			gatewayService: this.gatewayService,
-			channel,
-			event: 'CHANNEL_DELETE',
-			data: channelResponse,
-		});
-	}
-
-	async dispatchDmChannelDelete({
-		channel,
-		userId,
-		requestCache,
-	}: {
-		channel: Channel;
-		userId: UserID;
-		requestCache: RequestCache;
-	}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'CHANNEL_DELETE',
-			data: await mapChannelToResponse({
-				channel,
-				currentUserId: null,
-				userCacheService: this.userCacheService,
-				requestCache,
-			}),
-		});
-	}
-
-	async dispatchMessageCreate({
-		channel,
-		message,
-	}: {
-		channel: Channel;
-		message: Message;
-		requestCache: RequestCache;
-	}): Promise<void> {
-		await dispatchMessageCreateBroadcast({
-			gatewayService: this.gatewayService,
-			channel,
-			message,
-		});
 	}
 }

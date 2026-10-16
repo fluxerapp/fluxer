@@ -16,11 +16,6 @@
 	background: transparent;
 }
 
-:global(html.platform-native.window-focus-activation-guard:not(.first-click-passthrough-when-unfocused))
-	:local(.appContainer) {
-	pointer-events: none;
-}
-
 :global(html.is-standalone:not(.auth-page)) :local(.appContainer) {
 	padding-top: env(safe-area-inset-top);
 }
@@ -86,12 +81,6 @@
 	--skip-link-titlebar-offset: var(--native-titlebar-height);
 	--skip-link-traffic-lights-offset: 4.5rem;
 }
-:global(html.platform-native.window-focus-activation-guard:not(.first-click-passthrough-when-unfocused))
-	:local(.overlayScope)
-	> :not([data-overlay-pass-through]) {
-	pointer-events: none;
-}
-
 .quickSwitcherPortal {
 	position: fixed;
 	inset: 0;

@@ -2,12 +2,14 @@
 
 import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const DEFAULT_DISCOVERY_PAGE_SIZE = 36;
 
 class Discovery {
 	guilds: Array<DiscoveryGuild> = [];
+	loadedCount = 0;
 	total = 0;
 	loading = false;
 	error = false;
@@ -16,11 +18,14 @@ class Discovery {
 	language: string | null = null;
 	tag: string | null = null;
 	sortBy = 'member_count';
+	categoryCounts: ReadonlyMap<number, number> | null = null;
 	categories: Array<{
 		id: number;
 		name: string;
+		listed_in_all?: boolean;
 	}> = [];
 	categoriesLoaded = false;
+	categoriesError = false;
 	private activeSearchToken = 0;
 
 	constructor() {
@@ -44,9 +49,15 @@ class Discovery {
 		const offset = params.offset ?? 0;
 		const limit = params.limit ?? DEFAULT_DISCOVERY_PAGE_SIZE;
 		const searchToken = ++this.activeSearchToken;
+		const searchModeChanged = query.length > 0 !== this.query.length > 0;
 		runInAction(() => {
 			this.loading = true;
 			this.error = false;
+			if (offset === 0 && searchModeChanged) {
+				this.guilds = [];
+				this.loadedCount = 0;
+				this.total = 0;
+			}
 			this.query = query;
 			this.category = category;
 			this.language = language;
@@ -70,9 +81,12 @@ class Discovery {
 				if (offset === 0) {
 					this.guilds = result.guilds;
 				} else {
-					this.guilds = [...this.guilds, ...result.guilds];
+					const seen = new Set(this.guilds.map((guild) => guild.id));
+					this.guilds = [...this.guilds, ...result.guilds.filter((guild) => !seen.has(guild.id))];
 				}
+				this.loadedCount = offset + result.guilds.length;
 				this.total = result.total;
+				this.categoryCounts = result.categoryCounts;
 				this.loading = false;
 			});
 		} catch {
@@ -93,14 +107,43 @@ class Discovery {
 			runInAction(() => {
 				this.categories = categories;
 				this.categoriesLoaded = true;
+				this.categoriesError = false;
 			});
-		} catch {}
+		} catch {
+			runInAction(() => {
+				this.categoriesError = true;
+			});
+		}
+	}
+
+	getCategoryMatchCount(categoryId: number): number | null {
+		const counts = this.categoryCounts;
+		if (counts == null) {
+			return null;
+		}
+		return counts.get(categoryId) ?? 0;
+	}
+
+	get listedInAllMatchCount(): number | null {
+		const counts = this.categoryCounts;
+		if (counts == null) {
+			return null;
+		}
+		let total = 0;
+		for (const category of this.categories) {
+			if (category.listed_in_all !== false) {
+				total += counts.get(category.id) ?? 0;
+			}
+		}
+		return total;
 	}
 
 	reset(): void {
 		this.activeSearchToken += 1;
 		this.guilds = [];
+		this.loadedCount = 0;
 		this.total = 0;
+		this.categoryCounts = null;
 		this.loading = false;
 		this.error = false;
 		this.query = '';
@@ -111,4 +154,8 @@ class Discovery {
 	}
 }
 
-export default new Discovery();
+const discovery = new Discovery();
+
+AccountScopedWork.registerCancellation(() => discovery.reset());
+
+export default discovery;

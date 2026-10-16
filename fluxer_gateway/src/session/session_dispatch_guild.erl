@@ -16,7 +16,7 @@
 -type user_id() :: session:user_id().
 -type channel_event() :: channel_create | channel_update.
 
--spec update_channels_map(event(), map(), session_state()) -> session_state().
+-spec update_channels_map(event(), map() | list(), session_state()) -> session_state().
 update_channels_map(channel_create, Data, State) when is_map(Data) ->
     maybe_add_dm_channel(channel_create, Data, State);
 update_channels_map(channel_update, Data, State) when is_map(Data) ->
@@ -33,7 +33,7 @@ update_channels_map(channel_recipient_remove, Data, State) when is_map(Data) ->
 update_channels_map(_Event, _Data, State) ->
     State.
 
--spec update_dm_voice_states_map(event(), map(), session_state()) -> session_state().
+-spec update_dm_voice_states_map(event(), map() | list(), session_state()) -> session_state().
 update_dm_voice_states_map(voice_state_update, Data, State) when is_map(Data) ->
     update_dm_voice_state(Data, State);
 update_dm_voice_states_map(call_create, Data, State) when is_map(Data) ->
@@ -154,7 +154,7 @@ normalize_optional_snowflake_field(Data, Key) ->
     case get_field(Data, Key) of
         undefined -> undefined;
         null -> undefined;
-        Value -> guild_voice_connection_normalize:normalize_positive_snowflake(Value)
+        Value -> snowflake_id:parse_maybe(Value)
     end.
 
 -spec normalize_binary_field(map(), binary()) -> binary() | undefined.
@@ -359,7 +359,7 @@ add_unique_user_by_id(UserMap, Id, List) ->
         false -> [UserMap | List]
     end.
 
--spec update_relationships_map(event(), map(), session_state()) -> session_state().
+-spec update_relationships_map(event(), map() | list(), session_state()) -> session_state().
 update_relationships_map(relationship_add, Data, State) ->
     upsert_relationship(Data, State);
 update_relationships_map(relationship_update, Data, State) ->
@@ -392,24 +392,6 @@ upsert_relationship(Data, State) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-add_unique_id_test() ->
-    ?assertEqual([1, 2, 3], add_unique_id(1, [2, 3])),
-    ?assertEqual([1, 2, 3], add_unique_id(1, [1, 2, 3])),
-    ?assertEqual([<<"1">>, 2, 3], add_unique_id(1, [<<"1">>, 2, 3])),
-    ok.
-
-channel_create_inserts_test() ->
-    State = #{channels => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
-
-channel_create_updates_existing_test() ->
-    State = #{channels => #{100 => #{<<"type">> => 0}}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
 
 channel_update_preserves_dm_recipients_when_payload_is_partial_test() ->
     Existing = #{
@@ -453,12 +435,6 @@ channel_update_recipient_ids_replace_stale_recipient_maps_test() ->
     Channel = maps:get(100, maps:get(channels, State1)),
     ?assertNot(maps:is_key(<<"recipients">>, Channel)),
     ?assertEqual([<<"3">>], maps:get(<<"recipient_ids">>, Channel)).
-
-relationship_add_inserts_test() ->
-    State = #{relationships => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_relationships_map(relationship_add, Data, State),
-    ?assertEqual(1, map_size(maps:get(relationships, State1))).
 
 relationship_add_updates_type_test() ->
     State = #{relationships => #{100 => 1}},

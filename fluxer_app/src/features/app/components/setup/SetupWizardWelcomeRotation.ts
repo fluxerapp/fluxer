@@ -128,6 +128,10 @@ function createWelcomeOrder(
 	return [options.firstIndex, ...order];
 }
 
+export function welcomeTextForLocale(localeCode: string): string {
+	return WELCOME_ROTATION[findWelcomeLocaleIndex(localeCode)]?.text ?? WELCOME_ROTATION[0].text;
+}
+
 export function createWelcomeRotationState(
 	localeCode: string,
 	random: RandomSource = Math.random,

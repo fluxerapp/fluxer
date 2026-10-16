@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import styles from '@app/features/channel/components/GuildMembersPage.module.css';
 import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -105,7 +105,7 @@ export function MembersTableHeaderRow({
 					data-flx="channel.guild-members-page.members-table-view.header-cell--3"
 				>
 					<div className={styles.thContent} data-flx="channel.guild-members-page.members-table-view.th-content--2">
-						{i18n._(JOINED_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(JOINED_PRODUCT_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 						<button
 							type="button"
 							className={clsx(styles.filterButton, joinedFluxerActive && styles.filterButtonActive)}

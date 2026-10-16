@@ -7,7 +7,7 @@ import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import {AvatarWithPresence} from '@app/features/ui/avatars/AvatarWithPresence';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {UserProfilePopout} from '@app/features/user/components/popouts/UserProfilePopout';
 import {useUserProfileHoverPreload} from '@app/features/user/hooks/useUserProfileHoverPreload';
 import type {User} from '@app/features/user/models/User';
@@ -23,6 +23,11 @@ import MediaEngine, {useMediaEngineVersion, useVoiceEngineV2Model} from '@app/fe
 import {selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {
+	UNKNOWN_USER_DESCRIPTOR,
+	VIEW_PROFILE_FOR_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
+import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -31,19 +36,11 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
-const VIEW_PROFILE_FOR_DESCRIPTOR = msg({
-	message: 'View profile for {displayName}',
-	comment:
-		"Aria label on an avatar tile in the voice participants list. {displayName} is the participant's display name.",
-});
 const VOICE_PARTICIPANTS_DESCRIPTOR = msg({
 	message: 'Voice participants',
 	comment: 'Aria label on the voice participants avatar list container.',
 });
-const UNKNOWN_USER_DESCRIPTOR = msg({
-	message: 'Unknown user',
-	comment: 'Fallback voice participant display name when the user record has no usable name.',
-});
+
 const DEFAULT_WRAPPED_AVATAR_GAP_PX = 12;
 const WRAPPED_AVATAR_SLOT_TRANSITION = {
 	width: {duration: 0.22, ease: [0.22, 1, 0.36, 1]},
@@ -212,20 +209,24 @@ export function useVoiceParticipantAvatarEntries({
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const sortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 	return useMemo(() => {
+		if (!channelId) return [];
 		const nextEntries: Array<VoiceParticipantAvatarEntry> = [];
-		for (const snapshot of Object.values(participantSnapshots)) {
-			if (!snapshot.userId || !snapshot.connectionId) continue;
-			const user = Users.getUser(snapshot.userId);
+		for (const [connectionId, voiceState] of Object.entries(
+			MediaEngine.getAllVoiceStatesInChannel(guildId ?? ME, channelId),
+		)) {
+			if (!voiceState.user_id) continue;
+			const user = Users.getUser(voiceState.user_id);
 			if (!user) continue;
-			const voiceState = connectionVoiceStates[snapshot.connectionId] ?? null;
+			const snapshot = MediaEngine.getParticipantByUserIdAndConnectionId(voiceState.user_id, connectionId) ?? null;
+			const isLocal = connectionId === MediaEngine.connectionId;
 			const permissionMuted = isParticipantVoicePermissionMuted({
 				voiceState,
 				guildId,
 				channelId,
-				isCurrentUser: snapshot.isLocal,
+				isCurrentUser: isLocal,
 			});
 			const entryVoiceState = resolveVoiceParticipantAvatarEntryVoiceState({
-				snapshot,
+				snapshot: {...(snapshot ?? {}), isLocal},
 				voiceState,
 				permissionMuted,
 				localEffectiveSelfMute,
@@ -233,12 +234,12 @@ export function useVoiceParticipantAvatarEntries({
 			});
 			nextEntries.push({
 				user,
-				userId: snapshot.userId,
-				connectionId: snapshot.connectionId,
+				userId: voiceState.user_id,
+				connectionId,
 				speaking: entryVoiceState.speaking,
-				hasCamera: snapshot.isCameraEnabled,
-				hasScreenShare: snapshot.isScreenShareEnabled,
-				isLocal: snapshot.isLocal,
+				hasCamera: snapshot?.isCameraEnabled ?? false,
+				hasScreenShare: snapshot?.isScreenShareEnabled ?? false,
+				isLocal,
 				selfMute: entryVoiceState.selfMute,
 				selfDeaf: entryVoiceState.selfDeaf,
 			});
@@ -262,7 +263,7 @@ interface VoiceParticipantPopoutRowProps {
 
 function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipantPopoutRowProps) {
 	const {i18n} = useLingui();
-	const displayName = NicknameUtils.getNickname(entry.user, guildId ?? undefined, channelId ?? undefined);
+	const displayName = NicknameUtils.getNickname(entry.user, guildId ?? null, channelId ?? undefined);
 	const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 	const {scheduleProfilePreload, cancelProfilePreload} = useUserProfileHoverPreload({
 		userId: entry.user.id,
@@ -279,6 +280,8 @@ function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipant
 					onClose={onClose}
 					guildId={guildId ?? undefined}
 					connectionId={entry.connectionId}
+					surface="participant-avatar-list"
+					source={{kind: 'participant'}}
 					data-flx="voice.voice-participant-avatar-list.handle-context-menu.voice-participant-context-menu"
 				/>
 			));
@@ -405,7 +408,7 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 				event.stopPropagation();
 				const entry = sortedEntries[index];
 				if (!entry) return;
-				const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
+				const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 				const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 				ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 					<VoiceParticipantContextMenu
@@ -414,6 +417,8 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 						onClose={onClose}
 						guildId={guildId ?? undefined}
 						connectionId={entry.connectionId}
+						surface="participant-avatar-list"
+						source={{kind: 'participant'}}
 						data-flx="voice.voice-participant-avatar-list.handle-user-context-menu.voice-participant-context-menu"
 					/>
 				));
@@ -480,7 +485,7 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 						className={styles.remainingCount}
 						data-flx="voice.voice-participant-avatar-list.remaining-content.remaining-count"
 					>
-						+{remainingCount}
+						+{i18n.number(remainingCount)}
 					</div>
 				</Popout>
 			);
@@ -544,17 +549,17 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			[avatarSize],
 		);
 		const shouldAnimateAvatarChanges = !Accessibility.useReducedMotion;
-		const {slots: animatedSlots, onSlotAnimationComplete} = useWrappedAvatarSlots(
+		const {slots: avatarSlots, onSlotAnimationComplete} = useWrappedAvatarSlots(
 			sortedEntries,
 			shouldAnimateAvatarChanges,
 		);
 		const gapPx = useResolvedWrappedAvatarGapPx(containerRef);
-		const slotSize = avatarSize * getAppZoomFactor() + gapPx;
+		const slotSize = avatarSize * getAppRemScale() + gapPx;
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent<HTMLElement>, entry: VoiceParticipantAvatarEntry) => {
 				event.preventDefault();
 				event.stopPropagation();
-				const displayName = NicknameUtils.getNickname(entry.user, guildId ?? undefined, channelId ?? undefined);
+				const displayName = NicknameUtils.getNickname(entry.user, guildId ?? null, channelId ?? undefined);
 				const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 				ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 					<VoiceParticipantContextMenu
@@ -563,6 +568,8 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 						onClose={onClose}
 						guildId={guildId ?? undefined}
 						connectionId={entry.connectionId}
+						surface="participant-avatar-list"
+						source={{kind: 'participant'}}
 						data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.handle-context-menu.voice-participant-context-menu"
 					/>
 				));
@@ -583,22 +590,38 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			),
 			[avatarSize, guildId],
 		);
-		const finalAvatarNodes = sortedEntries.map((entry) => (
-			// biome-ignore lint/a11y/noStaticElementInteractions: wrapped voice avatars expose a pointer-only context menu.
-			<div
-				key={`${entry.userId}:${entry.connectionId}`}
-				className={styles.wrapAvatarSlot}
-				onContextMenu={(event) => handleContextMenu(event, entry)}
-				data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot"
-			>
-				<div
-					className={styles.wrapAvatar}
-					data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar"
+		const avatarSlotNodes = avatarSlots.map((slot) => {
+			const isCollapsed = slot.phase === 'exiting';
+			const isEntering = slot.phase === 'entering';
+			return (
+				<motion.div
+					key={shouldAnimateAvatarChanges ? `${slot.key}:motion` : `${slot.key}:static`}
+					className={clsx(styles.wrapAvatarSlot, shouldAnimateAvatarChanges && styles.wrapAvatarSlotAnimated)}
+					onContextMenu={(event) => handleContextMenu(event, slot.entry)}
+					initial={shouldAnimateAvatarChanges && isEntering ? {width: 0, flexBasis: 0} : false}
+					animate={
+						shouldAnimateAvatarChanges
+							? {width: isCollapsed ? 0 : slotSize, flexBasis: isCollapsed ? 0 : slotSize}
+							: undefined
+					}
+					transition={WRAPPED_AVATAR_SLOT_TRANSITION}
+					onAnimationComplete={() => onSlotAnimationComplete(slot.key, slot.phase)}
+					data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot"
 				>
-					{renderAvatar(entry)}
-				</div>
-			</div>
-		));
+					<motion.div
+						className={clsx(styles.wrapAvatar, shouldAnimateAvatarChanges && styles.wrapAvatarAnimated)}
+						initial={shouldAnimateAvatarChanges && isEntering ? {opacity: 0, scale: 0.92} : false}
+						animate={
+							shouldAnimateAvatarChanges ? {opacity: isCollapsed ? 0 : 1, scale: isCollapsed ? 0.9 : 1} : undefined
+						}
+						transition={WRAPPED_AVATAR_POP_TRANSITION}
+						data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar"
+					>
+						{renderAvatar(slot.entry)}
+					</motion.div>
+				</motion.div>
+			);
+		});
 		return (
 			<div
 				ref={containerRef}
@@ -606,39 +629,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 				style={listStyle}
 				data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-container"
 			>
-				{shouldAnimateAvatarChanges
-					? animatedSlots.map((slot) => {
-							const isCollapsed = slot.phase === 'exiting';
-							return (
-								<motion.div
-									key={slot.key}
-									className={clsx(styles.wrapAvatarSlot, styles.wrapAvatarSlotAnimated)}
-									onContextMenu={(event) => handleContextMenu(event, slot.entry)}
-									initial={slot.phase === 'entering' ? {width: 0, flexBasis: 0} : false}
-									animate={{
-										width: isCollapsed ? 0 : slotSize,
-										flexBasis: isCollapsed ? 0 : slotSize,
-									}}
-									transition={WRAPPED_AVATAR_SLOT_TRANSITION}
-									onAnimationComplete={() => onSlotAnimationComplete(slot.key, slot.phase)}
-									data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot.motion"
-								>
-									<motion.div
-										className={clsx(styles.wrapAvatar, styles.wrapAvatarAnimated)}
-										initial={slot.phase === 'entering' ? {opacity: 0, scale: 0.92} : false}
-										animate={{
-											opacity: isCollapsed ? 0 : 1,
-											scale: isCollapsed ? 0.9 : 1,
-										}}
-										transition={WRAPPED_AVATAR_POP_TRANSITION}
-										data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar.motion"
-									>
-										{renderAvatar(slot.entry)}
-									</motion.div>
-								</motion.div>
-							);
-						})
-					: finalAvatarNodes}
+				{avatarSlotNodes}
 			</div>
 		);
 	},

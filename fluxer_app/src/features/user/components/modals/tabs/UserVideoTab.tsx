@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	MACOS_CAMERA_PERMISSION_NAME,
-	MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME,
-	MACOS_SYSTEM_SETTINGS_NAME,
-	PREMIUM_PRODUCT_NAME,
-	PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
-import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {
+	CAMERA_DESCRIPTOR as CAMERA_2_DESCRIPTOR,
+	GET_PREMIUM_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -23,22 +18,45 @@ import {getAdvancedSettingsCategorySectionId} from '@app/features/user/component
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
 import styles from '@app/features/user/components/modals/tabs/UserVideoTab.module.css';
+import {
+	resolveUserVideoTabScreenShareState,
+	SCREEN_SHARE_PRESET_DESCRIPTORS,
+} from '@app/features/user/components/modals/tabs/UserVideoTabState';
+import {
+	CAMERA_QUALITY_DESCRIPTOR,
+	AUTOMATIC_DESCRIPTOR as SCREEN_SHARE_BITRATE_AUTOMATIC_DESCRIPTOR,
+	SCREEN_SHARE_BITRATE_DESCRIPTOR,
+	SCREEN_SHARE_QUALITY_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {CameraPreviewModalStandalone} from '@app/features/voice/components/modals/CameraPreviewModal';
-import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import type {CameraResolution, ScreenshareResolution} from '@app/features/voice/state/VoiceSettings';
 import {
-	resolveScreenShareFrameRate,
+	CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR,
+	type OfferedScreenShareResolution,
+} from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import type {CameraResolution} from '@app/features/voice/state/VoiceSettings';
+import {
+	resolveScreenShareQualityPick,
+	type ScreenShareQualityInput,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
-import {msg} from '@lingui/core/macro';
+import type {I18n} from '@lingui/core';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CrownIcon, GearIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
+
+const FPS_DESCRIPTOR = msg({
+	message: '{frameRate} FPS',
+	comment: 'Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.',
+});
 
 const LOW_480P_LABEL = '480p';
 const MEDIUM_720P_LABEL = '720p';
@@ -56,33 +74,48 @@ const HIGH_FRAME_RATE_REQUIRES_PREMIUM_DESCRIPTOR = msg({
 	comment: 'Video settings note shown when higher frame rates require premium.',
 });
 const SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR = msg({
-	message: 'This instance currently allows screen share up to 720p at 30 FPS.',
+	message: 'This instance currently allows screen sharing up to 720p at 30 FPS.',
 	comment: 'Neutral video settings note shown when higher screen share quality is disabled by instance limits.',
 });
-const VERY_LOW_240P_LABEL = '240p';
-const STANDARD_720P_LABEL = '720p';
-const HIGH_DEFINITION_1080P_LABEL = '1080p';
-const QUAD_HD_1440P_LABEL = '1440p';
+const SCREEN_SHARE_RESOLUTION_LABELS: Record<Exclude<OfferedScreenShareResolution, 'source'>, string> = {
+	low_480p: '480p',
+	medium: '720p',
+	high: '1080p',
+	ultra: '1440p',
+};
 const SOURCE_DESCRIPTOR = msg({
 	message: 'Source',
 	comment: 'Short label in the video tab for the native source resolution option. Keep it concise.',
 });
-const CAMERA_2_DESCRIPTOR = msg({
-	message: 'Camera',
-	comment: 'Short label in the video tab. Keep it concise.',
+const SCREEN_SHARE_PRESET_OWNED_DESCRIPTOR = msg({
+	message: 'Set by the {preset} preset. Picking a value here switches to Custom.',
+	comment:
+		'Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.',
 });
-const CAMERA_QUALITY_DESCRIPTOR = msg({
-	message: 'Camera quality',
-	comment: 'Short label in the video tab. Keep it concise.',
+const SCREEN_SHARE_TIER_LIMITED_DESCRIPTOR = msg({
+	message:
+		'Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS.',
+	comment:
+		'Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.',
 });
+
 const MIRROR_CAMERA_DESCRIPTOR = msg({
 	message: 'Mirror camera',
 	comment: 'Switch label in the video tab for flipping the local camera preview horizontally.',
 });
-const SCREEN_SHARE_QUALITY_DESCRIPTOR = msg({
-	message: 'Screen share quality',
-	comment: 'Short label in the video tab. Keep it concise.',
+
+const SCREEN_SHARE_BITRATE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth.',
+	comment:
+		'Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.',
 });
+const SCREEN_SHARE_BITRATE_MBPS_DESCRIPTOR = msg({
+	message: '{bitrate} Mbps',
+	comment:
+		'Option label of the screen share bitrate select in the video tab. bitrate is a formatted number of megabits per second. Mbps is a technical unit token.',
+});
+
 const ADVANCED_VIDEO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Advanced video settings',
 	comment: 'Subsection title in the video tab. Keep it concise.',
@@ -92,136 +125,131 @@ const OPEN_ADVANCED_MEDIA_SETTINGS_DESCRIPTOR = msg({
 	comment: 'Button label in the video tab that jumps to the advanced settings media section.',
 });
 
-interface VideoTabProps {
-	voiceSettings: typeof VoiceSettings;
-	hasPremium: boolean;
-	autoRequestPermission?: boolean;
+function getScreenShareResolutionLabel(i18n: I18n, resolution: OfferedScreenShareResolution): string {
+	return resolution === 'source' ? i18n._(SOURCE_DESCRIPTOR) : SCREEN_SHARE_RESOLUTION_LABELS[resolution];
 }
 
-export const VideoTab: React.FC<VideoTabProps> = observer(
-	({voiceSettings, hasPremium: _hasPremium, autoRequestPermission = true}) => {
-		const {i18n} = useLingui();
-		const {videoDeviceId, cameraResolution, mirrorCamera, screenshareResolution, videoFrameRate} = voiceSettings;
-		const hasHigherQuality = isLimitToggleEnabled(
-			{
-				feature_higher_video_quality: LimitResolver.resolve({
-					key: 'feature_higher_video_quality',
-					fallback: 0,
-				}),
-			},
-			'feature_higher_video_quality',
-		);
-		const isSelfHosted = RuntimeConfig.isSelfHosted();
-		const {
-			devices,
-			deviceState,
-			status: permissionStatus,
-			requestPermission,
-		} = useMediaPermission('video', {
-			autoRequest: autoRequestPermission,
-		});
-		const videoDeviceOptions = useMemo(
-			() => buildSettingsDeviceOptions(deviceState, 'videoinput', i18n),
-			[deviceState, i18n.locale],
-		);
-		const effectiveVideoDeviceId = resolveEffectiveDeviceId(videoDeviceId, devices) ?? 'default';
-		const cameraResolutionOptions: ReadonlyArray<ComboboxOption<CameraResolution>> = [
-			{value: 'low', label: LOW_480P_LABEL},
-			{value: 'medium', label: MEDIUM_720P_LABEL},
-			...(hasHigherQuality || !isSelfHosted
-				? [
-						{
-							value: 'high' as const,
-							label: HIGH_1080P_LABEL,
-							isDisabled: !hasHigherQuality,
-						},
-					]
-				: []),
-		];
-		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<ScreenshareResolution>> = [
-			{value: 'low_240p', label: VERY_LOW_240P_LABEL},
-			{value: 'low_480p', label: LOW_480P_LABEL},
-			{
-				value: 'medium',
-				label: STANDARD_720P_LABEL,
-			},
-			...(hasHigherQuality || !isSelfHosted
-				? [
-						{
-							value: 'high' as const,
-							label: HIGH_DEFINITION_1080P_LABEL,
-							isDisabled: !hasHigherQuality,
-						},
-						{
-							value: 'ultra' as const,
-							label: QUAD_HD_1440P_LABEL,
-							isDisabled: !hasHigherQuality,
-						},
-						{
-							value: 'source' as const,
-							label: i18n._(SOURCE_DESCRIPTOR),
-							isDisabled: !hasHigherQuality,
-						},
-					]
-				: []),
-		];
-		const frameRateOptions: ReadonlyArray<ComboboxOption<SupportedScreenShareFrameRate>> = hasHigherQuality
+interface VideoTabProps {
+	voiceSettings: typeof VoiceSettings;
+}
+
+export const VideoTab: React.FC<VideoTabProps> = observer(({voiceSettings}) => {
+	const {i18n} = useLingui();
+	const {
+		videoDeviceId,
+		cameraResolution,
+		mirrorCamera,
+		screenshareResolution,
+		videoFrameRate,
+		streamingMode,
+		screenShareContentHint,
+	} = voiceSettings;
+	const hasHigherQuality = hasHigherVideoQuality();
+	const showPremium = shouldShowPremiumFeatures();
+	const {devices, deviceState, status: permissionStatus, requestPermission} = useMediaPermission('video');
+	const videoDeviceOptions = useMemo(
+		() => buildSettingsDeviceOptions(deviceState, 'videoinput', i18n),
+		[deviceState, i18n.locale],
+	);
+	const effectiveVideoDeviceId = resolveEffectiveDeviceId(videoDeviceId, devices) ?? 'default';
+	const cameraResolutionOptions: ReadonlyArray<ComboboxOption<CameraResolution>> = [
+		{value: 'low', label: LOW_480P_LABEL},
+		{value: 'medium', label: MEDIUM_720P_LABEL},
+		...(hasHigherQuality || showPremium
 			? [
-					{value: 15, label: '15 FPS'},
-					{value: 30, label: '30 FPS'},
-					{value: 60, label: '60 FPS'},
+					{
+						value: 'high' as const,
+						label: HIGH_1080P_LABEL,
+						isDisabled: !hasHigherQuality,
+					},
 				]
-			: [
-					{value: 15, label: '15 FPS'},
-					{value: 30, label: '30 FPS'},
-				];
-		const resolvedVideoFrameRate = resolveScreenShareFrameRate(videoFrameRate);
-		const effectiveVideoFrameRate: SupportedScreenShareFrameRate =
-			!hasHigherQuality && resolvedVideoFrameRate === 60 ? 30 : resolvedVideoFrameRate;
-		const handleCameraPreview = async () => {
-			const granted = await requestPermission();
-			if (granted) {
-				ModalCommands.push(
-					modal(() => (
-						<CameraPreviewModalStandalone
-							showEnableCameraButton={false}
-							data-flx="user.video-tab.handle-camera-preview.camera-preview-modal-standalone"
-						/>
-					)),
-				);
-			}
-		};
-		const handleScreenshareResolutionChange = useCallback((value: ScreenshareResolution) => {
-			VoiceSettingsCommands.update({screenshareResolution: value, streamingMode: 'custom'});
-		}, []);
-		const handleVideoFrameRateChange = useCallback((value: SupportedScreenShareFrameRate) => {
-			VoiceSettingsCommands.update({videoFrameRate: value, streamingMode: 'custom'});
-		}, []);
-		const handleOpenAdvancedVideoSettings = useCallback(() => {
-			ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {
-				tab: 'advanced_settings',
-				section: getAdvancedSettingsCategorySectionId('media'),
-			});
-		}, []);
-		return (
-			<div className={styles.content} data-flx="user.video-tab.content">
-				{devices.length === 0 && permissionStatus !== 'loading' && permissionStatus !== 'granted' ? (
-					<div className={styles.deviceNotice} data-flx="user.video-tab.device-notice">
-						<div className={styles.deviceNoticeText} data-flx="user.video-tab.device-notice-text">
-							<div className={styles.deviceNoticeTitle} data-flx="user.video-tab.device-notice-title">
-								<Trans>No camera found</Trans>
-							</div>
-							<p className={styles.deviceNoticeDescription} data-flx="user.video-tab.device-notice-description">
-								{permissionStatus === 'denied' ? (
-									<Trans>
-										Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} →{' '}
-										{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}.
-									</Trans>
-								) : (
-									i18n._(PRODUCT_NEEDS_CAMERA_ACCESS_DESCRIPTOR, {productName: PRODUCT_NAME})
-								)}
-							</p>
+			: []),
+	];
+	const liveShareContext = ActiveScreenShareSource.getShareContext();
+	const screenShareQuality: ScreenShareQualityInput = {
+		mode: streamingMode,
+		storedResolution: screenshareResolution,
+		storedFrameRate: videoFrameRate,
+		entitled: hasHigherQuality,
+		context: liveShareContext ?? 'display',
+	};
+	const screenShareState = resolveUserVideoTabScreenShareState({
+		quality: screenShareQuality,
+		hintSetting: screenShareContentHint,
+		bitrate: voiceSettings.getScreenShareBitrateBudget(),
+		selfHosted: !showPremium,
+	});
+	const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<OfferedScreenShareResolution>> =
+		screenShareState.resolutionOptions.map((option) => ({
+			value: option.value,
+			label: getScreenShareResolutionLabel(i18n, option.value),
+			isDisabled: option.isDisabled,
+		}));
+	const frameRateOptions: ReadonlyArray<ComboboxOption<SupportedScreenShareFrameRate>> =
+		screenShareState.frameRateOptions.map((value) => ({
+			value,
+			label: i18n._(FPS_DESCRIPTOR, {frameRate: value}),
+		}));
+	const bitrateOptions: ReadonlyArray<ComboboxOption<number | null>> = [
+		{value: null, label: i18n._(SCREEN_SHARE_BITRATE_AUTOMATIC_DESCRIPTOR)},
+		...screenShareState.bitrateOptions.map((value) => ({
+			value,
+			label: i18n._(SCREEN_SHARE_BITRATE_MBPS_DESCRIPTOR, {
+				bitrate: i18n.number(value / 1_000_000, {maximumFractionDigits: 1}),
+			}),
+		})),
+	];
+	const handleCameraPreview = async () => {
+		const granted = await requestPermission();
+		if (granted) {
+			ModalCommands.push(
+				modal(() => (
+					<CameraPreviewModalStandalone
+						showEnableCameraButton={false}
+						data-flx="user.video-tab.handle-camera-preview.camera-preview-modal-standalone"
+					/>
+				)),
+			);
+		}
+	};
+	const handleScreenshareResolutionChange = (value: OfferedScreenShareResolution) => {
+		const patch = resolveScreenShareQualityPick(screenShareQuality, {axis: 'resolution', resolution: value});
+		if (patch === null) return;
+		VoiceSettingsCommands.update(patch);
+	};
+	const handleVideoFrameRateChange = (value: SupportedScreenShareFrameRate) => {
+		const patch = resolveScreenShareQualityPick(screenShareQuality, {axis: 'frameRate', frameRate: value});
+		if (patch === null) return;
+		VoiceSettingsCommands.update(patch);
+	};
+	const handleOpenAdvancedVideoSettings = useCallback(() => {
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {
+			tab: 'advanced_settings',
+			section: getAdvancedSettingsCategorySectionId('media'),
+		});
+	}, []);
+	return (
+		<div className={styles.content} data-flx="user.video-tab.content">
+			{devices.length === 0 && permissionStatus !== 'loading' ? (
+				<div className={styles.deviceNotice} data-flx="user.video-tab.device-notice">
+					<div className={styles.deviceNoticeText} data-flx="user.video-tab.device-notice-text">
+						<div className={styles.deviceNoticeTitle} data-flx="user.video-tab.device-notice-title">
+							<Trans>No camera found</Trans>
 						</div>
+						<p className={styles.deviceNoticeDescription} data-flx="user.video-tab.device-notice-description">
+							{permissionStatus === 'denied' ? (
+								<Trans comment="Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
+									Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your camera in System Settings →
+									Privacy & Security → Camera.
+								</Trans>
+							) : permissionStatus === 'granted' ? (
+								<Trans>Connect a camera and try again.</Trans>
+							) : (
+								i18n._(PRODUCT_NEEDS_CAMERA_ACCESS_DESCRIPTOR, {productName: RuntimeConfig.productName})
+							)}
+						</p>
+					</div>
+					{permissionStatus !== 'granted' ? (
 						<Button
 							variant="secondary"
 							small={true}
@@ -232,131 +260,173 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 						>
 							<Trans>Allow camera</Trans>
 						</Button>
-					</div>
-				) : null}
-				<div className={styles.controlGroup} data-flx="user.video-tab.camera-settings-group">
-					<CompactComboboxRow
-						label={i18n._(CAMERA_2_DESCRIPTOR)}
-						value={effectiveVideoDeviceId}
-						options={videoDeviceOptions}
-						onChange={(value) => VoiceSettingsCommands.update({videoDeviceId: value})}
-						controlWidth="wide"
-						menuMinWidth={280}
-						dataFlx="user.video-tab.select.update"
-						data-flx="user.user-video-tab.video-tab.compact-combobox-row.update"
-					/>
-					<div className={styles.cameraControlGroup} data-flx="user.video-tab.camera-control-group">
-						<Switch
-							label={i18n._(MIRROR_CAMERA_DESCRIPTOR)}
-							value={mirrorCamera}
-							onChange={(value) => VoiceSettingsCommands.update({mirrorCamera: value})}
-							data-flx="user.user-video-tab.video-tab.switch.update"
-						/>
-						<Button
-							variant="primary"
-							fitContent
-							className={styles.actionButton}
-							onClick={handleCameraPreview}
-							data-flx="user.video-tab.action-button.camera-preview"
-						>
-							<Trans>Start camera test and configure effects</Trans>
-						</Button>
-					</div>
-					<CompactComboboxRow<CameraResolution>
-						label={i18n._(CAMERA_QUALITY_DESCRIPTOR)}
-						options={cameraResolutionOptions}
-						value={cameraResolution}
-						onChange={(value) => VoiceSettingsCommands.update({cameraResolution: value})}
-						isSearchable={false}
-						controlWidth="small"
-						dataFlx="user.video-tab.select.camera-resolution-update"
-						data-flx="user.user-video-tab.video-tab.compact-combobox-row.update--2"
-					/>
+					) : null}
 				</div>
-				<div className={styles.controlGroup} data-flx="user.video-tab.screen-sharing-group">
-					<CompactComboboxRow<ScreenshareResolution>
-						label={i18n._(SCREEN_SHARE_QUALITY_DESCRIPTOR)}
-						options={screenshareResolutionOptions}
-						value={screenshareResolution}
-						onChange={handleScreenshareResolutionChange}
-						isSearchable={false}
-						controlWidth="small"
-						dataFlx="user.video-tab.select.screenshare-resolution-change"
-						data-flx="user.user-video-tab.video-tab.compact-combobox-row.screenshare-resolution-change"
+			) : null}
+			<div className={styles.controlGroup} data-flx="user.video-tab.camera-settings-group">
+				<CompactComboboxRow
+					label={i18n._(CAMERA_2_DESCRIPTOR)}
+					value={effectiveVideoDeviceId}
+					options={videoDeviceOptions}
+					onChange={(value) => VoiceSettingsCommands.update({videoDeviceId: value})}
+					controlWidth="wide"
+					menuMinWidth={280}
+					dataFlx="user.video-tab.select.update"
+					data-flx="user.user-video-tab.video-tab.compact-combobox-row.update"
+				/>
+				<div className={styles.cameraControlGroup} data-flx="user.video-tab.camera-control-group">
+					<Switch
+						label={i18n._(MIRROR_CAMERA_DESCRIPTOR)}
+						value={mirrorCamera}
+						onChange={(value) => VoiceSettingsCommands.update({mirrorCamera: value})}
+						data-flx="user.user-video-tab.video-tab.switch.update"
 					/>
-					{!hasHigherQuality && !isSelfHosted && (
-						<div className={styles.premiumCard} data-flx="user.video-tab.premium-card">
-							<div className={styles.premiumHeader} data-flx="user.video-tab.premium-header">
-								<CrownIcon
-									weight="fill"
-									size={remFromPx(18)}
-									className={styles.premiumIcon}
-									data-flx="user.video-tab.premium-icon"
-								/>
-								<span className={styles.premiumTitle} data-flx="user.video-tab.premium-title">
-									{i18n._(UNLOCK_HD_SCREEN_SHARE_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-								</span>
-							</div>
-							<p className={styles.premiumDescription} data-flx="user.video-tab.premium-description">
-								<Trans>
-									Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to
-									60 FPS.
-								</Trans>
-							</p>
-							<Button
-								variant="secondary"
-								small={true}
-								onClick={() => PremiumModalCommands.open()}
-								data-flx="user.video-tab.button.open"
-							>
-								{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-							</Button>
-						</div>
-					)}
-					<CompactComboboxRow<SupportedScreenShareFrameRate>
-						label={<Trans>Frame rate</Trans>}
-						options={frameRateOptions}
-						value={effectiveVideoFrameRate}
-						onChange={handleVideoFrameRateChange}
-						isSearchable={false}
-						controlWidth="small"
-						dataFlx="user.video-tab.select.frame-rate-change"
-						data-flx="user.user-video-tab.video-tab.compact-combobox-row.video-frame-rate-change"
-					/>
-					{!hasHigherQuality && !isSelfHosted && (
-						<div className={styles.frameRateNote} data-flx="user.video-tab.frame-rate-note">
-							<CrownIcon
-								weight="fill"
-								size={remFromPx(14)}
-								className={styles.frameRateIcon}
-								data-flx="user.video-tab.frame-rate-icon"
-							/>
-							{i18n._(HIGH_FRAME_RATE_REQUIRES_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-						</div>
-					)}
-					{!hasHigherQuality && isSelfHosted && (
-						<div className={styles.frameRateNote} data-flx="user.video-tab.instance-limit-note">
-							{i18n._(SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR)}
-						</div>
-					)}
-				</div>
-				<div className={styles.actionRow} data-flx="user.video-tab.advanced-video-settings-section">
-					<span className={styles.actionLabel} data-flx="user.video-tab.advanced-video-settings-label">
-						{i18n._(ADVANCED_VIDEO_SETTINGS_DESCRIPTOR)}
-					</span>
 					<Button
-						variant="secondary"
+						variant="primary"
 						fitContent
-						leftIcon={
-							<GearIcon size={remFromPx(16)} weight="bold" data-flx="user.video-tab.advanced-settings.gear-icon" />
-						}
-						onClick={handleOpenAdvancedVideoSettings}
-						data-flx="user.video-tab.button.open-advanced-video-settings"
+						className={styles.actionButton}
+						onClick={handleCameraPreview}
+						data-flx="user.video-tab.action-button.camera-preview"
 					>
-						{i18n._(OPEN_ADVANCED_MEDIA_SETTINGS_DESCRIPTOR)}
+						<Trans>Start camera test and configure effects</Trans>
 					</Button>
 				</div>
+				<CompactComboboxRow<CameraResolution>
+					label={i18n._(CAMERA_QUALITY_DESCRIPTOR)}
+					options={cameraResolutionOptions}
+					value={cameraResolution}
+					onChange={(value) => VoiceSettingsCommands.update({cameraResolution: value})}
+					isSearchable={false}
+					controlWidth="small"
+					dataFlx="user.video-tab.select.camera-resolution-update"
+					data-flx="user.user-video-tab.video-tab.compact-combobox-row.update--2"
+				/>
 			</div>
-		);
-	},
-);
+			<div className={styles.controlGroup} data-flx="user.video-tab.screen-sharing-group">
+				<CompactComboboxRow<OfferedScreenShareResolution>
+					label={i18n._(SCREEN_SHARE_QUALITY_DESCRIPTOR)}
+					options={screenshareResolutionOptions}
+					value={screenShareState.resolution}
+					onChange={handleScreenshareResolutionChange}
+					isSearchable={false}
+					controlWidth="small"
+					dataFlx="user.video-tab.select.screenshare-resolution-change"
+					data-flx="user.user-video-tab.video-tab.compact-combobox-row.screenshare-resolution-change"
+				/>
+				{!hasHigherQuality && showPremium && (
+					<div className={styles.premiumCard} data-flx="user.video-tab.premium-card">
+						<div className={styles.premiumHeader} data-flx="user.video-tab.premium-header">
+							<CrownIcon
+								weight="fill"
+								size={remFromPx(18)}
+								className={styles.premiumIcon}
+								data-flx="user.video-tab.premium-icon"
+							/>
+							<span className={styles.premiumTitle} data-flx="user.video-tab.premium-title">
+								{i18n._(UNLOCK_HD_SCREEN_SHARE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+							</span>
+						</div>
+						<p className={styles.premiumDescription} data-flx="user.video-tab.premium-description">
+							<Trans>
+								Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60
+								FPS.
+							</Trans>
+						</p>
+						<Button
+							variant="secondary"
+							small={true}
+							onClick={() => PremiumModalCommands.open()}
+							data-flx="user.video-tab.button.open"
+						>
+							{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+						</Button>
+					</div>
+				)}
+				<CompactComboboxRow<SupportedScreenShareFrameRate>
+					label={<Trans>Frame rate</Trans>}
+					options={frameRateOptions}
+					value={screenShareState.frameRate}
+					onChange={handleVideoFrameRateChange}
+					isSearchable={false}
+					controlWidth="small"
+					dataFlx="user.video-tab.select.frame-rate-change"
+					data-flx="user.user-video-tab.video-tab.compact-combobox-row.video-frame-rate-change"
+				/>
+				{!hasHigherQuality && showPremium && (
+					<div className={styles.frameRateNote} data-flx="user.video-tab.frame-rate-note">
+						<CrownIcon
+							weight="fill"
+							size={remFromPx(14)}
+							className={styles.frameRateIcon}
+							data-flx="user.video-tab.frame-rate-icon"
+						/>
+						{i18n._(HIGH_FRAME_RATE_REQUIRES_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+					</div>
+				)}
+				{!hasHigherQuality && !showPremium && (
+					<div className={styles.frameRateNote} data-flx="user.video-tab.instance-limit-note">
+						{i18n._(SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR)}
+					</div>
+				)}
+				{screenShareState.preset !== null && (
+					<div className={styles.frameRateNote} data-flx="user.video-tab.preset-note">
+						{i18n._(SCREEN_SHARE_PRESET_OWNED_DESCRIPTOR, {
+							preset: i18n._(SCREEN_SHARE_PRESET_DESCRIPTORS[screenShareState.preset]),
+						})}
+					</div>
+				)}
+				{screenShareState.presetOverriddenByContext && (
+					<div className={styles.frameRateNote} data-flx="user.video-tab.preset-context-note">
+						{i18n._(CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR)}
+					</div>
+				)}
+				{screenShareState.saved !== null && (
+					<div className={styles.frameRateNote} data-flx="user.video-tab.tier-limit-note">
+						<CrownIcon
+							weight="fill"
+							size={remFromPx(14)}
+							className={styles.frameRateIcon}
+							data-flx="user.video-tab.tier-limit-icon"
+						/>
+						{i18n._(SCREEN_SHARE_TIER_LIMITED_DESCRIPTOR, {
+							frameRate: screenShareState.frameRate,
+							premiumProductName: getPremiumProductName(),
+							resolution: getScreenShareResolutionLabel(i18n, screenShareState.resolution),
+							savedFrameRate: screenShareState.saved.frameRate,
+							savedResolution: getScreenShareResolutionLabel(i18n, screenShareState.saved.resolution),
+						})}
+					</div>
+				)}
+				{hasHigherQuality && (
+					<CompactComboboxRow<number | null>
+						label={i18n._(SCREEN_SHARE_BITRATE_DESCRIPTOR)}
+						description={i18n._(SCREEN_SHARE_BITRATE_DESCRIPTION_DESCRIPTOR)}
+						options={bitrateOptions}
+						value={screenShareState.bitrate}
+						onChange={(value) => VoiceSettingsCommands.update({screenShareBitrate: value})}
+						isSearchable={false}
+						controlWidth="small"
+						dataFlx="user.video-tab.select.screen-share-bitrate-change"
+						data-flx="user.user-video-tab.video-tab.compact-combobox-row.screen-share-bitrate-change"
+					/>
+				)}
+			</div>
+			<div className={styles.actionRow} data-flx="user.video-tab.advanced-video-settings-section">
+				<span className={styles.actionLabel} data-flx="user.video-tab.advanced-video-settings-label">
+					{i18n._(ADVANCED_VIDEO_SETTINGS_DESCRIPTOR)}
+				</span>
+				<Button
+					variant="secondary"
+					fitContent
+					leftIcon={
+						<GearIcon size={remFromPx(16)} weight="bold" data-flx="user.video-tab.advanced-settings.gear-icon" />
+					}
+					onClick={handleOpenAdvancedVideoSettings}
+					data-flx="user.video-tab.button.open-advanced-video-settings"
+				>
+					{i18n._(OPEN_ADVANCED_MEDIA_SETTINGS_DESCRIPTOR)}
+				</Button>
+			</div>
+		</div>
+	);
+});

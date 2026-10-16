@@ -35,7 +35,7 @@ interface MemberListIncomingOperation {
 	items?: ReadonlyArray<MemberListItem>;
 }
 
-interface GuildMemberListUpdatePayload {
+export interface GuildMemberListUpdatePayload {
 	guild_id: string;
 	id: string;
 	channel_id?: string;
@@ -81,10 +81,7 @@ export function handleGuildMemberListUpdate(data: GuildMemberListUpdatePayload, 
 		validOps.push({
 			op: 'SYNC',
 			range: op.range,
-			items: op.items.map((item: MemberListItem) => ({
-				member: item.member,
-				group: item.group,
-			})),
+			items: op.items,
 		});
 	}
 	if (validOps.length === 0 && ops.length > 0) {

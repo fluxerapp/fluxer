@@ -4,8 +4,8 @@ import {DesktopSettingsView} from '@app/features/app/components/dialogs/componen
 import {MobileSettingsView} from '@app/features/app/components/dialogs/components/MobileSettingsView';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsModalContainer} from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -24,7 +24,6 @@ import type {UserSettingsTabType} from '@app/features/user/components/settings_u
 import {useMobileNavigation} from '@app/features/user/hooks/useMobileNavigation';
 import {SettingsContentKeyProvider} from '@app/features/user/hooks/useSettingsContentKey';
 import UserSettings from '@app/features/user/state/UserSettings';
-import Users from '@app/features/user/state/Users';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -45,20 +44,15 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 			getAccountSectionForNestedTab(initialTab) ?? getAccountSectionForLegacySection(initialSubtab);
 		const normalizedInitialTab = initialAccountSection ? ACCOUNT_SETTINGS_TAB : initialTab;
 		const normalizedInitialSubtab = initialAccountSection ?? initialSubtab;
-		const isStaff = Users.getCurrentUser()?.isStaff() ?? false;
-		const hasExpressionPackAccess = isStaff && DeveloperOptions.showExpressionPacksSettings;
 		const isDeveloperModeEnabled = UserSettings.developerMode;
 		const visibleSettingsTabs = useMemo(() => {
 			return settingsTabs.filter((tab) => {
-				if (!hasExpressionPackAccess && tab.type === 'expression_packs') {
-					return false;
-				}
 				if (!isDeveloperModeEnabled && (tab.type === 'embed_debugger' || tab.type === 'component_gallery')) {
 					return false;
 				}
 				return true;
 			});
-		}, [hasExpressionPackAccess, isDeveloperModeEnabled, settingsTabs]);
+		}, [isDeveloperModeEnabled, settingsTabs]);
 		const resolveVisibleTab = useCallback(
 			(tabType?: UserSettingsTabType): UserSettingsTabType => {
 				if (tabType && visibleSettingsTabs.some((tab) => tab.type === tabType)) {
@@ -115,10 +109,21 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 		}, [currentTab?.type, mobileNav, unsavedChangesState.unsavedChanges]);
 		const handleTabSelect = useCallback(
 			(tabType: string, title: string) => {
+				if (tabType === 'plutonium') {
+					PlutoniumPageCommands.openPlutoniumPage();
+					return;
+				}
 				mobileNav.navigateTo(tabType as UserSettingsTabType, title);
 			},
 			[mobileNav],
 		);
+		const handleDesktopTabSelect = useCallback((tabType: UserSettingsTabType) => {
+			if (tabType === 'plutonium') {
+				PlutoniumPageCommands.openPlutoniumPage();
+				return;
+			}
+			setSelectedTab(tabType);
+		}, []);
 		const handleClose = useCallback(() => {
 			const checkTabId = selectedTab;
 			if (checkTabId && unsavedChangesState.unsavedChanges[checkTabId]) {
@@ -141,8 +146,12 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 			}
 		}, [resolveVisibleTab, selectedTab]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('USER_SETTINGS_TAB_SELECT', (args?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('USER_SETTINGS_TAB_SELECT', (args?: unknown) => {
 				const {tab, section} = (args ?? {}) as {tab?: string; section?: string};
+				if (tab === 'plutonium') {
+					PlutoniumPageCommands.openPlutoniumPage();
+					return;
+				}
 				if (tab && typeof tab === 'string') {
 					const accountSection =
 						getAccountSectionForNestedTab(tab as UserSettingsTabType) ?? getAccountSectionForLegacySection(section);
@@ -190,7 +199,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 								groupedSettingsTabs={groupedSettingsTabs}
 								currentTab={currentTab}
 								selectedTab={selectedTab}
-								onTabSelect={setSelectedTab}
+								onTabSelect={handleDesktopTabSelect}
 								initialGuildId={initialGuildId}
 								initialSubtab={normalizedInitialSubtab}
 								pendingSection={pendingSection}

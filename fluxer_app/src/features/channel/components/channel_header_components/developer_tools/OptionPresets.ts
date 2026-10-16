@@ -5,14 +5,16 @@ import {
 	type RadioMenuOption,
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {
+	formatDurationMs,
+	NO_TIMER_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/FormatHelpers';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
-import {EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatDurationMs, NO_TIMER_DESCRIPTOR} from './FormatHelpers';
 
-export const SUBSCRIPTION_DESCRIPTOR = msg({
+const SUBSCRIPTION_DESCRIPTOR = msg({
 	message: 'Subscription',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -20,91 +22,63 @@ export const LIFETIME_DESCRIPTOR = msg({
 	message: 'Lifetime',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const USE_ACTUAL_PREMIUM_TYPE_DESCRIPTOR = msg({
+const USE_ACTUAL_PREMIUM_TYPE_DESCRIPTOR = msg({
 	message: 'Use actual premium type',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const NONE_NORMAL_BEHAVIOR_DESCRIPTOR = msg({
+const NONE_NORMAL_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'None (normal behavior)',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const UNVERIFIED_EMAIL_DESCRIPTOR = msg({
+const UNVERIFIED_EMAIL_DESCRIPTOR = msg({
 	message: 'Unverified email',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const UNCLAIMED_ACCOUNT_DESCRIPTOR = msg({
+const UNCLAIMED_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Unclaimed account',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const ACCOUNT_TOO_NEW_DESCRIPTOR = msg({
+const ACCOUNT_TOO_NEW_DESCRIPTOR = msg({
 	message: 'Account too new',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR = msg({
+const NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR = msg({
 	message: 'Not a member long enough',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const NO_PHONE_NUMBER_DESCRIPTOR = msg({
-	message: 'No phone number',
+export const ACCOUNT_LIMITED_DESCRIPTOR = msg({
+	message: 'Messaging paused',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const SEND_MESSAGES_DISABLED_DESCRIPTOR = msg({
+const SEND_MESSAGES_DISABLED_DESCRIPTOR = msg({
 	message: 'Send messages disabled',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const PHONE_DESCRIPTOR = msg({
-	message: 'Phone',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const EMAIL_OR_PHONE_DESCRIPTOR = msg({
-	message: 'Email or phone',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const ENTER_PHONE_DESCRIPTOR = msg({
-	message: 'Enter phone',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const ENTER_CODE_DESCRIPTOR = msg({
-	message: 'Enter code',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const SUCCESS_DESCRIPTOR = msg({
-	message: 'Success',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const RATE_LIMITED_DESCRIPTOR = msg({
-	message: 'Rate limited',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const SERVICE_ERROR_DESCRIPTOR = msg({
-	message: 'Service error',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const GEO_RESTRICTED_DESCRIPTOR = msg({
+const GEO_RESTRICTED_DESCRIPTOR = msg({
 	message: 'Geo restricted',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MATURE_CONTENT_GATE_DESCRIPTOR = msg({
+const MATURE_CONTENT_GATE_DESCRIPTOR = msg({
 	message: 'Mature content',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const CONSENT_REQUIRED_DESCRIPTOR = msg({
+const CONSENT_REQUIRED_DESCRIPTOR = msg({
 	message: 'Consent required',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_1_MONTH_DESCRIPTOR = msg({
+const MESSAGE_1_MONTH_DESCRIPTOR = msg({
 	message: '1 month',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_3_MONTHS_DESCRIPTOR = msg({
+const MESSAGE_3_MONTHS_DESCRIPTOR = msg({
 	message: '3 months',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_6_MONTHS_DESCRIPTOR = msg({
+const MESSAGE_6_MONTHS_DESCRIPTOR = msg({
 	message: '6 months',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR = msg({
+const MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR = msg({
 	message: '12 months (1 year)',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -134,7 +108,7 @@ export const getVerificationBarrierOptions = (): Array<
 	{value: 'unverified_email', label: UNVERIFIED_EMAIL_DESCRIPTOR},
 	{value: 'account_too_new', label: ACCOUNT_TOO_NEW_DESCRIPTOR},
 	{value: 'not_member_long', label: NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR},
-	{value: 'no_phone', label: NO_PHONE_NUMBER_DESCRIPTOR},
+	{value: 'account_limited', label: ACCOUNT_LIMITED_DESCRIPTOR},
 	{value: 'send_message_disabled', label: SEND_MESSAGES_DISABLED_DESCRIPTOR},
 ];
 export const getCountdownTimerOptions = (
@@ -147,32 +121,6 @@ export const getCountdownTimerOptions = (
 	{value: 120000, label: formatDurationMs(i18n, 120000)},
 	{value: 300000, label: formatDurationMs(i18n, 300000)},
 	{value: 600000, label: formatDurationMs(i18n, 600000)},
-];
-export const getRequiredActionModeOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['mockRequiredActionsMode']>
-> => [
-	{value: 'email', label: EMAIL_DESCRIPTOR},
-	{value: 'phone', label: PHONE_DESCRIPTOR},
-	{value: 'email_or_phone', label: EMAIL_OR_PHONE_DESCRIPTOR},
-];
-export const getRequiredActionTabOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['mockRequiredActionsSelectedTab']>
-> => [
-	{value: 'email', label: EMAIL_DESCRIPTOR},
-	{value: 'phone', label: PHONE_DESCRIPTOR},
-];
-export const getRequiredActionPhoneStepOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['mockRequiredActionsPhoneStep']>
-> => [
-	{value: 'phone', label: ENTER_PHONE_DESCRIPTOR},
-	{value: 'code', label: ENTER_CODE_DESCRIPTOR},
-];
-export const getRequiredActionResendOutcomeOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['mockRequiredActionsResendOutcome']>
-> => [
-	{value: 'success', label: SUCCESS_DESCRIPTOR},
-	{value: 'rate_limited', label: RATE_LIMITED_DESCRIPTOR},
-	{value: 'server_error', label: SERVICE_ERROR_DESCRIPTOR},
 ];
 export const getMatureContentChannelGateOptions = (): Array<
 	RadioMenuOption<DeveloperOptionsState['mockMatureContentGateReason']>
@@ -195,15 +143,4 @@ export const getGiftDurationOptions = (): Array<RadioMenuOption<DeveloperOptions
 	{value: 6, label: MESSAGE_6_MONTHS_DESCRIPTOR},
 	{value: 12, label: MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR},
 	{value: 0, label: LIFETIME_DESCRIPTOR},
-];
-export const INJECT_METHOD_AUTOMATIC_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const getGameCaptureInjectionMethodOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['gameCaptureInjectionMethod']>
-> => [
-	{value: 'auto', label: INJECT_METHOD_AUTOMATIC_DESCRIPTOR},
-	{value: 'remote-thread', label: 'CreateRemoteThread'},
-	{value: 'set-windows-hook', label: 'SetWindowsHookEx'},
 ];

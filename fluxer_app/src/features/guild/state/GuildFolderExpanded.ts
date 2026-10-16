@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {makeSyncedField} from '@app/features/user/state/SyncedField';
-import {GuildFolderExpandedStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
+import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
 class GuildFolderExpanded {
@@ -9,19 +9,11 @@ class GuildFolderExpanded {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makeSyncedField(this, {
-			field: 'guildFolders',
-			schema: GuildFolderExpandedStateSchema,
-			persist: ['expandedFolderIds'],
-			toMessage: (s) => ({expandedFolderIds: s.expandedFolderIds.map((n) => BigInt(n))}),
-			applyMessage: (s, m) => {
-				s.expandedFolderIds = m.expandedFolderIds.map((b) => Number(b));
-			},
-		});
+		await makePersistent(this, 'GuildFolderExpanded', ['expandedFolderIds']);
 	}
 
 	isExpanded(folderId: number): boolean {

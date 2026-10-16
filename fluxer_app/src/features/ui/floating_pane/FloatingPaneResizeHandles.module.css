@@ -74,30 +74,3 @@
 	bottom: 0;
 	cursor: se-resize;
 }
-
-.cornerVisualHint {
-	position: absolute;
-	right: 0.25rem;
-	bottom: 0.25rem;
-	width: 0.625rem;
-	height: 0.625rem;
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity 150ms ease;
-	background: linear-gradient(
-		135deg,
-		transparent 0%,
-		transparent 50%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.75)) 50%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.75)) 60%,
-		transparent 60%,
-		transparent 70%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.55)) 70%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.55)) 80%,
-		transparent 80%
-	);
-}
-
-.cornerVisualHintVisible {
-	opacity: 1;
-}

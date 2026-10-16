@@ -3,7 +3,7 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
-import MessageReferences from '@app/features/messaging/state/MessageReferences';
+import MessageReferences, {MessageReferenceState} from '@app/features/messaging/state/MessageReferences';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -13,33 +13,29 @@ import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import * as TtsSpeechUtils from '@app/features/voice/utils/TtsSpeechUtils';
 import {formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {type I18n, i18n as linguiI18n} from '@lingui/core';
-import {msg, plural} from '@lingui/core/macro';
+import {msg} from '@lingui/core/macro';
 import {reaction} from 'mobx';
 
 const SENT_A_STICKER_DESCRIPTOR = msg({
-	message: 'sent a sticker',
+	message: '{authorName} sent a sticker',
 	comment:
-		'TTS substitution phrase spoken after the author name when a message contains only a sticker. Lowercase, mid-sentence.',
+		'Whole sentence spoken aloud by text-to-speech for a message that contains only a sticker. {authorName} is the sender nickname.',
 });
-const SENT_AN_ATTACHMENT_DESCRIPTOR = msg({
-	message: 'sent an attachment',
+const SENT_ATTACHMENTS_DESCRIPTOR = msg({
+	message: '{count, plural, one {{authorName} sent an attachment} other {{authorName} sent # attachments}}',
 	comment:
-		'TTS substitution phrase spoken after the author name when a message contains only attachments. Lowercase, mid-sentence.',
+		'Whole sentence spoken aloud by text-to-speech for a message that contains only attachments. {authorName} is the sender nickname, {count} the attachment count.',
 });
 const SENT_AN_EMBED_DESCRIPTOR = msg({
-	message: 'sent an embed',
+	message: '{authorName} sent an embed',
 	comment:
-		'TTS substitution phrase spoken after the author name when a message contains only an embed. Lowercase, mid-sentence.',
-});
-const MESSAGE_DESCRIPTOR = msg({
-	message: '{authorName} {description}',
-	comment:
-		'TTS sentence template combining {authorName} and the speakable {description}. Used for non-text-only messages.',
+		'Whole sentence spoken aloud by text-to-speech for a message that contains only an embed. {authorName} is the sender nickname.',
 });
 const MAX_RECENT_MESSAGES = 10;
 
@@ -356,47 +352,32 @@ function isUserMessageType(type: number): boolean {
 	return type === MessageTypes.DEFAULT || type === MessageTypes.REPLY || type === MessageTypes.CLIENT_SYSTEM;
 }
 
-function describeNonTextContent(message: Message, localI18n: I18n): string | null {
+function describeNonTextContent(message: Message, authorName: string, localI18n: I18n): string | null {
 	if (message.stickers && message.stickers.length > 0) {
-		return localI18n._(SENT_A_STICKER_DESCRIPTOR);
+		return localI18n._(SENT_A_STICKER_DESCRIPTOR, {authorName});
 	}
 	if (message.attachments && message.attachments.length > 0) {
-		if (message.attachments.length === 1) {
-			return localI18n._(SENT_AN_ATTACHMENT_DESCRIPTOR);
-		}
-		return localI18n._(
-			plural(
-				{count: message.attachments.length},
-				{
-					one: 'sent # attachment',
-					other: 'sent # attachments',
-				},
-			),
-		);
+		return localI18n._(SENT_ATTACHMENTS_DESCRIPTOR, {authorName, count: message.attachments.length});
 	}
 	if (message.embeds && message.embeds.length > 0) {
-		return localI18n._(SENT_AN_EMBED_DESCRIPTOR);
+		return localI18n._(SENT_AN_EMBED_DESCRIPTOR, {authorName});
 	}
 	return null;
 }
 
 function shouldSpeakMessage(message: Message): boolean {
-	const mode = Notification.ttsNotificationMode;
-	const isExplicitTts = message.tts === true;
-	const isSelf = message.author.id === Authentication.currentUserId;
-	const isSystemMessage = !isUserMessageType(message.type);
-	if (isSelf && !isSystemMessage) {
+	if (LocalVoiceState.getSelfDeaf()) {
 		return false;
 	}
-	if (mode === TTSNotificationMode.NEVER) {
-		return isExplicitTts && Accessibility.enableTTSCommand;
+	const viewing = Notification.isViewingChannel(message.channel_id);
+	if (Accessibility.enableTTSCommand && message.tts === true && viewing) {
+		return true;
 	}
-	if (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL) {
-		if (message.channel_id !== SelectedChannel.currentChannelId) {
-			return false;
-		}
+	if (message.author.id === Authentication.currentUserId) {
+		return false;
 	}
-	return true;
+	const mode = Notification.ttsNotificationMode;
+	return mode === TTSNotificationMode.FOR_ALL_CHANNELS || (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL && viewing);
 }
 
 function handleIncomingTtsMessage(message: Message): void {
@@ -419,7 +400,7 @@ function handleIncomingTtsMessage(message: Message): void {
 	}
 	if (
 		UserGuildSettings.isGuildOrChannelMuted(channel.guildId ?? null, channel.id) ||
-		UserGuildSettings.isCategoryMuted(channel.guildId ?? null, channel.id)
+		UserGuildSettings.isParentCategoryMuted(channel.guildId ?? null, channel.id)
 	) {
 		return;
 	}
@@ -438,15 +419,15 @@ function handleIncomingTtsMessage(message: Message): void {
 	if (!author) {
 		return;
 	}
-	const authorName = NicknameUtils.getNickname(author, channel.guildId ?? undefined);
+	const authorName = NicknameUtils.getNickname(author, channel.guildId ?? null);
 	if (!message.content.trim()) {
-		const description = describeNonTextContent(message, localI18n);
-		if (!description) {
+		const spokenText = describeNonTextContent(message, authorName, localI18n);
+		if (!spokenText) {
 			return;
 		}
 		addRecentMessageId(message.id);
 		currentMessage = {channelId: message.channel_id, messageId: message.id};
-		speakText({text: localI18n._(MESSAGE_DESCRIPTOR, {authorName, description})});
+		speakText({text: spokenText});
 		return;
 	}
 	let replyAuthorName: string | null = null;
@@ -454,10 +435,10 @@ function handleIncomingTtsMessage(message: Message): void {
 		const refChannelId = message.message_reference.channel_id ?? message.channel_id;
 		const refMessageId = message.message_reference.message_id;
 		const ref = MessageReferences.getMessageReference(refChannelId, refMessageId);
-		if (ref.message) {
+		if (ref.state === MessageReferenceState.LOADED) {
 			const replyAuthor = Users.getUser(ref.message.author.id);
 			if (replyAuthor) {
-				replyAuthorName = NicknameUtils.getNickname(replyAuthor, channel.guildId ?? undefined);
+				replyAuthorName = NicknameUtils.getNickname(replyAuthor, channel.guildId ?? null);
 			}
 		}
 	}

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VoiceParticipantTilePresentation} from '@app/features/voice/components/voice_participant_tile/shared';
 import type {VoiceMediaGraphStreamTileState} from '@app/features/voice/engine/VoiceMediaGraphTileState';
-import {assign, getInitialSnapshot, setup, transition} from 'xstate';
+import {assign, initialTransition, setup, transition} from 'xstate';
 
 export type VoiceParticipantTileScreenShareStateValue =
 	| 'idle'
@@ -31,14 +32,29 @@ export interface VoiceParticipantTileCameraBufferingSignals {
 	hasRenderedVideoFrame: boolean;
 }
 
+export interface VoiceParticipantTileStreamAudioSignals {
+	isScreenShare: boolean;
+	isOwnScreenShare: boolean;
+	isWatching: boolean;
+	hasScreenShareAudio: boolean;
+	isFocusedPlaceholderTile: boolean;
+	presentation: VoiceParticipantTilePresentation;
+}
+
+export interface VoiceParticipantTileControlPillSignals {
+	isFocusedPlaceholderTile: boolean;
+	showStreamAudioControls: boolean;
+	showSpectatorPill: boolean;
+	showGroupHiddenPill: boolean;
+	showDeviceCollapseControl: boolean;
+}
+
 export interface VoiceParticipantTileCameraActiveSignals {
 	isCameraTile: boolean;
-	isNativeEngine: boolean;
 	isOwnContent: boolean;
 	isCameraPublicationActive: boolean;
 	isParticipantCameraActive: boolean;
 	isLocalCameraRequested: boolean;
-	hasNativeVideo: boolean;
 }
 
 type VoiceParticipantTileEvent = {
@@ -67,7 +83,7 @@ function isRemoteVisibleScreenShare(signals: VoiceParticipantTileScreenShareSign
 	return !signals.isFocusedPlaceholderTile;
 }
 
-export function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphStreamTileState): boolean {
+function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphStreamTileState): boolean {
 	switch (graphTileState) {
 		case 'watchDesired':
 			return true;
@@ -79,6 +95,8 @@ export function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphSt
 			return true;
 		case 'rendering':
 			return true;
+		case 'recovering':
+			return true;
 		case 'failed':
 			return true;
 		case 'idle':
@@ -86,12 +104,12 @@ export function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphSt
 	}
 }
 
-export function shouldShowWatchFailed(signals: VoiceParticipantTileScreenShareSignals): boolean {
+function shouldShowWatchFailed(signals: VoiceParticipantTileScreenShareSignals): boolean {
 	if (!isRemoteVisibleScreenShare(signals)) return false;
 	return signals.graphTileState === 'failed';
 }
 
-export function shouldShowScreenShareBuffering(signals: VoiceParticipantTileScreenShareSignals): boolean {
+function shouldShowScreenShareBuffering(signals: VoiceParticipantTileScreenShareSignals): boolean {
 	if (!isRemoteVisibleScreenShare(signals)) return false;
 	if (signals.cameraLocallyDisabled) return false;
 	switch (signals.graphTileState) {
@@ -100,6 +118,8 @@ export function shouldShowScreenShareBuffering(signals: VoiceParticipantTileScre
 		case 'attaching':
 			return true;
 		case 'subscribedAwaitingFrame':
+			return true;
+		case 'recovering':
 			return true;
 		case 'publicationMissing':
 			if (signals.isRepublishGracePending) return true;
@@ -127,7 +147,7 @@ export function selectScreenShareBufferingPresentation(
 	return 'spinner';
 }
 
-export function shouldShowStreamEnded(signals: VoiceParticipantTileScreenShareSignals): boolean {
+function shouldShowStreamEnded(signals: VoiceParticipantTileScreenShareSignals): boolean {
 	if (!isRemoteVisibleScreenShare(signals)) return false;
 	if (signals.isFocusPresentationTile) return false;
 	if (signals.graphTileState !== 'publicationMissing') return false;
@@ -135,12 +155,31 @@ export function shouldShowStreamEnded(signals: VoiceParticipantTileScreenShareSi
 	return !signals.isTrackReference;
 }
 
-export function shouldShowWatchPrompt(signals: VoiceParticipantTileScreenShareSignals): boolean {
+function shouldShowWatchPrompt(signals: VoiceParticipantTileScreenShareSignals): boolean {
 	if (!isRemoteVisibleScreenShare(signals)) return false;
 	if (graphTileStateHoldsWatchIntent(signals.graphTileState)) return false;
 	if (!signals.isTrackReference) return false;
 	if (signals.cameraLocallyDisabled) return false;
 	return !signals.isFocusPresentationTile;
+}
+
+export function shouldShowTileStreamAudioControls(signals: VoiceParticipantTileStreamAudioSignals): boolean {
+	if (!signals.isScreenShare) return false;
+	if (signals.isOwnScreenShare) return false;
+	if (signals.isFocusedPlaceholderTile) return false;
+	if (!signals.isWatching) return false;
+	if (!signals.hasScreenShareAudio) return false;
+	return signals.presentation === 'grid' || signals.presentation === 'focus-main';
+}
+
+export function shouldShowTileControlPill(signals: VoiceParticipantTileControlPillSignals): boolean {
+	if (signals.isFocusedPlaceholderTile) return false;
+	return (
+		signals.showStreamAudioControls ||
+		signals.showSpectatorPill ||
+		signals.showGroupHiddenPill ||
+		signals.showDeviceCollapseControl
+	);
 }
 
 export function shouldShowCameraBuffering(signals: VoiceParticipantTileCameraBufferingSignals): boolean {
@@ -153,17 +192,13 @@ export function shouldShowCameraBuffering(signals: VoiceParticipantTileCameraBuf
 
 export function selectVoiceParticipantTileCameraActive(signals: VoiceParticipantTileCameraActiveSignals): boolean {
 	if (!signals.isCameraTile) return false;
-	if (signals.isNativeEngine && signals.isOwnContent) {
-		if (signals.isLocalCameraRequested) return true;
-		return signals.hasNativeVideo;
-	}
 	if (signals.isCameraPublicationActive) return true;
 	if (signals.isParticipantCameraActive) return true;
 	if (signals.isLocalCameraRequested) return true;
-	return signals.hasNativeVideo;
+	return false;
 }
 
-export const voiceParticipantTileStateMachine = setup({
+const voiceParticipantTileStateMachine = setup({
 	types: {} as {
 		context: VoiceParticipantTileContext;
 		events: VoiceParticipantTileEvent;
@@ -204,7 +239,7 @@ export function selectVoiceParticipantTileScreenShareState(
 ): VoiceParticipantTileScreenShareStateValue {
 	const [snapshot] = transition(
 		voiceParticipantTileStateMachine,
-		getInitialSnapshot(voiceParticipantTileStateMachine),
+		initialTransition(voiceParticipantTileStateMachine)[0],
 		{
 			type: 'tile.evaluateScreenShare',
 			signals,

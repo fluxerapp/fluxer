@@ -2,6 +2,34 @@
 
 import type {Readable} from 'node:stream';
 
+export class StorageObjectRangeNotSatisfiableError extends Error {
+	readonly bucket: string;
+	readonly key: string;
+	readonly range: string;
+
+	constructor(bucket: string, key: string, range: string) {
+		super(`Requested range ${range} is not satisfiable for ${bucket}/${key}`);
+		this.name = 'StorageObjectRangeNotSatisfiableError';
+		this.bucket = bucket;
+		this.key = key;
+		this.range = range;
+	}
+}
+
+export class StorageObjectListingOverflowError extends Error {
+	readonly bucket: string;
+	readonly prefix: string;
+	readonly maxObjects: number;
+
+	constructor(bucket: string, prefix: string, maxObjects: number) {
+		super(`Object listing exceeds maximum of ${maxObjects} objects for ${bucket}/${prefix}`);
+		this.name = 'StorageObjectListingOverflowError';
+		this.bucket = bucket;
+		this.prefix = prefix;
+		this.maxObjects = maxObjects;
+	}
+}
+
 export interface ProcessedStorageObjectMetadata {
 	contentType: string;
 	contentLength: number;
@@ -43,9 +71,6 @@ export interface IStorageService {
 		contentLength: number;
 		contentRange?: string | null;
 		contentType?: string | null;
-		cacheControl?: string | null;
-		contentDisposition?: string | null;
-		expires?: Date | null;
 		etag?: string | null;
 		lastModified?: Date | null;
 	} | null>;
@@ -65,14 +90,13 @@ export interface IStorageService {
 		contentType: string;
 		sourceLocalPath?: string;
 	}): Promise<ProcessedStorageObjectMetadata | null>;
-	moveObject(params: {
-		sourceBucket: string;
-		sourceKey: string;
-		destinationBucket: string;
-		destinationKey: string;
-		newContentType?: string;
-	}): Promise<void>;
-	getPresignedDownloadURL(params: {bucket: string; key: string; expiresIn?: number}): Promise<string>;
+	getPresignedDownloadURL(params: {
+		bucket: string;
+		key: string;
+		expiresIn?: number;
+		responseContentType?: string;
+		responseContentDisposition?: string;
+	}): Promise<string>;
 	getPresignedUploadURL(params: {
 		bucket: string;
 		key: string;
@@ -85,28 +109,19 @@ export interface IStorageService {
 		key: string;
 		uploadId: string;
 		partNumber: number;
+		contentLength?: number;
 		expiresIn?: number;
 	}): Promise<string>;
-	purgeBucket(bucket: string): Promise<void>;
 	uploadAvatar(params: {prefix: string; key: string; body: Uint8Array}): Promise<void>;
 	deleteAvatar(params: {prefix: string; key: string}): Promise<void>;
-	listObjects(params: {bucket: string; prefix: string}): Promise<
+	listObjects(params: {bucket: string; prefix: string; maxObjects?: number}): Promise<
 		ReadonlyArray<{
 			key: string;
 			lastModified?: Date;
 		}>
 	>;
-	deleteObjects(params: {
-		bucket: string;
-		objects: ReadonlyArray<{
-			Key: string;
-		}>;
-	}): Promise<void>;
 	createMultipartUpload(params: {bucket: string; key: string; contentType?: string}): Promise<{
 		uploadId: string;
-	}>;
-	uploadPart(params: {bucket: string; key: string; uploadId: string; partNumber: number; body: Uint8Array}): Promise<{
-		etag: string;
 	}>;
 	listParts(params: {bucket: string; key: string; uploadId: string}): Promise<
 		Array<{

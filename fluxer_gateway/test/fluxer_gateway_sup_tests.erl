@@ -4,61 +4,6 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
-cluster_children_empty_when_flag_unset_test() ->
-    persistent_term:put({fluxer_gateway, runtime_config}, #{}),
-    ?assertEqual([], fluxer_gateway_sup:cluster_children()),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-cluster_children_empty_when_flag_false_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{cluster_enabled => false}
-    ),
-    ?assertEqual([], fluxer_gateway_sup:cluster_children()),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-cluster_children_populated_when_flag_true_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{cluster_enabled => true}
-    ),
-    [Discovery, Membership, PgScope] = fluxer_gateway_sup:cluster_children(),
-    ?assertMatch(
-        #{
-            id := gateway_cluster_discovery,
-            start := {gateway_cluster_discovery, start_link, []}
-        },
-        Discovery
-    ),
-    ?assertMatch(
-        #{
-            id := gateway_cluster_membership,
-            start := {gateway_cluster_membership, start_link, []}
-        },
-        Membership
-    ),
-    ?assertMatch(
-        #{
-            id := gateway_pg_scope,
-            start := {gateway_pg_scope, start_link, []}
-        },
-        PgScope
-    ),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-cluster_children_only_truthy_atom_true_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{cluster_enabled => <<"true">>}
-    ),
-    ?assertEqual([], fluxer_gateway_sup:cluster_children()),
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{cluster_enabled => 1}
-    ),
-    ?assertEqual([], fluxer_gateway_sup:cluster_children()),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
 role_enabled_allows_monolith_and_exact_role_only_test() ->
     ?assert(fluxer_gateway_sup:role_enabled(sessions, all)),
     ?assert(fluxer_gateway_sup:role_enabled(guilds, guilds)),
@@ -118,6 +63,7 @@ init_guilds_role_includes_only_guild_state_children_test() ->
     ?assert(lists:member(presence_bus, Ids)),
     ?assert(lists:member(guild_manager, Ids)),
     ?assert(lists:member(guild_counts_cache, Ids)),
+    ?assert(lists:member(gateway_clock_offset, Ids)),
     ?assert(lists:member(voice_state_counts_sync, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(session_manager, Ids)),
@@ -137,6 +83,7 @@ init_sessions_role_includes_cluster_handoff_test() ->
     ?assert(lists:member(session_state_transfer, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(guild_manager, Ids)),
+    ?assertNot(lists:member(gateway_clock_offset, Ids)),
     ?assertNot(lists:member(presence_manager, Ids)),
     persistent_term:erase({fluxer_gateway, runtime_config}).
 
@@ -176,7 +123,7 @@ init_push_role_includes_cluster_handoff_test() ->
     ),
     {ok, {_SupFlags, Children}} = fluxer_gateway_sup:init([]),
     Ids = child_ids(Children),
-    ?assert(lists:member(push_dispatcher, Ids)),
+    ?assert(lists:member(push_outbox, Ids)),
     ?assert(lists:member(push, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(session_manager, Ids)),

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {trackedRecipientNameKey} from '@app/features/channel/state/ChannelDisplayNameTracking';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
@@ -48,12 +49,8 @@ class ChannelDisplayName {
 		deferUntilModulesLoaded(() => {
 			reaction(
 				() => {
-					if (!Users) return [];
-					return Users.usersList.map((user) => ({
-						id: user.id,
-						username: user.username,
-						globalName: user.globalName,
-					}));
+					if (!Users) return '';
+					return trackedRecipientNameKey(this.channelSnapshots, Users.users);
 				},
 				() => this.recomputeAll(),
 			);

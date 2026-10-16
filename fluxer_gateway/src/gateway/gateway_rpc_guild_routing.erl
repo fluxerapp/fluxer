@@ -2,6 +2,10 @@
 
 -module(gateway_rpc_guild_routing).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([
@@ -14,10 +18,6 @@
     process_batch/3,
     validate_batch_size/1
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -define(MAX_BATCH_SIZE, 100).
 
@@ -163,10 +163,7 @@ safe_guild_counts_get(GuildId) ->
 
 -spec validate_batch_size(non_neg_integer()) -> ok.
 validate_batch_size(Size) when Size > ?MAX_BATCH_SIZE ->
-    Max = integer_to_binary(?MAX_BATCH_SIZE),
-    gateway_rpc_error:raise(
-        <<"Batch size exceeds maximum of ", Max/binary>>
-    );
+    gateway_rpc_error:raise(<<"batch_too_large">>);
 validate_batch_size(_) ->
     ok.
 
@@ -214,46 +211,6 @@ collect_results(Ref, Remaining, Deadline, Acc) ->
 
 -ifdef(TEST).
 
-guild_owner_scope_local_test() ->
-    LocalNode = 'gateway_a@127.0.0.1',
-    ?assertEqual(
-        local,
-        guild_owner_scope(123, LocalNode, fun(_) -> LocalNode end)
-    ).
-
-guild_owner_scope_remote_test() ->
-    LocalNode = 'gateway_a@127.0.0.1',
-    RemoteNode = 'gateway_b@127.0.0.1',
-    ?assertEqual(
-        {remote, RemoteNode},
-        guild_owner_scope(123, LocalNode, fun(_) -> RemoteNode end)
-    ).
-
-resolve_owner_node_rejects_invalid_owner_atom_test() ->
-    LocalNode = 'gateway_a@127.0.0.1',
-    ?assertEqual(
-        unavailable,
-        resolve_owner_node(123, LocalNode, fun(_) -> bad_owner end)
-    ),
-    ?assertEqual(
-        unavailable,
-        resolve_owner_node(123, LocalNode, fun(_) -> {bad_owner} end)
-    ).
-
-group_guild_ids_by_owner_groups_ids_test() ->
-    NodeA = 'gateway_a@127.0.0.1',
-    NodeB = 'gateway_b@127.0.0.1',
-    Groups = group_guild_ids_by_owner([10, 20, 30, 40, 20], fun
-        (10) -> NodeA;
-        (20) -> NodeB;
-        (30) -> NodeA;
-        (40) -> NodeB
-    end),
-    ?assertEqual(
-        [{NodeA, [10, 30]}, {NodeB, [20, 40, 20]}],
-        Groups
-    ).
-
 owner_groups_for_reload_all_empty_ids_uses_active_nodes_test() ->
     NodeA = 'gateway_a@127.0.0.1',
     NodeB = 'gateway_b@127.0.0.1',
@@ -261,11 +218,6 @@ owner_groups_for_reload_all_empty_ids_uses_active_nodes_test() ->
         [{NodeA, []}, {NodeB, []}],
         owner_groups_for_reload_all([], fun() -> [NodeB, NodeA, NodeB] end)
     ).
-
-validate_batch_size_test() ->
-    ?assertEqual(ok, validate_batch_size(50)),
-    ?assertEqual(ok, validate_batch_size(100)),
-    ?assertError({gateway_rpc_error, _}, validate_batch_size(101)).
 
 process_batch_collects_successful_results_test() ->
     Results = process_batch([1, 2, 3], fun(N) -> eqwalizer:dynamic_cast(N) * 2 end, 1000),

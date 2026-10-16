@@ -13,8 +13,6 @@ import type {InviteCandidate} from '@app/features/channel/components/direct_mess
 import {getDefaultInviteChannelId} from '@app/features/channel/components/direct_message/DMListHelpers';
 import {buildMobileMenuGroups} from '@app/features/channel/components/direct_message/DMListItemMenuGroups';
 import {useDMListItemHandlers} from '@app/features/channel/components/direct_message/useDMListItemHandlers';
-import {EditGroupBottomSheet} from '@app/features/channel/components/modals/EditGroupBottomSheet';
-import {GroupInvitesBottomSheet} from '@app/features/channel/components/modals/GroupInvitesBottomSheet';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
@@ -28,7 +26,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {DMContextMenu} from '@app/features/ui/action_menu/DMContextMenu';
 import {GroupDMContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -40,12 +38,12 @@ import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomShee
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import {formatShortRelativeTime} from '@fluxer/date_utils/src/DateDuration';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -128,13 +126,14 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	const recipientId = recipient?.id || '';
 	const isBotDM = Boolean(recipient?.bot || recipient?.system);
 	const isTyping = isGroupDM
-		? channel.recipientIds.some((groupRecipientId) => TypingIndicator.isTyping(channel.id, groupRecipientId))
-		: TypingIndicator.isTyping(channel.id, recipientId);
+		? channel.recipientIds.some((groupRecipientId) => RollingTypingStore.isTyping(channel.id, groupRecipientId))
+		: RollingTypingStore.isTyping(channel.id, recipientId);
 	const hasUnreadMessages = () => ReadStates.hasUnread(channel.id);
 	const isMobile = MobileLayout.isMobileLayout();
-	const isMuted = UserGuildSettings.isChannelMuted(null, channel.id);
+	const isMuted = UserGuildSettings.isChannelDirectlyMuted(null, channel.id);
 	const mentionCount = ReadStates.getMentionCount(channel.id);
 	const unreadState = getChannelUnreadState({
+		hasUnread: ReadStates.hasUnread(channel.id),
 		unreadCount: ReadStates.getUnreadCount(channel.id),
 		mentionCount,
 		isMuted,
@@ -145,8 +144,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		title: string;
 		groups: Array<MenuGroupType>;
 	} | null>(null);
-	const [editGroupSheetOpen, setEditGroupSheetOpen] = useState(false);
-	const [invitesSheetOpen, setInvitesSheetOpen] = useState(false);
+
 	const currentUser = Users.getCurrentUser();
 	const lastMessage = Messages.getCachedMessages(channel.id)?.last();
 	const leaveGroup = useLeaveGroup();
@@ -188,13 +186,10 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		channel,
 		recipient,
 		isGroupDM,
-		isMobile,
 		relationshipType,
 		restrictRecipientActions,
 		closeAllSheets,
 		setMenuOpen,
-		setEditGroupSheetOpen,
-		setInvitesSheetOpen,
 		leaveGroup,
 		i18n,
 	});
@@ -233,7 +228,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		transition: {duration: 0},
 	};
 	const relativeTime = channel.lastMessageId
-		? formatShortRelativeTime(extractTimestamp(channel.lastMessageId), '1m')
+		? formatShortRelativeTime(i18n, extractTimestamp(channel.lastMessageId), '1m')
 		: null;
 	const shouldShowMessagePreviewSetting = (() => {
 		if (Accessibility.dmMessagePreviewMode === DMMessagePreviewMode.ALL) {
@@ -249,7 +244,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		const isCurrentUser = lastMessage.author.id === currentUser?.id;
 		const authorPrefix = isCurrentUser
 			? `${i18n._(YOU_DESCRIPTOR)}: `
-			: `${NicknameUtils.getNickname(lastMessage.author)}: `;
+			: `${NicknameUtils.getNickname(lastMessage.author, null, channel.id)}: `;
 		if (lastMessage.type !== MessageTypes.DEFAULT && lastMessage.type !== MessageTypes.REPLY) {
 			const systemText = SystemMessageUtils.stringify(lastMessage, i18n);
 			if (systemText) {
@@ -272,6 +267,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 								channelId: channel.id,
 								messageId: lastMessage.id,
 								disableAnimatedEmoji: true,
+								disableInteractions: true,
 								mentionChannels: lastMessage.mentionChannels,
 							}}
 							data-flx="channel.direct-message.dm-list-item.get-message-preview.safe-markdown"
@@ -420,7 +416,6 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 									<CustomStatusDisplay
 										userId={recipient.id}
 										className={styles.dmItemCustomStatus}
-										showText={true}
 										showTooltip
 										tooltipPosition="bottom"
 										animateOnParentHover
@@ -473,22 +468,6 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 						showCloseButton={true}
 						data-flx="channel.direct-message.dm-list-item.menu-bottom-sheet--2"
 					/>
-				)}
-				{isGroupDM && (
-					<>
-						<EditGroupBottomSheet
-							isOpen={editGroupSheetOpen}
-							onClose={() => setEditGroupSheetOpen(false)}
-							channelId={channel.id}
-							data-flx="channel.direct-message.dm-list-item.edit-group-bottom-sheet"
-						/>
-						<GroupInvitesBottomSheet
-							isOpen={invitesSheetOpen}
-							onClose={() => setInvitesSheetOpen(false)}
-							channelId={channel.id}
-							data-flx="channel.direct-message.dm-list-item.group-invites-bottom-sheet"
-						/>
-					</>
 				)}
 			</>
 		);
@@ -584,7 +563,6 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 								<CustomStatusDisplay
 									userId={recipient.id}
 									className={styles.dmItemCustomStatus}
-									showText={true}
 									showTooltip
 									tooltipPosition="bottom"
 									animateOnParentHover
@@ -634,22 +612,6 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 					</div>
 				</div>
 			</FocusRing>
-			{isGroupDM && (
-				<>
-					<EditGroupBottomSheet
-						isOpen={editGroupSheetOpen}
-						onClose={() => setEditGroupSheetOpen(false)}
-						channelId={channel.id}
-						data-flx="channel.direct-message.dm-list-item.edit-group-bottom-sheet--2"
-					/>
-					<GroupInvitesBottomSheet
-						isOpen={invitesSheetOpen}
-						onClose={() => setInvitesSheetOpen(false)}
-						channelId={channel.id}
-						data-flx="channel.direct-message.dm-list-item.group-invites-bottom-sheet--2"
-					/>
-				</>
-			)}
 		</>
 	);
 });

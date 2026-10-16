@@ -23,39 +23,6 @@ pub fn paperclip_icon(color: &str) -> Markup {
     }
 }
 
-pub fn checkmark_icon(color: &str) -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"
-            class={"inline-block h-4 w-4 " (color)}
-        {
-            (PreEscaped(concat!(
-                r#"<rect width="256" height="256" fill="none"/>"#,
-                r#"<polyline points="40 144 96 200 224 72" fill="none""#,
-                r#" stroke="currentColor" stroke-linecap="round""#,
-                r#" stroke-linejoin="round" stroke-width="24"/>"#,
-            )))
-        }
-    }
-}
-
-pub fn x_icon(color: &str) -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"
-            class={"inline-block h-4 w-4 " (color)}
-        {
-            (PreEscaped(concat!(
-                r#"<rect width="256" height="256" fill="none"/>"#,
-                r#"<line x1="200" y1="56" x2="56" y2="200" fill="none""#,
-                r#" stroke="currentColor" stroke-linecap="round""#,
-                r#" stroke-linejoin="round" stroke-width="24"/>"#,
-                r#"<line x1="200" y1="200" x2="56" y2="56" fill="none""#,
-                r#" stroke="currentColor" stroke-linecap="round""#,
-                r#" stroke-linejoin="round" stroke-width="24"/>"#,
-            )))
-        }
-    }
-}
-
 pub fn close_icon() -> Markup {
     html! {
         svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -79,66 +46,6 @@ pub fn spinner_icon() -> Markup {
             class="h-6 w-6 animate-spin" aria-hidden="true"
         {
             (PreEscaped(r#"<path d="M21 12a9 9 0 1 1-6.219-8.56"/>"#))
-        }
-    }
-}
-
-pub fn search_icon() -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            class="h-4 w-4" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true"
-        {
-            (PreEscaped(concat!(
-                r#"<circle cx="11" cy="11" r="8"/>"#,
-                r#"<line x1="21" y1="21" x2="16.65" y2="16.65"/>"#,
-            )))
-        }
-    }
-}
-
-pub fn chevron_right_icon() -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            class="h-4 w-4" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true"
-        {
-            (PreEscaped(r#"<polyline points="9 18 15 12 9 6"/>"#))
-        }
-    }
-}
-
-pub fn external_link_icon() -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            class="h-3.5 w-3.5" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true"
-        {
-            (PreEscaped(concat!(
-                r#"<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"#,
-                r#"a2 2 0 0 1 2-2h6"/>"#,
-                r#"<polyline points="15 3 21 3 21 9"/>"#,
-                r#"<line x1="10" y1="14" x2="21" y2="3"/>"#,
-            )))
-        }
-    }
-}
-
-pub fn copy_icon() -> Markup {
-    html! {
-        svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            class="h-3.5 w-3.5" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true"
-        {
-            (PreEscaped(concat!(
-                r#"<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>"#,
-                r#"<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9"#,
-                r#"a2 2 0 0 1 2 2v1"/>"#,
-            )))
         }
     }
 }

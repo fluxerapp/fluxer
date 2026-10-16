@@ -129,7 +129,7 @@ Deliberately submitting a fabricated security report MAY result in an immediate 
 
 Maintainers are not required to investigate possible LLM use proactively. Writing style alone is not evidence of a violation.
 
-A person MUST NOT publicly accuse or harass a contributor because of suspected LLM use. All discussion, review and enforcement under this policy MUST comply with the [Code of Conduct](CODE_OF_CONDUCT.md).
+A person MUST NOT publicly accuse or harass a contributor because of suspected LLM use. All discussion, review and enforcement under this policy MUST comply with the [Code of Conduct](https://github.com/fluxerapp/fluxer/blob/main/.github/CODE_OF_CONDUCT.md).
 
 ## 11. Normative References
 

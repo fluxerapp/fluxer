@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod ast;
+pub mod binary;
 pub mod block;
 pub mod constants;
 pub mod emoji;
 pub mod inline;
 pub mod json;
 pub mod links;
+pub mod native;
 pub mod normalize;
 pub mod parser;
 pub mod plaintext;

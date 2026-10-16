@@ -3,7 +3,7 @@
 import {Channel} from '@app/features/channel/models/Channel';
 import DeveloperOptions, {type DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import MockIncomingCall from '@app/features/voice/state/MockIncomingCall';
@@ -15,10 +15,10 @@ import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 const logger = new Logger('DeveloperOptions');
 
 type AttachmentMock = DeveloperOptionsState['mockAttachmentStates'][string];
-export type MockIncomingCallVariant = 'dm' | 'group-dm';
+type MockIncomingCallVariant = 'dm' | 'group-dm';
 
 function publishLayoutResize(): void {
-	ComponentDispatch.dispatch('LAYOUT_RESIZED');
+	ComponentBus.dispatch('LAYOUT_RESIZED');
 }
 
 function nextAttachmentMocks(
@@ -117,10 +117,6 @@ export function setAttachmentMock(attachmentId: string, mock: AttachmentMock | n
 export function clearAllAttachmentMocks(): void {
 	updateOption('mockAttachmentStates', {});
 	publishLayoutResize();
-}
-
-export function triggerMockIncomingCall(): void {
-	triggerVariant('dm');
 }
 
 export function triggerMockIncomingCallDM(): void {

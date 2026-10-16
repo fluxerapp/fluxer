@@ -2,7 +2,7 @@
 
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
-import {LinuxInputAccessSection} from '@app/features/user/components/modals/tabs/components/LinuxInputAccessSection';
+import {SystemShortcutsSection} from '@app/features/user/components/modals/tabs/components/SystemShortcutsSection';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {CustomKeybindsList} from '@app/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList';
 import {DefaultKeybindsList} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList';
@@ -49,7 +49,7 @@ const KeybindsTab: React.FC = observer(() => {
 				/>
 			</div>
 			<CustomKeybindsList searchQuery={searchQuery} data-flx="user.keybinds-tab.custom-keybinds-list" />
-			<LinuxInputAccessSection data-flx="user.keybinds-tab.linux-input-access-section" />
+			<SystemShortcutsSection data-flx="user.keybinds-tab.system-shortcuts-section" />
 			<DefaultKeybindsList searchQuery={searchQuery} data-flx="user.keybinds-tab.default-keybinds-list" />
 		</div>
 	);

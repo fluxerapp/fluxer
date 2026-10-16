@@ -41,7 +41,7 @@ describe('GatewayCompression', () => {
 				[constants.ZSTD_c_compressionLevel]: 3,
 			},
 		});
-		const compression = new GatewayCompression('zstd-stream', true);
+		const compression = new GatewayCompression('zstd-stream');
 		const messages: Array<{compressed: Uint8Array; payload: string}> = [];
 
 		try {
@@ -72,8 +72,8 @@ describe('GatewayCompression', () => {
 	}, 30_000);
 
 	it('round-trips 10,000 outbound messages through the wasm encoder into a peer decoder', async () => {
-		const client = new GatewayCompression('zstd-stream', true);
-		const server = new GatewayCompression('zstd-stream', true);
+		const client = new GatewayCompression('zstd-stream');
+		const server = new GatewayCompression('zstd-stream');
 		await client.warmup();
 
 		try {

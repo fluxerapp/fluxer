@@ -2,6 +2,54 @@
 
 import type {HistoryAdapter, HistoryLocation} from '@app/features/platform/components/router/RouterTypes';
 
+const TRAVERSAL_SETTLE_TIMEOUT_MS = 500;
+
+let pendingTraversals = 0;
+let traversalSettleTimer: ReturnType<typeof setTimeout> | null = null;
+let traversalListenerInstalled = false;
+const writesAfterTraversal: Array<() => void> = [];
+
+function flushWritesAfterTraversal(): void {
+	pendingTraversals = 0;
+	if (traversalSettleTimer !== null) {
+		clearTimeout(traversalSettleTimer);
+		traversalSettleTimer = null;
+	}
+	for (const write of writesAfterTraversal.splice(0)) {
+		write();
+	}
+}
+
+function settleTraversal(): void {
+	if (pendingTraversals === 0) {
+		return;
+	}
+	pendingTraversals -= 1;
+	if (pendingTraversals === 0) {
+		flushWritesAfterTraversal();
+	}
+}
+
+function beginTraversal(): void {
+	if (!traversalListenerInstalled) {
+		traversalListenerInstalled = true;
+		window.addEventListener('popstate', settleTraversal);
+	}
+	pendingTraversals += 1;
+	if (traversalSettleTimer !== null) {
+		clearTimeout(traversalSettleTimer);
+	}
+	traversalSettleTimer = setTimeout(flushWritesAfterTraversal, TRAVERSAL_SETTLE_TIMEOUT_MS);
+}
+
+function writeAfterTraversal(write: () => void): void {
+	if (pendingTraversals > 0) {
+		writesAfterTraversal.push(write);
+		return;
+	}
+	write();
+}
+
 export function createBrowserHistory(): HistoryAdapter {
 	const listeners = new Set<(location: HistoryLocation, action: 'pop') => void>();
 	const getLocation = (): HistoryLocation => ({
@@ -13,12 +61,16 @@ export function createBrowserHistory(): HistoryAdapter {
 		for (const l of listeners) l(loc, 'pop');
 	};
 	const push = (url: URL, state?: unknown) => {
-		window.history.pushState(state ?? null, '', url);
-		notify();
+		writeAfterTraversal(() => {
+			window.history.pushState(state ?? null, '', url);
+			notify();
+		});
 	};
 	const replace = (url: URL, state?: unknown) => {
-		window.history.replaceState(state ?? null, '', url);
-		notify();
+		writeAfterTraversal(() => {
+			window.history.replaceState(state ?? null, '', url);
+			notify();
+		});
 	};
 	const listen = (listener: (location: HistoryLocation, action: 'pop') => void) => {
 		listeners.add(listener);
@@ -30,9 +82,14 @@ export function createBrowserHistory(): HistoryAdapter {
 		};
 	};
 	const go = (delta: number) => {
+		if (delta === 0) {
+			return;
+		}
+		beginTraversal();
 		window.history.go(delta);
 	};
 	const back = () => {
+		beginTraversal();
 		window.history.back();
 	};
 	return {

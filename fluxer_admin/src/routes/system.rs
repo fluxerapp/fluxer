@@ -17,19 +17,18 @@ use serde::Deserialize;
 use super::system_actions;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct GatewayQuery {
     leaderboard_limit: Option<String>,
     node_stats: Option<String>,
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct AuditLogsQuery {
     q: Option<String>,
     admin_user_id: Option<String>,
     target_id: Option<String>,
     target_type: Option<String>,
+    access: Option<String>,
     sort_by: Option<String>,
     sort_order: Option<String>,
     limit: Option<u32>,
@@ -65,7 +64,6 @@ pub fn router() -> Router<AppState> {
             "/limit-config",
             get(limit_config_page).post(system_actions::limit_config_post),
         )
-        .route("/strange-place", get(strange_place_page))
 }
 
 async fn gateway_page(
@@ -121,6 +119,7 @@ async fn audit_logs_page(
         admin_user_id: query.admin_user_id.as_deref().unwrap_or(""),
         target_id: query.target_id.as_deref().unwrap_or(""),
         target_type: query.target_type.as_deref().unwrap_or(""),
+        access: query.access.as_deref().unwrap_or(""),
         sort_by: query.sort_by.as_deref().unwrap_or("createdAt"),
         sort_order: query.sort_order.as_deref().unwrap_or("desc"),
         limit,
@@ -133,10 +132,11 @@ async fn audit_logs_page(
         admin_user_id: nonempty(params.admin_user_id),
         target_id: nonempty(params.target_id),
         target_type: nonempty(params.target_type),
+        access: nonempty(params.access),
         sort_by: Some(params.sort_by.to_owned()),
         sort_order: Some(params.sort_order.to_owned()),
         limit,
-        offset: current_page * limit,
+        offset: u64::from(current_page) * u64::from(limit),
     };
     let result = client
         .search_audit_logs(&search_params)
@@ -220,6 +220,11 @@ async fn instance_config_page(
         .get_instance_config()
         .await
         .log_error("load instance config");
+    if let Some(instance_config) = &instance_config {
+        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
+            instance_config,
+        ));
+    }
     let limit_config = client
         .get_limit_config()
         .await
@@ -254,15 +259,6 @@ async fn limit_config_page(
         query.rule.as_deref(),
         limit_config.as_ref(),
     );
-    Html(markup.into_string()).into_response()
-}
-
-async fn strange_place_page(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-) -> Response {
-    let config = state.config();
-    let markup = templates::pages::strange_place::strange_place_page(config, &auth.0);
     Html(markup.into_string()).into_response()
 }
 

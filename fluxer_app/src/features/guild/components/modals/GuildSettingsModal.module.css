@@ -57,10 +57,6 @@
 	width: 1rem;
 }
 
-.deleteGuildButton {
-	width: 100%;
-}
-
 .externalTabLabel {
 	display: flex;
 	align-items: center;

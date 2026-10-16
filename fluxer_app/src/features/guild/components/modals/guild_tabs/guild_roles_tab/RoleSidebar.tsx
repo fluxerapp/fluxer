@@ -44,6 +44,8 @@ interface RoleSidebarProps {
 	isRoleLocked: (role: GuildRole) => boolean;
 	onSelectRole: (roleId: string) => void;
 	onCreateRole: () => void;
+	onDuplicateRole: (roleId: string) => void;
+	onDeleteRole: (roleId: string) => void;
 	onEnterHoistOrderMode: () => void;
 	onExitHoistOrderMode: () => void;
 	onResetHoistOrder: () => void;
@@ -74,6 +76,8 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 		isRoleLocked,
 		onSelectRole,
 		onCreateRole,
+		onDuplicateRole,
+		onDeleteRole,
 		onEnterHoistOrderMode,
 		onExitHoistOrderMode,
 		onResetHoistOrder,
@@ -139,7 +143,10 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							backend={HTML5Backend}
 							data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider"
 						>
-							<RoleDragAutoScroll listRef={listRef} />
+							<RoleDragAutoScroll
+								listRef={listRef}
+								data-flx="guild.guild-tabs.guild-roles-tab.role-sidebar.role-drag-auto-scroll"
+							/>
 							{hoistedRoles.map((role, index) => {
 								const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 								return (
@@ -152,6 +159,8 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 										isTerminal={index === hoistedRoles.length - 1}
 										canManageRoles={canManageRoles}
 										onClick={() => onSelectRole(role.id)}
+										onDuplicate={onDuplicateRole}
+										onDelete={onDeleteRole}
 										onEvaluateMove={onEvaluateHoistMove}
 										onCommitMove={onHoistDrop}
 										data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.role-item.set-selected-role-id"
@@ -232,7 +241,10 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 						backend={HTML5Backend}
 						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider--2"
 					>
-						<RoleDragAutoScroll listRef={listRef} />
+						<RoleDragAutoScroll
+							listRef={listRef}
+							data-flx="guild.guild-tabs.guild-roles-tab.role-sidebar.role-drag-auto-scroll--2"
+						/>
 						{roles.map((role: GuildRole, index) => {
 							const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 							return (
@@ -245,6 +257,8 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 									isTerminal={index === roles.length - 1}
 									canManageRoles={canManageRoles}
 									onClick={() => onSelectRole(role.id)}
+									onDuplicate={onDuplicateRole}
+									onDelete={onDeleteRole}
 									onEvaluateMove={onEvaluateRoleMove}
 									onCommitMove={onRoleDrop}
 									data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.role-item.set-selected-role-id--2"

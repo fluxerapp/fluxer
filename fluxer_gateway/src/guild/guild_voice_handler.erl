@@ -3,10 +3,7 @@
 -module(guild_voice_handler).
 -typing([eqwalizer]).
 
--export([
-    handle_call/3,
-    handle_cast/2
-]).
+-export([handle_call/3, handle_cast/2]).
 
 -type guild_state() :: map().
 
@@ -27,33 +24,28 @@ handle_call({get_voice_states_for_channel, ChIdBin}, _From, State) when
     is_binary(ChIdBin)
 ->
     VS = filter_voice_states_for_channel(ChIdBin, State),
-    {reply, #{voice_states => VS}, State};
-handle_call({get_pending_joins_for_channel, ChIdBin}, _From, State) when
-    is_binary(ChIdBin)
-->
-    PJ = filter_pending_joins(ChIdBin, State),
-    {reply, #{pending_joins => PJ}, State}.
+    {reply, #{voice_states => VS}, State}.
 
 -spec handle_voice_call(atom(), map(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()} | {noreply, guild_state()}.
 handle_voice_call(voice_state_update, Req, _From, State) ->
-    guild_voice:voice_state_update(Req, State);
+    guild_voice_connection:voice_state_update(Req, State);
 handle_voice_call(get_voice_state, Req, _From, State) ->
-    guild_voice:get_voice_state(Req, State);
+    guild_voice_state:get_voice_state(Req, State);
 handle_voice_call(update_member_voice, Req, _From, State) ->
-    guild_voice:update_member_voice(Req, State);
+    guild_voice_member:update_member_voice(Req, State);
 handle_voice_call(disconnect_voice_user, Req, _From, State) ->
-    guild_voice:disconnect_voice_user(Req, State);
+    guild_voice_disconnect_user:disconnect_voice_user(Req, State);
 handle_voice_call(disconnect_voice_user_if_in_channel, Req, _From, State) ->
-    guild_voice:disconnect_voice_user_if_in_channel(Req, State);
+    guild_voice_disconnect_user:disconnect_voice_user_if_in_channel(Req, State);
 handle_voice_call(disconnect_all_voice_users_in_channel, Req, _From, State) ->
-    guild_voice:disconnect_all_voice_users_in_channel(Req, State);
+    guild_voice_disconnect_channel:disconnect_all_voice_users_in_channel(Req, State);
 handle_voice_call(confirm_voice_connection_from_livekit, Req, _From, State) ->
-    guild_voice:confirm_voice_connection_from_livekit(Req, State);
+    guild_voice_connection_confirm:confirm_voice_connection_from_livekit(Req, State);
 handle_voice_call(move_member, Req, _From, State) ->
-    guild_voice:move_member(Req, State);
+    guild_voice_move:move_member(Req, State);
 handle_voice_call(switch_voice_region, Req, _From, State) ->
-    guild_voice:switch_voice_region_handler(Req, State).
+    guild_voice_region:switch_voice_region_handler(Req, State).
 
 -spec handle_add_virtual_access(integer(), integer(), guild_state()) ->
     {reply, ok, guild_state()}.
@@ -95,79 +87,6 @@ append_matching_voice_state(ChannelIdBin, ChannelIdBin, ConnId, VS, Acc) ->
 append_matching_voice_state(_OtherChannelId, _ChannelIdBin, _ConnId, _VS, Acc) ->
     Acc.
 
--spec filter_pending_joins(binary(), guild_state()) -> [map()].
-filter_pending_joins(ChannelIdBin, State) ->
-    PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    case snowflake_id:parse_optional(ChannelIdBin) of
-        undefined ->
-            [];
-        ChannelIdInt when is_integer(ChannelIdInt) ->
-            collect_pending_joins(ChannelIdInt, PendingConnections)
-    end.
-
--spec collect_pending_joins(integer(), map()) -> [map()].
-collect_pending_joins(ChannelIdInt, PendingConnections) ->
-    maps:fold(
-        fun(ConnId, Meta, Acc) ->
-            append_pending_join(ChannelIdInt, ConnId, Meta, Acc)
-        end,
-        [],
-        PendingConnections
-    ).
-
--spec append_pending_join(integer(), term(), term(), [map()]) -> [map()].
-append_pending_join(ChannelIdInt, ConnId, Metadata, Acc) when is_map(Metadata) ->
-    MetaChId = metadata_integer(Metadata, channel_id),
-    MetaUserId = metadata_integer(Metadata, user_id),
-    append_matching_pending_join(
-        MetaChId, ChannelIdInt, MetaUserId, ConnId, Metadata, Acc
-    );
-append_pending_join(_ChannelIdInt, _ConnId, _Metadata, Acc) ->
-    Acc.
-
--spec append_matching_pending_join(
-    integer() | undefined,
-    integer(),
-    integer() | undefined,
-    term(),
-    map(),
-    [map()]
-) -> [map()].
-append_matching_pending_join(ChannelIdInt, ChannelIdInt, UserId, ConnId, Metadata, Acc) when
-    ChannelIdInt > 0, is_integer(UserId), UserId > 0
-->
-    [
-        #{
-            connection_id => ConnId,
-            user_id => integer_to_binary(UserId),
-            token_nonce => maps:get(token_nonce, Metadata, null),
-            expires_at => maps:get(expires_at, Metadata, 0)
-        }
-        | Acc
-    ];
-append_matching_pending_join(
-    _MetadataChannelId, _ChannelIdInt, _UserId, _ConnId, _Metadata, Acc
-) ->
-    Acc.
-
--spec metadata_integer(map(), atom()) -> integer() | undefined.
-metadata_integer(Metadata, Key) ->
-    metadata_integer_or_fallback(map_integer(Metadata, Key), Metadata, Key).
-
--spec metadata_integer_or_fallback(integer() | undefined, map(), atom()) ->
-    integer() | undefined.
-metadata_integer_or_fallback(undefined, Metadata, Key) ->
-    map_integer(Metadata, atom_to_binary(Key, utf8));
-metadata_integer_or_fallback(Value, _Metadata, _Key) ->
-    Value.
-
--spec map_integer(map(), atom() | binary()) -> integer() | undefined.
-map_integer(Metadata, Key) ->
-    case map_utils:get_integer(Metadata, Key, undefined) of
-        Value when is_integer(Value) -> Value;
-        _ -> undefined
-    end.
-
 -spec handle_cast(term(), guild_state()) -> {noreply, guild_state()}.
 handle_cast({relay_voice_state_update, VS, OldChId}, State) when
     is_map(VS), is_binary(OldChId)
@@ -197,8 +116,40 @@ handle_cast({remove_virtual_channel_access, UId, ChId}, State) when
 handle_cast({cleanup_virtual_access_for_user, UId}, State) when
     is_integer(UId)
 ->
-    NewState = guild_voice_disconnect:cleanup_virtual_channel_access_for_user(UId, State),
-    {noreply, NewState}.
+    NewState = guild_voice_disconnect_user:cleanup_virtual_channel_access_for_user(UId, State),
+    {noreply, NewState};
+handle_cast({voice_signal, Request}, State) when is_map(Request) ->
+    ok = relay_voice_signal(Request, State),
+    {noreply, State}.
+
+-spec relay_voice_signal(map(), guild_state()) -> ok.
+relay_voice_signal(
+    #{session_id := SessionId, channel_id := ChannelId, to := To, data := Data}, State
+) ->
+    ChannelVoiceStates = maps:values(
+        voice_state_utils:channel_voice_states(ChannelId, voice_state_utils:voice_states(State))
+    ),
+    case voice_p2p:signal_route(ChannelVoiceStates, SessionId, To) of
+        {ok, Sender, Target} ->
+            GuildId = maps:get(id, State),
+            dispatch_voice_signal(
+                maps:get(<<"session_id">>, Target, undefined),
+                voice_p2p:signal_payload(GuildId, ChannelId, Sender, Data),
+                GuildId,
+                State
+            );
+        error ->
+            ok
+    end.
+
+-spec dispatch_voice_signal(term(), map(), integer(), guild_state()) -> ok.
+dispatch_voice_signal(SessionId, Payload, GuildId, State) ->
+    case maps:get(SessionId, maps:get(sessions, State, #{}), undefined) of
+        #{pid := Pid} when is_pid(Pid) ->
+            gateway_dispatch_relay:dispatch(Pid, voice_signal, Payload, GuildId);
+        _ ->
+            ok
+    end.
 
 -spec cast_relay_voice_server(
     integer(), integer(), binary(), binary(), binary(), binary(), guild_state()

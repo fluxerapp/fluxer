@@ -2,7 +2,7 @@
 
 const DEVTOOLS_DOCK_THRESHOLD_PX = 160;
 
-export type DevtoolsDockOrientation = 'horizontal' | 'vertical';
+type DevtoolsDockOrientation = 'horizontal' | 'vertical';
 
 export interface DevtoolsViewportSnapshot {
 	outerWidth: number;
@@ -45,7 +45,7 @@ function captureViewportSnapshot(): DevtoolsViewportSnapshot {
 	};
 }
 
-export function detectDevtoolsDockState(snapshot: DevtoolsViewportSnapshot): DevtoolsDockState {
+function detectDevtoolsDockState(snapshot: DevtoolsViewportSnapshot): DevtoolsDockState {
 	const wideGap = widthGap(snapshot) > DEVTOOLS_DOCK_THRESHOLD_PX;
 	const tallGap = heightGap(snapshot) > DEVTOOLS_DOCK_THRESHOLD_PX;
 	if (!(wideGap && tallGap) && (snapshot.legacyDebuggerPresent || wideGap || tallGap)) {

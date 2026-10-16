@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SelectableMenuItem, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
+import {SelectableMenuItem, textValueFromNode, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
 import styles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import radioStyles from '@app/features/ui/action_menu/MenuItemRadio.module.css';
 import React, {useCallback} from 'react';
@@ -15,17 +15,8 @@ interface MenuItemRadioProps {
 	closeOnSelect?: boolean;
 }
 
-const textValueFromNode = (node: React.ReactNode): string => {
-	if (typeof node === 'string') return node;
-	if (typeof node === 'number') return String(node);
-	if (Array.isArray(node)) return node.map(textValueFromNode).join('');
-	if (React.isValidElement(node)) {
-		return textValueFromNode((node.props as {children?: React.ReactNode}).children);
-	}
-	return '';
-};
 export const MenuItemRadio = React.forwardRef<HTMLDivElement, MenuItemRadioProps>(
-	({label, children, icon: _icon, selected, disabled = false, onSelect, closeOnSelect = false}, forwardedRef) => {
+	({label, children, icon, selected, disabled = false, onSelect, closeOnSelect = false}, forwardedRef) => {
 		const closeMenu = useContextMenuClose();
 		const handleAction = useCallback(() => {
 			if (disabled) return;
@@ -48,7 +39,16 @@ export const MenuItemRadio = React.forwardRef<HTMLDivElement, MenuItemRadioProps
 				data-flx="ui.action-menu.menu-item-radio.selectable-menu-item"
 			>
 				<div className={styles.itemLabel} data-flx="ui.action-menu.menu-item-radio.item-label">
-					{visibleLabel}
+					<div className={radioStyles.labelContent} data-flx="ui.action-menu.menu-item-radio.div">
+						{icon && (
+							<span className={radioStyles.icon} data-flx="ui.action-menu.menu-item-radio.span">
+								{icon}
+							</span>
+						)}
+						<span className={radioStyles.labelText} data-flx="ui.action-menu.menu-item-radio.span--2">
+							{visibleLabel}
+						</span>
+					</div>
 				</div>
 				<div
 					className={styles.checkboxIndicator}

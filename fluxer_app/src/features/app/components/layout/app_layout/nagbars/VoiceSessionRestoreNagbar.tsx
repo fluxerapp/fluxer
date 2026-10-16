@@ -3,7 +3,8 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
@@ -50,7 +51,7 @@ function getRestoreNagbarMessage(channel: Channel, i18n: I18n): string | null {
 		if (!CallState.hasActiveCall(channel.id)) return null;
 		const directCallName = getVoiceSessionRestoreChannelDisplayName(channel, '');
 		return i18n._(DIRECT_CALL_VOICE_SESSION_RESTORE_MESSAGE_DESCRIPTOR, {
-			productName: PRODUCT_NAME,
+			productName: RuntimeConfig.productName,
 			directCallName,
 		});
 	}
@@ -60,7 +61,7 @@ function getRestoreNagbarMessage(channel: Channel, i18n: I18n): string | null {
 	const communityName = guild?.name.trim() ?? '';
 	if (!channelName || !communityName) return null;
 	return i18n._(COMMUNITY_VOICE_SESSION_RESTORE_MESSAGE_DESCRIPTOR, {
-		productName: PRODUCT_NAME,
+		productName: RuntimeConfig.productName,
 		channelName,
 		communityName,
 	});
@@ -99,8 +100,8 @@ export const VoiceSessionRestoreNagbar = observer(({isMobile}: {isMobile: boolea
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#15803d"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.VOICE].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.VOICE].textColor}
 			data-flx="app.app-layout.nagbars.voice-session-restore-nagbar.nagbar"
 		>
 			<NagbarContent

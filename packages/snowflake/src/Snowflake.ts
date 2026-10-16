@@ -28,12 +28,6 @@ export interface SnowflakeParts {
 	sequence: number;
 }
 
-interface SnowflakeBitParts {
-	relativeTimestamp: bigint;
-	workerId: bigint;
-	sequence: bigint;
-}
-
 interface ResolvedSnowflakeGeneratorOptions {
 	workerId: number;
 	now: () => number;
@@ -82,25 +76,21 @@ function assertValidSequence(sequence: number): bigint {
 	return sequenceBigInt;
 }
 
-function toRelativeTimestamp(timestamp: number | bigint): bigint {
-	const timestampBigInt = BigInt(timestamp);
-	const relativeTimestamp = timestampBigInt - FLUXER_EPOCH;
+function assertValidRelativeTimestamp(relativeTimestamp: bigint): void {
 	if (relativeTimestamp < 0n) {
 		throw new Error('Timestamp must be on or after the Fluxer epoch');
 	}
+}
+
+function toRelativeTimestamp(timestamp: number | bigint): bigint {
+	const timestampBigInt = BigInt(timestamp);
+	const relativeTimestamp = timestampBigInt - FLUXER_EPOCH;
+	assertValidRelativeTimestamp(relativeTimestamp);
 	return relativeTimestamp;
 }
 
 function toEpochTimestamp(relativeTimestamp: bigint): bigint {
 	return relativeTimestamp + FLUXER_EPOCH;
-}
-
-function toSnowflakeBitParts(snowflake: bigint): SnowflakeBitParts {
-	return {
-		relativeTimestamp: snowflake >> TIMESTAMP_SHIFT,
-		workerId: (snowflake >> WORKER_ID_SHIFT) & MAX_WORKER_ID,
-		sequence: snowflake & MAX_SEQUENCE,
-	};
 }
 
 function createSnowflakeBigInt(relativeTimestamp: bigint, workerId: bigint, sequence: bigint): bigint {
@@ -128,20 +118,18 @@ export class SnowflakeGenerator {
 		if (timestamp < this.lastTimestamp) {
 			timestamp = this.lastTimestamp;
 		}
+		assertValidRelativeTimestamp(timestamp);
+		let sequence = 0n;
 		if (timestamp === this.lastTimestamp) {
-			this.sequence = (this.sequence + 1n) & MAX_SEQUENCE;
-			if (this.sequence === 0n) {
+			sequence = (this.sequence + 1n) & MAX_SEQUENCE;
+			if (sequence === 0n) {
 				timestamp = this.waitUntilNextTimestamp();
 			}
-		} else {
-			this.sequence = 0n;
 		}
+		const snowflake = createSnowflakeBigInt(timestamp, this.workerId, sequence);
+		this.sequence = sequence;
 		this.lastTimestamp = timestamp;
-		return createSnowflakeBigInt(timestamp, this.workerId, this.sequence);
-	}
-
-	getWorkerId(): number {
-		return Number(this.workerId);
+		return snowflake;
 	}
 
 	private waitUntilNextTimestamp(): bigint {
@@ -157,14 +145,6 @@ let defaultGenerator: SnowflakeGenerator | null = null;
 
 export function createSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}): SnowflakeGenerator {
 	return new SnowflakeGenerator(options);
-}
-
-export function setDefaultSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}): void {
-	defaultGenerator = createSnowflakeGenerator(options);
-}
-
-export function resetDefaultSnowflakeGenerator(): void {
-	defaultGenerator = null;
 }
 
 export function generateSnowflake(workerIdOrOptions?: number | SnowflakeGeneratorOptions): bigint {
@@ -184,21 +164,15 @@ export function createSnowflake(options: CreateSnowflakeOptions): bigint {
 	return createSnowflakeBigInt(relativeTimestamp, workerId, sequence);
 }
 
-export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
-	return createSnowflake({timestamp, workerId});
-}
-
 export function snowflakeToDate(snowflake: bigint): Date {
-	const bitParts = toSnowflakeBitParts(snowflake);
-	return new Date(Number(toEpochTimestamp(bitParts.relativeTimestamp)));
+	return new Date(Number(toEpochTimestamp(snowflake >> TIMESTAMP_SHIFT)));
 }
 
 export function parseSnowflake(snowflake: bigint): SnowflakeParts {
-	const bitParts = toSnowflakeBitParts(snowflake);
 	return {
-		timestamp: new Date(Number(toEpochTimestamp(bitParts.relativeTimestamp))),
-		workerId: Number(bitParts.workerId),
-		sequence: Number(bitParts.sequence),
+		timestamp: snowflakeToDate(snowflake),
+		workerId: Number((snowflake >> WORKER_ID_SHIFT) & MAX_WORKER_ID),
+		sequence: Number(snowflake & MAX_SEQUENCE),
 	};
 }
 
@@ -209,14 +183,14 @@ export function isValidSnowflake(value: unknown): value is bigint {
 	if (value < 0n) {
 		return false;
 	}
-	const bitParts = toSnowflakeBitParts(value);
-	const timestamp = toEpochTimestamp(bitParts.relativeTimestamp);
+	const timestamp = toEpochTimestamp(value >> TIMESTAMP_SHIFT);
 	const timestampNumber = Number(timestamp);
-	if (timestampNumber < Number(FLUXER_EPOCH)) {
-		return false;
-	}
 	if (timestampNumber > Date.now() + MAX_FUTURE_DRIFT_MS) {
 		return false;
 	}
 	return true;
+}
+
+export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
+	return createSnowflake({timestamp, workerId});
 }

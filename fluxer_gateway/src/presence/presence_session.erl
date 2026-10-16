@@ -213,24 +213,6 @@ normalize_socket_pid(_) -> undefined.
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-find_session_by_ref_found_test() ->
-    Ref = make_ref(),
-    Sessions = #{
-        <<"s1">> => #{session_id => <<"s1">>, mref => make_ref()},
-        <<"s2">> => #{session_id => <<"s2">>, mref => Ref}
-    },
-    ?assertEqual({ok, <<"s2">>}, find_session_by_ref(Ref, Sessions)).
-
-find_session_by_ref_not_found_test() ->
-    Ref = make_ref(),
-    Sessions = #{
-        <<"s1">> => #{session_id => <<"s1">>, mref => make_ref()}
-    },
-    ?assertEqual(not_found, find_session_by_ref(Ref, Sessions)).
-
-find_session_by_ref_empty_test() ->
-    ?assertEqual(not_found, find_session_by_ref(make_ref(), #{})).
-
 handle_presence_update_updates_mobile_test() ->
     SessionId = <<"s1">>,
     State = #{

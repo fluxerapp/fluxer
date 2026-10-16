@@ -3,32 +3,38 @@
 	"version": "0.0.0",
 	"description": "Instant messaging and VoIP application",
 	"homepage": "https://fluxer.app",
-	"author": "Fluxer Platform AB <support@fluxer.app>",
+	"author": "Fluxer Platform AB <support@fluxer.com>",
 	"license": "AGPL-3.0-or-later",
 	"private": true,
 	"type": "module",
 	"main": "dist/main/index.js",
 	"scripts": {
 		"build": "node scripts/build.mjs",
-		"set-channel": "cargo run --manifest-path ../tools/ci/Cargo.toml -- build-desktop --step set_build_channel",
-		"test": "cargo test --manifest-path native/rust/Cargo.toml",
-		"typecheck": "tsgo --noEmit"
+		"generate:windows-badges": "electron scripts/generate-windows-badges.mjs",
+		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
+		"test": "pnpm test:main",
+		"test:main": "pnpm set-channel && node --test 'src/main/*.test.mjs' 'src/preload/*.test.mjs' 'src/common/*.test.mjs'",
+		"test:native": "cargo test --manifest-path native/app-store/Cargo.toml && cargo test --manifest-path native/gateway-socket/Cargo.toml",
+		"typecheck": "pnpm set-channel && tsc --noEmit"
 	},
 	"dependencies": {
+		"@fluxer/constants": "workspace:*",
+		"@fluxer/desktop_ipc": "workspace:*",
+		"@fluxer/instance_bootstrap": "workspace:*",
+		"@fluxer/ip_utils": "workspace:*",
+		"@fluxer/record_utils": "workspace:*",
 		"@fluxer/voice_engine_v2": "workspace:*",
-		"@simplewebauthn/browser": "13.2.2",
+		"@simplewebauthn/browser": "14.0.0",
 		"franc-min": "6.2.0",
 		"hunspell-asm": "4.0.2",
-		"update-electron-app": "3.1.2",
-		"velopack": "0.0.1298"
+		"velopack": "1.2.0"
 	},
 	"devDependencies": {
-		"@types/node": "24.10.9",
-		"@typescript/native-preview": "7.0.0-dev.20260130.1",
-		"electron": "41.2.2",
-		"electron-builder": "26.9.0",
-		"esbuild": "0.27.2",
-		"typescript": "5.9.3"
+		"@types/node": "24.13.5",
+		"electron": "44.4.1",
+		"electron-builder": "27.0.0-alpha.8",
+		"esbuild": "catalog:",
+		"typescript": "catalog:ts7"
 	},
 	"knip": {
 		"ignoreDependencies": [
@@ -36,12 +42,14 @@
 		]
 	},
 	"optionalDependencies": {
+		"@fluxer/app-store": "file:./native/app-store",
+		"@fluxer/gateway-socket": "file:./native/gateway-socket",
+		"@fluxer/hardware-encoder": "file:./native/hardware-encoder",
 		"@fluxer/linux-audio-capture": "file:./native/linux-audio-capture",
 		"@fluxer/linux-evdev": "file:./native/linux-evdev",
 		"@fluxer/linux-input-hook": "file:./native/linux-input-hook",
 		"@fluxer/linux-notifications": "file:./native/linux-notifications",
 		"@fluxer/linux-portals": "file:./native/linux-portals",
-		"@fluxer/linux-screen-capture": "file:./native/linux-screen-capture",
 		"@fluxer/mac-app-audio": "file:./native/mac-app-audio",
 		"@fluxer/mac-clipboard": "file:./native/mac-clipboard",
 		"@fluxer/mac-screen-capture": "file:./native/mac-screen-capture",
@@ -51,13 +59,11 @@
 		"@fluxer/platform-info": "file:./native/platform-info",
 		"@fluxer/system-hunspell": "file:./native/system-hunspell",
 		"@fluxer/webauthn": "file:./native/webauthn",
-		"@fluxer/webrtc-sender": "file:./native/webrtc-sender",
 		"@fluxer/win-clipboard": "file:./native/win-clipboard",
 		"@fluxer/win-shell": "file:./native/win-shell",
-		"@fluxer/win-toast": "file:./native/win-toast",
 		"@fluxer/win-game-capture": "file:./native/win-game-capture",
 		"@fluxer/win-process-loopback": "file:./native/win-process-loopback",
 		"@fluxer/windows-input-hook": "file:./native/windows-input-hook",
-		"electron-log": "5.4.3"
+		"electron-log": "5.4.4"
 	}
 }

@@ -20,7 +20,6 @@ export const VerificationFailureReason = {
 	UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
 	ACCOUNT_TOO_NEW: 'ACCOUNT_TOO_NEW',
 	NOT_MEMBER_LONG_ENOUGH: 'NOT_MEMBER_LONG_ENOUGH',
-	NO_PHONE_NUMBER: 'NO_PHONE_NUMBER',
 	SEND_MESSAGE_DISABLED: 'SEND_MESSAGE_DISABLED',
 	TIMED_OUT: 'TIMED_OUT',
 } as const;
@@ -30,7 +29,7 @@ export type VerificationFailureReason = ValueOf<typeof VerificationFailureReason
 interface VerificationStatus {
 	canAccess: boolean;
 	reason?: VerificationFailureReason;
-	timeRemaining?: number;
+	verificationEndsAt?: number;
 }
 
 class GuildVerification {
@@ -41,7 +40,7 @@ class GuildVerification {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.recomputeAll();
 	}
 
@@ -81,10 +80,11 @@ class GuildVerification {
 		for (const guild of guilds) {
 			const status = this.computeVerificationStatus(guild);
 			newVerificationStatus[guild.id] = status;
-			if (!status.canAccess && status.timeRemaining && status.timeRemaining > 0) {
+			const delay = status.verificationEndsAt ? status.verificationEndsAt - Date.now() : undefined;
+			if (!status.canAccess && delay && delay > 0) {
 				newTimers[guild.id] = setTimeout(() => {
 					this.recomputeGuild(guild.id);
-				}, status.timeRemaining);
+				}, delay);
 			}
 		}
 		this.verificationStatus = Object.freeze(newVerificationStatus);
@@ -106,10 +106,11 @@ class GuildVerification {
 		}
 		const newTimers = {...this.timers};
 		delete newTimers[guildId];
-		if (!status.canAccess && status.timeRemaining && status.timeRemaining > 0) {
+		const delay = status.verificationEndsAt ? status.verificationEndsAt - Date.now() : undefined;
+		if (!status.canAccess && delay && delay > 0) {
 			newTimers[guildId] = setTimeout(() => {
 				this.recomputeGuild(guildId);
-			}, status.timeRemaining);
+			}, delay);
 		}
 		this.verificationStatus = Object.freeze(newVerificationStatus);
 		this.timers = newTimers;
@@ -124,12 +125,11 @@ class GuildVerification {
 		const now = Date.now();
 		if (member?.communicationDisabledUntil) {
 			const timeoutUntil = member.communicationDisabledUntil;
-			const timeRemaining = timeoutUntil.getTime() - now;
-			if (timeRemaining > 0) {
+			if (timeoutUntil.getTime() > now) {
 				return {
 					canAccess: false,
 					reason: VerificationFailureReason.TIMED_OUT,
-					timeRemaining,
+					verificationEndsAt: timeoutUntil.getTime(),
 				};
 			}
 		}
@@ -149,12 +149,6 @@ class GuildVerification {
 		if (member && member.roles.size > 0) {
 			return {canAccess: true};
 		}
-		if (verificationLevel === GuildVerificationLevel.VERY_HIGH) {
-			if (!user.hasVerifiedPhone) {
-				return {canAccess: false, reason: VerificationFailureReason.NO_PHONE_NUMBER};
-			}
-			return {canAccess: true};
-		}
 		if (!user.isClaimed()) {
 			return {canAccess: false, reason: VerificationFailureReason.UNCLAIMED_ACCOUNT};
 		}
@@ -164,18 +158,16 @@ class GuildVerification {
 			}
 		}
 		if (verificationLevel >= GuildVerificationLevel.MEDIUM) {
-			const accountAge = Date.now() - user.createdAt.getTime();
-			if (accountAge < FIVE_MINUTES_MS) {
-				const timeRemaining = FIVE_MINUTES_MS - accountAge;
-				return {canAccess: false, reason: VerificationFailureReason.ACCOUNT_TOO_NEW, timeRemaining};
+			const verificationEndsAt = user.createdAt.getTime() + FIVE_MINUTES_MS;
+			if (verificationEndsAt > now) {
+				return {canAccess: false, reason: VerificationFailureReason.ACCOUNT_TOO_NEW, verificationEndsAt};
 			}
 		}
 		if (verificationLevel >= GuildVerificationLevel.HIGH) {
 			if (member?.joinedAt) {
-				const membershipDuration = Date.now() - member.joinedAt.getTime();
-				if (membershipDuration < TEN_MINUTES_MS) {
-					const timeRemaining = TEN_MINUTES_MS - membershipDuration;
-					return {canAccess: false, reason: VerificationFailureReason.NOT_MEMBER_LONG_ENOUGH, timeRemaining};
+				const verificationEndsAt = member.joinedAt.getTime() + TEN_MINUTES_MS;
+				if (verificationEndsAt > now) {
+					return {canAccess: false, reason: VerificationFailureReason.NOT_MEMBER_LONG_ENOUGH, verificationEndsAt};
 				}
 			}
 		}
@@ -193,10 +185,6 @@ class GuildVerification {
 
 	getFailureReason(guildId: string): VerificationFailureReason | null {
 		return this.verificationStatus[guildId]?.reason ?? null;
-	}
-
-	getTimeRemaining(guildId: string): number | null {
-		return this.verificationStatus[guildId]?.timeRemaining ?? null;
 	}
 }
 

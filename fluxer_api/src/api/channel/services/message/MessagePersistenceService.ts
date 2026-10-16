@@ -1,51 +1,59 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
-import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
-import type {ChannelID, EmojiID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '../../../BrandedTypes';
-import {createAttachmentID, createEmojiID, createGuildID} from '../../../BrandedTypes';
-import {getContentMessage} from '../../../content_i18n/ContentI18n';
+import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import type {ChannelID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import {createAttachmentID, createGuildID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {AttachmentProcessingService} from '@app/api/channel/services/message/AttachmentProcessingService';
+import {type DmNsfwContext, MessageContentService} from '@app/api/channel/services/message/MessageContentService';
+import {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
+import {
+	assertAttachmentFileSizesWithinLimit,
+	collectMessageAttachments,
+	isCrosspostCopy,
+	keepOwnedEmbedAttachments,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {MessageStickerService} from '@app/api/channel/services/message/MessageStickerService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {
 	MessageAttachment,
 	MessageEmbed,
 	MessageReference,
 	MessageStickerItem,
-} from '../../../database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {EmbedService} from '../../../infrastructure/EmbedService';
-import type {IMediaService, MediaProxyNsfwMode} from '../../../infrastructure/IMediaService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {MessageSnapshot} from '../../../models/MessageSnapshot';
-import type {User} from '../../../models/User';
-import type {PackService} from '../../../pack/PackService';
-import type {ReadStateService} from '../../../read_state/ReadStateService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {hasVisibleContent} from '../../../utils/StringUtils';
-import type {AttachmentToProcess} from '../../AttachmentDTOs';
-import type {MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
-import {AttachmentProcessingService} from './AttachmentProcessingService';
-import {type DmNsfwContext, MessageContentService} from './MessageContentService';
-import {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
-import {collectMessageAttachments} from './MessageHelpers';
-import {MessageStickerService} from './MessageStickerService';
+} from '@app/api/database/types/MessageTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import type {IMediaService, MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
+import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 
 function mapAttachmentForEmbedResolution(att: MessageAttachment) {
 	return {
@@ -86,6 +94,7 @@ interface CreateMessageParams {
 	embeds?: Array<RichEmbedRequest>;
 	attachments?: Array<AttachmentToProcess>;
 	attachmentUploadUserId?: UserID;
+	uploadChannelId?: ChannelID;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
 	messageReference?: MessageReference;
@@ -106,6 +115,10 @@ interface CreateMessageParams {
 	};
 	allowEmbeds?: boolean;
 	dmNsfwContext?: DmNsfwContext;
+	processedEmbeds?: Array<MessageEmbed>;
+	processedStickerItems?: Array<MessageStickerItem>;
+	skipDeferredEmbeds?: boolean;
+	threadInsert?: boolean;
 }
 
 export class MessagePersistenceService {
@@ -116,18 +129,17 @@ export class MessagePersistenceService {
 	private readonly attachmentDecayService: AttachmentDecayService;
 
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		private embedService: EmbedService,
-		storageService: IStorageService,
+		private readonly storageService: IStorageService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		mediaService: IMediaService,
 		virusScanService: IVirusScanService,
 		snowflakeService: ISnowflakeService,
 		private readStateService: ReadStateService,
-		limitConfigService: LimitConfigService,
+		private readonly limitConfigService: LimitConfigService,
 	) {
 		this.attachmentService = new AttachmentProcessingService(
 			storageService,
@@ -136,20 +148,18 @@ export class MessagePersistenceService {
 			virusScanService,
 			snowflakeService,
 		);
-		this.contentService = new MessageContentService(
-			this.userRepository,
-			guildRepository,
-			this.packService,
-			limitConfigService,
-		);
-		this.stickerService = new MessageStickerService(
-			this.userRepository,
-			guildRepository,
-			this.packService,
-			limitConfigService,
-		);
+		this.contentService = new MessageContentService(this.userRepository, guildRepository, limitConfigService);
+		this.stickerService = new MessageStickerService(this.userRepository, guildRepository, limitConfigService);
 		this.embedAttachmentResolver = new MessageEmbedAttachmentResolver();
 		this.attachmentDecayService = new AttachmentDecayService();
+	}
+
+	private nsfwScopeChannel(channel: Channel): Promise<Channel> {
+		return resolveNsfwScopeChannel(channel, (channelId) => this.channelRepository.channelData.findUnique(channelId));
+	}
+
+	resolveDmNsfwContext(channel: Channel, senderId: UserID): Promise<DmNsfwContext | undefined> {
+		return this.contentService.resolveDmNsfwContext(channel, senderId);
 	}
 
 	getEmbedAttachmentResolver(): MessageEmbedAttachmentResolver {
@@ -170,24 +180,16 @@ export class MessagePersistenceService {
 		const isBot = params.user?.isBot ?? false;
 		const isBugHunterBot = isBot && ((params.user?.flags ?? 0n) & UserFlags.BUG_HUNTER) !== 0n;
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel: params.channel,
+			channel: params.channel ? await this.nsfwScopeChannel(params.channel) : undefined,
 			guild: params.guild,
 			member: params.member,
 			isBot,
 			dmNsfwContext: params.dmNsfwContext,
 		});
-		let nsfwEmojiIds = new Set<EmojiID>();
-		if (params.content) {
-			if (!isNSFWAllowed) {
-				await this.enforceNsfwEmojiRestrictions(params.content);
-			} else {
-				nsfwEmojiIds = await this.collectNsfwEmojiIds(params.content);
-			}
-		}
 		const [sanitizedContent, attachmentResult, processedStickers] = await Promise.all([
 			this.sanitizeContentIfNeeded(params, authorId),
 			this.processAttachments(params, isNSFWAllowed ? 'allow' : 'block'),
-			this.processStickers(params, authorId, isNSFWAllowed),
+			this.processStickers(params, authorId),
 		]);
 		let messageContent = sanitizedContent;
 		let processedAttachments: Array<MessageAttachment> = params.processedAttachments
@@ -204,8 +206,12 @@ export class MessagePersistenceService {
 		const allowEmbeds = params.allowEmbeds ?? true;
 		let initialEmbeds: Array<MessageEmbed> | null = null;
 		let hasUncachedUrls = false;
-		const referencedFilenames = this.embedAttachmentResolver.collectReferencedAttachmentFilenames(params.embeds);
-		if (allowEmbeds) {
+		const referencedFilenames = params.processedEmbeds
+			? new Set<string>()
+			: this.embedAttachmentResolver.collectReferencedAttachmentFilenames(params.embeds);
+		if (params.processedEmbeds) {
+			initialEmbeds = params.processedEmbeds.length > 0 ? params.processedEmbeds : null;
+		} else if (allowEmbeds) {
 			const resolvedEmbeds = this.embedAttachmentResolver.resolveEmbedAttachmentUrls({
 				embeds: params.embeds,
 				attachments: processedAttachments.map(mapAttachmentForEmbedResolution),
@@ -250,11 +256,14 @@ export class MessagePersistenceService {
 					? params.messageSnapshots.map((snapshot) => snapshot.toMessageSnapshot())
 					: null,
 			call: null,
-			nsfw_emojis: nsfwEmojiIds.size > 0 ? nsfwEmojiIds : null,
 			has_reaction: false,
 			version: 1,
 		};
-		const message = await this.channelRepository.messages.upsertMessage(messageRowData);
+		const message = await this.channelRepository.messages.upsertMessage(
+			messageRowData,
+			null,
+			params.threadInsert ? {isInsert: true} : undefined,
+		);
 		const enqueueDeferredEmbeds = await this.runPostPersistenceOperations({
 			message,
 			params,
@@ -303,6 +312,7 @@ export class MessagePersistenceService {
 			} as Message,
 			attachments: params.attachments,
 			uploadUserId,
+			uploadChannelId: params.uploadChannelId,
 			channel: params.channel,
 			guild: params.guild,
 			member: params.member,
@@ -313,8 +323,10 @@ export class MessagePersistenceService {
 	private async processStickers(
 		params: CreateMessageParams,
 		authorId: UserID | null,
-		isNSFWAllowed?: boolean,
 	): Promise<Array<MessageStickerItem>> {
+		if (params.processedStickerItems) {
+			return params.processedStickerItems;
+		}
 		if (!params.stickerIds || params.stickerIds.length === 0) {
 			return [];
 		}
@@ -323,35 +335,7 @@ export class MessagePersistenceService {
 			userId: authorId,
 			guildId: params.guildId,
 			hasPermission: params.hasPermission,
-			isNSFWAllowed: isNSFWAllowed ?? true,
 		});
-	}
-
-	private async enforceNsfwEmojiRestrictions(content: string): Promise<void> {
-		const nsfwIds = await this.collectNsfwEmojiIds(content);
-		if (nsfwIds.size > 0) {
-			throw new NsfwEmojiStickerBlockedError();
-		}
-	}
-
-	private async collectNsfwEmojiIds(content: string): Promise<Set<EmojiID>> {
-		const CUSTOM_EMOJI_REGEX = /<a?:[^:]+:(\d+)>/g;
-		const emojiIds = new Set<EmojiID>();
-		let match: RegExpExecArray | null;
-		while ((match = CUSTOM_EMOJI_REGEX.exec(content)) !== null) {
-			emojiIds.add(createEmojiID(BigInt(match[1])));
-		}
-		if (emojiIds.size === 0) {
-			return new Set();
-		}
-		const lookups = await Promise.all([...emojiIds].map((id) => this.guildRepository.getEmojiById(id)));
-		const nsfwEmojiIds = new Set<EmojiID>();
-		for (const emoji of lookups) {
-			if (emoji?.isNsfw) {
-				nsfwEmojiIds.add(emoji.id);
-			}
-		}
-		return nsfwEmojiIds;
 	}
 
 	private async runPostPersistenceOperations(context: {
@@ -364,7 +348,7 @@ export class MessagePersistenceService {
 	}): Promise<() => Promise<void>> {
 		const {message, params, authorId, allowEmbeds, hasUncachedUrls, isNSFWAllowed} = context;
 		const operations: Array<Promise<unknown>> = [];
-		const trackedAttachments = collectMessageAttachments(message);
+		const trackedAttachments = isCrosspostCopy(message) ? [] : collectMessageAttachments(message);
 		if (trackedAttachments.length > 0) {
 			const uploadedAt = snowflakeToDate(params.messageId);
 			const decayPayloads = trackedAttachments.map((att) => ({
@@ -378,7 +362,7 @@ export class MessagePersistenceService {
 			operations.push(this.attachmentDecayService.upsertMany(decayPayloads));
 		}
 		let enqueueDeferredEmbeds: () => Promise<void> = () => Promise.resolve();
-		if (allowEmbeds && hasUncachedUrls) {
+		if (allowEmbeds && hasUncachedUrls && !params.skipDeferredEmbeds) {
 			enqueueDeferredEmbeds = () =>
 				this.embedService.enqueueUrlEmbedExtraction(
 					params.channelId,
@@ -397,8 +381,9 @@ export class MessagePersistenceService {
 						channelId: params.channelId,
 						messageId: params.messageId,
 						mentionCount: 0,
-						silent: true,
+						implicit: {unreadThrough: params.user ? (params.channel?.lastMessageId ?? null) : null},
 						emitGateway: false,
+						...(params.threadInsert ? {capable: true, channel: params.channel ?? null} : {}),
 					}),
 				);
 			}
@@ -421,16 +406,18 @@ export class MessagePersistenceService {
 		isBot?: boolean;
 		isBugHunterBot?: boolean;
 		locale?: string | null;
+		dmNsfwContext?: DmNsfwContext;
 	}): Promise<UpdateMessageResult> {
 		const {message, messageId, data, channel, guild, member} = params;
 		if (message.messageSnapshots && message.messageSnapshots.length > 0) {
 			throw InputValidationError.fromCode('message', ValidationErrorCodes.MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED);
 		}
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel,
+			channel: await this.nsfwScopeChannel(channel),
 			guild,
 			member,
 			isBot: params.isBot,
+			dmNsfwContext: params.dmNsfwContext,
 		});
 		const updatedRowData = {...message.toRow()};
 		let hasChanges = false;
@@ -439,9 +426,6 @@ export class MessagePersistenceService {
 		if (data.content !== undefined && data.content !== message.content) {
 			let sanitizedContent = data.content && hasVisibleContent(data.content) ? data.content : '';
 			if (sanitizedContent) {
-				if (!isNSFWAllowed) {
-					await this.enforceNsfwEmojiRestrictions(sanitizedContent);
-				}
 				sanitizedContent = await this.contentService.sanitizeCustomEmojis({
 					content: sanitizedContent,
 					userId: message.authorId ?? null,
@@ -504,6 +488,32 @@ export class MessagePersistenceService {
 						uploadUserId !== undefined,
 						'Attachment upload actor must be resolved before processing new attachments',
 					);
+					const uploader = await this.userRepository.findUnique(uploadUserId);
+					const guildFeatures = guild?.features ?? null;
+					const maxFileSize = Math.floor(
+						resolveLimitSafe(
+							this.limitConfigService.getConfigSnapshot(),
+							createLimitMatchContext({user: uploader, guildFeatures}),
+							'max_attachment_file_size',
+							ATTACHMENT_MAX_SIZE_NON_PREMIUM,
+							guildFeatures ? 'guild' : 'user',
+						),
+					);
+					const uploadedSizes: Array<number> = [];
+					for (const [index, attachment] of newAttachments.entries()) {
+						const uploadedFile = await this.storageService.getObjectMetadata(
+							Config.s3.buckets.uploads,
+							attachment.upload_filename,
+						);
+						if (!uploadedFile) {
+							throw InputValidationError.fromCode(
+								`attachments.${index}.upload_filename`,
+								ValidationErrorCodes.FILE_NOT_FOUND,
+							);
+						}
+						uploadedSizes.push(uploadedFile.contentLength);
+					}
+					assertAttachmentFileSizesWithinLimit(uploadedSizes, maxFileSize);
 					const attachmentResult = await this.attachmentService.computeAttachments({
 						message,
 						attachments: newAttachments,
@@ -545,6 +555,7 @@ export class MessagePersistenceService {
 				isBugHunterBot: params.isBugHunterBot,
 			});
 			if (embedsExplicitlyProvided) {
+				keepOwnedEmbedAttachments(message, initialEmbeds);
 				updatedRowData.embeds = initialEmbeds;
 			} else {
 				const preservedEmbeds = message.embeds
@@ -572,55 +583,6 @@ export class MessagePersistenceService {
 						)
 				: () => Promise.resolve();
 		return {message: updatedMessage, enqueueDeferredEmbeds};
-	}
-
-	async updateSnapshotAttachments(params: {
-		message: Message;
-		snapshotEdits: ReadonlyArray<{
-			attachments?: ReadonlyArray<{
-				id: bigint | number;
-				title?: string | null;
-				description?: string | null;
-			}>;
-		}>;
-	}): Promise<Message> {
-		const {message, snapshotEdits} = params;
-		if (!message.messageSnapshots || message.messageSnapshots.length === 0) {
-			throw InputValidationError.fromCode('message_snapshots', ValidationErrorCodes.INVALID_MESSAGE_DATA);
-		}
-		const updatedSnapshots = message.messageSnapshots.map((snapshot, index) => {
-			const edit = snapshotEdits[index];
-			if (!edit || !edit.attachments || edit.attachments.length === 0) {
-				return snapshot.toMessageSnapshot();
-			}
-			const snapshotRow = snapshot.toMessageSnapshot();
-			const existingAttachments = snapshotRow.attachments ?? [];
-			const editsByRefId = new Map<
-				bigint,
-				{
-					title?: string | null;
-					description?: string | null;
-				}
-			>();
-			for (const att of edit.attachments) {
-				const refId = createAttachmentID(typeof att.id === 'number' ? BigInt(att.id) : att.id);
-				editsByRefId.set(refId, {title: att.title, description: att.description});
-			}
-			const newAttachments = existingAttachments.map((existing, attIndex) => {
-				const matchById = editsByRefId.get(existing.attachment_id);
-				const fallback = matchById === undefined ? editsByRefId.get(createAttachmentID(BigInt(attIndex))) : undefined;
-				const patch = matchById ?? fallback;
-				if (!patch) return existing;
-				return {
-					...existing,
-					title: patch.title !== undefined ? patch.title : existing.title,
-					description: patch.description !== undefined ? patch.description : existing.description,
-				};
-			});
-			return {...snapshotRow, attachments: newAttachments.length > 0 ? newAttachments : null};
-		});
-		const updatedRowData = {...message.toRow(), message_snapshots: updatedSnapshots};
-		return await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
 	}
 
 	async handleNonAuthorEdit(params: {
@@ -723,6 +685,7 @@ export class MessagePersistenceService {
 			guildId: params.guildId ?? null,
 			allowEmbeds: false,
 			messageReference: params.messageReference,
+			threadInsert: true,
 			mentionData: {
 				flags: 0,
 				mentionUserIds: params.mentionUserIds ?? [],

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {
@@ -17,7 +18,7 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.module.css';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
-import {showUserErrorModalAfterAutoDismiss} from '@app/features/user/utils/UserErrorModalUtils';
+
 import {VOICE_ACTIVITY_SHARING_COOLDOWN_MS} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -69,9 +70,10 @@ const TOAST_ERROR_DESCRIPTOR = msg({
 	message: "Couldn't update voice activity sharing right now",
 	comment: 'Privacy > Active now: error modal title shown when the mass-update request fails.',
 });
-const SECTION_TITLE_DESCRIPTOR = msg({
-	message: 'Voice activity on active now',
-	comment: 'Privacy > Active now: settings subsection title for voice activity sharing.',
+const SHARE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours.",
+	comment: 'Privacy > Active now: helper text under the switch controlling whether friends see voice activity.',
 });
 
 function formatRemaining(i18n: I18n, ms: number): string {
@@ -104,7 +106,7 @@ function useCooldownRemainingMs(endsAt: Date | null): number {
 export const ActiveNowTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const [submitting, setSubmitting] = useState(false);
-	const sharing = UserSettings.getDefaultShareVoiceActivity();
+	const sharing = UserSettings.defaultShareVoiceActivity;
 	const lastChange = Users.getCurrentUser()?.lastVoiceActivitySharingChangeAt ?? null;
 	const cooldownEndsAt =
 		lastChange != null ? new Date(lastChange.getTime() + VOICE_ACTIVITY_SHARING_COOLDOWN_MS) : null;
@@ -129,10 +131,12 @@ export const ActiveNowTabContent: React.FC = observer(() => {
 							await UserSettingsCommands.updateVoiceActivitySharingDefault(nextValue);
 							ToastCommands.createToast({type: 'success', children: i18n._(TOAST_SUCCESS_DESCRIPTOR)});
 						} catch {
-							showUserErrorModalAfterAutoDismiss(
-								i18n._(TOAST_ERROR_DESCRIPTOR),
-								i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
-							);
+							showGenericErrorModal({
+								title: i18n._(TOAST_ERROR_DESCRIPTOR),
+								message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+								dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+								defer: true,
+							});
 						} finally {
 							setSubmitting(false);
 						}
@@ -143,12 +147,10 @@ export const ActiveNowTabContent: React.FC = observer(() => {
 		);
 	};
 	return (
-		<SettingsTabSection
-			title={i18n._(SECTION_TITLE_DESCRIPTOR)}
-			data-flx="user.privacy-safety-tab.active-now-tab.settings-tab-section"
-		>
+		<SettingsTabSection data-flx="user.privacy-safety-tab.active-now-tab.settings-tab-section">
 			<Switch
 				label={i18n._(TITLE_DESCRIPTOR)}
+				description={i18n._(SHARE_DESCRIPTION_DESCRIPTOR)}
 				value={sharing}
 				disabled={onCooldown || submitting}
 				onChange={(value) => openConfirm(value)}

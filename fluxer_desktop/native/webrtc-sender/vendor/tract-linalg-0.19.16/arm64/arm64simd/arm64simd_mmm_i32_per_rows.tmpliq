@@ -1,8 +1,0 @@
-// vim: ft=arm
-
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_min", op:"smin", mr:mr, from:from, to:to %}
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_max", op:"smax", mr:mr, from:from, to:to %}
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_mul", op:"mul", mr:mr, from:from, to:to %}
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_add", op:"add", mr:mr, from:from, to:to %}
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_sub", op:"sub", mr:mr, from:from, to:to %}
-{% include "arm64simd_mmm_4s_per_row.tmpliq" label:"per_row_sub_flipped", op:"sub", mr:mr, from:from, to:to, flipped: true %}

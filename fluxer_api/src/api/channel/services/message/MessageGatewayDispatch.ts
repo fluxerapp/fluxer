@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {dispatchChannelEvent} from '../ChannelGatewayDispatch';
-import {createMessageResponseDataService} from './MessageResponseDataService';
 
 interface BuildBroadcastMessageDataParams {
 	channel: Channel;
@@ -110,5 +110,49 @@ export async function dispatchMessageUpdateBroadcast({
 		channel: params.channel,
 		event: 'MESSAGE_UPDATE',
 		data: await buildBroadcastMessageData(params),
+	});
+}
+
+export async function dispatchMessageDelete({
+	gatewayService,
+	channel,
+	messageId,
+	message,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageId: MessageID;
+	message: Message;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE',
+		data: {
+			channel_id: channel.id.toString(),
+			id: messageId.toString(),
+			content: message.content,
+			author_id: message.authorId?.toString(),
+		},
+	});
+}
+
+export async function dispatchMessageDeleteBulk({
+	gatewayService,
+	channel,
+	messageIds,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageIds: Array<MessageID>;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE_BULK',
+		data: {
+			channel_id: channel.id.toString(),
+			ids: messageIds.map((id) => id.toString()),
+		},
 	});
 }

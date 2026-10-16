@@ -274,11 +274,6 @@
 	opacity: 0.5;
 }
 
-.channelItemDisabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 .hoverAffordance {
 	display: none;
 }
@@ -303,7 +298,7 @@
 }
 
 .channelItemAutocompleteHighlight {
-	box-shadow: 0 0 0 0.125rem var(--brand-primary);
+	box-shadow: 0 0 0 0.125rem var(--brand-primary-foreground);
 }
 
 .categoryContent {

@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
+import Accounts from '@app/features/auth/state/Accounts';
 import {ActiveNowTabContent as ActiveNowTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab';
 import {CommunicationTabContent as CommunicationTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab';
 import {ConnectionsTabContent as ConnectionsTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab';
 import {DataDeletionTabContent as DataDeletionTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataDeletionTab';
 import {DataExportTabContent as DataExportTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataExportTab';
-import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline.module.css';
 import {ProfilePrivacyTabContent as ProfilePrivacyTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab';
 import {SensitiveContentTabContent as SensitiveContentTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
+import {useUserSettingsMutationController} from '@app/features/user/hooks/useUserSettingsMutationController';
+import {
+	ACTIVITY_SHARING_DESCRIPTOR,
+	PROFILE_PRIVACY_LABEL_DESCRIPTOR as PROFILE_PRIVACY_DESCRIPTOR,
+	SENSITIVE_CONTENT_2_DESCRIPTOR as SENSITIVE_CONTENT_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -18,22 +25,12 @@ const FRIENDS_AND_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	message: 'Friends & direct messages',
 	comment: 'Privacy dashboard section label for who can send friend requests and direct messages.',
 });
-const PROFILE_PRIVACY_DESCRIPTOR = msg({
-	message: 'Profile privacy',
-	comment: 'Privacy section label for who can see the user profile details.',
-});
+
 const COMMUNICATION_DESCRIPTOR = msg({
 	message: 'Communication',
 	comment: 'Short label in the privacy dashboard. Keep it concise.',
 });
-const ACTIVITY_SHARING_DESCRIPTOR = msg({
-	message: 'Activity sharing',
-	comment: 'Privacy section label for voice activity sharing.',
-});
-const SENSITIVE_CONTENT_DESCRIPTOR = msg({
-	message: 'Sensitive content',
-	comment: 'Short label in the privacy dashboard. Keep it concise.',
-});
+
 const DATA_EXPORT_DESCRIPTOR = msg({
 	message: 'Data export',
 	comment: 'Short label in the privacy dashboard. Keep it concise.',
@@ -44,8 +41,14 @@ const DATA_DELETION_DESCRIPTOR = msg({
 });
 export const PrivacyDashboardContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
+	const accountKey = Accounts.currentAccountKey;
+	const mutationController = useUserSettingsMutationController();
 	return (
-		<div className={styles.container} data-flx="user.privacy-safety-tab.privacy-dashboard-content.container">
+		<div
+			key={accountKey}
+			className={styles.container}
+			data-flx="user.privacy-safety-tab.privacy-dashboard-content.container"
+		>
 			<SettingsSection
 				id="profile-privacy"
 				tabType="privacy_safety"
@@ -68,7 +71,10 @@ export const PrivacyDashboardContent: React.FC = observer(() => {
 				title={i18n._(COMMUNICATION_DESCRIPTOR)}
 				data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication"
 			>
-				<CommunicationTab data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication-tab" />
+				<CommunicationTab
+					mutationController={mutationController}
+					data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication-tab"
+				/>
 			</SettingsSection>
 			<SettingsSection
 				id="active-now"

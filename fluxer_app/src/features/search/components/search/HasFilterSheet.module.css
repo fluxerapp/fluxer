@@ -50,7 +50,7 @@
 }
 
 :global(.theme-light) .optionSelected {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 	background-color: color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
@@ -71,7 +71,7 @@
 }
 
 :global(.theme-light) .optionIconSelected {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .optionText {
@@ -103,7 +103,7 @@
 }
 
 :global(.theme-light) .checkIcon {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .footer {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import {createEmailRevertToken} from '../BrandedTypes';
-import type {EmailRevertTokenRow} from '../database/types/AuthTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import {createEmailRevertToken} from '@app/api/BrandedTypes';
+import type {EmailRevertTokenRow} from '@app/api/database/types/AuthTypes';
 
 export class EmailRevertToken {
 	readonly token: string;

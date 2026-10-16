@@ -1,18 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Command} from '../../protocol/commands';
-import type {VoiceEngineV2Event} from '../../protocol/events';
+import {
+	allocateOperation,
+	markOperation,
+	queueCommand,
+	recordQueuedCommand,
+	unsupportedCapability,
+} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {resetPublishedMedia} from '@fluxer/voice_engine_v2/src/core/reducers/_media';
+import {
+	createVoiceEngineV2InitialSnapshot,
+	type VoiceEngineV2Snapshot,
+	type VoiceEngineV2Transition,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2ConnectOptions,
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2LifecycleReason,
 	VoiceEngineV2OperationId,
-} from '../../protocol/types';
-import {createVoiceEngineV2InitialSnapshot, type VoiceEngineV2Snapshot, type VoiceEngineV2Transition} from '../state';
-import {allocateOperation, markOperation, queueCommand, recordQueuedCommand, unsupportedCapability} from './_helpers';
-import {resetPublishedMedia} from './_media';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2ConnectionEvent = Extract<VoiceEngineV2Event, {type: `connection.${string}`}>;
 

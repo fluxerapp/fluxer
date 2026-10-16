@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {z} from 'zod';
-import type {AdminArchiveRow} from '../../database/types/AdminArchiveTypes';
-
-export type ArchiveSubjectType = 'user' | 'guild';
+import type {AdminArchiveRow} from '@app/api/database/types/AdminArchiveTypes';
+import type {AdminArchiveResponse, ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 
 export class AdminArchive {
 	subjectType: ArchiveSubjectType;
@@ -12,9 +9,11 @@ export class AdminArchive {
 	archiveId: bigint;
 	requestedBy: bigint;
 	requestedAt: Date;
+	attemptId: string | null;
 	startedAt: Date | null;
 	completedAt: Date | null;
 	failedAt: Date | null;
+	terminalFailedAt: Date | null;
 	storageKey: string | null;
 	fileSize: bigint | null;
 	progressPercent: number;
@@ -29,9 +28,11 @@ export class AdminArchive {
 		this.archiveId = row.archive_id;
 		this.requestedBy = row.requested_by;
 		this.requestedAt = row.requested_at;
+		this.attemptId = row.attempt_id ?? null;
 		this.startedAt = row.started_at ?? null;
 		this.completedAt = row.completed_at ?? null;
 		this.failedAt = row.failed_at ?? null;
+		this.terminalFailedAt = row.terminal_failed_at ?? null;
 		this.storageKey = row.storage_key ?? null;
 		this.fileSize = row.file_size ?? null;
 		this.progressPercent = row.progress_percent;
@@ -48,9 +49,11 @@ export class AdminArchive {
 			archive_id: this.archiveId,
 			requested_by: this.requestedBy,
 			requested_at: this.requestedAt,
+			attempt_id: this.attemptId,
 			started_at: this.startedAt,
 			completed_at: this.completedAt,
 			failed_at: this.failedAt,
+			terminal_failed_at: this.terminalFailedAt,
 			storage_key: this.storageKey,
 			file_size: this.fileSize,
 			progress_percent: this.progressPercent,
@@ -61,22 +64,7 @@ export class AdminArchive {
 		};
 	}
 
-	toResponse(): {
-		archive_id: string;
-		subject_type: ArchiveSubjectType;
-		subject_id: string;
-		requested_by: string;
-		requested_at: string;
-		started_at: string | null;
-		completed_at: string | null;
-		failed_at: string | null;
-		file_size: string | null;
-		progress_percent: number;
-		progress_step: string | null;
-		error_message: string | null;
-		download_url_expires_at: string | null;
-		expires_at: string | null;
-	} {
+	toResponse(): AdminArchiveResponse {
 		return {
 			archive_id: this.archiveId.toString(),
 			subject_type: this.subjectType,
@@ -95,5 +83,3 @@ export class AdminArchive {
 		};
 	}
 }
-
-export type AdminArchiveResponse = z.infer<typeof AdminArchiveResponseSchema>;

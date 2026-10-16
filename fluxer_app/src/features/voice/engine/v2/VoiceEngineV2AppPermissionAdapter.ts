@@ -15,30 +15,19 @@ import {
 } from '@app/features/voice/engine/VoicePermissionStateMachine';
 import {
 	enforceLocalMediaPublicationCap,
+	getLocalCameraPublications,
 	getLocalMicrophonePublications,
 	getLocalScreenSharePublications,
 	unpublishLocalMediaPublications,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import {removeVoiceInputProcessor} from '@app/features/voice/utils/VoiceInputProcessor';
+import {clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {getVoiceChannelPermissions, type VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
-import type {LocalAudioTrack, Room} from 'livekit-client';
-
-export {
-	createVoiceEngineV2AppSystemPermissionAdapter,
-	VoiceEngineV2AppSystemPermissionAdapter,
-	type VoiceEngineV2SystemPermissionsApi,
-} from './VoiceEngineV2AppSystemPermissionAdapter';
+import type {LocalAudioTrack, LocalVideoTrack, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppPermissionAdapter');
 
-export type VoiceEngineV2AppPermissionTrackSource = 'audio' | 'video' | 'screenShare';
-
-export interface VoiceEngineV2AppNativePermissionEnforcement {
-	revokeMicrophone: () => Promise<void>;
-	revokeCamera: () => Promise<void>;
-	revokeScreenShare: () => Promise<void>;
-}
+type VoiceEngineV2AppPermissionTrackSource = 'audio' | 'video' | 'screenShare';
 
 type RemotePublicationAdapter = {
 	isDesired?: boolean;
@@ -49,11 +38,10 @@ type RemotePublicationAdapter = {
 class VoiceEngineV2AppPermissionAdapter extends Store {
 	private snapshot: VoicePermissionSnapshot = createVoicePermissionSnapshot();
 	private currentRoom: Room | null = null;
-	private nativeEnforcement: VoiceEngineV2AppNativePermissionEnforcement | null = null;
 	private permissionDisposer: (() => void) | null = null;
 
 	private hasEnforceableMediaSession(): boolean {
-		return this.currentRoom != null || this.nativeEnforcement != null;
+		return this.currentRoom != null;
 	}
 
 	private sendPermissionEvent(
@@ -131,41 +119,11 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 	}
 
 	private revokePermissionForRoom(source: VoiceEngineV2AppPermissionTrackSource, room: Room | null | undefined): void {
-		const nativeEnforcement = this.nativeEnforcement;
-		if (nativeEnforcement) {
-			void this.handleNativePermissionRevoked(source, nativeEnforcement);
-			return;
-		}
 		if (!room) {
 			logger.debug('No active room, skipping permission enforcement', {source});
 			return;
 		}
 		void this.handlePermissionRevoked(source, room);
-	}
-
-	private async handleNativePermissionRevoked(
-		source: VoiceEngineV2AppPermissionTrackSource,
-		enforcement: VoiceEngineV2AppNativePermissionEnforcement,
-	): Promise<void> {
-		assert.ok(source === 'audio' || source === 'video' || source === 'screenShare', 'unknown permission track source');
-		assert.equal(enforcement, this.nativeEnforcement, 'native permission revocation requires the active enforcement');
-		logger.info('Revoking permission via native session', {source});
-		try {
-			switch (source) {
-				case 'audio':
-					await enforcement.revokeMicrophone();
-					break;
-				case 'video':
-					await enforcement.revokeCamera();
-					break;
-				case 'screenShare':
-					await enforcement.revokeScreenShare();
-					break;
-			}
-			logger.info('Successfully revoked permission via native session', {source});
-		} catch (error) {
-			logger.error('Failed to revoke permission via native session', {source, error});
-		}
 	}
 
 	private buildRemotePublicationInputs(room: Room): {
@@ -203,28 +161,9 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		this.sendPermissionEvent({type: 'permission.watch.stop'});
 		this.update(() => {
 			this.currentRoom = room;
-			this.nativeEnforcement = null;
 		});
 		this.beginPermissionWatch(guildId, channelId);
 		logger.info('Started permission watching', {guildId, channelId});
-	}
-
-	syncWithNativePermissionState(
-		guildId: string | null,
-		channelId: string,
-		enforcement: VoiceEngineV2AppNativePermissionEnforcement,
-	): void {
-		assert.ok(channelId.length > 0, 'native permission watch requires a channelId');
-		assert.equal(typeof enforcement.revokeMicrophone, 'function', 'native enforcement requires revokeMicrophone');
-		assert.equal(typeof enforcement.revokeCamera, 'function', 'native enforcement requires revokeCamera');
-		assert.equal(typeof enforcement.revokeScreenShare, 'function', 'native enforcement requires revokeScreenShare');
-		this.sendPermissionEvent({type: 'permission.watch.stop'});
-		this.update(() => {
-			this.currentRoom = null;
-			this.nativeEnforcement = enforcement;
-		});
-		this.beginPermissionWatch(guildId, channelId);
-		logger.info('Started native permission watching', {guildId, channelId});
 	}
 
 	private beginPermissionWatch(guildId: string | null, channelId: string): void {
@@ -268,21 +207,6 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 			old: oldPermissions,
 			new: newPermissions,
 		});
-	}
-
-	handlePermissionChange(permission: 'speak' | 'stream' | 'video', allowed: boolean): void {
-		const room = this.currentRoom;
-		if (!room && !this.nativeEnforcement) {
-			logger.warn('No active media session');
-			return;
-		}
-		const previousSnapshot = this.snapshot;
-		this.sendPermissionEvent({type: 'permission.change', permission, allowed, roomPresent: true}, {room});
-		if (this.snapshot.context.permissions === previousSnapshot.context.permissions) {
-			logger.debug('Permission unchanged, skipping', {permission, allowed});
-			return;
-		}
-		logger.info('Processing permission change', {permission, allowed});
 	}
 
 	initializeSubscriptions(room: Room): void {
@@ -331,36 +255,6 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		logger.info('Complete', {deafened, participantCount: room.remoteParticipants.size});
 	}
 
-	updateSubscriptionsForPermissionChange(room: Room, permissions: VoiceChannelPermissions): void {
-		if (!room) {
-			logger.warn('No room provided');
-			return;
-		}
-		const oldPermissions = this.snapshot.context.permissions;
-		this.sendPermissionEvent({type: 'permission.update', permissions, roomPresent: true}, {room});
-		if (this.snapshot.context.permissions === oldPermissions) {
-			logger.debug('Permissions unchanged, skipping update');
-			return;
-		}
-		logger.debug('Permissions updated', {
-			old: oldPermissions,
-			new: permissions,
-		});
-		logger.info('Complete', {permissions});
-	}
-
-	canPublishAudio(): boolean {
-		return this.snapshot.context.permissions.canSpeak;
-	}
-
-	canPublishVideo(): boolean {
-		return this.snapshot.context.permissions.canUseVideo;
-	}
-
-	canPublishScreenShare(): boolean {
-		return this.snapshot.context.permissions.canStream;
-	}
-
 	private async handlePermissionRevoked(source: VoiceEngineV2AppPermissionTrackSource, room: Room): Promise<void> {
 		if (!room?.localParticipant) {
 			logger.warn('No local participant');
@@ -376,16 +270,20 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 						.map((pub) => pub.track)
 						.filter((track): track is LocalAudioTrack => Boolean(track));
 					if (tracks.length > 0) {
-						await removeVoiceInputProcessor();
 						await Promise.allSettled(tracks.map((track) => localParticipant.unpublishTrack(track)));
 					}
 					break;
 				}
-				case 'video':
+				case 'video': {
 					await enforceLocalMediaPublicationCap(localParticipant, 'camera');
+					const cameraTrack = getLocalCameraPublications(localParticipant)[0]?.track as LocalVideoTrack | undefined;
+					if (cameraTrack != null) {
+						await clearCameraVideoProcessor(cameraTrack);
+					}
 					await localParticipant.setCameraEnabled(false);
 					await enforceLocalMediaPublicationCap(localParticipant, 'camera');
 					break;
+				}
 				case 'screenShare':
 					await unpublishLocalMediaPublications(localParticipant, getLocalScreenSharePublications(localParticipant), {
 						stopOnUnpublish: true,
@@ -402,38 +300,12 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		syncLocalVoiceStateWithServer(canSpeak ? {} : {self_mute: true});
 	}
 
-	getPermissions(): VoiceChannelPermissions {
-		return {...this.snapshot.context.permissions};
-	}
-
-	setPermissions(permissions: Partial<VoiceChannelPermissions>): void {
-		const hasChanges = Object.entries(permissions).some(
-			([key, value]) => this.snapshot.context.permissions[key as keyof VoiceChannelPermissions] !== value,
-		);
-		if (!hasChanges) {
-			logger.debug('No changes detected, skipping update');
-			return;
-		}
-		this.sendPermissionEvent({type: 'permission.set', permissions});
-		logger.debug('Updated', {permissions: this.snapshot.context.permissions});
-	}
-
-	getDeafened(): boolean {
-		return this.snapshot.context.deafened;
-	}
-
 	reset(): void {
 		this.sendPermissionEvent({type: 'permission.reset'});
 		this.update(() => {
 			this.currentRoom = null;
-			this.nativeEnforcement = null;
 		});
 		logger.debug('Permissions reset to defaults');
-	}
-
-	extractUserIdFromIdentity(identity: string): string | null {
-		const match = identity.match(/^user_(\d+)(?:_(.+))?$/);
-		return match ? match[1] : null;
 	}
 }
 

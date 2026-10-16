@@ -3,21 +3,17 @@
 -module(push_normalize).
 -typing([eqwalizer]).
 
--export([
-    optional_guild_id/1,
-    notification_level/1
-]).
-
--spec optional_guild_id(term()) -> pos_integer() | undefined.
-optional_guild_id(Value) -> snowflake_id:parse_maybe(Value).
+-export([notification_level/1]).
 
 -spec notification_level(term()) -> integer() | undefined.
 notification_level(undefined) ->
     0;
 notification_level(null) ->
     0;
+notification_level(Value) when is_integer(Value), Value >= -1, Value =< 3 ->
+    Value;
 notification_level(Value) ->
     case guild_data_normalize_schema:int(Value) of
-        Level when Level >= -1, Level =< 3 -> Level;
+        Level when is_integer(Level), Level =< 3 -> Level;
         _ -> undefined
     end.

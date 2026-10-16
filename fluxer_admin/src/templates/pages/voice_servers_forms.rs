@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::form::form_field_with_id;
+
 use crate::{
     api::types::VoiceServer,
     config::AdminConfig,
@@ -26,6 +28,9 @@ pub fn edit_server_form(
     let lat_val = server.latitude.map_or_else(String::new, |v| v.to_string());
     let lng_val = server.longitude.map_or_else(String::new, |v| v.to_string());
     let is_active = server.is_active.unwrap_or(false);
+    let soft_limit_val = server
+        .soft_connection_limit
+        .map_or_else(String::new, |v| v.to_string());
     let vip_only = server.vip_only.unwrap_or(false);
     let features_csv = server.required_guild_features.join(", ");
     let guild_ids_csv = server.allowed_guild_ids.join(", ");
@@ -57,6 +62,15 @@ pub fn edit_server_form(
                         "Optional per-server coordinate override",
                     ))
                 }
+                (form_field_with_helper(
+                    "Soft Connection Limit",
+                    &format!("{id_prefix}-soft-connection-limit"),
+                    "soft_connection_limit",
+                    "number",
+                    &soft_limit_val,
+                    "Leave empty for no limit",
+                    "Placement prefers another server once this server holds this many connections",
+                ))
                 (form_field_with_helper(
                     "API Key",
                     &format!("{id_prefix}-api-key"),
@@ -105,6 +119,15 @@ pub fn create_server_form(config: &AdminConfig, region_id: &str, csrf_token: &st
                 (form_field_with_id("API Secret", "new-server-api-secret", "api_secret", "password", "", "LiveKit API secret", true))
                 (form_field_with_id("Latitude (optional)", "new-server-latitude", "latitude", "number", "", "40.7128", false))
                 (form_field_with_id("Longitude (optional)", "new-server-longitude", "longitude", "number", "", "-74.0060", false))
+                (form_field_with_helper(
+                    "Soft Connection Limit (optional)",
+                    "new-server-soft-connection-limit",
+                    "soft_connection_limit",
+                    "number",
+                    "",
+                    "Leave empty for no limit",
+                    "Placement prefers another server once this server holds this many connections",
+                ))
             }
             div class="space-y-3" {
                 (checkbox("is_active", "true", "Server is active", true, true))
@@ -119,31 +142,6 @@ pub fn create_server_form(config: &AdminConfig, region_id: &str, csrf_token: &st
             }
         }
     })
-}
-
-fn form_field_with_id(
-    label: &str,
-    id: &str,
-    name: &str,
-    input_type: &str,
-    value: &str,
-    placeholder: &str,
-    required: bool,
-) -> Markup {
-    html! {
-        div class="space-y-1" {
-            label for=(id) class="block text-sm font-medium text-neutral-700" {
-                (label)
-            }
-            input type=(input_type) id=(id) name=(name) value=(value)
-                placeholder=(placeholder) required[required]
-                step=[if input_type == "number" { Some("any") } else { None }]
-                class="block w-full rounded-md border border-neutral-300 \
-                       px-3 py-2 text-sm shadow-sm \
-                       focus:border-brand-primary focus:outline-none \
-                       focus:ring-1 focus:ring-brand-primary";
-        }
-    }
 }
 
 fn form_field_with_helper(

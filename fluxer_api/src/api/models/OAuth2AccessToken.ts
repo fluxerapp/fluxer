@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import type {OAuth2AccessTokenRow} from '../database/types/OAuth2Types';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import type {OAuth2AccessTokenRow} from '@app/api/database/types/OAuth2Types';
 
 export class OAuth2AccessToken {
 	readonly token: string;
 	readonly applicationId: ApplicationID;
-	readonly userId: UserID | null;
+	readonly userId: UserID;
 	readonly scope: Set<string>;
 	readonly createdAt: Date;
 
@@ -26,9 +26,5 @@ export class OAuth2AccessToken {
 			scope: this.scope,
 			created_at: this.createdAt,
 		};
-	}
-
-	hasScope(scope: string): boolean {
-		return this.scope.has(scope);
 	}
 }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioSidebar.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
-import styles from './StudioSidebar.module.css';
 
 interface StudioSidebarProps {
 	ariaLabel: string;
@@ -55,11 +55,6 @@ export const StudioSidebarItem: React.FC<StudioSidebarItemProps> = ({icon, label
 			) : null}
 		</button>
 	</FocusRing>
-);
-export const StudioSidebarGroupLabel: React.FC<{children: ReactNode}> = ({children}) => (
-	<div className={styles.groupLabel} data-flx="theme-studio.ui.studio-sidebar.studio-sidebar-group-label.group-label">
-		{children}
-	</div>
 );
 export const StudioSidebarFooterText: React.FC<{children: ReactNode}> = ({children}) => (
 	<span className={styles.footerText} data-flx="theme-studio.ui.studio-sidebar.studio-sidebar-footer-text.footer-text">

@@ -3,12 +3,14 @@
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {
+	ANNOUNCEMENT_CHANNEL_DESCRIPTOR,
 	PERSONAL_NOTES_DESCRIPTOR,
 	TEXT_CHANNEL_DESCRIPTOR,
 	VOICE_CHANNEL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {useLingui} from '@lingui/react/macro';
 import {useMemo} from 'react';
@@ -39,12 +41,7 @@ export const useChannelHeaderData = (channel?: Channel): ChannelHeaderData => {
 		}
 		return Users.getUser(channel.recipientIds[0]) ?? null;
 	}, [channel, isDM]);
-	const directMessageName = useMemo(() => {
-		if (!isDM || !recipient) {
-			return '';
-		}
-		return recipient.displayName;
-	}, [isDM, recipient]);
+	const directMessageName = isDM && recipient && channel ? NicknameUtils.getNickname(recipient, null, channel.id) : '';
 	const groupDMName = useMemo(() => {
 		if (!isGroupDM || !channel) {
 			return '';
@@ -72,6 +69,9 @@ export const useChannelHeaderData = (channel?: Channel): ChannelHeaderData => {
 		}
 		if (channel.type === ChannelTypes.GUILD_TEXT) {
 			return i18n._(TEXT_CHANNEL_DESCRIPTOR);
+		}
+		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT) {
+			return i18n._(ANNOUNCEMENT_CHANNEL_DESCRIPTOR);
 		}
 		if (channel.type === ChannelTypes.GUILD_VOICE) {
 			return i18n._(VOICE_CHANNEL_DESCRIPTOR);

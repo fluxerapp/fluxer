@@ -3,57 +3,57 @@
 import {Routes} from '@app/app/Routes';
 import {GuildLayout} from '@app/features/app/components/layout/GuildLayout';
 import Channels from '@app/features/channel/state/Channels';
-import {compareChannelPosition, filterViewableChannels} from '@app/features/messaging/utils/ChannelShared';
+import {pickDefaultGuildChannelId} from '@app/features/messaging/utils/ChannelShared';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect} from 'react';
 
+function isGuildRootPath(pathname: string, guildId: string): boolean {
+	if (guildId === ME || pathname === Routes.ME || pathname.startsWith(Routes.ME)) {
+		return false;
+	}
+	if (!pathname.startsWith('/channels/')) {
+		return false;
+	}
+	const segments = pathname.split('/');
+	return segments.length === 3 && segments[2] === guildId;
+}
+
+function resolveDefaultChannelId(guildId: string): string | null {
+	let selectedChannelId = SelectedChannel.selectedChannelIds.get(guildId);
+	const threadsActive = ThreadGuilds.isActive(guildId);
+	if (threadsActive && selectedChannelId) {
+		const selectedThread = Channels.getChannel(selectedChannelId);
+		if (selectedThread?.isThread()) {
+			if (ChannelThreads.getThread(selectedThread.id)) return selectedThread.id;
+			selectedChannelId = selectedThread.parentId ?? undefined;
+		}
+	}
+	return pickDefaultGuildChannelId({
+		guildId,
+		channels: Channels.getGuildChannels(guildId),
+		selectedChannelId,
+		threadsActive,
+	});
+}
+
 export const GuildChannelRouter = observer<{guildId: string; children: React.ReactNode}>(({guildId, children}) => {
 	const location = useLocation();
+	const needsDefaultChannel = !MobileLayout.enabled && isGuildRootPath(location.pathname, guildId);
+	const defaultChannelId = needsDefaultChannel ? resolveDefaultChannelId(guildId) : null;
 	useEffect(() => {
-		if (guildId === ME || location.pathname === Routes.ME) {
+		if (!defaultChannelId) {
 			return;
 		}
-		if (MobileLayout.enabled) {
-			return;
-		}
-		if (location.pathname.startsWith('/channels/') && !location.pathname.startsWith(Routes.ME)) {
-			if (location.pathname.split('/').length === 3) {
-				const pathSegments = location.pathname.split('/');
-				const currentGuildId = pathSegments[2];
-				if (currentGuildId !== guildId) {
-					return;
-				}
-				const selectedChannelId = SelectedChannel.selectedChannelIds.get(guildId);
-				if (selectedChannelId) {
-					const channel = Channels.getChannel(selectedChannelId);
-					const isViewableChannel = channel ? filterViewableChannels([channel]).length > 0 : false;
-					if (channel && channel.guildId === guildId && isViewableChannel) {
-						NavigationCommands.selectChannel(guildId, selectedChannelId, undefined, 'replace');
-					} else {
-						const channels = Channels.getGuildChannels(guildId);
-						const viewableChannels = filterViewableChannels(channels).sort(compareChannelPosition);
-						if (viewableChannels.length > 0) {
-							const firstChannel = viewableChannels[0];
-							NavigationCommands.selectChannel(guildId, firstChannel.id, undefined, 'replace');
-						}
-					}
-				} else {
-					const channels = Channels.getGuildChannels(guildId);
-					const viewableChannels = filterViewableChannels(channels).sort(compareChannelPosition);
-					if (viewableChannels.length > 0) {
-						const firstChannel = viewableChannels[0];
-						NavigationCommands.selectChannel(guildId, firstChannel.id, undefined, 'replace');
-					}
-				}
-			}
-		}
-	}, [guildId, location.pathname, MobileLayout.enabled]);
+		NavigationCommands.selectChannel(guildId, defaultChannelId, undefined, 'replace');
+	}, [guildId, defaultChannelId]);
 	if (guildId === ME || location.pathname === Routes.ME) {
 		return null;
 	}

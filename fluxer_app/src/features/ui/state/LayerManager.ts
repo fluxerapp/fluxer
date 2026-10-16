@@ -4,12 +4,17 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import type {PopoutKey} from '@app/features/ui/popover';
 
-type LayerType = 'modal' | 'popout' | 'contextmenu';
+export const LayerType = Object.freeze({
+	CONTEXT_MENU: 'contextmenu',
+	MODAL: 'modal',
+	POPOUT: 'popout',
+} as const);
+
+export type LayerType = (typeof LayerType)[keyof typeof LayerType];
 
 export interface Layer {
 	type: LayerType;
 	key: string | PopoutKey;
-	timestamp: number;
 	onClose?: () => void;
 }
 
@@ -23,32 +28,20 @@ class LayerManager {
 		document.addEventListener('keydown', this.handleGlobalEscape, {capture: true});
 	}
 
-	destroy() {
-		if (!this.isInitialized) return;
-		this.isInitialized = false;
-		document.removeEventListener('keydown', this.handleGlobalEscape, {capture: true});
-		this.layers = [];
-	}
-
 	private handleGlobalEscape = (event: KeyboardEvent) => {
 		if (event.key !== 'Escape') return;
 		const topLayer = this.getTopLayer();
 		if (!topLayer) return;
+		if (topLayer.type !== 'popout' && !topLayer.onClose) return;
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		if (topLayer.type === 'modal') {
-			if (topLayer.onClose) {
-				topLayer.onClose();
-			} else {
-				ModalCommands.pop();
-			}
-		} else if (topLayer.type === 'popout') {
+		if (topLayer.type === 'popout') {
 			topLayer.onClose?.();
 			this.removeLayer('popout', topLayer.key);
 			PopoutCommands.close(topLayer.key);
-		} else if (topLayer.type === 'contextmenu') {
-			topLayer.onClose?.();
+			return;
 		}
+		topLayer.onClose?.();
 	};
 
 	addLayer(type: LayerType, key: string | PopoutKey, onClose?: () => void) {
@@ -56,7 +49,6 @@ class LayerManager {
 		this.layers.push({
 			type,
 			key,
-			timestamp: Date.now(),
 			onClose,
 		});
 	}
@@ -69,10 +61,6 @@ class LayerManager {
 		return this.layers.length > 0 ? this.layers[this.layers.length - 1] : undefined;
 	}
 
-	hasLayers(): boolean {
-		return this.layers.length > 0;
-	}
-
 	isTopLayer(type: LayerType, key: string | PopoutKey): boolean {
 		const topLayer = this.getTopLayer();
 		return topLayer?.type === type && topLayer?.key === key;
@@ -80,11 +68,6 @@ class LayerManager {
 
 	hasType(type: LayerType): boolean {
 		return this.layers.some((l) => l.type === type);
-	}
-
-	isTopType(type: LayerType): boolean {
-		const top = this.getTopLayer();
-		return top?.type === type;
 	}
 
 	closeAll(): void {

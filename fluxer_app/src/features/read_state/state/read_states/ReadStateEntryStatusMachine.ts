@@ -1,57 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
-import {compareMessageIds} from './shared';
+import {compareMessageIds} from '@app/features/read_state/state/read_states/shared';
 
 export interface ReadStateEntryStatusInput {
-	canTrackUnreads: boolean;
+	supportsUnreadTracking: boolean;
 	hasBlockedDirectMessageRecipient: boolean;
-	readStateKnown: boolean;
 	lastMessageId: string | null;
 	ackMessageId: string | null;
+	ackTimestamp: number;
+	lastMessageTimestamp: number;
 	mentionCount: number;
 }
 
-export type ReadStateEntryStatusEvent = {
-	type: 'readStateEntry.updated';
-	input: ReadStateEntryStatusInput;
-};
-
-export type ReadStateEntryStatusValue = 'untracked' | 'blocked' | 'unknown' | 'read' | 'unread';
+type ReadStateEntryStatusValue = 'untracked' | 'blocked' | 'read' | 'unread';
 
 export interface ReadStateEntryStatusModel {
 	state: ReadStateEntryStatusValue;
 	canBeUnread: boolean;
-	canHaveMentions: boolean;
+	supportsMentions: boolean;
 	hasUnread: boolean;
 	hasMentions: boolean;
-	hasUnreadOrMentions: boolean;
-}
-
-function getStatusValue(snapshot: ReadStateEntryStatusSnapshot): ReadStateEntryStatusValue {
-	switch (snapshot.value) {
-		case 'untracked':
-			return 'untracked';
-		case 'blocked':
-			return 'blocked';
-		case 'unknown':
-			return 'unknown';
-		case 'unread':
-			return 'unread';
-		default:
-			return 'read';
-	}
+	isUnreadOrMentioned: boolean;
 }
 
 function isUnread(context: ReadStateEntryStatusInput): boolean {
-	if (!context.readStateKnown || context.lastMessageId == null) return false;
-	return compareMessageIds(context.ackMessageId, context.lastMessageId) < 0;
+	if (context.lastMessageId == null) return false;
+	if (context.ackMessageId != null) {
+		return compareMessageIds(context.ackMessageId, context.lastMessageId) < 0;
+	}
+	return context.ackTimestamp < context.lastMessageTimestamp;
 }
 
 function getStatusValueFromInput(input: ReadStateEntryStatusInput): ReadStateEntryStatusValue {
-	if (!input.canTrackUnreads) return 'untracked';
+	if (!input.supportsUnreadTracking) return 'untracked';
 	if (input.hasBlockedDirectMessageRecipient) return 'blocked';
-	if (!input.readStateKnown || input.lastMessageId == null) return 'unknown';
 	if (isUnread(input)) return 'unread';
 	return 'read';
 }
@@ -62,83 +44,16 @@ function buildStatusModel(
 ): ReadStateEntryStatusModel {
 	const hasMentions = input.mentionCount > 0;
 	const canBeUnread = state !== 'untracked';
-	const canHaveMentions = hasMentions && state !== 'untracked' && state !== 'blocked';
+	const supportsMentions = hasMentions && state !== 'untracked' && state !== 'blocked';
 	const hasUnread = state === 'unread';
 	return {
 		state,
 		canBeUnread,
-		canHaveMentions,
+		supportsMentions,
 		hasUnread,
 		hasMentions,
-		hasUnreadOrMentions: hasUnread || canHaveMentions,
+		isUnreadOrMentioned: hasUnread || supportsMentions,
 	};
-}
-
-export const readStateEntryStatusMachine = setup({
-	types: {} as {
-		context: ReadStateEntryStatusInput;
-		events: ReadStateEntryStatusEvent;
-		input: ReadStateEntryStatusInput;
-	},
-	actions: {
-		applyInput: assign(({event}) => {
-			if (event.type !== 'readStateEntry.updated') return {};
-			return event.input;
-		}),
-	},
-	guards: {
-		isUntracked: ({context}) => !context.canTrackUnreads,
-		isBlocked: ({context}) => context.hasBlockedDirectMessageRecipient,
-		isUnknown: ({context}) => !context.readStateKnown || context.lastMessageId == null,
-		isUnread: ({context}) => isUnread(context),
-	},
-}).createMachine({
-	id: 'readStateEntryStatus',
-	context: ({input}) => input,
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [
-				{guard: 'isUntracked', target: 'untracked'},
-				{guard: 'isBlocked', target: 'blocked'},
-				{guard: 'isUnknown', target: 'unknown'},
-				{guard: 'isUnread', target: 'unread'},
-				{target: 'read'},
-			],
-		},
-		untracked: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		blocked: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		unknown: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		read: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		unread: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-	},
-});
-
-export type ReadStateEntryStatusSnapshot = SnapshotFrom<typeof readStateEntryStatusMachine>;
-
-export function createReadStateEntryStatusSnapshot(input: ReadStateEntryStatusInput): ReadStateEntryStatusSnapshot {
-	return getInitialSnapshot(readStateEntryStatusMachine, input);
-}
-
-export function transitionReadStateEntryStatusSnapshot(
-	snapshot: ReadStateEntryStatusSnapshot,
-	event: ReadStateEntryStatusEvent,
-): ReadStateEntryStatusSnapshot {
-	return transition(readStateEntryStatusMachine, snapshot, event)[0] as ReadStateEntryStatusSnapshot;
-}
-
-export function selectReadStateEntryStatusModel(snapshot: ReadStateEntryStatusSnapshot): ReadStateEntryStatusModel {
-	return buildStatusModel(getStatusValue(snapshot), snapshot.context);
 }
 
 export function resolveReadStateEntryStatus(input: ReadStateEntryStatusInput): ReadStateEntryStatusModel {

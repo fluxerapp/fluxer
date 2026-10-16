@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import type {PopoutResizePositionSession} from '@app/features/ui/popover/PopoutResizePositionContext';
 import {appZoomCssPx, appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {getAdaptivePadding} from '@app/features/ui/utils/Positioning';
@@ -20,7 +21,6 @@ import {
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 
 const logger = new Logger('useAntiShiftFloating');
-const DEFAULT_MIDDLEWARE: Array<Middleware> = [];
 const TITLEBAR_SELECTOR = '[data-native-titlebar]';
 const ANTI_SHIFT_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,
@@ -52,21 +52,16 @@ interface FloatingState {
 	isReady: boolean;
 	offsetX: number;
 	offsetY: number;
+	placement: Placement;
 }
 
 interface UseAntiShiftFloatingOptions {
 	placement: Placement;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
-	middleware?: Array<Middleware>;
 	shouldAutoUpdate?: boolean;
 	shouldObserveFloatingResize?: boolean;
-	enableSmartBoundary?: boolean;
 	constrainHeight?: boolean;
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max);
 }
 
 function normalizePadding(padding: Padding): {top: number; right: number; bottom: number; left: number} {
@@ -249,7 +244,7 @@ function getNativeTitlebarInset(ownerDocument: Document): number {
 	return Math.max(0, rect.bottom - viewportTop);
 }
 
-function getBoundaryPadding(ownerDocument: Document, basePadding: number): Padding {
+export function getBoundaryPadding(ownerDocument: Document, basePadding: number): Padding {
 	const titlebarInset = getNativeTitlebarInset(ownerDocument);
 	if (titlebarInset <= 0) {
 		return basePadding;
@@ -262,25 +257,24 @@ function getBoundaryPadding(ownerDocument: Document, basePadding: number): Paddi
 	};
 }
 
-export function useAntiShiftFloating(
-	target: ReferenceElement | null,
-	enabled: boolean,
-	options: UseAntiShiftFloatingOptions,
-) {
+export function useAntiShiftFloating(target: ReferenceElement | null, options: UseAntiShiftFloatingOptions) {
 	const {
 		placement,
 		offsetMainAxis = 8,
 		offsetCrossAxis = 0,
-		middleware: extraMiddleware = DEFAULT_MIDDLEWARE,
 		shouldAutoUpdate = true,
 		shouldObserveFloatingResize = true,
-		enableSmartBoundary = false,
 		constrainHeight = false,
 	} = options;
 	const floatingRef = useRef<HTMLElement>(null);
+	const [floatingElement, setFloatingElement] = useState<HTMLElement | null>(null);
+	const setFloating = useCallback((element: HTMLElement | null) => {
+		floatingRef.current = element;
+		setFloatingElement(element);
+	}, []);
 	const [state, setState] = useState<FloatingState>(() => {
 		const {x, y} = target ? getInitialGuess(target, placement, offsetMainAxis, offsetCrossAxis) : {x: -9999, y: -9999};
-		return {x, y, isReady: false, offsetX: 0, offsetY: 0};
+		return {x, y, isReady: false, offsetX: 0, offsetY: 0, placement};
 	});
 	const cleanupRef = useRef<(() => void) | null>(null);
 	const isCalculatingRef = useRef(false);
@@ -294,7 +288,7 @@ export function useAntiShiftFloating(
 	const manualAbsolutePositionRef = useRef<{x: number; y: number} | null>(null);
 	const requestPositionUpdateRef = useRef<() => void>(() => {});
 	const updatePositionNow = useCallback(async () => {
-		if (!enabled || target == null || floatingRef.current == null) return;
+		if (target == null || floatingRef.current == null) return;
 		if (manualSessionIdRef.current != null || isCalculatingRef.current) {
 			pendingUpdateRef.current = true;
 			return;
@@ -308,14 +302,13 @@ export function useAntiShiftFloating(
 			const ownerDocument = floating.ownerDocument;
 			const ownerWindow = ownerDocument.defaultView;
 			if (ownerWindow == null) return;
-			const adaptivePadding = enableSmartBoundary ? getAdaptivePadding(ownerWindow) : 8;
+			const adaptivePadding = getAdaptivePadding(ownerWindow);
 			const shiftPadding = Math.max(6, adaptivePadding);
 			const boundaryPadding = getBoundaryPadding(ownerDocument, shiftPadding);
 			const middleware: Array<Middleware> = [
 				offset({mainAxis: offsetMainAxis, crossAxis: offsetCrossAxis}),
 				flip({padding: boundaryPadding}),
 				shift({padding: boundaryPadding, crossAxis: true}),
-				...extraMiddleware,
 			];
 			if (constrainHeight) {
 				middleware.push(
@@ -345,7 +338,11 @@ export function useAntiShiftFloating(
 					}),
 				);
 			}
-			const {x, y} = await computePosition(target, floating, {
+			const {
+				x,
+				y,
+				placement: resolvedPlacement,
+			} = await computePosition(target, floating, {
 				placement,
 				middleware,
 			});
@@ -387,11 +384,18 @@ export function useAntiShiftFloating(
 					prev.y === safeBasePosition.y &&
 					prev.isReady &&
 					prev.offsetX === nextOffset.x &&
-					prev.offsetY === nextOffset.y
+					prev.offsetY === nextOffset.y &&
+					prev.placement === resolvedPlacement
 				) {
 					return prev;
 				}
-				return {...safeBasePosition, isReady: true, offsetX: nextOffset.x, offsetY: nextOffset.y};
+				return {
+					...safeBasePosition,
+					isReady: true,
+					offsetX: nextOffset.x,
+					offsetY: nextOffset.y,
+					placement: resolvedPlacement,
+				};
 			});
 		} catch (error) {
 			logger.error('Error positioning floating element', error);
@@ -404,16 +408,7 @@ export function useAntiShiftFloating(
 				requestPositionUpdateRef.current();
 			}
 		}
-	}, [
-		enabled,
-		target,
-		placement,
-		offsetMainAxis,
-		offsetCrossAxis,
-		extraMiddleware,
-		enableSmartBoundary,
-		constrainHeight,
-	]);
+	}, [target, placement, offsetMainAxis, offsetCrossAxis, constrainHeight]);
 	const updatePosition = useCallback(() => {
 		pendingUpdateRef.current = true;
 		if (manualSessionIdRef.current != null || rafIdRef.current != null) return;
@@ -469,7 +464,7 @@ export function useAntiShiftFloating(
 		};
 	}, []);
 	useLayoutEffect(() => {
-		if (!enabled || target == null || floatingRef.current == null) {
+		if (target == null || floatingElement == null) {
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
@@ -477,7 +472,7 @@ export function useAntiShiftFloating(
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
-		const floating = floatingRef.current;
+		const floating = floatingElement;
 		updatePosition();
 		if (shouldAutoUpdate) {
 			const cleanupCallbacks = [
@@ -490,7 +485,7 @@ export function useAntiShiftFloating(
 				}
 			};
 		} else if (shouldObserveFloatingResize) {
-			cleanupRef.current = observeFloatingResize(floatingRef.current, updatePosition);
+			cleanupRef.current = observeFloatingResize(floating, updatePosition);
 		}
 		return () => {
 			positionRevisionRef.current += 1;
@@ -507,9 +502,10 @@ export function useAntiShiftFloating(
 			}
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 		};
-	}, [enabled, target, shouldAutoUpdate, shouldObserveFloatingResize, updatePosition, updatePositionNow]);
+	}, [target, floatingElement, shouldAutoUpdate, shouldObserveFloatingResize, updatePosition, updatePositionNow]);
 	return {
 		ref: floatingRef,
+		setFloating,
 		state,
 		style: {
 			position: 'fixed' as const,

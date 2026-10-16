@@ -12,6 +12,13 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import type {User} from '@app/features/user/models/User';
+import {
+	EMAIL_CHANGED_DESCRIPTOR,
+	INVALID_OR_EXPIRED_CODE_DESCRIPTOR,
+	NEW_EMAIL_DESCRIPTOR,
+	NEW_EMAIL_FORM_DESCRIPTOR,
+	UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import {pushApiErrorModal} from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
@@ -24,28 +31,9 @@ const UNABLE_TO_START_EMAIL_CHANGE_DESCRIPTOR = msg({
 	message: 'Unable to start email change',
 	comment: 'Error message in the email change modal.',
 });
-const INVALID_OR_EXPIRED_CODE_DESCRIPTOR = msg({
-	message: 'Invalid or expired code',
-	comment: 'Error message in the email change modal.',
-});
-const UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR = msg({
-	message: 'Unable to resend code right now',
-	comment: 'Error message in the email change modal.',
-});
-const EMAIL_CHANGED_DESCRIPTOR = msg({
-	message: 'Email changed',
-	comment: 'Short label in the email change modal. Keep it concise.',
-});
+
 const CHANGE_YOUR_EMAIL_DESCRIPTOR = msg({
 	message: 'Change your email',
-	comment: 'Short label in the email change modal. Keep it concise.',
-});
-const NEW_EMAIL_FORM_DESCRIPTOR = msg({
-	message: 'New email form',
-	comment: 'Short label in the email change modal. Keep it concise.',
-});
-const NEW_EMAIL_DESCRIPTOR = msg({
-	message: 'New email',
 	comment: 'Short label in the email change modal. Keep it concise.',
 });
 

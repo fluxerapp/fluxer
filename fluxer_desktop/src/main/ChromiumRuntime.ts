@@ -1,8 +1,11 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
+import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import type {BuildChannel} from '@electron/common/BuildChannel';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -26,22 +29,6 @@ const RUNTIME_CACHE_DIRECTORIES = [
 	'Default/ShaderCache',
 	'Service Worker/ScriptCache',
 	'Default/Service Worker/ScriptCache',
-];
-const MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES = [
-	'ScreenCaptureKitMac',
-	'ScreenCaptureKitMacWindow',
-	'ScreenCaptureKitMacScreen',
-	'ScreenCaptureKitPickerScreen',
-	'ScreenCaptureKitStreamPickerSonoma',
-	'WarmScreenCaptureSonoma',
-	'UseSCContentSharingPicker',
-];
-const WINDOWS_WEBRTC_WGC_DISABLED_FEATURES = [
-	'AllowWgcScreenCapturer',
-	'AllowWgcWindowCapturer',
-	'AllowWgcScreenZeroHz',
-	'AllowWgcWindowZeroHz',
-	'WebRtcWgcRequireBorder',
 ];
 const WINDOWS_NVIDIA_HEVC_DECODE_WORKAROUND_DEVICE_IDS = new Set([
 	4928, 4929, 4932, 4934, 4935, 4936, 4937, 4939, 4941, 4942, 4943, 4986, 4987, 4992, 4993, 4994, 5008, 5009, 5010,
@@ -89,9 +76,10 @@ const CHROMIUM_FEATURE_SWITCHES = new Set([
 	'enable-features',
 ]);
 
-const LINUX_FLAGS_CONFIG_FILE_NAMES: Record<'stable' | 'canary', Array<string>> = {
+const LINUX_FLAGS_CONFIG_FILE_NAMES: Record<BuildChannel, Array<string>> = {
 	stable: ['fluxer_desktop-flags.conf', 'fluxer-flags.conf'],
 	canary: ['fluxer_desktop_canary-flags.conf', 'fluxer-canary-flags.conf'],
+	development: ['fluxer_desktop_development-flags.conf', 'fluxer-development-flags.conf'],
 };
 
 export const MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE = 'MiddleClickAutoscroll';
@@ -109,9 +97,16 @@ interface RuntimeCacheState {
 	key?: string;
 }
 
+function statWithoutAsarRedirection(filePath: string): fs.Stats {
+	if (process.versions.electron == null) {
+		return fs.statSync(filePath);
+	}
+	return (createRequire(import.meta.url)('original-fs') as typeof fs).statSync(filePath);
+}
+
 function safeFileFingerprint(filePath: string): {mtimeMs: number | null; size: number | null} {
 	try {
-		const stat = fs.statSync(filePath);
+		const stat = statWithoutAsarRedirection(filePath);
 		return {mtimeMs: Math.trunc(stat.mtimeMs), size: stat.size};
 	} catch {
 		return {mtimeMs: null, size: null};
@@ -151,10 +146,6 @@ function resolveUserDataChild(userDataPath: string, relativePath: string): strin
 		return target;
 	}
 	return null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
 }
 
 function splitChromiumFeatureList(value: string): Array<string> {
@@ -275,7 +266,7 @@ export function appendDisabledChromiumFeatures(features: Iterable<string>): void
 	appendChromiumFeatureSwitch('disable-features', features);
 }
 
-export function appendLinuxChromiumFlagsConfig(channel: 'stable' | 'canary'): void {
+export function appendLinuxChromiumFlagsConfig(channel: BuildChannel): void {
 	if (process.platform !== 'linux') return;
 	const configHome = getLinuxConfigHome();
 	if (!configHome) {
@@ -303,47 +294,9 @@ export function appendLinuxChromiumFlagsConfig(channel: 'stable' | 'canary'): vo
 	}
 }
 
-export function addMacosPreSequoiaScreenCaptureDisabledFeatures(features: Set<string>): void {
-	if (process.platform !== 'darwin') return;
-	const majorRelease = Number.parseInt(os.release().split('.')[0] ?? '', 10);
-	if (!Number.isFinite(majorRelease) || majorRelease >= 24) return;
-	for (const feature of MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES) {
-		features.add(feature);
-	}
-}
-
-export function addWindowsWebRtcWgcDisabledFeatures(features: Set<string>): void {
-	if (process.platform !== 'win32') return;
-	for (const feature of WINDOWS_WEBRTC_WGC_DISABLED_FEATURES) {
-		features.add(feature);
-	}
-}
-
 export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void {
 	if (process.platform !== 'linux') return;
 	features.add('AcceleratedVideoEncoder');
-}
-
-export interface ChromiumCommandLine {
-	appendSwitch(name: string, value?: string): void;
-	getSwitchValue(name: string): string;
-	hasSwitch(name: string): boolean;
-}
-
-export function addLinuxScreenCapturePipeWireFeature(features: Set<string>): void {
-	if (process.platform !== 'linux') return;
-	features.add('WebRTCPipeWireCapturer');
-}
-
-export function hasConfiguredOzonePlatformSwitch(commandLine: ChromiumCommandLine = app.commandLine): boolean {
-	return commandLine.hasSwitch('ozone-platform') || commandLine.getSwitchValue('ozone-platform').length > 0;
-}
-
-export function appendLinuxOzonePlatformHint(commandLine: ChromiumCommandLine = app.commandLine): void {
-	if (process.platform !== 'linux') return;
-	if (hasConfiguredOzonePlatformSwitch(commandLine)) return;
-	if (commandLine.hasSwitch('ozone-platform-hint')) return;
-	commandLine.appendSwitch('ozone-platform-hint', 'auto');
 }
 
 export function addWindowsHardwareVideoEncodeFeatures(features: Set<string>): void {

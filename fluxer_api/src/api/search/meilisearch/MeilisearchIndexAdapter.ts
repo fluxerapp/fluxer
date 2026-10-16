@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
+import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
+import {
+	joinMeiliFilters,
+	type MeilisearchFilter,
+	meiliTermFilter,
+} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import type {MeilisearchIndexDefinition} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import type {MeilisearchClient, MeilisearchTask} from './MeilisearchClient';
-import type {MeilisearchFilter} from './MeilisearchFilterUtils';
-import {joinMeiliFilters} from './MeilisearchFilterUtils';
-import type {MeilisearchIndexDefinition} from './MeilisearchIndexDefinitions';
 
 const MAX_SEARCH_LIMIT = 1000;
+const MAX_TOTAL_HITS = 10000;
+
+export const MEILISEARCH_MAX_TRACKED_BULK_TASKS = 4096;
 
 interface MeilisearchIndexAdapterOptions<TFilters> {
 	client: MeilisearchClient;
@@ -22,6 +29,7 @@ interface MeilisearchSearchResponse<TResult> {
 	totalHits?: number;
 	limit?: number;
 	offset?: number;
+	facetDistribution?: Record<string, Record<string, number>>;
 }
 
 export class MeilisearchIndexAdapter<
@@ -35,7 +43,7 @@ export class MeilisearchIndexAdapter<
 	protected readonly buildFilters: (filters: TFilters) => Array<MeilisearchFilter | undefined>;
 	protected readonly buildSort: ((filters: TFilters) => Array<string> | undefined) | undefined;
 	protected readonly buildQuery: ((query: string, filters: TFilters) => string) | undefined;
-	private readonly pendingTaskIds = new Set<number>();
+	private readonly pendingBulkTaskIds = new Set<number>();
 	private initialized = false;
 
 	constructor(options: MeilisearchIndexAdapterOptions<TFilters>) {
@@ -54,18 +62,25 @@ export class MeilisearchIndexAdapter<
 				uid,
 				primaryKey: this.indexDefinition.primaryKey,
 			});
-			await this.waitForTask(task.taskUid);
+			try {
+				await this.client.waitForTask(task.taskUid);
+			} catch (error) {
+				if (!(error instanceof MeilisearchTaskError && error.code === 'index_already_exists')) {
+					throw error;
+				}
+			}
 		}
 		await Promise.all([
-			this.applySetting('searchable-attributes', this.indexDefinition.searchableAttributes),
-			this.applySetting('filterable-attributes', this.indexDefinition.filterableAttributes),
-			this.applySetting('sortable-attributes', this.indexDefinition.sortableAttributes),
+			this.applySetting('PUT', 'searchable-attributes', this.indexDefinition.searchableAttributes),
+			this.applySetting('PUT', 'filterable-attributes', this.indexDefinition.filterableAttributes),
+			this.applySetting('PUT', 'sortable-attributes', this.indexDefinition.sortableAttributes),
+			this.applySetting('PATCH', 'pagination', {maxTotalHits: MAX_TOTAL_HITS}),
 		]);
 		this.initialized = true;
 	}
 
 	async shutdown(): Promise<void> {
-		this.pendingTaskIds.clear();
+		this.pendingBulkTaskIds.clear();
 		this.initialized = false;
 	}
 
@@ -94,40 +109,45 @@ export class MeilisearchIndexAdapter<
 			return;
 		}
 		this.assertInitialised();
-		const task = await this.client.request<MeilisearchTask>(
+		await this.client.request<MeilisearchTask>(
 			'POST',
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents/delete-batch`,
 			ids,
 		);
-		this.trackTask(task.taskUid);
+	}
+
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		await this.deleteByFilter(meiliTermFilter(field, value));
 	}
 
 	async deleteByFilter(filter: MeilisearchFilter): Promise<void> {
 		this.assertInitialised();
-		const task = await this.client.request<MeilisearchTask>(
+		await this.client.request<MeilisearchTask>(
 			'POST',
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents/delete`,
 			{filter},
 		);
-		this.trackTask(task.taskUid);
 	}
 
 	async deleteAllDocuments(): Promise<void> {
 		this.assertInitialised();
-		const task = await this.client.request<MeilisearchTask>(
+		await this.client.request<MeilisearchTask>(
 			'DELETE',
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents`,
 		);
-		this.trackTask(task.taskUid);
 	}
 
 	async bulkIndexDocuments(docs: Array<TResult>): Promise<void> {
-		await this.addDocuments(docs);
+		const taskUid = await this.addDocuments(docs);
+		if (taskUid === undefined) {
+			return;
+		}
+		this.trackBulkTask(taskUid);
 	}
 
 	async refreshIndex(): Promise<void> {
-		const taskIds = Array.from(this.pendingTaskIds);
-		this.pendingTaskIds.clear();
+		const taskIds = Array.from(this.pendingBulkTaskIds);
+		this.pendingBulkTaskIds.clear();
 		await Promise.all(taskIds.map((taskId) => this.client.waitForTask(taskId)));
 	}
 
@@ -137,6 +157,7 @@ export class MeilisearchIndexAdapter<
 		const limit = Math.min(Math.max(requestedLimit, 0), MAX_SEARCH_LIMIT);
 		const offset = options?.offset ?? (options?.page ? (options.page - 1) * (options.hitsPerPage ?? 25) : 0);
 		const filter = joinMeiliFilters(this.buildFilters(filters));
+		const facets = options?.facets;
 		const result = await this.client.request<MeilisearchSearchResponse<TResult>>(
 			'POST',
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/search`,
@@ -148,11 +169,13 @@ export class MeilisearchIndexAdapter<
 				sort: this.buildSort?.(filters),
 				attributesToSearchOn: this.indexDefinition.searchableAttributes,
 				showRankingScore: false,
+				...(facets && facets.length > 0 ? {facets} : {}),
 			},
 		);
 		return {
 			hits: result.hits,
 			total: result.totalHits ?? result.estimatedTotalHits ?? result.hits.length,
+			...(result.facetDistribution ? {facetCounts: result.facetDistribution} : {}),
 		};
 	}
 
@@ -177,18 +200,22 @@ export class MeilisearchIndexAdapter<
 		}
 	}
 
-	private async applySetting(setting: string, value: Array<string>): Promise<void> {
+	private async applySetting(
+		method: 'PUT' | 'PATCH',
+		setting: string,
+		value: Array<string> | {maxTotalHits: number},
+	): Promise<void> {
 		const task = await this.client.request<MeilisearchTask>(
-			'PUT',
+			method,
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/settings/${setting}`,
 			value,
 		);
-		await this.waitForTask(task.taskUid);
+		await this.client.waitForTask(task.taskUid);
 	}
 
-	private async addDocuments(docs: Array<TResult>): Promise<void> {
+	private async addDocuments(docs: Array<TResult>): Promise<number | undefined> {
 		if (docs.length === 0) {
-			return;
+			return undefined;
 		}
 		this.assertInitialised();
 		const task = await this.client.request<MeilisearchTask>(
@@ -196,15 +223,16 @@ export class MeilisearchIndexAdapter<
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents`,
 			docs,
 		);
-		this.trackTask(task.taskUid);
+		return task.taskUid;
 	}
 
-	private trackTask(taskUid: number): void {
-		this.pendingTaskIds.add(taskUid);
-	}
-
-	private async waitForTask(taskUid: number): Promise<void> {
-		this.pendingTaskIds.delete(taskUid);
-		await this.client.waitForTask(taskUid);
+	private trackBulkTask(taskUid: number): void {
+		if (this.pendingBulkTaskIds.size >= MEILISEARCH_MAX_TRACKED_BULK_TASKS) {
+			const oldest = this.pendingBulkTaskIds.values().next().value;
+			if (oldest !== undefined) {
+				this.pendingBulkTaskIds.delete(oldest);
+			}
+		}
+		this.pendingBulkTaskIds.add(taskUid);
 	}
 }

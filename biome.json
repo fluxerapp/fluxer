@@ -20,7 +20,7 @@
 			"bracketSpacing": false,
 			"bracketSameLine": false
 		},
-		"globals": ["React"]
+		"globals": ["React", "__webpack_base_uri__"]
 	},
 	"json": {
 		"formatter": {
@@ -48,7 +48,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"noForEach": "off",
 				"noImportantStyles": "off",
@@ -83,11 +83,23 @@
 					}
 				},
 				"useConst": "error",
+				"noDescendingSpecificity": "off",
 				"noNonNullAssertion": "off",
-				"noParameterAssign": "off"
+				"noParameterAssign": "off",
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"@lingui/react": {
+								"importNames": ["I18nProvider"],
+								"message": "Use AppI18nProvider from @app/features/i18n/components/AppI18nProvider so <Trans> output stays safe under page translation."
+							}
+						}
+					}
+				}
 			},
 			"a11y": {
-				"recommended": true,
+				"preset": "recommended",
 				"useAriaPropsForRole": "error",
 				"useValidAriaRole": "error",
 				"useValidAriaValues": "error",
@@ -115,6 +127,32 @@
 		}
 	},
 	"assist": {"actions": {"source": {"organizeImports": "on"}}},
+	"overrides": [
+		{
+			"includes": ["fluxer_app/src/**/*.tsx"],
+			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
+		},
+		{
+			"includes": ["fluxer_docs/scripts/VerifyDocsCoverage.ts"],
+			"linter": {"rules": {"suspicious": {"noTemplateCurlyInString": "off"}}}
+		},
+		{
+			"includes": [
+				"fluxer_app/src/features/i18n/components/AppI18nProvider.tsx",
+				"fluxer_app/src/features/i18n/components/AppI18nProvider.test.tsx"
+			],
+			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
+		},
+		{
+			"includes": ["fluxer_app/src/**/*.worklet.js"],
+			"javascript": {"globals": ["AudioWorkletProcessor", "registerProcessor", "sampleRate", "currentTime"]}
+		},
+		{
+			"includes": ["**/*.astro"],
+			"linter": {"rules": {"correctness": {"noUnusedImports": "off", "noUnusedVariables": "off"}}},
+			"assist": {"actions": {"source": {"organizeImports": "off"}}}
+		}
+	],
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -125,7 +163,6 @@
 			"**",
 			"!**/.git",
 			"!**/app.css",
-			"!fluxer_admin/public/static/app.css",
 			"!**/build",
 			"fluxer_app/scripts/build",
 			"!**/dist",
@@ -145,7 +182,11 @@
 			"!fluxer_static",
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
-			"!fluxer_api/src/api/openapi/openapi.json"
+			"!fluxer_api/src/api/openapi/openapi.json",
+			"!fluxer_api/pkgs/email/src/email_i18n/weblate",
+			"!fluxer_api/src/api/content_i18n/weblate",
+			"!packages/errors/src/i18n/weblate",
+			"!**/auto-i18n-reviewed-unchanged.json"
 		],
 		"ignoreUnknown": true
 	}

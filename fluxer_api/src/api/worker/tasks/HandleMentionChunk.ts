@@ -1,11 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createChannelID,
+	createGuildID,
+	createMessageID,
+	createUserID,
+	type GuildID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {ReadStateMarker} from '@app/api/read_state/ReadStateRepository';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createChannelID, createGuildID, createMessageID, createUserID, type UserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
 
+const MENTION_SETTINGS_FETCH_CONCURRENCY = 16;
+const THREAD_READ_STATE_FLAGS = ReadStateFlags.IS_GUILD_CHANNEL | ReadStateFlags.IS_THREAD;
+
+function threadReadStateMarker(guildId: GuildID): ReadStateMarker | null {
+	return {flags: THREAD_READ_STATE_FLAGS, guildId};
+}
 const MentionChunkEntrySchema = z.object({
 	userId: z.string(),
 	direct: z.boolean().optional(),
@@ -18,6 +34,7 @@ const PayloadSchema = z.object({
 	guildId: z.string().optional(),
 	chunkIndex: z.number().int().nonnegative().optional(),
 	chunkCount: z.number().int().positive().optional(),
+	thread: z.boolean().optional(),
 	mentions: z.array(MentionChunkEntrySchema),
 });
 
@@ -55,6 +72,11 @@ const handleMentionChunk: WorkerTaskHandler = async (payload, helpers) => {
 	const channelId = createChannelID(BigInt(validated.channelId));
 	const messageId = createMessageID(BigInt(validated.messageId));
 	const guildId = validated.guildId ? createGuildID(BigInt(validated.guildId)) : null;
+	const marker = validated.thread && guildId !== null ? threadReadStateMarker(guildId) : null;
+	if (validated.thread && marker === null) {
+		Logger.debug({channelId, messageId}, 'Thread mention chunk outside the experiment, skipping');
+		return;
+	}
 	const mentions = mergeMentionEntries(validated.mentions);
 	if (mentions.length === 0) {
 		Logger.debug({channelId, messageId}, 'Mention chunk empty, skipping');
@@ -68,11 +90,14 @@ const handleMentionChunk: WorkerTaskHandler = async (payload, helpers) => {
 		}
 	>();
 	if (guildId != null) {
-		const resolvedSettings = await Promise.all(
-			mentions.map(async (mention) => ({
+		const mentionsNeedingSettings = mentions.filter((mention) => mention.everyone || mention.role);
+		const resolvedSettings = await mapWithConcurrency(
+			mentionsNeedingSettings,
+			MENTION_SETTINGS_FETCH_CONCURRENCY,
+			async (mention) => ({
 				userId: mention.userId,
 				settings: await userRepository.findGuildSettings(mention.userId, guildId),
-			})),
+			}),
 		);
 		for (const {userId, settings: userSettings} of resolvedSettings) {
 			settingsByUserId.set(userId.toString(), {
@@ -109,7 +134,7 @@ const handleMentionChunk: WorkerTaskHandler = async (payload, helpers) => {
 		return;
 	}
 	await readStateService.bulkIncrementMentionCounts(
-		countedMentions.map((mention) => ({userId: mention.userId, channelId, messageId})),
+		countedMentions.map((mention) => ({userId: mention.userId, channelId, messageId, marker})),
 	);
 	if (guildId != null) {
 		await userRepository.createRecentMentions(

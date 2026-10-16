@@ -111,8 +111,7 @@
 
 .dotsButton:hover,
 .dotsButton:focus-visible,
-.dotsButton[data-context-menu-open='true'],
-.dotsButtonActive {
+.dotsButton[data-context-menu-open='true'] {
 	color: var(--text-primary);
 	background-color: var(--background-modifier-hover);
 }
@@ -284,16 +283,19 @@
 	box-shadow: inset 0 -0.0625rem 0 var(--background-modifier-accent);
 }
 
-.permissionSectionRow {
-	display: flex;
-	align-items: flex-start;
-	flex-direction: column;
-	gap: var(--spacing-1);
-}
-
 .permissionSectionHelper {
 	margin: 0;
 	font-size: 0.8125rem;
 	line-height: 1.4;
 	color: var(--text-primary-muted);
+}
+
+.systemShortcutsCommands {
+	margin: 0;
+	overflow-x: auto;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-primary);
+	white-space: pre;
 }

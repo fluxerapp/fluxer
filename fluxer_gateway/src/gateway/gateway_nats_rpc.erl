@@ -4,9 +4,9 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0, get_connection/0, is_connected/0, subscribe/2]).
+-export([start_link/0, get_connection/0, subscribe/2]).
 -export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
--export([rpc_subjects_for_role/1, handle_rpc_request/3]).
+
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -dialyzer(
@@ -17,14 +17,6 @@
     ]}
 ).
 
--spec rpc_subjects_for_role(atom()) -> [binary()].
-rpc_subjects_for_role(Role) ->
-    gateway_nats_rpc_handler:rpc_subjects_for_role(Role).
-
--spec handle_rpc_request(binary(), binary(), binary()) -> ok.
-handle_rpc_request(Subject, Payload, ReplyTo) ->
-    gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo).
-
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -32,17 +24,6 @@ start_link() ->
 -spec get_connection() -> {ok, nats:conn() | undefined} | {error, term()}.
 get_connection() ->
     gen_server:call(?MODULE, get_connection).
-
--spec is_connected() -> boolean().
-is_connected() ->
-    try get_connection() of
-        {ok, Conn} when Conn =/= undefined -> true;
-        _ -> false
-    catch
-        throw:_ -> false;
-        error:_ -> false;
-        exit:_ -> false
-    end.
 
 -spec subscribe(binary(), binary()) -> {ok, term()} | {error, term()}.
 subscribe(Subject, QueueGroup) ->
@@ -346,6 +327,7 @@ subscribe_recorded_extra_subject(
 ) ->
     case nats:sub(Conn, Subject, subscription_opts(QueueGroup)) of
         {ok, Sid} ->
+            notify_resubscribed(Subject),
             Acc#{Key => Sub#{sid => Sid}};
         {error, Reason} ->
             logger:error("Gateway NATS RPC failed to resubscribe extra subject", #{
@@ -381,9 +363,48 @@ handle_msg(
         true ->
             dispatch_rpc(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State);
         false ->
-            ReplyTo = maps:get(reply_to, MsgOpts, undefined),
-            gateway_rollout_config ! {nats_msg, Subject, Payload, ReplyTo},
+            deliver_subject(Subject, Payload, maps:get(reply_to, MsgOpts, undefined)),
             State
+    end.
+
+-spec subject_owner(binary()) -> atom() | undefined.
+subject_owner(<<"config.gateway.rollout">>) -> gateway_rollout_config;
+subject_owner(<<"config.channel.threads">>) -> channel_threads_config;
+subject_owner(_Subject) -> undefined.
+
+-spec notify_resubscribed(binary()) -> ok.
+notify_resubscribed(Subject) ->
+    case subject_owner(Subject) of
+        undefined -> ok;
+        Owner -> notify_owner(whereis(Owner), Subject)
+    end.
+
+-spec notify_owner(pid() | undefined, binary()) -> ok.
+notify_owner(Pid, Subject) when is_pid(Pid) ->
+    Pid ! {nats_resubscribed, Subject},
+    ok;
+notify_owner(undefined, _Subject) ->
+    ok.
+
+-spec deliver_subject(binary(), binary(), binary() | undefined) -> ok.
+deliver_subject(Subject, Payload, ReplyTo) ->
+    case subject_owner(Subject) of
+        undefined ->
+            logger:warning("Gateway NATS RPC has no owner for subject", #{subject => Subject});
+        Owner ->
+            deliver_to_owner(Owner, Subject, Payload, ReplyTo)
+    end.
+
+-spec deliver_to_owner(atom(), binary(), binary(), binary() | undefined) -> ok.
+deliver_to_owner(Owner, Subject, Payload, ReplyTo) ->
+    case whereis(Owner) of
+        undefined ->
+            logger:warning("Gateway NATS RPC subject owner is not running", #{
+                subject => Subject, owner => Owner
+            });
+        Pid ->
+            Pid ! {nats_msg, Subject, Payload, ReplyTo},
+            ok
     end.
 
 -spec dispatch_rpc(

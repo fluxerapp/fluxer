@@ -17,13 +17,13 @@ import {
 	MobileMediaViewer,
 } from '@app/features/messaging/components/modals/media_modal/MediaViewers';
 import {MobileMediaActions} from '@app/features/messaging/components/modals/media_modal/MobileMediaActions';
+import {MIN_ZOOM_SCALE} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomMath';
 import type {PanZoomSurfaceHandle} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {PanZoomTransformSnapshot} from '@app/features/messaging/components/modals/media_modal/pan_zoom/usePanZoomSurface';
 import {
 	ATTACHMENT_DESCRIPTOR,
 	ATTACHMENT_THUMBNAILS_DESCRIPTOR,
 	CLOSE_MEDIA_VIEWER_DESCRIPTOR,
-	clamp,
 	getNativeTitlebarHeight,
 	getViewportPadding,
 	type MediaModalProps,
@@ -36,11 +36,13 @@ import {
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import {Scroller} from '@app/features/ui/components/Scroller';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {MobileVideoViewer} from '@app/features/voice/components/modals/MobileVideoViewer';
 import {useLingui} from '@lingui/react/macro';
 import {CaretLeftIcon, CaretRightIcon} from '@phosphor-icons/react';
@@ -49,6 +51,38 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type {CSSProperties, FC, KeyboardEvent as ReactKeyboardEvent} from 'react';
 import {createElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+
+interface PanZoomInfo {
+	zoomPercent: number;
+	isDefault: boolean;
+	canZoomIn: boolean;
+	canZoomOut: boolean;
+}
+
+function buildPanZoomInfo(snapshot: PanZoomTransformSnapshot): PanZoomInfo {
+	return {
+		zoomPercent: Math.round(snapshot.scale * 100),
+		isDefault: snapshot.isDefault,
+		canZoomIn: snapshot.canZoomIn,
+		canZoomOut: snapshot.canZoomOut,
+	};
+}
+
+function isSamePanZoomInfo(a: PanZoomInfo, b: PanZoomInfo): boolean {
+	return (
+		a.zoomPercent === b.zoomPercent &&
+		a.isDefault === b.isDefault &&
+		a.canZoomIn === b.canZoomIn &&
+		a.canZoomOut === b.canZoomOut
+	);
+}
+
+const FITTED_PAN_ZOOM_INFO: PanZoomInfo = {
+	zoomPercent: Math.round(MIN_ZOOM_SCALE * 100),
+	isDefault: true,
+	canZoomIn: true,
+	canZoomOut: false,
+};
 
 export const MediaModal: FC<MediaModalProps> = observer(
 	({
@@ -62,6 +96,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		onOpenInBrowser,
 		onCopyLink,
 		onCopyMedia,
+		onDeleteAttachment,
 		onReply,
 		onForward,
 		children,
@@ -82,7 +117,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		const prefersReducedMotion = Accessibility.useReducedMotion;
 		const [zoomState, setZoomState] = useState<ZoomState>('fit');
 		const [rotation, setRotation] = useState(0);
-		const [panZoomInfo, setPanZoomInfo] = useState({zoomPercent: 100, isDefault: true});
+		const [panZoomInfo, setPanZoomInfo] = useState<PanZoomInfo>(FITTED_PAN_ZOOM_INFO);
 		const [isHudHovered, setIsHudHovered] = useState(false);
 		const [viewportPadding, setViewportPadding] = useState(getViewportPadding);
 		const [nativeTitlebarHeight, setNativeTitlebarHeight] = useState(getNativeTitlebarHeight);
@@ -92,8 +127,6 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		const bottomInfoBarRef = useRef<HTMLDivElement>(null);
 		const thumbnailCarouselRef = useRef<HTMLDivElement>(null);
 		const latestIndexRef = useRef(currentIndex ?? 0);
-		const transformFrameRef = useRef<number | null>(null);
-		const pendingPanZoomInfoRef = useRef(panZoomInfo);
 		const [topOverlayHeight, setTopOverlayHeight] = useState(0);
 		const [bottomOverlayHeight, setBottomOverlayHeight] = useState(0);
 		const measureOverlayHeights = useCallback(() => {
@@ -123,28 +156,8 @@ export const MediaModal: FC<MediaModalProps> = observer(
 			setZoomState((previousState) => (previousState === state ? previousState : state));
 		}, []);
 		const handleTransformChange = useCallback((snapshot: PanZoomTransformSnapshot) => {
-			const nextInfo = {
-				zoomPercent: Math.round(snapshot.scale * 100),
-				isDefault: snapshot.isDefault,
-			};
-			const pendingInfo = pendingPanZoomInfoRef.current;
-			if (pendingInfo.zoomPercent === nextInfo.zoomPercent && pendingInfo.isDefault === nextInfo.isDefault) {
-				return;
-			}
-			pendingPanZoomInfoRef.current = nextInfo;
-			if (transformFrameRef.current != null) {
-				return;
-			}
-			transformFrameRef.current = window.requestAnimationFrame(() => {
-				transformFrameRef.current = null;
-				setPanZoomInfo((previousInfo) => {
-					const latestInfo = pendingPanZoomInfoRef.current;
-					if (previousInfo.zoomPercent === latestInfo.zoomPercent && previousInfo.isDefault === latestInfo.isDefault) {
-						return previousInfo;
-					}
-					return latestInfo;
-				});
-			});
+			const nextInfo = buildPanZoomInfo(snapshot);
+			setPanZoomInfo((previousInfo) => (isSamePanZoomInfo(previousInfo, nextInfo) ? previousInfo : nextInfo));
 		}, []);
 		const handleResetMedia = useCallback(() => {
 			panZoomHandleRef.current?.reset();
@@ -168,22 +181,10 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		const handleHudPointerLeave = useCallback(() => {
 			setIsHudHovered(false);
 		}, []);
-		useEffect(() => {
-			pendingPanZoomInfoRef.current = panZoomInfo;
-		}, [panZoomInfo]);
-		useEffect(() => {
-			return () => {
-				if (transformFrameRef.current != null) {
-					window.cancelAnimationFrame(transformFrameRef.current);
-				}
-			};
-		}, []);
 		useLayoutEffect(() => {
 			if (currentIndex !== undefined) {
 				latestIndexRef.current = currentIndex;
-				const defaultInfo = {zoomPercent: 100, isDefault: true};
-				pendingPanZoomInfoRef.current = defaultInfo;
-				setPanZoomInfo(defaultInfo);
+				setPanZoomInfo(FITTED_PAN_ZOOM_INFO);
 				setRotation(0);
 			}
 		}, [currentIndex]);
@@ -359,14 +360,14 @@ export const MediaModal: FC<MediaModalProps> = observer(
 				<div
 					className={styles.mediaContainer}
 					style={{'--media-rotation': `${rotation}deg`} as CSSProperties}
-					data-media-rotation-active={hasCustomRotation ? 'true' : undefined}
 					data-rotation-swapped={isRotationSwapped ? 'true' : undefined}
+					data-pan-zoom-measured-box="true"
 					data-flx="messaging.media-modal.wrapped-children.media-container"
 				>
 					{children}
 				</div>
 			),
-			[children, rotation, hasCustomRotation, isRotationSwapped],
+			[children, rotation, isRotationSwapped],
 		);
 		const mediaContent = isMobileVideo
 			? createElement(MobileVideoViewer, {
@@ -621,6 +622,8 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onForward={onForward}
 									onClose={handleClose}
 									canReset={!panZoomInfo.isDefault || hasCustomRotation}
+									canZoomIn={panZoomInfo.canZoomIn}
+									canZoomOut={panZoomInfo.canZoomOut}
 									enableZoomControls={enablePanZoom}
 									onPointerEnter={handleHudPointerEnter}
 									onPointerLeave={handleHudPointerLeave}
@@ -635,6 +638,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onOpenInBrowser={onOpenInBrowser}
 									onCopyLink={onCopyLink}
 									onCopyMedia={onCopyMedia}
+									onDeleteAttachment={onDeleteAttachment}
 									onReset={handleResetMedia}
 									onZoomIn={handleZoomIn}
 									onZoomOut={handleZoomOut}
@@ -644,6 +648,8 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onForward={onForward}
 									onClose={handleClose}
 									canReset={!panZoomInfo.isDefault || hasCustomRotation}
+									canZoomIn={panZoomInfo.canZoomIn}
+									canZoomOut={panZoomInfo.canZoomOut}
 									enableZoomControls={enablePanZoom}
 									onPointerEnter={handleHudPointerEnter}
 									onPointerLeave={handleHudPointerLeave}
@@ -658,7 +664,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onPointerLeave={handleHudPointerLeave}
 									data-flx="messaging.media-modal.bottom-info-bar"
 								>
-									{[fileName, dimensions, fileSize, `${panZoomInfo.zoomPercent}%`]
+									{[fileName, dimensions, fileSize, formatRoundedPercentage(i18n.locale, panZoomInfo.zoomPercent)]
 										.filter(Boolean)
 										.map((part, index) => (
 											<span

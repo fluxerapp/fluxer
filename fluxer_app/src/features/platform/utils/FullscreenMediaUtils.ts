@@ -16,7 +16,7 @@ export function getFullscreenElement(): Element | null {
 	);
 }
 
-export function isFullscreenMediaElement(element: Element | null): boolean {
+function isFullscreenMediaElement(element: Element | null): boolean {
 	if (!element) return false;
 	if (typeof HTMLVideoElement !== 'undefined' && element instanceof HTMLVideoElement) return true;
 	return element.matches(EMBED_MEDIA_SELECTOR) || element.matches(MEDIA_FULLSCREEN_ROOT_SELECTOR);

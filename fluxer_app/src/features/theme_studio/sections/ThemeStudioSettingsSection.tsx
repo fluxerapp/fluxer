@@ -3,14 +3,16 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import styles from '@app/features/theme_studio/sections/ThemeStudioSettingsSection.module.css';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -30,8 +32,6 @@ import {ArrowCounterClockwiseIcon, ShareNetworkIcon, TrashIcon} from '@phosphor-
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import {StudioButton} from '../ui/StudioButton';
 
 const SYNC_CUSTOM_CSS_DESCRIPTOR = msg({
 	message: 'Sync custom CSS?',
@@ -138,7 +138,7 @@ export const SettingsSection: React.FC = observer(() => {
 					ModalCommands.push(
 						modal(() => (
 							<ConfirmModal
-								title={i18n._(RESTART_DESCRIPTOR, {productName: PRODUCT_NAME})}
+								title={i18n._(RESTART_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 								description={i18n._(TRANSPARENCY_RESTART_DESCRIPTION_DESCRIPTOR)}
 								primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
 								secondaryText={i18n._(LATER_DESCRIPTOR)}
@@ -274,7 +274,7 @@ export const SettingsSection: React.FC = observer(() => {
 								<ul className={styles.noticeList} data-flx="theme-studio.settings-section.notice-list--linux">
 									<li data-flx="theme-studio.theme-studio-settings-section.settings-section.li">
 										<Trans>
-											Resize, maximize, and window snapping depend on the compositor. Wayland without client-side
+											Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side
 											decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck.
 										</Trans>
 									</li>

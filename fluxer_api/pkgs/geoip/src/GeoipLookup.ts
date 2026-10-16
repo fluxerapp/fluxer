@@ -4,8 +4,6 @@ import {getRegionDisplayName} from '@fluxer/geo_utils/src/RegionFormatting';
 import {getSameIpDecisionKey, isValidIp, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
 import maxmind, {type CityResponse, type Reader} from 'maxmind';
 
-export const UNKNOWN_LOCATION = 'Unknown Location';
-
 export interface GeoipResult {
 	countryCode: string | null;
 	normalizedIp: string | null;
@@ -15,6 +13,8 @@ export interface GeoipResult {
 	countryName: string | null;
 	latitude?: number | null;
 	longitude?: number | null;
+	accuracyRadiusKm?: number | null;
+	timeZone?: string | null;
 }
 
 type CacheEntry = {
@@ -23,6 +23,7 @@ type CacheEntry = {
 };
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 10_000;
 const geoipCache = new Map<string, CacheEntry>();
 
 let maxmindReader: Reader<CityResponse> | null = null;
@@ -38,6 +39,8 @@ function buildFallbackResult(normalizedIp: string): GeoipResult {
 		countryName: null,
 		latitude: null,
 		longitude: null,
+		accuracyRadiusKm: null,
+		timeZone: null,
 	};
 }
 
@@ -85,6 +88,32 @@ function isAsciiUpperAlpha2(value: string): boolean {
 	);
 }
 
+function getCachedGeoipResult(cacheKey: string, normalizedIp: string): GeoipResult | null {
+	const cached = geoipCache.get(cacheKey);
+	if (!cached) {
+		return null;
+	}
+	if (Date.now() >= cached.expiresAt) {
+		geoipCache.delete(cacheKey);
+		return null;
+	}
+	geoipCache.delete(cacheKey);
+	geoipCache.set(cacheKey, cached);
+	return {...cached.result, normalizedIp};
+}
+
+function setCachedGeoipResult(cacheKey: string, result: GeoipResult): void {
+	geoipCache.delete(cacheKey);
+	if (geoipCache.size >= CACHE_MAX_ENTRIES) {
+		const oldestKey = geoipCache.keys().next().value;
+		if (oldestKey === undefined) {
+			throw new Error('GeoIP cache reached capacity without an entry to evict');
+		}
+		geoipCache.delete(oldestKey);
+	}
+	geoipCache.set(cacheKey, {result, expiresAt: Date.now() + CACHE_TTL_MS});
+}
+
 async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult> {
 	try {
 		const reader = await ensureReader(dbPath);
@@ -101,6 +130,8 @@ async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult
 			countryName: record.country?.names?.en ?? (countryCode ? countryDisplayName(countryCode) : null) ?? null,
 			latitude: record.location?.latitude ?? null,
 			longitude: record.location?.longitude ?? null,
+			accuracyRadiusKm: record.location?.accuracy_radius ?? null,
+			timeZone: record.location?.time_zone ?? null,
 		};
 	} catch {
 		return buildFallbackResult(clean);
@@ -108,14 +139,13 @@ async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult
 }
 
 async function resolveGeoip(clean: string, dbPath: string): Promise<GeoipResult> {
-	const now = Date.now();
 	const cacheKey = getSameIpDecisionKey(clean) ?? clean;
-	const cached = geoipCache.get(cacheKey);
-	if (cached && now < cached.expiresAt) {
-		return {...cached.result, normalizedIp: clean};
+	const cached = getCachedGeoipResult(cacheKey, clean);
+	if (cached) {
+		return cached;
 	}
 	const result = await lookupMaxmind(clean, dbPath);
-	geoipCache.set(cacheKey, {result, expiresAt: now + CACHE_TTL_MS});
+	setCachedGeoipResult(cacheKey, result);
 	return result;
 }
 
@@ -130,11 +160,18 @@ export async function lookupGeoipByIp(ip: string, dbPath: string | undefined): P
 	return resolveGeoip(clean, dbPath);
 }
 
-export function formatGeoipLocation(result: GeoipResult): string | null {
+export function resetGeoipReadersForTesting(): void {
+	maxmindReader = null;
+	maxmindReaderPromise = null;
+	geoipCache.clear();
+}
+
+export function formatGeoipLocation(result: GeoipResult, locale?: string | null): string | null {
 	const parts: Array<string> = [];
 	if (result.city) parts.push(result.city);
 	if (result.region) parts.push(result.region);
-	const countryLabel = result.countryName ?? result.countryCode;
+	const localizedCountry = locale && result.countryCode ? countryDisplayName(result.countryCode, locale) : null;
+	const countryLabel = localizedCountry ?? result.countryName ?? result.countryCode;
 	if (countryLabel) parts.push(countryLabel);
 	return parts.length > 0 ? parts.join(', ') : null;
 }

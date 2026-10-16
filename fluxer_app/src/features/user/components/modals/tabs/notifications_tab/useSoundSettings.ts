@@ -1,24 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
+import {CUSTOM_SOUND_MAX_SIZE_BYTES} from '@app/features/app/config/I18nDisplayConstants';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as CustomSoundDB from '@app/features/notification/utils/CustomSoundDB';
 import {getSoundLabels} from '@app/features/notification/utils/SoundLabels';
 import {clearCustomSoundCache, type SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
+import {INVALID_AUDIO_FILE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-const INVALID_AUDIO_FILE_DESCRIPTOR = msg({
-	message: 'Invalid audio file',
-	comment: 'Error message in the use sound settings.',
-});
 const CHOOSE_A_SUPPORTED_AUDIO_FILE_DESCRIPTOR = msg({
 	message: 'Choose a supported audio file and try again.',
 	comment: 'Body of the error modal shown when a custom notification sound file is invalid.',
+});
+const FILE_IS_TOO_LARGE_MAXIMUM_SIZE_IS_DESCRIPTOR = msg({
+	message: 'File is too large. Maximum size is {maxSize}.',
+	comment: 'Form validation error for an asset that exceeds the maximum file size.',
 });
 const CUSTOM_SOUND_UPLOADED_SUCCESSFULLY_DESCRIPTOR = msg({
 	message: 'Custom sound uploaded successfully',
@@ -68,22 +71,6 @@ export function useSoundSettings() {
 	const handleToggleSound = (soundType: SoundType, enabled: boolean) => {
 		SoundCommands.updateSoundSettings({soundType, enabled});
 	};
-	const handleEnableAllSounds = () => {
-		Object.keys(soundTypeLabels).forEach((soundType) => {
-			SoundCommands.updateSoundSettings({
-				soundType: soundType as SoundType,
-				enabled: true,
-			});
-		});
-	};
-	const handleDisableAllSounds = () => {
-		Object.keys(soundTypeLabels).forEach((soundType) => {
-			SoundCommands.updateSoundSettings({
-				soundType: soundType as SoundType,
-				enabled: false,
-			});
-		});
-	};
 	const handlePreviewSound = useCallback((soundType: SoundType) => {
 		SoundCommands.stopAllSounds();
 		SoundCommands.previewSound(soundType);
@@ -112,10 +99,16 @@ export function useSoundSettings() {
 			}
 			const validation = CustomSoundDB.isValidAudioFile(file);
 			if (!validation.valid) {
-				showUserErrorModal(
-					i18n._(INVALID_AUDIO_FILE_DESCRIPTOR),
-					validation.error || i18n._(CHOOSE_A_SUPPORTED_AUDIO_FILE_DESCRIPTOR),
-				);
+				showGenericErrorModal({
+					title: i18n._(INVALID_AUDIO_FILE_DESCRIPTOR),
+					message:
+						validation.reason === 'too_large'
+							? i18n._(FILE_IS_TOO_LARGE_MAXIMUM_SIZE_IS_DESCRIPTOR, {
+									maxSize: formatFileSize(i18n.locale, CUSTOM_SOUND_MAX_SIZE_BYTES),
+								})
+							: i18n._(CHOOSE_A_SUPPORTED_AUDIO_FILE_DESCRIPTOR),
+					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+				});
 				return;
 			}
 			try {
@@ -131,7 +124,11 @@ export function useSoundSettings() {
 					children: i18n._(CUSTOM_SOUND_UPLOADED_SUCCESSFULLY_DESCRIPTOR),
 				});
 			} catch {
-				showUserErrorModal(i18n._(FAILED_TO_UPLOAD_CUSTOM_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				showGenericErrorModal({
+					title: i18n._(FAILED_TO_UPLOAD_CUSTOM_SOUND_DESCRIPTOR),
+					message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+				});
 			}
 		},
 		[i18n],
@@ -150,7 +147,11 @@ export function useSoundSettings() {
 					children: i18n._(CUSTOM_SOUND_REMOVED_DESCRIPTOR),
 				});
 			} catch {
-				showUserErrorModal(i18n._(FAILED_TO_REMOVE_CUSTOM_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				showGenericErrorModal({
+					title: i18n._(FAILED_TO_REMOVE_CUSTOM_SOUND_DESCRIPTOR),
+					message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+				});
 			}
 		},
 		[i18n],
@@ -167,8 +168,6 @@ export function useSoundSettings() {
 		customSounds,
 		handleToggleAllSounds,
 		handleToggleSound,
-		handleEnableAllSounds,
-		handleDisableAllSounds,
 		handlePreviewSound,
 		handleUploadClick,
 		handleCustomSoundDelete,

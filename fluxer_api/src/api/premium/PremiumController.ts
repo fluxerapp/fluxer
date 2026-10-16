@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {Validator} from '@app/api/Validator';
 import {
 	PremiumStateQueryRequest,
 	PremiumStateResponse,
 	UpdatePremiumPerksDisabledRequest,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function PremiumController(app: HonoApp) {
 	app.get(
@@ -32,7 +33,8 @@ export function PremiumController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const {country_code} = ctx.req.valid('query');
-			const state = await ctx.get('stripeService').getPremiumState(userId, country_code);
+			const geoip = await lookupGeoip(ctx.req.raw);
+			const state = await ctx.get('stripeService').premiumState.getState(userId, geoip.countryCode ?? country_code);
 			return ctx.json(state);
 		},
 	);
@@ -55,7 +57,7 @@ export function PremiumController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const {disabled} = ctx.req.valid('json');
-			const state = await ctx.get('stripeService').setPremiumPerksDisabled(userId, disabled);
+			const state = await ctx.get('stripeService').premiumState.setPerksDisabled(userId, disabled);
 			return ctx.json(state);
 		},
 	);

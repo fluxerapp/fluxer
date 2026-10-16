@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import {
 	checkNativePermission,
 	type NativePermissionResult,
-	openNativePermissionSettings,
 } from '@app/features/permissions/system/utils/NativePermissions';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {
@@ -92,9 +92,22 @@ export function useScreenSharePickerDisplayPermission({
 	}, [shouldCheck, transitionDisplayPermission]);
 	const selectedPrompt = selectScreenSharePickerDisplayPermissionPrompt(snapshot);
 	const prompt = shouldCheck && snapshot.matches('idle') ? 'checking' : selectedPrompt;
+	const awaitingGrant = shouldCheck && (selectedPrompt === 'needs-permission' || selectedPrompt === 'restart-required');
+	useEffect(() => {
+		if (!awaitingGrant) return;
+		const recheck = () => {
+			void readScreenSharePickerScreenRecordingPermission('window-focus').then((permission) => {
+				transitionDisplayPermission({type: 'permission.result', permission});
+			});
+		};
+		window.addEventListener('focus', recheck);
+		return () => window.removeEventListener('focus', recheck);
+	}, [awaitingGrant, transitionDisplayPermission]);
 	const openSettings = useCallback(() => {
 		transitionDisplayPermission({type: 'permission.settingsOpened'});
-		void openNativePermissionSettings('screen');
+		void MacPermissions.refreshKind('screen').then((status) =>
+			status === 'not-determined' ? MacPermissions.request('screen') : MacPermissions.openSettings('screen'),
+		);
 	}, [transitionDisplayPermission]);
 	return {
 		blocksDesktopSources: shouldCheck && prompt !== 'none',

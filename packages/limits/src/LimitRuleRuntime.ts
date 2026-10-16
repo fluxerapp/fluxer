@@ -74,10 +74,6 @@ export function calculateSpecificity(filters: LimitFilter | undefined): number {
 	return traitCount + guildFeatureCount;
 }
 
-export function compareSpecificity(a: LimitFilter | undefined, b: LimitFilter | undefined): number {
-	return calculateSpecificity(a) - calculateSpecificity(b);
-}
-
 export function sortRulesBySpecificity(rules: Array<LimitRule>): Array<LimitRule> {
 	const rankedRules: Array<RankedRule> = rules.map((rule, index) => ({
 		rule,

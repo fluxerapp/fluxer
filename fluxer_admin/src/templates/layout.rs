@@ -1,15 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{api::types::FlashLevel, config::AdminConfig, middleware::auth::AuthContext};
+use crate::{
+    api::types::{FlashLevel, PremiumBranding},
+    config::AdminConfig,
+    middleware::auth::AuthContext,
+};
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::components::drawer::drawer_controller_script;
 use super::layout_header::render_header;
 use super::layout_scripts::{
-    ADMIN_ACTION_FORM_SCRIPT, COPY_TO_CLIPBOARD_SCRIPT, HTMX_FLASH_SCRIPT,
-    HTMX_SCROLL_PRESERVER_SCRIPT, SH_LINK_REWRITE_SCRIPT, SIDEBAR_SCRIPT,
+    ADMIN_ACTION_FORM_SCRIPT, COPY_TO_CLIPBOARD_SCRIPT, ENFORCEMENT_FIELDS_SCRIPT,
+    HTMX_FLASH_SCRIPT, HTMX_SCROLL_PRESERVER_SCRIPT, SH_LINK_REWRITE_SCRIPT, SIDEBAR_SCRIPT,
 };
 use super::layout_sidebar::render_sidebar;
+
+const DEFAULT_PRODUCT_NAME: &str = "Fluxer";
+
+pub fn product_name(branding: Option<&PremiumBranding>) -> &str {
+    branding
+        .and_then(|branding| branding.product_name.as_deref())
+        .unwrap_or(DEFAULT_PRODUCT_NAME)
+}
+
+pub fn favicon_links(config: &AdminConfig, branding: Option<&PremiumBranding>) -> Markup {
+    let cdn = &config.static_cdn_endpoint;
+    html! {
+        @if let Some(favicon_url) = branding.and_then(|branding| branding.favicon_url.as_deref()) {
+            link rel="icon" href=(favicon_url);
+        } @else {
+            link rel="icon" type="image/x-icon" href={(cdn) "/web/favicon.ico"};
+            link rel="apple-touch-icon" href={(cdn) "/web/apple-touch-icon.png"};
+            link rel="icon" type="image/png" sizes="32x32" href={(cdn) "/web/favicon-32x32.png"};
+            link rel="icon" type="image/png" sizes="16x16" href={(cdn) "/web/favicon-16x16.png"};
+        }
+    }
+}
 
 fn cache_busted_asset(base_path: &str, asset_version: &str, path: &str) -> String {
     format!("{base_path}{path}?t={asset_version}")
@@ -72,16 +98,13 @@ pub fn admin_layout_ext(
                 title { (title) " ~ Fluxer Admin" }
                 link rel="stylesheet" href={(base) "/static/fonts/" (crate::fonts::STYLESHEET_FILE_NAME)};
                 link rel="stylesheet" href=(cache_busted_asset(base, asset_version, "/static/app.css"));
-                link rel="icon" type="image/x-icon" href={(config.static_cdn_endpoint) "/web/favicon.ico"};
-                link rel="apple-touch-icon" href={(config.static_cdn_endpoint) "/web/apple-touch-icon.png"};
-                link rel="icon" type="image/png" sizes="32x32" href={(config.static_cdn_endpoint) "/web/favicon-32x32.png"};
-                link rel="icon" type="image/png" sizes="16x16" href={(config.static_cdn_endpoint) "/web/favicon-16x16.png"};
+                (favicon_links(config, auth.branding.as_ref()))
                 script src=(cache_busted_asset(base, asset_version, "/static/htmx.min.js")) defer {}
             }
             body class="min-h-screen overflow-hidden bg-neutral-50" hx-boost="true" {
                 a href="#main-content" class="skip-link" { "Skip to main content" }
                 div class="flex h-[100dvh]" {
-                    (render_sidebar(config, admin_acls, active_page, options.inspected_voice_region_id))
+                    (render_sidebar(config, admin_acls, active_page, options.inspected_voice_region_id, auth.pending_registration_count))
                     div data-sidebar-overlay="" class="pointer-events-none fixed inset-0 z-30 bg-black/50 opacity-0 transition-opacity duration-200 ease-in-out lg:hidden" aria-hidden="true" {}
                     div class="flex h-[100dvh] w-full flex-1 flex-col overflow-y-auto" {
                         (render_header(config, auth, csrf_token))
@@ -105,6 +128,7 @@ pub fn admin_layout_ext(
                 script defer { (PreEscaped(HTMX_SCROLL_PRESERVER_SCRIPT)) }
                 script defer { (PreEscaped(HTMX_FLASH_SCRIPT)) }
                 script defer { (PreEscaped(COPY_TO_CLIPBOARD_SCRIPT)) }
+                script defer { (PreEscaped(ENFORCEMENT_FIELDS_SCRIPT)) }
                 (drawer_controller_script())
                 @if let Some(extra) = options.extra_scripts {
                     script defer { (PreEscaped(extra)) }
@@ -124,11 +148,5 @@ fn render_flash(flash: &crate::api::types::FlashMessage) -> Markup {
         div class={"rounded-lg border px-4 py-3 text-sm " (classes)} {
             div { (flash.message) }
         }
-    }
-}
-
-pub fn flash_container() -> Markup {
-    html! {
-        div id="flash-container" class="mb-4 sm:mb-6 empty:hidden" {}
     }
 }

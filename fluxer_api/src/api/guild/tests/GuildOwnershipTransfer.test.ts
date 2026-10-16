@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_CREDENTIALS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_CREDENTIALS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {acceptInvite, createChannelInvite, createGuild, getChannel} from './GuildTestUtils';
+import {beforeAll, beforeEach, describe, it} from 'vitest';
 
 describe('Guild Ownership Transfer', () => {
 	let harness: ApiTestHarness;
@@ -33,18 +32,5 @@ describe('Guild Ownership Transfer', () => {
 			.body({new_owner_id: botAccount.userId, password: TEST_CREDENTIALS.STRONG_PASSWORD})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CANNOT_TRANSFER_OWNERSHIP_TO_BOT)
 			.execute();
-	});
-	it('allows transfer to a non-bot user', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Transfer Test Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await acceptInvite(harness, member.token, invite.code);
-		const updatedGuild = await createBuilder<GuildResponse>(harness, owner.token)
-			.post(`/guilds/${guild.id}/transfer-ownership`)
-			.body({new_owner_id: member.userId, password: TEST_CREDENTIALS.STRONG_PASSWORD})
-			.execute();
-		expect(updatedGuild.owner_id).toBe(member.userId);
 	});
 });

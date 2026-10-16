@@ -5,9 +5,10 @@
 
 -export([
     build_call_event/1,
+    caller_from_state/1,
+    put_caller/2,
     format_voice_state/1,
     format_voice_states/1,
-    format_pending_connections/1,
     integer_list_to_binaries/1,
     find_session_by_pid/2,
     remove_session_entry/2,
@@ -27,6 +28,26 @@ build_call_event(State) ->
         ringing => integer_list_to_binaries(maps:get(ringing, State)),
         voice_states => format_voice_states(maps:get(voice_states, State))
     }.
+
+-spec caller_from_state(map()) -> map().
+caller_from_state(State) ->
+    #{
+        caller_id => maps:get(caller_id, State, undefined),
+        caller_name => maps:get(caller_name, State, undefined),
+        caller_avatar => maps:get(caller_avatar, State, undefined)
+    }.
+
+-spec put_caller(map(), map()) -> map().
+put_caller(#{caller_id := Id, caller_name := Name} = Caller, State) when
+    is_integer(Id), is_binary(Name), byte_size(Name) > 0
+->
+    State#{
+        caller_id => Id,
+        caller_name => Name,
+        caller_avatar => maps:get(caller_avatar, Caller, undefined)
+    };
+put_caller(_Caller, State) ->
+    State.
 
 -spec integer_list_to_binaries([integer()]) -> [binary()].
 integer_list_to_binaries(Values) ->
@@ -48,89 +69,6 @@ format_voice_state(VoiceState) ->
 format_voice_states(VoiceStates) ->
     Sorted = lists:keysort(1, maps:to_list(VoiceStates)),
     [format_voice_state(VS) || {_UserId, VS} <- Sorted].
-
--spec format_pending_connections(term()) -> [map()].
-format_pending_connections(PendingConnections) when is_map(PendingConnections) ->
-    Sorted = lists:keysort(1, maps:to_list(PendingConnections)),
-    lists:filtermap(
-        fun format_pending_connection_entry/1,
-        Sorted
-    );
-format_pending_connections(_) ->
-    [].
-
--spec format_pending_connection_entry({term(), term()}) -> false | {true, map()}.
-format_pending_connection_entry({ConnectionId, Metadata}) ->
-    case format_pending_connection(ConnectionId, Metadata) of
-        undefined -> false;
-        Entry -> {true, Entry}
-    end.
-
--spec format_pending_connection(term(), term()) -> map() | undefined.
-format_pending_connection(ConnectionId, Metadata) when is_map(Metadata) ->
-    NormalizedConnectionId = normalize_pending_binary(ConnectionId),
-    UserId = normalize_pending_id(maps:get(user_id, Metadata, undefined)),
-    case {NormalizedConnectionId, UserId} of
-        {undefined, _} ->
-            undefined;
-        {_, undefined} ->
-            undefined;
-        _ ->
-            JoinedAt = normalize_pending_millisecond(
-                maps:get(joined_at, Metadata, erlang:system_time(millisecond))
-            ),
-            #{
-                connection_id => NormalizedConnectionId,
-                user_id => UserId,
-                token_nonce => normalize_pending_binary(
-                    maps:get(token_nonce, Metadata, <<>>), <<>>
-                ),
-                expires_at => JoinedAt + ?PENDING_CONNECTION_TIMEOUT_MS
-            }
-    end;
-format_pending_connection(_, _) ->
-    undefined.
-
--spec normalize_pending_id(term()) -> binary() | undefined.
-normalize_pending_id(Value) when is_integer(Value), Value > 0 ->
-    integer_to_binary(Value);
-normalize_pending_id(Value) ->
-    try snowflake_id:parse_optional(Value) of
-        Id when is_integer(Id), Id > 0 -> integer_to_binary(Id);
-        _ -> undefined
-    catch
-        error:{invalid_snowflake, _} -> undefined
-    end.
-
--spec normalize_pending_binary(term()) -> binary() | undefined.
-normalize_pending_binary(Value) ->
-    normalize_pending_binary(Value, undefined).
-
--spec normalize_pending_binary(term(), binary() | undefined) -> binary() | undefined.
-normalize_pending_binary(Value, _Default) when is_binary(Value) ->
-    Value;
-normalize_pending_binary(Value, _Default) when is_integer(Value) ->
-    integer_to_binary(Value);
-normalize_pending_binary(Value, Default) when is_list(Value), is_binary(Default) ->
-    type_conv:ensure_binary(Value, Default);
-normalize_pending_binary(Value, Default) when is_list(Value) ->
-    case type_conv:ensure_binary(Value) of
-        <<>> -> Default;
-        Binary -> Binary
-    end;
-normalize_pending_binary(_, Default) ->
-    Default.
-
--spec normalize_pending_millisecond(term()) -> integer().
-normalize_pending_millisecond(Value) when is_integer(Value) ->
-    Value;
-normalize_pending_millisecond(Value) when is_binary(Value); is_list(Value) ->
-    case type_conv:to_integer(Value) of
-        Millisecond when is_integer(Millisecond) -> Millisecond;
-        undefined -> erlang:system_time(millisecond)
-    end;
-normalize_pending_millisecond(_) ->
-    erlang:system_time(millisecond).
 
 -spec user_has_session(integer(), #{binary() => {integer(), pid(), reference()}}) -> boolean().
 user_has_session(UserId, Sessions) ->

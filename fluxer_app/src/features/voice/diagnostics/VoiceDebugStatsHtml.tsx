@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AppMetricsSnapshot} from '@app/features/platform/types/Electron';
 import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
-import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
+import type {AppMetricsSnapshot} from '@app/types/electron.d';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {renderToStaticMarkup} from 'react-dom/server';
 
-export const VOICE_DEBUG_STATS_JSON_ELEMENT_ID = 'stats-json';
+const VOICE_DEBUG_STATS_JSON_ELEMENT_ID = 'stats-json';
 const VOICE_DEBUG_STATS_MAX_VALUE_CHARS = 4096;
 const VOICE_DEBUG_STATS_MAX_RAW_JSON_CHARS = 262_144;
 const VOICE_DEBUG_STATS_SPARKLINE_MAX_SAMPLES = 60;
@@ -233,6 +233,10 @@ function TrackTables({data}: TrackTablesProps) {
 	const tracks: Array<[string, VoiceEngineV2PerTrackStats | null]> = [
 		['track:localAudio', data.localAudio],
 		['track:localVideo', data.localVideo],
+		...data.localVideoLayers.map((layer, index): [string, VoiceEngineV2PerTrackStats | null] => [
+			`track:localVideoLayers[${index}]`,
+			layer,
+		]),
 		['track:localScreenShare', data.localScreenShare],
 		['track:localScreenShareAudio', data.localScreenShareAudio],
 		['track:remoteAudio', data.remoteAudio],
@@ -371,11 +375,6 @@ function VoiceDebugStats({data, generatedAtIso}: VoiceDebugStatsProps) {
 				title="screenShareSettings"
 				record={asStatsRecord(data.screenShareSettings)}
 				data-flx="voice.diagnostics.voice-debug-stats-html.voice-debug-stats.stats-table--7"
-			/>
-			<StatsTable
-				title="screenShareAudioCapture (pump)"
-				record={asStatsRecord(data.screenShareAudioCapture.pump)}
-				data-flx="voice.diagnostics.voice-debug-stats-html.voice-debug-stats.stats-table--8"
 			/>
 			<StatsTable
 				title="screenShareAudioCapture (native)"

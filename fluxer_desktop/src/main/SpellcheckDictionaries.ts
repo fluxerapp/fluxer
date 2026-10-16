@@ -272,7 +272,7 @@ export const DICTIONARY_SOURCES = {
 	},
 } satisfies Record<string, SpellcheckDictionarySource>;
 
-export type SpellcheckDictionaryPackage = keyof typeof DICTIONARY_SOURCES;
+type SpellcheckDictionaryPackage = keyof typeof DICTIONARY_SOURCES;
 
 export interface SpellcheckDictionaryCatalogEntry extends SpellcheckBundledDictionary {
 	package: SpellcheckDictionaryPackage;

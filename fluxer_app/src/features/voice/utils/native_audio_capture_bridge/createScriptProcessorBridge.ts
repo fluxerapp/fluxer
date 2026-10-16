@@ -35,10 +35,6 @@ class PendingStereoChunkRing {
 		this.chunks = new Array(MAX_PENDING_CHUNKS).fill(null);
 	}
 
-	get length(): number {
-		return this.count;
-	}
-
 	push(chunk: Float32Array): number {
 		assert.equal(chunk.length % 2, 0, 'script processor chunks must be interleaved stereo');
 		let dropped = 0;
@@ -128,10 +124,10 @@ export async function createScriptProcessorBridge(
 		right.fill(0);
 		pendingChunks.drainInto(left, right);
 	};
-	const cleanup = async (stopRemote: boolean = true): Promise<void> => {
+	const cleanup = async (stopRemote: boolean = true, endDetail?: string): Promise<void> => {
 		if (cleanedUp) return;
 		cleanedUp = true;
-		endBridgeStats(captureId, 'cleanup', stopRemote ? 'caller-stopped' : 'remote-ended');
+		endBridgeStats(captureId, 'cleanup', endDetail ?? (stopRemote ? 'caller-stopped' : 'remote-ended'));
 		unsubscribeFrame();
 		unsubscribeEnd();
 		processor.onaudioprocess = null;

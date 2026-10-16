@@ -6,7 +6,6 @@
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
 -export([
-    determine_count/1,
     start_all/1,
     stop_all/1,
     handle_down_by_ref/2,
@@ -19,8 +18,7 @@
     local_snapshot/1,
     local_snapshot_chunks/2,
     content_digest/1,
-    memory_stats/1,
-    find_by_ref/2
+    memory_stats/1
 ]).
 
 -export_type([shard/0, state/0]).
@@ -29,14 +27,6 @@
 -type state() :: #{
     shards := #{non_neg_integer() => shard()}, shard_count := pos_integer(), _ => _
 }.
-
--spec determine_count(atom()) -> {pos_integer(), configured | auto}.
-determine_count(ConfigKey) ->
-    case clustered_ets_cache:determine_shard_count([ConfigKey]) of
-        {Count, ConfigKey} -> {Count, configured};
-        {Count, auto} -> {Count, auto};
-        {Count, _Source} -> {Count, configured}
-    end.
 
 -spec start_all(pos_integer()) -> #{non_neg_integer() => shard()}.
 start_all(Count) ->
@@ -58,7 +48,7 @@ stop_all(State) ->
 -spec handle_down_by_ref(reference(), state()) -> state().
 handle_down_by_ref(Ref, State) ->
     Shards = maps:get(shards, State),
-    case find_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_state(Index, State);
         not_found -> State
     end.
@@ -66,7 +56,7 @@ handle_down_by_ref(Ref, State) ->
 -spec handle_down_by_pid(pid(), state()) -> state().
 handle_down_by_pid(Pid, State) ->
     Shards = maps:get(shards, State),
-    case find_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_state(Index, State);
         not_found -> State
     end.
@@ -193,18 +183,6 @@ memory_stats(State) ->
     ),
     {ok, #{memory_bytes => TotalMemory, entry_count => TotalEntries}}.
 
--spec find_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
-
 -spec start(non_neg_integer()) -> {ok, shard()} | {error, term()}.
 start(Index) ->
     case presence_cache_shard:start_link(Index) of
@@ -305,18 +283,6 @@ merge_snapshot_reply(Snapshot, AccMap) when is_map(Snapshot) ->
     maps:merge(AccMap, Snapshot);
 merge_snapshot_reply(_, AccMap) ->
     AccMap.
-
--spec find_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
 
 -spec error_reply(term()) -> term().
 error_reply({put, _, _}) -> {error, unavailable};

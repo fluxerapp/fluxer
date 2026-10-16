@@ -5,7 +5,10 @@ import {
 	markdownBlockProps,
 	markdownTableProps,
 } from '@app/features/messaging/components/markdown/renderers/common/MarkdownBlockAttributes';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	isRestrictedInlineContext,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {renderTableNodeToMarkdown} from '@app/features/messaging/utils/markdown/Plaintext';
 import {AlertType, TableAlignment} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {
@@ -94,7 +97,7 @@ export function BlockquoteRenderer({node, id, renderChildren}: RendererProps<Blo
 
 export function ListRenderer({node, id, renderChildren, options}: RendererProps<ListNode>): React.ReactElement {
 	const Tag = node.ordered ? 'ol' : 'ul';
-	const isInlineContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isInlineContext = isRestrictedInlineContext(options.context);
 	if (!node.ordered) {
 		return (
 			<Tag
@@ -144,7 +147,7 @@ export function ListRenderer({node, id, renderChildren, options}: RendererProps<
 
 export function HeadingRenderer({node, id, renderChildren, options}: RendererProps<HeadingNode>): React.ReactElement {
 	const Tag = `h${node.level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-	const isInlineContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isInlineContext = isRestrictedInlineContext(options.context);
 	const headingRef = useRef<HTMLHeadingElement>(null);
 	useEffect(() => {
 		if (headingRef.current && !isInlineContext && node.level <= 3) {
@@ -171,7 +174,7 @@ export function HeadingRenderer({node, id, renderChildren, options}: RendererPro
 }
 
 export function SubtextRenderer({node, id, renderChildren, options}: RendererProps<SubtextNode>): React.ReactElement {
-	const isInlineContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isInlineContext = isRestrictedInlineContext(options.context);
 	if (isInlineContext) {
 		return <React.Fragment key={id}>{renderChildren(node.children)}</React.Fragment>;
 	}
@@ -244,7 +247,7 @@ function renderTableRow(
 export function TableRenderer({node, id, renderChildren, options}: RendererProps<TableNode>): React.ReactElement {
 	const copyText = renderTableNodeToMarkdown(node, {
 		channelId: options.channelId,
-		preserveMarkdown: true,
+		preserveMarkdown: false,
 		includeEmojiNames: true,
 		i18n: options.i18n,
 	});

@@ -4,6 +4,7 @@ import {deriveDefaultNameFromMessage} from '@app/features/channel/components/emb
 import styles from '@app/features/channel/components/embeds/media/EmbedAudio.module.css';
 import {getMediaButtonVisibility} from '@app/features/channel/components/embeds/media/MediaButtonUtils';
 import type {BaseMediaProps} from '@app/features/channel/components/embeds/media/MediaTypes';
+import {ATTACHMENT_CARD_WIDTH} from '@app/features/channel/components/MessageAttachmentUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {DELETE_ATTACHMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
@@ -130,14 +131,14 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 			: {
 					display: 'grid',
 					width: '100%',
-					maxWidth: 'min(100%, 400px)',
-					minWidth: 'min(400px, 100%)',
+					maxWidth: `min(100%, ${remFromPx(ATTACHMENT_CARD_WIDTH)})`,
+					minWidth: `min(${remFromPx(ATTACHMENT_CARD_WIDTH)}, 100%)`,
 				};
 		const {showDeleteButton, showDownloadButton} = getMediaButtonVisibility(
 			canFavorite,
 			isPreview ? undefined : message,
 			attachmentId,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
+			{disableDelete: !!isPreview || snapshotIndex !== undefined, mediaType: 'audio'},
 		);
 		return (
 			<div style={containerStyles} className={styles.container} data-flx="channel.embeds.media.embed-audio.container">

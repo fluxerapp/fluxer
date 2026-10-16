@@ -6,9 +6,12 @@ import {
 	type AddTrackRequest,
 	type AudioTrackFeature,
 	type ClientInfo,
+	type ClientInfo_Capability,
 	type ConnectionQualityUpdate,
 	ConnectionSettings,
+	type DataTrackSubscriberHandles,
 	DisconnectReason,
+	Encryption_Type,
 	JoinRequest,
 	type JoinResponse,
 	LeaveRequest,
@@ -17,6 +20,8 @@ import {
 	MuteTrackRequest,
 	type ParticipantInfo,
 	Ping,
+	PublishDataTrackRequest,
+	type PublishDataTrackResponse,
 	protoInt64,
 	type ReconnectReason,
 	type ReconnectResponse,
@@ -39,6 +44,10 @@ import {
 	type TrackPublishedResponse,
 	type TrackUnpublishedResponse,
 	TrickleRequest,
+	UnpublishDataTrackRequest,
+	type UnpublishDataTrackResponse,
+	UpdateDataSubscription,
+	UpdateDataSubscription_Update,
 	UpdateLocalAudioTrack,
 	UpdateParticipantMetadata,
 	type UpdateSubscription,
@@ -46,13 +55,24 @@ import {
 	UpdateVideoLayers,
 	type VideoLayer,
 	WrappedJoinRequest,
+	WrappedJoinRequest_Compression,
 } from '@livekit/protocol';
 import log, {getLogger, LoggerNames} from '../logger.ts';
-import {ConnectionError} from '../room/errors.ts';
+import type {DataTrackHandle} from '../room/data-track/handle.ts';
+import type {DataTrackSid} from '../room/data-track/types.ts';
+import {ConnectionError, ConnectionErrorReason} from '../room/errors.ts';
 import CriticalTimers, {type TimerHandle} from '../room/timers.ts';
 import type {LoggerOptions} from '../room/types.ts';
-import {getClientInfo, isReactNative, sleep} from '../room/utils.ts';
+import {getClientInfo, isCompressionStreamSupported, isReactNative, sleep} from '../room/utils.ts';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
 import {AsyncQueue} from '../utils/AsyncQueue.ts';
+import {announceMachine} from '../utils/machineInspector.ts';
+import {
+	createSignalMachine,
+	type SignalLifecycleState,
+	type SignalMachine,
+	type SignalMachineInput,
+} from './SignalClientStateMachine.ts';
 import {createRtcUrl, createValidateUrl, getAbortReasonAsString, parseSignalResponse} from './utils.ts';
 import {type WebSocketConnection, WebSocketStream} from './WebSocketStream.ts';
 
@@ -65,6 +85,7 @@ interface ConnectOpts extends SignalOptions {
 export interface SignalOptions {
 	autoSubscribe: boolean;
 	adaptiveStream?: boolean;
+	clientInfoCapabilities?: Array<ClientInfo_Capability>;
 	maxRetries: number;
 	e2eeEnabled: boolean;
 	websocketTimeout: number;
@@ -75,6 +96,13 @@ type SignalMessage = SignalRequest['message'];
 type SignalKind = NonNullable<SignalMessage>['case'];
 
 const passThroughQueueSignals: Array<SignalKind> = ['syncState', 'trickle', 'offer', 'answer', 'simulate', 'leave'];
+
+function isRecoverableReconnectError(error: unknown): boolean {
+	if (error instanceof ConnectionError) {
+		return error.reason !== ConnectionErrorReason.LeaveRequest && error.reason !== ConnectionErrorReason.NotAllowed;
+	}
+	return true;
+}
 
 function canPassThroughQueue(req: SignalMessage): boolean {
 	return passThroughQueueSignals.indexOf(req!.case) >= 0;
@@ -88,7 +116,24 @@ export enum SignalConnectionState {
 	DISCONNECTED,
 }
 
+function lifecycleToConnectionState(lifecycle: SignalLifecycleState): SignalConnectionState {
+	switch (lifecycle) {
+		case 'connected':
+			return SignalConnectionState.CONNECTED;
+		case 'connecting':
+			return SignalConnectionState.CONNECTING;
+		case 'reconnecting':
+			return SignalConnectionState.RECONNECTING;
+		case 'disconnecting':
+			return SignalConnectionState.DISCONNECTING;
+		default:
+			return SignalConnectionState.DISCONNECTED;
+	}
+}
+
 const MAX_WS_CLOSE_TIME = 250;
+
+const JOIN_RESPONSE_TIMEOUT = 5_000;
 
 export class SignalClient {
 	requestQueue: AsyncQueue;
@@ -145,20 +190,48 @@ export class SignalClient {
 
 	onMediaSectionsRequirement?: (requirement: MediaSectionsRequirement) => void;
 
+	onPublishDataTrackResponse?: (event: PublishDataTrackResponse) => void;
+
+	onUnPublishDataTrackResponse?: (event: UnpublishDataTrackResponse) => void;
+
+	onDataTrackSubscriberHandles?: (event: DataTrackSubscriberHandles) => void;
+
+	onJoined?: (event: JoinResponse) => void;
+
 	connectOptions?: ConnectOpts;
 
 	ws?: WebSocketStream;
 
 	get currentState() {
-		return this.state;
+		return lifecycleToConnectionState(this.lifecycleState);
 	}
 
 	get isDisconnected() {
-		return this.state === SignalConnectionState.DISCONNECTING || this.state === SignalConnectionState.DISCONNECTED;
+		const state = this.currentState;
+		return state === SignalConnectionState.DISCONNECTING || state === SignalConnectionState.DISCONNECTED;
+	}
+
+	private get lifecycleState(): SignalLifecycleState {
+		return this.machine.currentState();
+	}
+
+	private get attemptId() {
+		return this.machine.context.attemptId;
+	}
+
+	private sendLifecycleInput(input: SignalMachineInput): boolean {
+		const before = this.lifecycleState;
+		this.machine.handle(input.type, input);
+		return this.lifecycleState !== before;
+	}
+
+	private async settleInFlightClose() {
+		this.log.debug('waiting for an in-flight close to settle before establishing a session');
+		(await this.closingLock.lock())();
 	}
 
 	private get isEstablishingConnection() {
-		return this.state === SignalConnectionState.CONNECTING || this.state === SignalConnectionState.RECONNECTING;
+		return this.lifecycleState === 'connecting' || this.lifecycleState === 'reconnecting';
 	}
 
 	private getNextRequestId() {
@@ -178,7 +251,7 @@ export class SignalClient {
 
 	private closingLock: Mutex;
 
-	private state: SignalConnectionState = SignalConnectionState.DISCONNECTED;
+	private machine: SignalMachine;
 
 	private connectionLock: Mutex;
 
@@ -193,14 +266,21 @@ export class SignalClient {
 	private useV0SignalPath = false;
 
 	constructor(useJSON: boolean = false, loggerOptions: LoggerOptions = {}) {
-		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.Signal);
 		this.loggerContextCb = loggerOptions.loggerContextCb;
+		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.Signal, () => this.logContext);
 		this.useJSON = useJSON;
 		this.requestQueue = new AsyncQueue();
 		this.queuedRequests = [];
 		this.closingLock = new Mutex();
 		this.connectionLock = new Mutex();
-		this.state = SignalConnectionState.DISCONNECTED;
+		this.machine = createSignalMachine();
+		this.machine.on('transitioned', ({fromState, toState}) => {
+			this.log.debug(`signal lifecycle: ${fromState} -> ${toState}`);
+		});
+		this.machine.on('nohandler', ({inputName}) => {
+			this.log.debug(`ignoring signal lifecycle input ${inputName} in state ${this.lifecycleState}`);
+		});
+		announceMachine('signal', this.machine);
 	}
 
 	private get logContext() {
@@ -213,11 +293,24 @@ export class SignalClient {
 		opts: SignalOptions,
 		abortSignal?: AbortSignal,
 		useV0Path: boolean = false,
+		publisherOffer?: SessionDescription,
 	): Promise<JoinResponse> {
-		this.state = SignalConnectionState.CONNECTING;
+		if (this.lifecycleState === 'disconnecting') {
+			await this.settleInFlightClose();
+		}
+		if (!this.sendLifecycleInput({type: 'connect'})) {
+			throw ConnectionError.internal(
+				`cannot establish a signal session from '${this.lifecycleState}', close the current one first`,
+			);
+		}
 		this.options = opts;
-		const res = await this.connect(url, token, opts, abortSignal, useV0Path);
-		return res as JoinResponse;
+		try {
+			const res = await this.connect(url, token, opts, abortSignal, useV0Path, publisherOffer);
+			return res as JoinResponse;
+		} catch (e) {
+			this.sendLifecycleInput({type: 'connectFailed', error: e});
+			throw e;
+		}
 	}
 
 	async reconnect(
@@ -227,25 +320,39 @@ export class SignalClient {
 		reason?: ReconnectReason,
 	): Promise<ReconnectResponse | undefined> {
 		if (!this.options) {
-			this.log.warn('attempted to reconnect without signal options being set, ignoring', this.logContext);
+			this.log.warn('attempted to reconnect without signal options being set, ignoring');
 			return;
 		}
-		this.state = SignalConnectionState.RECONNECTING;
+		if (this.lifecycleState === 'disconnecting') {
+			await this.settleInFlightClose();
+		}
+		if (!this.sendLifecycleInput({type: 'reconnect'})) {
+			throw ConnectionError.internal(`cannot resume the signal session from '${this.lifecycleState}'`);
+		}
 		this.clearPingInterval();
 
-		const res = (await this.connect(
-			url,
-			token,
-			{
-				...this.options,
-				reconnect: true,
-				sid,
-				reconnectReason: reason,
-			},
-			undefined,
-			this.useV0SignalPath,
-		)) as ReconnectResponse | undefined;
-		return res;
+		try {
+			const res = (await this.connect(
+				url,
+				token,
+				{
+					...this.options,
+					reconnect: true,
+					sid,
+					reconnectReason: reason,
+				},
+				undefined,
+				this.useV0SignalPath,
+			)) as ReconnectResponse | undefined;
+			return res;
+		} catch (e) {
+			this.sendLifecycleInput({
+				type: 'reconnectFailed',
+				error: e,
+				recoverable: isRecoverableReconnectError(e),
+			});
+			throw e;
+		}
 	}
 
 	private async connect(
@@ -254,16 +361,17 @@ export class SignalClient {
 		opts: ConnectOpts,
 		abortSignal?: AbortSignal,
 		useV0Path: boolean = false,
+		publisherOffer?: SessionDescription,
 	): Promise<JoinResponse | ReconnectResponse | undefined> {
 		const unlock = await this.connectionLock.lock();
 
 		this.connectOptions = opts;
 		this.useV0SignalPath = useV0Path;
 
-		const clientInfo = getClientInfo();
+		const clientInfo = getClientInfo(opts.clientInfoCapabilities);
 		const params = useV0Path
 			? createConnectionParams(token, clientInfo, opts)
-			: createJoinRequestConnectionParams(token, clientInfo, opts);
+			: await createJoinRequestConnectionParams(token, clientInfo, opts, publisherOffer);
 		const rtcUrl = createRtcUrl(url, params, useV0Path).toString();
 		const validateUrl = createValidateUrl(rtcUrl).toString();
 
@@ -289,71 +397,75 @@ export class SignalClient {
 							this.close();
 						}
 						cleanupAbortHandlers();
-						reject(ConnectionError.cancelled(reason));
+						reject(eventOrError instanceof ConnectionError ? eventOrError : ConnectionError.cancelled(reason));
 					};
 
 					abortSignal?.addEventListener('abort', abortHandler);
 
 					const cleanupAbortHandlers = () => {
-						CriticalTimers.clearTimeout(wsTimeout);
+						clearTimeout(wsTimeout);
 						abortSignal?.removeEventListener('abort', abortHandler);
 					};
 
-					const wsTimeout = CriticalTimers.setTimeout(() => {
+					const wsTimeout = setTimeout(() => {
 						abortHandler(ConnectionError.timeout('room connection has timed out (signal)'));
 					}, opts.websocketTimeout);
-
-					const handleSignalConnected = (connection: WebSocketConnection, firstMessage?: SignalResponse) => {
-						this.handleSignalConnected(connection, wsTimeout, firstMessage);
-					};
 
 					const redactedUrl = new URL(rtcUrl);
 					if (redactedUrl.searchParams.has('access_token')) {
 						redactedUrl.searchParams.set('access_token', '<redacted>');
 					}
-					this.log.debug(`connecting to ${redactedUrl}`, {
+
+					if (this.ws) {
+						const startClose = performance.now();
+						await this.teardownTransport('replaced by a new connection attempt');
+						this.log.debug(`closed previous ws connection in ${performance.now() - startClose}ms`);
+					}
+
+					const attemptId = this.attemptId;
+
+					this.log.info(`signal connecting to ${redactedUrl}`, {
 						reconnect: opts.reconnect,
 						reconnectReason: opts.reconnectReason,
-						...this.logContext,
 					});
-					if (this.ws) {
-						await this.close(false);
-					}
 					this.ws = new WebSocketStream<ArrayBuffer>(rtcUrl);
+
+					let upgradeFailed = false;
+					this.ws.opened.catch(() => {
+						upgradeFailed = true;
+					});
 
 					try {
 						this.ws.closed
 							.then((closeInfo) => {
-								if (this.isEstablishingConnection) {
+								if (this.isEstablishingConnection && !upgradeFailed) {
 									reject(
 										ConnectionError.internal(
 											`Websocket got closed during a (re)connection attempt: ${closeInfo.reason}`,
 										),
 									);
 								}
-								if (closeInfo.closeCode !== 1000) {
-									this.log.warn(`websocket closed`, {
-										...this.logContext,
-										reason: closeInfo.reason,
-										code: closeInfo.closeCode,
-										wasClean: closeInfo.closeCode === 1000,
-										state: this.state,
-									});
-									if (this.state === SignalConnectionState.CONNECTED) {
-										this.handleOnClose(closeInfo.reason ?? 'Unexpected WS error');
-									}
-								}
+								this.log.debug('websocket closed', {
+									reason: closeInfo.reason,
+									code: closeInfo.closeCode,
+									attemptId,
+									state: this.lifecycleState,
+								});
+								this.handleOnClose(
+									closeInfo.reason ||
+										(closeInfo.closeCode === 1000 ? 'server closed the signal connection' : 'Unexpected WS error'),
+									attemptId,
+								);
 								return;
 							})
 							.catch((reason) => {
-								if (this.isEstablishingConnection) {
+								if (this.isEstablishingConnection && !upgradeFailed) {
 									reject(ConnectionError.internal(`Websocket error during a (re)connection attempt: ${reason}`));
 								}
 							});
 						const connection = await this.ws.opened.catch(async (reason: unknown) => {
-							if (this.state !== SignalConnectionState.CONNECTED) {
-								this.state = SignalConnectionState.DISCONNECTED;
-								CriticalTimers.clearTimeout(wsTimeout);
+							if (this.lifecycleState !== 'connected') {
+								clearTimeout(wsTimeout);
 								const error = await this.handleConnectionError(reason, validateUrl);
 								reject(error);
 								return;
@@ -362,13 +474,34 @@ export class SignalClient {
 							reject(reason);
 							return;
 						});
-						CriticalTimers.clearTimeout(wsTimeout);
+						clearTimeout(wsTimeout);
 						if (!connection) {
 							return;
 						}
 						const signalReader = connection.readable.getReader();
 						this.streamWriter = connection.writable.getWriter();
-						const firstMessage = await signalReader.read();
+
+						let firstMessage: ReadableStreamReadResult<string | ArrayBuffer>;
+						let firstMessageTimeout: ReturnType<typeof setTimeout> | undefined;
+						try {
+							firstMessage = await Promise.race([
+								signalReader.read(),
+								new Promise<never>((_, rejectRead) => {
+									firstMessageTimeout = setTimeout(() => {
+										rejectRead(
+											ConnectionError.timeout('signal connection timed out while waiting for the first message'),
+										);
+									}, JOIN_RESPONSE_TIMEOUT);
+								}),
+							]);
+						} catch (e) {
+							signalReader.releaseLock();
+							reject(e);
+							this.close();
+							return;
+						} finally {
+							clearTimeout(firstMessageTimeout);
+						}
 						signalReader.releaseLock();
 						if (!firstMessage.value) {
 							throw ConnectionError.internal('no message received as first message');
@@ -389,15 +522,18 @@ export class SignalClient {
 
 							if (this.pingTimeoutDuration && this.pingTimeoutDuration > 0) {
 								this.log.debug('ping config', {
-									...this.logContext,
 									timeout: this.pingTimeoutDuration,
 									interval: this.pingIntervalDuration,
 								});
 							}
+
+							if (this.onJoined) {
+								this.onJoined(firstSignalResponse.message.value);
+							}
 						}
 
 						const firstMessageToProcess = validation.shouldProcessFirstMessage ? firstSignalResponse : undefined;
-						handleSignalConnected(connection, firstMessageToProcess);
+						this.handleSignalConnected(connection, wsTimeout, attemptId, firstMessageToProcess);
 						resolve(validation.response);
 					} catch (e) {
 						reject(e);
@@ -418,16 +554,23 @@ export class SignalClient {
 		if (firstMessage) {
 			this.handleSignalResponse(firstMessage);
 		}
+		const attemptId = this.attemptId;
 		while (true) {
 			if (this.signalLatency) {
 				await sleep(this.signalLatency);
 			}
-			const {done, value} = await signalReader.read();
-			if (done) {
+			try {
+				const {done, value} = await signalReader.read();
+				if (done) {
+					break;
+				}
+				const resp = parseSignalResponse(value);
+				this.handleSignalResponse(resp);
+			} catch (e) {
+				this.log.error(`error reading from signal stream`, {error: e});
+				await this.handleOnClose('error in reading loop', attemptId);
 				break;
 			}
-			const resp = parseSignalResponse(value);
-			this.handleSignalResponse(resp);
 		}
 	}
 
@@ -447,16 +590,21 @@ export class SignalClient {
 	};
 
 	async close(updateState: boolean = true, reason = 'Close method called on signal client') {
-		if ([SignalConnectionState.DISCONNECTING || SignalConnectionState.DISCONNECTED].includes(this.state)) {
-			this.log.debug(`ignoring signal close as it's already in disconnecting state`);
-			return;
-		}
+		const drivesLifecycle = updateState && this.sendLifecycleInput({type: 'close', reason});
 		const unlock = await this.closingLock.lock();
 		try {
-			this.clearPingInterval();
-			if (updateState) {
-				this.state = SignalConnectionState.DISCONNECTING;
+			await this.teardownTransport(reason);
+		} finally {
+			if (drivesLifecycle) {
+				this.sendLifecycleInput({type: 'closeComplete'});
 			}
+			unlock();
+		}
+	}
+
+	private async teardownTransport(reason: string) {
+		try {
+			this.clearPingInterval();
 			if (this.ws) {
 				this.ws.close({closeCode: 1000, reason});
 
@@ -466,17 +614,12 @@ export class SignalClient {
 				await Promise.race([closePromise, sleep(MAX_WS_CLOSE_TIME)]);
 			}
 		} catch (e) {
-			this.log.debug('websocket error while closing', {...this.logContext, error: e});
-		} finally {
-			if (updateState) {
-				this.state = SignalConnectionState.DISCONNECTED;
-			}
-			unlock();
+			this.log.debug('websocket error while closing', {error: e});
 		}
 	}
 
 	sendOffer(offer: RTCSessionDescriptionInit, offerId: number) {
-		this.log.debug('sending offer', {...this.logContext, offerSdp: offer.sdp});
+		this.log.debug('sending offer', {offerSdp: offer.sdp});
 		this.sendRequest({
 			case: 'offer',
 			value: toProtoSessionDescription(offer, offerId),
@@ -484,7 +627,7 @@ export class SignalClient {
 	}
 
 	sendAnswer(answer: RTCSessionDescriptionInit, offerId: number) {
-		this.log.debug('sending answer', {...this.logContext, answerSdp: answer.sdp});
+		this.log.debug('sending answer', {answerSdp: answer.sdp});
 		return this.sendRequest({
 			case: 'answer',
 			value: toProtoSessionDescription(answer, offerId),
@@ -492,7 +635,7 @@ export class SignalClient {
 	}
 
 	sendIceCandidate(candidate: RTCIceCandidateInit, target: SignalTarget) {
-		this.log.debug('sending ice candidate', {...this.logContext, candidate});
+		this.log.debug('sending ice candidate', {candidate});
 		return this.sendRequest({
 			case: 'trickle',
 			value: new TrickleRequest({
@@ -614,9 +757,42 @@ export class SignalClient {
 		});
 	}
 
-	async sendRequest(message: SignalMessage, fromQueue: boolean = false) {
+	sendPublishDataTrackRequest(handle: DataTrackHandle, name: string, usesE2ee: boolean) {
+		return this.sendRequest({
+			case: 'publishDataTrackRequest',
+			value: new PublishDataTrackRequest({
+				pubHandle: handle,
+				name: name,
+				encryption: usesE2ee ? Encryption_Type.GCM : Encryption_Type.NONE,
+			}),
+		});
+	}
+
+	sendUnPublishDataTrackRequest(handle: DataTrackHandle) {
+		return this.sendRequest({
+			case: 'unpublishDataTrackRequest',
+			value: new UnpublishDataTrackRequest({pubHandle: handle}),
+		});
+	}
+
+	sendUpdateDataSubscription(sid: DataTrackSid, subscribe: boolean) {
+		return this.sendRequest({
+			case: 'updateDataSubscription',
+			value: new UpdateDataSubscription({
+				updates: [
+					new UpdateDataSubscription_Update({
+						trackSid: sid,
+						subscribe,
+					}),
+				],
+			}),
+		});
+	}
+
+	private async sendRequest(message: SignalMessage, fromQueue: boolean = false) {
 		const canQueue = !fromQueue && !canPassThroughQueue(message);
-		if (canQueue && this.state === SignalConnectionState.RECONNECTING) {
+		const isHoldingRequests = this.lifecycleState === 'reconnecting' || this.queuedRequests.length > 0;
+		if (canQueue && isHoldingRequests) {
 			this.queuedRequests.push(async () => {
 				await this.sendRequest(message, true);
 			});
@@ -628,12 +804,13 @@ export class SignalClient {
 		if (this.signalLatency) {
 			await sleep(this.signalLatency);
 		}
-		if (this.isDisconnected) {
+		const isLeaveOnShutdown = message.case === 'leave' && !!this.streamWriter;
+		if (this.isDisconnected && !isLeaveOnShutdown) {
 			this.log.debug(`skipping signal request (type: ${message.case}) - SignalClient disconnected`);
 			return;
 		}
 		if (!this.streamWriter) {
-			this.log.error(`cannot send signal request before connected, type: ${message?.case}`, this.logContext);
+			this.log.error(`cannot send signal request before connected, type: ${message?.case}`);
 			return;
 		}
 		const req = new SignalRequest({message});
@@ -642,17 +819,17 @@ export class SignalClient {
 			if (this.useJSON) {
 				await this.streamWriter.write(req.toJsonString());
 			} else {
-				await this.streamWriter.write(req.toBinary().buffer as ArrayBuffer);
+				await this.streamWriter.write((req.toBinary() as NonSharedUint8Array).buffer);
 			}
 		} catch (e) {
-			this.log.error('error sending signal message', {...this.logContext, error: e});
+			this.log.error('error sending signal message', {error: e});
 		}
 	}
 
 	private handleSignalResponse(res: SignalResponse) {
 		const msg = res.message;
 		if (msg === undefined) {
-			this.log.debug('received unsupported message', this.logContext);
+			this.log.debug('received unsupported message');
 			return;
 		}
 
@@ -748,8 +925,20 @@ export class SignalClient {
 			if (this.onMediaSectionsRequirement) {
 				this.onMediaSectionsRequirement(msg.value);
 			}
+		} else if (msg.case === 'publishDataTrackResponse') {
+			if (this.onPublishDataTrackResponse) {
+				this.onPublishDataTrackResponse(msg.value);
+			}
+		} else if (msg.case === 'unpublishDataTrackResponse') {
+			if (this.onUnPublishDataTrackResponse) {
+				this.onUnPublishDataTrackResponse(msg.value);
+			}
+		} else if (msg.case === 'dataTrackSubscriberHandles') {
+			if (this.onDataTrackSubscriberHandles) {
+				this.onDataTrackSubscriberHandles(msg.value);
+			}
 		} else {
-			this.log.debug('unsupported message', {...this.logContext, msgCase: msg.case});
+			this.log.debug('unsupported message', {msgCase: msg.case});
 		}
 
 		if (!pingHandled) {
@@ -766,24 +955,31 @@ export class SignalClient {
 		}
 	}
 
-	async handleOnClose(reason: string) {
-		if (this.state === SignalConnectionState.DISCONNECTED) return;
+	async handleOnClose(reason: string, attemptId: number = this.attemptId) {
 		const onCloseCallback = this.onClose;
-		await this.close(undefined, reason);
-		this.log.debug(`websocket connection closed: ${reason}`, {...this.logContext, reason});
+		if (!this.sendLifecycleInput({type: 'transportFailed', attemptId, reason})) {
+			this.log.debug(`ignoring transport close in state ${this.lifecycleState}`, {
+				reason,
+				attemptId,
+				currentAttemptId: this.attemptId,
+			});
+			return;
+		}
+		await this.teardownTransport(reason);
+		this.log.info(`websocket connection closed: ${reason}`, {reason});
 		if (onCloseCallback) {
 			onCloseCallback(reason);
 		}
 	}
 
 	private handleWSError(error: unknown) {
-		this.log.error('websocket error', {...this.logContext, error});
+		this.log.error('websocket error', {error});
 	}
 
 	private resetPingTimeout() {
 		this.clearPingTimeout();
 		if (!this.pingTimeoutDuration) {
-			this.log.warn('ping timeout duration not set', this.logContext);
+			this.log.warn('ping timeout duration not set');
 			return;
 		}
 		this.pingTimeout = CriticalTimers.setTimeout(() => {
@@ -791,7 +987,6 @@ export class SignalClient {
 				`ping timeout triggered. last pong received at: ${new Date(
 					Date.now() - this.pingTimeoutDuration! * 1000,
 				).toUTCString()}`,
-				this.logContext,
 			);
 			this.handleOnClose('ping timeout');
 		}, this.pingTimeoutDuration * 1000);
@@ -807,17 +1002,17 @@ export class SignalClient {
 		this.clearPingInterval();
 		this.resetPingTimeout();
 		if (!this.pingIntervalDuration) {
-			this.log.warn('ping interval duration not set', this.logContext);
+			this.log.warn('ping interval duration not set');
 			return;
 		}
-		this.log.debug('start ping interval', this.logContext);
+		this.log.debug('start ping interval');
 		this.pingInterval = CriticalTimers.setInterval(() => {
 			this.sendPing();
 		}, this.pingIntervalDuration * 1000);
 	}
 
 	private clearPingInterval() {
-		this.log.debug('clearing ping interval', this.logContext);
+		this.log.debug('clearing ping interval');
 		this.clearPingTimeout();
 		if (this.pingInterval) {
 			CriticalTimers.clearInterval(this.pingInterval);
@@ -826,11 +1021,25 @@ export class SignalClient {
 
 	private handleSignalConnected(
 		connection: WebSocketConnection,
-		timeoutHandle: TimerHandle,
+		timeoutHandle: ReturnType<typeof setTimeout>,
+		attemptId: number,
 		firstMessage?: SignalResponse,
 	) {
-		this.state = SignalConnectionState.CONNECTED;
-		CriticalTimers.clearTimeout(timeoutHandle);
+		clearTimeout(timeoutHandle);
+		const established = this.sendLifecycleInput(
+			this.lifecycleState === 'reconnecting'
+				? {type: 'reconnectComplete', attemptId}
+				: {type: 'connectComplete', attemptId},
+		);
+		if (!established) {
+			this.log.debug('discarding a connection whose attempt no longer owns the session', {
+				attemptId,
+				currentAttemptId: this.attemptId,
+				state: this.lifecycleState,
+			});
+			return;
+		}
+		this.log.info('signal connected');
 		this.startPingInterval();
 		this.startReadingLoop(connection.readable.getReader(), firstMessage);
 	}
@@ -849,14 +1058,14 @@ export class SignalClient {
 				isValid: true,
 				response: firstSignalResponse.message.value,
 			};
-		} else if (this.state === SignalConnectionState.RECONNECTING && firstSignalResponse.message?.case !== 'leave') {
+		} else if (this.lifecycleState === 'reconnecting' && firstSignalResponse.message?.case !== 'leave') {
 			if (firstSignalResponse.message?.case === 'reconnect') {
 				return {
 					isValid: true,
 					response: firstSignalResponse.message.value,
 				};
 			} else {
-				this.log.debug('declaring signal reconnected without reconnect response received', this.logContext);
+				this.log.debug('declaring signal reconnected without reconnect response received');
 				return {
 					isValid: true,
 					response: undefined,
@@ -891,11 +1100,16 @@ export class SignalClient {
 			const resp = await fetch(validateUrl);
 
 			switch (resp.status) {
-				case 404:
+				case 404: {
+					const errorMsg = await resp.text();
+					if (errorMsg.includes('requested room does not exist')) {
+						return ConnectionError.notAllowed(errorMsg, resp.status);
+					}
 					return ConnectionError.serviceNotFound(
 						'v1 RTC path not found. Consider upgrading your LiveKit server version',
 						'v0-rtc',
 					);
+				}
 				case 401:
 				case 403: {
 					const msg = await resp.text();
@@ -967,6 +1181,7 @@ function createConnectionParams(token: string, info: ClientInfo, opts: ConnectOp
 	params.set('sdk', isReactNative() ? 'reactnative' : 'js');
 	params.set('version', info.version!);
 	params.set('protocol', info.protocol!.toString());
+	params.set('client_protocol', info.clientProtocol!.toString());
 	if (info.deviceModel) {
 		params.set('device_model', info.deviceModel);
 	}
@@ -991,15 +1206,21 @@ function createConnectionParams(token: string, info: ClientInfo, opts: ConnectOp
 		params.set('reconnect_reason', opts.reconnectReason.toString());
 	}
 
-	const conn = (navigator as Navigator & {connection?: {type?: string}}).connection;
-	if (conn?.type) {
-		params.set('network', conn.type);
+	// @ts-expect-error
+	if (navigator.connection?.type) {
+		// @ts-expect-error
+		params.set('network', navigator.connection.type);
 	}
 
 	return params;
 }
 
-function createJoinRequestConnectionParams(token: string, info: ClientInfo, opts: ConnectOpts): URLSearchParams {
+async function createJoinRequestConnectionParams(
+	token: string,
+	info: ClientInfo,
+	opts: ConnectOpts,
+	publisherOffer?: SessionDescription,
+): Promise<URLSearchParams> {
 	const params = new URLSearchParams();
 	params.set('access_token', token);
 
@@ -1011,14 +1232,49 @@ function createJoinRequestConnectionParams(token: string, info: ClientInfo, opts
 		}),
 		reconnect: !!opts.reconnect,
 		participantSid: opts.sid ? opts.sid : undefined,
+		publisherOffer: publisherOffer,
 	});
 	if (opts.reconnectReason) {
 		joinRequest.reconnectReason = opts.reconnectReason;
 	}
+	const joinRequestBytes = joinRequest.toBinary();
+	let requestBytes: Uint8Array;
+	let compression: WrappedJoinRequest_Compression;
+	if (isCompressionStreamSupported()) {
+		const stream = new CompressionStream('gzip');
+		const writer = stream.writable.getWriter();
+		writer.write(new Uint8Array(joinRequestBytes));
+		writer.close();
+		const chunks: Array<Uint8Array> = [];
+		const reader = stream.readable.getReader();
+		while (true) {
+			const {done, value} = await reader.read();
+			if (done) break;
+			chunks.push(value);
+		}
+		const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+		const result = new Uint8Array(totalLength);
+		let offset = 0;
+		for (const chunk of chunks) {
+			result.set(chunk, offset);
+			offset += chunk.length;
+		}
+		requestBytes = result;
+		compression = WrappedJoinRequest_Compression.GZIP;
+	} else {
+		requestBytes = joinRequestBytes;
+		compression = WrappedJoinRequest_Compression.NONE;
+	}
 	const wrappedJoinRequest = new WrappedJoinRequest({
-		joinRequest: joinRequest.toBinary(),
+		joinRequest: requestBytes,
+		compression,
 	});
-	params.set('join_request', btoa(new TextDecoder('utf-8').decode(wrappedJoinRequest.toBinary())));
+	const wrappedBytes = wrappedJoinRequest.toBinary();
+	const bytesToBase64 = (bytes: Uint8Array) => {
+		const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
+		return btoa(binString);
+	};
+	params.set('join_request', bytesToBase64(wrappedBytes).replace(/\+/g, '-').replace(/\//g, '_'));
 
 	return params;
 }

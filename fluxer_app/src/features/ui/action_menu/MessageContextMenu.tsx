@@ -4,19 +4,20 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {messageActionMenuItemIds, useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
 import {getEffectiveContent, triggerAddReaction} from '@app/features/channel/components/MessageActionUtils';
 import {
-	getQuickReactionEmojiSrc,
 	REACT_WITH_EMOJI_DESCRIPTOR,
 	renderQuickReactionEmoji,
+	useReactionMenuImagePreload,
+	useReactionSubmenuEmojiSrc,
 } from '@app/features/channel/components/QuickReactionsRow';
 import type {Channel} from '@app/features/channel/models/Channel';
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {useExpressionImagesPreload} from '@app/features/expressions/utils/ExpressionImageCache';
 import {
 	COPY_LINK_DESCRIPTOR,
 	COPY_TEXT_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {MessageReactionsModal} from '@app/features/messaging/components/modals/MessageReactionsModal';
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
@@ -29,7 +30,8 @@ import {
 	getMessageSelectionRoot,
 } from '@app/features/messaging/utils/MessageSelectionCopyUtils';
 import {getEmojiNameWithColons, toReactionEmoji, useEmojiURL} from '@app/features/messaging/utils/ReactionUtils';
-import {useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
+import {SubMenu as MenuItemSubmenu, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
 import contextMenuStyles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import {CopyIdIcon, CopyLinkIcon, CopyTextIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import type {MediaMenuHandlers} from '@app/features/ui/action_menu/items/MediaMenuData';
@@ -37,10 +39,11 @@ import {TranslateMenuItems} from '@app/features/ui/action_menu/items/TranslateMe
 import {WebSearchMenuItems} from '@app/features/ui/action_menu/items/WebSearchMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
+import {CTRL_DESCRIPTOR} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -126,7 +129,7 @@ interface RemoveReactionsSubmenuProps {
 const RemoveReactionsSubmenuItem = observer(
 	({reaction, channelId, messageId}: {reaction: MessageReaction; channelId: string; messageId: string}) => {
 		const {i18n} = useLingui();
-		const emojiUrl = useEmojiURL({emoji: reaction.emoji, size: 32});
+		const emojiUrl = useEmojiURL({emoji: reaction.emoji});
 		const label = getEmojiNameWithColons(reaction.emoji);
 		if (reaction.count <= 0) {
 			return null;
@@ -158,7 +161,7 @@ const RemoveReactionsSubmenuItem = observer(
 				icon={renderEmojiPreview()}
 				onClick={handleSelect}
 				closeOnSelect={false}
-				hint={`${reaction.count}`}
+				hint={getCachedNumberFormat(i18n.locale).format(reaction.count)}
 				data-flx="ui.action-menu.message-context-menu.remove-reactions-submenu-item.menu-item.select"
 			>
 				{label}
@@ -191,7 +194,7 @@ RemoveReactionsSubmenu.displayName = 'RemoveReactionsSubmenu';
 const AddReactionSubmenuItem = observer(
 	({emoji, onSelect}: {emoji: FlatEmoji; onSelect: (emoji: FlatEmoji) => void}) => {
 		const reactionEmoji = useMemo(() => toReactionEmoji(emoji), [emoji]);
-		const emojiUrl = useEmojiURL({emoji: reactionEmoji, size: 32});
+		const emojiUrl = useReactionSubmenuEmojiSrc(emoji);
 		const label = getEmojiNameWithColons(reactionEmoji);
 		const renderEmojiPreview = () => {
 			if (emojiUrl) {
@@ -380,8 +383,8 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			return () => document.removeEventListener('selectionchange', handleSelectionChange);
 		}, [restoreSelection, normalizeSelectionText]);
 		const copyShortcut = useMemo(() => {
-			return /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? '⌘C' : 'Ctrl+C';
-		}, []);
+			return isMacPlatform() ? '⌘C' : `${i18n._(CTRL_DESCRIPTOR)}+C`;
+		}, [i18n.locale]);
 		const handleCopySelection = useCallback(async () => {
 			if (!selectionText) return;
 			await TextCopyCommands.copy(i18n, selectionText, true);
@@ -427,14 +430,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 				quickReactionCount: 4,
 				submenuReactionCount: 16,
 			});
-		const preloadedReactionImageUrls = useMemo(
-			() =>
-				Array.from(
-					new Set([...quickReactionEmojis, ...submenuReactionEmojis].map((emoji) => getQuickReactionEmojiSrc(emoji))),
-				),
-			[quickReactionEmojis, submenuReactionEmojis],
-		);
-		useExpressionImagesPreload(preloadedReactionImageUrls);
+		useReactionMenuImagePreload(quickReactionEmojis, submenuReactionEmojis);
 		const handleQuickReact = useCallback(
 			(emoji: FlatEmoji) => {
 				EmojiPicker.trackEmoji(emoji);
@@ -501,6 +497,8 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		const editItem = itemById.get(ids.edit);
 		const replyItem = itemById.get(ids.reply);
 		const forwardItem = itemById.get(ids.forward);
+		const createThreadItem = itemById.get(ids.createThread);
+		const crosspostItem = itemById.get(ids.crosspost);
 		const copyMessageItem = itemById.get(ids.copyMessage);
 		const pinMessageItem = itemById.get(ids.pinMessage);
 		const bookmarkMessageItem = itemById.get(ids.bookmarkMessage);
@@ -550,6 +548,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					{showAddReaction && addReactionItem && (
 						<MenuItemSubmenu
 							label={addReactionItem.label}
+							onTriggerSelect={handleOpenEmojiPickerAction}
 							render={() => (
 								<>
 									{submenuReactionEmojis.length > 0 && (
@@ -582,12 +581,14 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			);
 		};
 		const renderInteractionGroup = () => {
-			if (!editItem && !replyItem && !forwardItem) return null;
+			if (!editItem && !replyItem && !forwardItem && !createThreadItem && !crosspostItem) return null;
 			return (
 				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-interaction-group.menu-group">
 					{editItem && renderDataMenuItem(editItem, 'edit')}
 					{replyItem && renderDataMenuItem(replyItem, 'reply')}
 					{forwardItem && renderDataMenuItem(forwardItem, 'forward')}
+					{createThreadItem && renderDataMenuItem(createThreadItem, 'create-thread')}
+					{crosspostItem && renderDataMenuItem(crosspostItem, 'crosspost')}
 				</MenuGroup>
 			);
 		};
@@ -799,7 +800,6 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					<WebSearchMenuItems
 						selectionText={selectionText}
 						onClose={onClose}
-						wrapInGroup
 						data-flx="ui.action-menu.message-context-menu.web-search-menu-items"
 					/>
 				)}
@@ -807,7 +807,6 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					<TranslateMenuItems
 						selectionText={translateText}
 						onClose={onClose}
-						wrapInGroup
 						data-flx="ui.action-menu.message-context-menu.translate-menu-items"
 					/>
 				)}

@@ -71,15 +71,6 @@ function addSharedVideoFramePollTarget(target: SharedVideoFramePollTarget): () =
 	return () => removeSharedVideoFramePollTarget(id);
 }
 
-export function getActiveVideoFrameWatcherCountForTests(): number {
-	return sharedVideoFramePollTargets.size;
-}
-
-export function clearVideoFrameWatchersForTests(): void {
-	sharedVideoFramePollTargets.clear();
-	stopSharedVideoFramePollIntervalIfIdle();
-}
-
 export function watchVideoElementRenderedFrame({videoRef, onFrame}: VideoElementRenderedFrameWatchOptions): () => void {
 	let disposed = false;
 	let frameCallbackHandle: VideoFrameCallbackHandle | null = null;
@@ -117,18 +108,17 @@ export function watchVideoElementRenderedFrame({videoRef, onFrame}: VideoElement
 		onFrame();
 		return () => {};
 	}
+	removeSharedPollTarget = addSharedVideoFramePollTarget({videoRef, onFrame: markReadyIfPossible});
+	video?.addEventListener('loadeddata', markReadyIfPossible);
+	video?.addEventListener('playing', markReadyIfPossible);
+	video?.addEventListener('resize', markReadyIfPossible);
 	if (video?.requestVideoFrameCallback) {
 		frameCallbackHandle = video.requestVideoFrameCallback(() => {
 			frameCallbackHandle = null;
 			markPresentedFrame();
 		});
-	} else {
-		removeSharedPollTarget = addSharedVideoFramePollTarget({videoRef, onFrame: markReadyIfPossible});
-		video?.addEventListener('loadeddata', markReadyIfPossible);
-		video?.addEventListener('playing', markReadyIfPossible);
-		video?.addEventListener('resize', markReadyIfPossible);
-		markReadyIfPossible();
 	}
+	markReadyIfPossible();
 	return () => {
 		disposed = true;
 		clearWatchers();

@@ -33,7 +33,7 @@ export interface SlashSlotAutocompletePluginProps {
 	listboxId: string;
 	enabled: boolean;
 	onSelect: (option: AutocompleteOption) => void;
-	activeRef: React.MutableRefObject<boolean>;
+	activeRef: React.RefObject<boolean>;
 }
 
 export const SlashSlotAutocompletePlugin = ({
@@ -187,6 +187,7 @@ export const SlashSlotAutocompletePlugin = ({
 			attached
 			listboxId={listboxId}
 			mainAxisOffset={SLASH_SLOT_AUTOCOMPLETE_MAIN_AXIS_OFFSET}
+			data-flx="lexical.composer.slash-slot-autocomplete-plugin.autocomplete.select"
 		/>
 	);
 };

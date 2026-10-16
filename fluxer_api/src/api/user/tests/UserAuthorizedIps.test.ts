@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clearTestEmails, createTestAccount, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {AuthorizedIps} from '@app/api/Tables';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {clearTestEmails, createTestAccount, findLastTestEmail, listTestEmails} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {deleteOneOrMany, upsertOne} from '../../database/CassandraQueryExecution';
-import {getInstanceConfigRepository, getUserRepository} from '../../middleware/ServiceSingletons';
-import {AuthorizedIps} from '../../Tables';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 interface LoginResponse {
 	user_id: string;

@@ -3,12 +3,16 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
+import PremiumState from '@app/features/premium/state/PremiumState';
+import {
+	getPremiumProductFullName,
+	getPremiumProductName,
+	getStoreOwnedSubscription,
+} from '@app/features/premium/utils/PremiumUtils';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import {getFormattedFullDate} from '@app/features/user/utils/DateFormatting';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -61,16 +65,18 @@ const VIEW_PREMIUM_FEATURES_DESCRIPTOR = msg({
 
 function useOnboardingMessage(i18n: I18n): string {
 	const user = Users.currentUser;
+	const storeSubscription =
+		user != null && PremiumState.loadedForUserId === user.id ? getStoreOwnedSubscription(PremiumState.state) : null;
 	return useMemo(() => {
-		const premiumProductFullName = PREMIUM_PRODUCT_FULL_NAME;
-		const premiumProductName = PREMIUM_PRODUCT_NAME;
+		const premiumProductFullName = getPremiumProductFullName();
+		const premiumProductName = getPremiumProductName();
 		if (!user) {
 			return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
 		}
 		const isVisionary = user.premiumType === UserPremiumTypes.LIFETIME;
-		const billingCycle = user.premiumBillingCycle;
+		const billingCycle = storeSubscription?.billing_cycle ?? user.premiumBillingCycle;
 		const premiumUntil = user.premiumUntil;
-		const willCancel = user.premiumWillCancel;
+		const willCancel = storeSubscription ? !storeSubscription.will_renew : user.premiumWillCancel;
 		if (isVisionary) {
 			return i18n._(PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
 		}
@@ -106,7 +112,7 @@ function useOnboardingMessage(i18n: I18n): string {
 			});
 		}
 		return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
-	}, [i18n.locale, user]);
+	}, [i18n.locale, user, storeSubscription]);
 }
 
 export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar({isMobile}: {isMobile: boolean}) {
@@ -115,14 +121,7 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	const handleOpenPremiumSettings = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');
 		void UserCommands.update({has_dismissed_premium_onboarding: true});
-		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="plutonium"
-					data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.handle-open-premium-settings.user-settings-modal"
-				/>
-			)),
-		);
+		PlutoniumPageCommands.openPlutoniumPage();
 	}, []);
 	const handleDismiss = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');
@@ -131,8 +130,8 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar"
@@ -147,7 +146,7 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 						onClick={handleOpenPremiumSettings}
 						data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar-button.open-premium-settings"
 					>
-						{i18n._(VIEW_PREMIUM_FEATURES_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						{i18n._(VIEW_PREMIUM_FEATURES_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar-content"

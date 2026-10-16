@@ -1,44 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getExtendedDocument} from '@app/features/platform/types/Browser';
+import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getVolumeIcon} from '@app/features/voice/components/media_player/components/MediaVolumeControl';
 import styles from '@app/features/voice/components/media_player/MediaVerticalVolumeControl.module.css';
-import {msg} from '@lingui/core/macro';
+import {
+	MUTE_DESCRIPTOR_2 as MUTE_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR_2 as UNMUTE_DESCRIPTOR,
+	VOLUME_CONTROL_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
-import {SpeakerHighIcon, SpeakerLowIcon, SpeakerNoneIcon, SpeakerXIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
-
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	comment: 'Mute toggle button label in the media player volume control (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	comment: 'Mute toggle button label in the media player volume control (currently unmuted).',
-});
-const VOLUME_CONTROL_DESCRIPTOR = msg({
-	message: 'Volume control',
-	comment: 'Aria label for the volume control container in the media player.',
-});
-
-function getActiveFullscreenElement(): Element | null {
-	const doc = getExtendedDocument();
-	return (
-		document.fullscreenElement ||
-		doc.webkitFullscreenElement ||
-		doc.mozFullScreenElement ||
-		doc.msFullscreenElement ||
-		null
-	);
-}
 
 interface MediaVerticalVolumeControlProps {
 	volume: number;
@@ -48,19 +29,8 @@ interface MediaVerticalVolumeControlProps {
 	iconSize?: number;
 	className?: string;
 	position?: 'above' | 'below';
-}
-
-function getVolumeIcon(volume: number, isMuted: boolean) {
-	if (isMuted || volume === 0) {
-		return SpeakerXIcon;
-	}
-	if (volume < 0.33) {
-		return SpeakerNoneIcon;
-	}
-	if (volume < 0.67) {
-		return SpeakerLowIcon;
-	}
-	return SpeakerHighIcon;
+	maxVolume?: number;
+	ariaLabel?: string;
 }
 
 const POPOUT_GAP = 8;
@@ -73,6 +43,8 @@ export function MediaVerticalVolumeControl({
 	iconSize = 18,
 	className,
 	position = 'above',
+	maxVolume = 1,
+	ariaLabel,
 }: MediaVerticalVolumeControlProps) {
 	const {i18n} = useLingui();
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -91,7 +63,7 @@ export function MediaVerticalVolumeControl({
 				setPortalTarget(portalHost);
 				return;
 			}
-			const fsElement = getActiveFullscreenElement();
+			const fsElement = getFullscreenElement();
 			const button = buttonRef.current;
 			if (fsElement && button && fsElement.contains(button)) {
 				setPortalTarget(fsElement);
@@ -178,9 +150,9 @@ export function MediaVerticalVolumeControl({
 	}, [isDragging, scheduleClose]);
 	const handleSliderValueChange = useCallback(
 		(nextValue: number) => {
-			onVolumeChange(Math.max(0, Math.min(1, nextValue / 100)));
+			onVolumeChange(Math.max(0, Math.min(maxVolume, nextValue / 100)));
 		},
-		[onVolumeChange],
+		[maxVolume, onVolumeChange],
 	);
 	const handleSliderInteractionChange = useCallback(
 		(nextIsDragging: boolean) => {
@@ -209,7 +181,7 @@ export function MediaVerticalVolumeControl({
 				case 'ArrowRight':
 					e.preventDefault();
 					e.stopPropagation();
-					newVolume = Math.min(1, volume + step);
+					newVolume = Math.min(maxVolume, volume + step);
 					break;
 				case 'ArrowDown':
 				case 'ArrowLeft':
@@ -228,7 +200,7 @@ export function MediaVerticalVolumeControl({
 			}
 			onVolumeChange(newVolume);
 		},
-		[volume, onVolumeChange, onToggleMute],
+		[maxVolume, volume, onVolumeChange, onToggleMute],
 	);
 	useEffect(() => {
 		return () => {
@@ -264,12 +236,12 @@ export function MediaVerticalVolumeControl({
 						defaultValue={sliderValue}
 						factoryDefaultValue={100}
 						minValue={0}
-						maxValue={100}
+						maxValue={maxVolume * 100}
 						step={1}
 						value={sliderValue}
 						orientation="vertical"
 						ariaLabel={i18n._(VOLUME_DESCRIPTOR)}
-						ariaValueText={`${volumePercent}%`}
+						ariaValueText={formatRoundedPercentage(i18n.locale, volumePercent)}
 						onValueChange={handleSliderValueChange}
 						onPointerInteractionChange={handleSliderInteractionChange}
 						stopEventPropagation
@@ -284,7 +256,8 @@ export function MediaVerticalVolumeControl({
 		<div
 			className={clsx(styles.container, className)}
 			role="group"
-			aria-label={i18n._(VOLUME_CONTROL_DESCRIPTOR)}
+			aria-label={ariaLabel ?? i18n._(VOLUME_CONTROL_DESCRIPTOR)}
+			title={ariaLabel}
 			data-flx="voice.media-player.media-vertical-volume-control.container"
 		>
 			{popoutElement}

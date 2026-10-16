@@ -41,13 +41,6 @@
 	flex-wrap: wrap;
 }
 
-.spinnerWrap {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	min-height: 6rem;
-}
-
 .buttonInner {
 	display: inline-flex;
 	align-items: center;

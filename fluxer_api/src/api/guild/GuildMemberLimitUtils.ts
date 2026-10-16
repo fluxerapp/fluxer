@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_MEMBERS, MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
-import {DEFAULT_FREE_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {DEFAULT_RESTRICTED_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
 
 function toGuildFeatureSet(guildFeatures: Iterable<string> | null | undefined): Set<string> {
 	const featureSet = new Set<string>();
@@ -41,7 +41,7 @@ export function resolveMaxGuildMembersLimit(params: {
 	const resolved = resolveLimit(params.snapshot, ctx, 'max_guild_members', {
 		evaluationContext: 'guild',
 		baseLimits: {
-			...DEFAULT_FREE_LIMITS,
+			...DEFAULT_RESTRICTED_LIMITS,
 			max_guild_members: defaultLimit,
 		},
 	});

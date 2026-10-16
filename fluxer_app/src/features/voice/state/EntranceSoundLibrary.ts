@@ -65,7 +65,6 @@ class EntranceSoundLibrary {
 	selections: Record<string, string> = {};
 	loaded = false;
 	loading = false;
-	lastError: string | null = null;
 	private loadPromise: Promise<void> | null = null;
 
 	constructor() {
@@ -74,10 +73,6 @@ class EntranceSoundLibrary {
 
 	get list(): Array<EntranceSoundEntry> {
 		return Object.values(this.sounds).sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
-	}
-
-	get count(): number {
-		return Object.keys(this.sounds).length;
 	}
 
 	getById(soundId: string | null | undefined): EntranceSoundEntry | null {
@@ -107,7 +102,6 @@ class EntranceSoundLibrary {
 		const request = (async () => {
 			runInAction(() => {
 				this.loading = true;
-				this.lastError = null;
 			});
 			try {
 				const response = await http.get<ApiLibraryResponse>(Endpoints.USER_ENTRANCE_SOUNDS);
@@ -125,9 +119,6 @@ class EntranceSoundLibrary {
 				});
 			} catch (error) {
 				logger.warn('Failed to load entrance sound library', {error});
-				runInAction(() => {
-					this.lastError = error instanceof Error ? error.message : 'unknown';
-				});
 			} finally {
 				runInAction(() => {
 					this.loading = false;

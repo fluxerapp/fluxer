@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import {createHttpClient} from '@pkgs/http_client/src/HttpClient';
-import type {HttpClient, RequestOptions, StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
+import {DEFAULT_MAX_REDIRECTS, normalizeMaxRedirects} from '@pkgs/http_client/src/HttpClientRequestInternals';
+import type {
+	HttpClient,
+	RequestOptions,
+	RequestUrlPolicy,
+	ResponseStream,
+	StreamResponse,
+} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 
 const requestUrlPolicy = createPublicInternetRequestUrlPolicy();
@@ -9,32 +18,46 @@ const client: HttpClient = createHttpClient({
 	userAgent: 'fluxer-api',
 	requestUrlPolicy,
 });
-const redirectScopedClients = new Map<number, HttpClient>();
+const scopedClients = new WeakMap<RequestUrlPolicy, Map<number, HttpClient>>();
 
 interface SendRequestOptions {
 	maxRedirects?: number;
+	requestUrlPolicy?: RequestUrlPolicy;
 }
 
 function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
-	if (!options?.maxRedirects) {
+	const policy = options?.requestUrlPolicy ?? requestUrlPolicy;
+	const maxRedirects = normalizeMaxRedirects(options?.maxRedirects);
+	if (policy === requestUrlPolicy && maxRedirects === DEFAULT_MAX_REDIRECTS) {
 		return client;
 	}
-	const existingClient = redirectScopedClients.get(options.maxRedirects);
+	let clientsForPolicy = scopedClients.get(policy);
+	if (!clientsForPolicy) {
+		clientsForPolicy = new Map<number, HttpClient>();
+		scopedClients.set(policy, clientsForPolicy);
+	}
+	const existingClient = clientsForPolicy.get(maxRedirects);
 	if (existingClient) {
 		return existingClient;
 	}
-	const redirectScopedClient = createHttpClient({
+	const scopedClient = createHttpClient({
 		userAgent: 'fluxer-api',
-		maxRedirects: options.maxRedirects,
-		requestUrlPolicy,
+		maxRedirects,
+		requestUrlPolicy: policy,
 	});
-	redirectScopedClients.set(options.maxRedirects, redirectScopedClient);
-	return redirectScopedClient;
+	clientsForPolicy.set(maxRedirects, scopedClient);
+	return scopedClient;
 }
 
-export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions) {
+export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions): Promise<StreamResponse> {
 	const requestClient = getHttpClientForRequest(options);
 	return requestClient.sendRequest(opts);
+}
+
+export function discardResponseBody(stream: ResponseStream, status: number): void {
+	void stream?.cancel().catch(() => {
+		Logger.warn({status}, 'Failed to cancel discarded HTTP response body');
+	});
 }
 
 export class ResponseBodyTooLargeError extends Error {
@@ -48,7 +71,7 @@ export class ResponseBodyTooLargeError extends Error {
 	}
 }
 
-interface StreamToStringWithLimitOptions {
+interface ResponseBodyReadOptions {
 	maxBytes: number;
 	headers?: Headers;
 	url?: string;
@@ -69,11 +92,11 @@ function parseContentLength(value: string | null | undefined): number | null {
 }
 
 function createResponseBodyTooLargeError(
-	options: StreamToStringWithLimitOptions,
+	options: ResponseBodyReadOptions,
 	actualBytes: number | null,
 ): ResponseBodyTooLargeError {
 	const description = options.description ?? 'Response body';
-	const source = options.url ? ` from ${options.url}` : '';
+	const source = options.url ? ` from ${formatUrlForDiagnostics(options.url)}` : '';
 	const actual = actualBytes == null ? 'unknown size' : `${actualBytes} bytes`;
 	return new ResponseBodyTooLargeError(
 		`${description}${source} exceeds the ${options.maxBytes}-byte limit (${actual})`,
@@ -83,9 +106,16 @@ function createResponseBodyTooLargeError(
 }
 
 export async function streamToBufferWithLimit(
-	stream: StreamResponse['stream'],
-	options: StreamToStringWithLimitOptions,
+	stream: ResponseStream,
+	options: ResponseBodyReadOptions,
 ): Promise<Uint8Array> {
+	if (!Number.isSafeInteger(options.maxBytes) || options.maxBytes < 0) {
+		const error = new RangeError('maxBytes must be a nonnegative safe integer');
+		void stream?.cancel(error).catch(() => {
+			Logger.warn('Failed to cancel HTTP response body after invalid maxBytes');
+		});
+		throw error;
+	}
 	if (!stream) {
 		return new Uint8Array(0);
 	}
@@ -116,6 +146,9 @@ export async function streamToBufferWithLimit(
 				throw abortError;
 			}
 			const {done, value} = await reader.read();
+			if (options.signal?.aborted) {
+				throw abortError;
+			}
 			if (done) {
 				break;
 			}
@@ -125,7 +158,7 @@ export async function streamToBufferWithLimit(
 			totalSize += value.byteLength;
 			if (totalSize > options.maxBytes) {
 				const error = createResponseBodyTooLargeError(options, totalSize);
-				await reader.cancel(error).catch(() => {});
+				void reader.cancel(error).catch(() => {});
 				throw error;
 			}
 			chunks.push(value);
@@ -147,8 +180,8 @@ export async function streamToBufferWithLimit(
 }
 
 export async function streamToStringWithLimit(
-	stream: StreamResponse['stream'],
-	options: StreamToStringWithLimitOptions,
+	stream: ResponseStream,
+	options: ResponseBodyReadOptions,
 ): Promise<string> {
 	const merged = await streamToBufferWithLimit(stream, options);
 	return new TextDecoder().decode(merged);

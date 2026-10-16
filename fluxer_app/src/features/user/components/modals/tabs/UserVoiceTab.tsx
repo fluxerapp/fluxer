@@ -2,22 +2,20 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {
-	DESKTOP_DOWNLOAD_URL,
-	MACOS_INPUT_MONITORING_PERMISSION_NAME,
-	MACOS_MICROPHONE_PERMISSION_NAME,
-	MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME,
-	MACOS_SYSTEM_SETTINGS_NAME,
-	PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
 import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
-import {MacPermissionsSettingsRow} from '@app/features/permissions/system/components/MacPermissionsSettingsRow';
+import {macPermissionNameDescriptor} from '@app/features/permissions/system/components/useMacPermissionControl';
+import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {parseNumericInput} from '@app/features/ui/components/form/ComboboxNumericInput';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
@@ -29,15 +27,38 @@ import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import {EntranceSoundSection} from '@app/features/user/components/modals/tabs/components/EntranceSoundSection';
 import {MicTestSection} from '@app/features/user/components/modals/tabs/components/MicTestSection';
+import {SystemShortcutsPushToTalkAlert} from '@app/features/user/components/modals/tabs/components/SystemShortcutsSection';
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
+import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
+import {
+	ENTRANCE_SOUND_DESCRIPTOR,
+	MIC_TEST_DESCRIPTOR,
+	RELEASE_DELAY_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {supportsVoiceOutputDeviceSelection} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type ExternalAudioProcessorMatch,
 	findExternalProcessorForDevice,
 } from '@app/features/voice/utils/ExternalAudioProcessor';
+import {prefetchDeepFilterAssets} from '@app/features/voice/utils/noise_suppression/DeepFilter';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	getNoiseSuppressionChoiceValues,
+	getSelectedNoiseSuppressionChoice,
+	isStereoMicrophoneChoiceAvailable,
+	isStereoMicrophoneEnabled,
+	setNoiseSuppressionChoice,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
+import {
+	getNoiseSuppressionChoiceLabel,
+	getNoiseSuppressionFallbackMessage,
+	STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR,
+	STEREO_MICROPHONE_DESCRIPTOR,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
 import {hasDeviceLabels, resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
 import {
@@ -53,16 +74,12 @@ import {
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import type {VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import {VOICE_VOLUME_MAX_PERCENT} from '@app/features/voice/utils/VoiceVolumeUtils';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useMemo} from 'react';
+import {useCallback, useEffect, useMemo} from 'react';
 
-const RELEASE_DELAY_DESCRIPTOR = msg({
-	message: 'Release delay',
-	comment: 'Short label for push-to-talk release delay.',
-});
 const RELEASE_DELAY_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Keep transmitting briefly after release.',
 	comment: 'Description for push-to-talk release delay.',
@@ -77,23 +94,12 @@ const DIRECT_INPUT_DESCRIPTION_DESCRIPTOR = msg({
 });
 const CUSTOM_DESCRIPTOR = msg({
 	message: 'Custom',
-	comment: 'Short label in the voice tab. Keep it concise.',
+	context: 'voice-processing-profile',
+	comment: 'Voice input processing profile where the user configures processing manually.',
 });
 const CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Adjust each setting yourself: noise suppression, echo cancellation, and gain.',
 	comment: 'Description for the custom profile option in the voice tab.',
-});
-const NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Noise suppression option label in the voice tab (neural filter). Keep it concise.',
-});
-const NOISE_SUPPRESSION_STANDARD_DESCRIPTOR = msg({
-	message: 'Standard',
-	comment: 'Noise suppression option label in the voice tab (browser default). Keep it concise.',
-});
-const NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Short label in the voice tab. Keep it concise.',
 });
 const PUSH_TO_TALK_LIMITED_DESCRIPTOR = msg({
 	message: 'Push-to-talk (limited)',
@@ -128,8 +134,7 @@ const PUSH_TO_TALK_BROWSER_LIMITED_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Voice settings warning shown when push-to-talk is enabled in a browser.',
 });
 const PUSH_TO_TALK_PERMISSION_LIMITED_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		'Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it.',
+	message: 'Push-to-talk only works while {productName} is focused until {permissionName} is enabled.',
 	comment:
 		'Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.',
 });
@@ -157,10 +162,8 @@ const resolvePushToTalkReleaseDelayInput = (
 	options: ReadonlyArray<ComboboxOption<number>>,
 ): number | undefined => {
 	const normalized = inputValue.trim().toLowerCase();
-	const numericMatch = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
+	const parsedValue = parseNumericInput(normalized);
+	if (parsedValue === undefined) return undefined;
 	const unitMatch = normalized.match(/[0-9.]\s*([a-z]+)/);
 	const unit = unitMatch?.[1] ?? 'ms';
 	const valueInMs = unit.startsWith('s') ? parsedValue * 1000 : parsedValue;
@@ -169,70 +172,38 @@ const resolvePushToTalkReleaseDelayInput = (
 	).value;
 };
 const AUTO_GAIN_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Evens out your mic volume. Off when enhanced suppression is on.',
-	comment: 'Description for the automatic gain control toggle in the custom voice processing settings.',
+	message: 'Evens out your mic volume so you are not too quiet.',
+	comment: 'Description for the automatic gain control toggle in the voice processing settings.',
 });
 const INPUT_AND_OUTPUT_DESCRIPTOR = msg({
 	message: 'Input and output',
 	comment: 'Subsection title in the voice tab. Keep it concise.',
 });
-const VOLUME_DESCRIPTOR = msg({
-	message: 'Volume',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const MIC_TEST_DESCRIPTOR = msg({
-	message: 'Mic test',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const ENTRANCE_SOUND_DESCRIPTOR = msg({
-	message: 'Entrance sound',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const MACOS_DESCRIPTOR = msg({
-	message: 'macOS',
-	comment: 'Subsection title in the voice tab for macOS-specific settings. Keep it concise.',
-});
-
-type NoiseSuppressionMethod = 'enhanced' | 'standard' | 'none';
 
 interface VoiceTabProps {
 	voiceSettings: typeof VoiceSettings;
-	hasPremium: boolean;
-	autoRequestPermission?: boolean;
 }
 
-function resolveNoiseSuppressionMethod(deepFilterEnabled: boolean, browserNsEnabled: boolean): NoiseSuppressionMethod {
-	if (deepFilterEnabled) return 'enhanced';
-	if (browserNsEnabled) return 'standard';
-	return 'none';
-}
-
-export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = true}) => {
+export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 	const {i18n} = useLingui();
+	const formatPercentage = useCallback(
+		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		[i18n, i18n.locale],
+	);
 	const {
 		inputDeviceId,
 		outputDeviceId,
 		inputVolume,
 		outputVolume,
 		echoCancellation,
-		noiseSuppression,
 		autoGainControl,
-		deepFilterNoiseSuppression,
-		deepFilterNoiseSuppressionLevel,
 		vadThreshold,
 		vadAutoSensitivity,
 	} = voiceSettings;
-	const {
-		devices,
-		deviceState,
-		status: permissionStatus,
-		requestPermission,
-	} = useMediaPermission('audio', {
-		autoRequest: autoRequestPermission,
-	});
+	const {devices, deviceState, status: permissionStatus, requestPermission} = useMediaPermission('audio');
 	const isNativeDesktop = NativePermission.isDesktop;
 	const isNativeMac = NativePermission.isMacOS;
-	const inputMonitoringGranted = NativePermission.isInputMonitoringGranted;
+	const inputMonitoringGranted = MacPermissions.statuses['input-monitoring'] === 'granted';
 	const inputDevices = useMemo(() => devices.filter((d) => d.kind === 'audioinput'), [devices]);
 	const outputDevices = useMemo(() => devices.filter((d) => d.kind === 'audiooutput'), [devices]);
 	const transmitMode = Keybind.transmitMode;
@@ -241,15 +212,23 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	const pttCombo = pttPrimary?.combo ?? {key: '', enabled: true, global: true};
 	const pttReleaseDelay = Keybind.pushToTalkReleaseDelay;
 	const selectedPttReleaseDelay = getNearestPushToTalkReleaseDelay(pttReleaseDelay);
-	const pttReleaseDelayOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => PUSH_TO_TALK_RELEASE_DELAY_OPTIONS.map((value) => ({value, label: `${value}ms`})),
-		[],
-	);
+	const pttReleaseDelayOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(() => {
+		const formatter = getCachedNumberFormat(i18n.locale, {
+			style: 'unit',
+			unit: 'millisecond',
+			unitDisplay: 'narrow',
+			maximumFractionDigits: 0,
+		});
+		return PUSH_TO_TALK_RELEASE_DELAY_OPTIONS.map((value) => ({value, label: formatter.format(value)}));
+	}, [i18n.locale]);
 	const isPttLimited = !isNativeDesktop || (isNativeMac && !inputMonitoringGranted);
 	const defaultPttCombo = getDefaultKeybind('voice_push_to_talk', i18n);
 	const inputHasLabels = hasDeviceLabels(inputDevices);
 	const effectiveInputDeviceId = resolveEffectiveDeviceId(inputDeviceId, inputDevices) ?? 'default';
-	const effectiveOutputDeviceId = resolveEffectiveDeviceId(outputDeviceId, outputDevices) ?? 'default';
+	const canSelectOutputDevice = supportsVoiceOutputDeviceSelection();
+	const effectiveOutputDeviceId = canSelectOutputDevice
+		? (resolveEffectiveDeviceId(outputDeviceId, outputDevices) ?? 'default')
+		: 'default';
 	const activeInputDevice = inputDevices.find((d) => d.deviceId === effectiveInputDeviceId) ?? null;
 	const activeInputLabel = activeInputDevice?.label || null;
 	const voiceProcessingMode = voiceSettings.getVoiceProcessingModeForDeviceLabel(activeInputLabel);
@@ -260,6 +239,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	useEffect(() => {
 		if (pttReleaseDelay !== selectedPttReleaseDelay) Keybind.setPushToTalkReleaseDelay(selectedPttReleaseDelay);
 	}, [pttReleaseDelay, selectedPttReleaseDelay]);
+	useEffect(() => {
+		prefetchDeepFilterAssets();
+	}, [voiceProcessingMode]);
 	const handleInputDeviceChange = (value: string) => {
 		VoiceSettingsCommands.update({inputDeviceId: value});
 	};
@@ -271,8 +253,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		[deviceState, i18n.locale],
 	);
 	const outputDeviceOptions = useMemo(
-		() => buildSettingsDeviceOptions(deviceState, 'audiooutput', i18n),
-		[deviceState, i18n.locale],
+		() =>
+			buildSettingsDeviceOptions(
+				canSelectOutputDevice ? deviceState : {...deviceState, outputDevices: []},
+				'audiooutput',
+				i18n,
+			),
+		[canSelectOutputDevice, deviceState, i18n.locale],
 	);
 	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
 	const profileOptions: Array<RadioOption<VoiceProcessingMode>> = [
@@ -292,26 +279,14 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			desc: i18n._(CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR),
 		},
 	];
-	const noiseSuppressionMethod = resolveNoiseSuppressionMethod(deepFilterNoiseSuppression, noiseSuppression);
-	const effectiveAutoGainControl = !deepFilterNoiseSuppression && autoGainControl;
-	const noiseSuppressionOptions: Array<ComboboxOption<NoiseSuppressionMethod>> = [
-		{value: 'enhanced', label: i18n._(NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR)},
-		{value: 'standard', label: i18n._(NOISE_SUPPRESSION_STANDARD_DESCRIPTOR)},
-		{value: 'none', label: i18n._(NONE_DESCRIPTOR)},
-	];
-	const setNoiseSuppressionMethod = (method: NoiseSuppressionMethod) => {
-		switch (method) {
-			case 'enhanced':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: true, noiseSuppression: false});
-				return;
-			case 'standard':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: true});
-				return;
-			case 'none':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: false});
-				return;
-		}
-	};
+	const noiseSuppressionChoice = getSelectedNoiseSuppressionChoice();
+	const noiseSuppressionFallbackMessage = getNoiseSuppressionFallbackMessage(i18n);
+	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
+		getNoiseSuppressionChoiceValues().map((backend) => ({
+			value: backend,
+			label: getNoiseSuppressionChoiceLabel(i18n, backend),
+		}));
+	const stereoMicrophoneAvailable = isStereoMicrophoneChoiceAvailable(activeInputLabel);
 	const setPushToTalkEnabled = (enabled: boolean) => {
 		const mode = enabled ? 'voice_push_to_talk' : 'voice_activity';
 		if (enabled && !isNativeDesktop) {
@@ -322,8 +297,8 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						description={
 							<p data-flx="user.voice-tab.set-push-to-talk-enabled.p">
 								<Trans>
-									In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app
-									for system-wide push-to-talk.
+									In a browser, push-to-talk only works while the {ph({PRODUCT_NAME: RuntimeConfig.productName})} tab is
+									focused. Install the desktop app for system-wide push-to-talk.
 								</Trans>
 							</p>
 						}
@@ -344,16 +319,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			return;
 		}
 		if (enabled && isNativeMac && !inputMonitoringGranted) {
-			openMacPermissionsModal({focus: 'input-monitoring'});
-		}
-		if (enabled && NativePermission.isLinuxWaylandDesktop && NativePermission.linuxInputAccessStatus !== 'granted') {
-			NativePermission.requestLinuxInputAccessNagbar('push-to-talk');
+			openMacPermissionsModal('input-monitoring');
 		}
 		Keybind.setTransmitMode(mode);
 		MediaEngine.handlePushToTalkModeChange();
 	};
 	const handleOpenInputMonitoringModal = () => {
-		openMacPermissionsModal({focus: 'input-monitoring'});
+		openMacPermissionsModal('input-monitoring');
 	};
 	const pttAvailable = voiceProcessingMode !== 'studio';
 	const showPttDetails = pttAvailable && isPushToTalk;
@@ -396,6 +368,11 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							}}
 							data-flx="user.voice-tab.render-ptt-controls.keybind-recorder.set-primary-custom-keybind-combo"
 						/>
+						<SystemShortcutRowHint
+							action="voice_push_to_talk"
+							variant="voice-tab"
+							data-flx="user.voice-tab.render-ptt-controls.system-shortcut-row-hint"
+						/>
 					</div>
 					<div className={styles.pttSettingRow} data-flx="user.voice-tab.render-ptt-controls.ptt-setting-row--2">
 						<CompactComboboxRow<number>
@@ -432,7 +409,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								data-flx="user.voice-tab.render-ptt-controls.button.open-input-monitoring-modal"
 							>
 								{i18n._(ENABLE_PLATFORM_PERMISSION_DESCRIPTOR, {
-									permissionName: MACOS_INPUT_MONITORING_PERMISSION_NAME,
+									permissionName: i18n._(macPermissionNameDescriptor('input-monitoring')),
 								})}
 							</Button>
 						)
@@ -442,13 +419,37 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 					{!isNativeDesktop
 						? i18n._(PUSH_TO_TALK_BROWSER_LIMITED_DESCRIPTION_DESCRIPTOR)
 						: i18n._(PUSH_TO_TALK_PERMISSION_LIMITED_DESCRIPTION_DESCRIPTOR, {
-								productName: PRODUCT_NAME,
-								permissionName: MACOS_INPUT_MONITORING_PERMISSION_NAME,
+								productName: RuntimeConfig.productName,
+								permissionName: i18n._(macPermissionNameDescriptor('input-monitoring')),
 							})}
 				</WarningAlert>
 			)}
+			{isPushToTalk && !isPttLimited && (
+				<SystemShortcutsPushToTalkAlert data-flx="user.voice-tab.render-ptt-controls.system-shortcuts-ptt-alert" />
+			)}
 		</>
 	);
+	const renderAutoGainControlSwitch = () => (
+		<Switch
+			label={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
+			description={i18n._(AUTO_GAIN_DESCRIPTION_DESCRIPTOR)}
+			value={autoGainControl}
+			onChange={(value) => VoiceSettingsCommands.update({autoGainControl: value})}
+			ariaLabel={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
+			data-flx="user.voice-tab.render-auto-gain-control-switch.switch.update-auto-gain-control"
+		/>
+	);
+	const renderStereoMicrophoneSwitch = (dataFlx: string) =>
+		stereoMicrophoneAvailable && (
+			<Switch
+				label={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+				description={i18n._(STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR)}
+				value={isStereoMicrophoneEnabled()}
+				onChange={(value) => VoiceSettingsCommands.update({stereoMicrophone: value})}
+				ariaLabel={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+				data-flx={dataFlx}
+			/>
+		);
 	const renderCustomProfile = () => (
 		<div className={styles.profileSubSection} data-flx="user.voice-tab.render-custom-profile.profile-sub-section">
 			{renderPttControls()}
@@ -483,23 +484,25 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						minValue={0}
 						maxValue={100}
 						step={1}
-						onValueRender={formatRoundedPercentage}
+						onValueRender={formatPercentage}
 						asValueChanges={(value) => VoiceSettingsCommands.update({vadThreshold: value})}
 						onValueChange={(value) => VoiceSettingsCommands.update({vadThreshold: value})}
 						data-flx="user.voice-tab.render-custom-profile.slider"
 					/>
 				</div>
 			)}
-			<CompactComboboxRow<NoiseSuppressionMethod>
+			<CompactComboboxRow<VoiceNoiseSuppressionBackend>
 				label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
-				value={noiseSuppressionMethod}
+				description={noiseSuppressionFallbackMessage}
+				value={noiseSuppressionChoice}
 				options={noiseSuppressionOptions}
-				onChange={setNoiseSuppressionMethod}
+				onChange={setNoiseSuppressionChoice}
 				isSearchable={false}
 				controlWidth="medium"
 				dataFlx="user.voice-tab.render-custom-profile.select.set-noise-suppression-method"
 				data-flx="user.user-voice-tab.render-custom-profile.compact-combobox-row.set-noise-suppression-method"
 			/>
+			{renderStereoMicrophoneSwitch('user.voice-tab.render-custom-profile.switch.set-stereo-microphone')}
 			<Switch
 				label={i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
 				value={echoCancellation}
@@ -507,21 +510,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				ariaLabel={i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
 				data-flx="user.voice-tab.render-custom-profile.switch.update--2"
 			/>
-			<Switch
-				label={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
-				description={i18n._(AUTO_GAIN_DESCRIPTION_DESCRIPTOR)}
-				value={effectiveAutoGainControl}
-				disabled={deepFilterNoiseSuppression}
-				onChange={(value) => VoiceSettingsCommands.update({autoGainControl: value})}
-				ariaLabel={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
-				data-flx="user.voice-tab.render-custom-profile.switch.update-auto-gain-control"
-			/>
+			{renderAutoGainControlSwitch()}
 		</div>
 	);
 	return (
 		<>
 			<SettingsTabSection title={i18n._(INPUT_AND_OUTPUT_DESCRIPTOR)} data-flx="user.voice-tab.devices-section">
-				{devices.length === 0 && permissionStatus !== 'loading' && permissionStatus !== 'granted' ? (
+				{inputDevices.length === 0 && permissionStatus !== 'loading' ? (
 					<div className={styles.deviceNotice} data-flx="user.voice-tab.device-notice">
 						<div className={styles.deviceNoticeText} data-flx="user.voice-tab.device-notice-text">
 							<div className={styles.deviceNoticeTitle} data-flx="user.voice-tab.device-notice-title">
@@ -530,30 +525,35 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							<p className={styles.deviceNoticeDescription} data-flx="user.voice-tab.device-notice-description">
 								{permissionStatus === 'denied' ? (
 									isNativeDesktop ? (
-										<Trans>
-											Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} →{' '}
-											{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}.
+										<Trans comment="Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
+											Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your microphone in System Settings
+											→ Privacy & Security → Microphone.
 										</Trans>
 									) : (
 										<Trans>
-											Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings.
+											Allow {ph({PRODUCT_NAME: RuntimeConfig.productName})} to access your microphone. Check your
+											browser's address bar or settings.
 										</Trans>
 									)
+								) : permissionStatus === 'granted' ? (
+									<Trans>Connect a microphone and try again.</Trans>
 								) : (
-									i18n._(PRODUCT_NEEDS_MICROPHONE_ACCESS_DESCRIPTOR, {productName: PRODUCT_NAME})
+									i18n._(PRODUCT_NEEDS_MICROPHONE_ACCESS_DESCRIPTOR, {productName: RuntimeConfig.productName})
 								)}
 							</p>
 						</div>
-						<Button
-							variant="secondary"
-							small={true}
-							onClick={() => {
-								void requestPermission();
-							}}
-							data-flx="user.voice-tab.button"
-						>
-							<Trans>Allow microphone</Trans>
-						</Button>
+						{permissionStatus !== 'granted' ? (
+							<Button
+								variant="secondary"
+								small={true}
+								onClick={() => {
+									void requestPermission();
+								}}
+								data-flx="user.voice-tab.button"
+							>
+								<Trans>Allow microphone</Trans>
+							</Button>
+						) : null}
 					</div>
 				) : null}
 				<CompactComboboxRow
@@ -568,8 +568,14 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				/>
 				<CompactComboboxRow
 					label={i18n._(VOICE_OUTPUT_DEVICE_DESCRIPTOR)}
+					description={
+						!canSelectOutputDevice ? (
+							<Trans>Voice uses your system output device in this browser. Change it in your system settings.</Trans>
+						) : null
+					}
 					value={effectiveOutputDeviceId}
 					options={outputDeviceOptions}
+					disabled={!canSelectOutputDevice}
 					onChange={(value) => VoiceSettingsCommands.update({outputDeviceId: value})}
 					controlWidth="wide"
 					menuMinWidth={280}
@@ -600,8 +606,8 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						step={1}
 						markers={[0, 50, 100, 150, 200]}
 						stickToMarkers={false}
-						onMarkerRender={formatRoundedPercentage}
-						onValueRender={formatRoundedPercentage}
+						onMarkerRender={formatPercentage}
+						onValueRender={formatPercentage}
 						onValueChange={(value) => VoiceSettingsCommands.update({inputVolume: value})}
 						data-flx="user.voice-tab.slider"
 					/>
@@ -628,8 +634,8 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						step={1}
 						markers={[0, 50, 100, 150, 200]}
 						stickToMarkers={false}
-						onMarkerRender={formatRoundedPercentage}
-						onValueRender={formatRoundedPercentage}
+						onMarkerRender={formatPercentage}
+						onValueRender={formatPercentage}
 						onValueChange={(value) => VoiceSettingsCommands.update({outputVolume: value})}
 						data-flx="user.voice-tab.slider--2"
 					/>
@@ -646,8 +652,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							data-flx="user.voice-tab.warning-alert"
 						>
 							<Trans>
-								Looks like you're using {externalProcessor.name}. Stacking {PRODUCT_NAME}'s processing on top can cause
-								pumping or distortion. Direct input passes your audio through untouched.
+								Looks like you're using {externalProcessor.name}. Stacking{' '}
+								{ph({PRODUCT_NAME: RuntimeConfig.productName})}'s processing on top can cause pumping or distortion.
+								Direct input passes your audio through untouched.
 							</Trans>
 						</WarningAlert>
 					)}
@@ -659,12 +666,26 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							aria-label={i18n._(SELECT_VOICE_PROCESSING_DESCRIPTOR)}
 							data-flx="user.voice-tab.radio-group.voice-processing-mode-change"
 						/>
+						{voiceProcessingMode === 'voice' && noiseSuppressionFallbackMessage && (
+							<p
+								className={styles.pttSettingDescription}
+								data-flx="user.user-voice-tab.voice-tab.ptt-setting-description"
+							>
+								{noiseSuppressionFallbackMessage}
+							</p>
+						)}
 						{voiceProcessingMode === 'voice' && (
 							<div className={styles.profileSubSection} data-flx="user.voice-tab.profile-sub-section">
 								{renderPttControls()}
+								{renderAutoGainControlSwitch()}
 							</div>
 						)}
-						{voiceProcessingMode === 'studio' && pttCombo?.key && isPushToTalk && (
+						{voiceProcessingMode === 'studio' && stereoMicrophoneAvailable && (
+							<div className={styles.profileSubSection} data-flx="user.voice-tab.studio-profile-sub-section">
+								{renderStereoMicrophoneSwitch('user.voice-tab.studio-profile.switch.set-stereo-microphone')}
+							</div>
+						)}
+						{voiceProcessingMode === 'studio' && isPushToTalk && Keybind.hasPushToTalkKeybind() && (
 							<WarningAlert data-flx="user.voice-tab.warning-alert--2">
 								<Trans>Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it.</Trans>
 							</WarningAlert>
@@ -681,11 +702,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						inputVolume,
 						outputVolume,
 						echoCancellation,
-						noiseSuppression,
-						autoGainControl: effectiveAutoGainControl,
-						deepFilterNoiseSuppression,
-						deepFilterNoiseSuppressionLevel,
+						autoGainControl,
 						voiceProcessingMode,
+						stereoMicrophone: isStereoMicrophoneEnabled(),
 					}}
 					data-flx="user.voice-tab.mic-test-section"
 				/>
@@ -696,11 +715,6 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			>
 				<EntranceSoundSection data-flx="user.voice-tab.entrance-sound-section" />
 			</SettingsTabSection>
-			{NativePermission.isNativeMacDesktop && (
-				<SettingsTabSection title={i18n._(MACOS_DESCRIPTOR)} data-flx="user.voice-tab.macos-section">
-					<MacPermissionsSettingsRow data-flx="user.voice-tab.macos-permissions-row" />
-				</SettingsTabSection>
-			)}
 		</>
 	);
 });

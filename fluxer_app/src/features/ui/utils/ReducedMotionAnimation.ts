@@ -32,9 +32,3 @@ export const TOOLTIP_MOTION: MotionAnimation = {
 		scale: {type: 'spring', damping: 25, stiffness: 500},
 	},
 };
-export const FADE_MOTION: MotionAnimation = {
-	initial: {opacity: 0},
-	animate: {opacity: 1},
-	exit: {opacity: 0},
-	transition: {duration: 0.2},
-};

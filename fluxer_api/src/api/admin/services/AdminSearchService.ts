@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {Logger} from '@app/api/Logger';
+import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
+import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import type {ApiContext} from '../../ApiContext';
-import {createGuildID, createUserID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {Logger} from '../../Logger';
-import {getGuildSearchService, getUserSearchService} from '../../SearchFactory';
-import {mapGuildToAdminResponse} from '../models/GuildTypes';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 	index_type:
@@ -19,7 +23,8 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 		| 'channel_messages'
 		| 'favorite_memes'
 		| 'guild_members'
-		| 'discovery';
+		| 'discovery'
+		| 'threads';
 	admin_user_id: string;
 	audit_log_reason: string | null;
 	job_id: string;
@@ -29,7 +34,7 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 
 interface AdminSearchServiceDeps {
 	apiContext: ApiContext;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	auditService: AdminAuditService;
 }
 
@@ -44,8 +49,7 @@ export class AdminSearchService {
 		);
 		const guildSearchService = getGuildSearchService();
 		if (!guildSearchService) {
-			Logger.error('[AdminSearchService] searchGuilds - Search service not enabled');
-			throw new Error('Search is not enabled');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const query = data.query?.trim() || '';
 		const isIdQuery = /^\d+$/.test(query);
@@ -108,16 +112,7 @@ export class AdminSearchService {
 		const lastActiveIp = data.last_active_ip?.trim();
 		if (lastActiveIp) {
 			const {userIds, total} = await userRepository.listUserIdsByLastActiveIp(lastActiveIp, data.limit, data.offset);
-			const users = await userRepository.listUsers(userIds);
-			const usersById = new Map(users.map((user) => [user.id.toString(), user]));
-			const orderedUsers = [];
-			for (const userId of userIds) {
-				const user = usersById.get(userId.toString());
-				if (user) {
-					orderedUsers.push(user);
-				}
-			}
-			const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+			const response = await this.mapOrderedUsers(userIds, acls);
 			return {
 				users: response,
 				total,
@@ -125,20 +120,22 @@ export class AdminSearchService {
 		}
 		const userSearchService = getUserSearchService();
 		if (!userSearchService) {
-			throw new Error('Search is not enabled');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const query = data.query?.trim() || '';
-		const isIdQuery = /^\d+$/.test(query);
+		const isBrowseAll = query === '' || query === '*';
+		const searchFilters: UserSearchFilters = isBrowseAll
+			? {sortBy: 'createdAt', sortOrder: 'asc'}
+			: {sortBy: 'relevance'};
+		const directUserId = /^\d+$/.test(query) ? createUserID(BigInt(query)) : null;
+		const canResolveDirectUser = directUserId !== null && !isSyntheticUserId(directUserId) && data.offset === 0;
 		const [searchResult, directUser] = await Promise.all([
-			userSearchService.search(query, {}, {limit: data.limit, offset: data.offset}),
-			isIdQuery && data.offset === 0
-				? userRepository.findUnique(createUserID(BigInt(query))).catch(() => null)
-				: Promise.resolve(null),
+			userSearchService.search(query, searchFilters, {limit: data.limit, offset: data.offset}),
+			canResolveDirectUser ? userRepository.findUnique(directUserId).catch(() => null) : Promise.resolve(null),
 		]);
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
-		const users = await userRepository.listUsers(userIds);
-		const response = await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+		const response = await this.mapOrderedUsers(userIds, acls);
 		if (directUser && data.offset === 0) {
 			const directId = directUser.id.toString();
 			if (!response.some((u) => u.id === directId)) {
@@ -161,7 +158,8 @@ export class AdminSearchService {
 				| 'channel_messages'
 				| 'guild_members'
 				| 'favorite_memes'
-				| 'discovery';
+				| 'discovery'
+				| 'threads';
 			guild_id?: bigint;
 			user_id?: bigint;
 		},
@@ -179,25 +177,32 @@ export class AdminSearchService {
 		};
 		if (data.index_type === 'channel_messages') {
 			if (!data.guild_id) {
-				throw new Error('guild_id is required for the channel_messages index type');
+				throw InputValidationError.create('guild_id', 'guild_id is required for the channel_messages index type');
+			}
+			payload.guild_id = data.guild_id.toString();
+		}
+		if (data.index_type === 'threads') {
+			if (!data.guild_id) {
+				throw InputValidationError.create('guild_id', 'guild_id is required for the threads index type');
 			}
 			payload.guild_id = data.guild_id.toString();
 		}
 		if (data.index_type === 'guild_members') {
 			if (!data.guild_id) {
-				throw new Error('guild_id is required for the guild_members index type');
+				throw InputValidationError.create('guild_id', 'guild_id is required for the guild_members index type');
 			}
 			payload.guild_id = data.guild_id.toString();
 		}
 		if (data.index_type === 'favorite_memes') {
 			if (!data.user_id) {
-				throw new Error('user_id is required for favorite_memes index type');
+				throw InputValidationError.create('user_id', 'user_id is required for the favorite_memes index type');
 			}
 			payload.user_id = data.user_id.toString();
 		}
 		await workerService.addJob('refreshSearchIndex', payload, {
 			jobKey: `refreshSearchIndex_${data.index_type}_${jobId}`,
 			maxAttempts: 1,
+			requireLedger: true,
 		});
 		Logger.debug({index_type: data.index_type, job_id: jobId}, 'Queued search index refresh job');
 		const metadata = new Map([
@@ -243,5 +248,17 @@ export class AdminSearchService {
 			};
 		}
 		return status;
+	}
+
+	private async mapOrderedUsers(userIds: Array<UserID>, acls: ReadonlySet<string>) {
+		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const users = await userRepository.listUsers(userIds);
+		const usersById = new Map(users.map((user) => [user.id.toString(), user]));
+		const orderedUsers = [];
+		for (const userId of userIds) {
+			const user = usersById.get(userId.toString());
+			if (user) orderedUsers.push(user);
+		}
+		return Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
 	}
 }

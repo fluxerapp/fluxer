@@ -1,27 +1,96 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	AutocompleteType,
+	HistoryFilterRow,
+} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
 import type {Channel} from '@app/features/channel/models/Channel';
+import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
-import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {resolveSearchChannelDisplayName} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {IconProps} from '@phosphor-icons/react';
-import {ChatCenteredDotsIcon, EnvelopeSimpleIcon, GlobeIcon, HashIcon, UsersIcon} from '@phosphor-icons/react';
+import {ChatCenteredDotsIcon, ChatCircleIcon, GlobeIcon, HashIcon, UsersIcon} from '@phosphor-icons/react';
 
 export const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentType<IconProps>> = {
 	current: HashIcon,
-	all_dms: EnvelopeSimpleIcon,
+	all_dms: ChatCircleIcon,
 	open_dms: ChatCenteredDotsIcon,
 	all_guilds: GlobeIcon,
 	all: UsersIcon,
 	open_dms_and_all_guilds: UsersIcon,
 };
 
+export function resolveChannelSuggestionDisplayName(channel: Channel): string {
+	if (channel.type === ChannelTypes.GROUP_DM || channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+		return ChannelUtils.getDMDisplayName(channel);
+	}
+	return resolveSearchChannelDisplayName(channel);
+}
+
 export function filterRequiresValue(filter: SearchFilterOption): boolean {
 	return Boolean(filter.requiresValue) || (filter.values?.length ?? 0) > 0;
+}
+
+export const PLAINTEXT_SUGGESTION_FILTER_KEYS: ReadonlyArray<string> = ['from', 'in', 'mentions'];
+export const PLAINTEXT_SUGGESTIONS_PER_FILTER = 3;
+const INLINE_FILTER_KEYS: ReadonlyArray<string> = ['from', 'in', 'has', 'mentions'];
+
+export interface SearchFilterEligibility {
+	isInGuildChannel: boolean;
+	hidePersonalInformation: boolean;
+}
+
+export function isSearchFilterOptionEligible(
+	option: SearchFilterOption,
+	{isInGuildChannel, hidePersonalInformation}: SearchFilterEligibility,
+): boolean {
+	if (!option.requiresGuild) return true;
+	if (isInGuildChannel) return true;
+	return option.dmEligible === true && !hidePersonalInformation;
+}
+
+export function orderInlineFilterOptions(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<SearchFilterOption> {
+	const eligible = options.filter((option) => isSearchFilterOptionEligible(option, eligibility));
+	const byKey = new Map(eligible.map((option) => [option.key, option]));
+	const ordered: Array<SearchFilterOption> = [];
+	for (const key of INLINE_FILTER_KEYS) {
+		const option = byKey.get(key);
+		if (option != null) {
+			ordered.push(option);
+		}
+	}
+	return ordered;
+}
+
+function listDiscoverableFilterOptions(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<SearchFilterOption> {
+	return options.filter((option) => !option.key.startsWith('-') && isSearchFilterOptionEligible(option, eligibility));
+}
+
+export function buildHistoryFilterRows(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<HistoryFilterRow> {
+	const promoted = orderInlineFilterOptions(options, eligibility);
+	const promotedKeys = new Set(promoted.map((option) => option.key));
+	const rest = listDiscoverableFilterOptions(options, eligibility).filter((option) => !promotedKeys.has(option.key));
+	return [...promoted, ...rest].map((option) => ({kind: 'filter', option}));
+}
+
+const SEARCH_VALUE_MODES = new Set<AutocompleteType>(['users', 'channels', 'values', 'date']);
+
+export function isSearchValueMode(autocompleteType: AutocompleteType): boolean {
+	return SEARCH_VALUE_MODES.has(autocompleteType);
 }
 
 export interface MessageSearchCurrentWordRequest {
@@ -44,14 +113,14 @@ export function resolveMessageSearchCurrentWord({value, cursorPosition}: Message
 	return value.slice(wordStart, boundedCursorPosition);
 }
 
-export interface TokenInsertionResult {
+interface TokenInsertionResult {
 	newText: string;
 	newCursorPos: number;
 	insertedDisplay: string;
 	insertedLength: number;
 }
 
-export interface TokenInsertionInput {
+interface TokenInsertionInput {
 	textBeforeCursor: string;
 	textAfterCursor: string;
 	lastWordStart: number;
@@ -60,7 +129,15 @@ export interface TokenInsertionInput {
 	addSpaceAfter: boolean;
 }
 
-export function computeTokenInsertion({
+const SEARCH_TOKEN_QUOTE_TRIGGER = /[\\" ]/;
+const SEARCH_TOKEN_ESCAPE = /[\\"]/g;
+
+function quoteSearchTokenValue(value: string): string {
+	if (!SEARCH_TOKEN_QUOTE_TRIGGER.test(value)) return value;
+	return `"${value.replace(SEARCH_TOKEN_ESCAPE, (match) => `\\${match}`)}"`;
+}
+
+function computeTokenInsertion({
 	textBeforeCursor,
 	textAfterCursor,
 	lastWordStart,
@@ -68,27 +145,22 @@ export function computeTokenInsertion({
 	tokenValue,
 	addSpaceAfter,
 }: TokenInsertionInput): TokenInsertionResult {
-	const needsQuotes = /\s/.test(tokenValue);
-	let display: string;
-	if (needsQuotes) {
-		display = `${syntax}"${tokenValue}"`;
-	} else {
-		display = `${syntax}${tokenValue}`;
-	}
+	const display = `${syntax}${quoteSearchTokenValue(tokenValue)}`;
 	const before = textBeforeCursor.slice(0, lastWordStart);
+	const isAlreadyFollowedBySpace = SEARCH_TOKEN_WHITESPACE.test(textAfterCursor.charAt(0));
 	let space = '';
-	if (addSpaceAfter) {
+	if (!isAlreadyFollowedBySpace && (addSpaceAfter || textAfterCursor.length > 0)) {
 		space = ' ';
 	}
-	let separator = '';
-	if (!addSpaceAfter && textAfterCursor.length > 0 && !/^\s/.test(textAfterCursor)) {
-		separator = ' ';
+	let caretAdvance = 0;
+	if (addSpaceAfter) {
+		caretAdvance = 1;
 	}
 	return {
-		newText: [before, display, space, separator, textAfterCursor].join(''),
-		newCursorPos: (before + display).length + space.length,
+		newText: [before, display, space, textAfterCursor].join(''),
+		newCursorPos: (before + display).length + caretAdvance,
 		insertedDisplay: display,
-		insertedLength: display.length + space.length + separator.length,
+		insertedLength: display.length + space.length,
 	};
 }
 
@@ -161,18 +233,6 @@ export function replaceSearchTokenAtCursor(input: SearchTokenReplacementInput): 
 	};
 }
 
-export function deduplicateMembers(members: Array<GuildMember>): Array<GuildMember> {
-	const seen = new Set<string>();
-	const result: Array<GuildMember> = [];
-	for (const member of members) {
-		if (!seen.has(member.user.id)) {
-			seen.add(member.user.id);
-			result.push(member);
-		}
-	}
-	return result;
-}
-
 export function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): void {
 	if (!ref) {
 		return;
@@ -181,7 +241,7 @@ export function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): vo
 		ref(value);
 		return;
 	}
-	(ref as React.MutableRefObject<T | null>).current = value;
+	ref.current = value;
 }
 
 export function normalizeFilterKey(filterKey: string): string {
@@ -207,6 +267,41 @@ export function isUserFilterKey(filterKey: string): boolean {
 			return true;
 		default:
 			return false;
+	}
+}
+
+type DmChannelSuggestionMode = 'none' | 'current' | 'open' | 'all';
+type GuildChannelSuggestionMode = 'none' | 'current_guild' | 'all_guilds';
+
+export interface ChannelSuggestionSearchPlan {
+	dmMode: DmChannelSuggestionMode;
+	guildMode: GuildChannelSuggestionMode;
+	currentGuildId?: string;
+}
+
+export function getChannelSuggestionSearchPlan(
+	scope: MessageSearchScope,
+	currentGuildId: string | undefined,
+): ChannelSuggestionSearchPlan {
+	switch (scope) {
+		case 'current':
+			return currentGuildId
+				? {dmMode: 'none', guildMode: 'current_guild', currentGuildId}
+				: {dmMode: 'current', guildMode: 'none'};
+		case 'all_dms':
+			return {dmMode: 'all', guildMode: 'none'};
+		case 'open_dms':
+			return {dmMode: 'open', guildMode: 'none'};
+		case 'all':
+			return {dmMode: 'all', guildMode: 'all_guilds'};
+		case 'open_dms_and_all_guilds':
+			return {dmMode: 'open', guildMode: 'all_guilds'};
+		case 'all_guilds':
+			return {dmMode: 'none', guildMode: 'all_guilds'};
+		default: {
+			const exhaustiveScope: never = scope;
+			throw new Error(`Unsupported message search scope: ${exhaustiveScope}`);
+		}
 	}
 }
 
@@ -269,7 +364,7 @@ export function getUserGuildSearchPlan(
 	};
 }
 
-export type MemberSearchBoosters = Record<string, number>;
+type MemberSearchBoosters = Record<string, number>;
 
 export function buildUserSearchBoosters(
 	channel: Channel | undefined,

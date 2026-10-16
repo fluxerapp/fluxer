@@ -4,14 +4,13 @@ import {EmailVerificationAlert} from '@app/features/app/components/dialogs/compo
 import {UnclaimedAccountAlert} from '@app/features/app/components/dialogs/components/UnclaimedAccountAlert';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import Guilds from '@app/features/guild/state/Guilds';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import type {LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -19,7 +18,7 @@ import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownT
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -31,9 +30,12 @@ import * as UserCommands from '@app/features/user/commands/UserCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import styles from '@app/features/user/components/modals/tabs/MyProfileTab.module.css';
 import {AccentColorPicker} from '@app/features/user/components/modals/tabs/my_profile_tab/AccentColorPicker';
-import {AvatarUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
+import {
+	AvatarUploader,
+	useChangeAvatarAction,
+} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
-import {BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
+import {BIO_MARKDOWN_PARSER_FLAGS, BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
 import {UsernameSection} from '@app/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection';
 import {PerGuildPremiumUpsell} from '@app/features/user/components/modals/tabs/my_profile_tab/PerGuildPremiumUpsell';
 import {PremiumBadgeSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings';
@@ -52,9 +54,17 @@ import {
 import {ProfileTypeSelector} from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileTypeSelector';
 import {TimezoneProfileSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings';
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
+import {PRONOUNS_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {Profile} from '@app/features/user/models/Profile';
 import Users from '@app/features/user/state/Users';
+import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {
+	COMMUNITY_NICKNAME_DESCRIPTOR,
+	DISPLAY_NAME_DESCRIPTOR,
+	DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR,
+	PROFILE_CUSTOMIZATION_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
 import {type RemoteFormResetReason, useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -101,10 +111,7 @@ const PROFILE_CUSTOMIZATION_FOR_DESCRIPTOR = msg({
 	message: 'Profile customization for {selectedGuildName}',
 	comment: 'Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.',
 });
-const PROFILE_CUSTOMIZATION_DESCRIPTOR = msg({
-	message: 'Profile customization',
-	comment: 'Short label in the my profile tab. Keep it concise.',
-});
+
 const VERIFY_YOUR_EMAIL_TO_EDIT_THIS_COMMUNITY_PROFILE_DESCRIPTOR = msg({
 	message: 'Verify your email to edit this community profile',
 	comment: 'Label in the my profile tab.',
@@ -119,13 +126,10 @@ const VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_COMMUNITY_NICKNAME_DESCRIPTOR = msg
 });
 const VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_USERNAME_DISPLAY_DESCRIPTOR = msg({
 	message:
-		'Verify your email before changing your username, display name, avatar, banner, bio, pronouns, timezone, or {premiumProductName} badge privacy.',
+		'Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy.',
 	comment: 'Label in the my profile tab.',
 });
-const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
-	message: 'Community nickname',
-	comment: 'Short label in the my profile tab. Keep it concise.',
-});
+
 const THIS_NICKNAME_WILL_ONLY_BE_VISIBLE_IN_THIS_DESCRIPTOR = msg({
 	message: 'This nickname will only be visible in this community',
 	comment: 'Label in the my profile tab.',
@@ -134,19 +138,7 @@ const YOU_DON_T_HAVE_PERMISSION_TO_CHANGE_YOUR_DESCRIPTOR = msg({
 	message: "You can't change your nickname here",
 	comment: 'Label in the my profile tab. Keep the tone plain and specific.',
 });
-const DISPLAY_NAME_DESCRIPTOR = msg({
-	message: 'Display name',
-	comment: 'Short label in the my profile tab. Keep it concise.',
-});
-const PRONOUNS_DESCRIPTOR = msg({
-	message: 'Pronouns',
-	comment: 'Short label in the my profile tab. Keep it concise.',
-});
-const DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR = msg({
-	message:
-		"Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985.",
-	comment: 'Label in the my profile tab.',
-});
+
 const logger = new Logger('MyProfileTab');
 
 function hasGuildMemberProfileFlag(member: GuildMemberData, flag: number): boolean {
@@ -251,7 +243,9 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const [lastFlashTrigger, setLastFlashTrigger] = useState(0);
 	const [ariaAnnouncement, setAriaAnnouncement] = useState('');
 	const isClaimed = user?.isClaimed() ?? false;
-	const isProfileCustomizationLocked = isClaimed && user?.verified === false;
+	const isProfileEmailLocked = isClaimed && user?.verified === false;
+	const isProfileAccountLimited = user?.accountLimited === true;
+	const isProfileCustomizationLocked = isProfileEmailLocked || isProfileAccountLimited;
 	const form = useForm<FormInputs>({
 		defaultValues: {
 			bio: null,
@@ -410,7 +404,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	);
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const hasPremium = useMemo(() => showPremiumFeatures && (user?.isPremium() ?? false), [showPremiumFeatures, user]);
-	const hasProfileTimezoneAccess = (user?.isStaff() ?? false) && DeveloperOptions.showProfileTimezoneSettings;
 	const hasPerGuildProfiles = useMemo(
 		() =>
 			isLimitToggleEnabled(
@@ -448,7 +441,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const handleBioChange = useCallback((display: string, segments: Array<MentionSegment>, wire: string) => {
 		setBioValue(display);
 		setBioSegments(segments);
-		setBioActualValue(wire);
+		setBioActualValue(dropTrailingEmptyBlockquoteLines(wire, BIO_MARKDOWN_PARSER_FLAGS));
 	}, []);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
@@ -536,10 +529,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				};
 				assignProfileAssetUploadPatch(updateData, 'avatar', avatarAsset);
 				assignProfileAssetUploadPatch(updateData, 'banner', bannerAsset);
-				if (hasProfileTimezoneAccess) {
-					updateData.timezone = data.timezone;
-					updateData.timezone_privacy_flags = data.timezone_privacy_flags;
-				}
+				updateData.timezone = data.timezone;
+				updateData.timezone_privacy_flags = data.timezone_privacy_flags;
 				if (data.premium_badge_hidden !== undefined) {
 					updateData.premium_badge_hidden = data.premium_badge_hidden;
 				}
@@ -590,7 +581,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			commitProfileFormValues,
 			isPerGuildProfile,
 			isProfileCustomizationLocked,
-			hasProfileTimezoneAccess,
 			selectedGuildId,
 			user,
 			activeProfileData,
@@ -628,6 +618,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		form.setValue('avatar', null);
 		transitionAvatarAsset({type: 'asset.cleared'});
 	}, [form, transitionAvatarAsset]);
+	const {openChangeAvatar} = useChangeAvatarAction({onAvatarChange: handleAvatarChange});
 	const handleBannerChange = useCallback(
 		(base64: string) => {
 			form.setValue('banner', base64);
@@ -687,12 +678,15 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const guilds = Guilds.getGuilds();
 	const selectedGuild = selectedGuildId ? guilds.find((g) => g.id === selectedGuildId) : null;
 	const isPerGuildProfileCustomizationDisabled = isPerGuildProfile && !hasPerGuildProfiles;
+	const isAvatarCustomizationDisabled = isProfileCustomizationLocked || isPerGuildProfileCustomizationDisabled;
 	const isPronounsDisabled = isProfileCustomizationLocked;
-	const profileCustomizationDescription = isProfileCustomizationLocked
+	const profileCustomizationDescription = isProfileEmailLocked
 		? isPerGuildProfile
 			? i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_THIS_COMMUNITY_PROFILE_DESCRIPTOR)
 			: i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_YOUR_PROFILE_YOU_DESCRIPTOR)
-		: i18n._(EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR);
+		: isProfileAccountLimited
+			? i18n._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR)
+			: i18n._(EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR);
 	const hasAvatar =
 		!avatarAsset.hasCleared &&
 		(avatarAsset.hasAsset || (!avatarAsset.isDirty && Boolean(profileRemoteValues?.avatar.hasCustomAsset)));
@@ -700,12 +694,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		!bannerAsset.hasCleared &&
 		(bannerAsset.hasAsset || (!bannerAsset.isDirty && Boolean(profileRemoteValues?.banner.hasCustomAsset)));
 	const profileFallbackDisplayName = NicknameUtils.getDisplayName(user);
-	const watchedTimezone = hasProfileTimezoneAccess ? (form.watch('timezone') ?? null) : null;
-	const watchedTimezonePrivacyFlags = hasProfileTimezoneAccess
-		? (form.watch('timezone_privacy_flags') ?? ProfileFieldPrivacyFlags.EVERYONE)
-		: ProfileFieldPrivacyFlags.EVERYONE;
+	const watchedTimezone = form.watch('timezone') ?? null;
+	const watchedTimezonePrivacyFlags = form.watch('timezone_privacy_flags') ?? ProfileFieldPrivacyFlags.EVERYONE;
 	const previewTimezoneOffset =
-		hasProfileTimezoneAccess && !isPerGuildProfile && watchedTimezone !== null && watchedTimezonePrivacyFlags !== 0
+		!isPerGuildProfile && watchedTimezone !== null && watchedTimezonePrivacyFlags !== 0
 			? getCurrentTimeZoneOffsetMinutes(watchedTimezone)
 			: null;
 	return (
@@ -744,7 +736,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						description={profileCustomizationDescription}
 						data-flx="user.my-profile-tab.my-profile-tab-component.settings-section"
 					>
-						{isProfileCustomizationLocked && (
+						{isProfileEmailLocked && (
 							<EmailVerificationAlert
 								title={
 									isPerGuildProfile
@@ -755,9 +747,9 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 							>
 								{isPerGuildProfile
 									? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_COMMUNITY_NICKNAME_DESCRIPTOR)
-									: hasProfileTimezoneAccess && showPremiumFeatures
+									: showPremiumFeatures
 										? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_USERNAME_DISPLAY_DESCRIPTOR, {
-												premiumProductName: PREMIUM_PRODUCT_NAME,
+												premiumProductName: getPremiumProductName(),
 											})
 										: i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_YOUR_PROFILE_YOU_DESCRIPTOR)}
 							</EmailVerificationAlert>
@@ -831,7 +823,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											disabled={isPronounsDisabled}
 										/>
 									</div>
-									{!isPerGuildProfile && hasProfileTimezoneAccess && (
+									{!isPerGuildProfile && (
 										<TimezoneProfileSettings
 											timezone={watchedTimezone}
 											timezonePrivacyFlags={watchedTimezonePrivacyFlags}
@@ -853,7 +845,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											hasAvatar={hasAvatar}
 											onAvatarChange={handleAvatarChange}
 											onAvatarClear={handleAvatarClear}
-											disabled={isProfileCustomizationLocked || isPerGuildProfileCustomizationDisabled}
+											disabled={isAvatarCustomizationDisabled}
 											disableModeSelection={isProfileCustomizationLocked}
 											isPerGuildProfile={isPerGuildProfile}
 											errorMessage={form.formState.errors.avatar?.message}
@@ -916,6 +908,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											composerRef={bioComposerRef}
 											emojiPickerOpen={bioExpressionPickerOpen}
 											onEmojiPickerOpenChange={setBioExpressionPickerOpen}
+											data-flx="user.my-profile-tab.my-profile-tab-component.bio-editor.bio-change"
 										/>
 									</div>
 								</div>
@@ -946,6 +939,9 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										}}
 										ignoreGuildAvatarInPreview={isPerGuildProfile && avatarAsset.mode === 'inherit'}
 										ignoreGuildBannerInPreview={isPerGuildProfile && bannerAsset.mode === 'inherit'}
+										onAvatarClick={
+											mobileLayout.enabled && !isAvatarCustomizationDisabled ? openChangeAvatar : undefined
+										}
 										data-flx="user.my-profile-tab.my-profile-tab-component.profile-preview"
 									/>
 								</div>
@@ -974,7 +970,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					onClose={() => setBioExpressionPickerOpen(false)}
 					onEmojiSelect={handleBioEmojiSelect}
 					visibleTabs={['emojis']}
-					selectedTab="emojis"
 					zIndex={30000}
 					data-flx="user.my-profile-tab.my-profile-tab-component.expression-picker-sheet"
 				/>

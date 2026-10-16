@@ -11,12 +11,6 @@
 	background-color: var(--background-secondary);
 }
 
-.dmLayoutContainerMobile {
-	composes: dmLayoutContainer;
-	grid-template-columns: 1fr;
-	background-color: var(--background-secondary);
-}
-
 .dmLayoutContainerFullscreen {
 	grid-template-columns: minmax(0, 1fr);
 	background-color: #000;

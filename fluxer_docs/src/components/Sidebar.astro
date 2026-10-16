@@ -1,0 +1,24 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import ThemeSelect from '@/components/ThemeSelect.astro';
+---
+
+<flx-sidebar-head>
+	<flx-sidebar-brand>
+		<SiteTitle />
+		<flx-sidebar-actions>
+			<flx-sidebar-social>
+				<SocialIcons />
+			</flx-sidebar-social>
+			<ThemeSelect />
+		</flx-sidebar-actions>
+	</flx-sidebar-brand>
+	<flx-sidebar-search>
+		<Search />
+	</flx-sidebar-search>
+</flx-sidebar-head>
+<Default />

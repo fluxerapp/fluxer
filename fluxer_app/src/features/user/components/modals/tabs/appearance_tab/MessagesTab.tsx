@@ -9,8 +9,10 @@ import {
 import {Message} from '@app/features/channel/components/ChannelMessage';
 import {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import {isNewMessageGroup} from '@app/features/messaging/utils/MessageGroupingUtils';
+import {resolveNearestNumericOption} from '@app/features/ui/components/form/ComboboxNumericInput';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
@@ -24,6 +26,11 @@ import {FontSizeTabContent} from '@app/features/user/components/modals/tabs/appe
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {
+	COMFY_DESCRIPTOR,
+	DENSE_DESCRIPTOR,
+	SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {MessagePreviewContext, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -52,18 +59,12 @@ const TURN_DENSE_MODE_ON_NICE_DESCRIPTOR = msg({
 	message: '... turn dense mode on. Nice!',
 	comment: 'Description text in the messages tab.',
 });
-const COMFY_DESCRIPTOR = msg({
-	message: 'Comfy',
-	comment: 'Short label in the messages tab. Keep it concise.',
-});
+
 const SPACIOUS_LAYOUT_WITH_CLEAR_VISUAL_SEPARATION_BETWEEN_MESSAGES_DESCRIPTOR = msg({
 	message: 'Spacious layout with clear visual separation between messages.',
 	comment: 'Description text in the messages tab.',
 });
-const DENSE_DESCRIPTOR = msg({
-	message: 'Dense',
-	comment: 'Short label in the messages tab. Keep it concise.',
-});
+
 const MAXIMIZES_VISIBLE_MESSAGES_WITH_MINIMAL_SPACING_DESCRIPTOR = msg({
 	message: 'Maximizes visible messages with minimal spacing.',
 	comment: 'Description text in the messages tab.',
@@ -76,10 +77,7 @@ const HIDE_USER_AVATARS_DESCRIPTOR = msg({
 	message: 'Hide user avatars',
 	comment: 'Short label in the messages tab. Keep it concise.',
 });
-const SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR = msg({
-	message: 'Space between message groups',
-	comment: 'Label in the messages tab.',
-});
+
 const PIXELS_DESCRIPTOR = msg({
 	message: '{messageGroupSpacing}px',
 	comment: 'Message group spacing option label.',
@@ -103,18 +101,6 @@ const getNearestMessageGroupSpacing = (value: number): number => {
 	return nearest;
 };
 
-const resolveMessageGroupSpacingInput = (
-	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined => {
-	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	return options.reduce((nearest, option) =>
-		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
-	).value;
-};
 const MessagesPreview: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const {messageDisplayCompact} = UserSettings;
@@ -239,7 +225,7 @@ export const MessagesTabContent: React.FC = observer(() => {
 		() =>
 			MESSAGE_GROUP_SPACING_OPTIONS.map((value) => ({
 				value,
-				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: value}),
+				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: getCachedNumberFormat(i18n.locale).format(value)}),
 			})),
 		[i18n.locale],
 	);
@@ -287,7 +273,7 @@ export const MessagesTabContent: React.FC = observer(() => {
 				value={selectedMessageGroupSpacing}
 				options={messageGroupSpacingOptions}
 				onChange={(value) => AccessibilityCommands.update(getMessageGroupSpacingPatch(messageDisplayCompact, value))}
-				autoSelectValueFromInput={resolveMessageGroupSpacingInput}
+				autoSelectValueFromInput={resolveNearestNumericOption}
 				controlWidth="small"
 				menuMinWidth={128}
 				aria-label={i18n._(SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR)}

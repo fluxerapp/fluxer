@@ -48,16 +48,3 @@
 	flex-direction: column;
 	gap: 0.5rem;
 }
-
-.errorBox {
-	border-radius: 0.375rem;
-	border-width: 0.0625rem;
-	border-color: var(--background-header-secondary);
-	background-color: var(--background-tertiary);
-	padding: 1.5rem;
-}
-
-.errorText {
-	text-align: center;
-	color: var(--text-primary-muted);
-}

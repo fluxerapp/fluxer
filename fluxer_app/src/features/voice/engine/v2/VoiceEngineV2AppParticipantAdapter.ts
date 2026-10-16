@@ -2,61 +2,25 @@
 
 import assert from 'node:assert/strict';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
-import {
-	asVoiceConnectionQuality,
-	type VoiceConnectionQuality,
-	VoiceConnectionQuality as VoiceConnectionQualityValue,
-	VoiceTrackSource,
-} from '@app/features/voice/engine/VoiceTrackSource';
+import {asVoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
-	VoiceEngineV2Controller,
-	VoiceEngineV2Event,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
 	VoiceEngineV2Track,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import type {Participant, Room, TrackPublication} from 'livekit-client';
 import {Track} from 'livekit-client';
-import {assertNonNullObject, assertString} from './VoiceEngineV2AppAdapterAssertions';
 
-export const NATIVE_SPEAKING_HEARTBEAT_TIMEOUT_MS = 3_000;
 const MAX_DISCARDED_CONNECTION_IDS = 4096;
-const MAX_NATIVE_SPEAKING_HEARTBEATS = 4096;
-
-export interface VoiceEngineV2AppNativeSpeakingSample {
-	participantSid: string;
-	identity: string;
-	source: string;
-	isLocal: boolean;
-	speaking: boolean;
-}
-
-export interface VoiceEngineV2AppNativeParticipantFields {
-	identity: string;
-	sid: string;
-	name?: string;
-	isLocal?: boolean;
-	metadata?: string;
-	attributes?: Readonly<Record<string, string>>;
-	isMicrophoneEnabled?: boolean;
-	isCameraEnabled?: boolean;
-	isScreenShareEnabled?: boolean;
-	isScreenShareAudioEnabled?: boolean;
-}
-
-export interface VoiceEngineV2AppParticipantTrackFlags {
-	isMicrophoneEnabled?: boolean;
-	isCameraEnabled?: boolean;
-	isScreenShareEnabled?: boolean;
-	isScreenShareAudioEnabled?: boolean;
-}
 
 export interface VoiceEngineV2AppParticipantAdapterOptions {
 	controller: VoiceEngineV2Controller;
 	getModel: () => VoiceEngineV2Model;
 	ingest?: (event: VoiceEngineV2Event) => void;
 	getCurrentConnectionId?: () => string | null | undefined;
-	now?: () => number;
 }
 
 export type VoiceEngineV2AppLivekitParticipantSnapshot = LivekitParticipantSnapshot &
@@ -153,90 +117,18 @@ function collectParticipantTracks(participant: Participant): Array<VoiceEngineV2
 	return tracks;
 }
 
-function updateTrackFlags(
-	participant: VoiceEngineV2AppLivekitParticipantSnapshot,
-	flags: VoiceEngineV2AppParticipantTrackFlags,
-): VoiceEngineV2AppLivekitParticipantSnapshot {
-	return {
-		...participant,
-		isMicrophoneEnabled: flags.isMicrophoneEnabled ?? participant.isMicrophoneEnabled,
-		isCameraEnabled: flags.isCameraEnabled ?? participant.isCameraEnabled,
-		isScreenShareEnabled: flags.isScreenShareEnabled ?? participant.isScreenShareEnabled,
-		isScreenShareAudioEnabled: flags.isScreenShareAudioEnabled ?? participant.isScreenShareAudioEnabled,
-	};
-}
-
-function withAudioLevelSpeaking(
-	participant: VoiceEngineV2AppLivekitParticipantSnapshot,
-	speaking: boolean,
-	nowMs: number,
-): VoiceEngineV2AppLivekitParticipantSnapshot {
-	return {
-		...participant,
-		isAudioLevelSpeaking: speaking,
-		lastSpokeAt: speaking ? nowMs : participant.lastSpokeAt,
-	};
-}
-
-function participantAttributesEqual(
-	next: Readonly<Record<string, string>>,
-	previous: Readonly<Record<string, string>>,
-): boolean {
-	assertNonNullObject(next, 'next');
-	assertNonNullObject(previous, 'previous');
-	const nextKeys = Object.keys(next);
-	if (nextKeys.length !== Object.keys(previous).length) return false;
-	for (const key of nextKeys) {
-		if (next[key] !== previous[key]) return false;
-	}
-	return true;
-}
-
-function nativeFieldsMatchExistingSnapshot(
-	fields: VoiceEngineV2AppNativeParticipantFields,
-	existing: VoiceEngineV2AppLivekitParticipantSnapshot,
-): boolean {
-	assertNonNullObject(fields, 'fields');
-	assertNonNullObject(existing, 'existing');
-	if (existing.joinedAt == null) return false;
-	if ((fields.name ?? existing.name ?? '') !== existing.name) return false;
-	if ((fields.sid || existing.sid || '') !== existing.sid) return false;
-	if ((fields.isLocal ?? existing.isLocal ?? false) !== existing.isLocal) return false;
-	if ((fields.metadata ?? existing.metadata) !== existing.metadata) return false;
-	if ((fields.isMicrophoneEnabled ?? existing.isMicrophoneEnabled ?? false) !== existing.isMicrophoneEnabled) {
-		return false;
-	}
-	if ((fields.isCameraEnabled ?? existing.isCameraEnabled ?? false) !== existing.isCameraEnabled) {
-		return false;
-	}
-	if ((fields.isScreenShareEnabled ?? existing.isScreenShareEnabled ?? false) !== existing.isScreenShareEnabled) {
-		return false;
-	}
-	if (
-		(fields.isScreenShareAudioEnabled ?? existing.isScreenShareAudioEnabled ?? false) !==
-		existing.isScreenShareAudioEnabled
-	) {
-		return false;
-	}
-	if (fields.attributes === undefined) return true;
-	return participantAttributesEqual(fields.attributes, existing.attributes ?? {});
-}
-
 export class VoiceEngineV2AppParticipantAdapter {
 	private readonly controller: VoiceEngineV2Controller;
 	private readonly getModel: () => VoiceEngineV2Model;
 	private readonly ingest: (event: VoiceEngineV2Event) => void;
 	private readonly getCurrentConnectionId: () => string | null | undefined;
-	private readonly now: () => number;
 	private readonly discardedConnectionIds = new Set<string>();
-	private readonly nativeSpeakingHeartbeatsMs = new Map<string, number>();
 
 	constructor(options: VoiceEngineV2AppParticipantAdapterOptions) {
 		this.controller = options.controller;
 		this.getModel = options.getModel;
 		this.ingest = options.ingest ?? ((event) => this.controller.dispatch(event));
 		this.getCurrentConnectionId = options.getCurrentConnectionId ?? (() => null);
-		this.now = options.now ?? (() => Date.now());
 	}
 
 	get participants(): Readonly<Record<string, VoiceEngineV2AppLivekitParticipantSnapshot>> {
@@ -268,7 +160,6 @@ export class VoiceEngineV2AppParticipantAdapter {
 			const participant = participants[identity];
 			if (!participant) continue;
 			if (participant.connectionId === connectionId) {
-				this.nativeSpeakingHeartbeatsMs.delete(participant.identity);
 				this.ingest({type: 'room.participantLeft', participantIdentity: participant.identity});
 			}
 		}
@@ -314,149 +205,9 @@ export class VoiceEngineV2AppParticipantAdapter {
 		}
 	}
 
-	upsertParticipantFromNative(fields: VoiceEngineV2AppNativeParticipantFields): void {
-		assertNonNullObject(fields, 'fields');
-		assertString(fields.identity, 'fields.identity');
-		if (this.isConnectionDiscarded(extractParticipantConnectionId(fields.identity))) return;
-		const existing = this.participants[fields.identity];
-		if (existing && nativeFieldsMatchExistingSnapshot(fields, existing)) return;
-		const participant: VoiceEngineV2AppLivekitParticipantSnapshot = {
-			identity: fields.identity,
-			name: fields.name ?? existing?.name ?? '',
-			userId: extractParticipantUserId(fields.identity),
-			connectionId: extractParticipantConnectionId(fields.identity),
-			sid: fields.sid || existing?.sid || '',
-			isLocal: fields.isLocal ?? existing?.isLocal ?? false,
-			isSpeaking: existing?.isSpeaking ?? false,
-			isAudioLevelSpeaking: existing?.isAudioLevelSpeaking ?? false,
-			connectionQuality: existing?.connectionQuality ?? VoiceConnectionQualityValue.Unknown,
-			metadata: fields.metadata ?? existing?.metadata,
-			attributes:
-				fields.attributes === undefined
-					? (existing?.attributes ?? Object.freeze({}))
-					: Object.freeze({...fields.attributes}),
-			audioTrackSids: existing?.audioTrackSids ?? Object.freeze([]),
-			videoTrackSids: existing?.videoTrackSids ?? Object.freeze([]),
-			isMicrophoneEnabled: fields.isMicrophoneEnabled ?? existing?.isMicrophoneEnabled ?? false,
-			isCameraEnabled: fields.isCameraEnabled ?? existing?.isCameraEnabled ?? false,
-			isScreenShareEnabled: fields.isScreenShareEnabled ?? existing?.isScreenShareEnabled ?? false,
-			isScreenShareAudioEnabled: fields.isScreenShareAudioEnabled ?? existing?.isScreenShareAudioEnabled ?? false,
-			joinedAt: existing?.joinedAt ?? this.now(),
-			lastSpokeAt: existing?.lastSpokeAt ?? null,
-		};
-		this.upsertSnapshot(participant);
-	}
-
-	patchParticipantTrackFlags(identity: string, flags: VoiceEngineV2AppParticipantTrackFlags): void {
-		assertString(identity, 'identity');
-		assertNonNullObject(flags, 'flags');
-		const participant = this.participants[identity];
-		if (!participant) return;
-		if (this.isConnectionDiscarded(participant.connectionId)) return;
-		this.upsertSnapshot(updateTrackFlags(participant, flags));
-	}
-
-	setConnectionQualityForNative(sid: string, quality: VoiceConnectionQuality): void {
-		assertString(sid, 'sid');
-		const participant = this.getParticipantBySid(sid);
-		if (!participant) return;
-		if (participant.connectionQuality === quality) return;
-		this.upsertSnapshot({...participant, connectionQuality: quality});
-	}
-
-	updateActiveSpeakersBySid(sids: ReadonlyArray<string>): void {
-		assert.ok(Array.isArray(sids), 'sids must be array');
-		const speakerSids = new Set(sids);
-		const participants = this.participants;
-		for (const identity in participants) {
-			const participant = participants[identity];
-			if (!participant) continue;
-			const speaking = speakerSids.has(participant.sid);
-			if (participant.isSpeaking === speaking) continue;
-			this.upsertSnapshot({...participant, isSpeaking: speaking});
-		}
-	}
-
-	applyNativeSpeakingSample(sample: VoiceEngineV2AppNativeSpeakingSample, nowMs: number = this.now()): void {
-		assertNonNullObject(sample, 'sample');
-		assertString(sample.identity, 'sample.identity');
-		assert.equal(sample.source, 'microphone', 'native speaking sample must come from a microphone track');
-		assert.equal(typeof sample.speaking, 'boolean', 'sample.speaking must be a boolean');
-		assert.ok(Number.isFinite(nowMs), 'nowMs must be finite');
-		const participant = this.resolveNativeSpeakingParticipant(sample);
-		if (!participant) return;
-		if (this.isConnectionDiscarded(participant.connectionId)) return;
-		if (sample.speaking) {
-			assert.ok(
-				this.nativeSpeakingHeartbeatsMs.size <= MAX_NATIVE_SPEAKING_HEARTBEATS,
-				`nativeSpeakingHeartbeatsMs exceeded cap=${MAX_NATIVE_SPEAKING_HEARTBEATS}`,
-			);
-			this.nativeSpeakingHeartbeatsMs.set(participant.identity, nowMs);
-		} else {
-			this.nativeSpeakingHeartbeatsMs.delete(participant.identity);
-		}
-		if (participant.isAudioLevelSpeaking === sample.speaking) return;
-		this.upsertSnapshot(withAudioLevelSpeaking(participant, sample.speaking, nowMs));
-	}
-
-	sweepNativeSpeakingHeartbeats(nowMs: number = this.now()): void {
-		assert.ok(Number.isFinite(nowMs), 'nowMs must be finite');
-		assert.ok(
-			this.nativeSpeakingHeartbeatsMs.size <= MAX_NATIVE_SPEAKING_HEARTBEATS,
-			`nativeSpeakingHeartbeatsMs exceeded cap=${MAX_NATIVE_SPEAKING_HEARTBEATS}`,
-		);
-		const expired: Array<string> = [];
-		for (const [identity, heartbeatMs] of this.nativeSpeakingHeartbeatsMs) {
-			if (nowMs - heartbeatMs >= NATIVE_SPEAKING_HEARTBEAT_TIMEOUT_MS) {
-				expired.push(identity);
-			}
-		}
-		for (const identity of expired) {
-			this.nativeSpeakingHeartbeatsMs.delete(identity);
-			const participant = this.participants[identity];
-			if (!participant) continue;
-			if (!participant.isAudioLevelSpeaking) continue;
-			this.upsertSnapshot(withAudioLevelSpeaking(participant, false, nowMs));
-		}
-	}
-
-	private resolveNativeSpeakingParticipant(
-		sample: VoiceEngineV2AppNativeSpeakingSample,
-	): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
-		assertNonNullObject(sample, 'sample');
-		const byIdentity = this.participants[sample.identity];
-		if (byIdentity) return byIdentity;
-		if (sample.participantSid.length > 0) {
-			return this.getParticipantBySid(sample.participantSid);
-		}
-		return undefined;
-	}
-
 	removeParticipant(identity: string): void {
 		assertString(identity, 'identity');
-		this.nativeSpeakingHeartbeatsMs.delete(identity);
 		this.ingest({type: 'room.participantLeft', participantIdentity: identity});
-	}
-
-	removeParticipantBySid(sid: string): void {
-		assertString(sid, 'sid');
-		const participant = this.getParticipantBySid(sid);
-		if (participant) this.removeParticipant(participant.identity);
-	}
-
-	getParticipant(identity: string): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
-		assertString(identity, 'identity');
-		return this.participants[identity];
-	}
-
-	getParticipantBySid(sid: string): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
-		assertString(sid, 'sid');
-		const participants = this.participants;
-		for (const identity in participants) {
-			const participant = participants[identity];
-			if (participant?.sid === sid) return participant;
-		}
-		return undefined;
 	}
 
 	getLocalParticipant(): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
@@ -497,13 +248,7 @@ export class VoiceEngineV2AppParticipantAdapter {
 		return undefined;
 	}
 
-	extractConnectionId(identity: string): string | null {
-		assertString(identity, 'identity');
-		return extractParticipantConnectionId(identity);
-	}
-
 	clear(): void {
-		this.nativeSpeakingHeartbeatsMs.clear();
 		const participants = this.participants;
 		for (const identity in participants) {
 			const participant = participants[identity];

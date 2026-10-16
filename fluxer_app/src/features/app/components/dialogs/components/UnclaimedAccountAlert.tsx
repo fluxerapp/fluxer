@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
@@ -23,10 +24,17 @@ export const UnclaimedAccountAlert = observer(() => {
 			}
 			data-flx="app.unclaimed-account-alert.warning-alert"
 		>
-			<Trans>
-				Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices
-				and you could lose access to your account. Claim your account now to secure it.
-			</Trans>
+			{RuntimeConfig.usesUsernameSignIn ? (
+				<Trans>
+					Your account is not yet claimed. Without a username and password, you won't be able to sign in from other
+					devices and you could lose access to your account. Claim your account now to secure it.
+				</Trans>
+			) : (
+				<Trans>
+					Your account is not yet claimed. Without an email and password, you won't be able to sign in from other
+					devices and you could lose access to your account. Claim your account now to secure it.
+				</Trans>
+			)}
 		</WarningAlert>
 	);
 });

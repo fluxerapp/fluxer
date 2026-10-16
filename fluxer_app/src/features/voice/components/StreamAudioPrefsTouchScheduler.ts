@@ -48,12 +48,3 @@ export function registerStreamAudioPrefsTouch(streamKey: string): () => void {
 		stopStreamTouchIntervalIfIdle();
 	};
 }
-
-export function getActiveStreamAudioPrefsTouchCountForTests(): number {
-	return streamTouchRefs.size;
-}
-
-export function clearStreamAudioPrefsTouchSchedulerForTests(): void {
-	streamTouchRefs.clear();
-	stopStreamTouchIntervalIfIdle();
-}

@@ -43,7 +43,7 @@ pub async fn render(
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;
             let resp = client
-                .list_guild_members(guild_id, limit, page * limit)
+                .list_guild_members(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild members")?;
             Some(tabs::members::members_tab(
@@ -57,7 +57,7 @@ pub async fn render(
             let page = query.reports_page.unwrap_or(0);
             let limit: u32 = 25;
             let resp = client
-                .search_reports_by_guild(guild_id, limit, page * limit)
+                .search_reports_by_guild(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild reports")?;
             Some(tabs::reports::reports_tab(
@@ -78,8 +78,12 @@ pub async fn render(
                 .map(|response| response.emojis)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild emojis"))
                 .unwrap_or_default();
-            Some(tabs::emojis::emojis_tab(
-                config, &guild, &emojis, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &emojis,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Emoji,
             ))
         }
         "stickers" => {
@@ -92,8 +96,30 @@ pub async fn render(
                 .map(|response| response.stickers)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild stickers"))
                 .unwrap_or_default();
-            Some(tabs::stickers::stickers_tab(
-                config, &guild, &stickers, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &stickers,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Sticker,
+            ))
+        }
+        "threads" => {
+            if !acl::has_permission(admin_acls, acl::GUILD_LOOKUP) {
+                return None;
+            }
+            let threads = client
+                .list_guild_threads(guild_id)
+                .await
+                .map(|response| response.threads)
+                .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild threads"))
+                .unwrap_or_default();
+            Some(tabs::threads::threads_tab(
+                config,
+                &guild,
+                &threads,
+                acl::has_permission(admin_acls, acl::MESSAGE_DELETE_ALL),
+                csrf_token,
             ))
         }
         "audit_log" | "audit-log" => {
@@ -121,6 +147,7 @@ pub async fn render(
                     admin_user_id: None,
                     target_id: Some(guild_id.to_owned()),
                     target_type: Some("guild".to_owned()),
+                    access: Some("write".to_owned()),
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit: 50,
@@ -134,7 +161,7 @@ pub async fn render(
                     @if let Some(resp) = resp {
                         @if resp.logs.is_empty() {
                             p class="text-sm text-neutral-500" {
-                                "No admin audit log entries for this guild."
+                                "No admin write actions have been recorded for this guild."
                             }
                         } @else {
                             (table_container(table(maud::html! {
@@ -150,22 +177,6 @@ pub async fn render(
                 },
             ))
         }
-        "billing" => {
-            if config.self_hosted || !acl::has_permission(admin_acls, acl::BILLING_VIEW) {
-                return None;
-            }
-            let billing = client
-                .get_billing_overview(guild_id)
-                .await
-                .log_error("load guild billing overview")
-                .map(|b| b.data);
-            Some(tabs::billing::billing_tab(
-                config,
-                guild_id,
-                billing.as_ref(),
-                csrf_token,
-            ))
-        }
         "applications" => {
             if !acl::has_any_permission(
                 admin_acls,
@@ -174,11 +185,18 @@ pub async fn render(
                 return None;
             }
             let apps = client
-                .list_user_applications(guild_id)
+                .list_guild_applications(guild_id)
                 .await
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild applications"))
                 .unwrap_or_default();
-            Some(tabs::applications::applications_tab(config, &guild, &apps))
+            Some(
+                crate::templates::pages::user_detail_tabs::applications::applications_tab(
+                    config,
+                    &apps,
+                    "No applications installed",
+                    "This guild does not have any installed applications.",
+                ),
+            )
         }
         "archives" => {
             if !acl::has_any_permission(

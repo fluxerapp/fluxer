@@ -20,7 +20,7 @@
 role_list(Data) when is_map(Data) ->
     [
         normalize_role(Role)
-     || Role <- guild_data_index:ensure_list(
+     || Role <- map_utils:ensure_list(
             maps:get(<<"roles">>, Data, [])
         ),
         is_map(Role)
@@ -41,7 +41,7 @@ role_index(_) ->
 put_roles(Roles, Data) when is_map(Data) ->
     RoleList = [
         normalize_role(Role)
-     || Role <- guild_data_index:ensure_list(Roles),
+     || Role <- map_utils:ensure_list(Roles),
         is_map(Role)
     ],
     Data#{
@@ -68,7 +68,7 @@ build_role_perms_cache(Roles) ->
 -spec cache_role_permissions(role(), map()) -> map().
 cache_role_permissions(Role, Acc) ->
     RoleId = snowflake_id:parse_optional(maps:get(<<"id">>, Role, undefined)),
-    Perms = permission_bits:parse_optional(maps:get(<<"permissions">>, Role, undefined)),
+    Perms = bitset:parse_optional(maps:get(<<"permissions">>, Role, undefined)),
     cache_role_permissions(RoleId, Perms, Acc).
 
 -spec cache_role_permissions(term(), term(), map()) -> map().
@@ -87,47 +87,3 @@ normalize_role(Role) ->
 -spec existing_role_index(map()) -> #{snowflake_id() => role()}.
 existing_role_index(Index) ->
     Index.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-role_list_non_map_input_test() ->
-    ?assertEqual([], role_list(not_a_map)).
-
-role_list_non_list_roles_value_test() ->
-    ?assertEqual([], role_list(#{<<"roles">> => <<"invalid">>})).
-
-role_index_non_map_input_test() ->
-    ?assertEqual(#{}, role_index(not_a_map)).
-
-role_index_from_list_test() ->
-    Data = #{
-        <<"roles">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"Admin">>},
-            #{<<"id">> => <<"200">>, <<"name">> => <<"Member">>}
-        ]
-    },
-    Index = role_index(Data),
-    ?assertEqual(2, map_size(Index)),
-    ?assertEqual(<<"Admin">>, maps:get(<<"name">>, maps:get(100, Index))).
-
-put_roles_updates_list_and_index_test() ->
-    Data = #{<<"roles">> => [#{<<"id">> => <<"1">>, <<"name">> => <<"old">>}]},
-    NewRoles = [
-        #{<<"id">> => <<"10">>, <<"name">> => <<"new1">>},
-        #{<<"id">> => <<"20">>, <<"name">> => <<"new2">>}
-    ],
-    Updated = put_roles(NewRoles, Data),
-    ?assertEqual(
-        [
-            #{<<"id">> => 10, <<"name">> => <<"new1">>},
-            #{<<"id">> => 20, <<"name">> => <<"new2">>}
-        ],
-        role_list(Updated)
-    ),
-    ?assertEqual(2, map_size(role_index(Updated))).
-
-put_roles_non_map_data_returns_unchanged_test() ->
-    ?assertEqual(not_a_map, put_roles([], not_a_map)).
-
--endif.

@@ -5,14 +5,7 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import type {SettingsSubtab, SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import type {QuickSwitcherResultType, QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-import {DAYS_PER_WEEK, MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
-
-export const MAX_GENERAL_RESULTS = 5;
-export const MAX_QUERY_MODE_RESULTS = 20;
-export const MAX_RECENT_RESULTS = 8;
-export const MAX_UNREAD_RESULTS = 8;
-export const UNREAD_SORT_WEIGHT_BOOST = DAYS_PER_WEEK * MS_PER_DAY;
-export const QUICK_SWITCHER_MODAL_KEY = 'nav_quick_switcher';
+export const QUICK_SWITCHER_OVERLAY_ID = 'nav_quick_switcher';
 export const MEMBER_SEARCH_LIMIT = 25;
 
 export type QuickSwitcherQueryMode =
@@ -24,7 +17,7 @@ export type QuickSwitcherQueryMode =
 	| typeof QuickSwitcherResultTypes.SETTINGS;
 
 export interface ComputeResultsForQueryResult {
-	queryMode: QuickSwitcherQueryMode | null;
+	prefixMode: QuickSwitcherQueryMode | null;
 	results: Array<QuickSwitcherResult>;
 	selectedIndex: number;
 }
@@ -42,7 +35,6 @@ export interface UserResult {
 	subtitle?: string;
 	user: User;
 	dmChannelId: string | null;
-	viewContext?: string;
 }
 
 export interface GroupDMResult {
@@ -51,7 +43,6 @@ export interface GroupDMResult {
 	title: string;
 	subtitle?: string;
 	channel: Channel;
-	viewContext?: string;
 }
 
 export interface TextChannelResult {
@@ -61,7 +52,6 @@ export interface TextChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface VoiceChannelResult {
@@ -71,7 +61,6 @@ export interface VoiceChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface GuildResult {

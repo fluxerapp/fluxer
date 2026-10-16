@@ -16,7 +16,6 @@ import {z} from 'zod';
 const EMAIL_LOCAL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
 const DISCRIMINATOR_REGEX = /^\d{1,4}$/;
 const FLUXER_TAG_REGEX = /^[a-zA-Z0-9_]+$/;
-export const PHONE_E164_REGEX = /^\+[1-9]\d{1,14}$/;
 
 function sanitizeUsername(value: string): string {
 	if (value.length > MAX_STRING_PROCESSING_LENGTH) {
@@ -33,10 +32,10 @@ function sanitizeUsername(value: string): string {
 export const EmailType = withOpenApiType(
 	z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.pipe(
 			withStringLengthRangeValidation(
-				z.string().email(ValidationErrorCodes.INVALID_EMAIL_FORMAT),
+				z.email(ValidationErrorCodes.INVALID_EMAIL_FORMAT),
 				1,
 				254,
 				ValidationErrorCodes.EMAIL_LENGTH_INVALID,
@@ -49,6 +48,21 @@ export const EmailType = withOpenApiType(
 			return EMAIL_LOCAL_REGEX.test(local);
 		}, ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART),
 	'EmailType',
+);
+
+const EMAIL_BLOCKLIST_DOMAIN_REGEX =
+	/^@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+
+export const EmailBlocklistEntryType = withOpenApiType(
+	z
+		.string()
+		.overwrite(normalizeString)
+		.refine(
+			(value: string) =>
+				EMAIL_BLOCKLIST_DOMAIN_REGEX.test(value) ? value.length <= 254 : EmailType.safeParse(value).success,
+			ValidationErrorCodes.INVALID_EMAIL_FORMAT,
+		),
+	'EmailBlocklistEntryType',
 );
 export const DiscriminatorType = withOpenApiType(
 	z
@@ -63,7 +77,7 @@ export const DiscriminatorType = withOpenApiType(
 export const UsernameType = withOpenApiType(
 	z
 		.string()
-		.transform((value) => value.trim())
+		.trim()
 		.pipe(withStringLengthRangeValidation(z.string(), 1, 32, ValidationErrorCodes.USERNAME_LENGTH_INVALID))
 		.refine((value) => FLUXER_TAG_REGEX.test(value), ValidationErrorCodes.USERNAME_INVALID_CHARACTERS)
 		.refine((value) => {
@@ -101,18 +115,11 @@ export const GlobalNameType = z
 export const PasswordType = withOpenApiType(
 	z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.pipe(withStringLengthRangeValidation(z.string(), 8, 256, ValidationErrorCodes.PASSWORD_LENGTH_INVALID)),
 	'PasswordType',
 );
-export const PhoneNumberType = withOpenApiType(
-	z
-		.string()
-		.transform(normalizeString)
-		.refine((value) => PHONE_E164_REGEX.test(value), ValidationErrorCodes.PHONE_NUMBER_INVALID_FORMAT),
-	'PhoneNumberType',
-);
 export const WebhookNameType = z
 	.string()
-	.transform(normalizeString)
+	.overwrite(normalizeString)
 	.pipe(withStringLengthRangeValidation(z.string(), 1, 80, ValidationErrorCodes.WEBHOOK_NAME_LENGTH_INVALID));

@@ -2,8 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
 type IncidentImpact = 'critical' | 'major' | 'minor' | 'maintenance';
@@ -90,7 +89,11 @@ const POLL_ACTIVE_MAINTENANCE_JITTER_MS = 15 * 1000;
 const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
-const STATUS_PAGE_FETCH_OPTIONS: RequestInit = {cache: 'no-store'};
+const STATUS_PAGE_FETCH_TIMEOUT_MS = 10 * 1000;
+
+function statusPageFetchOptions(): RequestInit {
+	return {cache: 'no-store', signal: AbortSignal.timeout(STATUS_PAGE_FETCH_TIMEOUT_MS)};
+}
 
 export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
 	if (scheduledMaintenance?.status === 'in_progress') {
@@ -190,34 +193,71 @@ export class StatusPage {
 	scheduledMaintenance: StatusPageMaintenance | null = null;
 	pollTimerId: NodeJS.Timeout | null = null;
 	private checkInFlight: Promise<void> | null = null;
+	private checkInFlightUrl: string | null = null;
 	private lastCheckedAt = 0;
+	private pollingRequested = false;
 	private pollingStarted = false;
-	private readonly isSelfHosted = RuntimeConfig.isSelfHosted();
 
 	constructor() {
-		makeAutoObservable<StatusPage, 'checkInFlight' | 'lastCheckedAt' | 'pollingStarted' | 'pollTimerId'>(
+		makeAutoObservable<
+			StatusPage,
+			'checkInFlight' | 'checkInFlightUrl' | 'lastCheckedAt' | 'pollingRequested' | 'pollingStarted' | 'pollTimerId'
+		>(
 			this,
 			{
 				checkInFlight: false,
+				checkInFlightUrl: false,
 				lastCheckedAt: false,
+				pollingRequested: false,
 				pollingStarted: false,
 				pollTimerId: false,
 			},
 			{autoBind: true},
 		);
+		reaction(
+			() => RuntimeConfig.statusPageUrl,
+			() => this.handleStatusPageUrlChange(),
+		);
+	}
+
+	private handleStatusPageUrlChange(): void {
+		this.incident = null;
+		this.scheduledMaintenance = null;
+		this.checkInFlight = null;
+		this.checkInFlightUrl = null;
+		this.lastCheckedAt = 0;
+		this.stopActivePolling();
+		this.reconcilePolling();
 	}
 
 	startPolling(): void {
-		if (this.isSelfHosted || this.pollingStarted) {
-			return;
-		}
-
-		this.pollingStarted = true;
-		this.addResumeListeners();
-		this.schedulePoll();
+		this.pollingRequested = true;
+		this.reconcilePolling();
 	}
 
 	stopPolling(): void {
+		this.pollingRequested = false;
+		this.stopActivePolling();
+	}
+
+	private reconcilePolling(): void {
+		if (!this.pollingRequested || !RuntimeConfig.statusPageUrl) {
+			this.stopActivePolling();
+			return;
+		}
+		if (this.pollingStarted) {
+			return;
+		}
+		this.pollingStarted = true;
+		this.addResumeListeners();
+		void this.checkIncidents();
+		this.schedulePoll();
+	}
+
+	private stopActivePolling(): void {
+		if (!this.pollingStarted) {
+			return;
+		}
 		this.pollingStarted = false;
 		this.removeResumeListeners();
 		this.clearPollTimer();
@@ -239,38 +279,43 @@ export class StatusPage {
 	}
 
 	async checkIncidents(): Promise<void> {
-		if (this.isSelfHosted) {
+		const statusPageUrl = RuntimeConfig.statusPageUrl;
+		if (!statusPageUrl) {
 			return;
 		}
-		if (this.checkInFlight) {
+		if (this.checkInFlight !== null && this.checkInFlightUrl === statusPageUrl) {
 			return this.checkInFlight;
 		}
-		this.checkInFlight = this.fetchIncidents();
+		const pending = this.fetchIncidents(statusPageUrl);
+		this.checkInFlight = pending;
+		this.checkInFlightUrl = statusPageUrl;
 		try {
-			await this.checkInFlight;
+			await pending;
 		} finally {
-			this.lastCheckedAt = Date.now();
-			this.checkInFlight = null;
+			if (this.checkInFlight === pending) {
+				this.lastCheckedAt = Date.now();
+				this.checkInFlight = null;
+				this.checkInFlightUrl = null;
+			}
 		}
 	}
 
-	private async fetchIncidents(): Promise<void> {
+	private async fetchIncidents(statusPageUrl: string): Promise<void> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/summary.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${statusPageUrl}/summary.json`, statusPageFetchOptions());
 			if (!response.ok) {
-				runInAction(() => {
-					this.incident = null;
-					this.scheduledMaintenance = null;
-				});
 				return;
 			}
 			const data: InstatusSummary = await response.json();
 			const activeIncident = data.activeIncidents?.find((inc) => inc.status !== 'RESOLVED' && inc.resolved == null);
 			let activeMaintenance = selectActiveStatusPageMaintenance(data.activeMaintenances);
 			if (shouldFetchComponentMaintenances(data, activeMaintenance)) {
-				activeMaintenance = selectActiveStatusPageMaintenance(await this.fetchComponentMaintenances());
+				activeMaintenance = selectActiveStatusPageMaintenance(await this.fetchComponentMaintenances(statusPageUrl));
 			}
 			runInAction(() => {
+				if (statusPageUrl !== RuntimeConfig.statusPageUrl) {
+					return;
+				}
 				if (activeIncident) {
 					this.incident = {
 						id: activeIncident.id,
@@ -296,16 +341,12 @@ export class StatusPage {
 			});
 		} catch {
 			logger.warn('Failed to fetch status page');
-			runInAction(() => {
-				this.incident = null;
-				this.scheduledMaintenance = null;
-			});
 		}
 	}
 
-	private async fetchComponentMaintenances(): Promise<Array<InstatusMaintenance>> {
+	private async fetchComponentMaintenances(statusPageUrl: string): Promise<Array<InstatusMaintenance>> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/components.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${statusPageUrl}/components.json`, statusPageFetchOptions());
 			if (!response.ok) {
 				return [];
 			}
@@ -317,8 +358,8 @@ export class StatusPage {
 		}
 	}
 
-	clearIncident(): void {
-		this.incident = null;
+	refreshForConnectionIssue(): void {
+		this.refreshIfStale();
 	}
 
 	private async refreshAndReschedule(): Promise<void> {

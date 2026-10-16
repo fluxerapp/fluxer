@@ -16,6 +16,38 @@ finalize_pending_session_tracks_connected_user_test() ->
     ?assertEqual(2, maps:get(UserId, maps:get(presence_subscriptions, State1))),
     flush_connect_result().
 
+finalize_records_the_thread_viewer_flag_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{
+        enabled => true, included_users => #{<<"10">> => true}
+    }),
+    try
+        SessionId = <<"s-thread">>,
+        Attempt = 2,
+        State0 = finalize_state(SessionId, 10, Attempt, true, #{}, sets:new(), #{}),
+        State1 = State0#{data => #{thread_gate => #{active => true, version => 1}}},
+        Computed0 = finalize_computed(SessionId, 10),
+        Request = (maps:get(request, Computed0))#{thread_channels_capable => true},
+        Computed = Computed0#{request => Request, thread_viewer => true},
+        State2 = guild_connect_async:finalize_session_connect_async(
+            SessionId, Attempt, {ok, #{}}, Computed, State1
+        ),
+        Session = maps:get(SessionId, maps:get(sessions, State2)),
+        ?assertEqual(true, maps:get(thread_viewer, Session)),
+        ?assertEqual(true, maps:get(thread_capable, Session)),
+        receive
+            {thread_flip_resend, SessionId} -> ?assert(false)
+        after 0 -> ok
+        end,
+        flush_connect_result()
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
 finalize_connected_session_does_not_double_count_test() ->
     SessionId = <<"s1">>,
     UserId = 10,
@@ -122,6 +154,132 @@ enqueue_session_connect_async_allows_immediate_start_when_wait_queue_disabled_te
     ?assertEqual(Attempt, maps:get(SessionId, maps:get(session_connect_pending, State1))),
     WorkerRefs = maps:get(session_connect_worker_refs, State1, #{}),
     cleanup_worker_refs(WorkerRefs).
+
+finalize_batch_upserts_every_result_and_frees_one_worker_test() ->
+    UserId = 10,
+    Sessions = [<<"s1">>, <<"s2">>],
+    State0 = (finalize_state(<<"s1">>, UserId, 1, true, #{}, sets:new(), #{UserId => 1}))#{
+        sessions => maps:from_list([{S, pending_entry(S, UserId)} || S <- Sessions]),
+        session_connect_pending => maps:from_list([{S, 1} || S <- Sessions]),
+        session_connect_inflight => 2
+    },
+    State1 = guild_connect_async:finalize_session_connect_batch(
+        [{S, 1, {ok, #{}}, finalize_computed(S, UserId)} || S <- Sessions], State0
+    ),
+    ?assertEqual(1, maps:get(session_connect_inflight, State1)),
+    ?assertEqual(#{}, maps:get(session_connect_pending, State1)),
+    [
+        ?assertEqual(false, maps:get(pending_connect, maps:get(S, maps:get(sessions, State1))))
+     || S <- Sessions
+    ],
+    ?assertEqual(#{UserId => 2}, maps:get(user_session_counts, State1)),
+    ?assertEqual(3, maps:get(UserId, maps:get(presence_subscriptions, State1))),
+    ?assertEqual(2, length(flush_connect_results())).
+
+finalize_batch_skips_stale_attempts_test() ->
+    UserId = 11,
+    State0 = finalize_state(<<"s1">>, UserId, 2, true, #{}, sets:new(), #{UserId => 1}),
+    State1 = guild_connect_async:finalize_session_connect_batch(
+        [{<<"s1">>, 1, {ok, #{}}, finalize_computed(<<"s1">>, UserId)}], State0
+    ),
+    ?assertEqual(#{<<"s1">> => 2}, maps:get(session_connect_pending, State1)),
+    ?assertEqual(
+        true, maps:get(pending_connect, maps:get(<<"s1">>, maps:get(sessions, State1)))
+    ),
+    ?assertEqual([], flush_connect_results()).
+
+full_guild_reconnect_fits_the_connect_queue_test() ->
+    GuildId = 42,
+    State0 = (saturated_connect_state(GuildId, <<"s-0">>, 0, 1))#{
+        session_connect_queue => queue:new(),
+        session_connect_pending => #{},
+        sessions => #{}
+    },
+    State1 = lists:foldl(
+        fun(N, Acc) ->
+            SessionId = integer_to_binary(N),
+            guild_connect_async:enqueue_session_connect_async(
+                GuildId,
+                0,
+                connect_request(SessionId, N),
+                #{},
+                maps:remove(session_connect_max_queue, Acc)
+            )
+        end,
+        State0,
+        lists:seq(1, 3000)
+    ),
+    ?assertEqual(3000, queue:len(maps:get(session_connect_queue, State1))),
+    ?assertEqual(3000, map_size(maps:get(session_connect_pending, State1))),
+    receive
+        {guild_connect_result, GuildId, _, {error, overloaded}} ->
+            ?assert(false, connect_dropped)
+    after 0 ->
+        ok
+    end.
+
+queued_connects_spread_over_batched_workers_test() ->
+    ok = flush_batches(),
+    GuildId = 42,
+    Requests = [connect_request(integer_to_binary(N), N) || N <- lists:seq(1, 20)],
+    State0 = #{
+        id => GuildId,
+        sessions => #{},
+        session_connect_queue => queue:from_list([
+            #{guild_id => GuildId, attempt => 0, request => R, reply_via_pid => undefined}
+         || R <- Requests
+        ]),
+        session_connect_pending => #{},
+        session_connect_inflight => 0,
+        data => #{},
+        member_count => 0,
+        voice_states => #{},
+        member_list_engine => undefined,
+        virtual_channel_access => #{}
+    },
+    State1 = guild_connect_async:maybe_start_session_connect_workers(State0),
+    WorkerRefs = maps:get(session_connect_worker_refs, State1),
+    ?assertEqual(8, maps:get(session_connect_inflight, State1)),
+    ?assertEqual(8, map_size(WorkerRefs)),
+    ?assertEqual(0, queue:len(maps:get(session_connect_queue, State1))),
+    Batches = [receive_batch() || _ <- lists:seq(1, 8)],
+    ?assertEqual(
+        lists:sort([maps:get(session_id, R) || R <- Requests]),
+        lists:sort([SessionId || Batch <- Batches, {SessionId, 0, _, _} <- Batch])
+    ),
+    cleanup_worker_refs(WorkerRefs).
+
+pending_entry(SessionId, UserId) ->
+    #{
+        session_id => SessionId,
+        user_id => UserId,
+        pid => self(),
+        mref => make_ref(),
+        pending_connect => true,
+        active_guilds => sets:new()
+    }.
+
+receive_batch() ->
+    receive
+        {'$gen_cast', {session_connect_worker_batch_done, Results}} -> Results
+    after 5000 ->
+        ?assert(false, connect_batch_not_received)
+    end.
+
+flush_batches() ->
+    receive
+        {'$gen_cast', {session_connect_worker_batch_done, _Results}} -> flush_batches()
+    after 100 ->
+        ok
+    end.
+
+flush_connect_results() ->
+    receive
+        {guild_connect_result, _GuildId, _Attempt, _Reply} = Msg ->
+            [Msg | flush_connect_results()]
+    after 0 ->
+        []
+    end.
 
 finalize_state(SessionId, UserId, Attempt, PendingConnect, Counts, Connected, PresenceSubs) ->
     Existing = #{

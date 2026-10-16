@@ -3,7 +3,12 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
-import {EXPIRES_DESCRIPTOR, NEVER_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	EXPIRES_DESCRIPTOR,
+	NEVER_DESCRIPTOR,
+	UNKNOWN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey, stopPropagationOnEnterSpace} from '@app/features/input/utils/KeyboardUtils';
 import styles from '@app/features/invite/components/InviteListItem.module.css';
 import {useInviteCountdown} from '@app/features/invite/hooks/useInviteCountdown';
@@ -13,12 +18,13 @@ import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {formatShortRelativeTime} from '@fluxer/date_utils/src/DateDuration';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -31,10 +37,7 @@ const EXPIRED_DESCRIPTOR = msg({
 	message: 'Expired',
 	comment: 'Error message in the invite list item.',
 });
-const UNKNOWN_DESCRIPTOR = msg({
-	message: 'Unknown',
-	comment: 'Short label in the invite list item. Keep it concise.',
-});
+
 const NO_CATEGORY_DESCRIPTOR = msg({
 	message: 'No category',
 	comment: 'Empty-state text in the invite list item.',
@@ -104,26 +107,27 @@ export const InviteListItem: React.FC<{
 	const channel = showChannel ? channelFromState : null;
 	const category = showChannel && channelFromState?.parentId ? categoryFromState : null;
 	const usesText = useMemo(() => {
+		const locale = getCurrentLocale();
 		if (!guildInvite) {
-			return '0';
+			return formatNumber(0, locale);
 		}
 		const currentUses = guildInvite.uses ?? 0;
 		const maxUses = guildInvite.max_uses ?? 0;
 		if (maxUses > 0) {
-			return `${currentUses} / ${maxUses}`;
+			return `${formatNumber(currentUses, locale)} / ${formatNumber(maxUses, locale)}`;
 		}
-		return String(currentUses);
-	}, [guildInvite]);
+		return formatNumber(currentUses, locale);
+	}, [guildInvite, i18n.locale]);
 	const dateDisplay = useMemo(() => {
 		if (showCreatedDate) {
 			if (!guildInvite?.created_at) {
 				return '';
 			}
 			const createdDate = new Date(guildInvite.created_at);
-			return formatShortRelativeTime(createdDate);
+			return formatShortRelativeTime(i18n, createdDate);
 		}
 		return countdown || i18n._(NEVER_DESCRIPTOR);
-	}, [showCreatedDate, guildInvite, countdown]);
+	}, [showCreatedDate, guildInvite, countdown, i18n.locale]);
 	const dateTooltip = useMemo(() => {
 		if (showCreatedDate) {
 			if (!guildInvite?.created_at) {
@@ -166,13 +170,7 @@ export const InviteListItem: React.FC<{
 				</span>
 				{inviter && avatarUrl ? (
 					<>
-						<img
-							src={avatarUrl}
-							alt=""
-							className={styles.avatar}
-							loading="lazy"
-							data-flx="invite.invite-list-item.avatar"
-						/>
+						<img src={avatarUrl} alt="" className={styles.avatar} data-flx="invite.invite-list-item.avatar" />
 						<span className={styles.username} data-flx="invite.invite-list-item.username">
 							{inviterDisplayName}
 						</span>

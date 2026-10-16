@@ -6,6 +6,7 @@ import {GroupDMWelcomeSection} from '@app/features/channel/components/direct_mes
 import {PersonalNotesWelcomeSection} from '@app/features/channel/components/direct_message/PersonalNotesWelcomeSection';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {ThreadWelcomeSection} from '@app/features/threads/components/ThreadWelcomeSection';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {Trans} from '@lingui/react/macro';
@@ -40,6 +41,9 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 			<GroupDMWelcomeSection channel={channel} data-flx="channel.channel-welcome-section.group-dm-welcome-section" />
 		);
 	}
+	if (channel.isThread()) {
+		return <ThreadWelcomeSection thread={channel} data-flx="channel.channel-welcome-section.thread-welcome-section" />;
+	}
 	const channelDisplayName = `#${channel.name ?? ''}`;
 	return (
 		<div className={styles.container} data-flx="channel.channel-welcome-section.container">
@@ -53,7 +57,7 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 				<Trans>Welcome to {channelDisplayName}</Trans>
 			</h1>
 			<p className={styles.description} data-flx="channel.channel-welcome-section.description">
-				<Trans>In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good.</Trans>
+				<Trans>This is the start of {channelDisplayName}.</Trans>
 			</p>
 		</div>
 	);

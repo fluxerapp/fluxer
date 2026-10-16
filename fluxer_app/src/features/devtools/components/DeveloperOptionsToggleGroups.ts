@@ -29,22 +29,27 @@ const RENDER_ALL_YOUR_MESSAGES_AS_AN_UNKNOWN_MESSAGE_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Tooltip / description for the force-unknown-message-type override.',
 });
-const ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR = msg({
-	message: 'Always display the voice connection status bar in mocked mode.',
+const DISABLE_TRANSLATION_DOM_GUARD_DESCRIPTOR = msg({
+	message: 'Disable translation DOM guard',
+	comment: 'Developer option label for turning off the page-translator DOM crash guard.',
+});
+const STOP_PATCHING_NODE_PROTOTYPE_INSERTBEFORE_AND_DESCRIPTOR = msg({
+	message:
+		'Stop patching Node.prototype insertBefore and removeChild. The app will crash again when a page translator re-parents text nodes React still holds.',
 	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for forcing the voice connection status bar visible in mocked mode.',
+		'Developer / debug surface — keep terse and technical. Tooltip / description for the translation DOM guard kill switch.',
 });
 const APP_STATE_DESCRIPTOR = msg({
 	message: 'App state',
 	comment: 'Developer options group for overriding app/account state.',
 });
-const BYPASS_SPLASH_SCREEN_DESCRIPTOR = msg({
-	message: 'Bypass splash screen',
+const BYPASS_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Bypass loading skeleton',
 	comment: 'Developer option label.',
 });
-const FORCE_UPDATE_READY_DESCRIPTOR = msg({
-	message: 'Force update ready',
-	comment: 'Developer option label for simulating an available update.',
+const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Force loading skeleton',
+	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
@@ -57,10 +62,6 @@ const SELF_HOSTED_MODE_OVERRIDE_DESCRIPTOR = msg({
 const UI_COMPONENTS_DESCRIPTOR = msg({
 	message: 'UI components',
 	comment: 'Developer options group for forcing UI component states.',
-});
-const FORCE_GIF_PICKER_LOADING_DESCRIPTOR = msg({
-	message: 'Force GIF picker loading',
-	comment: 'Developer option label for simulating a loading GIF picker.',
 });
 const FORCE_SHOW_VANITY_URL_DISCLAIMER_DESCRIPTOR = msg({
 	message: 'Force show vanity URL disclaimer',
@@ -77,14 +78,6 @@ const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
 const SLOW_MESSAGE_SEND_DESCRIPTOR = msg({
 	message: 'Slow message send',
 	comment: 'Developer option label for simulating slow message sending.',
-});
-const SLOW_MESSAGE_EDIT_DESCRIPTOR = msg({
-	message: 'Slow message edit',
-	comment: 'Developer option label for simulating slow message edits.',
-});
-const SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR = msg({
-	message: 'Slow attachment upload',
-	comment: 'Developer option label for simulating slow file uploads.',
 });
 const SLOW_PROFILE_LOAD_DESCRIPTOR = msg({
 	message: 'Slow profile load',
@@ -114,28 +107,6 @@ const FORCE_UNKNOWN_MESSAGE_TYPE_DESCRIPTOR = msg({
 	message: 'Force unknown message type',
 	comment: 'Developer option label for rendering messages as unknown message types.',
 });
-const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
-	message: 'Force show voice connection',
-	comment: 'Developer option label for always showing the voice connection status bar.',
-});
-const SHOW_EXPRESSION_PACKS_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show expression packs settings',
-	comment: 'Developer option label for exposing the staff-only Expression packs page in user settings.',
-});
-const SHOW_EXPRESSION_PACKS_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only Expression packs page in user settings.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.',
-});
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show profile timezone settings',
-	comment: 'Developer option label for exposing the staff-only profile timezone section in profile settings.',
-});
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only timezone section in profile settings.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.',
-});
 const NO_OP_IN_APP_REPORTS_DESCRIPTOR = msg({
 	message: 'No-op in-app reports',
 	comment:
@@ -163,11 +134,8 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 	{
 		title: APP_STATE_DESCRIPTOR,
 		items: [
-			{key: 'bypassSplashScreen', label: BYPASS_SPLASH_SCREEN_DESCRIPTOR},
-			{
-				key: 'forceUpdateReady',
-				label: FORCE_UPDATE_READY_DESCRIPTOR,
-			},
+			{key: 'bypassLoadingSkeleton', label: BYPASS_LOADING_SKELETON_DESCRIPTOR},
+			{key: 'forceLoadingSkeleton', label: FORCE_LOADING_SKELETON_DESCRIPTOR},
 			{
 				key: 'showMyselfTyping',
 				label: SHOW_MYSELF_TYPING_DESCRIPTOR,
@@ -182,10 +150,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 	{
 		title: UI_COMPONENTS_DESCRIPTOR,
 		items: [
-			{
-				key: 'forceGifPickerLoading',
-				label: FORCE_GIF_PICKER_LOADING_DESCRIPTOR,
-			},
 			{
 				key: 'forceShowVanityURLDisclaimer',
 				label: FORCE_SHOW_VANITY_URL_DISCLAIMER_DESCRIPTOR,
@@ -203,14 +167,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 			{
 				key: 'slowMessageSend',
 				label: SLOW_MESSAGE_SEND_DESCRIPTOR,
-			},
-			{
-				key: 'slowMessageEdit',
-				label: SLOW_MESSAGE_EDIT_DESCRIPTOR,
-			},
-			{
-				key: 'slowAttachmentUpload',
-				label: SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR,
 			},
 			{
 				key: 'slowProfileLoad',
@@ -245,24 +201,14 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				description: RENDER_ALL_YOUR_MESSAGES_AS_AN_UNKNOWN_MESSAGE_DESCRIPTOR,
 			},
 			{
-				key: 'forceShowVoiceConnection',
-				label: FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR,
-				description: ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR,
-			},
-			{
-				key: 'showExpressionPacksSettings',
-				label: SHOW_EXPRESSION_PACKS_SETTINGS_DESCRIPTOR,
-				description: SHOW_EXPRESSION_PACKS_SETTINGS_DESC_DESCRIPTOR,
-			},
-			{
-				key: 'showProfileTimezoneSettings',
-				label: SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR,
-				description: SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR,
-			},
-			{
 				key: 'noOpInAppReports',
 				label: NO_OP_IN_APP_REPORTS_DESCRIPTOR,
 				description: NO_OP_IN_APP_REPORTS_DESC_DESCRIPTOR,
+			},
+			{
+				key: 'disableTranslationDomGuard',
+				label: DISABLE_TRANSLATION_DOM_GUARD_DESCRIPTOR,
+				description: STOP_PATCHING_NODE_PROTOTYPE_INSERTBEFORE_AND_DESCRIPTOR,
 			},
 		],
 	},

@@ -5,8 +5,7 @@ import {
 	MarkdownContext,
 	type MarkdownParseOptions,
 } from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
-import {WasmParser} from '@app/features/messaging/utils/markdown/parser/WasmParser';
+import {parseMarkdownContent} from '@app/features/messaging/utils/markdown/MarkdownParseCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
@@ -51,9 +50,7 @@ function parseMarkdown(
 ): React.ReactNode {
 	noteText(content);
 	try {
-		const flags = getParserFlagsForContext(options.context);
-		const parser = new WasmParser(content, flags);
-		const {nodes} = parser.parse();
+		const {nodes} = parseMarkdownContent({content, context: options.context});
 		const renderedContent = render(nodes, options);
 		return wrapRenderedContent(renderedContent, options.context);
 	} catch (error) {

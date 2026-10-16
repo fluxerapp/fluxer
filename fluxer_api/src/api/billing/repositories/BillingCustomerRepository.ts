@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapStripeCustomerToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
+import {hydrateByRefs, upsertVersionedMirrorRow} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {BillingCustomerRow} from '@app/api/database/types/BillingTypes';
+import {BILLING_CUSTOMER_COLUMNS} from '@app/api/database/types/BillingTypes';
+import {BillingCustomers, BillingCustomersByUserId} from '@app/api/Tables';
 import type Stripe from 'stripe';
-import {fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {BillingCustomerRow} from '../../database/types/BillingTypes';
-import {BILLING_CUSTOMER_COLUMNS} from '../../database/types/BillingTypes';
-import {BillingCustomers, BillingCustomersByUserId} from '../../Tables';
-import {mapStripeCustomerToRow} from '../mappers/StripeToBillingMapper';
-import {buildPatchFromRow, executeBillingVersionedUpdate, isExistingNewer, rowsEquivalent} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingCustomers.selectCql({
 	where: BillingCustomers.where.eq('provider_id'),
@@ -26,12 +27,7 @@ export class BillingCustomerRepository {
 	}
 
 	async findByUserId(userId: bigint): Promise<Array<BillingCustomerRow>> {
-		const refs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_BY_USER_ID, {user_id: userId});
-		if (refs.length === 0) return [];
-		const ids = refs.map((r) => r.provider_id);
-		return fetchMany<BillingCustomerRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		return hydrateByRefs<BillingCustomerRow>(FETCH_BY_USER_ID, {user_id: userId}, FETCH_BY_PROVIDER_IDS);
 	}
 
 	async upsertFromStripe(
@@ -45,32 +41,15 @@ export class BillingCustomerRepository {
 	}> {
 		const mapped = mapStripeCustomerToRow(c, hints);
 		const existing = await this.findById(mapped.primary.provider_id);
-		if (isExistingNewer(existing, mapped.primary)) {
-			return {changed: false, row: existing!};
+		const result = await upsertVersionedMirrorRow(BillingCustomers, BILLING_CUSTOMER_COLUMNS, existing, mapped.primary);
+		if (result.changed) {
+			if (mapped.byUserId) await upsertOne(BillingCustomersByUserId.upsertAll(mapped.byUserId));
 		}
-		if (existing && rowsEquivalent(existing, mapped.primary, ['mirrored_at', 'version'])) {
-			return {changed: false, row: existing};
-		}
-		const result = await executeBillingVersionedUpdate<BillingCustomerRow, 'provider_id'>(
-			async () => existing,
-			(current) => ({
-				pk: {provider_id: mapped.primary.provider_id},
-				patch: buildPatchFromRow(mapped.primary, current, BILLING_CUSTOMER_COLUMNS, ['provider_id']),
-			}),
-			BillingCustomers,
-			{initialData: existing},
-		);
-		if (mapped.byUserId) {
-			await upsertOne(BillingCustomersByUserId.upsertAll(mapped.byUserId));
-		}
-		return {
-			changed: true,
-			row: {...mapped.primary, version: result.finalVersion},
-		};
+		return result;
 	}
 
 	async markDeleted(providerId: string, deletedAt: Date): Promise<void> {
-		await executeBillingVersionedUpdate<BillingCustomerRow, 'provider_id'>(
+		await executeVersionedUpdate<BillingCustomerRow, 'provider_id'>(
 			async () => this.findById(providerId),
 			() => ({
 				pk: {provider_id: providerId},
@@ -81,6 +60,7 @@ export class BillingCustomerRepository {
 				},
 			}),
 			BillingCustomers,
+			{bumpVersion: (current) => (current ?? 0n) + 1n},
 		);
 	}
 }

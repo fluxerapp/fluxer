@@ -35,7 +35,7 @@
 }
 
 :global(.theme-light) .heroIcon {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .title {

@@ -1,10 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {stripBannerForUser} from '../infrastructure/AssetEntitlementUtils';
-import type {Application} from '../models/Application';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import type {ApplicationBotResponse, ApplicationResponse} from './OAuth2Types';
+import {stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {type UserAuthenticatorType, UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import type {
+	ApplicationBotResponse,
+	ApplicationResponse,
+	BotProfileResponse,
+	BotTokenResetResponse,
+} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
+
+export function findBotUser(users: Pick<UserRepository, 'findUnique'>, application: Application): Promise<User | null> {
+	return application.botUserId ? users.findUnique(application.botUserId) : Promise.resolve(null);
+}
+
+function getActiveAuthenticatorTypes(user: User): Array<UserAuthenticatorType> {
+	return Array.from(user.authenticatorTypes ?? []).filter(
+		(type): type is UserAuthenticatorType =>
+			type === UserAuthenticatorTypes.TOTP || type === UserAuthenticatorTypes.WEBAUTHN,
+	);
+}
 
 export function mapBotUserToResponse(
 	user: User,
@@ -13,6 +31,7 @@ export function mapBotUserToResponse(
 	},
 ): ApplicationBotResponse {
 	const partial = mapUserToPartialResponse(user);
+	const authenticatorTypes = getActiveAuthenticatorTypes(user);
 	return {
 		id: partial.id,
 		username: partial.username,
@@ -21,8 +40,8 @@ export function mapBotUserToResponse(
 		banner: stripBannerForUser(user),
 		bio: user.bio ?? null,
 		token: opts?.token,
-		mfa_enabled: (user.authenticatorTypes?.size ?? 0) > 0,
-		authenticator_types: user.authenticatorTypes ? Array.from(user.authenticatorTypes) : [],
+		mfa_enabled: authenticatorTypes.length > 0,
+		authenticator_types: authenticatorTypes,
 		flags: partial.flags,
 	};
 }
@@ -54,14 +73,14 @@ export function mapApplicationToResponse(
 	return baseResponse;
 }
 
-export function mapBotTokenResetResponse(user: User, token: string) {
+export function mapBotTokenResetResponse(user: User, token: string): BotTokenResetResponse {
 	return {
 		token,
 		bot: mapBotUserToResponse(user),
 	};
 }
 
-export function mapBotProfileToResponse(user: User) {
+export function mapBotProfileToResponse(user: User): BotProfileResponse {
 	const partial = mapUserToPartialResponse(user);
 	return {
 		id: partial.id,

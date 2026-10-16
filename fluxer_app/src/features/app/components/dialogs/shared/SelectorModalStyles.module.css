@@ -17,14 +17,25 @@
 	color: var(--text-secondary);
 }
 
+.selectorRoot {
+	height: 45rem;
+}
+
 .selectorContent {
-	--selector-modal-content-height: clamp(20rem, 48vh, 23.75rem);
 	display: flex;
 	flex-direction: column;
+	padding: 0;
+}
+
+:global(html.mobile-layout) .selectorRoot {
+	height: auto;
+}
+
+:global(html.mobile-layout) .selectorContent {
+	--selector-modal-content-height: clamp(20rem, 48vh, 23.75rem);
 	height: var(--selector-modal-content-height);
 	min-height: var(--selector-modal-content-height);
 	max-height: var(--selector-modal-content-height);
-	padding: 0;
 }
 
 .listContainer {
@@ -54,12 +65,6 @@
 	flex-direction: column;
 	gap: 0.0625rem;
 	padding: 0 0 1rem;
-}
-
-.itemGroupList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.0625rem;
 }
 
 .itemButton {
@@ -171,29 +176,4 @@
 
 .footer {
 	padding: var(--spacing-4);
-}
-
-.footerContent {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-4);
-	width: 100%;
-}
-
-.itemIcon {
-	width: 1.875rem;
-	height: 1.875rem;
-	flex-shrink: 0;
-	color: var(--text-primary-muted);
-}
-
-.avatar {
-	width: 1.875rem;
-	height: 1.875rem;
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	position: relative;
-	overflow: visible;
 }

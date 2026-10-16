@@ -10,7 +10,6 @@ import {
 	getBorderColor,
 	getUrlHostname,
 	isValidMedia,
-	shouldRenderAsInlineThumbnail,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {
 	EmbedMediaRenderer,
@@ -24,6 +23,11 @@ import {
 	EmbedProvider,
 	EmbedTitle,
 } from '@app/features/channel/components/embeds/channel_embed/EmbedParts';
+import {
+	EMBED_TEXT_OUTER_WIDTH,
+	embedAllowsMarkdown,
+	formatResponsiveEmbedWidth,
+} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {MessageEmbedTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedMedia} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -48,9 +52,8 @@ export const RichEmbed: FC<EmbedProps> = observer(
 			[galleryImages, embed, embedIndex, showGallery],
 		);
 		const shouldRenderMedia = hasAnyMedia || showGallery;
-		const isRichType = embed.type === MessageEmbedTypes.RICH;
-		const isInlineThumbnail =
-			!hasVideo && hasThumbnail && !hasImage && (isRichType || shouldRenderAsInlineThumbnail(embed.thumbnail));
+		const promotesThumbnailToImage = embed.type === MessageEmbedTypes.ARTICLE || embed.type === MessageEmbedTypes.IMAGE;
+		const isInlineThumbnail = !hasVideo && hasThumbnail && !hasImage && !promotesThumbnailToImage;
 		const shouldRenderInlineThumbnail = isInlineThumbnail && !showGallery;
 		const isYouTubeEmbed = getUrlHostname(embed.provider?.url) === 'www.youtube.com';
 		const useNarrowWidth = shouldRenderMedia && !shouldRenderInlineThumbnail;
@@ -60,7 +63,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 				data-search-highlight-scope="message"
 				style={{
 					borderLeft: `4px solid ${getBorderColor(embed.color)}`,
-					maxWidth: useNarrowWidth ? `min(100%, ${EMBED_MEDIA_MAX_WIDTH}px)` : 'min(100%, 516px)',
+					maxWidth: formatResponsiveEmbedWidth(useNarrowWidth ? EMBED_MEDIA_MAX_WIDTH : EMBED_TEXT_OUTER_WIDTH),
 				}}
 				data-flx="channel.embeds.embed.rich-embed.embed"
 			>
@@ -81,6 +84,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 							<EmbedTitle
 								title={embed.title}
 								url={embed.url}
+								markdown={embedAllowsMarkdown(embed)}
 								messageId={message.id}
 								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-title"
@@ -88,6 +92,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 							{!isYouTubeEmbed && (
 								<EmbedDescription
 									description={embed.description}
+									markdown={embedAllowsMarkdown(embed)}
 									messageId={message.id}
 									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-description"
@@ -125,8 +130,6 @@ export const RichEmbed: FC<EmbedProps> = observer(
 								<EmbedFooterComponent
 									footer={embed.footer}
 									timestamp={embed.timestamp ? new Date(embed.timestamp) : undefined}
-									messageId={message.id}
-									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-footer-component"
 								/>
 							)}

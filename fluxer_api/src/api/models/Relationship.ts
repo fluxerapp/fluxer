@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {RelationshipRow} from '@app/api/database/types/UserTypes';
 import type {RelationshipType} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../BrandedTypes';
-import type {RelationshipRow} from '../database/types/UserTypes';
 
 export class Relationship {
 	readonly sourceUserId: UserID;

@@ -1,0 +1,13 @@
+domain: chat.example.test
+networkPolicy:
+  ingressNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: ingress-nginx
+edge:
+  ingress:
+    className: nginx
+livekit:
+  nodeSelector:
+    kubernetes.io/hostname: voice-1
+  nodeCIDRs:
+    - 10.0.0.12/32

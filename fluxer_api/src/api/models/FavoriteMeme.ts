@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, MemeID, UserID} from '@app/api/BrandedTypes';
+import {userIdToChannelId} from '@app/api/BrandedTypes';
+import type {FavoriteMemeRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {AttachmentID, MemeID, UserID} from '../BrandedTypes';
-import {userIdToChannelId} from '../BrandedTypes';
-import type {FavoriteMemeRow} from '../database/types/UserTypes';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
 
 export class FavoriteMeme {
 	readonly id: MemeID;

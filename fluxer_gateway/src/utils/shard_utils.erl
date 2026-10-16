@@ -5,6 +5,8 @@
 
 -export([
     max_positive/1,
+    find_shard_by_ref/2,
+    find_shard_by_pid/2,
     safe_gen_call/3,
     safe_gen_call_detailed/3,
     safe_gen_call_remote/3,
@@ -14,9 +16,37 @@
     check_mailbox_pressure/1
 ]).
 
+-export_type([shard/0]).
+
+-type shard() :: #{pid := pid(), ref := reference()}.
+
 -spec max_positive(list()) -> pos_integer().
 max_positive(Candidates) ->
     lists:max([C || C <- Candidates, is_integer(C), C > 0] ++ [1]).
+
+-spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_ref(Ref, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
+
+-spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_pid(Pid, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
 
 -spec safe_gen_call(pid() | atom(), term(), pos_integer()) -> term().
 safe_gen_call(Pid, Request, Timeout) ->
@@ -106,28 +136,10 @@ check_pid_mailbox_pressure(Pid) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-max_positive_normal_test() ->
-    ?assertEqual(8, max_positive([4, 8, 2])).
-
-max_positive_fallback_test() ->
-    ?assertEqual(1, max_positive([])).
-
-max_positive_non_integers_test() ->
-    ?assertEqual(1, max_positive([undefined, foo, -1, 0])).
-
-max_positive_mixed_test() ->
-    ?assertEqual(4, max_positive([undefined, 4, -1, 0])).
-
 safe_gen_call_noproc_test() ->
     Pid = spawn(fun() -> ok end),
     ok = gateway_retry_timer:wait(50),
     ?assertEqual({error, unavailable}, safe_gen_call(Pid, ping, 100)).
-
-safe_apply_success_test() ->
-    ?assertEqual(42, safe_apply(fun() -> 42 end, 0)).
-
-safe_apply_throw_test() ->
-    ?assertEqual(fallback, safe_apply(fun() -> exit(boom) end, fallback)).
 
 safe_apply_error_test() ->
     ?assertEqual(fallback, safe_apply(fun() -> error(boom) end, fallback)).

@@ -1,39 +1,45 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ChannelID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {AttachmentUploadService} from '@app/api/channel/services/AttachmentUploadService';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {CallService} from '@app/api/channel/services/CallService';
+import {ChannelDataService} from '@app/api/channel/services/ChannelDataService';
+import {GroupDmOperationsService} from '@app/api/channel/services/group_dm/GroupDmOperationsService';
+import {MessageInteractionService} from '@app/api/channel/services/MessageInteractionService';
+import {MessageService} from '@app/api/channel/services/MessageService';
+import {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
-import type {ApiContext} from '../../ApiContext';
-import type {ChannelID} from '../../BrandedTypes';
-import type {IFavoriteMemeRepository} from '../../favorite_meme/IFavoriteMemeRepository';
-import type {GuildAuditLogService} from '../../guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {AvatarService} from '../../infrastructure/AvatarService';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {EmbedService} from '../../infrastructure/EmbedService';
-import type {ILiveKitService} from '../../infrastructure/ILiveKitService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {IVoiceRoomStore} from '../../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {IInviteRepository} from '../../invite/IInviteRepository';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {User} from '../../models/User';
-import type {PackService} from '../../pack/PackService';
-import type {ReadStateService} from '../../read_state/ReadStateService';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {createDirectMessageSpamMitigationService} from '../../user/services/DirectMessageSpamMitigationService';
-import type {VoiceAvailabilityService} from '../../voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '../../webhook/IWebhookRepository';
-import type {IChannelRepository} from '../IChannelRepository';
-import type {AttachmentUploadTraceRepository} from '../repositories/message/AttachmentUploadTraceRepository';
-import {AttachmentUploadService} from './AttachmentUploadService';
-import {CallService} from './CallService';
-import {ChannelDataService} from './ChannelDataService';
-import {GroupDmOperationsService} from './group_dm/GroupDmOperationsService';
-import {MessageInteractionService} from './MessageInteractionService';
-import {MessageService} from './MessageService';
-import {MessagePersistenceService} from './message/MessagePersistenceService';
-import {UserMessageDeletionService} from './message/UserMessageDeletionService';
+
+interface TypingCooldown {
+	message_send_cooldown_ms?: number;
+	thread_create_cooldown_ms?: number;
+}
 
 interface SlowmodeState {
 	rateLimitPerUser: number;
@@ -54,10 +60,9 @@ export class ChannelService {
 
 	constructor(
 		apiContext: ApiContext,
-		channelRepository: IChannelRepository,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
-		packService: PackService,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		embedService: EmbedService,
 		readStateService: ReadStateService,
@@ -66,12 +71,12 @@ export class ChannelService {
 		avatarService: AvatarService,
 		virusScanService: IVirusScanService,
 		purgeQueue: IPurgeQueue,
-		favoriteMemeRepository: IFavoriteMemeRepository,
+		favoriteMemeRepository: FavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		voiceRoomStore: IVoiceRoomStore,
 		liveKitService: ILiveKitService,
-		inviteRepository: IInviteRepository,
-		webhookRepository: IWebhookRepository,
+		inviteRepository: InviteRepository,
+		webhookRepository: WebhookRepository,
 		limitConfigService: LimitConfigService,
 		voiceAvailabilityService: VoiceAvailabilityService | null,
 	) {
@@ -89,12 +94,12 @@ export class ChannelService {
 			gatewayService,
 			storageService,
 			purgeQueue,
+			workerService,
 		});
 		const messagePersistenceService = new MessagePersistenceService(
 			channelRepository,
 			userRepository,
 			guildRepository,
-			packService,
 			embedService,
 			storageService,
 			attachmentUploadTraceRepository,
@@ -104,7 +109,6 @@ export class ChannelService {
 			readStateService,
 			limitConfigService,
 		);
-		const directMessageSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, userRepository);
 		this.channelData = new ChannelDataService(
 			channelRepository,
 			userRepository,
@@ -124,6 +128,7 @@ export class ChannelService {
 			webhookRepository,
 			limitConfigService,
 			rateLimitService,
+			cacheService,
 		);
 		this.messages = new MessageService(
 			channelRepository,
@@ -144,7 +149,6 @@ export class ChannelService {
 			messagePersistenceService,
 			attachmentUploadTraceRepository,
 			limitConfigService,
-			directMessageSpamMitigationService,
 		);
 		this.interactions = new MessageInteractionService(
 			channelRepository,
@@ -165,6 +169,7 @@ export class ChannelService {
 			this.interactions,
 			this.messages,
 			limitConfigService,
+			gatewayService,
 		);
 		this.groupDms = new GroupDmOperationsService(
 			channelRepository,
@@ -175,6 +180,8 @@ export class ChannelService {
 			snowflakeService,
 			this.messages.persistence,
 			limitConfigService,
+			voiceRoomStore,
+			liveKitService,
 		);
 		this.calls = new CallService(
 			channelRepository,
@@ -189,8 +196,50 @@ export class ChannelService {
 		);
 	}
 
-	async getSlowmodeState({user, channelId}: {user: User; channelId: ChannelID}): Promise<SlowmodeState> {
-		const auth = await this.channelData.auth.getChannelAuthenticated({userId: user.id, channelId});
+	async getTypingCooldown({
+		user,
+		viewer,
+		auth,
+	}: {
+		user: User;
+		viewer: ThreadViewer;
+		auth: AuthenticatedChannel;
+	}): Promise<TypingCooldown | null> {
+		const {channel, guild} = auth;
+		if (!guild || user.isBot || !viewerActive(viewer, guild.id)) return null;
+		const createsThreads = TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type);
+		if (channel.rateLimitPerUser <= 0 || (await auth.hasPermission(Permissions.BYPASS_SLOWMODE))) return null;
+		const windowMs = channel.rateLimitPerUser * 1000;
+		const [messageSendCooldownMs, threadCreateCooldownMs] = await Promise.all([
+			this.peekSlowmode(`slowmode:${channel.id}:${user.id}`, windowMs),
+			createsThreads ? this.peekSlowmode(`slowmode-thread:${channel.id}:${user.id}`, windowMs) : Promise.resolve(0),
+		]);
+		if (messageSendCooldownMs <= 0 && threadCreateCooldownMs <= 0) return null;
+		return {
+			...(messageSendCooldownMs > 0 ? {message_send_cooldown_ms: messageSendCooldownMs} : {}),
+			...(threadCreateCooldownMs > 0 ? {thread_create_cooldown_ms: threadCreateCooldownMs} : {}),
+		};
+	}
+
+	private async peekSlowmode(identifier: string, windowMs: number): Promise<number> {
+		const peek = await this.rateLimitService.peekLimit({
+			identifier,
+			maxAttempts: 1,
+			windowMs,
+		});
+		return Math.max(0, peek.resetTime.getTime() - Date.now());
+	}
+
+	async getSlowmodeState({
+		user,
+		channelId,
+		viewer,
+	}: {
+		user: User;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<SlowmodeState> {
+		const auth = await this.channelData.auth.getChannelAuthenticated({userId: user.id, channelId, viewer});
 		const rateLimitPerUser = auth.channel.rateLimitPerUser ?? 0;
 		if (!auth.guild || rateLimitPerUser <= 0 || user.isBot) {
 			return {rateLimitPerUser, retryAfterMs: 0, nextSendAllowedAt: null, canBypass: false};
@@ -199,11 +248,11 @@ export class ChannelService {
 		if (canBypass) {
 			return {rateLimitPerUser, retryAfterMs: 0, nextSendAllowedAt: null, canBypass: true};
 		}
+		const bucket = auth.channel.isThreadOnly() ? 'slowmode-thread' : 'slowmode';
 		const peek = await this.rateLimitService.peekLimit({
-			identifier: `slowmode:${channelId}:${user.id}`,
+			identifier: `${bucket}:${channelId}:${user.id}`,
 			maxAttempts: 1,
 			windowMs: rateLimitPerUser * 1000,
-			algorithm: 'leaky_bucket',
 		});
 		const retryAfterMs = Math.max(0, peek.resetTime.getTime() - Date.now());
 		return {

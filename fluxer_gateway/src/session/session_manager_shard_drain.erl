@@ -5,22 +5,26 @@
 
 -export([
     broadcast_reconnect_drain/1,
-    broadcast_transfer_to/2,
-    broadcast_transfer_to_topology/2,
     handoff_to_topology/2,
     build_session_data/7,
     build_ready_data_for_session/1,
     filter_guild_ids_for_identify/2,
     validate_identify_sharding/3,
-    check_identify_rate_limit/1,
     should_debounce_reactions/1,
+    thread_channels_capable/1,
     extract_e2ee_capable/1,
     fetch_rpc_data/2
 ]).
 
+-ifdef(TEST).
+-export([push_and_drain_session/3]).
+-endif.
+
 -export_type([handoff_result/0, identify_data/0, session_id/0, shard_identify_data/0, state/0]).
 
 -define(IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS, 16#2).
+-define(IDENTIFY_FLAG_CHANNEL_THREADS, 16#4).
+-define(READ_STATE_FLAG_IS_THREAD, 16#2).
 -define(SESSION_RPC_RETRY_CONFIG, {1, 1000, 10000, 500}).
 
 -type session_id() :: binary().
@@ -57,33 +61,6 @@ maybe_drain_session(_SessionId, {Pid, _Ref}, Count) when is_pid(Pid) ->
 maybe_drain_session(_SessionId, _SessionRef, Count) ->
     Count.
 
--spec broadcast_transfer_to(node(), state()) -> non_neg_integer().
-broadcast_transfer_to(TargetNode, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    maps:fold(
-        fun(SId, SRef, Cnt) ->
-            maybe_transfer(TargetNode, SId, SRef, Cnt)
-        end,
-        0,
-        Sessions
-    ).
-
--spec maybe_transfer(node(), session_id(), term(), non_neg_integer()) -> non_neg_integer().
-maybe_transfer(TargetNode, SessionId, {Pid, _Ref}, Count) when is_pid(Pid) ->
-    case process_liveness:is_alive(Pid) of
-        true -> transfer_count(TargetNode, SessionId, Pid, Count);
-        false -> Count
-    end;
-maybe_transfer(_, _, _, Count) ->
-    Count.
-
--spec transfer_count(node(), session_id(), pid(), non_neg_integer()) -> non_neg_integer().
-transfer_count(TargetNode, SessionId, Pid, Count) ->
-    case push_and_drain_session(TargetNode, SessionId, Pid) of
-        ok -> Count + 1;
-        {error, _Reason} -> Count
-    end.
-
 -spec push_and_drain_session(node(), session_id(), pid()) -> ok | {error, term()}.
 push_and_drain_session(TargetNode, SessionId, Pid) ->
     ExportResult =
@@ -113,10 +90,6 @@ do_push_and_drain(TargetNode, SessionId, SessionState, Pid) ->
             ),
             Error
     end.
-
--spec broadcast_transfer_to_topology([node()], state()) -> non_neg_integer().
-broadcast_transfer_to_topology(TargetNodes, State) ->
-    maps:get(handed_off, handoff_to_topology(TargetNodes, State)).
 
 -spec handoff_to_topology([node()], state()) -> handoff_result().
 handoff_to_topology(TargetNodes, State) ->
@@ -188,13 +161,20 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         mobile => extract_mobile(Presence, Properties),
         socket_pid => SocketPid,
         guilds => filter_guild_ids_for_identify(Data, IdentifyData),
-        ready => build_ready_data_for_session(Data),
+        ready => filter_thread_read_states(
+            build_ready_data_for_session(Data),
+            thread_channels_capable(IdentifyData),
+            map_utils:get_safe(UserDataMap, <<"bot">>, false) =:= true,
+            UserId
+        ),
         bot => map_utils:get_safe(UserDataMap, <<"bot">>, false),
         e2ee_capable => extract_e2ee_capable(Properties),
+        geoip_country_code => extract_geoip_country_code(Data),
         ignored_events => term_detach:detach(IgnoredEvents),
         initial_guild_id => map_utils:get_safe(IdentifyData, initial_guild_id, undefined),
         shard => Shard,
-        debounce_reactions => should_debounce_reactions(IdentifyData)
+        debounce_reactions => should_debounce_reactions(IdentifyData),
+        thread_channels_capable => thread_channels_capable(IdentifyData)
     },
     BaseFields.
 
@@ -218,7 +198,7 @@ extract_auth_session_id_hash(Data) ->
     case maps:get(<<"auth_session_id_hash">>, Data, undefined) of
         undefined -> <<>>;
         null -> <<>>;
-        Encoded -> base64url:decode(Encoded)
+        Encoded -> base64:decode(Encoded, #{mode => urlsafe, padding => false})
     end.
 
 -spec build_user_data(map()) -> map().
@@ -285,21 +265,57 @@ build_ready_data_for_session(Data) ->
         _ -> #{}
     end.
 
--spec check_identify_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-check_identify_rate_limit(Attempts) ->
-    case fluxer_gateway_env:get(identify_rate_limit_enabled) of
-        true -> do_check_rate_limit(Attempts);
-        _ -> {ok, Attempts}
+-spec filter_thread_read_states(map(), boolean(), boolean(), integer()) -> map().
+filter_thread_read_states(#{<<"read_states">> := Rows} = Ready, Capable, Bot, UserId) when
+    is_list(Rows)
+->
+    case lists:any(fun has_read_state_flags/1, Rows) of
+        false ->
+            Ready;
+        true ->
+            Viewer =
+                case channel_threads_config:loaded() of
+                    false ->
+                        fun(_Row) -> Capable orelse Bot end;
+                    true ->
+                        fun(Row) ->
+                            guild_thread_gate:compute_viewer(
+                                read_state_guild_active(Row), Bot, Capable, UserId
+                            )
+                        end
+                end,
+            Ready#{
+                <<"read_states">> => lists:filtermap(
+                    fun(Row) -> filter_read_state(Row, Capable orelse Bot, Viewer) end, Rows
+                )
+            }
+    end;
+filter_thread_read_states(Ready, _Capable, _Bot, _UserId) ->
+    Ready.
+
+-spec has_read_state_flags(term()) -> boolean().
+has_read_state_flags(#{<<"flags">> := _}) -> true;
+has_read_state_flags(_) -> false.
+
+-spec read_state_guild_active(map()) -> boolean().
+read_state_guild_active(Row) ->
+    case snowflake_id:parse_maybe(maps:get(<<"guild_id">>, Row, undefined)) of
+        GuildId when is_integer(GuildId) -> channel_threads_config:guild_active(GuildId);
+        _ -> true
     end.
 
--spec do_check_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-do_check_rate_limit(Attempts) ->
-    Now = erlang:system_time(millisecond),
-    AttemptsInWindow = [T || T <- Attempts, (Now - T) < 5000],
-    case AttemptsInWindow =/= [] of
-        true -> {error, rate_limited};
-        false -> {ok, [Now | AttemptsInWindow]}
-    end.
+-spec filter_read_state(term(), boolean(), fun((map()) -> boolean())) ->
+    boolean() | {true, term()}.
+filter_read_state(#{<<"flags">> := Flags} = Row, Capable, Viewer) when is_integer(Flags) ->
+    case Flags band ?READ_STATE_FLAG_IS_THREAD =/= 0 andalso not Viewer(Row) of
+        true -> false;
+        false when Capable -> true;
+        false -> {true, maps:remove(<<"flags">>, Row)}
+    end;
+filter_read_state(Row, false, _Viewer) when is_map(Row) ->
+    {true, maps:remove(<<"flags">>, Row)};
+filter_read_state(_Row, _Capable, _Viewer) ->
+    true.
 
 -spec should_debounce_reactions(map()) -> boolean().
 should_debounce_reactions(IdentifyData) ->
@@ -310,11 +326,27 @@ should_debounce_reactions(IdentifyData) ->
             false
     end.
 
+-spec thread_channels_capable(map()) -> boolean().
+thread_channels_capable(IdentifyData) ->
+    case map_utils:get_safe(IdentifyData, flags, 0) of
+        Flags when is_integer(Flags), Flags >= 0 ->
+            bitset:has(Flags, ?IDENTIFY_FLAG_CHANNEL_THREADS);
+        _ ->
+            false
+    end.
+
 -spec extract_e2ee_capable(term()) -> boolean().
 extract_e2ee_capable(Properties) when is_map(Properties) ->
     is_truthy(maps:get(<<"e2ee_capable">>, Properties, false));
 extract_e2ee_capable(_) ->
     false.
+
+-spec extract_geoip_country_code(map()) -> binary() | undefined.
+extract_geoip_country_code(Data) ->
+    case maps:get(<<"geoip_country_code">>, Data, null) of
+        CountryCode when is_binary(CountryCode), byte_size(CountryCode) > 0 -> CountryCode;
+        _ -> undefined
+    end.
 
 -spec fetch_rpc_data(map(), term()) -> {ok, map()} | {error, term()}.
 fetch_rpc_data(Request, PeerIP) ->
@@ -349,8 +381,17 @@ do_fetch_rpc_data(Request, PeerIP) ->
         <<"ip">> => PeerIP
     },
     RpcWithCoords = session_manager_shard_lookup:add_coordinates(RpcRequest, Lat, Lon),
-    RpcResult = api_rpc_client:call_with_retry(RpcWithCoords, ?SESSION_RPC_RETRY_CONFIG),
+    RpcWithCapability = add_thread_channels_capable(
+        RpcWithCoords, thread_channels_capable(IdentifyData)
+    ),
+    RpcResult = rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
     classify_rpc_result(RpcResult, PeerIP).
+
+-spec add_thread_channels_capable(map(), boolean()) -> map().
+add_thread_channels_capable(RpcRequest, true) ->
+    RpcRequest#{<<"thread_channels_capable">> => true};
+add_thread_channels_capable(RpcRequest, false) ->
+    RpcRequest.
 
 -spec classify_rpc_result(term(), term()) -> {ok, map()} | {error, term()}.
 classify_rpc_result({ok, Data}, _PeerIP) when is_map(Data) -> {ok, Data};
@@ -370,3 +411,87 @@ classify_rpc_result({error, {retries_exhausted, Reason}}, PeerIP) ->
     {error, {retries_exhausted, Reason}};
 classify_rpc_result({error, Reason}, _PeerIP) ->
     {error, {network_error, Reason}}.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+filter_thread_read_states_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{config_version => 1}),
+    try
+        Rows = [
+            #{<<"id">> => <<"1">>},
+            #{<<"id">> => <<"2">>, <<"flags">> => 1},
+            #{<<"id">> => <<"3">>, <<"flags">> => 3}
+        ],
+        Ready = #{<<"read_states">> => Rows},
+        ?assertEqual(
+            #{<<"read_states">> => [#{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>}]},
+            filter_thread_read_states(Ready, false, false, 7)
+        ),
+        ?assertEqual(
+            #{
+                <<"read_states">> => [
+                    #{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>, <<"flags">> => 1}
+                ]
+            },
+            filter_thread_read_states(Ready, true, false, 7)
+        ),
+        Plain = #{<<"read_states">> => [#{<<"id">> => <<"1">>}]},
+        ?assertEqual(Plain, filter_thread_read_states(Plain, false, false, 7))
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+filter_thread_read_states_keeps_thread_rows_before_the_config_loads_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, channel_threads_config:default_config()),
+    try
+        Thread = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
+        Ready = #{<<"read_states">> => [Thread]},
+        ?assertEqual(Ready, filter_thread_read_states(Ready, true, false, 7)),
+        ?assertEqual(Ready, filter_thread_read_states(Ready, false, true, 7)),
+        ?assertEqual(
+            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+filter_thread_read_states_checks_the_row_guild_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{
+        enabled => true,
+        enabled_guilds => #{<<"5">> => true},
+        included_users => #{<<"7">> => true}
+    }),
+    try
+        Active = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
+        Inactive = #{<<"id">> => <<"2">>, <<"guild_id">> => <<"6">>, <<"flags">> => 3},
+        Ready = #{<<"read_states">> => [Active, Inactive]},
+        ?assertEqual(
+            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, true, false, 7)
+        ),
+        ?assertEqual(
+            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
+        ),
+        ?assertEqual(
+            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, false, true, 8)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+-endif.

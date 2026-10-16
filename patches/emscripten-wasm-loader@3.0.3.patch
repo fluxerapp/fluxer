@@ -1,0 +1,32 @@
+diff --git a/dist/cjs/path/mountBuffer.js b/dist/cjs/path/mountBuffer.js
+index 86d8d65f384c98f50e78b117b6c1d4354e76320d..14944bd0cc299c69d4727df383a3a1ee7afb744a 100644
+--- a/dist/cjs/path/mountBuffer.js
++++ b/dist/cjs/path/mountBuffer.js
+@@ -1,6 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+-const nanoid = require("nanoid");
++const { nanoid } = require("nanoid");
+ const logger_1 = require("../util/logger");
+ const isMounted_1 = require("./isMounted");
+ /**
+diff --git a/dist/esm/path/mountBuffer.js b/dist/esm/path/mountBuffer.js
+index a494e92439fa467745f010df220b3b131d0ce868..1f9926436c095b9f0e82c0893ad535735a16279f 100644
+--- a/dist/esm/path/mountBuffer.js
++++ b/dist/esm/path/mountBuffer.js
+@@ -1,4 +1,4 @@
+-import * as nanoid from 'nanoid';
++import { nanoid } from 'nanoid';
+ import { log } from '../util/logger';
+ import { isMounted } from './isMounted';
+ /**
+diff --git a/src/path/mountBuffer.ts b/src/path/mountBuffer.ts
+index 2504332d11ac3eb7d1616da4e1986ec85ef8350a..4f3ff591a3aca3de340ae4854b55952f8874b150 100644
+--- a/src/path/mountBuffer.ts
++++ b/src/path/mountBuffer.ts
+@@ -1,4 +1,4 @@
+-import * as nanoid from 'nanoid';
++import { nanoid } from 'nanoid';
+ import { FS } from '../BaseAsmModule';
+ import { log } from '../util/logger';
+ import { isMounted } from './isMounted';

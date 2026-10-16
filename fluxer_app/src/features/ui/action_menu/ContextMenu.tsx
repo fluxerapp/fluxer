@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {getBoundaryPadding} from '@app/features/app/hooks/useAntiShiftFloating';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import styles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -39,7 +40,7 @@ export type ContextMenuActionEvent =
 	| {
 			readonly shiftKey?: boolean;
 	  };
-export type ContextMenuActionHandler = {bivarianceHack(event: ContextMenuActionEvent): void}['bivarianceHack'];
+type ContextMenuActionHandler = {bivarianceHack(event: ContextMenuActionEvent): void}['bivarianceHack'];
 
 function stopHoverEventWhenWindowCannotUseHover(event: React.SyntheticEvent): void {
 	const eventRoot = (event.currentTarget as HTMLElement | null)?.ownerDocument?.documentElement;
@@ -66,7 +67,7 @@ const CONTEXT_MENU_EDGE_PADDING = 12;
 const CONTEXT_MENU_OFFSET = 4;
 const SUBMENU_OFFSET = 10;
 
-const textValueFromNode = (node: React.ReactNode): string => {
+export const textValueFromNode = (node: React.ReactNode): string => {
 	if (typeof node === 'string') return node;
 	if (typeof node === 'number') return String(node);
 	if (Array.isArray(node)) return node.map(textValueFromNode).join('');
@@ -243,7 +244,10 @@ const RootContextMenuInner: React.FC<RootContextMenuProps> = observer(({contextM
 					align={placement.align}
 					sideOffset={CONTEXT_MENU_OFFSET}
 					alignOffset={0}
-					collisionPadding={CONTEXT_MENU_EDGE_PADDING}
+					collisionPadding={getBoundaryPadding(
+						resolvedPortalHost?.ownerDocument ?? document,
+						CONTEXT_MENU_EDGE_PADDING,
+					)}
 					className={styles.contextMenuPositioner}
 					data-flx="ui.action-menu.context-menu.positioner"
 				>
@@ -284,7 +288,7 @@ const RootContextMenuInner: React.FC<RootContextMenuProps> = observer(({contextM
 	);
 });
 
-export const RootContextMenu: React.FC<RootContextMenuProps> = observer(({contextMenu}) => {
+const RootContextMenu: React.FC<RootContextMenuProps> = observer(({contextMenu}) => {
 	return <RootContextMenuInner contextMenu={contextMenu} data-flx="ui.action-menu.context-menu.root-inner" />;
 });
 
@@ -553,7 +557,7 @@ export const SubMenu = React.forwardRef<HTMLDivElement, SubMenuProps>(
 					<BaseContextMenu.Positioner
 						sideOffset={SUBMENU_OFFSET}
 						className={styles.contextMenuPositioner}
-						collisionPadding={CONTEXT_MENU_EDGE_PADDING}
+						collisionPadding={getBoundaryPadding(portalHost?.ownerDocument ?? document, CONTEXT_MENU_EDGE_PADDING)}
 						data-flx="ui.action-menu.context-menu.sub-menu.positioner"
 					>
 						<BaseContextMenu.Popup

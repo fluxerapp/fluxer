@@ -2,6 +2,7 @@
 
 declare module '*.svg?react' {
 	import type {FunctionComponent, SVGProps} from 'react';
+
 	const content: FunctionComponent<SVGProps<SVGSVGElement>>;
 	export default content;
 }
@@ -32,6 +33,11 @@ declare module '*.jpeg' {
 }
 
 declare module '*.webp' {
+	const src: string;
+	export default src;
+}
+
+declare module '*.avif' {
 	const src: string;
 	export default src;
 }

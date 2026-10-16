@@ -195,32 +195,6 @@
 	isolation: isolate;
 }
 
-@keyframes slideInFromRight {
-	from {
-		transform: translate3d(100%, 0, 0);
-	}
-	to {
-		transform: translate3d(0, 0, 0);
-	}
-}
-
-@keyframes slideOutToRight {
-	from {
-		transform: translate3d(0, 0, 0);
-	}
-	to {
-		transform: translate3d(100%, 0, 0);
-	}
-}
-
-.mobileSlideIn {
-	animation: slideInFromRight 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.mobileSlideOut {
-	animation: slideOutToRight 0.2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
 @media screen and (min-width: 768px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(0.75rem, 2vh, 1.5rem);

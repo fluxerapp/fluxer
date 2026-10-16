@@ -3,46 +3,31 @@
 -module(gateway_cluster_handoff_transfer).
 -typing([eqwalizer]).
 
--export([
-    run_handoff/1,
-    normalize_members/1,
-    drain_targets/1,
-    broadcast_ws_reconnect/0
-]).
-
--ifdef(TEST).
--export([handoff_status/1]).
--endif.
+-export([run_handoff/1, normalize_members/1, drain_targets/1, broadcast_ws_reconnect/0]).
 
 -spec run_handoff([node()]) -> map().
 run_handoff(Members) ->
     logger:info("Gateway cluster handoff start", #{members => Members}),
-    Pause = maybe_enable_handoff_pause(),
-    Result0 = handoff_result(Members, Pause),
+    Result0 = handoff_result(Members),
     Result = Result0#{status => handoff_status(Result0)},
     logger:info("Gateway cluster handoff complete", #{result => Result}),
     Result.
 
--spec handoff_result([node()], enabled | disabled) -> map().
-handoff_result(Members, Pause) ->
+-spec handoff_result([node()]) -> map().
+handoff_result(Members) ->
     GuildNodes = role_aware_targets(guilds, Members),
     SessionNodes = role_aware_targets(sessions, Members),
     CallNodes = role_aware_targets(calls, Members),
-    try
-        #{
-            members => Members,
-            handoff_event_pause => Pause,
-            guilds => role_apply(guilds, guild_manager, handoff_to_topology, [GuildNodes]),
-            sessions => role_apply(
-                sessions, session_manager, handoff_to_topology, [SessionNodes]
-            ),
-            presence => role_apply(presence, presence_manager, handoff_for_drain, []),
-            calls => role_apply(calls, call_manager, handoff_to_topology, [CallNodes]),
-            caches => cache_handoff_result()
-        }
-    after
-        maybe_disable_handoff_pause(Pause)
-    end.
+    #{
+        members => Members,
+        guilds => role_apply(guilds, guild_manager, handoff_to_topology, [GuildNodes]),
+        sessions => role_apply(
+            sessions, session_manager, handoff_to_topology, [SessionNodes]
+        ),
+        presence => role_apply(presence, presence_manager, handoff_for_drain, []),
+        calls => role_apply(calls, call_manager, handoff_to_topology, [CallNodes]),
+        caches => cache_handoff_result()
+    }.
 
 -spec cache_handoff_result() -> map().
 cache_handoff_result() ->
@@ -80,35 +65,6 @@ role_apply(Role, Module, Function, Args) ->
     case fluxer_gateway_sup:role_enabled(Role) of
         true -> safe_apply(Module, Function, Args);
         false -> skipped
-    end.
-
--spec maybe_enable_handoff_pause() -> enabled | disabled.
-maybe_enable_handoff_pause() ->
-    case handoff_event_pause_enabled() of
-        true ->
-            shard_utils:safe_apply(fun gateway_event_pause:enable/0, ok),
-            shard_utils:safe_apply(fun gateway_event_pause:freeze/0, ok),
-            enabled;
-        false ->
-            disabled
-    end.
-
--spec maybe_disable_handoff_pause(enabled | disabled) -> ok.
-maybe_disable_handoff_pause(enabled) ->
-    shard_utils:safe_apply(fun gateway_event_pause:disable/0, ok),
-    ok;
-maybe_disable_handoff_pause(disabled) ->
-    ok.
-
--spec handoff_event_pause_enabled() -> boolean().
-handoff_event_pause_enabled() ->
-    try fluxer_gateway_env:get(handoff_enable_event_pause) of
-        true -> true;
-        _ -> false
-    catch
-        throw:_ -> false;
-        error:_ -> false;
-        exit:_ -> false
     end.
 
 -spec safe_apply(module(), atom(), [term()]) -> term().
@@ -173,13 +129,6 @@ normalize_pids(_Pids) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-normalize_members_sorts_and_filters_test() ->
-    ?assertEqual(
-        lists:usort([node(), bad, 'z@host']),
-        normalize_members(['z@host', node(), bad, 123])
-    ),
-    ?assertEqual([node()], normalize_members(not_a_list)).
-
 run_handoff_handles_missing_managers_test() ->
     persistent_term:put(
         {fluxer_gateway, runtime_config},
@@ -227,25 +176,6 @@ drain_targets_prefers_survivors_test() ->
         drain_targets([node(), 'peer@host'])
     ),
     ?assertEqual([node()], drain_targets([node()])).
-
-handoff_pause_lifecycle_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{handoff_enable_event_pause => true}
-    ),
-    case whereis(gateway_event_pause) of
-        undefined -> ok;
-        Existing when is_pid(Existing) -> gen_server:stop(Existing)
-    end,
-    {ok, Pid} = gateway_event_pause:start_link(),
-    ?assertEqual(enabled, maybe_enable_handoff_pause()),
-    ?assert(gateway_event_pause:is_paused()),
-    ?assert(gateway_event_pause:is_frozen()),
-    ?assertEqual(ok, maybe_disable_handoff_pause(enabled)),
-    ?assertNot(gateway_event_pause:is_paused()),
-    ?assertNot(gateway_event_pause:is_frozen()),
-    gen_server:stop(Pid),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
 
 role_aware_targets_uses_role_nodes_test() ->
     persistent_term:put(

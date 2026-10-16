@@ -1,5 +1,0 @@
-{{- if and .Values.pdb.enabled (gt (int .Values.gateway.replicas) 1) }}
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-{{ include "fluxer.pdb" (dict "name" "gateway" "minAvailable" .Values.pdb.minAvailable "context" .) }}
-{{- end }}

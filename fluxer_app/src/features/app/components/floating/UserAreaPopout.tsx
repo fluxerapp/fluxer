@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import {UserAreaAccountSwitchMenu} from '@app/features/app/components/floating/UserAreaAccountSwitchMenu';
 import styles from '@app/features/app/components/floating/UserAreaPopout.module.css';
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {
@@ -10,8 +13,8 @@ import {
 	type TimeWindowPreset,
 } from '@app/features/app/config/TimeWindowPresets';
 import {getStatusTypeLabel, STATUS_UNTIL_I_CHANGE_IT_DESCRIPTOR} from '@app/features/app/constants/AppConstants';
-import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
-import AccountSwitcherModal from '@app/features/auth/components/accounts/AccountSwitcherModal';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
+import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {useAccountSwitcherLogic} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {COPY_USERNAME_DESCRIPTOR, UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -25,8 +28,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
-import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import {StatusIndicator} from '@app/features/ui/components/StatusIndicator';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
@@ -34,7 +35,6 @@ import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {CustomStatusModal} from '@app/features/user/components/modals/CustomStatusModal';
 import {UserProfileModal} from '@app/features/user/components/modals/UserProfileModal';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
 import userProfilePopoutStyles from '@app/features/user/components/popouts/UserProfilePopout.module.css';
 import {UserProfilePreviewBio} from '@app/features/user/components/popouts/UserProfileShared';
@@ -52,9 +52,8 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
-import {COPIED_STATS_JSON_DESCRIPTOR} from '@app/features/voice/components/StatsForNerdsCopyDescriptors';
+import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {buildStatsForNerdsCopyPayload, collectStatsForNerdsSnapshot} from '@app/features/voice/utils/StatsForNerdsCopy';
 import {MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageDescriptor} from '@lingui/core';
@@ -62,9 +61,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {
 	CaretRightIcon,
 	ChartLineIcon,
-	CheckIcon,
 	CopyIcon,
-	GearIcon,
 	IdentificationBadgeIcon,
 	InfoIcon,
 	PencilIcon,
@@ -281,139 +278,50 @@ const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
 
 ActionButton.displayName = 'ActionButton';
 
-interface SwitchAccountsMenuProps {
-	accounts: Array<Account>;
-	currentAccountId: string | null;
-	onSelect: (userId: string) => void;
-	onManage: () => void;
-	onClose: () => void;
-}
-
-const SwitchAccountsMenu = observer(
-	({accounts, currentAccountId, onSelect, onManage, onClose}: SwitchAccountsMenuProps) => {
-		return (
-			<div className={styles.switchMenu} data-flx="app.floating.user-area-popout.switch-accounts-menu.switch-menu">
-				<div
-					className={styles.switchMenuList}
-					data-flx="app.floating.user-area-popout.switch-accounts-menu.switch-menu-list"
-				>
-					{accounts.map((account) => {
-						const isCurrent = account.userId === currentAccountId;
-						const avatarUrl = getAccountAvatarUrl(account);
-						const displayName = getAccountDisplayName(account, '???');
-						const discriminator = account.userData?.discriminator ?? '0000';
-						return (
-							<FocusRing
-								key={account.userId}
-								offset={-2}
-								data-flx="app.floating.user-area-popout.switch-accounts-menu.focus-ring"
-							>
-								<button
-									type="button"
-									className={styles.accountMenuItem}
-									onClick={() => {
-										if (!isCurrent) {
-											onSelect(account.userId);
-										}
-										onClose();
-										PopoutCommands.close();
-									}}
-									data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-item.close.button"
-								>
-									<div
-										className={styles.accountMenuAvatar}
-										data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-avatar"
-									>
-										<MockAvatar
-											size={24}
-											avatarUrl={avatarUrl}
-											userTag={displayName}
-											data-flx="app.floating.user-area-popout.switch-accounts-menu.mock-avatar"
-										/>
-									</div>
-									<div
-										className={styles.accountMenuInfo}
-										data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-info"
-									>
-										<span
-											className={styles.accountMenuTag}
-											data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-tag"
-										>
-											{displayName}
-											<span
-												className={styles.accountMenuDiscriminator}
-												data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-discriminator"
-											>
-												#{discriminator}
-											</span>
-										</span>
-										{isCurrent && (
-											<span
-												className={styles.accountMenuMeta}
-												data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-meta"
-											>
-												<Trans>Active account</Trans>
-											</span>
-										)}
-									</div>
-									{isCurrent && (
-										<div
-											className={styles.accountMenuCheck}
-											data-flx="app.floating.user-area-popout.switch-accounts-menu.account-menu-check"
-										>
-											<CheckIcon
-												size={10}
-												weight="bold"
-												data-flx="app.floating.user-area-popout.switch-accounts-menu.check-icon"
-											/>
-										</div>
-									)}
-								</button>
-							</FocusRing>
-						);
-					})}
-				</div>
-				<div
-					className={styles.switchMenuFooter}
-					data-flx="app.floating.user-area-popout.switch-accounts-menu.switch-menu-footer"
-				>
-					<FocusRing offset={-2} data-flx="app.floating.user-area-popout.switch-accounts-menu.focus-ring--2">
-						<button
-							type="button"
-							className={styles.manageAccountsButton}
-							onClick={() => {
-								onClose();
-								onManage();
-							}}
-							data-flx="app.floating.user-area-popout.switch-accounts-menu.manage-accounts-button.close"
-						>
-							<GearIcon
-								size={16}
-								weight="bold"
-								data-flx="app.floating.user-area-popout.switch-accounts-menu.gear-icon"
-							/>
-							<Trans>Manage accounts</Trans>
-						</button>
-					</FocusRing>
-				</div>
-			</div>
-		);
-	},
-);
 export const UserAreaPopout = observer(() => {
 	const {i18n} = useLingui();
-	const accountLogic = useAccountSwitcherLogic();
+	const openAccountSwitcher = useCallback((reloginAccount: Account | null) => {
+		openAccountSwitcherModal(
+			{
+				closeCurrentAccountOnSelect: true,
+				initialReloginAccount: reloginAccount,
+				redirectAfterLogin: null,
+				redirectAfterSwitch: Routes.ME,
+				switchAccount: null,
+				'data-flx': 'app.floating.user-area-popout.open-manage-accounts.account-switcher-modal',
+			},
+			null,
+		);
+		PopoutCommands.close();
+	}, []);
+	const openManageAccounts = useCallback(() => {
+		openAccountSwitcher(null);
+	}, [openAccountSwitcher]);
+	const startAccountRelogin = useCallback(
+		(account: Account) => {
+			openAccountSwitcher(account);
+		},
+		[openAccountSwitcher],
+	);
+	const accountLogic = useAccountSwitcherLogic({
+		onSessionExpired: startAccountRelogin,
+		redirectAfterSwitch: Routes.ME,
+		switchAccount: null,
+	});
 	const currentUser = Users.getCurrentUser();
 	const currentUserId = currentUser?.id ?? null;
 	const status = currentUserId ? Presence.getStatus(currentUserId) : StatusTypes.ONLINE;
 	const openEditProfile = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="my_profile"
-					data-flx="app.floating.user-area-popout.open-edit-profile.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="my_profile"
+						data-flx="app.floating.user-area-popout.open-edit-profile.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 		PopoutCommands.close();
 	}, []);
@@ -459,12 +367,7 @@ export const UserAreaPopout = observer(() => {
 			});
 	}, [i18n]);
 	const handleCopyStats = useCallback(() => {
-		const data = collectStatsForNerdsSnapshot();
-		void buildStatsForNerdsCopyPayload(data).then((payload) => {
-			void navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
-				ToastCommands.createToast({type: 'success', children: i18n._(COPIED_STATS_JSON_DESCRIPTOR)});
-			});
-		});
+		void copyVoiceDiagnostics(i18n);
 	}, [i18n]);
 	const handleCopyUserTag = useCallback(() => {
 		if (!currentUser) {
@@ -472,14 +375,6 @@ export const UserAreaPopout = observer(() => {
 		}
 		TextCopyCommands.copy(i18n, currentUser.tag);
 	}, [currentUser, i18n]);
-	const openManageAccounts = useCallback(() => {
-		ModalCommands.push(
-			modal(() => (
-				<AccountSwitcherModal data-flx="app.floating.user-area-popout.open-manage-accounts.account-switcher-modal" />
-			)),
-		);
-		PopoutCommands.close();
-	}, []);
 	const profile = useMemo(() => {
 		if (!currentUser) {
 			return null;
@@ -515,7 +410,7 @@ export const UserAreaPopout = observer(() => {
 	const accentColor = getUserAccentColor(currentUser, profileData?.accent_color);
 	const borderColor = accentColor;
 	const bannerColor = accentColor;
-	const displayName = currentUser ? NicknameUtils.getNickname(currentUser) : '';
+	const displayName = currentUser ? NicknameUtils.getNickname(currentUser, null) : '';
 	const customStatus = currentUserId ? Presence.getCustomStatus(currentUserId) : null;
 	const hasCustomStatus = Boolean(normalizeCustomStatus(customStatus));
 	const popoutContainerRef = useRef<HTMLDivElement | null>(null);
@@ -656,16 +551,19 @@ export const UserAreaPopout = observer(() => {
 									offsetMainAxis={8}
 									animationType="none"
 									render={({onClose}) => (
-										<SwitchAccountsMenu
+										<UserAreaAccountSwitchMenu
 											accounts={accountLogic.accounts}
-											currentAccountId={accountLogic.currentAccount?.userId ?? null}
-											onSelect={(userId) => {
-												accountLogic.handleSwitchAccount(userId);
-												PopoutCommands.close();
+											currentAccountKey={accountLogic.currentAccountKey}
+											onSelect={(account) => {
+												if (account.isValid === false) {
+													startAccountRelogin(account);
+													return;
+												}
+												void accountLogic.handleSwitchAccount(getAccountKey(account));
 											}}
 											onManage={openManageAccounts}
 											onClose={onClose}
-											data-flx="app.floating.user-area-popout.switch-accounts-menu"
+											data-flx="app.floating.user-area-popout.user-area-account-switch-menu"
 										/>
 									)}
 									data-flx="app.floating.user-area-popout.popout--2"

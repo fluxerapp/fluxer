@@ -1,0 +1,13 @@
+selfie_segmentation_256x256.onnx
+
+Source: https://huggingface.co/onnx-community/mediapipe_selfie_segmentation (onnx/model.onnx)
+Upstream: Google MediaPipe Selfie Segmentation.
+License: Apache License 2.0.
+SHA-256: 3241ac4ad8aa35bdaf33946776db29f7c283a413aa0b0dacb9483594b4531aad
+
+Tensor interface:
+  input  "pixel_values": float32 [batch, 3, 256, 256], NCHW, RGB, values rescaled to [0, 1] (x / 255), no mean/std normalization.
+  output "alphas":       float32 [batch, 1, 256, 256], single-channel foreground probability mask in [0, 1].
+
+A copy of the Apache License 2.0 is available at https://www.apache.org/licenses/LICENSE-2.0.
+This model is redistributed unmodified under the terms of that license.

@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {TYPING_BRIDGE_RIGHT_SHIFT_RATIO, TYPING_WIDTH_MULTIPLIER} from '../src/features/ui/constants/TypingConstants';
+import {TYPING_BRIDGE_RIGHT_SHIFT_RATIO, TYPING_WIDTH_MULTIPLIER} from '@app/features/ui/constants/TypingConstants';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,7 +145,8 @@ function calculateStatusGeometry(avatarSize: number, isMobile: boolean = false):
 		return baseGeometry;
 	}
 	const phoneWidth = statusSize;
-	const phoneHeight = Math.round(phoneWidth / DESIGN_RULES.mobileAspectRatio) + DESIGN_RULES.mobilePhoneExtraHeight;
+	const phoneHeight =
+		Math.round((phoneWidth / DESIGN_RULES.mobileAspectRatio + DESIGN_RULES.mobilePhoneExtraHeight) / 2) * 2;
 	const phoneRx = Math.round(phoneWidth * DESIGN_RULES.mobileCornerRadius);
 	const bezelHeight = Math.max(1, Math.round(phoneHeight * 0.05));
 	const phoneX = cutoutCenter - phoneWidth / 2;
@@ -161,218 +162,10 @@ function calculateStatusGeometry(avatarSize: number, isMobile: boolean = false):
 	};
 }
 
-function generateAvatarMaskDefault(size: number): string {
-	const r = size / 2;
-	return `<circle fill="white" cx="${r}" cy="${r}" r="${r}" />`;
-}
-
-function generateAvatarMaskStatusRound(size: number): string {
-	const r = size / 2;
-	const status = calculateStatusGeometry(size);
-	return `(
-				<>
-					<circle fill="white" cx="${r}" cy="${r}" r="${r}" />
-					<circle fill="black" cx="${status.cx}" cy="${status.cy}" r="${status.outerRadius}" />
-				</>
-			)`;
-}
-
-function generateAvatarMaskStatusTyping(size: number): string {
-	const r = size / 2;
-	const status = calculateStatusGeometry(size);
-	const typingWidth = Math.round(status.size * TYPING_WIDTH_MULTIPLIER);
-	const typingRx = status.outerRadius;
-	const typingExtension = Math.max(0, typingWidth - status.size);
-	const typingBridgeShift = typingExtension * TYPING_BRIDGE_RIGHT_SHIFT_RATIO;
-	const leftCx = status.cx - typingExtension + typingBridgeShift;
-	const rightCx = status.cx + typingBridgeShift;
-	const y = status.cy - typingRx;
-	const bridgeHeight = typingRx * 2;
-	return `(
-				<>
-					<circle fill="white" cx="${r}" cy="${r}" r="${r}" />
-					<circle fill="black" cx="${rightCx}" cy="${status.cy}" r="${typingRx}" />
-					<rect fill="black" x="${leftCx}" y="${y}" width="${typingExtension}" height="${bridgeHeight}" />
-					<circle fill="black" cx="${leftCx}" cy="${status.cy}" r="${typingRx}" />
-				</>
-			)`;
-}
-
-function generateMobilePhoneMask(mobileStatus: MobileStatusGeometry): string {
-	const displayExtraHeight = DESIGN_RULES.mobileDisplayExtraHeight;
-	const displayExtraWidthPerSide = DESIGN_RULES.mobileDisplayExtraWidthPerSide;
-	const screenWidth =
-		mobileStatus.phoneWidth * DESIGN_RULES.mobileScreenWidth +
-		displayExtraWidthPerSide * 2 -
-		MOBILE_SCREEN_WIDTH_TRIM_PX;
-	const screenHeight =
-		mobileStatus.phoneHeight * DESIGN_RULES.mobileScreenHeight + displayExtraHeight - MOBILE_SCREEN_HEIGHT_TRIM_PX;
-	const screenX = mobileStatus.phoneX + (mobileStatus.phoneWidth - screenWidth) / 2 + MOBILE_SCREEN_X_OFFSET_PX;
-	const screenY =
-		mobileStatus.phoneY +
-		mobileStatus.phoneHeight * DESIGN_RULES.mobileScreenY -
-		displayExtraHeight / 2 +
-		MOBILE_SCREEN_Y_OFFSET_PX;
-	const screenRx = Math.min(screenWidth, screenHeight) * 0.1;
-	const wheelRadius = mobileStatus.phoneWidth * DESIGN_RULES.mobileWheelRadius;
-	const wheelCx = mobileStatus.phoneX + mobileStatus.phoneWidth / 2;
-	const wheelCy = mobileStatus.phoneY + mobileStatus.phoneHeight * DESIGN_RULES.mobileWheelY;
-	return `(
-				<>
-					<rect fill="white" x="${mobileStatus.phoneX}" y="${mobileStatus.phoneY}" width="${mobileStatus.phoneWidth}" height="${mobileStatus.phoneHeight}" rx="${mobileStatus.phoneRx}" ry="${mobileStatus.phoneRx}" />
-					<rect fill="black" x="${screenX}" y="${screenY}" width="${screenWidth}" height="${screenHeight}" rx="${screenRx}" ry="${screenRx}" />
-					<circle fill="black" cx="${wheelCx}" cy="${wheelCy}" r="${wheelRadius}" />
-				</>
-			)`;
-}
-
-function generateStatusOnline(size: number, isMobile: boolean = false): string {
-	const status = calculateStatusGeometry(size, isMobile);
-	if (!isMobile) {
-		return `<circle fill="white" cx="${status.cx}" cy="${status.cy}" r="${status.outerRadius}" />`;
-	}
-	return generateMobilePhoneMask(status as MobileStatusGeometry);
-}
-
-function generateStatusIdle(size: number, isMobile: boolean = false): string {
-	const status = calculateStatusGeometry(size, isMobile);
-	if (!isMobile) {
-		const cutoutRadius = Math.round(status.outerRadius * DESIGN_RULES.idle.cutoutRadiusRatio);
-		const cutoutOffsetDistance = Math.round(status.outerRadius * DESIGN_RULES.idle.cutoutOffsetRatio);
-		const cutoutCx = status.cx - cutoutOffsetDistance;
-		const cutoutCy = status.cy - cutoutOffsetDistance;
-		return `(
-				<>
-					<circle fill="white" cx="${status.cx}" cy="${status.cy}" r="${status.outerRadius}" />
-					<circle fill="black" cx="${cutoutCx}" cy="${cutoutCy}" r="${cutoutRadius}" />
-				</>
-			)`;
-	}
-	return generateMobilePhoneMask(status as MobileStatusGeometry);
-}
-
-function generateStatusDnd(size: number, isMobile: boolean = false): string {
-	const status = calculateStatusGeometry(size, isMobile);
-	if (!isMobile) {
-		const barWidth = Math.round(status.outerRadius * DESIGN_RULES.dnd.barWidthRatio);
-		const rawBarHeight = status.outerRadius * DESIGN_RULES.dnd.barHeightRatio;
-		const barHeight = Math.max(DESIGN_RULES.dnd.minBarHeight, Math.round(rawBarHeight));
-		const barX = status.cx - barWidth / 2;
-		const barY = status.cy - barHeight / 2;
-		const barRx = barHeight / 2;
-		return `(
-				<>
-					<circle fill="white" cx="${status.cx}" cy="${status.cy}" r="${status.outerRadius}" />
-					<rect fill="black" x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="${barRx}" ry="${barRx}" />
-				</>
-			)`;
-	}
-	return generateMobilePhoneMask(status as MobileStatusGeometry);
-}
-
-function generateStatusOffline(size: number): string {
-	const status = calculateStatusGeometry(size);
-	const innerRadius = Math.round(status.innerRadius * DESIGN_RULES.offline.innerRingRatio);
-	return `(
-				<>
-					<circle fill="white" cx="${status.cx}" cy="${status.cy}" r="${status.outerRadius}" />
-					<circle fill="black" cx="${status.cx}" cy="${status.cy}" r="${innerRadius}" />
-				</>
-			)`;
-}
-
-function generateStatusTyping(size: number): string {
-	const status = calculateStatusGeometry(size);
-	const typingWidth = Math.round(status.size * TYPING_WIDTH_MULTIPLIER);
-	const typingHeight = status.size;
-	const rx = status.outerRadius;
-	const typingExtension = Math.max(0, typingWidth - status.size);
-	const typingBridgeShift = typingExtension * TYPING_BRIDGE_RIGHT_SHIFT_RATIO;
-	const x = status.cx - status.size / 2 - typingExtension + typingBridgeShift;
-	const y = status.cy - typingHeight / 2;
-	return `<rect fill="white" x="${x}" y="${y}" width="${typingWidth}" height="${typingHeight}" rx="${rx}" ry="${rx}" />`;
-}
-
 const SIZES: Array<AvatarSize> = [16, 20, 24, 32, 36, 40, 44, 48, 56, 80, 120];
 const GENERATED_HEADER = '// SPDX-License-Identifier: AGPL-3.0-or-later\n\n';
 
-let output = `${GENERATED_HEADER}type AvatarSize = ${SIZES.join(' | ')};
-
-interface MaskDefinition {
-	viewBox: string;
-	content: React.ReactElement;
-}
-
-interface MaskSet {
-	avatarDefault: MaskDefinition;
-	avatarStatusRound: MaskDefinition;
-	avatarStatusTyping: MaskDefinition;
-	statusOnline: MaskDefinition;
-	statusOnlineMobile: MaskDefinition;
-	statusIdle: MaskDefinition;
-	statusIdleMobile: MaskDefinition;
-	statusDnd: MaskDefinition;
-	statusDndMobile: MaskDefinition;
-	statusOffline: MaskDefinition;
-	statusTyping: MaskDefinition;
-}
-
-export const AVATAR_MASKS: Record<AvatarSize, MaskSet> = {
-`;
-
-for (const size of SIZES) {
-	output += `	${size}: {
-		avatarDefault: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateAvatarMaskDefault(size)},
-		},
-		avatarStatusRound: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateAvatarMaskStatusRound(size)},
-		},
-		avatarStatusTyping: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateAvatarMaskStatusTyping(size)},
-		},
-		statusOnline: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusOnline(size, false)},
-		},
-		statusOnlineMobile: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusOnline(size, true)},
-		},
-		statusIdle: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusIdle(size, false)},
-		},
-		statusIdleMobile: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusIdle(size, true)},
-		},
-		statusDnd: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusDnd(size, false)},
-		},
-		statusDndMobile: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusDnd(size, true)},
-		},
-		statusOffline: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusOffline(size)},
-		},
-		statusTyping: {
-			viewBox: '0 0 ${size} ${size}',
-			content: ${generateStatusTyping(size)},
-		},
-	},
-`;
-}
-
-output += `} as const;
-
-export const SVGMasks = () => (
+let output = `${GENERATED_HEADER}export const SVGMasks = () => (
 	<svg
 		viewBox="0 0 1 1"
 		aria-hidden={true}
@@ -444,74 +237,74 @@ for (const size of SIZES) {
 	const mobileScreenHeight = ((screenHeightPx / mobileStatus.phoneHeight) * DESIGN_RULES.mobileAspectRatio).toFixed(4);
 	const mobileScreenRx = (screenRxPx / mobileStatus.phoneWidth).toFixed(4);
 	const mobileScreenRy = ((screenRxPx / mobileStatus.phoneWidth) * DESIGN_RULES.mobileAspectRatio).toFixed(4);
-	output += `			<mask id="svg-mask-avatar-default-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+	output += `			<mask id="flx-mask-avatar-plain-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
-			<mask id="svg-mask-avatar-status-round-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-circle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 			</mask>
-			<mask id="svg-mask-avatar-status-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-phone-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<rect fill="black" x="${formatNumber(cutoutPhoneX)}" y="${formatNumber(cutoutPhoneY)}" width="${formatNumber(cutoutPhoneWidth)}" height="${formatNumber(cutoutPhoneHeight)}" rx="${formatNumber(cutoutPhoneRx)}" ry="${formatNumber(cutoutPhoneRx)}" />
 			</mask>
-			<mask id="svg-mask-avatar-status-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="${formatNumber(typingCutoutRightCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
 				<rect fill="black" x="${formatNumber(typingCutoutLeftCx)}" y="${formatNumber(typingCutoutY)}" width="${formatNumber(typingExtensionPx / size)}" height="${formatNumber(typingCutoutHeight)}" />
 				<circle fill="black" cx="${formatNumber(typingCutoutLeftCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
 			</mask>
-			<mask id="svg-mask-status-online-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 			</mask>
-			<mask id="svg-mask-status-online-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="${DESIGN_RULES.mobileCornerRadius}" ry="${(DESIGN_RULES.mobileCornerRadius * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" />
 				<rect fill="black" x="${mobileScreenX}" y="${mobileScreenY}" width="${mobileScreenWidth}" height="${mobileScreenHeight}" rx="${mobileScreenRx}" ry="${mobileScreenRy}" />
 				<ellipse fill="black" cx="0.5" cy="${DESIGN_RULES.mobileWheelY}" rx="${DESIGN_RULES.mobileWheelRadius}" ry="${(DESIGN_RULES.mobileWheelRadius * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" />
 			</mask>
-			<mask id="svg-mask-status-idle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-idle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<circle fill="black" cx="${formatNumber(idleCutoutCx)}" cy="${formatNumber(idleCutoutCy)}" r="${formatNumber(idleCutoutR)}" />
 			</mask>
-			<mask id="svg-mask-status-dnd-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-dnd-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<rect fill="black" x="${formatNumber(dndBarX)}" y="${formatNumber(dndBarY)}" width="${formatNumber(dndBarWidth)}" height="${formatNumber(dndBarHeight)}" rx="${formatNumber(dndBarRx)}" ry="${formatNumber(dndBarRx)}" />
 			</mask>
-			<mask id="svg-mask-status-offline-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-offline-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<circle fill="black" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(offlineInnerR)}" />
 			</mask>
-			<mask id="svg-mask-status-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="${formatNumber(typingX)}" y="${formatNumber(typingY)}" width="${formatNumber(typingWidth)}" height="${formatNumber(typingHeight)}" rx="${formatNumber(typingRx)}" ry="${formatNumber(typingRx)}" />
 			</mask>
 
 `;
 }
 
-output += `			<mask id="svg-mask-status-online" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+output += `			<mask id="flx-mask-presence-online" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
-			<mask id="svg-mask-status-idle" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-idle" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="0.25" cy="0.25" r="0.375" />
 			</mask>
-			<mask id="svg-mask-status-dnd" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-dnd" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<rect fill="black" x="0.125" y="0.375" width="0.75" height="0.25" rx="0.125" ry="0.125" />
 			</mask>
-			<mask id="svg-mask-status-offline" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-offline" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="0.5" cy="0.5" r="0.25" />
 			</mask>
-			<mask id="svg-mask-status-typing" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-typing" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="0.5" ry="0.5" />
 			</mask>
-			<mask id="svg-mask-status-online-mobile" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-mobile" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="${DESIGN_RULES.mobileCornerRadius}" ry="${(DESIGN_RULES.mobileCornerRadius * DESIGN_RULES.mobileAspectRatio).toFixed(2)}" />
 				<rect fill="black" x="${((1 - DESIGN_RULES.mobileScreenWidth) / 2).toFixed(4)}" y="${DESIGN_RULES.mobileScreenY}" width="${DESIGN_RULES.mobileScreenWidth}" height="${(DESIGN_RULES.mobileScreenHeight * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" rx="0.04" ry="${(0.04 * DESIGN_RULES.mobileAspectRatio).toFixed(2)}" />
 				<ellipse fill="black" cx="0.5" cy="${DESIGN_RULES.mobileWheelY}" rx="${DESIGN_RULES.mobileWheelRadius}" ry="${(DESIGN_RULES.mobileWheelRadius * DESIGN_RULES.mobileAspectRatio).toFixed(3)}" />
 			</mask>
-			<mask id="svg-mask-avatar-default" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-plain" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
 		</defs>

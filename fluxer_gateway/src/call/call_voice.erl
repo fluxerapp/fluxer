@@ -4,24 +4,51 @@
 -typing([eqwalizer]).
 
 -export([
-    handle_join_internal/6,
-    handle_join_async/5,
+    handle_join_internal/7,
     handle_session_down/2,
     handle_disconnect_user/4,
     handle_leave/2,
     disconnect_user_after_pending_timeout/4,
-    reconcile_absent_connections/2,
     maybe_notify_session_force_disconnect/4,
     maybe_spawn_region_switch/3,
+    convert_to_sfu/2,
+    update_voice_state/3,
+    relay_voice_signal/4,
     is_session_pid_alive/1
 ]).
 
 -define(PENDING_CONNECTION_TIMEOUT_MS, 30000).
 
 -spec handle_join_internal(
-    integer(), map(), binary(), pid(), binary() | undefined, map()
-) -> {reply, ok, map()}.
-handle_join_internal(UserId, VoiceState, SessionId, SessionPid, ConnectionId, State) ->
+    integer(), map(), binary(), pid(), binary() | undefined, pos_integer() | undefined, map()
+) -> {reply, ok | {error, atom()}, map()}.
+handle_join_internal(
+    UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants, State
+) ->
+    case join_violation(UserId, VoiceState, MaxParticipants, State) of
+        {error, ErrorAtom} ->
+            {reply, {error, ErrorAtom}, State};
+        ok ->
+            NewState = admit_join(
+                UserId,
+                VoiceState,
+                SessionId,
+                SessionPid,
+                pending_connection_id(ConnectionId, VoiceState),
+                State
+            ),
+            {reply, ok, NewState}
+    end.
+
+-spec join_violation(integer(), map(), pos_integer() | undefined, map()) ->
+    ok | {error, atom()}.
+join_violation(UserId, VoiceState, MaxParticipants, #{voice_states := VoiceStates}) ->
+    voice_p2p:invariant_violation(
+        maps:values(VoiceStates#{UserId => VoiceState}), MaxParticipants
+    ).
+
+-spec admit_join(integer(), map(), binary(), pid(), binary() | undefined, map()) -> map().
+admit_join(UserId, VoiceState, SessionId, SessionPid, PendingConnectionId, State) ->
     CleanState = call_ringing:cancel_ringing_timers([UserId], State),
     BaseState = call_ringing:remove_users_from_ringing([UserId], CleanState),
     #{
@@ -29,23 +56,24 @@ handle_join_internal(UserId, VoiceState, SessionId, SessionPid, ConnectionId, St
         sessions := Sessions0,
         participants_history := History0
     } = BaseState,
-    NewVoiceStates = VoiceStates0#{UserId => VoiceState},
-    NewSessions = monitor_session_entry(
-        Sessions0, SessionId, UserId, SessionPid
-    ),
-    NewHistory = sets:add_element(UserId, History0),
-    NewPending = build_pending(ConnectionId, UserId, SessionId, BaseState),
     NewState = BaseState#{
-        voice_states => NewVoiceStates,
-        sessions => NewSessions,
-        pending_connections => NewPending,
-        participants_history => NewHistory
+        voice_states => VoiceStates0#{UserId => VoiceState},
+        sessions => monitor_session_entry(Sessions0, SessionId, UserId, SessionPid),
+        pending_connections => build_pending(PendingConnectionId, UserId, SessionId, BaseState),
+        participants_history => sets:add_element(UserId, History0)
     },
     StateWithTimer = call_ringing:reset_idle_timer(NewState),
     {UpdatedState, Dispatched} = call_ringing:maybe_dispatch_state_update(
         BaseState, StateWithTimer
     ),
-    {reply, ok, ensure_call_update(UpdatedState, Dispatched)}.
+    ensure_call_update(UpdatedState, Dispatched).
+
+-spec pending_connection_id(binary() | undefined, map()) -> binary() | undefined.
+pending_connection_id(ConnectionId, VoiceState) ->
+    case voice_p2p:is_p2p(VoiceState) of
+        true -> undefined;
+        false -> ConnectionId
+    end.
 
 -spec build_pending(binary() | undefined, integer(), binary(), map()) -> map().
 build_pending(undefined, _UserId, _SessionId, #{pending_connections := Pending}) ->
@@ -82,31 +110,6 @@ monitor_session_entry(Sessions, SessionId, UserId, SessionPid) ->
     end,
     SessionRef = monitor(process, SessionPid),
     Sessions#{SessionId => {UserId, SessionPid, SessionRef}}.
-
--spec handle_join_async(integer(), map(), binary(), pid(), map()) -> {noreply, map()}.
-handle_join_async(
-    UserId, VoiceState, SessionId, SessionPid, #{channel_id := ChannelId} = State
-) ->
-    CleanState = call_ringing:cancel_ringing_timers([UserId], State),
-    BaseState = call_ringing:remove_users_from_ringing([UserId], CleanState),
-    #{
-        voice_states := VoiceStates0,
-        sessions := Sessions0,
-        participants_history := History0
-    } = BaseState,
-    NewVS = VoiceStates0#{UserId => VoiceState},
-    NewSess = monitor_session_entry(Sessions0, SessionId, UserId, SessionPid),
-    NewHistory = sets:add_element(UserId, History0),
-    NewState = BaseState#{
-        voice_states => NewVS, sessions => NewSess, participants_history => NewHistory
-    },
-    StateWithTimer = call_ringing:reset_idle_timer(NewState),
-    {UpdState, Dispatched} = call_ringing:maybe_dispatch_state_update(
-        BaseState, StateWithTimer
-    ),
-    FinalState = ensure_call_update(UpdState, Dispatched),
-    SessionPid ! {call_join_result, ChannelId, {ok, FinalState}},
-    {noreply, FinalState}.
 
 -spec maybe_remove_user_voice_state(integer(), map(), map()) -> map().
 maybe_remove_user_voice_state(UserId, RemainingSessions, VoiceStates) ->
@@ -155,7 +158,7 @@ handle_disconnect_user(
     end,
     case
         voice_disconnect_common:disconnect_user_if_in_channel(
-            UserId, ExpectedChannelId, VoiceStates, Sessions, CleanupFun
+            UserId, ExpectedChannelId, ConnectionId, VoiceStates, Sessions, CleanupFun
         )
     of
         {not_found, _, _} ->
@@ -238,93 +241,6 @@ disconnect_user_after_pending_timeout(
             }}
     end.
 
--spec reconcile_absent_connections([voice_reconciliation_v3:participant_entry()], map()) ->
-    {noreply, map()} | {stop, normal, map()}.
-reconcile_absent_connections([], State) ->
-    {noreply, State};
-reconcile_absent_connections(
-    AbsentEntries,
-    #{
-        voice_states := VoiceStates,
-        sessions := Sessions,
-        pending_connections := PendingConns
-    } = State
-) ->
-    ActiveAbsentEntries = active_absent_entries(AbsentEntries, VoiceStates),
-    case ActiveAbsentEntries of
-        [] ->
-            {noreply, State};
-        _ ->
-            do_reconcile_absent_connections(
-                ActiveAbsentEntries, VoiceStates, Sessions, PendingConns, State
-            )
-    end.
-
--spec active_absent_entries([voice_reconciliation_v3:participant_entry()], map()) ->
-    [voice_reconciliation_v3:participant_entry()].
-active_absent_entries(AbsentEntries, VoiceStates) ->
-    lists:filter(
-        fun(Entry) -> absent_entry_active(Entry, VoiceStates) end,
-        AbsentEntries
-    ).
-
--spec absent_entry_active(voice_reconciliation_v3:participant_entry(), map()) -> boolean().
-absent_entry_active(#{user_id := UserId, connection_id := ConnectionId}, VoiceStates) ->
-    case maps:get(UserId, VoiceStates, undefined) of
-        VoiceState when is_map(VoiceState) ->
-            maps:get(<<"connection_id">>, VoiceState, undefined) =:= ConnectionId;
-        _ ->
-            false
-    end.
-
--spec do_reconcile_absent_connections(
-    [voice_reconciliation_v3:participant_entry()], map(), map(), map(), map()
-) -> {noreply, map()} | {stop, normal, map()}.
-do_reconcile_absent_connections(
-    ActiveAbsentEntries, VoiceStates, Sessions, PendingConns, State
-) ->
-    RemovedUsers = [maps:get(user_id, Entry) || Entry <- ActiveAbsentEntries],
-    NewVoiceStates = lists:foldl(fun maps:remove/2, VoiceStates, RemovedUsers),
-    {NewSessions, NewPending} = remove_absent_sessions(
-        ActiveAbsentEntries, Sessions, PendingConns, State
-    ),
-    BaseState = State#{
-        voice_states => NewVoiceStates,
-        sessions => NewSessions,
-        pending_connections => NewPending
-    },
-    CleanState = call_ringing:cancel_ringing_timers(RemovedUsers, BaseState),
-    RingState = call_ringing:remove_users_from_ringing(RemovedUsers, CleanState),
-    {UpdatedState, Dispatched} = call_ringing:maybe_dispatch_state_update(State, RingState),
-    call_ringing:maybe_stop_or_noreply(UpdatedState, Dispatched).
-
--spec remove_absent_sessions(
-    [voice_reconciliation_v3:participant_entry()], map(), map(), map()
-) -> {map(), map()}.
-remove_absent_sessions(ActiveAbsentEntries, Sessions, PendingConns, State) ->
-    lists:foldl(
-        fun(Entry, {SessionsAcc, PendingAcc}) ->
-            remove_absent_session(Entry, SessionsAcc, PendingAcc, State)
-        end,
-        {Sessions, PendingConns},
-        ActiveAbsentEntries
-    ).
-
--spec remove_absent_session(voice_reconciliation_v3:participant_entry(), map(), map(), map()) ->
-    {map(), map()}.
-remove_absent_session(
-    #{user_id := UserId, connection_id := ConnectionId}, Sessions, Pending, State
-) ->
-    NewPending = voice_pending_common:remove_pending_connection(ConnectionId, Pending),
-    case voice_disconnect_common:find_session_by_user_id(UserId, Sessions) of
-        {ok, SessionId, _Pid, Ref} ->
-            demonitor(Ref, [flush]),
-            maybe_notify_session_force_disconnect(UserId, SessionId, ConnectionId, State),
-            {maps:remove(SessionId, Sessions), NewPending};
-        not_found ->
-            {Sessions, NewPending}
-    end.
-
 -spec maybe_notify_session_force_disconnect(
     integer(), binary(), binary() | undefined, map()
 ) -> ok.
@@ -373,18 +289,86 @@ maybe_spawn_region_switch_for_participants(
             ok
     end.
 
--spec spawn_voice_server_updates(binary(), map(), map(), integer()) -> ok.
+-spec spawn_voice_server_updates(binary() | undefined | null, map(), map(), integer()) -> ok.
 spawn_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId) ->
     spawn(fun() ->
         send_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId)
     end),
     ok.
 
+-spec update_voice_state(integer(), map(), map()) -> map().
+update_voice_state(UserId, VoiceState, #{voice_states := VoiceStates} = State) ->
+    WasP2p = voice_p2p:is_p2p(maps:get(UserId, VoiceStates)),
+    case {WasP2p, voice_p2p:is_p2p(VoiceState)} of
+        {true, false} ->
+            convert_to_sfu([UserId], State#{voice_states => VoiceStates#{UserId => VoiceState}});
+        {false, true} ->
+            Converted = voice_p2p:to_sfu(VoiceState),
+            NewState = State#{voice_states => VoiceStates#{UserId => Converted}},
+            ok = call_ringing:dispatch_voice_state_update(Converted, NewState),
+            NewState;
+        _ ->
+            State#{voice_states => VoiceStates#{UserId => VoiceState}}
+    end.
+
+-spec convert_to_sfu([integer()], map()) -> map().
+convert_to_sfu(
+    ExtraUserIds,
+    #{voice_states := VoiceStates, sessions := Sessions, channel_id := ChannelId} = State
+) ->
+    Converted = maps:map(
+        fun(_UserId, VoiceState) -> voice_p2p:to_sfu(VoiceState) end,
+        maps:filter(fun(_UserId, VoiceState) -> voice_p2p:is_p2p(VoiceState) end, VoiceStates)
+    ),
+    NewVoiceStates = maps:merge(VoiceStates, Converted),
+    Reconnecting = maps:with(ExtraUserIds ++ maps:keys(Converted), NewVoiceStates),
+    case maps:size(Reconnecting) of
+        0 ->
+            State;
+        _ ->
+            NewState = State#{voice_states => NewVoiceStates},
+            ok = dispatch_voice_state_updates(Converted, NewState),
+            spawn_voice_server_updates(
+                maps:get(region, State, undefined), Reconnecting, Sessions, ChannelId
+            ),
+            NewState
+    end.
+
+-spec dispatch_voice_state_updates(map(), map()) -> ok.
+dispatch_voice_state_updates(VoiceStates, State) ->
+    maps:foreach(
+        fun(_UserId, VoiceState) ->
+            call_ringing:dispatch_voice_state_update(VoiceState, State)
+        end,
+        VoiceStates
+    ).
+
+-spec relay_voice_signal(binary(), binary(), map(), map()) -> ok.
+relay_voice_signal(
+    SessionId,
+    To,
+    Data,
+    #{voice_states := VoiceStates, sessions := Sessions, channel_id := ChannelId}
+) ->
+    case voice_p2p:signal_route(maps:values(VoiceStates), SessionId, To) of
+        {ok, Sender, Target} ->
+            dispatch_voice_signal(
+                maps:get(maps:get(<<"session_id">>, Target, undefined), Sessions, undefined),
+                voice_p2p:signal_payload(null, ChannelId, Sender, Data)
+            );
+        error ->
+            ok
+    end.
+
+-spec dispatch_voice_signal(term(), map()) -> ok.
+dispatch_voice_signal({_UserId, SessionPid, _Ref}, Payload) when is_pid(SessionPid) ->
+    gateway_dispatch_relay:dispatch(SessionPid, voice_signal, Payload, 0);
+dispatch_voice_signal(_Session, _Payload) ->
+    ok.
+
 -spec send_voice_server_updates(
     binary() | undefined | null, map(), map(), integer()
 ) -> ok.
-send_voice_server_updates(NewRegion, _VS, _Sessions, _ChId) when not is_binary(NewRegion) ->
-    ok;
 send_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId) ->
     maps:foreach(
         fun(_SessionId, {UserId, SessionPid, _Ref}) ->
@@ -396,7 +380,9 @@ send_voice_server_updates(NewRegion, VoiceStates, Sessions, ChannelId) ->
     ),
     ok.
 
--spec maybe_send_voice_server_update(integer(), pid(), binary(), integer(), map()) -> ok.
+-spec maybe_send_voice_server_update(
+    integer(), pid(), binary() | undefined | null, integer(), map()
+) -> ok.
 maybe_send_voice_server_update(UserId, SessionPid, NewRegion, ChannelId, VoiceStates) ->
     case maps:get(UserId, VoiceStates, undefined) of
         undefined ->
@@ -405,7 +391,9 @@ maybe_send_voice_server_update(UserId, SessionPid, NewRegion, ChannelId, VoiceSt
             send_voice_server_update(ChannelId, UserId, SessionPid, NewRegion, VoiceState)
     end.
 
--spec send_voice_server_update(integer(), integer(), pid(), binary(), map()) -> ok.
+-spec send_voice_server_update(
+    integer(), integer(), pid(), binary() | undefined | null, map()
+) -> ok.
 send_voice_server_update(ChannelId, UserId, SessionPid, NewRegion, VoiceState) ->
     ConnectionId = maps:get(<<"connection_id">>, VoiceState, null),
     case ConnectionId of
@@ -417,15 +405,11 @@ send_voice_server_update(ChannelId, UserId, SessionPid, NewRegion, VoiceState) -
             Req0 = voice_utils:build_voice_token_rpc_request(
                 null, ChannelId, UserId, ConnectionId, null, null
             ),
-            Req = voice_utils:add_rtc_region_to_request(Req0, rpc_region(NewRegion)),
+            Req = voice_utils:add_rtc_region_to_request(
+                Req0, dm_voice_state:voice_region_for_rpc(NewRegion)
+            ),
             dispatch_voice_server_rpc(ChannelId, SessionPid, Req)
     end.
-
--spec rpc_region(binary()) -> binary() | null.
-rpc_region(<<"automatic">>) ->
-    null;
-rpc_region(NewRegion) ->
-    NewRegion.
 
 -spec dispatch_voice_server_rpc(integer(), pid(), map()) -> ok.
 dispatch_voice_server_rpc(ChannelId, SessionPid, Req) ->

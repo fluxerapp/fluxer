@@ -2,18 +2,19 @@
 
 import ChatInputSettings from '@app/features/messaging/state/ChatInputSettings';
 import {convertEmoticonsToEmoji} from '@app/features/messaging/utils/EmoticonConversionUtils';
+import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
 import {maybeSanitizeOutgoingMessage} from '@app/features/messaging/utils/UrlSanitizationUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	AllowedMentions,
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 const DEFAULT_ALLOWED_MENTIONS: AllowedMentions = {replied_user: true};
 
-export {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
+export {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 export interface ApiAttachmentMetadata {
 	id: string;
@@ -28,7 +29,7 @@ export interface ApiAttachmentMetadata {
 	waveform?: string;
 }
 
-export interface ApiAttachmentReferenceMetadata {
+interface ApiAttachmentReferenceMetadata {
 	id: string;
 	filename?: string;
 	title?: string | null;
@@ -57,6 +58,13 @@ export interface MessageEditRequest {
 	flags?: number;
 }
 
+export interface MessageEditPayload {
+	content?: string;
+	attachments?: Array<ApiMessageEditAttachmentMetadata>;
+	allowedMentions?: AllowedMentions;
+	flags?: number;
+}
+
 export interface MessageCreatePayload {
 	content?: string | null;
 	nonce?: string;
@@ -74,16 +82,48 @@ export interface NormalizedMessageContent {
 	flags: number;
 }
 
-export function normalizeMessageContent(content: string, favoriteMemeId?: string): NormalizedMessageContent {
-	const withoutSilent = removeSilentFlag(content);
+export function normalizeMessageContent(content: string): NormalizedMessageContent {
+	const silentPrefix = parseSilentMessagePrefix(content);
+	const withoutSilent = silentPrefix == null ? content : content.slice(silentPrefix.end);
 	const converted = applyOutgoingEmoticonConversion(withoutSilent);
 	const sanitized = maybeSanitizeOutgoingMessage(converted);
 	const normalizedContent = hasVisibleMessageContent(sanitized) ? sanitized : '';
-	const flags = getMessageFlags(content, favoriteMemeId);
+	const flags = silentPrefix == null ? 0 : MessageFlags.SUPPRESS_NOTIFICATIONS;
 	return {content: normalizedContent, flags};
 }
 
-export function normalizeMessageEditContent(content: string): string {
+export function canSubmitMessage(content: string, hasNonTextContent: boolean): boolean {
+	return hasNonTextContent || normalizeMessageContent(content).content.length > 0;
+}
+
+export interface ComposerSubmitSignals {
+	inputDisabled: boolean;
+	isSubmissionBlockedBySlowmode: boolean;
+	isOverCharacterLimit: boolean;
+	hasMessageContent: boolean;
+	hasAttachments: boolean;
+	hasPendingSticker: boolean;
+	isEditingMessageOnMobile: boolean;
+}
+
+export function canSubmitComposerContent(signals: ComposerSubmitSignals): boolean {
+	if (signals.inputDisabled || signals.isSubmissionBlockedBySlowmode || signals.isOverCharacterLimit) {
+		return false;
+	}
+	return (
+		signals.hasMessageContent || signals.hasAttachments || signals.hasPendingSticker || signals.isEditingMessageOnMobile
+	);
+}
+
+export function getComposerMessageContent(content: string, isEditingMessageOnMobile: boolean): string {
+	if (isEditingMessageOnMobile) {
+		return content;
+	}
+	const silentPrefix = parseSilentMessagePrefix(content);
+	return silentPrefix == null ? content : content.slice(silentPrefix.end);
+}
+
+function normalizeMessageEditContent(content: string): string {
 	return applyOutgoingEmoticonConversion(content);
 }
 
@@ -121,24 +161,26 @@ export function buildMessageCreateRequest(payload: MessageCreatePayload): Messag
 	return requestBody;
 }
 
-const isSilentMessage = (content: string): boolean => {
-	return content.startsWith('@silent ');
-};
-const removeSilentFlag = (content: string): string => {
-	return content.startsWith('@silent ') ? content.replace('@silent ', '') : content;
-};
+export function buildMessageEditRequest(payload: MessageEditPayload): MessageEditRequest {
+	const {content, attachments, allowedMentions, flags} = payload;
+	const requestBody: MessageEditRequest = {};
+	if (content !== undefined) {
+		requestBody.content = normalizeMessageEditContent(content);
+	}
+	if (attachments !== undefined) {
+		requestBody.attachments = attachments;
+	}
+	if (allowedMentions !== undefined) {
+		requestBody.allowed_mentions = allowedMentions;
+	}
+	if (flags !== undefined) {
+		requestBody.flags = flags;
+	}
+	return requestBody;
+}
+
 const applyOutgoingEmoticonConversion = (content: string): string => {
 	return ChatInputSettings.convertEmoticons ? convertEmoticonsToEmoji(content) : content;
-};
-const getMessageFlags = (content: string, favoriteMemeId?: string): number => {
-	let flags = 0;
-	if (isSilentMessage(content)) {
-		flags |= MessageFlags.SUPPRESS_NOTIFICATIONS;
-	}
-	if (favoriteMemeId) {
-		flags |= MessageFlags.COMPACT_ATTACHMENTS;
-	}
-	return flags;
 };
 const shouldIncludeAllowedMentions = (allowedMentions?: AllowedMentions): boolean => {
 	if (!allowedMentions) {

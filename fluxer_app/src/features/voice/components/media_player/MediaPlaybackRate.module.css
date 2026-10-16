@@ -66,5 +66,5 @@
 }
 
 :global(.theme-light) .active {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }

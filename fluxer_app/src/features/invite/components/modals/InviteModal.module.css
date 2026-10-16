@@ -1,37 +1,10 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.content {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-3);
-	padding-top: var(--spacing-4);
-	padding-bottom: var(--spacing-8);
-}
-
-.headerSearch {
-	margin-top: var(--spacing-3);
-	width: 100%;
-}
-
-.headerSearchInput {
-	width: 100%;
-}
-
 .loadingContainer {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: var(--spacing-8) 0;
-}
-
-.subtitle {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-1-5);
-	margin: -0.625rem 0 0;
-	font-size: 0.75rem;
-	color: var(--text-secondary);
-	line-height: 1.4;
 }
 
 .channelSubtitle {
@@ -80,21 +53,6 @@
 	font-size: 0.875rem;
 	color: var(--text-primary);
 	line-height: 1.4;
-	margin: 0;
-}
-
-.linkFooter {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-	flex-shrink: 0;
-	width: 100%;
-}
-
-.linkSectionLabel {
-	font-size: 0.875rem;
-	font-weight: 500;
-	color: var(--text-primary);
 	margin: 0;
 }
 

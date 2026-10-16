@@ -17,9 +17,15 @@ import {LiveBadge} from '@app/features/ui/components/LiveBadge';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/profile/VoiceActivityCard.module.css';
+import {
+	VOICE_ACTIVITY_AVATAR_MAX_VISIBLE,
+	VOICE_ACTIVITY_AVATAR_SIZE_PX,
+} from '@app/features/user/components/profile/VoiceActivityCardMetrics';
+import {JOIN_VOICE_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {STREAM_PREVIEW_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceStreamWatchCommands from '@app/features/voice/commands/VoiceStreamWatchCommands';
 import {useStreamPreview} from '@app/features/voice/components/useStreamPreview';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
@@ -60,10 +66,6 @@ const OPEN_VOICE_DESCRIPTOR = msg({
 	message: 'Open voice',
 	comment: 'Button or menu action label in the user settings voice activity card. Keep it concise.',
 });
-const JOIN_VOICE_DESCRIPTOR = msg({
-	message: 'Join voice',
-	comment: 'Button or menu action label in the user settings voice activity card. Keep it concise.',
-});
 const WATCHING_DESCRIPTOR = msg({
 	message: 'Watching',
 	comment: 'Short label in the user settings voice activity card. Keep it concise.',
@@ -83,10 +85,7 @@ const OPEN_3_DESCRIPTOR = msg({
 	comment:
 		'Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.',
 });
-const STREAM_PREVIEW_DESCRIPTOR = msg({
-	message: 'Stream preview',
-	comment: 'Short label in the user settings voice activity card. Keep it concise.',
-});
+
 const NO_PREVIEW_YET_DESCRIPTOR = msg({
 	message: 'No preview yet',
 	comment: 'Empty-state text in the user settings voice activity card.',
@@ -202,7 +201,7 @@ export const VoiceActivityCard: React.FC<VoiceActivityCardProps> = observer(({ac
 			return i18n._(PARTICIPANTS_DESCRIPTOR);
 		}
 		const names = avatarStackUsers
-			.map((user) => NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined))
+			.map((user) => NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined))
 			.join(', ');
 		return i18n._(PARTICIPANTS_2_DESCRIPTOR, {names});
 	}, [avatarStackUsers, guildId, channelId, i18n.locale]);
@@ -252,8 +251,8 @@ export const VoiceActivityCard: React.FC<VoiceActivityCardProps> = observer(({ac
 					data-flx="user.profile.voice-activity-card.participants-row"
 				>
 					<AvatarStack
-						size={20}
-						maxVisible={5}
+						size={VOICE_ACTIVITY_AVATAR_SIZE_PX}
+						maxVisible={VOICE_ACTIVITY_AVATAR_MAX_VISIBLE}
 						users={avatarStackUsers}
 						guildId={guildId}
 						channelId={channelId}
@@ -417,7 +416,7 @@ const VoiceActivityContext: React.FC<VoiceActivityContextProps> = observer(({cha
 		const recipientId = channel.recipientIds.find((id) => id !== voiceState.user_id);
 		const recipientUser = recipientId ? Users.getUser(recipientId) : undefined;
 		if (recipientUser) {
-			const displayName = NicknameUtils.getNickname(recipientUser);
+			const displayName = NicknameUtils.getNickname(recipientUser, null);
 			return (
 				<button
 					type="button"

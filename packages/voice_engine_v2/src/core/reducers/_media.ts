@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Error, VoiceEngineV2OperationId} from '../../protocol/types';
-import type {VoiceEngineV2LocalMediaState, VoiceEngineV2Snapshot} from '../state';
+import type {VoiceEngineV2LocalMediaState, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Error, VoiceEngineV2OperationId} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export function applyMediaSuccess<Options>(
 	state: VoiceEngineV2LocalMediaState<Options>,

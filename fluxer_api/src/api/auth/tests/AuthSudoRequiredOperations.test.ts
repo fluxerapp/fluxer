@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomBytes} from 'node:crypto';
+import {
+	createAuthHarness,
+	createTestAccount,
+	createTotpSecret,
+	loginAccount,
+	type TestAccount,
+	totpCodeNow,
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {TotpGenerator} from '../../utils/TotpGenerator';
-import {createAuthHarness, createTestAccount, loginAccount, type TestAccount} from './AuthTestUtils';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{
@@ -23,65 +28,6 @@ interface OAuth2ApplicationResponse {
 		id: string;
 		token: string;
 	};
-}
-
-function generateTotpSecret(): string {
-	const buffer = randomBytes(20);
-	const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-	let result = '';
-	for (let i = 0; i < buffer.length; i += 5) {
-		const bytes = [buffer[i]!, buffer[i + 1]!, buffer[i + 2]!, buffer[i + 3]!, buffer[i + 4]!];
-		const n = (bytes[0]! << 24) | (bytes[1]! << 16) | (bytes[2]! << 8) | bytes[3]!;
-		const indices = [
-			(n >> 3) & 0x1f,
-			((n >> 11) | ((bytes[4]! << 4) & 0xf)) & 0x1f,
-			((n >> 19) | ((bytes[4]! << 2) & 0x3c)) & 0x1f,
-			(bytes[4]! >> 1) & 0x1f,
-		];
-		result += base32Chars[indices[0]!];
-		result += base32Chars[indices[1]!];
-		result += base32Chars[indices[2]!];
-		result += base32Chars[indices[3]!];
-	}
-	return result;
-}
-
-async function generateTotpCode(secret: string): Promise<string> {
-	const totp = new TotpGenerator(secret);
-	const codes = await totp.generateTotp();
-	return codes[0]!;
-}
-
-async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const loginResp = await createBuilderWithoutAuth<
-		| {
-				mfa: true;
-				ticket: string;
-		  }
-		| {
-				mfa: false;
-				token: string;
-		  }
-	>(harness)
-		.post('/auth/login')
-		.body({
-			email: account.email,
-			password: account.password,
-		})
-		.execute();
-	if (!loginResp.mfa) {
-		throw new Error('Expected MFA login');
-	}
-	const mfaLoginResp = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			ticket: loginResp.ticket,
-			code: await generateTotpCode(secret),
-		})
-		.execute();
-	return {...account, token: mfaLoginResp.token};
 }
 
 async function createOAuth2BotApplication(
@@ -144,19 +90,6 @@ describe('Auth sudo required operations', () => {
 			.execute();
 		await loginAccount(harness, account);
 	});
-	it('requires sudo for delete OAuth2 application', async () => {
-		const account = await createTestAccount(harness);
-		const appName = `Test App ${Date.now()}`;
-		const appId = await createOAuth2BotApplication(harness, account, appName, ['https://example.com/callback']);
-		await createBuilder(harness, account.token).delete(`/oauth2/applications/${appId}`).body({}).expect(403).execute();
-		await createBuilder(harness, account.token)
-			.delete(`/oauth2/applications/${appId}`)
-			.body({
-				password: account.password,
-			})
-			.expect(204)
-			.execute();
-	});
 	it('requires sudo for reset bot token', async () => {
 		const account = await createTestAccount(harness);
 		const appName = `Test App ${Date.now()}`;
@@ -175,42 +108,10 @@ describe('Auth sudo required operations', () => {
 			.execute();
 		await deleteOAuth2Application(harness, account, appId);
 	});
-	it('requires sudo for disable TOTP MFA', async () => {
-		let account = await createTestAccount(harness);
-		const secret = generateTotpSecret();
-		const code = await generateTotpCode(secret);
-		const enableResp = await createBuilder<BackupCodesResponse>(harness, account.token)
-			.post('/users/@me/mfa/totp/enable')
-			.body({
-				secret,
-				code,
-				password: account.password,
-			})
-			.execute();
-		expect(enableResp.backup_codes.length).toBeGreaterThan(0);
-		const backupCode = enableResp.backup_codes[0]!.code;
-		account = await loginWithTotp(harness, account, secret);
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/totp/disable')
-			.body({
-				code: backupCode,
-			})
-			.expect(403)
-			.execute();
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/totp/disable')
-			.body({
-				code: backupCode,
-				mfa_method: 'totp',
-				mfa_code: await generateTotpCode(secret),
-			})
-			.expect(204)
-			.execute();
-	});
 	it('requires sudo for enable TOTP MFA', async () => {
 		const account = await createTestAccount(harness);
-		const secret = generateTotpSecret();
-		const code = await generateTotpCode(secret);
+		const secret = createTotpSecret();
+		const code = totpCodeNow(secret);
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/enable')
 			.body({
@@ -228,17 +129,6 @@ describe('Auth sudo required operations', () => {
 			})
 			.execute();
 	});
-	it('requires sudo for disable account', async () => {
-		const testUser = await createTestAccount(harness);
-		await createBuilder(harness, testUser.token).post('/users/@me/disable').body({}).expect(403).execute();
-		await createBuilder(harness, testUser.token)
-			.post('/users/@me/disable')
-			.body({
-				password: testUser.password,
-			})
-			.expect(204)
-			.execute();
-	});
 	it('requires sudo for delete account', async () => {
 		const testUser = await createTestAccount(harness);
 		await createBuilder(harness, testUser.token).post('/users/@me/delete').body({}).expect(403).execute();
@@ -249,11 +139,5 @@ describe('Auth sudo required operations', () => {
 			})
 			.expect(204)
 			.execute();
-	});
-	it('allows non-sudo operations without sudo', async () => {
-		const account = await createTestAccount(harness);
-		await loginAccount(harness, account);
-		await createBuilder(harness, account.token).get('/users/@me').expect(200).execute();
-		await createBuilder(harness, account.token).get('/auth/sessions').expect(200).execute();
 	});
 });

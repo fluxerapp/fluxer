@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {UserContactChangeLogRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
-import type {UserContactChangeLogRepository} from '../repositories/UserContactChangeLogRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserContactChangeLogRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+import type {UserContactChangeLogRepository} from '@app/api/user/repositories/UserContactChangeLogRepository';
+import {formatUserTag} from '@app/api/user/UserTag';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
 type ContactChangeReason = 'user_requested' | 'admin_action';
+
+interface ContactChange {
+	field: 'email' | 'fluxer_tag';
+	oldValue: string | null;
+	newValue: string | null;
+}
 
 interface RecordDiffParams {
 	oldUser: User | null;
@@ -28,55 +36,32 @@ export class UserContactChangeLogService {
 
 	async recordDiff(params: RecordDiffParams): Promise<void> {
 		const {oldUser, newUser, reason, actorUserId, eventAt} = params;
-		const tasks: Array<Promise<void>> = [];
-		const oldEmail = oldUser?.email?.toLowerCase() ?? null;
-		const newEmail = newUser.email?.toLowerCase() ?? null;
-		if (oldEmail !== newEmail) {
-			tasks.push(
-				this.repo.insertLog({
-					userId: newUser.id,
-					field: 'email',
-					oldValue: oldEmail,
-					newValue: newEmail,
-					reason,
-					actorUserId,
-					eventAt,
-				}),
-			);
-		}
-		const oldHasVerifiedPhone = oldUser?.hasVerifiedPhone ?? false;
-		const newHasVerifiedPhone = newUser.hasVerifiedPhone;
-		if (oldHasVerifiedPhone !== newHasVerifiedPhone) {
-			tasks.push(
-				this.repo.insertLog({
-					userId: newUser.id,
-					field: 'has_verified_phone',
-					oldValue: String(oldHasVerifiedPhone),
-					newValue: String(newHasVerifiedPhone),
-					reason,
-					actorUserId,
-					eventAt,
-				}),
-			);
-		}
-		const oldTag = oldUser ? this.buildFluxerTag(oldUser) : null;
-		const newTag = this.buildFluxerTag(newUser);
-		if (oldTag !== newTag) {
-			tasks.push(
-				this.repo.insertLog({
-					userId: newUser.id,
-					field: 'fluxer_tag',
-					oldValue: oldTag,
-					newValue: newTag,
-					reason,
-					actorUserId,
-					eventAt,
-				}),
-			);
-		}
-		if (tasks.length > 0) {
-			await Promise.all(tasks);
-		}
+		const changes: Array<ContactChange> = [
+			{
+				field: 'email',
+				oldValue: oldUser?.email?.toLowerCase() ?? null,
+				newValue: newUser.email?.toLowerCase() ?? null,
+			},
+			{
+				field: 'fluxer_tag',
+				oldValue: this.buildFluxerTag(oldUser),
+				newValue: this.buildFluxerTag(newUser),
+			},
+		];
+		await awaitAll(
+			changes
+				.filter(({oldValue, newValue}) => oldValue !== newValue)
+				.map(async (change) =>
+					this.repo.insertLog({
+						userId: newUser.id,
+						...change,
+						reason,
+						actorUserId,
+						eventAt,
+					}),
+				),
+			'Failed to record user contact changes',
+		);
 	}
 
 	async listLogs(params: ListLogsParams): Promise<Array<UserContactChangeLogRow>> {
@@ -91,7 +76,6 @@ export class UserContactChangeLogService {
 		if (!user.username || discriminator === '') {
 			return null;
 		}
-		const paddedDiscriminator = discriminator.padStart(4, '0');
-		return `${user.username}#${paddedDiscriminator}`;
+		return formatUserTag(user);
 	}
 }

@@ -123,7 +123,7 @@ export const TextareaAutosize = React.forwardRef<HTMLTextAreaElement, TextareaAu
 		(node: HTMLTextAreaElement | null) => {
 			elRef.current = node;
 			if (typeof forwardedRef === 'function') forwardedRef(node);
-			else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
+			else if (forwardedRef) forwardedRef.current = node;
 		},
 		[forwardedRef],
 	);

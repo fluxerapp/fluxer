@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {VisionarySlotRow} from '../database/types/PaymentTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {VisionarySlotRow} from '@app/api/database/types/PaymentTypes';
 
 export class VisionarySlot {
 	readonly slotIndex: number;

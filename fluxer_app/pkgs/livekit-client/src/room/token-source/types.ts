@@ -67,10 +67,12 @@ export type TokenSourceFetchOptions = {
 
 	agentName?: string;
 	agentMetadata?: string;
+	deployment?: string;
 };
 
 export abstract class TokenSourceConfigurable {
 	abstract fetch(options: TokenSourceFetchOptions): Promise<TokenSourceResponseObject>;
+	abstract fetch(options: TokenSourceFetchOptions, force?: boolean): Promise<TokenSourceResponseObject>;
 }
 
 export type TokenSourceBase = TokenSourceFixed | TokenSourceConfigurable;

@@ -63,7 +63,7 @@
 	border: var(--avatar-outline, 0.125rem) solid var(--background-tertiary);
 	background: var(--background-tertiary);
 	color: var(--text-secondary);
-	font-size: var(--font-size-xxs, 0.625rem);
+	font-size: 0.625rem;
 	font-weight: 600;
 	width: var(--avatar-size);
 	height: var(--avatar-size);

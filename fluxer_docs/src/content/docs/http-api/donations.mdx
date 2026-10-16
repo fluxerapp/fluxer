@@ -1,0 +1,217 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Donations
+description: Donation currencies and intervals, checkout sessions, and the donor management link.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A donation is a one-off or recurring payment, taken on an externally hosted checkout page. Fluxer tracks it by email address, and it grants no [premium](/http-api/premium/). [Billing](/http-api/billing/) defines the payment provider webhook that completes one.
+
+None of the routes here takes a credential, and all are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. When a request presents a valid credential anyway, Fluxer counts the request against that account's rate limit.
+
+Fluxer removes the surrounding whitespace from a submitted address and lowercases it before it matches a donor, so `Donor@example.com` and `donor@example.com` address the same donor.
+
+:::note[Donation management requires a completed donation]
+Fluxer stores a donor only when the payment provider confirms a donation checkout. [Request donation management link](#request-donation-management-link) sends a link only to an address stored as a donor.
+:::
+
+## Donation currencies
+
+Amounts are expressed in the minor unit of the selected currency. Each currency has its own inclusive bounds.
+
+| Value | Description |
+| --- | --- |
+| usd | The United States dollar (300-99999999 minor units) |
+| eur | The euro (300-99999999 minor units) |
+| brl | The Brazilian real (1000-99999999 minor units) |
+| inr | The Indian rupee (20000-99999999 minor units) |
+| pln | The Polish zloty (800-99999999 minor units) |
+| try | The Turkish lira (10000-99999999 minor units) |
+| sek | The Swedish krona (3000-99999999 minor units) |
+| dkk | The Danish krone (2000-99999999 minor units) |
+| nok | The Norwegian krone (3000-99999999 minor units) |
+
+## Donation intervals
+
+| Value | Description |
+| --- | --- |
+| month | The donation repeats every month |
+| year | The donation repeats every year |
+| null | The donation is taken once |
+
+## Donation checkout object
+
+A donation checkout is one absolute URL.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup> | string | The absolute URL to send the donor to |
+
+<sup>1</sup> The externally hosted checkout session URL. A recurring donation for an address that already holds an active recurring donation returns the public donation management page
+
+### Example
+
+```json
+{
+  "url": "https://checkout.example.com/c/pay/cs_test_a1b2c3d4e5f6"
+}
+```
+
+## Request donation management link
+
+<RouteHeader method="POST" path="/v1/donations/request-link" unauthenticated />
+
+Accepts a request for a single-use donation management link. Returns 204 with an empty body.
+
+### Limitations
+
+- The submitted address must be syntactically valid.
+- The address must not exceed 254 characters.
+- Its domain must publish usable mail or address records.
+
+A failure of any of those returns 400 `INVALID_FORM_BODY` with an `errors` entry on `email`.
+
+:::caution[Every address answers the same 204]
+An address that resolves to no donor receives no email.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email<sup>1</sup> <sup>2</sup> <sup>3</sup> | string | The donor email address (max 254 characters) |
+
+<sup>1</sup> An empty string is reported as a missing address
+
+<sup>2</sup> A padded address has its surrounding whitespace removed before validation
+
+<sup>3</sup> The domain must publish an MX, A or AAAA record
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The request was accepted, whether or not an email was sent |
+| 400 | [error response](/http-api/#error-response) | The address domain publishes no usable mail or address records |
+
+### Side effects
+
+An address that resolves to a donor receives an email with the management link. The 204 response does not guarantee delivery.
+
+Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid for 15 minutes, only when the address resolves to a donor. Issuing a new link deletes every earlier token for the same address, and a replaced link returns 400 `DONATION_MAGIC_LINK_INVALID`.
+
+### Rate limit
+
+3 requests per hour for each client IP address or authenticated user, on the `donation:request_link` bucket.
+
+10 requests per hour for each address, on the shared `donation:request_link:email` bucket.
+
+## Manage donation
+
+<RouteHeader method="GET" path="/v1/donations/manage" unauthenticated />
+
+Checks a donation management token and leaves it unspent. Answers 302 with `Location` set to the donation management confirmation page on the public site. The token is the credential.
+
+An unknown token redirects with `link_invalid` in `alert`, an expired token with `link_expired`, and a used token with `link_used`. An expired and used token reports `link_expired`. A token whose address no longer resolves to a donor holding a payment provider customer redirects with `no_customer`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token<sup>1</sup> | string | The management token, exactly 64 characters |
+
+<sup>1</sup> A token whose case was changed in transit redirects with `link_invalid`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 302 | empty | `Location` is the confirmation page, or the management page with an `alert` value |
+| 400 | [error response](/http-api/#error-response) | The token is not exactly 64 characters |
+
+### Side effects
+
+None. The token stays spendable, so a mail scanner that opens the link first does not spend it.
+
+### Rate limit
+
+10 requests per minute for each client IP address or authenticated user, on the `donation:manage` bucket.
+
+## Redeem donation management link
+
+<RouteHeader method="POST" path="/v1/donations/manage" unauthenticated />
+
+Creates the billing portal session and then consumes the token. Answers 302 with `Location` set to the externally hosted billing portal. The token is consumed only after the portal session exists, so a payment provider failure leaves it spendable.
+
+Every other outcome redirects to the public donation management page with `alert` set to `link_invalid`, `link_expired`, `link_used`, `no_customer` or `portal_error`. A deployment with no configured payment provider redirects with `portal_error`, and so does a provider that rejects the portal creation.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The management token, exactly 64 characters |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 302 | empty | `Location` is the billing portal session, or the management page with an `alert` value |
+| 400 | [error response](/http-api/#error-response) | The token is not exactly 64 characters |
+
+### Side effects
+
+The token is consumed. Closing the portal session returns the donor to the public donation page.
+
+### Rate limit
+
+10 requests per minute for each client IP address or authenticated user, on the `donation:manage` bucket.
+
+## Create donation checkout
+
+<RouteHeader method="POST" path="/v1/donations/checkout" unauthenticated />
+
+Creates a one-off or recurring donation checkout session. Returns a [donation checkout](#donation-checkout-object) object on success.
+
+An amount outside the selected currency's bounds fails validation with 400 `INVALID_FORM_BODY` and an `errors` entry on `amount_cents`. Where the deployment has no configured payment provider, the route returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` before it resolves the address. A provider failure while creating the session returns 400 `STRIPE_ERROR`.
+
+A recurring donation for an address with an active recurring donation returns the public donation management page, with the percent-encoded address in `email` and `active_subscription` in `alert`. A donation scheduled for cancellation does not block a new checkout.
+
+The session is bound to the address by email alone, never to a payment provider customer the address already has. Addresses are trimmed and lowercased before every lookup and before they are stored.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email<sup>1</sup> | string | The donor email address (max 254 characters) |
+| amount_cents<sup>2</sup> | integer | Amount in the minor unit of `currency`, within that currency's [bounds](#donation-currencies) |
+| currency | string | Lowercase [donation currency](#donation-currencies) |
+| interval | ?string | [Donation interval](#donation-intervals), or null for a one-off donation |
+| is_business?<sup>3</sup> | boolean | Whether to require a billing address for tax invoicing |
+
+<sup>1</sup> Subject to the same syntax, length and domain record checks that [request donation management link](#request-donation-management-link) applies. The domain check runs after the amount bounds check, so an amount error is reported first
+
+<sup>2</sup> The field name states cents, but the value is the minor unit of the selected currency. A fractional value is rejected
+
+<sup>3</sup> Only `true` requires a billing address. `false` and an omitted key both leave billing address collection to the payment provider
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [donation checkout](#donation-checkout-object) object | The checkout session was created, or the donor was redirected to donation management |
+| 400 | [error response](/http-api/#error-response) | The amount is outside the currency's bounds, the address domain publishes no usable records, the payment provider is not configured and returns `STRIPE_PAYMENT_NOT_AVAILABLE`, or the provider rejected the request and returns `STRIPE_ERROR` |
+
+### Side effects
+
+Checkout opens on the provider's pages for the submitted amount, currency and interval. Completion returns the donor to the public donation success page, while cancellation returns to the public donation page.
+
+When the payment provider confirms the payment, Fluxer stores the address as a donor and sends a donation confirmation email to it. From then on, [Request donation management link](#request-donation-management-link) sends a link to that address.
+
+### Rate limit
+
+5 requests per minute for each client IP address or authenticated user, on the `donation:checkout` bucket.
+
+10 requests per hour for each address, on the shared `donation:checkout:email` bucket.

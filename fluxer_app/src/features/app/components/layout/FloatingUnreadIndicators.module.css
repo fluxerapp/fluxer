@@ -1,0 +1,50 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.layer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: var(--z-index-elevated-2);
+}
+
+.slot {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.slotTop {
+	top: 0.5rem;
+}
+
+.slotBottom {
+	bottom: var(--floating-unread-indicator-bottom-inset, 0.5rem);
+}
+
+.indicator {
+	pointer-events: auto;
+	border: none;
+	border-radius: 62.4375rem;
+	padding: 0.25rem 0.75rem;
+	font-weight: 600;
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	letter-spacing: 0.025em;
+	text-transform: uppercase;
+	color: white;
+	cursor: pointer;
+	box-shadow:
+		0 0.625rem 1.25rem -0.75rem rgba(0, 0, 0, 0.75),
+		0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.45);
+}
+
+.indicatorBrand {
+	background-color: hsl(220, 6%, 30%);
+}
+
+.indicatorMention {
+	background-color: var(--status-danger);
+}

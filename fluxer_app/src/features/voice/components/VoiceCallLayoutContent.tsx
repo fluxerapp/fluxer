@@ -18,6 +18,12 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ParticipantContext, TrackRefContext, type TrackReferenceOrPlaceholder} from '@livekit/components-react';
+import {CaretDownIcon, CaretUpIcon, UsersIcon} from '@phosphor-icons/react';
+import {clsx} from 'clsx';
+import type {Participant} from 'livekit-client';
+import {observer} from 'mobx-react-lite';
+import type React from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
 function trackToEntry(trackRef: TrackReferenceOrPlaceholder, index: number): VoiceGridEntry {
 	const key =
@@ -34,13 +40,6 @@ function trackToEntry(trackRef: TrackReferenceOrPlaceholder, index: number): Voi
 		userId: null,
 	};
 }
-
-import {CaretDownIcon, CaretUpIcon, UsersIcon} from '@phosphor-icons/react';
-import {clsx} from 'clsx';
-import type {Participant} from 'livekit-client';
-import {observer} from 'mobx-react-lite';
-import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
 
 const HIDE_PARTICIPANTS_DESCRIPTOR = msg({
 	message: 'Hide participants',

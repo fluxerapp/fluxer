@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {getVisionarySlotRepository} from '../middleware/ServiceSingletons';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {getVisionarySlotRepository} from '@app/api/middleware/ServiceSingletons';
 
 const DEFAULT_SLOT_COUNT = 100;
 

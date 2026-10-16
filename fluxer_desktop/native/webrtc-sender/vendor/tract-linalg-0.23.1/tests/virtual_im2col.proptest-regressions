@@ -1,8 +1,0 @@
-# Seeds for failure cases proptest has generated in the past. It is
-# automatically read and these particular cases re-run before any
-# novel cases are generated.
-#
-# It is recommended to check this file in to source control so that
-# everyone who runs the test benefits from these saved cases.
-cc 0976721f82a17e26a00292dfb2991c1a492affd37448969833f57e3f6ca0b838 # shrinks to pb = ConvProblem { lazy_im2col: false, input: 2,3,4,F32 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0..., filters: 1,2,2,1,F32 0, 0, 0, 0 }
-cc 23f0f45fc36312ebfba6e486364031a59deae12155e7e6824ea4ac5de1860bb9 # shrinks to pb = ConvProblem { lazy_im2col: false, input: 3,3,5,F32 -57, 74, -124, -123, 104, 122, -60, -93, 73, 35, -116, -89..., filters: 2,3,3,3,F32 -34, -89, 23, 18, 86, 56, -112, 0, 57, 67, -5, -76... }

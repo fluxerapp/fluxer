@@ -2,7 +2,7 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
@@ -34,8 +34,8 @@ const NEVER_AUTOMATICALLY_DESCRIPTOR = msg({
 	message: 'Never automatically',
 	comment: 'Short label in the text to speech. Keep it concise.',
 });
-const REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_MANUALLY_DESCRIPTOR = msg({
-	message: 'Remain silent unless someone runs /tts manually.',
+const REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_IN_VIEWED_CHANNEL_DESCRIPTOR = msg({
+	message: "Remain silent unless someone runs /tts in the channel you're viewing.",
 	comment: 'Description text in the text to speech.',
 });
 const ENABLE_TTS_SPEECH_PLAYBACK_DESCRIPTOR = msg({
@@ -64,7 +64,7 @@ export const TextToSpeech = observer(() => {
 		AccessibilityCommands.update({enableTTSCommand: value});
 	}, []);
 	const handleAccessibilityLinkClick = useCallback(() => {
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'accessibility', section: 'tts'});
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'accessibility', section: 'tts'});
 	}, []);
 	const ttsNotificationMode = Notification.getTTSNotificationMode();
 	const ttsNotificationOptions: Array<RadioOption<TTSNotificationMode>> = [
@@ -81,7 +81,7 @@ export const TextToSpeech = observer(() => {
 		{
 			value: TTSNotificationMode.NEVER,
 			name: i18n._(NEVER_AUTOMATICALLY_DESCRIPTOR),
-			desc: i18n._(REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_MANUALLY_DESCRIPTOR),
+			desc: i18n._(REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_IN_VIEWED_CHANNEL_DESCRIPTOR),
 		},
 	];
 	const handleTtsNotificationChange = useCallback((value: TTSNotificationMode) => {

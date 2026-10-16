@@ -9,8 +9,8 @@ export interface EmojiDisplayData {
 	url: string | undefined;
 }
 
-export function getSkinTonedEmoji(emoji: FlatEmoji, skinTone: string): UnicodeEmoji | null {
-	if (!emoji.hasDiversity || !skinTone || !emoji.uniqueName) {
+function getSkinTonedEmoji(emoji: FlatEmoji, skinTone: string): UnicodeEmoji | null {
+	if (!emoji.hasSkinTones || !skinTone || !emoji.uniqueName) {
 		return null;
 	}
 	return UnicodeEmojis.findEmojiWithSkinTone(emoji.uniqueName, skinTone);
@@ -35,7 +35,7 @@ export function getEmojiDisplayDataWithSkinTone(emoji: FlatEmoji, skinTone: stri
 
 export function getSkinTonedSurrogate(emoji: FlatEmoji): string {
 	const skinTone = Emoji.skinTone;
-	if (!emoji.hasDiversity || !skinTone || !emoji.uniqueName) {
+	if (!emoji.hasSkinTones || !skinTone || !emoji.uniqueName) {
 		return emoji.surrogates ?? '';
 	}
 	const skinTonedEmoji = UnicodeEmojis.findEmojiWithSkinTone(emoji.uniqueName, skinTone);

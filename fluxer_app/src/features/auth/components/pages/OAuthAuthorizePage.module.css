@@ -9,14 +9,6 @@
 	margin: 0 auto;
 }
 
-.loadingContainer {
-	display: flex;
-	min-height: 100%;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
 .errorContainer {
 	display: flex;
 	min-height: 100%;
@@ -253,16 +245,6 @@
 	line-height: 1.35;
 }
 
-.successCard {
-	padding: 0.75rem 0.9rem;
-	border-radius: 0.85rem;
-	background: var(--background-secondary);
-	border: 0.0625rem solid var(--background-modifier-accent);
-	color: var(--text-primary);
-	font-size: 0.9rem;
-	line-height: 1.35;
-}
-
 .successScreen {
 	display: flex;
 	flex-direction: column;
@@ -338,9 +320,7 @@
 	align-items: center;
 	justify-content: center;
 	color: white;
-	font-weight: 700;
-	font-size: 0.9rem;
-	line-height: 1.75rem;
+	overflow: hidden;
 	border: 0.0625rem solid var(--background-modifier-accent);
 }
 

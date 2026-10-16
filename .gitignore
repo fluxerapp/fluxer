@@ -10,10 +10,12 @@
 /.direnv/
 /.fluxer/
 /.pnpm-store/
+/.vscode/
 
 **/*.css.d.ts
 **/*.tsbuildinfo
 **/.cache/
+**/.swc/
 **/__pycache__/
 **/_build/
 **/coverage/
@@ -24,28 +26,29 @@
 
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
+/fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
+**/auto-i18n-reviewed-unchanged.json.lock
+**/weblate/locales/auto-i18n-reviewed-unchanged.json
 /fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
 /fluxer_gateway/priv/
+/fluxer_static/desktop/spellcheck/dictionaries/*/*
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
 
-/fluxer_desktop/native/rust/fuzz/artifacts/
-/fluxer_desktop/native/rust/fuzz/corpus/
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
+/desktop-shared-assets/
+/desktop-modules/
 /s3_payload/
 /upload_staging/
 
-/deploy/helm/**/Chart.lock
-/deploy/helm/**/charts/
 
 **/.idea/
 **/*.iml

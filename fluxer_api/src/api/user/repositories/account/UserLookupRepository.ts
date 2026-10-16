@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSameIpDecisionKey, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
-import type {UserID} from '../../../BrandedTypes';
-import {fetchMany, fetchOne} from '../../../database/CassandraQueryExecution';
+import type {UserID} from '@app/api/BrandedTypes';
+import {fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	UserByLastActiveIpRow,
 	UserByLastActiveIpTrustKeyRow,
 	UserByStripeCustomerIdRow,
 	UserByStripeSubscriptionIdRow,
 	UserByUsernameRow,
-} from '../../../database/types/UserTypes';
-import type {User} from '../../../models/User';
+} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
 import {
 	UserByLastActiveIp,
 	UserByLastActiveIpTrustKey,
 	UserByStripeCustomerId,
 	UserByStripeSubscriptionId,
 	UserByUsername,
-} from '../../../Tables';
-import type {UserEmailOwnershipRepository} from './crud/UserEmailOwnershipRepository';
+} from '@app/api/Tables';
+import type {UserEmailOwnershipRepository} from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
+import {getSameIpDecisionKey, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
 
 const FETCH_DISCRIMINATORS_BY_USERNAME_QUERY = UserByUsername.select({
 	columns: ['discriminator', 'user_id'],
@@ -91,6 +91,15 @@ export class UserLookupRepository {
 			FETCH_DISCRIMINATORS_BY_USERNAME_QUERY.bind({username: usernameLower}),
 		);
 		return new Set(result.map((r) => r.discriminator));
+	}
+
+	async findUsersByUsername(username: string): Promise<Array<User>> {
+		const usernameLower = username.toLowerCase();
+		const rows = await fetchMany<Pick<UserByUsernameRow, 'discriminator' | 'user_id'>>(
+			FETCH_DISCRIMINATORS_BY_USERNAME_QUERY.bind({username: usernameLower}),
+		);
+		const users = await Promise.all(rows.map((row) => this.findUniqueUser(row.user_id)));
+		return users.filter((user): user is User => user !== null);
 	}
 
 	async listUserIdsByLastActiveIp(

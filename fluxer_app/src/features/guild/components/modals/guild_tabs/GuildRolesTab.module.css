@@ -8,14 +8,6 @@
 	font-size: 0.875rem;
 }
 
-.grid {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 1rem;
-	min-height: 0;
-	align-items: start;
-}
-
 .right {
 	display: flex;
 	flex: 1 1 auto;
@@ -79,27 +71,6 @@
 	min-width: 0;
 }
 
-.sectionDescription {
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	line-height: 1.4;
-}
-
-.sectionHeaderRow {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-	gap: 0.75rem;
-}
-
-.sectionHelp {
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	flex: 1;
-}
-
 .sectionSubtitle {
 	font-weight: 600;
 	font-size: 0.75rem;
@@ -150,33 +121,6 @@
 	min-width: 0;
 }
 
-.layoutButtons {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	flex-shrink: 0;
-}
-
-.layoutButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.25rem;
-	height: 2.25rem;
-	border-radius: 0.375rem;
-	background: var(--background-secondary);
-	color: var(--text-primary-muted);
-	cursor: pointer;
-	transition:
-		background-color 150ms ease,
-		color 150ms ease;
-}
-
-.layoutButton:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .permCategories {
 	display: flex;
 	flex-direction: column;
@@ -196,14 +140,6 @@
 	color: var(--text-primary-muted);
 	font-size: 0.8125rem;
 	flex: 1;
-}
-
-.icon {
-	width: 1rem;
-	height: 1rem;
-	margin-right: 0.375rem;
-	display: inline-flex;
-	align-items: center;
 }
 
 .emptyState {
@@ -236,10 +172,6 @@
 	color: var(--text-primary-muted);
 }
 
-.sectionPad {
-	padding-top: 1rem;
-}
-
 .leftTitle {
 	margin-bottom: 0.25rem;
 	font-weight: 600;
@@ -262,13 +194,18 @@
 	background: transparent;
 }
 
-.overwriteItem:not(.overwriteItemSelected):hover {
+.overwriteItem:not(.overwriteItemSelected):hover,
+.overwriteItem:not(.overwriteItemSelected).overwriteItemHovered {
 	background: var(--background-modifier-hover);
 }
 
 .overwriteItemSelected {
 	background: var(--brand-primary);
 	color: var(--brand-primary-fill);
+}
+
+.overwriteItemSelected .lockIcon {
+	color: inherit;
 }
 
 .roleDot {

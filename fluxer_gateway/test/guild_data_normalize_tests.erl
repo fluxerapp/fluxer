@@ -16,11 +16,11 @@ snowflake_uses_fluxer_response_shape_test() ->
     ?assertError({invalid_snowflake, null}, snowflake_id:parse(null)).
 
 permission_accepts_unsigned_decimal_strings_test() ->
-    ?assertEqual(0, permission_bits:parse(<<"0">>)),
-    ?assertEqual(1, permission_bits:parse(<<"001">>)),
-    ?assertEqual(42, permission_bits:parse(42)),
-    ?assertError({invalid_bitset, <<"+1">>}, permission_bits:parse(<<"+1">>)),
-    ?assertError({invalid_bitset, <<"-1">>}, permission_bits:parse(<<"-1">>)).
+    ?assertEqual(0, bitset:parse(<<"0">>)),
+    ?assertEqual(1, bitset:parse(<<"001">>)),
+    ?assertEqual(42, bitset:parse(42)),
+    ?assertError({invalid_bitset, <<"+1">>}, bitset:parse(<<"+1">>)),
+    ?assertError({invalid_bitset, <<"-1">>}, bitset:parse(<<"-1">>)).
 
 member_role_ids_are_integer_keyed_in_memory_test() ->
     Member = normalized_member(#{

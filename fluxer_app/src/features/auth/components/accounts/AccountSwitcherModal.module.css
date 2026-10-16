@@ -1,41 +1,23 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.subtitle {
-	margin: 0;
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
 .content {
 	padding: 0;
 }
 
-.loadingContainer {
-	display: flex;
-	height: 8.75rem;
-	align-items: center;
-	justify-content: center;
-}
-
-.noAccounts {
-	display: flex;
-	height: 7.5rem;
-	align-items: center;
-	justify-content: center;
-	color: var(--text-secondary);
-}
-
-.scroller {
-	padding: 0.5rem;
-	max-height: 17.5rem;
-}
-
-.accountList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
 .footer {
 	padding: 0.75rem 0.75rem 0.5rem;
+}
+
+.confirmPanel {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0.75rem;
+}
+
+.confirmText {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.4;
 }

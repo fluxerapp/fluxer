@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createGuildID, type GuildID} from '@app/api/BrandedTypes';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {normalizeRequestPath} from '@app/api/utils/RequestPathUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {type ChannelID, createChannelID, createGuildID, type GuildID} from '../BrandedTypes';
-import type {Guild} from '../models/Guild';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
-import {normalizeRequestPath} from '../utils/RequestPathUtils';
 
 function parseResourceId(path: string, resourceName: 'guilds' | 'channels'): string | null {
 	const segments = path.split('/').filter(Boolean);
@@ -63,7 +63,8 @@ async function resolveGuildIdForRequest(ctx: Context<HonoEnv>, path: string): Pr
 	if (channelId === null) {
 		return null;
 	}
-	const channel = await ctx.get('channelRepository').findUnique(channelId);
+	const channel = await ctx.get('channelRepository').channelData.findUnique(channelId);
+	ctx.get('requestCache')?.channels.set(channelId, channel);
 	return channel?.guildId ?? null;
 }
 
@@ -80,7 +81,8 @@ export const GuildAvailabilityMiddleware = createMiddleware<HonoEnv>(async (ctx,
 		return;
 	}
 	try {
-		const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
+		const guild = await ctx.get('guildService').data.operations.getGuildSystem(guildId);
+		ctx.get('requestCache')?.guilds.set(guildId, guild);
 		if (isGuildUnavailableForUser(guild, user)) {
 			throw new MissingAccessError();
 		}

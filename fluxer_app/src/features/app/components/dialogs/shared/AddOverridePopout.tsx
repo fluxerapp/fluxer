@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getOverrideMemberLabel,
+	parseOverrideMemberQuery,
+	selectOverrideMembers,
+} from '@app/features/app/components/dialogs/shared/AddOverrideMemberSearch';
 import styles from '@app/features/app/components/dialogs/shared/AddOverridePopout.module.css';
 import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch, {type SearchContext} from '@app/features/member/state/MemberSearch';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
@@ -14,7 +18,6 @@ import {
 	type SearchableListPopoutItem,
 	type SearchableListPopoutSection,
 } from '@app/features/ui/popover/searchable_list_popout/SearchableListPopout';
-import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
@@ -46,74 +49,6 @@ const MEMBERS_LIMIT = 10;
 const WORKER_RESULT_LIMIT = 25;
 const SERVER_DEBOUNCE_MS = 300;
 
-interface ParsedMemberQuery {
-	usernameQuery: string;
-	tagQuery: string | null;
-	hasTagSeparator: boolean;
-}
-
-function parseMemberQuery(query: string): ParsedMemberQuery {
-	const hashIndex = query.indexOf('#');
-	if (hashIndex === -1) {
-		return {usernameQuery: query, tagQuery: null, hasTagSeparator: false};
-	}
-	return {
-		usernameQuery: query.slice(0, hashIndex),
-		tagQuery: query.slice(hashIndex + 1),
-		hasTagSeparator: true,
-	};
-}
-
-function getMemberDisplayName(member: GuildMember, guildId: string): string {
-	return NicknameUtils.getNickname(member.user, guildId);
-}
-
-function compareByDisplayName(a: GuildMember, b: GuildMember, guildId: string): number {
-	const aName = getMemberDisplayName(a, guildId).toLowerCase();
-	const bName = getMemberDisplayName(b, guildId).toLowerCase();
-	return aName.localeCompare(bName);
-}
-
-function filterMembers(
-	members: Array<GuildMember>,
-	guildId: string,
-	parsed: ParsedMemberQuery,
-	stableOrder?: Map<string, number>,
-): Array<GuildMember> {
-	let matched: Array<GuildMember>;
-	if (parsed.hasTagSeparator) {
-		const usernameLower = parsed.usernameQuery.toLowerCase();
-		const tagLower = parsed.tagQuery?.toLowerCase() ?? '';
-		matched = members.filter((member) => {
-			const nick = member.nick?.toLowerCase() ?? '';
-			const username = member.user.username.toLowerCase();
-			const matchesUsername =
-				usernameLower.length === 0 || username.startsWith(usernameLower) || nick.startsWith(usernameLower);
-			const matchesTag = tagLower.length === 0 || member.user.discriminator.startsWith(tagLower);
-			return matchesUsername && matchesTag;
-		});
-	} else {
-		const trimmed = parsed.usernameQuery.trim();
-		if (trimmed.length === 0) {
-			matched = [...members];
-		} else {
-			matched = matchSorter(members, trimmed, {
-				keys: [(member) => getMemberDisplayName(member, guildId), 'nick', 'user.username', 'user.tag'],
-			});
-		}
-	}
-	if (stableOrder && stableOrder.size > 0) {
-		const NEW_RANK = Number.MAX_SAFE_INTEGER;
-		return [...matched].sort((a, b) => {
-			const ra = stableOrder.get(a.user.id) ?? NEW_RANK;
-			const rb = stableOrder.get(b.user.id) ?? NEW_RANK;
-			if (ra !== rb) return ra - rb;
-			return compareByDisplayName(a, b, guildId);
-		});
-	}
-	return [...matched].sort((a, b) => compareByDisplayName(a, b, guildId));
-}
-
 export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(function AddOverridePopout({
 	guildId,
 	existingOverwriteIds,
@@ -126,11 +61,6 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 	const [serverMemberIds, setServerMemberIds] = useState<Array<string>>([]);
 	const searchContextRef = useRef<SearchContext | null>(null);
 	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-	const sessionRef = useRef<{key: string; order: Map<string, number>; nextRank: number}>({
-		key: '',
-		order: new Map(),
-		nextRank: 0,
-	});
 	useEffect(() => {
 		const context = MemberSearch.getSearchContext((results) => {
 			setServerMemberIds(results.map((result) => result.id));
@@ -147,7 +77,7 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 	}, []);
 	useEffect(() => {
 		const trimmed = searchQuery.trim();
-		const parsed = parseMemberQuery(trimmed);
+		const parsed = parseOverrideMemberQuery(trimmed);
 		const queryForServer = parsed.usernameQuery.trim();
 		if (debounceTimerRef.current) {
 			clearTimeout(debounceTimerRef.current);
@@ -155,11 +85,11 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 		}
 		const context = searchContextRef.current;
 		if (queryForServer.length === 0) {
-			context?.clearQuery();
+			context?.cancelSearch();
 			setServerMemberIds([]);
 			return;
 		}
-		context?.setQuery(queryForServer, {guild: guildId});
+		context?.beginSearch(queryForServer, {guild: guildId});
 		if (GuildMembers.isGuildFullyLoaded(guildId)) {
 			return;
 		}
@@ -176,40 +106,15 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 	}, [guild, existingOverwriteIds]);
 	const members = useMemo(() => {
 		if (!guild) return [];
-		const cached = GuildMembers.getMembers(guildId).filter((member) => !existingOverwriteIds.has(member.user.id));
-		const trimmed = searchQuery.trim();
-		const parsed = parseMemberQuery(trimmed);
-		const hasQuery = trimmed.length > 0;
-		if (!hasQuery) {
-			sessionRef.current = {key: `${guildId}:`, order: new Map(), nextRank: 0};
-			return [...cached].sort((a, b) => compareByDisplayName(a, b, guildId)).slice(0, MEMBERS_LIMIT);
-		}
-		const sessionKey = `${guildId}:${trimmed}`;
-		if (sessionRef.current.key !== sessionKey) {
-			sessionRef.current = {key: sessionKey, order: new Map(), nextRank: 0};
-		}
-		const merged = new Map<string, GuildMember>();
-		for (const member of cached) {
-			merged.set(member.user.id, member);
-		}
-		for (const id of serverMemberIds) {
-			if (existingOverwriteIds.has(id) || merged.has(id)) continue;
-			const member = GuildMembers.getMember(guildId, id);
-			if (member) {
-				merged.set(id, member);
-			}
-		}
-		const result = filterMembers(Array.from(merged.values()), guildId, parsed, sessionRef.current.order).slice(
-			0,
-			MEMBERS_LIMIT,
-		);
-		const session = sessionRef.current;
-		for (const member of result) {
-			if (!session.order.has(member.user.id)) {
-				session.order.set(member.user.id, session.nextRank++);
-			}
-		}
-		return result;
+		return selectOverrideMembers({
+			cachedMembers: GuildMembers.getMembers(guildId),
+			workerMemberIds: serverMemberIds,
+			resolveMember: (userId) => GuildMembers.getMember(guildId, userId),
+			excludedIds: existingOverwriteIds,
+			guildId,
+			query: searchQuery,
+			limit: MEMBERS_LIMIT,
+		});
 	}, [guild, guildId, existingOverwriteIds, searchQuery, serverMemberIds]);
 	const filteredRoles = useMemo(() => {
 		const trimmed = searchQuery.trim();
@@ -244,7 +149,7 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 	}, [filteredRoles, onClose, onSelect]);
 	const memberItems = useMemo<Array<SearchableListPopoutItem>>(() => {
 		return members.map((member) => {
-			const displayName = getMemberDisplayName(member, guildId);
+			const displayName = getOverrideMemberLabel(member, guildId);
 			return {
 				id: `member-${member.user.id}`,
 				ariaLabel: displayName,

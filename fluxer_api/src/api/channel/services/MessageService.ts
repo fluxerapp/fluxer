@@ -1,39 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
+import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import {MessageCrosspostService} from '@app/api/channel/services/message/MessageCrosspostService';
+import {MessageDeleteService} from '@app/api/channel/services/message/MessageDeleteService';
+import {MessageEditService} from '@app/api/channel/services/message/MessageEditService';
+import {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {MessageRetrievalService} from '@app/api/channel/services/message/MessageRetrievalService';
+import {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
+import {MessageSystemService} from '@app/api/channel/services/message/MessageSystemService';
+import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {IFavoriteMemeRepository} from '../../favorite_meme/IFavoriteMemeRepository';
-import type {GuildAuditLogService} from '../../guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IMediaService} from '../../infrastructure/IMediaService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {ReadStateService} from '../../read_state/ReadStateService';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '../../user/services/DirectMessageSpamMitigationService';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
-import type {AttachmentUploadTraceRepository} from '../repositories/message/AttachmentUploadTraceRepository';
-import {MessageAnonymizationService} from './message/MessageAnonymizationService';
-import {MessageChannelAuthService} from './message/MessageChannelAuthService';
-import {MessageDeleteService} from './message/MessageDeleteService';
-import {MessageDispatchService} from './message/MessageDispatchService';
-import {MessageEditService} from './message/MessageEditService';
-import {MessageMentionService} from './message/MessageMentionService';
-import {MessageOperationsHelpers} from './message/MessageOperationsHelpers';
-import type {MessagePersistenceService} from './message/MessagePersistenceService';
-import {MessageProcessingService} from './message/MessageProcessingService';
-import {createMessageResponseDataService} from './message/MessageResponseDataService';
-import {MessageRetrievalService} from './message/MessageRetrievalService';
-import {MessageSearchService} from './message/MessageSearchService';
-import {MessageSendService} from './message/MessageSendService';
-import {MessageSystemService} from './message/MessageSystemService';
-import {MessageValidationService} from './message/MessageValidationService';
 
 export class MessageService {
 	public readonly validation: MessageValidationService;
@@ -41,19 +42,21 @@ export class MessageService {
 	public readonly search: MessageSearchService;
 	public readonly persistence: MessagePersistenceService;
 	public readonly channelAuth: MessageChannelAuthService;
-	public readonly dispatch: MessageDispatchService;
 	public readonly processing: MessageProcessingService;
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
-	public readonly anonymization: MessageAnonymizationService;
+	public readonly writeLock: MessageWriteLock;
+	public readonly crosspostPropagation: CrosspostPropagation;
+	public readonly crosspost: MessageCrosspostService;
+	public readonly threadActivity: ThreadMessageActivity;
 
 	constructor(
-		channelRepository: IChannelRepositoryAggregate,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		readStateService: ReadStateService,
 		cacheService: ICacheService,
@@ -64,14 +67,15 @@ export class MessageService {
 		snowflakeService: ISnowflakeService,
 		rateLimitService: IRateLimitService,
 		purgeQueue: IPurgeQueue,
-		favoriteMemeRepository: IFavoriteMemeRepository,
+		favoriteMemeRepository: FavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
-		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
+		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
+		this.crosspostPropagation = new CrosspostPropagation({rateLimitService, workerService});
 		this.mention = new MessageMentionService(
 			userRepository,
 			guildRepository,
@@ -87,7 +91,6 @@ export class MessageService {
 			guildRepository,
 			gatewayService,
 		);
-		this.dispatch = new MessageDispatchService(gatewayService);
 		this.processing = new MessageProcessingService(
 			channelRepository,
 			userRepository,
@@ -101,7 +104,7 @@ export class MessageService {
 			guildRepository,
 			snowflakeService,
 			this.persistence,
-			this.dispatch,
+			gatewayService,
 		);
 		const operationsHelpers = new MessageOperationsHelpers({
 			channelRepository,
@@ -111,7 +114,9 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService);
 		this.send = new MessageSendService({
+			threadActivity: this.threadActivity,
 			channelRepository,
 			userRepository,
 			storageService,
@@ -125,25 +130,26 @@ export class MessageService {
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
-			directMessageSpamMitigationService,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.edit = new MessageEditService({
 			channelRepository,
 			userRepository,
-			cacheService,
 			validationService: this.validation,
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
+			gatewayService,
 			searchService: this.search,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.deletion = new MessageDeleteService({
 			channelRepository,
@@ -151,10 +157,18 @@ export class MessageService {
 			purgeQueue,
 			validationService: this.validation,
 			channelAuthService: this.channelAuth,
-			dispatchService: this.dispatch,
-			searchService: this.search,
 			gatewayService,
+			searchService: this.search,
 			guildAuditLogService,
+			crosspostPropagation: this.crosspostPropagation,
+		});
+		this.crosspost = new MessageCrosspostService({
+			channelRepository,
+			channelAuthService: this.channelAuth,
+			gatewayService,
+			rateLimitService,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.retrieval = new MessageRetrievalService(
 			channelRepository,
@@ -164,6 +178,5 @@ export class MessageService {
 			this.search,
 			userRepository,
 		);
-		this.anonymization = new MessageAnonymizationService(channelRepository);
 	}
 }

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {GeolocationResponse} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
 import {resolveClientGeoip} from '@pkgs/geoip/src/ResolveClientGeoip';
 import type {Hono} from 'hono';
-import {Config} from '../Config';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
 
 export function GeolocationController(app: Hono<HonoEnv>): void {
 	app.get(
@@ -27,11 +28,7 @@ export function GeolocationController(app: Hono<HonoEnv>): void {
 			ctx.header('Access-Control-Allow-Origin', '*');
 			ctx.header('Access-Control-Allow-Headers', 'Content-Type');
 			ctx.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-			const response = await resolveClientGeoip(ctx.req.raw, {
-				maxmindDbPath: Config.geoip.maxmindDbPath,
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const response = await resolveClientGeoip(getRequestClientIp(ctx), Config.geoip.maxmindDbPath);
 			return ctx.json(response);
 		},
 	);

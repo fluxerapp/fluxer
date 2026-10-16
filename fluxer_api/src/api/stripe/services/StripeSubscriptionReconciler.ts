@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {
+	getPrimarySubscriptionItem,
+	getSubscriptionBillingCycle,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {getPrimarySubscriptionItem, getSubscriptionStartDate} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
 interface InvoiceRenewalContext {
 	userId: UserID;
@@ -21,7 +25,7 @@ interface InvoiceRenewalContext {
 export class StripeSubscriptionReconciler {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: ProductRegistry,
 	) {}
 
@@ -203,7 +207,7 @@ export class StripeSubscriptionReconciler {
 	): Promise<User> {
 		const customerId = extractId(subscription.customer) ?? this.getCustomerIdFromInvoice(options?.fallbackInvoice);
 		const productInfo = options?.productInfo;
-		const billingCycle = productInfo?.billingCycle || this.getBillingCycleFromSubscription(subscription);
+		const billingCycle = productInfo?.billingCycle || getSubscriptionBillingCycle(subscription);
 		const subscriptionStartDate = getSubscriptionStartDate(subscription);
 		const patch: Partial<UserRow> = {};
 		if (user.stripeSubscriptionId !== subscription.id) {
@@ -247,50 +251,14 @@ export class StripeSubscriptionReconciler {
 		return false;
 	}
 
-	getBillingCycleFromSubscription(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {
-		const item = getPrimarySubscriptionItem(subscription);
-		const interval = item?.price?.recurring?.interval;
-		if (interval === 'month') {
-			return 'monthly';
-		}
-		if (interval === 'year') {
-			return 'yearly';
-		}
-		return null;
-	}
-
 	getPriceIdFromInvoice(invoice: Stripe.Invoice): string | null {
-		type InvoiceLineWithPrice = Stripe.InvoiceLineItem & {
-			price?: string | Stripe.Price | null;
-			pricing?: {
-				price_details?: {
-					price?: string;
-				};
-			};
-			parent?: {
-				subscription_item_details?: {
-					price?: {
-						price?: string;
-					};
-				};
-			};
-		};
 		if (!invoice.lines?.data?.length) {
 			return null;
 		}
 		for (const line of invoice.lines.data) {
-			const lineWithPrice = line as InvoiceLineWithPrice;
-			const directPriceId = extractId(lineWithPrice.price);
-			if (directPriceId) {
-				return directPriceId;
-			}
-			const nestedPriceId = lineWithPrice.pricing?.price_details?.price;
-			if (nestedPriceId) {
-				return extractId(nestedPriceId);
-			}
-			const parentNestedPriceId = lineWithPrice.parent?.subscription_item_details?.price?.price;
-			if (parentNestedPriceId) {
-				return extractId(parentNestedPriceId);
+			const priceId = extractId(line.pricing?.price_details?.price ?? null);
+			if (priceId) {
+				return priceId;
 			}
 		}
 		return null;
@@ -328,39 +296,15 @@ export class StripeSubscriptionReconciler {
 	}
 
 	getSubscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
-		type InvoiceWithSubscription = Stripe.Invoice & {
-			subscription?: string | Stripe.Subscription;
-		};
-		const invoiceWithSubscription = invoice as InvoiceWithSubscription;
-		const directSubscription = invoiceWithSubscription.subscription;
-		if (directSubscription) {
-			return extractId(directSubscription);
-		}
-		type InvoiceWithParent = Stripe.Invoice & {
-			parent?: {
-				subscription_details?: {
-					subscription?: string;
-				};
-			};
-		};
-		type InvoiceLineWithParent = Stripe.InvoiceLineItem & {
-			parent?: {
-				subscription_item_details?: {
-					subscription?: string;
-				};
-			};
-		};
-		const invoiceWithParent = invoice as InvoiceWithParent;
-		const parentSubscription = invoiceWithParent.parent?.subscription_details?.subscription;
+		const parentSubscription = extractId(invoice.parent?.subscription_details?.subscription ?? null);
 		if (parentSubscription) {
-			return extractId(parentSubscription);
+			return parentSubscription;
 		}
 		if (invoice.lines?.data?.length) {
 			for (const line of invoice.lines.data) {
-				const lineWithParent = line as InvoiceLineWithParent;
-				const subscriptionId = lineWithParent.parent?.subscription_item_details?.subscription;
+				const subscriptionId = line.parent?.subscription_item_details?.subscription ?? null;
 				if (subscriptionId) {
-					return extractId(subscriptionId);
+					return subscriptionId;
 				}
 			}
 		}

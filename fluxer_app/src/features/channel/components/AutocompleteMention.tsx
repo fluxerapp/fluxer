@@ -2,11 +2,11 @@
 
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
 import styles from '@app/features/channel/components/AutocompleteMention.module.css';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
 import {
 	type AutocompleteMentionMemberOption,
 	type AutocompleteMentionRoleOption,
 	type AutocompleteMentionUserOption,
-	type AutocompleteOption,
 	type AutocompleteSpecialMentionOption,
 	isMentionMember,
 	isMentionRole,
@@ -18,7 +18,7 @@ import {useParams} from '@app/features/platform/components/router/RouterReact';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -37,7 +37,7 @@ const NOTIFY_USERS_WITH_THIS_ROLE_WHO_HAVE_PERMISSION_DESCRIPTOR = msg({
 	comment: 'Description text in the channel and chat autocomplete mention. Keep the tone plain and specific.',
 });
 
-type RowRef = React.MutableRefObject<Array<HTMLButtonElement | null>> | undefined;
+type RowRef = React.RefObject<Array<HTMLButtonElement | null>> | undefined;
 type OptionIdGetter = ((index: number) => string) | undefined;
 
 function resolveOptionId(getOptionId: OptionIdGetter, index: number): string | undefined {
@@ -69,21 +69,12 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 	onMouseLeave,
 	rowRefs,
 	getOptionId,
-}: {
-	onSelect: (option: AutocompleteOption) => void;
-	keyboardFocusIndex: number;
-	hoverIndex: number;
-	options: Array<AutocompleteOption>;
-	onMouseEnter: (index: number) => void;
-	onMouseLeave: () => void;
-	rowRefs?: React.MutableRefObject<Array<HTMLButtonElement | null>>;
-	getOptionId?: (index: number) => string;
-}) {
+}: AutocompleteListProps) {
 	const {i18n} = useLingui();
 	const routeParams = useParams() as {guildId?: string};
 	const guildId = routeParams.guildId;
 	const guild = Guilds.getGuild(guildId == null ? '' : guildId);
-	const nicknameGuildId = guild == null ? undefined : guild.id;
+	const nicknameGuildId = guild == null ? null : guild.id;
 	const members = options.filter(isMentionMember);
 	const users = options.filter(isMentionUser);
 	const roles = options.filter(isMentionRole);
@@ -166,7 +157,11 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 			<AutocompleteItem
 				key={option.role.id}
 				id={resolveOptionId(getOptionId, currentIndex)}
-				name={<span style={{color: roleColor}}>@{option.role.name}</span>}
+				name={
+					<span style={{color: roleColor}} data-flx="channel.autocomplete-mention.render-role.span">
+						@{option.role.name}
+					</span>
+				}
 				description={i18n._(NOTIFY_USERS_WITH_THIS_ROLE_WHO_HAVE_PERMISSION_DESCRIPTOR)}
 				isKeyboardSelected={currentIndex === keyboardFocusIndex}
 				isHovered={currentIndex === hoverIndex}

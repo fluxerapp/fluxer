@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/avatars/AvatarStack.module.css';
+import {
+	AVATAR_STACK_DEFAULT_MAX_VISIBLE,
+	AVATAR_STACK_DEFAULT_SIZE_PX,
+	resolveAvatarStackGeometry,
+} from '@app/features/ui/avatars/AvatarStackGeometry';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -35,12 +39,17 @@ export interface AvatarStackProps {
 	onUserContextMenu?: (event: React.MouseEvent<HTMLElement>, user: User, index: number) => void;
 }
 
+interface AvatarStackEntry {
+	key: string;
+	node: React.ReactNode;
+}
+
 export const AvatarStack: React.FC<AvatarStackProps> = observer(
 	({
 		children,
 		users,
-		size = 28,
-		maxVisible = 3,
+		size = AVATAR_STACK_DEFAULT_SIZE_PX,
+		maxVisible = AVATAR_STACK_DEFAULT_MAX_VISIBLE,
 		overlap,
 		className,
 		guildId,
@@ -52,70 +61,14 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		onUserContextMenu,
 	}) => {
 		const {i18n} = useLingui();
-		const childArray = React.Children.toArray(children).filter(Boolean);
-		const userChildren =
-			users?.map((user, index) => {
-				const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
-				const avatarNode = renderAvatar?.(user, size, index) ?? (
-					<Avatar user={user} size={size} guildId={guildId ?? undefined} data-flx="ui.avatars.avatar-stack.avatar" />
-				);
-				if (!avatarNode) return null;
-				if (enableProfileModal) {
-					const profileTrigger = (
-						<FocusRing offset={-2} data-flx="ui.avatars.avatar-stack.focus-ring">
-							<button
-								type="button"
-								className={styles.avatarButton}
-								aria-label={i18n._(OPEN_PROFILE_FOR_DESCRIPTOR, {displayName})}
-								data-flx="ui.avatars.avatar-stack.avatar-button"
-							>
-								{avatarNode}
-							</button>
-						</FocusRing>
-					);
-					return (
-						<PreloadableUserPopout
-							key={user.id}
-							user={user}
-							isWebhook={false}
-							guildId={guildId ?? undefined}
-							channelId={channelId ?? undefined}
-							disableContextMenu={true}
-							tooltip={showTooltips ? displayName : undefined}
-							data-flx="ui.avatars.avatar-stack.preloadable-user-popout"
-						>
-							{profileTrigger}
-						</PreloadableUserPopout>
-					);
-				}
-				const content = (
-					<div className={styles.avatarContent} data-flx="ui.avatars.avatar-stack.avatar-content">
-						{avatarNode}
-					</div>
-				);
-				if (!showTooltips) {
-					return React.cloneElement(content, {key: user.id});
-				}
-				return (
-					<Tooltip key={user.id} text={displayName} data-flx="ui.avatars.avatar-stack.tooltip">
-						{content}
-					</Tooltip>
-				);
-			}) ?? [];
-		const resolvedChildren = users ? userChildren.filter(Boolean) : childArray;
-		const totalCount = resolvedChildren.length;
-		const visibleChildren = resolvedChildren.slice(0, maxVisible);
-		const remainingCount = Math.max(0, totalCount - maxVisible);
-		const computedOutline = Math.min(3, Math.max(1, Math.round(size * 0.05)));
-		const computedOverlap = overlap !== undefined ? overlap : Math.round(-0.35 * size);
-		const cssVars = {
-			'--avatar-size': remFromPx(size),
-			'--avatar-overlap': remFromPx(computedOverlap),
-			'--avatar-outline': remFromPx(computedOutline),
-		} as React.CSSProperties;
-		const wrapWithContextMenu = (node: React.ReactNode, user: User, index: number) => {
+		const childEntries: Array<AvatarStackEntry> = React.Children.toArray(children)
+			.filter(Boolean)
+			.map((child, index) => ({
+				key: React.isValidElement(child) && child.key != null ? child.key : `avatar-stack-child-${index}`,
+				node: child,
+			}));
+		const wrapWithContextMenu = (node: React.ReactNode, user: User, index: number, displayName: string) => {
 			if (!onUserContextMenu) return node;
-			const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
 			return (
 				<div
 					className={styles.avatarContextMenuWrap}
@@ -128,26 +81,80 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 				</div>
 			);
 		};
-		const userChildrenWithContextMenu =
-			users && onUserContextMenu
-				? userChildren.map((child, index) => {
-						const user = users[index];
-						return user ? wrapWithContextMenu(child, user, index) : child;
-					})
-				: resolvedChildren;
-		const finalVisibleChildren = users ? userChildrenWithContextMenu.slice(0, maxVisible) : visibleChildren;
+		const userEntries: Array<AvatarStackEntry> = [];
+		const userKeyCounts = new Map<string, number>();
+		users?.forEach((user, index) => {
+			const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
+			const avatarNode = renderAvatar?.(user, size, index) ?? (
+				<Avatar user={user} size={size} guildId={guildId ?? undefined} data-flx="ui.avatars.avatar-stack.avatar" />
+			);
+			if (!avatarNode) return;
+			let node: React.ReactNode;
+			if (enableProfileModal) {
+				node = (
+					<PreloadableUserPopout
+						user={user}
+						isWebhook={false}
+						guildId={guildId ?? undefined}
+						channelId={channelId ?? undefined}
+						disableContextMenu={true}
+						tooltip={showTooltips ? displayName : undefined}
+						data-flx="ui.avatars.avatar-stack.preloadable-user-popout"
+					>
+						<FocusRing offset={-2} data-flx="ui.avatars.avatar-stack.focus-ring">
+							<button
+								type="button"
+								className={styles.avatarButton}
+								aria-label={i18n._(OPEN_PROFILE_FOR_DESCRIPTOR, {displayName})}
+								data-flx="ui.avatars.avatar-stack.avatar-button"
+							>
+								{avatarNode}
+							</button>
+						</FocusRing>
+					</PreloadableUserPopout>
+				);
+			} else {
+				const content = (
+					<div className={styles.avatarContent} data-flx="ui.avatars.avatar-stack.avatar-content">
+						{avatarNode}
+					</div>
+				);
+				node = showTooltips ? (
+					<Tooltip text={displayName} data-flx="ui.avatars.avatar-stack.tooltip">
+						{content}
+					</Tooltip>
+				) : (
+					content
+				);
+			}
+			const occurrence = userKeyCounts.get(user.id) ?? 0;
+			userKeyCounts.set(user.id, occurrence + 1);
+			userEntries.push({
+				key: occurrence === 0 ? user.id : `${user.id}:${occurrence}`,
+				node: wrapWithContextMenu(node, user, index, displayName),
+			});
+		});
+		const resolvedEntries = users ? userEntries : childEntries;
+		const remainingCount = Math.max(0, resolvedEntries.length - maxVisible);
+		const visibleEntries = resolvedEntries.slice(0, maxVisible);
+		const geometry = resolveAvatarStackGeometry(size, overlap);
+		const cssVars = {
+			'--avatar-size': geometry.sizeRem,
+			'--avatar-overlap': geometry.overlapRem,
+			'--avatar-outline': geometry.outlineRem,
+		} as React.CSSProperties;
 		return (
 			<div className={clsx(styles.container, className)} style={cssVars} data-flx="ui.avatars.avatar-stack.container">
-				{finalVisibleChildren.map((child, index) => (
+				{visibleEntries.map((entry, index) => (
 					<div
-						key={index}
+						key={entry.key}
 						className={clsx(
 							styles.avatar,
-							(index < finalVisibleChildren.length - 1 || remainingCount > 0) && styles.withMask,
+							(index < visibleEntries.length - 1 || remainingCount > 0) && styles.withMask,
 						)}
 						data-flx="ui.avatars.avatar-stack.avatar--2"
 					>
-						{child}
+						{entry.node}
 					</div>
 				))}
 				{remainingCount > 0 &&

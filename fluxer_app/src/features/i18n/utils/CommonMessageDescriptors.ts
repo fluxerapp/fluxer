@@ -67,6 +67,11 @@ export const HOURS_AND_MINUTES_DURATION_DESCRIPTOR = msg({
 	message: '{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}',
 	comment: 'Generic duration label for an interval that includes hours and remaining minutes.',
 });
+export const COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR = msg({
+	message: "Couldn't verify with passkey. Try again.",
+	comment:
+		'Error shown when verifying with a passkey fails, in the sudo (re-auth) modal and on the sign-in page. Keep plain.',
+});
 export const TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'Try again',
 	comment: 'Generic action label for retrying a failed or interrupted operation.',
@@ -115,6 +120,10 @@ export const MORE_OPTIONS_DESCRIPTOR = msg({
 export const OPEN_SETTINGS_DESCRIPTOR = msg({
 	message: 'Open settings',
 	comment: 'Generic action label that opens the global app settings modal.',
+});
+export const RELAUNCH_TO_APPLY_DESCRIPTOR = msg({
+	message: 'Relaunch to apply',
+	comment: 'Button label that restarts the desktop app so macOS applies a permission change.',
 });
 export const BACK_TO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Back to settings',
@@ -230,6 +239,11 @@ export const VOICE_CHANNEL_DESCRIPTOR = msg({
 export const TEXT_CHANNEL_DESCRIPTOR = msg({
 	message: 'Text channel',
 	comment: 'Generic label for a text channel type.',
+});
+export const ANNOUNCEMENT_CHANNEL_DESCRIPTOR = msg({
+	message: 'Announcement channel',
+	comment:
+		'Generic label for an announcement channel type. Other communities can follow an announcement channel to get its published messages in their own channels.',
 });
 export const STICKER_DESCRIPTOR = msg({
 	message: 'Sticker',
@@ -501,7 +515,7 @@ export const DESCRIPTION_DESCRIPTOR = msg({
 });
 export const INCOMING_CALL_DESCRIPTOR = msg({
 	message: 'Incoming call',
-	comment: 'Generic label for an incoming voice or video call.',
+	comment: 'Notification sound setting label. Ringtone for an incoming DM or group DM call.',
 });
 export const TURN_OFF_CAMERA_DESCRIPTOR = msg({
 	message: 'Turn off camera',
@@ -648,10 +662,6 @@ export const NEVER_DESCRIPTOR = msg({
 	message: 'Never',
 	comment: 'Generic short option label for "never" in time / frequency dropdowns.',
 });
-export const NO_DESCRIPTION_PROVIDED_DESCRIPTOR = msg({
-	message: 'No description provided.',
-	comment: 'Generic short empty-state body shown when an entity has no description set.',
-});
 export const PINNED_DM_DESCRIPTOR = msg({
 	message: 'Pinned DM',
 	comment: 'Generic short toast / status label confirming a DM was pinned.',
@@ -680,25 +690,26 @@ export const JOIN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Join community',
 	comment: 'Generic action label that accepts a community invite / joins a community.',
 });
+export const DISCOVERABLE_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Discoverable community',
+	comment:
+		'Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.',
+});
 export const INVITES_DESCRIPTOR = msg({
 	message: 'Invites',
 	comment: 'Generic section / tab label for the invites list.',
 });
 export const MUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Mute favourites',
+	message: 'Mute favorites',
 	comment: 'Action label that mutes notifications for the favourites pseudo-guild.',
 });
 export const UNMUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Unmute favourites',
+	message: 'Unmute favorites',
 	comment: 'Action label that unmutes notifications for the favourites pseudo-guild.',
 });
 export const HIDE_FAVORITES_DESCRIPTOR = msg({
 	message: 'Hide favorites',
 	comment: 'Toggle / action label that collapses or hides the favorites section.',
-});
-export const NOTIFICATIONS_DESCRIPTOR = msg({
-	message: 'Notifications',
-	comment: 'Generic section header / tab label for the notifications area.',
 });
 export const FAILED_TO_SEND_INVITE_DESCRIPTOR = msg({
 	message: "Couldn't send invite. Try again.",
@@ -722,7 +733,7 @@ export const CAMERA_DESCRIPTOR = msg({
 });
 export const CAMERA_ON_DESCRIPTOR = msg({
 	message: 'Camera on',
-	comment: 'Generic action label that enables the local camera.',
+	comment: 'Notification sound setting label. Sound played when the user turns their camera on in a call.',
 });
 export const COPY_COMMUNITY_ID_DESCRIPTOR = msg({
 	message: 'Copy community ID',
@@ -754,7 +765,7 @@ export const EXPRESSION_PICKER_CATEGORIES_DESCRIPTOR = msg({
 });
 export const UNKNOWN_DESCRIPTOR = msg({
 	message: 'Unknown',
-	comment: 'Generic fallback label when a more specific value is unavailable.',
+	comment: 'Fallback version label when the installed desktop version is unknown.',
 });
 export const CHANNEL_DELETED_DESCRIPTOR = msg({
 	message: 'Channel deleted',
@@ -780,10 +791,6 @@ export const ENABLE_NOTIFICATIONS_DESCRIPTOR = msg({
 	message: 'Enable notifications',
 	comment: 'Generic action label / toggle that turns on push or desktop notifications.',
 });
-export const ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Generic radio / dropdown option label for an "enhanced" tier.',
-});
 export const CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR = msg({
 	message: 'Channel removed from favorites',
 	comment: 'Toast confirming a channel was removed from the favorites list.',
@@ -797,7 +804,7 @@ export const GET_PREMIUM_DESCRIPTOR = msg({
 	comment: 'Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.',
 });
 export const MENTION_COUNT_ARIA_DESCRIPTOR = msg({
-	message: '{mentionCount} mentions',
+	message: '{mentionCount, plural, one {# mention} other {# mentions}}',
 	comment: 'Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.',
 });
 export const SENT_DESCRIPTOR = msg({
@@ -807,4 +814,114 @@ export const SENT_DESCRIPTOR = msg({
 export const SOUNDS_DESCRIPTOR = msg({
 	message: 'Sounds',
 	comment: 'Section heading / tab label for the notification-sounds area.',
+});
+export const AUTHENTICATOR_CODE_DESCRIPTOR = msg({
+	message: 'Authenticator code',
+	comment: 'Generic field label for the one-time code produced by an authenticator app.',
+});
+export const BACKUP_CODE_DESCRIPTOR = msg({
+	message: 'Backup code',
+	comment: 'Generic field label for one of the one-use codes saved when two-factor authentication was set up.',
+});
+export const BACK_DESCRIPTOR = msg({
+	message: 'Back',
+	comment: 'Accessible label of the back button on the Plutonium page in the mobile layout.',
+});
+export const DONE_DESCRIPTOR = msg({
+	message: 'Done',
+	comment: 'Generic action or status label indicating that the current flow is complete.',
+});
+export const MORE_DESCRIPTOR = msg({
+	message: 'More',
+	comment: 'Generic label for a button that reveals additional actions.',
+});
+export const CHANGE_INSTANCE_DESCRIPTOR = msg({
+	message: 'Change instance',
+	comment: 'Generic action label that returns the user to instance selection.',
+});
+export const INSTANCE_URL_DESCRIPTOR = msg({
+	message: 'Instance URL',
+	comment: 'Generic field label for the address of a self-hosted instance.',
+});
+export const OFFICIAL_INSTANCE_DESCRIPTOR = msg({
+	message: 'Official instance',
+	comment: 'Accessible label for identifying the official Fluxer instance.',
+});
+export const CODE_DESCRIPTOR = msg({
+	message: 'Code',
+	comment: 'Generic field label for a short verification or backup code the user types in.',
+});
+export const NEW_PASSWORD_DESCRIPTOR = msg({
+	message: 'New password',
+	comment: 'Generic field label for the password the user is choosing.',
+});
+export const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
+	message: 'Confirm new password',
+	comment: 'Generic field label for retyping the password the user is choosing.',
+});
+export const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Validation error shown when a password and its confirmation field differ.',
+});
+export const DISPLAY_NAME_OPTIONAL_DESCRIPTOR = msg({
+	message: 'Display name (optional)',
+	comment: 'Optional display-name field label in account registration forms.',
+});
+export const WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR = msg({
+	message: 'What should people call you?',
+	comment: 'Display-name field placeholder in account registration forms.',
+});
+export const COMMUNITY_DESCRIPTOR = msg({
+	message: 'Community',
+	comment: 'Generic label for a community. Used as a field label, filter label, or fallback community name.',
+});
+export const GROUP_DM_DESCRIPTOR = msg({
+	message: 'Group DM',
+	comment: 'Generic label for a group direct message conversation.',
+});
+export const THEME_DESCRIPTOR = msg({
+	message: 'Theme',
+	comment: 'Generic label for the app theme selector.',
+});
+export const INVALID_STATUS_DESCRIPTOR = msg({
+	message: 'Invalid status',
+	comment: 'Callback page title shown when an external flow returns an unrecognized status.',
+});
+export const ACTIVE_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Active account',
+	comment: 'Short status label for the account currently signed in.',
+});
+export const ADD_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Add account',
+	comment: 'Generic action label that starts signing in to an additional account.',
+});
+
+export const MESSAGE_COUNT_DESCRIPTOR = msg({
+	message: '{count, plural, one {# message} other {# messages}}',
+	comment: 'Message count on a thread chip and in the thread browser. count is the number of messages.',
+});
+
+export const SAVE_DESCRIPTOR = msg({
+	message: 'Save',
+	comment: 'Button that saves the forum tag editor or tag picker.',
+});
+
+export const SEARCH_INDEXING_DESCRIPTOR = msg({
+	message: 'Search is getting ready for this community. Trying again shortly...',
+	comment: 'Notice in a forum channel while the server is still building the post search index.',
+});
+
+export const RETRY_SEARCH_DESCRIPTOR = msg({
+	message: 'Retry',
+	comment: 'Button that retries a failed thread search.',
+});
+
+export const AVAILABLE_DESCRIPTOR = msg({
+	message: 'Available',
+	comment: 'Screen reader text for a check mark in the Plutonium page comparison table.',
+});
+
+export const SAVE_PERCENT_DESCRIPTOR = msg({
+	message: 'Save {percent}%',
+	comment: 'Badge on the one-year option in the gift purchase dialog. percent is a whole number such as 17.',
 });

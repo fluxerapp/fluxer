@@ -2,7 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
+import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {insertComposerEmoji} from '@app/features/lexical/composer/ComposerInsertion';
 import {LexicalComposerInput} from '@app/features/lexical/composer/LexicalComposerInput';
 import composerStyles from '@app/features/lexical/composer/LexicalMessageComposer.module.css';
@@ -12,19 +12,13 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import {resolveTypedEmojiToken} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {flxElementClassName} from '@app/lib/react';
 import type {I18n} from '@lingui/core';
-
 import type React from 'react';
 import {useCallback, useId, useImperativeHandle, useRef, useState} from 'react';
 
 export interface LexicalRichInputHandle {
-	getWire: () => string;
-	getDisplay: () => string;
-	getSegments: () => Array<MentionSegment>;
-	getSelection: () => ComposerSelectionRange | null;
 	focus: () => void;
-	clear: () => void;
+
 	insertEmoji: (emoji: FlatEmoji) => boolean;
-	wrapSelection: (prefix: string, suffix: string) => void;
 }
 
 export interface LexicalRichInputProps {
@@ -34,11 +28,13 @@ export interface LexicalRichInputProps {
 	disabled?: boolean;
 	channel?: Channel | null;
 	allowedTriggers?: Array<TriggerType>;
+	allowSpecialMentions?: boolean;
 	markdown?: boolean;
 	markdownParserFlags?: number;
 	singleLine?: boolean;
 	size?: 'chat' | 'form';
 	maxLength?: number;
+	maxWireLength?: number;
 	onExceedMaxLength?: () => void;
 	autocompleteAnchor?: HTMLElement | null;
 	className?: string;
@@ -51,13 +47,14 @@ export interface LexicalRichInputProps {
 	richInputRef?: React.Ref<LexicalRichInputHandle>;
 	onChange?: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onSubmit?: () => void;
+	submitOnEnter?: boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
 	i18n: I18n;
 }
 
-const NOOP = (): void => {};
+const ARROW_UP_UNHANDLED = (): boolean => false;
 const SAFE_CHANNEL_TRIGGERS: Array<TriggerType> = ['emoji', 'mention', 'channel'];
 const SAFE_CONTEXT_FREE_TRIGGERS: Array<TriggerType> = ['emoji'];
 
@@ -68,11 +65,13 @@ export const LexicalRichInput = ({
 	disabled = false,
 	channel = null,
 	allowedTriggers,
+	allowSpecialMentions = true,
 	markdown = true,
 	markdownParserFlags,
 	singleLine = false,
 	size = 'chat',
 	maxLength,
+	maxWireLength = maxLength,
 	onExceedMaxLength,
 	autocompleteAnchor,
 	className,
@@ -85,12 +84,13 @@ export const LexicalRichInput = ({
 	richInputRef,
 	onChange,
 	onSubmit,
+	submitOnEnter,
 	onKeyDown,
 	onFocus,
 	onBlur,
 	i18n,
 }: LexicalRichInputProps) => {
-	const [value, setValue] = useState(initialValue);
+	const [_value, setValue] = useState(initialValue);
 	const handleRef = useRef<ComposerHandle | null>(null);
 	const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
 	const listboxId = useId();
@@ -101,44 +101,45 @@ export const LexicalRichInput = ({
 		[channel, channelGuildId, i18n],
 	);
 
-	const {segmentManagerRef, previousValueRef, rememberSegmentsForValue, clearSegments} = useTextareaSegments();
+	const {segmentManagerRef, previousValueRef} = useTextareaSegments();
 
 	const seededRef = useRef(false);
 	if (!seededRef.current) {
 		seededRef.current = true;
 		segmentManagerRef.current.setSegments(initialSegments.map((segment) => ({...segment})));
 		previousValueRef.current = initialValue;
-		rememberSegmentsForValue(initialValue, initialSegments);
 	}
 
 	const emitChange = useCallback(
 		(display: string, segments: Array<MentionSegment>, wire: string) => {
 			segmentManagerRef.current.setSegments(segments);
 			previousValueRef.current = display;
-			rememberSegmentsForValue(display, segments);
 			setValue(display);
 			if (onChange != null) {
 				onChange(display, segments, wire);
 			}
 		},
-		[onChange, previousValueRef, rememberSegmentsForValue, segmentManagerRef],
+		[onChange, previousValueRef, segmentManagerRef],
 	);
 
-	const {autocompleteQuery, autocompleteOptions, autocompleteType, isSlotMenu, onCursorMove, handleSelect} =
-		useLexicalAutocomplete({
-			channel,
-			handleRef,
-			allowedTriggers:
-				allowedTriggers == null
-					? channel == null
-						? SAFE_CONTEXT_FREE_TRIGGERS
-						: SAFE_CHANNEL_TRIGGERS
-					: allowedTriggers,
-			allowMediaOptions: false,
-			maxActualLength: maxLength,
-			onExceedMaxLength,
-			i18n,
-		});
+	const {
+		autocompleteQuery,
+		autocompleteOptions,
+		autocompleteType,
+		isSlotMenu,
+		onCursorMove,
+		handleSelect,
+		specialMentionsAllowed,
+	} = useLexicalAutocomplete({
+		channel,
+		handleRef,
+		allowedTriggers: allowedTriggers ?? (channel == null ? SAFE_CONTEXT_FREE_TRIGGERS : SAFE_CHANNEL_TRIGGERS),
+		allowSpecialMentions,
+		allowMediaOptions: false,
+		maxActualLength: maxLength,
+		onExceedMaxLength,
+		i18n,
+	});
 
 	const insertEmoji = useCallback(
 		(emoji: FlatEmoji) =>
@@ -152,45 +153,16 @@ export const LexicalRichInput = ({
 	useImperativeHandle(
 		richInputRef,
 		(): LexicalRichInputHandle => ({
-			getWire: () => {
-				const handle = handleRef.current;
-				return handle == null ? segmentManagerRef.current.displayToActual(value) : handle.getWireValue();
-			},
-			getDisplay: () => {
-				const handle = handleRef.current;
-				return handle == null ? value : handle.getDisplayValue();
-			},
-			getSegments: () => {
-				const handle = handleRef.current;
-				return handle == null ? segmentManagerRef.current.getSegmentsCopy() : handle.getSegments();
-			},
-			getSelection: () => {
-				const handle = handleRef.current;
-				return handle == null ? null : handle.getSelection();
-			},
 			focus: () => {
 				const handle = handleRef.current;
 				if (handle != null) {
 					handle.focus();
 				}
 			},
-			clear: () => {
-				const handle = handleRef.current;
-				if (handle != null) {
-					handle.clear();
-				}
-				setValue('');
-				clearSegments();
-			},
+
 			insertEmoji,
-			wrapSelection: (prefix, suffix) => {
-				const handle = handleRef.current;
-				if (handle != null) {
-					handle.wrapSelection(prefix, suffix);
-				}
-			},
 		}),
-		[insertEmoji, clearSegments, segmentManagerRef, value],
+		[insertEmoji],
 	);
 
 	const handleEnter = useCallback(() => {
@@ -207,6 +179,7 @@ export const LexicalRichInput = ({
 				size === 'form' && composerStyles.formSize,
 				className,
 			)}
+			data-flx="lexical.composer.lexical-rich-input.flx-lexical-rich-input"
 		>
 			<LexicalComposerInput
 				placeholder={placeholder}
@@ -222,10 +195,12 @@ export const LexicalRichInput = ({
 				initialSegments={initialSegments}
 				markdown={markdown}
 				markdownParserFlags={markdownParserFlags}
+				maxWireLength={maxWireLength}
 				emojiShortcodeResolver={emojiShortcodeResolver}
+				specialMentionsAllowed={specialMentionsAllowed}
 				channelId={channel == null ? undefined : channel.id}
 				guildId={channel == null ? undefined : channel.guildId}
-				submitOnEnter={singleLine}
+				submitOnEnter={submitOnEnter ?? singleLine}
 				autocompleteOptions={autocompleteOptions}
 				autocompleteType={autocompleteType}
 				autocompleteQuery={autocompleteQuery}
@@ -237,10 +212,11 @@ export const LexicalRichInput = ({
 				onChange={emitChange}
 				onCursorMove={onCursorMove}
 				onEnter={onSubmit == null ? undefined : handleEnter}
-				onArrowUp={NOOP}
+				onArrowUp={ARROW_UP_UNHANDLED}
 				onKeyDown={onKeyDown}
 				onFocus={onFocus}
 				onBlur={onBlur}
+				data-flx="lexical.composer.lexical-rich-input.lexical-composer-input.emit-change"
 			/>
 		</flx-lexical-rich-input>
 	);

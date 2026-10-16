@@ -45,7 +45,7 @@ import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import type {
 	VoiceEngineV2LatencyDataPoint as LatencyDataPoint,
 	VoiceEngineV2TransportInfo as TransportInfo,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CaretDownIcon, DesktopIcon, DeviceMobileIcon, XIcon} from '@phosphor-icons/react';
@@ -332,7 +332,7 @@ export const VoiceDetailsPopout = observer(({onClose, hideHeader = false}: Voice
 											className={styles.gridText}
 											data-flx="voice.voice-connection-status.voice-details-popout.grid-text"
 										>
-											{value}ms
+											{formatMilliseconds(value, locale)}
 										</text>
 									</g>
 								);

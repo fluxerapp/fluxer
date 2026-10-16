@@ -8,15 +8,12 @@
 -export([
     do_start_or_lookup/3,
     do_lookup/2,
-    do_ensure_started/2,
     lookup_or_fetch/3,
     start_fetch/3,
-    start_fetch_without_pending/2,
     add_pending_request/3,
     handle_guild_data_fetched/3,
     handle_guild_data_fetched/4,
     handle_fetch_worker_down/3,
-    handle_guild_data_reloaded/5,
     reply_to_all/2,
     collect_active_guild_ids/1,
     ensure_local_owner/1,
@@ -98,59 +95,6 @@ lookup_from_registry(GuildId, Guilds, State) ->
         {error, not_found} -> {reply, {error, not_found}, State}
     end.
 
--spec do_ensure_started(guild_id(), state()) ->
-    {reply, ok | {ok, pid()} | {error, term()}, state()}.
-do_ensure_started(GuildId, State) ->
-    case ensure_local_owner(GuildId) of
-        ok -> do_ensure_started_local(GuildId, State);
-        {error, _Reason} = Error -> {reply, Error, State}
-    end.
-
--spec do_ensure_started_local(guild_id(), state()) ->
-    {reply, ok | {ok, pid()} | {error, term()}, state()}.
-do_ensure_started_local(GuildId, State) ->
-    Guilds = maps:get(guilds, State),
-    case maps:get(GuildId, Guilds, undefined) of
-        {Pid, Ref} ->
-            handle_tracked_ensure(GuildId, Pid, Ref, Guilds, State);
-        loading ->
-            {reply, ok, State};
-        undefined ->
-            ensure_started_new(GuildId, Guilds, State)
-    end.
-
--spec handle_tracked_ensure(guild_id(), pid(), reference(), map(), state()) ->
-    {reply, ok | {ok, pid()} | {error, term()}, state()}.
-handle_tracked_ensure(GuildId, Pid, Ref, Guilds, State) ->
-    case process_liveness:is_alive(Pid) of
-        true ->
-            {reply, {ok, Pid}, State};
-        false ->
-            cleanup_dead_guild(GuildId, Ref, Guilds),
-            CleanState = State#{guilds => maps:remove(GuildId, Guilds)},
-            do_ensure_started_local(GuildId, CleanState)
-    end.
-
--spec ensure_started_new(guild_id(), map(), state()) ->
-    {reply, ok | {ok, pid()} | {error, term()}, state()}.
-ensure_started_new(GuildId, Guilds, State) ->
-    GuildKey = process_registry:build_process_key(guild, GuildId),
-    case process_registry:registry_whereis(GuildKey) of
-        undefined ->
-            maybe_fetch_new_guild(GuildId, State);
-        _ExistingPid ->
-            monitor_existing(GuildKey, GuildId, Guilds, State)
-    end.
-
--spec maybe_fetch_new_guild(guild_id(), state()) ->
-    {reply, ok | {error, term()}, state()}.
-maybe_fetch_new_guild(GuildId, State) ->
-    GuildIdBin = require_binary(type_conv:to_binary(GuildId)),
-    case gateway_rollout_config:is_guild_eligible(GuildIdBin) of
-        false -> {reply, {error, not_eligible}, State};
-        true -> {reply, ok, start_fetch_without_pending(GuildId, State)}
-    end.
-
 -spec monitor_existing(process_registry:process_key(), guild_id(), map(), state()) ->
     {reply, {ok, pid()} | {error, term()}, state()}.
 monitor_existing(GuildKey, GuildId, Guilds, State) ->
@@ -199,12 +143,6 @@ start_fetch(GuildId, From, State) ->
         pending_requests => Pending#{GuildId => [From]}
     },
     {noreply, start_fetch_worker(GuildId, NewState)}.
-
--spec start_fetch_without_pending(guild_id(), state()) -> state().
-start_fetch_without_pending(GuildId, State) ->
-    Guilds = maps:get(guilds, State),
-    NewState = State#{guilds => Guilds#{GuildId => loading}},
-    start_fetch_worker(GuildId, NewState).
 
 -spec start_fetch_worker(guild_id(), state()) -> state().
 start_fetch_worker(GuildId, State) ->
@@ -373,18 +311,6 @@ cleanup_fetch_worker(GuildId, FetchToken, State) ->
         FetchWorkers
     ),
     State#{fetch_workers => RemainingWorkers}.
-
--spec handle_guild_data_reloaded(guild_id(), pid(), gen_server:from(), fetch_result(), state()) ->
-    {noreply, state()}.
-handle_guild_data_reloaded(_GuildId, Pid, From, Result, State) ->
-    case Result of
-        {ok, Data} ->
-            _ = shard_utils:safe_gen_call_detailed(Pid, {reload, Data}, ?GUILD_CALL_TIMEOUT),
-            gen_server:reply(From, ok);
-        _ ->
-            gen_server:reply(From, {error, fetch_failed})
-    end,
-    {noreply, State}.
 
 -spec reply_to_all([gen_server:from()], term()) -> ok.
 reply_to_all(Requests, Reply) ->

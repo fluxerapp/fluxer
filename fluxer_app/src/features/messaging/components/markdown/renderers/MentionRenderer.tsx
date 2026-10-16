@@ -16,6 +16,10 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
+import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelContextMenu} from '@app/features/ui/action_menu/ChannelContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -40,6 +44,13 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'channel link',
 	comment: 'Short label in the messaging mention renderer. Keep it concise.',
 });
+const UNKNOWN_MENTION_DESCRIPTOR = msg({message: 'unknown-mention'});
+
+function isMentionableThreadFeatureChannel(channel: Channel): boolean {
+	if (!ThreadGuilds.isActive(channel.guildId)) return false;
+	if (channel.isThread()) return ChannelThreads.getThread(channel.id) != null;
+	return channel.isThreadOnly();
+}
 
 interface InteractiveChannelMentionProps {
 	channel: Channel;
@@ -55,6 +66,10 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 		const guildId = channel.guildId;
 		if (guildId == null) {
 			throw new Error('Interactive channel mentions must belong to a guild');
+		}
+		if (channel.isThread()) {
+			openThread(channel);
+			return;
 		}
 		NavigationCommands.selectChannel(guildId, channel.id);
 	};
@@ -82,19 +97,29 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 					event.stopPropagation();
 					ContextMenuCommands.openFromEvent(
 						event,
-						({onClose}) => (
-							<ChannelContextMenu
-								channel={channel}
-								onClose={onClose}
-								data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
-							/>
-						),
+						({onClose}) =>
+							channel.isThread() ? (
+								<ThreadContextMenu
+									thread={channel}
+									onClose={onClose}
+									data-flx="messaging.markdown.renderers.mention-renderer.thread-context-menu"
+								/>
+							) : (
+								<ChannelContextMenu
+									channel={channel}
+									onClose={onClose}
+									data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
+								/>
+							),
 						withTracking(),
 					);
 				}}
 				data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation--2"
 			>
-				<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+				<MentionLabel
+					icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
+					data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention.mention-label"
+				>
 					{channel.name}
 				</MentionLabel>
 			</span>
@@ -116,16 +141,12 @@ export const MentionRenderer = observer(function MentionRenderer({
 			const user = kind.id ? Users.getUser(kind.id) : null;
 			const channel = channelId ? Channels.getChannel(channelId) : undefined;
 			const resolvedGuildId = channel?.guildId || options.guildId || '';
-			let name: string | null = null;
-			if (user) {
-				name = user.displayName;
-				if (resolvedGuildId) {
-					name = NicknameUtils.getNickname(user, resolvedGuildId) || name;
-				}
-			}
+			const name = user ? NicknameUtils.getNickname(user, resolvedGuildId || null, channelId) : null;
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
-					<MentionLabel>@{name || kind.id}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label">
+						{`@${name || kind.id}`}
+					</MentionLabel>
 				</span>
 			);
 			if (!user) {
@@ -138,7 +159,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--2"
 					>
-						<MentionLabel>@{name || user.displayName}</MentionLabel>
+						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--2">
+							{`@${name || user.displayName}`}
+						</MentionLabel>
 					</span>
 				);
 			}
@@ -164,7 +187,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 							}}
 							data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation"
 						>
-							<MentionLabel>@{name || user.displayName}</MentionLabel>
+							<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--3">
+								{`@${name || user.displayName}`}
+							</MentionLabel>
 						</span>
 					</FocusRing>
 				</PreloadableUserPopout>
@@ -182,7 +207,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--3"
 					>
-						<MentionLabel>@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}</MentionLabel>
+						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--4">
+							@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}
+						</MentionLabel>
 					</span>
 				);
 			}
@@ -200,7 +227,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					style={style}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--4"
 				>
-					<MentionLabel>@{role.name}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--5">
+						@{role.name}
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -214,6 +243,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 				>
 					<MentionLabel
 						icon={ChannelUtils.getIcon({type: ChannelTypes.GUILD_TEXT}, {className: mentionRendererStyles.channelIcon})}
+						data-flx="messaging.markdown.renderers.mention-renderer.mention-label--6"
 					>
 						{i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)}
 					</MentionLabel>
@@ -230,6 +260,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 						>
 							<MentionLabel
 								icon={ChannelUtils.getIcon(fallbackMention, {className: mentionRendererStyles.channelIcon})}
+								data-flx="messaging.markdown.renderers.mention-renderer.mention-label--7"
 							>
 								{fallbackMention.name}
 							</MentionLabel>
@@ -247,8 +278,10 @@ export const MentionRenderer = observer(function MentionRenderer({
 			}
 			if (
 				channel.type !== ChannelTypes.GUILD_TEXT &&
+				channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
 				channel.type !== ChannelTypes.GUILD_VOICE &&
-				channel.type !== ChannelTypes.GUILD_LINK
+				channel.type !== ChannelTypes.GUILD_LINK &&
+				!isMentionableThreadFeatureChannel(channel)
 			) {
 				return unknownMention;
 			}
@@ -259,13 +292,23 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--8"
 					>
-						<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+						<MentionLabel
+							icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
+							data-flx="messaging.markdown.renderers.mention-renderer.mention-label--8"
+						>
 							{channel.name}
 						</MentionLabel>
 					</span>
 				);
 			}
-			return <InteractiveChannelMention key={id} channel={channel} roleDescription={i18n._(CHANNEL_LINK_DESCRIPTOR)} />;
+			return (
+				<InteractiveChannelMention
+					key={id}
+					channel={channel}
+					roleDescription={i18n._(CHANNEL_LINK_DESCRIPTOR)}
+					data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention"
+				/>
+			);
 		}
 		case MentionKind.Everyone: {
 			return (
@@ -274,7 +317,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--9"
 				>
-					<MentionLabel>@everyone</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--9">
+						@everyone
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -285,7 +330,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--10"
 				>
-					<MentionLabel>@here</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--10">@here</MentionLabel>
 				</span>
 			);
 		}
@@ -302,7 +347,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--11"
 				>
-					<MentionLabel>{commandName}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--11">
+						{commandName}
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -334,14 +381,16 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--12"
 				>
-					<MentionLabel>{content}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--12">
+						{content}
+					</MentionLabel>
 				</span>
 			);
 		}
 		default:
 			return (
 				<span key={id} data-flx="messaging.markdown.renderers.mention-renderer.span--13">
-					{'<unknown-mention>'}
+					{`<${i18n._(UNKNOWN_MENTION_DESCRIPTOR)}>`}
 				</span>
 			);
 	}

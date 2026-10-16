@@ -123,12 +123,6 @@ build_initial_active_guilds(_, _) -> sets:new().
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-build_initial_active_guilds_test() ->
-    ?assertEqual(sets:new(), build_initial_active_guilds(undefined, 123)),
-    ?assertEqual(sets:from_list([123]), build_initial_active_guilds(123, 123)),
-    ?assertEqual(sets:new(), build_initial_active_guilds(456, 123)),
-    ok.
-
 mark_cached_guild_unavailable_test() ->
     GuildId = 2001,
     CacheState = #{

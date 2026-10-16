@@ -3,6 +3,7 @@
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import * as WebhookCommands from '@app/features/webhook/commands/WebhookCommands';
@@ -63,7 +64,7 @@ export function useWebhookUpdates({tabId, canManage, originals}: UseWebhookUpdat
 			logger.error('Failed to update webhooks', error);
 			showGenericErrorModal({
 				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
-				message: <Trans>Failed to update webhooks</Trans>,
+				message: failureMessage(error) ?? <Trans>Failed to update webhooks</Trans>,
 				dataFlx: 'webhook.use-webhook-updates.save-error-modal',
 			});
 		} finally {

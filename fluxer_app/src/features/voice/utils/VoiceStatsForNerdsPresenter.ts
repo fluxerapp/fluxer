@@ -1,25 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {
 	isScreenShareAudioPublicationLike,
 	type VoiceTrackPublicationSourceLike,
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
-import type {ScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
+import {
+	selectVoiceEngineV2StatsPresentationProjection,
+	type VoiceEngineV2StatsPresentationProjection,
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 import {
 	classifyVoiceEngineV2TrackStats,
-	selectVoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2PerTrackStats,
-	type VoiceEngineV2Stats,
-	type VoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2StatsSample,
 	type VoiceEngineV2StatsTrackClassificationInput,
 	type VoiceEngineV2StatsTrackRoleSelection,
-	type VoiceEngineV2TransportInfo,
-	type VoiceEngineV2VoiceStats,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/policies/voiceStats';
+import type {
+	VoiceEngineV2PerTrackStats,
+	VoiceEngineV2Stats,
+	VoiceEngineV2StatsSample,
+	VoiceEngineV2TransportInfo,
+	VoiceEngineV2VoiceStats,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Track} from 'livekit-client';
+
+export interface ScreenShareAudioPublicationDiagnostic {
+	trackSid: string | null;
+	source: string | null;
+	isMuted: boolean | null;
+	isUpstreamPaused: boolean | null;
+	mediaStreamTrackId: string | null;
+	mediaStreamTrackReadyState: string | null;
+	mediaStreamTrackMuted: boolean | null;
+	mediaStreamTrackEnabled: boolean | null;
+}
 
 export interface StatsForNerdsData {
 	session: {
@@ -44,6 +59,7 @@ export interface StatsForNerdsData {
 		subscriberTransport: VoiceEngineV2TransportInfo | null;
 	};
 	localVideo: VoiceEngineV2PerTrackStats | null;
+	localVideoLayers: Array<VoiceEngineV2PerTrackStats>;
 	localAudio: VoiceEngineV2PerTrackStats | null;
 	localScreenShare: VoiceEngineV2PerTrackStats | null;
 	localScreenShareAudio: VoiceEngineV2PerTrackStats | null;
@@ -57,10 +73,12 @@ export interface StatsForNerdsData {
 	};
 	audio: {
 		echoCancellation: boolean;
-		noiseSuppression: boolean;
 		autoGainControl: boolean;
-		deepFilterNoiseSuppression: boolean;
-		deepFilterNoiseSuppressionLevel: number;
+		noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		requestedNoiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		browserNoiseSuppression: boolean;
+		voiceInputGraphUnavailable: boolean;
+		deepFilterLevels: {inputRms: number; outputRms: number; contextTime: number} | null;
 		processingMode: string;
 	};
 	screenShareSettings: {
@@ -72,28 +90,18 @@ export interface StatsForNerdsData {
 		codecPreferenceOrder: Array<string>;
 		contentHint: string;
 		encoderMode: string;
-		softwareQuality: string;
 		scalabilityMode: string;
-		backupCodecMode: string;
 		maxBitrateMbps: number;
-		adaptiveQuality: boolean;
-		adaptiveQualityAdapted: boolean;
-		adaptiveQualityConfiguredResolution: string;
-		adaptiveQualityConfiguredFrameRate: number;
-		adaptiveQualityEffectiveResolution: string;
-		adaptiveQualityEffectiveFrameRate: number;
-		adaptiveQualityLimitationReason: string;
 		audioSourceMode: string;
 		audioIncludeSources: Array<Record<string, string>>;
 		audioExcludeSources: Array<Record<string, string>>;
 		shareDesktopAudio: boolean;
 		shareAppAudio: boolean;
 		muteStreamAudio: boolean;
-		openH264Enabled: boolean;
 	};
 	screenShareAudioCapture: {
-		pump: ScreenShareAudioPumpDiagnostics;
 		nativeCapture: Record<string, unknown>;
+		publications: Array<ScreenShareAudioPublicationDiagnostic>;
 	};
 	appInfo: {
 		appVersion: string;
@@ -126,6 +134,7 @@ export interface VoiceStatsForNerdsPresentation {
 	session: StatsForNerdsData['session'];
 	network: StatsForNerdsData['network'];
 	localVideo: VoiceEngineV2PerTrackStats | null;
+	localVideoLayers: Array<VoiceEngineV2PerTrackStats>;
 	localAudio: VoiceEngineV2PerTrackStats | null;
 	localScreenShare: VoiceEngineV2PerTrackStats | null;
 	localScreenShareAudio: VoiceEngineV2PerTrackStats | null;
@@ -138,9 +147,12 @@ export interface VoiceStatsForNerdsPresentation {
 
 interface PublicationTrackLike {
 	mediaStreamTrack?: MediaStreamTrack;
+	isUpstreamPaused?: boolean;
 }
 
 interface TrackPublicationLike extends VoiceTrackPublicationSourceLike {
+	trackSid?: string;
+	isMuted?: boolean;
 	audioTrack?: PublicationTrackLike | null;
 	videoTrack?: PublicationTrackLike | null;
 	track?: PublicationTrackLike | null;
@@ -241,6 +253,38 @@ function collectParticipantScreenShareAudioTrackIdentifiers(
 	return Array.from(identifiers);
 }
 
+function summarizeScreenShareAudioPublication(
+	publication: TrackPublicationLike,
+): ScreenShareAudioPublicationDiagnostic {
+	const track = publication.audioTrack ?? publication.track ?? null;
+	const mediaStreamTrack = track?.mediaStreamTrack ?? null;
+	return {
+		trackSid: publication.trackSid ?? null,
+		source: typeof publication.source === 'string' ? publication.source : null,
+		isMuted: publication.isMuted ?? null,
+		isUpstreamPaused: track?.isUpstreamPaused ?? null,
+		mediaStreamTrackId: mediaStreamTrack?.id ?? null,
+		mediaStreamTrackReadyState: mediaStreamTrack?.readyState ?? null,
+		mediaStreamTrackMuted: mediaStreamTrack?.muted ?? null,
+		mediaStreamTrackEnabled: mediaStreamTrack?.enabled ?? null,
+	};
+}
+
+export function collectScreenShareAudioPublicationDiagnostics(
+	participant: ParticipantPublicationLookup | null | undefined,
+): Array<ScreenShareAudioPublicationDiagnostic> {
+	const publications = new Set<TrackPublicationLike>();
+	const directPublication = participant?.getTrackPublication(SCREEN_SHARE_AUDIO_SOURCE);
+	if (directPublication) {
+		publications.add(directPublication);
+	}
+	for (const publication of participant?.audioTrackPublications?.values() ?? []) {
+		if (!isScreenShareAudioPublicationLike(publication)) continue;
+		publications.add(publication);
+	}
+	return Array.from(publications, summarizeScreenShareAudioPublication);
+}
+
 function collectRemoteScreenShareAudioTrackIdentifiers(
 	remoteParticipants: Iterable<ParticipantPublicationLookup> | null | undefined,
 ): Array<string> {
@@ -289,6 +333,25 @@ function getClassifiedTrack(
 ): VoiceEngineV2PerTrackStats | null {
 	if (!classification || index == null || index < 0 || index >= perTrackStats.length) return null;
 	return perTrackStats[index] ?? null;
+}
+
+function getPublicationGroupKey(track: VoiceEngineV2PerTrackStats): string | null {
+	if (track.mediaSourceId !== undefined) return `source:${track.mediaSourceId}`;
+	if (track.trackIdentifier !== undefined) return `track:${track.trackIdentifier}`;
+	if (track.mid !== undefined) return `mid:${track.mid}`;
+	return null;
+}
+
+function selectLocalVideoLayers(
+	perTrackStats: ReadonlyArray<VoiceEngineV2PerTrackStats>,
+	localVideo: VoiceEngineV2PerTrackStats | null,
+): Array<VoiceEngineV2PerTrackStats> {
+	if (!localVideo) return [];
+	const groupKey = getPublicationGroupKey(localVideo);
+	if (groupKey === null) return [localVideo];
+	return perTrackStats.filter(
+		(track) => track.direction === 'send' && track.kind === 'video' && getPublicationGroupKey(track) === groupKey,
+	);
 }
 
 function selectNativeStatsProjection(
@@ -373,6 +436,7 @@ export function buildVoiceStatsForNerdsPresentation(
 			subscriberTransport,
 		},
 		localVideo: nativeProjection ? nativeProjection.localVideo : localVideo,
+		localVideoLayers: selectLocalVideoLayers(perTrackStats, localVideo),
 		localAudio: nativeProjection ? nativeProjection.localAudio : localAudio,
 		localScreenShare: nativeProjection ? nativeProjection.localScreenShare : localScreenShare,
 		localScreenShareAudio: nativeProjection ? nativeProjection.localScreenShareAudio : localScreenShareAudio,

@@ -1,9 +1,0 @@
-// vim: set syntax=asm :
-
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_min", op:"vpminsd", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_max", op:"vpmaxsd", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_add", op:"vpaddd", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_mul", op:"vpmulld", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_sub", op:"vpsubd", from:from, to:to%}
-{% include "fma_mmm_ymm_per_row.tmpliq" label:"per_row_sub_flipped", op:"vpsubd", from:from, to:to, flipped: true%}
-

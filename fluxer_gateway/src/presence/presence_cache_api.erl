@@ -10,8 +10,7 @@
     safe_call_if_enabled/2,
     safe_cast_if_enabled/1,
     rebalance/0,
-    generation/0,
-    handoff_to_target/1
+    generation/0
 ]).
 
 -spec cast_owner(integer(), term()) -> ok.
@@ -53,16 +52,6 @@ generation() ->
 -spec normalize_generation(term()) -> non_neg_integer().
 normalize_generation(G) when is_integer(G), G >= 0 -> G;
 normalize_generation(_) -> 0.
-
--spec handoff_to_target(node()) -> ok.
-handoff_to_target(TargetNode) ->
-    case fluxer_gateway_sup:role_enabled(presence) of
-        true ->
-            _ = safe_call({handoff_to_target, TargetNode}, ?DEFAULT_GEN_SERVER_TIMEOUT, ok),
-            ok;
-        false ->
-            ok
-    end.
 
 -spec rebalance_if_enabled() -> ok.
 rebalance_if_enabled() ->

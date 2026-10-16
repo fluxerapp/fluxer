@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
+import {resolveRoutePattern} from '@fluxer/errors/src/error_handling/RoutePattern';
 import {createLogger} from '@fluxer/logger/src/Logger';
-import type {MiddlewareHandler} from 'hono';
+import type {Context, MiddlewareHandler} from 'hono';
 import type {ZodType} from 'zod';
-import type {HonoEnv} from '../types/HonoEnv';
 
 const responseValidationLogger = createLogger('response_validation');
 
@@ -28,92 +30,61 @@ class ResponseValidationError extends InternalServerError {
 	}
 }
 
-export function ResponseType<T extends ZodType>(
-	schema: T,
-	options?: {
-		skipValidation?: boolean;
-		allowNoContent?: boolean;
-	},
-): MiddlewareHandler<HonoEnv> {
-	const {skipValidation = false, allowNoContent = false} = options ?? {};
-	return async (ctx, next) => {
-		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
-		await next();
-		if (skipValidation) {
-			return;
-		}
-		const response = ctx.res;
-		if (allowNoContent && response.status === 204) {
-			return;
-		}
-		const contentType = response.headers.get('content-type');
-		if (!contentType?.includes('application/json')) {
-			return;
-		}
-		if (response.status >= 400) {
-			return;
-		}
-		const clonedResponse = response.clone();
-		let body: unknown;
-		try {
-			body = await clonedResponse.json();
-		} catch {
-			return;
-		}
-		const result = schema.safeParse(body);
-		if (!result.success) {
-			const validationErrors = result.error.issues.map((issue) => ({
-				path: issue.path.join('.') || 'root',
-				message: issue.message,
-			}));
-			const errorContext = {
-				method: ctx.req.method,
-				path: ctx.req.path,
-				status: response.status,
-				validationErrors,
-				body,
-			};
-			const responseValidationError = new ResponseValidationError(validationErrors);
-			responseValidationLogger.error(errorContext, 'Response validation failed');
-			throw responseValidationError;
-		}
-		ctx.res = new Response(stringifyValidatedResponse(result.data), {
+async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType): Promise<void> {
+	const response = ctx.res;
+	const contentType = response.headers.get('content-type');
+	if (!contentType?.includes('application/json')) {
+		return;
+	}
+	if (response.status >= 400) {
+		return;
+	}
+	const clonedResponse = response.clone();
+	let body: unknown;
+	try {
+		body = await clonedResponse.json();
+	} catch {
+		return;
+	}
+	const result = schema.safeParse(body);
+	if (!result.success) {
+		const validationErrors = result.error.issues.map((issue) => ({
+			path: issue.path.join('.') || 'root',
+			message: issue.message,
+		}));
+		const errorContext = {
+			method: ctx.req.method,
+			path: resolveRoutePattern(ctx),
 			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
-	};
-}
-
-interface OpenAPIMetadata {
-	operationId: string;
-	summary: string;
-	description: string;
-	responseSchema: ZodType | null;
-	requestSchema?: ZodType;
-	requestFormSchema?: ZodType;
-	requestBodyRequired?: boolean;
-	statusCode?: number | Array<number>;
-	security?: SecurityScheme | Array<SecurityScheme>;
-	tags: string | Array<string>;
-	deprecated?: boolean;
-	externalDocs?: {
-		url: string;
-		description?: string;
-	};
+			validationErrors,
+			body,
+		};
+		const responseValidationError = new ResponseValidationError(validationErrors);
+		responseValidationLogger.error(errorContext, 'Response validation failed');
+		throw responseValidationError;
+	}
+	ctx.res = new Response(stringifyValidatedResponse(result.data), {
+		status: response.status,
+		statusText: response.statusText,
+		headers: response.headers,
+	});
 }
 
 type SecurityScheme = 'botToken' | 'oauth2Token' | 'bearerToken' | 'sessionToken' | 'adminApiKey';
 
-interface OpenAPIRouteMetadata {
+export interface OpenAPIRouteMetadata {
 	operationId: string;
 	summary: string;
 	description: string;
 	responseSchema: ZodType | null;
+	acceptedResponseSchema?: ZodType;
+	responseContentType?: string;
 	requestSchema?: ZodType;
 	requestFormSchema?: ZodType;
 	requestBodyRequired?: boolean;
 	statusCode?: number | Array<number>;
+	bodylessStatusCodes?: Array<number>;
+	errorStatusCodes?: Array<number>;
 	security?: SecurityScheme | Array<SecurityScheme>;
 	tags: string | Array<string>;
 	deprecated?: boolean;
@@ -121,10 +92,7 @@ interface OpenAPIRouteMetadata {
 		url: string;
 		description?: string;
 	};
-}
-
-interface OpenAPIOptions {
-	description: string;
+	experiment?: string;
 }
 
 function validateOperationId(operationId: string): void {
@@ -135,117 +103,24 @@ function validateOperationId(operationId: string): void {
 	}
 }
 
-function normalizeSecurityToArray(
-	security?: SecurityScheme | Array<SecurityScheme>,
-): Array<SecurityScheme> | undefined {
-	if (!security) return undefined;
-	return Array.isArray(security) ? security : [security];
-}
-
-function normalizeTagsToArray(tags: string | Array<string>): Array<string> {
-	return Array.isArray(tags) ? tags : [tags];
-}
-
-function normalizeStatusCodeToArray(statusCode?: number | Array<number>): Array<number> | undefined {
-	if (!statusCode) return undefined;
-	return Array.isArray(statusCode) ? statusCode : [statusCode];
-}
-
-export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationId: string,
-	summary: string,
-	responseSchema: ZodType | null,
-	options: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationIdOrMetadata: string | OpenAPIRouteMetadata,
-	summary?: string,
-	responseSchema?: ZodType | null,
-	options?: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv> {
-	let metadata: OpenAPIRouteMetadata;
-	if (typeof operationIdOrMetadata === 'string') {
-		if (!options?.description) {
-			throw new Error(
-				`Missing description for OpenAPI route ${operationIdOrMetadata}. The description field is required.`,
-			);
-		}
-		if (responseSchema === undefined) {
-			throw new Error(
-				`Missing responseSchema for OpenAPI route ${operationIdOrMetadata}. The responseSchema field is required (use null for no-content responses).`,
-			);
-		}
-		metadata = {
-			operationId: operationIdOrMetadata,
-			summary: summary!,
-			description: options.description,
-			responseSchema,
-			tags: [],
-		};
-	} else {
-		metadata = operationIdOrMetadata;
-	}
+export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv> {
 	validateOperationId(metadata.operationId);
-	const {statusCode, security, tags, deprecated, externalDocs} = metadata;
+	const {bodylessStatusCodes, responseContentType} = metadata;
 	const schema = metadata.responseSchema;
+	const mediaType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase();
+	const hasJsonResponse = mediaType === undefined || mediaType === 'application/json';
 	return async (ctx, next) => {
-		const fullMetadata: OpenAPIMetadata = {
-			operationId: metadata.operationId,
-			summary: metadata.summary,
-			description: metadata.description,
-			responseSchema: schema,
-			requestSchema: metadata.requestSchema,
-			requestFormSchema: metadata.requestFormSchema,
-			requestBodyRequired: metadata.requestBodyRequired,
-			statusCode: statusCode ? normalizeStatusCodeToArray(statusCode) : undefined,
-			security: security ? normalizeSecurityToArray(security) : undefined,
-			tags: normalizeTagsToArray(tags),
-			deprecated,
-			externalDocs,
-		};
-		ctx.set('openapiMetadata' as keyof HonoEnv['Variables'], fullMetadata);
-		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
 		await next();
-		if (!schema) {
+		const statusSchema =
+			ctx.res.status === 202 && metadata.acceptedResponseSchema ? metadata.acceptedResponseSchema : schema;
+		if (
+			!statusSchema ||
+			!hasJsonResponse ||
+			!Config.dev.validateResponses ||
+			bodylessStatusCodes?.includes(ctx.res.status)
+		) {
 			return;
 		}
-		const response = ctx.res;
-		const contentType = response.headers.get('content-type');
-		if (!contentType?.includes('application/json')) {
-			return;
-		}
-		if (response.status >= 400) {
-			return;
-		}
-		const clonedResponse = response.clone();
-		let body: unknown;
-		try {
-			body = await clonedResponse.json();
-		} catch {
-			return;
-		}
-		const result = schema.safeParse(body);
-		if (!result.success) {
-			const validationErrors = result.error.issues.map((issue) => ({
-				path: issue.path.join('.') || 'root',
-				message: issue.message,
-			}));
-			const errorContext = {
-				method: ctx.req.method,
-				path: ctx.req.path,
-				status: response.status,
-				validationErrors,
-				body,
-			};
-			const responseValidationError = new ResponseValidationError(validationErrors);
-			responseValidationLogger.error(errorContext, 'Response validation failed');
-			throw responseValidationError;
-		}
-		ctx.res = new Response(stringifyValidatedResponse(result.data), {
-			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
+		await validateAndRewriteResponse(ctx, statusSchema);
 	};
 }

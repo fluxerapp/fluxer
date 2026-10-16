@@ -8,13 +8,13 @@ import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
-type ChannelUpdatePayload = Partial<Channel> & {
+export type ChannelBulkUpdatePayload = Partial<Channel> & {
 	id: string;
 	type: number;
 };
 
-interface ChannelUpdateBulkPayload {
-	channels: Array<ChannelUpdatePayload>;
+export interface ChannelUpdateBulkPayload {
+	channels: Array<ChannelBulkUpdatePayload>;
 }
 
 export function handleChannelUpdateBulk(data: ChannelUpdateBulkPayload, _context: GatewayHandlerContext): void {

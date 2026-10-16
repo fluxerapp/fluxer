@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 export interface PushPayload {
 	type?: string;
 	action?: string;
@@ -17,8 +19,6 @@ export interface PushNotificationClientState {
 	hasWindowClient: boolean;
 	hasVisibleClient: boolean;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 export const normalizePushPayload = (raw: unknown): PushPayload => {
 	const payload = (raw ?? {}) as PushPayload;
@@ -53,6 +53,19 @@ export const resolvePushNotificationTag = (payload: PushPayload): string | undef
 	}
 	return undefined;
 };
+export const resolvePushMessageId = (payload: PushPayload): string | undefined => {
+	const messageId = payload.data?.message_id;
+	if (typeof messageId === 'string' && messageId.length > 0) {
+		return messageId;
+	}
+	return undefined;
+};
+export const shouldRenotifyPushNotification = (
+	messageId: string | undefined,
+	shownWithSameTag: ReadonlyArray<{readonly data?: unknown}>,
+): boolean =>
+	messageId === undefined ||
+	!shownWithSameTag.some((notification) => isRecord(notification.data) && notification.data.message_id === messageId);
 export const resolvePushChannelId = (payload: PushPayload): string | undefined => {
 	const channelId = payload.data?.channel_id;
 	if (typeof channelId === 'string' && channelId.length > 0) {
@@ -75,6 +88,20 @@ export const matchesPushChannelNotification = (notification: Notification, chann
 		return true;
 	}
 	return typeof tag === 'string' && tag.startsWith(`${channelTag}:`);
+};
+const SNOWFLAKE_PATTERN = /^[1-9]\d*$/;
+export const isPushNotificationReadThrough = (
+	notification: {readonly data?: unknown},
+	readThroughMessageId: string | undefined,
+): boolean => {
+	if (readThroughMessageId === undefined || !SNOWFLAKE_PATTERN.test(readThroughMessageId)) {
+		return true;
+	}
+	const messageId = isRecord(notification.data) ? notification.data.message_id : undefined;
+	if (typeof messageId !== 'string' || !SNOWFLAKE_PATTERN.test(messageId)) {
+		return true;
+	}
+	return BigInt(messageId) <= BigInt(readThroughMessageId);
 };
 export const getPushNotificationClientState = (
 	clients: ReadonlyArray<{readonly visibilityState?: string}>,

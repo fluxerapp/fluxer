@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {makeAutoObservable} from 'mobx';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
+import {makeAutoObservable, observable} from 'mobx';
 
 export interface GuildCounts {
 	memberCount: number;
@@ -21,10 +22,9 @@ const FRESH_TTL_MS = 60 * 1000;
 const REQUEST_DEBOUNCE_MS = 100;
 
 class GuildCount {
-	private cache: Map<string, GuildCounts> = new Map();
+	private readonly cache = observable.map<string, GuildCounts>(undefined, {deep: false});
 	private pending: Set<string> = new Set();
 	private flushTimer: NodeJS.Timeout | null = null;
-	private cacheVersion = 0;
 
 	constructor() {
 		makeAutoObservable<GuildCount, 'cache' | 'pending' | 'flushTimer'>(
@@ -35,7 +35,6 @@ class GuildCount {
 	}
 
 	getCounts(guildId: string): GuildCounts | null {
-		void this.cacheVersion;
 		return this.cache.get(guildId) ?? null;
 	}
 
@@ -61,7 +60,7 @@ class GuildCount {
 		this.scheduleFlush();
 	}
 
-	handleConnectionOpen(guilds: ReadonlyArray<HydratableGuild>): void {
+	handleGatewayReady(guilds: ReadonlyArray<HydratableGuild>): void {
 		this.hydrate(guilds);
 	}
 
@@ -86,13 +85,10 @@ class GuildCount {
 			});
 			this.pending.delete(entry.guild_id);
 		}
-		this.cacheVersion += 1;
 	}
 
 	handleGuildDelete(guildId: string): void {
-		if (this.cache.delete(guildId)) {
-			this.cacheVersion += 1;
-		}
+		this.cache.delete(guildId);
 		this.pending.delete(guildId);
 	}
 
@@ -103,12 +99,10 @@ class GuildCount {
 			clearTimeout(this.flushTimer);
 			this.flushTimer = null;
 		}
-		this.cacheVersion += 1;
 	}
 
 	private hydrate(guilds: ReadonlyArray<HydratableGuild>): void {
 		const now = Date.now();
-		let updated = false;
 		for (const guild of guilds) {
 			if (!guild || typeof guild.id !== 'string') continue;
 			if (guild.unavailable) continue;
@@ -118,10 +112,6 @@ class GuildCount {
 				onlineCount: guild.online_count,
 				fetchedAt: now,
 			});
-			updated = true;
-		}
-		if (updated) {
-			this.cacheVersion += 1;
 		}
 	}
 
@@ -148,7 +138,7 @@ class GuildCount {
 	private flushPending(): void {
 		if (this.pending.size === 0) return;
 		const guildIds = Array.from(this.pending);
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		if (!socket) {
 			this.pending.clear();
 			return;
@@ -157,4 +147,6 @@ class GuildCount {
 	}
 }
 
-export default new GuildCount();
+const guildCount = new GuildCount();
+ResettableStates.register(guildCount, guildCount.handleSessionInvalidated);
+export default guildCount;

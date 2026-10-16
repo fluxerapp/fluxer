@@ -1,9 +1,0 @@
-// vim: set syntax=asm :
-
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_min", op:"vminps", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_max", op:"vmaxps", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_add", op:"vaddps", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_mul", op:"vmulps", mr:mr, from:from, to:to%}
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_sub", op:"vsubps", from:from, to:to%}
-{% include "fma_mmm_ymm_per_col.tmpliq" label:"per_col_sub_flipped", op:"vsubps", from:from, to:to, flipped: true%}
-

@@ -9,7 +9,12 @@ use crate::{
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    templates::pages::enforcement_decision::suspension_label,
+    utils::{
+        bigint::format_discriminator,
+        timestamps::{format_admin_timestamp, snowflake_creation_date},
+        user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -21,10 +26,11 @@ pub fn overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
 ) -> Markup {
     render_overview_tab(
-        config, user, admin_acls, csrf_token, change_log, None, false,
+        config, user, admin_acls, csrf_token, change_log, None, false, false,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn overview_tab_with_limit_config(
     config: &AdminConfig,
     user: &AdminUser,
@@ -32,6 +38,7 @@ pub fn overview_tab_with_limit_config(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
+    username_sign_in: bool,
 ) -> Markup {
     render_overview_tab(
         config,
@@ -41,9 +48,11 @@ pub fn overview_tab_with_limit_config(
         change_log,
         limit_config,
         true,
+        username_sign_in,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
@@ -52,23 +61,36 @@ fn render_overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
     show_traits: bool,
+    username_sign_in: bool,
 ) -> Markup {
     html! {
         div class="space-y-6" {
-            @if let Some(until) = &user.temp_banned_until {
-                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" {
-                    "Temporarily banned until " (until)
-                }
-            }
-            @if user.temp_banned_until.is_none() {
+            (restriction_banner(config, user))
+            @if user.temp_banned_until.is_none() && user.enforcement_decision_id.is_none() {
                 @if let Some(pending) = &user.pending_deletion_at {
                     div class="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900" {
-                        div class="font-medium" { "Scheduled for deletion: " (pending) }
+                        div class="font-medium" { "Scheduled for deletion: " (format_admin_timestamp(pending)) }
                         @if let Some(code) = user.deletion_reason_code {
                             div class="mt-1" { "Reason code: " (code) }
                         }
                         @if let Some(reason) = &user.deletion_public_reason {
                             div class="mt-1" { "Public reason: " (reason) }
+                        }
+                        @if let Some(reason) = &user.deletion_audit_log_reason {
+                            div class="mt-1" { "Private reason: " (reason) }
+                        }
+                        div class="mt-1" {
+                            "Scheduled by "
+                            @match user.deletion_scheduled_by.as_deref() {
+                                Some(id) if id == user.id => { "the user" }
+                                Some(id) => {
+                                    a href={(config.base_path) "/users/" (id)} class="underline" { (id) }
+                                }
+                                None => { "an unrecorded source" }
+                            }
+                            @if let Some(at) = user.deletion_scheduled_at.as_deref() {
+                                " on " (format_admin_timestamp(at))
+                            }
                         }
                     }
                 }
@@ -76,7 +98,7 @@ fn render_overview_tab(
             @if let Some(pending) = &user.pending_bulk_message_deletion_at {
                 div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4" {
                     div class="font-medium text-neutral-700 text-sm" {
-                        "Bulk message deletion scheduled for " (pending)
+                        "Bulk message deletion scheduled for " (format_admin_timestamp(pending))
                     }
                     @if acl::has_permission(admin_acls, acl::USER_CANCEL_BULK_MESSAGE_DELETION) {
                         form method="post"
@@ -99,7 +121,7 @@ fn render_overview_tab(
                         (snowflake_creation_date(&user.id))
                     }))
                     (detail_row("Username", html! {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }))
                     (detail_row("Display Name", html! {
                         @if let Some(ref name) = user.global_name {
@@ -108,7 +130,7 @@ fn render_overview_tab(
                             span class="text-neutral-400" { "Not set" }
                         }
                     }))
-                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) {
+                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) && !username_sign_in {
                         (detail_row("Email", html! {
                             @if let Some(ref email) = user.email {
                                 (email)
@@ -120,13 +142,6 @@ fn render_overview_tab(
                             }
                         }))
                     }
-                    (detail_row("Phone", html! {
-                        @if user.has_verified_phone {
-                            span class="text-green-700" { "Verified" }
-                        } @else {
-                            span class="text-neutral-400" { "Not verified" }
-                        }
-                    }))
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_DOB) {
                         (detail_row("Date of Birth", html! {
                             (user.date_of_birth.as_deref().unwrap_or("Not set"))
@@ -179,10 +194,10 @@ fn render_overview_tab(
                         }
                     }))
                     @if let Some(ref value) = user.premium_grace_ends_at {
-                        (detail_row("Grace Period Ends", html! { (value) }))
+                        (detail_row("Grace Period Ends", html! { (format_admin_timestamp(value)) }))
                     }
                     (detail_row("Last Active", html! {
-                        (user.last_active_at.as_deref().unwrap_or("Never"))
+                        (user.last_active_at.as_deref().map_or_else(|| "Never".to_string(), format_admin_timestamp))
                     }))
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_IP) {
                         (detail_row("Last IP", html! {
@@ -221,7 +236,7 @@ fn render_overview_tab(
                                     div class="py-3 text-sm" {
                                         dt class="font-medium text-neutral-900" {
                                             (entry.field)
-                                            span class="ml-2 font-normal text-xs text-neutral-500" { (entry.event_at) }
+                                            span class="ml-2 font-normal text-xs text-neutral-500" { (format_admin_timestamp(&entry.event_at)) }
                                         }
                                         dd class="mt-1 font-mono text-xs text-neutral-700" {
                                             (entry.old_value.as_deref().unwrap_or("null"))
@@ -244,6 +259,30 @@ fn render_overview_tab(
     }
 }
 
+fn restriction_banner(config: &AdminConfig, user: &AdminUser) -> Markup {
+    let base = &config.base_path;
+    html! {
+        @match (&user.enforcement_decision_id, &user.temp_banned_until) {
+            (Some(decision_id), until) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    @match (until, &user.pending_deletion_at) {
+                        (Some(until), _) => { (suspension_label(until)) ". " }
+                        (None, Some(pending)) => { "Scheduled for deletion on " (format_admin_timestamp(pending)) ". " }
+                        (None, None) => { "Restricted by a decision. " }
+                    }
+                    a href={(base) "/decisions/" (decision_id)} class="underline" { "Decision " (decision_id) }
+                }
+            }
+            (None, Some(until)) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    (suspension_label(until)) ". Recorded before decisions, so it has no decision."
+                }
+            }
+            (None, None) => {}
+        }
+    }
+}
+
 fn flags_card(
     config: &AdminConfig,
     user: &AdminUser,
@@ -251,132 +290,58 @@ fn flags_card(
     csrf_token: &str,
 ) -> Markup {
     let can_update_flags = acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
-    let can_update_suspicious =
-        acl::has_permission(admin_acls, acl::USER_UPDATE_SUSPICIOUS_ACTIVITY);
+    let suspended = user.temp_banned_until.is_some();
     html! {
         div class="space-y-6" {
-            (u64_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "User Flags",
+                "User flags",
                 "update_flags",
-                "flags[]",
-                user.flags,
-                admin_flags::USER_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
+                html! {
+                    @for flag in admin_flags::USER_FLAGS {
+                        (checkbox(
+                            "flags[]",
+                            &flag.value.to_string(),
+                            flag.name,
+                            user.flags & flag.value != 0,
+                            can_update_flags && admin_flags::user_flag_is_editable(flag.value, user.flags, suspended),
+                        ))
+                    }
+                },
             ))
-            (i32_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "Premium Flags",
+                "Premium flags",
                 "update_premium_flags",
-                "flags[]",
-                user.premium_flags,
-                admin_flags::PREMIUM_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
-            ))
-            (i32_flag_form(
-                config,
-                &user.id,
-                "Suspicious Activity Flags",
-                "update_suspicious_flags",
-                "suspicious_flags[]",
-                user.suspicious_activity_flags,
-                admin_flags::SUSPICIOUS_ACTIVITY_FLAGS,
-                csrf_token,
-                can_update_suspicious,
-                Some(acl::USER_UPDATE_SUSPICIOUS_ACTIVITY),
+                html! {
+                    @for flag in admin_flags::PREMIUM_FLAGS {
+                        (checkbox(
+                            "flags[]",
+                            &flag.value.to_string(),
+                            flag.name,
+                            user.premium_flags & flag.value != 0,
+                            can_update_flags && admin_flags::premium_flag_is_editable(flag.value),
+                        ))
+                    }
+                },
             ))
         }
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn u64_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: u64,
-    flags: &[admin_flags::U64Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-fn i32_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: i32,
-    flags: &[admin_flags::I32Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
 fn flag_form_shell(
     config: &AdminConfig,
     user_id: &str,
     title: &str,
     action: &str,
-    _raw_value: String,
     csrf_token: &str,
     can_edit: bool,
-    required_acl: Option<&str>,
     checkboxes: Markup,
 ) -> Markup {
     card_with_header(
@@ -388,14 +353,15 @@ fn flag_form_shell(
                     (checkboxes)
                 }
                 @if can_edit {
+                    p class="text-xs text-neutral-500" {
+                        "Restriction flags are read-only. Use the moderation tab."
+                    }
                     (form_actions(html! {
                         (submit_button("Save"))
                     }))
                 } @else {
-                    @if let Some(required) = required_acl {
-                        p class="text-xs text-neutral-500" {
-                            "Read-only \u{2014} " (required) " permission required."
-                        }
+                    p class="text-xs text-neutral-500" {
+                        "Read-only. Needs the " (acl::USER_UPDATE_FLAGS) " permission."
                     }
                 }
             }
@@ -546,6 +512,10 @@ fn traits_form(
                         class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20" {
                         (custom_traits.join("\n"))
                     }
+                    p class="text-neutral-500 text-xs" {
+                        "The premium trait follows each member's subscription or gift and cannot be \
+                         assigned here."
+                    }
                 }
                 (form_actions(html! {
                     (submit_button("Save Traits"))
@@ -554,6 +524,8 @@ fn traits_form(
         }
     }
 }
+
+const DERIVED_TRAITS: [&str; 1] = ["premium"];
 
 fn parse_trait_definitions(limit_config: Option<&LimitConfigResponse>) -> Vec<&str> {
     limit_config
@@ -564,6 +536,7 @@ fn parse_trait_definitions(limit_config: Option<&LimitConfigResponse>) -> Vec<&s
                 .iter()
                 .map(|value| value.trim())
                 .filter(|value| !value.is_empty())
+                .filter(|value| !DERIVED_TRAITS.contains(value))
                 .collect()
         })
         .unwrap_or_default()
@@ -574,5 +547,6 @@ fn custom_traits<'a>(user: &'a AdminUser, trait_definitions: &[&str]) -> Vec<&'a
         .iter()
         .map(String::as_str)
         .filter(|trait_name| !trait_definitions.contains(trait_name))
+        .filter(|trait_name| !DERIVED_TRAITS.contains(trait_name))
         .collect()
 }

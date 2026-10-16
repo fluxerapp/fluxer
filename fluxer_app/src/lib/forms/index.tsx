@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {isAbortError} from '@app/features/auth/state/SudoPrompt';
+import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -14,10 +15,6 @@ import type {FieldValues, Path, UseFormReturn} from 'react-hook-form';
 const AN_UNEXPECTED_ERROR_OCCURRED_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'An unexpected error occurred. Try again.',
 	comment: 'Generic error toast body asking the user to retry.',
-});
-const SOMETHING_WENT_WRONG_DESCRIPTOR = msg({
-	message: 'Something went wrong',
-	comment: 'Generic error toast title.',
 });
 
 interface ValidationError {

@@ -2,8 +2,7 @@
 
 import {createReadStream} from 'node:fs';
 import {createConnection} from 'node:net';
-import {Readable} from 'node:stream';
-import type {IVirusScanProvider} from '@pkgs/virus_scan/src/IVirusScanProvider';
+import type {Readable} from 'node:stream';
 import type {VirusScanProviderResult} from '@pkgs/virus_scan/src/VirusScanProviderResult';
 
 interface ClamAVConfig {
@@ -12,7 +11,7 @@ interface ClamAVConfig {
 	streamChunkBytes?: number;
 }
 
-export class ClamAVProvider implements IVirusScanProvider {
+export class ClamAVProvider {
 	private readonly streamChunkBytes: number;
 
 	constructor(private config: ClamAVConfig) {
@@ -21,10 +20,6 @@ export class ClamAVProvider implements IVirusScanProvider {
 
 	async scanFile(filePath: string): Promise<VirusScanProviderResult> {
 		return this.scanReadable(createReadStream(filePath, {highWaterMark: this.streamChunkBytes}));
-	}
-
-	async scanBuffer(buffer: Buffer): Promise<VirusScanProviderResult> {
-		return this.scanReadable(Readable.from(buffer));
 	}
 
 	private scanReadable(source: Readable): Promise<VirusScanProviderResult> {

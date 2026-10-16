@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface.module.css';
+import {
+	type PanZoomTransformSnapshot,
+	type UsePanZoomSurfaceOptions,
+	usePanZoomSurface,
+} from '@app/features/messaging/components/modals/media_modal/pan_zoom/usePanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
 import {clsx} from 'clsx';
 import {motion} from 'framer-motion';
-import type {CSSProperties, HTMLAttributes, ReactNode} from 'react';
+import type {HTMLAttributes, ReactNode} from 'react';
 import {forwardRef, memo, useImperativeHandle} from 'react';
-import styles from './PanZoomSurface.module.css';
-import {type PanZoomTransformSnapshot, type UsePanZoomSurfaceOptions, usePanZoomSurface} from './usePanZoomSurface';
 
 export interface PanZoomSurfaceHandle {
 	reset: () => void;
 	zoomIn: () => void;
 	zoomOut: () => void;
-	zoomTo: (state: ZoomState) => void;
-	getSnapshot: () => PanZoomTransformSnapshot;
 }
 
 interface PanZoomSurfaceProps
@@ -23,18 +25,12 @@ interface PanZoomSurfaceProps
 	> {
 	children: ReactNode;
 	contentClassName?: string;
-	contentStyle?: CSSProperties;
 	contentRole?: string;
-	contentAriaLabel?: string;
 	zoomState?: ZoomState;
-	minScale?: number;
 	maxScale?: number;
 	zoomedScale?: number;
-	preferNaturalZoomScale?: boolean;
 	disabled?: boolean;
 	panDisabled?: boolean;
-	wheelEnabled?: boolean;
-	pinchEnabled?: boolean;
 	doubleClickEnabled?: boolean;
 	tapToToggleZoom?: boolean;
 	resetKey?: unknown;
@@ -71,19 +67,13 @@ export const PanZoomSurface = memo(
 			children,
 			className,
 			contentClassName,
-			contentStyle,
 			contentRole,
-			contentAriaLabel,
 			style,
 			zoomState,
-			minScale,
 			maxScale,
 			zoomedScale,
-			preferNaturalZoomScale,
 			disabled,
 			panDisabled,
-			wheelEnabled,
-			pinchEnabled,
 			doubleClickEnabled,
 			tapToToggleZoom,
 			resetKey,
@@ -97,14 +87,10 @@ export const PanZoomSurface = memo(
 	) {
 		const controllerOptions: UsePanZoomSurfaceOptions = {
 			zoomState,
-			minScale,
 			maxScale,
 			zoomedScale,
-			preferNaturalZoomScale,
 			disabled,
 			panDisabled,
-			wheelEnabled,
-			pinchEnabled,
 			doubleClickEnabled,
 			tapToToggleZoom,
 			resetKey,
@@ -120,10 +106,8 @@ export const PanZoomSurface = memo(
 				reset: controller.reset,
 				zoomIn: controller.zoomIn,
 				zoomOut: controller.zoomOut,
-				zoomTo: controller.zoomTo,
-				getSnapshot: controller.getSnapshot,
 			}),
-			[controller.getSnapshot, controller.reset, controller.zoomIn, controller.zoomOut, controller.zoomTo],
+			[controller.reset, controller.zoomIn, controller.zoomOut],
 		);
 		return (
 			<div
@@ -140,14 +124,12 @@ export const PanZoomSurface = memo(
 					{...controller.contentBindings}
 					className={clsx(styles.content, controller.isDragging && styles.contentDragging, contentClassName)}
 					style={{
-						...contentStyle,
 						x: controller.x,
 						y: controller.y,
 						scale: controller.scale,
 					}}
 					transformTemplate={buildPanZoomTransform}
 					role={contentRole}
-					aria-label={contentAriaLabel}
 				>
 					{children}
 				</motion.div>

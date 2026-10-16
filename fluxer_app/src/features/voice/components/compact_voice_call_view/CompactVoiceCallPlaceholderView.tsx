@@ -5,20 +5,20 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/voice/components/CompactVoiceCallView.module.css';
 import {CompactCallHeightToggleButton} from '@app/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton';
+import {COMPACT_HEIGHT_MIN} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
 import {
 	getCompactAudioAvatarLayoutStyle,
 	resolveCompactAudioAvatarLayoutMetrics,
 } from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallLayoutMetrics';
 import {
-	COMPACT_HEIGHT_MIN,
 	type CompactVoiceCallContainerStyle,
 	type CompactVoiceCallViewProps,
-	DISCONNECTED_DESCRIPTOR,
 	RESIZE_CALL_VIEW_DESCRIPTOR,
 	VOICE_CALL_DESCRIPTOR,
 } from '@app/features/voice/components/compact_voice_call_view/shared';
 import {useCompactVoiceCallResize} from '@app/features/voice/components/compact_voice_call_view/useCompactVoiceCallResize';
 import voiceCallStyles from '@app/features/voice/components/VoiceCallView.module.css';
+import {DISCONNECTED_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';

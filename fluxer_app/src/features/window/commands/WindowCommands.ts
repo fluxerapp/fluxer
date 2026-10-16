@@ -6,8 +6,8 @@ import Notification from '@app/features/ui/state/Notification';
 import Window from '@app/features/window/state/Window';
 
 function applyFocusSideEffects(focused: boolean): void {
-	GuildReadState.handleWindowFocus();
-	Notification.handleWindowFocus({focused});
+	GuildReadState.handleWindowFocused();
+	Notification.handleWindowFocused({focused});
 	if (focused) {
 		Idle.recordActivity();
 	}

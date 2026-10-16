@@ -1,0 +1,20 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.content {
+	gap: 1rem;
+}
+
+.steps {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin: 0;
+	padding-left: 1.25rem;
+	color: var(--text-primary);
+	list-style: decimal;
+}
+
+.step {
+	padding-left: 0.25rem;
+	line-height: 1.4;
+}

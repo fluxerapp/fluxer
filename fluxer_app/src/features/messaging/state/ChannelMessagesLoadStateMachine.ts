@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
-
 export interface ChannelMessagesLoadInput {
 	isBefore: boolean;
 	isAfter: boolean;
@@ -20,26 +18,10 @@ export interface ChannelMessagesLoadDecision {
 	preserveHasMoreAfter: boolean;
 }
 
-export type ChannelMessagesLoadEvent = {
-	type: 'channelMessagesLoad.updated';
-	input: ChannelMessagesLoadInput;
-};
-
 function shouldReplaceVisibleWindow(context: ChannelMessagesLoadInput): boolean {
 	if (context.hasJump) return true;
 	if (!context.wasReady) return true;
 	return !context.isBefore && !context.isAfter;
-}
-
-function getLoadMode(snapshot: ChannelMessagesLoadSnapshot): ChannelMessagesLoadMode {
-	switch (snapshot.value) {
-		case 'mergeBefore':
-			return 'mergeBefore';
-		case 'mergeAfter':
-			return 'mergeAfter';
-		default:
-			return 'replace';
-	}
 }
 
 function getLoadModeFromInput(input: ChannelMessagesLoadInput): ChannelMessagesLoadMode {
@@ -80,63 +62,86 @@ function buildChannelMessagesLoadDecision(mode: ChannelMessagesLoadMode): Channe
 	}
 }
 
-export const channelMessagesLoadMachine = setup({
-	types: {} as {
-		context: ChannelMessagesLoadInput;
-		events: ChannelMessagesLoadEvent;
-		input: ChannelMessagesLoadInput;
-	},
-	actions: {
-		applyInput: assign(({event}) => {
-			if (event.type !== 'channelMessagesLoad.updated') return {};
-			return event.input;
-		}),
-	},
-	guards: {
-		shouldReplaceVisibleWindow: ({context}) => shouldReplaceVisibleWindow(context),
-		isBeforePage: ({context}) => context.isBefore,
-	},
-}).createMachine({
-	id: 'channelMessagesLoad',
-	context: ({input}) => input,
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [
-				{guard: 'shouldReplaceVisibleWindow', target: 'replace'},
-				{guard: 'isBeforePage', target: 'mergeBefore'},
-				{target: 'mergeAfter'},
-			],
-		},
-		replace: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		mergeBefore: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		mergeAfter: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-	},
-});
-
-export type ChannelMessagesLoadSnapshot = SnapshotFrom<typeof channelMessagesLoadMachine>;
-
-export function createChannelMessagesLoadSnapshot(input: ChannelMessagesLoadInput): ChannelMessagesLoadSnapshot {
-	return getInitialSnapshot(channelMessagesLoadMachine, input);
-}
-
-export function transitionChannelMessagesLoadSnapshot(
-	snapshot: ChannelMessagesLoadSnapshot,
-	event: ChannelMessagesLoadEvent,
-): ChannelMessagesLoadSnapshot {
-	return transition(channelMessagesLoadMachine, snapshot, event)[0] as ChannelMessagesLoadSnapshot;
-}
-
-export function selectChannelMessagesLoadDecision(snapshot: ChannelMessagesLoadSnapshot): ChannelMessagesLoadDecision {
-	return buildChannelMessagesLoadDecision(getLoadMode(snapshot));
-}
-
 export function resolveChannelMessagesLoadDecision(input: ChannelMessagesLoadInput): ChannelMessagesLoadDecision {
 	return buildChannelMessagesLoadDecision(getLoadModeFromInput(input));
+}
+
+export interface ChannelMessagesWindowInput {
+	ready: boolean;
+	loading: boolean;
+	failed: boolean;
+	messageCount: number;
+	hasMoreBefore: boolean;
+	hasMoreAfter: boolean;
+}
+
+export type ChannelMessagesWindowStatus = {
+	phase: ChannelMessagesWindowPhase;
+	olderPageAvailable: boolean;
+	newerPageAvailable: boolean;
+	needsPage: boolean;
+	retryVisible: boolean;
+};
+
+type ChannelMessagesWindowPhase = 'placeholder' | 'retry' | 'stream';
+
+export type ChannelMessagesWindowBar = 'none' | 'retry' | 'present';
+
+function hasLoadedWindow(context: ChannelMessagesWindowInput): boolean {
+	if (!context.ready) return false;
+	if (context.messageCount > 0) return true;
+	return !context.hasMoreBefore && !context.hasMoreAfter;
+}
+
+function getWindowPhaseFromInput(input: ChannelMessagesWindowInput): ChannelMessagesWindowPhase {
+	if (hasLoadedWindow(input)) return 'stream';
+	if (input.failed) return 'retry';
+	return 'placeholder';
+}
+
+function buildChannelMessagesWindowStatus(
+	phase: ChannelMessagesWindowPhase,
+	input: ChannelMessagesWindowInput,
+): ChannelMessagesWindowStatus {
+	return {
+		phase,
+		olderPageAvailable: input.hasMoreBefore,
+		newerPageAvailable: input.hasMoreAfter,
+		needsPage: phase === 'placeholder' && !input.loading,
+		retryVisible: input.failed,
+	};
+}
+
+export function resolveChannelMessagesWindowStatus(input: ChannelMessagesWindowInput): ChannelMessagesWindowStatus {
+	return buildChannelMessagesWindowStatus(getWindowPhaseFromInput(input), input);
+}
+
+export interface ChannelMessagesFillerMotionInput {
+	reducedMotion: boolean;
+	scrollManagerInitialized: boolean;
+	ready: boolean;
+}
+
+export function selectChannelMessagesFillerVisible(input: ChannelMessagesFillerMotionInput): boolean {
+	if (!input.reducedMotion) return true;
+	return input.scrollManagerInitialized || input.ready;
+}
+
+export function selectChannelMessagesSpacerHeight(status: ChannelMessagesWindowStatus, fillerHeight: number): number {
+	return status.olderPageAvailable || status.newerPageAvailable ? fillerHeight : 0;
+}
+
+export function selectChannelMessagesLoadRestoresTrust(input: {
+	mode: ChannelMessagesLoadMode;
+	isAfter: boolean;
+	hasMoreAfter: boolean;
+}): boolean {
+	if (input.mode === 'replace') return true;
+	return input.isAfter && !input.hasMoreAfter;
+}
+
+export function selectChannelMessagesWindowBar(status: ChannelMessagesWindowStatus): ChannelMessagesWindowBar {
+	if (status.phase === 'placeholder') return 'none';
+	if (status.phase === 'retry' || status.retryVisible) return 'retry';
+	return status.newerPageAvailable ? 'present' : 'none';
 }

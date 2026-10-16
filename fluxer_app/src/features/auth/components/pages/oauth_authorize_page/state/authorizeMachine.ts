@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ReviewStep = 'account' | 'scopes' | 'community' | 'permissions';
 export type AuthorizePhase =
@@ -22,9 +22,9 @@ interface AuthorizeMachineContext {
 	destinationName: string | null;
 }
 
-export const INITIAL_PHASE: AuthorizePhase = {kind: 'loading'};
+const INITIAL_PHASE: AuthorizePhase = {kind: 'loading'};
 
-export const authorizeStateMachine = setup({
+const authorizeStateMachine = setup({
 	types: {} as {
 		context: AuthorizeMachineContext;
 		events: AuthorizeEvent;
@@ -77,10 +77,10 @@ export const authorizeStateMachine = setup({
 });
 
 export type AuthorizeMachineSnapshot = SnapshotFrom<typeof authorizeStateMachine>;
-export type AuthorizeMachineStateValue = 'loading' | 'session_expired' | 'invalid_request' | 'review' | 'success';
+type AuthorizeMachineStateValue = 'loading' | 'session_expired' | 'invalid_request' | 'review' | 'success';
 
 export function createAuthorizeSnapshot(): AuthorizeMachineSnapshot {
-	return getInitialSnapshot(authorizeStateMachine);
+	return initialTransition(authorizeStateMachine)[0];
 }
 
 export function transitionAuthorizeSnapshot(
@@ -90,7 +90,7 @@ export function transitionAuthorizeSnapshot(
 	return transition(authorizeStateMachine, snapshot, event)[0] as AuthorizeMachineSnapshot;
 }
 
-export function getAuthorizeStateValue(snapshot: AuthorizeMachineSnapshot): AuthorizeMachineStateValue {
+function getAuthorizeStateValue(snapshot: AuthorizeMachineSnapshot): AuthorizeMachineStateValue {
 	switch (snapshot.value) {
 		case 'session_expired':
 		case 'invalid_request':

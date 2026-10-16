@@ -1,28 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import inboundVideoFrameStatsFixtureJson from '../../fixtures/event_logs/inbound_video_frame_stats.json';
-import inboundVideoFramesFixtureJson from '../../fixtures/event_logs/inbound_video_frames.json';
-import participantsTracksFixtureJson from '../../fixtures/event_logs/participants_tracks.json';
-import subscriptionQualityFixtureJson from '../../fixtures/event_logs/subscription_quality.json';
-import watchedStreamsFixtureJson from '../../fixtures/event_logs/watched_streams.json';
-import {translateVoiceEngineV2BridgeEventToEvents, translateVoiceEngineV2BridgeVideoFrameToEvent} from '../bridge';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
+import inboundVideoFramesFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/inbound_video_frames.json';
+import participantsTracksFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/participants_tracks.json';
+import subscriptionQualityFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/subscription_quality.json';
+import watchedStreamsFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/watched_streams.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
+import {
+	selectVoiceEngineV2ParticipantProjection,
+	selectVoiceEngineV2WatchedStreams,
+} from '@fluxer/voice_engine_v2/src/core/selectors';
+import {
+	availableVoiceEngineV2Capabilities,
+	createVoiceEngineV2InitialSnapshot,
+	type VoiceEngineV2Snapshot,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2InboundVideoTrack,
 	VoiceEngineV2Participant,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
-} from '../protocol/types';
-import {transitionVoiceEngineV2} from './reducer';
-import {selectVoiceEngineV2ParticipantProjection, selectVoiceEngineV2WatchedStreams} from './selectors';
-import {
-	availableVoiceEngineV2Capabilities,
-	createVoiceEngineV2InitialSnapshot,
-	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {describe, expect, it} from 'vitest';
 
 interface ParticipantsTracksFixtureExpected {
 	participants?: Array<VoiceEngineV2Participant>;
@@ -90,7 +91,6 @@ describe('voice engine v2 participants, subscriptions, and inbound video fixture
 		subscriptionQualityFixtureJson,
 		watchedStreamsFixtureJson,
 		inboundVideoFramesFixtureJson,
-		inboundVideoFrameStatsFixtureJson,
 	] as Array<ParticipantsTracksFixture>) {
 		it(`replays ${fixture.name}`, () => {
 			assertFixture(fixture);
@@ -136,39 +136,45 @@ describe('voice engine v2 participants, subscriptions, and inbound video fixture
 		assertFixture(fixture);
 	});
 
-	it('translates native bridge participant, track, and frame events into v2 projections', () => {
-		let snapshot = createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());
-		const bridgeEvents = translateVoiceEngineV2BridgeEventToEvents({
-			type: 'trackSubscribed',
-			payload: {
-				participantSid: 'PA_alice',
-				identity: 'alice',
-				participantName: 'Alice',
-				trackSid: 'TR_screen',
-				trackName: 'screen_share',
-				kind: 'video',
-				source: 'screen_share',
-				muted: false,
-				subscribed: true,
-				subscriptionStatus: 'subscribed',
+	it('projects a subscribed video track and its first frame into room and inbound-video state', () => {
+		const events: Array<VoiceEngineV2Event> = [
+			{
+				type: 'room.trackPublished',
+				track: {
+					participantIdentity: 'alice',
+					participantSid: 'PA_alice',
+					trackSid: 'TR_screen',
+					trackName: 'screen_share',
+					kind: 'video',
+					source: 'screen',
+					muted: false,
+				},
 			},
-		});
-		for (const event of bridgeEvents) {
-			snapshot = transitionVoiceEngineV2(snapshot, event).snapshot;
-		}
-		snapshot = transitionVoiceEngineV2(
-			snapshot,
-			translateVoiceEngineV2BridgeVideoFrameToEvent({
-				meta: {
+			{
+				type: 'inboundVideo.trackSubscribed',
+				track: {
+					participantSid: 'PA_alice',
+					participantIdentity: 'alice',
+					trackSid: 'TR_screen',
+					source: 'screen',
+				},
+			},
+			{
+				type: 'inboundVideo.frameReceived',
+				frame: {
 					participantSid: 'PA_alice',
 					trackSid: 'TR_screen',
 					width: 320,
 					height: 180,
 					timestampUs: 100,
+					byteLength: 86_400,
 				},
-				data: new ArrayBuffer(86_400),
-			}),
-		).snapshot;
+			},
+		];
+		let snapshot = createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());
+		for (const event of events) {
+			snapshot = transitionVoiceEngineV2(snapshot, event).snapshot;
+		}
 
 		expect(snapshot.room.tracks.TR_screen).toMatchObject({
 			participantIdentity: 'alice',

@@ -197,14 +197,14 @@ let localeChangeSequence = 0;
 let localLocaleOverride: string | null = null;
 
 export function getCurrentLocale(): string {
-	return UserSettings.getLocale() || DEFAULT_LOCALE;
+	return UserSettings.locale || DEFAULT_LOCALE;
 }
 
 export function getCurrentOrDetectedLocale(): string {
 	if (localLocaleOverride) {
 		return localLocaleOverride;
 	}
-	const currentLocale = UserSettings.getLocale();
+	const currentLocale = UserSettings.locale;
 	if (UserSettings.isHydrated() || currentLocale !== DEFAULT_LOCALE) {
 		return currentLocale || DEFAULT_LOCALE;
 	}
@@ -219,9 +219,6 @@ export function setLocale(localeCode: string): void {
 	}
 	const normalized = normalizeLocale(locale.code);
 	const previousLocale = normalizeLocale(getCurrentLocale());
-	if (normalized === previousLocale) {
-		return;
-	}
 	const sequence = ++localeChangeSequence;
 	void (async () => {
 		try {
@@ -230,7 +227,7 @@ export function setLocale(localeCode: string): void {
 			logger.error(`Failed to load locale ${localeCode}:`, error);
 			return;
 		}
-		if (sequence !== localeChangeSequence) {
+		if (sequence !== localeChangeSequence || normalized === previousLocale) {
 			return;
 		}
 		try {
@@ -288,7 +285,7 @@ interface DiscoveryLanguageInfo {
 	label: string;
 }
 
-export function getLocalizedLocaleName(code: string): string {
+function getLocalizedLocaleName(code: string): string {
 	const info = SUPPORTED_LOCALES.find((locale) => locale.code === code);
 	return info ? i18n._(info.name) : code;
 }
@@ -314,5 +311,5 @@ export function getSortedLocales(): Array<TranslatedLocaleInfo> {
 			...locale,
 			name: i18n._(locale.name),
 		}))
-		.sort((a, b) => a.nativeName.localeCompare(b.nativeName));
+		.sort((a, b) => a.code.localeCompare(b.code));
 }

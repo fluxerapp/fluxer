@@ -11,6 +11,7 @@ import {
 	Int32Type,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {HostnameType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {z} from 'zod';
 
 const ConnectionTypeSchema = withOpenApiType(
@@ -62,7 +63,7 @@ export type VerifyAndCreateConnectionRequest = z.infer<typeof VerifyAndCreateCon
 
 export const CreateConnectionRequest = z.object({
 	type: ConnectionTypeSchema.describe('The type of connection to create'),
-	identifier: z.string().min(1).max(253).describe('The connection identifier (handle or domain)'),
+	identifier: HostnameType.describe('The connection identifier (handle or domain)'),
 	visibility_flags: Int32Type.optional().describe('Bitfield controlling who can see this connection'),
 });
 

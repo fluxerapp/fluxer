@@ -20,11 +20,15 @@ const HarvestStatusEnum = withOpenApiType(
 	),
 	'HarvestStatus',
 );
+export type HarvestStatus = z.infer<typeof HarvestStatusEnum>;
+
 export const HarvestCreationResponseSchema = z.object({
 	harvest_id: SnowflakeStringType.describe('Unique identifier for the harvest request'),
 	status: HarvestStatusEnum,
 	created_at: z.string().describe('ISO 8601 timestamp when the harvest request was created'),
 });
+export type HarvestCreationResponse = z.infer<typeof HarvestCreationResponseSchema>;
+
 export const HarvestStatusResponseSchema = HarvestCreationResponseSchema.extend({
 	started_at: z.string().nullable().describe('ISO 8601 timestamp when the harvest started, or null if pending'),
 	completed_at: z.string().nullable().describe('ISO 8601 timestamp when the harvest completed, or null otherwise'),
@@ -49,8 +53,14 @@ export type HarvestStatusResponse = z.infer<typeof HarvestStatusResponseSchema>;
 
 export const HarvestStatusResponseSchemaNullable = HarvestStatusResponseSchema.nullable();
 export const HarvestDownloadUrlResponse = z.object({
-	download_url: createStringType(1, 2048).describe('The presigned URL to download the harvest archive'),
+	download_url: createStringType(1, 2048).describe('The temporary URL to download the harvest archive'),
 	expires_at: z.string().describe('ISO 8601 timestamp when the harvest download expires'),
 });
 
 export type HarvestDownloadUrlResponse = z.infer<typeof HarvestDownloadUrlResponse>;
+
+export const HarvestDownloadQuery = z.object({
+	token: createStringType(1, 2048).describe('The signed download token from the harvest download URL'),
+});
+
+export const HarvestArchiveResponse = z.file().describe('The ZIP archive containing the requested user data');

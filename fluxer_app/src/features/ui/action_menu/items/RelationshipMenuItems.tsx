@@ -51,7 +51,7 @@ interface SendFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const SendFriendRequestMenuItem: React.FC<SendFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const SendFriendRequestMenuItem: React.FC<SendFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const relationshipType = Relationships.getRelationship(user.id)?.type;
 	const [submitting, setSubmitting] = useState(false);
@@ -123,7 +123,7 @@ interface AcceptFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const AcceptFriendRequestMenuItem: React.FC<AcceptFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const AcceptFriendRequestMenuItem: React.FC<AcceptFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleAcceptFriendRequest = useCallback(
 		(event?: {shiftKey?: boolean}) => {
@@ -231,7 +231,7 @@ interface IgnoreFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const IgnoreFriendRequestMenuItem: React.FC<IgnoreFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const IgnoreFriendRequestMenuItem: React.FC<IgnoreFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleIgnoreFriendRequest = useCallback(() => {
 		onClose();
@@ -258,7 +258,7 @@ interface CancelFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const CancelFriendRequestMenuItem: React.FC<CancelFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const CancelFriendRequestMenuItem: React.FC<CancelFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleCancelFriendRequest = useCallback(() => {
 		onClose();

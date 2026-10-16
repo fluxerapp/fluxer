@@ -11,8 +11,8 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import {isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {Trans} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
@@ -22,7 +22,11 @@ interface EmojiPickerInspectorProps {
 
 export const EmojiPickerInspector = observer(({hoveredEmoji}: EmojiPickerInspectorProps) => {
 	const skinTone = Emoji.skinTone;
-	const shouldAnimateEmoji = useShouldAnimate({kind: 'emoji', isHovering: Boolean(hoveredEmoji)});
+	const shouldAnimateEmoji = useShouldAnimate({
+		kind: 'emoji',
+		isAnimated: Boolean(hoveredEmoji?.animated),
+		isHovering: Boolean(hoveredEmoji),
+	});
 	const getEmojiForDisplay = (
 		emoji: FlatEmoji | null,
 	): {useImg: boolean; url?: string; style?: React.CSSProperties} | null => {
@@ -30,7 +34,13 @@ export const EmojiPickerInspector = observer(({hoveredEmoji}: EmojiPickerInspect
 		if (emoji.guildId || emoji.id) {
 			return {
 				url: emoji.id
-					? AvatarUtils.getEmojiURL({id: emoji.id, animated: Boolean(emoji.animated) && shouldAnimateEmoji})
+					? (getEmojiRenderUrl({
+							id: emoji.id,
+							surrogateUrl: null,
+							isAnimatable: Boolean(emoji.animated),
+							animated: shouldAnimateEmoji,
+							jumbo: false,
+						}) ?? '')
 					: (emoji.url ?? ''),
 				useImg: true,
 			};
@@ -42,16 +52,14 @@ export const EmojiPickerInspector = observer(({hoveredEmoji}: EmojiPickerInspect
 			const {url} = getEmojiDisplayDataWithSkinTone(emoji, skinTone);
 			if (url) return {url, useImg: true};
 		}
-		const hasDiversity = emoji.hasDiversity && skinTone;
-		const index = hasDiversity ? emoji.diversityIndex : emoji.index;
+		const hasSkinTones = emoji.hasSkinTones && skinTone;
+		const index = hasSkinTones ? emoji.skinToneIndex : emoji.index;
 		if (index === undefined) return {url: emoji.url, useImg: true};
-		const perRow = hasDiversity ? EMOJI_SPRITES.DiversityPerRow : EMOJI_SPRITES.NonDiversityPerRow;
-		const rows = Math.ceil(
-			(hasDiversity ? UnicodeEmojis.numDiversitySprites : UnicodeEmojis.numNonDiversitySprites) / perRow,
-		);
+		const perRow = hasSkinTones ? EMOJI_SPRITES.SkinTonePerRow : EMOJI_SPRITES.BasePerRow;
+		const rows = Math.ceil((hasSkinTones ? UnicodeEmojis.skinToneSpriteCount : UnicodeEmojis.baseSpriteCount) / perRow);
 		return {
 			style: {
-				backgroundImage: getSpriteSheetBackground(hasDiversity ? skinTone : ''),
+				backgroundImage: getSpriteSheetBackground(hasSkinTones ? skinTone : ''),
 				...getEmojiSpriteSheetLayout(index, perRow, rows),
 			},
 			useImg: false,

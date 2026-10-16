@@ -1,0 +1,37 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 2.25rem;
+	padding: 0.25rem 0.5rem;
+	background: var(--background-secondary-lighter);
+}
+
+.rowDismissible {
+	padding-right: 2.5rem;
+}
+
+.rowMobile {
+	min-height: 3rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+}
+
+.rowMobileWithActions {
+	flex-direction: column;
+	min-height: 4.625rem;
+	gap: 0.5rem;
+}
+
+.tinted {
+	background-color: currentcolor;
+}

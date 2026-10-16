@@ -13,20 +13,16 @@ const YOU_RE_SENDING_MESSAGES_TOO_QUICKLY_DESCRIPTOR = msg({
 interface MessageSendTooQuickModalProps {
 	retryAfter?: number;
 	onRetry?: () => void;
-	hideCloseButton?: boolean;
 }
 
-export const MessageSendTooQuickModal = observer(
-	({retryAfter, onRetry, hideCloseButton}: MessageSendTooQuickModalProps) => {
-		const {i18n} = useLingui();
-		return (
-			<RateLimitedConfirmModal
-				title={i18n._(YOU_RE_SENDING_MESSAGES_TOO_QUICKLY_DESCRIPTOR)}
-				retryAfter={retryAfter}
-				onRetry={onRetry}
-				hideCloseButton={hideCloseButton}
-				data-flx="messaging.message-send-too-quick-modal.rate-limited-confirm-modal"
-			/>
-		);
-	},
-);
+export const MessageSendTooQuickModal = observer(({retryAfter, onRetry}: MessageSendTooQuickModalProps) => {
+	const {i18n} = useLingui();
+	return (
+		<RateLimitedConfirmModal
+			title={i18n._(YOU_RE_SENDING_MESSAGES_TOO_QUICKLY_DESCRIPTOR)}
+			retryAfter={retryAfter}
+			onRetry={onRetry}
+			data-flx="messaging.message-send-too-quick-modal.rate-limited-confirm-modal"
+		/>
+	);
+});

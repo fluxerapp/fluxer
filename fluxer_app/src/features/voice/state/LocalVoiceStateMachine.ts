@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {normalizeVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface LocalVoiceConnectionState {
 	selfMute: boolean;
@@ -15,9 +15,9 @@ export interface LocalVoiceConnectionState {
 	shouldUnmuteOnUndeafen: boolean;
 }
 
-export type LocalVoiceStateSeed = Partial<LocalVoiceConnectionState>;
+type LocalVoiceStateSeed = Partial<LocalVoiceConnectionState>;
 
-export interface LocalVoicePersistedDefaults {
+interface LocalVoicePersistedDefaults {
 	selfMute: boolean;
 	selfDeaf: boolean;
 	hasUserSetMute: boolean;
@@ -462,7 +462,7 @@ function resetPreferences(context: LocalVoiceStateContext): LocalVoiceStateConte
 	};
 }
 
-export const localVoiceStateMachine = setup({
+const localVoiceStateMachine = setup({
 	types: {} as {
 		context: LocalVoiceStateContext;
 		events: LocalVoiceStateEvent;
@@ -593,7 +593,7 @@ export const localVoiceStateMachine = setup({
 export type LocalVoiceStateSnapshot = SnapshotFrom<typeof localVoiceStateMachine>;
 
 export function createLocalVoiceStateSnapshot(input: LocalVoiceStateInput): LocalVoiceStateSnapshot {
-	return getInitialSnapshot(localVoiceStateMachine, input);
+	return initialTransition(localVoiceStateMachine, input)[0];
 }
 
 export function transitionLocalVoiceStateSnapshot(
@@ -601,15 +601,4 @@ export function transitionLocalVoiceStateSnapshot(
 	event: LocalVoiceStateEvent,
 ): LocalVoiceStateSnapshot {
 	return transition(localVoiceStateMachine, snapshot, event)[0] as LocalVoiceStateSnapshot;
-}
-
-export function getActiveLocalVoiceState(
-	snapshot: LocalVoiceStateSnapshot,
-	activeConnectionId: string | null,
-): LocalVoiceConnectionState {
-	return cloneState(getActiveStateForRead(snapshot.context, activeConnectionId));
-}
-
-export function hasLocalVoiceConnectionState(snapshot: LocalVoiceStateSnapshot, connectionId: string | null): boolean {
-	return connectionId ? snapshot.context.connections[connectionId] !== undefined : false;
 }

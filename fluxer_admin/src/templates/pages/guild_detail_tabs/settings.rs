@@ -28,16 +28,25 @@ const DISABLED_OPERATIONS: &[(&str, i32)] = &[
     ("MEMBER_LIST_UPDATES", 1 << 6),
 ];
 
+fn low_verification_label(username_sign_in: bool) -> &'static str {
+    if username_sign_in {
+        "Low (claimed account)"
+    } else {
+        "Low (verified email)"
+    }
+}
+
 pub fn settings_tab(
     config: &AdminConfig,
     guild: &GuildDetailInfo,
     csrf_token: &str,
     admin_acls: &[String],
+    username_sign_in: bool,
 ) -> Markup {
     let can_edit = acl::has_permission(admin_acls, acl::GUILD_UPDATE_SETTINGS);
 
     if !can_edit {
-        return settings_tab_readonly(guild);
+        return settings_tab_readonly(guild, username_sign_in);
     }
 
     let base = &config.base_path;
@@ -52,13 +61,12 @@ pub fn settings_tab(
                             "guild-verification-level",
                             "verification_level",
                             "Verification Level",
-                            guild.verification_level.unwrap_or(0),
+                            guild.verification_level.unwrap_or(0).min(3),
                             &[
                                 (0, "None"),
-                                (1, "Low (verified email)"),
+                                (1, low_verification_label(username_sign_in)),
                                 (2, "Medium (5+ minutes)"),
                                 (3, "High (10+ minutes)"),
-                                (4, "Very High (verified phone)"),
                             ],
                         ))
                         (select_field(
@@ -224,13 +232,12 @@ fn select_field(
     }
 }
 
-fn settings_tab_readonly(guild: &GuildDetailInfo) -> Markup {
-    let verification_label = match guild.verification_level.unwrap_or(0) {
+fn settings_tab_readonly(guild: &GuildDetailInfo, username_sign_in: bool) -> Markup {
+    let verification_label = match guild.verification_level.unwrap_or(0).min(3) {
         0 => "None",
-        1 => "Low (verified email)",
+        1 => low_verification_label(username_sign_in),
         2 => "Medium (5+ minutes)",
         3 => "High (10+ minutes)",
-        4 => "Very High (verified phone)",
         _ => "Unknown",
     };
     let mfa_label = match guild.mfa_level.unwrap_or(0) {

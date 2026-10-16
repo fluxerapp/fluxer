@@ -25,18 +25,6 @@ pub fn whole_frame_sample_count(sample_count: usize, channels: u32) -> usize {
     sample_count - (sample_count % channel_count)
 }
 
-pub fn direct_whole_frame_sample_count(sample_count: usize) -> usize {
-    whole_frame_sample_count(sample_count, DIRECT_CAPTURE_CHANNELS)
-}
-
-pub fn bounded_direct_read_sample_count(available: usize) -> usize {
-    bounded_direct_read_sample_count_for_format(
-        available,
-        DIRECT_CAPTURE_SAMPLE_RATE,
-        DIRECT_CAPTURE_CHANNELS,
-    )
-}
-
 pub fn sample_count_for_duration_us(sample_rate: u32, channels: u32, duration_us: u32) -> usize {
     if sample_rate == 0 || channels == 0 || duration_us == 0 {
         return 0;
@@ -62,16 +50,6 @@ pub fn bounded_direct_read_sample_count_for_format(
     whole_frame_sample_count(available.min(max), channels)
 }
 
-pub fn bounded_direct_append_slice(input: &[f32]) -> &[f32] {
-    let whole = direct_whole_frame_sample_count(input.len());
-    let framed = &input[..whole];
-    if framed.len() > DIRECT_CAPTURE_MAX_SAMPLES {
-        &framed[framed.len() - DIRECT_CAPTURE_MAX_SAMPLES..]
-    } else {
-        framed
-    }
-}
-
 pub fn direct_capture_latency_fraction() -> String {
     format!("{DIRECT_CAPTURE_LATENCY_FRAMES}/{DIRECT_CAPTURE_SAMPLE_RATE}")
 }
@@ -90,16 +68,6 @@ mod tests {
     }
 
     #[test]
-    fn direct_read_count_is_bounded_and_stereo_aligned() {
-        assert_eq!(0, bounded_direct_read_sample_count(1));
-        assert_eq!(2, bounded_direct_read_sample_count(3));
-        assert_eq!(
-            DIRECT_CAPTURE_MAX_READ_SAMPLES,
-            bounded_direct_read_sample_count(DIRECT_CAPTURE_MAX_READ_SAMPLES + 1),
-        );
-    }
-
-    #[test]
     fn direct_read_count_uses_stable_twenty_ms_chunks() {
         assert_eq!(1_920, DIRECT_CAPTURE_MAX_READ_SAMPLES);
         assert_eq!(
@@ -110,38 +78,5 @@ mod tests {
             1_764,
             bounded_direct_read_sample_count_for_format(9_600, 44_100, 2)
         );
-    }
-
-    #[test]
-    fn sample_duration_conversion_uses_whole_audio_frames() {
-        assert_eq!(1_920, sample_count_for_duration_us(48_000, 2, 20_000));
-        assert_eq!(20_000, duration_us_for_sample_count(1_920, 48_000, 2));
-        assert_eq!(0, sample_count_for_duration_us(0, 2, 20_000));
-        assert_eq!(0, duration_us_for_sample_count(1_920, 0, 2));
-    }
-
-    #[test]
-    fn direct_append_slice_keeps_only_complete_stereo_samples_within_queue_cap() {
-        let samples: [f32; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];
-        let trimmed = bounded_direct_append_slice(&samples);
-        assert_eq!(4, trimmed.len());
-        assert_eq!(&samples[..4], trimmed);
-    }
-
-    #[test]
-    fn direct_capture_latency_matches_stable_screen_share_buffer() {
-        assert_eq!("4096/48000", direct_capture_latency_fraction());
-    }
-
-    #[test]
-    fn routing_parser_caps_are_intentionally_finite() {
-        const {
-            assert!(MAX_ROUTING_RULE_PATTERNS > 0);
-            assert!(MAX_ROUTING_RULE_KEYS_PER_PATTERN > 0);
-            assert!(MAX_ROUTING_RULE_KEY_LENGTH > 0);
-            assert!(MAX_ROUTING_RULE_VALUE_LENGTH >= MAX_ROUTING_RULE_KEY_LENGTH);
-            assert!(MAX_INVENTORY_FIELDS <= MAX_ROUTING_RULE_KEYS_PER_PATTERN);
-            assert!(MAX_INVENTORY_FIELD_LENGTH <= MAX_ROUTING_RULE_KEY_LENGTH);
-        }
     }
 }

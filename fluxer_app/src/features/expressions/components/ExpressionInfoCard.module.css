@@ -1,0 +1,217 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.card {
+	--expression-info-card-surface: var(--settings-surface-background, var(--form-surface-background));
+	--expression-info-card-border: var(--settings-border-color, var(--background-modifier-accent));
+	--expression-info-card-band: color-mix(in srgb, var(--text-primary) 4%, transparent);
+	--expression-info-card-row-hover: color-mix(in srgb, var(--text-primary) 8%, transparent);
+	--expression-info-card-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.22);
+	display: flex;
+	flex-direction: column;
+	width: 20rem;
+	max-width: 20rem;
+	overflow: hidden;
+	background: var(--expression-info-card-surface);
+	color: var(--text-primary);
+	border: 0.0625rem solid var(--expression-info-card-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--expression-info-card-shadow);
+}
+
+:global(.theme-light) .card {
+	--expression-info-card-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.12);
+}
+
+.summarySection {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 0.875rem;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.preview {
+	display: block;
+	width: 3rem;
+	height: 3rem;
+	min-width: 3rem;
+	min-height: 3rem;
+	flex-shrink: 0;
+	object-fit: contain;
+}
+
+.summaryText {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.name {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.25;
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.description {
+	font-size: 0.8125rem;
+	font-weight: 400;
+	line-height: 1.4;
+	color: var(--text-secondary);
+}
+
+.guildSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.75rem 0.875rem;
+	background: var(--expression-info-card-band);
+	border-top: 0.0625rem solid var(--expression-info-card-border);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.guildLabel {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: 0.03125rem;
+	text-transform: uppercase;
+	color: var(--text-primary-muted);
+}
+
+.guildRow {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	min-width: 0;
+}
+
+.guildRowButton {
+	width: calc(100% + 0.5rem);
+	padding: 0.25rem;
+	margin: -0.25rem;
+	background: none;
+	border: none;
+	border-radius: var(--radius-md);
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.guildInfo {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.guildNameRow {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.guildName {
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25;
+	color: var(--text-primary);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.guildSubtitle {
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1.25;
+	color: var(--text-primary-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.guildSectionPlaceholder {
+	pointer-events: none;
+}
+
+.guildRowUnavailable {
+	min-height: 2.5rem;
+}
+
+.guildUnavailableText {
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1.25;
+	color: var(--text-primary-muted);
+}
+
+.guildIconPlaceholder {
+	display: block;
+	width: 2.5rem;
+	height: 2.5rem;
+	min-width: 2.5rem;
+	min-height: 2.5rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background: var(--expression-info-card-row-hover);
+}
+
+.joinConfirm {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	text-align: center;
+}
+
+.joinConfirmHeading {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.joinConfirmNameRow {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	justify-content: center;
+	gap: 0.375rem;
+}
+
+.joinConfirmName {
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.25;
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.joinConfirmSubtitle {
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1.25;
+	color: var(--text-primary-muted);
+}
+
+.joinConfirmText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	font-size: 0.875rem;
+	line-height: 1.4;
+	color: var(--text-primary-muted);
+}
+
+.joinConfirmQuestion {
+	color: var(--text-primary);
+}

@@ -13,7 +13,11 @@
     handle_reload/2
 ]).
 
+-define(MAX_RELOAD_REUSE_WARN_MEMBERS, 100000).
+
 -type guild_state() :: map().
+-type user_id() :: integer().
+-type member() :: map().
 
 -export_type([guild_state/0]).
 
@@ -23,7 +27,8 @@ init_base_state(GuildState) ->
     Data0 = maps:get(data, TransferSafe, #{}),
     ExistingVoice = maps:get(voice_states, TransferSafe, #{}),
     {VoiceStates, Data1} = extract_voice_states_from_data(Data0, ExistingVoice),
-    NormalizedData = guild_data_index:normalize_data(Data1),
+    {ThreadExtras, Data2} = guild_thread_load:take_extras(Data1),
+    NormalizedData = guild_data_index:normalize_map(Data2),
     MemberTab = ets:new(guild_members_data, [set, public, {read_concurrency, true}]),
     populate_member_ets(MemberTab, NormalizedData),
     BaseState = TransferSafe#{
@@ -35,9 +40,20 @@ init_base_state(GuildState) ->
         member_presence => ets:new(member_presence, [set, public]),
         connected_user_ids => sets:new(),
         user_session_counts => #{},
+        guild_session_refs => guild_sessions_connect:build_session_ref_index(
+            maps:get(sessions, TransferSafe, #{})
+        ),
         viewable_channels_cache => ets:new(viewable_channels_cache, [set, public])
     },
-    guild_handoff:restore_transferred_session_state(BaseState).
+    guild_thread_flip:converge(
+        guild_thread_subscriptions:restore_handoff(
+            guild_thread_flip:restore_handoff(
+                guild_handoff:restore_transferred_session_state(
+                    guild_thread_load:install(ThreadExtras, BaseState)
+                )
+            )
+        )
+    ).
 
 -spec populate_member_ets(ets:table(), map()) -> ok.
 populate_member_ets(Tab, Data) ->
@@ -58,12 +74,12 @@ init_member_list(State) ->
     Data = maps:get(data, State, #{}),
     case guild_id(State) of
         GuildId when is_integer(GuildId), GuildId > 0 ->
-            NifRef = guild_member_list_store:new(GuildId),
+            NifRef = guild_member_list_engine:new(),
             Roles = map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
-            MemberMap = guild_data_index:member_map(Data),
+            MemberMap = guild_data_index_members:member_map(Data),
             MemberTuples = guild_member_list_store:prepare_member_tuples(MemberMap, State),
             HoistedRoleIds = guild_member_list_store:prepare_hoisted_role_ids(Roles, GuildId),
-            ok = guild_member_list_store:bulk_load(NifRef, MemberTuples, HoistedRoleIds),
+            ok = guild_member_list_engine:bulk_load(NifRef, MemberTuples, HoistedRoleIds),
             State#{member_list_engine => NifRef};
         _ ->
             State
@@ -75,10 +91,10 @@ init_counts(State) ->
     MemberCount =
         case maps:get(member_count, State, undefined) of
             N when is_integer(N), N >= 0 -> N;
-            _ -> guild_data_index:member_count(Data)
+            _ -> guild_data_index_members:member_count(Data)
         end,
     State1 = State#{member_count => MemberCount},
-    OnlineCount = guild_member_list:get_online_count(State1),
+    OnlineCount = guild_member_list_read:get_online_count(State1),
     State2 = State1#{online_count => OnlineCount},
     PublicOnlineCount = guild_public_online:compute_count(State2),
     State2#{public_online_count => PublicOnlineCount}.
@@ -122,8 +138,18 @@ handle_reload(NewData, State) ->
     {ReloadVoiceStates, ReloadData} = extract_voice_states_from_data(
         NewData, ExistingVoiceStates
     ),
-    NormalizedNewData = guild_data_index:normalize_data(ReloadData),
-    NewState0 = State#{voice_states => ReloadVoiceStates, data => NormalizedNewData},
+    {ThreadExtras, ReloadData1} = guild_thread_load:take_extras(ReloadData),
+    NormalizedNewData0 = guild_data_index:normalize_map(ReloadData1),
+    NormalizedNewData = reuse_members_table(OldData, NormalizedNewData0),
+    NewState0 = guild_member_list_engine_inputs:forget_all(
+        guild_thread_flip:converge(
+            guild_thread_flip:reinstall(
+                ThreadExtras, State, State#{
+                    voice_states => ReloadVoiceStates, data => NormalizedNewData
+                }
+            )
+        )
+    ),
     NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
     NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),
     GuildId = maps:get(id, State),
@@ -138,6 +164,89 @@ handle_reload(NewData, State) ->
     ),
     ok = guild_maintenance:maybe_put_permission_cache(NewState),
     {reply, ok, NewState}.
+
+-spec reuse_members_table(term(), term()) -> term().
+reuse_members_table(OldData, NewData) when is_map(OldData), is_map(NewData) ->
+    reuse_healthy_members_table(OldData, NewData);
+reuse_members_table(_OldData, NewData) ->
+    NewData.
+
+-spec reuse_healthy_members_table(map(), map()) -> map().
+reuse_healthy_members_table(OldData, NewData) ->
+    case members_ets_table(OldData) of
+        Tab when is_reference(Tab) -> reuse_live_members_table(Tab, OldData, NewData);
+        undefined -> maps:remove(members_ets, NewData)
+    end.
+
+-spec members_ets_table(map()) -> ets:tid() | undefined.
+members_ets_table(#{members_ets := Tab}) ->
+    Tab;
+members_ets_table(_Data) ->
+    undefined.
+
+-spec reuse_live_members_table(ets:tid(), map(), map()) -> map().
+reuse_live_members_table(Tab, OldData, NewData) ->
+    case guild_members_table_repair:members_table_healthy(Tab) of
+        true -> apply_members_table_delta(Tab, OldData, NewData);
+        false -> maps:remove(members_ets, NewData)
+    end.
+
+-spec apply_members_table_delta(ets:tid(), map(), map()) -> map().
+apply_members_table_delta(Tab, OldData, NewData) ->
+    OldMap = guild_data_index_members:member_map(OldData),
+    NewMap = guild_data_index_members:member_map(NewData),
+    maybe_warn_large_reuse(map_size(NewMap)),
+    try
+        ok = insert_changed_members(Tab, OldMap, NewMap),
+        ok = delete_removed_members(Tab, OldMap, NewMap),
+        NewData#{members_ets => Tab}
+    catch
+        error:badarg ->
+            logger:warning(
+                "guild_reload_members_table_carry_failed: members=~p", [map_size(NewMap)]
+            ),
+            maps:remove(members_ets, NewData)
+    end.
+
+-spec insert_changed_members(ets:tid(), map(), map()) -> ok.
+insert_changed_members(Tab, OldMap, NewMap) ->
+    maps:foreach(
+        fun(UserId, Member) -> insert_changed_member(Tab, OldMap, UserId, Member) end,
+        NewMap
+    ).
+
+-spec insert_changed_member(ets:tid(), map(), user_id(), member()) -> ok.
+insert_changed_member(Tab, OldMap, UserId, Member) ->
+    case maps:get(UserId, OldMap, undefined) of
+        Member -> ok;
+        _ -> insert_member_row(Tab, UserId, Member)
+    end.
+
+-spec insert_member_row(ets:tid(), user_id(), member()) -> ok.
+insert_member_row(Tab, UserId, Member) ->
+    true = ets:insert(Tab, {UserId, Member}),
+    ok.
+
+-spec delete_removed_members(ets:tid(), map(), map()) -> ok.
+delete_removed_members(Tab, OldMap, NewMap) ->
+    OldIds = sets:from_list(maps:keys(OldMap)),
+    NewIds = sets:from_list(maps:keys(NewMap)),
+    RemovedIds = sets:to_list(sets:subtract(OldIds, NewIds)),
+    lists:foreach(fun(UserId) -> delete_member_row(Tab, UserId) end, RemovedIds).
+
+-spec delete_member_row(ets:tid(), user_id()) -> ok.
+delete_member_row(Tab, UserId) ->
+    true = ets:delete(Tab, UserId),
+    ok.
+
+-spec maybe_warn_large_reuse(non_neg_integer()) -> ok.
+maybe_warn_large_reuse(Size) when Size > ?MAX_RELOAD_REUSE_WARN_MEMBERS ->
+    logger:warning(
+        "guild_reload_members_table_carry_large: members=~p threshold=~p",
+        [Size, ?MAX_RELOAD_REUSE_WARN_MEMBERS]
+    );
+maybe_warn_large_reuse(_Size) ->
+    ok.
 
 -spec collect_active_pid(term(), map(), [pid()]) -> [pid()].
 collect_active_pid(_Sid, S, Acc) ->
@@ -168,3 +277,92 @@ maybe_index_voice_state(_, Acc) ->
 -spec guild_id(guild_state()) -> integer() | undefined.
 guild_id(State) ->
     snowflake_id:parse_optional(maps:get(id, State, undefined)).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+reuse_members_table_keeps_healthy_tid_test() ->
+    Tab = ets:new(reuse_members, [set, public]),
+    try
+        OldMap = #{1 => reuse_member(1), 2 => reuse_member(2)},
+        NewMap = #{1 => reuse_member(1), 3 => reuse_member(3)},
+        seed_reuse_table(Tab, OldMap),
+        OldData = reuse_data(OldMap, Tab),
+        Reused = reuse_members_table(OldData, reuse_data(NewMap, undefined)),
+        ?assertEqual(Tab, maps:get(members_ets, Reused)),
+        ?assertEqual([1, 3], reuse_table_ids(Tab))
+    after
+        ets:delete(Tab)
+    end.
+
+reuse_members_table_skips_dead_tid_test() ->
+    Tab = ets:new(dead_reuse_members, [set, public]),
+    true = ets:delete(Tab),
+    OldData = reuse_data(#{1 => reuse_member(1)}, Tab),
+    NewData = reuse_data(#{1 => reuse_member(1)}, undefined),
+    ?assertEqual(NewData, reuse_members_table(OldData, NewData)).
+
+reuse_members_table_without_old_tid_leaves_new_data_test() ->
+    OldData = reuse_data(#{1 => reuse_member(1)}, undefined),
+    NewData = reuse_data(#{2 => reuse_member(2)}, undefined),
+    ?assertEqual(NewData, reuse_members_table(OldData, NewData)).
+
+reuse_members_table_delta_failure_falls_back_to_new_data_test() ->
+    Tab = ets:new(failing_members, [set, public]),
+    true = ets:delete(Tab),
+    OldData = reuse_data(#{}, undefined),
+    NewData = reuse_data(#{1 => reuse_member(1)}, undefined),
+    ?assertEqual(NewData, apply_members_table_delta(Tab, OldData, NewData)).
+
+reuse_delta_never_empties_table_test() ->
+    Tab = ets:new(delta_members, [set, public]),
+    try
+        OldMap = #{1 => reuse_member(1), 2 => reuse_member(2), 3 => reuse_member(3)},
+        NewMap = #{
+            1 => reuse_member(1),
+            2 => reuse_member(2, <<"changed">>),
+            4 => reuse_member(4)
+        },
+        seed_reuse_table(Tab, OldMap),
+        ?assertEqual(3, ets:info(Tab, size)),
+        ok = insert_changed_members(Tab, OldMap, NewMap),
+        ?assertEqual(4, ets:info(Tab, size)),
+        ?assertEqual([{1, reuse_member(1)}], ets:lookup(Tab, 1)),
+        ok = delete_removed_members(Tab, OldMap, NewMap),
+        ?assertEqual(3, ets:info(Tab, size)),
+        ?assertEqual([{1, reuse_member(1)}], ets:lookup(Tab, 1)),
+        ?assertEqual([1, 2, 4], reuse_table_ids(Tab)),
+        ?assertEqual([{2, reuse_member(2, <<"changed">>)}], ets:lookup(Tab, 2))
+    after
+        ets:delete(Tab)
+    end.
+
+reuse_delta_skips_unchanged_members_test() ->
+    Tab = ets:new(unchanged_members, [set, public]),
+    try
+        MemberMap = #{1 => reuse_member(1)},
+        true = ets:insert(Tab, {1, sentinel}),
+        ok = insert_changed_members(Tab, MemberMap, MemberMap),
+        ?assertEqual([{1, sentinel}], ets:tab2list(Tab))
+    after
+        ets:delete(Tab)
+    end.
+
+reuse_data(MemberMap, undefined) ->
+    #{<<"members">> => MemberMap, members_normalized => MemberMap};
+reuse_data(MemberMap, Tab) ->
+    #{<<"members">> => MemberMap, members_normalized => MemberMap, members_ets => Tab}.
+
+seed_reuse_table(Tab, MemberMap) ->
+    maps:foreach(fun(UserId, Member) -> ets:insert(Tab, {UserId, Member}) end, MemberMap).
+
+reuse_member(UserId) ->
+    #{<<"user">> => #{<<"id">> => UserId}}.
+
+reuse_table_ids(Tab) ->
+    lists:sort([Id || {Id, _} <- ets:tab2list(Tab)]).
+
+reuse_member(UserId, Nick) ->
+    #{<<"user">> => #{<<"id">> => UserId}, <<"nick">> => Nick}.
+
+-endif.

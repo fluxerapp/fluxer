@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {useFrozenUnreadOrder} from '@app/features/app/components/floating/UnreadChannelOrder';
 import styles from '@app/features/app/components/floating/UnreadChannelsContent.module.css';
+import {
+	BULK_PREVIEW_CHANNEL_BATCH_SIZE,
+	UNREAD_PREVIEW_MESSAGE_LIMIT,
+} from '@app/features/app/components/floating/UnreadPreviewBudget';
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {renderChannelStream} from '@app/features/channel/components/ChannelMessageStream';
@@ -22,12 +27,14 @@ import {ensureMembersForMessages} from '@app/features/messaging/commands/Message
 import {InboxMessageHeader} from '@app/features/messaging/components/popouts/InboxMessageHeader';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import {createChannelStream} from '@app/features/messaging/utils/MessageGroupingUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import UnreadChannels from '@app/features/notification/state/UnreadChannels';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {http} from '@app/features/platform/transport/RestTransport';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -38,6 +45,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {compare as compareSnowflakes, extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -50,7 +58,7 @@ import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const MENTIONS_DESCRIPTOR = msg({
-	message: '{channelHeading}, {mentionCount} mentions',
+	message: '{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}',
 	comment:
 		'Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.',
 });
@@ -88,6 +96,10 @@ const YOU_RE_ALL_CAUGHT_UP_DESCRIPTOR = msg({
 });
 
 export function getUnreadChannels(): Array<Channel> {
+	return getMarkableUnreadChannels().filter((channel) => !channel.isThreadOnly());
+}
+
+export function getMarkableUnreadChannels(): Array<Channel> {
 	const channelIds = ReadStates.getChannelIds();
 	const channels: Array<Channel> = [];
 	for (const channelId of channelIds) {
@@ -129,8 +141,29 @@ interface ChannelPreviewData {
 
 const INITIAL_VISIBLE_CHANNELS = 10;
 const LOAD_MORE_CHUNK = 10;
-const UNREAD_PREVIEW_MESSAGE_LIMIT = 5;
-const BULK_PREVIEW_CHANNEL_BATCH_SIZE = 10;
+
+interface FrozenUnreadCounts {
+	mentionCount: number;
+	unreadCount: number;
+}
+
+interface FrozenUnreadChannels {
+	order: Map<string, number>;
+	counts: Map<string, FrozenUnreadCounts>;
+}
+
+function freezeUnreadChannels(): FrozenUnreadChannels {
+	const order = new Map<string, number>();
+	const counts = new Map<string, FrozenUnreadCounts>();
+	for (const [index, channel] of getUnreadChannels().entries()) {
+		order.set(channel.id, index);
+		counts.set(channel.id, {
+			mentionCount: ReadStates.getMentionCount(channel.id),
+			unreadCount: ReadStates.getUnreadCount(channel.id),
+		});
+	}
+	return {order, counts};
+}
 
 interface CacheEntry {
 	cacheKey: string;
@@ -139,6 +172,11 @@ interface CacheEntry {
 
 const previewCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<void>>();
+
+AccountScopedWork.registerCancellation(() => {
+	previewCache.clear();
+	inFlightRequests.clear();
+});
 
 interface BulkPreviewRequest {
 	channel_id: string;
@@ -193,8 +231,15 @@ function buildPreviewFetchPlan(channel: Channel, cacheKey: string): PreviewFetch
 	}
 	const ackMessageId = ReadStates.ackMessageId(channel.id);
 	if (!ackMessageId) {
-		previewCache.set(channel.id, {cacheKey, data: buildEmptyPreview(channel)});
-		return null;
+		return {
+			channel,
+			cacheKey,
+			oldestUnreadMessageId: null,
+			request: {
+				channel_id: channel.id,
+				limit: UNREAD_PREVIEW_MESSAGE_LIMIT,
+			},
+		};
 	}
 	return {
 		channel,
@@ -223,13 +268,13 @@ function buildPreviewDataFromMessages(
 				oldestUnreadMessageId: plan.oldestUnreadMessageId,
 			};
 		}
-		return buildEmptyPreview(plan.channel);
 	}
 	const sorted = [...records].sort((a, b) => compareSnowflakes(a.id, b.id));
+	const latest = sorted.slice(Math.max(0, sorted.length - UNREAD_PREVIEW_MESSAGE_LIMIT));
 	return {
 		channel: plan.channel,
-		messages: sorted.slice(0, UNREAD_PREVIEW_MESSAGE_LIMIT),
-		oldestUnreadMessageId: sorted[0]?.id ?? null,
+		messages: latest,
+		oldestUnreadMessageId: latest[0]?.id ?? null,
 	};
 }
 
@@ -239,11 +284,35 @@ async function fetchPreviewBatch(plans: Array<PreviewFetchPlan>): Promise<void> 
 		body: {requests: plans.map((plan) => plan.request)},
 	});
 	const responseChannels = new Map((response.body?.channels ?? []).map((entry) => [entry.channel_id, entry.messages]));
+	const retryPlans: Array<PreviewFetchPlan> = [];
 	for (const plan of plans) {
 		const messages = responseChannels.get(plan.channel.id) ?? [];
+		const isAnchored = plan.request.around != null || plan.request.after != null;
+		if (messages.length === 0 && isAnchored) {
+			retryPlans.push({
+				channel: plan.channel,
+				cacheKey: plan.cacheKey,
+				oldestUnreadMessageId: null,
+				request: {channel_id: plan.channel.id, limit: UNREAD_PREVIEW_MESSAGE_LIMIT},
+			});
+			continue;
+		}
 		previewCache.set(plan.channel.id, {
 			cacheKey: plan.cacheKey,
 			data: buildPreviewDataFromMessages(plan, messages),
+		});
+	}
+	if (retryPlans.length === 0) return;
+	const retryResponse = await http.post<BulkPreviewResponse>(Endpoints.CHANNEL_MESSAGES_BULK, {
+		body: {requests: retryPlans.map((plan) => plan.request)},
+	});
+	const retryChannels = new Map(
+		(retryResponse.body?.channels ?? []).map((entry) => [entry.channel_id, entry.messages]),
+	);
+	for (const plan of retryPlans) {
+		previewCache.set(plan.channel.id, {
+			cacheKey: plan.cacheKey,
+			data: buildPreviewDataFromMessages(plan, retryChannels.get(plan.channel.id) ?? []),
 		});
 	}
 }
@@ -322,22 +391,24 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 	channel,
 	headingId,
 	previewData,
+	mentionCount,
+	unreadCount,
 }: {
 	channel: Channel;
 	headingId: string;
 	previewData: ChannelPreviewData | null;
+	mentionCount: number;
+	unreadCount: number;
 }) {
 	const {i18n} = useLingui();
 	const messageDisplayCompact = UserSettings.getMessageDisplayCompact();
 	const messageGroupSpacing = Accessibility.getMessageGroupSpacingValue(messageDisplayCompact);
-	const mentionCount = ReadStates.getMentionCount(channel.id);
 	const isCollapsed = UnreadChannels.isCollapsed(channel.id);
-	const isMuted = UserGuildSettings.isGuildOrCategoryOrChannelMuted(channel.guildId ?? null, channel.id);
+	const isMuted = UserGuildSettings.isMutedAtAnyLevel(channel.guildId ?? null, channel.id);
 	const previewMessages = previewData?.messages ?? [];
 	const oldestUnreadMessageId = previewData?.oldestUnreadMessageId ?? null;
-	const totalUnreadCount = ReadStates.getUnreadCount(channel.id);
 	const hasMoreUnreadThanShown =
-		oldestUnreadMessageId != null && totalUnreadCount > 0 && totalUnreadCount > previewMessages.length;
+		oldestUnreadMessageId != null && unreadCount > 0 && unreadCount > previewMessages.length;
 	const spammerOverrideVersion = LocalUserSpamOverride.version;
 	useEffect(() => {
 		if (previewMessages.length === 0) return;
@@ -417,13 +488,14 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 			highlightedMessageId: null,
 			messageDisplayCompact,
 			messageGroupSpacing,
-			revealedMessageId: null,
+			unblurredMessageId: null,
 			onMessageEdit: undefined,
 			onReveal: undefined,
 			messageRowClassName: styles.messageRow,
 			messageActionsClassName: styles.messageActions,
 			renderMessageActions,
-			readonlyPreview: true,
+			suppressMessageActions: true,
+			previewContext: MessagePreviewContext.LIST_POPOUT,
 			dateDividerClassName: styles.previewDateDivider,
 			suppressUnreadIndicator: true,
 			getMessageHeadingActivate,
@@ -468,7 +540,7 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 				</h2>
 				<InboxMessageHeader
 					channel={channel}
-					className={styles.channelStickyHeader}
+					className={styles.stickyChannelHeader}
 					onClick={handleHeaderClick}
 					mentionCount={mentionCount}
 					leftAdornment={
@@ -620,23 +692,14 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 	const {i18n} = useLingui();
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
+	const resolveInboxScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
-	const frozenOrderRef = useRef<Map<string, number> | null>(null);
-	if (frozenOrderRef.current === null) {
-		frozenOrderRef.current = new Map(getUnreadChannels().map((channel, index) => [channel.id, index]));
-	}
-	const allUnreadChannels = useMemo(() => {
-		const order = frozenOrderRef.current!;
-		const current = getUnreadChannels();
-		return current
-			.filter((channel) => order.has(channel.id))
-			.sort((a, b) => {
-				const aIdx = order.get(a.id) ?? Number.POSITIVE_INFINITY;
-				const bIdx = order.get(b.id) ?? Number.POSITIVE_INFINITY;
-				return aIdx - bIdx;
-			});
-	}, [readStateVersion, settingsVersion]);
+	const liveUnreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
+	const {snapshot: frozenUnread, channels: allUnreadChannels} = useFrozenUnreadOrder(
+		freezeUnreadChannels,
+		liveUnreadChannels,
+	);
 	const [loadedCount, setLoadedCount] = useState(INITIAL_VISIBLE_CHANNELS);
 	const visibleChannels = useMemo(() => allUnreadChannels.slice(0, loadedCount), [allUnreadChannels, loadedCount]);
 	const channelPreviews = useBulkChannelPreviews(visibleChannels);
@@ -672,6 +735,30 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 		}
 		return groups;
 	}, [visibleChannels, channelPreviews, i18n.locale]);
+	const unreadRows = useMemo(() => {
+		const rows: Array<{
+			channel: Channel;
+			endsGroup: boolean;
+			groupLabel: string;
+			key: string;
+			mentionCount: number;
+			unreadCount: number;
+		}> = [];
+		for (const group of groupedChannels) {
+			for (const [index, channel] of group.channels.entries()) {
+				const counts = frozenUnread.counts.get(channel.id);
+				rows.push({
+					channel,
+					endsGroup: index === group.channels.length - 1,
+					groupLabel: group.label,
+					key: channel.id,
+					mentionCount: counts?.mentionCount ?? 0,
+					unreadCount: counts?.unreadCount ?? 0,
+				});
+			}
+		}
+		return rows;
+	}, [groupedChannels, frozenUnread]);
 	const hasMore = loadedCount < allUnreadChannels.length;
 	const handleScroll = useCallback(
 		(event: React.UIEvent<HTMLDivElement>) => {
@@ -696,7 +783,7 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 			const target = event.target as Element | null;
 			if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) return;
 			if (target instanceof HTMLElement && target.isContentEditable) return;
-			const scrollerNode = scrollerRef.current?.getScrollerNode() ?? null;
+			const scrollerNode = scrollerRef.current?.getViewportElement() ?? null;
 			if (!scrollerNode) return;
 			if (target && !scrollerNode.contains(target) && document.activeElement !== document.body) return;
 			const sections = Array.from(scrollerNode.querySelectorAll<HTMLElement>('[data-inbox-channel-section]'));
@@ -742,43 +829,44 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 		);
 	}
 	return (
-		<Scroller
-			key="unread-channels-scroller"
-			className={styles.scroller}
-			ref={scrollerRef}
-			onScroll={handleScroll}
-			onCopy={onCopySelectedMessages}
-			data-message-selection-root="true"
-			data-flx="app.floating.unread-channels-content.scroller"
-		>
-			{groupedChannels.map((group) => {
-				const groupHeadingId = `inbox-unread-group-${group.key}`;
-				return (
-					<section
-						key={group.key}
-						className={styles.guildGroup}
-						aria-labelledby={groupHeadingId}
-						data-flx="app.floating.unread-channels-content.guild-group"
-					>
-						<h1
-							id={groupHeadingId}
-							className={styles.guildGroupHeading}
-							data-flx="app.floating.unread-channels-content.guild-group-heading"
+		<NearViewportSurfaceContext.Provider value={resolveInboxScrollSurface}>
+			<Scroller
+				key="unread-channels-scroller"
+				className={styles.scroller}
+				ref={scrollerRef}
+				onScroll={handleScroll}
+				onCopy={onCopySelectedMessages}
+				data-message-selection-root="true"
+				data-flx="app.floating.unread-channels-content.scroller"
+			>
+				<div className={styles.list} role="list" data-flx="app.floating.unread-channels-content.list">
+					{unreadRows.map((row, rowIndex) => (
+						<div
+							key={row.key}
+							className={clsx(styles.row, row.endsGroup && styles.rowGroupEnd)}
+							role="listitem"
+							aria-posinset={rowIndex + 1}
+							aria-setsize={unreadRows.length}
+							data-flx="app.floating.unread-channels-content.row"
 						>
-							{group.label}
-						</h1>
-						{group.channels.map((channel) => (
-							<UnreadChannelCard
-								key={channel.id}
-								channel={channel}
-								headingId={`inbox-unread-channel-${channel.id}`}
-								previewData={channelPreviews.get(channel.id) ?? null}
-								data-flx="app.floating.unread-channels-content.unread-channel-card"
-							/>
-						))}
-					</section>
-				);
-			})}
-		</Scroller>
+							<section
+								className={styles.guildGroup}
+								aria-label={row.groupLabel}
+								data-flx="app.floating.unread-channels-content.guild-group"
+							>
+								<UnreadChannelCard
+									channel={row.channel}
+									headingId={`inbox-unread-channel-${row.channel.id}`}
+									previewData={channelPreviews.get(row.channel.id) ?? null}
+									mentionCount={row.mentionCount}
+									unreadCount={row.unreadCount}
+									data-flx="app.floating.unread-channels-content.unread-channel-card"
+								/>
+							</section>
+						</div>
+					))}
+				</div>
+			</Scroller>
+		</NearViewportSurfaceContext.Provider>
 	);
 });

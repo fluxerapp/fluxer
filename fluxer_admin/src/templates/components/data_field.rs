@@ -44,10 +44,6 @@ pub fn data_field_mono(label: &str, value: &str) -> Markup {
     data_field(label, data_field_value(value, DATA_FIELD_MONO_CLASS))
 }
 
-pub fn data_field_link(label: &str, href: &str, display: &str) -> Markup {
-    data_field(label, data_field_link_value(href, display, "break-words"))
-}
-
 pub fn data_field_link_mono(label: &str, href: &str, display: &str) -> Markup {
     data_field(label, data_field_link_value(href, display, "break-all"))
 }
@@ -65,21 +61,4 @@ pub fn data_grid(cols: u8, content: Markup) -> Markup {
     html! {
         div class=(col_class) { (content) }
     }
-}
-
-pub fn metadata_row(label: &str, value: Markup) -> Markup {
-    html! {
-        div class="flex flex-wrap gap-x-2 gap-y-0.5" {
-            span class="flex-shrink-0 text-neutral-500 text-sm" {
-                (label) ":"
-            }
-            span class="min-w-0 break-words text-neutral-900 text-sm" {
-                (value)
-            }
-        }
-    }
-}
-
-pub fn metadata_row_text(label: &str, value: &str) -> Markup {
-    metadata_row(label, html! { (value) })
 }

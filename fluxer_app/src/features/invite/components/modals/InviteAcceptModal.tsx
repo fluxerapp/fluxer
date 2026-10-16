@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
+import {getAccountDisplayLabels, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
-import {
-	JOIN_COMMUNITY_DESCRIPTOR,
-	NO_DESCRIPTION_PROVIDED_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import Accounts from '@app/features/auth/state/Accounts';
+import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
+import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteAcceptModal.module.css';
 import Invites from '@app/features/invite/state/Invites';
-import {
-	isGroupDmInvite,
-	isGuildInvite,
-	isPackInvite as isPackInviteGuard,
-} from '@app/features/invite/types/InviteTypes';
+import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {getGroupDmInviteCounts} from '@app/features/invite/utils/GroupDmInviteCounts';
 import {
 	GuildInvitePrimaryAction,
@@ -31,11 +28,12 @@ import {
 	INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR,
 	RAID_INVITES_PAUSED_SHORT_DESCRIPTOR,
 } from '@app/features/invite/utils/InviteMessageDescriptors';
+import {findInviteOnOtherAccount, type InviteAccountMatch} from '@app/features/invite/utils/InviteOtherAccountLookup';
+import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -54,50 +52,59 @@ const GO_TO_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Go to community',
 	comment: 'Short label in the invite accept modal. Keep it concise.',
 });
-const EMOJI_PACK_DESCRIPTOR = msg({
-	message: 'Emoji pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
+const INVITE_ON_OTHER_INSTANCE_DESCRIPTOR = msg({
+	message: 'This invite is on {instanceName}, where you also have an account.',
+	comment:
+		'Invite accept modal text shown when the invite does not exist on the current instance but does on another instance the user is signed in to. instanceName is a server or instance domain.',
 });
-const STICKER_PACK_DESCRIPTOR = msg({
-	message: 'Sticker pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
+const OPEN_INVITE_WITH_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Open with {accountName} on {instanceName}',
+	comment:
+		'Button in the invite accept modal that switches to another signed-in account and opens the invite there. instanceName is a server or instance domain.',
 });
-const INSTALL_EMOJI_PACK_DESCRIPTOR = msg({
-	message: 'Install emoji pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const INSTALL_STICKER_PACK_DESCRIPTOR = msg({
-	message: 'Install sticker pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const CREATED_BY_DESCRIPTOR = msg({
-	message: 'Created by {userName}',
-	comment: 'Metadata label for an expression pack invite. userName is the pack creator username.',
-});
-const INVITED_BY_DESCRIPTOR = msg({
-	message: 'Invited by {userTag}',
-	comment: 'Metadata label for an expression pack invite. userTag is the inviter username and discriminator.',
-});
-const ACCEPTING_INVITE_INSTALLS_PACK_DESCRIPTOR = msg({
-	message: 'Accepting this invite installs the pack automatically.',
-	comment: 'Note shown on expression pack invites before accepting.',
+const OPEN_INVITE_ON_INSTANCE_DESCRIPTOR = msg({
+	message: 'Open on {instanceName}',
+	comment:
+		'Button in the invite accept modal that switches to the signed-in account on another instance and opens the invite there, used when the account name is unknown. instanceName is a server or instance domain.',
 });
 const logger = new Logger('InviteAcceptModal');
 
 interface InviteAcceptModalProps {
 	code: string;
+	target: InstanceHTTPTarget;
 }
 
-export const InviteAcceptModal = observer(function InviteAcceptModal({code}: InviteAcceptModalProps) {
+export const InviteAcceptModal = observer(function InviteAcceptModal({code, target}: InviteAcceptModalProps) {
 	const {i18n} = useLingui();
-	const inviteState = Invites.invites.get(code) ?? null;
+	const inviteState = Invites.getInvite(code, target);
 	const invite = inviteState?.data ?? null;
 	const [isAccepting, setIsAccepting] = useState(false);
+	const [otherAccountMatch, setOtherAccountMatch] = useState<InviteAccountMatch | null>(null);
 	useEffect(() => {
 		if (!inviteState) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
+			void InviteCommands.fetchWithCoalescing(code, target).catch(() => {});
 		}
-	}, [code, inviteState]);
+	}, [code, inviteState, target]);
+	const isInviteMissing = inviteState != null && !inviteState.loading && (inviteState.error != null || !invite);
+	useEffect(() => {
+		setOtherAccountMatch(null);
+		if (!isInviteMissing) return;
+		let cancelled = false;
+		void findInviteOnOtherAccount(
+			code,
+			{accountKey: Accounts.currentAccountKey, instanceKey: target.instanceKey},
+			Accounts.getAllAccounts(),
+		)
+			.then((match) => {
+				if (!cancelled) setOtherAccountMatch(match);
+			})
+			.catch((error: unknown) => {
+				logger.warn('Failed to look the invite up on other accounts:', error);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [code, isInviteMissing, target.instanceKey]);
 	const isGroupDM = invite != null && isGroupDmInvite(invite);
 	const groupDMCounts =
 		invite && isGroupDM
@@ -106,7 +113,6 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 					inviteMemberCount: invite.member_count,
 				})
 			: null;
-	const isPackInvite = invite != null && isPackInviteGuard(invite);
 	const guildActionState = getGuildInviteActionState({invite});
 	const {presenceCount, memberCount} = guildActionState;
 	const inviteForHeader = useMemo(() => {
@@ -131,13 +137,10 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 		if (!guild.id || !guild.splash) {
 			return null;
 		}
-		return AvatarUtils.getGuildSplashURL(
-			{
-				id: guild.id,
-				splash: guild.splash,
-			},
-			4096,
-		);
+		return AvatarUtils.getGuildSplashURL({
+			id: guild.id,
+			splash: guild.splash,
+		});
 	}, [invite]);
 	const isJoinDisabled = isGuildInviteActionDisabled(guildActionState);
 	const primaryActionType = getGuildInvitePrimaryAction(guildActionState);
@@ -158,13 +161,41 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 	const handleAccept = useCallback(async () => {
 		setIsAccepting(true);
 		try {
-			await InviteCommands.acceptAndTransitionToChannel(code, i18n);
+			await InviteCommands.acceptAndTransitionToChannel(code, i18n, target);
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error(' Failed to accept invite:', error);
 			setIsAccepting(false);
 		}
-	}, [code, i18n]);
+	}, [code, i18n, target]);
+	const handleOpenWithOtherAccount = useCallback(() => {
+		if (otherAccountMatch == null) return;
+		ModalCommands.pop();
+		void switchStoredAccountFromSwitcher({
+			accountKey: otherAccountMatch.account.storageKey,
+			onSessionExpired: null,
+			onSuccess: null,
+			redirectAfterSwitch: Routes.inviteRegister(code),
+			switchAccount: null,
+		});
+	}, [code, otherAccountMatch]);
+	const renderOtherAccountOffer = (match: InviteAccountMatch) => {
+		const instanceName = resolveAccountInstanceLabel(match.account) ?? match.instanceKey;
+		const labels = getAccountDisplayLabels(match.account);
+		return (
+			<div className={styles.actions} data-flx="invite.invite-accept-modal.render-other-account-offer.actions">
+				<Button
+					onClick={handleOpenWithOtherAccount}
+					disabled={Accounts.isSwitching || Accounts.isLoading}
+					data-flx="invite.invite-accept-modal.render-other-account-offer.button.open-with-account"
+				>
+					{labels.available
+						? i18n._(OPEN_INVITE_WITH_ACCOUNT_DESCRIPTOR, {accountName: labels.displayLabel, instanceName})
+						: i18n._(OPEN_INVITE_ON_INSTANCE_DESCRIPTOR, {instanceName})}
+				</Button>
+			</div>
+		);
+	};
 	const renderBody = () => {
 		if (!inviteState || inviteState.loading) {
 			return (
@@ -178,54 +209,17 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 				<div className={styles.stateHost} data-flx="invite.invite-accept-modal.render-body.state-host--2">
 					<AuthErrorState
 						title={i18n._(INVITE_NOT_FOUND_TITLE_DESCRIPTOR)}
-						text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
+						text={
+							otherAccountMatch == null
+								? i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)
+								: i18n._(INVITE_ON_OTHER_INSTANCE_DESCRIPTOR, {
+										instanceName:
+											resolveAccountInstanceLabel(otherAccountMatch.account) ?? otherAccountMatch.instanceKey,
+									})
+						}
+						action={otherAccountMatch == null ? null : renderOtherAccountOffer(otherAccountMatch)}
 						data-flx="invite.invite-accept-modal.render-body.auth-error-state"
 					/>
-				</div>
-			);
-		}
-		if (isPackInvite && invite) {
-			const packKindLabel =
-				invite.pack.type === 'emoji' ? i18n._(EMOJI_PACK_DESCRIPTOR) : i18n._(STICKER_PACK_DESCRIPTOR);
-			const packActionLabel =
-				invite.pack.type === 'emoji' ? i18n._(INSTALL_EMOJI_PACK_DESCRIPTOR) : i18n._(INSTALL_STICKER_PACK_DESCRIPTOR);
-			const creatorUserName = NicknameUtils.getDisplayName(invite.pack.creator);
-			const inviterTag = invite.inviter ? `${invite.inviter.username}#${invite.inviter.discriminator}` : null;
-			return (
-				<div className={styles.cardInner} data-flx="invite.invite-accept-modal.render-body.card-inner">
-					<InviteHeader invite={inviteForHeader} data-flx="invite.invite-accept-modal.render-body.invite-header" />
-					<p
-						className={styles.packDescriptionText}
-						data-flx="invite.invite-accept-modal.render-body.pack-description-text"
-					>
-						{invite.pack.description || i18n._(NO_DESCRIPTION_PROVIDED_DESCRIPTOR)}
-					</p>
-					<div className={styles.packMetaRow} data-flx="invite.invite-accept-modal.render-body.pack-meta-row">
-						<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text">
-							{packKindLabel}
-						</span>
-						<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text--2">
-							{i18n._(CREATED_BY_DESCRIPTOR, {userName: creatorUserName})}
-						</span>
-						{inviterTag ? (
-							<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text--3">
-								{i18n._(INVITED_BY_DESCRIPTOR, {userTag: inviterTag})}
-							</span>
-						) : null}
-					</div>
-					<p className={styles.packNote} data-flx="invite.invite-accept-modal.render-body.pack-note">
-						{i18n._(ACCEPTING_INVITE_INSTALLS_PACK_DESCRIPTOR)}
-					</p>
-					<div className={styles.actions} data-flx="invite.invite-accept-modal.render-body.actions">
-						<Button
-							onClick={handleAccept}
-							disabled={isAccepting}
-							submitting={isAccepting}
-							data-flx="invite.invite-accept-modal.render-body.button.accept"
-						>
-							{packActionLabel}
-						</Button>
-					</div>
 				</div>
 			);
 		}
@@ -235,7 +229,7 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 				{isJoinDisabled ? (
 					<p className={styles.disabledText} data-flx="invite.invite-accept-modal.render-body.disabled-text">
 						{guildActionState.isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: PRODUCT_NAME})
+							? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: getActiveInstanceProductName()})
 							: i18n._(INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR)}
 					</p>
 				) : null}

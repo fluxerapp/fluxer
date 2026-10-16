@@ -6,7 +6,7 @@ import {GuildMemberActionsSheet} from '@app/features/guild/components/modals/gui
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {GuildMemberContextMenu} from '@app/features/ui/action_menu/GuildMemberContextMenu';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import {WebhookContextMenu} from '@app/features/ui/action_menu/WebhookContextMenu';
@@ -155,7 +155,7 @@ export const PreloadableUserPopout = React.forwardRef<
 					if (isShiftMentionClick(event)) {
 						event.preventDefault();
 						event.stopPropagation();
-						ComponentDispatch.dispatch('INSERT_MENTION', {userId: user.id});
+						ComponentBus.dispatch('INSERT_MENTION', {userId: user.id});
 						return;
 					}
 					handleMobileClick();
@@ -217,7 +217,7 @@ export const PreloadableUserPopout = React.forwardRef<
 			if (isShiftMentionClick(event)) {
 				event.preventDefault();
 				event.stopPropagation();
-				ComponentDispatch.dispatch('INSERT_MENTION', {userId: user.id});
+				ComponentBus.dispatch('INSERT_MENTION', {userId: user.id});
 				return;
 			}
 			if (originalOnClick) {

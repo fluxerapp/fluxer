@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {extractClientIpDetails, requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {Logger} from '@app/api/Logger';
+import {hashRequestToken, recordAuthFailure} from '@app/api/middleware/RequestErrorTelemetry';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import * as AuthSession from '../auth/AuthSession';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
-import {stripApiPrefix} from '../utils/RequestPathUtils';
-import {hashAuthToken, recordAbuseSignal} from './AbusiveIpAutoBanner';
 
 type TokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key';
 
@@ -18,7 +18,13 @@ interface ParsedAuthHeader {
 	type: TokenType;
 }
 
-const SKIP_PATHS = new Set(['/_health', '/webhooks/livekit', '/webhooks/sweego']);
+const SKIP_PATHS = new Set([
+	'/_health',
+	'/webhooks/livekit',
+	'/webhooks/sweego',
+	'/webhooks/app-store',
+	'/webhooks/google-play',
+]);
 const SESSION_TOKEN_PATTERN = /^flx_[A-Za-z0-9]{36}$/;
 
 function parseAuthHeader(authHeader?: string | null): ParsedAuthHeader | null {
@@ -61,10 +67,7 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	ctx.set('user', user);
 	if (trackActivity) {
 		const now = new Date();
-		const ip = requireClientIp(ctx.req.raw, {
-			trustClientIpHeader: Config.proxy.trust_client_ip_header,
-			clientIpHeaderName: Config.proxy.client_ip_header,
-		});
+		const ip = getRequestClientIp(ctx);
 		const kvActivityTracker = ctx.get('kvActivityTracker');
 		const userActivityBuffer = ctx.get('userActivityBuffer');
 		userActivityBuffer.recordActivity(user.id, now, ip);
@@ -81,53 +84,40 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	}
 	const rawAuthHeader = ctx.req.header('Authorization');
 	const parsed = parseAuthHeader(rawAuthHeader);
-	const extractedClientIp = extractClientIpDetails(ctx.req.raw, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
-	const resolvedClientIp =
-		extractedClientIp?.ip ??
-		requireClientIp(ctx.req.raw, {
-			trustClientIpHeader: Config.proxy.trust_client_ip_header,
-			clientIpHeaderName: Config.proxy.client_ip_header,
-		});
-	ctx.set('oauthBearerToken', undefined);
+	const resolvedClientIp = getRequestClientIp(ctx);
 	ctx.set('oauthBearerApplicationId', undefined);
 	ctx.set('oauthBearerAllowed', false);
 	ctx.set('oauthBearerScopes', undefined);
-	ctx.set('oauthBearerUserId', undefined);
 	ctx.set('authToken', undefined);
 	if (!parsed) {
 		if (rawAuthHeader) {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:malformed', {tokenHash: hashAuthToken(rawAuthHeader)});
+			recordAuthFailure(resolvedClientIp, hashRequestToken(rawAuthHeader));
 		}
 		return next();
 	}
 	const {token, type} = parsed;
-	const tokenHash = hashAuthToken(token);
+	const tokenHash = hashRequestToken(token);
 	ctx.set('authToken', token);
 	if (type === 'session') {
 		const apiContext = ctx.get('apiContext');
 		const authSession = await AuthSession.getAuthSessionByToken(apiContext, token);
 		if (authSession) {
-			void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
-			const user = await apiContext.services.users.findUniqueAssert(authSession.userId);
-			const sessionId = Buffer.from(authSession.sessionIdHash).toString('base64url');
-			void AuthSession.updateUserActivity(apiContext, {
-				userId: authSession.userId,
-				clientIp: resolvedClientIp,
-				user,
-				action: 'session_authenticated',
-				tokenType: 'session',
-				sessionId,
-			}).catch((error: unknown) => {
-				Logger.warn({error, userId: authSession.userId}, 'Failed to update user activity telemetry');
-			});
-			ctx.set('authSession', authSession);
-			ctx.set('authTokenType', 'session');
-			setUserInContext(ctx, user, true);
+			const user = await apiContext.services.users.findUnique(authSession.userId);
+			if (user && !isSignInRefused(user)) {
+				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
+				ctx.set('authSession', authSession);
+				ctx.set('authTokenType', 'session');
+				setUserInContext(ctx, user, true);
+			} else {
+				recordAuthFailure(resolvedClientIp, tokenHash);
+				if (user) {
+					void AuthSession.revokeToken(apiContext, token).catch((error: unknown) => {
+						Logger.warn({error, userId: user.id}, 'Failed to revoke a refused session');
+					});
+				}
+			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;
@@ -135,23 +125,18 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (type === 'bearer') {
 		const oauth2TokenRepository = ctx.get('oauth2TokenRepository');
 		const accessToken = await oauth2TokenRepository.getAccessToken(token);
-		if (accessToken) {
-			ctx.set('oauthBearerToken', token);
+		const tokenUser = accessToken ? await ctx.get('apiContext').services.users.findUnique(accessToken.userId) : null;
+		if (accessToken && !(tokenUser && isSignInRefused(tokenUser))) {
 			ctx.set('oauthBearerApplicationId', accessToken.applicationId);
 			ctx.set('oauthBearerScopes', accessToken.scope);
-			ctx.set('oauthBearerUserId', accessToken.userId ?? undefined);
 			ctx.set('authTokenType', 'bearer');
-			const userId = accessToken.userId ?? null;
-			if (userId) {
-				const user = await ctx.get('apiContext').services.users.findUnique(userId);
-				if (user) {
-					setUserInContext(ctx, user, false);
-				}
+			if (tokenUser) {
+				setUserInContext(ctx, tokenUser, false);
 			}
 			await next();
 			return;
 		}
-		recordAbuseSignal(resolvedClientIp, 'auth_failure:bearer', {tokenHash});
+		recordAuthFailure(resolvedClientIp, tokenHash);
 		await next();
 		return;
 	}
@@ -165,7 +150,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 				setUserInContext(ctx, botUser, false);
 			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:bot', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;
@@ -182,12 +167,11 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			const user = await ctx.get('apiContext').services.users.findUnique(apiKey.createdById);
 			if (user) {
 				ctx.set('authTokenType', 'admin_api_key');
-				ctx.set('adminApiKey', apiKey);
 				ctx.set('adminApiKeyAcls', apiKey.acls);
 				setUserInContext(ctx, user, false);
 			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:admin_api_key', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;

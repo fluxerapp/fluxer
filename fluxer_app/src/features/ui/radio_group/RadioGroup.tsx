@@ -22,6 +22,8 @@ interface RadioGroupProps<T> {
 	className?: string;
 	onChange: (value: T) => void;
 	renderContent?: (option: RadioOption<T>, checked: boolean) => React.ReactNode;
+	optionAlign?: 'start' | 'center';
+	dir?: 'ltr' | 'rtl';
 	'aria-label'?: string;
 }
 
@@ -31,9 +33,17 @@ interface RadioOptionItemProps<T> {
 	renderContent?: (option: RadioOption<T>, checked: boolean) => React.ReactNode;
 	isSelected: boolean;
 	groupDisabled: boolean;
+	align: 'start' | 'center';
 }
 
-const RadioOptionItem = <T,>({option, value, renderContent, isSelected, groupDisabled}: RadioOptionItemProps<T>) => {
+const RadioOptionItem = <T,>({
+	option,
+	value,
+	renderContent,
+	isSelected,
+	groupDisabled,
+	align,
+}: RadioOptionItemProps<T>) => {
 	const radioRef = useRef<HTMLButtonElement | null>(null);
 	return (
 		<FocusRing
@@ -48,7 +58,7 @@ const RadioOptionItem = <T,>({option, value, renderContent, isSelected, groupDis
 				ref={radioRef}
 				value={value}
 				disabled={option.disabled || groupDisabled}
-				className={styles.radioGroupOption}
+				className={clsx(styles.radioGroupOption, align === 'center' && styles.radioGroupOptionCenter)}
 				data-flx="ui.radio-group.radio-group.radio-option-item.radio-group-option"
 			>
 				<svg
@@ -118,6 +128,8 @@ export const RadioGroup = observer(
 		className,
 		onChange,
 		renderContent,
+		optionAlign = 'start',
+		dir,
 		'aria-label': ariaLabel,
 	}: RadioGroupProps<T>) => {
 		const valueToString = (val: T): string => {
@@ -143,6 +155,7 @@ export const RadioGroup = observer(
 				onValueChange={handleChange}
 				disabled={disabled}
 				orientation="vertical"
+				dir={dir}
 				aria-label={ariaLabel}
 				data-flx="ui.radio-group.radio-group.group"
 			>
@@ -157,6 +170,7 @@ export const RadioGroup = observer(
 							renderContent={renderContent}
 							isSelected={isSelected}
 							groupDisabled={disabled}
+							align={optionAlign}
 							data-flx="ui.radio-group.radio-group.radio-option-item"
 						/>
 					);

@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-{{include "fluxer.pdb" (dict "name" "worker-realtime" "minAvailable" .Values.pdb.minAvailable "context" .)}}
----
-{{include "fluxer.pdb" (dict "name" "worker-unfurl" "minAvailable" .Values.pdb.minAvailable "context" .)}}
----
-{{include "fluxer.pdb" (dict "name" "worker-lifecycle" "minAvailable" .Values.pdb.minAvailable "context" .)}}
----
-{{include "fluxer.pdb" (dict "name" "worker-batch" "minAvailable" .Values.pdb.minAvailable "context" .)}}

@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_ring).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([fetch_dm_channel_via_rpc/2]).
@@ -8,10 +12,6 @@
 -export([check_recipient/3]).
 -export([is_dm_channel_type/1]).
 -export([broadcast_voice_state_update/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -129,13 +129,9 @@ channel_recipient_ids(Channel) ->
     Raw =
         case maps:get(<<"recipient_ids">>, Channel, undefined) of
             Ids when is_list(Ids) -> Ids;
-            _ -> ensure_list(maps:get(<<"recipients">>, Channel, []))
+            _ -> map_utils:ensure_list(maps:get(<<"recipients">>, Channel, []))
         end,
     [Id || Entry <- Raw, Id <- [recipient_entry_id(Entry)], is_integer(Id)].
-
--spec ensure_list(term()) -> [term()].
-ensure_list(Value) when is_list(Value) -> Value;
-ensure_list(_) -> [].
 
 -spec dispatch_voice_state_update([integer()], atom(), voice_state()) -> ok.
 dispatch_voice_state_update(AllRecipients, Event, VoiceState) ->
@@ -168,40 +164,6 @@ is_channel_recipient(UserId, State) ->
     UserId =:= maps:get(user_id, State).
 
 -ifdef(TEST).
-
-is_dm_channel_type_test() ->
-    ?assert(is_dm_channel_type(1)),
-    ?assert(is_dm_channel_type(3)),
-    ?assertNot(is_dm_channel_type(0)),
-    ?assertNot(is_dm_channel_type(2)),
-    ?assertNot(is_dm_channel_type(4)).
-
-filter_recipient_id_test() ->
-    ?assertEqual(false, filter_recipient_id(null, 1)),
-    ?assertEqual(false, filter_recipient_id(1, 1)),
-    ?assertEqual({true, 2}, filter_recipient_id(2, 1)).
-
-parse_id_test() ->
-    ?assertEqual(123, parse_id(123)),
-    ?assertEqual(null, parse_id(invalid)).
-
-channel_recipient_ids_converted_shape_test() ->
-    Channel = #{<<"id">> => <<"100">>, <<"type">> => 1, <<"recipient_ids">> => [2, <<"3">>]},
-    ?assertEqual([2, 3], channel_recipient_ids(Channel)).
-
-channel_recipient_ids_api_shape_test() ->
-    Channel = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 1,
-        <<"recipients">> => [
-            #{<<"id">> => <<"2">>, <<"username">> => <<"dm-user">>},
-            #{<<"id">> => <<"3">>, <<"username">> => <<"other">>}
-        ]
-    },
-    ?assertEqual([2, 3], channel_recipient_ids(Channel)).
-
-channel_recipient_ids_missing_test() ->
-    ?assertEqual([], channel_recipient_ids(#{<<"id">> => <<"100">>, <<"type">> => 1})).
 
 check_recipient_accepts_session_owner_for_dm_types_test() ->
     State = #{

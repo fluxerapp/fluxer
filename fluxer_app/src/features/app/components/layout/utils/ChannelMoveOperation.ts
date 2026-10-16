@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {DragItem, DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {isTextChannel} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -8,8 +9,6 @@ import {
 	sortChannelsForOrdering,
 } from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 
-const isTextChannel = (channel: Channel) =>
-	channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK;
 const isCategoryChannel = (channel: Channel) => channel.type === ChannelTypes.GUILD_CATEGORY;
 const gatherCategoryBlock = (channels: ReadonlyArray<Channel>, categoryId: string) => {
 	return channels.filter((ch) => ch.id === categoryId || ch.parentId === categoryId);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
 import {
 	DirectMessageEmailVerificationRequiredError,
 	EmailVerificationRequiredError,
@@ -37,7 +38,7 @@ export function requireEmailVerified(
 	user: {emailVerified: boolean; isBot?: boolean},
 	reason?: EmailVerificationRequiredReason,
 ): void {
-	if (user.isBot) {
+	if (user.isBot || usesUsernameSignIn()) {
 		return;
 	}
 	if (!user.emailVerified) {

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readBlobAsDataUrl as blobToDataUrl} from '@app/features/platform/utils/BlobDataUrl';
+
 import type {ThemeLibraryAsset, ThemeLibraryLocalFileReference} from '@app/features/theme/state/ThemeLibrary';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 
@@ -45,8 +47,8 @@ export interface ThemeExportPayload {
 	}>;
 }
 
-export const THEME_ASSET_REFERENCE_PREFIX = 'fluxer-theme-asset';
-export const THEME_LOCAL_FILE_REFERENCE_PREFIX = 'fluxer-local-file';
+const THEME_ASSET_REFERENCE_PREFIX = 'fluxer-theme-asset';
+const THEME_LOCAL_FILE_REFERENCE_PREFIX = 'fluxer-local-file';
 const HEADER_COMMENT_PATTERN = /^\s*\/\*([\s\S]*?)\*\//;
 const METADATA_LINE_PATTERN =
 	/^\s*(?:\*\s*)?(?:@?([a-zA-Z][a-zA-Z0-9_-]*)|([a-zA-Z][a-zA-Z0-9 _-]*))\s*[:=]\s*(.*?)\s*$/;
@@ -126,7 +128,7 @@ export function parseThemeMetadata(css: string, fallbackName: string): ThemeMeta
 	return metadata;
 }
 
-export function buildThemeCssHeader(metadata: ThemeMetadata): string {
+function buildThemeCssHeader(metadata: ThemeMetadata): string {
 	const lines = ['/**', ` * @name ${metadata.name || 'Untitled theme'}`];
 	if (metadata.description.trim()) {
 		lines.push(` * @description ${metadata.description.trim()}`);
@@ -172,15 +174,6 @@ function decodeReferenceValue(value: string): string {
 	} catch {
 		return unescaped;
 	}
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onerror = () => reject(reader.error ?? new Error('Failed to read theme asset blob'));
-		reader.onload = () => resolve(String(reader.result ?? ''));
-		reader.readAsDataURL(blob);
-	});
 }
 
 function getAssetReferenceMap(assets: ReadonlyArray<ThemeLibraryAsset>): Map<string, ThemeLibraryAsset> {

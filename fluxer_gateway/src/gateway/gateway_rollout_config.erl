@@ -8,7 +8,6 @@
 -export([
     start_link/0,
     get/0,
-    is_clustered/0,
     session_rollout_percentage/0,
     session_rollout_mode/0,
     guild_rollout_percentage/0,
@@ -16,13 +15,10 @@
     gateway_dispatch_relay_shards/0,
     gateway_dispatch_relay_max_queue/0,
     rpc_request_timeout_ms/0,
-    voice_reconciliation_v3_percentage/0,
-    voice_reconciliation_v3_interval_ms/0,
     max_concurrent_session_starts/0,
     max_concurrent_guild_starts/0,
     is_session_eligible/1,
     is_guild_eligible/1,
-    session_start_rollout_decision/1,
     subscribe_changes/1,
     unsubscribe_changes/1
 ]).
@@ -49,20 +45,6 @@ get() ->
         persistent_term:get(?PERSISTENT_TERM_KEY)
     catch
         error:badarg -> default_config()
-    end.
-
--spec is_clustered() -> boolean().
-is_clustered() ->
-    case fluxer_gateway_env:get(cluster_enabled) of
-        true -> cluster_member_count() > 1;
-        _ -> false
-    end.
-
--spec cluster_member_count() -> non_neg_integer().
-cluster_member_count() ->
-    case persistent_term:get({gateway_cluster_membership, members}, undefined) of
-        undefined -> 1;
-        Members when is_list(Members) -> length(Members)
     end.
 
 -spec session_rollout_percentage() -> number().
@@ -99,14 +81,6 @@ gateway_dispatch_relay_max_queue() ->
 rpc_request_timeout_ms() ->
     maps:get(<<"rpc_request_timeout_ms">>, get(), 10000).
 
--spec voice_reconciliation_v3_percentage() -> number().
-voice_reconciliation_v3_percentage() ->
-    maps:get(<<"voice_reconciliation_v3_percentage">>, get(), 100).
-
--spec voice_reconciliation_v3_interval_ms() -> integer().
-voice_reconciliation_v3_interval_ms() ->
-    maps:get(<<"voice_reconciliation_v3_interval_ms">>, get(), 2000).
-
 -spec max_concurrent_session_starts() -> integer().
 max_concurrent_session_starts() ->
     maps:get(<<"max_concurrent_session_starts">>, get(), 512).
@@ -122,33 +96,6 @@ is_session_eligible(UserId) ->
 -spec is_guild_eligible(binary()) -> boolean().
 is_guild_eligible(GuildId) ->
     check_eligibility(GuildId, guild_rollout_percentage(), modulo).
-
--spec session_start_rollout_decision(map()) -> eligible | not_eligible | missing_user_id.
-session_start_rollout_decision(ApiData) ->
-    Percentage = session_rollout_percentage(),
-    Mode = session_rollout_mode(),
-    case Percentage >= 100 of
-        true ->
-            eligible;
-        false ->
-            check_user_eligibility(ApiData, Percentage, Mode)
-    end.
-
--spec check_user_eligibility(map(), number(), modulo | random) ->
-    eligible | not_eligible | missing_user_id.
-check_user_eligibility(ApiData, Percentage, Mode) ->
-    case maps:get(<<"user_id">>, ApiData, undefined) of
-        undefined ->
-            missing_user_id;
-        UserId ->
-            eligibility_result(check_eligibility(UserId, Percentage, Mode))
-    end.
-
--spec eligibility_result(boolean()) -> eligible | not_eligible.
-eligibility_result(true) ->
-    eligible;
-eligibility_result(false) ->
-    not_eligible.
 
 -spec subscribe_changes(pid()) -> ok.
 subscribe_changes(Pid) ->
@@ -237,9 +184,7 @@ default_config() ->
         <<"max_concurrent_guild_starts">> => 256,
         <<"gateway_dispatch_relay_shards">> => 32,
         <<"gateway_dispatch_relay_max_queue">> => 50000,
-        <<"voice_e2ee_scope">> => <<"guild_feature_only">>,
-        <<"voice_reconciliation_v3_percentage">> => 100,
-        <<"voice_reconciliation_v3_interval_ms">> => 2000
+        <<"voice_e2ee_scope">> => <<"guild_feature_only">>
     }.
 
 -spec initial_config() -> map().
@@ -261,7 +206,7 @@ validate_config(Config) ->
 -spec fetch_config_from_api() -> store_result().
 fetch_config_from_api() ->
     RpcRequest = #{<<"type">> => <<"get_gateway_rollout_config">>},
-    case api_rpc_client:call(RpcRequest) of
+    case rpc_client:call(RpcRequest) of
         {ok, #{<<"config">> := Config}} when is_map(Config) ->
             store_valid_config(Config, api);
         {ok, _Other} ->
@@ -357,9 +302,7 @@ log_config_transitions(OldConfig, NewConfig) ->
     WatchKeys = [
         <<"session_rollout_percentage">>,
         <<"guild_rollout_percentage">>,
-        <<"rpc_request_timeout_ms">>,
-        <<"voice_reconciliation_v3_percentage">>,
-        <<"voice_reconciliation_v3_interval_ms">>
+        <<"rpc_request_timeout_ms">>
     ],
     lists:foreach(
         fun(Key) -> log_key_transition(Key, OldConfig, NewConfig) end,

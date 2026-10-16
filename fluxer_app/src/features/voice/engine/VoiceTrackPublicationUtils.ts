@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	asVoiceTrackSource,
+	type VoiceTrackSource,
+	VoiceTrackSource as VoiceTrackSourceValue,
+} from '@app/features/voice/engine/VoiceTrackSource';
 import type {LocalParticipant, LocalTrack, LocalTrackPublication} from 'livekit-client';
-import {asVoiceTrackSource, type VoiceTrackSource, VoiceTrackSource as VoiceTrackSourceValue} from './VoiceTrackSource';
+import {ParticipantEvent} from 'livekit-client';
 
 interface LocalParticipantWithAudioPublications extends Pick<LocalParticipant, 'audioTrackPublications'> {}
 interface LocalParticipantWithTrackPublications extends Pick<LocalParticipant, 'trackPublications'> {}
 interface LocalParticipantWithUnpublish extends LocalParticipantWithTrackPublications {
 	unpublishTrack: LocalParticipant['unpublishTrack'];
 }
+interface LocalParticipantWithUnpublishEvents extends Pick<LocalParticipant, 'on' | 'off'> {}
+
+const republishedCaptureOwners = new WeakMap<MediaStreamTrack, LocalTrack>();
 
 export type LocalMediaPublicationSlot = 'camera' | 'screen_share';
 
@@ -20,13 +28,11 @@ export interface LocalMediaPublicationCapResult {
 	}>;
 }
 
-export function isMicrophoneSourcePublication(
-	publication: Pick<LocalTrackPublication, 'source'> | null | undefined,
-): boolean {
+function isMicrophoneSourcePublication(publication: Pick<LocalTrackPublication, 'source'> | null | undefined): boolean {
 	return asVoiceTrackSource(publication?.source) === VoiceTrackSourceValue.Microphone;
 }
 
-export function isControllableMicrophonePublication(
+function isControllableMicrophonePublication(
 	publication: Pick<LocalTrackPublication, 'source'> | null | undefined,
 ): boolean {
 	if (!publication) {
@@ -49,7 +55,7 @@ export function getPrimaryLocalMicrophonePublication(
 	return getLocalMicrophonePublications(participant)[0] ?? null;
 }
 
-export function getLocalTrackPublicationsBySource(
+function getLocalTrackPublicationsBySource(
 	participant: LocalParticipantWithTrackPublications,
 	source: VoiceTrackSource,
 ): Array<LocalTrackPublication> {
@@ -82,7 +88,7 @@ export function getLocalScreenSharePublications(
 	return [...getLocalScreenShareVideoPublications(participant), ...getLocalScreenShareAudioPublications(participant)];
 }
 
-export function getLocalPublicationTrack(publication: LocalTrackPublication): LocalTrack | null {
+function getLocalPublicationTrack(publication: LocalTrackPublication): LocalTrack | null {
 	return (publication.track ?? publication.videoTrack ?? publication.audioTrack ?? null) as LocalTrack | null;
 }
 
@@ -243,4 +249,21 @@ export function selectLocalMediaPublicationsForConnectionRepublish(
 		selected.push(publication);
 	}
 	return selected;
+}
+
+export function releaseCaptureWithRepublishedTrack(
+	participant: LocalParticipantWithUnpublishEvents,
+	republished: LocalTrackPublication,
+	sourceTrack: LocalTrack,
+): void {
+	const publishedTrack = sourceTrack.mediaStreamTrack;
+	const captureOwner = republishedCaptureOwners.get(publishedTrack) ?? sourceTrack;
+	republishedCaptureOwners.set(publishedTrack, captureOwner);
+	const republishedTrack = republished.track;
+	const releaseCapture = (publication: LocalTrackPublication): void => {
+		if (publication.track !== republishedTrack || publishedTrack.readyState !== 'ended') return;
+		participant.off(ParticipantEvent.LocalTrackUnpublished, releaseCapture);
+		captureOwner.stop();
+	};
+	participant.on(ParticipantEvent.LocalTrackUnpublished, releaseCapture);
 }

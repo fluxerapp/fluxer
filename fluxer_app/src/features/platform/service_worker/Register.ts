@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Config from '@app/features/app/config/Config';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWebStorage';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/NativeUtils';
 
@@ -54,6 +56,7 @@ async function unregisterFluxerServiceWorkers({
 	logContext: string;
 	reason: string;
 }): Promise<void> {
+	if (isDesktopLocalAppDocument()) return;
 	if (!('serviceWorker' in navigator)) return;
 	if (cleanupPushState) {
 		await cleanupNativeDesktopPushState(reason);
@@ -86,6 +89,9 @@ export async function unregisterServiceWorkersForNativeDesktop(reason = 'native-
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | undefined> {
+	if (isDesktopLocalAppDocument()) {
+		return;
+	}
 	if (!('serviceWorker' in navigator)) {
 		return;
 	}
@@ -103,7 +109,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 	}
 	try {
 		const versionParam = Config.PUBLIC_BUILD_VERSION || 'dev';
-		const swUrl = new URL('/sw.js', window.location.origin);
+		const swUrl = resolveDocumentURLFromRoot('/sw.js');
 		swUrl.searchParams.set('v', String(versionParam));
 		return await navigator.serviceWorker.register(`${swUrl.pathname}${swUrl.search}`);
 	} catch (error) {

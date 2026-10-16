@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 
-export interface VoiceCameraCapacityVoiceState {
+interface VoiceCameraCapacityVoiceState {
 	user_id: string;
 	self_video?: boolean;
 }
@@ -15,7 +15,7 @@ export interface VoiceCameraUserCapInput {
 	limit?: number;
 }
 
-export function countDistinctCameraUsers(voiceStates: Readonly<Record<string, VoiceCameraCapacityVoiceState>>): number {
+function countDistinctCameraUsers(voiceStates: Readonly<Record<string, VoiceCameraCapacityVoiceState>>): number {
 	const cameraUserIds = new Set<string>();
 	let voiceStateCount = 0;
 	for (const connectionId in voiceStates) {

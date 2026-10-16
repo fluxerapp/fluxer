@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	SpellcheckBundledDictionary,
-	SpellcheckEngine,
-	SpellcheckResolvedEngineInfo,
-} from '@app/features/platform/types/Electron';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
+import type {SpellcheckBundledDictionary, SpellcheckEngine, SpellcheckResolvedEngineInfo} from '@app/types/electron.d';
 import {SpellcheckSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -33,7 +30,7 @@ class Spellcheck {
 
 	constructor() {
 		makeAutoObservable(this, {electronDisposers: false as const}, {autoBind: true});
-		void this.initialize();
+		initializeStore(this, () => this.initialize());
 	}
 
 	private normalizeLanguages(langs: Array<string> = []): Array<string> {
@@ -56,9 +53,8 @@ class Spellcheck {
 	get reloadRequired(): boolean {
 		if (!this.providerActivationEngine) return false;
 		const isLinuxDesktop = getElectronAPI()?.platform === 'linux';
-		const wasHunspell = this.providerActivationEngine === 'hunspell' || this.providerActivationEngine === 'auto';
-		const isHunspell =
-			this.engine === 'hunspell' || this.engine === 'auto' || (isLinuxDesktop && this.engine === 'system');
+		const wasHunspell = this.providerActivationEngine === 'hunspell';
+		const isHunspell = isLinuxDesktop ? true : this.engine === 'hunspell';
 		return wasHunspell !== isHunspell;
 	}
 
@@ -189,11 +185,6 @@ class Spellcheck {
 
 	setAutoDetect(value: boolean): void {
 		this.autoDetect = value;
-		void this.pushToElectron();
-	}
-
-	setLanguages(languages: Array<string>): void {
-		this.languages = this.normalizeLanguages(languages);
 		void this.pushToElectron();
 	}
 

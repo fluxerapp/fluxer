@@ -35,6 +35,7 @@ export type ShortcutSource = 'local' | 'global';
 export type KeybindHandler = (payload: {
 	type: 'press' | 'release';
 	source: ShortcutSource;
+	sourceId: string;
 	context?: {
 		focusedMessage?: Message;
 		focusedChannel?: Channel | null;
@@ -44,6 +45,8 @@ export type KeybindHandler = (payload: {
 
 export interface HoldBindingRuntime {
 	action: HoldAction;
+	sourceId: string;
+	gamepadSourceId: string;
 	combo: KeyCombo;
 	keycode: number | null;
 	keyName: string | null;

@@ -11,6 +11,7 @@ import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -34,7 +35,7 @@ export const BanDetailsModal: React.FC<BanDetailsModalProps> = observer(({ban, o
 	const [isRevoking, setIsRevoking] = useState(false);
 	const userDisplayName = NicknameUtils.getDisplayName(ban.user);
 	const userTag = NicknameUtils.formatTagForStreamerMode(
-		ban.user.tag ?? `${ban.user.username}#${(ban.user.discriminator ?? '').padStart(4, '0')}`,
+		ban.user.tag ?? formatUserTag({...ban.user, discriminator: (ban.user.discriminator ?? '').padStart(4, '0')}),
 	);
 	const handleRevoke = useCallback(async () => {
 		if (!onRevoke) return;

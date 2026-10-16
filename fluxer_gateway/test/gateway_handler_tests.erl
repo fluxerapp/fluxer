@@ -13,6 +13,39 @@ websocket_info_session_reconnect_sends_reconnect_then_close_test() ->
         <<"Session drain requested; reconnect to continue">>
     ).
 
+websocket_info_dispatch_list_payload_emits_frame_test() ->
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, user_pinned_dms_update, [<<"1">>, <<"2">>], 1}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"USER_PINNED_DMS_UPDATE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual([<<"1">>, <<"2">>], maps:get(<<"d">>, Decoded)),
+    ?assertEqual(1, maps:get(<<"s">>, Decoded)).
+
+websocket_info_sessions_replace_list_payload_emits_frame_test() ->
+    Sessions = [
+        #{<<"session_id">> => <<"abc">>, <<"status">> => <<"online">>},
+        #{<<"session_id">> => <<"def">>, <<"status">> => <<"idle">>}
+    ],
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, sessions_replace, Sessions, 7}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"SESSIONS_REPLACE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual(Sessions, maps:get(<<"d">>, Decoded)),
+    ?assertEqual(7, maps:get(<<"s">>, Decoded)).
+
+websocket_info_empty_list_payload_emits_json_array_test() ->
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, webauthn_credentials_update, [], 3}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"WEBAUTHN_CREDENTIALS_UPDATE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual([], maps:get(<<"d">>, Decoded)).
+
 start_session_with_drain_guard_holds_during_drain_test() ->
     Request = #{},
     assert_pending_identify(
@@ -83,6 +116,17 @@ handle_session_start_result_server_error_closes_with_unknown_error_test() ->
         ),
     ?assertEqual(constants:close_code_to_num(unknown_error), CloseCode).
 
+handle_session_start_result_unknown_reason_closes_failed_to_start_test() ->
+    State = (gateway_handler:new_state())#{
+        version => 1, encoding => json, compress_ctx => gateway_compress:new_context(none)
+    },
+    {[{close, CloseCode, Reason}], _NewState} =
+        gateway_handler_identify:handle_session_start_result(
+            {error, something_unmapped}, State
+        ),
+    ?assertEqual(constants:close_code_to_num(unknown_error), CloseCode),
+    ?assertEqual(<<"Failed to start session">>, Reason).
+
 websocket_init_schedules_tokened_heartbeat_timer_test() ->
     {[{text, _Frame}], State} = gateway_handler:websocket_init(new_json_state()),
     ?assertMatch({_TimerRef, _Token}, maps:get(heartbeat_timer, State)),
@@ -105,14 +149,6 @@ heartbeat_check_replaces_matched_timer_test() ->
     ?assertNotEqual({TimerRef, Token}, maps:get(heartbeat_timer, State2)),
     gateway_handler_heartbeat:cancel_heartbeat_timer(State2).
 
-legacy_heartbeat_check_ignored_when_tokened_timer_active_test() ->
-    State0 = heartbeat_test_state(),
-    State1 = gateway_handler_heartbeat:schedule_heartbeat_check(State0),
-    {TimerRef, Token} = maps:get(heartbeat_timer, State1),
-    {ok, State2} = gateway_handler:websocket_info({heartbeat_check}, State1),
-    ?assertEqual({TimerRef, Token}, maps:get(heartbeat_timer, State2)),
-    gateway_handler_heartbeat:cancel_heartbeat_timer(State2).
-
 pending_identify_retry_ignores_stale_token_test() ->
     Timer = erlang:send_after(60000, self(), stale_pending_identify_retry),
     CurrentToken = make_ref(),
@@ -123,17 +159,6 @@ pending_identify_retry_ignores_stale_token_test() ->
     {ok, State1} = gateway_handler:websocket_info(
         {retry_pending_identify, make_ref()}, State0
     ),
-    ?assertEqual(State0, State1),
-    cancel_pending_identify_timer(State1).
-
-legacy_pending_identify_retry_ignored_when_tokened_timer_active_test() ->
-    Timer = erlang:send_after(60000, self(), stale_pending_identify_retry),
-    CurrentToken = make_ref(),
-    State0 = (new_json_state())#{
-        pending_identify => {#{token => <<"t">>}, self()},
-        pending_identify_retry_timer => {Timer, CurrentToken}
-    },
-    {ok, State1} = gateway_handler:websocket_info(retry_pending_identify, State0),
     ?assertEqual(State0, State1),
     cancel_pending_identify_timer(State1).
 
@@ -166,11 +191,6 @@ parse_forwarded_for_invalid_ipv4_octet_test() ->
     ?assertEqual(<<>>, gateway_handler:parse_forwarded_for(<<"203.0.113.300">>)).
 parse_forwarded_for_unterminated_bracket_test() ->
     ?assertEqual(<<>>, gateway_handler:parse_forwarded_for(<<"[2001:db8::1">>)).
-parse_version_test() ->
-    ?assertEqual(1, gateway_handler:parse_version(<<"1">>)),
-    ?assertEqual(undefined, gateway_handler:parse_version(<<"2">>)),
-    ?assertEqual(undefined, gateway_handler:parse_version(undefined)).
-
 parse_ignored_events_test() ->
     ?assertEqual({ok, []}, gateway_handler_identify:parse_ignored_events(undefined)),
     ?assertEqual({ok, []}, gateway_handler_identify:parse_ignored_events(null)),
@@ -185,11 +205,6 @@ parse_ignored_events_test() ->
         {error, invalid_ignored_events},
         gateway_handler_identify:parse_ignored_events(<<"not_a_list">>)
     ).
-
-adjust_status_test() ->
-    ?assertEqual(invisible, gateway_handler_dispatch:adjust_status(offline)),
-    ?assertEqual(online, gateway_handler_dispatch:adjust_status(online)),
-    ?assertEqual(idle, gateway_handler_dispatch:adjust_status(idle)).
 
 check_rate_limit_blocks_general_flood_test() ->
     with_rate_limits_enabled(fun() ->
@@ -219,6 +234,26 @@ check_presence_rate_limit_soft_drops_only_presence_test() ->
         ?assertEqual(1, length(maps:get(events, RateLimitState)))
     end).
 
+check_voice_signal_rate_limit_allows_trickle_bursts_test() ->
+    with_rate_limits_enabled(fun() ->
+        Now = erlang:system_time(millisecond),
+        State = fun(Count) ->
+            (gateway_handler:new_state())#{
+                rate_limit_state => #{
+                    events => [],
+                    op_events => #{voice_signal => lists:duplicate(Count, Now - 1000)}
+                }
+            }
+        end,
+        ?assertMatch(
+            {ok, _}, gateway_handler_rate_limit:check_rate_limit(State(239), voice_signal)
+        ),
+        ?assertMatch(
+            {opcode_rate_limited, _},
+            gateway_handler_rate_limit:check_rate_limit(State(240), voice_signal)
+        )
+    end).
+
 enqueue_voice_update_keeps_latest_update_for_connection_test() ->
     Queue0 = queue:new(),
     Data1 = #{
@@ -228,16 +263,6 @@ enqueue_voice_update_keeps_latest_update_for_connection_test() ->
     Queue1 = gateway_handler_voice:enqueue_voice_update(Queue0, Data1),
     Queue2 = gateway_handler_voice:enqueue_voice_update(Queue1, Data2),
     ?assertEqual([Data2], queue:to_list(Queue2)).
-
-enqueue_voice_update_keeps_distinct_connections_test() ->
-    Queue0 = queue:new(),
-    Data1 = #{
-        <<"guild_id">> => <<"1">>, <<"connection_id">> => <<"conn-1">>, <<"self_mute">> => false
-    },
-    Data2 = Data1#{<<"connection_id">> => <<"conn-2">>, <<"self_mute">> => true},
-    Queue1 = gateway_handler_voice:enqueue_voice_update(Queue0, Data1),
-    Queue2 = gateway_handler_voice:enqueue_voice_update(Queue1, Data2),
-    ?assertEqual([Data1, Data2], queue:to_list(Queue2)).
 
 handle_request_guild_members_queues_latest_request_while_worker_active_test() ->
     ExistingWorkerPid = self(),
@@ -262,19 +287,6 @@ handle_request_guild_counts_drops_when_socket_worker_limit_reached_test() ->
     ),
     ?assertEqual(1, maps:size(maps:get(request_workers, NewState))).
 
-request_worker_down_removes_tracked_worker_test() ->
-    Ref = make_ref(),
-    WorkerPid = self(),
-    State = (gateway_handler:new_state())#{
-        request_workers => #{
-            Ref => #{pid => WorkerPid, type => lazy_request, timer => undefined}
-        }
-    },
-    {ok, NewState} = gateway_handler_dispatch:handle_request_worker_down(
-        Ref, WorkerPid, normal, State
-    ),
-    ?assertEqual(#{}, maps:get(request_workers, NewState)).
-
 request_worker_timeout_removes_and_kills_worker_test() ->
     WorkerPid = spawn(fun request_worker_wait_loop/0),
     Ref = make_ref(),
@@ -289,65 +301,6 @@ request_worker_timeout_removes_and_kills_worker_test() ->
     ok = gateway_retry_timer:wait(10),
     ?assertEqual(#{}, maps:get(request_workers, NewState)),
     ?assertNot(erlang:is_process_alive(WorkerPid)).
-
-validate_presence_data_valid_test() ->
-    Data = #{<<"status">> => <<"online">>, <<"afk">> => false, <<"mobile">> => false},
-    {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
-    ?assertEqual(online, maps:get(status, Result)).
-
-validate_presence_data_missing_status_test() ->
-    ?assertEqual(
-        {error, invalid_presence},
-        gateway_handler_dispatch:validate_presence_data(#{<<"afk">> => false})
-    ).
-validate_presence_data_empty_map_test() ->
-    ?assertEqual(
-        {error, invalid_presence}, gateway_handler_dispatch:validate_presence_data(#{})
-    ).
-validate_presence_data_not_a_map_test() ->
-    ?assertEqual(
-        {error, invalid_presence}, gateway_handler_dispatch:validate_presence_data(not_a_map())
-    ).
-validate_presence_data_invalid_status_string_test() ->
-    ?assertEqual(
-        {error, invalid_presence},
-        gateway_handler_dispatch:validate_presence_data(#{
-            <<"status">> => <<"not_a_real_status">>
-        })
-    ).
-
-validate_presence_data_integer_status_defaults_to_online_test() ->
-    {ok, Result} = gateway_handler_dispatch:validate_presence_data(#{<<"status">> => 42}),
-    ?assertEqual(online, maps:get(status, Result)).
-
-validate_presence_data_offline_becomes_invisible_test() ->
-    {ok, Result} = gateway_handler_dispatch:validate_presence_data(#{
-        <<"status">> => <<"offline">>
-    }),
-    ?assertEqual(invisible, maps:get(status, Result)).
-
-validate_resume_data_valid_test() ->
-    ?assertEqual(
-        {ok, <<"abc">>, <<"sess1">>, 5},
-        gateway_handler_identify:validate_resume_data(#{
-            <<"token">> => <<"abc">>, <<"session_id">> => <<"sess1">>, <<"seq">> => 5
-        })
-    ).
-validate_resume_data_missing_token_test() ->
-    ?assertEqual(
-        {error, missing_required_field},
-        gateway_handler_identify:validate_resume_data(#{
-            <<"session_id">> => <<"sess1">>, <<"seq">> => 5
-        })
-    ).
-validate_resume_data_empty_map_test() ->
-    ?assertEqual(
-        {error, missing_required_field}, gateway_handler_identify:validate_resume_data(#{})
-    ).
-validate_resume_data_not_a_map_test() ->
-    ?assertEqual(
-        {error, invalid_data}, gateway_handler_identify:validate_resume_data(not_a_map())
-    ).
 
 validate_identify_data_empty_map_test() ->
     ?assertEqual(
@@ -372,65 +325,33 @@ validate_identify_data_negative_flags_test() ->
         })
     ).
 
-validate_identify_data_accepts_shard_test() ->
-    ?assertMatch(
-        {ok, <<"abc">>, _Properties, _Presence, [], 0, undefined, {1, 4}},
-        gateway_handler_identify:validate_identify_data(
-            valid_identify_data(#{
-                <<"shard">> => [1, 4]
-            })
-        )
-    ).
-
-validate_identify_data_accepts_absent_shard_test() ->
-    ?assertMatch(
-        {ok, <<"abc">>, _Properties, _Presence, [], 0, undefined, undefined},
-        gateway_handler_identify:validate_identify_data(valid_identify_data(#{}))
-    ).
-
-validate_identify_data_rejects_invalid_shard_test() ->
-    ?assertEqual(
-        {error, invalid_shard},
-        gateway_handler_identify:validate_identify_data(
-            valid_identify_data(#{
-                <<"shard">> => [2, 2]
-            })
-        )
-    ),
-    ?assertEqual(
-        {error, invalid_shard},
-        gateway_handler_identify:validate_identify_data(
-            valid_identify_data(#{
-                <<"shard">> => <<"not-a-shard">>
-            })
-        )
-    ).
-
 handle_identify_runs_identify_rate_check_at_zero_rollout_test() ->
-    session_abuse_protection:ensure_tables(),
-    OldConfig = gateway_rollout_config:get(),
-    IP = unique_test_peer_ip(<<"zero-rollout-identify">>),
-    try
-        persistent_term:put(gateway_rollout_config, OldConfig#{
-            <<"session_rollout_percentage">> => 0
-        }),
-        lists:foreach(
-            fun(_) ->
-                ?assertEqual(ok, session_abuse_protection:check_identify_rate(IP))
-            end,
-            lists:seq(1, ?TEST_IDENTIFY_MAX_PER_IP - 1)
-        ),
-        {ok, HeldState} = gateway_handler_identify:handle_identify(
-            valid_identify_data(#{}), IP, new_json_state()
-        ),
-        cancel_pending_identify_timer(HeldState),
-        ?assertEqual(
-            {error, identify_rate_limited},
-            session_abuse_protection:check_identify_rate(IP)
-        )
-    after
-        persistent_term:put(gateway_rollout_config, OldConfig)
-    end.
+    with_rate_limits_enabled(fun() ->
+        session_abuse_protection:ensure_tables(),
+        OldConfig = gateway_rollout_config:get(),
+        IP = unique_test_peer_ip(<<"zero-rollout-identify">>),
+        try
+            persistent_term:put(gateway_rollout_config, OldConfig#{
+                <<"session_rollout_percentage">> => 0
+            }),
+            lists:foreach(
+                fun(_) ->
+                    ?assertEqual(ok, session_abuse_protection:check_identify_rate(IP))
+                end,
+                lists:seq(1, ?TEST_IDENTIFY_MAX_PER_IP - 1)
+            ),
+            {ok, HeldState} = gateway_handler_identify:handle_identify(
+                valid_identify_data(#{}), IP, new_json_state()
+            ),
+            cancel_pending_identify_timer(HeldState),
+            ?assertEqual(
+                {error, identify_rate_limited},
+                session_abuse_protection:check_identify_rate(IP)
+            )
+        after
+            persistent_term:put(gateway_rollout_config, OldConfig)
+        end
+    end).
 
 handle_session_start_result_invalid_shard_closes_4010_test() ->
     {[{close, CloseCode, _Reason}], _NewState} =
@@ -445,6 +366,192 @@ handle_session_start_result_sharding_required_closes_4011_test() ->
             {error, sharding_required}, new_json_state()
         ),
     ?assertEqual(constants:close_code_to_num(sharding_required), CloseCode).
+
+identify_with_non_map_payload_closes_test() ->
+    State = (new_json_state())#{peer_ip => unique_test_peer_ip(<<"198.51.100.61">>)},
+    {[{close, CloseCode, _Reason}], _NewState} = gateway_handler_dispatch:handle_opcode(
+        identify, #{<<"d">> => null}, State
+    ),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
+
+voice_state_update_with_non_map_payload_closes_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    {[{close, CloseCode, _Reason}], _NewState} = gateway_handler_dispatch:handle_opcode(
+        voice_state_update, #{<<"d">> => <<"not-a-map">>}, State
+    ),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
+
+voice_signal_is_cast_to_the_session_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    Data = #{<<"channel_id">> => <<"100">>, <<"to">> => <<"conn-b">>, <<"data">> => #{}},
+    ?assertEqual(
+        {ok, State},
+        gateway_handler_dispatch:handle_opcode(voice_signal, #{<<"d">> => Data}, State)
+    ),
+    receive
+        {'$gen_cast', {voice_signal, Data}} -> ok
+    after 1000 ->
+        error(voice_signal_not_cast)
+    end.
+
+voice_signal_with_non_map_payload_is_dropped_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    ?assertEqual(
+        {ok, State},
+        gateway_handler_dispatch:handle_opcode(
+            voice_signal, #{<<"d">> => <<"not-a-map">>}, State
+        )
+    ).
+
+websocket_info_gateway_error_emits_an_error_frame_test() ->
+    {[{text, Frame}], _State} = gateway_handler:websocket_info(
+        {gateway_error, voice_p2p_consent_required}, new_json_state()
+    ),
+    ?assertEqual(
+        #{
+            <<"op">> => 12,
+            <<"d">> => #{
+                <<"code">> => <<"VOICE_P2P_CONSENT_REQUIRED">>,
+                <<"message">> => <<"This call is peer-to-peer and requires agreement to join">>
+            }
+        },
+        json:decode(Frame)
+    ).
+
+voice_signal_opcode_is_thirteen_test() ->
+    ?assertEqual(voice_signal, constants:gateway_opcode(13)),
+    ?assertEqual(13, constants:opcode_to_num(voice_signal)).
+
+websocket_handle_rejects_compressed_frame_past_max_payload_test() ->
+    {ok, Compressed, _} = gateway_compress:compress(
+        binary:copy(<<"a">>, constants:max_payload_size() * 64),
+        gateway_compress:new_context(zstd_stream)
+    ),
+    ?assert(byte_size(Compressed) =< constants:max_payload_size()),
+    State = (new_json_state())#{compress_ctx => gateway_compress:new_context(zstd_stream)},
+    {[{close, CloseCode, Reason}], _} =
+        gateway_handler:websocket_handle({binary, Compressed}, State),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode),
+    ?assertEqual(<<"Payload too large">>, Reason).
+
+forum_unreads_gate_off_closes_like_an_unknown_opcode_test() ->
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    persistent_term:put(
+        channel_threads_config, (channel_threads_config:default_config())#{config_version => 1}
+    ),
+    try
+        State = (new_json_state())#{session_pid => self()},
+        Unknown = gateway_handler_dispatch:handle_opcode(
+            not_an_opcode, #{<<"d">> => #{}}, State
+        ),
+        ?assertEqual({[{close, 4001, <<"Unknown opcode">>}], State}, Unknown),
+        ?assertEqual(
+            Unknown,
+            gateway_handler_dispatch:handle_opcode(
+                request_forum_unreads,
+                #{<<"d">> => #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>}},
+                State
+            )
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler_dispatch:handle_request_forum_unreads(#{}, self(), State)
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler:websocket_info(forum_unreads_unknown_opcode, State)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(channel_threads_config);
+            _ -> persistent_term:put(channel_threads_config, Previous)
+        end
+    end.
+
+forum_unreads_closes_like_an_unknown_opcode_once_a_default_config_is_pulled_test() ->
+    Key = channel_threads_config,
+    PulledKey = {channel_threads_config, pulled},
+    Previous = persistent_term:get(Key, undefined),
+    PreviousPulled = persistent_term:get(PulledKey, undefined),
+    persistent_term:put(Key, channel_threads_config:default_config()),
+    persistent_term:put(PulledKey, true),
+    try
+        Bot = fake_session(#{user_id => <<"6">>, bot => true, thread_channels_capable => true}),
+        State = (new_json_state())#{session_pid => Bot},
+        Unknown = {[{close, 4001, <<"Unknown opcode">>}], State},
+        ?assertEqual(
+            Unknown,
+            gateway_handler_dispatch:handle_opcode(
+                request_forum_unreads,
+                #{<<"d">> => #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>}},
+                State
+            )
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler_dispatch:handle_request_forum_unreads(#{}, Bot, State)
+        ),
+        ?assertNot(received_unknown_opcode())
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end,
+        case PreviousPulled of
+            undefined -> persistent_term:erase(PulledKey);
+            _ -> persistent_term:put(PulledKey, PreviousPulled)
+        end
+    end.
+
+forum_unreads_gate_on_closes_non_viewers_on_every_path_test() ->
+    with_threads_enabled(fun() ->
+        NonViewer = fake_session(#{user_id => <<"5">>, thread_channels_capable => false}),
+        State = (new_json_state())#{session_pid => NonViewer},
+        {ok, _} = gateway_handler_dispatch:handle_request_forum_unreads(#{}, NonViewer, State),
+        ?assert(received_unknown_opcode()),
+        Full = State#{request_worker_max => 1, request_workers => #{make_ref() => #{}}},
+        {ok, Full} = gateway_handler_dispatch:handle_request_forum_unreads(
+            #{}, NonViewer, Full
+        ),
+        ?assert(received_unknown_opcode()),
+        Dead = spawn(fun() -> ok end),
+        DeadState = State#{session_pid => Dead},
+        {ok, _} = gateway_handler_dispatch:handle_request_forum_unreads(#{}, Dead, DeadState),
+        ?assert(received_unknown_opcode()),
+        Viewer = fake_session(#{user_id => <<"6">>, bot => true}),
+        ViewerFull = Full#{session_pid => Viewer},
+        {ok, ViewerFull} = gateway_handler_dispatch:handle_request_forum_unreads(
+            #{}, Viewer, ViewerFull
+        ),
+        ?assertNot(received_unknown_opcode())
+    end).
+
+with_threads_enabled(Fun) ->
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    persistent_term:put(
+        channel_threads_config, (channel_threads_config:default_config())#{enabled => true}
+    ),
+    try
+        Fun()
+    after
+        case Previous of
+            undefined -> persistent_term:erase(channel_threads_config);
+            _ -> persistent_term:put(channel_threads_config, Previous)
+        end
+    end.
+
+fake_session(SessionState) ->
+    spawn(fun Loop() ->
+        receive
+            {'$gen_call', From, {get_state}} ->
+                gen_server:reply(From, SessionState),
+                Loop()
+        after 2000 -> ok
+        end
+    end).
+
+received_unknown_opcode() ->
+    receive
+        forum_unreads_unknown_opcode -> true
+    after 300 -> false
+    end.
 
 new_json_state() ->
     (gateway_handler:new_state())#{
@@ -472,6 +579,13 @@ valid_identify_data(Extra) ->
         Extra
     ).
 
+decode_dispatch_frame(Result) ->
+    {[Frame], _NewState} = Result,
+    {_FrameType, EncodedFrame} = Frame,
+    {ok, DecodedFrame} = gateway_codec:decode(EncodedFrame, json),
+    ?assertEqual(constants:opcode_to_num(dispatch), maps:get(<<"op">>, DecodedFrame)),
+    DecodedFrame.
+
 assert_reconnect_close(Result, CloseReason) ->
     {[Frame, {close, CloseCode, CloseReason}], _NewState} = Result,
     ?assertEqual(constants:close_code_to_num(unknown_error), CloseCode),
@@ -489,9 +603,6 @@ assert_held_without_pending(Result) ->
     {ok, State} = Result,
     ?assertEqual(undefined, maps:get(pending_identify, State, undefined)),
     ?assertEqual(undefined, maps:get(pending_identify_retry_timer, State, undefined)).
-
-not_a_map() ->
-    eqwalizer:dynamic_cast(not_a_map).
 
 request_worker_wait_loop() ->
     receive

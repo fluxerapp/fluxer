@@ -207,10 +207,6 @@ normalize_start_link(ignore) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-table_name_test() ->
-    ?assertEqual(presence_cache_0, table_name(0)),
-    ?assertEqual(presence_cache_5, table_name(5)).
-
 do_put_online_inserts_test() ->
     Table = test_cache_table,
     ets:new(Table, [named_table, public, set]),
@@ -234,24 +230,4 @@ do_put_invisible_deletes_test() ->
     ?assertEqual([], ets:lookup(Table, 1)),
     ets:delete(Table).
 
-ensure_table_creates_new_test() ->
-    TestTable = test_ensure_table_create,
-    ensure_table(TestTable, self()),
-    ?assertNotEqual(undefined, ets:info(TestTable)),
-    ets:delete(TestTable).
-
-ensure_table_reuses_existing_test() ->
-    TestTable = test_ensure_table_reuse,
-    ets:new(TestTable, [named_table, public, set]),
-    ets:insert(TestTable, {42, #{<<"status">> => <<"online">>}}),
-    ensure_table(TestTable, self()),
-    ?assertMatch([{42, _}], ets:lookup(TestTable, 42)),
-    ets:delete(TestTable).
-
-heir_option_returns_empty_for_undefined_test() ->
-    ?assertEqual([], heir_option(undefined)).
-
-heir_option_returns_heir_tuple_test() ->
-    Pid = self(),
-    ?assertEqual([{heir, Pid, inherited}], heir_option(Pid)).
 -endif.

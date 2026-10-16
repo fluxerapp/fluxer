@@ -2,7 +2,6 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {EmojiListHeader, EmojiListItem} from '@app/features/emoji/components/emojis/EmojiListItem';
 import {EmojiUploadModal} from '@app/features/emoji/components/modals/EmojiUploadModal';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
@@ -11,7 +10,7 @@ import {
 	seedGuildEmojiCache,
 	subscribeToGuildEmojiUpdates,
 } from '@app/features/expressions/state/GuildExpressionTabCache';
-import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import * as ImageCropUtils from '@app/features/expressions/utils/ImageCropUtils';
 import {isSvgFile} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {CloneAllowedToggle} from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle';
@@ -32,8 +31,9 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_EMOJIS} from '@fluxer/constants/src/LimitConstants';
+import {EMOJI_MAX_SIZE, MAX_GUILD_EMOJIS} from '@fluxer/constants/src/LimitConstants';
 import type {GuildEmojiWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -179,7 +179,8 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 	}, [filteredEmojis]);
 	const maxEmojis = guild?.maxEmojis ?? MAX_GUILD_EMOJIS;
 	const currentEmojiCount = emojis.length;
-	const emojiMaxSizeLabel = formatFileSize(GlobalLimits.getEmojiMaxSize());
+	const maxEmojiSize = guild?.maxEmojiSize ?? EMOJI_MAX_SIZE;
+	const emojiMaxSizeLabel = formatFileSize(i18n.locale, maxEmojiSize);
 	const canModifyEmoji = useCallback(
 		(emoji: GuildEmojiWithUser): boolean => {
 			if (canManageExpressions) return true;
@@ -291,8 +292,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 			);
 			const preparedEmojis: Array<{name: string; image: string; file: File}> = [];
 			const preparationFailures: Array<EmojiUploadFailure> = [];
-			const maxEmojiSize = GlobalLimits.getEmojiMaxSize();
-			const maxEmojiSizeLabel = formatFileSize(maxEmojiSize);
+			const maxEmojiSizeLabel = formatFileSize(i18n.locale, maxEmojiSize);
 			for (const file of filesWithinSlots) {
 				try {
 					const base64Image = await ImageCropUtils.optimizeEmojiImage(file, maxEmojiSize, 128);
@@ -307,7 +307,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 										? EMOJI_PROCESSED_FILE_TOO_LARGE_DESCRIPTOR
 										: EMOJI_SOURCE_FILE_TOO_LARGE_DESCRIPTOR,
 									{
-										fileSize: formatFileSize(error.actualSizeBytes),
+										fileSize: formatFileSize(i18n.locale, error.actualSizeBytes),
 										maxSize: maxEmojiSizeLabel,
 									},
 								)
@@ -399,7 +399,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 				);
 			}
 		},
-		[guildId, fetchEmojis, maxEmojis, currentEmojiCount, i18n, renderEmojiFailureDescription],
+		[guildId, fetchEmojis, maxEmojis, maxEmojiSize, currentEmojiCount, i18n, renderEmojiFailureDescription],
 	);
 	const handleDrop = useCallback(
 		async (files: Array<File>) => {

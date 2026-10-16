@@ -98,11 +98,6 @@ function getBackendAvailability() {
 	return binding.getBackendAvailability();
 }
 
-function __setBindingForTests(nextBinding) {
-	binding = nextBinding;
-	loadError = null;
-}
-
 class ProcessLoopback extends EventEmitter {
 	constructor(pid, options = {}) {
 		super();
@@ -170,25 +165,9 @@ class ProcessLoopback extends EventEmitter {
 		}
 	}
 
-	setScreenAudioSink(handle) {
-		if (typeof this.native.setScreenAudioSink !== 'function') return false;
-		try {
-			return this.native.setScreenAudioSink(handle) !== false;
-		} catch {
-			return false;
-		}
-	}
-
-	clearScreenAudioSink() {
-		if (typeof this.native.clearScreenAudioSink === 'function') {
-			this.native.clearScreenAudioSink();
-		}
-	}
-
 	async stop() {
 		if (this.stopped) return;
 		this.stopped = true;
-		this.clearScreenAudioSink();
 		try {
 			await this.native.stop();
 		} finally {
@@ -204,5 +183,4 @@ module.exports = {
 	getBackendInfo,
 	pidFromWindowId,
 	loadError,
-	__setBindingForTests,
 };

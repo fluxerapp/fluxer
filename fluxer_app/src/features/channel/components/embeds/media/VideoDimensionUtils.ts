@@ -26,6 +26,8 @@ const DEFAULT_INLINE_VIDEO_LAYOUT_CONSTRAINTS: VideoLayoutConstraints = {
 	maxWidth: 400,
 	maxHeight: 400,
 };
+const MAX_INLINE_PLAYBACK_LONG_EDGE = 6016;
+const MAX_INLINE_PLAYBACK_SHORT_EDGE = 3384;
 
 export function normalizeVideoDimensions(dimensions?: Partial<VideoDimensions> | null): VideoDimensions | null {
 	const width = dimensions?.width;
@@ -37,6 +39,18 @@ export function normalizeVideoDimensions(dimensions?: Partial<VideoDimensions> |
 		width: Math.round(width),
 		height: Math.round(height),
 	};
+}
+
+export function isInlinePlayableVideoSize(dimensions?: Partial<VideoDimensions> | null): boolean {
+	const source = normalizeVideoDimensions(dimensions);
+	if (source === null) {
+		return true;
+	}
+	const {width, height} = source;
+	return (
+		(width <= MAX_INLINE_PLAYBACK_LONG_EDGE && height <= MAX_INLINE_PLAYBACK_SHORT_EDGE) ||
+		(width <= MAX_INLINE_PLAYBACK_SHORT_EDGE && height <= MAX_INLINE_PLAYBACK_LONG_EDGE)
+	);
 }
 
 function normalizeConstraint(value: number | undefined, fallback: number): number {

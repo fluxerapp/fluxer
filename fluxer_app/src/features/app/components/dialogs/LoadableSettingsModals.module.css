@@ -1,0 +1,18 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: auto;
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	background: hsl(0deg 0% 0%);
+	opacity: 0.85;
+	pointer-events: none;
+}

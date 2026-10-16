@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GuildMemberProfileFlags, type JoinSourceType} from '@fluxer/constants/src/GuildConstants';
+import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
+import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
-import type {GuildID, InviteCode, RoleID, UserID} from '../BrandedTypes';
-import type {GuildMemberRow} from '../database/types/GuildTypes';
 
 export class GuildMember {
 	readonly guildId: GuildID;
@@ -50,18 +50,6 @@ export class GuildMember {
 		this.profileFlags = row.profile_flags ?? 0;
 		this.mentionFlags = row.mention_flags ?? 0;
 		this.version = row.version;
-	}
-
-	hasProfileFlag(flag: number): boolean {
-		return (this.profileFlags & flag) === flag;
-	}
-
-	isAvatarUnset(): boolean {
-		return this.hasProfileFlag(GuildMemberProfileFlags.AVATAR_UNSET);
-	}
-
-	isBannerUnset(): boolean {
-		return this.hasProfileFlag(GuildMemberProfileFlags.BANNER_UNSET);
 	}
 
 	toRow(): GuildMemberRow {

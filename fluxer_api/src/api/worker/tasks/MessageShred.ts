@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {enqueueCrosspostSourceRemoval} from '@app/api/channel/services/message/CrosspostPropagation';
+import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import type {Message} from '@app/api/models/Message';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
 import {z} from 'zod';
-import type {ChannelID, MessageID} from '../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import {purgeMessageAttachments} from '../../channel/services/message/MessageHelpers';
-import type {Message} from '../../models/Message';
-import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import {getWorkerDependencies} from '../WorkerContext';
-import {chunkArray, createBulkDeleteDispatcher} from './utils/MessageDeletion';
 
 const PayloadSchema = z.object({
 	job_id: z.string().min(1),
@@ -29,7 +31,8 @@ const STATUS_TTL_SECONDS = seconds('1 hour');
 const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	const data = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload: data}, 'Processing messageShred task');
-	const {kvClient, channelRepository, gatewayService, storageService, purgeQueue} = getWorkerDependencies();
+	const {kvClient, channelRepository, gatewayService, storageService, purgeQueue, workerService} =
+		getWorkerDependencies();
 	const progressKey = `message_shred_status:${data.job_id}`;
 	const requestedEntries = data.entries.length;
 	const startedAt = new Date().toISOString();
@@ -62,11 +65,6 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	await persistStatus('in_progress');
 	const authorId = createUserID(BigInt(data.target_user_id));
 	const seen = new Set<string>();
-	const bulkDeleteDispatcher = createBulkDeleteDispatcher({
-		channelRepository,
-		gatewayService,
-		batchSize: DELETION_CHUNK_SIZE,
-	});
 	const processSlice = async (
 		entriesSlice: Array<{
 			channel_id: string;
@@ -100,7 +98,7 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 		for (const validationChunk of chunkArray(typedSlice, VALIDATION_CHUNK_SIZE)) {
 			const messageFetches = validationChunk.map(
 				({channelId, messageId}: {channelId: ChannelID; messageId: MessageID}) =>
-					channelRepository.getMessage(channelId, messageId),
+					channelRepository.messages.getMessage(channelId, messageId),
 			);
 			const fetchedMessages = await Promise.all(messageFetches);
 			const deletableChunk: Array<{
@@ -126,10 +124,8 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 				await Promise.all(
 					deletionChunk.map(
 						async ({channelId, messageId, message}: {channelId: ChannelID; messageId: MessageID; message: Message}) => {
-							if (message.attachments.length > 0) {
-								await purgeMessageAttachments(message, storageService, purgeQueue);
-							}
-							return channelRepository.deleteMessage(channelId, messageId, authorId);
+							await purgeMessageAttachments(message, storageService, purgeQueue);
+							return channelRepository.messages.deleteMessage(channelId, messageId, authorId);
 						},
 					),
 				);
@@ -138,11 +134,28 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 					deletionChunk.map(({messageId}) => messageId),
 					{context: {source: 'message_shred', jobId: data.job_id}},
 				);
+				await enqueueCrosspostSourceRemoval(workerService, {
+					messages: deletionChunk.map(({message}) => message),
+					mode: 'purge',
+				});
 				await persistStatus('in_progress');
+				const messagesByChannel = new Map<ChannelID, Array<MessageID>>();
 				for (const {channelId, messageId} of deletionChunk) {
-					bulkDeleteDispatcher.track(channelId, messageId);
+					const ids = messagesByChannel.get(channelId) ?? [];
+					ids.push(messageId);
+					messagesByChannel.set(channelId, ids);
 				}
-				await bulkDeleteDispatcher.flush(true);
+				for (const [channelId, messageIds] of messagesByChannel) {
+					const channel = await channelRepository.channelData.findUnique(channelId);
+					if (!channel) continue;
+					await decrementThreadMessageCount(channelRepository, channel, messageIds);
+					await dispatchChannelEvent({
+						gatewayService,
+						channel,
+						event: 'MESSAGE_DELETE_BULK',
+						data: {channel_id: channelId.toString(), ids: messageIds.map((id) => id.toString())},
+					});
+				}
 			}
 		}
 	};
@@ -152,7 +165,6 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	await persistStatus('completed', {
 		completed_at: new Date().toISOString(),
 	});
-	await bulkDeleteDispatcher.flush(true);
 };
 
 export default messageShredTask;

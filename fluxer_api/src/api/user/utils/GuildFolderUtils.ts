@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildFolder} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {type GuildFolderIcon, UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {GuildFolder} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IUserRepository} from '../IUserRepository';
-import {mapUserSettingsToResponse} from '../UserMappers';
 
 export function dedupeGuildFolders(folders: ReadonlyArray<GuildFolder>): {
 	folders: Array<GuildFolder>;
@@ -87,7 +87,7 @@ function rankOccurrence(
 export async function removeGuildFromUserFolders(params: {
 	userId: UserID;
 	guildId: GuildID;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	gatewayService: IGatewayService;
 }): Promise<void> {
 	const {userId, guildId, userRepository, gatewayService} = params;

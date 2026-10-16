@@ -1,0 +1,614 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Threads
+description: Thread objects, starting and archiving threads, archived thread lists, thread search, and thread permissions.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A thread is a channel inside a guild text, announcement, forum, or media channel that holds its own messages. A public thread or an announcement thread is visible to everyone who can view its parent. A private thread is visible to its members and to thread moderators.
+
+[Thread members](/http-api/thread-members/) defines joining, leaving, and member lists. [Forums](/http-api/forums/) defines forum and media channels, where every thread is a post.
+
+:::note[User requests need the `channel_threads` client capability]
+A user request without the `channel_threads` client capability gets 404 `NOT_FOUND` from every route with a route header on this page. A bot needs no declaration. [Client capability](#client-capability) has the details.
+:::
+
+[List active guild threads](#list-active-guild-threads) returns 404 `NOT_FOUND` to every user. [Modify thread](#modify-thread) and [Delete thread](#delete-thread) return 404 `UNKNOWN_CHANNEL` to a user without the capability.
+
+## Thread object
+
+A thread is a [channel object](/http-api/channels/#channel-object) with the thread fields below.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the thread |
+| type | integer | The [thread type](#thread-types) |
+| guild_id | snowflake | The ID of the guild |
+| parent_id | snowflake | The ID of the text, announcement, forum, or media channel the thread belongs to |
+| owner_id | snowflake | The ID of the user or webhook that created the thread |
+| name | string | The name of the thread (1-100 characters) |
+| last_message_id | ?snowflake | The ID of the most recent message, or null when the thread has none |
+| last_pin_timestamp | ?ISO8601 timestamp | The time a message was most recently pinned, or null when nothing has ever been pinned |
+| rate_limit_per_user | integer | The slowmode interval in seconds (0-21,600) |
+| flags<sup>2</sup> | integer | The [channel flags](/http-api/forums/#channel-flags) of the thread |
+| thread_metadata | [thread metadata](#thread-metadata-object) object | The archive and lock state of the thread |
+| message_count<sup>3</sup> | integer | The number of messages in the thread |
+| total_message_sent<sup>4</sup> | integer | The number of messages ever sent in the thread |
+| member_count | integer | The number of thread members, capped at 50 |
+| applied_tags?<sup>5</sup> | array[snowflake] | The IDs of the [forum tags](/http-api/forums/#forum-tag-object) applied to a post (max 5) |
+| member_ids_preview?<sup>5</sup> | array[snowflake] | The IDs of the most recently joined members of a post, newest first (max 8) |
+| member?<sup>6</sup> | [thread member](/http-api/thread-members/#thread-member-object) object | The thread member object of the caller |
+
+<sup>1</sup> A thread started from a message has the ID of that message. The first message of a forum post has the ID of the post
+
+<sup>2</sup> Only `PINNED` is ever set, and only on a forum or media post
+
+<sup>3</sup> Excludes the first message of a forum post and every deleted message
+
+<sup>4</sup> Excludes the first message of a forum post. Deleting a message does not lower it
+
+<sup>5</sup> Present only on a thread whose parent is a forum or media channel. A Gateway payload has no `member_ids_preview`
+
+<sup>6</sup> Present only when the caller is a member, on [Get channel](/http-api/channels/#get-channel), on [Modify channel](/http-api/channels/#modify-channel), on `thread` of a message, on [Thread Create](/gateway/threads/#thread-create), and on the `threads` list of a guild in [Ready](/gateway/events/#ready), [Guild Create](/gateway/events/#guild-create), and [Guild Sync](/gateway/events/#guild-sync)
+
+The schema also declares `topic`, `url`, `icon`, `position`, `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region`, `rtc_p2p`, `permission_overwrites`, `recipients`, `nsfw`, `nsfw_override`, `content_warning_level`, `content_warning_text`, `nicks`, `default_auto_archive_duration`, `default_thread_rate_limit_per_user`, `available_tags`, `default_reaction_emoji`, `default_sort_order`, `default_forum_layout`, and `default_tag_setting`. Fluxer never sends them on a thread. A thread uses the permissions of its parent as [Thread permissions](#thread-permissions) describes. An age restriction and a content warning resolve through the parent, then the parent category, and finally the guild.
+
+### Example
+
+```json
+{
+  "id": "1501320100000000000",
+  "type": 11,
+  "guild_id": "1501314428688990000",
+  "parent_id": "1501314428688998182",
+  "owner_id": "1501314428688992222",
+  "name": "Release checklist",
+  "last_message_id": "1501320500000000000",
+  "last_pin_timestamp": null,
+  "rate_limit_per_user": 0,
+  "flags": 0,
+  "thread_metadata": {
+    "archived": false,
+    "auto_archive_duration": 4320,
+    "archive_timestamp": "2026-05-05T20:30:05.018Z",
+    "locked": false,
+    "create_timestamp": "2026-05-05T20:30:05.018Z"
+  },
+  "message_count": 12,
+  "total_message_sent": 14,
+  "member_count": 3
+}
+```
+
+## Thread metadata object
+
+The archive and lock state of a thread.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| archived | boolean | Whether the thread is archived |
+| auto_archive_duration | integer | The [auto archive duration](#auto-archive-durations) in minutes |
+| archive_timestamp<sup>1</sup> | ISO8601 timestamp | The time the thread was last archived, unarchived, or given a new auto archive duration |
+| locked | boolean | Whether only thread moderators can act in the thread |
+| invitable?<sup>2</sup> | boolean | Whether a member who is not a thread moderator can add members who are not thread moderators |
+| create_timestamp | ISO8601 timestamp | The time the thread was created |
+
+<sup>1</sup> Equal to `create_timestamp` until the first of those changes
+
+<sup>2</sup> Present only on a private thread
+
+## Thread types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 10 | ANNOUNCEMENT_THREAD | A thread in an announcement channel, visible to everyone who can view the parent |
+| 11 | PUBLIC_THREAD | A thread visible to everyone who can view the parent |
+| 12 | PRIVATE_THREAD | A thread in a guild text channel visible to its members and to thread moderators |
+
+A forum or media post is always `PUBLIC_THREAD`. Every thread in an announcement channel is `ANNOUNCEMENT_THREAD`, and an announcement channel holds no private threads.
+
+Converting a guild text channel into an announcement channel turns each of its public threads into an announcement thread. Converting it back turns them into public threads again. Fluxer emits [Thread Update](/gateway/threads/#thread-update) with the new `type` for each active thread. A guild text channel with a private thread cannot become an announcement channel, and the request returns 400 `CHANNEL_HAS_THREADS`.
+
+A message in an announcement thread cannot be published to following channels. Publishing returns 400 `ANNOUNCEMENT_CHANNEL_REQUIRED`. Publishing the message a thread started from works as for any other announcement. A copy delivered to a following channel starts with neither `HAS_THREAD` nor `thread`.
+
+## Auto archive durations
+
+| Value | Description |
+| --- | --- |
+| 60 | One hour |
+| 1440 | One day |
+| 4320 | Three days, the default |
+| 10080 | One week |
+
+A create request that omits `auto_archive_duration` gets 4320. Fluxer does not apply the `default_auto_archive_duration` of the parent.
+
+## Thread lifecycle
+
+Fluxer archives an active thread once `auto_archive_duration` minutes pass after the later of its last message and its `archive_timestamp`. It then emits [Thread Update](/gateway/threads/#thread-update). A pinned forum post is never archived automatically. Archiving a pinned post clears its `PINNED` flag.
+
+A guild holds at most 1,000 active threads. Creating or unarchiving a thread past that count returns 400 `MAX_ACTIVE_THREADS`.
+
+Sending a message to an archived thread unarchives it. Fluxer emits [Thread Update](/gateway/threads/#thread-update) before the message. A locked thread returns 400 `THREAD_LOCKED` to a caller who is not a thread moderator for a message, a reaction, a pin, an edit, a join, or an added member.
+
+An archived thread accepts no reaction, pin, edit, join, leave, or member change, and each returns 400 `THREAD_ARCHIVED`. Deleting a message in an archived thread is allowed.
+
+### Thread moderators
+
+A thread moderator is the guild owner, a member with `ADMINISTRATOR`, or a member holding `MANAGE_THREADS` in the parent who is not timed out.
+
+## Thread permissions
+
+A thread has no permission overwrites of its own. Fluxer computes permissions in the parent channel and then replaces `SEND_MESSAGES` with `SEND_MESSAGES_IN_THREADS`. Posting in a forum or media channel itself uses the unreplaced `SEND_MESSAGES` of that channel.
+
+[Permissions](/http-api/permissions/#permissions) lists the four thread bits, `MANAGE_THREADS`, `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS`. `MANAGE_THREADS` is an [elevated permission](/http-api/permissions/#elevated-permissions). `ADMINISTRATOR` grants all four bits. The four bits are [feature-gated](/http-api/permissions/#feature-gated-permission-bits).
+
+These actions need an enrolled authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless the caller owns the guild. Without one, each returns 400 `TWO_FACTOR_REQUIRED`.
+
+- [Delete thread](#delete-thread).
+- [Modify thread](#modify-thread) with a change to `locked`, `rate_limit_per_user`, or `flags` that needs a thread moderator, or with unarchiving a locked thread.
+- [Modify thread](#modify-thread) with a change to `name`, `auto_archive_duration`, or `invitable`, or with archiving, by a caller who is not the thread owner.
+- [Join thread](/http-api/thread-members/#join-thread), [Add thread member](/http-api/thread-members/#add-thread-member), and [Remove thread member](/http-api/thread-members/#remove-thread-member) in the cases those entries state.
+
+A timed-out member can read a thread and can join or leave one. A timed-out member who is neither the guild owner nor an administrator receives 403 `COMMUNICATION_DISABLED` for starting, modifying, or deleting a thread. The same applies to adding or removing a thread member, sending a message, adding a reaction, pinning, and editing their own message in a thread.
+
+A caller who can view the parent but is neither a member nor a thread moderator receives 403 `MISSING_ACCESS` for a private thread. Losing access to the parent keeps the membership, and the member receives no event from the thread until access returns.
+
+## Start thread from message
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/threads" bot auditReason />
+
+Starts a public thread from a message in a guild text channel, or an announcement thread from a message in an announcement channel. Requires `CREATE_PUBLIC_THREADS` and `READ_MESSAGE_HISTORY`. Returns a [thread object](#thread-object) on success. Emits a [Thread Create](/gateway/threads/#thread-create) Gateway event.
+
+### Limitations
+
+- The channel must be a guild text or announcement channel.
+- The message must be a default message or a reply.
+- A message starts at most one thread.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild text or announcement channel |
+| message_id | snowflake | The ID of the message to start the thread from |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the thread (1-100 characters) |
+| auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
+| rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
+
+`rate_limit_per_user` defaults to the `default_thread_rate_limit_per_user` of the parent, or `0` when the parent has none.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [thread](#thread-object) object | Thread was started |
+| 400 | [error response](/http-api/#error-response) | Channel is not a guild text or announcement channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Message is a system message and the request returns `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
+| 400 | [error response](/http-api/#error-response) | Message already started a thread and the request returns `THREAD_ALREADY_CREATED_FOR_MESSAGE` |
+| 400 | [error response](/http-api/#error-response) | Guild has 1,000 active threads and the request returns `MAX_ACTIVE_THREADS` |
+| 400 | [error response](/http-api/#error-response) | Parent slowmode denies the thread and the request returns `SLOWMODE_RATE_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks a required permission and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller is timed out and the request returns `COMMUNICATION_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller account is limited and the request returns `ACCOUNT_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | Message does not exist and the request returns `UNKNOWN_MESSAGE` |
+
+### Side effects
+
+- Fluxer sets `HAS_THREAD` on the message and emits [Message Update](/gateway/events/#message-update) with `thread`.
+- Fluxer emits [Message Create](/gateway/events/#message-create) for the `THREAD_STARTER_MESSAGE` of the thread.
+- A source message outside the five most recent messages of the parent also produces a `THREAD_CREATED` message in the parent.
+- The caller becomes the first thread member.
+
+Starting a thread uses the parent slowmode on its own counter. A bot and a member holding `BYPASS_SLOWMODE` are exempt.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:create::channel_id` bucket.
+
+## Start thread
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/threads" bot auditReason />
+
+Starts a thread with no source message, or creates a post in a forum or media channel. Returns a [thread object](#thread-object), or a [forum post object](/http-api/forums/#forum-post-object) for a post, on success. Emits a [Thread Create](/gateway/threads/#thread-create) Gateway event.
+
+### Limitations
+
+- In a guild text channel, a public thread requires `CREATE_PUBLIC_THREADS` and a private thread requires `CREATE_PRIVATE_THREADS`.
+- In an announcement channel, a thread requires `CREATE_PUBLIC_THREADS`. Both `ANNOUNCEMENT_THREAD` and `PUBLIC_THREAD` start an announcement thread, and `PRIVATE_THREAD` returns 400 `INVALID_CHANNEL_TYPE`.
+- In a guild text channel, `ANNOUNCEMENT_THREAD` returns 400 `INVALID_CHANNEL_TYPE`.
+- In a forum or media channel, a post requires `SEND_MESSAGES` in that channel.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild text, announcement, forum, or media channel |
+
+### JSON body
+
+The parent type selects the body. Either body can be sent as multipart form data with the JSON in a `payload_json` part. A forum or media post can also attach files in `files[n]` parts, as [Create message](/http-api/messages/#create-message) describes.
+
+`rate_limit_per_user` defaults to the `default_thread_rate_limit_per_user` of the parent, or `0` when the parent has none.
+
+#### Text and announcement channel body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the thread (1-100 characters) |
+| type | integer | The [thread type](#thread-types) to start |
+| auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
+| rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
+| invitable?<sup>1</sup> | boolean | Whether a member who is not a thread moderator can add members who are not thread moderators (default true) |
+
+<sup>1</sup> Applies only to a private thread
+
+#### Forum post body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the post (1-100 characters) |
+| message | object | The first message, with the fields of [Create message](/http-api/messages/#create-message) other than `message_reference`, `nonce`, `tts`, and `favorite_meme_id` |
+| applied_tags?<sup>1</sup> | array[snowflake] | The IDs of the forum tags to apply (max 5) |
+| auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
+| rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
+| type?<sup>2</sup> | integer | The thread type (`11` only) |
+
+<sup>1</sup> Required when the channel has `REQUIRE_TAG`. A tag marked `moderated` needs a thread moderator
+
+<sup>2</sup> Any other value returns 400 `INVALID_CHANNEL_TYPE`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [forum post](/http-api/forums/#forum-post-object) object | Post was created in a forum or media channel |
+| 201 | [thread](#thread-object) object | Thread was started in a guild text or announcement channel |
+| 400 | [error response](/http-api/#error-response) | Channel cannot hold threads, or the thread type does not fit it, returning `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Guild has 1,000 active threads and the request returns `MAX_ACTIVE_THREADS` |
+| 400 | [error response](/http-api/#error-response) | Parent slowmode denies the thread and the request returns `SLOWMODE_RATE_LIMITED` |
+| 400 | [error response](/http-api/#error-response) | A forum post names no tag under `REQUIRE_TAG` and the request returns `FORUM_TAG_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | A forum post names no tag, with `REQUIRE_TAG` and no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks a required permission or applies a moderated tag, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller is timed out and the request returns `COMMUNICATION_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller account is limited and the request returns `ACCOUNT_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | A tag does not exist and the request returns `UNKNOWN_FORUM_TAG` |
+
+In a channel with `REQUIRE_TAG` and no unmoderated tag, a caller who is not a thread moderator receives `NO_TAGS_AVAILABLE_TO_NON_MODERATORS`, and a thread moderator receives `FORUM_TAG_REQUIRED`. [Creating and modifying a forum](/http-api/forums/#creating-and-modifying-a-forum) states how a channel reaches that state.
+
+### Side effects
+
+- A public thread in a guild text channel and an announcement thread post a `THREAD_CREATED` message in the parent. A private thread and a forum post have none.
+- The first message of a forum post has the ID of the post, and a failed first message deletes the post again.
+- Creating a forum post marks the forum as read for a user caller.
+- The caller becomes the first thread member.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:thread:create::channel_id` bucket.
+
+## Modify thread
+
+[Modify channel](/http-api/channels/#modify-channel) on a thread takes the thread body below and returns the updated [thread object](#thread-object). It emits a [Thread Update](/gateway/threads/#thread-update) Gateway event when a field changes.
+
+### Limitations
+
+- `name`, `auto_archive_duration`, and archiving need the thread owner or a thread moderator.
+- `locked` needs a thread moderator, and the thread owner can set it to true.
+- `rate_limit_per_user` and `flags` need a thread moderator.
+- `invitable` needs the thread owner or a thread moderator.
+- Unarchiving needs a thread member, the thread owner, or a thread moderator, and needs a thread moderator when the thread is locked.
+- An archived thread accepts no other change unless the same body sets `archived` to false.
+
+### Thread body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The name of the thread (1-100 characters) |
+| archived?<sup>1</sup> | ?boolean | Whether the thread is archived |
+| auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes |
+| locked?<sup>1</sup> | ?boolean | Whether only thread moderators can act in the thread |
+| rate_limit_per_user?<sup>2</sup> | ?integer | The slowmode interval in seconds (0-21,600) |
+| flags?<sup>3</sup> | integer | The [channel flags](/http-api/forums/#channel-flags) of the thread |
+| applied_tags?<sup>4</sup> | array[snowflake] | The complete set of forum tag IDs (max 5) |
+| invitable?<sup>5</sup> | ?boolean | Whether a member who is not a thread moderator can add members who are not thread moderators |
+
+<sup>1</sup> Null leaves the value unchanged
+
+<sup>2</sup> Null sets `0`
+
+<sup>3</sup> Only `PINNED` on a forum or media post. Any other bit returns 400 `INVALID_FORM_BODY`
+
+<sup>4</sup> Only on a forum or media post, and only by the thread owner or a thread moderator
+
+<sup>5</sup> Applies only to a private thread. Null leaves the value unchanged
+
+On a public thread in a guild text channel `applied_tags` returns 400 `INVALID_CHANNEL_TYPE`. A private or announcement thread ignores it.
+
+Pinning a second post in one forum returns 400 `MAX_PINNED_THREADS_IN_FORUM`. Changing `auto_archive_duration` resets `archive_timestamp`. Renaming a thread posts a `CHANNEL_NAME_CHANGE` message in it.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [thread](#thread-object) object | Thread was modified |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the body changes another field, returning `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | Unarchiving would exceed 1,000 active threads and the request returns `MAX_ACTIVE_THREADS` |
+| 400 | [error response](/http-api/#error-response) | Forum already has a pinned post and the request returns `MAX_PINNED_THREADS_IN_FORUM` |
+| 400 | [error response](/http-api/#error-response) | `flags` sets a bit the thread cannot hold and the request returns `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | `applied_tags` is set on a public thread in a guild text channel, returning `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | `applied_tags` is empty under `REQUIRE_TAG` and the request returns `FORUM_TAG_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | `applied_tags` is empty, with `REQUIRE_TAG` and no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks the owner or moderator role the field needs and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller is timed out and the request returns `COMMUNICATION_DISABLED` |
+| 404 | [error response](/http-api/#error-response) | A tag does not exist and the request returns `UNKNOWN_FORUM_TAG` |
+
+In a channel with `REQUIRE_TAG` and no unmoderated tag, a caller who is not a thread moderator receives `NO_TAGS_AVAILABLE_TO_NON_MODERATORS`, and a thread moderator receives `FORUM_TAG_REQUIRED`. [Creating and modifying a forum](/http-api/forums/#creating-and-modifying-a-forum) states how a channel reaches that state.
+
+### Rate limit
+
+Shared with [Modify channel](/http-api/channels/#modify-channel).
+
+## Delete thread
+
+[Delete or leave channel](/http-api/channels/#delete-or-leave-channel) on a thread deletes it with its messages, attachments, and memberships. It requires a [thread moderator](#thread-moderators) and emits a [Thread Delete](/gateway/threads/#thread-delete) Gateway event.
+
+### Side effects
+
+- The source message of a thread started from a message loses `HAS_THREAD`, and Fluxer emits [Message Update](/gateway/events/#message-update) for it.
+- Fluxer removes the thread and its messages from search.
+- The guild audit log records action type 112.
+
+### Rate limit
+
+Shared with [Delete or leave channel](/http-api/channels/#delete-or-leave-channel).
+
+## List active guild threads
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/threads/active" bot />
+
+Returns every active thread in the guild that the bot can view, newest first. Requires a bot token.
+
+A private thread is included when the bot is a member or a thread moderator in its parent.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](#thread-object) object] | The active threads |
+| members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the bot joined |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | active threads object | Threads were returned |
+| 403 | [error response](/http-api/#error-response) | Bot is not a member of the guild and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Caller is a user, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Rate limit
+
+5 requests per 10 seconds for each authenticated user and guild ID, on the `guild:threads:active::guild_id` bucket.
+
+## List public archived threads
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/threads/archived/public" bot />
+
+Returns the archived public threads of a guild text, announcement, forum, or media channel, most recently archived first. An announcement channel returns announcement threads. Requires `READ_MESSAGE_HISTORY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the parent channel |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| before? | ISO8601 timestamp | Return threads archived before this time |
+| limit? | integer | The maximum number of threads to return (2-100, default 50) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](#thread-object) object] | The archived threads |
+| members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
+| has_more | boolean | Whether a later request can return more threads |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | archived threads object | Threads were returned |
+| 400 | [error response](/http-api/#error-response) | Channel is not a thread parent and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `READ_MESSAGE_HISTORY` and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:threads:archived:list::channel_id` bucket.
+
+## List private archived threads
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/threads/archived/private" bot />
+
+Returns the archived private threads of a guild text channel, most recently archived first. Requires `READ_MESSAGE_HISTORY` and a [thread moderator](#thread-moderators).
+
+An announcement, forum, or media channel returns 400 `INVALID_CHANNEL_TYPE`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild text channel |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| before? | ISO8601 timestamp | Return threads archived before this time |
+| limit? | integer | The maximum number of threads to return (2-100, default 50) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](#thread-object) object] | The archived threads |
+| members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
+| has_more | boolean | Whether a later request can return more threads |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:threads:archived:list::channel_id` bucket.
+
+## List joined private archived threads
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/users/@me/threads/archived/private" bot />
+
+Returns the archived private threads of a guild text channel that the caller joined, newest first. Requires `READ_MESSAGE_HISTORY`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| before? | snowflake | Return threads with an ID below this thread ID |
+| limit? | integer | The maximum number of threads to return (2-100, default 50) |
+
+An announcement, forum, or media channel returns 400 `INVALID_CHANNEL_TYPE`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](#thread-object) object] | The archived threads |
+| members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
+| has_more | boolean | Whether a later request can return more threads |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:threads:archived:list::channel_id` bucket.
+
+## Search threads
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/threads/search" bot />
+
+Searches the threads of a guild text, announcement, forum, or media channel by name and tag. Requires `READ_MESSAGE_HISTORY`.
+
+A caller who is not a thread moderator finds public threads and the private threads they joined.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The text to match in thread names (max 100 characters) |
+| tag?<sup>1</sup> | array[snowflake] | The forum tag IDs to filter by, repeated once per tag (max 20) |
+| tag_setting? | string | `match_some` or `match_all`, defaulting to the `default_tag_setting` of the channel |
+| archived? | boolean | Whether to return only archived or only active threads (default both) |
+| sort_by? | string | `last_message_time`, `archive_time`, `relevance`, or `creation_time` (default `last_message_time`) |
+| sort_order? | string | `asc` or `desc` (default `desc`) |
+| limit? | integer | The maximum number of threads to return (1-25, default 25) |
+| offset? | integer | The number of threads to skip (0-9,975, default 0) |
+| max_id? | snowflake | Return threads with an ID below this ID |
+| min_id? | snowflake | Return threads with an ID above this ID |
+| slop? | integer | A value Fluxer accepts and ignores (0-100, default 2) |
+
+<sup>1</sup> Fluxer drops a tag the channel does not have. Under `match_all` a dropped tag empties the result, and under `match_some` the result is empty when every tag is dropped
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](#thread-object) object] | The matching threads |
+| members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
+| has_more | boolean | Whether a later request can return more threads |
+| total_results | integer | The number of matching threads |
+| first_messages?<sup>1</sup> | array[[message](/http-api/messages/#message-object) object] | The first message of each returned post |
+
+<sup>1</sup> Present only for a forum or media channel
+
+A 202 response has the body below. A search in a guild whose index is not built yet queues the build.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | Always `SEARCH_INDEX_NOT_READY` |
+| message | string | A description of the response |
+| documents_indexed | integer | Always `0` |
+| retry_after | number | The seconds to wait before retrying, always `2` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | thread search object | Search completed |
+| 202 | index not ready object | The guild thread index is being built |
+| 400 | [error response](/http-api/#error-response) | Channel is not a thread parent and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `READ_MESSAGE_HISTORY` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Thread search is unavailable on the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:threads:search::channel_id` bucket.
+
+## Thread messages
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 18 | THREAD_CREATED | System message in the parent that announces a new public or announcement thread |
+| 21 | THREAD_STARTER_MESSAGE | First message of a thread started from a message, built on read and never stored |
+
+`message_reference.channel_id` of a `THREAD_CREATED` message is the thread, and the reference names no message.
+
+Fluxer builds a `THREAD_STARTER_MESSAGE` when it reads the thread and stores none. It has the ID of its thread and references the source message. Deleting it returns 403 `MISSING_PERMISSIONS`. When the source message is deleted, the thread stays and its `referenced_message` becomes null.
+
+A message that started a thread has `thread`, the [thread object](#thread-object), and the message flag `HAS_THREAD` (1 &lt;&lt; 5). A role mention in a public or announcement thread adds the members of the role, up to 250 per message. A message gets `FAILED_TO_MENTION_SOME_ROLES_IN_THREAD` (1 &lt;&lt; 8) when that limit or the [thread member limit](/http-api/thread-members/) stops a role member from being added. Only Fluxer sets either flag.
+
+Sending a message in a thread adds a user sender who has not joined it. A mentioned user who can view the parent is added too. A private thread that is not `invitable` adds mentioned users only when the sender is a thread moderator.
+
+## Thread fields on other objects
+
+| Object | Field | Description |
+| --- | --- | --- |
+| [Text or announcement channel](/http-api/channels/#channel-object) | default_auto_archive_duration | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), which Fluxer does not apply to a new thread |
+| [Text or announcement channel](/http-api/channels/#channel-object) | default_thread_rate_limit_per_user | The slowmode interval in seconds new threads inherit |
+| [Read state](/http-api/read-states/#read-state-object) | flags | The [read state flags](/http-api/read-states/#read-state-flags) |
+| [Message search result](/http-api/search/#message-search-result-object) | threads | The threads that contain a returned message |
+| [Message search result](/http-api/search/#message-search-result-object) | members | A thread member object for each of those threads the caller joined |
+| [Guild audit log response](/http-api/guild-audit-logs/#guild-audit-log-response-object) | threads | The threads a returned thread action targets |
+
+The guild audit log records thread creation, update, and deletion as action types 110, 111, and 112.
+
+## Client capability
+
+A user request reaches a route with a route header on this page only with a session token and `channel_threads` in the `X-Fluxer-Features` header. Without both, Fluxer returns 404 `NOT_FOUND` before the rate limit and before the login check. An OAuth2 bearer token never has the capability. A request with no token gets the same 404. A bot token needs no declaration.
+
+A `channel_id` that does not exist or names a channel outside a guild returns the same 404.
+
+On other routes, a user request without the capability sees no threads. A route that resolves a thread, forum, or media channel by ID returns 404 `UNKNOWN_CHANNEL` unless its own entry states another result. Message lists drop `THREAD_CREATED` messages, and each message loses `thread` and both thread message flags.
+
+A Gateway session reads the separate `CHANNEL_THREADS` [session flag](/gateway/threads/#session-flag).

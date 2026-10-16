@@ -29,8 +29,8 @@ jobs:
   image:
     needs: approve
     uses: ./.github/workflows/_build-image.yaml
+    secrets: inherit
     with:
       image: fluxer-docs
       dockerfile: fluxer_docs/Dockerfile
-      context: fluxer_docs
       build-version: ${{ inputs['build-version'] }}

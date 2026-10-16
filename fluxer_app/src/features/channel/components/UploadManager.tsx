@@ -12,7 +12,7 @@ import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {isDialogPasteTarget} from '@app/features/messaging/utils/TextInputEditUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {useSlowmode} from '@app/features/slowmode/hooks/useSlowmode';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -50,7 +50,7 @@ export const UploadManager = observer(({channel, canAttachFiles, canSendMessages
 	}, []);
 	const focusTextarea = useCallback(() => {
 		setTimeout(() => {
-			ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
+			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
 		}, 0);
 	}, [channel.id]);
 	const onDrop = useCallback(

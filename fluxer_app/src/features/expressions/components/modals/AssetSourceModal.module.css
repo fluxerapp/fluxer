@@ -61,10 +61,10 @@
 }
 
 :global(.theme-light) .card:hover {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .cardIcon {
 	background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }

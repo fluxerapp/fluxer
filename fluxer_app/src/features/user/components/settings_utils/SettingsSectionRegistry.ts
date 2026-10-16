@@ -19,7 +19,6 @@ import type {I18n} from '@lingui/core';
 
 export type {
 	SearchableSettingItem,
-	SectionDefinition,
 	SettingsSectionConfig,
 	UserSettingsTabType,
 } from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
@@ -46,13 +45,6 @@ function sectionMatchesTab(section: SectionDefinition, tabType: UserSettingsTabT
 	return section.tabType === tabType;
 }
 
-function sectionMatchesAllowedTabs(
-	section: SectionDefinition,
-	allowedTabTypes: Set<UserSettingsTabType> | undefined,
-): boolean {
-	return !allowedTabTypes || allowedTabTypes.has(section.tabType);
-}
-
 function toSettingsSectionConfig(section: SectionDefinition, i18n: I18n): SettingsSectionConfig {
 	return {
 		id: section.id,
@@ -73,7 +65,11 @@ function toSearchableSettingItem(section: SectionDefinition, i18n: I18n): Search
 		sectionId: section.id,
 		sourceSectionId: section.id,
 		label: i18n._(section.label),
-		keywords: section.keywords.map((keyword) => (typeof keyword === 'string' ? keyword : i18n._(keyword))),
+		keywords: section.keywords.map((keyword) => {
+			if (typeof keyword === 'string') return keyword;
+			if (typeof keyword === 'function') return keyword();
+			return i18n._(keyword);
+		}),
 		description: section.description ? i18n._(section.description) : undefined,
 		audience: getSettingsAudience(section),
 		tags: section.tags,
@@ -88,10 +84,6 @@ export function getSectionsForTab(tabType: UserSettingsTabType, i18n: I18n): Arr
 
 export function getSectionIdsForTab(tabType: UserSettingsTabType): Array<string> {
 	return getVisibleSectionsForTab(tabType).map((section) => section.id);
-}
-
-export function tabHasSections(tabType: UserSettingsTabType): boolean {
-	return SECTION_REGISTRY.some((section) => section.tabType === tabType);
 }
 
 export function tabHasMultipleLinkableSections(tabType: UserSettingsTabType): boolean {
@@ -121,11 +113,8 @@ export function isSectionIdValid(sectionId: string, tabType?: UserSettingsTabTyp
 	});
 }
 
-export function getSearchableItemsFromRegistry(
-	i18n: I18n,
-	allowedTabTypes?: Set<UserSettingsTabType>,
-): Array<SearchableSettingItem> {
-	return SECTION_REGISTRY.filter(
-		(section) => sectionMatchesAllowedTabs(section, allowedTabTypes) && isSectionVisible(section),
-	).map((section) => toSearchableSettingItem(section, i18n));
+export function getSearchableItemsFromRegistry(i18n: I18n): Array<SearchableSettingItem> {
+	return SECTION_REGISTRY.filter((section) => isSectionVisible(section)).map((section) =>
+		toSearchableSettingItem(section, i18n),
+	);
 }

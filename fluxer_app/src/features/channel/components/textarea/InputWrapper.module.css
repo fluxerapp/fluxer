@@ -44,23 +44,8 @@
 
 .composerRoot {
 	--composer-action-button-size: 2rem;
-	--composer-divider-color: var(--floating-surface-ring-color-strong);
-}
-
-.composerRoot::before {
-	content: '';
-	position: absolute;
-	bottom: calc(100% + var(--composer-box-inset, 0px));
-	inset-inline: calc(-1 * var(--composer-box-inset-inline, 0px));
-	height: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
-	background: linear-gradient(
-		to bottom,
-		transparent 0%,
-		color-mix(in srgb, var(--composer-surface-color) 42%, transparent) 34%,
-		color-mix(in srgb, var(--composer-surface-color) 82%, transparent) 66%,
-		var(--composer-surface-color) 100%
-	);
-	pointer-events: none;
+	--composer-divider-color: var(--floating-surface-ring-color);
+	--composer-surface-fill: var(--composer-surface-color, var(--background-secondary-lighter));
 }
 
 .statusRail {
@@ -68,7 +53,7 @@
 	--slowmode-indicator-height: var(--composer-status-line-height, 1.125rem);
 	position: absolute;
 	inset-inline: var(--composer-box-padding-inline, 0px);
-	bottom: calc(100% + var(--composer-status-safe-gap, 0.5rem));
+	bottom: 100%;
 	z-index: 3;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
@@ -76,11 +61,8 @@
 	gap: 0.5rem;
 	min-width: 0;
 	max-width: 100%;
-	height: var(--composer-status-line-height, 1.125rem);
+	height: var(--composer-status-row-height, 1.5rem);
 	box-sizing: border-box;
-	text-shadow:
-		0 0 0.1875rem var(--composer-surface-color),
-		0 0 0.5rem var(--composer-surface-color);
 	pointer-events: none;
 }
 
@@ -110,6 +92,7 @@
 	min-width: 0;
 	max-width: min(14rem, 35vw);
 	justify-self: end;
+	padding-inline-end: max(0px, calc(1rem - var(--composer-box-padding-inline, 0px)));
 	pointer-events: auto;
 }
 

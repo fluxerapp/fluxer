@@ -167,7 +167,7 @@ export const MobileFriendRequestItem: React.FC<MobileFriendRequestItemProps> = o
 					/>
 					<div className={styles.userInfo} data-flx="channel.friends.mobile-friend-request-item.user-info">
 						<span className={styles.userName} data-flx="channel.friends.mobile-friend-request-item.user-name">
-							{NicknameUtils.getNickname(user)}
+							{NicknameUtils.getNickname(user, null)}
 						</span>
 						<span className={styles.requestStatus} data-flx="channel.friends.mobile-friend-request-item.request-status">
 							{statusText}
@@ -179,7 +179,7 @@ export const MobileFriendRequestItem: React.FC<MobileFriendRequestItemProps> = o
 							onClick={() => setMenuOpen(true)}
 							className={styles.actionButton}
 							aria-label={i18n._(FRIEND_REQUEST_ACTIONS_FOR_DESCRIPTOR, {
-								displayName: NicknameUtils.getNickname(user),
+								displayName: NicknameUtils.getNickname(user, null),
 							})}
 							aria-haspopup="dialog"
 							data-flx="channel.friends.mobile-friend-request-item.action-button.set-menu-open"

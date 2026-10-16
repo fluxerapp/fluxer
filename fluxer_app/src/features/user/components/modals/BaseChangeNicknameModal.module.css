@@ -14,8 +14,3 @@
 .clearButton:hover {
 	color: var(--text-primary);
 }
-
-.helperText {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-}

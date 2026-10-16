@@ -5,7 +5,7 @@ import {SystemMessageUsername} from '@app/features/channel/components/SystemMess
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import styles from '@app/features/theme/styles/Message.module.css';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Trans} from '@lingui/react/macro';
@@ -23,18 +23,18 @@ export const PinSystemMessage = observer(({message}: PinSystemMessageProps) => {
 	const jumpToMessage = useCallback(() => {
 		if (message.messageReference?.message_id) {
 			goToMessage(message.channelId, message.messageReference.message_id, {
-				returnTargetId: message.id,
+				returnToMessageId: message.id,
 				returnChannelId: message.channelId,
 			});
 		}
 	}, [message.channelId, message.id, message.messageReference?.message_id]);
 	const openPins = useCallback(() => {
 		if (mobileLayout.enabled) {
-			ComponentDispatch.dispatch('CHANNEL_DETAILS_OPEN', {
+			ComponentBus.dispatch('CHANNEL_DETAILS_OPEN', {
 				initialTab: 'pins',
 			});
 		} else {
-			ComponentDispatch.dispatch('CHANNEL_PINS_OPEN');
+			ComponentBus.dispatch('CHANNEL_PINS_OPEN');
 		}
 	}, [mobileLayout.enabled]);
 	if (!channel) {

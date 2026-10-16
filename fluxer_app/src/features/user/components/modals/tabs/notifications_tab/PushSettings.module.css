@@ -9,10 +9,6 @@
 	padding: 0.25rem 0;
 }
 
-.selectOnlyContainer {
-	display: inline-flex;
-}
-
 .text {
 	display: flex;
 	min-width: 0;

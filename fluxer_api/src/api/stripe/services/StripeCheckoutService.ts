@@ -1,6 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID} from 'node:crypto';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getBillingBranding} from '@app/api/stripe/BillingBranding';
+import {getEffectiveBillingConfig, isCurrentCatalogPriceId} from '@app/api/stripe/BillingConfigCache';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {ensureStripeCustomer, isStripeResourceMissingError} from '@app/api/stripe/StripeCustomer';
+import {getCachedStripePriceSummary, type StripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
+import {
+	canProvisionPremiumFromSubscriptionStatus,
+	getPremiumWillCancelFromSubscription,
+} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
+import {
+	getSubscriptionBillingCycle,
+	getSubscriptionCurrentPeriodStart,
+	getSubscriptionPremiumPeriodEnd,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {type Currency, isLocalizedCurrency, shouldDisableAdaptivePricing} from '@app/api/utils/CurrencyUtils';
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {PurchaseEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
@@ -13,40 +38,10 @@ import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment
 import {UnclaimedAccountCannotMakePurchasesError} from '@fluxer/errors/src/domains/user/UnclaimedAccountCannotMakePurchasesError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {CheckoutPaymentMethod} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
-import type {PricingMode} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {PriceIdsResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {getContentMessage} from '../../content_i18n/ContentI18n';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {
-	type Currency,
-	getBaseCurrencyPreferences,
-	getBaseGiftCurrencyPreferences,
-	getCurrencyPreferences,
-	getGiftCurrencyPreferences,
-} from '../../utils/CurrencyUtils';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {
-	canProvisionPremiumFromSubscriptionStatus,
-	getPremiumWillCancelFromSubscription,
-} from '../StripeSubscriptionAccessPolicy';
-import {
-	getPrimarySubscriptionItem,
-	getSubscriptionPremiumPeriodEnd,
-	getSubscriptionStartDate,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
-const PRODUCT_NAME = 'Fluxer';
-const PREMIUM_TIER_NAME = 'Plutonium';
-const TERMS_URL = 'https://fluxer.app/terms';
 export const EU_WITHDRAWAL_WAIVER_TEXT_VERSION = '2026-04-23';
 
 type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
@@ -86,33 +81,15 @@ export interface CreateCheckoutSessionParams {
 	clientGeoipCountryCode?: string | null;
 	purchaseGeoipCountryCode?: string | null;
 	euWithdrawalWaiverAccepted?: boolean;
-	pricingMode?: PricingMode;
 	paymentMethod?: CheckoutPaymentMethod;
 	isBusiness?: boolean;
 }
 
-const UPI_MANDATE_DESCRIPTION = 'Fluxer Premium';
 const PIX_UPI_MANDATE_HEADROOM_MULTIPLIER = 1.25;
 
-interface ResolvedPriceIds {
-	monthly: string | null;
-	yearly: string | null;
-	gift_1_month: string | null;
-	gift_1_year: string | null;
-	currency: Currency;
-	gift_currency: Currency;
-}
-
-interface PriceIdsResponse extends ResolvedPriceIds {
-	monthly_amount_minor: number | null;
-	yearly_amount_minor: number | null;
-	gift_1_month_amount_minor: number | null;
-	gift_1_year_amount_minor: number | null;
-}
-
-interface StripePriceSummary {
-	unitAmountMinor: number | null;
-}
+const LOCAL_PAYMENT_METHOD_BY_CURRENCY: Partial<Record<Currency, CheckoutPaymentMethod>> = {
+	BRL: 'pix',
+};
 
 interface EuWithdrawalWaiverContext {
 	accepted: boolean;
@@ -121,57 +98,13 @@ interface EuWithdrawalWaiverContext {
 	required: boolean;
 }
 
-type LocalizedCardPreapprovalStatus = 'approved' | 'checkout_created' | 'pending' | 'rejected';
-type LocalizedCardPreapprovalRejectedReason =
-	| 'country_mismatch'
-	| 'missing_customer'
-	| 'missing_payment_method'
-	| 'missing_setup_intent'
-	| 'payment_method_not_card'
-	| 'unknown';
-
-interface LocalizedCardPreapprovalFlowState {
-	actualCardCountry: string | null;
-	approvedPaymentMethodId: string | null;
-	clientGeoipCountryCode: string | null;
-	countryCode: string;
-	customerId: string;
-	currency: Currency;
-	euWithdrawalWaiverAccepted: boolean;
-	finalCheckoutUrl: string | null;
-	isBusiness: boolean;
-	preapprovalSessionId: string;
-	purchaseGeoipCountryCode: string | null;
-	priceId: string;
-	rejectionReason: LocalizedCardPreapprovalRejectedReason | null;
-	status: LocalizedCardPreapprovalStatus;
-	token: string;
-	userId: string;
-}
-
-export type ContinueLocalizedCardPreapprovalResult =
-	| {
-			status: 'expired';
-	  }
-	| {
-			status: 'pending';
-	  }
-	| {
-			status: 'ready';
-			url: string;
-	  }
-	| {
-			status: 'rejected';
-			reason: LocalizedCardPreapprovalRejectedReason;
-			actual_country?: string | null;
-	  };
-
 export class StripeCheckoutService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: ProductRegistry,
 		private cacheService: ICacheService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async createCheckoutSession({
@@ -182,7 +115,6 @@ export class StripeCheckoutService {
 		clientGeoipCountryCode,
 		purchaseGeoipCountryCode,
 		euWithdrawalWaiverAccepted,
-		pricingMode = 'localized',
 		paymentMethod = 'card',
 		isBusiness = false,
 	}: CreateCheckoutSessionParams): Promise<string> {
@@ -191,11 +123,19 @@ export class StripeCheckoutService {
 			priceId,
 			isGift,
 			countryCode,
-			pricingMode,
+			purchaseGeoipCountryCode,
 		});
 		const isRecurringSubscription = this.productRegistry.isRecurringSubscription(productInfo);
 		const checkoutMode: CheckoutSessionMode = isRecurringSubscription ? 'subscription' : 'payment';
-		this.assertPaymentMethodCompatibility({paymentMethod, productInfo, isGift, userId, priceId});
+		const effectivePaymentMethod =
+			this.resolveRequiredLocalPaymentMethod({productInfo, isGift, isRecurringSubscription}) ?? paymentMethod;
+		this.assertPaymentMethodCompatibility({
+			paymentMethod: effectivePaymentMethod,
+			productInfo,
+			isGift,
+			userId,
+			priceId,
+		});
 		const waiverContext = this.resolveEuWithdrawalWaiverContext({
 			countryCode,
 			clientGeoipCountryCode,
@@ -205,10 +145,12 @@ export class StripeCheckoutService {
 		const paymentMethodOptions = await this.buildPaymentMethodOptions({
 			productInfo,
 			checkoutMode,
-			paymentMethod,
+			paymentMethod: effectivePaymentMethod,
 			priceId,
 		});
-		const paymentMethodTypes = this.resolvePaymentMethodTypes(paymentMethod);
+		const paymentMethodTypes = this.resolvePaymentMethodTypes(effectivePaymentMethod);
+		const branding = await getBillingBranding();
+		const billing = getEffectiveBillingConfig();
 		const checkoutMetadata = {
 			user_id: userId.toString(),
 			price_id: priceId,
@@ -221,25 +163,28 @@ export class StripeCheckoutService {
 			eu_withdrawal_waiver_accepted: waiverContext.accepted ? 'true' : 'false',
 			...(waiverContext.acceptedAt ? {eu_withdrawal_waiver_accepted_at: waiverContext.acceptedAt.toISOString()} : {}),
 			eu_withdrawal_waiver_text_version: EU_WITHDRAWAL_WAIVER_TEXT_VERSION,
-			pricing_mode: pricingMode,
-			payment_method: paymentMethod,
+			payment_method: effectivePaymentMethod,
 		};
 		const checkoutParams: CheckoutSessionCreateParams = {
 			customer: customerId,
 			client_reference_id: userId.toString(),
 			metadata: checkoutMetadata,
-			consent_collection: {
-				terms_of_service: 'required',
-			},
-			custom_text: {
-				terms_of_service_acceptance: {
-					message: getContentMessage('billing.eu_withdrawal_waiver_checkout', user.locale, {
-						product_name: PRODUCT_NAME,
-						premium_tier_name: PREMIUM_TIER_NAME,
-						terms_url: TERMS_URL,
-					}),
-				},
-			},
+			...(billing.termsConsentRequired
+				? {
+						consent_collection: {
+							terms_of_service: 'required',
+						},
+						custom_text: {
+							terms_of_service_acceptance: {
+								message: getContentMessage('billing.eu_withdrawal_waiver_checkout', user.locale, {
+									product_name: branding.productName,
+									premium_tier_name: branding.premiumName,
+									terms_url: branding.termsUrl,
+								}),
+							},
+						},
+					}
+				: {}),
 			line_items: [
 				{
 					price: priceId,
@@ -257,10 +202,10 @@ export class StripeCheckoutService {
 					}
 				: {}),
 			automatic_tax: {
-				enabled: true,
+				enabled: billing.automaticTax,
 			},
 			tax_id_collection: {
-				enabled: true,
+				enabled: billing.taxIdCollection,
 			},
 			customer_update: {
 				address: 'auto',
@@ -268,6 +213,7 @@ export class StripeCheckoutService {
 			},
 			billing_address_collection: isBusiness ? 'required' : 'auto',
 			allow_promotion_codes: true,
+			...(shouldDisableAdaptivePricing(productInfo.currency) ? {adaptive_pricing: {enabled: false}} : {}),
 			...(checkoutMode === 'subscription'
 				? {
 						subscription_data: {
@@ -294,273 +240,12 @@ export class StripeCheckoutService {
 		});
 	}
 
-	async createLocalizedCardPreapprovalSession({
-		userId,
-		priceId,
-		countryCode,
-		clientGeoipCountryCode,
-		purchaseGeoipCountryCode,
-		euWithdrawalWaiverAccepted,
-		pricingMode = 'localized',
-		isBusiness = false,
-	}: Pick<
-		CreateCheckoutSessionParams,
-		| 'clientGeoipCountryCode'
-		| 'countryCode'
-		| 'euWithdrawalWaiverAccepted'
-		| 'isBusiness'
-		| 'priceId'
-		| 'pricingMode'
-		| 'purchaseGeoipCountryCode'
-		| 'userId'
-	>): Promise<string> {
-		if (!this.stripe) {
-			throw new StripePaymentNotAvailableError();
-		}
-		const normalizedCountryCode = countryCode?.trim().toUpperCase();
-		if (!normalizedCountryCode) {
-			Logger.error({priceId, userId}, 'Localized card preapproval requires a country code');
-			throw new StripeInvalidProductConfigurationError();
-		}
-		if (pricingMode !== 'localized') {
-			Logger.error(
-				{priceId, userId, pricingMode},
-				'Localized card preapproval requested for non-localized pricing mode',
-			);
-			throw new StripeInvalidProductConfigurationError();
-		}
-		const {customerId, productInfo} = await this.prepareCheckoutContext({
-			userId,
-			priceId,
-			isGift: false,
-			countryCode: normalizedCountryCode,
-			pricingMode,
-		});
-		if (!this.requiresLocalizedCardPreapproval(productInfo)) {
-			Logger.error(
-				{priceId, userId, currency: productInfo.currency, countryCode: normalizedCountryCode},
-				'Localized card preapproval requested for non-localized recurring price',
-			);
-			throw new StripeInvalidProductConfigurationError();
-		}
-		const waiverContext = this.resolveEuWithdrawalWaiverContext({
-			countryCode: normalizedCountryCode,
-			clientGeoipCountryCode,
-			purchaseGeoipCountryCode,
-			euWithdrawalWaiverAccepted,
-		});
-		const token = randomUUID();
-		const checkoutParams: CheckoutSessionCreateParams = {
-			customer: customerId,
-			client_reference_id: userId.toString(),
-			metadata: {
-				user_id: userId.toString(),
-				price_id: priceId,
-				product_type: productInfo.type,
-				country_code: normalizedCountryCode,
-				...(purchaseGeoipCountryCode ? {purchase_geoip_country_code: purchaseGeoipCountryCode.toUpperCase()} : {}),
-				...(clientGeoipCountryCode ? {purchase_client_country_code: clientGeoipCountryCode.toUpperCase()} : {}),
-				eu_withdrawal_waiver_required: waiverContext.required ? 'true' : 'false',
-				eu_withdrawal_waiver_accepted: waiverContext.accepted ? 'true' : 'false',
-				...(waiverContext.acceptedAt ? {eu_withdrawal_waiver_accepted_at: waiverContext.acceptedAt.toISOString()} : {}),
-				...(waiverContext.required ? {eu_withdrawal_waiver_text_version: EU_WITHDRAWAL_WAIVER_TEXT_VERSION} : {}),
-				pricing_mode: pricingMode,
-				setup_type: 'localized_card_preapproval',
-				localized_card_preapproval_currency: productInfo.currency,
-				localized_card_preapproval_token: token,
-				is_business: isBusiness ? 'true' : 'false',
-			},
-			mode: 'setup',
-			payment_method_types: ['card'],
-			success_url: `${Config.endpoints.webApp}/premium-callback?status=preapproval-success&token=${encodeURIComponent(token)}`,
-			cancel_url: `${Config.endpoints.webApp}/premium-callback?status=preapproval-cancel`,
-			tax_id_collection: {
-				enabled: true,
-			},
-			billing_address_collection: isBusiness ? 'required' : 'auto',
-			customer_update: {
-				address: 'auto',
-				name: 'auto',
-			},
-		};
-		try {
-			const session = await this.stripe.checkout.sessions.create(checkoutParams);
-			try {
-				await getBillingRepository().checkoutSessions.upsertFromStripe(session, {knownUserId: userId});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, sessionId: session.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
-			if (!session.url) {
-				Logger.error({userId, sessionId: session.id}, 'Stripe localized card preapproval session missing url');
-				throw new StripeError('Stripe localized card preapproval session missing url');
-			}
-			await this.setLocalizedCardPreapprovalFlow(token, {
-				actualCardCountry: null,
-				approvedPaymentMethodId: null,
-				clientGeoipCountryCode: this.normalizeCountryCode(clientGeoipCountryCode),
-				countryCode: normalizedCountryCode,
-				customerId,
-				currency: productInfo.currency,
-				euWithdrawalWaiverAccepted: waiverContext.accepted,
-				finalCheckoutUrl: null,
-				isBusiness,
-				preapprovalSessionId: session.id,
-				purchaseGeoipCountryCode: this.normalizeCountryCode(purchaseGeoipCountryCode),
-				priceId,
-				rejectionReason: null,
-				status: 'pending',
-				token,
-				userId: userId.toString(),
-			});
-			Logger.debug(
-				{userId, sessionId: session.id, countryCode: normalizedCountryCode},
-				'Localized card preapproval session created',
-			);
-			return session.url;
-		} catch (error: unknown) {
-			Logger.error(
-				{error, userId, countryCode: normalizedCountryCode},
-				'Failed to create localized card preapproval session',
-			);
-			const message = error instanceof Error ? error.message : 'Failed to create localized card preapproval session';
-			throw new StripeError(message);
-		}
-	}
-
-	async continueLocalizedCardPreapproval(token: string): Promise<ContinueLocalizedCardPreapprovalResult> {
-		const normalizedToken = token.trim();
-		if (!normalizedToken) {
-			return {status: 'expired'};
-		}
-		const flowState = await this.getLocalizedCardPreapprovalFlow(normalizedToken);
-		if (!flowState) {
-			return {status: 'expired'};
-		}
-		if (flowState.finalCheckoutUrl) {
-			return {status: 'ready', url: flowState.finalCheckoutUrl};
-		}
-		if (flowState.status === 'pending') {
-			return {status: 'pending'};
-		}
-		if (flowState.status === 'rejected') {
-			return {
-				status: 'rejected',
-				reason: flowState.rejectionReason ?? 'unknown',
-				actual_country: flowState.actualCardCountry,
-			};
-		}
-		const lockKey = this.getLocalizedCardPreapprovalContinueLockKey(normalizedToken);
-		const lockToken = await this.cacheService.acquireLock(
-			lockKey,
-			StripeCheckoutService.LOCALIZED_CARD_PREAPPROVAL_CONTINUE_LOCK_TTL_SECONDS,
-		);
-		if (!lockToken) {
-			return {status: 'pending'};
-		}
-		try {
-			const freshFlowState = await this.getLocalizedCardPreapprovalFlow(normalizedToken);
-			if (!freshFlowState) {
-				return {status: 'expired'};
-			}
-			if (freshFlowState.finalCheckoutUrl) {
-				return {status: 'ready', url: freshFlowState.finalCheckoutUrl};
-			}
-			if (freshFlowState.status === 'pending') {
-				return {status: 'pending'};
-			}
-			if (freshFlowState.status === 'rejected') {
-				return {
-					status: 'rejected',
-					reason: freshFlowState.rejectionReason ?? 'unknown',
-					actual_country: freshFlowState.actualCardCountry,
-				};
-			}
-			if (freshFlowState.approvedPaymentMethodId && this.stripe) {
-				await this.setCustomerDefaultPaymentMethod(freshFlowState.customerId, freshFlowState.approvedPaymentMethodId);
-			}
-			const checkoutUrl = await this.createCheckoutSession({
-				userId: createUserID(BigInt(freshFlowState.userId)),
-				priceId: freshFlowState.priceId,
-				isGift: false,
-				countryCode: freshFlowState.countryCode,
-				clientGeoipCountryCode: freshFlowState.clientGeoipCountryCode,
-				purchaseGeoipCountryCode: freshFlowState.purchaseGeoipCountryCode,
-				euWithdrawalWaiverAccepted: freshFlowState.euWithdrawalWaiverAccepted,
-				isBusiness: freshFlowState.isBusiness,
-			});
-			const updatedFlowState: LocalizedCardPreapprovalFlowState = {
-				...freshFlowState,
-				finalCheckoutUrl: checkoutUrl,
-				status: 'checkout_created',
-			};
-			await this.setLocalizedCardPreapprovalFlow(normalizedToken, updatedFlowState);
-			return {status: 'ready', url: checkoutUrl};
-		} finally {
-			try {
-				await this.cacheService.releaseLock(lockKey, lockToken);
-			} catch (error) {
-				Logger.error({error, token: normalizedToken}, 'Failed to release localized card preapproval continuation lock');
-			}
-		}
-	}
-
-	async completeLocalizedCardPreapproval(session: Stripe.Checkout.Session): Promise<void> {
-		if (!this.stripe) {
-			throw new StripePaymentNotAvailableError();
-		}
-		const token = session.metadata?.localized_card_preapproval_token?.trim();
-		if (!token) {
-			Logger.error({sessionId: session.id}, 'Localized card preapproval session missing token');
-			return;
-		}
-		const countryCode = session.metadata?.country_code?.trim().toUpperCase();
-		if (!countryCode) {
-			await this.rejectLocalizedCardPreapproval(session, token, 'unknown');
-			return;
-		}
-		const setupIntentId = extractId(session.setup_intent);
-		if (!setupIntentId) {
-			await this.rejectLocalizedCardPreapproval(session, token, 'missing_setup_intent');
-			return;
-		}
-		const setupIntent = await this.stripe.setupIntents.retrieve(setupIntentId, {
-			expand: ['payment_method'],
-		});
-		const paymentMethod = setupIntent.payment_method;
-		if (!paymentMethod || typeof paymentMethod === 'string') {
-			await this.rejectLocalizedCardPreapproval(session, token, 'missing_payment_method');
-			return;
-		}
-		if (paymentMethod.type !== 'card' || !paymentMethod.card) {
-			await this.rejectLocalizedCardPreapproval(session, token, 'payment_method_not_card');
-			return;
-		}
-		const cardCountry = paymentMethod.card.country?.trim().toUpperCase() ?? null;
-		if (cardCountry !== countryCode) {
-			await this.rejectLocalizedCardPreapproval(session, token, 'country_mismatch', cardCountry);
-			return;
-		}
-		const flowState = await this.buildLocalizedCardPreapprovalFlowStateFromSession(session, token);
-		const approvedFlowState: LocalizedCardPreapprovalFlowState = {
-			...flowState,
-			actualCardCountry: cardCountry,
-			approvedPaymentMethodId: paymentMethod.id,
-			rejectionReason: null,
-			status: 'approved',
-		};
-		await this.setLocalizedCardPreapprovalFlow(token, approvedFlowState);
-		Logger.info({sessionId: session.id, userId: flowState.userId, countryCode}, 'Localized card preapproval completed');
-	}
-
 	private async prepareCheckoutContext({
 		userId,
 		priceId,
 		isGift = false,
 		countryCode,
-		pricingMode = 'localized',
+		purchaseGeoipCountryCode,
 	}: CreateCheckoutSessionParams): Promise<{
 		customerId: string;
 		productInfo: ProductInfo;
@@ -581,12 +266,18 @@ export class StripeCheckoutService {
 			);
 			throw new StripeInvalidProductConfigurationError();
 		}
-		if (this.requiresCountryCodeForLocalizedCurrency(productInfo.currency) && !countryCode) {
+		const billing = getEffectiveBillingConfig();
+		if (billing.catalogMode === 'operator' && !isCurrentCatalogPriceId(priceId, billing)) {
+			Logger.error({priceId, userId}, 'Checkout requested for a price outside the current operator catalog');
+			throw new StripeInvalidProductError();
+		}
+		const enforcedCountryCode = this.resolveEnforcedPricingCountryCode({countryCode, purchaseGeoipCountryCode});
+		if (this.requiresCountryCodeForLocalizedCurrency(productInfo.currency) && !enforcedCountryCode) {
 			Logger.error({priceId, userId, currency: productInfo.currency}, 'Localized price requested without country code');
 			throw new StripeInvalidProductConfigurationError();
 		}
-		if (countryCode) {
-			this.assertPriceMatchesCountryCatalog({countryCode, priceId, isGift, pricingMode, userId});
+		if (enforcedCountryCode && billing.catalogMode === 'env') {
+			this.assertPriceMatchesCountryCatalog({countryCode: enforcedCountryCode, priceId, isGift, userId});
 		}
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
@@ -597,6 +288,12 @@ export class StripeCheckoutService {
 			throw new PremiumPurchaseBlockedError('lifetime');
 		}
 		this.validateUserCanPurchase(user);
+		if (isRecurringSubscription) {
+			const storeEntitlement = await this.storeEntitlementService?.getActiveStoreEntitlement(user.id);
+			if (storeEntitlement) {
+				throw new PremiumPurchaseBlockedError('existing_subscription', {provider: storeEntitlement.provider});
+			}
+		}
 		const customerUser = await this.ensureStripeCustomer(user);
 		const customerId = customerUser.stripeCustomerId;
 		if (!customerId) {
@@ -639,14 +336,6 @@ export class StripeCheckoutService {
 		}
 		try {
 			const session = await this.stripe.checkout.sessions.create(checkoutParams);
-			try {
-				await getBillingRepository().checkoutSessions.upsertFromStripe(session, {knownUserId: userId});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, sessionId: session.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
 			if (!session.url) {
 				Logger.error({userId, sessionId: session.id}, 'Stripe checkout session missing url');
 				throw new StripeError('Stripe checkout session missing url');
@@ -703,20 +392,26 @@ export class StripeCheckoutService {
 		return normalized && /^[A-Z]{2}$/.test(normalized) ? normalized : null;
 	}
 
+	private resolveEnforcedPricingCountryCode({
+		countryCode,
+		purchaseGeoipCountryCode,
+	}: Pick<CreateCheckoutSessionParams, 'countryCode' | 'purchaseGeoipCountryCode'>): string | null {
+		return this.normalizeCountryCode(purchaseGeoipCountryCode) ?? this.normalizeCountryCode(countryCode);
+	}
+
 	private assertPriceMatchesCountryCatalog({
 		countryCode,
 		priceId,
 		isGift,
-		pricingMode = 'localized',
 		userId,
 	}: {
 		countryCode: string;
 		priceId: string;
 		isGift: boolean;
-		pricingMode?: PricingMode;
 		userId: UserID;
 	}): void {
-		const localizedPrices = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+		const localizedPrices = this.productRegistry.resolveLocalizedPriceIds(countryCode);
+		if (!localizedPrices) throw new StripeError('Stripe price ids missing for supported currencies');
 		const allowedPriceIds = new Set(
 			(isGift
 				? [localizedPrices.gift_1_month, localizedPrices.gift_1_year]
@@ -731,7 +426,6 @@ export class StripeCheckoutService {
 					userId,
 					currency: isGift ? localizedPrices.gift_currency : localizedPrices.currency,
 					isGift,
-					pricingMode,
 				},
 				'Checkout price mismatch for country',
 			);
@@ -739,134 +433,8 @@ export class StripeCheckoutService {
 		}
 	}
 
-	private requiresLocalizedCardPreapproval(productInfo: ProductInfo): boolean {
-		return (
-			this.productRegistry.isRecurringSubscription(productInfo) &&
-			productInfo.currency !== 'USD' &&
-			productInfo.currency !== 'EUR'
-		);
-	}
-
 	private requiresCountryCodeForLocalizedCurrency(currency: Currency): boolean {
-		return currency !== 'USD' && currency !== 'EUR';
-	}
-
-	private async rejectLocalizedCardPreapproval(
-		session: Stripe.Checkout.Session,
-		token: string,
-		rejectionReason: LocalizedCardPreapprovalRejectedReason,
-		actualCardCountry: string | null = null,
-	): Promise<void> {
-		const flowState = await this.buildLocalizedCardPreapprovalFlowStateFromSession(session, token);
-		const rejectedFlowState: LocalizedCardPreapprovalFlowState = {
-			...flowState,
-			actualCardCountry,
-			approvedPaymentMethodId: null,
-			rejectionReason,
-			status: 'rejected',
-		};
-		await this.setLocalizedCardPreapprovalFlow(token, rejectedFlowState);
-		Logger.info(
-			{
-				sessionId: session.id,
-				userId: flowState.userId,
-				countryCode: flowState.countryCode,
-				actualCardCountry,
-				rejectionReason,
-			},
-			'Localized card preapproval rejected',
-		);
-	}
-
-	private async buildLocalizedCardPreapprovalFlowStateFromSession(
-		session: Stripe.Checkout.Session,
-		token: string,
-	): Promise<LocalizedCardPreapprovalFlowState> {
-		const existingFlowState = await this.getLocalizedCardPreapprovalFlow(token);
-		if (existingFlowState) {
-			return existingFlowState;
-		}
-		const userId = session.metadata?.user_id?.trim();
-		const priceId = session.metadata?.price_id?.trim();
-		const countryCode = session.metadata?.country_code?.trim().toUpperCase();
-		const currency = session.metadata?.localized_card_preapproval_currency?.trim().toUpperCase() as
-			| Currency
-			| undefined;
-		const customerId = extractId(session.customer);
-		if (!userId || !priceId || !countryCode || !currency || !customerId) {
-			throw new StripeError('Localized card preapproval session missing required metadata');
-		}
-		return {
-			actualCardCountry: null,
-			approvedPaymentMethodId: null,
-			clientGeoipCountryCode: this.normalizeCountryCode(session.metadata?.purchase_client_country_code),
-			countryCode,
-			customerId,
-			currency,
-			euWithdrawalWaiverAccepted: session.metadata?.eu_withdrawal_waiver_accepted === 'true',
-			finalCheckoutUrl: null,
-			isBusiness: session.metadata?.is_business === 'true',
-			preapprovalSessionId: session.id,
-			purchaseGeoipCountryCode: this.normalizeCountryCode(session.metadata?.purchase_geoip_country_code),
-			priceId,
-			rejectionReason: null,
-			status: 'pending',
-			token,
-			userId,
-		};
-	}
-
-	private async getLocalizedCardPreapprovalFlow(token: string): Promise<LocalizedCardPreapprovalFlowState | null> {
-		return (
-			(await this.cacheService.get<LocalizedCardPreapprovalFlowState>(
-				this.getLocalizedCardPreapprovalFlowKey(token),
-			)) ?? null
-		);
-	}
-
-	private async setLocalizedCardPreapprovalFlow(
-		token: string,
-		flowState: LocalizedCardPreapprovalFlowState,
-	): Promise<void> {
-		await this.cacheService.set(
-			this.getLocalizedCardPreapprovalFlowKey(token),
-			flowState,
-			StripeCheckoutService.LOCALIZED_CARD_PREAPPROVAL_TTL_SECONDS,
-		);
-	}
-
-	private getLocalizedCardPreapprovalFlowKey(token: string): string {
-		return `stripe:localized-card-preapproval:flow:${token}`;
-	}
-
-	private getLocalizedCardPreapprovalContinueLockKey(token: string): string {
-		return `stripe:localized-card-preapproval:continue:${token}`;
-	}
-
-	private async setCustomerDefaultPaymentMethod(customerId: string, paymentMethodId: string): Promise<void> {
-		if (!this.stripe) {
-			return;
-		}
-		try {
-			const updatedCustomer = await this.stripe.customers.update(customerId, {
-				invoice_settings: {
-					default_payment_method: paymentMethodId,
-				},
-			});
-			try {
-				await getBillingRepository().customers.upsertFromStripe(updatedCustomer);
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, customerId: updatedCustomer.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
-		} catch (error) {
-			Logger.warn(
-				{error, customerId, paymentMethodId},
-				'Failed to set localized card preapproval default payment method',
-			);
-		}
+		return isLocalizedCurrency(currency);
 	}
 
 	private async findBlockingSubscriptionForCustomer(customerId: string): Promise<Stripe.Subscription | null> {
@@ -935,7 +503,7 @@ export class StripeCheckoutService {
 		const patch: Partial<UserRow> = {};
 		const subscriptionStartDate = this.getRuntimeSubscriptionStartDate(subscription);
 		const premiumUntil = getSubscriptionPremiumPeriodEnd(subscription);
-		const premiumBillingCycle = this.getRuntimeSubscriptionBillingCycle(subscription);
+		const premiumBillingCycle = getSubscriptionBillingCycle(subscription);
 		const premiumWillCancel = getPremiumWillCancelFromSubscription(subscription);
 		const customerId = extractId(subscription.customer);
 		if (user.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
@@ -946,6 +514,15 @@ export class StripeCheckoutService {
 		}
 		if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 			patch.premium_until = premiumUntil;
+			const giftEnd = shiftGiftExtensionPastPremiumUntil(
+				{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+				premiumUntil,
+				new Date(),
+				getSubscriptionCurrentPeriodStart(subscription),
+			);
+			if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+				patch.premium_gift_extension_ends_at = giftEnd;
+			}
 		}
 		if (user.premiumWillCancel !== premiumWillCancel) {
 			patch.premium_will_cancel = premiumWillCancel;
@@ -982,18 +559,6 @@ export class StripeCheckoutService {
 		return typeof startUnix === 'number' ? getSubscriptionStartDate(subscription) : null;
 	}
 
-	private getRuntimeSubscriptionBillingCycle(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {
-		const item = getPrimarySubscriptionItem(subscription);
-		const interval = item?.price?.recurring?.interval;
-		if (interval === 'month') {
-			return 'monthly';
-		}
-		if (interval === 'year') {
-			return 'yearly';
-		}
-		return null;
-	}
-
 	async createCustomerPortalSession(userId: UserID): Promise<string> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
@@ -1005,25 +570,31 @@ export class StripeCheckoutService {
 		if (!user.stripeCustomerId) {
 			throw new StripeNoPurchaseHistoryError();
 		}
+		const portalUser = await this.ensureStripeCustomer(user);
+		const customerId = portalUser.stripeCustomerId;
+		if (!customerId) {
+			throw new StripeNoPurchaseHistoryError();
+		}
 		try {
 			const session = await this.stripe.billingPortal.sessions.create({
-				customer: user.stripeCustomerId,
+				customer: customerId,
 				return_url: `${Config.endpoints.webApp}/premium-callback?status=closed-billing-portal`,
 			});
 			if (!session.url) {
-				Logger.error({userId, customerId: user.stripeCustomerId}, 'Stripe customer portal session missing url');
+				Logger.error({userId, customerId}, 'Stripe customer portal session missing url');
 				throw new StripeError('Stripe customer portal session missing url');
 			}
 			return session.url;
 		} catch (error: unknown) {
-			Logger.error({error, userId, customerId: user.stripeCustomerId}, 'Failed to create customer portal session');
+			Logger.error({error, userId, customerId}, 'Failed to create customer portal session');
 			const message = error instanceof Error ? error.message : 'Failed to create customer portal session';
 			throw new StripeError(message);
 		}
 	}
 
-	async getPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): Promise<PriceIdsResponse> {
-		const resolvedPrices = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+	async getPriceIds(countryCode?: string): Promise<PriceIdsResponse> {
+		const resolvedPrices = this.productRegistry.resolveLocalizedPriceIds(countryCode);
+		if (!resolvedPrices) throw new StripeError('Stripe price ids missing for supported currencies');
 		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
 			this.getStripePriceSummary(resolvedPrices.monthly),
 			this.getStripePriceSummary(resolvedPrices.yearly),
@@ -1051,207 +622,26 @@ export class StripeCheckoutService {
 		}
 	}
 
-	private static readonly CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
-	private static readonly LOCALIZED_CARD_PREAPPROVAL_CONTINUE_LOCK_TTL_SECONDS = seconds('30 seconds');
-	private static readonly LOCALIZED_CARD_PREAPPROVAL_TTL_SECONDS = seconds('1 day');
-	private static readonly PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
-
-	private resolveConfiguredPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): ResolvedPriceIds {
-		const recurringCurrencyPreferences =
-			pricingMode === 'base' ? getBaseCurrencyPreferences(countryCode) : getCurrencyPreferences(countryCode);
-		const giftCurrencyPreferences =
-			pricingMode === 'base' ? getBaseGiftCurrencyPreferences(countryCode) : getGiftCurrencyPreferences(countryCode);
-		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
-		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
-		return {
-			monthly: recurringPrices.monthly,
-			yearly: recurringPrices.yearly,
-			gift_1_month: giftPrices.gift_1_month,
-			gift_1_year: giftPrices.gift_1_year,
-			currency: recurringPrices.currency,
-			gift_currency: giftPrices.gift_currency,
-		};
-	}
-
-	private resolveRecurringPriceIds(
-		preferredCurrencies: Array<Currency>,
-	): Pick<ResolvedPriceIds, 'monthly' | 'yearly' | 'currency'> {
-		for (const currency of preferredCurrencies) {
-			const resolvedPrices = this.getConfiguredRecurringPriceIdsForCurrency(currency);
-			if (resolvedPrices) {
-				return resolvedPrices;
-			}
-		}
-		throw new StripeError(
-			`Stripe recurring price ids missing for supported currencies: ${preferredCurrencies.join(', ')}`,
-		);
-	}
-
-	private resolveGiftPriceIds(
-		preferredCurrencies: Array<Currency>,
-	): Pick<ResolvedPriceIds, 'gift_1_month' | 'gift_1_year' | 'gift_currency'> {
-		for (const currency of preferredCurrencies) {
-			const resolvedPrices = this.getConfiguredGiftPriceIdsForCurrency(currency);
-			if (resolvedPrices) {
-				return resolvedPrices;
-			}
-		}
-		throw new StripeError(`Stripe gift price ids missing for supported currencies: ${preferredCurrencies.join(', ')}`);
-	}
-
-	private getConfiguredRecurringPriceIdsForCurrency(
-		currency: Currency,
-	): Pick<ResolvedPriceIds, 'monthly' | 'yearly' | 'currency'> | null {
-		const prices = Config.stripe.prices;
-		if (!prices) {
-			return null;
-		}
-		switch (currency) {
-			case 'EUR':
-				if (!prices.monthlyEur || !prices.yearlyEur) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyEur,
-					yearly: prices.yearlyEur,
-					currency,
-				};
-			case 'BRL':
-				if (!prices.monthlyBrl || !prices.yearlyBrl) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyBrl,
-					yearly: prices.yearlyBrl,
-					currency,
-				};
-			case 'INR':
-				if (!prices.monthlyInr || !prices.yearlyInr) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyInr,
-					yearly: prices.yearlyInr,
-					currency,
-				};
-			case 'PLN':
-				if (!prices.monthlyPln || !prices.yearlyPln) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyPln,
-					yearly: prices.yearlyPln,
-					currency,
-				};
-			case 'TRY':
-				if (!prices.monthlyTry || !prices.yearlyTry) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyTry,
-					yearly: prices.yearlyTry,
-					currency,
-				};
-			case 'USD':
-				if (!prices.monthlyUsd || !prices.yearlyUsd) {
-					return null;
-				}
-				return {
-					monthly: prices.monthlyUsd,
-					yearly: prices.yearlyUsd,
-					currency,
-				};
-			default:
-				return null;
-		}
-	}
-
-	private getConfiguredGiftPriceIdsForCurrency(
-		currency: Currency,
-	): Pick<ResolvedPriceIds, 'gift_1_month' | 'gift_1_year' | 'gift_currency'> | null {
-		const prices = Config.stripe.prices;
-		if (!prices) {
-			return null;
-		}
-		switch (currency) {
-			case 'BRL':
-				if (!prices.gift1MonthBrl || !prices.gift1YearBrl) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthBrl,
-					gift_1_year: prices.gift1YearBrl,
-					gift_currency: 'BRL',
-				};
-			case 'INR':
-				if (!prices.gift1MonthInr || !prices.gift1YearInr) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthInr,
-					gift_1_year: prices.gift1YearInr,
-					gift_currency: 'INR',
-				};
-			case 'PLN':
-				if (!prices.gift1MonthPln || !prices.gift1YearPln) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthPln,
-					gift_1_year: prices.gift1YearPln,
-					gift_currency: 'PLN',
-				};
-			case 'TRY':
-				if (!prices.gift1MonthTry || !prices.gift1YearTry) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthTry,
-					gift_1_year: prices.gift1YearTry,
-					gift_currency: 'TRY',
-				};
-			case 'EUR':
-				if (!prices.gift1MonthEur || !prices.gift1YearEur) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthEur,
-					gift_1_year: prices.gift1YearEur,
-					gift_currency: 'EUR',
-				};
-			case 'USD':
-				if (!prices.gift1MonthUsd || !prices.gift1YearUsd) {
-					return null;
-				}
-				return {
-					gift_1_month: prices.gift1MonthUsd,
-					gift_1_year: prices.gift1YearUsd,
-					gift_currency: 'USD',
-				};
-			default:
-				return null;
-		}
-	}
-
 	private async getStripePriceSummary(priceId: string | null): Promise<StripePriceSummary | null> {
-		if (!priceId || !this.stripe) {
+		return getCachedStripePriceSummary({stripe: this.stripe, cacheService: this.cacheService, priceId});
+	}
+
+	private resolveRequiredLocalPaymentMethod({
+		productInfo,
+		isGift,
+		isRecurringSubscription,
+	}: {
+		productInfo: ProductInfo;
+		isGift: boolean;
+		isRecurringSubscription: boolean;
+	}): CheckoutPaymentMethod | null {
+		if (isGift || !isRecurringSubscription) {
 			return null;
 		}
-		try {
-			return await this.cacheService.getOrSet<StripePriceSummary>(
-				`stripe_price_summary:${priceId}`,
-				async () => {
-					const price = await this.stripe!.prices.retrieve(priceId);
-					return {
-						unitAmountMinor: price.unit_amount ?? null,
-					};
-				},
-				StripeCheckoutService.PRICE_CACHE_TTL_SECONDS,
-			);
-		} catch (error: unknown) {
-			Logger.warn({error, priceId}, 'Failed to retrieve Stripe price summary');
+		if (getEffectiveBillingConfig().catalogMode === 'operator') {
 			return null;
 		}
+		return LOCAL_PAYMENT_METHOD_BY_CURRENCY[productInfo.currency] ?? null;
 	}
 
 	private assertPaymentMethodCompatibility({
@@ -1272,6 +662,10 @@ export class StripeCheckoutService {
 		}
 		if (isGift || !this.productRegistry.isRecurringSubscription(productInfo)) {
 			Logger.error({paymentMethod, priceId, userId}, 'Non-card payment method only valid for recurring subscriptions');
+			throw new StripeInvalidProductConfigurationError();
+		}
+		if (getEffectiveBillingConfig().catalogMode === 'operator') {
+			Logger.error({paymentMethod, priceId, userId}, 'Non-card payment methods are unavailable for operator prices');
 			throw new StripeInvalidProductConfigurationError();
 		}
 		if (paymentMethod === 'pix' && productInfo.currency !== 'BRL') {
@@ -1307,7 +701,8 @@ export class StripeCheckoutService {
 		paymentMethod: CheckoutPaymentMethod;
 		priceId: string;
 	}): Promise<CheckoutSessionPaymentMethodOptions | undefined> {
-		if (productInfo.currency === 'BRL' && checkoutMode === 'payment') {
+		const envCatalog = getEffectiveBillingConfig().catalogMode === 'env';
+		if (envCatalog && productInfo.currency === 'BRL' && checkoutMode === 'payment') {
 			return {
 				pix: {
 					amount_includes_iof: 'always',
@@ -1331,13 +726,13 @@ export class StripeCheckoutService {
 			};
 		}
 		if (paymentMethod === 'upi') {
-			const mandateAmount = await this.resolveMandateAmount(priceId);
+			const [mandateAmount, branding] = await Promise.all([this.resolveMandateAmount(priceId), getBillingBranding()]);
 			return {
 				upi: {
 					mandate_options: {
 						amount: mandateAmount,
 						amount_type: 'maximum',
-						description: UPI_MANDATE_DESCRIPTION,
+						description: branding.upiMandateDescription,
 					},
 				},
 			};
@@ -1353,59 +748,55 @@ export class StripeCheckoutService {
 		return Math.ceil(priceSummary.unitAmountMinor * PIX_UPI_MANDATE_HEADROOM_MULTIPLIER);
 	}
 
-	private async ensureStripeCustomer(user: User): Promise<User> {
-		if (user.stripeCustomerId) {
+	private async clearStaleStripeCustomer(user: User): Promise<User> {
+		if (!Config.instance.selfHosted || !this.stripe || !user.stripeCustomerId) {
 			return user;
 		}
+		const customerId = user.stripeCustomerId;
+		try {
+			const customer = await this.stripe.customers.retrieve(customerId);
+			if (!('deleted' in customer && customer.deleted)) {
+				return user;
+			}
+		} catch (error: unknown) {
+			if (!isStripeResourceMissingError(error)) {
+				Logger.warn({error, userId: user.id, customerId}, 'Failed to verify stored Stripe customer');
+				return user;
+			}
+		}
+		const patch: Partial<UserRow> = {stripe_customer_id: null};
+		if (user.stripeSubscriptionId && (await this.isStripeSubscriptionMissing(user.stripeSubscriptionId))) {
+			patch.stripe_subscription_id = null;
+		}
+		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
+		Logger.info(
+			{userId: user.id, customerId, clearedFields: Object.keys(patch)},
+			'Cleared Stripe customer that no longer exists for the configured Stripe account',
+		);
+		return updatedUser;
+	}
+
+	private async isStripeSubscriptionMissing(subscriptionId: string): Promise<boolean> {
+		if (!this.stripe) {
+			return false;
+		}
+		try {
+			await this.stripe.subscriptions.retrieve(subscriptionId);
+			return false;
+		} catch (error: unknown) {
+			return isStripeResourceMissingError(error);
+		}
+	}
+
+	private async ensureStripeCustomer(existingUser: User): Promise<User> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
-		const lockKey = `stripe_customer_create_lock:${user.id}`;
-		const lockToken = await this.cacheService.acquireLock(lockKey, StripeCheckoutService.CUSTOMER_LOCK_TTL_SECONDS);
-		if (!lockToken) {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			throw new StripeError('Failed to acquire customer creation lock');
-		}
-		try {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			const customer = await this.stripe.customers.create({
-				email: user.email ?? undefined,
-				metadata: {
-					userId: user.id.toString(),
-				},
-			});
-			try {
-				await getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, customerId: customer.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
-			const updatedUser = await this.userRepository.patchUpsert(
-				user.id,
-				{
-					stripe_customer_id: customer.id,
-				},
-				user.toRow(),
-			);
-			Logger.debug({userId: user.id, customerId: customer.id}, 'Stripe customer created');
-			return updatedUser;
-		} finally {
-			try {
-				const released = await this.cacheService.releaseLock(lockKey, lockToken);
-				if (!released) {
-					Logger.warn({userId: user.id, lockKey}, 'Customer creation lock token no longer matched on release');
-				}
-			} catch (error) {
-				Logger.error({error, userId: user.id, lockKey}, 'Failed to release customer creation lock');
-			}
-		}
+		return ensureStripeCustomer({
+			stripe: this.stripe,
+			user: await this.clearStaleStripeCustomer(existingUser),
+			userRepository: this.userRepository,
+			cacheService: this.cacheService,
+		});
 	}
 }

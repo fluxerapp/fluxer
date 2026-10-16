@@ -57,11 +57,11 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 		const splashUrl = useMemo(() => {
 			if (previewSplashUrl) return previewSplashUrl;
 			if (guild?.splash) {
-				return AvatarUtils.getGuildSplashURL({id: guild.id, splash: guild.splash}, 4096);
+				return AvatarUtils.getGuildSplashURL({id: guild.id, splash: guild.splash});
 			}
 			return null;
 		}, [previewSplashUrl, guild?.id, guild?.splash]);
-		const {patternReady, splashLoaded, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
+		const {patternReady, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
 		const shouldShowSplash = Boolean(splashUrl && splashDimensions);
 		const handleClose = useCallback(() => {
 			ModalCommands.pop();
@@ -122,12 +122,9 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 					<AuthBackground
 						className={clsx(styles.background, !shouldShowSplash && authLayoutStyles.patternHost)}
 						splashUrl={splashUrl}
-						splashLoaded={splashLoaded}
 						splashDimensions={splashDimensions}
-						patternReady={patternReady}
-						patternImageUrl={foodPatternUrl}
+						patternImageUrl={patternReady ? foodPatternUrl : null}
 						splashAlignment={splashAlignment}
-						useFullCover={true}
 						data-flx="invite.invite-page-preview-modal.background"
 					/>
 					<div className={styles.foreground} data-flx="invite.invite-page-preview-modal.foreground">
@@ -142,7 +139,6 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 							<div className={authLayoutStyles.leftSplitWrapper} data-flx="invite.invite-page-preview-modal.div--2">
 								<div className={authLayoutStyles.leftSplitAnimated} data-flx="invite.invite-page-preview-modal.div--3">
 									<AuthCardContainer
-										showLogoSide={true}
 										isInert={true}
 										className={clsx(authLayoutStyles.cardContainer, styles.cardContainer)}
 										data-flx="invite.invite-page-preview-modal.card-container"

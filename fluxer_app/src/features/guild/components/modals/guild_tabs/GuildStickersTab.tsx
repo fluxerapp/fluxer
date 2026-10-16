@@ -3,7 +3,6 @@
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {StickerGridItem} from '@app/features/emoji/components/stickers/StickerGridItem';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
 import * as GuildStickerCommands from '@app/features/expressions/commands/GuildStickerCommands';
@@ -12,14 +11,16 @@ import {
 	seedGuildStickerCache,
 	subscribeToGuildStickerUpdates,
 } from '@app/features/expressions/state/GuildExpressionTabCache';
-import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import {isSvgFile} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {CloneAllowedToggle} from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildStickersTab.module.css';
+import {resolveEnclosingScrollSurface} from '@app/features/guild/components/modals/guild_tabs/GuildStickersTabScrollSurface';
 import {UploadDropZone} from '@app/features/guild/components/UploadDropZone';
 import {UploadSlotInfo} from '@app/features/guild/components/UploadSlotInfo';
 import Guilds from '@app/features/guild/state/Guilds';
 import {OKAY_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -31,8 +32,9 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GUILD_STICKERS, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import type {GuildStickerWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -42,7 +44,7 @@ import {clsx} from 'clsx';
 import {matchSorter} from 'match-sorter';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const SEARCH_STICKERS_DESCRIPTOR = msg({
 	message: 'Search stickers',
@@ -92,6 +94,8 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 	const [stickers, setStickers] = useState<ReadonlyArray<GuildStickerWithUser>>([]);
 	const [fetchStatus, setFetchStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
 	const [searchQuery, setSearchQuery] = useState('');
+	const gridRef = useRef<HTMLDivElement | null>(null);
+	const resolveGridScrollSurface = useCallback(() => resolveEnclosingScrollSurface(gridRef.current), []);
 	const layoutState = EmojiStickerLayout;
 	const viewMode = layoutState.getStickerViewMode();
 	const guild = Guilds.getGuild(guildId);
@@ -223,7 +227,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		},
 		[canManageExpressions, canCreateExpressions, currentUserId],
 	);
-	const stickerMaxSizeLabel = formatFileSize(GlobalLimits.getStickerMaxSize());
+	const stickerMaxSizeLabel = formatFileSize(i18n.locale, guild?.maxStickerSize ?? STICKER_MAX_SIZE);
 	return (
 		<div className={styles.container} data-flx="guild.guild-tabs.guild-stickers-tab.container">
 			<CloneAllowedToggle
@@ -309,21 +313,24 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 				/>
 			)}
 			{fetchStatus === 'success' && filteredStickers.length > 0 && (
-				<div
-					className={clsx(styles.stickerGrid, viewMode === 'compact' ? styles.compactGrid : styles.cozyGrid)}
-					data-flx="guild.guild-tabs.guild-stickers-tab.sticker-grid"
-				>
-					{filteredStickers.map((sticker) => (
-						<StickerGridItem
-							key={sticker.id}
-							guildId={guildId}
-							sticker={sticker}
-							canModify={canModifySticker(sticker)}
-							onUpdate={fetchStickers}
-							data-flx="guild.guild-tabs.guild-stickers-tab.sticker-grid-item"
-						/>
-					))}
-				</div>
+				<NearViewportSurfaceContext.Provider value={resolveGridScrollSurface}>
+					<div
+						ref={gridRef}
+						className={clsx(styles.stickerGrid, viewMode === 'compact' ? styles.compactGrid : styles.cozyGrid)}
+						data-flx="guild.guild-tabs.guild-stickers-tab.sticker-grid"
+					>
+						{filteredStickers.map((sticker) => (
+							<StickerGridItem
+								key={sticker.id}
+								guildId={guildId}
+								sticker={sticker}
+								canModify={canModifySticker(sticker)}
+								onUpdate={fetchStickers}
+								data-flx="guild.guild-tabs.guild-stickers-tab.sticker-grid-item"
+							/>
+						))}
+					</div>
+				</NearViewportSurfaceContext.Provider>
 			)}
 			{fetchStatus === 'error' && (
 				<StatusSlate

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db} from '../../../database/CassandraTypes';
-import type {ChannelMessageBucketRow, ChannelStateRow} from '../../../database/types/MessageTypes';
-import type {Message} from '../../../models/Message';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {ChannelMessageBucketRow, ChannelStateRow} from '@app/api/database/types/MessageTypes';
+import type {Message} from '@app/api/models/Message';
 import {
 	AttachmentLookup,
 	ChannelEmptyBuckets,
@@ -15,10 +15,11 @@ import {
 	MessageReactions,
 	Messages,
 	MessagesByAuthorV2,
-} from '../../../Tables';
-import type {MessageDataRepository} from './MessageDataRepository';
+} from '@app/api/Tables';
+import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
 const BULK_DELETE_BATCH_SIZE = 100;
+const BULK_DELETE_BATCH_QUERY_LIMIT = 30;
 const POST_DELETE_BUCKET_CHECK_LIMIT = 25;
 const HAS_ANY_MESSAGE_IN_BUCKET = Messages.select({
 	columns: ['message_id'],
@@ -80,19 +81,21 @@ export class MessageDeletionRepository {
 				}),
 			);
 		}
-		batch.addPrepared(
-			MessageReactions.delete({
-				where: [
-					MessageReactions.where.eq('channel_id'),
-					MessageReactions.where.eq('bucket'),
-					MessageReactions.where.eq('message_id'),
-				],
-			}).bind({
-				channel_id: channelId,
-				bucket,
-				message_id: messageId,
-			}),
-		);
+		if (message?.hasReaction !== false) {
+			batch.addPrepared(
+				MessageReactions.delete({
+					where: [
+						MessageReactions.where.eq('channel_id'),
+						MessageReactions.where.eq('bucket'),
+						MessageReactions.where.eq('message_id'),
+					],
+				}).bind({
+					channel_id: channelId,
+					bucket,
+					message_id: messageId,
+				}),
+			);
+		}
 		if (message?.attachments) {
 			for (const attachment of message.attachments) {
 				batch.addPrepared(
@@ -230,7 +233,7 @@ export class MessageDeletionRepository {
 				affectedBuckets.add(bucket);
 				this.addMessageDeletionBatchQueries(batch, channelId, messageId, bucket, message);
 			}
-			await batch.execute();
+			await batch.executeChunked(BULK_DELETE_BATCH_QUERY_LIMIT, false);
 			await this.postDeleteMaintenance(channelId, affectedBuckets, chunk);
 		}
 	}
@@ -264,7 +267,7 @@ export class MessageDeletionRepository {
 						message.pinnedTimestamp || undefined,
 					);
 				}
-				await batch.execute();
+				await batch.executeChunked(BULK_DELETE_BATCH_QUERY_LIMIT, false);
 			}
 			if (messages.length < 100) {
 				hasMore = false;

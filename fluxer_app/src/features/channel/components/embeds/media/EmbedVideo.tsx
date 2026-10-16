@@ -16,15 +16,15 @@ import {
 	resolveVideoLayout,
 } from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
-import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import {buildMediaProxyURL, mediaDevicePixelRatio} from '@app/features/messaging/utils/MediaProxyUtils';
 import {attachmentsToViewerItems, findViewerItemIndex} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -33,6 +33,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {
+	detachMediaElementSource,
 	VideoPlayer,
 	type VideoPlayerMetadata,
 } from '@app/features/voice/components/media_player/components/VideoPlayer';
@@ -45,7 +46,7 @@ import {PlayIcon, SpeakerHighIcon, SpeakerXIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type {FC} from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const OPEN_VIDEO_DESCRIPTOR = msg({
 	message: 'Open video',
@@ -66,10 +67,12 @@ const PLAY_VIDEO_DESCRIPTOR = msg({
 });
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 
@@ -137,7 +140,8 @@ const MobileVideoOverlay: FC<{
 							exit={{opacity: 0}}
 							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
 							src={thumbHashURL}
-							alt={title ? i18n._(THUMBNAIL_FOR_DESCRIPTOR, {title}) : i18n._(VIDEO_THUMBNAIL_DESCRIPTOR)}
+							alt=""
+							aria-hidden={true}
 							className={styles.thumbHashPlaceholder}
 							data-flx="channel.embeds.media.embed-video.mobile-video-overlay.thumbnail-placeholder"
 						/>
@@ -213,7 +217,12 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
 		const isBlob = src.startsWith('blob:');
-		const posterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp'});
+		const declaredLayout = resolveVideoLayout(getEffectiveVideoLayoutDimensions({width, height}, null), {
+			maxWidth,
+			maxHeight,
+		});
+		const posterRequestWidth = Math.max(1, Math.round(declaredLayout.renderDimensions.width * mediaDevicePixelRatio()));
+		const posterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp', width: posterRequestWidth});
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
 			rememberKey: posterSrc ?? effectiveSrc,
 		});
@@ -231,8 +240,16 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const [isPlayingInline, setIsPlayingInline] = useState(false);
 		const [decodedVideoDimensions, setDecodedVideoDimensions] = useState<DecodedVideoDimensions | null>(null);
 		const [posterNaturalDimensions, setPosterNaturalDimensions] = useState<DecodedVideoDimensions | null>(null);
+		const [metadataProbeArmed, setMetadataProbeArmed] = useState(false);
 		const inlineVideoRef = useRef<HTMLVideoElement>(null);
 		useInAppMediaSoundCapture(inlineVideoRef);
+		useLayoutEffect(() => {
+			if (!isPlayingInline) return;
+			const inlineVideo = inlineVideoRef.current;
+			return () => {
+				detachMediaElementSource(inlineVideo);
+			};
+		}, [isPlayingInline]);
 		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
 		const shouldLoadMedia = isNearViewport && !shouldBlur;
 		const defaultName =
@@ -257,6 +274,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			[src],
 		);
 		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+		const allowAttachmentDelete = !isPreview && snapshotIndex === undefined;
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
 				if (!message) return;
@@ -313,6 +331,8 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				? !hasDifferentAspectRatio(decodedDimensionsForSrc, posterDimensionsForSrc, 0.05)
 				: true;
 		const effectivePosterSrc = posterMatchesVideo ? posterSrc : null;
+		const posterKnownLoaded = posterLoaded && posterMatchesVideo;
+		const presentedPosterSrc = shouldLoadMedia || posterKnownLoaded ? effectivePosterSrc : null;
 		const updateDecodedVideoDimensions = useCallback(
 			(nextWidth: number, nextHeight: number) => {
 				const nextDimensions = normalizeVideoDimensions({width: nextWidth, height: nextHeight});
@@ -346,9 +366,6 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		useEffect(() => {
 			if (!shouldLoadMedia) return;
 			if (!posterSrc) return;
-			if (DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading) {
-				return;
-			}
 			if (loadedPosterSrc === posterSrc) return;
 			let active = true;
 			const cleanup = ImageCacheUtils.loadImage(
@@ -356,9 +373,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				() => {
 					if (!active) return;
 					setLoadedPosterSrc(posterSrc);
-					const image = ImageCacheUtils.getImage(posterSrc);
-					if (active && image && image.naturalWidth > 0 && image.naturalHeight > 0) {
-						setPosterNaturalDimensions({src: posterSrc, width: image.naturalWidth, height: image.naturalHeight});
+					const posterSize = ImageCacheUtils.getImageSize(posterSrc);
+					if (active && posterSize) {
+						setPosterNaturalDimensions({src: posterSrc, width: posterSize.width, height: posterSize.height});
 					}
 				},
 				() => {
@@ -379,6 +396,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					messageId,
 					message,
 					sourceChannel: messageViewContext?.channel,
+					allowAttachmentDelete,
 				});
 			} else {
 				MediaViewerCommands.openMediaViewer(
@@ -390,12 +408,13 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 							naturalHeight: viewerVideoDimensions.height,
 							type: 'video' as const,
 							contentHash,
+							attachmentId,
 							embedIndex,
 							duration,
 						},
 					],
 					0,
-					{channelId, messageId, message, sourceChannel: messageViewContext?.channel},
+					{channelId, messageId, message, sourceChannel: messageViewContext?.channel, allowAttachmentDelete},
 				);
 			}
 		}, [
@@ -403,6 +422,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			messageId,
 			message,
 			messageViewContext?.channel,
+			allowAttachmentDelete,
 			mediaAttachments,
 			attachmentId,
 			effectiveSrc,
@@ -434,6 +454,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					messageId,
 					message,
 					sourceChannel: messageViewContext?.channel,
+					allowAttachmentDelete,
 				});
 			} else {
 				MediaViewerCommands.openMediaViewer(
@@ -445,13 +466,14 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 							naturalHeight: viewerVideoDimensions.height,
 							type: 'video' as const,
 							contentHash,
+							attachmentId,
 							embedIndex,
 							duration,
 							initialTime: currentTime,
 						},
 					],
 					0,
-					{channelId, messageId, message, sourceChannel: messageViewContext?.channel},
+					{channelId, messageId, message, sourceChannel: messageViewContext?.channel, allowAttachmentDelete},
 				);
 			}
 			setIsPlayingInline(false);
@@ -460,6 +482,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			messageId,
 			message,
 			messageViewContext?.channel,
+			allowAttachmentDelete,
 			mediaAttachments,
 			attachmentId,
 			effectiveSrc,
@@ -480,6 +503,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		}, []);
 		const handleInitialPlay = useCallback(() => {
 			setHasPlayed(true);
+		}, []);
+		const handleMediaPointerEnter = useCallback(() => {
+			setMetadataProbeArmed(true);
 		}, []);
 		const containerStyles: React.CSSProperties = isMobile
 			? {
@@ -514,6 +540,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 								<img
 									src={thumbHashUrl}
 									alt=""
+									aria-hidden={true}
 									className={styles.blurThumbnail}
 									style={{filter: 'blur(40px)'}}
 									data-flx="channel.embeds.media.embed-video.blur-thumbnail"
@@ -537,7 +564,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			{disableDelete: !!isPreview || snapshotIndex !== undefined},
 		);
 		const metadataProbe =
-			shouldLoadMedia && !fillContainer && !isBlob && !hasPlayed && !isPlayingInline ? (
+			metadataProbeArmed && shouldLoadMedia && !fillContainer && !isBlob && !hasPlayed && !isPlayingInline ? (
 				<video
 					aria-hidden="true"
 					className={styles.metadataProbe}
@@ -545,7 +572,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					muted
 					playsInline
 					preload="metadata"
-					src={effectiveSrc}
+					src={resolveDesktopCrossOriginMediaURL(effectiveSrc)}
 					tabIndex={-1}
 					onLoadedMetadata={handleMetadataProbeLoaded}
 					data-flx="channel.embeds.media.embed-video.metadata-probe"
@@ -567,6 +594,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					showDeleteButton={showDeleteButton}
 					onDeleteClick={handleDeleteClick}
 					onContextMenu={handleContextMenu}
+					onMouseEnter={handleMediaPointerEnter}
 					renderedWidth={dimensions.width}
 					renderedHeight={dimensions.height}
 					data-flx="channel.embeds.media.embed-video.media-container.context-menu"
@@ -578,7 +606,8 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 								<video
 									ref={inlineVideoRef}
 									className={styles.inlineVideo}
-									src={effectiveSrc}
+									src={resolveDesktopCrossOriginMediaURL(effectiveSrc)}
+									poster={presentedPosterSrc ?? undefined}
 									autoPlay
 									playsInline
 									muted={VideoVolume.isMuted}
@@ -613,9 +642,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 						) : (
 							<MobileVideoOverlay
 								thumbHashURL={thumbHashUrl}
-								posterSrc={shouldLoadMedia ? effectivePosterSrc : null}
-								posterLoaded={shouldLoadMedia && posterLoaded && posterMatchesVideo}
-								posterCachedOnMount={shouldLoadMedia && posterCachedOnMount && posterMatchesVideo}
+								posterSrc={presentedPosterSrc}
+								posterLoaded={posterKnownLoaded}
+								posterCachedOnMount={posterCachedOnMount && posterMatchesVideo}
 								onTap={handleMobileTap}
 								onPlayInline={handlePlayInline}
 								title={title}
@@ -641,6 +670,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				showDeleteButton={showDeleteButton}
 				onDeleteClick={handleDeleteClick}
 				onContextMenu={handleContextMenu}
+				onMouseEnter={handleMediaPointerEnter}
 				renderedWidth={dimensions.width}
 				renderedHeight={dimensions.height}
 				data-flx="channel.embeds.media.embed-video.media-container.context-menu--2"
@@ -649,7 +679,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				<div className={styles.videoPlayerWrapper} data-flx="channel.embeds.media.embed-video.video-player-wrapper">
 					<VideoPlayer
 						src={effectiveSrc}
-						poster={shouldLoadMedia ? (effectivePosterSrc ?? undefined) : undefined}
+						poster={presentedPosterSrc ?? undefined}
 						placeholder={placeholder}
 						duration={duration}
 						width={dimensions.width}

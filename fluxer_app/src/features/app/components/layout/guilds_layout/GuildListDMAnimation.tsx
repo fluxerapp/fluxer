@@ -8,7 +8,7 @@ import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
 
 const DM_LIST_ENTER_X = -88;
-export const DM_LIST_ENTER_DURATION_MS = 260;
+const DM_LIST_ENTER_DURATION_MS = 260;
 const DM_LIST_EXIT_DURATION_MS = 200;
 export const DM_LIST_REMOVAL_DELAY_MS = DM_LIST_EXIT_DURATION_MS + 120;
 const DM_LIST_ENTER_EASING: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
@@ -30,7 +30,7 @@ interface DMListAnimatedRowProps {
 	readonly onHoverStart: (channelId: string) => void;
 	readonly onHoverEnd: (channelId: string) => void;
 	readonly onRemovalAnimationComplete: (channelId: string) => void;
-	readonly scrollAnchorRef: React.RefCallback<HTMLElement>;
+	readonly scrollTargetRef: React.RefCallback<HTMLElement>;
 	readonly voiceCallActive: boolean;
 }
 
@@ -43,9 +43,10 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 	onHoverStart,
 	onHoverEnd,
 	onRemovalAnimationComplete,
-	scrollAnchorRef,
+	scrollTargetRef,
 	voiceCallActive,
 }) => {
+	const setRowRef = scrollTargetRef;
 	const previousPendingRemovalRef = useRef(pendingRemoval);
 	const removalCycleRef = useRef(0);
 	if (previousPendingRemovalRef.current !== pendingRemoval) {
@@ -64,7 +65,7 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 	if (reducedMotion) durationMs = 0;
 	return (
 		<motion.div
-			ref={scrollAnchorRef}
+			ref={setRowRef}
 			className={styles.dmListRow}
 			initial={reducedMotion ? false : {height: 0}}
 			animate={{height: pendingRemoval ? 0 : rowHeight}}

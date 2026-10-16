@@ -28,6 +28,7 @@ pub struct VoiceServer {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
     pub is_active: Option<bool>,
+    pub soft_connection_limit: Option<i64>,
     pub vip_only: Option<bool>,
     #[serde(default)]
     pub required_guild_features: Vec<String>,
@@ -76,9 +77,4 @@ pub struct CreateVoiceServerResponse {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UpdateVoiceServerResponse {
     pub server: VoiceServer,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GetVoiceServerResponse {
-    pub server: Option<VoiceServer>,
 }

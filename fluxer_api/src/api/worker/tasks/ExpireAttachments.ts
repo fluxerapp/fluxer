@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isAttachmentDecayReconcileRunning} from '@app/api/attachment/AttachmentDecayReconcileRun';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import {Logger} from '@app/api/Logger';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
-import {Logger} from '../../Logger';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BUCKET_LOOKBACK_DAYS = 3;
 const FETCH_LIMIT = 200;
 
 export async function processExpiredAttachments(now = new Date()): Promise<void> {
-	const {assetDeletionQueue, instanceConfigRepository} = getWorkerDependencies();
+	const {assetDeletionQueue, instanceConfigRepository, kvClient} = getWorkerDependencies();
 	const attachmentDecay = await instanceConfigRepository.getEffectiveAttachmentDecayConfig();
 	if (!attachmentDecay.enabled) {
 		Logger.info('Attachment decay disabled; skipping expireAttachments task');
+		return;
+	}
+	if (await isAttachmentDecayReconcileRunning(kvClient)) {
+		Logger.info('Attachment decay reconcile in progress; skipping expireAttachments task');
 		return;
 	}
 	const repo = new AttachmentDecayRepository();
@@ -29,7 +34,7 @@ export async function processExpiredAttachments(now = new Date()): Promise<void>
 			for (const row of expired) {
 				const metadata = await repo.fetchById(row.attachment_id);
 				if (!metadata) {
-					await repo.deleteRecords({
+					await repo.deleteExpiryRecord({
 						expiry_bucket: row.expiry_bucket,
 						expires_at: row.expires_at,
 						attachment_id: row.attachment_id,
@@ -38,7 +43,7 @@ export async function processExpiredAttachments(now = new Date()): Promise<void>
 					continue;
 				}
 				if (metadata.expires_at > row.expires_at) {
-					await repo.deleteRecords({
+					await repo.deleteExpiryRecord({
 						expiry_bucket: row.expiry_bucket,
 						expires_at: row.expires_at,
 						attachment_id: row.attachment_id,

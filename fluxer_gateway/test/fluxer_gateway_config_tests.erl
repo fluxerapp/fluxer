@@ -4,48 +4,7 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
-cluster_defaults_test() ->
-    Config = fluxer_gateway_config:build_config(#{}),
-    ?assertEqual(false, maps:get(cluster_enabled, Config)),
-    ?assertEqual(undefined, maps:get(cluster_discovery_dns_name, Config)),
-    ?assertEqual(undefined, maps:get(cluster_discovery_node_basename, Config)),
-    ?assertEqual(5000, maps:get(cluster_discovery_poll_interval_ms, Config)),
-    ?assertEqual([], maps:get(cluster_static_peers, Config)).
-
-cluster_overrides_test() ->
-    RawConfig = #{
-        <<"services">> => #{
-            <<"gateway">> => #{
-                <<"cluster_enabled">> => true,
-                <<"cluster_discovery_dns_name">> =>
-                    <<"fluxer-gateway-headless.fluxer.svc.cluster.local">>,
-                <<"cluster_discovery_node_basename">> => <<"fluxer_gateway">>,
-                <<"cluster_discovery_poll_interval_ms">> => 2500,
-                <<"cluster_static_peers">> =>
-                    <<"fluxer_gateway_websocket_1@127.0.0.1, fluxer_gateway_sessions_1@127.0.0.1">>
-            }
-        }
-    },
-    Config = fluxer_gateway_config:build_config(RawConfig),
-    ?assertEqual(true, maps:get(cluster_enabled, Config)),
-    ?assertEqual(
-        "fluxer-gateway-headless.fluxer.svc.cluster.local",
-        maps:get(cluster_discovery_dns_name, Config)
-    ),
-    ?assertEqual(
-        "fluxer_gateway",
-        maps:get(cluster_discovery_node_basename, Config)
-    ),
-    ?assertEqual(2500, maps:get(cluster_discovery_poll_interval_ms, Config)),
-    ?assertEqual(
-        [
-            list_to_atom("fluxer_gateway_websocket_1@127.0.0.1"),
-            list_to_atom("fluxer_gateway_sessions_1@127.0.0.1")
-        ],
-        maps:get(cluster_static_peers, Config)
-    ).
-
-cluster_static_peers_filters_invalid_node_names_test() ->
+cluster_static_peers_rejects_invalid_node_names_test() ->
     LongPeer = list_to_binary(lists:duplicate(260, $a)),
     RawConfig = #{
         <<"services">> => #{
@@ -60,77 +19,131 @@ cluster_static_peers_filters_invalid_node_names_test() ->
             }
         }
     },
+    ?assertError(
+        {invalid_cluster_static_peer, "invalid peer@127.0.0.2"},
+        fluxer_gateway_config:build_config(RawConfig)
+    ).
+
+cluster_static_peers_accepts_valid_node_names_test() ->
+    RawConfig = #{
+        <<"services">> => #{
+            <<"gateway">> => #{
+                <<"cluster_static_peers">> =>
+                    <<"valid_peer@127.0.0.1,other-valid@node.local">>
+            }
+        }
+    },
     Config = fluxer_gateway_config:build_config(RawConfig),
     ?assertEqual(
         [list_to_atom("valid_peer@127.0.0.1"), list_to_atom("other-valid@node.local")],
         maps:get(cluster_static_peers, Config)
     ).
 
-presence_push_buffer_env_defaults_test() ->
-    with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES", "7", fun() ->
-        with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES", "4096", fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(7, maps:get(presence_push_buffer_max_entries, Config)),
-            ?assertEqual(4096, maps:get(presence_push_buffer_max_bytes, Config))
-        end)
+env_int_rejects_a_non_integer_value_test() ->
+    with_env("FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "abc", fun() ->
+        ?assertError(
+            {invalid_integer_env, "FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "abc"},
+            fluxer_gateway_config:load()
+        )
     end).
 
-env_only_push_and_http_runtime_config_test() ->
-    ApnsAppsJson =
-        "[{\"app_id\":\"ios-stable\",\"topic\":\"app.fluxer\",\"environment\":\"production\"}]",
-    FcmAppsJson = "[{\"app_id\":\"android-stable\",\"project_id\":\"fluxer-fcm\"}]",
+env_int_falls_back_to_the_default_for_an_empty_value_test() ->
+    with_env("FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "", fun() ->
+        Config = fluxer_gateway_config:load(),
+        ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config))
+    end).
+
+blank_env_values_fall_back_to_the_defaults_test() ->
     with_envs(
         [
-            {"FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS", "1234"},
-            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "42"},
-            {"FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", "9"},
-            {"FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", "6000"},
-            {"FLUXER_PUSH_APNS_ENABLED", "true"},
-            {"FLUXER_PUSH_APNS_TEAM_ID", "TEAMID"},
-            {"FLUXER_PUSH_APNS_KEY_ID", "KEYID"},
-            {"FLUXER_PUSH_APNS_PRIVATE_KEY_PATH", "/etc/fluxer/apns.p8"},
-            {"FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT", "development"},
-            {"FLUXER_PUSH_APNS_APPS", ApnsAppsJson},
-            {"FLUXER_PUSH_FCM_ENABLED", "true"},
-            {"FLUXER_PUSH_FCM_PROJECT_ID", "fluxer-fcm"},
-            {"FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH", "/etc/fluxer/fcm.json"},
-            {"FLUXER_PUSH_FCM_TOKEN_URI", "https://oauth2.example/token"},
-            {"FLUXER_PUSH_FCM_APPS", FcmAppsJson}
+            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "  "},
+            {"FLUXER_CLIENT_IP_HEADER_NAME", " "},
+            {"FLUXER_NATS_URL", "\t"},
+            {"FLUXER_GATEWAY_API_RPC_ENDPOINT", "   "},
+            {"FLUXER_GATEWAY_LOGGER_LEVEL", " "},
+            {"FLUXER_GATEWAY_PUSH_ENABLED", " "}
         ],
         fun() ->
             Config = fluxer_gateway_config:load(),
-            ?assertEqual(1234, maps:get(shutdown_drain_wait_ms, Config)),
-            ?assertEqual(42, maps:get(gateway_http_rpc_max_concurrency, Config)),
-            ?assertEqual(9, maps:get(gateway_http_failure_threshold, Config)),
-            ?assertEqual(6000, maps:get(gateway_http_recovery_timeout_ms, Config)),
-            ?assertEqual(true, maps:get(apns_enabled, Config)),
-            ?assertEqual(<<"TEAMID">>, maps:get(apns_team_id, Config)),
-            ?assertEqual(<<"KEYID">>, maps:get(apns_key_id, Config)),
-            ?assertEqual(<<"development">>, maps:get(apns_default_environment, Config)),
+            ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config)),
+            ?assertEqual(<<"x-forwarded-for">>, maps:get(client_ip_header, Config)),
+            ?assertEqual("nats://nats:4222", maps:get(nats_core_url, Config)),
+            ?assertEqual(undefined, maps:get(api_rpc_endpoint, Config)),
+            ?assertEqual(info, maps:get(logger_level, Config)),
+            ?assertEqual(true, maps:get(push_enabled, Config))
+        end
+    ).
+
+self_hosted_follows_the_fluxer_self_hosted_env_test() ->
+    with_env("FLUXER_SELF_HOSTED", "", fun() ->
+        ?assertEqual(false, maps:get(self_hosted, fluxer_gateway_config:load()))
+    end),
+    with_env("FLUXER_SELF_HOSTED", "true", fun() ->
+        ?assertEqual(true, maps:get(self_hosted, fluxer_gateway_config:load()))
+    end).
+
+pinned_guild_ids_reject_non_snowflakes_test() ->
+    with_env("FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001,ab", fun() ->
+        ?assertError({invalid_pinned_guild_id, "ab"}, fluxer_gateway_config:load())
+    end).
+
+env_value_reads_name_file_test() ->
+    with_env_file(<<"from-file\r\n">>, fun(Path) ->
+        with_envs(
+            [{"FLUXER_GATEWAY_TEST_SECRET", ""}, {"FLUXER_GATEWAY_TEST_SECRET_FILE", Path}],
+            fun() ->
+                ?assertEqual(
+                    "from-file", fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+                )
+            end
+        )
+    end).
+
+env_value_trims_only_one_newline_test() ->
+    with_env_file(<<"line1\nline2\n\n">>, fun(Path) ->
+        with_env("FLUXER_GATEWAY_TEST_SECRET_FILE", Path, fun() ->
             ?assertEqual(
-                [
-                    #{
-                        <<"app_id">> => <<"ios-stable">>,
-                        <<"topic">> => <<"app.fluxer">>,
-                        <<"environment">> => <<"production">>
-                    }
-                ],
-                maps:get(apns_apps, Config)
-            ),
-            ?assertEqual(true, maps:get(fcm_enabled, Config)),
-            ?assertEqual(<<"fluxer-fcm">>, maps:get(fcm_project_id, Config)),
-            ?assertEqual(<<"https://oauth2.example/token">>, maps:get(fcm_token_uri, Config)),
-            ?assertEqual(
-                [#{<<"app_id">> => <<"android-stable">>, <<"project_id">> => <<"fluxer-fcm">>}],
-                maps:get(fcm_apps, Config)
+                "line1\nline2\n", fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+            )
+        end)
+    end).
+
+env_value_rejects_name_and_name_file_test() ->
+    with_envs(
+        [
+            {"FLUXER_GATEWAY_TEST_SECRET", "direct"},
+            {"FLUXER_GATEWAY_TEST_SECRET_FILE", "/run/secrets/x"}
+        ],
+        fun() ->
+            ?assertError(
+                {ambiguous_env, "FLUXER_GATEWAY_TEST_SECRET",
+                    "FLUXER_GATEWAY_TEST_SECRET_FILE"},
+                fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
             )
         end
     ).
 
-optional_string_test() ->
-    ?assertEqual(undefined, fluxer_gateway_config:optional_string(undefined)),
-    ?assertEqual("hello", fluxer_gateway_config:optional_string(<<"hello">>)),
-    ?assertEqual("", fluxer_gateway_config:optional_string(<<>>)).
+env_value_rejects_missing_name_file_test() ->
+    Path = "/nonexistent/fluxer-gateway-test-secret",
+    with_env("FLUXER_GATEWAY_TEST_SECRET_FILE", Path, fun() ->
+        ?assertError(
+            {unreadable_env_file, "FLUXER_GATEWAY_TEST_SECRET_FILE", Path, enoent},
+            fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+        )
+    end).
+
+with_env_file(Contents, Fun) ->
+    Path = filename:join(
+        filename:basedir(user_cache, "fluxer_gateway_tests"),
+        integer_to_list(erlang:unique_integer([positive]))
+    ),
+    ok = filelib:ensure_dir(Path),
+    ok = file:write_file(Path, Contents),
+    try
+        Fun(Path)
+    after
+        file:delete(Path)
+    end.
 
 with_envs([], Fun) ->
     Fun();

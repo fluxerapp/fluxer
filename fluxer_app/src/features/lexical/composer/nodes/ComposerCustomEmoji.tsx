@@ -2,13 +2,12 @@
 
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Emoji from '@app/features/emoji/state/Emoji';
-import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
-import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
-import {EmojiWithTooltip} from '@app/features/ui/emoji_tooltip_content/EmojiWithTooltip';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
+import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -33,43 +32,52 @@ interface ComposerCustomEmojiProps {
 export const ComposerCustomEmoji = observer(({emojiId, animated, display}: ComposerCustomEmojiProps) => {
 	const {plainText} = useContext(ComposerMentionContext);
 	const {i18n} = useLingui();
-	const shouldAnimate = useShouldAnimate({kind: 'emoji'});
+	const record = Emoji.getEmojiById(emojiId);
+	const isAnimatable = record?.animated ?? animated;
+	const shouldAnimate = useShouldAnimate({
+		kind: 'emoji',
+		isAnimated: isAnimatable,
+	});
 	if (plainText) {
 		return (
-			<span className={styles.plainText} contentEditable={false}>
+			<span
+				className={styles.plainText}
+				contentEditable={false}
+				data-flx="lexical.composer.nodes.composer-custom-emoji.plain-text"
+			>
 				{display}
 			</span>
 		);
 	}
-	const name = display.replace(/^:|:$/g, '');
-	const record = Emoji.getEmojiById(emojiId);
-	const emojiForSubtext: FlatEmoji =
-		record == null
-			? {
-					id: emojiId,
-					animated,
-					name,
-					uniqueName: name,
-					allNamesString: display,
-				}
-			: record;
 	const guildId = record == null ? null : record.guildId;
 	const guild = guildId ? Guilds.getGuild(guildId) : null;
 	const communityName = guild == null ? null : guild.name;
 	const accessibleLabel = communityName
 		? i18n._(CUSTOM_EMOJI_FROM_COMMUNITY_DESCRIPTOR, {emojiName: display, communityName})
 		: i18n._(CUSTOM_EMOJI_DESCRIPTOR, {emojiName: display});
-	const displayUrl = AvatarSourceUtils.getEmojiURL({id: emojiId, animated: animated && shouldAnimate});
-	const tooltipUrl = setUrlQueryParams(displayUrl, {size: 240, quality: 'lossless'});
+	const displayUrl =
+		getEmojiRenderUrl({
+			id: emojiId,
+			surrogateUrl: null,
+			isAnimatable,
+			animated: shouldAnimate,
+			jumbo: false,
+		}) ?? '';
 	return (
-		<EmojiWithTooltip emojiUrl={tooltipUrl} emojiName={display} emojiForSubtext={emojiForSubtext}>
+		<Tooltip
+			text={display}
+			delay={EXPRESSION_TOOLTIP_DELAY_MS}
+			data-flx="lexical.composer.nodes.composer-custom-emoji.tooltip"
+		>
 			<img
 				src={displayUrl}
 				alt={accessibleLabel}
+				aria-label={accessibleLabel}
 				className={styles.customEmoji}
 				draggable={false}
 				contentEditable={false}
+				data-flx="lexical.composer.nodes.composer-custom-emoji.custom-emoji"
 			/>
-		</EmojiWithTooltip>
+		</Tooltip>
 	);
 });

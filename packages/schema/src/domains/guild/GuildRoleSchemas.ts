@@ -10,7 +10,7 @@ export const GuildRoleResponse = z.object({
 	color: Int32Type.describe('The colour of the role as an integer'),
 	position: Int32Type.describe('The position of the role in the role hierarchy'),
 	hoist_position: Int32Type.nullish().describe('The position of the role in the hoisted member list'),
-	permissions: PermissionStringType.describe('fluxer:PermissionStringType The permissions bitfield for the role'),
+	permissions: PermissionStringType.describe('The permissions bitfield for the role'),
 	hoist: z.boolean().describe('Whether this role is displayed separately in the member list'),
 	mentionable: z.boolean().describe('Whether this role can be mentioned by anyone'),
 	unicode_emoji: z.string().nullish().describe('The unicode emoji for this role'),
@@ -18,14 +18,6 @@ export const GuildRoleResponse = z.object({
 
 export type GuildRoleResponse = z.infer<typeof GuildRoleResponse>;
 
-export interface GuildRole {
-	readonly id: string;
-	readonly name: string;
-	readonly color: number;
-	readonly position: number;
-	readonly hoist_position?: number | null;
-	readonly permissions: string;
-	readonly hoist: boolean;
-	readonly mentionable: boolean;
-	readonly unicode_emoji?: string | null;
-}
+export type GuildRole = Readonly<GuildRoleResponse>;
+
+export const GuildRoleListResponse = z.array(GuildRoleResponse);

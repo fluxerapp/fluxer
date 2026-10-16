@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {useListNavigation} from '@app/features/app/hooks/useListNavigation';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import * as QuickSwitcherCommands from '@app/features/search/commands/QuickSwitcherCommands';
 import {QuickSwitcherBottomSheet} from '@app/features/search/components/bottomsheets/QuickSwitcherBottomSheet';
 import quickStyles from '@app/features/search/components/quick_switcher/QuickSwitcherModal.module.css';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import {consumeEscapeIntent} from '@app/features/search/state/QuickSwitcherEscapeIntent';
 import type {QuickSwitcherExecutableResult, QuickSwitcherResult} from '@app/features/search/state/QuickSwitcherTypes';
 import {
 	createSections,
+	dismissQuickSwitcher,
 	getQuickSwitcherResultAccessibilityMetadata,
 	getResultKey,
-	getViewContext,
 	handleContextMenu,
 	PREFIX_HINTS,
 	type QuickSwitcherSection,
 	renderIcon,
+	useQuickSwitcherEscapeIntent,
 	useQuickSwitcherInputFocus,
 	useQuickSwitcherKeyboardHandling,
 } from '@app/features/search/utils/QuickSwitcherModalUtils';
@@ -34,7 +35,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useId, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
 
 const NO_AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
 	message: 'No autocomplete suggestion',
@@ -58,7 +59,7 @@ const AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
 	comment: 'Screen-reader announcement for the highlighted autocomplete suggestion, without query echo.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment:
 		'Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.',
 });
@@ -71,7 +72,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const QUICK_SWITCHER_DESCRIPTOR = msg({
@@ -99,6 +100,7 @@ const QUICK_SWITCHER_RESULTS_DESCRIPTOR = msg({
 	message: 'Quick switcher results',
 	comment: 'Accessible label for the desktop quick switcher result listbox.',
 });
+const SELECTED_ROW_SCROLL_PADDING = 10;
 const getQuickSwitcherOptionId = (baseId: string, index: number): string => `${baseId}-option-${index}`;
 type PrefixHint = (typeof PREFIX_HINTS)[number];
 const PrefixHintToken: React.FC<{
@@ -121,26 +123,20 @@ const ResultRow = observer(
 		result,
 		index,
 		isKeyboardSelected,
-		isHovered,
 		onHover,
-		onMouseLeave,
 		onConfirm,
 		optionId,
 		positionInSet,
 		setSize,
-		innerRef,
 	}: {
 		result: QuickSwitcherResult;
 		index: number;
 		isKeyboardSelected: boolean;
-		isHovered: boolean;
 		onHover: (index: number) => void;
-		onMouseLeave: () => void;
 		onConfirm: (result: QuickSwitcherExecutableResult) => void;
 		optionId: string;
 		positionInSet: number;
 		setSize: number;
-		innerRef?: React.Ref<HTMLDivElement>;
 	}) => {
 		const {i18n} = useLingui();
 		if (result.type === QuickSwitcherResultTypes.HEADER) {
@@ -158,7 +154,7 @@ const ResultRow = observer(
 		const resultMetadata = getQuickSwitcherResultAccessibilityMetadata(executableResult, i18n);
 		const {guildName, isChannel, isUser, label: optionLabel, mentionCount, subtext, unreadCount} = resultMetadata;
 		const hasUnread = unreadCount > 0 || mentionCount > 0;
-		const isActive = isKeyboardSelected || isHovered;
+		const isActive = isKeyboardSelected;
 		const isHighlight =
 			hasUnread &&
 			(executableResult.type === QuickSwitcherResultTypes.TEXT_CHANNEL ||
@@ -182,9 +178,8 @@ const ResultRow = observer(
 			quickStyles.optionIcon,
 			quickStyles.optionIconHighlight,
 		);
-		const key = getViewContext(executableResult)
-			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
-			: `${executableResult.type}-${executableResult.id}`;
+		const iconContent: React.ReactElement = iconRendered.content;
+		const key = `${executableResult.type}-${executableResult.id}`;
 		return (
 			<FocusRing offset={-2} data-flx="search.quick-switcher.quick-switcher-modal.result-row.focus-ring">
 				<div
@@ -195,9 +190,7 @@ const ResultRow = observer(
 					aria-posinset={positionInSet}
 					aria-setsize={setSize}
 					className={clsx(quickStyles.option, isActive && quickStyles.optionActive)}
-					ref={innerRef}
 					onMouseEnter={handleMouseEnter}
-					onMouseLeave={onMouseLeave}
 					onMouseDown={(event) => {
 						if (event.button === 0) event.preventDefault();
 					}}
@@ -217,17 +210,17 @@ const ResultRow = observer(
 								className={quickStyles.avatar}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--3"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : iconRendered.type === 'guild' ? (
 							<div
 								className={quickStyles.guildIcon}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--4"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : (
-							iconRendered.content
+							iconContent
 						)}
 						<div
 							className={clsx(quickStyles.optionText, isHighlight && quickStyles.optionHighlight)}
@@ -289,57 +282,17 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 	const quickSwitcherId = useId();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
-	const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
-	const shouldScrollToSelection = useRef(false);
+	const previousQueryRef = useRef(query);
+	const [isKeyboardNavigating, setIsKeyboardNavigating] = useState(true);
 	const isMobile = MobileLayout.isMobileLayout();
 	const inputId = `${quickSwitcherId}-input`;
 	const listboxId = `${quickSwitcherId}-results`;
 	const statusId = `${quickSwitcherId}-status`;
 	const suggestionStatusId = `${quickSwitcherId}-suggestion-status`;
 	const hintId = `${quickSwitcherId}-hint`;
-	const {
-		keyboardFocusIndex,
-		hoverIndexForRender,
-		handleMouseEnter: handleHoverIndex,
-		handleMouseLeave,
-		setSelectedIndex: setKeyboardIndex,
-	} = useListNavigation({
-		itemCount: results.length,
-		initialIndex: selectedIndex >= 0 ? selectedIndex : 0,
-		loop: true,
-	});
-	if (rowRefs.current.length !== results.length) {
-		rowRefs.current = Array(results.length).fill(null);
-	}
-	useEffect(() => {
-		if (results.length === 0) {
-			setKeyboardIndex(-1);
-			handleMouseLeave();
-			return;
-		}
-		const clamped = selectedIndex >= 0 ? Math.min(selectedIndex, results.length - 1) : 0;
-		setKeyboardIndex(clamped);
-	}, [handleMouseLeave, results.length, selectedIndex, setKeyboardIndex]);
-	useEffect(() => {
-		handleMouseLeave();
-	}, [handleMouseLeave, results.length]);
 	useQuickSwitcherKeyboardHandling(isOpen, isMobile, inputRef, query);
 	useQuickSwitcherInputFocus(isOpen, isMobile, undefined, inputRef);
-	useEffect(() => {
-		if (!isOpen || isMobile) {
-			return;
-		}
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
-				return;
-			}
-			event.preventDefault();
-			shouldScrollToSelection.current = true;
-			QuickSwitcherCommands.moveSelection(event.key === 'ArrowDown' ? 'down' : 'up');
-		};
-		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, [isMobile, isOpen]);
+	const escapeIntentRef = useQuickSwitcherEscapeIntent(isOpen && !isMobile);
 	const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
 		QuickSwitcherCommands.search(event.target.value);
 	}, []);
@@ -347,21 +300,23 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		if (isIMEComposing(event)) {
 			return;
 		}
+		setIsKeyboardNavigating(true);
+		if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'n' || event.key === 'p')) {
+			event.preventDefault();
+			event.stopPropagation();
+			QuickSwitcherCommands.moveSelection(event.key === 'n' ? 'down' : 'up');
+			return;
+		}
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':
 				event.preventDefault();
 				event.stopPropagation();
-				shouldScrollToSelection.current = true;
 				QuickSwitcherCommands.moveSelection(event.key === 'ArrowDown' ? 'down' : 'up');
 				break;
 			case 'Enter':
 				event.preventDefault();
 				await QuickSwitcherCommands.confirmSelection();
-				break;
-			case 'Escape':
-				event.preventDefault();
-				QuickSwitcherCommands.hide();
 				break;
 			default:
 				break;
@@ -371,29 +326,41 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		if (LayerManager.hasType('contextmenu')) {
 			return;
 		}
-		QuickSwitcherCommands.hide();
+		dismissQuickSwitcher({isEscape: consumeEscapeIntent(escapeIntentRef)});
+	}, [escapeIntentRef]);
+	const handlePointerMove = useCallback(() => {
+		setIsKeyboardNavigating(false);
 	}, []);
 	const handleHover = useCallback(
 		(index: number) => {
-			shouldScrollToSelection.current = false;
-			handleHoverIndex(index);
+			if (isKeyboardNavigating) {
+				return;
+			}
+			QuickSwitcherCommands.select(index);
 		},
-		[handleHoverIndex],
+		[isKeyboardNavigating],
 	);
 	const handleConfirm = useCallback((result: QuickSwitcherExecutableResult) => {
 		void QuickSwitcherCommands.switchTo(result);
 	}, []);
 	useEffect(() => {
-		if (!shouldScrollToSelection.current || keyboardFocusIndex < 0) {
-			shouldScrollToSelection.current = false;
+		const scroller = scrollerRef.current;
+		if (!scroller) {
 			return;
 		}
-		shouldScrollToSelection.current = false;
-		const node = rowRefs.current[keyboardFocusIndex];
-		if (node) {
-			scrollerRef.current?.scrollIntoViewNode({node: node as HTMLElement, padding: 32});
+		if (previousQueryRef.current !== query) {
+			previousQueryRef.current = query;
+			scroller.scrollTo({to: 0});
+			return;
 		}
-	}, [keyboardFocusIndex]);
+		if (!isKeyboardNavigating || selectedIndex < 0) {
+			return;
+		}
+		const node = document.getElementById(getQuickSwitcherOptionId(listboxId, selectedIndex));
+		if (node) {
+			scroller.revealElement({node, padding: SELECTED_ROW_SCROLL_PADDING});
+		}
+	}, [isKeyboardNavigating, listboxId, query, results, selectedIndex]);
 	const sections = useMemo(() => createSections(results), [results]);
 	const selectableIndices = useMemo(
 		() =>
@@ -405,19 +372,20 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			}, []),
 		[results],
 	);
-	const selectedOptionPosition = keyboardFocusIndex >= 0 ? selectableIndices.indexOf(keyboardFocusIndex) + 1 : 0;
+	const selectedOptionPosition = selectedIndex >= 0 ? selectableIndices.indexOf(selectedIndex) + 1 : 0;
+	const hasSearchIntent = query.trim().length > 0;
 	const resultCount = useMemo(
 		() => results.filter((result) => result.type !== QuickSwitcherResultTypes.HEADER).length,
 		[results],
 	);
 	const activeDescendant =
-		keyboardFocusIndex >= 0 && results[keyboardFocusIndex]?.type !== QuickSwitcherResultTypes.HEADER
-			? getQuickSwitcherOptionId(listboxId, keyboardFocusIndex)
+		selectedIndex >= 0 && results[selectedIndex]?.type !== QuickSwitcherResultTypes.HEADER
+			? getQuickSwitcherOptionId(listboxId, selectedIndex)
 			: undefined;
 	const activeSuggestionStatus = useMemo(() => {
-		const result = results[keyboardFocusIndex];
+		const result = results[selectedIndex];
 		if (!result || result.type === QuickSwitcherResultTypes.HEADER) {
-			return resultCount === 0 ? i18n._(NO_AUTOCOMPLETE_SUGGESTION_DESCRIPTOR) : '';
+			return resultCount === 0 && hasSearchIntent ? i18n._(NO_AUTOCOMPLETE_SUGGESTION_DESCRIPTOR) : '';
 		}
 		const label = getQuickSwitcherResultAccessibilityMetadata(result as QuickSwitcherExecutableResult, i18n).label;
 		const trimmedQuery = query.trim();
@@ -429,11 +397,13 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		return selectedOptionPosition > 0
 			? i18n._(AUTOCOMPLETE_SUGGESTION_OF_DESCRIPTOR, {label, selectedOptionPosition, resultCount})
 			: i18n._(AUTOCOMPLETE_SUGGESTION_DESCRIPTOR, {label});
-	}, [i18n.locale, keyboardFocusIndex, query, resultCount, results, selectedOptionPosition]);
+	}, [hasSearchIntent, i18n.locale, query, resultCount, results, selectedIndex, selectedOptionPosition]);
 	const resultStatus = QuickSwitcher.isLoadingMemberResults
 		? i18n._(SEARCHING_PEOPLE_DESCRIPTOR)
 		: resultCount === 0
-			? i18n._(NO_MATCHES_FOUND_DESCRIPTOR)
+			? hasSearchIntent
+				? i18n._(NO_MATCHES_FOUND_DESCRIPTOR)
+				: ''
 			: resultCount === 1
 				? i18n._(MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR)
 				: i18n._(RESULTS_AVAILABLE_DESCRIPTOR, {resultCount});
@@ -455,7 +425,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			className={quickStyles.modalRoot}
 			onClose={handleClose}
 			initialFocusRef={inputRef}
-			transitionPreset="instant"
+			transitionPreset="quick"
 			data-quick-switcher-modal="true"
 			data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.modal-root"
 		>
@@ -463,8 +433,10 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 				text={i18n._(QUICK_SWITCHER_DESCRIPTOR)}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.modal-screen-reader-label"
 			/>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it has no affordance of its own. */}
 			<div
 				className={quickStyles.container}
+				onMouseMove={handlePointerMove}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div"
 			>
 				<div
@@ -522,86 +494,83 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 					>
 						{activeSuggestionStatus}
 					</div>
-					<Scroller
-						ref={scrollerRef}
-						className={quickStyles.scrollerContainer}
-						overflow="scroll"
-						key="quick_switcher-desktop-scroller"
-						data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.scroller"
-					>
-						{results.length === 0 ? (
-							<div
-								className={quickStyles.emptyState}
-								role="status"
-								aria-live="polite"
-								data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.status--3"
-							>
+					{results.length === 0 && !hasSearchIntent ? null : (
+						<Scroller
+							ref={scrollerRef}
+							className={quickStyles.scrollerContainer}
+							overflow="scroll"
+							key="quick_switcher-desktop-scroller"
+							data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.scroller"
+						>
+							{results.length === 0 ? (
 								<div
-									className={quickStyles.emptyStateTitle}
-									data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--5"
+									className={quickStyles.emptyState}
+									role="status"
+									aria-live="polite"
+									data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.status--3"
 								>
-									{i18n._(NO_MATCHES_FOUND_DESCRIPTOR)}
+									<div
+										className={quickStyles.emptyStateTitle}
+										data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--5"
+									>
+										{i18n._(NO_MATCHES_FOUND_DESCRIPTOR)}
+									</div>
+									<div
+										className={quickStyles.emptyStateHint}
+										data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--6"
+									>
+										{i18n._(TRY_A_DIFFERENT_NAME_OR_USE_PREFIXES_TO_DESCRIPTOR)}
+									</div>
 								</div>
+							) : (
 								<div
-									className={quickStyles.emptyStateHint}
-									data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--6"
+									id={listboxId}
+									role="listbox"
+									aria-label={i18n._(QUICK_SWITCHER_RESULTS_DESCRIPTOR)}
+									data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.listbox"
 								>
-									{i18n._(TRY_A_DIFFERENT_NAME_OR_USE_PREFIXES_TO_DESCRIPTOR)}
+									{sections.map((section: QuickSwitcherSection) => {
+										const sectionHeaderId = section.header ? `${listboxId}-${section.key}` : undefined;
+										const sectionAriaProps = sectionHeaderId
+											? ({role: 'group', 'aria-labelledby': sectionHeaderId} as const)
+											: ({role: 'presentation'} as const);
+										return (
+											<div
+												key={section.key}
+												className={quickStyles.section}
+												data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--7"
+												{...sectionAriaProps}
+											>
+												{section.header && (
+													<div
+														id={sectionHeaderId}
+														className={quickStyles.sectionHeader}
+														data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--8"
+													>
+														{section.header.title}
+													</div>
+												)}
+												{section.rows.map(({result, index}: {result: QuickSwitcherExecutableResult; index: number}) => (
+													<ResultRow
+														key={getResultKey(result)}
+														result={result}
+														index={index}
+														isKeyboardSelected={index === selectedIndex}
+														onHover={handleHover}
+														onConfirm={handleConfirm}
+														optionId={getQuickSwitcherOptionId(listboxId, index)}
+														positionInSet={selectableIndices.indexOf(index) + 1}
+														setSize={resultCount}
+														data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.result-row"
+													/>
+												))}
+											</div>
+										);
+									})}
 								</div>
-							</div>
-						) : (
-							<div
-								id={listboxId}
-								role="listbox"
-								aria-label={i18n._(QUICK_SWITCHER_RESULTS_DESCRIPTOR)}
-								data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.listbox"
-							>
-								{sections.map((section: QuickSwitcherSection, sidx: number) => {
-									const sectionHeaderId = section.header ? `${listboxId}-section-${sidx}` : undefined;
-									const sectionAriaProps = sectionHeaderId
-										? ({role: 'group', 'aria-labelledby': sectionHeaderId} as const)
-										: ({role: 'presentation'} as const);
-									return (
-										<div
-											key={`section-${sidx}`}
-											className={quickStyles.section}
-											data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--7"
-											{...sectionAriaProps}
-										>
-											{section.header && (
-												<div
-													id={sectionHeaderId}
-													className={quickStyles.sectionHeader}
-													data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--8"
-												>
-													{section.header.title}
-												</div>
-											)}
-											{section.rows.map(({result, index}: {result: QuickSwitcherExecutableResult; index: number}) => (
-												<ResultRow
-													key={getResultKey(result)}
-													result={result}
-													index={index}
-													isKeyboardSelected={index === keyboardFocusIndex}
-													isHovered={index === hoverIndexForRender}
-													onHover={handleHover}
-													onMouseLeave={handleMouseLeave}
-													onConfirm={handleConfirm}
-													optionId={getQuickSwitcherOptionId(listboxId, index)}
-													positionInSet={selectableIndices.indexOf(index) + 1}
-													setSize={resultCount}
-													innerRef={(node) => {
-														rowRefs.current[index] = node;
-													}}
-													data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.result-row"
-												/>
-											))}
-										</div>
-									);
-								})}
-							</div>
-						)}
-					</Scroller>
+							)}
+						</Scroller>
+					)}
 				</div>
 				<div
 					className={quickStyles.footer}

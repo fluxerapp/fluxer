@@ -1,0 +1,243 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+mod keys;
+mod local;
+mod object_read;
+mod object_stream;
+mod relay_body;
+mod response_body;
+mod s3;
+mod s3_endpoint;
+
+#[cfg(test)]
+pub(crate) mod tests;
+
+pub(crate) use keys::safe_key;
+pub use relay_body::{RelayBody, RelayBodyChunks, RelayPutOptions};
+
+use crate::{
+    aws_sigv4,
+    byte_budget::{BudgetedBytes, ByteBudget},
+    config::{Config, StorageBackend},
+    http_client::{self, HTTPClientOptions},
+    metrics::{http_client::HTTPClientMetrics, storage::StorageMetrics},
+    response_body_limit,
+};
+use axum::body::Body;
+use bytes::Bytes;
+use http::StatusCode;
+use response_body::LocalStreamBufferPool;
+use std::{num::NonZeroU64, sync::Arc};
+use thiserror::Error;
+
+const STORAGE_STREAM_CHUNK_BYTES: usize = 256 * 1024;
+const LOCAL_STREAM_BUFFER_COUNT: usize = 256;
+
+#[derive(Clone, Debug)]
+pub struct Object {
+    pub data: Bytes,
+    pub content_type: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct BufferedStorageObject {
+    pub data: BudgetedBytes,
+    pub content_type: String,
+    pub content_digest: Option<[u8; 32]>,
+}
+
+pub struct StreamObject {
+    pub body: Body,
+    pub status: StatusCode,
+    pub content_length: Option<u64>,
+    pub content_type: String,
+    pub byte_range: Option<crate::range::ByteRange>,
+    pub total_length: Option<u64>,
+}
+
+#[derive(Clone, Debug)]
+pub struct HeadResult {
+    pub content_length: u64,
+    pub content_type: String,
+}
+
+#[derive(Clone, Copy)]
+struct BufferedObjectReadRequest<'a> {
+    bucket: &'a str,
+    key: &'a str,
+    limit: usize,
+    budget: &'a ByteBudget,
+    content_digest: ContentDigestRequest,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ContentDigestRequest {
+    Omit,
+    Include,
+}
+
+#[derive(Clone, Copy)]
+struct ObjectStreamPlan<'a> {
+    bucket: &'a str,
+    key: &'a str,
+    range: StreamRange<'a>,
+}
+
+#[derive(Clone, Copy)]
+enum StreamRange<'a> {
+    Full,
+    Header(&'a str),
+}
+
+#[derive(Debug, Error)]
+pub enum StorageError {
+    #[error("object not found")]
+    NotFound,
+    #[error("invalid key")]
+    InvalidKey,
+    #[error("invalid bucket")]
+    InvalidBucket,
+    #[error("read-only storage")]
+    ReadOnlyStorage,
+    #[error("stream too long")]
+    StreamTooLong,
+    #[error("invalid S3 endpoint")]
+    InvalidS3Endpoint,
+    #[error("object changed between identity resolution and content read")]
+    ObjectChanged,
+    #[error("buffered input byte budget exhausted")]
+    BufferBudgetExhausted,
+    #[error("buffered input allocation failed")]
+    BufferAllocationFailed,
+    #[error("object storage operation failed: {0}")]
+    ObjectStorage(#[source] anyhow::Error),
+    #[error("S3 request failed: {0}")]
+    S3(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error("{}", error_with_causes(.0))]
+    Http(#[from] reqwest::Error),
+    #[error("{}", error_with_causes(.0))]
+    HttpMiddleware(#[from] reqwest_middleware::Error),
+    #[error(transparent)]
+    Sign(#[from] aws_sigv4::Error),
+}
+
+#[derive(Clone)]
+pub struct Store {
+    pub cfg: Config,
+    client: http_client::HttpClient,
+    raw_client: reqwest::Client,
+    metrics: Arc<StorageMetrics>,
+    local_stream_buffers: LocalStreamBufferPool,
+}
+
+impl Store {
+    #[cfg(test)]
+    pub fn new(
+        cfg: Config,
+        metrics: Arc<StorageMetrics>,
+        http_client_metrics: Arc<HTTPClientMetrics>,
+    ) -> Self {
+        Self {
+            cfg,
+            client: http_client::build_default(http_client_metrics),
+            raw_client: http_client::build_raw_default(),
+            metrics,
+            local_stream_buffers: local_stream_buffer_pool(),
+        }
+    }
+
+    pub fn try_new(
+        cfg: Config,
+        metrics: Arc<StorageMetrics>,
+        http_client_metrics: Arc<HTTPClientMetrics>,
+    ) -> Result<Self, reqwest::Error> {
+        let socket_io_timeout =
+            NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
+        let options = HTTPClientOptions::new(socket_io_timeout, socket_io_timeout);
+        let client = http_client::build(options, http_client_metrics)?;
+        let raw_client = http_client::build_raw(options)?;
+        Ok(Self {
+            cfg,
+            client,
+            raw_client,
+            metrics,
+            local_stream_buffers: local_stream_buffer_pool(),
+        })
+    }
+
+    #[cfg(test)]
+    pub async fn write_object(
+        &self,
+        bucket: &str,
+        key: &str,
+        data: &[u8],
+        _content_type: &str,
+    ) -> Result<(), StorageError> {
+        if self.cfg.read_only {
+            return Err(StorageError::ReadOnlyStorage);
+        }
+        assert!(
+            matches!(self.cfg.storage.backend, StorageBackend::Local),
+            "write_object is a local-only test fixture"
+        );
+        self.write_local(bucket, key, data).await
+    }
+
+    pub async fn relay_put_object(
+        &self,
+        bucket: &str,
+        key: &str,
+        options: RelayPutOptions,
+    ) -> Result<Option<String>, StorageError> {
+        if self.cfg.read_only {
+            return Err(StorageError::ReadOnlyStorage);
+        }
+        match self.cfg.storage.backend {
+            StorageBackend::Local => {
+                self.write_local_relay(bucket, key, options).await?;
+                Ok(None)
+            }
+            StorageBackend::S3 => self.relay_put_s3(bucket, key, options).await,
+        }
+    }
+}
+
+fn local_stream_buffer_pool() -> LocalStreamBufferPool {
+    LocalStreamBufferPool::new(STORAGE_STREAM_CHUNK_BYTES, LOCAL_STREAM_BUFFER_COUNT)
+        .expect("local stream buffer pool bounds are constant and nonzero")
+}
+
+pub(crate) fn unversioned_read_budget(limit: usize) -> ByteBudget {
+    ByteBudget::new(
+        limit.saturating_add(response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX),
+    )
+}
+
+fn record_storage_outcome<T>(metrics: &StorageMetrics, result: &Result<T, StorageError>) {
+    match result {
+        Ok(_) => metrics.storage_hits.inc(),
+        Err(StorageError::NotFound) => metrics.storage_misses.inc(),
+        Err(_) => metrics.storage_errors.inc(),
+    }
+}
+
+fn error_with_causes(error: &(dyn std::error::Error + 'static)) -> String {
+    let mut message = error.to_string();
+    let mut cause = error.source();
+    while let Some(error) = cause {
+        message.push_str(": ");
+        message.push_str(&error.to_string());
+        cause = error.source();
+    }
+    message
+}
+
+fn map_not_found(err: std::io::Error) -> StorageError {
+    if err.kind() == std::io::ErrorKind::NotFound {
+        StorageError::NotFound
+    } else {
+        StorageError::Io(err)
+    }
+}

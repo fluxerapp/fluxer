@@ -2,16 +2,13 @@
 
 import NewDeviceMonitoring from '@app/features/auth/state/NewDeviceMonitoring';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {SHOW_NEW_DEVICE_ALERTS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-const SHOW_NEW_DEVICE_ALERTS_DESCRIPTOR = msg({
-	message: 'Show new device alerts',
-	comment: 'Short label for an advanced voice device preference.',
-});
 const SHOW_CONNECTION_VOLUME_CONTROLS_DESCRIPTOR = msg({
 	message: 'Show connection volume controls',
 	comment:

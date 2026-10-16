@@ -9,6 +9,7 @@
     member_list/1,
     member_count/1,
     member_ids/1,
+    sorted_member_ids/2,
     member_role_index/1,
     get_member/2,
     get_member_ets/2,
@@ -84,6 +85,8 @@ member_list(Data) ->
     SortedIds = sorted_member_ids(Data, MemberMap),
     [Member || UserId <- SortedIds, {ok, Member} <- [maps:find(UserId, MemberMap)]].
 
+%% Every member mutation drops members_sorted_ids, so a cache that is present always
+%% equals lists:sort(maps:keys(member_map(Data))) and callers may page it as-is.
 -spec sorted_member_ids(term(), #{user_id() => member()}) -> [user_id()].
 sorted_member_ids(Data, MemberMap) when is_map(Data) ->
     case maps:find(members_sorted_ids, Data) of
@@ -144,6 +147,7 @@ put_member(Member, Data) when is_map(Member), is_map(Data) ->
             Data1 = Data#{
                 <<"members">> => NewMemberMap,
                 members_normalized => NewMemberMap,
+                member_list_revision => make_ref(),
                 <<"member_role_index">> => RoleIndex2
             },
             invalidate_sorted_member_ids(Data1)
@@ -157,6 +161,7 @@ put_member_map(MemberMap, Data) when is_map(MemberMap), is_map(Data) ->
     Data#{
         <<"members">> => NormalizedMemberMap,
         members_normalized => NormalizedMemberMap,
+        member_list_revision => make_ref(),
         members_sorted_ids => lists:sort(maps:keys(NormalizedMemberMap)),
         <<"member_role_index">> => build_member_role_index(NormalizedMemberMap)
     };
@@ -181,6 +186,7 @@ remove_member(UserId, Data) when is_integer(UserId), is_map(Data) ->
     Data1 = Data#{
         <<"members">> => RemovedMap,
         members_normalized => RemovedMap,
+        member_list_revision => make_ref(),
         <<"member_role_index">> => RoleIndex1
     },
     invalidate_sorted_member_ids(Data1);
@@ -270,7 +276,7 @@ member_user(Member) ->
 
 -spec member_role_ids(term()) -> [snowflake_id()].
 member_role_ids(Member) when is_map(Member) ->
-    guild_data_index:extract_integer_list(maps:get(<<"roles">>, Member, []));
+    snowflake_id:parse_list(maps:get(<<"roles">>, Member, []));
 member_role_ids(_) ->
     [].
 
@@ -369,3 +375,50 @@ members_ets_table(#{members_ets := Tab}) ->
     Tab;
 members_ets_table(_) ->
     undefined.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+sorted_member_ids_equals_sorted_keys_test() ->
+    lists:foreach(fun assert_sorted_ids_match_keys/1, sorted_ids_fixtures()).
+
+assert_sorted_ids_match_keys(Data) ->
+    MemberMap = member_map(Data),
+    ?assertEqual(lists:sort(maps:keys(MemberMap)), sorted_member_ids(Data, MemberMap)).
+
+sorted_member_ids_cache_dropped_by_mutations_test() ->
+    Base = put_member_map(fixture_member_map([12, 3, 7]), #{}),
+    ?assertEqual([3, 7, 12], maps:get(members_sorted_ids, Base)),
+    ?assertNot(maps:is_key(members_sorted_ids, put_member(fixture_member(5), Base))),
+    ?assertNot(maps:is_key(members_sorted_ids, remove_member(3, Base))).
+
+sorted_ids_fixtures() ->
+    Base = put_member_map(fixture_member_map([12, 3, 7]), #{}),
+    Large = put_member_map(fixture_member_map(fixture_user_ids(40)), #{}),
+    [
+        #{},
+        #{<<"members">> => #{}},
+        #{<<"members">> => fixture_member_list([9, 2, 5])},
+        #{<<"members">> => #{<<"9">> => fixture_member(9), <<"2">> => fixture_member(2)}},
+        #{<<"members">> => fixture_member_list(fixture_user_ids(40))},
+        Base,
+        Large,
+        put_member(fixture_member(5), Base),
+        put_member(fixture_member(500), Large),
+        remove_member(3, Base),
+        put_member_list(fixture_member_list([4, 1]), Base)
+    ].
+
+fixture_user_ids(Count) ->
+    lists:sort(fun(A, B) -> erlang:phash2(A) =< erlang:phash2(B) end, lists:seq(1, Count)).
+
+fixture_member_map(UserIds) ->
+    maps:from_list([{UserId, fixture_member(UserId)} || UserId <- UserIds]).
+
+fixture_member_list(UserIds) ->
+    [fixture_member(UserId) || UserId <- UserIds].
+
+fixture_member(UserId) ->
+    #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}}.
+
+-endif.

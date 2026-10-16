@@ -1,0 +1,11 @@
+domain: chat.example.test
+edge:
+  expose: gateway
+  gateway:
+    parentRefs:
+      - name: shared
+        namespace: gateway-system
+    timeouts:
+      request: 0s
+livekit:
+  expose: nodePort

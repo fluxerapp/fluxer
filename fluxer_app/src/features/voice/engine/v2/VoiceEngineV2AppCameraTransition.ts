@@ -2,12 +2,14 @@
 
 import assert from 'node:assert/strict';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
+import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
+import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
+import {isPermissionDeniedError} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import VoiceEngineV2AppMediaStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaStateAdapter';
 import {ensureNativeMediaPermission} from '@app/features/voice/engine/voice_screen_share_manager/NativePermissionGate';
 
-export const CAMERA_PERMISSION_DENIED_MODAL_DATA_FLX =
-	'voice.engine.voice-media-manager.camera-permission-denied-modal';
+const CAMERA_PERMISSION_DENIED_MODAL_DATA_FLX = 'voice.engine.voice-media-manager.camera-permission-denied-modal';
 
 export type VoiceEngineV2AppCameraTransitionOutcome = 'applied' | 'denied' | 'failed';
 
@@ -62,6 +64,7 @@ export async function runCameraTransition(
 		}
 		await args.publish();
 		if (args.enabled) {
+			MediaPermission.updateCameraPermissionGranted();
 			VoiceEngineV2AppMediaStateAdapter.applyCameraState(true, {
 				forceSync: syncSettledState,
 				sendUpdate: args.sendUpdate,
@@ -71,6 +74,12 @@ export async function runCameraTransition(
 		SoundCommands.playSound(args.enabled ? SoundType.CameraOn : SoundType.CameraOff);
 		return 'applied';
 	} catch (error) {
+		if (args.enabled && isPermissionDeniedError(error)) {
+			MediaPermission.markCameraExplicitlyDenied();
+			if (args.sendUpdate) handleMediaPermissionBlocked('camera');
+			args.onPermissionDenied?.();
+			return 'denied';
+		}
 		const actual = args.readActualEnabled();
 		assert.equal(typeof actual, 'boolean', 'actual-state reader must return a boolean');
 		args.onFailure?.(actual, error);

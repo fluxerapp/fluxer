@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
+import {isMessageSearchIndexable} from '@app/api/channel/services/message/MessageSearchService';
+import {Logger} from '@app/api/Logger';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {seconds} from 'itty-time';
 import {z} from 'zod';
-import type {MessageID, UserID} from '../../BrandedTypes';
-import {createChannelID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getMessageSearchService} from '../../SearchFactory';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	channelId: z.string(),
@@ -15,19 +16,11 @@ const PayloadSchema = z.object({
 	channelCount: z.number().optional(),
 });
 const BULK_BATCH_SIZE = 5000;
-function getMessageIndexServices(): Array<IMessageSearchService> {
-	const services: Array<IMessageSearchService> = [];
-	const defaultService = getMessageSearchService();
-	if (defaultService) {
-		services.push(defaultService);
-	}
-	return services;
-}
-
+const COMPLETION_KEY_TTL_SECONDS = seconds('1 day');
 const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 	const validated = PayloadSchema.parse(payload);
-	const searchServices = getMessageIndexServices();
-	if (searchServices.length === 0) {
+	const searchService = getMessageSearchService();
+	if (!searchService) {
 		throw new Error('Search service is not available in this worker process');
 	}
 	const channelId = createChannelID(BigInt(validated.channelId));
@@ -37,7 +30,7 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 	let totalIndexed = 0;
 	try {
 		while (true) {
-			const messages = await channelRepository.listMessages(channelId, cursor, BULK_BATCH_SIZE);
+			const messages = await channelRepository.messages.listMessages(channelId, cursor, BULK_BATCH_SIZE);
 			if (messages.length === 0) {
 				break;
 			}
@@ -52,7 +45,8 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 					authorBotCache.set(user.id, user.isBot);
 				}
 			}
-			await Promise.all(searchServices.map((s) => s.bulkIndexMessages(messages, authorBotCache)));
+			const indexable = messages.filter(isMessageSearchIndexable);
+			await searchService.bulkIndexMessages(indexable, authorBotCache);
 			totalIndexed += messages.length;
 			cursor = messages[messages.length - 1]!.id;
 			Logger.debug(
@@ -64,10 +58,12 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 			}
 		}
 		if (validated.completionKey && validated.channelCount) {
-			const completed = await kvClient.incr(validated.completionKey);
+			await kvClient.sadd(validated.completionKey, validated.channelId);
+			await kvClient.expire(validated.completionKey, COMPLETION_KEY_TTL_SECONDS);
+			const completed = await kvClient.scard(validated.completionKey);
 			if (completed >= validated.channelCount) {
 				try {
-					await Promise.all(searchServices.map((s) => s.refreshIndex()));
+					await searchService.refreshIndex();
 				} catch (error) {
 					Logger.warn({error}, 'Search refresh after bulk indexing failed');
 				}
@@ -75,9 +71,11 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 				Logger.info({completionKey: validated.completionKey}, 'All channels indexed');
 			}
 		}
-		const channel = await channelRepository.findUnique(channelId);
-		if (channel) {
-			await channelRepository.upsert({...channel.toRow(), indexed_at: new Date()});
+		const channel = await channelRepository.channelData.findUnique(channelId);
+		if (channel?.isThread()) {
+			await channelRepository.channelData.patchIndexedAt(channelId, new Date());
+		} else if (channel) {
+			await channelRepository.channelData.upsert({...channel.toRow(), indexed_at: new Date()});
 		}
 		Logger.info({channelId: channelId.toString(), totalIndexed}, 'Bulk channel indexing complete');
 	} catch (error) {

@@ -6,7 +6,7 @@ import styles from '@app/features/channel/components/pickers/gif/ImportFavoriteG
 import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import FavoriteGifImport from '@app/features/expressions/state/FavoriteGifImport';
 import {FAVORITE_GIF_LIMIT_REACHED_DESCRIPTOR} from '@app/features/expressions/utils/FavoriteGifMessageDescriptors';
-import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR, DONE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Textarea} from '@app/features/ui/components/form/FormInput';
@@ -50,10 +50,6 @@ const PASTE_GIF_URLS_DESCRIPTOR = msg({
 const IMPORT_MORE_DESCRIPTOR = msg({
 	message: 'Import more',
 	comment: 'Button in the favorite GIF import modal after a completed import.',
-});
-const DONE_DESCRIPTOR = msg({
-	message: 'Done',
-	comment: 'Primary button in the favorite GIF import modal after a completed import.',
 });
 const CANCEL_IMPORT_DESCRIPTOR = msg({
 	message: 'Cancel import',

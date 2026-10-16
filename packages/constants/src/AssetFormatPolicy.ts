@@ -185,11 +185,6 @@ export function getAcceptString(kind: AssetKind, options: AssetUploadExtensionOp
 	return [...exts, ...mimes].join(',');
 }
 
-export function getMimeWhitelist(kind: AssetKind): ReadonlyArray<string> {
-	const policy = ASSET_FORMAT_POLICY[kind];
-	return policy.upload.map((ext) => policy.mimes[ext]);
-}
-
 export function getExtensionWhitelist(kind: AssetKind): ReadonlyArray<AssetExtension> {
 	return ASSET_FORMAT_POLICY[kind].upload;
 }
@@ -224,13 +219,4 @@ export function isExtensionAllowed(kind: AssetKind, ext: string): boolean {
 	const withoutDot = ext.toLowerCase().replace(/^\./, '');
 	const normalized = (withoutDot === 'jpg' ? 'jpeg' : withoutDot) as AssetExtension;
 	return ASSET_FORMAT_POLICY[kind].upload.includes(normalized);
-}
-
-export function isMimeAllowed(kind: AssetKind, mime: string): boolean {
-	const normalized = mime.toLowerCase();
-	const policy = ASSET_FORMAT_POLICY[kind];
-	for (const ext of policy.upload) {
-		if (policy.mimes[ext] === normalized) return true;
-	}
-	return false;
 }

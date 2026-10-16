@@ -45,7 +45,13 @@ export const SearchResultsHeader: React.FC<SearchResultsHeaderProps> = ({
 		<div className={styles.header} data-flx="channel.channel-search-results.render-header.header">
 			<div className={styles.headerLoading} data-flx="channel.channel-search-results.render-header.header-loading">
 				{showSpinner && <Spinner size="small" data-flx="channel.channel-search-results.render-header.spinner" />}
-				<h2 className={styles.headerTitle} data-flx="channel.channel-search-results.render-header.header-title">
+				<h2
+					className={styles.headerTitle}
+					role="status"
+					aria-live="polite"
+					aria-atomic="true"
+					data-flx="channel.channel-search-results.render-header.header-title"
+				>
 					{i18n._(headerTitleDescriptor)}
 				</h2>
 			</div>

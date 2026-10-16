@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility, {ChannelTypingIndicatorMode} from '@app/features/accessibility/state/Accessibility';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import styles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
 import {ChannelItemIcon} from '@app/features/app/components/layout/ChannelItemIcon';
 import channelItemSurfaceStyles from '@app/features/app/components/layout/ChannelItemSurface.module.css';
+import {
+	DirectSelectionSurface,
+	markDirectSelection,
+	peekDirectSelection,
+} from '@app/features/app/components/layout/DirectSelectionOrigin';
 import {
 	type ChannelReorderTarget,
 	canChannelDropOnTarget,
@@ -12,24 +18,23 @@ import {
 } from '@app/features/app/components/layout/dnd/ChannelReorderStateMachine';
 import {GenericChannelItem} from '@app/features/app/components/layout/GenericChannelItem';
 import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
-import {DND_TYPES, type DragItem, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {isCategory, isTextChannel} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {VoiceChannelUserCount} from '@app/features/app/components/layout/VoiceChannelUserCount';
 import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import {CategoryBottomSheet} from '@app/features/channel/components/bottomsheets/CategoryBottomSheet';
 import {ChannelBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelBottomSheet';
 import {Typing} from '@app/features/channel/components/ChannelTyping';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {getTypingText, usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	CREATE_CHANNEL_DESCRIPTOR,
@@ -53,6 +58,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -140,7 +146,7 @@ interface ChannelItemCoreProps {
 export const ChannelItemCore: React.FC<ChannelItemCoreProps> = observer(
 	({channel, isSelected = false, forceHover = false, typingIndicator, className}) => {
 		const channelLabelRef = useRef<HTMLSpanElement>(null);
-		const isChannelNameOverflowing = useTextOverflow(channelLabelRef);
+		const isChannelNameOverflowing = useTextOverflow(channelLabelRef, {content: channel.name});
 		return (
 			<div
 				className={clsx(
@@ -221,10 +227,11 @@ export const ChannelItem = observer(
 			defaultHiddenForChannel: channelIsVoice,
 			enabled: !channelIsCategory,
 		});
-		const draggingChannel = activeDragItem?.type === DND_TYPES.CHANNEL ? activeDragItem : null;
+		const draggingChannel = activeDragItem?.type === DragItemType.CHANNEL ? activeDragItem : null;
 		const isVoiceDragActive = draggingChannel?.channelType === ChannelTypes.GUILD_VOICE;
 		const shouldDimForVoiceDrag = Boolean(isVoiceDragActive && channelIsText && channel.parentId !== null);
 		const unreadCount = ReadStates.getUnreadCount(channel.id);
+		const hasUnread = channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id);
 		const connectedVoiceGuildId = channelIsVoice ? MediaEngine.guildId : null;
 		const connectedVoiceChannelId = channelIsVoice ? MediaEngine.channelId : null;
 		const canManageChannels = Permission.can(Permissions.MANAGE_CHANNELS, channel);
@@ -233,7 +240,7 @@ export const ChannelItem = observer(
 		const canInvite = InviteUtils.canInviteToChannel(channel.id, channel.guildId);
 		const mobileLayout = MobileLayout;
 		const isMuted = UserGuildSettings.isGuildOrChannelMuted(guild.id, channel.id);
-		const isChannelDirectlyMuted = UserGuildSettings.isChannelMuted(guild.id, channel.id);
+		const isChannelDirectlyMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channel.id);
 		const currentUserCount =
 			channelIsVoice && channel.userLimit != null && channel.userLimit > 0
 				? Object.keys(MediaEngine.getAllVoiceStatesInChannel(guild.id, channel.id)).length
@@ -260,6 +267,7 @@ export const ChannelItem = observer(
 			type: channel.type,
 		});
 		const unreadState = getChannelUnreadState({
+			hasUnread,
 			unreadCount,
 			mentionCount,
 			isMuted: isChannelDirectlyMuted,
@@ -283,7 +291,7 @@ export const ChannelItem = observer(
 		const [dropIndicator, setDropIndicator] = useState<{position: 'top' | 'bottom'; isValid: boolean} | null>(null);
 		const dragItemData = useMemo<DragItem>(
 			() => ({
-				type: channelIsCategory ? DND_TYPES.CATEGORY : DND_TYPES.CHANNEL,
+				type: channelIsCategory ? DragItemType.CATEGORY : DragItemType.CHANNEL,
 				id: channel.id,
 				channelType: channel.type,
 				parentId: channel.parentId,
@@ -319,7 +327,7 @@ export const ChannelItem = observer(
 		);
 		const [{isOver}, dropRef] = useDrop(
 			() => ({
-				accept: [DND_TYPES.CHANNEL, DND_TYPES.CATEGORY, DND_TYPES.VOICE_PARTICIPANT],
+				accept: [DragItemType.CHANNEL, DragItemType.CATEGORY, DragItemType.VOICE_PARTICIPANT],
 				canDrop: (item: DragItem) => canChannelDropOnTarget(item, dropTargetData),
 				hover: (item: DragItem, monitor) => {
 					const node = dropTargetRef.current;
@@ -335,7 +343,7 @@ export const ChannelItem = observer(
 						setDropIndicator(null);
 						return;
 					}
-					if (item.type === DND_TYPES.VOICE_PARTICIPANT && channelIsVoice) {
+					if (item.type === DragItemType.VOICE_PARTICIPANT && channelIsVoice) {
 						const canMove = Permission.can(Permissions.MOVE_MEMBERS, {guildId: guild.id});
 						if (!canMove || item.currentChannelId === channel.id) {
 							setDropIndicator(null);
@@ -405,6 +413,7 @@ export const ChannelItem = observer(
 			CompactVoiceCallHeight.setExpandedForKey(getGuildVoiceCallExpansionKey(channel.id), false);
 		}, [channelIsVoice, channel.id]);
 		const handleSelect = useCallback(() => {
+			markDirectSelection(DirectSelectionSurface.CHANNEL_LIST);
 			if (channel.type === ChannelTypes.GUILD_CATEGORY) {
 				onToggle?.();
 				return;
@@ -465,7 +474,8 @@ export const ChannelItem = observer(
 		const shouldShowSelectedState = !channelIsCategory && isSelected && (!channelIsVoice || isSelectedByPath);
 		const hasMountedRef = useRef(false);
 		useEffect(() => {
-			if (shouldShowSelectedState && hasMountedRef.current) {
+			const selectedFromThisRow = peekDirectSelection(DirectSelectionSurface.CHANNEL_LIST);
+			if (shouldShowSelectedState && hasMountedRef.current && !selectedFromThisRow) {
 				elementRef.current?.scrollIntoView({block: 'nearest'});
 			}
 			hasMountedRef.current = true;
@@ -597,12 +607,15 @@ export const ChannelItem = observer(
 		const handleChannelSettingsClick = useCallback(() => {
 			armActionModalReturn();
 			ModalCommands.push(
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, armActionModalReturn]);
 		const channelSettingsLabel = channelIsCategory

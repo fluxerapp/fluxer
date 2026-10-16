@@ -30,7 +30,6 @@
 -type session_ref() :: {pid(), reference()}.
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    identify_attempts := [integer()],
     pending_identifies := map(),
     identify_workers := map(),
     shard_index := non_neg_integer(),

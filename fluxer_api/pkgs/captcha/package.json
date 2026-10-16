@@ -7,14 +7,16 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/logger": "workspace:*",
-		"itty-time": "catalog:"
+		"altcha-lib": "catalog:",
+		"itty-time": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

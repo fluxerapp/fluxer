@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getSortModeOptions} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
+import {useSearchResultCollapsedGroups} from '@app/features/channel/hooks/useSearchResultCollapsedGroups';
 import {msg} from '@lingui/core/macro';
 import '@app/features/channel/components/ChannelSearchHighlight.css';
 import sharedStyles from '@app/features/app/components/bottomsheets/shared.module.css';
@@ -8,6 +10,7 @@ import {Message as MessageComponent} from '@app/features/channel/components/Chan
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
 import type {MessageGroupRenderWrapperProps} from '@app/features/channel/components/MessageGroup';
+import {countSearchResultChannels} from '@app/features/channel/components/SearchResultGrouping';
 import {SearchResultMessageList} from '@app/features/channel/components/SearchResultMessageList';
 import {type ChannelSearchFilters, useChannelSearch} from '@app/features/channel/hooks/useChannelSearch';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -22,6 +25,7 @@ import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {
 	applyChannelSearchHighlight,
@@ -29,9 +33,9 @@ import {
 } from '@app/features/messaging/utils/ChannelSearchHighlight';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
-import {getCollapsedMessageGroupKey} from '@app/features/messaging/utils/MessageGroupingUtils';
+
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
-import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {ChannelFilterSheet} from '@app/features/search/components/search/ChannelFilterSheet';
@@ -62,26 +66,16 @@ import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {HashIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-const NEWEST_DESCRIPTOR = msg({
-	message: 'Newest',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts results newest first.',
-});
-const OLDEST_DESCRIPTOR = msg({
-	message: 'Oldest',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts results oldest first.',
-});
-const RELEVANT_DESCRIPTOR = msg({
-	message: 'Relevant',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts by relevance.',
-});
+const UNNAMED_CHANNEL_DESCRIPTOR = msg({message: 'Unnamed channel'});
+
 const MESSAGE_1_USER_DESCRIPTOR = msg({
 	message: '1 user',
 	comment: 'Summary chip text in the mobile channel search sheet when exactly one user is selected as a filter.',
 });
 const USERS_DESCRIPTOR = msg({
-	message: '{length} users',
+	message: '{length, plural, one {# user} other {# users}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when more than one user is selected. length is the count.',
 });
@@ -114,7 +108,7 @@ const STICKER_DESCRIPTOR = msg({
 	comment: 'Label for the has:sticker filter option in the mobile channel search sheet.',
 });
 const TYPES_DESCRIPTOR = msg({
-	message: '{length} types',
+	message: '{length, plural, one {# type} other {# types}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when multiple content types are selected. length is the count.',
 });
@@ -123,7 +117,7 @@ const SEARCH_DESCRIPTOR = msg({
 	comment: 'Title of the mobile channel search bottom sheet.',
 });
 const SEARCH_RESULTS_COUNT_DESCRIPTOR = msg({
-	message: '{resultCount} results',
+	message: '{resultCount, plural, one {# result} other {# results}}',
 	comment: 'Subtitle in the mobile channel search bottom sheet showing the total number of search results.',
 });
 const SEARCH_MESSAGES_DESCRIPTOR = msg({
@@ -163,7 +157,7 @@ const MESSAGE_1_CHANNEL_DESCRIPTOR = msg({
 	comment: 'Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.',
 });
 const CHANNELS_DESCRIPTOR = msg({
-	message: '{length} channels',
+	message: '{length, plural, one {# channel} other {# channels}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when more than one channel is selected. length is the count.',
 });
@@ -184,11 +178,12 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 		const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
 		const [selectedMessageChannel, setSelectedMessageChannel] = useState<Channel | null>(null);
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
+		const resolveSearchSheetScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 		const inputRef = useRef<HTMLInputElement>(null);
 		const [hasFilters, setHasFilters] = useState<Array<HasFilterType>>([]);
 		const [fromUserIds, setFromUserIds] = useState<Array<string>>([]);
 		const [inChannelIds, setInChannelIds] = useState<Array<string>>([]);
-		const [revealedGroupKeys, setRevealedGroupKeys] = useState<Set<string>>(new Set());
+
 		const [hasSheetOpen, setHasSheetOpen] = useState(false);
 		const [userSheetOpen, setUserSheetOpen] = useState(false);
 		const [channelSheetOpen, setChannelSheetOpen] = useState(false);
@@ -212,59 +207,17 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 		const successResults = machineState.status === 'success' ? machineState.results : EMPTY_SEARCH_MESSAGES;
 		const successChannels = machineState.status === 'success' ? machineState.channels : EMPTY_SEARCH_CHANNELS;
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(successResults);
-		const searchChannelsById = React.useMemo(
-			() => new Map(successChannels.map((searchChannel) => [searchChannel.id, searchChannel])),
-			[successChannels],
-		);
-		const messagesByChannel = React.useMemo(() => {
-			const grouped = new Map<string, Array<Message>>();
-			for (const message of successResults) {
-				if (!grouped.has(message.channelId)) {
-					grouped.set(message.channelId, []);
-				}
-				grouped.get(message.channelId)!.push(message);
-			}
-			return grouped;
-		}, [successResults]);
-		const spammerOverrideVersion = LocalUserSpamOverride.version;
-		const collapsedMessageVisibility = React.useMemo(
-			() => ({
-				isMessageRevealed: (message: Message) => {
-					const channelMessages = messagesByChannel.get(message.channelId);
-					if (!channelMessages) {
-						return false;
-					}
-					const messageChannel = searchChannelsById.get(message.channelId) ?? Channels.getChannel(message.channelId);
-					if (!messageChannel) {
-						return false;
-					}
-					const groupKey = getCollapsedMessageGroupKey({
-						channel: messageChannel,
-						messages: channelMessages,
-						messageId: message.id,
-						treatSpam: true,
-					});
-					return groupKey != null && revealedGroupKeys.has(groupKey);
-				},
-			}),
-			[messagesByChannel, revealedGroupKeys, searchChannelsById, spammerOverrideVersion],
-		);
-		const handleCollapsedGroupRevealChange = useCallback((groupKey: string, revealed: boolean) => {
-			setRevealedGroupKeys((current) => {
-				const next = new Set(current);
-				if (revealed) {
-					next.add(groupKey);
-				} else {
-					next.delete(groupKey);
-				}
-				return next;
-			});
-		}, []);
-		const sortModeLabel = (() => {
-			if (sortMode === 'newest') return i18n._(NEWEST_DESCRIPTOR);
-			if (sortMode === 'oldest') return i18n._(OLDEST_DESCRIPTOR);
-			return i18n._(RELEVANT_DESCRIPTOR);
-		})();
+		const {
+			spammerOverrideVersion,
+			searchChannelsById,
+			resultGroups,
+			collapsedMessageVisibility,
+			revealedGroupKeys,
+			setRevealedGroupKeys,
+			handleCollapsedGroupRevealChange,
+		} = useSearchResultCollapsedGroups(successResults, successChannels);
+
+		const sortModeLabel = getSortModeOptions(i18n).find((option) => option.mode === sortMode)!.label;
 		const buildFilters = useCallback((): ChannelSearchFilters => {
 			return {
 				content: contentQuery.trim() || undefined,
@@ -367,7 +320,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 				clearChannelSearchHighlight();
 				return;
 			}
-			const container = scrollerRef.current?.getScrollerNode();
+			const container = scrollerRef.current?.getViewportElement();
 			if (!container) {
 				return;
 			}
@@ -598,95 +551,98 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 						);
 					}
 					const totalPages = Math.max(1, Math.ceil(total / hitsPerPage));
-					const hasMultipleChannels = messagesByChannel.size > 1;
+					const hasMultipleChannels = countSearchResultChannels(resultGroups) > 1;
 					return (
 						<>
 							<CollapsedMessageVisibilityProvider
 								value={collapsedMessageVisibility}
 								data-flx="channel.channel-search-bottom-sheet.render-content.collapsed-message-visibility-provider"
 							>
-								<Scroller
-									ref={scrollerRef}
-									className={styles.resultsScroller}
-									key="channel-search-results-scroller"
-									onCopy={onCopySelectedMessages}
-									data-message-selection-root="true"
-									data-flx="channel.channel-search-bottom-sheet.render-content.results-scroller"
-								>
-									{Array.from(messagesByChannel.entries()).map(([channelId, messages]) => {
-										const messageChannel = searchChannelsById.get(channelId) ?? Channels.getChannel(channelId);
-										if (!messageChannel) {
-											return null;
-										}
-										const renderMessageWrapper = ({
-											message,
-											index,
-											isGroupStart,
-											children,
-										}: MessageGroupRenderWrapperProps) => (
-											<LongPressable
-												data-message-index={index}
-												data-message-id={message.id}
-												data-is-group-start={isGroupStart}
-												className={styles.searchResultItem}
-												role="button"
-												tabIndex={0}
-												onClick={() => handleTap(message)}
-												onKeyDown={(e) => {
-													if (isKeyboardActivationKey(e.key)) {
-														e.preventDefault();
-														handleTap(message);
-													}
-												}}
-												onLongPress={() => {
-													setSelectedMessage(message);
-													setMenuOpen(true);
-												}}
-												data-flx="channel.channel-search-bottom-sheet.render-message-wrapper.search-result-item.tap"
-											>
-												{children}
-											</LongPressable>
-										);
-										return (
-											<React.Fragment key={channelId}>
-												{hasMultipleChannels && (
-													<div
-														className={styles.channelSection}
-														data-flx="channel.channel-search-bottom-sheet.render-content.channel-section"
-													>
-														{ChannelUtils.getIcon(messageChannel, {
-															className: styles.channelIcon,
-														})}
-														<span
-															className={styles.channelName}
-															data-flx="channel.channel-search-bottom-sheet.render-content.channel-name"
+								<NearViewportSurfaceContext.Provider value={resolveSearchSheetScrollSurface}>
+									<Scroller
+										ref={scrollerRef}
+										className={styles.resultsScroller}
+										key="channel-search-results-scroller"
+										onCopy={onCopySelectedMessages}
+										data-message-selection-root="true"
+										data-flx="channel.channel-search-bottom-sheet.render-content.results-scroller"
+									>
+										{resultGroups.map((resultGroup) => {
+											const messageChannel =
+												searchChannelsById.get(resultGroup.channelId) ?? Channels.getChannel(resultGroup.channelId);
+											if (!messageChannel) {
+												return null;
+											}
+											const renderMessageWrapper = ({
+												message,
+												index,
+												isGroupStart,
+												children,
+											}: MessageGroupRenderWrapperProps) => (
+												<LongPressable
+													data-message-index={index}
+													data-message-id={message.id}
+													data-is-group-start={isGroupStart}
+													className={styles.searchResultItem}
+													role="button"
+													tabIndex={0}
+													onClick={() => handleTap(message)}
+													onKeyDown={(e) => {
+														if (isKeyboardActivationKey(e.key)) {
+															e.preventDefault();
+															handleTap(message);
+														}
+													}}
+													onLongPress={() => {
+														setSelectedMessage(message);
+														setMenuOpen(true);
+													}}
+													data-flx="channel.channel-search-bottom-sheet.render-message-wrapper.search-result-item.tap"
+												>
+													{children}
+												</LongPressable>
+											);
+											return (
+												<React.Fragment key={resultGroup.key}>
+													{hasMultipleChannels && (
+														<div
+															className={styles.channelSection}
+															data-flx="channel.channel-search-bottom-sheet.render-content.channel-section"
 														>
-															{messageChannel.name || 'Unnamed Channel'}
-														</span>
-													</div>
-												)}
-												<SearchResultMessageList
-													channel={messageChannel}
-													messages={messages}
-													revealedGroupKeys={revealedGroupKeys}
-													onGroupRevealChange={handleCollapsedGroupRevealChange}
-													collapsedGroupClassName={styles.collapsedMessageGroup}
-													messagePreviewContext={MessagePreviewContext.LIST_POPOUT}
-													renderMessageWrapper={renderMessageWrapper}
-													spammerOverrideVersion={spammerOverrideVersion}
-													renderMessage={(message) => (
-														<SearchResultItem
-															message={message}
-															messageChannel={messageChannel}
-															data-flx="channel.channel-search-bottom-sheet.render-content.search-result-item"
-														/>
+															{ChannelUtils.getIcon(messageChannel, {
+																className: styles.channelIcon,
+															})}
+															<span
+																className={styles.channelName}
+																data-flx="channel.channel-search-bottom-sheet.render-content.channel-name"
+															>
+																{messageChannel.name || i18n._(UNNAMED_CHANNEL_DESCRIPTOR)}
+															</span>
+														</div>
 													)}
-													data-flx="channel.channel-search-bottom-sheet.render-content.search-result-message-list"
-												/>
-											</React.Fragment>
-										);
-									})}
-								</Scroller>
+													<SearchResultMessageList
+														channel={messageChannel}
+														messages={resultGroup.messages}
+														revealedGroupKeys={revealedGroupKeys}
+														onGroupRevealChange={handleCollapsedGroupRevealChange}
+														collapsedGroupClassName={styles.collapsedMessageGroup}
+														messagePreviewContext={MessagePreviewContext.LIST_POPOUT}
+														renderMessageWrapper={renderMessageWrapper}
+														spammerOverrideVersion={spammerOverrideVersion}
+														renderMessage={(message) => (
+															<SearchResultItem
+																message={message}
+																messageChannel={messageChannel}
+																data-flx="channel.channel-search-bottom-sheet.render-content.search-result-item"
+															/>
+														)}
+														data-flx="channel.channel-search-bottom-sheet.render-content.search-result-message-list"
+													/>
+												</React.Fragment>
+											);
+										})}
+									</Scroller>
+								</NearViewportSurfaceContext.Provider>
 							</CollapsedMessageVisibilityProvider>
 							{totalPages > 1 && (
 								<div

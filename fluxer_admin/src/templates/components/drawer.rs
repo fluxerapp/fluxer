@@ -7,22 +7,16 @@ use super::icons::{close_icon, spinner_icon};
 #[derive(Clone, Copy)]
 pub enum DrawerSide {
     Right,
-    Left,
-    Bottom,
 }
 
 #[derive(Clone, Copy)]
 pub enum DrawerWidth {
-    Sm,
-    Md,
     Lg,
     Xl,
 }
 
 fn width_class(width: DrawerWidth) -> &'static str {
     match width {
-        DrawerWidth::Sm => "sm:max-w-sm",
-        DrawerWidth::Md => "sm:max-w-md",
         DrawerWidth::Lg => "sm:max-w-lg",
         DrawerWidth::Xl => "sm:max-w-xl",
     }
@@ -31,24 +25,18 @@ fn width_class(width: DrawerWidth) -> &'static str {
 fn side_class(side: DrawerSide) -> &'static str {
     match side {
         DrawerSide::Right => "right-0 top-0 h-[100dvh] w-full sm:w-[92vw]",
-        DrawerSide::Left => "left-0 top-0 h-[100dvh] w-full sm:w-[92vw]",
-        DrawerSide::Bottom => "bottom-0 left-0 right-0 max-h-[92dvh] w-full",
     }
 }
 
 fn side_off_class(side: DrawerSide) -> &'static str {
     match side {
         DrawerSide::Right => "translate-x-full",
-        DrawerSide::Left => "-translate-x-full",
-        DrawerSide::Bottom => "translate-y-full",
     }
 }
 
 fn side_name(side: DrawerSide) -> &'static str {
     match side {
         DrawerSide::Right => "right",
-        DrawerSide::Left => "left",
-        DrawerSide::Bottom => "bottom",
     }
 }
 
@@ -68,10 +56,7 @@ pub fn drawer(
         "drawer-panel pointer-events-auto fixed z-50 flex flex-col \
          bg-white shadow-2xl {} {} {}",
         side_class(side),
-        match side {
-            DrawerSide::Bottom => "",
-            _ => width_class(width),
-        },
+        width_class(width),
         side_off_class(side),
     );
     html! {
@@ -146,16 +131,6 @@ pub fn drawer_loading_state() -> Markup {
                    text-neutral-500" {
             (spinner_icon())
             span class="text-sm" { "Loading\u{2026}" }
-        }
-    }
-}
-
-pub fn drawer_error_state(message: &str) -> Markup {
-    html! {
-        div role="alert"
-            class="rounded-lg border border-red-200 bg-red-50 p-4 \
-                   text-red-800 text-sm" {
-            (message)
         }
     }
 }

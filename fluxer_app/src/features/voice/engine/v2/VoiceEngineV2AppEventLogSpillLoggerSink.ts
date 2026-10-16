@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2EventLogEntry, VoiceEngineV2EventLogSpillSink} from '@fluxer/voice_engine_v2';
+import type {
+	VoiceEngineV2EventLogEntry,
+	VoiceEngineV2EventLogSpillSink,
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 
-export const VOICE_ENGINE_V2_APP_EVENT_LOG_SPILL_WARN_INTERVAL_MS = 60_000;
-export const VOICE_ENGINE_V2_APP_EVENT_LOG_SPILL_WARN_INTERVAL_MAX_MS = 3_600_000;
+const VOICE_ENGINE_V2_APP_EVENT_LOG_SPILL_WARN_INTERVAL_MS = 60_000;
+const VOICE_ENGINE_V2_APP_EVENT_LOG_SPILL_WARN_INTERVAL_MAX_MS = 3_600_000;
 
 const RESOLVED_SPILL_WRITE = Promise.resolve();
 
-export interface VoiceEngineV2AppEventLogSpillLogger {
+interface VoiceEngineV2AppEventLogSpillLogger {
 	warn(payload: Record<string, unknown>, message?: string): void;
 }
 

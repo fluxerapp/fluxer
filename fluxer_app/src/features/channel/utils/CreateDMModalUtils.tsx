@@ -2,6 +2,7 @@
 
 import i18n from '@app/app/I18n';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
@@ -16,9 +17,9 @@ import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {I18n} from '@lingui/core';
@@ -164,12 +165,15 @@ export const CreateDMRestrictionSlate: React.FC<
 								return;
 							}
 							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="channel.create-dm-modal-utils.restriction-slate.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="channel.create-dm-modal-utils.restriction-slate.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							);
 						},
 						variant: 'primary',
@@ -220,6 +224,7 @@ export function useCreateDMModalLogic(
 	const createChannel = useCallback(
 		async (userIds: Array<string>) => {
 			if (restriction) return;
+			if (userIds.length !== 1 && blockIfAccountLimited()) return;
 			setIsCreating(true);
 			try {
 				const channel =

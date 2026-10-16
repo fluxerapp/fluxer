@@ -1,28 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {ensureStripeCustomer} from '@app/api/stripe/StripeCustomer';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {AgeVerificationAlreadyVerifiedError} from '@fluxer/errors/src/domains/payment/AgeVerificationAlreadyVerifiedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-
-const CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
 
 export class AgeVerificationService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
 		private cacheService: ICacheService,
 	) {}
@@ -38,7 +34,12 @@ export class AgeVerificationService {
 		if (user.flags & UserFlags.AGE_VERIFIED_ADULT) {
 			throw new AgeVerificationAlreadyVerifiedError();
 		}
-		const customerUser = await this.ensureStripeCustomer(user);
+		const customerUser = await ensureStripeCustomer({
+			stripe: this.stripe,
+			user,
+			userRepository: this.userRepository,
+			cacheService: this.cacheService,
+		});
 		const customerId = customerUser.stripeCustomerId;
 		if (!customerId) {
 			throw new StripeError('Stripe customer id missing after customer setup');
@@ -61,14 +62,6 @@ export class AgeVerificationService {
 				success_url: `${Config.endpoints.webApp}/age-verification-callback?status=success`,
 				cancel_url: `${Config.endpoints.webApp}/age-verification-callback?status=cancel`,
 			});
-			try {
-				await getBillingRepository().checkoutSessions.upsertFromStripe(session, {knownUserId: userId});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, sessionId: session.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
 			if (!session.url) {
 				Logger.error({userId, sessionId: session.id}, 'Stripe age verification session missing url');
 				throw new StripeError('Stripe age verification session missing url');
@@ -122,70 +115,12 @@ export class AgeVerificationService {
 			Logger.debug({userId}, 'User already age-verified, skipping flag update');
 			return;
 		}
-		const updatedUser = await this.userRepository.patchUpsert(
-			user.id,
-			{flags: user.flags | UserFlags.AGE_VERIFIED_ADULT},
-			user.toRow(),
-		);
-		await this.gatewayService.dispatchPresence({
-			userId: updatedUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
+		const updatedUser = await this.userRepository.updateFlags(user.id, (flags) => flags | UserFlags.AGE_VERIFIED_ADULT);
+		if (!updatedUser) {
+			Logger.error({userId}, 'User not found during age verification completion');
+			return;
+		}
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		Logger.info({userId}, 'Age verification completed successfully');
-	}
-
-	private async ensureStripeCustomer(user: User): Promise<User> {
-		if (user.stripeCustomerId) {
-			return user;
-		}
-		if (!this.stripe) {
-			throw new StripePaymentNotAvailableError();
-		}
-		const lockKey = `stripe_customer_create_lock:${user.id}`;
-		const lockToken = await this.cacheService.acquireLock(lockKey, CUSTOMER_LOCK_TTL_SECONDS);
-		if (!lockToken) {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			throw new StripeError('Failed to acquire customer creation lock');
-		}
-		try {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			const customer = await this.stripe.customers.create({
-				email: user.email ?? undefined,
-				metadata: {
-					userId: user.id.toString(),
-				},
-			});
-			try {
-				await getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, customerId: customer.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
-			const updatedUser = await this.userRepository.patchUpsert(
-				user.id,
-				{stripe_customer_id: customer.id},
-				user.toRow(),
-			);
-			Logger.debug({userId: user.id, customerId: customer.id}, 'Stripe customer created for age verification');
-			return updatedUser;
-		} finally {
-			try {
-				const released = await this.cacheService.releaseLock(lockKey, lockToken);
-				if (!released) {
-					Logger.warn({userId: user.id, lockKey}, 'Customer creation lock token no longer matched on release');
-				}
-			} catch (error) {
-				Logger.error({error, userId: user.id, lockKey}, 'Failed to release customer creation lock');
-			}
-		}
 	}
 }

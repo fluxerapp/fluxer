@@ -1,36 +1,61 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import {createUserID} from '../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
+import {
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AdminAuditLogRow,
 	BannedAvatarHashRow,
 	BannedFileShaRow,
+	BannedIpRow,
 	BannedProfileSubstringRow,
 	BannedProfileSubstringScope,
 	BannedUrlDomainRow,
 	BannedUrlRow,
-} from '../database/types/AdminArchiveTypes';
-import {isAccountPolicyContactDomainReputationExempt} from '../risk/AccountPolicyService';
-import {isIpBanExempt} from '../risk/IpBanExemptions';
+} from '@app/api/database/types/AdminArchiveTypes';
 import {
 	AdminAuditLogs,
 	BannedAvatarHashes,
 	BannedEmails,
 	BannedFileShas,
 	BannedIps,
-	BannedPhonePrefixes,
 	BannedPhrases,
 	BannedProfileSubstrings,
 	BannedUrlDomains,
 	BannedUrls,
-	DisposableEmailDomains,
-	SuspiciousEmailDomains,
-} from '../Tables';
-import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
-import {canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
-import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from './IAdminRepository';
+} from '@app/api/Tables';
+import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
+
+export interface AdminAuditLog {
+	logId: bigint;
+	adminUserId: UserID;
+	targetType: string;
+	targetId: bigint;
+	action: string;
+	auditLogReason: string | null;
+	metadata: Map<string, string>;
+	createdAt: Date;
+}
+
+export type BannedIpKind = 'permanent' | 'temporary_24h';
+
+export interface BannedIpEntry {
+	ip: string;
+	kind: BannedIpKind;
+	reason: string | null;
+	expiresAt: Date | null;
+	createdAt: Date | null;
+	decisionId: bigint | null;
+}
 
 const FETCH_AUDIT_LOG_BY_ID_QUERY = AdminAuditLogs.select({
 	where: AdminAuditLogs.where.eq('log_id'),
@@ -39,37 +64,31 @@ const FETCH_AUDIT_LOGS_BY_IDS_QUERY = AdminAuditLogs.select({
 	where: AdminAuditLogs.where.in('log_id', 'log_ids'),
 });
 const LOAD_ALL_BANNED_IPS_QUERY = BannedIps.select();
+const FETCH_BANNED_IP_QUERY = BannedIps.select({
+	where: BannedIps.where.eq('ip'),
+});
 const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
 	where: BannedEmails.where.eq('email_lower'),
 });
-const IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY = SuspiciousEmailDomains.select({
-	where: SuspiciousEmailDomains.where.eq('domain'),
-});
-const IS_EMAIL_DOMAIN_DISPOSABLE_QUERY = DisposableEmailDomains.select({
-	where: DisposableEmailDomains.where.eq('domain'),
-});
-const createLoadDisposableEmailDomainsQuery = (limit?: number) =>
-	limit ? DisposableEmailDomains.select({limit}) : DisposableEmailDomains.select();
-const IS_PHRASE_BANNED_QUERY = BannedPhrases.select({
-	where: BannedPhrases.where.eq('phrase'),
-});
+const LOAD_ALL_BANNED_EMAILS_QUERY = BannedEmails.select();
+
+function getEmailBlocklistKeys(email: string): Array<string> {
+	const emailLower = email.trim().toLowerCase();
+	const atIndex = emailLower.lastIndexOf('@');
+	if (atIndex <= 0) {
+		return [emailLower];
+	}
+	const labels = emailLower.slice(atIndex + 1).split('.');
+	const keys = [emailLower];
+	for (let index = 0; index < labels.length - 1; index++) {
+		keys.push(`@${labels.slice(index).join('.')}`);
+	}
+	return keys;
+}
 const LOAD_ALL_BANNED_PHRASES_QUERY = BannedPhrases.select();
-const LOAD_ALL_BANNED_PHONE_PREFIXES_QUERY = BannedPhonePrefixes.select();
-const IS_URL_BANNED_QUERY = BannedUrls.select({
-	where: BannedUrls.where.eq('url_canonical'),
-});
 const LOAD_ALL_BANNED_URLS_QUERY = BannedUrls.select();
-const IS_URL_DOMAIN_BANNED_QUERY = BannedUrlDomains.select({
-	where: BannedUrlDomains.where.eq('domain'),
-});
 const LOAD_ALL_BANNED_URL_DOMAINS_QUERY = BannedUrlDomains.select();
-const IS_FILE_SHA_BANNED_QUERY = BannedFileShas.select({
-	where: BannedFileShas.where.eq('sha256_hex'),
-});
 const LOAD_ALL_BANNED_FILE_SHAS_QUERY = BannedFileShas.select();
-const IS_AVATAR_HASH_BANNED_QUERY = BannedAvatarHashes.select({
-	where: BannedAvatarHashes.where.eq('hash_short'),
-});
 const LOAD_ALL_BANNED_AVATAR_HASHES_QUERY = BannedAvatarHashes.select();
 const LOAD_ALL_BANNED_PROFILE_SUBSTRINGS_QUERY = BannedProfileSubstrings.select();
 const createListAllAuditLogsPaginatedQuery = (limit: number) =>
@@ -90,7 +109,18 @@ function canonicalizeBannedIpEntry(value: string): string {
 	return parseIpBanEntry(value)?.canonical ?? value;
 }
 
-export class AdminRepository implements IAdminRepository {
+function toBannedIpEntry(row: BannedIpRow): BannedIpEntry {
+	return {
+		ip: row.ip,
+		kind: parseBannedIpKind(row.ban_kind),
+		reason: row.reason ?? null,
+		expiresAt: row.expires_at ?? null,
+		createdAt: row.created_at ?? null,
+		decisionId: row.decision_id ?? null,
+	};
+}
+
+export class AdminRepository {
 	async createAuditLog(log: AdminAuditLogRow): Promise<AdminAuditLog> {
 		await upsertOne(AdminAuditLogs.insert(log));
 		return this.mapRowToAuditLog(log);
@@ -152,38 +182,129 @@ export class AdminRepository implements IAdminRepository {
 		return false;
 	}
 
-	async banIp(ip: string): Promise<void> {
-		if (isIpBanExempt(ip)) {
-			return;
-		}
-		const canonicalIp = canonicalizeBannedIpEntry(ip);
-		await upsertOne(
-			BannedIps.insert({
-				ip: canonicalIp,
-				ban_kind: 'permanent',
-				reason: 'platform_admin_enforcement',
-				expires_at: null,
-				created_at: new Date(),
-			}),
-		);
+	async banIp(ip: string, ttlSeconds: number | null = null): Promise<void> {
+		await this.writeIpBan(ip, 'platform_admin_enforcement', ttlSeconds);
 	}
 
 	async banIpTemp(ip: string, ttlSeconds: number): Promise<void> {
-		if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
+		await this.writeIpBan(ip, 'abusive_api_access_patterns', ttlSeconds);
+	}
+
+	async findIpBanDecision(ip: string): Promise<bigint | null> {
+		const row = await this.fetchActiveIpBanRow(canonicalizeBannedIpEntry(ip));
+		return row?.decision_id ?? null;
+	}
+
+	async banIpForDecision(ip: string, decisionId: bigint, expiresAt: Date): Promise<BannedIpEntry | null> {
+		if (isIpBanExempt(ip)) {
+			return null;
+		}
+		const canonicalIp = canonicalizeBannedIpEntry(ip);
+		const existing = await this.fetchActiveIpBanRow(canonicalIp);
+		if (existing && (existing.decision_id ?? decisionId) !== decisionId) {
+			return null;
+		}
+		if (existing && !existing.expires_at) {
+			return null;
+		}
+		const createdAt = new Date();
+		const existingExpiry = existing?.expires_at ?? null;
+		const expiry = existingExpiry && existingExpiry.getTime() > expiresAt.getTime() ? existingExpiry : expiresAt;
+		const row: BannedIpRow = {
+			ip: canonicalIp,
+			ban_kind: 'temporary_24h',
+			reason: 'enforcement_decision',
+			expires_at: expiry,
+			created_at: createdAt,
+			decision_id: decisionId,
+		};
+		const ttlSeconds = Math.ceil((expiry.getTime() - createdAt.getTime()) / 1000);
+		await upsertOne(BannedIps.insertWithTtl(row, ttlSeconds));
+		return toBannedIpEntry(row);
+	}
+
+	async listDecisionIpBans(decisionId: bigint): Promise<Array<BannedIpEntry>> {
+		const entries = await this.loadAllBannedIpEntries();
+		return entries.filter((entry) => entry.decisionId === decisionId);
+	}
+
+	async relinkDecisionIpBans(fromDecisionId: bigint, toDecisionId: bigint): Promise<Array<BannedIpEntry>> {
+		const now = Date.now();
+		const entries = (await this.listDecisionIpBans(fromDecisionId)).filter(
+			(entry) => entry.expiresAt && entry.expiresAt.getTime() > now,
+		);
+		const relinked = entries.map((entry) => ({...entry, decisionId: toDecisionId}));
+		await Promise.all(
+			relinked.map((entry) =>
+				upsertOne(
+					BannedIps.insertWithTtl(
+						{
+							ip: entry.ip,
+							ban_kind: entry.kind,
+							reason: entry.reason,
+							expires_at: entry.expiresAt,
+							created_at: entry.createdAt,
+							decision_id: toDecisionId,
+						},
+						Math.ceil((entry.expiresAt!.getTime() - now) / 1000),
+					),
+				),
+			),
+		);
+		return relinked;
+	}
+
+	async removeDecisionIpBans(decisionIds: ReadonlyArray<bigint>): Promise<Array<BannedIpEntry>> {
+		const ids = new Set(decisionIds);
+		const entries = (await this.loadAllBannedIpEntries()).filter(
+			(entry) => entry.decisionId !== null && ids.has(entry.decisionId),
+		);
+		await Promise.all(entries.map((entry) => deleteOneOrMany(BannedIps.deleteByPk({ip: entry.ip}))));
+		return entries;
+	}
+
+	private async fetchActiveIpBanRow(canonicalIp: string): Promise<BannedIpRow | null> {
+		const row = await fetchOne<BannedIpRow>(FETCH_BANNED_IP_QUERY.bind({ip: canonicalIp}));
+		if (!row || (row.expires_at && row.expires_at.getTime() <= Date.now())) {
+			return null;
+		}
+		return row;
+	}
+
+	private async writeIpBan(ip: string, reason: string, ttlSeconds: number | null): Promise<void> {
+		if (ttlSeconds !== null && (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0)) {
 			throw new RangeError('Temporary IP ban TTL must be a positive integer');
 		}
 		if (isIpBanExempt(ip)) {
 			return;
 		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
+		if ((await this.fetchActiveIpBanRow(canonicalIp))?.decision_id != null) {
+			return;
+		}
+		const createdAt = new Date();
+		if (ttlSeconds === null) {
+			await upsertOne(
+				BannedIps.insert({
+					ip: canonicalIp,
+					ban_kind: 'permanent',
+					reason,
+					expires_at: null,
+					created_at: createdAt,
+					decision_id: null,
+				}),
+			);
+			return;
+		}
 		await upsertOne(
 			BannedIps.insertWithTtl(
 				{
 					ip: canonicalIp,
 					ban_kind: 'temporary_24h',
-					reason: 'abusive_api_access_patterns',
-					expires_at: new Date(Date.now() + ttlSeconds * 1000),
-					created_at: new Date(),
+					reason,
+					expires_at: new Date(createdAt.getTime() + ttlSeconds * 1000),
+					created_at: createdAt,
+					decision_id: null,
 				},
 				ttlSeconds,
 			),
@@ -206,34 +327,22 @@ export class AdminRepository implements IAdminRepository {
 		await Promise.all(Array.from(deleteKeys).map((key) => deleteOneOrMany(BannedIps.deleteByPk({ip: key}))));
 	}
 
-	async loadAllBannedIps(): Promise<Set<string>> {
-		const entries = await this.loadAllBannedIpEntries();
-		return new Set(entries.map((row) => row.ip));
-	}
-
 	async loadAllBannedIpEntries(): Promise<Array<BannedIpEntry>> {
-		const rows = await fetchMany<{
-			ip: string;
-			ban_kind?: string | null;
-			reason?: string | null;
-			expires_at?: Date | null;
-			created_at?: Date | null;
-		}>(LOAD_ALL_BANNED_IPS_QUERY.bind({}));
-		return rows.map((row) => ({
-			ip: row.ip,
-			kind: parseBannedIpKind(row.ban_kind),
-			reason: row.reason ?? null,
-			expiresAt: row.expires_at ?? null,
-			createdAt: row.created_at ?? null,
-		}));
+		const rows = await fetchMany<BannedIpRow>(LOAD_ALL_BANNED_IPS_QUERY.bind({}));
+		const now = Date.now();
+		return rows.filter((row) => !row.expires_at || row.expires_at.getTime() > now).map(toBannedIpEntry);
 	}
 
 	async isEmailBanned(email: string): Promise<boolean> {
-		const emailLower = email.toLowerCase();
-		const result = await fetchOne<{
-			email_lower: string;
-		}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: emailLower}));
-		return !!result;
+		for (const key of getEmailBlocklistKeys(email)) {
+			const result = await fetchOne<{
+				email_lower: string;
+			}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: key}));
+			if (result) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	async banEmail(email: string): Promise<void> {
@@ -246,57 +355,11 @@ export class AdminRepository implements IAdminRepository {
 		await deleteOneOrMany(BannedEmails.deleteByPk({email_lower: emailLower}));
 	}
 
-	async isEmailDomainSuspicious(domain: string): Promise<boolean> {
-		const domainLower = domain.toLowerCase();
-		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY.bind({domain: domainLower}));
-		return !!result;
-	}
-
-	async addSuspiciousEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await upsertOne(SuspiciousEmailDomains.insert({domain: domainLower}));
-	}
-
-	async removeSuspiciousEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await deleteOneOrMany(SuspiciousEmailDomains.deleteByPk({domain: domainLower}));
-	}
-
-	async isEmailDomainDisposable(domain: string): Promise<boolean> {
-		const domainLower = domain.toLowerCase();
-		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_EMAIL_DOMAIN_DISPOSABLE_QUERY.bind({domain: domainLower}));
-		return !!result;
-	}
-
-	async addDisposableEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await upsertOne(DisposableEmailDomains.insert({domain: domainLower}));
-	}
-
-	async removeDisposableEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await deleteOneOrMany(DisposableEmailDomains.deleteByPk({domain: domainLower}));
-	}
-
-	async listDisposableEmailDomains(limit?: number): Promise<Array<string>> {
+	async loadAllBannedEmails(): Promise<Array<string>> {
 		const rows = await fetchMany<{
-			domain: string;
-		}>(createLoadDisposableEmailDomainsQuery(limit).bind({}));
-		return rows.map((row) => row.domain);
-	}
-
-	async isPhraseBanned(phrase: string): Promise<boolean> {
-		const phraseLower = canonicalizeStoredPhrase(phrase);
-		const result = await fetchOne<{
-			phrase: string;
-		}>(IS_PHRASE_BANNED_QUERY.bind({phrase: phraseLower}));
-		return !!result;
+			email_lower: string;
+		}>(LOAD_ALL_BANNED_EMAILS_QUERY.bind({}));
+		return rows.map((row) => row.email_lower);
 	}
 
 	async banPhrase(phrase: string): Promise<void> {
@@ -316,21 +379,6 @@ export class AdminRepository implements IAdminRepository {
 		return rows.map((row) => row.phrase);
 	}
 
-	async loadAllBannedPhonePrefixes(): Promise<Array<string>> {
-		const rows = await fetchMany<{
-			prefix: string;
-		}>(LOAD_ALL_BANNED_PHONE_PREFIXES_QUERY.bind({}));
-		return rows.map((row) => row.prefix);
-	}
-
-	async isUrlBanned(url: string): Promise<boolean> {
-		const canonical = url.toLowerCase();
-		const result = await fetchOne<{
-			url_canonical: string;
-		}>(IS_URL_BANNED_QUERY.bind({url_canonical: canonical}));
-		return !!result;
-	}
-
 	async banUrl(row: BannedUrlRow): Promise<void> {
 		await upsertOne(BannedUrls.insert({...row, url_canonical: row.url_canonical.toLowerCase()}));
 	}
@@ -341,14 +389,6 @@ export class AdminRepository implements IAdminRepository {
 
 	async loadAllBannedUrls(): Promise<Array<BannedUrlRow>> {
 		return fetchMany<BannedUrlRow>(LOAD_ALL_BANNED_URLS_QUERY.bind({}));
-	}
-
-	async isUrlDomainBanned(domain: string): Promise<boolean> {
-		const d = domain.toLowerCase();
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_URL_DOMAIN_BANNED_QUERY.bind({domain: d}));
-		return !!result;
 	}
 
 	async banUrlDomain(row: BannedUrlDomainRow): Promise<void> {
@@ -363,14 +403,6 @@ export class AdminRepository implements IAdminRepository {
 		return fetchMany<BannedUrlDomainRow>(LOAD_ALL_BANNED_URL_DOMAINS_QUERY.bind({}));
 	}
 
-	async isFileShaBanned(sha256Hex: string): Promise<boolean> {
-		const h = sha256Hex.toLowerCase();
-		const result = await fetchOne<{
-			sha256_hex: string;
-		}>(IS_FILE_SHA_BANNED_QUERY.bind({sha256_hex: h}));
-		return !!result;
-	}
-
 	async banFileSha(row: BannedFileShaRow): Promise<void> {
 		await upsertOne(BannedFileShas.insert({...row, sha256_hex: row.sha256_hex.toLowerCase()}));
 	}
@@ -379,16 +411,17 @@ export class AdminRepository implements IAdminRepository {
 		await deleteOneOrMany(BannedFileShas.deleteByPk({sha256_hex: sha256Hex.toLowerCase()}));
 	}
 
-	async loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>> {
-		return fetchMany<BannedFileShaRow>(LOAD_ALL_BANNED_FILE_SHAS_QUERY.bind({}));
+	async unbanFeedFileSha(sha256Hex: string): Promise<boolean> {
+		return executeConditional(
+			BannedFileShas.conditionalDeleteByPk(
+				{sha256_hex: sha256Hex.toLowerCase()},
+				{added_by: null, category: ContentBlocklistCategory.MALWARE_BAZAAR},
+			),
+		);
 	}
 
-	async isAvatarHashBanned(hashShort: string): Promise<boolean> {
-		const h = hashShort.toLowerCase();
-		const result = await fetchOne<{
-			hash_short: string;
-		}>(IS_AVATAR_HASH_BANNED_QUERY.bind({hash_short: h}));
-		return !!result;
+	async loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>> {
+		return fetchMany<BannedFileShaRow>(LOAD_ALL_BANNED_FILE_SHAS_QUERY.bind({}));
 	}
 
 	async banAvatarHash(row: BannedAvatarHashRow): Promise<void> {

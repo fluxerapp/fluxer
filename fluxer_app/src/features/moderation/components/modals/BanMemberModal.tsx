@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import {useSaveData} from '@app/features/app/hooks/useSaveData';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {
 	CUSTOM_ELLIPSIS_DESCRIPTOR,
@@ -9,10 +13,12 @@ import {
 	ONE_HOUR_DURATION_DESCRIPTOR,
 	ONE_MONTH_DURATION_DESCRIPTOR,
 	ONE_WEEK_DURATION_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
 	TWELVE_HOURS_DURATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import styles from '@app/features/moderation/components/modals/BanMemberModal.module.css';
+import {BAN_DELETE_MESSAGE_OPTIONS} from '@app/features/moderation/constants/BanDeleteMessageOptions';
+import {BANNED_MP4, BANNED_POSTER, BANNED_WEBM} from '@app/features/moderation/constants/BanModalMedia';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -21,10 +27,7 @@ import {Combobox as FormCombobox} from '@app/features/ui/components/form/FormCom
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
-import bannedMp4 from '@app/media/videos/banned.mp4';
-import bannedWebm from '@app/media/videos/banned.webm';
-import bannedPoster from '@app/media/videos/banned.webp';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {MAX_TEMP_BAN_DURATION_SECONDS, MIN_TEMP_BAN_DURATION_SECONDS} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -77,33 +80,6 @@ const DELETE_MESSAGE_HISTORY_DESCRIPTOR = msg({
 	comment:
 		'Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.',
 });
-const DON_T_DELETE_ANY_DESCRIPTOR = msg({
-	message: "Don't delete any",
-	comment:
-		'Message-history-deletion option in the destructive ban-member modal. Keeps all messages from the banned member. Short standalone label.',
-});
-const KEEP_ALL_MESSAGES_DESCRIPTOR = msg({
-	message: 'Keep all messages',
-	comment: 'Helper text under the "Don\'t delete any" message-history option in the destructive ban-member modal.',
-});
-const PREVIOUS_24_HOURS_DESCRIPTOR = msg({
-	message: 'Previous 24 hours',
-	comment:
-		"Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 24 hours.",
-});
-const DELETE_MESSAGES_FROM_THE_LAST_DAY_DESCRIPTOR = msg({
-	message: 'Delete their messages from the last 24 hours',
-	comment: 'Helper text under the "Previous 24 hours" option in the destructive ban-member modal.',
-});
-const PREVIOUS_7_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 7 days',
-	comment:
-		"Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 7 days.",
-});
-const DELETE_MESSAGES_FROM_THE_LAST_WEEK_DESCRIPTOR = msg({
-	message: 'Delete their messages from the last 7 days',
-	comment: 'Helper text under the "Previous 7 days" option in the destructive ban-member modal.',
-});
 const REASON_OPTIONAL_DESCRIPTOR = msg({
 	message: 'Reason (optional)',
 	comment:
@@ -124,9 +100,12 @@ interface ComboboxOption {
 export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef);
+	const dataSaverOn = useSaveData();
+	const showArtwork = !RuntimeConfig.isSelfHosted();
+	const motionArtworkAllowed = showArtwork && !Accessibility.useReducedMotion && !dataSaverOn;
+	const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {enabled: motionArtworkAllowed});
 	const [reason, setReason] = useState('');
-	const [deleteMessageDays, setDeleteMessageDays] = useState<number>(1);
+	const [deleteMessageSeconds, setDeleteMessageSeconds] = useState<number>(60 * 60 * 24);
 	const [banDuration, setBanDuration] = useState<number>(0);
 	const [isBanDurationCustom, setIsBanDurationCustom] = useState(false);
 	const [isBanning, setIsBanning] = useState(false);
@@ -150,7 +129,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 	const handleBan = async () => {
 		setIsBanning(true);
 		try {
-			await GuildCommands.banMember(guildId, targetUser.id, deleteMessageDays, reason || undefined, banDuration);
+			await GuildCommands.banMember(guildId, targetUser.id, deleteMessageSeconds, reason || undefined, banDuration);
 			ToastCommands.createToast({
 				type: 'success',
 				children: <Trans>Banned {targetUserTag} from the community</Trans>,
@@ -158,11 +137,12 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error('Failed to ban member:', error);
-			showModerationErrorModal(
-				i18n,
-				<Trans>Failed to ban member. Try again.</Trans>,
-				'moderation.ban-member-modal.ban-error-modal',
-			);
+			showGenericErrorModal({
+				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
+				message: <Trans>Failed to ban member. Try again.</Trans>,
+				dataFlx: 'moderation.ban-member-modal.ban-error-modal',
+				defer: false,
+			});
 		} finally {
 			setIsBanning(false);
 		}
@@ -175,19 +155,33 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 			/>
 			<Modal.Content data-flx="moderation.ban-member-modal.modal-content">
 				<div className={styles.content} data-flx="moderation.ban-member-modal.content">
-					<video
-						ref={videoRef}
-						autoPlay={videoPlaybackAllowed}
-						loop
-						muted
-						playsInline
-						poster={bannedPoster}
-						className={styles.video}
-						data-flx="moderation.ban-member-modal.video"
-					>
-						<source src={bannedWebm} type="video/webm" data-flx="moderation.ban-member-modal.source.video-webm" />
-						<source src={bannedMp4} type="video/mp4" data-flx="moderation.ban-member-modal.source.video-mp4" />
-					</video>
+					{motionArtworkAllowed ? (
+						<video
+							ref={videoRef}
+							autoPlay={videoPlaybackAllowed}
+							loop
+							muted
+							playsInline
+							poster={BANNED_POSTER}
+							width={480}
+							height={240}
+							className={styles.video}
+							data-flx="moderation.ban-member-modal.video"
+						>
+							<source src={BANNED_WEBM} type="video/webm" data-flx="moderation.ban-member-modal.source.video-webm" />
+							<source src={BANNED_MP4} type="video/mp4" data-flx="moderation.ban-member-modal.source.video-mp4" />
+						</video>
+					) : showArtwork ? (
+						<img
+							src={BANNED_POSTER}
+							alt=""
+							width={480}
+							height={240}
+							aria-hidden={true}
+							className={styles.video}
+							data-flx="moderation.ban-member-modal.video-still"
+						/>
+					) : null}
 					<div data-flx="moderation.ban-member-modal.div">
 						<FormCombobox<number>
 							label={i18n._(BAN_DURATION_DESCRIPTOR)}
@@ -242,23 +236,14 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 						</div>
 						<RadioGroup
 							aria-label={i18n._(DELETE_MESSAGE_HISTORY_DESCRIPTOR)}
-							options={[
-								{value: 0, name: i18n._(DON_T_DELETE_ANY_DESCRIPTOR), desc: i18n._(KEEP_ALL_MESSAGES_DESCRIPTOR)},
-								{
-									value: 1,
-									name: i18n._(PREVIOUS_24_HOURS_DESCRIPTOR),
-									desc: i18n._(DELETE_MESSAGES_FROM_THE_LAST_DAY_DESCRIPTOR),
-								},
-								{
-									value: 7,
-									name: i18n._(PREVIOUS_7_DAYS_DESCRIPTOR),
-									desc: i18n._(DELETE_MESSAGES_FROM_THE_LAST_WEEK_DESCRIPTOR),
-								},
-							]}
-							value={deleteMessageDays}
-							onChange={setDeleteMessageDays}
+							options={BAN_DELETE_MESSAGE_OPTIONS.map((option) => ({
+								value: option.seconds,
+								name: i18n._(option.label),
+							}))}
+							value={deleteMessageSeconds}
+							onChange={setDeleteMessageSeconds}
 							disabled={isBanning}
-							data-flx="moderation.ban-member-modal.radio-group.set-delete-message-days"
+							data-flx="moderation.ban-member-modal.radio-group.set-delete-message-seconds"
 						/>
 					</div>
 					<Input

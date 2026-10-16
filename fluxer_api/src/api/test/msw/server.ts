@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/PwnedPasswordsHandlers';
 import {setupServer} from 'msw/node';
-import {createBunnyEdgeHandlers} from './handlers/BunnyEdgeHandlers';
-import {createNcmecHandlers} from './handlers/NcmecHandlers';
-import {createOnionooDetailsHandler} from './handlers/OnionooHandlers';
-import {createOpenNsfwHandlers} from './handlers/OpenNsfwHandlers';
-import {createPwnedPasswordsRangeHandler} from './handlers/PwnedPasswordsHandlers';
 
-export const server = setupServer(
-	...createBunnyEdgeHandlers(),
-	...createNcmecHandlers(),
-	...createOpenNsfwHandlers(),
-	createOnionooDetailsHandler(),
-	createPwnedPasswordsRangeHandler(),
-);
+export const server = setupServer(createPwnedPasswordsRangeHandler());

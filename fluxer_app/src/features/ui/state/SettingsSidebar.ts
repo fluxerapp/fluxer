@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 import type React from 'react';
 
 class SettingsSidebar {
@@ -10,7 +10,7 @@ class SettingsSidebar {
 	dismissedOwnerId: string | null = null;
 
 	constructor() {
-		makeAutoObservable(this, {overrideContent: observable.ref}, {autoBind: true});
+		makeAutoObservable(this, {overrideContent: observableRef}, {autoBind: true});
 	}
 
 	get hasOverride(): boolean {

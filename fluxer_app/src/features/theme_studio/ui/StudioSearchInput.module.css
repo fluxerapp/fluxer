@@ -59,13 +59,3 @@
 	background: var(--studio-bg-row-hover);
 	color: var(--studio-fg-primary);
 }
-
-.shortcut {
-	font-size: var(--studio-fs-xs);
-	color: var(--studio-fg-subtle);
-	padding: 0 0.3125rem;
-	border-radius: var(--studio-radius-sm);
-	background: var(--studio-button-secondary);
-	border: 0.0625rem solid var(--studio-border);
-	white-space: nowrap;
-}

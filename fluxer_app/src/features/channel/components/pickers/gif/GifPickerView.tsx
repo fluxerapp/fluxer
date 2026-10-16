@@ -61,29 +61,28 @@ export const GifPickerView = observer(({onClose, selectGif}: GifPickerProps = {}
 	const headerPortalContext = useExpressionPickerHeaderPortal();
 	const hasPortal = Boolean(headerPortalContext?.headerPortalElement);
 	const autoSendKlipyGifs = Accessibility.autoSendKlipyGifs;
-	const gifAutoPlay = true;
 	const videoPool = useGifVideoPool();
 	const scrollerRef = useRef<ScrollerHandle>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [estimatedContentSize, setEstimatedContentSize] = useState<number | null>(null);
 	useSearchInputAutofocus(searchInputRef);
-	const {viewportSize, scrollTop, handleScroll, handleResize, scrollToTop} = useScrollerViewport(scrollerRef);
-	useWindowFocusVideoControl({scrollerRef, videoPool, gifAutoPlay});
+	const {viewportSize, scrollTop, handleScroll, handleResize, jumpToStartEdge} = useScrollerViewport(scrollerRef);
+	useWindowFocusVideoControl({scrollerRef, videoPool});
 	useEffect(() => {
 		store.ensureFeaturedLoaded();
 		return () => store.dispose();
 	}, [store]);
 	useEffect(() => {
-		scrollToTop();
-	}, [store.view, scrollToTop]);
+		jumpToStartEdge();
+	}, [store.view, jumpToStartEdge]);
 	useEffect(() => {
 		if (
 			(!store.loading && store.shouldRenderSearchResults) ||
 			(!store.searchTerm.trim() && !store.shouldRenderSearchResults)
 		) {
-			scrollToTop();
+			jumpToStartEdge();
 		}
-	}, [store.loading, store.shouldRenderSearchResults, store.searchTerm, scrollToTop]);
+	}, [store.loading, store.shouldRenderSearchResults, store.searchTerm, jumpToStartEdge]);
 	useEffect(() => {
 		if (!store.isShowingFavorites || FavoriteGif.totalCount === 0) return;
 		void FavoriteGifCommands.refreshFavoriteGifPreviews();
@@ -221,7 +220,6 @@ export const GifPickerView = observer(({onClose, selectGif}: GifPickerProps = {}
 								onClose={onClose}
 								selectGif={selectGif}
 								autoSendKlipyGifs={autoSendKlipyGifs}
-								gifAutoPlay={gifAutoPlay}
 								viewportWidth={viewportSize.width}
 								viewportHeight={viewportSize.height}
 								scrollTop={scrollTop}

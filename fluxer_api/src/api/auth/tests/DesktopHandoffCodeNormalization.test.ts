@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAuthHarness, createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createAuthHarness, createTestAccount, loginAccount} from './AuthTestUtils';
 
 interface HandoffInitiateResponse {
 	code: string;
+	poll_secret: string;
 }
 
 interface HandoffInfoResponse {
@@ -59,21 +60,11 @@ describe('Auth desktop handoff code normalization', () => {
 			.expect(204)
 			.execute();
 		const status2 = await createBuilderWithoutAuth<HandoffStatusResponse>(harness)
-			.get(`/auth/handoff/${initResp.code}/status`)
+			.post(`/auth/handoff/${initResp.code}/status`)
+			.body({poll_secret: initResp.poll_secret})
 			.execute();
 		expect(status2.status).toBe('completed');
 		expect(status2.token).toBeTruthy();
 		expect(status2.token).not.toBe(login.token);
-	});
-	it('normalises code on info endpoint', async () => {
-		const initResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
-			.post('/auth/handoff/initiate')
-			.body(null)
-			.execute();
-		const lowercaseCode = initResp.code.toLowerCase().replace(/-/g, '');
-		const info = await createBuilderWithoutAuth<HandoffInfoResponse>(harness)
-			.get(`/auth/handoff/${lowercaseCode}/info`)
-			.execute();
-		expect(info.status).toBe('pending');
 	});
 });

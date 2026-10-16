@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {EmptyStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/EmptyStreamThumbnailPayloadError';
+import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {InvalidStreamKeyFormatError} from '@fluxer/errors/src/domains/channel/InvalidStreamKeyFormatError';
 import {InvalidStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/InvalidStreamThumbnailPayloadError';
 import {StreamKeyChannelMismatchError} from '@fluxer/errors/src/domains/channel/StreamKeyChannelMismatchError';
@@ -9,12 +14,9 @@ import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedErr
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {StreamKeyScopeMismatchError} from '@fluxer/errors/src/domains/oauth/StreamKeyScopeMismatchError';
 import type {StreamPreviewUploadUrlResponseSchema} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
+import {isValidBase64} from '@fluxer/schema/src/primitives/FileValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
-import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ChannelService} from './ChannelService';
-import type {StreamPreviewService} from './StreamPreviewService';
 
 type ParsedStreamKey = {
 	scope: 'guild' | 'dm';
@@ -76,11 +78,13 @@ export class StreamService {
 
 	private async assertStreamChannelAccess(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		parsedKey: ParsedStreamKey;
 	}): Promise<void> {
 		const channel = await this.channelService.channelData.operations.getChannel({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 		});
 		if (channel.guildId) {
@@ -89,6 +93,9 @@ export class StreamService {
 			}
 			if (params.parsedKey.guildId !== channel.guildId.toString()) {
 				throw new StreamKeyScopeMismatchError();
+			}
+			if (channel.type !== ChannelTypes.GUILD_VOICE) {
+				throw new InvalidChannelTypeError();
 			}
 			const hasConnect = await this.gatewayService.checkPermission({
 				guildId: channel.guildId,
@@ -99,8 +106,13 @@ export class StreamService {
 			if (!hasConnect) {
 				throw new MissingPermissionsError();
 			}
-		} else if (params.parsedKey.scope !== 'dm') {
-			throw new StreamKeyScopeMismatchError();
+		} else {
+			if (params.parsedKey.scope !== 'dm') {
+				throw new StreamKeyScopeMismatchError();
+			}
+			if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
+				throw new InvalidChannelTypeError();
+			}
 		}
 		if (params.parsedKey.channelId !== params.channelId.toString()) {
 			throw new StreamKeyChannelMismatchError();
@@ -109,6 +121,7 @@ export class StreamService {
 
 	private async assertStreamMutationAccess(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		parsedKey: ParsedStreamKey;
 	}): Promise<void> {
@@ -140,11 +153,17 @@ export class StreamService {
 		}
 	}
 
-	async updateStreamRegion(params: {userId: UserID; streamKey: string; region?: string}): Promise<void> {
+	async updateStreamRegion(params: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		streamKey: string;
+		region?: string;
+	}): Promise<void> {
 		const parsedKey = this.getParsedStreamKeyOrThrow(params.streamKey);
 		const channelId = this.getChannelIdFromParsedKeyOrThrow(parsedKey);
 		await this.assertStreamMutationAccess({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId,
 			parsedKey,
 		});
@@ -155,7 +174,7 @@ export class StreamService {
 		);
 	}
 
-	async getPreview(params: {userId: UserID; streamKey: string}): Promise<{
+	async getPreview(params: {userId: UserID; viewer: ThreadViewer; streamKey: string}): Promise<{
 		buffer: Uint8Array;
 		contentType: string;
 	} | null> {
@@ -163,17 +182,16 @@ export class StreamService {
 		const channelId = this.getChannelIdFromParsedKeyOrThrow(parsedKey);
 		await this.assertStreamChannelAccess({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId,
 			parsedKey,
 		});
-		const preview = await this.streamPreviewService.getPreview(params.streamKey);
-		if (preview) {
-		}
-		return preview;
+		return this.streamPreviewService.getPreview(params.streamKey);
 	}
 
 	async uploadPreview(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		streamKey: string;
 		channelId: ChannelID;
 		thumbnail: string;
@@ -182,18 +200,14 @@ export class StreamService {
 		const parsedKey = this.getParsedStreamKeyOrThrow(params.streamKey);
 		await this.assertStreamMutationAccess({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 			parsedKey,
 		});
-		let body: Uint8Array;
-		try {
-			body = Uint8Array.from(Buffer.from(params.thumbnail, 'base64'));
-		} catch {
+		if (!isValidBase64(params.thumbnail)) {
 			throw new InvalidStreamThumbnailPayloadError();
 		}
-		if (body.byteLength === 0) {
-			throw new EmptyStreamThumbnailPayloadError();
-		}
+		const body = Uint8Array.from(Buffer.from(params.thumbnail, 'base64'));
 		await this.streamPreviewService.uploadPreview({
 			streamKey: params.streamKey,
 			channelId: params.channelId,
@@ -205,6 +219,7 @@ export class StreamService {
 
 	async createPreviewUploadUrl(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		streamKey: string;
 		channelId: ChannelID;
 		contentType?: string;
@@ -213,6 +228,7 @@ export class StreamService {
 		const parsedKey = this.getParsedStreamKeyOrThrow(params.streamKey);
 		await this.assertStreamMutationAccess({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 			parsedKey,
 		});
@@ -225,11 +241,12 @@ export class StreamService {
 		});
 	}
 
-	async deletePreview(params: {userId: UserID; streamKey: string}): Promise<void> {
+	async deletePreview(params: {userId: UserID; viewer: ThreadViewer; streamKey: string}): Promise<void> {
 		const parsedKey = this.getParsedStreamKeyOrThrow(params.streamKey);
 		const channelId = this.getChannelIdFromParsedKeyOrThrow(parsedKey);
 		await this.assertStreamMutationAccess({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId,
 			parsedKey,
 		});

@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createFakeAuthToken,
 	createTestAccount,
-	loginAccount,
-	type TestAccount,
 	type UserMeResponse,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Auth login and sessions', () => {
 	let harness: ApiTestHarness;
@@ -81,53 +78,16 @@ describe('Auth login and sessions', () => {
 		await createBuilder(harness, tamperedToken).get('/users/@me').expect(401).execute();
 		await createBuilderWithoutAuth(harness).get('/users/@me').expect(401).execute();
 	});
-	it('supports session listing and logout flows', async () => {
-		let account = await createTestAccount(harness);
-		const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, account.token)
-			.get('/auth/sessions')
-			.execute();
-		expect(sessions.length).toBeGreaterThan(0);
-		expect(sessions[0]?.id_hash?.length).toBeGreaterThan(0);
-		await createBuilder(harness, account.token)
-			.post('/auth/sessions/logout')
-			.body({
-				session_id_hashes: [sessions[0]!.id_hash],
-				password: account.password,
-			})
-			.expect(204)
-			.execute();
-		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
-		account = await loginAccount(harness, account);
+	it('logout requires a live session', async () => {
+		await createBuilderWithoutAuth(harness).post('/auth/logout').expect(401).execute();
+		await createBuilder(harness, createFakeAuthToken()).post('/auth/logout').expect(401).execute();
+		const account = await createTestAccount(harness);
 		await createBuilder(harness, account.token).post('/auth/logout').expect(204).execute();
-		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
+		await createBuilder(harness, account.token).post('/auth/logout').expect(401).execute();
 	});
-	it('treats /auth/sessions/logout as idempotent and removes targeted sessions', async () => {
-		let account: TestAccount = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/auth/sessions/logout')
-			.body({
-				session_id_hashes: ['nonexistent-hash-1', 'nonexistent-hash-2'],
-				password: account.password,
-			})
-			.expect(204)
-			.execute();
-		const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, account.token)
-			.get('/auth/sessions')
-			.execute();
-		expect(sessions.length).toBeGreaterThan(0);
-		const target = sessions[0]!.id_hash;
-		await createBuilder(harness, account.token)
-			.post('/auth/sessions/logout')
-			.body({
-				session_id_hashes: [target],
-				password: account.password,
-			})
-			.expect(204)
-			.execute();
-		account = await loginAccount(harness, account);
-		const sessionsAfter = await createBuilder<Array<AuthSessionResponse>>(harness, account.token)
-			.get('/auth/sessions')
-			.execute();
-		expect(sessionsAfter.some((sess) => sess.id_hash === target)).toBe(false);
+	it('logout with a Bearer-prefixed session token revokes it', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, `Bearer ${account.token}`).post('/auth/logout').expect(204).execute();
+		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
 	});
 });

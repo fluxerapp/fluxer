@@ -18,7 +18,11 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import {getEffectiveAttachmentExpiry} from '@app/features/messaging/utils/AttachmentExpiryUtils';
-import {getAttachmentMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
+import {
+	getAttachmentMediaDimensions,
+	isUsefulVisualMediaSize,
+} from '@app/features/messaging/utils/MediaDimensionConfig';
+import {resolveProxyRequestSize} from '@app/features/messaging/utils/MediaProxyRequestSize';
 import {
 	buildAnimatedImageProxyURL,
 	buildMediaProxyURL,
@@ -106,7 +110,7 @@ const VideoAttachment: FC<AttachmentMediaProps & {message?: Message; isPreview?:
 		const embedUrl = attachment.url ?? '';
 		const proxyUrl = attachment.proxy_url ?? embedUrl;
 		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const videoLayoutConstraints = getInlineVideoLayoutConstraints(attachmentDimensions);
 		return (
 			<FocusRing
@@ -250,26 +254,27 @@ const AttachmentMedia: FC<AttachmentMediaProps & {message?: Message; isPreview?:
 				/>
 			);
 		}
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const mediaCalculator = createCalculator({
 			maxWidth: attachmentDimensions.maxWidth,
 			maxHeight: attachmentDimensions.maxHeight,
 			responsive: true,
 		});
-		const {dimensions} = mediaCalculator.calculate(
-			{
-				width: attachment.width!,
-				height: attachment.height!,
-			},
-			{forceScale: true},
+		const {dimensions} = mediaCalculator.calculate({
+			width: attachment.width!,
+			height: attachment.height!,
+		});
+		const requestedSize = resolveProxyRequestSize(
+			dimensions.width,
+			dimensions.height,
+			attachment.width!,
+			attachment.height!,
 		);
-		const targetWidth = Math.round(dimensions.width * 2);
-		const targetHeight = Math.round(dimensions.height * 2);
 		const proxySrc = attachment.proxy_url ?? attachment.url ?? '';
 		const optimizedSrc = buildMediaProxyURL(proxySrc, {
 			format: resolvePreferredImageFormat(attachment.content_type),
-			width: targetWidth,
-			height: targetHeight,
+			width: requestedSize?.width,
+			height: requestedSize?.height,
 			animated: attachmentIsAnimated,
 		});
 		return (
@@ -291,7 +296,7 @@ const AttachmentMedia: FC<AttachmentMediaProps & {message?: Message; isPreview?:
 						height={dimensions.height}
 						placeholder={attachment.placeholder}
 						constrain={true}
-						alt={attachment.title || attachment.description}
+						alt={attachment.description ?? undefined}
 						nsfw={nsfw}
 						channelId={message?.channelId}
 						messageId={message?.id}
@@ -368,16 +373,20 @@ export const Attachment: FC<AttachmentProps> = observer(
 						attachment={enrichedAttachment}
 						isPreview={isPreview}
 						message={message}
+						spoilerHidden={spoilerHidden}
 						data-flx="channel.embeds.attachments.attachment.attachment-file"
 					/>,
 				),
 			);
 		}
-		const inlineAttachmentMedia = UserSettings.getInlineAttachmentMedia();
+		const inlineAttachmentMedia = UserSettings.inlineAttachmentMedia;
 		if (renderInMosaic && isMediaAttachment(att)) {
 			return null;
 		}
-		if (!inlineAttachmentMedia && (isImageType(att.content_type) || isVideoType(att.content_type))) {
+		const isVisualType = isImageType(att.content_type) || isVideoType(att.content_type);
+		const tooSmallToShowInline =
+			isVisualType && !isUsefulVisualMediaSize(att.width ?? 0, att.height ?? 0, getAttachmentMediaDimensions());
+		if ((!inlineAttachmentMedia || tooSmallToShowInline) && isVisualType) {
 			return renderWithFootnote(
 				wrapSpoiler(
 					<FocusRing
@@ -389,6 +398,7 @@ export const Attachment: FC<AttachmentProps> = observer(
 							attachment={enrichedAttachment}
 							isPreview={isPreview}
 							message={message}
+							spoilerHidden={spoilerHidden}
 							data-flx="channel.embeds.attachments.attachment.attachment-file--2"
 						/>
 					</FocusRing>,
@@ -455,6 +465,7 @@ export const Attachment: FC<AttachmentProps> = observer(
 							attachment={enrichedAttachment}
 							isPreview={isPreview}
 							message={message}
+							spoilerHidden={spoilerHidden}
 							data-flx="channel.embeds.attachments.attachment.attachment-file--3"
 						/>
 					</FocusRing>,
@@ -548,6 +559,7 @@ export const Attachment: FC<AttachmentProps> = observer(
 							attachment={att}
 							isPreview={isPreview}
 							message={message}
+							spoilerHidden={spoilerHidden}
 							data-flx="channel.embeds.attachments.attachment.attachment-file--4"
 						/>
 					</FocusRing>

@@ -1,51 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/MessageActionBar.module.css';
+import {useShiftKey} from '@app/features/channel/components/MessageActionBarShiftKey';
 import {
 	createMessageActionHandlers,
-	getCopyableMessageText,
 	isClientSystemMessage,
-	isEmbedsSuppressed,
 	useMessagePermissions,
 } from '@app/features/channel/components/MessageActionUtils';
 import {REACT_WITH_EMOJI_DESCRIPTOR} from '@app/features/channel/components/QuickReactionsRow';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {useQuickReactionEmojis} from '@app/features/channel/state/QuickReactionStore';
 import {MessageDebugModal} from '@app/features/devtools/components/debug/MessageDebugModal';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
+import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiDisplayData} from '@app/features/expressions/utils/SkinToneUtils';
 import {
 	ADD_REACTION_DESCRIPTOR,
-	BOOKMARK_MESSAGE_DESCRIPTOR,
 	COPY_MESSAGE_ID_DESCRIPTOR,
 	COPY_MESSAGE_LINK_DESCRIPTOR,
-	COPY_TEXT_DESCRIPTOR,
 	DELETE_MESSAGE_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
 	MARK_AS_UNREAD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PIN_MESSAGE_DESCRIPTOR,
-	REMOVE_BOOKMARK_DESCRIPTOR,
 	REPLY_DESCRIPTOR,
-	SUPPRESS_EMBEDS_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
 	UNPIN_MESSAGE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
-import messageStyles from '@app/features/theme/styles/Message.module.css';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {
 	AddReactionIcon,
-	BookmarkIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
-	CopyMessageTextIcon,
+	CreateThreadIcon,
+	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
@@ -55,7 +52,6 @@ import {
 	PinIcon,
 	ReplyIcon,
 	RetryIcon,
-	SuppressEmbedsIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -67,15 +63,13 @@ import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {canUseWindowFocusedActivationClick} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {MessageStates} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import React, {useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const CLICK_TO_REACT_DESCRIPTOR = msg({
 	message: 'Click to react',
@@ -85,116 +79,24 @@ const MESSAGE_DEBUG_DESCRIPTOR = msg({
 	message: 'Message debug',
 	comment: 'Title of the developer-mode message debug modal opened from the message action bar.',
 });
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.',
-});
 const DEBUG_MESSAGE_DESCRIPTOR = msg({
 	message: 'Debug message',
 	comment: 'Developer-mode item in the message action bar overflow menu. Opens the message debug modal.',
 });
-const UNSUPPRESS_EMBEDS_DESCRIPTOR = msg({
-	message: 'Unsuppress embeds',
-	comment: 'Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.',
+const PUBLISH_DESCRIPTOR = msg({
+	message: 'Publish',
+	comment:
+		'Tooltip on the publish button in the inline message hover action bar. Publishing sends an announcement channel message to every channel that follows it.',
+});
+const PUBLISHED_DESCRIPTOR = msg({
+	message: 'Published',
+	comment:
+		'Tooltip on the disabled publish button in the inline message hover action bar for a message that was already published.',
 });
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
 	comment: 'Tooltip on the forward button in the inline message hover action bar.',
 });
-const shiftKeyManager = (() => {
-	let isShiftPressed = false;
-	const listeners = new Set<() => void>();
-	const notify = () => {
-		listeners.forEach((listener) => listener());
-	};
-	const setShiftPressed = (pressed: boolean) => {
-		if (isShiftPressed !== pressed) {
-			isShiftPressed = pressed;
-			notify();
-		}
-	};
-	const handleKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'Shift') {
-			setShiftPressed(true);
-		}
-	};
-	const handleKeyUp = (event: KeyboardEvent) => {
-		if (event.key === 'Shift') {
-			setShiftPressed(false);
-		}
-	};
-	const handleWindowBlur = () => {
-		setShiftPressed(false);
-	};
-	const handlePointerModifierChange = (event: MouseEvent) => {
-		setShiftPressed(event.getModifierState?.('Shift') ?? event.shiftKey);
-	};
-	const supportsPointerModifierEvents = (): boolean => 'PointerEvent' in window;
-	const addPointerModifierListeners = () => {
-		if (supportsPointerModifierEvents()) {
-			window.addEventListener('pointerover', handlePointerModifierChange, true);
-			window.addEventListener('pointerdown', handlePointerModifierChange, true);
-			window.addEventListener('pointerup', handlePointerModifierChange, true);
-			return;
-		}
-		window.addEventListener('mouseover', handlePointerModifierChange, true);
-		window.addEventListener('mousedown', handlePointerModifierChange, true);
-		window.addEventListener('mouseup', handlePointerModifierChange, true);
-	};
-	const removePointerModifierListeners = () => {
-		if (supportsPointerModifierEvents()) {
-			window.removeEventListener('pointerover', handlePointerModifierChange, true);
-			window.removeEventListener('pointerdown', handlePointerModifierChange, true);
-			window.removeEventListener('pointerup', handlePointerModifierChange, true);
-			return;
-		}
-		window.removeEventListener('mouseover', handlePointerModifierChange, true);
-		window.removeEventListener('mousedown', handlePointerModifierChange, true);
-		window.removeEventListener('mouseup', handlePointerModifierChange, true);
-	};
-	window.addEventListener('keydown', handleKeyDown);
-	window.addEventListener('keyup', handleKeyUp);
-	window.addEventListener('blur', handleWindowBlur);
-	return {
-		subscribe: (listener: () => void) => {
-			if (listeners.size === 0) {
-				addPointerModifierListeners();
-			}
-			listeners.add(listener);
-			return () => {
-				listeners.delete(listener);
-				if (listeners.size === 0) {
-					removePointerModifierListeners();
-				}
-			};
-		},
-		getSnapshot: () => isShiftPressed,
-		getServerSnapshot: () => false,
-	};
-})();
-const useShiftKey = (enabled: boolean) => {
-	const subscribe = useCallback(
-		(listener: () => void) => {
-			if (!enabled) {
-				return () => undefined;
-			}
-			return shiftKeyManager.subscribe(listener);
-		},
-		[enabled],
-	);
-	const getSnapshot = useCallback(() => {
-		return enabled ? shiftKeyManager.getSnapshot() : false;
-	}, [enabled]);
-	return useSyncExternalStore(subscribe, getSnapshot, shiftKeyManager.getServerSnapshot);
-};
-const suppressBlockedActivationClick = (event: React.SyntheticEvent): boolean => {
-	if (canUseWindowFocusedActivationClick()) {
-		return false;
-	}
-	event.preventDefault();
-	event.stopPropagation();
-	return true;
-};
 
 interface MessageActionBarButtonProps {
 	label: string;
@@ -204,34 +106,32 @@ interface MessageActionBarButtonProps {
 	danger?: boolean;
 	isActive?: boolean;
 	hidden?: boolean;
+	disabled?: boolean;
 	dataAction?: string;
 }
 
 const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageActionBarButtonProps>(
-	({label, icon, onClick, onPointerDownCapture, danger, isActive, hidden, dataAction}, ref) => {
+	({label, icon, onClick, onPointerDownCapture, danger, isActive, hidden, disabled, dataAction}, ref) => {
 		const handleClick = useCallback(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				event.preventDefault();
 				event.stopPropagation();
+				if (disabled) {
+					return;
+				}
 				onClick?.(event);
 			},
-			[onClick],
+			[onClick, disabled],
 		);
 		const handlePointerDownCapture = useCallback(
 			(event: React.PointerEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				onPointerDownCapture?.(event);
 			},
 			[onPointerDownCapture],
 		);
 		const buttonClassName = useMemo(
-			() => clsx(styles.button, danger && styles.danger, isActive && styles.active),
-			[danger, isActive],
+			() => clsx(styles.button, danger && styles.danger, isActive && styles.active, disabled && styles.disabled),
+			[danger, isActive, disabled],
 		);
 		return (
 			<Tooltip text={label} data-flx="channel.message-action-bar.message-action-bar-button.tooltip">
@@ -240,6 +140,7 @@ const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageAction
 						type="button"
 						ref={ref}
 						aria-label={label}
+						aria-disabled={disabled || undefined}
 						hidden={hidden}
 						onClick={handleClick}
 						onPointerDownCapture={handlePointerDownCapture}
@@ -265,39 +166,31 @@ MessageActionBarButton.displayName = 'MessageActionBarButton';
 interface QuickReactionButtonProps {
 	emoji: FlatEmoji;
 	onReact: (emoji: FlatEmoji) => void;
+	hidden?: boolean;
 }
 
 const QuickReactionButton = observer(
-	React.forwardRef<HTMLButtonElement, QuickReactionButtonProps>(({emoji, onReact}, ref) => {
+	React.forwardRef<HTMLButtonElement, QuickReactionButtonProps>(({emoji, onReact, hidden}, ref) => {
 		const {i18n} = useLingui();
+		const isAnimatedEmoji = emoji.animated === true;
 		const [isHovered, setIsHovered] = useState(false);
-		const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
 		const {url: displayUrl} = getEmojiDisplayData(emoji);
 		const handleClick = useCallback(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				event.preventDefault();
 				event.stopPropagation();
-				EmojiPickerCommands.trackEmojiUsage(emoji);
+				EmojiPicker.trackEmoji(emoji);
 				onReact(emoji);
 			},
 			[emoji, onReact],
 		);
-		const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-		const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+		const beginEmojiHover = useMemo(() => (isAnimatedEmoji ? () => setIsHovered(true) : undefined), [isAnimatedEmoji]);
+		const endEmojiHover = useMemo(() => (isAnimatedEmoji ? () => setIsHovered(false) : undefined), [isAnimatedEmoji]);
 		const emojiNameWithColons = useMemo(() => getEmojiNameWithColons(toReactionEmoji(emoji)), [emoji]);
-		const shouldShowAnimated = useMemo(
-			() => emoji.animated && isHovered && animatedMediaPlaybackAllowed,
-			[animatedMediaPlaybackAllowed, emoji.animated, isHovered],
-		);
+		const shouldShowAnimated = useShouldAnimate({kind: 'emoji', isAnimated: isAnimatedEmoji, isHovering: isHovered});
 		const emojiSrc = useMemo(
-			() =>
-				emoji.animated && emoji.id
-					? AvatarUtils.getEmojiURL({id: emoji.id, animated: shouldShowAnimated})
-					: (displayUrl ?? ''),
-			[emoji.animated, emoji.id, displayUrl, shouldShowAnimated],
+			() => (emoji.id ? buildCustomEmojiURL({id: emoji.id, animated: shouldShowAnimated}) : (displayUrl ?? '')),
+			[emoji.id, displayUrl, shouldShowAnimated],
 		);
 		const tooltipContent = useCallback(
 			() => (
@@ -321,17 +214,19 @@ const QuickReactionButton = observer(
 						type="button"
 						ref={ref}
 						aria-label={ariaLabel}
+						hidden={hidden}
 						onClick={handleClick}
-						onMouseEnter={handleMouseEnter}
-						onMouseLeave={handleMouseLeave}
-						onFocus={handleMouseEnter}
-						onBlur={handleMouseLeave}
+						onMouseEnter={beginEmojiHover}
+						onMouseLeave={endEmojiHover}
+						onFocus={beginEmojiHover}
+						onBlur={endEmojiHover}
 						className={styles.button}
 						data-flx="channel.message-action-bar.button.click"
 					>
 						<img
 							src={emojiSrc}
 							alt={emoji.name}
+							aria-hidden={true}
 							className={styles.emojiImage}
 							data-flx="channel.message-action-bar.emoji-image"
 						/>
@@ -355,22 +250,24 @@ interface MessageActionBarCoreProps {
 		canDeleteMessage: boolean;
 		canPinMessage: boolean;
 		canForwardMessage: boolean;
+		canCrosspostMessage: boolean;
 		shouldRenderSuppressEmbeds: boolean;
+		canCreateThread?: boolean;
 	};
-	isSaved: boolean;
 	developerMode: boolean;
+	isActive: boolean;
 	onPopoutToggle?: (isOpen: boolean) => void;
 }
 
 export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observer(
-	({message, handleDelete, permissions, isSaved, developerMode, onPopoutToggle}) => {
+	({message, handleDelete, permissions, developerMode, isActive, onPopoutToggle}) => {
 		const {i18n} = useLingui();
 		const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 		const moreOptionsButtonRef = useRef<HTMLButtonElement>(null);
 		const emojiPickerButtonRef = useRef<HTMLButtonElement>(null);
 		const actionBarRef = useRef<HTMLDivElement>(null);
 		const keepOpenOnNextMoreMenuCloseRef = useRef(false);
-		const contextMenuOpen = useContextMenuHoverState(actionBarRef);
+		const emojiPickerOpenRef = useRef(false);
 		const moreMenuOpen = useContextMenuHoverState(moreOptionsButtonRef);
 		const showMessageActionBar = Accessibility.showMessageActionBar;
 		const showQuickReactions = Accessibility.showMessageActionBarQuickReactions;
@@ -379,7 +276,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		const keyboardModeEnabled = KeyboardMode.keyboardModeEnabled;
 		const shouldListenForShift = showShiftExpand && showMessageActionBar && !onlyMoreButton && !keyboardModeEnabled;
 		const shiftPressed = useShiftKey(shouldListenForShift);
-		const showFullActions = showShiftExpand && shiftPressed;
+		const showFullActions = shouldListenForShift && shiftPressed;
 		const {
 			canSendMessages,
 			canAddReactions,
@@ -387,8 +284,9 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			canDeleteMessage,
 			canPinMessage,
 			canForwardMessage,
-			shouldRenderSuppressEmbeds,
+			canCrosspostMessage,
 		} = permissions;
+		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage;
 		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message), [message]);
 		const handlers = useMemo(
 			() => createMessageActionHandlers(message, {i18n, channel: permissions.channel}),
@@ -406,8 +304,23 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			}
 			requestAnimationFrame(() => emojiPickerButtonRef.current?.blur());
 		}, [keyboardModeEnabled]);
+		useEffect(() => {
+			if (isActive || keyboardModeEnabled) {
+				return;
+			}
+			const container = actionBarRef.current;
+			if (container == null) {
+				return;
+			}
+			const focused = container.ownerDocument.activeElement;
+			if (!(focused instanceof HTMLElement) || !container.contains(focused) || focused.matches(':focus-visible')) {
+				return;
+			}
+			focused.blur();
+		}, [isActive, keyboardModeEnabled]);
 		const handleEmojiPickerToggle = useCallback(
 			(open: boolean) => {
+				emojiPickerOpenRef.current = open;
 				setEmojiPickerOpen(open);
 				onPopoutToggle?.(open);
 				if (!open) {
@@ -423,7 +336,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		}, []);
 		const handleMoreMenuClose = useCallback(
 			(closeMenu: () => void) => {
-				if (!keepOpenOnNextMoreMenuCloseRef.current) {
+				if (!keepOpenOnNextMoreMenuCloseRef.current || !emojiPickerOpenRef.current) {
 					onPopoutToggle?.(false);
 				}
 				closeMenu();
@@ -431,8 +344,9 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			[onPopoutToggle],
 		);
 		const handleMoreMenuClosed = useCallback(() => {
-			if (keepOpenOnNextMoreMenuCloseRef.current) {
-				keepOpenOnNextMoreMenuCloseRef.current = false;
+			const handedOffToReactionPicker = keepOpenOnNextMoreMenuCloseRef.current;
+			keepOpenOnNextMoreMenuCloseRef.current = false;
+			if (handedOffToReactionPicker && emojiPickerOpenRef.current) {
 				return;
 			}
 			onPopoutToggle?.(false);
@@ -456,7 +370,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			);
 		}, [message, i18n]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('EMOJI_PICKER_OPEN', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('EMOJI_PICKER_OPEN', (payload?: unknown) => {
 				const data = (payload ?? {}) as {messageId?: string};
 				if (data.messageId === message.id && emojiPickerButtonRef.current) {
 					PopoutCommands.open({
@@ -548,11 +462,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		return (
 			<div
 				ref={actionBarRef}
-				className={clsx(
-					styles.actionBarContainer,
-					messageStyles.buttons,
-					(emojiPickerOpen || contextMenuOpen) && messageStyles.emojiPickerOpen,
-				)}
+				className={styles.actionBarContainer}
 				data-flx="channel.message-action-bar.message-action-bar-core.action-bar-container"
 			>
 				<div className={styles.actionBar} data-flx="channel.message-action-bar.message-action-bar-core.action-bar">
@@ -569,13 +479,13 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 							/>
 						) : (
 							<>
-								{!showFullActions &&
-									canAddReactions &&
+								{canAddReactions &&
 									showQuickReactions &&
 									quickReactionEmojis.map((emoji) => (
 										<QuickReactionButton
-											key={emoji.name}
+											key={emoji.id ?? emoji.uniqueName}
 											emoji={emoji}
+											hidden={showFullActions}
 											onReact={handlers.handleEmojiSelect}
 											data-flx="channel.message-action-bar.message-action-bar-core.quick-reaction-button"
 										/>
@@ -619,36 +529,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.copy-message-link"
 											/>
 										)}
-										{getCopyableMessageText(message, i18n) && (
-											<MessageActionBarButton
-												icon={
-													<CopyMessageTextIcon
-														size={20}
-														data-flx="channel.message-action-bar.message-action-bar-core.copy-message-text-icon"
-													/>
-												}
-												label={i18n._(COPY_TEXT_DESCRIPTOR)}
-												onClick={handlers.handleCopyMessage}
-												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.copy-message"
-											/>
-										)}
-										{shouldRenderSuppressEmbeds && (
-											<MessageActionBarButton
-												icon={
-													<SuppressEmbedsIcon
-														size={20}
-														data-flx="channel.message-action-bar.message-action-bar-core.suppress-embeds-icon"
-													/>
-												}
-												label={
-													isEmbedsSuppressed(message)
-														? i18n._(UNSUPPRESS_EMBEDS_DESCRIPTOR)
-														: i18n._(SUPPRESS_EMBEDS_DESCRIPTOR)
-												}
-												onClick={handlers.handleToggleSuppressEmbeds}
-												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.toggle-suppress-embeds"
-											/>
-										)}
 										<MessageActionBarButton
 											icon={
 												<MarkAsUnreadIcon
@@ -660,20 +540,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 											onClick={handlers.handleMarkAsUnread}
 											data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.mark-as-unread"
 										/>
-										{message.isUserMessage() && supportsInteractiveActions && (
-											<MessageActionBarButton
-												icon={
-													<BookmarkIcon
-														size={20}
-														filled={isSaved}
-														data-flx="channel.message-action-bar.message-action-bar-core.bookmark-icon"
-													/>
-												}
-												label={isSaved ? i18n._(REMOVE_BOOKMARK_DESCRIPTOR) : i18n._(BOOKMARK_MESSAGE_DESCRIPTOR)}
-												onClick={handlers.handleSaveMessage(isSaved)}
-												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.save-message"
-											/>
-										)}
 										{message.isUserMessage() && canPinMessage && (
 											<MessageActionBarButton
 												icon={
@@ -682,6 +548,19 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 												label={message.pinned ? i18n._(UNPIN_MESSAGE_DESCRIPTOR) : i18n._(PIN_MESSAGE_DESCRIPTOR)}
 												onClick={handlers.handlePinMessage}
 												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.pin-message"
+											/>
+										)}
+										{showsEditInTail && supportsInteractiveActions && canSendMessages && (
+											<MessageActionBarButton
+												icon={
+													<ReplyIcon
+														size={20}
+														data-flx="channel.message-action-bar.message-action-bar-core.reply-icon--2"
+													/>
+												}
+												label={i18n._(REPLY_DESCRIPTOR)}
+												onClick={handlers.handleReply}
+												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.reply--2"
 											/>
 										)}
 									</>
@@ -700,7 +579,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										uniqueId={`emoji_picker-actionbar-${message.id}`}
 										shouldAutoUpdate={false}
 										animationType="none"
-										shouldOpenOnClick={() => canUseWindowFocusedActivationClick()}
 										onOpen={handleEmojiPickerOpen}
 										onClose={handleEmojiPickerClose}
 										data-flx="channel.message-action-bar.message-action-bar-core.popout"
@@ -720,7 +598,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										/>
 									</Popout>
 								)}
-								{message.isUserMessage() && !message.messageSnapshots && canEditMessage && (
+								{showsEditInTail && (
 									<MessageActionBarButton
 										icon={
 											<EditMessageIcon
@@ -733,7 +611,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.edit-message"
 									/>
 								)}
-								{message.isUserMessage() && supportsInteractiveActions && canSendMessages && (
+								{message.isUserMessage() && supportsInteractiveActions && canSendMessages && !showsEditInTail && (
 									<MessageActionBarButton
 										icon={
 											<ReplyIcon size={20} data-flx="channel.message-action-bar.message-action-bar-core.reply-icon" />
@@ -756,6 +634,33 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.forward"
 									/>
 								)}
+								{supportsInteractiveActions && canCrosspostMessage && (
+									<MessageActionBarButton
+										icon={
+											<CrosspostIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.crosspost-icon"
+											/>
+										}
+										label={message.isCrossposted ? i18n._(PUBLISHED_DESCRIPTOR) : i18n._(PUBLISH_DESCRIPTOR)}
+										disabled={message.isCrossposted}
+										onClick={handlers.handleCrosspostMessage}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.crosspost"
+									/>
+								)}
+								{permissions.canCreateThread && (
+									<MessageActionBarButton
+										icon={
+											<CreateThreadIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.create-thread-icon"
+											/>
+										}
+										label={i18n._(CREATE_THREAD_DESCRIPTOR)}
+										onClick={() => openCreateThread(channel, message.id)}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.create-thread"
+									/>
+								)}
 								{showFullActions && canDeleteMessage && (
 									<MessageActionBarButton
 										danger={true}
@@ -773,7 +678,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										<MoreIcon size={20} data-flx="channel.message-action-bar.message-action-bar-core.more-icon--2" />
 									}
 									label={i18n._(MORE_DESCRIPTOR)}
-									hidden={showFullActions}
+									hidden={showFullActions && canDeleteMessage}
 									onPointerDownCapture={handleMoreOptionsPointerDown}
 									onClick={openMoreOptionsMenu}
 									isActive={moreMenuOpen}
@@ -810,14 +715,15 @@ export const MessageActionBar = observer(
 		message,
 		handleDelete,
 		sourceChannel,
+		isActive,
 		onPopoutToggle,
 	}: {
 		message: Message;
 		handleDelete: (bypassConfirm?: boolean) => void;
 		sourceChannel?: Channel | null;
+		isActive: boolean;
 		onPopoutToggle?: (isOpen: boolean) => void;
 	}) => {
-		const isSaved = SavedMessages.isSaved(message.id);
 		const developerMode = UserSettings.developerMode;
 		const permissions = useMessagePermissions(message, sourceChannel);
 		if (!permissions) {
@@ -828,8 +734,8 @@ export const MessageActionBar = observer(
 				message={message}
 				handleDelete={handleDelete}
 				permissions={permissions}
-				isSaved={isSaved}
 				developerMode={developerMode}
+				isActive={isActive}
 				onPopoutToggle={onPopoutToggle}
 				data-flx="channel.message-action-bar.message-action-bar-core"
 			/>

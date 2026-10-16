@@ -1,57 +1,72 @@
 {
-	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"include": ["files", "exports", "types", "dependencies", "unlisted", "binaries", "catalog"],
-	"ignoreDependencies": [
-		"@bufbuild/protoc-gen-es",
-		"@tailwindcss/cli",
-		"@types/events",
-		"events",
-		"fflate",
-		"gifenc",
-		"gifuct-js",
-		"tailwindcss",
-		"upng-js"
+	"ignoreExportsUsedInFile": true,
+	"ignoreDependencies": ["@bufbuild/protoc-gen-es", "@tailwindcss/cli", "@types/events", "events", "tailwindcss"],
+	"ignoreFiles": [
+		"fluxer_admin/src/styles/app.css",
+		"fluxer_admin/static/htmx.min.js",
+		"fluxer_app/src/features/voice/utils/camera-effects/models/selfie_segmentation_256x256.d.onnx.ts",
+		"fluxer_app/src/media/images/badges/bug-hunter.d.svg.ts",
+		"fluxer_app/src/media/images/badges/partner.d.svg.ts",
+		"fluxer_app/src/media/images/badges/plutonium.d.svg.ts",
+		"fluxer_app/src/media/images/badges/staff.d.svg.ts",
+		"fluxer_app/src/media/images/i-like-food.d.svg.ts"
 	],
-	"ignoreFiles": ["fluxer_admin/src/styles/app.css", "fluxer_admin/static/htmx.min.js"],
 	"ignoreIssues": {
-		"fluxer_app/scripts/build/Config.tsx": ["exports"],
-		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
-		"fluxer_app/src/index.tsx": ["unlisted"],
-		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
-		"fluxer_desktop/src/common/DesktopConfig.ts": ["types"],
-		"fluxer_desktop/src/common/Types.ts": ["types"],
-		"fluxer_desktop/src/main/Autostart.ts": ["exports"],
-		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
-		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
-		"fluxer_desktop/src/main/WindowsVulkanGameCaptureLayer.ts": ["exports"],
-		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
-		"pnpm-workspace.yaml": ["catalog"]
+		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
+		"fluxer_app/src/features/platform/state/PersistentStorage.ts": ["exports"],
+		"fluxer_app/src/features/voice/utils/CodecCapabilityDetector.ts": ["exports"],
+		"fluxer_app/src/index.tsx": ["unlisted"]
 	},
 	"workspaces": {
 		".": {
-			"project": ["scripts/**/*.mjs"]
+			"ignoreDependencies": ["vite"]
+		},
+		"fluxer_api": {
+			"ignoreDependencies": [
+				"@elastic/elasticsearch",
+				"@messageformat/core",
+				"@messageformat/parser",
+				"@vvo/tzdb",
+				"emoji-regex",
+				"ioredis",
+				"maxmind",
+				"pg",
+				"pino",
+				"undici",
+				"validator"
+			],
+			"ignoreBinaries": ["ffmpeg", "ffprobe"]
 		},
 		"fluxer_app": {
-			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
-			"ignoreDependencies": ["@lingui/swc-plugin"]
+			"entry": [
+				"lingui.config.js",
+				"scripts/build-sw.mjs",
+				"scripts/Generate*.ts",
+				"src/features/platform/utils/BrowserAssertStrict.ts"
+			]
 		},
 		"fluxer_desktop": {
 			"entry": [
 				"src/main/Bootstrap.ts",
 				"src/main/index.ts",
 				"src/preload/index.ts",
+				"src/preload/LegacyHarvestPreload.ts",
 				"src/main/**/*.test.{ts,mjs}",
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs",
-				"native/*/*.test.mjs",
-				"native/*/test/**/*.mjs",
-				"native/*/scripts/**/*.mjs"
+				"scripts/generate-windows-badges.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
+			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
 			"ignoreDependencies": ["electron-builder"]
 		},
+		"fluxer_docs": {
+			"entry": ["scripts/*.ts", "src/**/*.astro"],
+			"project": ["src/**/*.{ts,astro,mdx}", "scripts/**/*.ts"]
+		},
 		"packages/openapi": {
-			"entry": ["src/GenerateOpenAPISpec.ts"],
 			"project": ["src/**/*.ts"]
 		},
 		"packages/schema": {

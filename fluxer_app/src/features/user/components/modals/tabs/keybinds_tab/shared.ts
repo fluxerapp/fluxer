@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindCommand, KeybindConfig, KeybindSection, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {formatKeyCombo, formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
+import type {I18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import type React from 'react';
+
+const ANY_KEY_DESCRIPTOR = msg({message: 'Any key'});
 
 export const UNASSIGNED = '__unassigned__' as const;
 
@@ -33,10 +37,14 @@ export const DEFAULT_KEYBIND_SECTIONS: ReadonlyArray<KeybindSection> = [
 	'voice_and_video',
 	'misc',
 ];
-export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
+const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
 	messages: [
 		'message_reply',
+		'message_reply_prev',
+		'message_reply_next',
 		'message_edit',
+		'message_edit_prev',
+		'message_edit_next',
 		'message_delete',
 		'message_react',
 		'message_forward',
@@ -94,7 +102,9 @@ export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray
 	],
 	misc: ['misc_search', 'misc_open_context_menu', 'misc_help'],
 };
-export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
+const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
+	['message_reply_prev', 'message_reply_next'],
+	['message_edit_prev', 'message_edit_next'],
 	['nav_guild_prev', 'nav_guild_next'],
 	['nav_channel_prev', 'nav_channel_next'],
 	['nav_history_back', 'nav_history_forward'],
@@ -107,28 +117,6 @@ export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, Keybi
 export type ShortcutRowModel = KeybindConfig | [KeybindConfig, KeybindConfig];
 
 export const OVERRIDDEN_CHIP_STYLE: React.CSSProperties = {opacity: 0.5, textDecoration: 'line-through'};
-export const PRINTABLE_NAV_KEYS_TO_SWALLOW = new Set([
-	'Tab',
-	'Escape',
-	'F1',
-	'F2',
-	'F3',
-	'F4',
-	'F5',
-	'F6',
-	'F7',
-	'F8',
-	'F9',
-	'F10',
-	'F11',
-	'F12',
-	'PageUp',
-	'PageDown',
-	'Home',
-	'End',
-	'Insert',
-	'ContextMenu',
-]);
 
 export function isShortcutMergePair(row: ShortcutRowModel): row is [KeybindConfig, KeybindConfig] {
 	return Array.isArray(row);
@@ -147,24 +135,14 @@ export function sortBySectionDisplayOrder(
 	return [...entries].sort((a, b) => indexFor(a.action) - indexFor(b.action));
 }
 
-export function chipsForDefaultEntry(entry: KeybindConfig): Array<string> {
+export function chipsForDefaultEntry(i18n: I18n, entry: KeybindConfig): Array<string> {
 	if (entry.defaultsShortcutDisplayKind === 'any_key') {
-		return ['ANY KEY'];
+		return [i18n._(ANY_KEY_DESCRIPTOR)];
 	}
 	if (entry.defaultsShortcutDisplayKind === 'space_or_enter') {
-		const space = formatKeyCombo({key: ' '}).split(' + ');
-		const enter = formatKeyCombo({key: 'Enter'}).split(' + ');
-		return [...space, ...enter];
+		return [...formatKeyComboParts(i18n, {key: ' '}), ...formatKeyComboParts(i18n, {key: 'Enter'})];
 	}
-	const combo = entry.combo;
-	if (!combo) return [];
-	if (combo.modifierOnly && combo.bothSides) {
-		const formatted = formatKeyCombo(combo);
-		return formatted ? formatted.split(' + ') : [];
-	}
-	const formatted = formatKeyCombo(combo);
-	if (!formatted) return [];
-	return formatted.split(' + ');
+	return entry.combo ? formatKeyComboParts(i18n, entry.combo) : [];
 }
 
 export function partitionMergedShortcutRows(entries: ReadonlyArray<KeybindConfig>): Array<ShortcutRowModel> {
@@ -191,42 +169,20 @@ export function normalizeQuery(query: string): string {
 	return query.trim().toLowerCase();
 }
 
-export function entryMatchesQuery(entry: KeybindConfig, normalized: string): boolean {
+export function entryMatchesQuery(i18n: I18n, entry: KeybindConfig, normalized: string): boolean {
 	if (!normalized) return true;
 	if (entry.label.toLowerCase().includes(normalized)) return true;
-	const chips = chipsForDefaultEntry(entry);
+	const chips = chipsForDefaultEntry(i18n, entry);
 	for (const chip of chips) {
 		if (chip.toLowerCase().includes(normalized)) return true;
 	}
 	return false;
 }
 
-export function comboMatchesQuery(combo: KeyCombo, normalized: string): boolean {
+export function comboMatchesQuery(i18n: I18n, combo: KeyCombo, normalized: string): boolean {
 	if (!normalized) return true;
-	const formatted = formatKeyCombo(combo);
+	const formatted = formatKeyCombo(i18n, combo);
 	if (formatted?.toLowerCase().includes(normalized)) return true;
 	if (combo.key?.toLowerCase().includes(normalized)) return true;
-	return false;
-}
-
-export function combosLooseEqual(a: KeyCombo, b: KeyCombo): boolean {
-	if (!a || !b) return false;
-	if ((a.key ?? '') !== (b.key ?? '')) return false;
-	if ((a.code ?? '') !== (b.code ?? '')) return false;
-	if (!!a.ctrlOrMeta !== !!b.ctrlOrMeta) return false;
-	if (!!a.ctrl !== !!b.ctrl) return false;
-	if (!!a.alt !== !!b.alt) return false;
-	if (!!a.shift !== !!b.shift) return false;
-	if (!!a.meta !== !!b.meta) return false;
-	if (!!a.modifierOnly !== !!b.modifierOnly) return false;
-	if (!!a.bothSides !== !!b.bothSides) return false;
-	if ((a.mouseButton ?? null) !== (b.mouseButton ?? null)) return false;
-	if ((a.gamepadButton ?? null) !== (b.gamepadButton ?? null)) return false;
-	return true;
-}
-
-export function isShortcutLikeKeyEvent(event: KeyboardEvent): boolean {
-	if (event.ctrlKey || event.metaKey || event.altKey) return true;
-	if (event.key.length > 1 && PRINTABLE_NAV_KEYS_TO_SWALLOW.has(event.key)) return true;
 	return false;
 }

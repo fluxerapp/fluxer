@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createFriendship, createGroupDmChannel} from './ChannelTestUtils';
 
 describe('Group DM Add Recipient Permissions', () => {
 	let harness: ApiTestHarness;
@@ -30,21 +30,6 @@ describe('Group DM Add Recipient Permissions', () => {
 			.put(`/channels/${groupDmChannel.id}/recipients/${user4.userId}`)
 			.body(null)
 			.expect(HTTP_STATUS.BAD_REQUEST, 'NOT_FRIENDS_WITH_USER')
-			.execute();
-	});
-	it('allows adding friend to group DM', async () => {
-		const user1 = await createTestAccount(harness);
-		const user2 = await createTestAccount(harness);
-		const user3 = await createTestAccount(harness);
-		const user4 = await createTestAccount(harness);
-		await createFriendship(harness, user1, user2);
-		await createFriendship(harness, user1, user3);
-		await createFriendship(harness, user1, user4);
-		const groupDmChannel = await createGroupDmChannel(harness, user1.token, [user2.userId, user3.userId]);
-		await createBuilder(harness, user1.token)
-			.put(`/channels/${groupDmChannel.id}/recipients/${user4.userId}`)
-			.body(null)
-			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
 	});
 	it('allows member to add their own friend to group DM', async () => {

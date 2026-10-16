@@ -2,9 +2,6 @@
 
 import {
 	extractClientIp,
-	extractClientIpDetails,
-	extractClientIpDetailsFromHeaders,
-	extractClientIpFromHeaders,
 	MissingClientIpError,
 	requireClientIp,
 	resolveClientIpHeaderName,
@@ -53,18 +50,43 @@ describe('extractClientIp', () => {
 			'192.168.1.1',
 		);
 	});
-	it('returns null when trust is disabled', () => {
+	it('ignores the header and uses the peer address when trust is disabled', () => {
 		const request = new Request('http://example.com', {
 			headers: {'X-Forwarded-For': '192.168.1.1'},
 		});
-		expect(extractClientIp(request, {trustClientIpHeader: false})).toBeNull();
-		expect(extractClientIp(request)).toBeNull();
+		expect(extractClientIp(request, {trustClientIpHeader: false, peerAddress: '203.0.113.7'})).toBe('203.0.113.7');
+		expect(extractClientIp(request, {peerAddress: '203.0.113.7'})).toBe('203.0.113.7');
 	});
-	it('returns null when no options are provided', () => {
+	it('uses the peer address when trust is disabled and no header is sent', () => {
+		const request = new Request('http://example.com');
+		expect(extractClientIp(request, {trustClientIpHeader: false, peerAddress: '2001:db8::7'})).toBe('2001:db8::7');
+	});
+	it('unmaps an ipv4-mapped peer address', () => {
+		const request = new Request('http://example.com');
+		expect(extractClientIp(request, {peerAddress: '::ffff:203.0.113.7'})).toBe('203.0.113.7');
+	});
+	it('returns null when trust is disabled and there is no usable peer address', () => {
 		const request = new Request('http://example.com', {
 			headers: {'X-Forwarded-For': '192.168.1.1'},
 		});
 		expect(extractClientIp(request)).toBeNull();
+		expect(extractClientIp(request, {trustClientIpHeader: false, peerAddress: null})).toBeNull();
+		expect(extractClientIp(request, {trustClientIpHeader: false, peerAddress: 'not-an-ip'})).toBeNull();
+	});
+	it('ignores the peer address when the header is trusted', () => {
+		const request = new Request('http://example.com', {
+			headers: {'X-Forwarded-For': '198.51.100.4'},
+		});
+		expect(extractClientIp(request, {trustClientIpHeader: true, peerAddress: '10.0.0.2'})).toBe('198.51.100.4');
+		expect(
+			extractClientIp(new Request('http://example.com'), {trustClientIpHeader: true, peerAddress: '10.0.0.2'}),
+		).toBeNull();
+	});
+	it('unmaps an ipv4-mapped header value', () => {
+		const request = new Request('http://example.com', {
+			headers: {'X-Forwarded-For': '::ffff:198.51.100.4, 10.0.0.1'},
+		});
+		expect(extractClientIp(request, {trustClientIpHeader: true})).toBe('198.51.100.4');
 	});
 	it('returns null for missing or invalid headers', () => {
 		expect(extractClientIp(new Request('http://example.com'), {trustClientIpHeader: true})).toBeNull();
@@ -111,54 +133,6 @@ describe('resolveClientIpHeaderName', () => {
 	});
 });
 
-describe('extractClientIpDetails', () => {
-	it('returns extracted ip and source', () => {
-		const request = new Request('http://example.com', {
-			headers: {'X-Forwarded-For': '203.0.113.50'},
-		});
-		expect(extractClientIpDetails(request, {trustClientIpHeader: true})).toEqual({
-			ip: '203.0.113.50',
-			source: 'client-ip-header',
-			ipVersion: 'ipv4',
-		});
-	});
-	it('returns null when trust is disabled', () => {
-		const request = new Request('http://example.com', {
-			headers: {'X-Forwarded-For': '203.0.113.50'},
-		});
-		expect(extractClientIpDetails(request, {trustClientIpHeader: false})).toBeNull();
-	});
-});
-
-describe('extractClientIpFromHeaders', () => {
-	it('extracts from node-style headers with configured header name', () => {
-		const headers = {
-			'x-real-ip': '192.168.1.1',
-		};
-		expect(extractClientIpFromHeaders(headers, {trustClientIpHeader: true, clientIpHeaderName: 'x-real-ip'})).toBe(
-			'192.168.1.1',
-		);
-	});
-	it('supports case-insensitive keys and array values', () => {
-		const headers = {
-			'X-FORWARDED-FOR': ['203.0.113.50'],
-		};
-		expect(extractClientIpFromHeaders(headers, {trustClientIpHeader: true})).toBe('203.0.113.50');
-		expect(extractClientIpDetailsFromHeaders(headers, {trustClientIpHeader: true})).toEqual({
-			ip: '203.0.113.50',
-			source: 'client-ip-header',
-			ipVersion: 'ipv4',
-		});
-	});
-	it('returns null when trust is disabled', () => {
-		expect(extractClientIpFromHeaders({'x-forwarded-for': '192.168.1.1'})).toBeNull();
-	});
-	it('returns null for invalid inputs', () => {
-		expect(extractClientIpFromHeaders({}, {trustClientIpHeader: true})).toBeNull();
-		expect(extractClientIpFromHeaders({'x-forwarded-for': 'not-an-ip'}, {trustClientIpHeader: true})).toBeNull();
-	});
-});
-
 describe('requireClientIp', () => {
 	it('returns ip when present and trusted', () => {
 		const request = new Request('http://example.com', {
@@ -166,9 +140,16 @@ describe('requireClientIp', () => {
 		});
 		expect(requireClientIp(request, {trustClientIpHeader: true})).toBe('192.168.1.1');
 	});
+	it('returns the peer address when the header is not trusted', () => {
+		const request = new Request('http://example.com', {
+			headers: {'X-Forwarded-For': '192.168.1.1'},
+		});
+		expect(requireClientIp(request, {trustClientIpHeader: false, peerAddress: '203.0.113.7'})).toBe('203.0.113.7');
+	});
 	it('throws typed error when missing', () => {
 		const request = new Request('http://example.com');
 		expect(() => requireClientIp(request, {trustClientIpHeader: true})).toThrow(MissingClientIpError);
-		expect(() => requireClientIp(request, {trustClientIpHeader: true})).toThrow('Client IP header is required');
+		expect(() => requireClientIp(request, {trustClientIpHeader: true})).toThrow('Client IP is required');
+		expect(() => requireClientIp(request, {trustClientIpHeader: false})).toThrow(MissingClientIpError);
 	});
 });

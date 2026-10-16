@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
+import {
+	reportSkeletonSimplePageLayout,
+	SkeletonSimplePageBody,
+	SkeletonSimplePageRoute,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {RECENT_MENTIONS_RETENTION_DAYS} from '@app/features/app/config/I18nDisplayConstants';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {ensureMembersForMessages} from '@app/features/messaging/commands/MessageCommands';
 import {MessageListPage} from '@app/features/messaging/components/pages/MessageListPage';
 import styles from '@app/features/messaging/components/pages/RecentMentionsPage.module.css';
@@ -48,6 +54,16 @@ export const RecentMentionsPage = observer(() => {
 		if (recentMentions.length === 0) return;
 		void ensureMembersForMessages(recentMentions);
 	}, [recentMentions]);
+	useSkeletonLayoutReport(() => {
+		if (!fetched) {
+			return;
+		}
+		reportSkeletonSimplePageLayout(
+			SkeletonSimplePageRoute.MENTIONS,
+			SkeletonSimplePageBody.MESSAGE_LIST,
+			recentMentions.length,
+		);
+	}, `${fetched}|${recentMentions.length}`);
 	const renderActionButtons = (message: Message) => (
 		<button
 			type="button"

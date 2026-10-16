@@ -8,13 +8,10 @@
   --font-display: "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
   --color-brand-primary: hsl(242 70% 55%);
   --color-brand-primary-dark: hsl(242 70% 47%);
-  --color-brand-primary-rgb: 93 79 192;
 }
 
 :root {
   --brand-primary: hsl(242 70% 55%);
-  --focus-ring-color: hsl(242 70% 55% / 0.45);
-  --focus-ring-offset: #ffffff;
 }
 
 html,
@@ -34,6 +31,12 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 640px) {
   input, select, textarea {
     font-size: 16px;
+  }
+
+  select,
+  input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="color"], [type="file"]) {
+    height: auto;
+    min-height: 2.5rem;
   }
 }
 
@@ -71,33 +74,6 @@ main:focus {
   outline-offset: 2px;
 }
 
-.flash-success {
-  border: 1px solid #86efac;
-  background-color: #f0fdf4;
-  color: #166534;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
-.flash-error {
-  border: 1px solid #fca5a5;
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
-.flash-info {
-  border: 1px solid #93c5fd;
-  background-color: #eff6ff;
-  color: #1e40af;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
 .drawer-panel {
   inset: unset;
   margin: 0;
@@ -109,8 +85,6 @@ main:focus {
 }
 
 .drawer-panel[data-drawer-side="right"] { right: 0; top: 0; }
-.drawer-panel[data-drawer-side="left"]  { left: 0; top: 0; }
-.drawer-panel[data-drawer-side="bottom"] { bottom: 0; left: 0; right: 0; }
 
 .drawer-panel[data-open],
 .drawer-panel:popover-open {
@@ -237,4 +211,29 @@ input:disabled + .checkbox-custom {
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: content-box;
+}
+
+:target {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  scroll-margin-top: 6rem;
+  animation: target-pulse 700ms ease-in-out 3;
+}
+
+@keyframes target-pulse {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: hsl(242 70% 55% / 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :target {
+    background-color: hsl(242 70% 55% / 0.12);
+    animation: none;
+  }
 }

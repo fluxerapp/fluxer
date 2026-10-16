@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export interface AutoAckWindowConditions {
+interface AutoAckWindowConditions {
 	channelId: string | null;
 	isAtBottom: boolean;
 	canAutoAck: boolean;
@@ -65,7 +65,7 @@ function getCommands(previous: AutoAckWindowContext, next: AutoAckWindowConditio
 	return commands;
 }
 
-export const autoAckWindowStateMachine = setup({
+const autoAckWindowStateMachine = setup({
 	types: {} as {
 		context: AutoAckWindowContext;
 		events: AutoAckWindowEvent;
@@ -111,7 +111,7 @@ export const autoAckWindowStateMachine = setup({
 export type AutoAckWindowSnapshot = SnapshotFrom<typeof autoAckWindowStateMachine>;
 
 export function createAutoAckWindowSnapshot(input: AutoAckWindowInput = {}): AutoAckWindowSnapshot {
-	return getInitialSnapshot(autoAckWindowStateMachine, input);
+	return initialTransition(autoAckWindowStateMachine, input)[0];
 }
 
 export function transitionAutoAckWindowSnapshot(

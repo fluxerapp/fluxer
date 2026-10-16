@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use napi::Result;
-use napi::bindgen_prelude::{Buffer, Error, Status};
-
-#[allow(dead_code)]
-pub fn buffer_from_bytes(bytes: &[u8]) -> Buffer {
-    Buffer::from(bytes.to_vec())
-}
+use napi::bindgen_prelude::{Error, Status};
 
 pub fn ceremony_error(prefix: &str, message: &str) -> Error {
     Error::new(Status::GenericFailure, format!("{prefix}: {message}"))
@@ -16,36 +11,20 @@ pub const CREATE_PREFIX: &str = "WebAuthn registration failed";
 pub const GET_PREFIX: &str = "WebAuthn authentication failed";
 
 pub const TRANSPORT_USB: u32 = 0x0000_0001;
-#[allow(dead_code)]
-pub const TRANSPORT_NFC: u32 = 0x0000_0002;
-#[allow(dead_code)]
-pub const TRANSPORT_BLE: u32 = 0x0000_0004;
 pub const TRANSPORT_INTERNAL: u32 = 0x0000_0010;
 
 #[allow(dead_code)]
 pub const ATTACHMENT_ANY: u32 = 0;
-#[allow(dead_code)]
-pub const ATTACHMENT_PLATFORM: u32 = 1;
-#[allow(dead_code)]
-pub const ATTACHMENT_CROSS_PLATFORM: u32 = 2;
 
 #[allow(dead_code)]
 pub const USER_VERIFICATION_REQUIRED: u32 = 1;
 #[allow(dead_code)]
 pub const USER_VERIFICATION_PREFERRED: u32 = 2;
-#[allow(dead_code)]
-pub const USER_VERIFICATION_DISCOURAGED: u32 = 3;
 
 #[allow(dead_code)]
 pub const ATTESTATION_NONE: u32 = 1;
-#[allow(dead_code)]
-pub const ATTESTATION_INDIRECT: u32 = 2;
-#[allow(dead_code)]
-pub const ATTESTATION_DIRECT: u32 = 3;
 
 pub const ENTERPRISE_NONE: u32 = 0;
-#[allow(dead_code)]
-pub const ENTERPRISE_VENDOR_FACILITATED: u32 = 1;
 
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -202,14 +181,8 @@ mod tests {
             Some("cross-platform"),
             attachment_from_transport(TRANSPORT_USB)
         );
-        assert_eq!(
-            Some("cross-platform"),
-            attachment_from_transport(TRANSPORT_NFC)
-        );
-        assert_eq!(
-            Some("cross-platform"),
-            attachment_from_transport(TRANSPORT_BLE)
-        );
+        assert_eq!(Some("cross-platform"), attachment_from_transport(0x2));
+        assert_eq!(Some("cross-platform"), attachment_from_transport(0x4));
         assert_eq!(None, attachment_from_transport(0));
     }
 

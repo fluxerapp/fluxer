@@ -23,7 +23,7 @@ export const CreateFavoriteMemeBodySchema = FavoriteMemeBase.extend({
 	attachment_id: SnowflakeType.nullish().describe('ID of the message attachment to save as a meme'),
 	embed_index: z.number().int().min(0).nullish().describe('Index of the message embed to save as a meme'),
 }).refine((data) => data.attachment_id !== undefined || data.embed_index !== undefined, {
-	message: 'Either attachment_id or embed_index must be provided',
+	error: 'Either attachment_id or embed_index must be provided',
 });
 
 export type CreateFavoriteMemeBodySchema = z.infer<typeof CreateFavoriteMemeBodySchema>;

@@ -1,0 +1,307 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+use axum::{
+    body::Body,
+    http::{HeaderMap, HeaderValue, StatusCode, header},
+    response::{IntoResponse, Response},
+};
+use fluxer_common::http_range::{RangeSelection, parse_range};
+use std::path::Path;
+use tokio::io::{AsyncReadExt, AsyncSeekExt};
+use tokio_util::io::ReaderStream;
+
+const STREAM_CHUNK_BYTES: usize = 64 * 1024;
+
+pub(crate) async fn stream_file(
+    path: &Path,
+    request_headers: &HeaderMap,
+    entity_tag: Option<&str>,
+) -> std::io::Result<Response> {
+    let mut file = tokio::fs::File::open(path).await?;
+    let metadata = file.metadata().await?;
+    if !metadata.is_file() {
+        return Err(std::io::Error::other("not a regular file"));
+    }
+    let file_size = metadata.len();
+
+    let (status, start, length) = match requested_range(request_headers, entity_tag, file_size) {
+        RangeSelection::Full => (StatusCode::OK, 0, file_size),
+        RangeSelection::Partial(range) => (
+            StatusCode::PARTIAL_CONTENT,
+            range.start as u64,
+            (range.end - range.start + 1) as u64,
+        ),
+        RangeSelection::Unsatisfiable => return Ok(range_not_satisfiable(file_size)),
+    };
+
+    if start > 0 {
+        file.seek(std::io::SeekFrom::Start(start)).await?;
+    }
+
+    let stream = ReaderStream::with_capacity(file.take(length), STREAM_CHUNK_BYTES);
+    let mut response = Response::new(Body::from_stream(stream));
+    *response.status_mut() = status;
+    let headers = response.headers_mut();
+    headers.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+    headers.insert(header::CONTENT_LENGTH, HeaderValue::from(length));
+    if status == StatusCode::PARTIAL_CONTENT
+        && let Ok(value) =
+            HeaderValue::from_str(&format!("bytes {start}-{}/{file_size}", start + length - 1))
+    {
+        headers.insert(header::CONTENT_RANGE, value);
+    }
+    Ok(response)
+}
+
+fn range_not_satisfiable(file_size: u64) -> Response {
+    let mut response = StatusCode::RANGE_NOT_SATISFIABLE.into_response();
+    let headers = response.headers_mut();
+    headers.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+    if let Ok(value) = HeaderValue::from_str(&format!("bytes */{file_size}")) {
+        headers.insert(header::CONTENT_RANGE, value);
+    }
+    response
+}
+
+fn requested_range(
+    headers: &HeaderMap,
+    entity_tag: Option<&str>,
+    file_size: u64,
+) -> RangeSelection {
+    let Some(raw) = headers
+        .get(header::RANGE)
+        .and_then(|value| value.to_str().ok())
+    else {
+        return RangeSelection::Full;
+    };
+    if !if_range_matches(headers, entity_tag) {
+        return RangeSelection::Full;
+    }
+    let Ok(file_size) = usize::try_from(file_size) else {
+        return RangeSelection::Full;
+    };
+    parse_range(Some(raw), file_size)
+}
+
+fn if_range_matches(headers: &HeaderMap, entity_tag: Option<&str>) -> bool {
+    let Some(raw) = headers
+        .get(header::IF_RANGE)
+        .and_then(|value| value.to_str().ok())
+    else {
+        return true;
+    };
+    entity_tag.is_some_and(|tag| raw.trim() == tag)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    struct StreamedFile {
+        root: std::path::PathBuf,
+    }
+
+    impl StreamedFile {
+        fn with_bytes(bytes: &[u8]) -> Self {
+            static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
+            let unique = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
+            let pid = std::process::id();
+            let root = std::env::temp_dir().join(format!("fluxer-file-stream-{pid}-{unique}"));
+            std::fs::create_dir_all(&root).unwrap();
+            std::fs::write(root.join("payload.bin"), bytes).unwrap();
+            Self { root }
+        }
+
+        fn path(&self) -> std::path::PathBuf {
+            self.root.join("payload.bin")
+        }
+    }
+
+    impl Drop for StreamedFile {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.root);
+        }
+    }
+
+    fn range_headers(value: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(header::RANGE, HeaderValue::from_str(value).unwrap());
+        headers
+    }
+
+    fn header_of(response: &Response, name: header::HeaderName) -> Option<String> {
+        response
+            .headers()
+            .get(name)
+            .and_then(|value| value.to_str().ok())
+            .map(ToOwned::to_owned)
+    }
+
+    async fn body_of(response: Response) -> Vec<u8> {
+        axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap()
+            .to_vec()
+    }
+
+    #[tokio::test]
+    async fn a_whole_file_is_streamed_with_a_length_and_a_range_offer() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &HeaderMap::new(), None)
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            header_of(&response, header::CONTENT_LENGTH).as_deref(),
+            Some("10")
+        );
+        assert_eq!(
+            header_of(&response, header::ACCEPT_RANGES).as_deref(),
+            Some("bytes")
+        );
+        assert_eq!(body_of(response).await, b"0123456789");
+    }
+
+    #[tokio::test]
+    async fn a_resumed_download_gets_only_the_bytes_it_asked_for() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &range_headers("bytes=4-6"), None)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            response.status(),
+            StatusCode::PARTIAL_CONTENT,
+            "a client resuming a partial download re-fetches the whole file on a 200"
+        );
+        assert_eq!(
+            header_of(&response, header::CONTENT_RANGE).as_deref(),
+            Some("bytes 4-6/10")
+        );
+        assert_eq!(
+            header_of(&response, header::CONTENT_LENGTH).as_deref(),
+            Some("3")
+        );
+        assert_eq!(body_of(response).await, b"456");
+    }
+
+    #[tokio::test]
+    async fn an_open_ended_range_runs_to_the_last_byte() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &range_headers("bytes=7-"), None)
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::PARTIAL_CONTENT);
+        assert_eq!(
+            header_of(&response, header::CONTENT_RANGE).as_deref(),
+            Some("bytes 7-9/10")
+        );
+        assert_eq!(body_of(response).await, b"789");
+    }
+
+    #[tokio::test]
+    async fn a_suffix_range_returns_the_tail() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &range_headers("bytes=-3"), None)
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::PARTIAL_CONTENT);
+        assert_eq!(
+            header_of(&response, header::CONTENT_RANGE).as_deref(),
+            Some("bytes 7-9/10")
+        );
+        assert_eq!(body_of(response).await, b"789");
+    }
+
+    #[tokio::test]
+    async fn a_range_past_the_end_is_refused_with_the_real_size() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &range_headers("bytes=50-60"), None)
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::RANGE_NOT_SATISFIABLE);
+        assert_eq!(
+            header_of(&response, header::CONTENT_RANGE).as_deref(),
+            Some("bytes */10")
+        );
+    }
+
+    #[tokio::test]
+    async fn a_multi_range_request_falls_back_to_the_whole_file() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let response = stream_file(&fixture.path(), &range_headers("bytes=0-1,5-6"), None)
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(body_of(response).await, b"0123456789");
+    }
+
+    #[tokio::test]
+    async fn a_range_against_a_stale_validator_resends_the_whole_file() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+        let mut headers = range_headers("bytes=4-6");
+        headers.insert(
+            header::IF_RANGE,
+            HeaderValue::from_static("\"from-a-previous-build\""),
+        );
+
+        let response = stream_file(&fixture.path(), &headers, Some("\"current\""))
+            .await
+            .unwrap();
+
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "stitching a range from a redeployed build onto a stale prefix corrupts the download"
+        );
+        assert_eq!(body_of(response).await, b"0123456789");
+    }
+
+    #[tokio::test]
+    async fn a_range_against_the_current_validator_is_honoured() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+        let mut headers = range_headers("bytes=4-6");
+        headers.insert(header::IF_RANGE, HeaderValue::from_static("\"current\""));
+
+        let response = stream_file(&fixture.path(), &headers, Some("\"current\""))
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::PARTIAL_CONTENT);
+        assert_eq!(body_of(response).await, b"456");
+    }
+
+    #[tokio::test]
+    async fn a_missing_file_is_reported_as_not_found() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let err = stream_file(&fixture.root.join("absent.bin"), &HeaderMap::new(), None)
+            .await
+            .expect_err("a missing file must not stream an empty body");
+
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    }
+
+    #[tokio::test]
+    async fn a_directory_is_never_streamed_as_a_file() {
+        let fixture = StreamedFile::with_bytes(b"0123456789");
+
+        let err = stream_file(&fixture.root, &HeaderMap::new(), None)
+            .await
+            .expect_err("a directory answered as 200 promises a length no body can deliver");
+
+        assert_ne!(err.kind(), std::io::ErrorKind::NotFound);
+    }
+}

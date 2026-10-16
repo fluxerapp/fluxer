@@ -21,6 +21,38 @@
 	border-radius: 50%;
 }
 
+.image {
+	position: static;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.placeholder {
+	fill: var(--background-secondary-alt);
+	pointer-events: none;
+	transition: none;
+}
+
+:global(html:not(.reduced-motion)) .placeholder {
+	transition: opacity 0.2s ease;
+}
+
+:global(html:not(.reduced-motion)) .placeholderFastFade {
+	transition: opacity 0.05s ease;
+}
+
+.placeholderVisible {
+	opacity: 1;
+}
+
+.placeholderHidden {
+	opacity: 0;
+}
+
 .hoverOverlay {
 	opacity: 0;
 	transition: opacity 0.2s ease;
@@ -61,18 +93,20 @@
 	transition-duration: 0s;
 }
 
-.statusAnimationDriven {
-	transition: none;
-}
-
 .animatedMaskShape {
-	cx: var(--avatar-mask-cx);
 	x: var(--avatar-mask-x);
+	y: var(--avatar-mask-y);
 	width: var(--avatar-mask-width);
+	height: var(--avatar-mask-height);
+	rx: var(--avatar-mask-radius);
+	ry: var(--avatar-mask-radius);
 	transition:
-		cx var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
 		x var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
-		width var(--avatar-status-transition-duration) var(--avatar-status-transition-easing);
+		y var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
+		width var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
+		height var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
+		rx var(--avatar-status-transition-duration) var(--avatar-status-transition-easing),
+		ry var(--avatar-status-transition-duration) var(--avatar-status-transition-easing);
 }
 
 .animatedMaskReducedMotion {

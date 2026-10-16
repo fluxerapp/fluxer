@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
-import type {MediaProxyNsfwMode} from './IMediaService';
 
 export interface UnfurlResult {
 	embeds: Array<MessageEmbedResponse>;

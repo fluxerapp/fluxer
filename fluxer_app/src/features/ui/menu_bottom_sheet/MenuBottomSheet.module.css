@@ -84,14 +84,14 @@
 }
 
 .checkbox.checked {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 	background-color: var(--brand-primary);
 }
 
 .checkIcon {
 	height: 0.75rem;
 	width: 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .radioContainer {
@@ -115,14 +115,14 @@
 }
 
 .radio.radioSelected {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 .radioInner {
 	height: 0.625rem;
 	width: 0.625rem;
 	border-radius: 50%;
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }
 
 .labelColumn {

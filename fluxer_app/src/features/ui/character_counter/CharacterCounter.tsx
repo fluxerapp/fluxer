@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/CharacterCountAnnouncer';
 import styles from '@app/features/ui/character_counter/CharacterCounter.module.css';
 import {
@@ -28,6 +28,7 @@ export const CharacterCounter = observer(
 	({currentLength, maxLength, canUpgrade, premiumMaxLength, onUpgradeClick, className}: CharacterCounterProps) => {
 		const {i18n} = useLingui();
 		const remaining = maxLength - currentLength;
+		const formattedRemaining = getCachedNumberFormat(i18n.locale).format(remaining);
 		const isOverLimit = remaining < 0;
 		const isNearingLimit = remaining < 50;
 		const showPremiumFeatures = shouldShowPremiumFeatures();
@@ -35,7 +36,7 @@ export const CharacterCounter = observer(
 		const tooltipText = needsPremium
 			? i18n._(CHARACTERS_LEFT_GET_TO_WRITE_UP_TO_CHARACTERS_DESCRIPTOR, {
 					remaining,
-					premiumProductName: PREMIUM_PRODUCT_NAME,
+					premiumProductName: getPremiumProductName(),
 					premiumMaxLength,
 				})
 			: isOverLimit
@@ -53,7 +54,7 @@ export const CharacterCounter = observer(
 						className={clsx(styles.counterButton, colorClass, className)}
 					>
 						<span aria-hidden="true" data-flx="ui.character-counter.character-counter.span">
-							{remaining}
+							{formattedRemaining}
 						</span>
 					</button>
 				</FocusRing>
@@ -65,7 +66,7 @@ export const CharacterCounter = observer(
 					data-flx="ui.character-counter.character-counter.counter-span"
 					className={clsx(styles.counterSpan, colorClass, className)}
 				>
-					{remaining}
+					{formattedRemaining}
 				</span>
 			</Tooltip>
 		);

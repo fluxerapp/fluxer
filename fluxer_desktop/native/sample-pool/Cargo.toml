@@ -1,0 +1,9 @@
+[package]
+name = "fluxer_sample_pool"
+version = "0.0.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[workspace]
+resolver = "2"

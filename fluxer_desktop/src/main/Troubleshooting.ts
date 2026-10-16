@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getDesktopTroubleshootingSettings, setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig';
+import {setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
+import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
-import {getStableRelaunchOptions} from '@electron/main/LinuxLaunchPath';
+import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {t} from '@electron/main/MainI18n';
 import {clearSavedWindowBounds, getMainWindow, setQuitting} from '@electron/main/Window';
-import {app, BrowserWindow, dialog, Menu, type MenuItemConstructorOptions, session} from 'electron';
+import {app, BrowserWindow, dialog, type MenuItemConstructorOptions, session} from 'electron';
 
 const logger = createChildLogger('Troubleshooting');
 
@@ -20,13 +21,8 @@ export function relaunchAndExit(): void {
 	relaunchRequested = true;
 	setQuitting(true);
 	destroyDesktopTray();
-	app.relaunch(getStableRelaunchOptions());
+	relaunchStableLaunchPath();
 	app.exit(0);
-}
-
-function isHardwareAccelerationDisabled(): boolean {
-	if (process.platform === 'darwin') return false;
-	return getDesktopTroubleshootingSettings().disableHardwareAcceleration;
 }
 
 export function setHardwareAccelerationDisabled(disable: boolean): void {
@@ -48,7 +44,13 @@ export function setHardwareAccelerationDisabledAndRestart(disable: boolean): voi
 	relaunchAndExit();
 }
 
-export function reloadMainWindow(): void {
+export function setModuleUpdatesDisabledAndRestart(disable: boolean): void {
+	setDesktopTroubleshootingSettings({disableModuleUpdates: disable});
+	logger.info('Restarting to apply module updates change', {disable});
+	relaunchAndExit();
+}
+
+function reloadMainWindow(): void {
 	const mainWindow = getMainWindow();
 	if (!mainWindow || mainWindow.isDestroyed()) {
 		logger.warn('Reload requested but no main window is available');
@@ -58,23 +60,21 @@ export function reloadMainWindow(): void {
 	mainWindow.webContents.reloadIgnoringCache();
 }
 
-export async function resetAppDataAndRestart(options?: {confirm?: boolean}): Promise<void> {
+async function resetAppDataAndRestart(): Promise<void> {
 	const mainWindow = getMainWindow();
-	if (options?.confirm !== false) {
-		const choice = await dialog.showMessageBox(mainWindow ?? new BrowserWindow({show: false}), {
-			type: 'warning',
-			buttons: [t('desktop.troubleshooting.resetConfirm'), t('desktop.troubleshooting.resetCancel')],
-			defaultId: 1,
-			cancelId: 1,
-			title: t('desktop.troubleshooting.resetTitle'),
-			message: t('desktop.troubleshooting.resetMessage'),
-			detail: t('desktop.troubleshooting.resetDetail'),
-			noLink: true,
-		});
-		if (choice.response !== 0) {
-			logger.info('App data reset cancelled by user');
-			return;
-		}
+	const choice = await dialog.showMessageBox(mainWindow ?? new BrowserWindow({show: false}), {
+		type: 'warning',
+		buttons: [t('desktop.troubleshooting.resetConfirm'), t('desktop.troubleshooting.resetCancel')],
+		defaultId: 1,
+		cancelId: 1,
+		title: t('desktop.troubleshooting.resetTitle'),
+		message: t('desktop.troubleshooting.resetMessage'),
+		detail: t('desktop.troubleshooting.resetDetail'),
+		noLink: true,
+	});
+	if (choice.response !== 0) {
+		logger.info('App data reset cancelled by user');
+		return;
 	}
 	const partition = mainWindow?.webContents.session ?? session.defaultSession;
 	try {
@@ -111,7 +111,7 @@ export async function resetAppDataAndRestart(options?: {confirm?: boolean}): Pro
 }
 
 export function buildTroubleshootingMenuItems(): Array<MenuItemConstructorOptions> {
-	const hwAccelDisabled = isHardwareAccelerationDisabled();
+	const hwAccelDisabled = getLaunchDesktopTroubleshootingSettings().disableHardwareAcceleration;
 	const toggleHwAccelLabel = hwAccelDisabled
 		? t('desktop.troubleshooting.enableHardwareAccelerationAndRestart')
 		: t('desktop.troubleshooting.disableHardwareAccelerationAndRestart');
@@ -132,23 +132,4 @@ export function buildTroubleshootingMenuItems(): Array<MenuItemConstructorOption
 			},
 		},
 	];
-}
-
-function buildHelpPopupMenu(): Menu {
-	const template: Array<MenuItemConstructorOptions> = [
-		{
-			label: t('desktop.appMenu.troubleshooting'),
-			submenu: buildTroubleshootingMenuItems(),
-		},
-	];
-	return Menu.buildFromTemplate(template);
-}
-
-export function popupHelpMenu(window: BrowserWindow | null): void {
-	const menu = buildHelpPopupMenu();
-	if (window && !window.isDestroyed()) {
-		menu.popup({window});
-	} else {
-		menu.popup();
-	}
 }

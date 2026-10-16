@@ -9,7 +9,7 @@
 -export([get_voice_states_list/1]).
 -export([update_voice_state_data/1]).
 -export([user_matches_voice_state/2]).
--export([create_voice_state/2, create_voice_state/8]).
+-export([create_voice_state/2]).
 -export([extract_session_info_from_voice_state/2]).
 -export([has_voice_state_change/2]).
 
@@ -264,40 +264,6 @@ create_voice_state(Fields, Flags) ->
         maps:get(e2ee_capable, Fields, false)
     ),
     voice_state_utils:complete_voice_state(apply_voice_flags(Base, Flags)).
-
--spec create_voice_state(
-    binary(),
-    binary(),
-    binary(),
-    binary(),
-    boolean(),
-    boolean(),
-    voice_flags(),
-    list()
-) -> voice_state().
-create_voice_state(
-    GuildIdBin,
-    ChannelIdBin,
-    UserIdBin,
-    ConnectionId,
-    ServerMute,
-    ServerDeaf,
-    Flags,
-    ViewerStreamKeys
-) ->
-    create_voice_state(
-        #{
-            guild_id => GuildIdBin,
-            channel_id => ChannelIdBin,
-            user_id => UserIdBin,
-            connection_id => ConnectionId,
-            server_mute => ServerMute,
-            server_deaf => ServerDeaf,
-            viewer_stream_keys => ViewerStreamKeys,
-            e2ee_capable => false
-        },
-        Flags
-    ).
 
 -spec base_voice_state(
     binary(),

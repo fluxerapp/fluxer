@@ -7,7 +7,6 @@
     handle_identify/3,
     handle_resume/2,
     handle_rollout_config_changed/1,
-    handle_pending_identify_retry/1,
     handle_pending_identify_retry/2,
     start_session/3,
     start_session_with_drain_guard/4,
@@ -19,7 +18,7 @@
 
 -type state() :: gateway_handler:state().
 -type ws_result() :: gateway_handler:ws_result().
--type pending_retry_timer() :: {reference(), reference()} | reference() | undefined.
+-type pending_retry_timer() :: {reference(), reference()} | undefined.
 
 -export_type([state/0, ws_result/0]).
 
@@ -103,6 +102,9 @@ do_identify(
     GwTimings,
     State
 ) ->
+    ok = channel_threads_config:note_identify(
+        session_manager_shard_drain:thread_channels_capable(#{flags => Flags}), Properties
+    ),
     SessionId = utils:generate_session_id(),
     IdentifyData = build_identify_data(
         Token,
@@ -151,7 +153,7 @@ maybe_put(Key, Value, Map) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
         gateway_sharding:shard() | undefined}
     | {error, atom()}.
-validate_identify_data(Data) ->
+validate_identify_data(Data) when is_map(Data) ->
     try
         Token = maps:get(<<"token">>, Data),
         Properties = maps:get(<<"properties">>, Data),
@@ -163,7 +165,9 @@ validate_identify_data(Data) ->
         )
     catch
         error:{badkey, _} -> {error, missing_required_field}
-    end.
+    end;
+validate_identify_data(_Data) ->
+    {error, invalid_data}.
 
 -spec validate_properties(binary(), term(), term(), term(), term(), map()) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
@@ -348,12 +352,6 @@ session_start_error_action(_) ->
     unknown.
 
 -spec log_session_start_error(term(), state()) -> ws_result().
-log_session_start_error({retries_exhausted, Reason}, State) ->
-    logger:error(
-        "Session start failed after retries: last_error=~p peer_ip=~ts",
-        [Reason, maps:get(peer_ip, State, <<"unknown">>)]
-    ),
-    gateway_handler_encode:close_with_reason(unknown_error, <<"Session start failed">>, State);
 log_session_start_error(Reason, State) ->
     logger:error(
         "Session start failed: reason=~p peer_ip=~ts",
@@ -367,25 +365,11 @@ log_session_start_error(Reason, State) ->
 handle_rollout_config_changed(State) ->
     retry_pending_identify(State).
 
--spec handle_pending_identify_retry(state()) -> ws_result().
-handle_pending_identify_retry(State) ->
-    handle_legacy_pending_identify_retry(State).
-
 -spec handle_pending_identify_retry(reference(), state()) -> ws_result().
 handle_pending_identify_retry(Token, State) ->
     case maps:get(pending_identify_retry_timer, State, undefined) of
         {TimerRef, Token} ->
             cancel_pending_identify_retry_value({TimerRef, Token}),
-            retry_pending_identify(State#{pending_identify_retry_timer => undefined});
-        _ ->
-            {ok, State}
-    end.
-
--spec handle_legacy_pending_identify_retry(state()) -> ws_result().
-handle_legacy_pending_identify_retry(State) ->
-    case maps:get(pending_identify_retry_timer, State, undefined) of
-        TimerRef when is_reference(TimerRef) ->
-            cancel_pending_identify_retry_value(TimerRef),
             retry_pending_identify(State#{pending_identify_retry_timer => undefined});
         _ ->
             {ok, State}
@@ -433,10 +417,6 @@ schedule_pending_identify_retry(
     is_reference(TimerRef), is_reference(Token)
 ->
     State;
-schedule_pending_identify_retry(#{pending_identify_retry_timer := TimerRef} = State) when
-    is_reference(TimerRef)
-->
-    State;
 schedule_pending_identify_retry(State) ->
     Delay =
         ?PENDING_IDENTIFY_RETRY_BASE_MS +
@@ -459,15 +439,11 @@ clear_pending_identify(State) ->
 -spec maybe_cancel_pending_identify_retry(pending_retry_timer()) -> ok.
 maybe_cancel_pending_identify_retry(undefined) ->
     ok;
-maybe_cancel_pending_identify_retry({TimerRef, _Token}) when is_reference(TimerRef) ->
-    cancel_pending_identify_retry_value(TimerRef);
-maybe_cancel_pending_identify_retry(TimerRef) when is_reference(TimerRef) ->
-    cancel_pending_identify_retry_value(TimerRef).
+maybe_cancel_pending_identify_retry({TimerRef, Token}) when is_reference(TimerRef) ->
+    cancel_pending_identify_retry_value({TimerRef, Token}).
 
--spec cancel_pending_identify_retry_value({reference(), reference()} | reference()) -> ok.
+-spec cancel_pending_identify_retry_value({reference(), reference()}) -> ok.
 cancel_pending_identify_retry_value({TimerRef, _Token}) ->
-    cancel_pending_identify_retry_value(TimerRef);
-cancel_pending_identify_retry_value(TimerRef) ->
     _ = erlang:cancel_timer(TimerRef, [{async, true}, {info, false}]),
     ok.
 
@@ -487,14 +463,6 @@ handle_session_start_capacity_holds_without_reconnect_test() ->
 
 handle_session_start_rate_limit_holds_without_close_test() ->
     {ok, _State} = handle_session_start_result({error, rate_limited}, identify_test_state()).
-
-start_session_with_drain_guard_holds_pending_identify_test() ->
-    {ok, State} = start_session_with_drain_guard(
-        true, #{token => <<"t">>}, self(), identify_test_state()
-    ),
-    {PendingRequest, PendingPid} = maps:get(pending_identify, State),
-    ?assertEqual(#{token => <<"t">>}, PendingRequest),
-    ?assert(is_pid(PendingPid)).
 
 identify_test_state() ->
     #{

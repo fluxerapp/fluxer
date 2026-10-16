@@ -1,41 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {getDmChannelIdsForScope} from '@app/api/channel/services/message/DmScopeUtils';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import {attachmentDecayPayloadsForMessage} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import {
+	createMessageResponseDataService,
+	type MessageResponseAccessContext,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import {maskThreadArtifactsFor, ThreadMessageResponses} from '@app/api/channel/services/message/ThreadMessageResponses';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {maskChannelResponseThreadBits} from '@app/api/guild/services/ThreadPermissionBits';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
+import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {MessageResponse, MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createMessageID} from '../../../BrandedTypes';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {getMessageSearchService} from '../../../SearchFactory';
-import {buildMessageSearchFilters} from '../../../search/BuildMessageSearchFilters';
-import {channelNeedsReindexing} from '../../../search/ChannelIndexingUtils';
-import {searchExistingMessages} from '../../../search/MessageSearchResultReconciler';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import {getDmChannelIdsForScope} from './DmScopeUtils';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import {collectMessageAttachments} from './MessageHelpers';
-import type {MessageProcessingService} from './MessageProcessingService';
-import {createMessageResponseDataService, type MessageResponseAccessContext} from './MessageResponseDataService';
-import type {MessageSearchService} from './MessageSearchService';
 
 export class MessageRetrievalService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
+		private channelRepository: ChannelRepository,
 		private userCacheService: UserCacheService,
 		private channelAuthService: MessageChannelAuthService,
 		private processingService: MessageProcessingService,
 		private searchService: MessageSearchService,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private attachmentDecayService: AttachmentDecayService = new AttachmentDecayService(),
 	) {}
 
@@ -59,37 +64,68 @@ export class MessageRetrievalService {
 		return this.isMessageAfterCutoff(messageId, cutoff);
 	}
 
+	private threadResponsesInstance: ThreadMessageResponses | undefined;
+
+	get threadResponses(): ThreadMessageResponses {
+		this.threadResponsesInstance ??= new ThreadMessageResponses(
+			this.channelRepository,
+			createMessageResponseDataService(),
+			this.userCacheService,
+		);
+		return this.threadResponsesInstance;
+	}
+
 	async getResponseAccessContext(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId?: MessageID;
+		authChannel?: AuthenticatedChannel;
 	}): Promise<MessageResponseAccessContext> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({
-			userId: params.userId,
-			channelId: params.channelId,
-		});
+		return (await this.getResponseAccess(params)).access;
+	}
+
+	async getResponseAccess(params: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+		messageId?: MessageID;
+		authChannel?: AuthenticatedChannel;
+	}): Promise<{access: MessageResponseAccessContext; authChannel: AuthenticatedChannel}> {
+		const authChannel =
+			params.authChannel ??
+			(await this.channelAuthService.getChannelAuthenticated({
+				userId: params.userId,
+				channelId: params.channelId,
+				viewer: params.viewer,
+			}));
 		if (params.messageId && !(await this.canAccessMessage(authChannel, params.messageId))) {
 			throw new UnknownMessageError();
 		}
 		const canReadMessageHistory =
 			!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		return {
-			sourceGuildId: authChannel.channel.guildId,
-			messageHistoryCutoff: canReadMessageHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),
-			canReadMessageHistory,
+			authChannel,
+			access: {
+				sourceGuildId: authChannel.channel.guildId,
+				messageHistoryCutoff: canReadMessageHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),
+				canReadMessageHistory,
+			},
 		};
 	}
 
 	async getMessage({
 		userId,
+		viewer,
 		channelId,
 		messageId,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 	}): Promise<Message> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
 		if (!(await this.canAccessMessage(authChannel, messageId))) {
 			throw new UnknownMessageError();
 		}
@@ -102,18 +138,50 @@ export class MessageRetrievalService {
 		return repairedMessage;
 	}
 
+	async getMessagesByIds({
+		userId,
+		viewer,
+		channelId,
+		messageIds,
+	}: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+		messageIds: Array<MessageID>;
+	}): Promise<Map<string, Message>> {
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
+		const canReadMessageHistory =
+			!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
+		const cutoff = authChannel.guild?.message_history_cutoff ?? null;
+		const readableIds = messageIds.filter(
+			(messageId) => canReadMessageHistory || (cutoff != null && this.isMessageAfterCutoff(messageId, cutoff)),
+		);
+		const found = (
+			await Promise.all(
+				readableIds.map((messageId) => this.channelRepository.messages.getMessage(channelId, messageId)),
+			)
+		).filter((message): message is Message => message != null);
+		const repairedMessages = await Promise.all(
+			found.map((message) => this.processingService.repairMentionsOnRead(message, authChannel.channel)),
+		);
+		await this.extendAttachments(repairedMessages);
+		return new Map(repairedMessages.map((message) => [message.id.toString(), message] as const));
+	}
+
 	async searchMessages({
 		userId,
+		viewer,
 		channelId,
 		searchParams,
 		requestCache,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
 		const {channel} = authChannel;
 		const hasReadHistory = !authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		if (!hasReadHistory) {
@@ -161,29 +229,22 @@ export class MessageRetrievalService {
 			hitsPerPage,
 			page,
 		});
-		const messageEntries = result.hits.map((hit) => ({
-			channelId: createChannelID(BigInt(hit.channelId)),
-			messageId: createMessageID(BigInt(hit.id)),
-		}));
 		const access = {
 			sourceGuildId: channel.guildId,
 			messageHistoryCutoff: !hasReadHistory ? (authChannel.guild?.message_history_cutoff ?? null) : null,
 			canReadMessageHistory: hasReadHistory,
 		};
-		const responseDataService = createMessageResponseDataService();
-		const foundMessages = await Promise.all(
-			messageEntries.map(({channelId, messageId}) =>
-				responseDataService.getMessage({
-					userId,
-					channelId,
-					messageId,
-					access,
-				}),
-			),
+		const builtMessages = await createMessageResponseDataService().buildMessages({
+			userId,
+			messages: result.messages,
+			access,
+		});
+		const messageResponses = maskThreadArtifactsFor(viewer, channel.guildId, builtMessages).map(
+			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,
 		);
-		const messageResponses = foundMessages.filter((message): message is MessageResponse => message !== null);
 		return {
-			channels: messageResponses.length > 0 ? [await this.mapSearchChannelResponse(channel, userId, requestCache)] : [],
+			channels:
+				messageResponses.length > 0 ? await this.mapSearchChannelResponse(channel, userId, viewer, requestCache) : [],
 			messages: messageResponses,
 			total: hasReadHistory ? result.total : messageResponses.length,
 			hits_per_page: hitsPerPage,
@@ -191,13 +252,19 @@ export class MessageRetrievalService {
 		};
 	}
 
-	private async mapSearchChannelResponse(channel: Channel, userId: UserID, requestCache: RequestCache) {
-		return mapChannelToResponse({
+	private async mapSearchChannelResponse(
+		channel: Channel,
+		userId: UserID,
+		viewer: ThreadViewer,
+		requestCache: RequestCache,
+	) {
+		const response = await mapChannelToResponse({
 			channel,
 			currentUserId: userId,
 			userCacheService: this.userCacheService,
 			requestCache,
 		});
+		return maskChannelResponseThreadBits(channel.guildId, viewer, [response]);
 	}
 
 	private async channelNeedsIndexing(channel: Channel, channelId: ChannelID): Promise<boolean> {
@@ -212,32 +279,9 @@ export class MessageRetrievalService {
 	}
 
 	private async extendAttachments(messages: Array<Message>): Promise<void> {
-		const payloads = messages.flatMap((message) => {
-			return this.buildAttachmentDecayEntriesForMessage(message);
-		});
+		const payloads = messages.flatMap(attachmentDecayPayloadsForMessage);
 		if (payloads.length === 0) return;
 		await this.attachmentDecayService.extendForAttachments(payloads);
-	}
-
-	private buildAttachmentDecayEntriesForMessage(message: Message): Array<{
-		attachmentId: AttachmentID;
-		channelId: ChannelID;
-		messageId: MessageID;
-		filename: string;
-		sizeBytes: bigint;
-		uploadedAt: Date;
-	}> {
-		const attachments = collectMessageAttachments(message);
-		if (attachments.length === 0) return [];
-		const uploadedAt = snowflakeToDate(message.id);
-		return attachments.map((attachment) => ({
-			attachmentId: attachment.id,
-			channelId: message.channelId,
-			messageId: message.id,
-			filename: attachment.filename,
-			sizeBytes: attachment.size,
-			uploadedAt,
-		}));
 	}
 
 	private async applyDmScopeToSearchParams({

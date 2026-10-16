@@ -19,13 +19,13 @@ get_members_cursor(Request, State) ->
     {reply, map(), guild_state()}.
 members_cursor(Limit, _AfterId, State) when Limit =< 0 ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     {reply, #{members => [], total => map_size(MemberMap)}, State};
 members_cursor(Limit, AfterId, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     Total = map_size(MemberMap),
-    SortedIds = lists:sort(maps:keys(MemberMap)),
+    SortedIds = guild_data_index_members:sorted_member_ids(Data, MemberMap),
     FilteredIds = filter_ids_after(SortedIds, AfterId),
     ResponseMembers = take_members(FilteredIds, Limit, MemberMap),
     {reply, #{members => ResponseMembers, total => Total}, State}.
@@ -33,7 +33,7 @@ members_cursor(Limit, AfterId, State) ->
 -spec take_members([integer()], integer(), map()) -> [map()].
 take_members(_Ids, Limit, _MemberMap) when Limit =< 0 -> [];
 take_members(Ids, Limit, MemberMap) ->
-    [maps:get(Id, MemberMap) || Id <- lists:sublist(Ids, Limit)].
+    [Member || Id <- lists:sublist(Ids, Limit), {ok, Member} <- [maps:find(Id, MemberMap)]].
 
 -spec filter_ids_after([integer()], integer() | undefined) -> [integer()].
 filter_ids_after(Ids, undefined) -> Ids;

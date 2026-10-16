@@ -28,40 +28,24 @@ export const ReactionTooltip = observer(
 		reaction,
 		children,
 		hoveredEmojiUrl,
-		animationSyncKey,
-		onRequestAnimationSync,
 		onTooltipHoverChange,
 	}: {
 		message: Message;
 		reaction: MessageReaction;
 		children: React.ReactElement<Record<string, unknown> & {ref?: React.Ref<HTMLElement>}>;
 		hoveredEmojiUrl?: string | null;
-		animationSyncKey?: number;
-		onRequestAnimationSync?: () => void;
 		onTooltipHoverChange?: (hovering: boolean) => void;
 	}) => {
 		const {i18n} = useLingui();
 		const tooltip = useHoverFloatingTooltip(500);
-		const prevIsOpenRef = useRef(false);
-		useEffect(() => {
-			if (tooltip.state.isOpen && !prevIsOpenRef.current) {
-				onRequestAnimationSync?.();
-			}
-			prevIsOpenRef.current = tooltip.state.isOpen;
-		}, [tooltip.state.isOpen, onRequestAnimationSync]);
 		useEffect(() => {
 			onTooltipHoverChange?.(tooltip.state.isOpen);
 		}, [tooltip.state.isOpen, onTooltipHoverChange]);
 		const {fetchStatus} = useReactionUsers(message.id, reaction.emoji);
 		const isLoading = fetchStatus === 'pending';
 		const tooltipText = getReactionTooltip(message, reaction.emoji);
-		const emojiIdentifier = reaction.emoji.id ?? reaction.emoji.name;
-		const tooltipEmojiKey = `${emojiIdentifier}-${animationSyncKey ?? 0}`;
-		const fallbackEmojiUrl = useEmojiURL({
-			emoji: reaction.emoji,
-			isHovering: tooltip.state.isOpen,
-			forceAnimate: tooltip.state.isOpen,
-		});
+		const tooltipEmojiKey = reaction.emoji.id ?? reaction.emoji.name;
+		const fallbackEmojiUrl = useEmojiURL({emoji: reaction.emoji});
 		const emojiUrl = hoveredEmojiUrl ?? fallbackEmojiUrl;
 		const errorRetryRef = useRef(false);
 		useEffect(() => {

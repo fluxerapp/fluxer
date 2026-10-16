@@ -8,19 +8,25 @@ import {
 	type PopoutResizePositionSession,
 	usePopoutResizePositionController,
 } from '@app/features/ui/popover/PopoutResizePositionContext';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-export interface ResizablePaneSize {
+interface ResizablePaneSize {
 	width: number;
 	height: number;
+}
+
+interface ResizablePaneWidthSnap {
+	readonly step: number;
+	readonly offset: number;
 }
 
 export interface UseResizablePaneOptions {
 	readonly storageKey: string;
 	readonly defaultSize: ResizablePaneSize;
 	readonly minSize: ResizablePaneSize;
+	readonly widthSnap?: ResizablePaneWidthSnap | null;
 	readonly viewportPadding: number;
 	readonly resizingClassName: string;
 	readonly cursorProperty: string;
@@ -80,15 +86,26 @@ const RESIZABLE_PANE_SIZE_JSON_MAX_LENGTH =
 const TITLEBAR_SELECTOR = '[data-native-titlebar]';
 const logger = new Logger('useResizablePane');
 
-function clampDimension(value: number, configuredMin: number, availableMax: number): number {
+function clampResizablePaneDimension(
+	value: number,
+	configuredMin: number,
+	availableMax: number,
+	snap?: ResizablePaneWidthSnap | null,
+): number {
 	const max = Math.max(1, Math.floor(availableMax));
 	const min = Math.min(configuredMin, max);
-	if (!Number.isFinite(value)) return min;
-	return Math.max(min, Math.min(Math.round(value), max));
+	const requested = Number.isFinite(value) ? Math.round(value) : min;
+	const bounded = Math.max(min, Math.min(requested, max));
+	if (snap == null || !(snap.step > 0)) return bounded;
+	const fitted = snap.offset + Math.floor((bounded - snap.offset) / snap.step) * snap.step;
+	if (fitted >= min) return fitted;
+	const raised = fitted + snap.step;
+	if (raised <= max) return raised;
+	return fitted > 0 ? fitted : bounded;
 }
 
 function getUsableAppZoomFactor(ownerDocument: Document): number {
-	const zoom = getAppZoomFactor(ownerDocument);
+	const zoom = getAppRemScale(ownerDocument);
 	if (!Number.isFinite(zoom) || zoom <= 0) return 1;
 	return zoom;
 }
@@ -281,24 +298,25 @@ export function useResizablePane(
 			edge: ResizeEdge | null,
 			anchorRect: ResizeAnchorRect | null,
 		): ResizablePaneSize => {
-			const {minSize, viewportPadding} = optionsRef.current;
+			const {minSize, viewportPadding, widthSnap} = optionsRef.current;
+			const unbounded = Number.POSITIVE_INFINITY;
 			if (ownerDocument == null) {
 				return {
-					width: Math.max(minSize.width, Math.round(size.width)),
-					height: Math.max(minSize.height, Math.round(size.height)),
+					width: clampResizablePaneDimension(size.width, minSize.width, unbounded, widthSnap),
+					height: clampResizablePaneDimension(size.height, minSize.height, unbounded),
 				};
 			}
 			const zoom = getUsableAppZoomFactor(ownerDocument);
 			const maximumSize = getResizeMaximumSize(ownerDocument, viewportPadding, zoom, edge, anchorRect);
 			if (maximumSize == null) {
 				return {
-					width: Math.max(minSize.width, Math.round(size.width)),
-					height: Math.max(minSize.height, Math.round(size.height)),
+					width: clampResizablePaneDimension(size.width, minSize.width, unbounded, widthSnap),
+					height: clampResizablePaneDimension(size.height, minSize.height, unbounded),
 				};
 			}
 			return {
-				width: clampDimension(size.width, minSize.width, maximumSize.width),
-				height: clampDimension(size.height, minSize.height, maximumSize.height),
+				width: clampResizablePaneDimension(size.width, minSize.width, maximumSize.width, widthSnap),
+				height: clampResizablePaneDimension(size.height, minSize.height, maximumSize.height),
 			};
 		},
 		[],

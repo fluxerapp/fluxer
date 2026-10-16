@@ -23,17 +23,3 @@
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
 }
-
-.sectionDescriptionMultiline {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
-.sectionDescriptionMultiline p {
-	margin-bottom: 0.5rem;
-}
-
-.sectionDescriptionMultiline p:last-child {
-	margin-bottom: 0;
-}

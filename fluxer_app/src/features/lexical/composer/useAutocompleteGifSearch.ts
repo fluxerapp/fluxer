@@ -13,6 +13,19 @@ export interface GifAutocompleteSearchState {
 	results: Array<Gif>;
 }
 
+const GIF_SEARCH_DEBOUNCE_MS = 250;
+const NO_GIF_RESULTS: ReadonlyArray<Gif> = [];
+
+export function selectAutocompleteGifResults(
+	state: GifAutocompleteSearchState,
+	searchQuery: string,
+): ReadonlyArray<Gif> {
+	if (searchQuery.length === 0) {
+		return NO_GIF_RESULTS;
+	}
+	return state.results;
+}
+
 interface MutableValue<T> {
 	current: T;
 }
@@ -37,7 +50,6 @@ export function useAutocompleteGifSearch({
 	setState,
 }: GifAutocompleteSearchLifecycle): void {
 	useEffect(() => {
-		let disposed = false;
 		if (debounceTimerRef.current != null) {
 			clearTimeout(debounceTimerRef.current);
 			debounceTimerRef.current = null;
@@ -64,25 +76,24 @@ export function useAutocompleteGifSearch({
 		debounceTimerRef.current = setTimeout(() => {
 			debounceTimerRef.current = null;
 			currentSearchRef.current = query;
-			setState({status: 'loading', query, results: []});
+			setState((previous) => ({status: 'loading', query, results: previous.results}));
 			GifCommands.search(query)
 				.then((gifs) => {
 					cacheRef.current.set(query, gifs);
-					if (disposed || currentSearchRef.current !== query) {
+					if (currentSearchRef.current !== query) {
 						return;
 					}
 					setState({status: 'success', query, results: gifs});
 				})
 				.catch((error) => {
-					if (disposed || currentSearchRef.current !== query) {
+					if (currentSearchRef.current !== query) {
 						return;
 					}
 					logger.error('GIF search failed', error);
 					setState({status: 'error', query, results: []});
 				});
-		}, 300);
+		}, GIF_SEARCH_DEBOUNCE_MS);
 		return () => {
-			disposed = true;
 			if (debounceTimerRef.current != null) {
 				clearTimeout(debounceTimerRef.current);
 				debounceTimerRef.current = null;

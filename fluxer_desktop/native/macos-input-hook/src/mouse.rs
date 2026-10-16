@@ -7,16 +7,11 @@ pub enum CgEventType {
     LeftMouseUp = 2,
     RightMouseDown = 3,
     RightMouseUp = 4,
-    MouseMoved = 5,
-    LeftMouseDragged = 6,
-    RightMouseDragged = 7,
     KeyDown = 10,
     KeyUp = 11,
     FlagsChanged = 12,
-    ScrollWheel = 22,
     OtherMouseDown = 25,
     OtherMouseUp = 26,
-    OtherMouseDragged = 27,
 }
 
 impl CgEventType {
@@ -26,16 +21,11 @@ impl CgEventType {
             2 => Self::LeftMouseUp,
             3 => Self::RightMouseDown,
             4 => Self::RightMouseUp,
-            5 => Self::MouseMoved,
-            6 => Self::LeftMouseDragged,
-            7 => Self::RightMouseDragged,
             10 => Self::KeyDown,
             11 => Self::KeyUp,
             12 => Self::FlagsChanged,
-            22 => Self::ScrollWheel,
             25 => Self::OtherMouseDown,
             26 => Self::OtherMouseUp,
-            27 => Self::OtherMouseDragged,
             _ => return None,
         })
     }
@@ -66,64 +56,4 @@ pub fn is_down(event_type: CgEventType) -> bool {
         event_type,
         CgEventType::LeftMouseDown | CgEventType::RightMouseDown | CgEventType::OtherMouseDown
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn left_and_right_buttons_map_to_0_and_2() {
-        assert_eq!(
-            Classification::Button(0),
-            classify(CgEventType::LeftMouseDown, 0)
-        );
-        assert_eq!(
-            Classification::Button(2),
-            classify(CgEventType::RightMouseUp, 0)
-        );
-    }
-
-    #[test]
-    fn middle_button_other_2_maps_to_1() {
-        assert_eq!(
-            Classification::Button(1),
-            classify(CgEventType::OtherMouseDown, 2)
-        );
-    }
-
-    #[test]
-    fn back_forward_other_3_4_map_to_3_and_4() {
-        assert_eq!(
-            Classification::Button(3),
-            classify(CgEventType::OtherMouseDown, 3)
-        );
-        assert_eq!(
-            Classification::Button(4),
-            classify(CgEventType::OtherMouseUp, 4)
-        );
-    }
-
-    #[test]
-    fn unknown_other_button_is_ignored() {
-        assert_eq!(
-            Classification::Ignored,
-            classify(CgEventType::OtherMouseDown, 99)
-        );
-    }
-
-    #[test]
-    fn is_down_distinguishes_press_from_release() {
-        assert!(is_down(CgEventType::LeftMouseDown));
-        assert!(!is_down(CgEventType::LeftMouseUp));
-        assert!(is_down(CgEventType::OtherMouseDown));
-        assert!(!is_down(CgEventType::MouseMoved));
-    }
-
-    #[test]
-    fn from_u32_maps_known_event_types() {
-        assert_eq!(Some(CgEventType::LeftMouseDown), CgEventType::from_u32(1));
-        assert_eq!(Some(CgEventType::ScrollWheel), CgEventType::from_u32(22));
-        assert_eq!(None, CgEventType::from_u32(999));
-    }
 }

@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
-import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
-import type {AnimationPlaybackControls, MotionValue} from 'framer-motion';
-import {animate, useMotionValue, useMotionValueEvent, useReducedMotion} from 'framer-motion';
-import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {
 	clampPanForScale,
 	clampScale,
@@ -14,7 +8,6 @@ import {
 	getCentroid,
 	getDistance,
 	getViewportPoint,
-	getWheelZoomFactor,
 	isDefaultTransform,
 	MAX_ZOOM_SCALE,
 	MIN_ZOOM_SCALE,
@@ -23,8 +16,14 @@ import {
 	TAP_MOVE_THRESHOLD,
 	ZOOM_STATE_EPSILON,
 	ZOOM_STEP,
-} from './PanZoomMath';
-import {useLatestRef} from './useLatestRef';
+} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomMath';
+import {useLatestRef} from '@app/features/messaging/components/modals/media_modal/pan_zoom/useLatestRef';
+import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
+import type {AnimationPlaybackControls, MotionValue} from 'framer-motion';
+import {animate, useMotionValue, useReducedMotion} from 'framer-motion';
+import type React from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 interface PointerRecord extends Point {
 	pointerId: number;
@@ -39,6 +38,7 @@ interface PanGesture {
 	moved: boolean;
 	startedOnContent: boolean;
 	startedOnBackdrop: boolean;
+	followsPinch: boolean;
 }
 
 interface PinchGesture {
@@ -60,18 +60,16 @@ export interface PanZoomTransformSnapshot {
 	zoomState: ZoomState;
 	isDragging: boolean;
 	isDefault: boolean;
+	canZoomIn: boolean;
+	canZoomOut: boolean;
 }
 
 export interface UsePanZoomSurfaceOptions {
 	zoomState?: ZoomState;
-	minScale?: number;
 	maxScale?: number;
 	zoomedScale?: number;
-	preferNaturalZoomScale?: boolean;
 	disabled?: boolean;
 	panDisabled?: boolean;
-	wheelEnabled?: boolean;
-	pinchEnabled?: boolean;
 	doubleClickEnabled?: boolean;
 	tapToToggleZoom?: boolean;
 	resetKey?: unknown;
@@ -107,7 +105,6 @@ export interface PanZoomSurfaceController {
 	viewportBindings: PanZoomSurfaceBindings;
 	contentBindings: PanZoomContentBindings;
 	zoomTo: (state: ZoomState, origin?: Point) => void;
-	zoomBy: (factor: number, origin?: Point) => void;
 	zoomIn: (origin?: Point) => void;
 	zoomOut: (origin?: Point) => void;
 	reset: () => void;
@@ -115,11 +112,14 @@ export interface PanZoomSurfaceController {
 }
 
 const ZOOM_TRANSITION = {
-	type: 'tween' as const,
-	duration: 0.18,
-	ease: [0.22, 1, 0.36, 1] as const,
+	type: 'spring' as const,
+	stiffness: 300,
+	damping: 30,
+	mass: 1,
 };
 const NON_PASSIVE_EVENT_LISTENER_OPTIONS: AddEventListenerOptions = {passive: false};
+const MEASURED_BOX_SELECTOR = '[data-pan-zoom-measured-box]';
+const MEASURED_ELEMENT_SELECTOR = 'img, video, canvas, svg';
 
 function toZoomState(scale: number, minScale: number): ZoomState {
 	return scale <= minScale + ZOOM_STATE_EPSILON ? 'fit' : 'zoomed';
@@ -133,17 +133,32 @@ function getPointerRecords(records: Map<number, PointerRecord>): Array<PointerRe
 	return Array.from(records.values());
 }
 
+function getMediaCandidates(content: HTMLElement): Array<Element> {
+	const measuredBox = content.querySelector<HTMLElement>(MEASURED_BOX_SELECTOR) ?? content;
+	return Array.from(measuredBox.querySelectorAll(MEASURED_ELEMENT_SELECTOR));
+}
+
+function findMediaElement(content: HTMLElement): Element | null {
+	let widest: Element | null = null;
+	let widestArea = 0;
+	for (const candidate of getMediaCandidates(content)) {
+		const rect = candidate.getBoundingClientRect();
+		const area = rect.width * rect.height;
+		if (area > widestArea) {
+			widestArea = area;
+			widest = candidate;
+		}
+	}
+	return widest;
+}
+
 export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSurfaceController {
 	const {
 		zoomState: controlledZoomState,
-		minScale = MIN_ZOOM_SCALE,
 		maxScale = MAX_ZOOM_SCALE,
 		zoomedScale = DEFAULT_ZOOM_SCALE,
-		preferNaturalZoomScale = false,
 		disabled = false,
 		panDisabled = false,
-		wheelEnabled = true,
-		pinchEnabled = true,
 		doubleClickEnabled = true,
 		tapToToggleZoom = false,
 		resetKey,
@@ -156,7 +171,8 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const contentRef = useRef<HTMLDivElement>(null);
 	const x = useMotionValue(0);
 	const y = useMotionValue(0);
-	const scale = useMotionValue(minScale);
+	const scale = useMotionValue(MIN_ZOOM_SCALE);
+	const requestedTransformRef = useRef({scale: MIN_ZOOM_SCALE, x: 0, y: 0});
 	const prefersReducedMotion = useReducedMotion();
 	const [internalZoomState, setInternalZoomState] = useState<ZoomState>(controlledZoomState ?? 'fit');
 	const [isDragging, setIsDragging] = useState(false);
@@ -166,7 +182,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const metricsRef = useRef<PanZoomMetrics | null>(null);
 	const viewportRectRef = useRef<DOMRectReadOnly | null>(null);
 	const animationControlsRef = useRef<Array<AnimationPlaybackControls>>([]);
-	const transformFrameRef = useRef<number | null>(null);
+	const metricsFrameRef = useRef<number | null>(null);
 	const isDraggingRef = useRef(false);
 	const lastCommittedZoomStateRef = useRef<ZoomState>(controlledZoomState ?? 'fit');
 	const controlledZoomStateRef = useLatestRef(controlledZoomState);
@@ -175,64 +191,44 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const onTapRef = useLatestRef(onTap);
 	const onBackdropTapRef = useLatestRef(onBackdropTap);
 	const activeZoomState = controlledZoomState ?? internalZoomState;
-	const minScaleRef = useLatestRef(minScale);
 	const maxScaleRef = useLatestRef(maxScale);
 	const zoomedScaleRef = useLatestRef(zoomedScale);
-	const preferNaturalZoomScaleRef = useLatestRef(preferNaturalZoomScale);
 	const disabledRef = useLatestRef(disabled);
 	const panDisabledRef = useLatestRef(panDisabled);
 	const stopAnimations = useCallback(() => {
+		if (animationControlsRef.current.length === 0) return;
 		for (const controls of animationControlsRef.current) {
 			controls.stop();
 		}
 		animationControlsRef.current = [];
-	}, []);
+		requestedTransformRef.current = {scale: scale.get(), x: x.get(), y: y.get()};
+	}, [scale, x, y]);
 	const measureMetrics = useCallback((): PanZoomMetrics | null => {
 		const viewport = viewportRef.current;
 		const content = contentRef.current;
 		if (!viewport || !content) return null;
 		const viewportRect = viewport.getBoundingClientRect();
 		viewportRectRef.current = viewportRect;
-		const contentWidth = content.offsetWidth || viewportRect.width;
-		const contentHeight = content.offsetHeight || viewportRect.height;
+		const activeScale = scale.get();
+		const inverseScale = activeScale > 0 ? 1 / activeScale : 1;
+		const mediaRect = findMediaElement(content)?.getBoundingClientRect();
+		const hasMediaRect = mediaRect != null && mediaRect.width > 0 && mediaRect.height > 0;
 		const metrics = {
 			viewportWidth: viewportRect.width,
 			viewportHeight: viewportRect.height,
-			contentWidth,
-			contentHeight,
+			contentWidth: hasMediaRect ? mediaRect.width * inverseScale : content.offsetWidth || viewportRect.width,
+			contentHeight: hasMediaRect ? mediaRect.height * inverseScale : content.offsetHeight || viewportRect.height,
 		};
 		metricsRef.current = metrics;
 		return metrics;
-	}, []);
+	}, [scale]);
 	const getMetrics = useCallback((): PanZoomMetrics | null => metricsRef.current ?? measureMetrics(), [measureMetrics]);
-	const updateDragging = useCallback((nextIsDragging: boolean) => {
-		if (isDraggingRef.current === nextIsDragging) return;
-		isDraggingRef.current = nextIsDragging;
-		setIsDragging(nextIsDragging);
-	}, []);
-	useLayoutEffect(() => {
-		measureMetrics();
-		const viewport = viewportRef.current;
-		const content = contentRef.current;
-		if (!viewport || !content) return;
-		const ownerWindow = viewport.ownerDocument.defaultView;
-		const handleResize = () => {
+	const scheduleMetricsRefresh = useCallback(() => {
+		if (typeof window === 'undefined' || metricsFrameRef.current != null) return;
+		metricsFrameRef.current = window.requestAnimationFrame(() => {
+			metricsFrameRef.current = null;
 			measureMetrics();
-		};
-		ownerWindow?.addEventListener('resize', handleResize);
-		const ResizeObserverCtor = ownerWindow?.ResizeObserver;
-		if (!ResizeObserverCtor) {
-			return () => {
-				ownerWindow?.removeEventListener('resize', handleResize);
-			};
-		}
-		const observer = new ResizeObserverCtor(handleResize);
-		observer.observe(viewport);
-		observer.observe(content);
-		return () => {
-			observer.disconnect();
-			ownerWindow?.removeEventListener('resize', handleResize);
-		};
+		});
 	}, [measureMetrics]);
 	const commitZoomState = useCallback(
 		(nextZoomState: ZoomState, emit = true) => {
@@ -247,75 +243,101 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		},
 		[controlledZoomStateRef, onZoomStateChangeRef],
 	);
-	const getSnapshot = useCallback(
-		(): PanZoomTransformSnapshot => ({
-			scale: scale.get(),
-			x: x.get(),
-			y: y.get(),
+	const canStepScale = useCallback(
+		(fromScale: number, factor: number) =>
+			clampScale(fromScale * factor, MIN_ZOOM_SCALE, maxScaleRef.current) !== fromScale,
+		[maxScaleRef],
+	);
+	const getSnapshot = useCallback((): PanZoomTransformSnapshot => {
+		const requested = requestedTransformRef.current;
+		return {
+			scale: requested.scale,
+			x: requested.x,
+			y: requested.y,
 			zoomState: lastCommittedZoomStateRef.current,
 			isDragging: gestureRef.current.mode !== 'idle',
 			isDefault: isDefaultTransform({
-				scale: scale.get(),
-				x: x.get(),
-				y: y.get(),
-				minScale: minScaleRef.current,
+				scale: requested.scale,
+				x: requested.x,
+				y: requested.y,
+				minScale: MIN_ZOOM_SCALE,
 			}),
-		}),
-		[minScaleRef, scale, x, y],
+			canZoomIn: canStepScale(requested.scale, ZOOM_STEP),
+			canZoomOut: canStepScale(requested.scale, 1 / ZOOM_STEP),
+		};
+	}, [canStepScale]);
+	const commitRequestedTransform = useCallback(
+		(next: {scale: number; x: number; y: number}) => {
+			requestedTransformRef.current = next;
+			commitZoomState(toZoomState(next.scale, MIN_ZOOM_SCALE));
+			onTransformChangeRef.current?.(getSnapshot());
+		},
+		[commitZoomState, getSnapshot, onTransformChangeRef],
 	);
-	const emitTransformChange = useCallback(() => {
-		if (typeof window === 'undefined') {
-			onTransformChangeRef.current?.(getSnapshot());
-			return;
-		}
-		if (transformFrameRef.current != null) {
-			return;
-		}
-		transformFrameRef.current = window.requestAnimationFrame(() => {
-			transformFrameRef.current = null;
-			onTransformChangeRef.current?.(getSnapshot());
-		});
-	}, [getSnapshot, onTransformChangeRef]);
-	const getNaturalContentZoomScale = useCallback((): number | null => {
+	const clampPanToMetrics = useCallback(
+		(metrics: PanZoomMetrics | null) => {
+			if (!metrics) return;
+			const currentX = x.get();
+			const currentY = y.get();
+			const clamped = clampPanForScale({x: currentX, y: currentY}, scale.get(), metrics);
+			if (clamped.x === currentX && clamped.y === currentY) return;
+			x.set(clamped.x);
+			y.set(clamped.y);
+			commitRequestedTransform({scale: requestedTransformRef.current.scale, x: clamped.x, y: clamped.y});
+		},
+		[commitRequestedTransform, scale, x, y],
+	);
+	const updateDragging = useCallback((nextIsDragging: boolean) => {
+		if (isDraggingRef.current === nextIsDragging) return;
+		isDraggingRef.current = nextIsDragging;
+		setIsDragging(nextIsDragging);
+	}, []);
+	useLayoutEffect(() => {
+		measureMetrics();
+		const viewport = viewportRef.current;
 		const content = contentRef.current;
-		if (!content) return null;
-		const ownerWindow = content.ownerDocument.defaultView;
-		if (!ownerWindow) return null;
-		const media = content.querySelector('img, video, canvas, svg');
-		if (!(media instanceof ownerWindow.HTMLElement || media instanceof ownerWindow.SVGSVGElement)) return null;
-		const renderedWidth = media instanceof ownerWindow.SVGSVGElement ? media.clientWidth : media.offsetWidth;
-		const renderedHeight = media instanceof ownerWindow.SVGSVGElement ? media.clientHeight : media.offsetHeight;
-		if (renderedWidth <= 0 || renderedHeight <= 0) return null;
-		let naturalWidth = 0;
-		let naturalHeight = 0;
-		if (media instanceof ownerWindow.HTMLImageElement) {
-			naturalWidth = media.naturalWidth;
-			naturalHeight = media.naturalHeight;
-		} else if (media instanceof ownerWindow.HTMLVideoElement) {
-			naturalWidth = media.videoWidth;
-			naturalHeight = media.videoHeight;
-		} else if (media instanceof ownerWindow.HTMLCanvasElement) {
-			naturalWidth = media.width;
-			naturalHeight = media.height;
-		} else if (media instanceof ownerWindow.SVGSVGElement) {
-			naturalWidth = media.viewBox.baseVal.width || media.clientWidth;
-			naturalHeight = media.viewBox.baseVal.height || media.clientHeight;
+		if (!viewport || !content) return;
+		const ownerWindow = viewport.ownerDocument.defaultView;
+		const handleResize = () => {
+			clampPanToMetrics(measureMetrics());
+		};
+		const handleSettledTransform = (event: Event) => {
+			if ((event as TransitionEvent).propertyName !== 'transform') return;
+			if (event.target === content) return;
+			clampPanToMetrics(measureMetrics());
+		};
+		ownerWindow?.addEventListener('resize', handleResize);
+		content.addEventListener('transitionend', handleSettledTransform);
+		content.addEventListener('transitioncancel', handleSettledTransform);
+		const ResizeObserverCtor = ownerWindow?.ResizeObserver;
+		if (!ResizeObserverCtor) {
+			return () => {
+				ownerWindow?.removeEventListener('resize', handleResize);
+				content.removeEventListener('transitionend', handleSettledTransform);
+				content.removeEventListener('transitioncancel', handleSettledTransform);
+			};
 		}
-		if (naturalWidth <= 0 || naturalHeight <= 0) return null;
-		const naturalScale = Math.max(naturalWidth / renderedWidth, naturalHeight / renderedHeight, minScaleRef.current);
-		return Number.isFinite(naturalScale) ? naturalScale : null;
-	}, [minScaleRef]);
-	const getZoomedScale = useCallback(() => {
-		const naturalScale = preferNaturalZoomScaleRef.current ? getNaturalContentZoomScale() : null;
-		const targetScale =
-			naturalScale != null && naturalScale > minScaleRef.current + ZOOM_STATE_EPSILON
-				? naturalScale
-				: zoomedScaleRef.current;
-		return clampScale(targetScale, minScaleRef.current, maxScaleRef.current);
-	}, [getNaturalContentZoomScale, maxScaleRef, minScaleRef, preferNaturalZoomScaleRef, zoomedScaleRef]);
+		const observer = new ResizeObserverCtor(handleResize);
+		observer.observe(viewport);
+		observer.observe(content);
+		for (const candidate of getMediaCandidates(content)) {
+			observer.observe(candidate);
+		}
+		return () => {
+			observer.disconnect();
+			ownerWindow?.removeEventListener('resize', handleResize);
+			content.removeEventListener('transitionend', handleSettledTransform);
+			content.removeEventListener('transitioncancel', handleSettledTransform);
+		};
+	}, [clampPanToMetrics, measureMetrics, resetKey]);
+	const getZoomedScale = useCallback(
+		() => clampScale(zoomedScaleRef.current, MIN_ZOOM_SCALE, maxScaleRef.current),
+		[maxScaleRef, zoomedScaleRef],
+	);
 	const setTransform = useCallback(
 		(next: {scale: number; x: number; y: number}, animated: boolean) => {
 			stopAnimations();
+			commitRequestedTransform(next);
 			if (animated && !prefersReducedMotion) {
 				const start = {
 					scale: scale.get(),
@@ -333,7 +355,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 						x.set(next.x);
 						y.set(next.y);
 						scale.set(next.scale);
-						commitZoomState(toZoomState(next.scale, minScaleRef.current));
+						animationControlsRef.current = [];
 					},
 				});
 				animationControlsRef.current = [controls];
@@ -341,61 +363,54 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				x.set(next.x);
 				y.set(next.y);
 				scale.set(next.scale);
-				commitZoomState(toZoomState(next.scale, minScaleRef.current));
 			}
 		},
-		[commitZoomState, minScaleRef, prefersReducedMotion, scale, stopAnimations, x, y],
+		[commitRequestedTransform, prefersReducedMotion, scale, stopAnimations, x, y],
 	);
 	const zoomTo = useCallback(
 		(nextZoomState: ZoomState, origin?: Point) => {
-			const metrics = getMetrics();
+			const metrics = measureMetrics();
 			if (!metrics) return;
-			const nextScale = nextZoomState === 'fit' ? minScaleRef.current : getZoomedScale();
-			const resolvedZoomState = toZoomState(nextScale, minScaleRef.current);
-			const currentScale = scale.get();
-			const currentPoint = {x: x.get(), y: y.get()};
+			const nextScale = nextZoomState === 'fit' ? MIN_ZOOM_SCALE : getZoomedScale();
+			const requested = requestedTransformRef.current;
 			const nextPoint =
 				nextZoomState === 'fit'
 					? {x: 0, y: 0}
 					: getAnchoredZoomPoint({
 							origin: origin ?? {x: 0, y: 0},
-							current: currentPoint,
-							currentScale,
+							current: {x: requested.x, y: requested.y},
+							currentScale: requested.scale,
 							nextScale,
 							metrics,
 						});
-			commitZoomState(resolvedZoomState);
 			setTransform({scale: nextScale, x: nextPoint.x, y: nextPoint.y}, true);
 		},
-		[commitZoomState, getMetrics, getZoomedScale, minScaleRef, scale, setTransform, x, y],
+		[getZoomedScale, measureMetrics, setTransform],
 	);
 	const zoomBy = useCallback(
 		(factor: number, origin?: Point) => {
-			const metrics = getMetrics();
+			const metrics = measureMetrics();
 			if (!metrics) return;
-			const currentScale = scale.get();
-			const nextScale = clampScale(currentScale * factor, minScaleRef.current, maxScaleRef.current);
-			const currentPoint = {x: x.get(), y: y.get()};
-			const nextPoint =
-				nextScale <= minScaleRef.current + ZOOM_STATE_EPSILON
-					? {x: 0, y: 0}
-					: getAnchoredZoomPoint({
-							origin: origin ?? {x: 0, y: 0},
-							current: currentPoint,
-							currentScale,
-							nextScale,
-							metrics,
-						});
+			const requested = requestedTransformRef.current;
+			const currentScale = requested.scale;
+			const nextScale = clampScale(currentScale * factor, MIN_ZOOM_SCALE, maxScaleRef.current);
+			if (nextScale === currentScale) return;
+			const nextPoint = getAnchoredZoomPoint({
+				origin: origin ?? {x: 0, y: 0},
+				current: {x: requested.x, y: requested.y},
+				currentScale,
+				nextScale,
+				metrics,
+			});
 			setTransform({scale: nextScale, x: nextPoint.x, y: nextPoint.y}, true);
 		},
-		[getMetrics, maxScaleRef, minScaleRef, scale, setTransform, x, y],
+		[maxScaleRef, measureMetrics, setTransform],
 	);
 	const zoomIn = useCallback((origin?: Point) => zoomBy(ZOOM_STEP, origin), [zoomBy]);
 	const zoomOut = useCallback((origin?: Point) => zoomBy(1 / ZOOM_STEP, origin), [zoomBy]);
 	const reset = useCallback(() => {
-		commitZoomState('fit');
-		setTransform({scale: minScaleRef.current, x: 0, y: 0}, true);
-	}, [commitZoomState, minScaleRef, setTransform]);
+		setTransform({scale: MIN_ZOOM_SCALE, x: 0, y: 0}, true);
+	}, [setTransform]);
 	useEffect(() => {
 		if (controlledZoomState === undefined) return;
 		if (lastCommittedZoomStateRef.current === controlledZoomState) return;
@@ -403,25 +418,20 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		zoomTo(controlledZoomState);
 	}, [commitZoomState, controlledZoomState, zoomTo]);
 	useEffect(() => {
+		measureMetrics();
 		reset();
-	}, [reset, resetKey]);
+	}, [measureMetrics, reset, resetKey]);
 	useEffect(() => {
 		return () => stopAnimations();
 	}, [stopAnimations]);
 	useEffect(() => {
 		return () => {
-			if (transformFrameRef.current != null && typeof window !== 'undefined') {
-				window.cancelAnimationFrame(transformFrameRef.current);
+			if (typeof window === 'undefined') return;
+			if (metricsFrameRef.current != null) {
+				window.cancelAnimationFrame(metricsFrameRef.current);
 			}
 		};
 	}, []);
-	useMotionValueEvent(scale, 'change', (latestScale) => {
-		const nextZoomState = toZoomState(latestScale, minScaleRef.current);
-		commitZoomState(nextZoomState);
-		emitTransformChange();
-	});
-	useMotionValueEvent(x, 'change', emitTransformChange);
-	useMotionValueEvent(y, 'change', emitTransformChange);
 	const updatePointerRecord = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
 		pointerRecordsRef.current.set(event.pointerId, {
 			pointerId: event.pointerId,
@@ -443,41 +453,25 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	);
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
-			if (disabledRef.current || !wheelEnabled) return;
+			if (disabledRef.current || event.ctrlKey || panDisabledRef.current) return;
+			const currentScale = scale.get();
+			if (currentScale <= MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON) return;
 			const metrics = getMetrics();
-			const origin = getViewportRelativePoint(event.clientX, event.clientY);
-			if (!metrics || !origin) return;
+			if (!metrics) return;
 			event.preventDefault();
 			stopAnimations();
-			const currentScale = scale.get();
-			const nextScale = clampScale(
-				currentScale * getWheelZoomFactor(event.deltaY, event.ctrlKey),
-				minScaleRef.current,
-				maxScaleRef.current,
+			const requested = requestedTransformRef.current;
+			const pannedPoint = clampPanForScale(
+				{x: requested.x - event.deltaX, y: requested.y - event.deltaY},
+				requested.scale,
+				metrics,
 			);
-			const currentPoint = {x: x.get(), y: y.get()};
-			const nextPoint =
-				nextScale <= minScaleRef.current + ZOOM_STATE_EPSILON
-					? {x: 0, y: 0}
-					: getAnchoredZoomPoint({origin, current: currentPoint, currentScale, nextScale, metrics});
-			x.set(nextPoint.x);
-			y.set(nextPoint.y);
-			scale.set(nextScale);
-			commitZoomState(toZoomState(nextScale, minScaleRef.current));
+			x.set(pannedPoint.x);
+			y.set(pannedPoint.y);
+			commitRequestedTransform({scale: requested.scale, x: pannedPoint.x, y: pannedPoint.y});
+			scheduleMetricsRefresh();
 		},
-		[
-			commitZoomState,
-			disabledRef,
-			getMetrics,
-			getViewportRelativePoint,
-			maxScaleRef,
-			minScaleRef,
-			scale,
-			stopAnimations,
-			wheelEnabled,
-			x,
-			y,
-		],
+		[commitRequestedTransform, disabledRef, getMetrics, panDisabledRef, scale, scheduleMetricsRefresh, stopAnimations],
 	);
 	useEffect(() => {
 		const viewport = viewportRef.current;
@@ -511,13 +505,14 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 					moved: false,
 					startedOnContent,
 					startedOnBackdrop,
+					followsPinch: false,
 				};
 				updateDragging(
-					!disabledRef.current && !panDisabledRef.current && currentScale > minScaleRef.current + ZOOM_STATE_EPSILON,
+					!disabledRef.current && !panDisabledRef.current && currentScale > MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON,
 				);
 				return;
 			}
-			if (!pinchEnabled || disabledRef.current || pointerRecordsRef.current.size !== 2) return;
+			if (disabledRef.current || pointerRecordsRef.current.size !== 2) return;
 			const records = getPointerRecords(pointerRecordsRef.current);
 			const viewportRect = viewportRectRef.current;
 			if (!viewportRect || records.length !== 2) return;
@@ -534,19 +529,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			};
 			updateDragging(true);
 		},
-		[
-			disabledRef,
-			measureMetrics,
-			minScaleRef,
-			panDisabledRef,
-			pinchEnabled,
-			scale,
-			stopAnimations,
-			updateDragging,
-			updatePointerRecord,
-			x,
-			y,
-		],
+		[disabledRef, measureMetrics, panDisabledRef, scale, stopAnimations, updateDragging, updatePointerRecord, x, y],
 	);
 	const handlePointerMove = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
@@ -561,7 +544,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				const dy = event.clientY - gesture.startPointer.y;
 				const moved = Math.hypot(dx, dy) >= TAP_MOVE_THRESHOLD;
 				gesture.moved = gesture.moved || moved;
-				if (panDisabledRef.current || scale.get() <= minScaleRef.current + ZOOM_STATE_EPSILON) return;
+				if (panDisabledRef.current || scale.get() <= MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON) return;
 				const nextPoint = clampPanForScale(
 					{
 						x: gesture.startX + dx,
@@ -572,10 +555,10 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				);
 				x.set(nextPoint.x);
 				y.set(nextPoint.y);
+				commitRequestedTransform({scale: requestedTransformRef.current.scale, x: nextPoint.x, y: nextPoint.y});
 				updateDragging(true);
 				return;
 			}
-			if (!pinchEnabled) return;
 			const records = getPointerRecords(pointerRecordsRef.current);
 			if (records.length < 2) return;
 			const viewportRect = viewportRectRef.current;
@@ -586,7 +569,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			const distance = Math.max(1, getDistance(first, second));
 			const nextScale = Math.min(
 				maxScaleRef.current,
-				Math.max(minScaleRef.current, gesture.startScale * (distance / gesture.startDistance)),
+				Math.max(MIN_ZOOM_SCALE, gesture.startScale * (distance / gesture.startDistance)),
 			);
 			const localPoint = {
 				x: (gesture.startCentroid.x - gesture.startX) / gesture.startScale,
@@ -604,16 +587,14 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			scale.set(nextScale);
 			x.set(nextPoint.x);
 			y.set(nextPoint.y);
-			commitZoomState(toZoomState(nextScale, minScaleRef.current));
+			commitRequestedTransform({scale: nextScale, x: nextPoint.x, y: nextPoint.y});
 		},
 		[
-			commitZoomState,
+			commitRequestedTransform,
 			disabledRef,
 			getMetrics,
 			maxScaleRef,
-			minScaleRef,
 			panDisabledRef,
-			pinchEnabled,
 			scale,
 			updateDragging,
 			updatePointerRecord,
@@ -632,7 +613,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 				const moved = gesture.moved || Math.hypot(dx, dy) >= TAP_MOVE_THRESHOLD;
 				updateDragging(false);
 				gestureRef.current = {mode: 'idle'};
-				if (!moved) {
+				if (!moved && !gesture.followsPinch) {
 					if (gesture.startedOnBackdrop && !wasPointerDownInside(contentRef.current)) {
 						onBackdropTapRef.current?.();
 						return;
@@ -657,8 +638,9 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 					moved: false,
 					startedOnContent: true,
 					startedOnBackdrop: false,
+					followsPinch: true,
 				};
-				updateDragging(scale.get() > minScaleRef.current + ZOOM_STATE_EPSILON);
+				updateDragging(scale.get() > MIN_ZOOM_SCALE + ZOOM_STATE_EPSILON);
 				return;
 			}
 			if (pointerRecordsRef.current.size === 0) {
@@ -669,7 +651,6 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 		[
 			disabledRef,
 			getViewportRelativePoint,
-			minScaleRef,
 			onBackdropTapRef,
 			onTapRef,
 			scale,
@@ -701,9 +682,10 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 	const cursor = useMemo(() => {
 		if (disabled) return 'default';
 		if (!isHoveringContent) return 'default';
+		if (tapToToggleZoom) return activeZoomState === 'zoomed' ? 'zoom-out' : 'zoom-in';
 		if (isDragging) return 'grabbing';
-		if (activeZoomState === 'zoomed') return tapToToggleZoom ? 'zoom-out' : 'grab';
-		return tapToToggleZoom || doubleClickEnabled ? 'zoom-in' : 'default';
+		if (activeZoomState === 'zoomed') return 'grab';
+		return doubleClickEnabled ? 'zoom-in' : 'default';
 	}, [activeZoomState, disabled, doubleClickEnabled, isDragging, isHoveringContent, tapToToggleZoom]);
 	return {
 		x,
@@ -727,7 +709,6 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			onPointerLeave: () => setIsHoveringContent(false),
 		},
 		zoomTo,
-		zoomBy,
 		zoomIn,
 		zoomOut,
 		reset,

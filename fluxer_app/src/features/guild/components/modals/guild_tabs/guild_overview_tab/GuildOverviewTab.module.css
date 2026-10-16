@@ -146,12 +146,6 @@
 	gap: var(--spacing-3);
 }
 
-.iconUploadDescription {
-	font-size: 0.75rem;
-	line-height: 1.35;
-	color: var(--text-primary-muted);
-}
-
 .errorMessage {
 	margin: var(--spacing-3) 0 0 0;
 	font-size: 0.75rem;
@@ -179,12 +173,6 @@
 	gap: var(--spacing-3);
 }
 
-.imageUploadDescription {
-	font-size: 0.75rem;
-	line-height: 1.35;
-	color: var(--text-primary-muted);
-}
-
 .imagePreviewColumn {
 	width: 100%;
 	display: flex;
@@ -196,19 +184,6 @@
 .imagePreviewColumn > * {
 	width: min(22.5rem, 100%);
 	margin-left: auto;
-}
-
-.settingsContent {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
-	gap: var(--spacing-5);
-	align-items: start;
-}
-
-.notificationOptions {
-	display: flex;
-	flex-direction: column;
-	gap: 0.625rem;
 }
 
 .dateTimePickerField {
@@ -252,37 +227,6 @@
 		height: 4.5rem;
 		border-radius: 50%;
 	}
-}
-
-.previewButtonContainer {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-}
-
-.previewButtonRow {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-}
-
-.previewButtonDescription {
-	font-size: 0.75rem;
-	line-height: 1.35;
-	color: var(--text-primary-muted);
-}
-
-.alignmentSection {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-	margin-top: var(--spacing-2);
-}
-
-.alignmentLabel {
-	font-size: 0.8125rem;
-	font-weight: 700;
-	color: var(--text-primary);
 }
 
 .alignmentControlsRow {

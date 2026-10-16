@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -30,12 +31,15 @@ const GiftInventoryNagbarContent = observer(function GiftInventoryNagbarContent(
 	const message = i18n._(GIFT_INVENTORY_MESSAGE_DESCRIPTOR, {count: unreadCount});
 	const handleOpenGiftInventory = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="gift_inventory"
-					data-flx="app.app-layout.nagbars.gift-inventory-nagbar.handle-open-gift-inventory.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="gift_inventory"
+						data-flx="app.app-layout.nagbars.gift-inventory-nagbar.handle-open-gift-inventory.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const handleDismiss = useCallback(() => {
@@ -44,8 +48,8 @@ const GiftInventoryNagbarContent = observer(function GiftInventoryNagbarContent(
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.gift-inventory-nagbar.nagbar"

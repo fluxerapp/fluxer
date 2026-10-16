@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createGuildID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	guildId: z.string(),

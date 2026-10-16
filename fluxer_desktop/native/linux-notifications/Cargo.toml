@@ -14,9 +14,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 async-io = "2.6.0"
 futures-lite = "2.6.1"
-napi = {version = "3.9.1", default-features = false, features = ["dyn-symbols", "napi8"]}
-napi-derive = "3.5.6"
-zbus = "5.16.0"
+napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
+napi-derive = "3.6.7"
+zbus = "5.19.0"
 
 [build-dependencies]
-napi-build = "2.3.2"
+napi-build = "2.4.3"

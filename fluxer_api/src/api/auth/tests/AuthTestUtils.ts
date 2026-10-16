@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface RegisterResponse {
 	user_id: string;
@@ -22,20 +22,10 @@ export interface LoginMfaResponse {
 	allowed_methods: Array<string>;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 }
 
-type LoginResponse =
-	| {
-			user_id: string;
-			token: string;
-	  }
-	| {
-			mfa: true;
-			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
-	  };
+type LoginResponse = LoginSuccessResponse | LoginMfaResponse;
 
 export interface UserMeResponse {
 	id: string;
@@ -133,7 +123,6 @@ export async function createTestAccount(
 	if (!params?.skipEmailVerification) {
 		const securityFlagsBuilder = createBuilder(harness, '').post(`/test/users/${reg.user_id}/security-flags`).body({
 			email_verified: true,
-			suspicious_activity_flags: 0,
 		});
 		if (ipAddress) {
 			securityFlagsBuilder.header('x-forwarded-for', ipAddress);
@@ -271,6 +260,22 @@ export function totpCodeNow(secret: string): string {
 	return generateTotpCode(secret, Date.now());
 }
 
+export async function loginWithTotp(
+	harness: ApiTestHarness,
+	account: TestAccount,
+	secret: string,
+): Promise<TestAccount> {
+	const login = await loginUser(harness, {email: account.email, password: account.password});
+	if (!('mfa' in login)) {
+		throw new Error('Expected MFA login');
+	}
+	const mfaLogin = await createBuilder<{token: string}>(harness, '')
+		.post('/auth/login/mfa/totp')
+		.body({ticket: login.ticket, code: totpCodeNow(secret)})
+		.execute();
+	return {...account, token: mfaLogin.token};
+}
+
 export async function seedMfaTicket(
 	harness: ApiTestHarness,
 	ticket: string,
@@ -336,12 +341,12 @@ export async function enableSso(
 		redirect_uri: '',
 		...overrides,
 	};
-	await createBuilder(harness, token).post('/admin/instance-config/update').body({sso: ssoConfig}).execute();
+	await createBuilder(harness, token).patch('/admin/instance/config').body({sso: ssoConfig}).execute();
 }
 
 export async function disableSso(harness: ApiTestHarness, token: string): Promise<void> {
 	await createBuilder(harness, token)
-		.post('/admin/instance-config/update')
+		.patch('/admin/instance/config')
 		.body({
 			sso: {
 				enabled: false,

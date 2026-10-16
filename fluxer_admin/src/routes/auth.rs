@@ -4,14 +4,17 @@ use crate::{
     api::client::AdminApiClient,
     config::AdminConfig,
     oauth2,
-    session::{self, LEGACY_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_MAX_AGE},
+    session::{
+        self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookies,
+        clear_cookie_values,
+    },
     state::AppState,
     templates::pages::login,
 };
 use axum::{
     Json, Router,
     extract::{Query, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
 };
@@ -87,7 +90,8 @@ async fn login_page(
         Some(_) => Some("Login error. Please try again."),
         None => None,
     };
-    Html(login::login_page(config, error_msg).into_string()).into_response()
+    let branding = state.self_hosted_branding().await;
+    Html(login::login_page(config, branding.as_ref(), error_msg).into_string()).into_response()
 }
 
 async fn auth_start(State(state): State<AppState>) -> Response {
@@ -187,7 +191,7 @@ async fn oauth2_callback_finish(
 
     let session_cookie_value =
         session::create_session(&user.id, &token.access_token, &config.secret_key_base);
-    let secure = if config.is_production() {
+    let secure = if config.secure_cookies() {
         "; Secure"
     } else {
         ""
@@ -201,7 +205,7 @@ async fn oauth2_callback_finish(
         secure
     );
 
-    let mut cookies = clear_session_cookie_values(config);
+    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
     cookies.push(session_cookie);
     oauth_finish_response(StatusCode::OK, &format!("{base}/dashboard"), &cookies)
 }
@@ -215,7 +219,7 @@ async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -
     }
     redirect_with_cookies(
         &format!("{}/login", config.base_path),
-        &clear_session_cookie_values(config),
+        &clear_cookie_values(SESSION_COOKIE_NAME, config),
     )
 }
 
@@ -348,7 +352,7 @@ fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&
     )
 }
 
-fn json_string(value: &str) -> String {
+pub(crate) fn json_string(value: &str) -> String {
     serde_json::to_string(value)
         .expect("JSON string serialization cannot fail")
         .replace('<', "\\u003c")
@@ -356,45 +360,6 @@ fn json_string(value: &str) -> String {
         .replace('&', "\\u0026")
         .replace('\u{2028}', "\\u2028")
         .replace('\u{2029}', "\\u2029")
-}
-
-fn admin_cookie_path(config: &AdminConfig) -> &str {
-    if config.base_path.is_empty() {
-        "/"
-    } else {
-        config.base_path.as_str()
-    }
-}
-
-fn clear_cookie_value(name: &str, path: &str) -> String {
-    format!("{name}=; Path={path}; HttpOnly; SameSite=Lax; Max-Age=0")
-}
-
-fn clear_cookie_values(name: &str, config: &AdminConfig) -> Vec<String> {
-    let admin_path = admin_cookie_path(config);
-    let mut cookies = vec![clear_cookie_value(name, admin_path)];
-    if admin_path != "/" {
-        cookies.push(clear_cookie_value(name, "/"));
-    }
-    cookies
-}
-
-fn clear_session_cookie_values(config: &AdminConfig) -> Vec<String> {
-    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
-    cookies.extend(clear_cookie_values(LEGACY_SESSION_COOKIE_NAME, config));
-    cookies
-}
-
-fn append_cookie(response: &mut Response, cookie: &str) {
-    if let Ok(value) = HeaderValue::from_str(cookie) {
-        response.headers_mut().append(header::SET_COOKIE, value);
-    }
-}
-
-fn append_cookies(response: &mut Response, cookies: &[String]) {
-    for cookie in cookies {
-        append_cookie(response, cookie);
-    }
 }
 
 fn redirect_with_cookies(url: &str, cookies: &[String]) -> Response {

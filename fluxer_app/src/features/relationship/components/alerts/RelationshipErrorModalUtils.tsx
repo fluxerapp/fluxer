@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n from '@app/app/I18n';
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
@@ -113,130 +111,122 @@ const IGNORE_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the ignore-friend-request error modal.',
 });
 
-interface ErrorContent {
-	title: string;
-	message: string;
-}
-
-function pushRelationshipErrorModal(getContent: () => ErrorContent, flx: string): void {
-	ModalCommands.push(
-		modal(() => {
-			const content = getContent();
-			return <GenericErrorModal title={content.title} message={content.message} data-flx={flx} />;
-		}),
-	);
-}
-
 export function showSendFriendRequestErrorModal(error: unknown): void {
 	const code = failureCode(error);
 	const apiMessage = failureMessage(error);
-	pushRelationshipErrorModal(() => {
-		const title = i18n._(SEND_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR);
-		let message: string;
-		switch (code) {
-			case APIErrorCodes.FRIEND_REQUEST_BLOCKED:
-				message = i18n._(NOT_ACCEPTING_FRIEND_REQUESTS_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER:
-				message = i18n._(UNBLOCK_FIRST_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.CANNOT_SEND_FRIEND_REQUEST_TO_SELF:
-				message = i18n._(CANNOT_FRIEND_SELF_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.ALREADY_FRIENDS:
-				message = i18n._(ALREADY_FRIENDS_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS:
-				message = i18n._(FINISH_SIGNING_UP_TO_SEND_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED:
-				message = i18n._(VERIFY_EMAIL_TO_SEND_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.MAX_FRIENDS:
-				message = i18n._(FRIENDS_LIST_FULL_MESSAGE_DESCRIPTOR);
-				break;
-			default:
-				message = apiMessage || i18n._(SEND_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR);
-				break;
-		}
-		return {title, message};
-	}, 'relationship.error-modal.send-friend-request');
+	showGenericErrorModal({
+		getContent: () => {
+			const title = i18n._(SEND_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR);
+			let message: string;
+			switch (code) {
+				case APIErrorCodes.FRIEND_REQUEST_BLOCKED:
+					message = i18n._(NOT_ACCEPTING_FRIEND_REQUESTS_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER:
+					message = i18n._(UNBLOCK_FIRST_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.CANNOT_SEND_FRIEND_REQUEST_TO_SELF:
+					message = i18n._(CANNOT_FRIEND_SELF_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.ALREADY_FRIENDS:
+					message = i18n._(ALREADY_FRIENDS_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS:
+					message = i18n._(FINISH_SIGNING_UP_TO_SEND_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED:
+					message = i18n._(VERIFY_EMAIL_TO_SEND_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.MAX_FRIENDS:
+					message = i18n._(FRIENDS_LIST_FULL_MESSAGE_DESCRIPTOR);
+					break;
+				default:
+					message = apiMessage || i18n._(SEND_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR);
+					break;
+			}
+			return {title, message};
+		},
+		dataFlx: 'relationship.error-modal.send-friend-request',
+	});
 }
 
 export function showAcceptFriendRequestErrorModal(error: unknown): void {
 	const code = failureCode(error);
-	pushRelationshipErrorModal(() => {
-		const title = i18n._(ACCEPT_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR);
-		let message: string;
-		switch (code) {
-			case APIErrorCodes.UNKNOWN_USER:
-			case APIErrorCodes.FRIEND_REQUEST_BLOCKED:
-				message = i18n._(REQUEST_NO_LONGER_AVAILABLE_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS:
-				message = i18n._(CLAIM_TO_ACCEPT_MESSAGE_DESCRIPTOR);
-				break;
-			case APIErrorCodes.MAX_FRIENDS:
-				message = i18n._(FRIENDS_LIST_FULL_MESSAGE_DESCRIPTOR);
-				break;
-			default:
-				message = i18n._(ACCEPT_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR);
-				break;
-		}
-		return {title, message};
-	}, 'relationship.error-modal.accept-friend-request');
+	showGenericErrorModal({
+		getContent: () => {
+			const title = i18n._(ACCEPT_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR);
+			let message: string;
+			switch (code) {
+				case APIErrorCodes.UNKNOWN_USER:
+				case APIErrorCodes.FRIEND_REQUEST_BLOCKED:
+					message = i18n._(REQUEST_NO_LONGER_AVAILABLE_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS:
+					message = i18n._(CLAIM_TO_ACCEPT_MESSAGE_DESCRIPTOR);
+					break;
+				case APIErrorCodes.MAX_FRIENDS:
+					message = i18n._(FRIENDS_LIST_FULL_MESSAGE_DESCRIPTOR);
+					break;
+				default:
+					message = i18n._(ACCEPT_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR);
+					break;
+			}
+			return {title, message};
+		},
+		dataFlx: 'relationship.error-modal.accept-friend-request',
+	});
 }
 
 export function showCancelFriendRequestErrorModal(_error: unknown): void {
-	pushRelationshipErrorModal(
-		() => ({
+	showGenericErrorModal({
+		getContent: () => ({
 			title: i18n._(CANCEL_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR),
 			message: i18n._(CANCEL_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR),
 		}),
-		'relationship.error-modal.cancel-friend-request',
-	);
+		dataFlx: 'relationship.error-modal.cancel-friend-request',
+	});
 }
 
 export function showRemoveFriendErrorModal(_error: unknown): void {
-	pushRelationshipErrorModal(
-		() => ({
+	showGenericErrorModal({
+		getContent: () => ({
 			title: i18n._(REMOVE_FRIEND_FAILED_TITLE_DESCRIPTOR),
 			message: i18n._(REMOVE_FRIEND_FAILED_MESSAGE_DESCRIPTOR),
 		}),
-		'relationship.error-modal.remove-friend',
-	);
+		dataFlx: 'relationship.error-modal.remove-friend',
+	});
 }
 
 export function showBlockUserErrorModal(error: unknown): void {
 	const code = failureCode(error);
-	pushRelationshipErrorModal(
-		() => ({
+	showGenericErrorModal({
+		getContent: () => ({
 			title: i18n._(BLOCK_USER_FAILED_TITLE_DESCRIPTOR),
 			message:
 				code === APIErrorCodes.CANNOT_BLOCK_SYSTEM_USER
 					? i18n._(CANNOT_BLOCK_SYSTEM_USER_MESSAGE_DESCRIPTOR)
 					: i18n._(BLOCK_USER_FAILED_MESSAGE_DESCRIPTOR),
 		}),
-		'relationship.error-modal.block-user',
-	);
+		dataFlx: 'relationship.error-modal.block-user',
+	});
 }
 
 export function showUnblockUserErrorModal(_error: unknown): void {
-	pushRelationshipErrorModal(
-		() => ({
+	showGenericErrorModal({
+		getContent: () => ({
 			title: i18n._(UNBLOCK_USER_FAILED_TITLE_DESCRIPTOR),
 			message: i18n._(UNBLOCK_USER_FAILED_MESSAGE_DESCRIPTOR),
 		}),
-		'relationship.error-modal.unblock-user',
-	);
+		dataFlx: 'relationship.error-modal.unblock-user',
+	});
 }
 
 export function showIgnoreFriendRequestErrorModal(_error: unknown): void {
-	pushRelationshipErrorModal(
-		() => ({
+	showGenericErrorModal({
+		getContent: () => ({
 			title: i18n._(IGNORE_FRIEND_REQUEST_FAILED_TITLE_DESCRIPTOR),
 			message: i18n._(IGNORE_FRIEND_REQUEST_FAILED_MESSAGE_DESCRIPTOR),
 		}),
-		'relationship.error-modal.ignore-friend-request',
-	);
+		dataFlx: 'relationship.error-modal.ignore-friend-request',
+	});
 }

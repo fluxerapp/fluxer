@@ -6,7 +6,7 @@ import CallState from '@app/features/voice/state/CallState';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 export function isActiveCallParticipant(channel: Channel | null | undefined, userId: string): boolean {
-	if (!channel || !channel.isPrivate()) return false;
+	if (!channel?.isPrivate()) return false;
 	const call = CallState.getCall(channel.id);
 	if (!call) return false;
 	const participants = new Set([...call.participants, ...CallState.getParticipants(channel.id)]);

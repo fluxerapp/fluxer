@@ -3,5 +3,5 @@
 .button {
 	font-weight: 600;
 	-webkit-app-region: no-drag;
-	color: var(--nagbar-background-color, inherit);
+	--button-inverted-text: var(--nagbar-background-color, inherit);
 }

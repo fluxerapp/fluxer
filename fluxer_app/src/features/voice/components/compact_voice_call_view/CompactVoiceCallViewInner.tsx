@@ -6,19 +6,16 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/voice/components/CompactVoiceCallView.module.css';
 import {CompactCallHeightToggleButton} from '@app/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton';
+import {COMPACT_HEIGHT_MIN} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
 import {
 	getCompactAudioAvatarLayoutStyle,
 	resolveCompactAudioAvatarLayoutMetrics,
 } from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallLayoutMetrics';
 import {resolveCompactVoiceCallPresentationModel} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallPresentationStateMachine';
 import {
-	COMPACT_HEIGHT_MIN,
 	type CompactCallMetrics,
 	type CompactVoiceCallContainerStyle,
 	type CompactVoiceCallViewProps,
-	ENTER_FULLSCREEN_DESCRIPTOR,
-	EXIT_FULLSCREEN_DESCRIPTOR,
-	getCompactHeightKey,
 	hasCompactCallMetricsChanged,
 	RESIZE_CALL_VIEW_DESCRIPTOR,
 	toLayoutPx,
@@ -27,6 +24,7 @@ import {
 } from '@app/features/voice/components/compact_voice_call_view/shared';
 import {useCompactVoiceCallResize} from '@app/features/voice/components/compact_voice_call_view/useCompactVoiceCallResize';
 import {useConnectionLabel} from '@app/features/voice/components/compact_voice_call_view/useConnectionLabel';
+import {FocusedStreamVolumeControl} from '@app/features/voice/components/FocusedStreamVolumeControl';
 import {PoppedOutOverlay} from '@app/features/voice/components/popout/PoppedOutOverlay';
 import {
 	selectPoppedOutOverlayTransition,
@@ -50,11 +48,16 @@ import {
 	VoiceEngineConnectionState,
 } from '@app/features/voice/engine/VoiceConnectionStateMachine';
 import CallState from '@app/features/voice/state/CallState';
+import {getCompactVoiceCallExpansionKey as getCompactHeightKey} from '@app/features/voice/state/CompactVoiceCallHeight';
 import PopoutWindowManager, {
 	getVoiceCallPopoutKey,
 	isVoicePopoutSupported,
 } from '@app/features/voice/state/PopoutWindowManager';
 import {VOICE_CALL_DESCRIPTOR as VOICE_CALL_TITLE_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	ENTER_FULLSCREEN_DESCRIPTOR,
+	EXIT_FULLSCREEN_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {isTrackReference} from '@livekit/components-react';
 import {CornersInIcon, CornersOutIcon} from '@phosphor-icons/react';
@@ -75,7 +78,6 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 		showAvatarFallback = true,
 		audioOnly = false,
 		onFullscreenRequest,
-		fullscreenRequestNonce,
 		fillHeight = false,
 		reserveHeaderChrome = false,
 		heightToggle,
@@ -84,7 +86,6 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 		const {i18n} = useLingui();
 		const containerRef = useRef<HTMLElement>(null);
 		const hudPointerTimeoutRef = useRef<number | null>(null);
-		const previousFullscreenRequestNonceRef = useRef<number | undefined>(undefined);
 		const {keyboardModeEnabled} = KeyboardMode;
 		const connectionState = useVoiceEngineConnectionState();
 		const isMobile = MobileLayout.isMobileLayout();
@@ -93,7 +94,6 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 		const {
 			isFullscreen: isVoiceCallAppFullscreen,
 			supportsFullscreen: supportsVoiceCallAppFullscreen,
-			enterFullscreen: enterVoiceCallAppFullscreen,
 			exitFullscreen: exitVoiceCallAppFullscreen,
 			toggleFullscreen: toggleVoiceCallAppFullscreen,
 		} = useVoiceCallAppFullscreen({containerRef});
@@ -215,23 +215,15 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 			return BoldIcon;
 		}, [isVoiceCallAppFullscreen]);
 		const handlePopOutCall = useCallback(() => {
-			void (async () => {
-				if (isVoiceCallAppFullscreen) {
-					await exitVoiceCallAppFullscreen();
-				}
-				PopoutWindowManager.openCallPopout({
-					channelId: channel.id,
-					guildId: channel.guildId ?? null,
-					title: channel.name ?? i18n._(VOICE_CALL_TITLE_DESCRIPTOR),
-				});
-			})();
+			const didOpen = PopoutWindowManager.openCallPopout({
+				channelId: channel.id,
+				guildId: channel.guildId ?? null,
+				title: channel.name ?? i18n._(VOICE_CALL_TITLE_DESCRIPTOR),
+			});
+			if (didOpen && isVoiceCallAppFullscreen) {
+				void exitVoiceCallAppFullscreen();
+			}
 		}, [channel.guildId, channel.id, channel.name, exitVoiceCallAppFullscreen, i18n, isVoiceCallAppFullscreen]);
-		useEffect(() => {
-			if (fullscreenRequestNonce == null) return;
-			if (previousFullscreenRequestNonceRef.current === fullscreenRequestNonce) return;
-			previousFullscreenRequestNonceRef.current = fullscreenRequestNonce;
-			void enterVoiceCallAppFullscreen();
-		}, [enterVoiceCallAppFullscreen, fullscreenRequestNonce]);
 		const clearHudPointerTimeout = useCallback(() => {
 			if (hudPointerTimeoutRef.current == null) return;
 			window.clearTimeout(hudPointerTimeoutRef.current);
@@ -525,6 +517,14 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 					fullscreenLabel={fullscreenButtonLabel}
 					fullscreenIcon={FullscreenButtonIcon}
 					onToggleFullscreen={handleToggleVoiceCallAppFullscreen}
+					volumeControl={
+						<FocusedStreamVolumeControl
+							track={layoutMode === 'focus' ? focusMainTrack : null}
+							guildId={channel.guildId}
+							channelId={channel.id}
+							data-flx="voice.compact-voice-call-view.compact-voice-call-view-inner.focused-stream-volume-control"
+						/>
+					}
 					data-flx="voice.compact-voice-call-view.compact-voice-call-view-inner.voice-call-corner-controls"
 				/>
 				{shouldRenderPoppedOutOverlay(poppedOutTransition.snapshot) && (

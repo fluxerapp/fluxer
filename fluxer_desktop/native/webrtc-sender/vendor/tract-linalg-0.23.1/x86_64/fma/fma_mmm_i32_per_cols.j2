@@ -1,9 +1,0 @@
-// vim: set syntax=asm :
-{% from "fma_mmm_ymm_ops.j2" import per_col %}
-
-{{ per_col("per_col_min", "vpminsd", mr, from, to, type="i32") }}
-{{ per_col("per_col_max", "vpmaxsd", mr, from, to, type="i32") }}
-{{ per_col("per_col_add", "vpaddd", mr, from, to, type="i32") }}
-{{ per_col("per_col_mul", "vpmulld", mr, from, to, type="i32") }}
-{{ per_col("per_col_sub", "vpsubd", mr, from, to, type="i32") }}
-{{ per_col("per_col_sub_flipped", "vpsubd", mr, from, to, type="i32", flipped=true) }}

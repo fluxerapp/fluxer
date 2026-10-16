@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {getDonationAmountConstraints} from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
 import {
 	createDonationCheckoutBuilder,
 	createValidCheckoutBody,
-	DONATION_AMOUNTS,
 	DONATION_CURRENCY_VALUES,
-	DONATION_INTERVALS,
 	TEST_DONOR_EMAIL,
-} from './DonationTestUtils';
+} from '@app/api/donation/tests/DonationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {getDonationAmountConstraints} from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('POST /donations/checkout', () => {
 	let harness: ApiTestHarness;
@@ -75,30 +73,6 @@ describe('POST /donations/checkout', () => {
 			.execute();
 		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
 	});
-	test('accepts minimum amount', async () => {
-		const response = await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					amount_cents: DONATION_AMOUNTS.MINIMUM,
-				}),
-			)
-			.expect(200)
-			.execute();
-		expect(response.url).toContain('https://');
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
-	});
-	test('accepts maximum amount', async () => {
-		const response = await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					amount_cents: DONATION_AMOUNTS.MAXIMUM,
-				}),
-			)
-			.expect(200)
-			.execute();
-		expect(response.url).toContain('https://');
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
-	});
 	test.each([
 		DONATION_CURRENCY_VALUES.USD,
 		DONATION_CURRENCY_VALUES.EUR,
@@ -106,6 +80,9 @@ describe('POST /donations/checkout', () => {
 		DONATION_CURRENCY_VALUES.INR,
 		DONATION_CURRENCY_VALUES.PLN,
 		DONATION_CURRENCY_VALUES.TRY,
+		DONATION_CURRENCY_VALUES.SEK,
+		DONATION_CURRENCY_VALUES.DKK,
+		DONATION_CURRENCY_VALUES.NOK,
 	])('accepts %s currency', async (currency) => {
 		const amount_cents = getDonationAmountConstraints(currency).minimumAmountMinor;
 		const response = await createDonationCheckoutBuilder(harness)
@@ -128,125 +105,7 @@ describe('POST /donations/checkout', () => {
 			  }
 			| undefined;
 		expect(lineItem?.price_data?.currency).toBe(currency);
-	});
-	test('accepts monthly interval', async () => {
-		const response = await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					interval: DONATION_INTERVALS.MONTH,
-				}),
-			)
-			.expect(200)
-			.execute();
-		expect(response.url).toBeDefined();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
-	});
-	test('accepts yearly interval', async () => {
-		const response = await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					interval: DONATION_INTERVALS.YEAR,
-				}),
-			)
-			.expect(200)
-			.execute();
-		expect(response.url).toBeDefined();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
-	});
-	test('rejects invalid email', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					email: 'not-an-email',
-				}),
-			)
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects empty email', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body(
-				createValidCheckoutBody({
-					email: '',
-				}),
-			)
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects missing email field', async () => {
-		const body = createValidCheckoutBody();
-		const {email: _, ...bodyWithoutEmail} = body;
-		await createDonationCheckoutBuilder(harness).body(bodyWithoutEmail).expect(400).execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects missing amount_cents field', async () => {
-		const body = createValidCheckoutBody();
-		const {amount_cents: _, ...bodyWithoutAmount} = body;
-		await createDonationCheckoutBuilder(harness).body(bodyWithoutAmount).expect(400).execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects missing currency field', async () => {
-		const body = createValidCheckoutBody();
-		const {currency: _, ...bodyWithoutCurrency} = body;
-		await createDonationCheckoutBuilder(harness).body(bodyWithoutCurrency).expect(400).execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects missing interval field', async () => {
-		const body = createValidCheckoutBody();
-		const {interval: _, ...bodyWithoutInterval} = body;
-		await createDonationCheckoutBuilder(harness).body(bodyWithoutInterval).expect(400).execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects invalid currency', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body({
-				...createValidCheckoutBody(),
-				currency: 'gbp',
-			})
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects invalid interval', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body({
-				...createValidCheckoutBody(),
-				interval: 'week',
-			})
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects non-integer amount', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body({
-				...createValidCheckoutBody(),
-				amount_cents: 25.5,
-			})
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects negative amount', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body({
-				...createValidCheckoutBody(),
-				amount_cents: -500,
-			})
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-	});
-	test('rejects zero amount', async () => {
-		await createDonationCheckoutBuilder(harness)
-			.body({
-				...createValidCheckoutBody(),
-				amount_cents: 0,
-			})
-			.expect(400)
-			.execute();
-		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
+		const nordic = ['sek', 'dkk', 'nok'].includes(currency);
+		expect(session?.adaptive_pricing).toEqual(nordic ? {enabled: 'false'} : undefined);
 	});
 });

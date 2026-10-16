@@ -7,11 +7,11 @@ import {
 } from '@app/features/voice/state/CompactVoiceCallHeight';
 
 export const COMPACT_HEIGHT_MIN = COMPACT_VOICE_CALL_HEIGHT_MIN;
-export const COMPACT_HEIGHT_VIEWPORT_MARGIN = 32;
-export const COMPACT_HEIGHT_CHAT_AREA_RESERVATION = 220;
+const COMPACT_HEIGHT_VIEWPORT_MARGIN = 32;
+const COMPACT_HEIGHT_CHAT_AREA_RESERVATION = 220;
 export const COMPACT_HEIGHT_MESSAGES_SLIVER = 56;
 
-export function resolveCompactHeightMax({
+function resolveCompactHeightMax({
 	compactHeightMin,
 	viewportHeight,
 	chatAreaReservation = COMPACT_HEIGHT_CHAT_AREA_RESERVATION,

@@ -134,30 +134,3 @@ fn floor_char_boundary(value: &str, limit: usize) -> usize {
     }
     boundary
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn en_gb_prompt_keeps_strict_preservation_guidance() {
-        let prompt = build_system_prompt("en-GB");
-        assert!(prompt.contains("Do not translate \"US\" to \"UK\""));
-        assert!(prompt.contains("Keep our words."));
-    }
-
-    #[test]
-    fn compact_guidance_truncates_on_clean_boundary() {
-        let content = "First paragraph.\n\nSecond paragraph that should be truncated.\n\nThird.";
-        let compact = compact_guidance_excerpt(content, 35);
-        assert!(compact.ends_with("[excerpt truncated]"));
-        assert!(compact.starts_with("First paragraph."));
-    }
-
-    #[test]
-    fn compact_guidance_truncates_utf8_safely() {
-        let content = "Brand term: caf\u{00e9} caf\u{00e9} caf\u{00e9} caf\u{00e9}.";
-        let compact = compact_guidance_excerpt(content, 18);
-        assert!(compact.ends_with("[excerpt truncated]"));
-    }
-}

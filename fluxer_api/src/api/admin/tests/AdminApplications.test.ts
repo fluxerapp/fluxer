@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+
+interface AuditLogsResponse {
+	logs: Array<{
+		target_type: string;
+		target_id: string;
+		action: string;
+	}>;
+}
+
+describe('Admin applications', () => {
+	let harness: ApiTestHarness;
+
+	beforeEach(async () => {
+		harness = await createApiTestHarness();
+	});
+
+	afterEach(async () => {
+		await harness.shutdown();
+	});
+
+	test('rejects a list by owner from a lookup-only admin', async () => {
+		const owner = await createTestAccount(harness);
+		await createOAuth2Application(harness, owner.token, {
+			name: createUniqueApplicationName('Owned App'),
+			redirect_uris: ['https://example.test/callback'],
+		});
+		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LOOKUP]);
+
+		await createBuilder(harness, `${owner.token}`)
+			.get(`/admin/applications?owner_id=${owner.userId}`)
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.executeWithResponse();
+	});
+
+	test('refuses to transfer the built-in admin application', async () => {
+		const owner = await createTestAccount(harness);
+		const newOwner = await createTestAccount(harness);
+		await setUserACLs(harness, owner, [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.APPLICATION_TRANSFER_OWNERSHIP,
+			AdminACLs.AUDIT_LOG_VIEW,
+		]);
+
+		await createBuilder(harness, `${owner.token}`)
+			.patch(`/admin/applications/${ADMIN_OAUTH2_APPLICATION_ID}`)
+			.body({new_owner_id: newOwner.userId})
+			.expect(HTTP_STATUS.FORBIDDEN, 'FORBIDDEN')
+			.execute();
+
+		const auditLogs = await createBuilder<AuditLogsResponse>(harness, `${owner.token}`)
+			.get(`/admin/audit-logs?target_type=application&target_id=${ADMIN_OAUTH2_APPLICATION_ID}`)
+			.execute();
+
+		expect(auditLogs.logs).toEqual([]);
+	});
+
+	test('transfer requires the application update permission', async () => {
+		const owner = await createTestAccount(harness);
+		const newOwner = await createTestAccount(harness);
+		const app = await createOAuth2Application(harness, owner.token, {
+			name: createUniqueApplicationName('Guarded App'),
+			redirect_uris: ['https://example.test/callback'],
+		});
+		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LOOKUP]);
+
+		await createBuilder(harness, `${owner.token}`)
+			.patch(`/admin/applications/${app.application.id}`)
+			.body({new_owner_id: newOwner.userId})
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.executeWithResponse();
+	});
+});

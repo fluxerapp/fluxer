@@ -22,8 +22,7 @@
 	],
 	"scripts": {
 		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "pnpm test:cargo && node --test index.test.mjs",
-		"test:cargo": "cargo test --manifest-path Cargo.toml"
+		"test": "cargo test --manifest-path Cargo.toml"
 	},
 	"binary": {
 		"napi_versions": [

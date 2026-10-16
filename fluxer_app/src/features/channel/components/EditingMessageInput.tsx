@@ -16,15 +16,15 @@ import {
 	EDIT_MESSAGE_DESCRIPTOR,
 	EMOJIS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Keybind from '@app/features/input/state/InputKeybind';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
-import {doesEventMatchShortcut, useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
+import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {openPopout} from '@app/features/ui/popover/PopoverPopout';
@@ -36,9 +36,7 @@ import {SmileyIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-
-const EDITING_ALLOWED_TRIGGERS = ['emoji', 'mention', 'channel'] as const;
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 interface EditingFocusRequest {
 	requestedChannelId: string | null;
@@ -88,7 +86,7 @@ export const EditingMessageInput = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const maxMessageLength = Limits.getMaxMessageLength();
-		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
+		const premiumMaxLength = Limits.getStockValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 		const [initial] = useState(() => {
 			let wire = MessageEdit.getEditingContent(channel.id, message.id);
 			if (wire == null) {
@@ -102,6 +100,10 @@ export const EditingMessageInput = observer(
 			return {display, segments: segments.getSegmentsCopy(), wire};
 		});
 		const [actualContent, setActualContent] = useState(initial.wire);
+		const resolvedContent = useMemo(
+			() => resolveTypedEmojiShortcodes({content: actualContent, channel, i18n}),
+			[actualContent, channel, i18n],
+		);
 		const composerRef = useRef<LexicalRichInputHandle | null>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
 		const editableRef = useRef<HTMLElement | null>(null);
@@ -145,24 +147,14 @@ export const EditingMessageInput = observer(
 			}
 		}, []);
 		const handleSubmit = useCallback(() => {
-			if (editingDisabled || actualContent.length > maxMessageLength) {
+			if (editingDisabled || resolvedContent.length > maxMessageLength) {
 				return;
 			}
-			onSubmit(actualContent);
-		}, [actualContent, editingDisabled, maxMessageLength, onSubmit]);
+			onSubmit(resolvedContent);
+		}, [editingDisabled, maxMessageLength, onSubmit, resolvedContent]);
 		const handleKeyDown = useCallback(
 			(event: React.KeyboardEvent<HTMLElement>) => {
 				if (event.defaultPrevented) {
-					return;
-				}
-				const composer = composerRef.current;
-				const selection = composer == null ? null : composer.getSelection();
-				const hasSelectionRange = selection != null && selection.start !== selection.end;
-				const inboxCombo = Keybind.getByAction('chat_toggle_inbox').combo;
-				if (doesEventMatchShortcut(event, inboxCombo) && !hasSelectionRange && actualContent.trim().length === 0) {
-					event.preventDefault();
-					event.stopPropagation();
-					ComponentDispatch.dispatch('INBOX_OPEN');
 					return;
 				}
 				if (event.key === 'Escape' && !event.shiftKey && !event.defaultPrevented && !event.nativeEvent.isComposing) {
@@ -198,7 +190,7 @@ export const EditingMessageInput = observer(
 			setExpressionPickerOpen(false);
 		}, [channel.id, editingDisabled]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
 				const data = payload as {channelId?: string; enterKeyboardMode?: boolean} | undefined;
 				let requestedChannelId: string | null = null;
 				let enterKeyboardMode: boolean | null = null;
@@ -244,6 +236,7 @@ export const EditingMessageInput = observer(
 							onEmojiSelect={handleEmojiSelect}
 							onClose={onClose}
 							visibleTabs={['emojis']}
+							data-flx="channel.editing-message-input.handle-expression-picker-toggle.expression-picker-popout"
 						/>
 					),
 					position: 'top-end',
@@ -257,7 +250,7 @@ export const EditingMessageInput = observer(
 			);
 		}, [channel.id, editingDisabled, expressionPickerOpen, handleEmojiSelect]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
 				const data = payload as {channelId?: string; messageId?: string; tab?: string} | undefined;
 				if (data == null || data.channelId !== channel.id || data.messageId !== message.id || data.tab !== 'emojis') {
 					return;
@@ -274,7 +267,7 @@ export const EditingMessageInput = observer(
 		if (mobileLayout.enabled) {
 			handleExpressionPickerButtonClick = () => setExpressionPickerOpen(true);
 		}
-		let displayContentLength = actualContent.length;
+		let displayContentLength = resolvedContent.length;
 		if (editingDisabled) {
 			displayContentLength = 0;
 		}
@@ -297,10 +290,10 @@ export const EditingMessageInput = observer(
 									placeholder={placeholderText}
 									disabled={editingDisabled}
 									channel={channel}
-									allowedTriggers={[...EDITING_ALLOWED_TRIGGERS]}
 									markdown={true}
 									singleLine={!mobileLayout.enabled}
 									size="chat"
+									maxWireLength={maxMessageLength}
 									className={editingStyles.editor}
 									autocompleteAnchor={containerRef.current}
 									ariaLabel={i18n._(EDIT_MESSAGE_DESCRIPTOR)}
@@ -311,6 +304,7 @@ export const EditingMessageInput = observer(
 									onFocus={() => setIsFocused(true)}
 									onBlur={() => setIsFocused(false)}
 									i18n={i18n}
+									data-flx="channel.editing-message-input.lexical-rich-input.submit"
 								/>
 							</div>
 							<div
@@ -343,9 +337,15 @@ export const EditingMessageInput = observer(
 				<div className={editingStyles.footer} data-flx="channel.editing-message-input.footer">
 					<div data-flx="channel.editing-message-input.hints">
 						<Trans>
-							escape to{' '}
+							Escape to{' '}
 							<FocusRing offset={-2} data-flx="channel.editing-message-input.focus-ring--2">
-								<button type="button" className={editingStyles.footerLink} onClick={onCancel} key="cancel">
+								<button
+									type="button"
+									className={editingStyles.footerLink}
+									onClick={onCancel}
+									key="cancel"
+									data-flx="channel.editing-message-input.button.cancel"
+								>
 									cancel
 								</button>
 							</FocusRing>
@@ -356,7 +356,7 @@ export const EditingMessageInput = observer(
 							data-flx="channel.editing-message-input.separator"
 						/>
 						<Trans>
-							enter to{' '}
+							Enter to{' '}
 							<FocusRing offset={-2} enabled={!editingDisabled} data-flx="channel.editing-message-input.focus-ring--3">
 								<button
 									type="button"
@@ -364,6 +364,7 @@ export const EditingMessageInput = observer(
 									onClick={handleSubmit}
 									disabled={editingDisabled}
 									key="save"
+									data-flx="channel.editing-message-input.button.submit"
 								>
 									save
 								</button>
@@ -378,7 +379,6 @@ export const EditingMessageInput = observer(
 						channelId={channel.id}
 						onEmojiSelect={handleEmojiSelect}
 						visibleTabs={['emojis']}
-						selectedTab="emojis"
 						data-flx="channel.editing-message-input.expression-picker-sheet"
 					/>
 				)}

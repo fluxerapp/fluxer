@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {clearRemScaleCache} from '@app/features/theme/layout/RemFromPx';
 import type {ThemeLibraryAsset, ThemeLibraryLocalFileReference} from '@app/features/theme/state/ThemeLibrary';
 import {resolveThemeCssReferences} from '@app/features/theme/utils/ThemeCssUtils';
 import {useEffect} from 'react';
@@ -32,10 +33,15 @@ export function useCustomThemeStyle({
 		if (!css) {
 			if (existing?.parentNode) {
 				existing.parentNode.removeChild(existing);
+				clearRemScaleCache();
 			}
 			return;
 		}
 		const styleElement = existing ?? document.createElement('style');
+		const applyThemeCss = (value: string): void => {
+			styleElement.textContent = value;
+			clearRemScaleCache();
+		};
 		styleElement.id = STYLE_ELEMENT_ID;
 		let disposed = false;
 		let objectUrls: Array<string> = [];
@@ -48,7 +54,7 @@ export function useCustomThemeStyle({
 					return;
 				}
 				objectUrls = resolved.objectUrls;
-				styleElement.textContent = resolved.css;
+				applyThemeCss(resolved.css);
 				if (resolved.missingAssetReferences.length > 0 || resolved.missingLocalFileReferences.length > 0) {
 					logger.warn('Custom theme CSS has unresolved file references', {
 						assets: resolved.missingAssetReferences,
@@ -58,7 +64,7 @@ export function useCustomThemeStyle({
 			})
 			.catch((error) => {
 				logger.error('Failed to resolve custom theme CSS references', error);
-				styleElement.textContent = css;
+				applyThemeCss(css);
 			});
 		if (!existing) {
 			document.head.appendChild(styleElement);

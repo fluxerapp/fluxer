@@ -1,0 +1,1172 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.root {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	isolation: isolate;
+	container-name: plutonium-page;
+	container-type: size;
+	--pl-fg: 255 255 255;
+	--pl-bg: #080811;
+	background-color: var(--pl-bg);
+	color: rgb(var(--pl-fg));
+	font-family: 'Radio Canada Big', var(--font-sans);
+	-webkit-font-smoothing: auto;
+	-moz-osx-font-smoothing: auto;
+}
+
+.scroller {
+	--brand-solid: #4641d9;
+	--brand-primary-light: #b0adff;
+	--flux-light: 176 173 255;
+	--flux-glow-light: 129 124 255;
+	--flux-glow-indigo: 99 94 233;
+	--space-panel: 12 12 24;
+	--space-deep-rgb: 8 8 17;
+	--pl-panel-shadow: rgb(0 0 0 / 0.8);
+	--flux-line-dir: 90deg;
+	--flux-gradient-dir: 100deg;
+	--flux-gradient-fallback: #4641d9;
+	--flux-gradient: linear-gradient(
+		var(--flux-gradient-dir),
+		#5a55e6 0%,
+		var(--flux-gradient-fallback) 55%,
+		#322cb0 100%
+	);
+	--flux-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+	--flux-waves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='640'%3E%3Cg fill='none' stroke='%23fff' opacity='.075'%3E%3Cpath d='M0 27C40 31 80 34 120 34C160 33 200 27 240 25C280 23 320 22 360 23C400 23 440 28 480 28C520 29 560 27 600 25C640 23 680 19 720 16C760 14 800 11 840 9C880 7 920 3 960 3C1000 3 1040 5 1080 9C1120 13 1160 23 1200 27' stroke-opacity='1'/%3E%3Cpath d='M0 69C40 73 80 75 120 75C160 76 200 72 240 71C280 69 320 67 360 65C400 63 440 60 480 58C520 56 560 55 600 55C640 55 680 59 720 59C760 58 800 56 840 54C880 51 920 44 960 44C1000 43 1040 47 1080 51C1120 55 1160 65 1200 69' stroke-opacity='0.97'/%3E%3Cpath d='M0 106C40 108 80 111 120 113C160 115 200 118 240 117C280 116 320 111 360 106C400 102 440 92 480 89C520 86 560 87 600 88C640 89 680 96 720 97C760 98 800 97 840 96C880 95 920 91 960 91C1000 92 1040 95 1080 97C1120 99 1160 103 1200 106' stroke-opacity='0.87'/%3E%3Cpath d='M0 141C40 142 80 147 120 149C160 152 200 158 240 157C280 156 320 149 360 144C400 140 440 131 480 127C520 124 560 125 600 125C640 126 680 129 720 131C760 133 800 134 840 137C880 139 920 142 960 144C1000 145 1040 145 1080 144C1120 144 1160 141 1200 141' stroke-opacity='0.72'/%3E%3Cpath d='M0 182C40 181 80 185 120 186C160 187 200 189 240 188C280 187 320 183 360 181C400 178 440 175 480 172C520 170 560 167 600 166C640 164 680 162 720 164C760 166 800 173 840 178C880 183 920 191 960 193C1000 195 1040 192 1080 190C1120 188 1160 183 1200 182' stroke-opacity='0.55'/%3E%3Cpath d='M0 228C40 226 80 224 120 222C160 219 200 216 240 215C280 214 320 216 360 217C400 217 440 219 480 218C520 216 560 210 600 208C640 205 680 202 720 204C760 207 800 215 840 220C880 226 920 232 960 235C1000 237 1040 235 1080 233C1120 232 1160 230 1200 228' stroke-opacity='0.38'/%3E%3Cpath d='M0 274C40 271 80 262 120 257C160 252 200 247 240 246C280 245 320 251 360 253C400 255 440 258 480 258C520 258 560 253 600 253C640 252 680 252 720 253C760 255 800 259 840 262C880 264 920 267 960 269C1000 272 1040 275 1080 276C1120 277 1160 277 1200 274' stroke-opacity='0.23'/%3E%3Cpath d='M0 313C40 310 80 299 120 295C160 290 200 286 240 285C280 283 320 286 360 288C400 289 440 291 480 293C520 295 560 298 600 300C640 302 680 305 720 305C760 306 800 302 840 302C880 302 920 302 960 304C1000 306 1040 313 1080 315C1120 316 1160 316 1200 313' stroke-opacity='0.13'/%3E%3Cpath d='M0 345C40 343 80 339 120 336C160 334 200 331 240 329C280 327 320 323 360 323C400 323 440 325 480 329C520 333 560 343 600 347C640 351 680 354 720 354C760 353 800 347 840 345C880 343 920 342 960 343C1000 343 1040 348 1080 348C1120 349 1160 347 1200 345' stroke-opacity='0.1'/%3E%3Cpath d='M0 375C40 375 80 379 120 379C160 378 200 376 240 374C280 371 320 364 360 364C400 363 440 367 480 371C520 375 560 385 600 389C640 393 680 395 720 395C760 396 800 392 840 391C880 389 920 387 960 385C1000 383 1040 380 1080 378C1120 376 1160 375 1200 375' stroke-opacity='0.13'/%3E%3Cpath d='M0 408C40 409 80 416 120 417C160 418 200 417 240 416C280 415 320 411 360 411C400 412 440 415 480 417C520 419 560 423 600 426C640 428 680 431 720 433C760 435 800 438 840 437C880 436 920 431 960 426C1000 422 1040 412 1080 409C1120 406 1160 407 1200 408' stroke-opacity='0.23'/%3E%3Cpath d='M0 445C40 446 80 449 120 451C160 453 200 454 240 457C280 459 320 462 360 464C400 465 440 465 480 464C520 464 560 461 600 461C640 462 680 467 720 469C760 472 800 478 840 477C880 476 920 469 960 464C1000 460 1040 451 1080 447C1120 444 1160 445 1200 445' stroke-opacity='0.38'/%3E%3Cpath d='M0 486C40 484 80 482 120 484C160 486 200 493 240 498C280 503 320 511 360 513C400 515 440 512 480 510C520 508 560 503 600 502C640 501 680 505 720 506C760 507 800 509 840 508C880 507 920 503 960 501C1000 498 1040 495 1080 492C1120 490 1160 487 1200 486' stroke-opacity='0.55'/%3E%3Cpath d='M0 528C40 525 80 522 120 524C160 527 200 535 240 540C280 546 320 552 360 555C400 557 440 555 480 553C520 552 560 550 600 548C640 546 680 544 720 542C760 539 800 536 840 535C880 534 920 536 960 537C1000 537 1040 539 1080 538C1120 536 1160 530 1200 528' stroke-opacity='0.72'/%3E%3Cpath d='M0 573C40 572 80 572 120 573C160 575 200 579 240 582C280 584 320 587 360 589C400 592 440 595 480 596C520 597 560 597 600 594C640 591 680 582 720 577C760 572 800 567 840 566C880 565 920 571 960 573C1000 575 1040 578 1080 578C1120 578 1160 573 1200 573' stroke-opacity='0.87'/%3E%3Cpath d='M0 620C40 622 80 625 120 625C160 626 200 622 240 622C280 622 320 622 360 624C400 626 440 633 480 635C520 636 560 636 600 633C640 630 680 619 720 615C760 610 800 606 840 605C880 603 920 606 960 608C1000 609 1040 611 1080 613C1120 615 1160 618 1200 620' stroke-opacity='0.97'/%3E%3C/g%3E%3C/svg%3E");
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 10% -8rem, rgb(var(--flux-glow-light) / 0.2), transparent 70%),
+		radial-gradient(56rem 32rem at 92% -6rem, rgb(var(--flux-glow-indigo) / 0.3), transparent 72%);
+	--flux-ink: linear-gradient(to bottom, hsl(242 32% 4%) 0%, hsl(242 32% 6%) 45%, hsl(242 32% 8.5%) 100%);
+	--pl-gutter: 1.25rem;
+	--pl-flow: 0.75rem;
+	--pl-stack: 1.25rem;
+	--pl-group: 2rem;
+	--pl-section: 2.75rem;
+	--pl-pagetop: 1.5rem;
+	--pl-measure: 34rem;
+	--pl-text-display: clamp(2.375rem, 1.15rem + 5.1cqw, 4rem);
+	--pl-text-display-line-height: 1.06;
+	--pl-text-display-letter-spacing: -0.02em;
+	--pl-text-title: clamp(1.75rem, 1.35rem + 1.7cqw, 2.75rem);
+	--pl-text-title-line-height: 1.14;
+	--pl-text-title-letter-spacing: -0.01em;
+	--pl-text-heading: clamp(1.25rem, 1.15rem + 0.45cqw, 1.5rem);
+	--pl-text-lead: clamp(1.0625rem, 1rem + 0.32cqw, 1.25rem);
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	isolation: isolate;
+	background-color: var(--pl-bg);
+	background-image: var(--flux-grain), var(--flux-aurora), var(--flux-waves), var(--flux-ink);
+	background-size:
+		128px 128px,
+		100% 100%,
+		100% 100%,
+		1200px 640px,
+		100% 100%;
+	background-repeat: repeat, no-repeat, no-repeat, repeat, no-repeat;
+	background-attachment: local;
+	color: rgb(var(--pl-fg));
+	font-size: 1rem;
+	line-height: 1.5;
+	scrollbar-color: rgb(var(--pl-fg) / 0.2) transparent;
+	scrollbar-width: thin;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.scroller {
+		--pl-gutter: 2rem;
+		--pl-section: 6rem;
+		--pl-pagetop: 4rem;
+	}
+}
+
+@container plutonium-page (min-width: 64rem) {
+	.scroller {
+		--pl-gutter: 3rem;
+	}
+}
+
+@container plutonium-page (min-width: 80rem) {
+	.scroller {
+		--pl-gutter: 4rem;
+	}
+}
+
+:global(:root:is(:lang(de), :lang(fr), :lang(fi), :lang(el), :lang(ru), :lang(uk), :lang(pl), :lang(hu))) .scroller {
+	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
+}
+
+:global(:root:is(:lang(th), :lang(hi), :lang(vi), :lang(ja), :lang(ko), :lang(zh-CN), :lang(zh-TW))) .scroller {
+	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
+	--pl-text-title: clamp(1.5rem, 1.2rem + 1.3cqw, 2.5rem);
+	--pl-text-display-line-height: 1.3;
+	--pl-text-display-letter-spacing: 0;
+	--pl-text-title-line-height: 1.3;
+	--pl-text-title-letter-spacing: 0;
+}
+
+:global(html[dir='rtl']) .scroller {
+	--flux-line-dir: 270deg;
+	--flux-gradient-dir: 260deg;
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 90% -8rem, rgb(var(--flux-glow-light) / 0.2), transparent 70%),
+		radial-gradient(56rem 32rem at 8% -6rem, rgb(var(--flux-glow-indigo) / 0.3), transparent 72%);
+}
+
+:global(html.theme-light) .root {
+	--pl-fg: 18 17 34;
+	--pl-bg: #f6f6fb;
+}
+
+:global(html.theme-light) .scroller {
+	--brand-primary-light: #4641d9;
+	--space-panel: 255 255 255;
+	--space-deep-rgb: 255 255 255;
+	--pl-panel-shadow: rgb(18 17 34 / 0.18);
+	--flux-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .04 0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+	--flux-waves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='640'%3E%3Cg fill='none' stroke='%234641d9' opacity='.075'%3E%3Cpath d='M0 27C40 31 80 34 120 34C160 33 200 27 240 25C280 23 320 22 360 23C400 23 440 28 480 28C520 29 560 27 600 25C640 23 680 19 720 16C760 14 800 11 840 9C880 7 920 3 960 3C1000 3 1040 5 1080 9C1120 13 1160 23 1200 27' stroke-opacity='1'/%3E%3Cpath d='M0 69C40 73 80 75 120 75C160 76 200 72 240 71C280 69 320 67 360 65C400 63 440 60 480 58C520 56 560 55 600 55C640 55 680 59 720 59C760 58 800 56 840 54C880 51 920 44 960 44C1000 43 1040 47 1080 51C1120 55 1160 65 1200 69' stroke-opacity='0.97'/%3E%3Cpath d='M0 106C40 108 80 111 120 113C160 115 200 118 240 117C280 116 320 111 360 106C400 102 440 92 480 89C520 86 560 87 600 88C640 89 680 96 720 97C760 98 800 97 840 96C880 95 920 91 960 91C1000 92 1040 95 1080 97C1120 99 1160 103 1200 106' stroke-opacity='0.87'/%3E%3Cpath d='M0 141C40 142 80 147 120 149C160 152 200 158 240 157C280 156 320 149 360 144C400 140 440 131 480 127C520 124 560 125 600 125C640 126 680 129 720 131C760 133 800 134 840 137C880 139 920 142 960 144C1000 145 1040 145 1080 144C1120 144 1160 141 1200 141' stroke-opacity='0.72'/%3E%3Cpath d='M0 182C40 181 80 185 120 186C160 187 200 189 240 188C280 187 320 183 360 181C400 178 440 175 480 172C520 170 560 167 600 166C640 164 680 162 720 164C760 166 800 173 840 178C880 183 920 191 960 193C1000 195 1040 192 1080 190C1120 188 1160 183 1200 182' stroke-opacity='0.55'/%3E%3Cpath d='M0 228C40 226 80 224 120 222C160 219 200 216 240 215C280 214 320 216 360 217C400 217 440 219 480 218C520 216 560 210 600 208C640 205 680 202 720 204C760 207 800 215 840 220C880 226 920 232 960 235C1000 237 1040 235 1080 233C1120 232 1160 230 1200 228' stroke-opacity='0.38'/%3E%3Cpath d='M0 274C40 271 80 262 120 257C160 252 200 247 240 246C280 245 320 251 360 253C400 255 440 258 480 258C520 258 560 253 600 253C640 252 680 252 720 253C760 255 800 259 840 262C880 264 920 267 960 269C1000 272 1040 275 1080 276C1120 277 1160 277 1200 274' stroke-opacity='0.23'/%3E%3Cpath d='M0 313C40 310 80 299 120 295C160 290 200 286 240 285C280 283 320 286 360 288C400 289 440 291 480 293C520 295 560 298 600 300C640 302 680 305 720 305C760 306 800 302 840 302C880 302 920 302 960 304C1000 306 1040 313 1080 315C1120 316 1160 316 1200 313' stroke-opacity='0.13'/%3E%3Cpath d='M0 345C40 343 80 339 120 336C160 334 200 331 240 329C280 327 320 323 360 323C400 323 440 325 480 329C520 333 560 343 600 347C640 351 680 354 720 354C760 353 800 347 840 345C880 343 920 342 960 343C1000 343 1040 348 1080 348C1120 349 1160 347 1200 345' stroke-opacity='0.1'/%3E%3Cpath d='M0 375C40 375 80 379 120 379C160 378 200 376 240 374C280 371 320 364 360 364C400 363 440 367 480 371C520 375 560 385 600 389C640 393 680 395 720 395C760 396 800 392 840 391C880 389 920 387 960 385C1000 383 1040 380 1080 378C1120 376 1160 375 1200 375' stroke-opacity='0.13'/%3E%3Cpath d='M0 408C40 409 80 416 120 417C160 418 200 417 240 416C280 415 320 411 360 411C400 412 440 415 480 417C520 419 560 423 600 426C640 428 680 431 720 433C760 435 800 438 840 437C880 436 920 431 960 426C1000 422 1040 412 1080 409C1120 406 1160 407 1200 408' stroke-opacity='0.23'/%3E%3Cpath d='M0 445C40 446 80 449 120 451C160 453 200 454 240 457C280 459 320 462 360 464C400 465 440 465 480 464C520 464 560 461 600 461C640 462 680 467 720 469C760 472 800 478 840 477C880 476 920 469 960 464C1000 460 1040 451 1080 447C1120 444 1160 445 1200 445' stroke-opacity='0.38'/%3E%3Cpath d='M0 486C40 484 80 482 120 484C160 486 200 493 240 498C280 503 320 511 360 513C400 515 440 512 480 510C520 508 560 503 600 502C640 501 680 505 720 506C760 507 800 509 840 508C880 507 920 503 960 501C1000 498 1040 495 1080 492C1120 490 1160 487 1200 486' stroke-opacity='0.55'/%3E%3Cpath d='M0 528C40 525 80 522 120 524C160 527 200 535 240 540C280 546 320 552 360 555C400 557 440 555 480 553C520 552 560 550 600 548C640 546 680 544 720 542C760 539 800 536 840 535C880 534 920 536 960 537C1000 537 1040 539 1080 538C1120 536 1160 530 1200 528' stroke-opacity='0.72'/%3E%3Cpath d='M0 573C40 572 80 572 120 573C160 575 200 579 240 582C280 584 320 587 360 589C400 592 440 595 480 596C520 597 560 597 600 594C640 591 680 582 720 577C760 572 800 567 840 566C880 565 920 571 960 573C1000 575 1040 578 1080 578C1120 578 1160 573 1200 573' stroke-opacity='0.87'/%3E%3Cpath d='M0 620C40 622 80 625 120 625C160 626 200 622 240 622C280 622 320 622 360 624C400 626 440 633 480 635C520 636 560 636 600 633C640 630 680 619 720 615C760 610 800 606 840 605C880 603 920 606 960 608C1000 609 1040 611 1080 613C1120 615 1160 618 1200 620' stroke-opacity='0.97'/%3E%3C/g%3E%3C/svg%3E");
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 10% -8rem, rgb(var(--flux-glow-light) / 0.16), transparent 70%),
+		radial-gradient(56rem 32rem at 92% -6rem, rgb(var(--flux-glow-indigo) / 0.18), transparent 72%);
+	--flux-ink: linear-gradient(to bottom, hsl(242 60% 98.5%) 0%, hsl(242 50% 96.5%) 45%, hsl(242 45% 94%) 100%);
+	scrollbar-color: rgb(var(--pl-fg) / 0.25) transparent;
+}
+
+:global(html.theme-light[dir='rtl']) .scroller {
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 90% -8rem, rgb(var(--flux-glow-light) / 0.16), transparent 70%),
+		radial-gradient(56rem 32rem at 8% -6rem, rgb(var(--flux-glow-indigo) / 0.18), transparent 72%);
+}
+
+:global(:root:lang(ja)) .scroller {
+	line-break: strict;
+}
+
+:global(:root:lang(ko)) .scroller {
+	word-break: keep-all;
+}
+
+.starfield {
+	display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+	@media (prefers-reduced-motion: no-preference) and (pointer: fine) {
+		.scroller {
+			background-image: var(--flux-grain), var(--flux-aurora), var(--flux-ink);
+			background-size:
+				128px 128px,
+				100% 100%,
+				100% 100%,
+				100% 100%;
+			background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+			scroll-timeline: --plutonium-waves block;
+		}
+
+		.starfield {
+			position: sticky;
+			top: 0;
+			z-index: -1;
+			display: block;
+			height: 100cqh;
+			margin-bottom: -100cqh;
+			overflow: clip;
+			pointer-events: none;
+		}
+
+		.starfield::before {
+			position: absolute;
+			inset-inline: 0;
+			top: 0;
+			height: calc(100cqh + 640px);
+			background-image: var(--flux-waves);
+			background-size: 1200px 640px;
+			background-repeat: repeat;
+			animation-name: plutonium-flux-parallax;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-iteration-count: 12;
+			animation-range: 0px 23040px;
+			animation-timeline: --plutonium-waves;
+			will-change: transform;
+			content: '';
+		}
+	}
+}
+
+@keyframes plutonium-flux-parallax {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+
+	to {
+		transform: translate3d(0, -640px, 0);
+	}
+}
+
+.mobileBar {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	padding: 0.5rem var(--pl-gutter) 0;
+}
+
+.backButton {
+	display: inline-flex;
+	width: 2.75rem;
+	height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	margin-inline-start: -0.75rem;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: rgb(var(--pl-fg));
+	cursor: pointer;
+}
+
+.backButton:hover {
+	background-color: rgb(var(--pl-fg) / 0.08);
+}
+
+.backIcon {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+:global(html[dir='rtl']) .backIcon {
+	transform: scaleX(-1);
+}
+
+.hero {
+	position: relative;
+	isolation: isolate;
+	padding: var(--pl-pagetop) var(--pl-gutter) var(--pl-group);
+}
+
+.hero::before {
+	position: absolute;
+	inset-inline: 0;
+	inset-block: 0 -6rem;
+	z-index: -1;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 760' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g'%3E%3Cstop offset='0' stop-color='%23b0adff' stop-opacity='0'/%3E%3Cstop offset='.25' stop-color='%23b0adff'/%3E%3Cstop offset='.6' stop-color='%23635ee9'/%3E%3Cstop offset='1' stop-color='%234641d9' stop-opacity='.25'/%3E%3C/linearGradient%3E%3Cpath id='a' d='M0 623.9068531556543C48 626 96 632 144 630C192 627 240 621 288 608C336 595 384 574 432 551C480 528 528 497 576 470C624 442 672 411 720 386C768 362 816 340 864 325C912 310 960 302 1008 298C1056 294 1104 298 1152 301C1200 304 1248 312 1296 315C1344 317 1392 314 1440 314'/%3E%3Cpath id='b' d='M0 693.9068531556543C48 696 96 703 144 701C192 698 240 693 288 680C336 667 384 647 432 624C480 601 528 571 576 544C624 517 672 485 720 461C768 438 816 415 864 401C912 387 960 379 1008 375C1056 372 1104 376 1152 379C1200 382 1248 391 1296 394C1344 396 1392 394 1440 394'/%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)' stroke-linecap='round'%3E%3Cuse href='%23a' stroke-width='120' stroke-opacity='.07'/%3E%3Cuse href='%23b' stroke-width='120' stroke-opacity='.07'/%3E%3Cuse href='%23a' stroke-width='36' stroke-opacity='.12'/%3E%3Cuse href='%23b' stroke-width='36' stroke-opacity='.12'/%3E%3Cuse href='%23a' stroke-width='2' stroke-opacity='.75'/%3E%3Cuse href='%23b' stroke-width='2' stroke-opacity='.75'/%3E%3C/g%3E%3C/svg%3E");
+	background-size: 100% min(100%, 46rem);
+	background-position: bottom;
+	background-repeat: no-repeat;
+	pointer-events: none;
+	mask-image: linear-gradient(to bottom, transparent 0, transparent 82%, #000 96%);
+	content: '';
+}
+
+:global(html[dir='rtl']) .hero::before {
+	transform: scaleX(-1);
+}
+
+@container plutonium-page (max-width: 48rem) {
+	.hero::before {
+		background-size: max(100%, 64rem) min(100%, 46rem);
+		background-position: bottom right;
+	}
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.hero {
+		padding-bottom: 4rem;
+	}
+}
+
+.heroInner {
+	max-width: 56rem;
+	margin-inline: auto;
+	text-align: center;
+}
+
+.crownWrap {
+	display: flex;
+	justify-content: center;
+	margin-bottom: var(--pl-stack);
+}
+
+.crown {
+	display: block;
+	width: 10rem;
+	height: auto;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.crown {
+		width: 15rem;
+	}
+}
+
+.displayHeading {
+	margin: 0;
+	color: rgb(var(--pl-fg));
+	font-size: var(--pl-text-display);
+	font-weight: 700;
+	line-height: var(--pl-text-display-line-height);
+	letter-spacing: var(--pl-text-display-letter-spacing);
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.displayHeading {
+		font-size: 4.5rem;
+		line-height: 1.04;
+	}
+}
+
+:global(
+		:root:is(
+			:lang(de),
+			:lang(fi),
+			:lang(el),
+			:lang(ru),
+			:lang(uk),
+			:lang(pl),
+			:lang(hu),
+			:lang(nl),
+			:lang(da),
+			:lang(no),
+			:lang(sv-SE),
+			:lang(cs),
+			:lang(hr),
+			:lang(lt),
+			:lang(bg),
+			:lang(ro),
+			:lang(tr),
+			:lang(pt-BR)
+		)
+	)
+	:is(.displayHeading, .titleHeading, .perkTitle) {
+	hyphens: auto;
+}
+
+.heroLead {
+	max-width: 42rem;
+	margin: var(--pl-stack) auto 0;
+	color: rgb(var(--pl-fg) / 0.85);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+.priceLine {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 0.75rem;
+	margin: var(--pl-group) 0 0;
+}
+
+.price {
+	color: rgb(var(--pl-fg));
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.priceOr {
+	color: rgb(var(--pl-fg) / 0.8);
+	font-size: 1rem;
+	line-height: 1.6;
+}
+
+.actions {
+	display: grid;
+	gap: var(--pl-flow);
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.actions {
+		grid-auto-flow: column;
+		justify-content: center;
+	}
+}
+
+.heroActions {
+	margin-top: var(--pl-group);
+	justify-content: center;
+}
+
+.button {
+	display: flex;
+	width: 100%;
+	min-height: 3rem;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0.625rem 1.25rem;
+	border: 0;
+	border-radius: 0.75rem;
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.3;
+	text-align: center;
+	text-decoration: none;
+	text-wrap: balance;
+	cursor: pointer;
+	transition:
+		background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.button {
+		width: auto;
+	}
+}
+
+.button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.buttonPrimary {
+	border: 1px solid rgb(var(--flux-light) / 0.35);
+	border-radius: 0.625rem;
+	background-color: var(--flux-gradient-fallback);
+	background-image: var(--flux-gradient);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.18),
+		0 12px 32px -16px rgb(var(--flux-glow-light) / 0.6);
+	color: #fff;
+	transition:
+		filter 0.15s ease,
+		border-color 0.15s ease,
+		box-shadow 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.buttonPrimary:not(:disabled):hover {
+	border-color: rgb(var(--flux-light) / 0.7);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.22),
+		0 14px 36px -14px rgb(var(--flux-glow-light) / 0.8);
+	filter: brightness(1.06);
+}
+
+.buttonSecondary {
+	border: 1px solid rgb(var(--pl-fg) / 0.4);
+	border-radius: 0.625rem;
+	background-color: rgb(var(--space-deep-rgb) / 0.4);
+	color: rgb(var(--pl-fg));
+}
+
+.buttonSecondary:not(:disabled):hover {
+	border-color: rgb(var(--pl-fg) / 0.5);
+	background-color: rgb(var(--pl-fg) / 0.06);
+}
+
+.buttonIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
+:global(html[dir='rtl']) .buttonIconDirectional {
+	transform: scaleX(-1);
+}
+
+.buttonBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.125rem 0.5rem;
+	border-radius: 999px;
+	background-color: rgb(255 255 255 / 0.16);
+	color: #fff;
+	font-size: 0.8125rem;
+	font-weight: 700;
+	line-height: 1.45;
+	white-space: nowrap;
+}
+
+.buttonSpinner {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	border: 2px solid currentColor;
+	border-inline-end-color: transparent;
+	border-radius: 999px;
+	animation: plutonium-button-spin 0.7s linear infinite;
+}
+
+@keyframes plutonium-button-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.secondaryLinks {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 1.25rem;
+	margin-top: var(--pl-stack);
+}
+
+.textButton {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: rgb(var(--pl-fg) / 0.85);
+	font-family: inherit;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.5;
+	cursor: pointer;
+	transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.textButton:hover {
+	color: rgb(var(--pl-fg));
+}
+
+.textButtonIcon {
+	width: 1.125rem;
+	height: 1.125rem;
+	color: var(--brand-primary-light);
+}
+
+.meta {
+	max-width: var(--pl-measure);
+	margin: var(--pl-stack) auto 0;
+	color: rgb(var(--pl-fg) / 0.65);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.notice {
+	max-width: var(--pl-measure);
+	margin: var(--pl-stack) auto 0;
+	color: rgb(var(--pl-fg) / 0.85);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.inlineLink {
+	position: relative;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-decoration-line: underline;
+	text-decoration-color: rgb(var(--pl-fg) / 0.4);
+	text-underline-offset: 4px;
+	cursor: pointer;
+	transition:
+		color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		text-decoration-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inlineLink:hover {
+	color: rgb(var(--pl-fg));
+	text-decoration-color: rgb(var(--pl-fg));
+}
+
+.inlineLink::after,
+.footnoteMarker::after {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline: -0.5rem;
+	block-size: 2.75rem;
+	transform: translateY(-50%);
+	content: '';
+}
+
+.sections {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: 0 var(--pl-gutter) var(--pl-section);
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.sections {
+		gap: 2rem;
+	}
+}
+
+.glassPanel {
+	position: relative;
+	width: 100%;
+	max-width: 80rem;
+	box-sizing: border-box;
+	margin-inline: auto;
+	border: 1px solid rgb(var(--pl-fg) / 0.09);
+	border-radius: 1.125rem;
+	background-color: rgb(var(--space-panel) / 0.5);
+	box-shadow: 0 24px 48px -32px var(--pl-panel-shadow);
+}
+
+.glassPanel::before {
+	position: absolute;
+	inset-block-start: -1px;
+	inset-inline: 1.5rem;
+	height: 1px;
+	background-image: linear-gradient(
+		var(--flux-line-dir),
+		transparent,
+		rgb(var(--flux-light) / 0.7) 20%,
+		rgb(129 124 255 / 0.7) 70%,
+		transparent
+	);
+	pointer-events: none;
+	content: '';
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	@media (pointer: fine) {
+		.glassPanel {
+			-webkit-backdrop-filter: blur(12px);
+			backdrop-filter: blur(12px);
+		}
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	.glassPanel {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+
+.glassPanelBrand {
+	border-color: rgb(var(--flux-light) / 0.2);
+	background-color: rgb(var(--space-panel));
+	background-image:
+		var(--flux-grain),
+		radial-gradient(
+			46rem 22rem at 0% 0%,
+			rgb(var(--flux-glow-indigo) / 0.2),
+			rgb(var(--flux-glow-indigo) / 0.08) 40%,
+			transparent 70%
+		),
+		radial-gradient(
+			52rem 26rem at 100% 100%,
+			rgb(var(--flux-glow-light) / 0.18),
+			rgb(var(--flux-glow-light) / 0.07) 40%,
+			transparent 70%
+		),
+		var(--flux-waves);
+	background-size:
+		128px 128px,
+		100% 100%,
+		100% 100%,
+		1200px 640px;
+	background-repeat: repeat, no-repeat, no-repeat, repeat;
+}
+
+:global(html[dir='rtl']) .glassPanelBrand {
+	background-image:
+		var(--flux-grain),
+		radial-gradient(
+			46rem 22rem at 100% 0%,
+			rgb(var(--flux-glow-indigo) / 0.2),
+			rgb(var(--flux-glow-indigo) / 0.08) 40%,
+			transparent 70%
+		),
+		radial-gradient(
+			52rem 26rem at 0% 100%,
+			rgb(var(--flux-glow-light) / 0.18),
+			rgb(var(--flux-glow-light) / 0.07) 40%,
+			transparent 70%
+		),
+		var(--flux-waves);
+}
+
+.managePanel {
+	padding: 1.25rem;
+	scroll-margin-top: 1rem;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.managePanel {
+		padding: 3rem;
+	}
+}
+
+.manageHeading {
+	margin: 0 0 var(--pl-stack);
+	color: rgb(var(--pl-fg));
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+	text-wrap: balance;
+}
+
+.manageSurface {
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: 1.25rem;
+	border-radius: 1rem;
+	background-color: var(--background-primary);
+	color: var(--text-primary);
+	text-align: start;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.manageSurface {
+		padding: 1.5rem;
+	}
+}
+
+.perkRow {
+	position: relative;
+	display: grid;
+	width: 100%;
+	max-width: 80rem;
+	box-sizing: border-box;
+	align-items: center;
+	gap: 2rem;
+	margin-inline: auto;
+	padding-block: 2.5rem;
+	border-block-start: 1px solid rgb(var(--pl-fg) / 0.08);
+}
+
+.perkRow::before {
+	position: absolute;
+	inset-block-start: -1px;
+	inset-inline-start: 0;
+	inline-size: min(14rem, 45%);
+	block-size: 1px;
+	background-image: linear-gradient(var(--flux-line-dir), rgb(var(--flux-light) / 0.9), transparent);
+	pointer-events: none;
+	content: '';
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkRow {
+		grid-template-columns: 7fr 5fr;
+		gap: 4rem;
+		padding-block: 4rem;
+	}
+
+	.perkRowFlipped {
+		grid-template-columns: 5fr 7fr;
+	}
+
+	.perkRowTextOnly {
+		grid-template-columns: minmax(0, 1fr);
+		padding-block: 2.5rem;
+	}
+}
+
+.perkArtColumn {
+	order: 1;
+	min-width: 0;
+}
+
+.perkTextColumn {
+	order: 2;
+	max-width: var(--pl-measure);
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkRowFlipped .perkArtColumn {
+		order: 2;
+	}
+
+	.perkRowFlipped .perkTextColumn {
+		order: 1;
+	}
+}
+
+.perkTitle {
+	margin: 0;
+	color: rgb(var(--pl-fg));
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+	text-wrap: balance;
+	overflow-wrap: break-word;
+}
+
+.perkBody {
+	margin: var(--pl-stack) 0 0;
+	color: rgb(var(--pl-fg) / 0.8);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+.footnoteMarker {
+	position: relative;
+	color: var(--brand-primary-light);
+	text-decoration-line: underline;
+	text-underline-offset: 2px;
+	transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.footnoteMarker:hover {
+	color: rgb(var(--pl-fg));
+}
+
+.perkArt {
+	position: relative;
+}
+
+.perkArtImage {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.perkOverlay {
+	position: absolute;
+	display: block;
+	max-width: none;
+	object-fit: contain;
+	pointer-events: none;
+	user-select: none;
+}
+
+.perkOverlaySvg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.perkOverlaySvg image {
+		display: none;
+	}
+}
+
+.comparison {
+	padding: 1.5rem;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.comparison {
+		padding: 3rem;
+	}
+}
+
+.titleHeading {
+	margin: 0;
+	color: rgb(var(--pl-fg));
+	font-size: var(--pl-text-title);
+	font-weight: 700;
+	line-height: var(--pl-text-title-line-height);
+	letter-spacing: var(--pl-text-title-letter-spacing);
+	text-align: center;
+	text-wrap: balance;
+	overflow-wrap: break-word;
+}
+
+.perkCards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pl-flow);
+	margin: var(--pl-group) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkCards {
+		display: none;
+	}
+}
+
+.perkCard {
+	padding: 0.875rem;
+	border: 1px solid rgb(var(--pl-fg) / 0.08);
+	border-radius: 1rem;
+	background-color: rgb(var(--pl-fg) / 0.02);
+}
+
+.perkCardHead {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.perkCardIcon {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+	margin-top: 0.125rem;
+	color: var(--brand-primary-light);
+}
+
+.perkCardLabel {
+	min-width: 0;
+	color: rgb(var(--pl-fg));
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.6;
+}
+
+.perkCardValues {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.5rem;
+	margin: 0.625rem 0 0;
+}
+
+.perkCell {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid rgb(var(--pl-fg) / 0.08);
+	border-radius: 0.75rem;
+}
+
+.perkCellPremium {
+	border-color: rgb(var(--flux-light) / 0.35);
+	background-color: rgb(var(--flux-glow-light) / 0.06);
+	box-shadow: inset 0 1px 0 rgb(var(--flux-light) / 0.3);
+}
+
+.perkCellTerm {
+	color: rgb(var(--pl-fg) / 0.55);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+}
+
+.perkCellPremium .perkCellTerm {
+	color: var(--brand-primary-light);
+}
+
+.perkCellValue {
+	margin: 0;
+	color: rgb(var(--pl-fg) / 0.7);
+	font-size: 1rem;
+	line-height: 1.6;
+}
+
+.perkCellPremium .perkCellValue {
+	color: rgb(var(--pl-fg));
+	font-weight: 600;
+}
+
+.tableWrap {
+	display: none;
+	margin-top: var(--pl-group);
+	overflow-x: auto;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.tableWrap {
+		display: block;
+	}
+}
+
+.table {
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.tableHead {
+	padding: 1rem;
+	vertical-align: middle;
+	border: 0 solid rgb(var(--pl-fg) / 0.1);
+	border-bottom-width: 1px;
+	color: rgb(var(--pl-fg) / 0.7);
+	font-size: 1.0625rem;
+	font-weight: 600;
+	line-height: 1.35;
+	text-align: center;
+}
+
+.tableHeadFeature {
+	width: 50%;
+	text-align: start;
+}
+
+.tableHeadTier {
+	width: 25%;
+}
+
+.tableHeadPremium {
+	color: var(--brand-primary-light);
+}
+
+.tableRow {
+	vertical-align: middle;
+	border: 0 solid rgb(var(--pl-fg) / 0.1);
+	border-bottom-width: 1px;
+}
+
+.tableRow:last-child {
+	border-bottom-width: 0;
+}
+
+.tableRowHead {
+	padding: 1.25rem 1rem;
+	vertical-align: middle;
+	color: rgb(var(--pl-fg));
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.6;
+	text-align: start;
+}
+
+.tableRowLabel {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.tableRowIcon {
+	width: 1.5rem;
+	height: 1.5rem;
+	flex-shrink: 0;
+	color: var(--brand-primary-light);
+}
+
+.tableCell {
+	padding: 1.25rem 1rem;
+	vertical-align: middle;
+	color: rgb(var(--pl-fg) / 0.6);
+	font-size: 1.0625rem;
+	line-height: 1.35;
+	text-align: center;
+}
+
+.tableCellPremium {
+	color: rgb(var(--pl-fg));
+	font-weight: 600;
+}
+
+.booleanIcon {
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	margin-inline-start: -0.125rem;
+	vertical-align: middle;
+}
+
+.booleanIconHighlighted {
+	color: var(--brand-primary-light);
+}
+
+.booleanIconMuted {
+	color: rgb(var(--pl-fg) / 0.6);
+}
+
+.booleanIconMissing {
+	color: rgb(var(--pl-fg) / 0.3);
+}
+
+.comparisonActions {
+	margin-top: var(--pl-group);
+	justify-content: center;
+}
+
+.closing {
+	padding: 4rem 1.5rem;
+	text-align: center;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.closing {
+		padding-block: 7rem;
+	}
+}
+
+.closingInner {
+	max-width: 56rem;
+	margin-inline: auto;
+}
+
+.closingBody {
+	max-width: 42rem;
+	margin: var(--pl-stack) auto var(--pl-group);
+	color: rgb(var(--pl-fg) / 0.85);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.closingBody {
+		font-size: 1.375rem;
+		line-height: 1.625;
+	}
+}
+
+.closingActions {
+	justify-content: center;
+}
+
+.footnote {
+	max-width: var(--pl-measure);
+	margin: 0 auto;
+	color: rgb(var(--pl-fg) / 0.65);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	text-align: center;
+	text-wrap: pretty;
+	scroll-margin-top: 1rem;
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+@media (forced-colors: active) {
+	.hero::before,
+	.starfield::before,
+	.glassPanel::before,
+	.perkRow::before {
+		display: none;
+	}
+
+	.scroller,
+	.glassPanelBrand {
+		background-image: none;
+	}
+}

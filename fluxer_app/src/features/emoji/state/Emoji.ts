@@ -13,7 +13,8 @@ import {checkEmojiAvailability} from '@app/features/expressions/utils/Expression
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import GuildList from '@app/features/guild/state/GuildList';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import type {GuildEmoji as WireGuildEmoji} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -50,12 +51,10 @@ function toFlatUnicodeEmoji(unicodeEmoji: UnicodeEmoji): FlatEmoji {
 		url: unicodeEmoji.url || undefined,
 		useSpriteSheet: unicodeEmoji.useSpriteSheet,
 		index: unicodeEmoji.index,
-		diversityIndex: unicodeEmoji.diversityIndex,
-		hasDiversity: unicodeEmoji.hasDiversity,
+		skinToneIndex: unicodeEmoji.skinToneIndex,
+		hasSkinTones: unicodeEmoji.hasSkinTones,
 	};
 }
-
-const EMOJI_CATEGORIES: ReadonlyArray<string> = Object.freeze(['custom', ...UnicodeEmojis.getCategories()]);
 
 type BaseUnicodeEmojiIndex = Readonly<{
 	emojis: ReadonlyArray<FlatEmoji>;
@@ -146,21 +145,6 @@ class EmojiGuildRegistry {
 			this.customEmojisByLowerNameByGuild.delete(guildId);
 		}
 		return didDeleteGuild || previousIds !== undefined || previousNames !== undefined;
-	}
-
-	get(guildId: string): GuildEmojiContext | undefined {
-		return this.guilds.get(guildId);
-	}
-
-	rebuildRegistry(): void {
-		this.customEmojisById.clear();
-		this.customEmojisByLowerName.clear();
-		this.customEmojisByLowerNameByGuild.clear();
-		this.emojiIdsByGuild.clear();
-		for (const [guildId, guild] of this.guilds.entries()) {
-			this.indexGuildEmojis(guildId, guild.usableEmojis);
-		}
-		this.invalidateCaches();
 	}
 
 	updateGuild(guildId: string, guildEmojis?: ReadonlyArray<WireGuildEmoji>): void {
@@ -336,7 +320,7 @@ class Emoji {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -350,10 +334,6 @@ class Emoji {
 			},
 		});
 		UnicodeEmojis.setDefaultSkinTone(this.skinTone);
-	}
-
-	get categories(): ReadonlyArray<string> {
-		return EMOJI_CATEGORIES;
 	}
 
 	getGuildEmoji(guildId: string): ReadonlyArray<GuildEmoji> {
@@ -392,8 +372,8 @@ class Emoji {
 		if (emoji.id) {
 			return `<${emoji.animated ? 'a' : ''}:${emoji.uniqueName}:${emoji.id}>`;
 		}
-		if (emoji.hasDiversity && this.skinTone) {
-			const skinToneName = UnicodeEmojis.convertSurrogateToName(this.skinTone, false);
+		if (emoji.hasSkinTones && this.skinTone) {
+			const skinToneName = UnicodeEmojis.nameForSurrogate(this.skinTone, false);
 			if (skinToneName) {
 				return `:${emoji.uniqueName}::${skinToneName}:`;
 			}
@@ -447,32 +427,40 @@ class Emoji {
 		UnicodeEmojis.setDefaultSkinTone(skinTone);
 	}
 
-	handleConnectionOpen({guilds}: {guilds: ReadonlyArray<GuildReadyData>}): void {
+	handleGatewayReady({guilds}: {guilds: ReadonlyArray<GuildReadyData>}): void {
 		emojiGuildRegistry.reset();
 		for (const guild of guilds) {
 			emojiGuildRegistry.updateGuild(guild.id, guild.emojis);
 		}
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
+	}
+
+	hydrateFromSnapshot(guildEmojis: ReadonlyArray<{guildId: string; emojis: ReadonlyArray<WireGuildEmoji>}>): void {
+		emojiGuildRegistry.reset();
+		for (const {guildId, emojis} of guildEmojis) {
+			emojiGuildRegistry.updateGuild(guildId, emojis);
+		}
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	handleGuildUpdate({guild}: {guild: GuildReadyData | WireGuild}): void {
 		if (!('emojis' in guild)) {
-			ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+			ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 			return;
 		}
 		emojiGuildRegistry.updateGuild(guild.id, guild.emojis);
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	handleGuildEmojiUpdated({guildId, emojis}: {guildId: string; emojis: ReadonlyArray<WireGuildEmoji>}): void {
 		emojiGuildRegistry.updateGuild(guildId, emojis);
 		patchGuildEmojiCacheFromGateway(guildId, emojis);
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	handleGuildDelete({guildId}: {guildId: string}): void {
 		emojiGuildRegistry.deleteGuild(guildId);
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 }
 

@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
+type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
 export type VideoPlayerPlayPauseIndicator = 'play' | 'pause';
+
+type VideoPlayerPreloadAttribute = 'none' | 'metadata' | undefined;
 
 export interface VideoPlayerRenderSignals {
 	autoPlay: boolean;
 	hasPlayed: boolean;
+	wantsMetadata: boolean;
 	isPlaying: boolean;
 	isPaused: boolean;
 	isEnded: boolean;
@@ -17,12 +20,13 @@ export interface VideoPlayerRenderSignals {
 export interface VideoPlayerRenderModel {
 	renderState: VideoPlayerRenderState;
 	shouldAttachSource: boolean;
+	preloadAttribute: VideoPlayerPreloadAttribute;
 	shouldHideVideo: boolean;
 	shouldShowPosterOverlay: boolean;
 	shouldShowControlsOverlay: boolean;
 }
 
-export interface VideoPlayerPlaybackSignals {
+interface VideoPlayerPlaybackSignals {
 	hasPlayed: boolean;
 	isPlaying: boolean;
 }
@@ -41,6 +45,7 @@ interface VideoPlayerRenderContext {
 const DEFAULT_RENDER_SIGNALS: VideoPlayerRenderSignals = {
 	autoPlay: false,
 	hasPlayed: false,
+	wantsMetadata: false,
 	isPlaying: false,
 	isPaused: true,
 	isEnded: false,
@@ -60,7 +65,8 @@ function createRenderModel(signals: VideoPlayerRenderSignals): VideoPlayerRender
 	const renderState = selectRenderState(signals);
 	return {
 		renderState,
-		shouldAttachSource: signals.hasPlayed,
+		shouldAttachSource: signals.hasPlayed || signals.wantsMetadata,
+		preloadAttribute: signals.hasPlayed ? undefined : signals.wantsMetadata ? 'metadata' : 'none',
 		shouldHideVideo: !signals.hasPlayed,
 		shouldShowPosterOverlay: !signals.hasPlayed && !signals.autoPlay,
 		shouldShowControlsOverlay: signals.hasPlayed || signals.autoPlay,
@@ -79,7 +85,7 @@ function selectPlayPauseIndicator(
 
 const DEFAULT_RENDER_MODEL = createRenderModel(DEFAULT_RENDER_SIGNALS);
 
-export const videoPlayerRenderStateMachine = setup({
+const videoPlayerRenderStateMachine = setup({
 	types: {} as {
 		context: VideoPlayerRenderContext;
 		events: VideoPlayerRenderEvent;
@@ -121,7 +127,7 @@ export const videoPlayerRenderStateMachine = setup({
 export type VideoPlayerRenderSnapshot = SnapshotFrom<typeof videoPlayerRenderStateMachine>;
 
 export function createVideoPlayerRenderSnapshot(): VideoPlayerRenderSnapshot {
-	return getInitialSnapshot(videoPlayerRenderStateMachine);
+	return initialTransition(videoPlayerRenderStateMachine)[0];
 }
 
 export function transitionVideoPlayerRenderSnapshot(

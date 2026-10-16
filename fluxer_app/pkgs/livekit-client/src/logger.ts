@@ -25,6 +25,9 @@ export enum LoggerNames {
 	PCTransport = 'livekit-pc-transport',
 	E2EE = 'lk-e2ee',
 	DataTracks = 'livekit-data-tracks',
+	Region = 'livekit-region',
+	ICE = 'livekit-ice',
+	Stats = 'livekit-stats',
 }
 
 type LogLevelString = keyof typeof LogLevel;
@@ -40,17 +43,39 @@ export type StructuredLogger = log.Logger & {
 	getLevel: () => number;
 };
 
-const livekitLogger = log.getLogger('livekit');
+export type ContextProvider = () => object | undefined;
+
+const livekitLogger = log.getLogger(LoggerNames.Default);
 const livekitLoggers = Object.values(LoggerNames).map((name) => log.getLogger(name));
 
 livekitLogger.setDefaultLevel(LogLevel.info);
 
 export default livekitLogger as StructuredLogger;
 
-export function getLogger(name: string) {
+export function getLogger(name: string, ctxFn?: ContextProvider) {
 	const logger = log.getLogger(name);
 	logger.setDefaultLevel(livekitLogger.getLevel());
-	return logger as StructuredLogger;
+	if (!ctxFn) {
+		return logger as StructuredLogger;
+	}
+	return wrapWithContext(logger as StructuredLogger, ctxFn);
+}
+
+function wrapWithContext(base: StructuredLogger, ctxFn: ContextProvider): StructuredLogger {
+	type LogMethod = 'trace' | 'debug' | 'info' | 'warn' | 'error';
+	const wrap = (method: LogMethod) => (msg: string, extra?: object) => {
+		const ctx = ctxFn();
+		const merged = ctx || extra ? {...ctx, ...extra} : undefined;
+		base[method](msg, merged);
+	};
+
+	const proxy = Object.create(base) as StructuredLogger;
+	proxy.trace = wrap('trace');
+	proxy.debug = wrap('debug');
+	proxy.info = wrap('info');
+	proxy.warn = wrap('warn');
+	proxy.error = wrap('error');
+	return proxy;
 }
 
 export function setLogLevel(level: LogLevel | LogLevelString, loggerName?: LoggerNames) {
@@ -89,4 +114,24 @@ export function setLogExtension(extension: LogExtension, logger?: StructuredLogg
 	});
 }
 
-export const workerLogger = log.getLogger('lk-e2ee') as StructuredLogger;
+export const workerLogger = log.getLogger(LoggerNames.E2EE) as StructuredLogger;
+
+const workerLogLevelListeners = new Set<(level: LogLevel) => void>();
+
+const originalWorkerSetLevel = workerLogger.setLevel.bind(workerLogger);
+workerLogger.setLevel = ((level: log.LogLevelDesc, persist?: boolean) => {
+	originalWorkerSetLevel(level, persist);
+	const numeric = workerLogger.getLevel() as LogLevel;
+	workerLogLevelListeners.forEach((cb) => cb(numeric));
+}) as typeof workerLogger.setLevel;
+
+export function onWorkerLogLevelChanged(cb: (level: LogLevel) => void): () => void {
+	workerLogLevelListeners.add(cb);
+	return () => {
+		workerLogLevelListeners.delete(cb);
+	};
+}
+
+export function getWorkerLogLevelListenerCount(): number {
+	return workerLogLevelListeners.size;
+}

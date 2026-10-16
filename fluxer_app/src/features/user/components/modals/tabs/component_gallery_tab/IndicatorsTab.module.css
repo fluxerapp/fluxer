@@ -7,27 +7,6 @@
 	gap: 1.5rem;
 }
 
-.itemWithLabel {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.itemText {
-	font-size: 0.875rem;
-	color: var(--text-primary);
-}
-
-.itemTextSmall {
-	font-size: 0.75rem;
-	color: var(--text-primary);
-}
-
-.itemTextBase {
-	font-size: 1rem;
-	color: var(--text-primary);
-}
-
 .itemTextTertiary {
 	font-size: 0.75rem;
 	color: var(--text-tertiary);
@@ -36,12 +15,6 @@
 .avatarGroup {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.avatarShapes {
-	display: flex;
 	align-items: center;
 	gap: 0.5rem;
 }

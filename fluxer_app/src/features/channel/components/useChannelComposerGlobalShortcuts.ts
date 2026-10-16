@@ -4,7 +4,7 @@ import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/c
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {canFocusTextarea, safeFocus} from '@app/features/platform/utils/InputFocusManager';
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -98,7 +98,7 @@ export function useChannelComposerGlobalShortcuts({
 				event.stopPropagation();
 				return;
 			}
-			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId: channel.id});
+			ComponentBus.dispatch('ESCAPE_PRESSED', {channelId: channel.id});
 			event.preventDefault();
 		};
 		window.addEventListener('keydown', handleKeyDown);

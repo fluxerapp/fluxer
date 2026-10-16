@@ -1,43 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
-import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
-import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
-import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
-import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
-import {GuildInviteHeader, InviteHeader} from '@app/features/auth/flow/InviteHeader';
-import {useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
+import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
+import {linkRegisterFields, readRegistrationUrlCode} from '@app/features/auth/flow/RegisterFormFields';
+import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
+import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
+import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
-import {CREATE_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
-import Invites from '@app/features/invite/state/Invites';
-import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
+import {CREATE_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {
-	ACCEPT_INVITE_DESCRIPTOR,
-	INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR,
-	INVITE_NOT_FOUND_TITLE_DESCRIPTOR,
-	INVITES_PAUSED_ACCOUNT_ACTIONS_DESCRIPTOR,
-	INVITES_PAUSED_DESCRIPTOR,
-	RAID_INVITES_PAUSED_ACCOUNT_ACTIONS_DESCRIPTOR,
-	RAID_INVITES_PAUSED_DESCRIPTOR,
-} from '@app/features/invite/utils/InviteMessageDescriptors';
+	InviteAuthPageState,
+	InvitesPausedPanel,
+	useInviteAuthPage,
+} from '@app/features/invite/components/pages/InviteAuthPageState';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {useLocation, useParams} from '@app/features/platform/components/router/RouterReact';
-import {Button} from '@app/features/ui/button/Button';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
-import {GuildFeatures, GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo} from 'react';
+import {useMemo} from 'react';
 
-const InviteRegisterPage = observer(function InviteRegisterPage() {
+interface InviteRegisterPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const InviteRegisterPageContent = observer(function InviteRegisterPageContent({
+	runtimeSnapshot,
+}: InviteRegisterPageContentProps) {
 	const {i18n} = useLingui();
+	const runtimeTarget = useAuthRuntimeTarget();
 	const {code} = useParams() as {code: string};
 	const location = useLocation();
 	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -49,108 +47,33 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 	const loginPath = safeRedirect
 		? setPathQueryParams(Routes.inviteLogin(code), {redirect_to: safeRedirect})
 		: Routes.inviteLogin(code);
-	const {setSplashUrl, setSplashCardAlignment} = useAuthLayoutContext();
-	useFluxerDocumentTitle(i18n._(ACCEPT_INVITE_DESCRIPTOR));
-	const inviteState = Invites.invites.get(code) ?? null;
-	const inviteData = inviteState?.data ?? null;
-	const guildInvite = inviteData && isGuildInvite(inviteData) ? inviteData : null;
-	useEffect(() => {
-		const currentInviteState = Invites.invites.get(code) ?? null;
-		if (!currentInviteState && code) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
-		}
-	}, [code]);
-	useEffect(() => {
-		if (!guildInvite) {
-			return;
-		}
-		const guild = guildInvite.guild;
-		if (guild?.splash) {
-			const splashUrl = AvatarUtils.getGuildSplashURL(
-				{
-					id: guild.id,
-					splash: guild.splash,
-				},
-				4096,
-			);
-			setSplashUrl(splashUrl);
-		}
-	}, [guildInvite?.guild?.splash, guildInvite?.guild?.id, setSplashUrl]);
-	useEffect(() => {
-		if (guildInvite) {
-			setSplashCardAlignment(guildInvite.guild.splash_card_alignment ?? GuildSplashCardAlignment.CENTER);
-		} else {
-			setSplashCardAlignment(GuildSplashCardAlignment.CENTER);
-		}
-	}, [guildInvite?.guild?.splash_card_alignment, setSplashCardAlignment]);
-	if (!inviteState || inviteState.loading) {
-		return <AuthLoadingState data-flx="invite.invite-register-page.auth-loading-state" />;
-	}
-	if (inviteState.error || !inviteState.data) {
+
+	useAuthPresentation({variant: AuthCardVariant.STANDARD});
+	const {invite, loading, guildInvite, isGroupDM, isInvitesDisabled, isRaidDetected} = useInviteAuthPage(
+		code,
+		runtimeSnapshot,
+	);
+	if (!invite)
 		return (
-			<AuthErrorState
-				title={i18n._(INVITE_NOT_FOUND_TITLE_DESCRIPTOR)}
-				text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
-				data-flx="invite.invite-register-page.auth-error-state"
+			<InviteAuthPageState
+				loading={loading}
+				prefix="invite.invite-register-page"
+				data-flx="invite.invite-register-page.invite-register-page-content.invite-auth-page-state"
 			/>
 		);
-	}
-	const invite = inviteState.data;
-	const isGroupDM = isGroupDmInvite(invite);
-	const guildFeatures = guildInvite?.guild.features
-		? Array.isArray(guildInvite.guild.features)
-			? guildInvite.guild.features
-			: [...guildInvite.guild.features]
-		: [];
-	const isInvitesDisabled = guildFeatures.includes(GuildFeatures.INVITES_DISABLED);
-	const isRaidDetected = guildFeatures.includes(GuildFeatures.RAID_DETECTED);
-	if (isInvitesDisabled && !isGroupDM) {
+	if (isInvitesDisabled && !isGroupDM)
 		return (
-			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div">
-				<DesktopDeepLinkPrompt
-					code={code}
-					kind="invite"
-					data-flx="invite.invite-register-page.desktop-deep-link-prompt"
-				/>
-				{guildInvite ? (
-					<GuildInviteHeader invite={guildInvite} data-flx="invite.invite-register-page.guild-invite-header" />
-				) : null}
-				<div className={sharedStyles.disabledContainer} data-flx="invite.invite-register-page.div--2">
-					<p className={sharedStyles.disabledText} data-flx="invite.invite-register-page.p">
-						{isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_DESCRIPTOR, {productName: PRODUCT_NAME})
-							: i18n._(INVITES_PAUSED_DESCRIPTOR)}
-					</p>
-					<p className={sharedStyles.disabledSubtext} data-flx="invite.invite-register-page.p--2">
-						{isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_ACCOUNT_ACTIONS_DESCRIPTOR)
-							: i18n._(INVITES_PAUSED_ACCOUNT_ACTIONS_DESCRIPTOR)}
-					</p>
-				</div>
-				<div className={sharedStyles.disabledActions} data-flx="invite.invite-register-page.div--3">
-					<AuthRouterLink
-						to="/register"
-						className={sharedStyles.disabledActionLink}
-						data-flx="invite.invite-register-page.auth-router-link"
-					>
-						<Button fitContainer data-flx="invite.invite-register-page.button">
-							{i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
-						</Button>
-					</AuthRouterLink>
-					<AuthRouterLink
-						to="/login"
-						className={sharedStyles.disabledActionLink}
-						data-flx="invite.invite-register-page.auth-router-link--2"
-					>
-						<Button fitContainer variant="secondary" data-flx="invite.invite-register-page.button--2">
-							{i18n._(SIGN_IN_DESCRIPTOR)}
-						</Button>
-					</AuthRouterLink>
-				</div>
-			</div>
+			<InvitesPausedPanel
+				code={code}
+				guildInvite={guildInvite}
+				isRaidDetected={isRaidDetected}
+				prefix="invite.invite-register-page"
+				data-flx="invite.invite-register-page.invite-register-page-content.invites-paused-panel"
+			/>
 		);
-	}
-	if (isRuntimeSsoEnforced()) {
+
+	const runtimeSso = resolveAuthPanelSso(runtimeSnapshot);
+	if (runtimeSso?.enabled === true && runtimeSso.enforced === true) {
 		return (
 			<>
 				<DesktopDeepLinkPrompt
@@ -160,12 +83,18 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 				/>
 				<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header.sso" />
 				<div className={sharedStyles.container} data-flx="invite.invite-register-page.sso-container">
-					<AuthSsoPanel redirectPath={ssoRedirectPath} dataFlx="invite.invite-register-page.sso-panel" />
+					<AuthSsoPanel
+						redirectPath={ssoRedirectPath}
+						runtimeSnapshot={runtimeSnapshot}
+						dataFlx="invite.invite-register-page.sso-panel"
+						data-flx="invite.invite-register-page.auth-sso-panel"
+					/>
 					<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link.sso" />
 				</div>
 			</>
 		);
 	}
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
 	return (
 		<>
 			<DesktopDeepLinkPrompt
@@ -175,10 +104,14 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			/>
 			<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header" />
 			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div--4">
-				<AuthMinimalRegisterFormCore
+				<AuthRegisterFormCore
+					fields={linkRegisterFields(runtimeSnapshot, readRegistrationUrlCode(params))}
 					submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
 					redirectPath="/"
+					offerRecoveryKit={usernameSignIn}
 					inviteCode={code}
+					runtimeSnapshot={runtimeSnapshot}
+					onAuthenticated={runtimeTarget.reset}
 					data-flx="invite.invite-register-page.auth-minimal-register-form-core"
 				/>
 				<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link" />
@@ -186,5 +119,16 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 		</>
 	);
 });
+
+const InviteRegisterPage = observer(() => (
+	<AuthRuntimeTargetGate data-flx="invite.invite-register-page.runtime-target-gate">
+		{(runtimeSnapshot) => (
+			<InviteRegisterPageContent
+				runtimeSnapshot={runtimeSnapshot}
+				data-flx="invite.invite-register-page.invite-register-page-content"
+			/>
+		)}
+	</AuthRuntimeTargetGate>
+));
 
 export default InviteRegisterPage;

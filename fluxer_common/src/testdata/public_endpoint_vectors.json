@@ -1,0 +1,440 @@
+[
+	{
+		"url": "https://fluxer.example",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "https://fluxer.example"
+	},
+	{
+		"url": "https://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "https://fluxer.example/media"
+	},
+	{
+		"url": "https://fluxer.example/admin",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "https://fluxer.example/admin"
+	},
+	{
+		"url": "https://fluxer.example/admin/oauth2_callback",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "https://fluxer.example/admin/oauth2_callback"
+	},
+	{
+		"url": "wss://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "wss://fluxer.example/gateway"
+	},
+	{
+		"url": "http://fluxer.example",
+		"base_domain": "fluxer.example",
+		"public_port": 80,
+		"normalized": "http://fluxer.example"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 80,
+		"normalized": "http://fluxer.example/media"
+	},
+	{
+		"url": "ws://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 80,
+		"normalized": "ws://fluxer.example/gateway"
+	},
+	{
+		"url": "http://fluxer.example",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080"
+	},
+	{
+		"url": "http://fluxer.example/",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/media"
+	},
+	{
+		"url": "http://fluxer.example/api",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/api"
+	},
+	{
+		"url": "http://fluxer.example/admin",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/admin"
+	},
+	{
+		"url": "http://fluxer.example/admin/oauth2_callback",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/admin/oauth2_callback"
+	},
+	{
+		"url": "ws://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "ws://fluxer.example:19080/gateway"
+	},
+	{
+		"url": "https://fluxer.example/admin/oauth2_callback",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https://fluxer.example:8443/admin/oauth2_callback"
+	},
+	{
+		"url": "wss://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "wss://fluxer.example:8443/gateway"
+	},
+	{
+		"url": "https://fluxer.example",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https://fluxer.example:8443"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "http://fluxer.example:443/media"
+	},
+	{
+		"url": "https://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 80,
+		"normalized": "https://fluxer.example:80/media"
+	},
+	{
+		"url": "ws://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 443,
+		"normalized": "ws://fluxer.example:443/gateway"
+	},
+	{
+		"url": "wss://fluxer.example/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 80,
+		"normalized": "wss://fluxer.example:80/gateway"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": null,
+		"normalized": "http://fluxer.example/media"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 0,
+		"normalized": "http://fluxer.example/media"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example/media"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "   ",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example/media"
+	},
+	{
+		"url": "http://fluxer.example:19080/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/media"
+	},
+	{
+		"url": "http://fluxer.example:8080/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:8080/media"
+	},
+	{
+		"url": "https://fluxer.example:443/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "https://fluxer.example:443/media"
+	},
+	{
+		"url": "http://fluxer.example:80/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:80/media"
+	},
+	{
+		"url": "https://fluxer.example:8443/admin/oauth2_callback",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https://fluxer.example:8443/admin/oauth2_callback"
+	},
+	{
+		"url": "ws://fluxer.example:19080/gateway",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "ws://fluxer.example:19080/gateway"
+	},
+	{
+		"url": "http://fluxer.example:8080?a=1",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:8080?a=1"
+	},
+	{
+		"url": "https://cdn.example.net/assets",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "https://cdn.example.net/assets"
+	},
+	{
+		"url": "https://media.example.net",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "https://media.example.net"
+	},
+	{
+		"url": "https://sub.fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "https://sub.fluxer.example/media"
+	},
+	{
+		"url": "https://fluxer.example/media",
+		"base_domain": "example",
+		"public_port": 19080,
+		"normalized": "https://fluxer.example/media"
+	},
+	{
+		"url": "https://fluxer.example.evil.net/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "https://fluxer.example.evil.net/media"
+	},
+	{
+		"url": "http://api:8080",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://api:8080"
+	},
+	{
+		"url": "http://media-proxy:8080",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://media-proxy:8080"
+	},
+	{
+		"url": "http://FLUXER.example/Media",
+		"base_domain": "Fluxer.Example",
+		"public_port": 19080,
+		"normalized": "http://FLUXER.example:19080/Media"
+	},
+	{
+		"url": "HTTPS://fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "HTTPS://fluxer.example:8443/media"
+	},
+	{
+		"url": "http://fluxer.example./media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example.:19080/media"
+	},
+	{
+		"url": "http://fluxer.example/media",
+		"base_domain": "fluxer.example.",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/media"
+	},
+	{
+		"url": "http://fluxer.example./media",
+		"base_domain": "fluxer.example.",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example.:19080/media"
+	},
+	{
+		"url": "http://fluxer.example?a=1",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080?a=1"
+	},
+	{
+		"url": "http://fluxer.example#top",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080#top"
+	},
+	{
+		"url": "http://fluxer.example/media/x.png?v=1#frag",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/media/x.png?v=1#frag"
+	},
+	{
+		"url": "http://fluxer.example/media/",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/media/"
+	},
+	{
+		"url": "http://fluxer.example/a%20b",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080/a%20b"
+	},
+	{
+		"url": "http://fluxer.example#/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080#/media"
+	},
+	{
+		"url": "http://user:pass@fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://user:pass@fluxer.example:19080/media"
+	},
+	{
+		"url": "http://user:pass@fluxer.example:19080/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://user:pass@fluxer.example:19080/media"
+	},
+	{
+		"url": "http://user:p@ss@fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://user:p@ss@fluxer.example:19080/media"
+	},
+	{
+		"url": "http://[::1]/media",
+		"base_domain": "[::1]",
+		"public_port": 19080,
+		"normalized": "http://[::1]:19080/media"
+	},
+	{
+		"url": "http://[::1]:8080/media",
+		"base_domain": "[::1]",
+		"public_port": 19080,
+		"normalized": "http://[::1]:8080/media"
+	},
+	{
+		"url": "http://127.0.0.1/media",
+		"base_domain": "127.0.0.1",
+		"public_port": 19080,
+		"normalized": "http://127.0.0.1:19080/media"
+	},
+	{
+		"url": "http://[2001:db8::1]/media",
+		"base_domain": "[2001:db8::1]",
+		"public_port": 19080,
+		"normalized": "http://[2001:db8::1]:19080/media"
+	},
+	{
+		"url": "http://[2001:DB8::1]/media",
+		"base_domain": "[2001:db8::1]",
+		"public_port": 19080,
+		"normalized": "http://[2001:DB8::1]:19080/media"
+	},
+	{
+		"url": "",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": ""
+	},
+	{
+		"url": "/api",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "/api"
+	},
+	{
+		"url": "fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "fluxer.example/media"
+	},
+	{
+		"url": "not a url",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "not a url"
+	},
+	{
+		"url": "://x",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "://x"
+	},
+	{
+		"url": "file:///x",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "file:///x"
+	},
+	{
+		"url": "mailto:a@fluxer.example",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "mailto:a@fluxer.example"
+	},
+	{
+		"url": "http://fluxer.example\\evil",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "http://fluxer.example:19080\\evil"
+	},
+	{
+		"url": "https://fluxer.example:/media",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https://fluxer.example:/media"
+	},
+	{
+		"url": "//fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 19080,
+		"normalized": "//fluxer.example/media"
+	},
+	{
+		"url": "https:fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https:fluxer.example/media"
+	},
+	{
+		"url": "https:/fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https:/fluxer.example/media"
+	},
+	{
+		"url": "https:////fluxer.example/media",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "https:////fluxer.example/media"
+	},
+	{
+		"url": "android:apk-key-hash:9NrCFDLVR8_ObZC-EWzaRA",
+		"base_domain": "fluxer.example",
+		"public_port": 8443,
+		"normalized": "android:apk-key-hash:9NrCFDLVR8_ObZC-EWzaRA"
+	}
+]

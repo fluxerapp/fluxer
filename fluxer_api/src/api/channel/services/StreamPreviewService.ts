@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {applyUploadRelayDecision, resolveUploadRelayDecision} from '@app/api/channel/services/UploadRelay';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import {STREAM_PREVIEW_CONTENT_TYPE_JPEG, STREAM_PREVIEW_MAX_BYTES} from '@fluxer/constants/src/StreamConstants';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
@@ -8,11 +13,6 @@ import {PreviewMustBeJpegError} from '@fluxer/errors/src/domains/core/PreviewMus
 import type {StreamPreviewUploadUrlResponseSchema} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {ms, seconds} from 'itty-time';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import {applyUploadRelayDecision, resolveUploadRelayDecision} from './UploadRelay';
 
 const PREVIEW_TTL_SECONDS = seconds('1 day');
 const PREVIEW_UPLOAD_URL_TTL_SECONDS = seconds('1 day');

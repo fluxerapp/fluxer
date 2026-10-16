@@ -1,0 +1,975 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Fluxer chart values",
+	"definitions": {
+		"workload": {
+			"type": "object",
+			"properties": {
+				"replicas": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"image": {
+					"type": "object",
+					"properties": {
+						"registry": {
+							"type": "string"
+						},
+						"tag": {
+							"type": ["string", "number"]
+						},
+						"digest": {
+							"type": "string"
+						},
+						"pullPolicy": {
+							"type": "string",
+							"enum": ["Always", "IfNotPresent", "Never"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"resources": {
+					"type": "object"
+				},
+				"env": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"extraEnv": {
+					"type": "array"
+				},
+				"probes": {
+					"type": "object",
+					"properties": {
+						"startup": {
+							"type": ["object", "null"]
+						},
+						"liveness": {
+							"type": ["object", "null"]
+						},
+						"readiness": {
+							"type": ["object", "null"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"podAnnotations": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"topologySpreadConstraints": {
+					"type": "array"
+				},
+				"pdb": {
+					"type": "object",
+					"properties": {
+						"minAvailable": {
+							"type": ["string", "integer"]
+						},
+						"maxUnavailable": {
+							"type": ["string", "integer"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"hpa": {
+					"type": "object",
+					"properties": {
+						"minReplicas": {
+							"type": "integer",
+							"minimum": 1
+						},
+						"maxReplicas": {
+							"type": "integer",
+							"minimum": 1
+						},
+						"targetCPUUtilizationPercentage": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					"additionalProperties": false
+				},
+				"extraVolumes": {
+					"type": "array"
+				},
+				"extraVolumeMounts": {
+					"type": "array"
+				},
+				"terminationGracePeriodSeconds": {
+					"type": "integer",
+					"minimum": 0
+				}
+			},
+			"additionalProperties": false
+		},
+		"thirdPartyImage": {
+			"type": "object",
+			"properties": {
+				"repository": {
+					"type": "string",
+					"minLength": 1
+				},
+				"tag": {
+					"type": ["string", "number"]
+				},
+				"digest": {
+					"type": "string"
+				},
+				"pullPolicy": {
+					"type": "string",
+					"enum": ["Always", "IfNotPresent", "Never"]
+				}
+			},
+			"additionalProperties": false
+		},
+		"persistence": {
+			"type": "object",
+			"properties": {
+				"size": {
+					"type": "string",
+					"minLength": 1
+				},
+				"storageClassName": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"svc": {
+			"type": "object",
+			"properties": {
+				"router": {
+					"$ref": "#/definitions/workload"
+				},
+				"shard": {
+					"$ref": "#/definitions/workload"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"type": "object",
+	"required": ["domain"],
+	"additionalProperties": false,
+	"properties": {
+		"global": {
+			"type": "object"
+		},
+		"enabled": {
+			"type": "boolean"
+		},
+		"domain": {
+			"type": "string",
+			"description": "Public hostname of the instance, for example chat.example.com"
+		},
+		"scheme": {
+			"type": "string",
+			"enum": ["http", "https"]
+		},
+		"port": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 65535
+		},
+		"publicOrigin": {
+			"type": "string"
+		},
+		"adminBasePath": {
+			"type": "string"
+		},
+		"email": {
+			"type": "string"
+		},
+		"clusterDomain": {
+			"type": "string",
+			"minLength": 1
+		},
+		"clusterChecks": {
+			"type": "boolean"
+		},
+		"image": {
+			"type": "object",
+			"properties": {
+				"registry": {
+					"type": "string",
+					"minLength": 1
+				},
+				"tag": {
+					"type": ["string", "number"]
+				},
+				"pullPolicy": {
+					"type": "string",
+					"enum": ["Always", "IfNotPresent", "Never"]
+				},
+				"tags": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"digests": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"pullSecrets": {
+					"type": "array"
+				},
+				"revision": {
+					"type": ["string", "number"]
+				}
+			},
+			"additionalProperties": false
+		},
+		"initImage": {
+			"$ref": "#/definitions/thirdPartyImage"
+		},
+		"secrets": {
+			"type": "object",
+			"properties": {
+				"existingSecret": {
+					"type": "string"
+				},
+				"generate": {
+					"type": "boolean"
+				},
+				"values": {
+					"type": "object",
+					"properties": {
+						"FLUXER_POSTGRES_PASSWORD": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_SEARCH_API_KEY": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_S3_ACCESS_KEY_ID": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_S3_SECRET_ACCESS_KEY": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_SUDO_MODE_SECRET": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_CONNECTION_INITIATION_SECRET": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_PROFILE_PSEUDONYM_SECRET": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_GATEWAY_RPC_AUTH_TOKEN": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_VALKEY_PASSWORD": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_NATS_AUTH_TOKEN": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_ERLANG_COOKIE": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_MEDIA_PROXY_SECRET_KEY": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_ADMIN_SECRET_KEY_BASE": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_ADMIN_OAUTH_CLIENT_SECRET": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_SETUP_TOKEN": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_LIVEKIT_API_KEY": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_LIVEKIT_API_SECRET": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_VAPID_PUBLIC_KEY": {
+							"type": ["string", "null"]
+						},
+						"FLUXER_VAPID_PRIVATE_KEY": {
+							"type": ["string", "null"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"extra": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "null"]
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"env": {
+			"type": "object",
+			"additionalProperties": {
+				"type": ["string", "number", "boolean", "null"]
+			}
+		},
+		"postgres": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"persistence": {
+					"$ref": "#/definitions/persistence"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"external": {
+					"type": "object",
+					"properties": {
+						"host": {
+							"type": "string"
+						},
+						"port": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 65535
+						},
+						"database": {
+							"type": "string"
+						},
+						"username": {
+							"type": "string"
+						},
+						"ssl": {
+							"type": ["string", "boolean"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"database": {
+					"type": "string",
+					"minLength": 1
+				},
+				"username": {
+					"type": "string",
+					"minLength": 1
+				},
+				"runAsUser": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"parameters": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"shmSize": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"valkey": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"persistence": {
+					"$ref": "#/definitions/persistence"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"external": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"maxmemory": {
+					"type": "string"
+				},
+				"maxmemoryPolicy": {
+					"type": "string"
+				},
+				"appendfsync": {
+					"type": "string",
+					"enum": ["always", "everysec", "no"]
+				}
+			},
+			"additionalProperties": false
+		},
+		"nats": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"persistence": {
+					"$ref": "#/definitions/persistence"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"external": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"replicas": {
+					"type": "integer",
+					"minimum": 1
+				}
+			},
+			"additionalProperties": false
+		},
+		"meilisearch": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"persistence": {
+					"$ref": "#/definitions/persistence"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"external": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"maxIndexingMemory": {
+					"type": "string"
+				},
+				"maxIndexingThreads": {
+					"type": "integer",
+					"minimum": 1
+				}
+			},
+			"additionalProperties": false
+		},
+		"seaweedfs": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"persistence": {
+					"$ref": "#/definitions/persistence"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"volumeGrowth": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"gomemlimit": {
+					"type": "string"
+				},
+				"initAttempts": {
+					"type": "integer",
+					"minimum": 1
+				}
+			},
+			"additionalProperties": false
+		},
+		"s3": {
+			"type": "object",
+			"properties": {
+				"endpoint": {
+					"type": "string"
+				},
+				"publicEndpoint": {
+					"type": "string"
+				},
+				"region": {
+					"type": "string",
+					"minLength": 1
+				},
+				"forcePathStyle": {
+					"type": "boolean"
+				},
+				"buckets": {
+					"type": "object",
+					"properties": {
+						"cdn": {
+							"type": "string",
+							"minLength": 1
+						},
+						"uploads": {
+							"type": "string",
+							"minLength": 1
+						},
+						"reports": {
+							"type": "string",
+							"minLength": 1
+						},
+						"harvests": {
+							"type": "string",
+							"minLength": 1
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"livekit": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"external": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						},
+						"publicUrl": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"expose": {
+					"type": "string",
+					"enum": ["hostNetwork", "loadBalancer", "nodePort"]
+				},
+				"nodeIP": {
+					"type": "string"
+				},
+				"loadBalancerIP": {
+					"type": "string"
+				},
+				"useExternalIP": {
+					"type": "boolean"
+				},
+				"tcpPort": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 65535
+				},
+				"udpPort": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 65535
+				},
+				"nodePorts": {
+					"type": "object",
+					"properties": {
+						"tcp": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 65535
+						},
+						"udp": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 65535
+						}
+					},
+					"additionalProperties": false
+				},
+				"stunServers": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"logLevel": {
+					"type": "string"
+				},
+				"extraConfig": {
+					"type": "object"
+				},
+				"defaultRegion": {
+					"type": "string"
+				},
+				"nodeCIDRs": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"serviceAnnotations": {
+					"type": "object"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				}
+			},
+			"additionalProperties": false
+		},
+		"api": {
+			"$ref": "#/definitions/workload"
+		},
+		"worker": {
+			"$ref": "#/definitions/workload"
+		},
+		"gateway": {
+			"$ref": "#/definitions/workload"
+		},
+		"mediaProxy": {
+			"$ref": "#/definitions/workload"
+		},
+		"push": {
+			"$ref": "#/definitions/workload"
+		},
+		"admin": {
+			"$ref": "#/definitions/workload"
+		},
+		"appProxy": {
+			"type": "object",
+			"properties": {
+				"replicas": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"image": {
+					"type": "object",
+					"properties": {
+						"registry": {
+							"type": "string"
+						},
+						"tag": {
+							"type": ["string", "number"]
+						},
+						"digest": {
+							"type": "string"
+						},
+						"pullPolicy": {
+							"type": "string",
+							"enum": ["Always", "IfNotPresent", "Never"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"resources": {
+					"type": "object"
+				},
+				"env": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"extraEnv": {
+					"type": "array"
+				},
+				"probes": {
+					"type": "object",
+					"properties": {
+						"startup": {
+							"type": ["object", "null"]
+						},
+						"liveness": {
+							"type": ["object", "null"]
+						},
+						"readiness": {
+							"type": ["object", "null"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"podAnnotations": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				},
+				"topologySpreadConstraints": {
+					"type": "array"
+				},
+				"pdb": {
+					"type": "object",
+					"properties": {
+						"minAvailable": {
+							"type": ["string", "integer"]
+						},
+						"maxUnavailable": {
+							"type": ["string", "integer"]
+						}
+					},
+					"additionalProperties": false
+				},
+				"hpa": {
+					"type": "object",
+					"properties": {
+						"minReplicas": {
+							"type": "integer",
+							"minimum": 1
+						},
+						"maxReplicas": {
+							"type": "integer",
+							"minimum": 1
+						},
+						"targetCPUUtilizationPercentage": {
+							"type": "integer",
+							"minimum": 1
+						}
+					},
+					"additionalProperties": false
+				},
+				"extraVolumes": {
+					"type": "array"
+				},
+				"extraVolumeMounts": {
+					"type": "array"
+				},
+				"terminationGracePeriodSeconds": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"config": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"staticProxy": {
+			"$ref": "#/definitions/workload"
+		},
+		"svc": {
+			"type": "object",
+			"properties": {
+				"gifs": {
+					"$ref": "#/definitions/svc"
+				},
+				"messages": {
+					"$ref": "#/definitions/svc"
+				},
+				"snowflakes": {
+					"$ref": "#/definitions/svc"
+				},
+				"unfurl": {
+					"$ref": "#/definitions/svc"
+				},
+				"users": {
+					"$ref": "#/definitions/svc"
+				}
+			},
+			"additionalProperties": false
+		},
+		"edge": {
+			"type": "object",
+			"properties": {
+				"image": {
+					"$ref": "#/definitions/thirdPartyImage"
+				},
+				"expose": {
+					"type": "string",
+					"enum": ["ingress", "gateway", "loadBalancer", "none"]
+				},
+				"ingress": {
+					"type": "object",
+					"properties": {
+						"className": {
+							"type": "string"
+						},
+						"annotations": {
+							"type": "object"
+						},
+						"tls": {
+							"type": "object",
+							"properties": {
+								"mode": {
+									"type": "string",
+									"enum": ["certManager", "existingSecret", "none"]
+								},
+								"secretName": {
+									"type": "string"
+								},
+								"acmeServer": {
+									"type": "string"
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"additionalProperties": false
+				},
+				"gateway": {
+					"type": "object",
+					"properties": {
+						"parentRefs": {
+							"type": "array"
+						},
+						"timeouts": {
+							"type": "object"
+						}
+					},
+					"additionalProperties": false
+				},
+				"loadBalancer": {
+					"type": "object",
+					"properties": {
+						"http3": {
+							"type": "boolean"
+						},
+						"annotations": {
+							"type": "object"
+						},
+						"persistence": {
+							"$ref": "#/definitions/persistence"
+						}
+					},
+					"additionalProperties": false
+				},
+				"replicas": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"env": {
+					"type": "object",
+					"additionalProperties": {
+						"type": ["string", "number", "boolean", "null"]
+					}
+				},
+				"extraEnv": {
+					"type": "array"
+				},
+				"resources": {
+					"type": "object"
+				},
+				"podAnnotations": {
+					"type": "object"
+				},
+				"nodeSelector": {
+					"type": "object"
+				},
+				"tolerations": {
+					"type": "array"
+				},
+				"affinity": {
+					"type": "object"
+				}
+			},
+			"additionalProperties": false
+		},
+		"networkPolicy": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean"
+				},
+				"ingressNamespaceSelector": {
+					"type": "object"
+				}
+			},
+			"additionalProperties": false
+		}
+	}
+}

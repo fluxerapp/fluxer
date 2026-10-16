@@ -3,8 +3,9 @@
 import type {HttpClientTelemetry} from '@pkgs/http_client/src/HttpClientTelemetryTypes';
 
 export type ResponseStream = ReadableStream<Uint8Array> | null;
+export type FetchDispatcher = NonNullable<RequestInit['dispatcher']>;
 export type HttpMethod = 'GET' | 'POST' | 'HEAD' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS';
-export type RequestUrlValidationPhase = 'initial' | 'redirect';
+type RequestUrlValidationPhase = 'initial' | 'redirect';
 
 export interface RequestUrlValidationContext {
 	phase: RequestUrlValidationPhase;
@@ -13,6 +14,7 @@ export interface RequestUrlValidationContext {
 }
 
 export interface RequestUrlPolicy {
+	readonly dispatcher?: FetchDispatcher;
 	validate(url: URL, context: RequestUrlValidationContext): Promise<void>;
 }
 

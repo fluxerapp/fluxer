@@ -1,0 +1,72 @@
+{{- include "fluxer.validate" . }}
+{{- $v := .Values }}
+{{- $o := include "fluxer.origin" . }}
+Fluxer is installing in namespace {{ .Release.Namespace }}. Run one release per namespace.
+
+Open {{ $o }} once every pod is ready:
+
+  kubectl -n {{ .Release.Namespace }} get pods
+
+The admin panel is at {{ $o }}{{ $v.adminBasePath }}.
+
+The setup wizard asks for the setup token before it creates the admin account:
+
+  kubectl -n {{ .Release.Namespace }} get secret {{ include "fluxer.secretName" . }} -o jsonpath='{.data.FLUXER_SETUP_TOKEN}' | base64 -d
+
+A Secret with no FLUXER_SETUP_TOKEN has a token the API wrote to its log once:
+
+  kubectl -n {{ .Release.Namespace }} logs deployment/api | grep -i 'setup token'
+{{- if eq $v.edge.expose "loadBalancer" }}
+
+Point DNS for {{ $v.domain }} at the external address of the edge-public Service:
+
+  kubectl -n {{ .Release.Namespace }} get service edge-public
+{{- else if eq $v.edge.expose "none" }}
+
+Nothing exposes the instance yet. Send your proxy or tunnel to the Service edge
+on port 8080, with the Host header {{ $v.domain }}.
+{{- else }}
+
+Point DNS for {{ $v.domain }} at your {{ ternary "ingress controller" "gateway" (eq $v.edge.expose "ingress") }}. Its Service needs
+externalTrafficPolicy Local or the PROXY protocol, or every client shares one IP
+and registration hits its per-IP limit.
+{{- end }}
+{{- if $v.livekit.external.url }}
+
+Voice uses your LiveKit server at {{ $v.livekit.external.publicUrl }}. Point its webhook at
+{{ $o }}/api/webhooks/livekit, signed with the key in FLUXER_LIVEKIT_API_KEY.
+{{- end }}
+{{- if $v.livekit.enabled }}
+
+Voice media does not pass through the edge. Open these ports to the internet:
+{{- if eq $v.livekit.expose "hostNetwork" }}
+  {{ $v.livekit.tcpPort }}/tcp and {{ $v.livekit.udpPort }}/udp on the node that runs the livekit pod.
+  hostNetwork needs a namespace that allows privileged pods. Keep 7880 closed.
+{{- else if eq $v.livekit.expose "nodePort" }}
+  {{ $v.livekit.nodePorts.tcp }}/tcp and {{ $v.livekit.nodePorts.udp }}/udp on the node that runs the livekit pod.
+{{- else }}
+  {{ $v.livekit.tcpPort }}/tcp and {{ $v.livekit.udpPort }}/udp on the load balancer of the Service livekit-rtc,
+  whose public IP must be {{ $v.livekit.nodeIP }}.
+{{- end }}
+{{- end }}
+
+Back up the Secret {{ include "fluxer.secretName" . }}{{ if $v.postgres.enabled }}, the database in postgres-0{{ end }}{{ if $v.seaweedfs.enabled }} and the uploads on the volume data-seaweedfs-0{{ end }}.
+{{- if $v.secrets.existingSecret }}
+After editing the Secret {{ $v.secrets.existingSecret }}, restart the release:
+
+  kubectl -n {{ .Release.Namespace }} rollout restart deployment,statefulset -l app.kubernetes.io/instance={{ .Release.Name }}
+{{- end }}
+{{- if and $v.secrets.generate (not $v.secrets.existingSecret) }}
+
+Argo CD and helm template cannot read the existing Secret and would generate
+new secrets on every render. Under them, set secrets.generate=false and use
+secrets.existingSecret or give every key in secrets.values.
+{{- end }}
+
+To move to the latest v1 images, pull the repository and upgrade with your values file:
+
+  helm upgrade {{ .Release.Name }} <chart> -n {{ .Release.Namespace }} -f <your values file> --set-string image.revision=$(date +%s)
+
+Leave out --reuse-values, which keeps the defaults of the old chart version.
+
+Documentation: https://docs.fluxer.app/operator/kubernetes/

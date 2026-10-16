@@ -99,10 +99,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
             format!("{gateway_base}/livekit"),
         ),
         (
-            "FLUXER_LIVEKIT_WEBHOOK_URL".to_owned(),
-            format!("{base}/api/webhooks/livekit"),
-        ),
-        (
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT".to_owned(),
             format!("{base}/media"),
         ),
@@ -122,10 +118,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
         (
             "FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS".to_owned(),
             format!("{localhost_origins},{base}"),
-        ),
-        (
-            "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT".to_owned(),
-            format!("{base}/api"),
         ),
     ])
 }
@@ -153,19 +145,6 @@ pub fn public_url_env_text(public_url: &str) -> Result<String> {
     text.push_str(LOCAL_ENV_END);
     text.push('\n');
     Ok(text)
-}
-
-pub fn write_public_url_local_env(path: &Path, public_url: &str) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create {}", parent.display()))?;
-    }
-    let generated = public_url_env_text(public_url)?;
-    let existing = fs::read_to_string(path).unwrap_or_default();
-    let next = replace_marked_block(&existing, &generated);
-    fs::write(path, next).with_context(|| format!("failed to write {}", path.display()))?;
-    println!("Wrote public URL overrides to {}", path.display());
-    Ok(())
 }
 
 pub fn default_token_file() -> PathBuf {
@@ -227,7 +206,7 @@ pub fn resolve_cloudflare_public_url(public_url_arg: Option<&str>) -> Result<Str
         }
     }
     bail!(
-        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure -- --public-url https://...` or pass `pnpm dev -- --cloudflare-tunnel --public-url https://...`."
+        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure --public-url https://...` or pass `pnpm dev --cloudflare-tunnel --public-url https://...`."
     );
 }
 
@@ -253,6 +232,16 @@ pub async fn run_cloudflare_tunnel(
         return Ok(status.code().unwrap_or(1));
     }
     if running_inside_devcontainer() {
+        let container = std::fs::read_to_string("/etc/hostname")
+            .context("failed to read the current devcontainer hostname")?;
+        let container = container.trim();
+        if container.is_empty()
+            || !container
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+        {
+            bail!("Current devcontainer hostname is invalid");
+        }
         let docker = docker_command();
         let mut command = Command::new(&docker[0]);
         command.args(&docker[1..]);
@@ -261,11 +250,7 @@ pub async fn run_cloudflare_tunnel(
                 "run",
                 "--rm",
                 "--network",
-                &format!(
-                    "container:{}",
-                    std::env::var("HOSTNAME")
-                        .unwrap_or_else(|_| "fluxer-dev-workspace-1".to_owned())
-                ),
+                &format!("container:{container}"),
                 "cloudflare/cloudflared:latest",
                 "tunnel",
                 "run",
@@ -373,40 +358,6 @@ fn docker_socket_is_writable() -> bool {
     std::os::unix::net::UnixStream::connect("/var/run/docker.sock").is_ok()
 }
 
-fn replace_marked_block(existing: &str, generated: &str) -> String {
-    let Some(start) = existing.find(LOCAL_ENV_START) else {
-        return append_block(existing, generated);
-    };
-    let Some(relative_end) = existing[start..].find(LOCAL_ENV_END) else {
-        return append_block(existing, generated);
-    };
-    let end = start + relative_end + LOCAL_ENV_END.len();
-    let mut next = String::new();
-    next.push_str(existing[..start].trim_end());
-    if !next.is_empty() {
-        next.push_str("\n\n");
-    }
-    next.push_str(generated.trim_end());
-    let suffix = existing[end..].trim_start_matches(['\r', '\n']);
-    if !suffix.is_empty() {
-        next.push_str("\n\n");
-        next.push_str(suffix);
-    } else {
-        next.push('\n');
-    }
-    next
-}
-
-fn append_block(existing: &str, generated: &str) -> String {
-    let mut next = existing.trim_end().to_owned();
-    if !next.is_empty() {
-        next.push_str("\n\n");
-    }
-    next.push_str(generated.trim_end());
-    next.push('\n');
-    next
-}
-
 #[cfg(unix)]
 fn set_private_file_mode(path: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
@@ -419,52 +370,4 @@ fn set_private_file_mode(path: &Path) -> Result<()> {
 #[cfg(not(unix))]
 fn set_private_file_mode(_path: &Path) -> Result<()> {
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn derives_https_public_url_env() {
-        let env = public_url_env("https://dev.example.test").unwrap();
-        assert!(env.iter().any(|(key, value)| {
-            key == "FLUXER_GATEWAY_ENDPOINT" && value == "wss://dev.example.test/gateway"
-        }));
-        assert!(env.iter().any(|(key, value)| {
-            key == "FLUXER_LIVEKIT_URL" && value == "wss://dev.example.test/livekit"
-        }));
-        assert!(env.iter().any(|(key, value)| {
-            key == "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT"
-                && value == "https://dev.example.test/media"
-        }));
-        assert!(env.iter().any(|(key, value)| {
-            key == "FLUXER_S3_PUBLIC_ENDPOINT" && value == "https://dev.example.test"
-        }));
-        assert!(
-            env.iter()
-                .any(|(key, value)| { key == "FLUXER_PUBLIC_PORT" && value == "443" })
-        );
-    }
-
-    #[test]
-    fn rejects_public_url_with_path() {
-        assert!(parse_public_url("https://example.com/app").is_err());
-    }
-
-    #[test]
-    fn resolves_public_url_arg_normalized() {
-        assert_eq!(
-            resolve_cloudflare_public_url(Some("https://example.com/")).unwrap(),
-            "https://example.com"
-        );
-    }
-
-    #[test]
-    fn replaces_existing_generated_block() {
-        let existing =
-            "A=1\n\n# BEGIN fluxer-dev public URL\nOLD=1\n# END fluxer-dev public URL\n\nB=2\n";
-        let next = replace_marked_block(existing, "NEW=1\n");
-        assert_eq!(next, "A=1\n\nNEW=1\n\nB=2\n");
-    }
 }

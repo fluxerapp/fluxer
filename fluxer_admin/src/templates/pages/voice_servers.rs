@@ -18,19 +18,33 @@ use crate::{
     },
 };
 use maud::{Markup, html};
+use std::collections::HashMap;
 
 use super::voice_servers_forms::{create_server_form, edit_server_form};
+
+pub struct VoiceServersPageParams<'a> {
+    pub region_id: Option<&'a str>,
+    pub region_name: Option<&'a str>,
+    pub servers: Option<&'a [VoiceServer]>,
+    pub connection_counts: &'a HashMap<String, i64>,
+    pub error: Option<&'a str>,
+    pub csrf_token: &'a str,
+}
 
 pub fn voice_servers_page(
     config: &AdminConfig,
     auth: &AuthContext,
-    region_id: Option<&str>,
-    region_name: Option<&str>,
-    servers: Option<&[VoiceServer]>,
-    error: Option<&str>,
-    csrf_token: &str,
+    p: &VoiceServersPageParams<'_>,
 ) -> Markup {
     let base = &config.base_path;
+    let VoiceServersPageParams {
+        region_id,
+        region_name,
+        servers,
+        connection_counts,
+        error,
+        csrf_token,
+    } = *p;
     let options = LayoutOptions {
         csrf_token,
         inspected_voice_region_id: region_id,
@@ -67,7 +81,7 @@ pub fn voice_servers_page(
                     html! {},
                 ))
                 @if let Some(servers) = servers {
-                    (servers_list(config, rid, servers, csrf_token))
+                    (servers_list(config, rid, servers, connection_counts, csrf_token))
                 }
                 div id="create" class="mt-8" {
                     (create_server_form(config, rid, csrf_token))
@@ -109,6 +123,7 @@ fn servers_list(
     config: &AdminConfig,
     region_id: &str,
     servers: &[VoiceServer],
+    connection_counts: &HashMap<String, i64>,
     csrf_token: &str,
 ) -> Markup {
     if servers.is_empty() {
@@ -121,7 +136,7 @@ fn servers_list(
     html! {
         div class="space-y-4" {
             @for server in servers {
-                (server_card(config, region_id, server, csrf_token))
+                (server_card(config, region_id, server, connection_counts.get(&server.server_id).copied(), csrf_token))
             }
         }
     }
@@ -131,6 +146,7 @@ fn server_card(
     config: &AdminConfig,
     region_id: &str,
     server: &VoiceServer,
+    connection_count: Option<i64>,
     csrf_token: &str,
 ) -> Markup {
     let base = &config.base_path;
@@ -145,6 +161,15 @@ fn server_card(
     let lng_str = server
         .longitude
         .map_or_else(|| "Region default".to_string(), |v| v.to_string());
+    let soft_limit_str = server
+        .soft_connection_limit
+        .map_or_else(|| "No limit".to_string(), |v| v.to_string());
+    let connections_str =
+        connection_count.map_or_else(|| "Unavailable".to_string(), |v| v.to_string());
+    let at_soft_limit = matches!(
+        (server.soft_connection_limit, connection_count),
+        (Some(limit), Some(count)) if limit > 0 && count >= limit
+    );
 
     card(html! {
         div class="mb-4 flex flex-col gap-1" {
@@ -155,6 +180,9 @@ fn server_card(
                 } @else {
                     (badge("INACTIVE", BadgeVariant::Default))
                 }
+                @if at_soft_limit {
+                    (badge("AT SOFT LIMIT", BadgeVariant::Warning))
+                }
                 (voice_status_badges(vip_only, has_features, has_guild_ids))
             }
             p class="text-sm text-neutral-500" { (endpoint) }
@@ -164,6 +192,8 @@ fn server_card(
             (data_field_text("Status", if is_active { "Active" } else { "Inactive" }))
             (data_field_text("Latitude", &lat_str))
             (data_field_text("Longitude", &lng_str))
+            (data_field_text("Soft connection limit", &soft_limit_str))
+            (data_field_text("Live connections", &connections_str))
         }
         (voice_features_list(&server.required_guild_features))
         (voice_guild_ids_list(&server.allowed_guild_ids))

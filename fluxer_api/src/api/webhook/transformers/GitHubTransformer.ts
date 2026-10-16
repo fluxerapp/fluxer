@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {
 	transformCheckRun,
 	transformCheckSuite,
 	transformDiscussion,
 	transformDiscussionComment,
-} from './GitHubCheckTransformer';
-import {transformCommitComment, transformCreate, transformDelete, transformPush} from './GitHubCommitTransformer';
-import {transformIssue, transformIssueComment} from './GitHubIssueTransformer';
+} from '@app/api/webhook/transformers/GitHubCheckTransformer';
+import {
+	transformCommitComment,
+	transformCreate,
+	transformDelete,
+	transformPush,
+} from '@app/api/webhook/transformers/GitHubCommitTransformer';
+import {transformIssue, transformIssueComment} from '@app/api/webhook/transformers/GitHubIssueTransformer';
 import {
 	transformPullRequest,
 	transformPullRequestReview,
 	transformPullRequestReviewComment,
-} from './GitHubPullRequestTransformer';
+} from '@app/api/webhook/transformers/GitHubPullRequestTransformer';
 import {
 	transformFork,
 	transformMember,
@@ -22,7 +25,9 @@ import {
 	transformRelease,
 	transformRepository,
 	transformWatch,
-} from './GitHubRepositoryTransformer';
+} from '@app/api/webhook/transformers/GitHubRepositoryTransformer';
+import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 
 export async function transform(event: string, body: GitHubWebhook): Promise<RichEmbedRequest | null> {
 	switch (event) {

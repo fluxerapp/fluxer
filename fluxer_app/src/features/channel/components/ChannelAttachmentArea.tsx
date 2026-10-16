@@ -5,7 +5,7 @@ import {computeHorizontalDropPosition} from '@app/features/app/components/layout
 import {
 	type AttachmentDragItem,
 	type AttachmentDropResult,
-	DND_TYPES,
+	DragItemType,
 } from '@app/features/app/components/layout/types/DndTypes';
 import styles from '@app/features/channel/components/ChannelAttachmentArea.module.css';
 import EmbedVideo from '@app/features/channel/components/embeds/media/EmbedVideo';
@@ -15,7 +15,8 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {type CloudAttachment, CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {isEmbeddableImageFile} from '@app/features/messaging/utils/EmbeddableImageTypes';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {hasRenderableLocalPreview} from '@app/features/messaging/utils/LocalAttachmentPreviewUtils';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -78,6 +79,11 @@ const EDIT_ATTACHMENT_DESCRIPTOR = msg({
 	message: 'Edit attachment',
 	comment: 'Button or menu action label in the channel attachment area. Keep it concise.',
 });
+const PENDING_ATTACHMENT_DESCRIPTOR = msg({
+	message: 'Attachment {pendingFilename}',
+	comment:
+		'Short label in the channel attachment area. Keep it concise. Preserve {pendingFilename}; it is inserted by code.',
+});
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
 const MESSAGE_SCROLLER_BOTTOM_THRESHOLD = 16;
 const getActiveMessageScroller = (): HTMLElement | null =>
@@ -138,15 +144,6 @@ const getFileIcon = (file: File): Icon => {
 		return FileCodeIcon;
 	}
 	return FileIcon;
-};
-const isAttachmentMedia = (attachment: CloudAttachment): boolean => {
-	if (attachment.file.type.startsWith('video/')) {
-		return attachment.previewURL !== null || attachment.thumbnailURL !== null;
-	}
-	if (isEmbeddableImageFile(attachment.file)) {
-		return attachment.previewURL !== null;
-	}
-	return false;
 };
 const VideoPreviewModal = observer(({file, width, height}: {file: File; width: number; height: number}) => {
 	const {i18n} = useLingui();
@@ -213,7 +210,7 @@ const SortableAttachmentItem = observer(
 		const isSpoiler = (attachment.flags & MessageAttachmentFlags.IS_SPOILER) !== 0;
 		const dragItemData = useMemo<AttachmentDragItem>(
 			() => ({
-				type: DND_TYPES.ATTACHMENT,
+				type: DragItemType.ATTACHMENT,
 				id: attachment.id,
 				channelId,
 			}),
@@ -244,7 +241,7 @@ const SortableAttachmentItem = observer(
 		}, []);
 		const [{isDragging}, dragRef, preview] = useDrag(
 			() => ({
-				type: DND_TYPES.ATTACHMENT,
+				type: DragItemType.ATTACHMENT,
 				item: () => {
 					onDragStateChange?.(dragItemData);
 					return dragItemData;
@@ -260,7 +257,7 @@ const SortableAttachmentItem = observer(
 		);
 		const [{isOver}, dropRef] = useDrop(
 			() => ({
-				accept: DND_TYPES.ATTACHMENT,
+				accept: DragItemType.ATTACHMENT,
 				canDrop: (item: AttachmentDragItem) => item.id !== attachment.id,
 				hover: (item: AttachmentDragItem, monitor) => {
 					if (item.id === attachment.id) {
@@ -377,7 +374,7 @@ const SortableAttachmentItem = observer(
 			opacity: isDragging ? 0.5 : 1,
 			cursor: isDragging ? 'grabbing' : 'default',
 		};
-		const isMedia = isAttachmentMedia(attachment);
+		const isMedia = hasRenderableLocalPreview(attachment);
 		const isHiddenSpoiler = isSpoiler && spoilerHidden;
 		const IconComponent = getFileIcon(attachment.file);
 		return (
@@ -405,6 +402,11 @@ const SortableAttachmentItem = observer(
 								type="button"
 								className={styles.clickableMedia}
 								onClick={handleClick}
+								aria-label={
+									isHiddenSpoiler
+										? undefined
+										: i18n._(PENDING_ATTACHMENT_DESCRIPTOR, {pendingFilename: attachment.filename})
+								}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.clickable-media.button"
 							>
 								<div
@@ -469,6 +471,11 @@ const SortableAttachmentItem = observer(
 								type="button"
 								className={styles.clickableMedia}
 								onClick={handleClick}
+								aria-label={
+									isHiddenSpoiler
+										? undefined
+										: i18n._(PENDING_ATTACHMENT_DESCRIPTOR, {pendingFilename: attachment.filename})
+								}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.clickable-media.button--2"
 							>
 								<div
@@ -544,7 +551,7 @@ const SortableAttachmentItem = observer(
 								className={styles.fileSize}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.file-size"
 							>
-								{formatFileSize(attachment.file.size)}
+								{formatFileSize(i18n.locale, attachment.file.size)}
 							</span>
 							<span
 								className={styles.fileExtension}
@@ -597,7 +604,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 	const getScrollElement = useCallback(() => {
 		const scroller = scrollerRef.current;
 		if (scroller == null) return null;
-		return scroller.getScrollerNode();
+		return scroller.getViewportElement();
 	}, []);
 	useDragAutoScroll({active: isDragging, axis: 'horizontal', getScrollElement});
 	channelIdRef.current = channelId;
@@ -629,7 +636,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 			forceJumpFrameRef.current = null;
 			const messages = Messages.getMessages(channelIdRef.current);
 			if (messages.hasMoreAfter) {
-				ComponentDispatch.dispatch('FORCE_JUMP_TO_PRESENT');
+				ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT', {channelId: channelIdRef.current});
 			}
 		});
 	}, []);
@@ -733,12 +740,13 @@ const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttach
 });
 const VideoThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
 	const [hasError, setHasError] = useState(false);
-	const src = attachment.thumbnailURL || attachment.previewURL;
+	const src = attachment.thumbnailURL;
 	if (hasError || !src) return null;
 	return (
 		<img
 			src={src}
 			alt={attachment.filename}
+			aria-hidden={true}
 			className={clsx(styles.media, spoiler && styles.spoiler)}
 			onError={() => setHasError(true)}
 			data-flx="channel.channel-attachment-area.video-thumbnail.media"

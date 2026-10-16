@@ -27,5 +27,5 @@
 }
 
 :global(.theme-light) .dropIndicatorValid {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

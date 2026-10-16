@@ -10,6 +10,7 @@ export interface WebAuthnCredential {
 	name: string;
 	created_at: string;
 	last_used_at: string | null;
+	rp_id: string;
 }
 
 class WebAuthnCredentials {
@@ -24,7 +25,7 @@ class WebAuthnCredentials {
 		logger.debug(`Set WebAuthn credentials: ${credentials.length}`);
 	}
 
-	handleConnectionOpen(credentials: ReadonlyArray<WebAuthnCredential> | undefined): void {
+	handleGatewayReady(credentials: ReadonlyArray<WebAuthnCredential> | undefined): void {
 		this.setCredentials(credentials ?? []);
 	}
 

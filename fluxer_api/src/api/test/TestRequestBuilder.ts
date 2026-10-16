@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {drainSearchTasks} from '../search/SearchTaskTracker';
-import type {ApiTestHarness} from './ApiTestHarness';
+import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 
 export class TestRequestBuilder<TResponse = unknown> {
 	private path: string = '';

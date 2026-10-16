@@ -4,6 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch, {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
+import {hasSearchableParams, parseSearchQueryWithSegments} from '@app/features/search/utils/SearchUtils';
 import {useCallback, useMemo} from 'react';
 
 interface UseChannelSearchStateReturn {
@@ -40,10 +41,24 @@ export const useChannelSearchState = (channel?: Channel): UseChannelSearchStateR
 			if (!contextId) {
 				return;
 			}
+			const submitContext = ChannelSearch.getContext(contextId);
+			if (submitContext?.machineState.status === 'loading' && submitContext.activeSearchQuery === query) {
+				return;
+			}
 			ChannelSearch.setSearchInput(contextId, query, segments);
+			const params = parseSearchQueryWithSegments(query, segments, {
+				historyKey: contextId,
+				guildId: channel?.guildId,
+			});
+			if (!hasSearchableParams(params)) {
+				if (query.trim().length > 0) {
+					ChannelSearch.setUnsearchableSearch(contextId, query);
+				}
+				return;
+			}
 			ChannelSearch.setActiveSearch(contextId, query, segments);
 		},
-		[contextId],
+		[contextId, channel?.id, channel?.guildId],
 	);
 	const handleSearchClose = useCallback(() => {
 		if (!contextId) {

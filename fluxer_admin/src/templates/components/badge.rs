@@ -29,11 +29,3 @@ pub fn badge(label: &str, variant: BadgeVariant) -> Markup {
         }
     }
 }
-
-pub fn flag_badge(label: &str, active: bool) -> Markup {
-    if active {
-        badge(label, BadgeVariant::Success)
-    } else {
-        badge(label, BadgeVariant::Default)
-    }
-}

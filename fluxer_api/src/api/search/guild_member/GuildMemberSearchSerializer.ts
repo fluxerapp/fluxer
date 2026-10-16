@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
 import type {SearchableGuildMember} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import {extractTimestampFromSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
-import type {GuildMember} from '../../models/GuildMember';
-import type {User} from '../../models/User';
+import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 const MIN_USERNAME_SUFFIX_LENGTH = 2;
 
@@ -34,7 +34,7 @@ export function convertToSearchableGuildMember(member: GuildMember, user: User):
 		joinSourceType: member.joinSourceType,
 		sourceInviteCode: member.sourceInviteCode?.toString() ?? null,
 		inviterId: member.inviterId?.toString() ?? null,
-		userCreatedAt: Math.floor(extractTimestampFromSnowflake(member.userId.toString()) / 1000),
+		userCreatedAt: Math.floor(extractTimestamp(member.userId.toString()) / 1000),
 		isBot: user.isBot,
 	};
 }

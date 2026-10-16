@@ -3,7 +3,7 @@
 import {Avatar} from '@app/features/ui/components/Avatar';
 import styles from '@app/features/user/components/UserIdentityRow.module.css';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {observer} from 'mobx-react-lite';
 
@@ -20,10 +20,20 @@ export const UserIdentityRow = observer(
 		const displayName = DisplayNameUtils.getNickname(user, guildId, channelId);
 		return (
 			<>
-				<Avatar user={user} size={avatarSize} guildId={guildId === null ? undefined : guildId} className={className} />
-				<flx-user-identity-row-info className={flxElementClassName(styles.info)}>
-					<span className={styles.name}>{displayName}</span>
-					<span className={styles.tag}>{user.tag}</span>
+				<Avatar
+					user={user}
+					size={avatarSize}
+					guildId={guildId === null ? undefined : guildId}
+					className={className}
+					data-flx="user.user-identity-row.avatar"
+				/>
+				<flx-user-identity-row-info className={flxElementClassName(styles.info)} data-flx="user.user-identity-row.info">
+					<span className={styles.name} data-flx="user.user-identity-row.name">
+						{displayName}
+					</span>
+					<span className={styles.tag} data-flx="user.user-identity-row.tag">
+						{user.tag}
+					</span>
 				</flx-user-identity-row-info>
 			</>
 		);

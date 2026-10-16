@@ -9,56 +9,55 @@ import type {
 	UserID,
 	WebhookID,
 	WebhookToken,
-} from '../../BrandedTypes';
-
-type Nullish<T> = T | null;
+} from '@app/api/BrandedTypes';
 
 export interface PermissionOverwrite {
 	type: number;
-	allow_: Nullish<bigint>;
-	deny_: Nullish<bigint>;
+	allow_: bigint | null;
+	deny_: bigint | null;
 }
 
 export interface ChannelRow {
 	channel_id: ChannelID;
-	guild_id: Nullish<GuildID>;
+	guild_id: GuildID | null;
 	type: number;
-	name: Nullish<string>;
-	topic: Nullish<string>;
-	icon_hash: Nullish<string>;
-	url: Nullish<string>;
-	parent_id: Nullish<ChannelID>;
-	position: Nullish<number>;
-	owner_id: Nullish<UserID>;
-	recipient_ids: Nullish<Set<UserID>>;
-	nsfw: Nullish<boolean>;
-	content_warning_level?: Nullish<number>;
-	content_warning_text?: Nullish<string>;
-	rate_limit_per_user: Nullish<number>;
-	bitrate: Nullish<number>;
-	user_limit: Nullish<number>;
-	voice_connection_limit: Nullish<number>;
-	rtc_region: Nullish<string>;
-	last_message_id: Nullish<MessageID>;
-	last_pin_timestamp: Nullish<Date>;
-	permission_overwrites: Nullish<Map<RoleID | UserID, PermissionOverwrite>>;
-	nicks: Nullish<Map<string, string>>;
+	name: string | null;
+	topic: string | null;
+	icon_hash: string | null;
+	url: string | null;
+	parent_id: ChannelID | null;
+	position: number | null;
+	owner_id: UserID | null;
+	recipient_ids: Set<UserID> | null;
+	nsfw: boolean | null;
+	content_warning_level?: number | null;
+	content_warning_text?: string | null;
+	rate_limit_per_user: number | null;
+	bitrate: number | null;
+	user_limit: number | null;
+	voice_connection_limit: number | null;
+	rtc_region: string | null;
+	rtc_p2p: boolean | null;
+	last_message_id: MessageID | null;
+	last_pin_timestamp: Date | null;
+	permission_overwrites: Map<RoleID | UserID, PermissionOverwrite> | null;
+	nicks: Map<string, string> | null;
 	soft_deleted: boolean;
-	indexed_at: Nullish<Date>;
+	indexed_at: Date | null;
 	version: number;
 }
 
 export interface InviteRow {
 	code: InviteCode;
 	type: number;
-	guild_id: Nullish<GuildID>;
-	channel_id: Nullish<ChannelID>;
-	inviter_id: Nullish<UserID>;
+	guild_id: GuildID | null;
+	channel_id: ChannelID | null;
+	inviter_id: UserID | null;
 	created_at: Date;
 	uses: number;
 	max_uses: number;
 	max_age: number;
-	temporary: Nullish<boolean>;
+	temporary: boolean | null;
 	version: number;
 }
 
@@ -66,30 +65,58 @@ export interface WebhookRow {
 	webhook_id: WebhookID;
 	webhook_token: WebhookToken;
 	type: number;
-	guild_id: Nullish<GuildID>;
-	channel_id: Nullish<ChannelID>;
-	creator_id: Nullish<UserID>;
+	guild_id: GuildID | null;
+	channel_id: ChannelID | null;
+	creator_id: UserID | null;
 	name: string;
-	avatar_hash: Nullish<string>;
+	avatar_hash: string | null;
+	source_guild_id: GuildID | null;
+	source_channel_id: ChannelID | null;
 	version: number;
+}
+
+export interface WebhooksBySourceChannelRow {
+	source_channel_id: ChannelID;
+	webhook_id: WebhookID;
+	guild_id: GuildID;
+}
+
+type CrosspostedMessageState = 'pending' | 'delivered';
+
+export interface CrosspostedMessageRow {
+	source_message_id: MessageID;
+	webhook_id: WebhookID;
+	source_channel_id: ChannelID;
+	target_guild_id: GuildID;
+	target_channel_id: ChannelID;
+	target_message_id: MessageID;
+	state: CrosspostedMessageState;
+	reserved_at: Date;
+	source_fingerprint: string | null;
+	created_at: Date;
+}
+
+export interface CrosspostSourceByChannelRow {
+	source_channel_id: ChannelID;
+	source_message_id: MessageID;
 }
 
 export interface PrivateChannelRow {
 	user_id: UserID;
 	channel_id: ChannelID;
 	is_gdm: boolean;
-	channel_type?: Nullish<number>;
-	channel_name?: Nullish<string>;
-	channel_icon_hash?: Nullish<string>;
-	channel_owner_id?: Nullish<UserID>;
-	channel_recipient_ids?: Nullish<Set<UserID>>;
-	channel_last_message_id?: Nullish<MessageID>;
-	channel_last_pin_timestamp?: Nullish<Date>;
-	channel_nicks?: Nullish<Map<string, string>>;
-	channel_rate_limit_per_user?: Nullish<number>;
-	channel_nsfw?: Nullish<boolean>;
-	channel_version?: Nullish<number>;
-	snapshot_at?: Nullish<Date>;
+	channel_type?: number | null;
+	channel_name?: string | null;
+	channel_icon_hash?: string | null;
+	channel_owner_id?: UserID | null;
+	channel_recipient_ids?: Set<UserID> | null;
+	channel_last_message_id?: MessageID | null;
+	channel_last_pin_timestamp?: Date | null;
+	channel_nicks?: Map<string, string> | null;
+	channel_rate_limit_per_user?: number | null;
+	channel_nsfw?: boolean | null;
+	channel_version?: number | null;
+	snapshot_at?: Date | null;
 }
 
 export interface DmStateRow {
@@ -101,9 +128,11 @@ export interface DmStateRow {
 export interface ReadStateRow {
 	user_id: UserID;
 	channel_id: ChannelID;
-	message_id: Nullish<MessageID>;
+	message_id: MessageID | null;
 	mention_count: number;
-	last_pin_timestamp: Nullish<Date>;
+	last_pin_timestamp: Date | null;
+	flags?: number | null;
+	guild_id?: GuildID | null;
 }
 
 export const CHANNEL_COLUMNS = [
@@ -126,6 +155,7 @@ export const CHANNEL_COLUMNS = [
 	'user_limit',
 	'voice_connection_limit',
 	'rtc_region',
+	'rtc_p2p',
 	'last_message_id',
 	'last_pin_timestamp',
 	'permission_overwrites',
@@ -165,14 +195,39 @@ export const WEBHOOK_COLUMNS = [
 	'creator_id',
 	'name',
 	'avatar_hash',
+	'source_guild_id',
+	'source_channel_id',
 	'version',
 ] as const satisfies ReadonlyArray<keyof WebhookRow>;
+export const WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS = [
+	'source_channel_id',
+	'webhook_id',
+	'guild_id',
+] as const satisfies ReadonlyArray<keyof WebhooksBySourceChannelRow>;
+export const CROSSPOSTED_MESSAGE_COLUMNS = [
+	'source_message_id',
+	'webhook_id',
+	'source_channel_id',
+	'target_guild_id',
+	'target_channel_id',
+	'target_message_id',
+	'state',
+	'reserved_at',
+	'source_fingerprint',
+	'created_at',
+] as const satisfies ReadonlyArray<keyof CrosspostedMessageRow>;
+export const CROSSPOST_SOURCE_BY_CHANNEL_COLUMNS = [
+	'source_channel_id',
+	'source_message_id',
+] as const satisfies ReadonlyArray<keyof CrosspostSourceByChannelRow>;
 export const READ_STATE_COLUMNS = [
 	'user_id',
 	'channel_id',
 	'message_id',
 	'mention_count',
 	'last_pin_timestamp',
+	'flags',
+	'guild_id',
 ] as const satisfies ReadonlyArray<keyof ReadStateRow>;
 export const PRIVATE_CHANNEL_COLUMNS = [
 	'user_id',

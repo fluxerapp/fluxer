@@ -1,0 +1,377 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Forums
+description: Forum and media channels, forum tags, post data, and webhooks that post into a forum.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A forum channel holds posts, and every post is a public [thread](/http-api/threads/) with its own first message. A media channel is a forum channel that can hide media download options. Neither accepts a message of its own.
+
+:::note[User requests need the `channel_threads` client capability]
+A route with a route header on this page returns 404 `NOT_FOUND` to a user request without the [`channel_threads` client capability](/http-api/threads/#client-capability). A `channel_id` that does not exist or names a channel outside a guild returns the same 404.
+:::
+
+## Forum channel fields
+
+A forum or media channel is a [channel object](/http-api/channels/#channel-object) of type `15` or `16` with the fields below.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| topic | ?string | The guidelines of the channel (1-4,096 characters), or null when none are set |
+| last_message_id<sup>1</sup> | ?snowflake | The ID of the newest post, or null when the channel has never had one |
+| flags | integer | The [channel flags](#channel-flags) of the channel |
+| available_tags | array[[forum tag](#forum-tag-object) object] | The tags a post can apply (max 20) |
+| default_reaction_emoji | ?[default reaction](#default-reaction-object) object | The reaction clients show on each post, or null when none is set |
+| default_sort_order | ?integer | The default [sort order](#forum-sort-orders) of posts, or null when none is set |
+| default_forum_layout?<sup>2</sup> | integer | The default [layout](#forum-layouts) of posts |
+| default_tag_setting<sup>3</sup> | string | The default [tag matching](#forum-tag-settings) of a post search |
+| default_auto_archive_duration<sup>4</sup> | ?integer | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), or null when none is set |
+| default_thread_rate_limit_per_user<sup>5</sup> | integer | The slowmode interval in seconds new threads inherit |
+
+<sup>1</sup> A new post sets it to the post ID and emits no [Channel Update](/gateway/events/#channel-update)
+
+<sup>2</sup> Present only on a forum channel. A forum channel that stores no layout reports `0`
+
+<sup>3</sup> A channel that stores no value reports `match_some`
+
+<sup>4</sup> Fluxer does not apply it to a new post. A create request that omits `auto_archive_duration` gets 4320, as [Auto archive durations](/http-api/threads/#auto-archive-durations) states
+
+<sup>5</sup> Applies when the request sets no `rate_limit_per_user`. A channel that stores no value reports `0`
+
+`rate_limit_per_user` on the channel limits how often one member creates a post. A bot and a member with `BYPASS_SLOWMODE` are exempt, and a denied post returns 400 `SLOWMODE_RATE_LIMITED`.
+
+[Create message](/http-api/messages/#create-message) to the channel itself returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`. Adding a reaction and pinning a message return the same code. [List channel messages](/http-api/messages/#list-channel-messages), listing pins, and the typing indicator return 400 `INVALID_CHANNEL_TYPE`.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998300",
+  "type": 15,
+  "guild_id": "1501314428688990000",
+  "name": "help",
+  "position": 4,
+  "permission_overwrites": [],
+  "parent_id": null,
+  "last_message_id": "1501320250000000000",
+  "last_pin_timestamp": null,
+  "topic": "One question per post",
+  "nsfw": false,
+  "nsfw_override": null,
+  "content_warning_level": 0,
+  "content_warning_text": null,
+  "rate_limit_per_user": 0,
+  "flags": 16,
+  "default_auto_archive_duration": null,
+  "default_thread_rate_limit_per_user": 0,
+  "available_tags": [
+    {"id": "1501314428688998301", "name": "Solved", "moderated": false, "emoji_id": null, "emoji_name": null}
+  ],
+  "default_reaction_emoji": null,
+  "default_sort_order": null,
+  "default_tag_setting": "match_some",
+  "default_forum_layout": 0
+}
+```
+
+## Forum post object
+
+[Start thread](/http-api/threads/#start-thread) returns a forum post, which is a [thread object](/http-api/threads/#thread-object) with its first message.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message | [message](/http-api/messages/#message-object) object | The first message of the post, which has the ID of the post |
+
+## Channel types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 15 | GUILD_FORUM | Guild channel that holds posts and no messages of its own |
+| 16 | GUILD_MEDIA | Forum channel that can [hide media download options](#channel-flags) |
+
+## Channel flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 1 | PINNED | The post is the pinned post of its channel |
+| 1 &lt;&lt; 4 | REQUIRE_TAG | A new post, or a change to the tags of a post, needs at least one tag |
+| 1 &lt;&lt; 15 | HIDE_MEDIA_DOWNLOAD_OPTIONS | Clients hide the media download options of the channel |
+
+`PINNED` is set on a post. A channel holds at most one pinned post, and pinning a second returns 400 `MAX_PINNED_THREADS_IN_FORUM`. Archiving a post clears `PINNED`.
+
+`REQUIRE_TAG` is set on a forum or media channel. A new post with no tag returns 400 `FORUM_TAG_REQUIRED`. [Modify thread](/http-api/threads/#modify-thread) with an empty `applied_tags` on a post returns the same code.
+
+`HIDE_MEDIA_DOWNLOAD_OPTIONS` is set on a media channel. On a forum channel it returns 400 `HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY`. Any other bit on a forum or media channel returns 400 `INVALID_FORM_BODY`.
+
+## Forum tag object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the tag |
+| name | string | The name of the tag (1-50 characters) |
+| moderated | boolean | Whether only thread moderators can apply or remove the tag |
+| emoji_id | ?snowflake | The ID of a custom emoji of this guild, or null when the tag has none |
+| emoji_name | ?string | A single Unicode emoji, or null when the tag has none |
+
+At most one of `emoji_id` and `emoji_name` is set. A tag name is unique within its channel, and the comparison is case-sensitive.
+
+A member who is not a thread moderator and adds or removes a moderated tag on a post gets 403 `MISSING_PERMISSIONS`.
+
+## Default reaction object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id | ?snowflake | The ID of a custom emoji of this guild, or null for a Unicode emoji |
+| emoji_name | ?string | A single Unicode emoji, or null for a custom emoji |
+
+## Forum sort orders
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | LATEST_ACTIVITY | Sort posts by latest activity |
+| 1 | CREATION_TIME | Sort posts by creation time |
+
+## Forum layouts
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | DEFAULT | No layout is set |
+| 1 | LIST | Show posts as a list |
+| 2 | GRID | Show posts as a grid of tiles |
+
+## Forum tag settings
+
+| Value | Description |
+| --- | --- |
+| match_some | A post matches when it applies any of the searched tags |
+| match_all | A post matches when it applies every searched tag |
+
+## Creating and modifying a forum
+
+[Create guild channel](/http-api/guild-channels/#create-guild-channel) with `type` `15` or `16`, and [Modify channel](/http-api/channels/#modify-channel) on a forum or media channel, accept these fields beside the common guild channel fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| topic? | ?string | The guidelines of the channel (1-4,096 characters), or null to clear them |
+| available_tags?<sup>1</sup> | array[[forum tag](#forum-tag-object) object] | The complete tag set (max 20) |
+| default_reaction_emoji? | ?[default reaction](#default-reaction-object) object | The default reaction, or null to clear it |
+| default_sort_order? | ?integer | The [sort order](#forum-sort-orders), or null to clear it |
+| default_forum_layout?<sup>2</sup> | ?integer | The [layout](#forum-layouts), or null to reset it to `0` |
+| default_tag_setting? | ?string | The [tag matching](#forum-tag-settings) default, or null to reset it to `match_some` |
+| default_auto_archive_duration? | ?integer | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), which Fluxer does not apply to a new thread, or null to clear it |
+| default_thread_rate_limit_per_user? | ?integer | The slowmode interval in seconds new threads inherit (0-21,600), or null to clear it |
+| flags? | integer | The [channel flags](#channel-flags) of the channel |
+
+<sup>1</sup> An entry with `id` keeps that tag, and an entry without one creates a tag. A stored tag missing from the array is deleted
+
+<sup>2</sup> Accepted only on a forum channel. A media channel ignores it
+
+A guild text or announcement channel accepts `default_auto_archive_duration` and `default_thread_rate_limit_per_user` as well.
+
+`available_tags` with more than 20 entries returns 400 `MAX_FORUM_TAGS`, and a repeated name returns 400 `FORUM_TAG_NAMES_MUST_BE_UNIQUE`. An `id` the channel does not hold returns 404 `UNKNOWN_FORUM_TAG`. An `emoji_id` that is not an emoji of this guild returns 404 `UNKNOWN_EMOJI`, except on a kept tag whose `emoji_id` is unchanged. A tag or default reaction with both `emoji_id` and `emoji_name`, or with an `emoji_name` that is not a single Unicode emoji, returns 400 `INVALID_FORM_BODY`. While another tag change holds the channel, a request with `available_tags` returns 429 `RESOURCE_LOCKED`.
+
+Fluxer rejects a change that leaves `REQUIRE_TAG` set with no unmoderated tag with 400 `NO_TAGS_AVAILABLE_TO_NON_MODERATORS`. Two concurrent [Modify channel](/http-api/channels/#modify-channel) requests, one setting `REQUIRE_TAG` and one replacing `available_tags`, can each pass that check and together store that state. A post that names no tag then returns the same code to a caller who is not a thread moderator.
+
+For a user request without the [`channel_threads` client capability](/http-api/threads/#client-capability), [Modify channel](/http-api/channels/#modify-channel) on a forum or media channel returns 404 `UNKNOWN_CHANNEL`. [Create guild channel](/http-api/guild-channels/#create-guild-channel) with `type` `15` or `16` returns 400 `INVALID_FORM_BODY`.
+
+[Create channel invite](/http-api/invites/#create-channel-invite) on a thread, a forum channel, or a media channel the caller can view returns 400 `INVALID_CHANNEL_TYPE`.
+
+## Create forum tag
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/tags" bot auditReason />
+
+Adds a tag to a forum or media channel. Requires `MANAGE_CHANNELS`. Returns the updated [channel object](/http-api/channels/#channel-object) on success. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the forum or media channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the tag (1-50 characters) |
+| moderated? | boolean | Whether only thread moderators can apply or remove the tag (default false) |
+| emoji_id? | ?snowflake | The ID of a custom emoji of this guild, or null for none |
+| emoji_name? | ?string | A single Unicode emoji (max 64 characters), or null for none |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | Tag was added |
+| 400 | [error response](/http-api/#error-response) | Channel is a guild channel other than a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Channel has 20 tags and the request returns `MAX_FORUM_TAGS` |
+| 400 | [error response](/http-api/#error-response) | Channel has a tag with the name and the request returns `FORUM_TAG_NAMES_MUST_BE_UNIQUE` |
+| 400 | [error response](/http-api/#error-response) | The new tag leaves `REQUIRE_TAG` with no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 400 | [error response](/http-api/#error-response) | Body sets both emoji fields or an invalid emoji, returning `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_CHANNELS` and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | Emoji is not an emoji of this guild and the request returns `UNKNOWN_EMOJI` |
+| 429 | [error response](/http-api/#error-response) | Another tag change holds the channel, returning `RESOURCE_LOCKED` |
+
+The body is the forum or media channel with its [forum channel fields](#forum-channel-fields). It has no `thread_metadata`, `message_count`, `total_message_sent`, `member_count`, `applied_tags`, `member_ids_preview`, or `member`.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Modify forum tag
+
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/tags/{tag_id}" bot auditReason />
+
+Replaces a tag of a forum or media channel. Requires `MANAGE_CHANNELS`. Returns the updated [channel object](/http-api/channels/#channel-object) on success. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+An omitted `moderated` is stored as false, and an omitted emoji field is stored as null.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the forum or media channel |
+| tag_id | snowflake | The ID of the tag |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the tag (1-50 characters) |
+| moderated? | boolean | Whether only thread moderators can apply or remove the tag (default false) |
+| emoji_id? | ?snowflake | The ID of a custom emoji of this guild, or null for none |
+| emoji_name? | ?string | A single Unicode emoji (max 64 characters), or null for none |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | Tag was replaced |
+| 400 | [error response](/http-api/#error-response) | Channel is a guild channel other than a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Another tag has the name and the request returns `FORUM_TAG_NAMES_MUST_BE_UNIQUE` |
+| 400 | [error response](/http-api/#error-response) | The change leaves `REQUIRE_TAG` with no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 400 | [error response](/http-api/#error-response) | Body sets both emoji fields or an invalid emoji, returning `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_CHANNELS` and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | Channel holds no tag with `tag_id` and the request returns `UNKNOWN_FORUM_TAG` |
+| 404 | [error response](/http-api/#error-response) | The new `emoji_id` is not an emoji of this guild and the request returns `UNKNOWN_EMOJI` |
+| 429 | [error response](/http-api/#error-response) | Another tag change holds the channel, returning `RESOURCE_LOCKED` |
+
+The body is the forum or media channel with its [forum channel fields](#forum-channel-fields). It has no `thread_metadata`, `message_count`, `total_message_sent`, `member_count`, `applied_tags`, `member_ids_preview`, or `member`.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Delete forum tag
+
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/tags/{tag_id}" bot auditReason />
+
+Removes a tag from a forum or media channel. Requires `MANAGE_CHANNELS`. Returns the updated [channel object](/http-api/channels/#channel-object) on success. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+Every thread object an HTTP route returns afterwards leaves the deleted tag out of `applied_tags`, except in the `threads` array of the [guild audit log](/http-api/guild-audit-logs/). A Gateway thread payload can keep the ID until the post next changes. A post drops the stored ID the next time its tags change.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the forum or media channel |
+| tag_id | snowflake | The ID of the tag |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | Tag was removed |
+| 400 | [error response](/http-api/#error-response) | Channel is a guild channel other than a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | The removal leaves `REQUIRE_TAG` with no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 400 | [error response](/http-api/#error-response) | Caller needs an authenticator and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_CHANNELS` and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | Channel holds no tag with `tag_id` and the request returns `UNKNOWN_FORUM_TAG` |
+| 429 | [error response](/http-api/#error-response) | Another tag change holds the channel, returning `RESOURCE_LOCKED` |
+
+The body is the forum or media channel with its [forum channel fields](#forum-channel-fields). It has no `thread_metadata`, `message_count`, `total_message_sent`, `member_count`, `applied_tags`, `member_ids_preview`, or `member`.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Get forum post data
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/post-data" bot />
+
+Returns the owner and first message of each requested post in a forum or media channel. Requires `READ_MESSAGE_HISTORY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the forum or media channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_ids | array[snowflake] | The IDs of the posts (1-100) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads<sup>1</sup> | map[snowflake, [post data](#post-data-object) object] | The post data keyed by post ID |
+
+<sup>1</sup> Has one key for each distinct requested ID. An ID that is not a post of this channel maps to null `owner` and null `first_message`
+
+#### Post data object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| owner<sup>1</sup> | ?[guild member](/http-api/guild-members/#guild-member-object) object | The guild member who created the post |
+| first_message<sup>2</sup> | ?[message](/http-api/messages/#message-object) object | The first message of the post |
+
+<sup>1</sup> Null when the creator is no longer a member of the guild, and for a post a webhook created
+
+<sup>2</sup> Null when the first message was deleted
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [post data](#response-body) map | Post data was returned |
+| 400 | [error response](/http-api/#error-response) | Channel is a guild channel other than a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `READ_MESSAGE_HISTORY` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is outside a guild, and the request returns `NOT_FOUND` |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:post_data::channel_id` bucket.
+
+## Webhooks in forums
+
+A webhook whose channel is a forum or media channel creates a post, or posts into an existing one. [Execute webhook](/http-api/webhooks/#execute-webhook) lists the `thread_id`, `thread_name`, and `applied_tags` fields and their error codes.
+
+A locked thread refuses a webhook message with 400 `THREAD_LOCKED`. An archived thread that is not locked is unarchived by it, and Fluxer emits a [Thread Update](/gateway/threads/#thread-update) Gateway event. When the guild already has 1,000 active threads, the message returns 400 `MAX_ACTIVE_THREADS` and the thread stays archived. Editing a webhook message in an archived thread returns 400 `THREAD_ARCHIVED`, and in a locked thread 400 `THREAD_LOCKED`.
+
+## New post notifications
+
+A [channel notification override](/http-api/users/settings/#channel-notification-override-object) has `flags`, and only these two bits are stored.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 13 | NEW_FORUM_THREADS_OFF | No push notification for a new post in the channel |
+| 1 &lt;&lt; 14 | NEW_FORUM_THREADS_ON | A value Fluxer stores and does not read |
+
+A new post sends a push notification to a member when the channel resolves to the all messages notification level. A mute on the guild, on the parent category, or on the channel suppresses it, and so does `NEW_FORUM_THREADS_OFF`. Fluxer ignores `flags` in a user request without the [`channel_threads` client capability](/http-api/threads/#client-capability), and the stored value stays.

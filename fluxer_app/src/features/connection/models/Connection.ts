@@ -20,17 +20,6 @@ export class Connection {
 		this.sortOrder = connection.sort_order;
 	}
 
-	equals(other: Connection): boolean {
-		return (
-			this.id === other.id &&
-			this.type === other.type &&
-			this.name === other.name &&
-			this.verified === other.verified &&
-			this.visibilityFlags === other.visibilityFlags &&
-			this.sortOrder === other.sortOrder
-		);
-	}
-
 	toJSON(): ConnectionResponse {
 		return {
 			id: this.id,

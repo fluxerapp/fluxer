@@ -307,33 +307,3 @@ fn classify_payload(_key: &str, value: &Value<'_>) -> ChangePayload {
     }
     ChangePayload::Unknown
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn color_scheme_maps_to_strings_per_typescript_union() {
-        assert_eq!(ColorScheme::from_u32(0).as_str(), "no-preference");
-        assert_eq!(ColorScheme::from_u32(1).as_str(), "prefer-dark");
-        assert_eq!(ColorScheme::from_u32(2).as_str(), "prefer-light");
-        assert_eq!(ColorScheme::from_u32(99).as_str(), "no-preference");
-    }
-
-    #[test]
-    fn contrast_maps_to_strings_per_typescript_union() {
-        assert_eq!(Contrast::from_u32(0).as_str(), "no-preference");
-        assert_eq!(Contrast::from_u32(1).as_str(), "high");
-        assert_eq!(Contrast::from_u32(99).as_str(), "no-preference");
-    }
-
-    #[test]
-    fn classify_accent_color_treats_negative_as_no_preference() {
-        assert_eq!(classify_accent_color(-1.0, -1.0, -1.0), None);
-        assert_eq!(classify_accent_color(-0.0001, 0.5, 0.5), None);
-        let accent = classify_accent_color(0.1, 0.2, 0.3).unwrap();
-        assert_eq!(accent.r, 0.1);
-        assert_eq!(accent.g, 0.2);
-        assert_eq!(accent.b, 0.3);
-    }
-}

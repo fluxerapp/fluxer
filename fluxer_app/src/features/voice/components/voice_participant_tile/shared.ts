@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {VoiceTrackKind, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {MEDIA_PROXY_AVATAR_SIZE_PROFILE} from '@fluxer/constants/src/MediaProxyAssetSizes';
+import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {msg} from '@lingui/core/macro';
 import type {TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import type React from 'react';
 
 export const logger = new Logger('VoiceParticipantTile');
 export const TILE_AVATAR_BASE = 192;
+export const TILE_AVATAR_MEDIA_SIZE: MediaProxyImageSize = MEDIA_PROXY_AVATAR_SIZE_PROFILE;
 export const TILE_AVATAR_STYLE = {
 	width: 'var(--tile-avatar-size)',
 	height: 'var(--tile-avatar-size)',
 } satisfies React.CSSProperties;
-export const UNMUTE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Unmute stream audio',
-	comment: 'Tooltip / button label on a voice participant tile that unmutes the remote screen-share or camera audio.',
-});
-export const MUTE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Mute stream audio',
-	comment: 'Tooltip / button label on a voice participant tile that mutes the remote screen-share or camera audio.',
-});
 export const STREAM_ENDED_DESCRIPTOR = msg({
 	message: 'Stream ended',
 	comment: 'Status overlay on a voice participant tile when the remote screen share has ended.',
@@ -68,12 +63,13 @@ export const WATCH_DESCRIPTOR = msg({
 	comment: 'Compact button label on a participant tile. Joins / opens the remote screen share.',
 });
 export const WATCHING_DESCRIPTOR = msg({
-	message: '{length} watching',
+	message: '{length, plural, one {# watching} other {# watching}}',
 	comment:
 		'Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.',
 });
 export const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
+	context: 'microphone-state',
 	comment: "Status badge on a voice participant tile. The participant's microphone is muted.",
 });
 export const MOBILE_DEVICE_DESCRIPTOR = msg({
@@ -125,16 +121,6 @@ export interface VoiceParticipantTileInnerProps {
 
 export function isCameraSource(source: unknown) {
 	return source === VoiceTrackSource.Camera;
-}
-
-export function isAudioTrackWithVolume(track: unknown): track is {kind: string; setVolume: (volume: number) => void} {
-	return (
-		track != null &&
-		typeof track === 'object' &&
-		'kind' in track &&
-		(track as {kind: string}).kind === VoiceTrackKind.Audio &&
-		'setVolume' in track
-	);
 }
 
 export function getSourceDataAttr(source: unknown) {

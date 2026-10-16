@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import type {
 	VoiceMediaGraphSubscriptionCommand,
 	VoiceMediaGraphSubscriptionEntry,
-} from './VoiceMediaGraphSubscriptionTypes';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
 
 const VOICE_MEDIA_GRAPH_RECONCILE_SCAN_LIMIT = 2048;
 
-export function voiceMediaGraphCommandsEquivalent(
+function voiceMediaGraphCommandsEquivalent(
 	left: VoiceMediaGraphSubscriptionCommand,
 	right: VoiceMediaGraphSubscriptionCommand,
 ): boolean {

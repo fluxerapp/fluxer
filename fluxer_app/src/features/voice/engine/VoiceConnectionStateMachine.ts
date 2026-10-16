@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VoiceConnectionDisconnectReason = 'user' | 'error' | 'server';
 export type VoiceConnectionLocalDisconnectReason =
@@ -523,16 +523,9 @@ export const voiceConnectionStateMachine = setup({
 });
 
 export type VoiceConnectionSnapshot = SnapshotFrom<typeof voiceConnectionStateMachine>;
-export type VoiceConnectionStateValue =
-	| 'disconnected'
-	| 'connecting'
-	| 'connected'
-	| 'reconnecting'
-	| 'channelMove'
-	| 'failed';
 
 export function createVoiceConnectionSnapshot(): VoiceConnectionSnapshot {
-	return getInitialSnapshot(voiceConnectionStateMachine);
+	return initialTransition(voiceConnectionStateMachine)[0];
 }
 
 export function transitionVoiceConnectionSnapshot(
@@ -542,20 +535,12 @@ export function transitionVoiceConnectionSnapshot(
 	return transition(voiceConnectionStateMachine, snapshot, event)[0] as VoiceConnectionSnapshot;
 }
 
-export function getVoiceConnectionStateValue(snapshot: VoiceConnectionSnapshot): VoiceConnectionStateValue {
-	return snapshot.value as VoiceConnectionStateValue;
-}
-
 export function isLatestVoiceConnectionAttempt(snapshot: VoiceConnectionSnapshot, attemptId: number): boolean {
 	return snapshot.context.connectionAttemptId === attemptId;
 }
 
 export function isVoiceConnectionFailed(snapshot: VoiceConnectionSnapshot): boolean {
 	return snapshot.value === 'failed';
-}
-
-export function getVoiceConnectionFailureReason(snapshot: VoiceConnectionSnapshot): VoiceConnectionFailureReason {
-	return snapshot.context.failureReason;
 }
 
 export function getVoiceConnectionFailedTarget(

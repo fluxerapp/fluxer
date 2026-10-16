@@ -1,11 +1,11 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_member_list_subs).
--typing([eqwalizer]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
 
 -export([
     new/0,
@@ -17,8 +17,6 @@
     get_session_ranges/3,
     list_ids/1,
     fold_list_subs/4,
-    fold_lists/3,
-    foreach_list/2,
     is_subscribed/3
 ]).
 
@@ -132,27 +130,9 @@ get_session_ranges(SessionId, ListId, Tab) ->
 list_ids(Tab) ->
     list_ids_loop(Tab, ets:next(Tab, {<<>>, <<>>}), []).
 
--spec fold_list_subs(
-    binary(), ets:table(), fun((binary(), [range()], map()) -> map()), map()
-) -> map().
+-spec fold_list_subs(binary(), ets:table(), fun((binary(), [range()], Acc) -> Acc), Acc) -> Acc.
 fold_list_subs(ListId, Tab, Fun, Acc0) ->
     fold_list_subs_loop(Tab, ets:next(Tab, {ListId, <<>>}), ListId, Fun, Acc0).
-
--spec fold_lists(fun((binary(), list_subs(), map()) -> map()), map(), ets:table()) -> map().
-fold_lists(Fun, Acc0, Tab) ->
-    fold_lists_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
-
--spec foreach_list(fun((binary(), list_subs()) -> term()), ets:table()) -> ok.
-foreach_list(Fun, Tab) ->
-    _ = fold_lists(
-        fun(ListId, ListSubs, Acc) ->
-            _ = Fun(ListId, ListSubs),
-            Acc
-        end,
-        #{},
-        Tab
-    ),
-    ok.
 
 -spec is_subscribed(binary(), binary(), ets:table()) -> boolean().
 is_subscribed(ListId, SessionId, Tab) ->
@@ -178,8 +158,8 @@ list_ids_loop(Tab, Key, Acc) ->
     list_ids_loop(Tab, ets:next(Tab, Key), Acc).
 
 -spec fold_list_subs_loop(
-    ets:table(), term(), binary(), fun((binary(), [range()], map()) -> map()), map()
-) -> map().
+    ets:table(), term(), binary(), fun((binary(), [range()], Acc) -> Acc), Acc
+) -> Acc.
 fold_list_subs_loop(_Tab, '$end_of_table', _ListId, _Fun, Acc) ->
     Acc;
 fold_list_subs_loop(_Tab, {Other, _}, ListId, _Fun, Acc) when Other =/= ListId ->
@@ -187,19 +167,6 @@ fold_list_subs_loop(_Tab, {Other, _}, ListId, _Fun, Acc) when Other =/= ListId -
 fold_list_subs_loop(Tab, {ListId, SId} = Key, ListId, Fun, Acc) when is_binary(SId) ->
     [{_, Ranges}] = ets:lookup(Tab, Key),
     fold_list_subs_loop(Tab, ets:next(Tab, Key), ListId, Fun, Fun(SId, Ranges, Acc)).
-
--spec fold_lists_loop(
-    fun((binary(), list_subs(), map()) -> map()), map(), ets:table(), term()
-) -> map().
-fold_lists_loop(_Fun, Acc, _Tab, '$end_of_table') ->
-    Acc;
-fold_lists_loop(_Fun, Acc, _Tab, {idx_tab, _}) ->
-    Acc;
-fold_lists_loop(Fun, Acc, Tab, {ListId, _} = Key) when is_binary(ListId) ->
-    ListSubs = collect_list(Tab, Key, ListId, #{}),
-    Acc2 = Fun(ListId, ListSubs, Acc),
-    NextListKey = skip_past_list(Tab, Key, ListId),
-    fold_lists_loop(Fun, Acc2, Tab, NextListKey).
 
 -spec skip_past_list(ets:table(), term(), binary()) -> term().
 skip_past_list(Tab, Key, ListId) ->
@@ -243,25 +210,6 @@ remove_list_from_session_index(IdxTab, SessionId, ListId, Ids) ->
     end.
 
 -ifdef(TEST).
-
-retain_only_session_list_drops_other_lists_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"200">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"300">>, [{0, 99}], Tab),
-    Removed = retain_only_session_list(<<"s1">>, <<"300">>, Tab),
-    ?assertEqual([<<"100">>, <<"200">>], lists:sort(Removed)),
-    ?assert(is_subscribed(<<"300">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"200">>, <<"s1">>, Tab)),
-    destroy(Tab).
-
-retain_only_session_list_noop_when_single_list_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    ?assertEqual([], retain_only_session_list(<<"s1">>, <<"100">>, Tab)),
-    ?assert(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    destroy(Tab).
 
 retain_only_session_list_leaves_other_sessions_untouched_test() ->
     Tab = new(),

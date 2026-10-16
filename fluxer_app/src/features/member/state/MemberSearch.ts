@@ -3,44 +3,19 @@
 import Guilds from '@app/features/guild/state/Guilds';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {
+	type MemberSearchFilters,
+	MessageTypes as MemberSearchWorkerMessageTypes,
+	type TransformedMember,
+} from '@app/features/member/workers/MemberSearchProtocol';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable} from 'mobx';
-
-export enum MemberSearchActionTypes {
-	UPDATE_USERS = 'UPDATE_USERS',
-	USER_RESULTS = 'USER_RESULTS',
-	QUERY_SET = 'QUERY_SET',
-	QUERY_CLEAR = 'QUERY_CLEAR',
-}
-
-export enum MemberSearchWorkerMessageTypes {
-	UPDATE_USERS = 'UPDATE_USERS',
-	USER_RESULTS = 'USER_RESULTS',
-	QUERY_SET = 'QUERY_SET',
-	QUERY_CLEAR = 'QUERY_CLEAR',
-}
-
-export interface MemberSearchFilters {
-	friends?: boolean;
-	guild?: string;
-}
-
-export interface TransformedMember {
-	id: string;
-	username: string;
-	globalName?: string | null;
-	guildNicknames?: Record<string, string | null>;
-	isBot?: boolean;
-	isFriend?: boolean;
-	guildIds?: Array<string>;
-	_delete?: boolean;
-	_removeGuild?: string;
-	[key: string]: string | boolean | null | undefined | Array<string> | Record<string, string | null>;
-}
 
 export type QueryBlacklist = Set<string>;
 export type QueryWhitelist = Set<string>;
@@ -63,32 +38,33 @@ interface WorkerMessage {
 }
 
 interface MemberResultsMessage extends WorkerMessage {
-	type: MemberSearchWorkerMessageTypes.USER_RESULTS;
+	type: MemberSearchWorkerMessageTypes.MATCHES_READY;
 	uuid: string;
 	generation: number;
 	payload: Array<TransformedMember>;
 }
 
 interface UpdateMembersMessage extends WorkerMessage {
-	type: MemberSearchWorkerMessageTypes.UPDATE_USERS;
+	type: MemberSearchWorkerMessageTypes.INGEST_DIRECTORY;
 	payload: {
 		users: Array<TransformedMember>;
 	};
 }
 
 interface QuerySetMessage extends WorkerMessage {
-	type: MemberSearchWorkerMessageTypes.QUERY_SET;
+	type: MemberSearchWorkerMessageTypes.SEARCH_BEGIN;
 	uuid: string;
 	payload: QueryData;
 }
 
 interface QueryClearMessage extends WorkerMessage {
-	type: MemberSearchWorkerMessageTypes.QUERY_CLEAR;
+	type: MemberSearchWorkerMessageTypes.SEARCH_CANCEL;
 	uuid: string;
 }
 
 const DEFAULT_LIMIT = 10;
-const BACKGROUND_FETCH_DEDUP_WINDOW_MS = 750;
+const MEMBER_FETCH_DEDUPE_MS = 60_000;
+const MEMBER_FETCH_SETTLE_MS = 750;
 
 let worker: Worker | null = null;
 const searchContexts = new Set<SearchContext>();
@@ -102,7 +78,7 @@ function updateMembers(members: Array<TransformedMember>): void {
 		return;
 	}
 	worker.postMessage({
-		type: MemberSearchWorkerMessageTypes.UPDATE_USERS,
+		type: MemberSearchWorkerMessageTypes.INGEST_DIRECTORY,
 		payload: {users: filtered},
 	} as UpdateMembersMessage);
 }
@@ -118,7 +94,7 @@ function isFriendRelationship(userId: string): boolean {
 function getTransformedUser(user: User): TransformedMember {
 	return {
 		id: user.id,
-		username: `${user.username}#${user.discriminator}`,
+		username: formatUserTag(user),
 		globalName: user.globalName,
 		isBot: user.bot,
 		isFriend: isFriendRelationship(user.id),
@@ -159,41 +135,41 @@ function updateMembersList(members: Array<GuildMember>, guildId?: string): Array
 }
 
 export class SearchContext {
-	private readonly _uuid: string;
-	private readonly _callback: (results: Array<TransformedMember>) => void;
-	private readonly _limit: number;
-	private _currentQuery: QueryData | false | null;
-	private _nextQuery: QueryData | null;
+	private readonly _contextId: string;
+	private readonly _deliverResults: (results: Array<TransformedMember>) => void;
+	private readonly _maxResults: number;
+	private _inFlightQuery: QueryData | false | null;
+	private _queuedQuery: QueryData | null;
 	private _latestGeneration: number;
 	private _nextGeneration: number;
 	private readonly _handleMessages: (event: MessageEvent<WorkerMessage>) => void;
 	private _attachedWorker: Worker | null = null;
 
 	constructor(callback: (results: Array<TransformedMember>) => void, limit: number = DEFAULT_LIMIT) {
-		this._uuid = crypto.randomUUID();
-		this._callback = callback;
-		this._limit = limit;
-		this._currentQuery = null;
-		this._nextQuery = null;
+		this._contextId = randomUuid();
+		this._deliverResults = callback;
+		this._maxResults = limit;
+		this._inFlightQuery = null;
+		this._queuedQuery = null;
 		this._latestGeneration = 0;
 		this._nextGeneration = 1;
 		this._handleMessages = (event: MessageEvent<WorkerMessage>) => {
 			const data = event.data;
-			if (!data || data.type !== MemberSearchWorkerMessageTypes.USER_RESULTS) {
+			if (!data || data.type !== MemberSearchWorkerMessageTypes.MATCHES_READY) {
 				return;
 			}
 			const resultsMessage = data as MemberResultsMessage;
-			if (resultsMessage.uuid !== this._uuid) {
+			if (resultsMessage.uuid !== this._contextId) {
 				return;
 			}
 			const isLatestGeneration = resultsMessage.generation === this._latestGeneration;
-			if (isLatestGeneration && this._currentQuery !== false) {
-				this._callback(resultsMessage.payload);
+			if (isLatestGeneration && this._inFlightQuery !== false) {
+				this._deliverResults(resultsMessage.payload);
 			}
-			const currentQuery = this._currentQuery;
+			const currentQuery = this._inFlightQuery;
 			if (currentQuery !== null && currentQuery !== false && currentQuery.generation === resultsMessage.generation) {
-				this._currentQuery = null;
-				this._setNextQuery();
+				this._inFlightQuery = null;
+				this._flushQueuedQuery();
 			}
 		};
 		searchContexts.add(this);
@@ -201,7 +177,7 @@ export class SearchContext {
 	}
 
 	destroy(): void {
-		this.clearQuery();
+		this.cancelSearch();
 		searchContexts.delete(this);
 		this.attachToWorker(null);
 	}
@@ -218,36 +194,36 @@ export class SearchContext {
 			return;
 		}
 		nextWorker.addEventListener('message', this._handleMessages);
-		if (this._currentQuery === false) {
+		if (this._inFlightQuery === false) {
 			nextWorker.postMessage({
-				uuid: this._uuid,
-				type: MemberSearchWorkerMessageTypes.QUERY_CLEAR,
+				uuid: this._contextId,
+				type: MemberSearchWorkerMessageTypes.SEARCH_CANCEL,
 			} as QueryClearMessage);
 			return;
 		}
-		if (this._currentQuery != null) {
+		if (this._inFlightQuery != null) {
 			nextWorker.postMessage({
-				uuid: this._uuid,
-				type: MemberSearchWorkerMessageTypes.QUERY_SET,
-				payload: this._currentQuery,
+				uuid: this._contextId,
+				type: MemberSearchWorkerMessageTypes.SEARCH_BEGIN,
+				payload: this._inFlightQuery,
 			} as QuerySetMessage);
 			return;
 		}
-		this._setNextQuery();
+		this._flushQueuedQuery();
 	}
 
-	clearQuery(): void {
-		this._currentQuery = false;
-		this._nextQuery = null;
+	cancelSearch(): void {
+		this._inFlightQuery = false;
+		this._queuedQuery = null;
 		if (this._attachedWorker != null) {
 			this._attachedWorker.postMessage({
-				uuid: this._uuid,
-				type: MemberSearchWorkerMessageTypes.QUERY_CLEAR,
+				uuid: this._contextId,
+				type: MemberSearchWorkerMessageTypes.SEARCH_CANCEL,
 			} as QueryClearMessage);
 		}
 	}
 
-	setQuery(
+	beginSearch(
 		query: string,
 		filters: MemberSearchFilters = {},
 		blacklist: QueryBlacklist = new Set(),
@@ -259,29 +235,29 @@ export class SearchContext {
 		}
 		const generation = this._nextGeneration++;
 		this._latestGeneration = generation;
-		this._nextQuery = {
+		this._queuedQuery = {
 			query,
 			filters,
 			blacklist: Array.from(blacklist),
 			whitelist: Array.from(whitelist),
 			boosters,
-			limit: this._limit,
+			limit: this._maxResults,
 			generation,
 		};
-		this._setNextQuery();
+		this._flushQueuedQuery();
 	}
 
-	private _setNextQuery(): void {
-		if (this._currentQuery || !this._nextQuery) {
+	private _flushQueuedQuery(): void {
+		if (this._inFlightQuery || !this._queuedQuery) {
 			return;
 		}
-		this._currentQuery = this._nextQuery;
-		this._nextQuery = null;
+		this._inFlightQuery = this._queuedQuery;
+		this._queuedQuery = null;
 		if (this._attachedWorker != null) {
 			this._attachedWorker.postMessage({
-				uuid: this._uuid,
-				type: MemberSearchWorkerMessageTypes.QUERY_SET,
-				payload: this._currentQuery,
+				uuid: this._contextId,
+				type: MemberSearchWorkerMessageTypes.SEARCH_BEGIN,
+				payload: this._inFlightQuery,
 			} as QuerySetMessage);
 		}
 	}
@@ -290,7 +266,7 @@ export class SearchContext {
 class MemberSearch {
 	private logger = new Logger('MemberSearch');
 	private initialized: boolean = false;
-	private readonly inFlightFetches = new Map<string, Promise<void>>();
+	private readonly recentFetches = new Map<string, number>();
 
 	constructor() {
 		makeAutoObservable(this);
@@ -335,7 +311,7 @@ class MemberSearch {
 		updateMembers(allMembers);
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		if (worker) {
 			this.terminate();
 		}
@@ -404,24 +380,6 @@ class MemberSearch {
 		updateMembers(transformedMembers);
 	}
 
-	handleUserUpdate(userId: string): void {
-		if (!worker) return;
-		const user = Users.getUser(userId);
-		if (user == null) return;
-		const allMembers: Array<TransformedMember> = [getTransformedUser(user)];
-		const guilds = Guilds.getGuilds();
-		for (const guild of guilds) {
-			const member = GuildMembers.getMember(guild.id, userId);
-			if (member) {
-				const transformedMember = getTransformedMember(member, guild.id);
-				if (transformedMember) {
-					allMembers.push(transformedMember);
-				}
-			}
-		}
-		updateMembers(allMembers);
-	}
-
 	handleFriendshipChange(userId: string, isFriend: boolean): void {
 		if (!worker) return;
 		const user = Users.getUser(userId);
@@ -452,12 +410,6 @@ class MemberSearch {
 		this.initialized = false;
 	}
 
-	cleanup(): void {
-		this.terminate();
-		this.initialized = false;
-		this.inFlightFetches.clear();
-	}
-
 	async fetchMembersInBackground(query: string, guildIds: Array<string>, priorityGuildId?: string): Promise<void> {
 		const trimmed = query.trim();
 		if (!trimmed) {
@@ -483,24 +435,25 @@ class MemberSearch {
 			return;
 		}
 		const key = `${eligibleGuildIds.join(',')}:${trimmed.toLowerCase()}`;
-		const existing = this.inFlightFetches.get(key);
-		if (existing) {
-			await existing;
+		const now = Date.now();
+		for (const [previousKey, requestedAt] of this.recentFetches) {
+			if (now - requestedAt >= MEMBER_FETCH_DEDUPE_MS) {
+				this.recentFetches.delete(previousKey);
+			}
+		}
+		if (this.recentFetches.has(key)) {
 			return;
 		}
-		const promise = new Promise<void>((resolve) => {
-			GuildMembers.requestMembersInBackground({
-				guildIds: eligibleGuildIds,
-				query: trimmed,
-				limit: 25,
-				presences: true,
-			});
-			setTimeout(resolve, BACKGROUND_FETCH_DEDUP_WINDOW_MS);
-		}).finally(() => {
-			this.inFlightFetches.delete(key);
+		this.recentFetches.set(key, now);
+		GuildMembers.requestMembersInBackground({
+			guildIds: eligibleGuildIds,
+			query: trimmed,
+			limit: 25,
+			presences: true,
 		});
-		this.inFlightFetches.set(key, promise);
-		await promise;
+		await new Promise<void>((resolve) => {
+			setTimeout(resolve, MEMBER_FETCH_SETTLE_MS);
+		});
 	}
 }
 

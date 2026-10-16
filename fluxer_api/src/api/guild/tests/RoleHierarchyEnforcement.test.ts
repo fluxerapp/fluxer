@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
@@ -15,7 +11,11 @@ import {
 	updateMember,
 	updateRole,
 	updateRolePositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Role Hierarchy Enforcement', () => {
 	let harness: ApiTestHarness;

@@ -15,6 +15,7 @@ import {
 import {EventEmitter} from 'events';
 import type TypedEmitter from 'typed-emitter';
 import log, {getLogger, LoggerNames, type StructuredLogger} from '../../logger.ts';
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import {ParticipantEvent, TrackEvent} from '../events.ts';
 import type LocalTrackPublication from '../track/LocalTrackPublication.ts';
 import type LocalVideoTrack from '../track/LocalVideoTrack.ts';
@@ -128,8 +129,8 @@ export default class Participant extends (EventEmitter as new () => TypedEmitter
 	) {
 		super();
 
-		this.log = getLogger(loggerOptions?.loggerName ?? LoggerNames.Participant);
 		this.loggerOptions = loggerOptions;
+		this.log = getLogger(loggerOptions?.loggerName ?? LoggerNames.Participant, () => this.logContext);
 
 		this.setMaxListeners(100);
 		this.sid = sid;
@@ -309,8 +310,12 @@ export default class Participant extends (EventEmitter as new () => TypedEmitter
 		this.audioContext = ctx;
 		this.audioTrackPublications.forEach((track) => isAudioTrack(track.track) && track.track.setAudioContext(ctx));
 	}
-
 	addTrackPublication(publication: TrackPublication) {
+		this.log.debug(`adding track publication`, {
+			trackSid: publication.trackSid,
+			source: publication.source,
+			kind: publication.kind,
+		});
 		publication.on(TrackEvent.Muted, () => {
 			this.emit(ParticipantEvent.TrackMuted, publication);
 		});
@@ -337,7 +342,6 @@ export default class Participant extends (EventEmitter as new () => TypedEmitter
 		}
 	}
 }
-
 export type ParticipantEventArgumentMap = {
 	trackPublished: [publication: RemoteTrackPublication];
 	trackSubscribed: [track: RemoteTrack, publication: RemoteTrackPublication];
@@ -352,7 +356,7 @@ export type ParticipantEventArgumentMap = {
 	localSenderCreated: [sender: RTCRtpSender, track: Track, codec?: VideoCodec, trackId?: string];
 	participantMetadataChanged: [prevMetadata: string | undefined, participant?: unknown];
 	participantNameChanged: [name: string];
-	dataReceived: [payload: Uint8Array, kind: DataPacket_Kind, encryptionType?: Encryption_Type];
+	dataReceived: [payload: NonSharedUint8Array, kind: DataPacket_Kind, encryptionType?: Encryption_Type];
 	sipDTMFReceived: [dtmf: SipDTMF];
 	transcriptionReceived: [transcription: Array<TranscriptionSegment>, publication?: TrackPublication];
 	isSpeakingChanged: [speaking: boolean];

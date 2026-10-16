@@ -7,7 +7,6 @@ use crate::{
     templates::{
         components::{
             auto_refresh::auto_refresh,
-            badge::{BadgeVariant, badge},
             data_field::{data_field_mono, data_field_text, data_grid},
             form::{csrf_input, danger_button, form_field_group},
             page_container::{page_header_with_actions, page_header_with_back},
@@ -18,17 +17,7 @@ use crate::{
 };
 use maud::{Markup, html};
 
-fn status_badge(status: &str) -> Markup {
-    let variant = match status {
-        "queued" => BadgeVariant::Default,
-        "running" => BadgeVariant::Info,
-        "succeeded" => BadgeVariant::Success,
-        "failed" | "deadletter" => BadgeVariant::Danger,
-        "cancelled" => BadgeVariant::Warning,
-        _ => BadgeVariant::Default,
-    };
-    badge(status, variant)
-}
+use super::jobs_list_helpers::{job_time, status_badge};
 
 fn val_str<'a>(job: &'a serde_json::Value, key: &str) -> &'a str {
     job.get(key).and_then(|v| v.as_str()).unwrap_or("")
@@ -71,7 +60,7 @@ fn progress_bar(job: &serde_json::Value) -> Markup {
         }
         (cur, Some(tot)) => {
             let c = cur.unwrap_or(0);
-            let pct = (c * 100 / tot).min(100);
+            let pct = (u128::from(c) * 100 / u128::from(tot)).min(100);
             html! {
                 div role="progressbar" aria-valuenow=(pct) aria-valuemin="0"
                     aria-valuemax="100"
@@ -124,10 +113,10 @@ fn overview_section(job: &serde_json::Value) -> Markup {
             html! {
                 (data_field_mono("Task", task_type))
                 (data_field_mono("Lane", if lane.is_empty() { "\u{2014}" } else { lane }))
-                (data_field_text("Created", if created_at.is_empty() { "\u{2014}" } else { created_at }))
-                (data_field_text("Started", if started_at.is_empty() { "\u{2014}" } else { started_at }))
-                (data_field_text("Completed", if completed_at.is_empty() { "\u{2014}" } else { completed_at }))
-                (data_field_text("Run-at", run_at))
+                (data_field_text("Created", &job_time(created_at)))
+                (data_field_text("Started", &job_time(started_at)))
+                (data_field_text("Completed", &job_time(completed_at)))
+                (data_field_text("Run-at", &job_time(run_at)))
                 (data_field_text("Attempts", &format!("{attempts}/{max_attempts}")))
                 (data_field_mono("Scheduled by", requester_display))
                 (data_field_text("Audit reason", if audit_reason.is_empty() { "\u{2014}" } else { audit_reason }))

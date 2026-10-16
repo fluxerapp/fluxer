@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0, pub/2, pub/3, pub_reply/2, reply_publish_failures/0, get_pool_status/0]).
+-export([start_link/0, pub/2, pub_reply/2, reply_publish_failures/0, get_pool_status/0]).
 -export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -33,13 +33,6 @@ start_link() ->
 pub(Subject, Payload) ->
     case gateway_nats_pool_conn:get_pool_conn() of
         {ok, Conn} -> nats:pub(Conn, Subject, Payload);
-        Error -> Error
-    end.
-
--spec pub(binary(), iodata(), map()) -> ok | {error, term()}.
-pub(Subject, Payload, Opts) ->
-    case gateway_nats_pool_conn:get_pool_conn() of
-        {ok, Conn} -> nats:pub(Conn, Subject, Payload, Opts);
         Error -> Error
     end.
 
@@ -112,12 +105,16 @@ init([]) ->
         slots => #{},
         monitors => #{},
         connecting => #{},
-        rpc_enabled => true,
+        rpc_enabled => nats_rpc_enabled(),
         subs => #{},
         handler_count => 0,
         handler_refs => #{},
         max_handlers => gateway_nats_pool_conn:max_handlers()
     }}.
+
+-spec nats_rpc_enabled() -> boolean().
+nats_rpc_enabled() ->
+    fluxer_gateway_env:get(nats_rpc_enabled) =/= false.
 
 -spec handle_call(term(), gen_server:from(), map()) -> {reply, term(), map()}.
 handle_call(get_pool_status, _From, State) ->
@@ -395,7 +392,7 @@ dispatch_rpc_msg(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State) ->
 -spec spawn_rpc_handler(binary(), binary(), binary()) -> {pid(), reference()}.
 spawn_rpc_handler(Subject, Payload, ReplyTo) ->
     spawn_monitor(fun() ->
-        gateway_nats_rpc:handle_rpc_request(Subject, Payload, ReplyTo)
+        gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo)
     end).
 
 -spec send_overloaded(binary()) -> ok | {error, term()}.
@@ -569,6 +566,24 @@ legacy_connect_timeout_ignores_tokened_slot_worker_test() ->
         ?assert(erlang:is_process_alive(Pid))
     after
         exit(Pid, kill)
+    end.
+
+pool_keeps_rpc_unsubscribed_when_switched_off_test() ->
+    persistent_term:put({fluxer_gateway, runtime_config}, #{nats_rpc_enabled => false}),
+    Parent = self(),
+    try
+        Pid = spawn(fun() -> Parent ! {self(), init([])} end),
+        {ok, State} =
+            receive
+                {Pid, Reply} -> Reply
+            after 5000 -> timeout
+            end,
+        ?assertEqual(false, maps:get(rpc_enabled, State)),
+        ?assertEqual(State, handle_ready(self(), false, #{0 => self()}, State))
+    after
+        persistent_term:erase(?PERSISTENT_TERM_KEY),
+        persistent_term:erase(?REPLY_FAILURE_KEY),
+        persistent_term:erase({fluxer_gateway, runtime_config})
     end.
 
 wait_forever() ->

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import type {ReportType} from '@app/features/moderation/components/report/ReportTypes';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
@@ -40,6 +41,7 @@ export const ReportStepSelection: React.FC<Props> = ({reportTypeOptions, selecte
 					options={reportTypeOptions}
 					value={selectedType}
 					onChange={onSelect}
+					dir={getLocaleDirection(i18n.locale)}
 					aria-label={i18n._(REPORT_TYPE_DESCRIPTOR)}
 					data-flx="moderation.report.report-step-selection.radio-group.select"
 				/>

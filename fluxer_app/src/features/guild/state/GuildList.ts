@@ -6,7 +6,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import UserSettings, {type GuildFolder} from '@app/features/user/state/UserSettings';
 import {UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 export type OrganizedItem =
 	| {
@@ -26,8 +26,7 @@ class GuildList {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	@action
-	handleConnectionOpen(guilds: ReadonlyArray<GuildReadyData>): void {
+	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
 		const availableGuilds: Array<Guild> = [];
 		for (const guild of guilds) {
 			if (guild.unavailable) continue;
@@ -42,7 +41,6 @@ class GuildList {
 		}
 	}
 
-	@action
 	handleGuild(guild: Guild | GuildReadyData | WireGuild): void {
 		if (guild.unavailable) {
 			return;
@@ -66,7 +64,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	handleGuildDelete(guildId: string, unavailable?: boolean): void {
 		const index = this.guilds.findIndex((s) => s.id === guildId);
 		if (index === -1) {
@@ -85,7 +82,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	sortGuilds(): void {
 		const next = this.guilds.slice();
 		this.sortGuildArrayInPlace(next);
@@ -105,16 +101,23 @@ class GuildList {
 		const guildMap = new Map(this.guilds.map((guild) => [guild.id, guild]));
 		const result: Array<OrganizedItem> = [];
 		const placedGuildIds = new Set<string>();
+		const emittedFolderIds = new Set<number | null>();
 		for (const folder of guildFolders) {
-			const folderGuilds = folder.guildIds
-				.map((guildId) => guildMap.get(guildId))
-				.filter((guild): guild is Guild => guild !== undefined);
-			for (const guild of folderGuilds) {
-				placedGuildIds.add(guild.id);
+			if (folder.id !== UNCATEGORIZED_FOLDER_ID && emittedFolderIds.has(folder.id)) {
+				continue;
+			}
+			const folderGuilds: Array<Guild> = [];
+			for (const guildId of folder.guildIds) {
+				if (placedGuildIds.has(guildId)) continue;
+				const guild = guildMap.get(guildId);
+				if (guild === undefined) continue;
+				placedGuildIds.add(guildId);
+				folderGuilds.push(guild);
 			}
 			if (folderGuilds.length === 0) {
 				continue;
 			}
+			emittedFolderIds.add(folder.id);
 			if (folder.id === UNCATEGORIZED_FOLDER_ID) {
 				for (const guild of folderGuilds) {
 					result.push({type: 'guild', guild});

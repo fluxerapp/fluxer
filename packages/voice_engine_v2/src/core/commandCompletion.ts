@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Snapshot} from './state';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 
 export function isVoiceEngineV2CommandCompletionStale(
 	snapshot: VoiceEngineV2Snapshot,
@@ -56,8 +56,7 @@ function staleSessionCommand(snapshot: VoiceEngineV2Snapshot, command: VoiceEngi
 			return snapshot.outputDevice.operationId !== command.operationId;
 		case 'stats.collect':
 			return snapshot.statsOperationId !== command.operationId;
-		case 'capabilities.queryHardwareEncoder':
-			return snapshot.hardwareEncoder.operationId !== command.operationId;
+
 		case 'gateway.voiceState.write':
 		case 'gateway.voiceState.clear':
 			return snapshot.gateway.operationId !== command.operationId;

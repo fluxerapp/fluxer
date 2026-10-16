@@ -12,8 +12,6 @@
     lookup/1,
     lookup_or_rehydrate/3,
     reconnect_drain/0,
-    transfer_sessions_to/1,
-    transfer_sessions_to_topology/1,
     handoff_to_topology/1,
     session_count/0,
     call_shard/3
@@ -73,15 +71,6 @@ lookup_or_rehydrate(SessionId, Token, SocketPid) ->
 reconnect_drain() ->
     safe_gen_call(reconnect_drain).
 
--spec transfer_sessions_to(node()) -> {ok, non_neg_integer()} | {error, timeout | unavailable}.
-transfer_sessions_to(TargetNode) ->
-    safe_gen_call({transfer_to, TargetNode}).
-
--spec transfer_sessions_to_topology([node()]) ->
-    {ok, non_neg_integer()} | {error, timeout | unavailable}.
-transfer_sessions_to_topology(TargetNodes) ->
-    safe_gen_call({transfer_to_topology, TargetNodes}).
-
 -spec handoff_to_topology([node()]) -> {ok, handoff_result()} | {error, timeout | unavailable}.
 handoff_to_topology(TargetNodes) ->
     safe_handoff_call({handoff_to_topology, TargetNodes}).
@@ -107,7 +96,7 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     _ = fluxer_gateway_env:load(),
     session_manager_shards:ensure_shard_table(),
-    {ShardCount, _Source} = determine_shard_count(),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([session_shards]),
     Shards = session_manager_shards:start_shards(ShardCount),
     State = #{shards => Shards, shard_count => ShardCount},
     session_manager_shards:sync_shard_table(State),
@@ -139,30 +128,10 @@ handle_call(get_global_count, _From, State) ->
     handle_aggregate_count(get_global_count, State);
 handle_call(reconnect_drain, _From, State) ->
     handle_aggregate_count(reconnect_drain, State);
-handle_call({transfer_to, TargetNode}, _From, State) when is_atom(TargetNode) ->
-    handle_transfer_to(TargetNode, State);
-handle_call({transfer_to_topology, TargetNodes}, _From, State) ->
-    handle_transfer_to_topology_request(TargetNodes, State);
 handle_call({handoff_to_topology, TargetNodes}, _From, State) ->
     handle_handoff_to_topology_request(TargetNodes, State);
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
-
--spec handle_transfer_to_topology_request(term(), state()) ->
-    {reply, {ok, non_neg_integer()} | {error, unavailable}, state()}.
-handle_transfer_to_topology_request(TargetNodes, State) ->
-    case atom_list(TargetNodes) of
-        {ok, Nodes} -> handle_transfer_to_topology(Nodes, State);
-        error -> {reply, {error, unavailable}, State}
-    end.
-
--spec handle_transfer_to_topology([node()], state()) ->
-    {reply, {ok, non_neg_integer()}, state()}.
-handle_transfer_to_topology(TargetNodes, State) ->
-    {Count, NewState} = session_manager_transfer:aggregate_transfer_to_topology(
-        TargetNodes, State
-    ),
-    {reply, {ok, Count}, NewState}.
 
 -spec handle_handoff_to_topology_request(term(), state()) ->
     {reply, {ok, handoff_result()} | {error, unavailable}, state()}.
@@ -229,11 +198,6 @@ handle_aggregate_count(Request, State) ->
     {Count, NewState} = session_manager_transfer:aggregate_counts(Request, State),
     {reply, {ok, Count}, NewState}.
 
--spec handle_transfer_to(node(), state()) -> {reply, {ok, non_neg_integer()}, state()}.
-handle_transfer_to(TargetNode, State) ->
-    {Count, NewState} = session_manager_transfer:aggregate_transfer_to(TargetNode, State),
-    {reply, {ok, Count}, NewState}.
-
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -241,7 +205,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> handle_down_by_pid(Pid, State)
     end;
@@ -334,7 +298,7 @@ restart_shard_noreply(Index, State) ->
 -spec handle_down_by_pid(pid(), state()) -> {noreply, state()}.
 handle_down_by_pid(Pid, State) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> {noreply, State}
     end.
@@ -352,55 +316,3 @@ atom_list([Value | Rest], Acc) when is_atom(Value) ->
     atom_list(Rest, [Value | Acc]);
 atom_list(_, _) ->
     error.
-
--spec determine_shard_count() -> {pos_integer(), configured | auto}.
-determine_shard_count() ->
-    case fluxer_gateway_env:get(session_shards) of
-        Value when is_integer(Value), Value > 0 ->
-            {Value, configured};
-        _ ->
-            {default_shard_count(), auto}
-    end.
-
--spec default_shard_count() -> pos_integer().
-default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-determine_shard_count_configured_test() ->
-    with_runtime_config(session_shards, 3, fun() ->
-        ?assertMatch({3, configured}, determine_shard_count())
-    end).
-
-determine_shard_count_auto_test() ->
-    with_runtime_config(session_shards, undefined, fun() ->
-        {Count, auto} = determine_shard_count(),
-        ?assert(Count >= 1)
-    end).
-
-default_shard_count_positive_test() ->
-    Count = default_shard_count(),
-    ?assert(Count >= 1).
-
-with_runtime_config(Key, Value, Fun) ->
-    case persistent_term:get({fluxer_gateway, runtime_config}, undefined) of
-        undefined -> persistent_term:put({fluxer_gateway, runtime_config}, #{});
-        _ -> ok
-    end,
-    Original = fluxer_gateway_env:get(Key),
-    fluxer_gateway_env:patch(#{Key => Value}),
-    Result = Fun(),
-    fluxer_gateway_env:update(fun(Map) -> restore_runtime_config(Key, Original, Map) end),
-    Result.
-
-restore_runtime_config(Key, undefined, Map) ->
-    maps:remove(Key, Map);
-restore_runtime_config(Key, Existing, Map) ->
-    Map#{Key => Existing}.
-
--endif.

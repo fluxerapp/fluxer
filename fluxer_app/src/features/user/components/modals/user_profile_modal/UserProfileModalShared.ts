@@ -103,21 +103,3 @@ export function isContextMenuOpenForTarget(
 	}
 	return false;
 }
-
-export function isContextMenuOpenForRef(ref: React.RefObject<HTMLElement | null>): boolean {
-	const contextMenu = ContextMenu.contextMenu;
-	return !!contextMenu && !!ref.current && contextMenu.target.target === ref.current;
-}
-
-export function useIsContextMenuOpenForRef(ref: React.RefObject<HTMLElement | null>): boolean {
-	const [isOpen, setIsOpen] = useState(false);
-	useEffect(() => {
-		const disposer = autorun(() => {
-			setIsOpen(isContextMenuOpenForRef(ref));
-		});
-		return () => {
-			disposer();
-		};
-	}, [ref]);
-	return isOpen;
-}

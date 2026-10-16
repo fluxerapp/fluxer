@@ -4,15 +4,13 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import EventEmitter from 'eventemitter3';
 
 export type ComponentActionType =
-	| 'CAMERA_DEVICE_REFRESH'
 	| 'CHANNEL_DETAILS_OPEN'
 	| 'CHANNEL_MEMBER_LIST_TOGGLE'
-	| 'CHANNEL_NOTIFICATION_SETTINGS_OPEN'
 	| 'CHANNEL_PINS_OPEN'
+	| 'THREAD_BROWSER_OPEN'
 	| 'COMPACT_VOICE_CALL_EXPANSION_TOGGLE'
 	| 'EMOJI_PICKER_OPEN'
 	| 'EMOJI_PICKER_RERENDER'
-	| 'EMOJI_SELECT'
 	| 'ESCAPE_PRESSED'
 	| 'EDITING_EXPRESSION_PICKER_TAB_TOGGLE'
 	| 'EXPRESSION_PICKER_TAB_TOGGLE'
@@ -24,12 +22,9 @@ export type ComponentActionType =
 	| 'INBOX_OPEN'
 	| 'INSERT_MENTION'
 	| 'LAYOUT_RESIZED'
-	| 'MEMES_PICKER_RERENDER'
+	| 'MESSAGE_REVEAL'
 	| 'MESSAGE_SEARCH_OPEN'
 	| 'MESSAGE_SENT'
-	| 'OPEN_MEMES_TAB'
-	| 'POPOUT_CLOSE'
-	| 'SCROLLTO_PRESENT'
 	| 'SCROLL_PAGE_DOWN'
 	| 'SCROLL_PAGE_UP'
 	| 'SOUNDBOARD_TOGGLE'
@@ -39,20 +34,20 @@ export type ComponentActionType =
 	| 'TEXTAREA_DISMISS_AFFORDANCE'
 	| 'TEXTAREA_UPLOAD_FILE'
 	| 'USER_SETTINGS_TAB_SELECT';
-type ComponentDispatchEvents = {
+type ComponentBusEvents = {
 	[K in ComponentActionType]: (...args: Array<unknown>) => unknown;
 };
 
-class Dispatch extends EventEmitter<ComponentDispatchEvents> {
-	private _savedDispatches: Partial<Record<ComponentActionType, Array<unknown>>> = {};
-	private logger = new Logger('ComponentDispatch');
+class Dispatch extends EventEmitter<ComponentBusEvents> {
+	private bufferedDispatches: Partial<Record<ComponentActionType, Array<unknown>>> = {};
+	private logger = new Logger('ComponentBus');
 
-	safeDispatch(type: ComponentActionType, args?: unknown) {
+	dispatchOrBuffer(type: ComponentActionType, args?: unknown) {
 		if (!this.hasSubscribers(type)) {
-			if (!this._savedDispatches[type]) {
-				this._savedDispatches[type] = [];
+			if (!this.bufferedDispatches[type]) {
+				this.bufferedDispatches[type] = [];
 			}
-			this._savedDispatches[type].push(args);
+			this.bufferedDispatches[type].push(args);
 			return;
 		}
 		this.dispatch(type, args);
@@ -60,13 +55,6 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 
 	dispatch(type: ComponentActionType, args?: unknown) {
 		this.emit(type, args);
-	}
-
-	dispatchToLastSubscribed(type: ComponentActionType, args?: unknown) {
-		const listeners = this.listeners(type);
-		if (listeners.length > 0) {
-			listeners[listeners.length - 1](args);
-		}
 	}
 
 	dispatchToFirstResult(type: ComponentActionType, args: unknown, predicate: (result: unknown) => boolean): unknown {
@@ -77,45 +65,28 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 		return undefined;
 	}
 
-	dispatchToFirst(types: Array<ComponentActionType>, args?: unknown) {
-		for (const type of types) {
-			if (this.hasSubscribers(type)) {
-				this.dispatch(type, args);
-				break;
-			}
-		}
-	}
-
 	hasSubscribers(type: ComponentActionType) {
 		return this.listenerCount(type) > 0;
 	}
 
-	private _checkSavedDispatches(type: ComponentActionType) {
-		if (this._savedDispatches[type]) {
-			for (const args of this._savedDispatches[type]) {
+	private flushBufferedDispatches(type: ComponentActionType) {
+		if (this.bufferedDispatches[type]) {
+			for (const args of this.bufferedDispatches[type]) {
 				this.dispatch(type, args);
 			}
-			delete this._savedDispatches[type];
+			delete this.bufferedDispatches[type];
 		}
 	}
 
 	subscribe(type: ComponentActionType, callback: (...args: Array<unknown>) => void): () => void {
 		if (this.listeners(type).includes(callback)) {
-			this.logger.warn('ComponentDispatch.subscribe: Attempting to add a duplicate listener', type);
+			this.logger.warn('Ignoring duplicate subscriber for component action', type);
 			return () => {
 				this.unsubscribe(type, callback);
 			};
 		}
 		this.on(type, callback);
-		this._checkSavedDispatches(type);
-		return () => {
-			this.unsubscribe(type, callback);
-		};
-	}
-
-	subscribeOnce(type: ComponentActionType, callback: (...args: Array<unknown>) => void): () => void {
-		this.once(type, callback);
-		this._checkSavedDispatches(type);
+		this.flushBufferedDispatches(type);
 		return () => {
 			this.unsubscribe(type, callback);
 		};
@@ -124,10 +95,6 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 	unsubscribe(type: ComponentActionType, callback: (...args: Array<unknown>) => void) {
 		this.removeListener(type, callback);
 	}
-
-	reset() {
-		this.removeAllListeners();
-	}
 }
 
-export const ComponentDispatch = new Dispatch();
+export const ComponentBus = new Dispatch();

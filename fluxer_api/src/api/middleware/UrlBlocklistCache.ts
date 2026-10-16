@@ -1,74 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import {Logger} from '../Logger';
-import {RISK_S3_KEYS, readLinesFromS3} from '../risk/RiskBlocklistS3';
-import {canonicalizeUrl} from '../utils/UrlNormalizer';
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BLOCKLIST_S3_KEYS, readLinesFromS3} from '@app/api/blocklist/BlocklistS3';
+import {Config} from '@app/api/Config';
+import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import {RefreshedCache} from '@app/api/utils/RefreshedCache';
+import {UrlHostRuleSet} from '@app/api/utils/UrlHostRules';
+import {canonicalizeUrl, extractLinkHosts, extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 
-class UrlBlocklistCache {
-	private exactUrls: Set<string> = new Set();
-	private blockedDomains: Set<string> = new Set();
-	private isInitialized = false;
-	private adminRepository = new AdminRepository();
-	private kvClient: IKVProvider | null = null;
-	private storageService: IStorageService | null = null;
-	private kvSubscription: IKVSubscription | null = null;
-	private subscriberInitialized = false;
-	private messageHandler: ((channel: string) => void) | null = null;
-	private consecutiveFailures = 0;
-	private readonly maxConsecutiveFailures = 5;
-
-	setRefreshSubscriber(kvClient: IKVProvider | null): void {
-		this.kvClient = kvClient;
+class UrlBlocklistCache extends RefreshedCache {
+	constructor() {
+		super({name: 'URL blocklist cache', channels: [BANNED_URLS_REFRESH_CHANNEL, BANNED_URL_DOMAINS_REFRESH_CHANNEL]});
 	}
 
+	private exactUrls: Set<string> = new Set();
+	private hostRules = new UrlHostRuleSet();
+	private adminRepository = new AdminRepository();
+	private storageService: IStorageService | null = null;
 	setStorageService(storageService: IStorageService | null): void {
 		this.storageService = storageService;
 	}
 
-	async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		await this.refresh();
-		this.isInitialized = true;
-		this.setupSubscriber();
-	}
-
-	private setupSubscriber(): void {
-		if (this.subscriberInitialized || !this.kvClient) return;
-		const subscription = this.kvClient.duplicate();
-		this.kvSubscription = subscription;
-		this.messageHandler = (channel: string) => {
-			if (channel === BANNED_URLS_REFRESH_CHANNEL || channel === BANNED_URL_DOMAINS_REFRESH_CHANNEL) {
-				this.refresh().catch((err) => {
-					this.consecutiveFailures++;
-					const message = err instanceof Error ? err.message : String(err);
-					if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-						Logger.error({error: message}, 'Failed to refresh URL blocklist cache after notification');
-					} else {
-						Logger.warn({error: message}, 'Failed to refresh URL blocklist cache after notification');
-					}
-				});
-			}
-		};
-		subscription
-			.connect()
-			.then(() => subscription.subscribe(BANNED_URLS_REFRESH_CHANNEL))
-			.then(() => subscription.subscribe(BANNED_URL_DOMAINS_REFRESH_CHANNEL))
-			.then(() => {
-				if (this.messageHandler) {
-					subscription.on('message', this.messageHandler);
-				}
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Failed to subscribe to URL blocklist refresh channels');
-			});
-		this.subscriberInitialized = true;
-	}
-
-	async refresh(): Promise<void> {
+	protected async load(): Promise<void> {
 		const [manualUrls, domains, feedUrls] = await Promise.all([
 			this.adminRepository.loadAllBannedUrls(),
 			this.adminRepository.loadAllBannedUrlDomains(),
@@ -78,22 +33,22 @@ class UrlBlocklistCache {
 		for (const row of manualUrls) {
 			if (row.url_canonical) nextUrls.add(row.url_canonical.toLowerCase());
 		}
-		const nextDomains = new Set<string>();
+		const nextHostRules = new UrlHostRuleSet();
 		for (const row of domains) {
-			nextDomains.add(row.domain.toLowerCase());
+			nextHostRules.add(row.domain, row.match_subdomains ?? true);
 		}
 		this.exactUrls = nextUrls;
-		this.blockedDomains = nextDomains;
-		this.consecutiveFailures = 0;
+		this.hostRules = nextHostRules;
+
 		Logger.debug(
-			{urls: nextUrls.size, domains: nextDomains.size, feedUrls: feedUrls.size},
+			{urls: nextUrls.size, ...nextHostRules.size, feedUrls: feedUrls.size},
 			'URL blocklist cache refreshed',
 		);
 	}
 
 	private async loadFeedUrls(): Promise<Set<string>> {
-		if (!this.storageService) return new Set();
-		const lines = await readLinesFromS3(this.storageService, RISK_S3_KEYS.feedUrls);
+		if (!this.storageService || !Config.blocklistFeeds.enabled) return new Set();
+		const lines = await readLinesFromS3(this.storageService, BLOCKLIST_S3_KEYS.feedUrls);
 		return new Set(lines);
 	}
 
@@ -117,7 +72,17 @@ class UrlBlocklistCache {
 	}
 
 	isHostnameBanned(host: string): boolean {
-		return this.blockedDomains.has(host.toLowerCase());
+		return this.hostRules.matches(host);
+	}
+
+	containsBannedLink(text: string): boolean {
+		for (const url of extractUrlCandidates(text)) {
+			if (this.isUrlOrDomainBanned(url)) return true;
+		}
+		for (const host of extractLinkHosts(text)) {
+			if (this.isHostnameBanned(host)) return true;
+		}
+		return false;
 	}
 
 	addExactUrl(canonical: string): void {
@@ -128,33 +93,31 @@ class UrlBlocklistCache {
 		this.exactUrls.delete(canonical.toLowerCase());
 	}
 
-	addDomain(domain: string): void {
-		this.blockedDomains.add(domain.toLowerCase());
+	addDomain(domain: string, matchSubdomains = true): void {
+		this.hostRules.add(domain, matchSubdomains);
 	}
 
 	removeDomain(domain: string): void {
-		this.blockedDomains.delete(domain.toLowerCase());
+		this.hostRules.remove(domain);
 	}
 
 	get size(): {
 		urls: number;
 		domains: number;
+		patterns: number;
 	} {
 		return {
 			urls: this.exactUrls.size,
-			domains: this.blockedDomains.size,
+			...this.hostRules.size,
 		};
 	}
 
-	shutdown(): void {
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
+	resetForTesting(): void {
+		this.resetRefreshState();
+		this.exactUrls = new Set();
+		this.hostRules = new UrlHostRuleSet();
+
+		this.storageService = null;
 	}
 }
 

@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {
+	buildRefundEligibility,
+	refundCooldownExpiresAt,
+	refundWindowExpiresAt,
+	SELF_SERVE_REFUND_WINDOW_DAYS,
+	shouldBlockFurtherPurchases,
+} from '@app/api/stripe/services/RefundAllowance';
+import {REFUND_ALLOWANCE_CLAIM_PREFIX} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
+import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeNoPurchaseHistoryError} from '@fluxer/errors/src/domains/payment/StripeNoPurchaseHistoryError';
@@ -9,22 +28,11 @@ import {StripeRefundOutsideWindowError} from '@fluxer/errors/src/domains/payment
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	SelfServeRefundEligibilityResponse,
-	SelfServeRefundIneligibilityReason,
 	SelfServeRefundResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {extractId} from '../StripeUtils';
-import type {StripeSubscriptionService} from './StripeSubscriptionService';
 
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-export const SELF_SERVE_REFUND_WINDOW_DAYS = 3;
-export const SELF_SERVE_REFUND_COOLDOWN_DAYS = 30;
+const PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS = 1;
 
 interface RefundTarget {
 	invoice: Stripe.Invoice;
@@ -39,7 +47,6 @@ interface RefundTarget {
 
 type StripeInvoiceWithPayments = Stripe.Invoice & {
 	customer?: string | Stripe.Customer | null;
-	subscription?: string | Stripe.Subscription | null;
 	payments?: {
 		data?: Array<{
 			payment?: {
@@ -53,6 +60,10 @@ type StripeInvoiceWithPayments = Stripe.Invoice & {
 		}>;
 	} | null;
 };
+
+function resolveInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+	return extractId(invoice.parent?.subscription_details?.subscription ?? null);
+}
 
 function getInvoicePaymentRef(invoice: Stripe.Invoice): {
 	chargeId: string | null;
@@ -83,7 +94,7 @@ function getInvoicePaymentRef(invoice: Stripe.Invoice): {
 export class StripeRefundService {
 	constructor(
 		private readonly stripe: Stripe | null,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly subscriptionService: StripeSubscriptionService,
 	) {}
 
@@ -113,7 +124,7 @@ export class StripeRefundService {
 			const list = await this.stripe.invoices.list({
 				customer: user.stripeCustomerId,
 				limit: 5,
-				expand: ['data.payments.data.payment.payment_intent'],
+				expand: ['data.payments.data.payment'],
 			});
 			for (const invoice of list.data) {
 				if (!invoice.id || invoice.status !== 'paid' || invoice.amount_paid <= 0) {
@@ -132,7 +143,7 @@ export class StripeRefundService {
 					chargeId: ref.chargeId,
 					paymentIntentId: ref.paymentIntentId,
 					paidAt,
-					subscriptionId: extractId((invoice as StripeInvoiceWithPayments).subscription),
+					subscriptionId: resolveInvoiceSubscriptionId(invoice),
 				};
 			}
 		} catch (error) {
@@ -141,66 +152,120 @@ export class StripeRefundService {
 		return null;
 	}
 
-	private cooldownExpiresAt(user: User): Date | null {
-		if (!user.firstRefundAt) {
-			return null;
-		}
-		const expiresAt = new Date(user.firstRefundAt.getTime() + SELF_SERVE_REFUND_COOLDOWN_DAYS * MILLISECONDS_PER_DAY);
-		return expiresAt.getTime() > Date.now() ? expiresAt : null;
-	}
-
-	private windowExpiresAt(target: RefundTarget): Date {
-		return new Date(target.paidAt.getTime() + SELF_SERVE_REFUND_WINDOW_DAYS * MILLISECONDS_PER_DAY);
-	}
-
 	async getEligibility(userId: UserID): Promise<SelfServeRefundEligibilityResponse> {
-		if (Config.instance.selfHosted || !this.stripe) {
-			return {
-				eligible: false,
-				reason: 'feature_unavailable',
-				invoice_id: null,
-				invoice_amount_paid_cents: null,
-				currency: null,
-				paid_at: null,
-				refund_window_expires_at: null,
-				cooldown_expires_at: null,
-				cancels_subscription: false,
-			};
-		}
+		if (Config.instance.selfHosted || !this.stripe) return buildRefundEligibility({reason: 'feature_unavailable'});
 		const user = await this.getRequiredUser(userId);
 		const target = await this.resolveLatestRefundTarget(user);
-		if (!target) {
-			return {
-				eligible: false,
-				reason: 'no_refundable_purchase',
-				invoice_id: null,
-				invoice_amount_paid_cents: null,
-				currency: null,
-				paid_at: null,
-				refund_window_expires_at: null,
-				cooldown_expires_at: this.cooldownExpiresAt(user)?.toISOString() ?? null,
-				cancels_subscription: false,
-			};
+		return buildRefundEligibility({target, cooldownExpiresAt: refundCooldownExpiresAt(user)});
+	}
+
+	private async resolveChargePaymentMethodType(stripe: Stripe, target: RefundTarget): Promise<string | null> {
+		try {
+			if (target.chargeId) {
+				const charge = await stripe.charges.retrieve(target.chargeId);
+				return charge.payment_method_details?.type ?? null;
+			}
+			if (target.paymentIntentId) {
+				const paymentIntent = await stripe.paymentIntents.retrieve(target.paymentIntentId, {
+					expand: ['latest_charge'],
+				});
+				const latestCharge = paymentIntent.latest_charge;
+				if (latestCharge && typeof latestCharge !== 'string') {
+					return latestCharge.payment_method_details?.type ?? null;
+				}
+			}
+		} catch (error) {
+			Logger.warn(
+				{error, chargeId: target.chargeId, paymentIntentId: target.paymentIntentId},
+				'Failed to resolve payment method type for self-serve refund',
+			);
+			throw new StripeError('Could not determine the payment method for this refund');
 		}
-		const windowExpiresAt = this.windowExpiresAt(target);
-		const cooldownExpiresAt = this.cooldownExpiresAt(user);
-		let reason: SelfServeRefundIneligibilityReason | null = null;
-		if (windowExpiresAt.getTime() <= Date.now()) {
-			reason = 'outside_refund_window';
-		} else if (cooldownExpiresAt) {
-			reason = 'cooldown_active';
+		return null;
+	}
+
+	private async countPriorTerminalFailures(invoiceId: string): Promise<number> {
+		const priorRefunds = await getBillingRepository().refunds.listByInvoice(invoiceId);
+		return priorRefunds.filter((r) => r.status === 'failed' || r.status === 'canceled').length;
+	}
+
+	private async finalizeIfSucceeded(refund: Stripe.Refund): Promise<void> {
+		if (refund.status !== 'succeeded' || refund.metadata?.refund_kind !== 'self_serve') {
+			return;
 		}
-		return {
-			eligible: reason === null,
-			reason,
-			invoice_id: target.invoiceId,
-			invoice_amount_paid_cents: target.amountPaidCents,
-			currency: target.currency,
-			paid_at: target.paidAt.toISOString(),
-			refund_window_expires_at: windowExpiresAt.toISOString(),
-			cooldown_expires_at: cooldownExpiresAt?.toISOString() ?? null,
-			cancels_subscription: target.subscriptionId !== null,
-		};
+		const userIdRaw = refund.metadata.user_id;
+		if (!userIdRaw) {
+			return;
+		}
+		let userId: UserID;
+		try {
+			userId = createUserID(BigInt(userIdRaw));
+		} catch {
+			return;
+		}
+		const user = await this.userRepository.findUnique(userId);
+		if (!user) {
+			return;
+		}
+		const subscriptionId = refund.metadata.subscription_id;
+		if (subscriptionId) {
+			try {
+				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund', subscriptionId);
+			} catch (error) {
+				Logger.error(
+					{error, userId: user.id.toString(), subscriptionId},
+					'Self-serve refund confirmed but subscription cancellation failed; the subscription is still active and will keep billing until it is cancelled manually',
+				);
+			}
+		}
+		const claimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${refund.id}`;
+		const claim = await getBillingRepository().webhookEvents.tryClaim(claimKey);
+		if (claim === 'in_flight') {
+			Logger.debug(
+				{userId: user.id.toString(), refundId: refund.id, claim},
+				'Self-serve refund allowance is being counted by another delivery',
+			);
+			return;
+		}
+		const isFirstRefund = !user.firstRefundAt;
+		let patch: Partial<UserRow>;
+		let countedRefundIds: Array<string> = [];
+		if (isFirstRefund) {
+			patch = {first_refund_at: new Date()};
+		} else {
+			const outcome = await shouldBlockFurtherPurchases(user, this.userRepository);
+			countedRefundIds = outcome.countedRefundIds;
+			if (!outcome.blocked) {
+				await getBillingRepository().webhookEvents.markProcessed(claimKey);
+				Logger.info(
+					{userId: user.id.toString(), refundId: refund.id, countedRefundIds},
+					'Self-serve refund redelivered after the allowance claim expired; not counting it twice',
+				);
+				return;
+			}
+			patch = {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		}
+		try {
+			await this.userRepository.patchUpsert(user.id, patch, user.toRow());
+		} catch (error) {
+			await getBillingRepository().webhookEvents.releaseClaim(claimKey);
+			throw error;
+		}
+		await getBillingRepository().webhookEvents.markProcessed(claimKey);
+		Logger.info(
+			{
+				userId: user.id.toString(),
+				refundId: refund.id,
+				subscriptionId: subscriptionId || null,
+				isFirstRefund,
+				countedRefundIds,
+			},
+			'Self-serve refund confirmed succeeded; refund allowance and cancellation finalized',
+		);
+	}
+
+	async handleRefundWebhookEvent(refund: Stripe.Refund): Promise<void> {
+		await this.finalizeIfSucceeded(refund);
 	}
 
 	async refundLatestPurchase(userId: UserID): Promise<SelfServeRefundResponse> {
@@ -211,29 +276,42 @@ export class StripeRefundService {
 			throw new StripeNoPurchaseHistoryError();
 		}
 		const now = Date.now();
-		if (this.windowExpiresAt(target).getTime() <= now) {
+		if (refundWindowExpiresAt(target.paidAt).getTime() <= now) {
 			throw new StripeRefundOutsideWindowError();
 		}
-		if (this.cooldownExpiresAt(user)) {
+		if (refundCooldownExpiresAt(user)) {
 			throw new StripeRefundCooldownActiveError();
 		}
+		const priorFailures = await this.countPriorTerminalFailures(target.invoiceId);
+		const idempotencyKey = [
+			'self-serve-refund',
+			user.id.toString(),
+			target.invoiceId,
+			target.paymentIntentId ?? target.chargeId,
+			...(priorFailures > 0 ? [`retry-${priorFailures}`] : []),
+		].join(':');
+		const paymentMethodType = await this.resolveChargePaymentMethodType(stripe, target);
+		const isPix = paymentMethodType === 'pix';
+		const requestedAmountCents =
+			isPix && target.amountPaidCents > PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS
+				? target.amountPaidCents - PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS
+				: target.amountPaidCents;
 		let refund: Stripe.Response<Stripe.Refund>;
 		try {
 			refund = await stripe.refunds.create(
 				{
 					...(target.paymentIntentId ? {payment_intent: target.paymentIntentId} : {charge: target.chargeId!}),
-					amount: target.amountPaidCents,
+					amount: requestedAmountCents,
 					reason: 'requested_by_customer',
 					metadata: {
 						user_id: user.id.toString(),
 						invoice_id: target.invoiceId,
 						refund_kind: 'self_serve',
 						refund_window_days: String(SELF_SERVE_REFUND_WINDOW_DAYS),
+						...(target.subscriptionId ? {subscription_id: target.subscriptionId} : {}),
 					},
 				},
-				{
-					idempotencyKey: `self-serve-refund:${user.id}:${target.invoiceId}:${target.paymentIntentId ?? target.chargeId}`,
-				},
+				{idempotencyKey},
 			);
 		} catch (error) {
 			Logger.warn(
@@ -242,45 +320,39 @@ export class StripeRefundService {
 			);
 			throw new StripeError(error instanceof Error ? error.message : 'Failed to refund latest purchase');
 		}
-		try {
-			await getBillingRepository().refunds.upsertFromStripe(refund, {
-				invoiceId: target.invoiceId,
-				customerId: user.stripeCustomerId ?? undefined,
-				userId: user.id,
-			});
-		} catch (mirrorErr) {
-			Logger.error({mirrorErr, refundId: refund.id}, 'Mirror upsert failed after Stripe write; reconciler will heal');
-		}
-		if (target.subscriptionId) {
-			try {
-				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
-			} catch (error) {
-				Logger.warn(
-					{error, userId: user.id.toString(), subscriptionId: target.subscriptionId},
-					'Self-serve refund issued but subscription cancellation failed; will reconcile via webhook',
-				);
-			}
-		}
-		await this.userRepository.patchUpsert(user.id, {first_refund_at: new Date()}, user.toRow());
+		await mirrorBestEffort(
+			() =>
+				getBillingRepository().refunds.upsertFromStripe(refund, {
+					invoiceId: target.invoiceId,
+					customerId: user.stripeCustomerId ?? undefined,
+					userId: user.id,
+				}),
+			{refundId: refund.id},
+			'Mirror upsert failed after Stripe write; reconciler will heal',
+		);
+		await this.finalizeIfSucceeded(refund);
+		const succeeded = refund.status === 'succeeded';
 		Logger.info(
 			{
 				userId: user.id.toString(),
 				invoiceId: target.invoiceId,
 				refundId: refund.id,
+				status: refund.status,
 				amountCents: refund.amount,
 				subscriptionId: target.subscriptionId,
 			},
-			'Self-serve refund issued',
+			succeeded ? 'Self-serve refund issued' : 'Self-serve refund created; awaiting confirmation from provider',
 		);
 		return {
 			invoice_id: target.invoiceId,
 			payment_intent_id: target.paymentIntentId,
 			charge_id: target.chargeId,
 			refund_id: refund.id,
-			refunded_amount_cents: refund.amount,
+			refunded_amount_cents: succeeded ? refund.amount : 0,
 			invoice_amount_paid_cents: target.amountPaidCents,
 			currency: target.currency,
-			subscription_id: target.subscriptionId,
+			subscription_id: succeeded ? target.subscriptionId : null,
+			status: refund.status ?? 'pending',
 		};
 	}
 }

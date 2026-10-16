@@ -6,10 +6,6 @@
 -export([
     collect_ready_users/2,
     collect_ready_presences/2,
-    collect_relationship_users/1,
-    collect_channel_users/1,
-    collect_guild_users/1,
-    dedup_users/1,
     strip_users_from_guild_members/1,
     strip_user_from_relationships/1
 ]).
@@ -34,12 +30,6 @@ collect_ready_users_nonbot(State, CollectedGuilds) ->
     UserMap1 = add_channel_users(Channels, UserMap0),
     UserMap2 = add_guild_users(CollectedGuilds, UserMap1),
     maps:values(UserMap2).
-
--spec collect_relationship_users(session_state()) -> [map()].
-collect_relationship_users(State) ->
-    Ready = maps:get(ready, State, #{}),
-    Relationships = map_utils:ensure_list(map_utils:get_safe(Ready, <<"relationships">>, [])),
-    normalize_users_safe([maps:get(<<"user">>, Rel, undefined) || Rel <- Relationships]).
 
 -spec collect_ready_presences(session_state(), [map()]) -> [map()].
 collect_ready_presences(#{bot := true}, _CollectedGuilds) ->
@@ -92,27 +82,6 @@ add_presence_by_id(P, Acc) ->
     case presence_user_id(P) of
         undefined -> Acc;
         Id -> Acc#{Id => P}
-    end.
-
--spec collect_channel_users([map()]) -> [map()].
-collect_channel_users(Channels) ->
-    lists:foldl(
-        fun(Channel, Acc) ->
-            collect_dm_recipients(Channel) ++ Acc
-        end,
-        [],
-        Channels
-    ).
-
--spec collect_dm_recipients(map()) -> [map()].
-collect_dm_recipients(Channel) ->
-    Type = maps:get(<<"type">>, Channel, undefined),
-    case Type =:= 1 orelse Type =:= 3 of
-        true ->
-            RecipientsRaw = map_utils:ensure_list(maps:get(<<"recipients">>, Channel, [])),
-            normalize_users_safe(RecipientsRaw);
-        false ->
-            []
     end.
 
 -spec add_presence_target_ids([term()], user_id(), #{user_id() => true}) ->
@@ -197,30 +166,10 @@ add_guild_member_user(Member, Acc) when is_map(Member) ->
 add_guild_member_user(_Member, Acc) ->
     Acc.
 
--spec collect_guild_users([map()]) -> [map()].
-collect_guild_users(GuildStates) ->
-    lists:foldl(
-        fun(GuildState, Acc) ->
-            extract_guild_member_users(GuildState) ++ Acc
-        end,
-        [],
-        GuildStates
-    ).
-
--spec extract_guild_member_users(map()) -> [map()].
-extract_guild_member_users(GuildState) ->
-    Members = map_utils:ensure_list(maps:get(<<"members">>, GuildState, [])),
-    normalize_users_safe([maps:get(<<"user">>, M, undefined) || M <- Members]).
-
--spec dedup_users([map()]) -> [map()].
-dedup_users(Users) ->
-    Map = lists:foldl(fun add_user_by_id/2, #{}, Users),
-    maps:values(Map).
-
--spec add_user_by_id(term(), #{user_id() => map()}) -> #{user_id() => map()}.
+-spec add_user_by_id(map() | undefined, #{user_id() => map()}) -> #{user_id() => map()}.
 add_user_by_id(undefined, Acc) ->
     Acc;
-add_user_by_id(U, Acc) ->
+add_user_by_id(U, Acc) when is_map(U) ->
     case user_id(U) of
         undefined -> Acc;
         Id -> Acc#{Id => U#{<<"id">> => Id}}
@@ -258,17 +207,6 @@ user_ref(User) ->
     case normalize_user_safe(User) of
         undefined -> undefined;
         Normalized -> user_ref_from_normalized(Normalized)
-    end.
-
--spec normalize_users_safe([term()]) -> [map()].
-normalize_users_safe(Users) ->
-    lists:filtermap(fun normalize_user_filter/1, Users).
-
--spec normalize_user_filter(term()) -> {true, map()} | false.
-normalize_user_filter(User) ->
-    case normalize_user_safe(User) of
-        undefined -> false;
-        Normalized -> {true, Normalized}
     end.
 
 -spec normalize_user_safe(term()) -> map() | undefined.
@@ -321,19 +259,6 @@ ensure_relationship_id(Rel, UserId) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-presence_user_id_rejects_malformed_id_test() ->
-    ?assertEqual(undefined, presence_user_id(#{<<"user">> => #{<<"id">> => <<"001">>}})).
-
-dedup_users_test() ->
-    Users = [
-        #{<<"id">> => <<"1">>, <<"username">> => <<"alice">>},
-        #{<<"id">> => <<"2">>, <<"username">> => <<"bob">>},
-        #{<<"id">> => <<"1">>, <<"username">> => <<"alice_duplicate">>}
-    ],
-    Result = dedup_users(Users),
-    ?assertEqual(2, length(Result)),
-    ok.
-
 collect_presence_targets_deduplicates_before_fetch_test() ->
     State = #{
         user_id => 1,
@@ -376,37 +301,5 @@ collect_ready_users_skips_invalid_dm_recipient_ids_test() ->
     },
     Users = collect_ready_users(State, []),
     ?assertEqual([10], lists:sort([maps:get(<<"id">>, U) || U <- Users])).
-
-collect_channel_users_skips_invalid_dm_recipient_ids_test() ->
-    ValidUser = #{<<"id">> => <<"11">>, <<"username">> => <<"valid">>},
-    InvalidUser = #{<<"id">> => <<"0">>, <<"username">> => <<"invalid">>},
-    Channels = [#{<<"type">> => 3, <<"recipients">> => [InvalidUser, ValidUser]}],
-    Users = collect_channel_users(Channels),
-    ?assertEqual([11], lists:sort([maps:get(<<"id">>, U) || U <- Users])).
-
-strip_user_from_member_test() ->
-    Member = #{
-        <<"user">> => #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-        <<"nick">> => <<"nickname">>
-    },
-    Stripped = strip_user_from_member(Member),
-    ?assertEqual(#{<<"id">> => 123}, maps:get(<<"user">>, Stripped)),
-    ?assertEqual(<<"nickname">>, maps:get(<<"nick">>, Stripped)),
-    ok.
-
-strip_user_from_member_keeps_bad_user_unchanged_test() ->
-    Member = #{<<"user">> => #{<<"id">> => <<"bad">>, <<"username">> => <<"test">>}},
-    ?assertEqual(Member, strip_user_from_member(Member)).
-
-strip_user_from_relationship_test() ->
-    Rel = #{
-        <<"user">> => #{<<"id">> => <<"100">>, <<"username">> => <<"friend">>},
-        <<"type">> => 1
-    },
-    Stripped = strip_user_from_relationship(Rel),
-    ?assertEqual(undefined, maps:get(<<"user">>, Stripped, undefined)),
-    ?assertEqual(100, maps:get(<<"id">>, Stripped)),
-    ?assertEqual(1, maps:get(<<"type">>, Stripped)),
-    ok.
 
 -endif.

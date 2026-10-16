@@ -48,7 +48,7 @@ dispatch_member_list_event(channel_update, EventData, _OldState, UpdatedState) -
 dispatch_member_list_event(channel_update_bulk, EventData, _OldState, UpdatedState) ->
     Channels = maps:get(<<"channels">>, EventData, []),
     lists:foldl(
-        fun broadcast_channel_update/2,
+        fun(Channel, AccState) -> broadcast_channel_update(Channel, AccState) end,
         UpdatedState,
         Channels
     );
@@ -62,7 +62,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
         undefined ->
             UpdatedState;
         _ ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
                 UserId, OldState, UpdatedState
             ),
             NewState
@@ -70,7 +70,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
 
 -spec broadcast_all_updates(guild_state()) -> guild_state().
 broadcast_all_updates(UpdatedState) ->
-    {ok, NewState} = guild_member_list:broadcast_all_member_list_updates(UpdatedState),
+    {ok, NewState} = guild_member_list_write:broadcast_all_member_list_updates(UpdatedState),
     NewState.
 
 -spec broadcast_channel_update(event_data(), guild_state()) -> guild_state().
@@ -80,10 +80,48 @@ broadcast_channel_update(EventData, UpdatedState) ->
         undefined ->
             UpdatedState;
         ChannelId ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates_for_channel(
+            broadcast_channel_update_for_id(ChannelId, UpdatedState)
+    end.
+
+%% guild_state:post_update_channel/2 has already rebuilt this channel's engine
+%% earlier in the same dispatch when its permission inputs changed, through
+%% guild_member_list_write:rebuild_channels_for_permission_change/2. Rebuilding
+%% again here is a second full O(members) build over the same state, so when the
+%% engine already exists and nothing in the window can have changed what a
+%% rebuild would see, queue the sync and skip the rebuild.
+-spec broadcast_channel_update_for_id(integer(), guild_state()) -> guild_state().
+broadcast_channel_update_for_id(ChannelId, UpdatedState) ->
+    case rebuild_is_redundant(ChannelId, UpdatedState) of
+        true ->
+            sync_channel_list_without_rebuild(ChannelId, UpdatedState);
+        false ->
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates_for_channel(
                 ChannelId, UpdatedState
             ),
             NewState
+    end.
+
+%% The engine must already exist, because the earlier pass only rebuilds
+%% ALREADY-LOADED engines while this pass would build a missing one. guild_visibility
+%% can grant a user virtual access to a channel they just lost permission for, and
+%% that does change what a rebuild sees, so the engine must also still match the
+%% permission inputs it was built from.
+-spec rebuild_is_redundant(integer(), guild_state()) -> boolean().
+rebuild_is_redundant(ChannelId, UpdatedState) ->
+    ListId = integer_to_binary(ChannelId),
+    guild_member_list_channel_engine:ref(ListId, UpdatedState) =/= undefined andalso
+        not guild_member_list_engine_inputs:is_stale(ListId, UpdatedState).
+
+%% Mirrors guild_member_list_write:broadcast_list_by_id/4 with the rebuild
+%% removed: a list nobody is subscribed to is left alone, otherwise the sync is
+%% queued exactly as that function would have queued it.
+-spec sync_channel_list_without_rebuild(integer(), guild_state()) -> guild_state().
+sync_channel_list_without_rebuild(ChannelId, State) ->
+    ListId = integer_to_binary(ChannelId),
+    SubsTab = maps:get(member_list_subscriptions, State),
+    case map_size(guild_member_list_subs:get_list_subs(ListId, SubsTab)) of
+        0 -> State;
+        _ -> guild_member_list_sync_batch:queue_list_sync(ListId, State)
     end.
 
 -spec extract_user_id_from_event(event_data()) -> user_id() | undefined.
@@ -92,19 +130,3 @@ extract_user_id_from_event(EventData) ->
     guild_dispatch_decorate:parse_snowflake(
         <<"user.id">>, maps:get(<<"id">>, MUser, undefined)
     ).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-extract_user_id_from_event_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"42">>}},
-    ?assertEqual(42, extract_user_id_from_event(EventData)).
-
-extract_user_id_from_event_missing_test() ->
-    ?assertEqual(undefined, extract_user_id_from_event(#{})).
-
-extract_user_id_from_event_invalid_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"invalid">>}},
-    ?assertEqual(undefined, extract_user_id_from_event(EventData)).
-
--endif.

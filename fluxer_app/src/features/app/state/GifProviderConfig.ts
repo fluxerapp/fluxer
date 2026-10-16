@@ -38,5 +38,3 @@ export function normalizeGifProviderInfo(input: GifProviderInfoInput = {}): GifP
 		attributionRequired: input.attributionRequired ?? GIF_PROVIDER_DEFAULT_ATTRIBUTION[name],
 	};
 }
-
-export const DEFAULT_GIF_PROVIDER_INFO: GifProviderInfo = Object.freeze(normalizeGifProviderInfo());

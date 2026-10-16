@@ -33,24 +33,8 @@
 	font-feature-settings: 'cv11';
 }
 
-.panelDescription {
-	margin: 0;
-	font-size: var(--studio-fs-xs);
-	color: var(--studio-fg-muted);
-}
-
-.panelActions {
-	display: flex;
-	gap: 0.25rem;
-	align-items: center;
-}
-
 .panelBody {
 	flex: 1 1 auto;
 	min-height: 0;
 	overflow: auto;
-}
-
-.panelBodyPadded {
-	padding: 0.75rem;
 }

@@ -52,16 +52,3 @@
 .helpText {
 	color: inherit;
 }
-
-.footer {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	width: 100%;
-	gap: 0.5rem;
-}
-
-.footer > * {
-	flex: 1;
-	min-width: fit-content;
-}

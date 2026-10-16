@@ -43,7 +43,6 @@ const DISALLOWED_INPUT_TYPES = new Set([
 	'submit',
 	'time',
 	'week',
-	'password',
 ]);
 const CONTEXT_TARGET_MAX_AGE_MS = 5000;
 const createSyntheticEvent = (
@@ -88,6 +87,13 @@ const createSyntheticEvent = (
 		relatedTarget: null,
 	} satisfies React.MouseEvent<HTMLElement>;
 };
+const getEditingHost = (element: HTMLElement): HTMLElement => {
+	let host = element;
+	while (host.parentElement?.isContentEditable) {
+		host = host.parentElement;
+	}
+	return host;
+};
 const getEditableTarget = (node: Element | null): HTMLElement | null => {
 	if (!node) return null;
 	if (node instanceof HTMLTextAreaElement) {
@@ -100,7 +106,7 @@ const getEditableTarget = (node: Element | null): HTMLElement | null => {
 		}
 	}
 	if ((node as HTMLElement).isContentEditable) {
-		return node as HTMLElement;
+		return getEditingHost(node as HTMLElement);
 	}
 	const textarea = node.closest('textarea') as HTMLTextAreaElement | null;
 	if (textarea) {
@@ -172,7 +178,7 @@ export const useTextInputContextMenu = () => {
 	useEffect(() => {
 		if (!nativeShim) return;
 		const electronAPI = getElectronAPI();
-		if (!electronAPI || !electronAPI.onTextareaContextMenu) return;
+		if (!electronAPI?.onTextareaContextMenu) return;
 		let recentTarget: RecentContextMenuTarget | null = null;
 		const onContextMenuCapture = (event: MouseEvent) => {
 			const editable = getEditableTarget(event.target as Element | null);
@@ -218,6 +224,7 @@ export const useTextInputContextMenu = () => {
 				suggestions: params.suggestions,
 				editFlags: params.editFlags as TextareaContextMenuEditFlags | undefined,
 				targetElement: resolvedTarget.editable,
+				showSendButtonToggle: resolvedTarget.editable.closest('flx-channel-textarea') != null,
 			});
 		});
 		return () => {

@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {
-	createMockWebhookPayload,
-	createStripeApiHandlers,
-	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {UserRepository} from '../../user/repositories/UserRepository';
+import {createTestAccount, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {
 	mockStripeWebhookSecret,
 	restoreStripeWebhookSecret,
+	sendStripeWebhook,
+	sendStripeWebhookExpectStripeError,
 	setupSyncStripeWebhookWorker,
-} from './StripeWebhookTestUtils';
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createStripeApiHandlers, type StripeWebhookEventData} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface UserDataExistsResponse {
 	user_exists: boolean;
@@ -50,38 +45,8 @@ describe('Stripe Webhook Dispute Events', () => {
 	afterEach(() => {
 		server.resetHandlers();
 	});
-	function createWebhookSignature(payload: string, timestamp: number, secret: string): string {
-		const signedPayload = `${timestamp}.${payload}`;
-		const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-		return `t=${timestamp},v1=${signature}`;
-	}
-	async function sendWebhook(eventData: StripeWebhookEventData): Promise<{
-		received: boolean;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder<{
-			received: boolean;
-		}>(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-	async function sendWebhookExpectStripeError(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.expect(400, APIErrorCodes.STRIPE_ERROR)
-			.execute();
-	}
 	describe('charge.dispute.created', () => {
-		test('schedules account deletion on chargeback for direct purchase', async () => {
+		test('limits purchases on chargeback for direct purchase and never closes the account', async () => {
 			const purchaser = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_chargeback_123';
 			const paymentRepo = new PaymentRepository();
@@ -108,18 +73,16 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhook(eventData);
+			await sendStripeWebhook(harness, eventData);
 			const updatedUser = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
-			expect(updatedUser.has_deleted_flag).toBe(true);
-			expect(updatedUser.deletion_reason_code).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
-			expect(updatedUser.pending_deletion_at).not.toBeNull();
-			const deletionDate = new Date(updatedUser.pending_deletion_at!);
-			const now = new Date();
-			const daysDifference = (deletionDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000);
-			expect(daysDifference).toBeGreaterThan(58);
-			expect(daysDifference).toBeLessThan(62);
+			expect(updatedUser.has_deleted_flag).toBe(false);
+			expect(updatedUser.pending_deletion_at).toBeNull();
+			const user = await new UserRepository().findUniqueAssert(createUserID(BigInt(purchaser.userId)));
+			expect(user.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
+			expect(user.flags & UserFlags.DISABLED).toBe(0n);
+			expect(user.tempBannedUntil).toBeNull();
 		});
 		test('reports fraudulent disputes to Stripe and populates active default blocklists', async () => {
 			const purchaser = await createTestAccount(harness);
@@ -157,7 +120,7 @@ describe('Stripe Webhook Dispute Events', () => {
 				payment_intent_id: paymentIntentId,
 				stripe_customer_id: customerId,
 			});
-			await sendWebhook({
+			await sendStripeWebhook(harness, {
 				type: 'charge.dispute.created',
 				data: {
 					object: {
@@ -192,7 +155,7 @@ describe('Stripe Webhook Dispute Events', () => {
 				]),
 			);
 		});
-		test('revokes premium and schedules deletion for gift chargeback', async () => {
+		test('revokes premium and limits the purchaser for gift chargeback', async () => {
 			const purchaser = await createTestAccount(harness);
 			const redeemer = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_gift_chargeback_123';
@@ -250,7 +213,7 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhook(eventData);
+			await sendStripeWebhook(harness, eventData);
 			const redeemerAfterDispute = await createBuilder<{
 				premium_type: number;
 			}>(harness, redeemer.token)
@@ -260,9 +223,10 @@ describe('Stripe Webhook Dispute Events', () => {
 			const purchaserAfterDispute = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
-			expect(purchaserAfterDispute.has_deleted_flag).toBe(true);
-			expect(purchaserAfterDispute.deletion_reason_code).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
-			expect(purchaserAfterDispute.pending_deletion_at).not.toBeNull();
+			expect(purchaserAfterDispute.has_deleted_flag).toBe(false);
+			expect(purchaserAfterDispute.pending_deletion_at).toBeNull();
+			const purchaserUser = await userRepository.findUniqueAssert(createUserID(BigInt(purchaser.userId)));
+			expect(purchaserUser.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
 		});
 		test('preserves remaining premium when other redeemed gifts still cover the user', async () => {
 			const purchaser = await createTestAccount(harness);
@@ -305,7 +269,7 @@ describe('Stripe Webhook Dispute Events', () => {
 					premium_gift_extension_ends_at: new Date(redeemedAt.getTime() + 2 * 7 * 24 * 60 * 60 * 1000).toISOString(),
 				})
 				.execute();
-			await sendWebhook({
+			await sendStripeWebhook(harness, {
 				type: 'charge.dispute.created',
 				data: {
 					object: {
@@ -326,116 +290,6 @@ describe('Stripe Webhook Dispute Events', () => {
 			const premiumUntil = new Date(redeemerAfterDispute.premium_until!);
 			expect(Math.abs(premiumUntil.getTime() - expectedRemainingPremiumUntil.getTime())).toBeLessThan(60 * 1000);
 		});
-		test('handles chargeback when redeemer has stripe_customer_id but no active subscription', async () => {
-			const purchaser = await createTestAccount(harness);
-			const redeemer = await createTestAccount(harness);
-			const paymentIntentId = 'pi_test_gift_chargeback_stripe_cus';
-			const giftCode = 'GIFT_CHARGEBACK_STRIPE_CUS_ONLY';
-			const userRepository = new UserRepository();
-			const paymentRepo = new PaymentRepository();
-			const redeemerId = createUserID(BigInt(redeemer.userId));
-			await userRepository.createGiftCode({
-				code: giftCode,
-				duration_months: null,
-				duration_type: 'months',
-				duration_quantity: 1,
-				created_at: new Date(),
-				created_by_user_id: createUserID(BigInt(purchaser.userId)),
-				redeemed_at: new Date(),
-				redeemed_by_user_id: redeemerId,
-				stripe_payment_intent_id: paymentIntentId,
-				visionary_sequence_number: null,
-				checkout_session_id: null,
-				version: 1,
-			});
-			await paymentRepo.createPayment({
-				checkout_session_id: 'cs_test_gift_chargeback_stripe_cus',
-				user_id: createUserID(BigInt(purchaser.userId)),
-				price_id: 'price_test_monthly',
-				product_type: 'monthly_subscription',
-				status: 'completed',
-				is_gift: true,
-				created_at: new Date(),
-			});
-			await paymentRepo.updatePayment({
-				checkout_session_id: 'cs_test_gift_chargeback_stripe_cus',
-				payment_intent_id: paymentIntentId,
-				gift_code: giftCode,
-			});
-			await createBuilder(harness, redeemer.token)
-				.post(`/test/users/${redeemer.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-					stripe_customer_id: 'cus_test_chargeback_redeemer',
-				})
-				.execute();
-			const redeemerBefore = await createBuilder<{
-				premium_type: number;
-			}>(harness, redeemer.token)
-				.get('/users/@me')
-				.execute();
-			expect(redeemerBefore.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			await sendWebhook({
-				type: 'charge.dispute.created',
-				data: {
-					object: {
-						id: 'dp_test_gift_stripe_cus_only',
-						payment_intent: paymentIntentId,
-						status: 'needs_response',
-					},
-				},
-			});
-			const updatedRedeemer = await userRepository.findUnique(redeemerId);
-			expect(updatedRedeemer).not.toBeNull();
-			expect(updatedRedeemer!.stripeCustomerId).toBe('cus_test_chargeback_redeemer');
-			const purchaserAfterDispute = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
-				.get(`/test/users/${purchaser.userId}/data-exists`)
-				.execute();
-			expect(purchaserAfterDispute.has_deleted_flag).toBe(true);
-		});
-		test('preserves lifetime premium overrides during gift chargeback handling', async () => {
-			const purchaser = await createTestAccount(harness);
-			const redeemer = await createTestAccount(harness);
-			const paymentIntentId = 'pi_test_gift_chargeback_lifetime_override';
-			const userRepository = new UserRepository();
-			await userRepository.createGiftCode({
-				code: 'GIFT_CHARGEBACK_OVERRIDE',
-				duration_months: null,
-				duration_type: 'months',
-				duration_quantity: 1,
-				created_at: new Date(),
-				created_by_user_id: createUserID(BigInt(purchaser.userId)),
-				redeemed_at: new Date(),
-				redeemed_by_user_id: createUserID(BigInt(redeemer.userId)),
-				stripe_payment_intent_id: paymentIntentId,
-				visionary_sequence_number: null,
-				checkout_session_id: null,
-				version: 1,
-			});
-			await createBuilder(harness, redeemer.token)
-				.post(`/test/users/${redeemer.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.LIFETIME,
-				})
-				.execute();
-			await sendWebhook({
-				type: 'charge.dispute.created',
-				data: {
-					object: {
-						id: 'dp_test_gift_override_123',
-						payment_intent: paymentIntentId,
-						status: 'needs_response',
-					},
-				},
-			});
-			const redeemerAfterDispute = await createBuilder<{
-				premium_type: number;
-			}>(harness, redeemer.token)
-				.get('/users/@me')
-				.execute();
-			expect(redeemerAfterDispute.premium_type).toBe(UserPremiumTypes.LIFETIME);
-		});
 		test('handles dispute for payment intent not found gracefully', async () => {
 			const eventData: StripeWebhookEventData = {
 				type: 'charge.dispute.created',
@@ -447,11 +301,11 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhookExpectStripeError(eventData);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 		});
 	});
 	describe('charge.dispute.closed', () => {
-		test('unsuspends account when chargeback is won', async () => {
+		test('cancels a payment closure from before decisions when the chargeback is won', async () => {
 			const purchaser = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_dispute_won_123';
 			const paymentRepo = new PaymentRepository();
@@ -468,21 +322,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_won',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const userBeforeWin = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
@@ -498,13 +345,16 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhook(eventData);
+			await sendStripeWebhook(harness, eventData);
 			const userAfterWin = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
 			expect(userAfterWin.has_deleted_flag).toBe(false);
 			expect(userAfterWin.deletion_reason_code).toBeNull();
 			expect(userAfterWin.pending_deletion_at).toBeNull();
+			const emails = await listTestEmails(harness, {recipient: purchaser.email});
+			expect(findLastTestEmail(emails, 'account_deletion_cancelled')).not.toBeNull();
+			expect(findLastTestEmail(emails, 'enforcement_ended')).toBeNull();
 		});
 		test('does not unsuspend when chargeback is lost', async () => {
 			const purchaser = await createTestAccount(harness);
@@ -523,21 +373,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_lost',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const eventData: StripeWebhookEventData = {
 				type: 'charge.dispute.closed',
 				data: {
@@ -548,7 +391,7 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhook(eventData);
+			await sendStripeWebhook(harness, eventData);
 			const userAfterLoss = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
@@ -567,7 +410,7 @@ describe('Stripe Webhook Dispute Events', () => {
 					},
 				},
 			};
-			await sendWebhookExpectStripeError(eventData);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 		});
 	});
 });

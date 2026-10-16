@@ -1,31 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {emitGuildJoinRefused} from '@app/api/infrastructure/activity/GuildEvents';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {DiscoveryDisabledError} from '@fluxer/errors/src/domains/discovery/DiscoveryDisabledError';
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import {InvitesDisabledError} from '@fluxer/errors/src/domains/invite/InvitesDisabledError';
-import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import {GuildIdChannelIdParam, GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	DiscoveryApplicationPatchRequest,
 	DiscoveryApplicationRequest,
 	DiscoveryApplicationResponse,
 	DiscoveryCategoryListResponse,
+	DiscoveryChannelPreviewResponse,
 	DiscoveryGuildListResponse,
 	DiscoverySearchQuery,
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import {createGuildID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 function ensureDiscoveryEnabled(): void {
 	if (!Config.discovery.enabled) {
@@ -61,7 +63,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 			description: 'Search for guilds listed in the discovery directory.',
 			responseSchema: DiscoveryGuildListResponse,
 			statusCode: 200,
-			security: ['sessionToken', 'bearerToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Discovery'],
 		}),
 		async (ctx) => {
@@ -90,7 +92,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 			description: 'Returns the list of available discovery categories.',
 			responseSchema: DiscoveryCategoryListResponse,
 			statusCode: 200,
-			security: ['sessionToken', 'bearerToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Discovery'],
 		}),
 		async (ctx) => {
@@ -101,9 +103,35 @@ export function GuildDiscoveryController(app: HonoApp) {
 			return ctx.json(categories);
 		},
 	);
+	app.get(
+		'/discovery/guilds/:guild_id/channels/:channel_id',
+		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_CHANNEL_PREVIEW),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('param', GuildIdChannelIdParam),
+		OpenAPI({
+			operationId: 'get_discovery_channel_preview',
+			summary: 'Preview a channel in a discoverable guild',
+			description:
+				'Returns the guild and channel behind a channel or message link when the guild is listed in discovery and new members can read the channel.',
+			responseSchema: DiscoveryChannelPreviewResponse,
+			statusCode: 200,
+			security: ['sessionToken', 'bearerToken'],
+			tags: ['Discovery'],
+		}),
+		async (ctx) => {
+			ensureDiscoveryEnabled();
+			const {guild_id, channel_id} = ctx.req.valid('param');
+			const preview = await ctx
+				.get('discoveryService')
+				.getChannelPreview(createGuildID(guild_id), createChannelID(channel_id), viewerFromCtx(ctx));
+			return ctx.json(preview);
+		},
+	);
 	app.post(
 		'/discovery/guilds/:guild_id/join',
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_JOIN),
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('param', GuildIdParam),
 		OpenAPI({
@@ -124,8 +152,11 @@ export function GuildDiscoveryController(app: HonoApp) {
 			if (!status || status.status !== DiscoveryApplicationStatus.APPROVED) {
 				throw new DiscoveryNotDiscoverableError();
 			}
-			const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
+			const guild = await ctx.get('guildService').data.operations.getGuildSystem(guildId);
 			if (guild.features.has(GuildFeatures.INVITES_DISABLED)) {
+				if (!(await ctx.get('gatewayService').hasGuildMember({guildId, userId: user.id}))) {
+					await emitGuildJoinRefused({guildId, userId: user.id, joinSource: 'discovery'});
+				}
 				throw new InvitesDisabledError();
 			}
 			await ctx.get('guildService').members.addUserToGuild({
@@ -159,14 +190,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
 			const data = ctx.req.valid('json');
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const row = await ctx.get('discoveryService').apply({
 				guildId,
 				userId: user.id,
@@ -200,14 +225,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
 			const data = ctx.req.valid('json');
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const row = await ctx.get('discoveryService').editApplication({
 				guildId,
 				userId: user.id,
@@ -236,14 +255,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			await ctx.get('discoveryService').withdraw({guildId, userId: user.id});
 			return ctx.body(null, 204);
 		},
@@ -266,14 +279,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.getStatus(guildId);
 			const eligibility = await discoveryService.getEligibility(guildId);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AVATAR_MAX_SIZE, MAX_GROUP_DM_OTHER_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GUILDS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -10,7 +10,6 @@ import {
 	GroupDmAddPermissionFlagsDescriptions,
 	GuildFolderFlags,
 	GuildFolderFlagsDescriptions,
-	GuildFolderIcons,
 	IncomingCallFlags,
 	IncomingCallFlagsDescriptions,
 	ProfileFieldPrivacyFlags,
@@ -24,7 +23,7 @@ import {
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
-import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
 import {createQueryIntegerType, DateTimeType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -33,7 +32,6 @@ import {
 	createNamedStringLiteralUnion,
 	createStringType,
 	Int32Type,
-	SignedInt32Type,
 	SnowflakeStringType,
 	SnowflakeType,
 	withFieldDescription,
@@ -41,6 +39,7 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {
+	GuildFolderIconSchema,
 	MentionReplyPreferencesSchema,
 	ProfilePrivacyLevelSchema,
 	RelationshipTypesSchema,
@@ -68,24 +67,18 @@ export const UserUpdateRequest = z
 		email: EmailType.describe('The email address for the account'),
 		new_password: PasswordType.describe('The new password to set'),
 		password: PasswordType.describe('The current password for verification'),
-		avatar: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
-			.nullish()
-			.describe('Base64-encoded avatar image'),
-		banner: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
-			.nullish()
-			.describe('Base64-encoded profile banner image'),
+		avatar: createBase64ImageType().nullish().describe('Base64-encoded avatar image'),
+		banner: createBase64ImageType().nullish().describe('Base64-encoded profile banner image'),
 		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),
 		pronouns: createStringType(1, 40).nullish().describe('User pronouns (max 40 characters)'),
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),
-		timezone: createStringType(1, 128)
-			.nullish()
-			.describe('Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.'),
+		timezone: createStringType(1, 128).nullish().describe('IANA timezone identifier saved for profile local time'),
 		timezone_privacy_flags: createBitflagInt32Type(
 			ProfileFieldPrivacyFlags,
 			ProfileFieldPrivacyFlagsDescriptions,
 			'Bitfield controlling who can see the profile timezone',
 			'ProfileFieldPrivacyFlags',
-		).describe('Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.'),
+		).describe('Bitfield controlling who can see the profile timezone'),
 		premium_badge_hidden: z.boolean().describe('Whether to hide the premium badge'),
 		premium_badge_masked: z.boolean().describe('Whether to mask the premium badge'),
 		premium_badge_timestamp_hidden: z.boolean().describe('Whether to hide premium badge timestamp'),
@@ -103,21 +96,18 @@ export const UserUpdateRequest = z
 export type UserUpdateRequest = z.infer<typeof UserUpdateRequest>;
 
 const EmailTokenType = createStringType(1, 256);
-export const UserUpdateWithVerificationRequest = UserUpdateRequest.merge(
-	z.object({
-		email_token: EmailTokenType.optional().describe('Email change token for updating email'),
-	}),
-)
-	.merge(SudoVerificationSchema)
-	.superRefine((data, ctx) => {
-		if (data.email !== undefined) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.EMAIL_MUST_BE_CHANGED_VIA_TOKEN,
-				path: ['email'],
-			});
-		}
-	});
+export const UserUpdateWithVerificationRequest = UserUpdateRequest.extend({
+	email_token: EmailTokenType.optional().describe('Email change token for updating email'),
+	...SudoVerificationSchema.shape,
+}).superRefine((data, ctx) => {
+	if (data.email !== undefined) {
+		ctx.addIssue({
+			code: 'custom',
+			message: ValidationErrorCodes.EMAIL_MUST_BE_CHANGED_VIA_TOKEN,
+			path: ['email'],
+		});
+	}
+});
 
 export type UserUpdateWithVerificationRequest = z.infer<typeof UserUpdateWithVerificationRequest>;
 
@@ -136,6 +126,9 @@ export type EmailChangeVerifyOriginalRequest = z.infer<typeof EmailChangeVerifyO
 export const EmailChangeRequestNewRequest = EmailChangeTicketRequest.extend({
 	new_email: EmailType.describe('New email address to switch to'),
 	original_proof: createStringType().describe('Proof token obtained from verifying the original email'),
+	new_password: PasswordType.optional().describe(
+		'Password the caller intends to set, rejected here instead of after the code is sent',
+	),
 });
 
 export type EmailChangeRequestNewRequest = z.infer<typeof EmailChangeRequestNewRequest>;
@@ -150,7 +143,7 @@ export const EmailChangeApplyRequest = z
 	.object({
 		email_token: EmailTokenType.describe('Email change token returned from verify-new'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type EmailChangeApplyRequest = z.infer<typeof EmailChangeApplyRequest>;
 
@@ -184,6 +177,14 @@ export const PasswordChangeCompleteRequest = PasswordChangeTicketRequest.extend(
 });
 
 export type PasswordChangeCompleteRequest = z.infer<typeof PasswordChangeCompleteRequest>;
+
+export const UserPasswordUpdateRequest = z
+	.object({
+		new_password: PasswordType.describe('The new password to set'),
+	})
+	.extend(SudoVerificationSchema.shape);
+
+export type UserPasswordUpdateRequest = z.infer<typeof UserPasswordUpdateRequest>;
 
 export const FriendRequestByTagRequest = z.object({
 	username: UsernameType.describe('Username of the user to send friend request'),
@@ -227,11 +228,11 @@ const CustomStatusPayloadSchema = z
 			.describe('Unicode emoji to display (ignored when emoji_id is provided)'),
 	})
 	.refine((value) => value.emoji_name == null || isValidSingleUnicodeEmoji(value.emoji_name), {
-		message: 'Emoji name must be a valid Unicode emoji',
+		error: 'Emoji name must be a valid Unicode emoji',
 		path: ['emoji_name'],
 	})
 	.refine((value) => value.expires_at == null || value.expires_at.getTime() > Date.now(), {
-		message: 'expires_at must be in the future',
+		error: 'expires_at must be in the future',
 		path: ['expires_at'],
 	});
 export const CustomStatusPayload = z.preprocess((value) => {
@@ -248,21 +249,6 @@ export const CustomStatusPayload = z.preprocess((value) => {
 
 export type CustomStatusPayload = z.infer<typeof CustomStatusPayload>;
 
-const GuildFolderIconSchema = withOpenApiType(
-	createNamedStringLiteralUnion(
-		[
-			[GuildFolderIcons.FOLDER, 'FOLDER', 'Classic folder icon'],
-			[GuildFolderIcons.STAR, 'STAR', 'Star icon'],
-			[GuildFolderIcons.HEART, 'HEART', 'Heart icon'],
-			[GuildFolderIcons.BOOKMARK, 'BOOKMARK', 'Bookmark icon'],
-			[GuildFolderIcons.GAME_CONTROLLER, 'GAME_CONTROLLER', 'Game controller icon'],
-			[GuildFolderIcons.SHIELD, 'SHIELD', 'Shield icon'],
-			[GuildFolderIcons.MUSIC_NOTE, 'MUSIC_NOTE', 'Music note icon'],
-		] as const,
-		'Guild folder icon',
-	),
-	'GuildFolderIconType',
-);
 export const CreatePrivateChannelRequest = z
 	.object({
 		recipient_id: SnowflakeType.optional().describe('User ID for creating a DM channel'),
@@ -276,16 +262,21 @@ export const CreatePrivateChannelRequest = z
 		(data) =>
 			(data.recipient_id != null && data.recipients == null) || (data.recipient_id == null && data.recipients != null),
 		{
-			message: 'Either recipient_id or recipients must be provided, but not both',
+			error: 'Either recipient_id or recipients must be provided, but not both',
 		},
 	);
 
 export type CreatePrivateChannelRequest = z.infer<typeof CreatePrivateChannelRequest>;
 
+const UserSettingsGuildIds = z
+	.array(SnowflakeType)
+	.transform((ids) => [...new Set(ids)])
+	.refine((ids) => ids.length <= MAX_GUILDS_PREMIUM, `Maximum ${MAX_GUILDS_PREMIUM} guilds allowed`);
+
 const GuildFolderSchema = z.object({
-	id: SignedInt32Type.describe('Unique identifier for the folder (-1 for uncategorized)'),
+	id: z.number().int().min(-1).describe('Unique identifier for the folder (-1 for uncategorized)'),
 	name: createStringType(0, 100).nullish().describe('Display name of the folder'),
-	color: Int32Type.nullish().describe('Color of the folder as integer'),
+	color: ColorType.nullish().default(0x000000).describe('Color of the folder as integer'),
 	flags: createBitflagInt32Type(
 		GuildFolderFlags,
 		GuildFolderFlagsDescriptions,
@@ -295,7 +286,7 @@ const GuildFolderSchema = z.object({
 		.default(0)
 		.describe('Bitfield for guild folder display behaviour'),
 	icon: GuildFolderIconSchema.default(DEFAULT_GUILD_FOLDER_ICON).describe('Selected icon for the guild folder'),
-	guild_ids: z.array(SnowflakeType).max(200).describe('Guild IDs in this folder'),
+	guild_ids: UserSettingsGuildIds.describe('Guild IDs in this folder'),
 });
 const UserStatusType = withOpenApiType(
 	createNamedStringLiteralUnion(
@@ -324,19 +315,15 @@ const UserThemeType = withOpenApiType(
 );
 export const UserSettingsUpdateRequest = z
 	.object({
-		flags: createBitflagInt32Type(
-			FriendSourceFlags,
-			FriendSourceFlagsDescriptions,
-			'Friend source flags',
-			'FriendSourceFlags',
-		),
+		flags: z.number().int().describe('Bitfield of user settings flags'),
 		status: UserStatusType,
 		status_resets_at: DateTimeType.nullish().describe('When status resets'),
 		status_resets_to: UserStatusType.nullish(),
 		theme: UserThemeType,
+		guild_positions: UserSettingsGuildIds.describe('Ordered array of guild IDs for sidebar positioning'),
 		locale: LocaleSchema,
-		restricted_guilds: z.array(SnowflakeType).max(200).describe('Guilds with DM restrictions'),
-		bot_restricted_guilds: z.array(SnowflakeType).max(200).describe('Guilds with bot DM restrictions'),
+		restricted_guilds: UserSettingsGuildIds.describe('Guilds with DM restrictions'),
+		bot_restricted_guilds: UserSettingsGuildIds.describe('Guilds with bot DM restrictions'),
 		default_guilds_restricted: z.boolean().describe('Default DM restriction for new guilds'),
 		bot_default_guilds_restricted: z.boolean().describe('Default bot DM restriction for new guilds'),
 		inline_attachment_media: z.boolean().describe('Display attachments inline'),
@@ -366,9 +353,9 @@ export const UserSettingsUpdateRequest = z
 			'Group DM add permissions',
 			'GroupDmAddPermissionFlags',
 		),
-		guild_folders: z.array(GuildFolderSchema).max(200).describe('Guild folder organization'),
+		guild_folders: z.array(GuildFolderSchema).max(100).describe('Guild folder organization'),
 		custom_status: CustomStatusPayload.nullish().describe('Custom status'),
-		afk_timeout: z.number().int().describe('AFK timeout in seconds'),
+		afk_timeout: z.number().int().min(60).max(600).describe('AFK timeout in seconds (60-600)'),
 		time_format: withFieldDescription(TimeFormatTypesSchema, 'Time format preference'),
 		developer_mode: z.boolean().describe('Developer mode enabled'),
 		trusted_domains: z
@@ -400,6 +387,17 @@ export const UserSettingsUpdateRequest = z
 			ProfilePrivacyLevelSchema,
 			'Controls who sees the full profile: all guild members, only small-guild members, or only friends',
 		),
+		default_share_voice_activity: z
+			.boolean()
+			.describe('Default share_voice_activity applied to new friend relationships'),
+		privacy_setup_version: z
+			.number()
+			.int()
+			.min(1)
+			.max(1000)
+			.describe(
+				'Version of the privacy setup the user just reviewed. The server also records privacy_setup_completed_at as the current time.',
+			),
 		synced_preferences: z
 			.string()
 			.max(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH)
@@ -421,6 +419,16 @@ const MuteConfigSchema = z
 		selected_time_window: z.number().int().describe('Selected mute duration'),
 	})
 	.nullish();
+export const ThreadMemberSettingsRequest = z.object({
+	flags: Int32Type.optional().describe(
+		'Thread member notification flags (ALL_MESSAGES 1<<1, ONLY_MENTIONS 1<<2, NO_MESSAGES 1<<3)',
+	),
+	muted: z.boolean().optional().describe('Whether the thread is muted'),
+	mute_config: MuteConfigSchema.describe('Thread mute configuration'),
+});
+
+export type ThreadMemberSettingsRequest = z.infer<typeof ThreadMemberSettingsRequest>;
+
 const ChannelOverrideSchema = z.object({
 	collapsed: z.boolean().describe('Channel category collapsed'),
 	message_notifications: withFieldDescription(UserNotificationSettingsSchema, 'Channel notification level'),
@@ -429,6 +437,9 @@ const ChannelOverrideSchema = z.object({
 	unread_badges: withFieldDescription(UserNotificationSettingsSchema, 'Unread badges level override for this channel')
 		.nullish()
 		.describe('Unread badges level override for this channel (null = inherit)'),
+	flags: Int32Type.optional().describe(
+		'Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)',
+	),
 });
 export const UserGuildSettingsUpdateRequest = z
 	.object({
@@ -480,6 +491,7 @@ const MobilePushPlatformSchema = createNamedStringLiteralUnion(
 	[
 		['android_fcm', 'ANDROID_FCM', 'Firebase Cloud Messaging (Android)'],
 		['ios_apns', 'IOS_APNS', 'Apple Push Notification Service (iOS)'],
+		['ios_apns_voip', 'IOS_APNS_VOIP', 'Apple PushKit VoIP push, used only to ring an incoming call (iOS)'],
 		['android_unified_push', 'ANDROID_UNIFIED_PUSH', 'UnifiedPush (Android without Google services)'],
 	],
 	'The mobile push notification platform',
@@ -494,7 +506,9 @@ const MobilePushProviderEnvironmentSchema = createNamedStringLiteralUnion(
 export const RegisterMobileDeviceRequest = z
 	.object({
 		platform: MobilePushPlatformSchema.describe('The mobile push notification platform'),
-		token: createStringType(1, 4096).describe('The platform-specific push notification token or endpoint URL'),
+		token: createStringType(1, 4096).describe(
+			'The Web Push endpoint URL when encryption keys are supplied, otherwise the raw platform push token',
+		),
 		user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the device'),
 		app_id: createStringType(1, 128)
 			.optional()
@@ -504,25 +518,47 @@ export const RegisterMobileDeviceRequest = z
 		),
 		encryption_key: createStringType(1, 1024)
 			.optional()
-			.describe('The P-256 ECDH public key for UnifiedPush encryption (base64url)'),
+			.describe('The P-256 ECDH public key for Web Push encryption (base64url)'),
 		auth_secret: createStringType(1, 1024)
 			.optional()
-			.describe('The authentication secret for UnifiedPush encryption (base64url)'),
+			.describe('The authentication secret for Web Push encryption (base64url)'),
 	})
 	.superRefine((value, ctx) => {
-		if (value.platform !== 'android_unified_push') return;
+		const tokenIsUrl = URLType.safeParse(value.token).success;
+		const isWebPushRegistration =
+			value.platform === 'android_unified_push' ||
+			value.platform === 'ios_apns_voip' ||
+			value.encryption_key != null ||
+			value.auth_secret != null;
+		if (!isWebPushRegistration) {
+			if (tokenIsUrl) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['token'],
+					message: 'Endpoint URL registrations require encryption_key and auth_secret',
+				});
+			}
+			return;
+		}
+		if (!tokenIsUrl) {
+			ctx.addIssue({
+				code: 'custom',
+				path: ['token'],
+				message: 'Web Push registrations require a valid endpoint URL',
+			});
+		}
 		if (!value.encryption_key) {
 			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
+				code: 'custom',
 				path: ['encryption_key'],
-				message: 'UnifiedPush registrations require encryption_key',
+				message: 'Web Push registrations require encryption_key',
 			});
 		}
 		if (!value.auth_secret) {
 			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
+				code: 'custom',
 				path: ['auth_secret'],
-				message: 'UnifiedPush registrations require auth_secret',
+				message: 'Web Push registrations require auth_secret',
 			});
 		}
 	});
@@ -531,7 +567,9 @@ export type RegisterMobileDeviceRequest = z.infer<typeof RegisterMobileDeviceReq
 
 export const UnregisterMobileDeviceRequest = z.object({
 	platform: MobilePushPlatformSchema.describe('The mobile push notification platform'),
-	token: createStringType(1, 4096).describe('The platform-specific push notification token to unregister'),
+	token: createStringType(1, 4096).describe(
+		'The Web Push endpoint URL or raw platform push token used at registration',
+	),
 	app_id: createStringType(1, 128)
 		.optional()
 		.describe('Client app channel or bundle mapping identifier, such as stable, beta, or canary'),
@@ -580,6 +618,7 @@ export const UserSavedMessagesQueryRequest = z.object({
 	limit: createQueryIntegerType({minValue: 1, maxValue: 100, defaultValue: 25}).describe(
 		'Maximum number of saved messages to return (1-100, default 25)',
 	),
+	before: SnowflakeType.optional().describe('Get saved messages before this message ID'),
 });
 
 export type UserSavedMessagesQueryRequest = z.infer<typeof UserSavedMessagesQueryRequest>;
@@ -600,6 +639,7 @@ export const PushSubscribeRequest = z.object({
 		})
 		.describe('Encryption keys for the push subscription'),
 	user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the client'),
+	installed_app: z.boolean().optional().describe('Whether the client runs in an installed web app window'),
 });
 
 export type PushSubscribeRequest = z.infer<typeof PushSubscribeRequest>;
@@ -614,6 +654,7 @@ export const PushRotateRequest = z.object({
 		})
 		.describe('Encryption keys for the new push subscription'),
 	user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the client'),
+	installed_app: z.boolean().optional().describe('Whether the client runs in an installed web app window'),
 });
 
 export type PushRotateRequest = z.infer<typeof PushRotateRequest>;
@@ -631,7 +672,7 @@ export const BulkIgnoreFriendRequestsRequest = z.object({
 
 export type BulkIgnoreFriendRequestsRequest = z.infer<typeof BulkIgnoreFriendRequestsRequest>;
 
-const BulkDeleteSelfMessagesScope = createNamedStringLiteralUnion(
+export const BulkDeleteSelfMessagesScope = createNamedStringLiteralUnion(
 	[
 		['selected', 'Selected', 'Delete messages matching the explicit include_* toggles and excluded_guild_ids.'],
 		[
@@ -642,105 +683,108 @@ const BulkDeleteSelfMessagesScope = createNamedStringLiteralUnion(
 	],
 	'Which set of contexts the deletion targets',
 );
-const BulkDeleteSelfMessagesFilterShape = z.object({
-	scope: BulkDeleteSelfMessagesScope.optional().default('selected'),
-	include_dms: z.boolean().optional().default(true).describe('Include 1:1 direct messages the caller still has open.'),
-	include_dms_closed: z
-		.boolean()
-		.optional()
-		.default(true)
-		.describe(
-			'Include 1:1 direct messages the caller has previously closed. Independent of include_dms — set include_dms=false and include_dms_closed=true to target closed DMs only.',
-		),
-	include_group_dms: z
-		.boolean()
-		.optional()
-		.default(true)
-		.describe('Include group DMs the caller is still a member of.'),
-	include_guilds: z
-		.boolean()
-		.optional()
-		.default(true)
-		.describe('Include text channels in guilds the caller is a member of.'),
-	guild_filter_mode: createNamedStringLiteralUnion(
-		[
-			['exclude', 'Exclude', 'Apply to every guild except those listed in excluded_guild_ids.'],
-			[
-				'include_only',
-				'Include Only',
-				'Apply only to the guilds listed in included_guild_ids; all other guilds are left untouched.',
-			],
-		],
-		'How the guild filter list is interpreted when include_guilds is true.',
-	)
-		.optional()
-		.default('exclude'),
-	excluded_guild_ids: z
-		.array(SnowflakeType)
-		.max(500)
-		.optional()
-		.default([])
-		.describe(
-			'Guild IDs to leave untouched. Used when include_guilds is true, guild_filter_mode is exclude, and scope is selected.',
-		),
-	included_guild_ids: z
-		.array(SnowflakeType)
-		.max(500)
-		.optional()
-		.default([])
-		.describe(
-			'The only guild IDs to apply this operation to. Used when include_guilds is true, guild_filter_mode is include_only, and scope is selected.',
-		),
-	start_date: z
-		.string()
-		.datetime()
-		.nullable()
-		.optional()
-		.describe('Inclusive ISO8601 lower bound for message timestamps. Null/omitted means unbounded in the past.'),
-	end_date: z
-		.string()
-		.datetime()
-		.nullable()
-		.optional()
-		.describe('Exclusive ISO8601 upper bound for message timestamps. Null/omitted means unbounded in the future.'),
-});
+export type BulkDeleteSelfMessagesScope = z.infer<typeof BulkDeleteSelfMessagesScope>;
 
-function applyBulkDeleteSelfMessagesRefinement<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
-	return schema.superRefine((value, ctx) => {
-		const cast = value as z.infer<typeof BulkDeleteSelfMessagesFilterShape> & Record<string, unknown>;
-		if (cast.scope === 'selected') {
-			const anyToggle = cast.include_dms || cast.include_dms_closed || cast.include_group_dms || cast.include_guilds;
-			if (!anyToggle) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'Enable at least one of include_dms, include_dms_closed, include_group_dms, or include_guilds.',
-					path: ['include_dms'],
-				});
-			}
+export const BulkDeleteSelfMessagesGuildFilterMode = createNamedStringLiteralUnion(
+	[
+		['exclude', 'Exclude', 'Apply to every guild except those listed in excluded_guild_ids.'],
+		[
+			'include_only',
+			'Include Only',
+			'Apply only to the guilds listed in included_guild_ids; all other guilds are left untouched.',
+		],
+	],
+	'How the guild filter list is interpreted when include_guilds is true.',
+);
+export type BulkDeleteSelfMessagesGuildFilterMode = z.infer<typeof BulkDeleteSelfMessagesGuildFilterMode>;
+
+export const BulkDeleteSelfMessagesFilter = z
+	.object({
+		scope: BulkDeleteSelfMessagesScope.optional().default('selected'),
+		include_dms: z
+			.boolean()
+			.optional()
+			.default(true)
+			.describe('Include 1:1 direct messages the caller still has open.'),
+		include_dms_closed: z
+			.boolean()
+			.optional()
+			.default(true)
+			.describe(
+				'Include 1:1 direct messages the caller has previously closed. Independent of include_dms — set include_dms=false and include_dms_closed=true to target closed DMs only.',
+			),
+		include_group_dms: z
+			.boolean()
+			.optional()
+			.default(true)
+			.describe('Include group DMs the caller is still a member of.'),
+		include_guilds: z
+			.boolean()
+			.optional()
+			.default(true)
+			.describe('Include text channels in guilds the caller is a member of.'),
+		guild_filter_mode: BulkDeleteSelfMessagesGuildFilterMode.optional().default('exclude'),
+		excluded_guild_ids: z
+			.array(SnowflakeType)
+			.max(500)
+			.optional()
+			.default([])
+			.describe(
+				'Guild IDs to leave untouched. Used when include_guilds is true, guild_filter_mode is exclude, and scope is selected.',
+			),
+		included_guild_ids: z
+			.array(SnowflakeType)
+			.max(500)
+			.optional()
+			.default([])
+			.describe(
+				'The only guild IDs to apply this operation to. Used when include_guilds is true, guild_filter_mode is include_only, and scope is selected.',
+			),
+		start_date: z.iso
+			.datetime()
+			.nullable()
+			.optional()
+			.describe('Inclusive ISO8601 lower bound for message timestamps. Null/omitted means unbounded in the past.'),
+		end_date: z.iso
+			.datetime()
+			.nullable()
+			.optional()
+			.describe('Exclusive ISO8601 upper bound for message timestamps. Null/omitted means unbounded in the future.'),
+	})
+	.superRefine((value, ctx) => {
+		if (
+			value.scope === 'selected' &&
+			!value.include_dms &&
+			!value.include_dms_closed &&
+			!value.include_group_dms &&
+			!value.include_guilds
+		) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'Enable at least one of include_dms, include_dms_closed, include_group_dms, or include_guilds.',
+				path: ['include_dms'],
+			});
 		}
-		if (cast.start_date && cast.end_date) {
-			if (new Date(cast.start_date).getTime() >= new Date(cast.end_date).getTime()) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: 'start_date must be earlier than end_date.',
-					path: ['end_date'],
-				});
-			}
+		if (
+			value.start_date &&
+			value.end_date &&
+			new Date(value.start_date).getTime() >= new Date(value.end_date).getTime()
+		) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'start_date must be earlier than end_date.',
+				path: ['end_date'],
+			});
 		}
 	});
-}
-
-export const BulkDeleteSelfMessagesFilter = applyBulkDeleteSelfMessagesRefinement(BulkDeleteSelfMessagesFilterShape);
 
 export type BulkDeleteSelfMessagesFilter = z.infer<typeof BulkDeleteSelfMessagesFilter>;
 
-export const BulkDeleteSelfMessagesRequest = applyBulkDeleteSelfMessagesRefinement(
-	BulkDeleteSelfMessagesFilterShape.merge(SudoVerificationSchema),
-);
+export const BulkDeleteSelfMessagesRequest = BulkDeleteSelfMessagesFilter.safeExtend(SudoVerificationSchema.shape);
 
 export type BulkDeleteSelfMessagesRequest = z.infer<typeof BulkDeleteSelfMessagesRequest>;
 
-export const HarvestSelfDataRequest = applyBulkDeleteSelfMessagesRefinement(BulkDeleteSelfMessagesFilterShape);
+export const HarvestSelfDataRequest = BulkDeleteSelfMessagesFilter.clone();
 
 export type HarvestSelfDataRequest = z.infer<typeof HarvestSelfDataRequest>;
 

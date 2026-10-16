@@ -60,6 +60,5 @@ if (process.platform === 'linux') {
 module.exports = {
 	Hunspell: binding ? binding.Hunspell : null,
 	discoverSystemDictionaries: binding ? binding.discoverSystemDictionaries : null,
-	hashFile: binding ? binding.hashFile : null,
 	loadError,
 };

@@ -13,10 +13,6 @@
 	border-bottom: 0.0625rem solid var(--background-modifier-accent);
 }
 
-.itemInteractive {
-	cursor: pointer;
-}
-
 .container > .item:last-child {
 	border-bottom: 0;
 }

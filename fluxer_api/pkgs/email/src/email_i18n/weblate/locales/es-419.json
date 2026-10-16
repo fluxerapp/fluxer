@@ -1,86 +1,94 @@
 {
-    "account_disabled_suspicious": {
-        "subject": "Tu cuenta de {product_name} ha sido deshabilitada temporalmente",
-        "body": "Hola {username}:\n\nDeshabilitamos temporalmente tu cuenta de {product_name} porque detectamos actividad sospechosa.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara recuperar el acceso a tu cuenta, deberás restablecer tu contraseña:\n\n{forgotUrl}\n\nDespués de restablecer tu contraseña, podrás iniciar sesión de nuevo.\n\nSi crees que esto fue un error, comunícate con nuestro equipo de soporte.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "account_scheduled_deletion": {
-        "subject": "Tu cuenta de {product_name} será eliminada permanentemente",
-        "body": "Hola {username}:\n\nTu cuenta de {product_name} ha sido programada para su eliminación permanente debido a infracciones de nuestros Términos de Servicio o Normas de la Comunidad.\n\nEliminación programada: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nEsta es una medida grave. Los datos de tu cuenta se eliminarán permanentemente en la fecha programada.\n\nPor favor, revisa:\n- Términos de Servicio: {termsUrl}\n- Normas de la Comunidad: {guidelinesUrl}\n\nProceso de apelación:\nSi crees que esta decisión fue incorrecta o injustificada, tienes 60 días para presentar una apelación. Envía un correo electrónico a {appeals_email} desde esta dirección de correo electrónico.\n\nEn tu apelación:\n- Explica claramente por qué crees que la decisión fue incorrecta o injustificada\n- Proporciona cualquier evidencia o contexto relevante\n\nUn miembro del Equipo de Seguridad de {product_name} revisará tu apelación y podrá pausar la eliminación pendiente hasta que se haya tomado una decisión final.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "account_temp_banned": {
-        "subject": "Tu cuenta de {product_name} ha sido suspendida temporalmente",
-        "body": "Hola {username}:\n\nTu cuenta de {product_name} ha sido suspendida temporalmente por violar nuestros Términos de Servicio o Normas de la Comunidad.\n\nDuración: {durationHours, plural,\n  =1 {1 hora}\n  other {# horas}\n}\nSuspendida hasta: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nDurante este tiempo, no podrás acceder a tu cuenta.\n\nPor favor, revisa:\n- Términos de Servicio: {termsUrl}\n- Normas de la Comunidad: {guidelinesUrl}\n\nSi crees que esta decisión fue incorrecta o injustificada, puedes presentar una apelación. Envía un correo electrónico a {appeals_email} desde esta dirección de correo electrónico y explica claramente por qué crees que la decisión fue incorrecta. Revisaremos tu apelación y te responderemos con nuestra decisión.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "donation_confirmation": {
-        "subject": "Gracias por tu donación a {product_name}",
-        "body": "Hola:\n\n¡Gracias por tu donación a {product_name}! Tu {interval, select,\n  month {donación recurrente}\n  year {donación recurrente}\n  other {donación única}\n} ha sido {interval, select,\n  month {configurada}\n  year {configurada}\n  other {procesada}\n} con éxito.\n\nDetalles de la donación:\nMonto: {amount} {currency} {interval, select,\n  month {por mes}\n  year {por año}\n  other {}\n}\n\nStripe te enviará un recibo separado con tu factura en PDF en breve. Esto incluye todos los detalles de pago y se puede utilizar para fines fiscales.\n\nPuedes ver tu historial de donaciones, descargar facturas, {interval, select,\n  month {y administrar o cancelar tu suscripción}\n  year {y administrar o cancelar tu suscripción}\n  other {y administrar futuras donaciones}\n} en cualquier momento usando este enlace:\n\n{manageUrl}\n\nTu apoyo ayuda a mantener {product_name} en funcionamiento. ¡Gracias!\n\n– Equipo de {product_name}"
-    },
-    "donation_magic_link": {
-        "subject": "Administra tus donaciones a {product_name}",
-        "body": "Hola:\n\nHaz clic en el siguiente enlace para acceder a tu portal de donantes:\n\n{manageUrl}\n\nEn el portal, puedes administrar suscripciones, descargar facturas y ver tu historial de donaciones.\n\nEste enlace vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste este enlace, puedes ignorar este correo electrónico de forma segura.\n\n– Equipo de {product_name}"
-    },
-    "dsa_report_verification": {
-        "subject": "Verifica tu correo electrónico para un informe de la Ley de Servicios Digitales",
-        "body": "Hola:\n\nUsa el código de verificación a continuación para enviar tu informe de la Ley de Servicios Digitales en {product_name}:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, puedes ignorar este correo electrónico.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "email_change_new": {
-        "subject": "Verifica tu nuevo correo electrónico de {product_name}",
-        "body": "Hola {username}:\n\nIngresa este código en la aplicación para verificar tu nuevo correo electrónico de {product_name}:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, puedes ignorar este correo electrónico.\n\n– Equipo de {product_name}"
-    },
-    "email_change_original": {
-        "subject": "Confirma tu cambio de correo electrónico de {product_name}",
-        "body": "Hola {username}:\n\nRecibimos una solicitud para cambiar la dirección de correo electrónico de tu cuenta de {product_name}.\n\nPara confirmar este cambio, ingresa este código en la aplicación:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, por favor, protege tu cuenta de inmediato.\n\n– Equipo de {product_name}"
-    },
-    "email_change_revert": {
-        "subject": "Tu correo electrónico de {product_name} fue cambiado",
-        "body": "Hola {username}:\n\nLa dirección de correo electrónico de tu cuenta de {product_name} se cambió a {newEmail}.\n\nSi realizaste este cambio, no es necesario que hagas nada. Si no lo hiciste, puedes revertir el cambio y proteger tu cuenta usando este enlace:\n\n{revertUrl}\n\nEsto restaurará tu correo electrónico anterior, cerrará tu sesión en todas partes, eliminará los números de teléfono vinculados, deshabilitará la autenticación multifactor y te pedirá que establezcas una nueva contraseña.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "email_verification": {
-        "subject": "Verifica tu dirección de correo electrónico de {product_name}",
-        "body": "Hola {username}:\n\nPor favor, verifica la dirección de correo electrónico de tu cuenta de {product_name} haciendo clic en el siguiente enlace:\n\n{verifyUrl}\n\nSi no creaste una cuenta de {product_name}, puedes ignorar este correo electrónico de forma segura.\n\nEste enlace es válido por 24 horas.\n\n– Equipo de {product_name}"
-    },
-    "gift_chargeback_notification": {
-        "subject": "Los beneficios de tu regalo canjeado han sido eliminados",
-        "body": "Hola {username}:\n\nUn código de regalo que canjeaste fue pagado originalmente por otra persona. Ese pago ha sido revertido (un contracargo).\n\nDebido a esto, hemos eliminado los beneficios que se agregaron a tu cuenta cuando canjeaste el regalo.\n\nSi crees que esto es un error, comunícate con nuestro equipo de soporte e incluye cualquier detalle que tengas sobre el código de regalo y cuándo lo canjeaste.\n\n– Equipo de {product_name}"
-    },
-    "harvest_completed": {
-        "subject": "Tu exportación de datos de {product_name} está lista para descargar",
-        "body": "Hola {username}:\n\nTu exportación de datos está lista.\n\nEnlace de descarga:\n{downloadUrl}\n\nMensajes incluidos: {totalMessages, number}\nTamaño del archivo: {fileSizeMB, number} MB\n\nEste enlace vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esta exportación, por favor, cambia tu contraseña inmediatamente y comunícate con nuestro equipo de soporte.\n\n– Equipo de {product_name}"
-    },
-    "inactivity_warning": {
-        "subject": "Tu cuenta de {product_name} será eliminada debido a inactividad",
-        "body": "Hola {username}:\n\nNo hemos visto actividad en tu cuenta de {product_name} desde el {lastActiveDate, date, full}.\n\nSi no inicias sesión antes del {deletionDate, date, full} a las {deletionDate, time, short}, tu cuenta será eliminada permanentemente debido a inactividad.\n\nInicia sesión aquí:\n{loginUrl}\n\nSi has usado {product_name} recientemente, por favor, comunícate con nuestro equipo de soporte de inmediato.\n\n– Equipo de {product_name}"
-    },
-    "ip_authorization": {
-        "subject": "Autoriza el inicio de sesión desde una nueva dirección IP",
-        "body": "Hola {username}:\n\nDetectamos un intento de inicio de sesión en tu cuenta de {product_name} desde una nueva dirección IP:\n\nDirección IP: {ipAddress}\nUbicación: {location}\n\nSi fuiste tú, por favor, autoriza esta dirección IP haciendo clic en el siguiente enlace:\n\n{authUrl}\n\nSi no intentaste iniciar sesión, por favor, cambia tu contraseña de inmediato.\n\nEste enlace es válido por 30 minutos.\n\n– Equipo de {product_name}"
-    },
-    "password_change_verification": {
-        "subject": "Confirma tu cambio de contraseña de {product_name}",
-        "body": "Hola {username}:\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta de {product_name}.\n\nPara confirmar este cambio, ingresa este código en la aplicación:\n\n{code}\n\nEste código vence a las {expiresAt}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente y habilita la autenticación de dos factores.\n\n– Equipo de {product_name}"
-    },
-    "password_reset": {
-        "subject": "Restablece tu contraseña de {product_name}",
-        "body": "Hola {username}:\n\nSolicitaste un restablecimiento de contraseña de {product_name}. Usa el siguiente enlace para establecer una nueva contraseña:\n\n{resetUrl}\n\nSi no solicitaste esto, puedes ignorar este correo electrónico de forma segura.\n\nEste enlace es válido por 1 hora.\n\n– Equipo de {product_name}"
-    },
-    "registration_approved": {
-        "subject": "Tu registro en {product_name} ha sido aprobado",
-        "body": "Hola {username}:\n\nBuenas noticias: tu registro en {product_name} ha sido aprobado.\n\nAhora puedes iniciar sesión en la aplicación de {product_name} aquí:\n{channelsUrl}\n\nBienvenido a la comunidad de {product_name}.\n\n– Equipo de {product_name}"
-    },
-    "report_resolved": {
-        "subject": "Tu informe de {product_name} ha sido revisado",
-        "body": "Hola {username}:\n\nTu informe (ID: {reportId}) ha sido revisado por nuestro Equipo de Seguridad.{hasComment, select, yes {\n\nRespuesta del Equipo de Seguridad:\n{publicComment}} other {}}\n\nGracias por ayudar a mantener {product_name} seguro para todos. Nos tomamos todos los informes en serio y agradecemos tu contribución a la comunidad.\n\nSi tienes alguna pregunta o inquietud sobre este resultado, comunícate con {safety_email}.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "scheduled_deletion_notification": {
-        "subject": "Tu cuenta de {product_name} será eliminada permanentemente",
-        "body": "Hola {username}:\n\nTu cuenta de {product_name} ha sido programada para su eliminación permanente.\n\nEliminación programada: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nEsta es una medida grave. Los datos de tu cuenta se eliminarán permanentemente en la fecha programada.\n\nSi crees que esta decisión fue incorrecta, puedes presentar una apelación. Envía un correo electrónico a {appeals_email} desde esta dirección de correo electrónico.\n\n– Equipo de Seguridad de {product_name}"
-    },
-    "self_deletion_scheduled": {
-        "subject": "La eliminación de tu cuenta de {product_name} está programada",
-        "body": "Hola {username}:\n\nSolicitaste eliminar tu cuenta de {product_name}. Tu cuenta está programada para su eliminación permanente el:\n\n{deletionDate, date, full} a las {deletionDate, time, short}\n\nSi no solicitaste esto, inicia sesión en tu cuenta para cancelar la eliminación. También te recomendamos cambiar tu contraseña para proteger tu cuenta.\n\n– Equipo de {product_name}"
-    },
-    "unban_notification": {
-        "subject": "Se levantó la suspensión de tu cuenta de {product_name}",
-        "body": "Hola {username}:\n\nBuenas noticias: se levantó la suspensión de tu cuenta de {product_name}.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nAhora puedes iniciar sesión de nuevo y seguir usando {product_name} con normalidad.\n\n– Equipo de Seguridad de {product_name}"
-    }
+	"account_deletion_cancelled": {
+		"subject": "Se canceló la eliminación de tu cuenta de {product_name}",
+		"body": "Hola {username}:\n\nSe canceló la eliminación programada de tu cuenta de {product_name}. Tu cuenta no será eliminada.\n\n{safety_email, select, null {Si tienes alguna pregunta, comunícate con los administradores de esta instancia.} other {Si tienes alguna pregunta, comunícate con {safety_email}.}}\n\n– Equipo de {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Tu cuenta de {product_name} será eliminada debido a inactividad",
+		"body": "Hola {username}:\n\nTu cuenta de {product_name} lleva mucho tiempo inactiva, por lo que programamos su eliminación para el {deletion_date}.\n\nPara conservar tu cuenta, inicia sesión antes de esa fecha. {support_email, select, null {Si tienes preguntas, comunícate con los administradores de esta instancia.} other {Si tienes preguntas, comunícate con {support_email}.}}\n\nEl equipo de {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "La eliminación de tu cuenta de {product_name} está programada",
+		"body": "Hola {username}:\n\nTal como lo pediste, programamos la eliminación de tu cuenta de {product_name} para el {deletion_date}.\n\nPara conservar tu cuenta, inicia sesión antes del {deletion_date}. {safety_email, select, null {Si no lo pediste tú, comunícate con los administradores de esta instancia.} other {Si no lo pediste tú, comunícate con {safety_email}.}}\n\nEl equipo de {product_name}"
+	},
+	"donation_confirmation": {
+		"subject": "Gracias por tu donación a {product_name}",
+		"body": "Hola:\n\n¡Gracias por tu donación a {product_name}! Tu {interval, select,\n  month {donación recurrente}\n  year {donación recurrente}\n  other {donación única}\n} ha sido {interval, select,\n  month {configurada}\n  year {configurada}\n  other {procesada}\n} con éxito.\n\nDetalles de la donación:\nMonto: {amount} {interval, select,\n  month {por mes}\n  year {por año}\n  other {}\n}\n\nEn breve, Stripe te enviará por separado un correo electrónico con el recibo y la factura en PDF. Este recibo incluye todos los detalles de pago y se puede utilizar para fines fiscales.\n\nPuedes ver tu historial de donaciones, descargar facturas {interval, select,\n  month {y administrar o cancelar tu suscripción}\n  year {y administrar o cancelar tu suscripción}\n  other {y administrar futuras donaciones}\n} en cualquier momento usando este enlace:\n\n{manageUrl}\n\nTu apoyo ayuda a mantener {product_name} en funcionamiento. ¡Gracias!\n\n– Equipo de {product_name}"
+	},
+	"donation_magic_link": {
+		"subject": "Administra tus donaciones a {product_name}",
+		"body": "Hola:\n\nHaz clic en el siguiente enlace para acceder a tu portal de donantes:\n\n{manageUrl}\n\nEn el portal, puedes administrar suscripciones, descargar facturas y ver tu historial de donaciones.\n\nEste enlace vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste este enlace, puedes ignorar este correo electrónico de forma segura.\n\n– Equipo de {product_name}"
+	},
+	"dsa_report_resolved": {
+		"subject": "Tomamos una decisión sobre tu reporte en {product_name}",
+		"body": "Hola:\n\nRevisamos tu reporte (ID: {reportId}).\n\n{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {Comprobamos que la cuenta que reportaste infringía nuestras reglas y la restringimos. No compartimos qué medidas tomamos contra otra cuenta, porque son datos personales de su titular.} action_taken {Comprobamos que lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos contra otra cuenta, porque son datos personales de su titular.} no_violation {Comprobamos que el contenido o la cuenta que reportaste no infringe nuestras reglas, así que no cambiamos nada.} other {Cerramos tu reporte.}}{hasComment, select, yes {\n\nNota de nuestro equipo: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nSi no estás de acuerdo, escribe a {appeals_email} en un plazo de 60 días e indica el ID del reporte. Si estás en la UE, también puedes someter el asunto a un órgano de resolución extrajudicial de litigios certificado o presentar una reclamación ante el coordinador de servicios digitales de tu país.}}\n\nEl equipo de {product_name}"
+	},
+	"dsa_report_verification": {
+		"subject": "Verifica tu correo electrónico para enviar un reporte conforme a la Ley de Servicios Digitales",
+		"body": "Hola:\n\nUsa el código de verificación a continuación para enviar tu reporte conforme a la Ley de Servicios Digitales en {product_name}:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, puedes ignorar este correo electrónico.\n\n– Equipo de seguridad de {product_name}"
+	},
+	"email_change_new": {
+		"subject": "Verifica tu nuevo correo electrónico en {product_name}",
+		"body": "Hola {username}:\n\nIngresa este código en la aplicación para verificar tu nuevo correo electrónico en {product_name}:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, puedes ignorar este correo electrónico.\n\n– Equipo de {product_name}"
+	},
+	"email_change_original": {
+		"subject": "Confirma tu cambio de correo electrónico en {product_name}",
+		"body": "Hola {username}:\n\nRecibimos una solicitud para cambiar la dirección de correo electrónico de tu cuenta de {product_name}.\n\nPara confirmar este cambio, ingresa este código en la aplicación:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, por favor, protege tu cuenta de inmediato.\n\n– Equipo de {product_name}"
+	},
+	"email_change_revert": {
+		"subject": "Se cambió tu correo electrónico en {product_name}",
+		"body": "Hola {username}:\n\nLa dirección de correo electrónico de tu cuenta de {product_name} se cambió a {newEmail}.\n\nSi realizaste este cambio, no es necesario que hagas nada. Si no lo hiciste, puedes revertir el cambio y proteger tu cuenta usando este enlace:\n\n{revertUrl}\n\nEsto restaurará tu correo electrónico anterior, cerrará tu sesión en todas partes, deshabilitará la autenticación multifactor y te pedirá que establezcas una nueva contraseña.\n\n– Equipo de seguridad de {product_name}"
+	},
+	"email_verification": {
+		"subject": "Verifica tu dirección de correo electrónico en {product_name}",
+		"body": "Hola {username}:\n\nPor favor, verifica la dirección de correo electrónico de tu cuenta de {product_name} haciendo clic en el siguiente enlace:\n\n{verifyUrl}\n\nSi no creaste una cuenta de {product_name}, puedes ignorar este correo electrónico de forma segura.\n\nEste enlace es válido por 24 horas.\n\n– Equipo de {product_name}"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {Revocamos una decisión sobre tu cuenta de {product_name}} other {Terminó una restricción de tu cuenta de {product_name}}}",
+		"body": "Hola {username}:\n\n{outcome, select, reversed {{decision_id, select, null {Volvimos a revisar una decisión sobre tu cuenta y la revocamos.} other {Volvimos a revisar la decisión {decision_id} y la revocamos.}} Lamentamos las molestias.} other {{decision_id, select, null {Levantamos la restricción de tu cuenta.} other {Levantamos la restricción de la decisión {decision_id}.}}}}{restores_access, select, yes { Ya puedes iniciar sesión y volver a usar {product_name}.} other {}}{statement, select, null {} other {\n\nNota de nuestro equipo: {statement}}}{content_removed, select, yes {\n\nEl contenido que eliminamos no se puede restaurar.} other {}}\n\nEl equipo de {product_name}"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {Información sobre tu cuenta de {product_name}} other {{kind_label, select, warning {Una advertencia sobre tu cuenta de {product_name}} suspension {Tu cuenta de {product_name} está suspendida} ban {Tu cuenta de {product_name} está suspendida de forma permanente} closure {Tu cuenta de {product_name} está cerrada} feature_limit {Algunas funciones de tu cuenta de {product_name} están limitadas} content_removal {Eliminamos mensajes que enviaste en {product_name}} profile_reset {Restablecimos partes de tu perfil de {product_name}} community_removal {Eliminamos tu comunidad en {product_name}} bot {Información sobre tu bot en {product_name}} other {Información sobre tu cuenta de {product_name}}}}}",
+		"body": "Hola {username}:\n\n{summary}\n\n{effects}\n\nPor qué\nRegla: {rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\nNota de nuestro equipo: {statement}}}\n\nCómo lo decidimos\n{how_we_decided}{appeals_email, select, null {} other {\n\nCómo apelar\nSi crees que nos equivocamos, escribe a {appeals_email} a más tardar el {appeal_deadline}. Si puedes, escribe desde la dirección de correo electrónico de tu cuenta e indica el ID de la decisión. Apelar es gratis, y una persona revisa cada apelación.{redress, select, null {} other {\n\n{redress}}}}}\n\nID de la decisión: {decision_id}\n\nEl equipo de {product_name}"
+	},
+	"gift_chargeback_notification": {
+		"subject": "Los beneficios de tu regalo canjeado han sido eliminados",
+		"body": "Hola {username}:\n\nUn código de regalo que canjeaste fue pagado originalmente por otra persona. Ese pago ha sido revertido (un contracargo).\n\nDebido a esto, hemos eliminado los beneficios que se agregaron a tu cuenta cuando canjeaste el regalo.\n\n{support_email, select, null {Si crees que esto es un error, comunícate con los administradores de esta instancia e incluye cualquier detalle que tengas sobre el código de regalo y cuándo lo canjeaste.} other {Si crees que esto es un error, comunícate con nuestro equipo de soporte e incluye cualquier detalle que tengas sobre el código de regalo y cuándo lo canjeaste.}}\n\n– Equipo de {product_name}"
+	},
+	"harvest_completed": {
+		"subject": "Tu exportación de datos de {product_name} está lista para descargar",
+		"body": "Hola {username}:\n\nTu exportación de datos está lista.\n\nEnlace de descarga:\n{downloadUrl}\n\nMensajes incluidos: {totalMessages, number}\nTamaño del archivo: {fileSizeMB, number} MB\n\nEste enlace vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\n{support_email, select, null {Si no solicitaste esta exportación, por favor, cambia tu contraseña inmediatamente y comunícate con los administradores de esta instancia.} other {Si no solicitaste esta exportación, por favor, cambia tu contraseña inmediatamente y comunícate con nuestro equipo de soporte.}}\n\n– Equipo de {product_name}"
+	},
+	"inactivity_warning": {
+		"subject": "Tu cuenta de {product_name} será eliminada debido a inactividad",
+		"body": "Hola {username}:\n\nNo hemos visto actividad en tu cuenta de {product_name} desde el {lastActiveDate, date, full}.\n\nSi no inicias sesión antes del {deletionDate, date, full} a las {deletionDate, time, short}, tu cuenta será eliminada permanentemente debido a inactividad.\n\nInicia sesión aquí:\n{loginUrl}\n\n{support_email, select, null {Si has usado {product_name} recientemente, por favor, comunícate con los administradores de esta instancia de inmediato.} other {Si has usado {product_name} recientemente, por favor, comunícate con nuestro equipo de soporte de inmediato.}}\n\n– Equipo de {product_name}"
+	},
+	"ip_authorization": {
+		"subject": "Autoriza el inicio de sesión desde una nueva dirección IP",
+		"body": "Hola {username}:\n\nDetectamos un intento de inicio de sesión en tu cuenta de {product_name} desde una nueva dirección IP:\n\nDirección IP: {ipAddress}\nUbicación: {location}\n\nSi fuiste tú, por favor, autoriza esta dirección IP haciendo clic en el siguiente enlace:\n\n{authUrl}\n\nSi no intentaste iniciar sesión, por favor, cambia tu contraseña de inmediato.\n\nEste enlace es válido por 30 minutos.\n\n– Equipo de {product_name}"
+	},
+	"mfa_backup_codes_view": {
+		"subject": "Confirma el acceso a tus códigos de respaldo de {product_name}",
+		"body": "Hola {username}:\n\nRecibimos una solicitud para ver los códigos de respaldo de tu cuenta de {product_name}.\n\nPara confirmar esta solicitud, ingresa este código en la aplicación:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente.\n\n– Equipo de {product_name}"
+	},
+	"password_change_verification": {
+		"subject": "Confirma tu cambio de contraseña de {product_name}",
+		"body": "Hola {username}:\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta de {product_name}.\n\nPara confirmar este cambio, ingresa este código en la aplicación:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente y habilita la autenticación de dos factores.\n\n– Equipo de {product_name}"
+	},
+	"password_reset": {
+		"subject": "Restablece tu contraseña de {product_name}",
+		"body": "Hola {username}:\n\nSolicitaste un restablecimiento de contraseña de {product_name}. Usa el siguiente enlace para establecer una nueva contraseña:\n\n{resetUrl}\n\nSi no solicitaste esto, puedes ignorar este correo electrónico de forma segura.\n\nEste enlace es válido por 1 hora.\n\n– Equipo de {product_name}"
+	},
+	"report_received": {
+		"subject": "Recibimos tu reporte en {product_name}",
+		"body": "Hola:\n\nRecibimos tu reporte conforme a la Ley de Servicios Digitales sobre {targetKind, select, message {un mensaje} user {una cuenta} guild {una comunidad} other {contenido}} en {product_name}.\n\nID del reporte: {reportId}\n\nNuestro equipo de seguridad revisará tu reporte y te escribiremos a esta dirección cuando hayamos tomado una decisión. Guarda este correo electrónico para tus registros.\n\n– Equipo de seguridad de {product_name}"
+	},
+	"report_resolved": {
+		"subject": "Se revisó tu reporte en {product_name}",
+		"body": "Hola {username}:\n\nRevisamos tu reporte (ID: {reportId}).\n\n{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {Comprobamos que la cuenta que reportaste infringía nuestras reglas y la restringimos. No compartimos qué medidas tomamos contra otra cuenta, porque son datos personales de su titular.} action_taken {Comprobamos que lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos contra otra cuenta, porque son datos personales de su titular.} no_violation {Comprobamos que el contenido o la cuenta que reportaste no infringe nuestras reglas, así que no cambiamos nada.} other {Cerramos tu reporte.}}{hasComment, select, yes {\n\nNota de nuestro equipo: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nSi no estás de acuerdo, escribe a {appeals_email} en un plazo de 60 días e indica el ID del reporte. Si estás en la UE, también puedes someter el asunto a un órgano de resolución extrajudicial de litigios certificado o presentar una reclamación ante el coordinador de servicios digitales de tu país.}}\n\nEl equipo de {product_name}"
+	},
+	"self_deletion_scheduled": {
+		"subject": "La eliminación de tu cuenta de {product_name} está programada",
+		"body": "Hola {username}:\n\nSolicitaste eliminar tu cuenta de {product_name}. La eliminación permanente de tu cuenta está programada para el:\n\n{deletionDate, date, full} a las {deletionDate, time, short}\n\nSi no solicitaste esto, inicia sesión en tu cuenta para cancelar la eliminación. También te recomendamos cambiar tu contraseña para proteger tu cuenta.\n\n– Equipo de {product_name}"
+	}
 }

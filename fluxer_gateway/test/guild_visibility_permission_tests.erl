@@ -43,7 +43,7 @@ channel_overwrite_denies_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([], Channels).
 
 role_overwrite_allows_view_test() ->
@@ -90,7 +90,7 @@ role_overwrite_allows_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([ChannelId], Channels).
 
 user_overwrite_denies_view_test() ->
@@ -137,73 +137,8 @@ user_overwrite_denies_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([], Channels).
-
-have_shared_viewable_channel_shared_test() ->
-    GuildId = 100,
-    ViewPerm = constants:view_channel_permission(),
-    State = #{
-        id => GuildId,
-        sessions => #{},
-        data => #{
-            <<"guild">> => #{<<"owner_id">> => <<"999">>},
-            <<"roles">> => [
-                #{
-                    <<"id">> => integer_to_binary(GuildId),
-                    <<"permissions">> => integer_to_binary(ViewPerm)
-                }
-            ],
-            <<"members">> => [
-                #{<<"user">> => #{<<"id">> => <<"10">>}, <<"roles">> => []},
-                #{<<"user">> => #{<<"id">> => <<"20">>}, <<"roles">> => []}
-            ],
-            <<"channels">> => [
-                #{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}
-            ]
-        }
-    },
-    ?assertEqual(true, guild_visibility:have_shared_viewable_channel(10, 20, State)).
-
-have_shared_viewable_channel_no_shared_test() ->
-    GuildId = 101,
-    ViewPerm = constants:view_channel_permission(),
-    RoleId = 200,
-    State = #{
-        id => GuildId,
-        sessions => #{},
-        data => #{
-            <<"guild">> => #{<<"owner_id">> => <<"999">>},
-            <<"roles">> => [
-                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>},
-                #{
-                    <<"id">> => integer_to_binary(RoleId),
-                    <<"permissions">> => integer_to_binary(ViewPerm)
-                }
-            ],
-            <<"members">> => [
-                #{
-                    <<"user">> => #{<<"id">> => <<"10">>},
-                    <<"roles">> => [integer_to_binary(RoleId)]
-                },
-                #{<<"user">> => #{<<"id">> => <<"20">>}, <<"roles">> => []}
-            ],
-            <<"channels">> => [
-                #{
-                    <<"id">> => <<"500">>,
-                    <<"permission_overwrites">> => [
-                        #{
-                            <<"id">> => integer_to_binary(GuildId),
-                            <<"type">> => 0,
-                            <<"allow">> => <<"0">>,
-                            <<"deny">> => integer_to_binary(ViewPerm)
-                        }
-                    ]
-                }
-            ]
-        }
-    },
-    ?assertEqual(false, guild_visibility:have_shared_viewable_channel(10, 20, State)).
 
 parent_category_included_when_child_channel_is_visible_test() ->
     GuildId = 40,
@@ -215,7 +150,7 @@ parent_category_included_when_child_channel_is_visible_test() ->
     State = parent_category_visible_state(
         GuildId, UserId, RoleId, CategoryId, ChannelId, ViewPerm
     ),
-    Channels = lists:sort(guild_visibility:get_user_viewable_channels(UserId, State)),
+    Channels = lists:sort(guild_visibility_channels:get_user_viewable_channels(UserId, State)),
     ?assertEqual([CategoryId, ChannelId], Channels).
 
 parent_category_visible_state(GuildId, UserId, RoleId, CategoryId, ChannelId, ViewPerm) ->

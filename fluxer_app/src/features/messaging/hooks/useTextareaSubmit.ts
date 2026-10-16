@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {accountOwnsActiveView} from '@app/features/auth/state/AccountViewOwnership';
 import * as ChannelStickerCommands from '@app/features/channel/commands/ChannelStickerCommands';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Channels from '@app/features/channel/state/Channels';
@@ -9,6 +10,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailabilityWithGuildFallback} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import ChannelMemberCount from '@app/features/guild/state/ChannelMemberCount';
 import Guilds from '@app/features/guild/state/Guilds';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {
 	type LexicalMessageCommandResolution,
@@ -19,20 +21,26 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {MentionConfirmationInfo, MentionType} from '@app/features/messaging/state/MentionConfirmationStateMachine';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {canSubmitMessage, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {
+	getReactionShorthandTargetId,
+	parseReactionShorthand,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Presence from '@app/features/presence/state/Presence';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import * as FormUtils from '@app/lib/forms';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
@@ -61,6 +69,7 @@ const mentionTypePriority: Record<MentionType, number> = {
 const pendingMentionCountLoads = new Map<string, Promise<void>>();
 
 interface UseTextareaSubmitOptions {
+	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
 	guildId: string | null;
 	value: string;
@@ -81,6 +90,7 @@ interface UseTextareaSubmitOptions {
 		maybeFavoriteMemeId?: string,
 	) => boolean;
 	onMentionConfirmationNeeded?: (info: MentionConfirmationInfo) => void;
+	commandsEnabled?: boolean;
 	i18n: I18n;
 }
 
@@ -176,7 +186,7 @@ async function ensureMentionCountsLoaded(guildId: string, channelId: string): Pr
 	await loadPromise;
 }
 
-export function getResolvedMentionCount({
+function getResolvedMentionCount({
 	mentionType,
 	guildId,
 	channelId,
@@ -230,11 +240,12 @@ function shouldBlockSubmissionForSlowmode(
 	return CommandUtils.doesCommandSendCurrentChannelMessage(parsedCommand);
 }
 
-export function shouldShowMentionConfirmation(params: MentionCountResolutionParams): boolean {
+function shouldShowMentionConfirmation(params: MentionCountResolutionParams): boolean {
 	return getResolvedMentionCount(params) > MENTION_EVERYONE_THRESHOLD;
 }
 
 export const useTextareaSubmit = ({
+	draftOwner,
 	channelId,
 	guildId,
 	value,
@@ -249,6 +260,7 @@ export const useTextareaSubmit = ({
 	hasPendingSticker,
 	handleSendMessage,
 	onMentionConfirmationNeeded,
+	commandsEnabled = true,
 	i18n,
 }: UseTextareaSubmitOptions) => {
 	const checkMentionConfirmation = useCallback(
@@ -438,6 +450,9 @@ export const useTextareaSubmit = ({
 		[channelId, guildId, i18n],
 	);
 	const onSubmit = useCallback(async () => {
+		if (!accountOwnsActiveView(draftOwner)) {
+			return;
+		}
 		let composerHandle: ComposerHandle | null = null;
 		if (composerHandleRef !== undefined) {
 			composerHandle = composerHandleRef.current;
@@ -445,17 +460,34 @@ export const useTextareaSubmit = ({
 		let lexicalCommand: LexicalMessageCommandResolution | null = null;
 		let actualContent = displayToActual(value).trim();
 		if (composerHandle !== null) {
-			lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
-			actualContent = composerHandle.getWireValue().trim();
+			if (commandsEnabled) {
+				lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
+			}
+			actualContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue()).trim();
 		}
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
 		let parsedCommand: CommandUtils.ParsedCommand | null = null;
 		if (lexicalCommand === null) {
-			parsedCommand = CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
+			parsedCommand =
+				commandsEnabled && CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
 		} else if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.VALID_COMMAND) {
 			parsedCommand = lexicalCommand.command;
 		}
-		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
+		const replaceCommand = commandsEnabled ? ReplaceCommandUtils.parseReplaceCommand(actualContent) : null;
+		const reactionShorthand =
+			commandsEnabled && editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
+				? parseReactionShorthand(actualContent, Channels.getChannel(channelId) ?? null, guildId, i18n)
+				: null;
+		const reactionTargetId = reactionShorthand === null ? null : getReactionShorthandTargetId(channelId);
+		if (reactionShorthand !== null && reactionTargetId !== null) {
+			ReactionCommands.addReaction(i18n, channelId, reactionTargetId, reactionShorthand);
+			setValue('');
+			clearSegments();
+			DraftCommands.deleteDraft(draftOwner, channelId);
+			RollingTypingSender.stopTyping(channelId);
+			MessageCommands.stopReply(channelId);
+			return;
+		}
 		if (
 			shouldBlockSubmissionForSlowmode(
 				isSlowmodeActive,
@@ -476,22 +508,21 @@ export const useTextareaSubmit = ({
 				clearSegments();
 			};
 			if (!hasVisibleMessageContent(resolvedContent)) {
+				if (isAttachmentOnlyMessage(editingMessage)) {
+					finishMobileEdit();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(editingMessage)) {
-					if (editingMessage.content.length === 0) {
+					MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
 						finishMobileEdit();
-						return;
-					}
-					MessageCommands.edit(
-						channelId,
-						editingMessage.id,
-						'',
-						undefined,
-						editingMessage._allowedMentions,
-						buildExistingAttachmentEditReferences(editingMessage),
-					).then((result) => {
-						if (result) {
-							finishMobileEdit();
-						}
+						void MessageCommands.edit(
+							channelId,
+							editingMessage.id,
+							'',
+							undefined,
+							editingMessage._allowedMentions,
+							buildExistingAttachmentEditReferences(editingMessage),
+						);
 					});
 					return;
 				}
@@ -506,20 +537,19 @@ export const useTextareaSubmit = ({
 			if (checkCustomEmojiAvailability(resolvedContent)) {
 				return;
 			}
-			MessageCommands.edit(
-				channelId,
-				editingMessage.id,
-				resolvedContent,
-				undefined,
-				editingMessage._allowedMentions,
-			).then((result) => {
-				if (result) {
-					finishMobileEdit();
-				}
+			MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
+				finishMobileEdit();
+				void MessageCommands.edit(
+					channelId,
+					editingMessage.id,
+					resolvedContent,
+					undefined,
+					editingMessage._allowedMentions,
+				);
 			});
 			return;
 		}
-		if (!hasVisibleMessageContent(resolvedContent) && uploadAttachmentsLength === 0 && !hasPendingSticker) {
+		if (!canSubmitMessage(resolvedContent, uploadAttachmentsLength > 0 || hasPendingSticker)) {
 			return;
 		}
 		if (replaceCommand) {
@@ -527,19 +557,21 @@ export const useTextareaSubmit = ({
 			if (lastMessage) {
 				const newContent = ReplaceCommandUtils.executeReplaceCommand(lastMessage.content, replaceCommand);
 				if (newContent !== lastMessage.content) {
-					MessageCommands.edit(
-						lastMessage.channelId,
-						lastMessage.id,
-						newContent,
-						undefined,
-						lastMessage._allowedMentions,
-					);
+					MessageCommands.confirmPublishedMessageEdit(i18n, lastMessage, () => {
+						void MessageCommands.edit(
+							lastMessage.channelId,
+							lastMessage.id,
+							newContent,
+							undefined,
+							lastMessage._allowedMentions,
+						);
+					});
 				}
 			}
 			setValue('');
 			clearSegments();
-			DraftCommands.deleteDraft(channelId);
-			TypingUtils.clear(channelId);
+			DraftCommands.deleteDraft(draftOwner, channelId);
+			RollingTypingSender.stopTyping(channelId);
 			return;
 		}
 		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean): boolean => {
@@ -594,8 +626,8 @@ export const useTextareaSubmit = ({
 						await CommandUtils.executeCommand(parsedCommand, channelId, commandGuildId, i18n);
 						setValue('');
 						clearSegments();
-						DraftCommands.deleteDraft(channelId);
-						TypingUtils.clear(channelId);
+						DraftCommands.deleteDraft(draftOwner, channelId);
+						RollingTypingSender.stopTyping(channelId);
 						if (parsedCommand.type !== 'msg') {
 							MessageCommands.stopReply(channelId);
 						}
@@ -620,6 +652,7 @@ export const useTextareaSubmit = ({
 			sendWithPendingSticker(resolvedContent, false);
 		}
 	}, [
+		draftOwner,
 		channelId,
 		value,
 		uploadAttachmentsLength,
@@ -638,6 +671,7 @@ export const useTextareaSubmit = ({
 		checkMentionConfirmation,
 		resolveTypedEmojiContent,
 		ttsCommandEnabled,
+		commandsEnabled,
 	]);
 	return {onSubmit};
 };

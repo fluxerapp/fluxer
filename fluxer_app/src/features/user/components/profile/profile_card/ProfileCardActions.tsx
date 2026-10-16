@@ -7,18 +7,13 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/profile/profile_card/ProfileCardActions.module.css';
 import UserNote from '@app/features/user/state/UserNote';
-import {msg} from '@lingui/core/macro';
+import {EDIT_NOTE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {ListPlusIcon, SnowflakeIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useRef} from 'react';
-
-const EDIT_NOTE_DESCRIPTOR = msg({
-	message: 'Edit note',
-	comment: 'Button or menu action label in the user settings profile card actions. Keep it concise.',
-});
 
 interface ProfileCardActionsProps {
 	userId: string;

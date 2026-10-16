@@ -1,0 +1,652 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import type {
+	AdminAuditCoverageCase,
+	AdminAuditCoverageContext,
+} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
+import {
+	createTestAccount,
+	createTotpSecret,
+	createUniqueEmail,
+	createUniqueUsername,
+	generateTotpCode,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createRegistrationResponse,
+	createWebAuthnDevice,
+	type WebAuthnCredentialMetadata,
+	type WebAuthnRegistrationOptions,
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {expect, onTestFinished} from 'vitest';
+
+async function loadUser(account: TestAccount): Promise<User> {
+	const user = await getUserRepository().findUnique(createUserID(BigInt(account.userId)));
+	if (!user) {
+		throw new Error(`User ${account.userId} not found`);
+	}
+	return user;
+}
+
+function adminBuilder({harness, admin}: AdminAuditCoverageContext) {
+	return createBuilder(harness, admin.token);
+}
+
+async function enableTotp(context: AdminAuditCoverageContext, account: TestAccount): Promise<string> {
+	const secret = createTotpSecret();
+	await createBuilder(context.harness, account.token)
+		.post('/users/@me/mfa/totp/enable')
+		.body({secret, code: generateTotpCode(secret), password: account.password})
+		.execute();
+	return secret;
+}
+
+const COVERAGE_DECISION = {
+	reason_code: DeletionReasons.SPAM,
+	source: 'own_review',
+	automation: 'none',
+	statement: 'Coverage decision',
+};
+
+export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/relationships',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const friend = await createTestAccount(harness);
+			await createFriendship(harness, target, friend);
+			return {
+				request: {path: `/admin/users/${target.userId}/relationships?category=friend`},
+				expected: {
+					action: 'remove_relationships_by_category',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {category: 'friend', removed_count: '1'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/relationships/:target_user_id',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const friend = await createTestAccount(harness);
+			await createFriendship(harness, target, friend);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/relationships/${friend.userId}?category=friend`,
+					expectStatus: 204,
+				},
+				expected: {
+					action: 'remove_relationship',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {target_user_id: friend.userId, category: 'friend'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/sessions',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/sessions`},
+				expected: {
+					action: 'terminate_sessions',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/webauthn-credentials/:credential_id',
+		async prepare(context) {
+			const {harness} = context;
+			const target = await createTestAccount(harness);
+			const secret = await enableTotp(context, target);
+			const device = createWebAuthnDevice();
+			const registrationOptions = await createBuilder<WebAuthnRegistrationOptions>(harness, target.token)
+				.post('/users/@me/mfa/webauthn/credentials/registration-options')
+				.body({mfa_method: 'totp', mfa_code: generateTotpCode(secret)})
+				.execute();
+			if (registrationOptions.rp.id) {
+				device.rpId = registrationOptions.rp.id;
+			}
+			await createBuilder(harness, target.token)
+				.post('/users/@me/mfa/webauthn/credentials')
+				.body({
+					response: createRegistrationResponse(device, registrationOptions, 'Coverage Passkey'),
+					challenge: registrationOptions.challenge,
+					name: 'Coverage Passkey',
+					mfa_method: 'totp',
+					mfa_code: generateTotpCode(secret),
+				})
+				.expect(204)
+				.execute();
+			const credentials = await createBuilder<Array<WebAuthnCredentialMetadata>>(harness, target.token)
+				.get('/users/@me/mfa/webauthn/credentials')
+				.execute();
+			const credentialId = credentials[0]!.id;
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/webauthn-credentials/${credentialId}`,
+					expectStatus: 204,
+				},
+				expected: {
+					action: 'delete_webauthn_credential',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {credential_id: credentialId},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/mfa',
+		async prepare(context) {
+			const target = await createTestAccount(context.harness);
+			await enableTotp(context, target);
+			return {
+				request: {path: `/admin/users/${target.userId}/mfa`, expectStatus: 204},
+				expected: {
+					action: 'disable_mfa',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/profile-fields',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/profile-fields`,
+					body: {fields: ['bio', 'pronouns', 'global_name'], basis: {type: 'holder_request'}},
+				},
+				expected: {
+					action: 'clear_fields',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {fields: 'bio,pronouns,global_name', basis: 'holder_request'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/profile-fields',
+		name: 'enforcement',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/profile-fields`,
+					body: {fields: ['global_name'], basis: {type: 'enforcement', decision: COVERAGE_DECISION}},
+				},
+				expected: {
+					action: 'clear_fields',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						fields: 'global_name',
+						basis: 'enforcement',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'profile_reset',
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/bot-status',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/bot-status`, body: {bot: true}},
+				expected: {
+					action: 'set_bot_status',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {bot: 'true'},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/system-status',
+		async prepare(context) {
+			const target = await createTestAccount(context.harness);
+			await adminBuilder(context).put(`/admin/users/${target.userId}/bot-status`).body({bot: true}).execute();
+			return {
+				request: {path: `/admin/users/${target.userId}/system-status`, body: {system: true}},
+				expected: {
+					action: 'set_system_status',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {system: 'true'},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/users/:user_id/username',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const username = createUniqueUsername('renamed');
+			return {
+				request: {path: `/admin/users/${target.userId}/username`, body: {username}},
+				expected: {
+					action: 'change_username',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						old_username: (await loadUser(target)).username,
+						new_username: username,
+						discriminator: expect.any(String),
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/users/:user_id/email',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const email = createUniqueEmail('changed');
+			return {
+				request: {path: `/admin/users/${target.userId}/email`, body: {email}},
+				expected: {
+					action: 'change_email',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {old_email: (await loadUser(target)).email!, new_email: email},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/email-verification',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness, {skipEmailVerification: true});
+			return {
+				request: {path: `/admin/users/${target.userId}/email-verification`},
+				expected: {
+					action: 'verify_email',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {email: (await loadUser(target)).email!},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/verification-email',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness, {skipEmailVerification: true});
+			return {
+				request: {path: `/admin/users/${target.userId}/verification-email`, expectStatus: 204},
+				expected: {
+					action: 'resend_verification_email',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {email: (await loadUser(target)).email!},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/password-reset',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/password-reset`, expectStatus: 204},
+				expected: {
+					action: 'send_password_reset',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {email: (await loadUser(target)).email!},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/password-reset-link',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/password-reset-link`},
+				expected: {
+					action: 'create_password_reset_link',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/recovery-kit',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/recovery-kit`, expectStatus: 204},
+				expected: {
+					action: 'revoke_recovery_kit',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/ban',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/ban`,
+					body: {duration_hours: 24, decision: COVERAGE_DECISION},
+				},
+				expected: {
+					action: 'temp_ban',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						duration_hours: '24',
+						banned_until: expect.any(String),
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'suspension',
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/ban',
+		async prepare(context) {
+			const target = await createTestAccount(context.harness);
+			const users = getUserRepository();
+			const user = await loadUser(target);
+			await users.patchUpsert(user.id, {temp_banned_until: new Date(Date.now() + 86_400_000)}, user.toRow());
+			await users.updateFlags(user.id, (flags) => flags | UserFlags.DISABLED);
+			return {
+				request: {path: `/admin/users/${target.userId}/ban`},
+				expected: {
+					action: 'unban',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {ended_notice: 'true'},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/warnings',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/warnings`, body: {decision: COVERAGE_DECISION}},
+				expected: {
+					action: 'warn_user',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'warning',
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/feature-limits',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/feature-limits`,
+					body: {limit: 'direct_messages', decision: COVERAGE_DECISION},
+				},
+				expected: {
+					action: 'limit_features',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						limit: 'direct_messages',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'feature_limit',
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/deletion',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/deletion`,
+					body: {days_until_deletion: 30, basis: {type: 'holder_request'}},
+				},
+				expected: {
+					action: 'schedule_deletion',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						basis: 'holder_request',
+						days: '30',
+						reason_code: DeletionReasons.USER_REQUESTED.toString(),
+						pending_deletion_at: expect.any(String),
+						notification_sent: 'true',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/deletion',
+		async prepare(context) {
+			const target = await createTestAccount(context.harness);
+			await adminBuilder(context)
+				.put(`/admin/users/${target.userId}/deletion`)
+				.body({days_until_deletion: 30, basis: {type: 'holder_request'}})
+				.execute();
+			const pendingDeletionAt = (await loadUser(target)).pendingDeletionAt!.toISOString();
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/deletion`,
+					body: {expected_pending_deletion_at: pendingDeletionAt},
+				},
+				expected: {
+					action: 'cancel_deletion',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						cancelled_pending_deletion_at: pendingDeletionAt,
+						cancelled_scheduled_by: context.admin.userId,
+						cancelled_scheduled_at: expect.any(String),
+						cancelled_reason_code: DeletionReasons.USER_REQUESTED.toString(),
+						notice: 'account_deletion_cancelled',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/message-deletion',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			await createBuilder(harness, target.token)
+				.post('/users/@me/messages/delete')
+				.body({password: target.password})
+				.expect(204)
+				.execute();
+			return {
+				request: {path: `/admin/users/${target.userId}/message-deletion`},
+				expected: {
+					action: 'cancel_bulk_message_deletion',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/acls',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const acls = [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP];
+			return {
+				request: {path: `/admin/users/${target.userId}/acls`, body: {acls}},
+				expected: {
+					action: 'set_acls',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {acls: acls.join(',')},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/traits',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/traits`, body: {traits: ['coverage_trait']}},
+				expected: {
+					action: 'set_traits',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {traits: 'coverage_trait'},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/users/:user_id/flags',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const {flags} = await loadUser(target);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/flags`,
+					body: {add_flags: [UserFlags.PARTNER.toString()], remove_flags: [UserFlags.SPAMMER.toString()]},
+				},
+				expected: {
+					action: 'update_flags',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						add_flags: UserFlags.PARTNER.toString(),
+						remove_flags: UserFlags.SPAMMER.toString(),
+						new_flags: ((flags | UserFlags.PARTNER) & ~UserFlags.SPAMMER).toString(),
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/users/:user_id/premium-flags',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const {premiumFlags} = await loadUser(target);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/premium-flags`,
+					body: {add_flags: [PremiumFlags.BADGE_HIDDEN], remove_flags: [PremiumFlags.PURCHASE_DISABLED]},
+				},
+				expected: {
+					action: 'update_premium_flags',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						add_flags: PremiumFlags.BADGE_HIDDEN.toString(),
+						remove_flags: PremiumFlags.PURCHASE_DISABLED.toString(),
+						new_flags: ((premiumFlags | PremiumFlags.BADGE_HIDDEN) & ~PremiumFlags.PURCHASE_DISABLED).toString(),
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/users/:user_id/date-of-birth',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/date-of-birth`, body: {date_of_birth: '1995-06-15'}},
+				expected: {
+					action: 'change_dob',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {old_dob: (await loadUser(target)).dateOfBirth!, new_dob: '1995-06-15'},
+				},
+			};
+		},
+	},
+];

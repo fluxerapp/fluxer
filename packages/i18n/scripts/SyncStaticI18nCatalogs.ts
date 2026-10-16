@@ -1,13 +1,14 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {parseArgs} from 'node:util';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../..');
-const GENERATED_HEADER = '// SPDX-License-Identifier: AGPL-3.0-or-later\n\n';
 
 const STATIC_I18N_LOCALES = [
 	'ar',
@@ -63,10 +64,6 @@ interface StaticCatalogConfig {
 	sourceModulePath: string;
 	sourceExportName: string;
 	weblateDir: string;
-	localeTsDir: string;
-	defineImportPath: string;
-	defineFunctionName: string;
-	exportPrefix: string;
 }
 
 const CATALOGS: Array<StaticCatalogConfig> = [
@@ -76,10 +73,6 @@ const CATALOGS: Array<StaticCatalogConfig> = [
 		sourceModulePath: path.join(REPO_ROOT, 'packages/errors/src/i18n/ErrorI18nMessages.ts'),
 		sourceExportName: 'ERROR_I18N_MESSAGES',
 		weblateDir: path.join(REPO_ROOT, 'packages/errors/src/i18n/weblate'),
-		localeTsDir: path.join(REPO_ROOT, 'packages/errors/src/i18n/locales'),
-		defineImportPath: '../ErrorI18nMessages',
-		defineFunctionName: 'defineErrorI18nLocaleMessages',
-		exportPrefix: 'ERROR_I18N',
 	},
 	{
 		name: 'email',
@@ -87,10 +80,6 @@ const CATALOGS: Array<StaticCatalogConfig> = [
 		sourceModulePath: path.join(REPO_ROOT, 'fluxer_api/pkgs/email/src/email_i18n/EmailI18nMessages.ts'),
 		sourceExportName: 'EMAIL_I18N_MESSAGES',
 		weblateDir: path.join(REPO_ROOT, 'fluxer_api/pkgs/email/src/email_i18n/weblate'),
-		localeTsDir: path.join(REPO_ROOT, 'fluxer_api/pkgs/email/src/email_i18n/locales'),
-		defineImportPath: '../EmailI18nMessages',
-		defineFunctionName: 'defineEmailI18nLocaleMessages',
-		exportPrefix: 'EMAIL_I18N',
 	},
 	{
 		name: 'content',
@@ -98,10 +87,6 @@ const CATALOGS: Array<StaticCatalogConfig> = [
 		sourceModulePath: path.join(REPO_ROOT, 'fluxer_api/src/api/content_i18n/ContentI18nMessages.ts'),
 		sourceExportName: 'CONTENT_I18N_MESSAGES',
 		weblateDir: path.join(REPO_ROOT, 'fluxer_api/src/api/content_i18n/weblate'),
-		localeTsDir: path.join(REPO_ROOT, 'fluxer_api/src/api/content_i18n/locales'),
-		defineImportPath: '../ContentI18nMessages',
-		defineFunctionName: 'defineContentI18nLocaleMessages',
-		exportPrefix: 'CONTENT_I18N',
 	},
 ];
 
@@ -125,17 +110,6 @@ async function importExport<T>(modulePath: string, exportName: string): Promise<
 	return value as T;
 }
 
-async function importDefault<T>(modulePath: string): Promise<T | null> {
-	if (!fs.existsSync(modulePath)) {
-		return null;
-	}
-	const module = await import(pathToFileURL(modulePath).href);
-	if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) {
-		return null;
-	}
-	return module.default as T;
-}
-
 function readJson<T>(filePath: string): T | null {
 	if (!fs.existsSync(filePath)) {
 		return null;
@@ -154,15 +128,6 @@ function sortKeys<T>(record: Record<string, T>): Record<string, T> {
 function writeJson(filePath: string, value: unknown): void {
 	ensureDir(path.dirname(filePath));
 	fs.writeFileSync(filePath, `${JSON.stringify(value, null, '\t')}\n`, 'utf8');
-}
-
-function localeTsPath(config: StaticCatalogConfig, locale: StaticLocale): string {
-	return path.join(config.localeTsDir, `${locale}.ts`);
-}
-
-function exportName(config: StaticCatalogConfig, locale: StaticLocale): string {
-	const normalizedLocale = locale.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase();
-	return `${config.exportPrefix}_${normalizedLocale}_MESSAGES`;
 }
 
 function normalizeFlatCatalog(source: FlatCatalog, existing: unknown): FlatCatalog {
@@ -193,10 +158,6 @@ function normalizeEmailCatalog(source: EmailCatalog, existing: unknown): EmailCa
 		};
 	}
 	return next;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function validateCatalog(kind: CatalogKind, catalog: unknown, label: string): Catalog {
@@ -231,56 +192,43 @@ async function extractCatalog(config: StaticCatalogConfig): Promise<void> {
 		await importExport(config.sourceModulePath, config.sourceExportName),
 		`${config.name} source catalog`,
 	);
-	writeJson(jsonPath(config), sortKeys(source));
+	writeJson(jsonPath(config), sortKeys<Catalog[string]>(source));
 
 	for (const locale of STATIC_I18N_LOCALES) {
-		const existingJson = readJson<unknown>(jsonPath(config, locale));
-		const existingTs = existingJson === null ? await importDefault<Catalog>(localeTsPath(config, locale)) : null;
-		const next = normalizeCatalog(config, source, existingJson ?? existingTs);
-		writeJson(jsonPath(config, locale), sortKeys(next));
+		const next = normalizeCatalog(config, source, readJson<unknown>(jsonPath(config, locale)));
+		writeJson(jsonPath(config, locale), sortKeys<Catalog[string]>(next));
 	}
 	console.log(`extracted static ${config.name} catalogs`);
 }
 
-function renderTs(config: StaticCatalogConfig, locale: StaticLocale, catalog: Catalog): string {
-	const name = exportName(config, locale);
-	return `${GENERATED_HEADER}import {${config.defineFunctionName}} from '${config.defineImportPath}';
-
-const ${name} = ${config.defineFunctionName}(${JSON.stringify(catalog, null, '\t')});
-
-export default ${name};
-`;
+interface SyncOptions {
+	catalogs: Array<StaticCatalogConfig>;
 }
 
-async function compileCatalog(config: StaticCatalogConfig): Promise<void> {
-	const source = validateCatalog(
-		config.kind,
-		await importExport(config.sourceModulePath, config.sourceExportName),
-		`${config.name} source catalog`,
-	);
-	for (const locale of STATIC_I18N_LOCALES) {
-		const existing = readJson<unknown>(jsonPath(config, locale));
-		const catalog = normalizeCatalog(config, source, existing);
-		ensureDir(config.localeTsDir);
-		fs.writeFileSync(localeTsPath(config, locale), renderTs(config, locale, catalog), 'utf8');
+function parseSyncOptions(argv: Array<string>): SyncOptions {
+	const {values} = parseArgs({
+		args: argv,
+		options: {
+			catalog: {type: 'string', multiple: true, default: []},
+		},
+		strict: true,
+		allowPositionals: false,
+	});
+	const known = CATALOGS.map((config) => config.name);
+	const unknown = values.catalog.filter((name) => !known.includes(name));
+	if (unknown.length > 0) {
+		throw new Error(`unknown catalog ${unknown.join(', ')}, expected one of ${known.join(', ')}`);
 	}
-	console.log(`compiled static ${config.name} locale modules`);
+	return {
+		catalogs:
+			values.catalog.length === 0 ? CATALOGS : CATALOGS.filter((config) => values.catalog.includes(config.name)),
+	};
 }
 
 async function main(): Promise<void> {
-	const args = new Set(process.argv.slice(2));
-	const shouldExtract = args.has('--extract');
-	const shouldCompile = args.has('--compile');
-	if (!shouldExtract && !shouldCompile) {
-		throw new Error('usage: SyncStaticI18nCatalogs.ts --extract [--compile]');
-	}
-	for (const config of CATALOGS) {
-		if (shouldExtract) {
-			await extractCatalog(config);
-		}
-		if (shouldCompile) {
-			await compileCatalog(config);
-		}
+	const options = parseSyncOptions(process.argv.slice(2));
+	for (const config of options.catalogs) {
+		await extractCatalog(config);
 	}
 }
 

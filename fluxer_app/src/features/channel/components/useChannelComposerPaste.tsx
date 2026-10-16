@@ -6,8 +6,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import type {GuildEmoji} from '@app/features/expressions/models/GuildEmoji';
 import GuildGuilds from '@app/features/guild/state/Guilds';
 import {
-	$insertComposerClipboardSlice,
-	type ComposerClipboardSlice,
+	$insertComposerPastedText,
 	FLUXER_COMPOSER_CLIPBOARD_MIME,
 	getComposerClipboardTextPlain,
 	parseComposerClipboardSlice,
@@ -23,7 +22,6 @@ import {canAttachFilesInChannel} from '@app/features/messaging/utils/AttachmentP
 import {getClipboardDataFiles, readClipboardImageFiles} from '@app/features/messaging/utils/ClipboardFilePasteUtils';
 import * as FileUploadUtils from '@app/features/messaging/utils/FileUploadUtils';
 import {detectPastedSegments, type LookupFunctions} from '@app/features/messaging/utils/PasteSegmentUtils';
-import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {isDialogPasteTarget} from '@app/features/messaging/utils/TextInputEditUtils';
 import {canFocusTextarea, safeFocus} from '@app/features/platform/utils/InputFocusManager';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -32,12 +30,13 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import Users from '@app/features/user/state/Users';
-import {COMMAND_PRIORITY_HIGH, PASTE_COMMAND} from 'lexical';
+import {$addUpdateTag, COMMAND_PRIORITY_HIGH, PASTE_COMMAND, PASTE_TAG} from 'lexical';
 import type React from 'react';
 import {useCallback, useEffect} from 'react';
 
 interface UseChannelComposerPasteParams {
 	channel: Channel;
+	attachmentKey: string;
 	handleRef: React.RefObject<ComposerHandle | null>;
 	editableRef: React.RefObject<HTMLDivElement | null>;
 	isFocused: boolean;
@@ -47,29 +46,9 @@ interface UseChannelComposerPasteParams {
 	textareaInputDisabled: boolean;
 }
 
-function createComposerPasteSlice(pastedText: string, segments: ReadonlyArray<MentionSegment>): ComposerClipboardSlice {
-	const displayParts: Array<string> = [];
-	const projectedSegments: Array<MentionSegment> = [];
-	let sourceCursor = 0;
-	let displayLength = 0;
-	for (const segment of segments) {
-		const plainText = pastedText.slice(sourceCursor, segment.start);
-		displayParts.push(plainText, segment.displayText);
-		displayLength += plainText.length;
-		projectedSegments.push({
-			...segment,
-			start: displayLength,
-			end: displayLength + segment.displayText.length,
-		});
-		displayLength += segment.displayText.length;
-		sourceCursor = segment.end;
-	}
-	displayParts.push(pastedText.slice(sourceCursor));
-	return {display: displayParts.join(''), segments: projectedSegments};
-}
-
 export function useChannelComposerPaste({
 	channel,
+	attachmentKey,
 	handleRef,
 	editableRef,
 	isFocused,
@@ -89,16 +68,28 @@ export function useChannelComposerPaste({
 				pastedText,
 				uploadAttachments.length,
 				maxAttachments,
+				attachmentKey,
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
-					ModalCommands.push(modal(() => <TooManyAttachmentsModal />));
+					ModalCommands.push(
+						modal(() => (
+							<TooManyAttachmentsModal data-flx="channel.use-channel-composer-paste.handle-paste-exceeds-limit.too-many-attachments-modal" />
+						)),
+					);
 				} else if (result.error === 'file_size_too_large') {
-					ModalCommands.push(modal(() => <FileSizeTooLargeModal oversizedFileCount={result.oversizedFileCount} />));
+					ModalCommands.push(
+						modal(() => (
+							<FileSizeTooLargeModal
+								oversizedFileCount={result.oversizedFileCount}
+								data-flx="channel.use-channel-composer-paste.handle-paste-exceeds-limit.file-size-too-large-modal"
+							/>
+						)),
+					);
 				}
 			}
 		},
-		[channel, uploadAttachments.length, maxAttachments],
+		[channel, attachmentKey, uploadAttachments.length, maxAttachments],
 	);
 	const handlePasteFiles = useCallback(
 		async (files: Array<File>) => {
@@ -111,16 +102,28 @@ export function useChannelComposerPaste({
 				files,
 				uploadAttachments.length,
 				maxAttachments,
+				attachmentKey,
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
-					ModalCommands.push(modal(() => <TooManyAttachmentsModal />));
+					ModalCommands.push(
+						modal(() => (
+							<TooManyAttachmentsModal data-flx="channel.use-channel-composer-paste.handle-paste-files.too-many-attachments-modal" />
+						)),
+					);
 				} else if (result.error === 'file_size_too_large') {
-					ModalCommands.push(modal(() => <FileSizeTooLargeModal oversizedFileCount={result.oversizedFileCount} />));
+					ModalCommands.push(
+						modal(() => (
+							<FileSizeTooLargeModal
+								oversizedFileCount={result.oversizedFileCount}
+								data-flx="channel.use-channel-composer-paste.handle-paste-files.file-size-too-large-modal"
+							/>
+						)),
+					);
 				}
 			}
 		},
-		[channel, uploadAttachments.length, maxAttachments],
+		[channel, attachmentKey, uploadAttachments.length, maxAttachments],
 	);
 	const insertPastedText = useCallback(
 		(pastedText: string): boolean => {
@@ -151,13 +154,14 @@ export function useChannelComposerPaste({
 					return null;
 				},
 			};
-			const segments = detectPastedSegments(pastedText, 0, lookups);
-			const richSlice = createComposerPasteSlice(pastedText, segments);
-			const plainText = getComposerClipboardTextPlain(richSlice);
-			const slice = plainText === null || plainText === undefined ? {display: pastedText, segments: []} : richSlice;
-			return $insertComposerClipboardSlice(slice, ChatInputSettings.renderComposerAsPlainText);
+			return $insertComposerPastedText(
+				pastedText,
+				detectPastedSegments(pastedText, 0, lookups),
+				ChatInputSettings.renderComposerAsPlainText,
+				handleRef.current,
+			);
 		},
-		[channel.guildId],
+		[channel.guildId, handleRef],
 	);
 	useEffect(() => {
 		const handle = handleRef.current;
@@ -211,6 +215,7 @@ export function useChannelComposerPaste({
 			if (!insertPastedText(pastedText)) {
 				return false;
 			}
+			$addUpdateTag(PASTE_TAG);
 			event.preventDefault();
 			return true;
 		};

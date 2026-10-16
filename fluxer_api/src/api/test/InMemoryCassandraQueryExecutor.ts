@@ -1,33 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getKvMeta} from '../database/CassandraMetaRegistry';
-import type {CassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {CassandraParams, KvQueryMeta, PreparedQuery, WhereExpr} from '../database/CassandraTypes';
+import {getKvMeta} from '@app/api/database/CassandraMetaRegistry';
+import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {CassandraParams, KvQueryCondition, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
+import {isConditionalQuery} from '@app/api/database/CassandraTypes';
+import {matchesWhere, normalizeCql, rowComparator, valuesEqual} from '@app/api/database/PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 
-function normalizeCql(cql: string): string {
-	return cql.replace(/\s+/g, ' ').trim();
-}
-
-function compareValues(a: unknown, b: unknown): number {
-	if (typeof a === 'bigint' || typeof b === 'bigint') {
-		const av = typeof a === 'bigint' ? a : BigInt(a as number | string);
-		const bv = typeof b === 'bigint' ? b : BigInt(b as number | string);
-		if (av === bv) return 0;
-		return av < bv ? -1 : 1;
+function matchesConditions(
+	row: Row | undefined,
+	conditions: ReadonlyArray<KvQueryCondition<Row>> | undefined,
+	params: CassandraParams,
+): row is Row {
+	if (!conditions?.length) {
+		throw new Error('Conditional mutations require at least one condition');
 	}
-	const av = a instanceof Date ? a.getTime() : typeof a === 'bigint' ? Number(a) : a;
-	const bv = b instanceof Date ? b.getTime() : typeof b === 'bigint' ? Number(b) : b;
-	if (av === bv) return 0;
-	return (av as number | string) < (bv as number | string) ? -1 : 1;
-}
-
-function valuesEqual(a: unknown, b: unknown): boolean {
-	if (a == null && b == null) return true;
-	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
-	if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) return a.equals(b);
-	return a === b;
+	return row !== undefined && conditions.every(({col, expectedParam}) => valuesEqual(row[col], params[expectedParam]));
 }
 
 function cloneValue<T>(value: T): T {
@@ -62,61 +51,12 @@ function valueKey(value: unknown): string {
 	return `${typeof value}:${String(value)}`;
 }
 
-function getParam(params: CassandraParams, param: string): unknown {
-	return params[param];
-}
-
-function matchesWhere(row: Row, where: ReadonlyArray<WhereExpr<Row>> | undefined, params: CassandraParams): boolean {
-	for (const clause of where ?? []) {
-		switch (clause.kind) {
-			case 'eq':
-				if (!valuesEqual(row[clause.col], getParam(params, clause.param))) return false;
-				break;
-			case 'in': {
-				const values = getParam(params, clause.param) as ReadonlyArray<unknown> | Set<unknown> | undefined;
-				const haystack = values instanceof Set ? [...values] : (values ?? []);
-				if (!haystack.some((value) => valuesEqual(row[clause.col], value))) return false;
-				break;
-			}
-			case 'lt':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) >= 0) return false;
-				break;
-			case 'lte':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) > 0) return false;
-				break;
-			case 'gt':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) <= 0) return false;
-				break;
-			case 'gte':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
-				break;
-			case 'tokenGt':
-				break;
-			case 'tupleGt': {
-				const left = clause.cols.map((column) => row[column]);
-				const right = clause.params.map((param) => getParam(params, param));
-				let greater = false;
-				for (let i = 0; i < left.length; i += 1) {
-					const cmp = compareValues(left[i], right[i]);
-					if (cmp > 0) {
-						greater = true;
-						break;
-					}
-					if (cmp < 0) break;
-				}
-				if (!greater) return false;
-				break;
-			}
-		}
-	}
-	return true;
-}
-
 function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	if (!columns) return cloneRow(row);
 	const projected: Row = {};
 	for (const column of columns) {
-		projected[column] = cloneValue(row[column]);
+		// Cassandra returns null for selected columns that have never been written.
+		projected[column] = cloneValue(row[column] ?? null);
 	}
 	return projected;
 }
@@ -156,9 +96,16 @@ function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
 
 export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorForTesting {
 	private readonly tables = new Map<string, Map<string, Row>>();
+	readonly executed: Array<KvQueryMeta> = [];
+	readonly batchAtomicity: Array<boolean> = [];
+	countStatements(statement: string): number {
+		return this.executed.filter((meta) => `${meta.action}:${meta.table.name}` === statement).length;
+	}
 
 	reset(): void {
 		this.tables.clear();
+		this.executed.length = 0;
+		this.batchAtomicity.length = 0;
 	}
 
 	private table(meta: KvQueryMeta): Map<string, Row> {
@@ -180,6 +127,8 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	async executeQuery<T = Row>(query: PreparedQuery): Promise<Array<T>> {
 		const meta = this.meta(query);
+		const recordedMeta = query.kvMeta ?? getKvMeta(query.cql);
+		if (recordedMeta) this.executed.push(recordedMeta);
 		switch (meta.action) {
 			case 'select':
 				return this.select(meta, query.params) as Array<T>;
@@ -192,18 +141,36 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 				this.upsert(meta, query.params);
 				return [];
 			case 'patch':
-				this.patch(meta, query.params);
-				return [];
 			case 'delete':
-				this.delete(meta, query.params);
+				if (meta.conditions) {
+					return [{'[applied]': this.mutateConditionally(meta, query.params)}] as Array<T>;
+				}
+				if (meta.action === 'patch') {
+					this.patch(meta, query.params);
+				} else {
+					this.delete(meta, query.params);
+				}
 				return [];
 			case 'batch':
+				if (meta.batchEntries) {
+					return [{'[applied]': this.mutateBatchConditionally(meta, query.params)}] as Array<T>;
+				}
 				return [];
 		}
 		return [];
 	}
 
-	async executeBatch(queries: Array<{query: string; params: object; meta?: KvQueryMeta}>): Promise<void> {
+	async executeBatch(
+		queries: Array<{query: string; params: object; meta?: KvQueryMeta}>,
+		atomic?: boolean,
+	): Promise<void> {
+		this.batchAtomicity.push(atomic ?? true);
+
+		for (const query of queries) {
+			if (isConditionalQuery({cql: query.query, params: query.params as CassandraParams, kvMeta: query.meta})) {
+				throw new Error('Conditional writes must use executeConditional to preserve their result');
+			}
+		}
 		for (const query of queries) {
 			await this.executeQuery({
 				cql: query.query,
@@ -245,6 +212,55 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 		return true;
 	}
 
+	private mutateConditionally(meta: KvQueryMeta, params: CassandraParams): boolean {
+		const table = this.table(meta);
+		const key = this.keyFromParams(meta, params);
+		const row = table.get(key);
+		if (!matchesConditions(row, meta.conditions, params)) {
+			return false;
+		}
+		if (meta.action === 'patch') {
+			this.patch(meta, params);
+		} else {
+			table.delete(key);
+		}
+		return true;
+	}
+
+	private mutateBatchConditionally(meta: KvQueryMeta, params: CassandraParams): boolean {
+		const entries = meta.batchEntries;
+		if (!entries?.length) {
+			throw new Error('Conditional batches require at least one entry');
+		}
+		const table = this.table(meta);
+		const updates = new Map<string, Row | null>();
+		for (const entry of entries) {
+			const pk = Object.fromEntries(entry.pk.map(({col, param}) => [col, params[param]]));
+			const key = pkKey(meta, pk);
+			if (updates.has(key)) throw new Error('Conditional batches cannot repeat a row');
+			const row = table.get(key);
+			if (entry.action === 'insert') {
+				if (row) return false;
+			} else {
+				if (!matchesConditions(row, entry.conditions, params)) return false;
+				if (entry.action === 'delete') {
+					updates.set(key, null);
+					continue;
+				}
+			}
+			const updated = {...row};
+			for (const {col, param} of entry.action === 'insert' ? entry.values : entry.patch) {
+				updated[col] = cloneValue(params[param]);
+			}
+			updates.set(key, updated);
+		}
+		for (const [key, row] of updates) {
+			if (row === null) table.delete(key);
+			else table.set(key, row);
+		}
+		return true;
+	}
+
 	private patch(meta: KvQueryMeta, params: CassandraParams): void {
 		const table = this.table(meta);
 		const key = this.keyFromParams(meta, params);
@@ -266,11 +282,9 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 	}
 
 	private select(meta: KvQueryMeta, params: CassandraParams): Array<Row> {
-		let rows = [...this.table(meta).values()].filter((row) => matchesWhere(row, meta.where, params));
-		if (meta.orderBy) {
-			const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-			rows = rows.sort((a, b) => compareValues(a[meta.orderBy!.col], b[meta.orderBy!.col]) * direction);
-		}
+		let rows = [...this.table(meta).values()]
+			.filter((row) => matchesWhere(row, meta.where, params))
+			.sort(rowComparator(meta));
 		if (typeof meta.limit === 'number') {
 			rows = rows.slice(0, meta.limit);
 		}

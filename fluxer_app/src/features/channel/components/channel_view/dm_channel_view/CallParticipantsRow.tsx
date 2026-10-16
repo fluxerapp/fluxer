@@ -15,7 +15,7 @@ import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {AvatarWithPresence} from '@app/features/ui/avatars/AvatarWithPresence';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import {appZoomLayoutPx, getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {appZoomLayoutPx, getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -72,7 +72,7 @@ export const CallParticipantsRow = observer(
 				event.preventDefault();
 				event.stopPropagation();
 				const participantEntry = participantEntryByUserId.get(user.id);
-				const participantName = NicknameUtils.getNickname(user, channel.guildId ?? undefined, channel.id) || user.id;
+				const participantName = NicknameUtils.getNickname(user, channel.guildId ?? null, channel.id) || user.id;
 				ContextMenuCommands.openFromEvent(event, ({onClose}) =>
 					participantEntry ? (
 						<VoiceParticipantContextMenu
@@ -81,6 +81,8 @@ export const CallParticipantsRow = observer(
 							onClose={onClose}
 							guildId={channel.guildId ?? undefined}
 							connectionId={participantEntry.connectionId}
+							surface="call-avatar"
+							source={{kind: 'participant'}}
 							data-flx="channel.channel-view.dm-channel-view.handle-context-menu.voice-participant-context-menu"
 						/>
 					) : (
@@ -129,6 +131,7 @@ export const CallParticipantsRow = observer(
 			return () => resizeObserver.disconnect();
 		}, [participants.length]);
 		const avatarSize = layoutMetrics.avatarSize;
+		const scaledAvatarSize = avatarSize / getAppRemScale();
 		const callRippleStyle = useMemo(
 			() =>
 				({
@@ -154,7 +157,7 @@ export const CallParticipantsRow = observer(
 				>
 					{participants.map(({user, isRinging}) => {
 						const participantEntry = participantEntryByUserId.get(user.id);
-						const displayName = NicknameUtils.getNickname(user, channel.guildId ?? undefined, channel.id);
+						const displayName = NicknameUtils.getNickname(user, channel.guildId ?? null, channel.id);
 						return (
 							<motion.button
 								type="button"
@@ -175,7 +178,7 @@ export const CallParticipantsRow = observer(
 								>
 									<AvatarWithPresence
 										user={user}
-										size={avatarSize / getAppZoomFactor()}
+										size={scaledAvatarSize}
 										speaking={participantEntry?.speaking}
 										muted={participantEntry?.selfMute}
 										deafened={participantEntry?.selfDeaf}

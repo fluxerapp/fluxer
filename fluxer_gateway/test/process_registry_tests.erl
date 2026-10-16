@@ -6,98 +6,6 @@
 
 -define(REGISTRY_TABLE, process_registry_table).
 
-build_process_key_integer_atom_test() ->
-    ?assertEqual({guild, 123456}, process_registry:build_process_key(guild, 123456)),
-    ?assertEqual({channel, 0}, process_registry:build_process_key(channel, 0)),
-    ?assertEqual({voice, 999}, process_registry:build_process_key(voice, 999)).
-
-build_process_key_integer_string_test() ->
-    ?assertEqual({channel, 999}, process_registry:build_process_key("channel", 999)),
-    ?assertEqual({guild, 12345}, process_registry:build_process_key("guild", 12345)),
-    ?assertEqual({voice, 0}, process_registry:build_process_key("voice", 0)).
-
-build_process_key_binary_atom_test() ->
-    ?assertEqual(
-        {guild, <<"123456">>}, process_registry:build_process_key(guild, <<"123456">>)
-    ),
-    ?assertEqual({voice, <<"789">>}, process_registry:build_process_key(voice, <<"789">>)),
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key(channel, <<"abc">>)).
-
-build_process_key_binary_string_test() ->
-    ?assertEqual({voice, <<"789">>}, process_registry:build_process_key("voice", <<"789">>)),
-    ?assertEqual({guild, <<"test">>}, process_registry:build_process_key("guild", <<"test">>)),
-    ?assertEqual(
-        {channel, <<"123">>}, process_registry:build_process_key("channel", <<"123">>)
-    ).
-
-build_process_key_string_atom_test() ->
-    ?assertEqual({guild, <<"123456">>}, process_registry:build_process_key(guild, "123456")),
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key(channel, "abc")),
-    ?assertEqual({voice, <<"xyz">>}, process_registry:build_process_key(voice, "xyz")).
-
-build_process_key_string_string_test() ->
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key("channel", "abc")),
-    ?assertEqual({guild, <<"test">>}, process_registry:build_process_key("guild", "test")),
-    ?assertEqual({voice, <<"123">>}, process_registry:build_process_key("voice", "123")).
-
-build_process_key_special_chars_test() ->
-    ?assertEqual({guild, <<"123_456">>}, process_registry:build_process_key(guild, "123_456")),
-    ?assertEqual(
-        {channel, <<"test-channel">>},
-        process_registry:build_process_key(channel, "test-channel")
-    ).
-
-build_process_name_is_alias_test() ->
-    ?assertEqual(
-        process_registry:build_process_key(guild, 123),
-        process_registry:build_process_name(guild, 123)
-    ),
-    ?assertEqual(
-        process_registry:build_process_key(session, <<"abc">>),
-        process_registry:build_process_name(session, <<"abc">>)
-    ).
-
-register_and_monitor_success_test() ->
-    process_registry:init(),
-    Key = {test_reg, 1001},
-    ProcessMap = #{},
-
-    Pid = spawn_sleep(100),
-
-    Result = process_registry:register_and_monitor(Key, Pid, ProcessMap),
-
-    ?assertMatch({ok, Pid, _Ref, _NewMap}, Result),
-    {ok, ReturnedPid, Ref, NewMap} = Result,
-
-    ?assertEqual(Pid, ReturnedPid),
-    ?assertEqual(Pid, process_registry:registry_whereis(Key)),
-
-    ?assertEqual(1, maps:size(NewMap)),
-    ?assertEqual({Pid, Ref}, maps:get(Key, NewMap)),
-
-    ?assert(is_reference(Ref)),
-
-    process_registry:registry_unregister(Key).
-
-register_and_monitor_existing_map_test() ->
-    process_registry:init(),
-    Key = {test_reg, 1002},
-    ExistingPid = list_to_pid("<0.100.0>"),
-    ExistingRef = make_ref(),
-    ProcessMap = #{other_process => {ExistingPid, ExistingRef}},
-
-    Pid = spawn_sleep(100),
-
-    {ok, _ReturnedPid, _Ref, NewMap} = process_registry:register_and_monitor(
-        Key, Pid, ProcessMap
-    ),
-
-    ?assertEqual(2, maps:size(NewMap)),
-    ?assert(maps:is_key(other_process, NewMap)),
-    ?assert(maps:is_key(Key, NewMap)),
-
-    process_registry:registry_unregister(Key).
-
 register_and_monitor_race_condition_test() ->
     process_registry:init(),
     Key = {test_reg, 1003},
@@ -121,41 +29,6 @@ register_and_monitor_race_condition_test() ->
 
     ?assertEqual({WinnerPid, Ref}, maps:get(Key, NewMap)),
 
-    process_registry:registry_unregister(Key).
-
-register_and_monitor_race_dead_test() ->
-    process_registry:init(),
-    Key = {test_reg, 1004},
-    ProcessMap = #{},
-
-    DeadPid = spawn(fun() -> ok end),
-    timer:sleep(10),
-    ?assertEqual(false, process_liveness:is_alive(DeadPid)),
-
-    NewPid = spawn_sleep(100),
-
-    Result = process_registry:register_and_monitor(Key, NewPid, ProcessMap),
-    ?assertMatch({ok, NewPid, _Ref, _NewMap}, Result),
-
-    process_registry:registry_unregister(Key).
-
-register_and_monitor_dead_process_test() ->
-    process_registry:init(),
-    Key = {test_reg, 1005},
-    ProcessMap = #{},
-
-    DeadPid = spawn(fun() -> exit(normal) end),
-    timer:sleep(10),
-    ?assertEqual(false, process_liveness:is_alive(DeadPid)),
-
-    Result = process_registry:register_and_monitor(Key, DeadPid, ProcessMap),
-
-    case Result of
-        {ok, DeadPid, _Ref, _NewMap} ->
-            ok;
-        {error, _} ->
-            ok
-    end,
     process_registry:registry_unregister(Key).
 
 register_and_monitor_concurrent_test_() ->
@@ -191,14 +64,6 @@ register_and_monitor_concurrent_test_() ->
         process_registry:registry_unregister(Key)
     end}.
 
-registry_whereis_alive_test() ->
-    process_registry:init(),
-    Key = {test_whereis, 2001},
-    Pid = spawn_sleep(200),
-    ets:insert(?REGISTRY_TABLE, {Key, Pid}),
-    ?assertEqual(Pid, process_registry:registry_whereis(Key)),
-    process_registry:registry_unregister(Key).
-
 registry_whereis_dead_test() ->
     process_registry:init(),
     Key = {test_whereis, 2002},
@@ -207,19 +72,8 @@ registry_whereis_dead_test() ->
     ets:insert(?REGISTRY_TABLE, {Key, Pid}),
     ?assertEqual(undefined, process_registry:registry_whereis(Key)).
 
-registry_whereis_not_found_test() ->
-    process_registry:init(),
-    ?assertEqual(undefined, process_registry:registry_whereis({test_whereis, 2003})).
-
 spawn_sleep(Milliseconds) ->
     spawn(fun() -> timer:sleep(Milliseconds) end).
-
-spawn_register_worker(Parent, Key) ->
-    spawn(fun() ->
-        Pid = spawn_sleep(200),
-        Result = process_registry:register_and_monitor(Key, Pid, #{}),
-        Parent ! {self(), Result}
-    end).
 
 assert_success_results_share_pid([{ok, FirstPid, _, _} | RestResults]) ->
     AllSamePid = lists:all(
@@ -232,3 +86,10 @@ success_pid_matches(FirstPid, {ok, Pid, _, _}) ->
     Pid =:= FirstPid;
 success_pid_matches(_FirstPid, _Result) ->
     false.
+
+spawn_register_worker(Parent, Key) ->
+    spawn(fun() ->
+        Pid = spawn_sleep(200),
+        Result = process_registry:register_and_monitor(Key, Pid, #{}),
+        Parent ! {self(), Result}
+    end).

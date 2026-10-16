@@ -25,8 +25,8 @@ export interface StatusAwareAvatarProps {
 	hoverAvatarUrl?: string | null;
 	guildId?: string | null;
 	mediaSize?: MediaProxyImageSize;
-	deferImageLoad?: boolean;
 	status?: string | null;
+	isMobile?: boolean;
 	animateStatusCutout?: boolean;
 }
 
@@ -54,8 +54,8 @@ export const StatusAwareAvatar: React.FC<StatusAwareAvatarProps> = observer(
 		hoverAvatarUrl,
 		guildId,
 		mediaSize,
-		deferImageLoad,
 		status: externalStatus,
+		isMobile: externalIsMobile,
 		animateStatusCutout,
 	}) => {
 		if (!user) {
@@ -68,7 +68,7 @@ export const StatusAwareAvatar: React.FC<StatusAwareAvatarProps> = observer(
 		} else if (externalStatus == null) {
 			status = getStatusWithTransientFallback(user.id);
 		}
-		const isMobile = shouldDisablePresence ? false : Presence.isMobile(user.id);
+		const isMobile = shouldDisablePresence ? false : (externalIsMobile ?? Presence.isMobile(user.id));
 		return (
 			<Avatar
 				user={user}
@@ -86,7 +86,6 @@ export const StatusAwareAvatar: React.FC<StatusAwareAvatarProps> = observer(
 				hoverAvatarUrl={hoverAvatarUrl}
 				guildId={guildId}
 				mediaSize={mediaSize}
-				deferImageLoad={deferImageLoad}
 				animateStatusCutout={animateStatusCutout}
 				data-flx="ui.status-aware-avatar.avatar"
 			/>

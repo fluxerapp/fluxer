@@ -16,19 +16,14 @@ pub struct ActivityPubReplyContext {
     pub url: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivityPubPost {
-    pub id: Option<String>,
-    #[serde(rename = "type")]
-    pub object_type: Option<String>,
     pub url: Option<String>,
     pub published: Option<String>,
     pub attributed_to: Option<serde_json::Value>,
     pub content: Option<String>,
     pub summary: Option<String>,
-    pub sensitive: Option<bool>,
     pub attachment: Option<Vec<ActivityPubAttachment>>,
     pub in_reply_to: Option<String>,
     pub likes: Option<ActivityPubCollectionCount>,
@@ -40,18 +35,14 @@ pub struct ActivityPubPost {
     pub misskey_quote: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivityPubAttachment {
-    #[serde(rename = "type")]
-    pub attachment_type: Option<String>,
     pub media_type: Option<String>,
     pub url: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub name: Option<String>,
-    pub blurhash: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -82,10 +73,8 @@ pub struct ActivityPubIcon {
     pub url: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonPost {
-    pub id: Option<String>,
     pub created_at: Option<String>,
     pub in_reply_to_id: Option<String>,
     pub in_reply_to_account_id: Option<String>,
@@ -101,7 +90,6 @@ pub struct MastodonPost {
     pub poll: Option<MastodonPoll>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonAccount {
     pub username: Option<String>,
@@ -111,7 +99,6 @@ pub struct MastodonAccount {
     pub acct: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonMediaAttachment {
     #[serde(rename = "type")]
@@ -119,7 +106,6 @@ pub struct MastodonMediaAttachment {
     pub url: Option<String>,
     pub preview_url: Option<String>,
     pub description: Option<String>,
-    pub blurhash: Option<String>,
     pub meta: Option<MastodonMediaMeta>,
 }
 

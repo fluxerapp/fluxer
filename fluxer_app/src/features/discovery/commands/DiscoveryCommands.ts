@@ -10,6 +10,7 @@ export interface DiscoveryGuild {
 	id: string;
 	name: string;
 	icon: string | null;
+	banner: string | null;
 	description: string | null;
 	category_type: number;
 	primary_language: string | null;
@@ -20,14 +21,34 @@ export interface DiscoveryGuild {
 	verification_level: number;
 }
 
-interface DiscoverySearchResponse {
+type DiscoveryGuildPayload = Omit<DiscoveryGuild, 'banner'> & {banner?: string | null};
+
+export interface DiscoveryChannelPreview {
+	guild: {id: string; name: string; icon: string | null};
+	channel: {id: string; name: string | null; type: number};
+}
+
+interface DiscoveryCategoryCountPayload {
+	category_type: number;
+	count: number;
+}
+
+interface DiscoverySearchPayload {
+	guilds: Array<DiscoveryGuildPayload>;
+	total: number;
+	category_counts?: Array<DiscoveryCategoryCountPayload>;
+}
+
+export interface DiscoverySearchResponse {
 	guilds: Array<DiscoveryGuild>;
 	total: number;
+	categoryCounts: ReadonlyMap<number, number> | null;
 }
 
 interface DiscoveryCategory {
 	id: number;
 	name: string;
+	listed_in_all?: boolean;
 }
 
 interface DiscoverySearchParams {
@@ -63,11 +84,27 @@ function discoverySearchQuery(params: DiscoverySearchParams): Record<string, str
 	return query;
 }
 
+function readGuild(payload: DiscoveryGuildPayload): DiscoveryGuild {
+	return {...payload, banner: payload.banner ?? null};
+}
+
+function readCategoryCounts(payload: DiscoverySearchPayload): ReadonlyMap<number, number> | null {
+	const counts = payload.category_counts;
+	if (counts == null) {
+		return null;
+	}
+	return new Map(counts.map((entry) => [entry.category_type, entry.count]));
+}
+
 async function requestDiscoverySearch(params: DiscoverySearchParams): Promise<DiscoverySearchResponse> {
-	const response = await http.get<DiscoverySearchResponse>(Endpoints.DISCOVERY_GUILDS, {
+	const response = await http.get<DiscoverySearchPayload>(Endpoints.DISCOVERY_GUILDS, {
 		query: discoverySearchQuery(params),
 	});
-	return response.body;
+	return {
+		guilds: response.body.guilds.map(readGuild),
+		total: response.body.total,
+		categoryCounts: readCategoryCounts(response.body),
+	};
 }
 
 async function requestDiscoveryCategories(): Promise<Array<DiscoveryCategory>> {
@@ -81,6 +118,11 @@ export async function searchGuilds(params: DiscoverySearchParams): Promise<Disco
 
 export async function getCategories(): Promise<Array<DiscoveryCategory>> {
 	return requestDiscoveryCategories();
+}
+
+export async function getChannelPreview(guildId: string, channelId: string): Promise<DiscoveryChannelPreview> {
+	const response = await http.get<DiscoveryChannelPreview>(Endpoints.DISCOVERY_CHANNEL_PREVIEW(guildId, channelId));
+	return response.body;
 }
 
 export async function joinGuild(guildId: string): Promise<void> {

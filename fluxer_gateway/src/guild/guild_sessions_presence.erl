@@ -6,6 +6,7 @@
 -export([
     subscribe_connected_user_presence/2,
     subscribe_to_user_presence/2,
+    subscribe_without_cached_presence/2,
     unsubscribe_from_user_presence/2,
     unsubscribe_many_from_user_presence/3,
     handle_user_offline/2
@@ -21,17 +22,23 @@ subscribe_connected_user_presence(UserId, State) ->
 
 -spec subscribe_to_user_presence(user_id(), guild_state()) -> guild_state().
 subscribe_to_user_presence(UserId, State) ->
+    case subscribe_without_cached_presence(UserId, State) of
+        {fresh, StateWithSubs} -> maybe_send_cached_presence(UserId, StateWithSubs);
+        {existing, StateWithSubs} -> StateWithSubs
+    end.
+
+-spec subscribe_without_cached_presence(user_id(), guild_state()) ->
+    {fresh | existing, guild_state()}.
+subscribe_without_cached_presence(UserId, State) ->
     PresenceSubs = maps:get(presence_subscriptions, State, #{}),
-    CurrentCount = maps:get(UserId, PresenceSubs, 0),
-    case CurrentCount of
+    case maps:get(UserId, PresenceSubs, 0) of
         0 ->
             presence_bus:subscribe(UserId),
-            NewSubs = PresenceSubs#{UserId => 1},
-            StateWithSubs = State#{presence_subscriptions => NewSubs},
-            maybe_send_cached_presence(UserId, StateWithSubs);
-        _ ->
-            NewSubs = PresenceSubs#{UserId => CurrentCount + 1},
-            State#{presence_subscriptions => NewSubs}
+            {fresh, State#{presence_subscriptions => PresenceSubs#{UserId => 1}}};
+        CurrentCount ->
+            {existing, State#{
+                presence_subscriptions => PresenceSubs#{UserId => CurrentCount + 1}
+            }}
     end.
 
 -spec unsubscribe_from_user_presence(user_id(), guild_state()) -> guild_state().
@@ -98,6 +105,7 @@ handle_user_offline(UserId, State) ->
 remove_member_presence(UserId, State) ->
     Tab = maps:get(member_presence, State),
     ets:delete(Tab, UserId),
+    ok = guild_member_list_read:note_presence_write(UserId),
     State.
 
 -spec maybe_send_cached_presence(user_id(), guild_state()) -> guild_state().

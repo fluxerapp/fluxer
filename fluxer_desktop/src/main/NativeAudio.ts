@@ -7,27 +7,27 @@ import type {
 	NativeAudioApplication,
 	NativeAudioAvailability,
 	NativeAudioEndReason,
-	NativeAudioRoutingGraphResult,
+	NativeAudioPlaybackDevice,
 	NativeAudioStartOptions,
 	NativeAudioStartResult,
 	VirtmicLinkOptions,
 	VirtmicNode,
-	VirtmicRoutingGraph,
 } from '@electron/common/Types';
+import {buildFluxerAudioExcludePatterns, isKnownFluxerAudioProcessPid} from '@electron/main/FluxerAudioIdentity';
 import {getNativeAudioMode} from '@electron/main/LaunchOptions';
-import {ipcMain} from 'electron';
-import {buildFluxerAudioExcludePatterns, isKnownFluxerAudioProcessPid} from './FluxerAudioIdentity';
-import {resolveVirtmicWindowPid} from './LinuxAudioCapture';
-import {parseWindowSourceToken as parseDesktopWindowSourceToken} from './LinuxAudioCaptureHelpers';
-import {getTccStatus} from './MacTcc';
+import {resolveVirtmicWindowPid} from '@electron/main/LinuxAudioCapture';
+import {parseWindowSourceToken as parseDesktopWindowSourceToken} from '@electron/main/LinuxAudioCaptureHelpers';
+import {refreshTccStatus} from '@electron/main/MacTcc';
 import {
 	audioFrameDebugDetails,
 	isValidAudioFrame,
 	isValidLinuxRule,
 	isValidTargetPid,
+	isValidWinEndpoints,
 	normalizeTimestampUs,
-} from './NativeAudioValidation';
-import {createScreenAudioSinkHandleForSender, hasActiveNativeEngineForSender} from './NativeVoiceEngine';
+	resolveWindowsCaptureScope,
+} from '@electron/main/NativeAudioValidation';
+import {ipcMain} from 'electron';
 
 const logger = createChildLogger('NativeAudio');
 const requireModule = createRequire(import.meta.url);
@@ -41,9 +41,8 @@ interface NativeCaptureInstance {
 	removeListener(event: 'closed', listener: () => void): this;
 	start(): Promise<void> | void;
 	stop(): Promise<void> | void;
-	setScreenAudioSink?: (handle: unknown) => boolean;
-	clearScreenAudioSink?: () => void;
-	routingGraph?: () => VirtmicRoutingGraph | null;
+	setRoutingRule?: (target: {linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>}) => boolean;
+	setEndpoints?: (endpoints: Array<string>) => boolean;
 }
 
 interface WindowsNativeAudioModule {
@@ -64,12 +63,14 @@ interface WindowsNativeAudioModule {
 	};
 	pidFromHwnd: (hwnd: bigint) => number;
 	resolveAudioRootPid: (pid: number) => number;
+	listPlaybackDevices?: () => Promise<Array<NativeAudioPlaybackDevice>>;
 	ProcessLoopback: new (
 		pid: number,
 		options?: {
 			includeProcessTree?: boolean;
 			captureScope?: 'process' | 'system' | 'session-mixer';
 			winCaptureScope?: 'process' | 'system' | 'session-mixer';
+			endpoints?: Array<string>;
 		},
 	) => NativeCaptureInstance;
 	loadError?: Error | null;
@@ -275,6 +276,7 @@ function loadNativeAudioAddon(): NativeAddonLoadResult {
 							processInclude: false,
 							processExclude: false,
 							sessionMixer: false,
+							endpointSelect: false,
 							systemLoopbackMode: 'unavailable',
 						},
 					},
@@ -295,6 +297,7 @@ function loadNativeAudioAddon(): NativeAddonLoadResult {
 						processInclude,
 						processExclude,
 						sessionMixer,
+						endpointSelect: sessionMixer,
 						systemLoopbackMode:
 							systemLoopbackMode === 'process-exclude' || systemLoopbackMode === 'session-mixer'
 								? systemLoopbackMode
@@ -428,9 +431,9 @@ function loadNativeAudioAddon(): NativeAddonLoadResult {
 	return cachedLoadResult;
 }
 
-function getMacScreenPermissionStatus(): string | null {
+async function getMacScreenPermissionStatus(): Promise<string | null> {
 	try {
-		return getTccStatus('screen-recording');
+		return await refreshTccStatus('screen-recording');
 	} catch (error) {
 		logger.debug('Failed to read macOS screen capture status', error);
 		return null;
@@ -465,7 +468,7 @@ async function getNativeAudioAvailability(): Promise<NativeAudioAvailability> {
 				capabilities,
 			};
 		}
-		const screenPermissionStatus = getMacScreenPermissionStatus();
+		const screenPermissionStatus = await getMacScreenPermissionStatus();
 		if (screenPermissionStatus === 'denied' || screenPermissionStatus === 'restricted') {
 			return {
 				available: false,
@@ -511,6 +514,21 @@ async function listNativeAudioApplications(): Promise<Array<NativeAudioApplicati
 			}));
 	} catch (error) {
 		logger.warn('Failed to list native audio applications', error);
+		return [];
+	}
+}
+
+async function listWindowsPlaybackDevices(): Promise<Array<NativeAudioPlaybackDevice>> {
+	const loadResult = loadNativeAudioAddon();
+	if (loadResult.platform !== 'win32' || !loadResult.availability.available || !loadResult.addon) {
+		return [];
+	}
+	const addon = loadResult.addon as WindowsNativeAudioModule;
+	if (typeof addon.listPlaybackDevices !== 'function') return [];
+	try {
+		return await addon.listPlaybackDevices();
+	} catch (error) {
+		logger.warn('Failed to list Windows playback devices', error);
 		return [];
 	}
 }
@@ -634,6 +652,36 @@ async function stopCaptureById(
 	await stopActiveSession(session, reason, detail);
 }
 
+function reconfigureCaptureById(
+	senderId: number,
+	captureId: string,
+	linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>,
+): boolean {
+	const session = activeSessions.get(captureId);
+	if (!session || session.sender.id !== senderId) return false;
+	if (session.finalized || session.stopping) return false;
+	if (typeof session.capture.setRoutingRule !== 'function') return false;
+	try {
+		return session.capture.setRoutingRule({linuxRule});
+	} catch (error) {
+		logger.warn('Failed to reconfigure native audio routing in place', {captureId, error});
+		return false;
+	}
+}
+
+function reconfigureWindowsEndpointsById(senderId: number, captureId: string, endpoints: Array<string>): boolean {
+	const session = activeSessions.get(captureId);
+	if (!session || session.sender.id !== senderId) return false;
+	if (session.finalized || session.stopping) return false;
+	if (typeof session.capture.setEndpoints !== 'function') return false;
+	try {
+		return session.capture.setEndpoints(endpoints);
+	} catch (error) {
+		logger.warn('Failed to change Windows playback devices in place', {captureId, error});
+		return false;
+	}
+}
+
 async function makeRoomForSenderSession(senderId: number): Promise<void> {
 	const senderSessions = activeSessionIdsBySenderId.get(senderId);
 	if (!senderSessions) return;
@@ -667,6 +715,10 @@ async function startNativeAudioCapture(
 				: 'process';
 	const winSystemCapture =
 		loadResult.platform === 'win32' && (winCaptureScope === 'system' || winCaptureScope === 'session-mixer');
+	const winEndpoints = loadResult.platform === 'win32' ? options?.winEndpoints : undefined;
+	if (winEndpoints !== undefined && !isValidWinEndpoints(winEndpoints)) {
+		throw new Error('Invalid Windows playback device selection');
+	}
 	const targetPid = options?.targetPid;
 	if (!options || (!linuxRule && !macSystemCapture && !winSystemCapture && !isValidTargetPid(targetPid))) {
 		throw new Error('Invalid native audio target PID');
@@ -703,13 +755,7 @@ async function startNativeAudioCapture(
 	if (requestedScope === 'system' && availability.capabilities?.systemExcludesSelf !== true) {
 		throw new Error(`Native ${loadResult.platform} system audio capture does not guarantee Fluxer self-exclusion`);
 	}
-	const effectiveWinCaptureScope =
-		loadResult.platform === 'win32' &&
-		winCaptureScope === 'system' &&
-		availability.capabilities?.processExclude === false &&
-		availability.capabilities?.sessionMixer === true
-			? 'session-mixer'
-			: winCaptureScope;
+	const windowsCapture = resolveWindowsCaptureScope(winCaptureScope, winEndpoints, availability.capabilities);
 	if (sender.isDestroyed()) {
 		throw new Error('Cannot start native audio capture for destroyed renderer');
 	}
@@ -727,7 +773,8 @@ async function startNativeAudioCapture(
 		if (!isValidTargetPid(targetPidForCapture)) throw new Error('Invalid native audio target PID');
 		capture = new (loadResult.addon as WindowsNativeAudioModule).ProcessLoopback(targetPidForCapture, {
 			includeProcessTree: winSystemCapture ? false : (options.includeProcessTree ?? true),
-			captureScope: effectiveWinCaptureScope,
+			captureScope: windowsCapture.captureScope,
+			...(windowsCapture.endpoints ? {endpoints: windowsCapture.endpoints} : {}),
 		});
 	} else if (loadResult.platform === 'darwin') {
 		if (!isValidTargetPid(targetPidForCapture)) throw new Error('Invalid native audio target PID');
@@ -749,8 +796,6 @@ async function startNativeAudioCapture(
 		throw new Error('Native audio addon unavailable for this platform');
 	}
 	let firstFrameLogged = false;
-	let nativeSinkAttached = false;
-	let slowPathReported = false;
 	const session: ActiveNativeAudioSession = {
 		captureId,
 		capture,
@@ -772,19 +817,6 @@ async function startNativeAudioCapture(
 				stopActiveSession(session, 'stopped').catch((error) =>
 					logger.warn('stopActiveSession failed after sender destroyed', {captureId, error}),
 				);
-				return;
-			}
-			if (nativeSinkAttached) {
-				if (!slowPathReported) {
-					slowPathReported = true;
-					logger.error(
-						'Native screen-audio fast path stopped engaging: a captured frame reached the JS bridge even though the native engine sink is attached. Failing the capture so this critical regression surfaces immediately instead of silently downgrading to the crackle-prone path.',
-						{captureId, senderId: sender.id, sampleRate: frame.sampleRate, channels: frame.channels},
-					);
-					stopActiveSession(session, 'addon-error', 'native screen-audio fast path stopped engaging').catch((error) =>
-						logger.warn('stopActiveSession failed after native fast-path regression', {captureId, error}),
-					);
-				}
 				return;
 			}
 			try {
@@ -830,25 +862,6 @@ async function startNativeAudioCapture(
 	activeSessions.set(captureId, session);
 	rememberSenderSession(sender.id, captureId);
 	try {
-		if (hasActiveNativeEngineForSender(sender.id)) {
-			if (typeof capture.setScreenAudioSink !== 'function') {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: capture binding lacks setScreenAudioSink (stale native build)`,
-				);
-			}
-			const screenAudioSink = createScreenAudioSinkHandleForSender(sender.id);
-			if (!screenAudioSink) {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: native voice engine produced no sink handle for the active session`,
-				);
-			}
-			if (capture.setScreenAudioSink(screenAudioSink) !== true) {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: native capture binding does not implement setScreenAudioSink (stale native build)`,
-				);
-			}
-			nativeSinkAttached = true;
-		}
 		await Promise.resolve(capture.start());
 	} catch (error) {
 		logger.error('Native audio capture failed to start', {captureId, error});
@@ -879,32 +892,6 @@ async function startNativeAudioCapture(
 	};
 }
 
-function getNativeAudioRoutingGraph(sender: Electron.WebContents, captureId?: string): NativeAudioRoutingGraphResult {
-	const loadResult = loadNativeAudioAddon();
-	const availability = loadResult.availability;
-	if (loadResult.platform !== 'linux' || !availability.available) {
-		return {ok: false, graphs: [], availability};
-	}
-	const ownedIds = activeSessionIdsBySenderId.get(sender.id);
-	const candidateIds =
-		typeof captureId === 'string' && captureId
-			? ownedIds?.has(captureId)
-				? [captureId]
-				: []
-			: Array.from(ownedIds ?? []);
-	const graphs = candidateIds
-		.map((id) => {
-			const session = activeSessions.get(id);
-			if (!session || session.sender.id !== sender.id) return null;
-			return {
-				captureId: id,
-				graph: session.capture.routingGraph?.() ?? null,
-			};
-		})
-		.filter((entry): entry is {captureId: string; graph: VirtmicRoutingGraph | null} => entry !== null);
-	return {ok: true, graphs, availability};
-}
-
 export function registerNativeAudioHandlers(): void {
 	if (handlersRegistered) return;
 	handlersRegistered = true;
@@ -922,6 +909,25 @@ export function registerNativeAudioHandlers(): void {
 		(event, options: NativeAudioStartOptions): Promise<NativeAudioStartResult> =>
 			startNativeAudioCapture(event.sender, options),
 	);
+	ipcMain.handle(
+		'native-audio:set-rule',
+		(event, captureId: unknown, linuxRule: NativeAudioStartOptions['linuxRule']): boolean => {
+			if (typeof captureId !== 'string' || !isValidLinuxRule(linuxRule)) {
+				return false;
+			}
+			return reconfigureCaptureById(event.sender.id, captureId, linuxRule);
+		},
+	);
+	ipcMain.handle('native-audio:set-win-endpoints', (event, captureId: unknown, endpoints: unknown): boolean => {
+		if (typeof captureId !== 'string' || !isValidWinEndpoints(endpoints)) {
+			return false;
+		}
+		return reconfigureWindowsEndpointsById(event.sender.id, captureId, endpoints);
+	});
+	ipcMain.handle(
+		'native-audio:list-playback-devices',
+		(): Promise<Array<NativeAudioPlaybackDevice>> => listWindowsPlaybackDevices(),
+	);
 	ipcMain.handle('native-audio:stop', async (event, captureId: string): Promise<void> => {
 		const session = activeSessions.get(captureId);
 		if (!session || session.sender.id !== event.sender.id) {
@@ -929,10 +935,6 @@ export function registerNativeAudioHandlers(): void {
 		}
 		await stopActiveSession(session, 'stopped');
 	});
-	ipcMain.handle(
-		'native-audio:get-routing-graph',
-		(event, captureId?: string): NativeAudioRoutingGraphResult => getNativeAudioRoutingGraph(event.sender, captureId),
-	);
 }
 
 export function cleanupNativeAudio(): void {
@@ -941,8 +943,10 @@ export function cleanupNativeAudio(): void {
 	ipcMain.removeHandler('native-audio:list-applications');
 	ipcMain.removeHandler('native-audio:resolve-root-pid');
 	ipcMain.removeHandler('native-audio:start');
+	ipcMain.removeHandler('native-audio:set-rule');
+	ipcMain.removeHandler('native-audio:set-win-endpoints');
+	ipcMain.removeHandler('native-audio:list-playback-devices');
 	ipcMain.removeHandler('native-audio:stop');
-	ipcMain.removeHandler('native-audio:get-routing-graph');
 	handlersRegistered = false;
 	for (const session of [...activeSessions.values()]) {
 		stopActiveSession(session, 'stopped').catch((error) =>

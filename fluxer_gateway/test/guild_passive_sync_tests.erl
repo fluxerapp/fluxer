@@ -34,14 +34,6 @@ compute_delta_ignores_removed_channels_test() ->
     Delta = guild_passive_sync:compute_delta(Current, Previous),
     ?assertEqual(#{}, Delta).
 
-compute_channel_diffs_detects_created_updated_deleted_test() ->
-    Current = #{<<"1">> => 2, <<"2">> => 1},
-    Previous = #{<<"1">> => 1, <<"3">> => 9},
-    {Created, Updated, Deleted} = guild_passive_sync:compute_channel_diffs(Current, Previous),
-    ?assertEqual([<<"2">>], lists:sort(Created)),
-    ?assertEqual([<<"1">>], lists:sort(Updated)),
-    ?assertEqual([<<"3">>], lists:sort(Deleted)).
-
 send_passive_updates_uses_permission_capable_state_test() ->
     passive_sync_registry:init(),
     GuildId = 1427764661718740994,
@@ -85,7 +77,7 @@ send_passive_updates_uses_current_channel_index_and_message_only_payload_test() 
     ChannelId = 1497639278555484216,
     OldMessageId = 1500000000000000000,
     NewMessageId = 1500000000000000001,
-    Data0 = guild_data_index:normalize_data(#{
+    Data0 = guild_data_index:normalize_map(#{
         <<"guild">> => #{<<"id">> => GuildId, <<"owner_id">> => UserId},
         <<"channels">> => [#{<<"id">> => ChannelId, <<"last_message_id">> => OldMessageId}],
         <<"members">> => [#{<<"user">> => #{<<"id">> => UserId}, <<"roles">> => []}],

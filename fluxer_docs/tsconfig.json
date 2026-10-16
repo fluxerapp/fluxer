@@ -1,0 +1,11 @@
+{
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["./src/*"],
+			"@fluxer/*": ["../packages/*", "../packages/*/src/index.ts"]
+		}
+	},
+	"include": [".astro/types.d.ts", "**/*"],
+	"exclude": ["dist"]
+}

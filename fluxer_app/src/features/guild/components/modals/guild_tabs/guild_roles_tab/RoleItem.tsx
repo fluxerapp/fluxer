@@ -2,6 +2,7 @@
 
 import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import {DropIndicator} from '@app/features/app/components/layout/DropIndicator';
+import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab.module.css';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@app/features/guild/components/modals/guild_tabs/RoleReorderStateMachine';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -30,7 +32,7 @@ import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
 const YOU_CANNOT_EDIT_THIS_ROLE_BECAUSE_IT_IS_DESCRIPTOR = msg({
-	message: 'You cannot edit this role because it is your highest role or above you',
+	message: 'You cannot edit this role because it is at or above your highest role',
 	comment:
 		'Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.',
 });
@@ -43,6 +45,8 @@ interface RoleItemProps {
 	isTerminal: boolean;
 	canManageRoles: boolean;
 	onClick: () => void;
+	onDuplicate: (roleId: string) => void;
+	onDelete: (roleId: string) => void;
 	onEvaluateMove: (
 		draggedRoleId: string,
 		targetRoleId: string | null,
@@ -52,15 +56,34 @@ interface RoleItemProps {
 }
 
 export const RoleItem: React.FC<RoleItemProps> = observer(
-	({role, isSelected, isLocked, isGuildOwner, isTerminal, canManageRoles, onClick, onEvaluateMove, onCommitMove}) => {
+	({
+		role,
+		isSelected,
+		isLocked,
+		isGuildOwner,
+		isTerminal,
+		canManageRoles,
+		onClick,
+		onDuplicate,
+		onDelete,
+		onEvaluateMove,
+		onCommitMove,
+	}) => {
 		const {i18n} = useLingui();
 		const elementRef = useRef<HTMLButtonElement | null>(null);
 		const [dropIndicator, setDropIndicator] = useState<{position: 'top' | 'bottom'; isValid: boolean} | null>(null);
+		const contextMenuOpen = useContextMenuHoverState(elementRef, !MobileLayout.enabled);
+		const canDelete = canManageRoles && !role.isEveryone && !isLocked;
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent<HTMLButtonElement>) => {
-				openRoleContextMenu(event, role.id);
+				openRoleContextMenu(event, role.id, {
+					canDuplicate: canManageRoles,
+					onDuplicate: () => onDuplicate(role.id),
+					canDelete,
+					onDelete: () => onDelete(role.id),
+				});
 			},
-			[role.id],
+			[role.id, canManageRoles, canDelete, onDuplicate, onDelete],
 		);
 		const dragItem = useMemo<RoleDragItem>(
 			() => ({type: ROLE_DND_TYPE, id: role.id, isEveryone: role.isEveryone, isLocked}),
@@ -204,6 +227,7 @@ export const RoleItem: React.FC<RoleItemProps> = observer(
 						styles.overwriteItem,
 						styles.roleButton,
 						{[styles.overwriteItemSelected]: isSelected},
+						contextMenuOpen && styles.overwriteItemHovered,
 						isDragging && styles.dragging,
 						!canDrag && styles.noDrag,
 					)}

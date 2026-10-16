@@ -13,16 +13,23 @@ import {
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 	USE_DEFAULT_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {formatDurationMs} from '@app/features/channel/components/channel_header_components/developer_tools/FormatHelpers';
+import {
+	getPremiumTypeLabel,
+	LIFETIME_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {
+	DEVELOPER_OPTION_KEYS,
+	isDeveloperOptionAtDefault,
+	resetDeveloperOption,
+} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatDurationMs} from './FormatHelpers';
-import {getPremiumTypeLabel, LIFETIME_DESCRIPTOR} from './OptionPresets';
-import {DEVELOPER_OPTION_KEYS, isDeveloperOptionAtDefault, resetDeveloperOption} from './ResetOptions';
 
 const ACTIVE_DEVELOPER_OPTION_KEYS = DEVELOPER_OPTION_KEYS.filter((key) => key !== 'premiumScenarioOverride');
-export const ATTACHMENT_MOCKS_DESCRIPTOR = msg({
+const ATTACHMENT_MOCKS_DESCRIPTOR = msg({
 	message: 'Attachment mocks',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -38,8 +45,12 @@ const MONTHS_PLURAL_DESCRIPTOR = msg({
 	message: '{months, plural, one {# month} other {# months}}',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const BYPASS_SPLASH_SCREEN_DESCRIPTOR = msg({
-	message: 'Bypass splash screen',
+const BYPASS_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Bypass loading skeleton',
+	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
+});
+const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Force loading skeleton',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const FAIL_MESSAGE_SENDS_DESCRIPTOR = msg({
@@ -50,44 +61,8 @@ const FAIL_MESSAGE_LOADS_DESCRIPTOR = msg({
 	message: 'Fail message loads',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const RENDER_PLACEHOLDERS_DESCRIPTOR = msg({
-	message: 'Render placeholders',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const EMBED_SKELETONS_DESCRIPTOR = msg({
-	message: 'Embed skeletons',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const MEDIA_LOADING_STATE_DESCRIPTOR = msg({
-	message: 'Media loading state',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const ANY_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Any updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const NATIVE_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Native updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const NATIVE_UPDATE_PROGRESS_DESCRIPTOR = msg({
-	message: 'Native update progress',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const WEB_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Web updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const UPDATER_STATE_DESCRIPTOR = msg({
-	message: 'Updater state',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR = msg({
-	message: 'Slow attachment upload',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
@@ -96,10 +71,6 @@ const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
 });
 const SLOW_MESSAGE_SEND_DESCRIPTOR = msg({
 	message: 'Slow message send',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const SLOW_MESSAGE_EDIT_DESCRIPTOR = msg({
-	message: 'Slow message edit',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const SLOW_PROFILE_LOAD_DESCRIPTOR = msg({
@@ -114,14 +85,6 @@ const PROFILE_DATA_WARNING_DESCRIPTOR = msg({
 	message: 'Profile data warning',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const CLOUD_UPLOAD_DESCRIPTOR = msg({
-	message: 'Cloud upload',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const GIF_PICKER_LOADING_DESCRIPTOR = msg({
-	message: 'GIF picker loading',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const UNKNOWN_MESSAGE_TYPE_DESCRIPTOR = msg({
 	message: 'Unknown message type',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -132,10 +95,6 @@ const SELF_HOSTED_MODE_DESCRIPTOR = msg({
 });
 const VANITY_URL_DISCLAIMER_DESCRIPTOR = msg({
 	message: 'Vanity URL disclaimer',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const VOICE_CONNECTION_DEBUG_DESCRIPTOR = msg({
-	message: 'Voice connection debug',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 export const PREMIUM_TYPE_DESCRIPTOR = msg({
@@ -206,38 +165,6 @@ const UK_GEO_DESCRIPTOR = msg({
 	message: 'UK geo',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const GEO_BLOCK_OVERLAY_DESCRIPTOR = msg({
-	message: 'Geo block overlay',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR = msg({
-	message: 'Required actions overlay',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_VARIANT_DESCRIPTOR = msg({
-	message: 'Required action variant',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR = msg({
-	message: 'Required action default tab',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR = msg({
-	message: 'Required action phone step',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR = msg({
-	message: 'Required action resend loading',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR = msg({
-	message: 'Required action resend outcome',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR = msg({
-	message: 'Required action reverification text',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const NO_SEND_PERMISSION_DESCRIPTOR = msg({
 	message: 'No {sendMessagesPermission} permission',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -267,21 +194,17 @@ const GIFT_REDEEMED_DESCRIPTOR = msg({
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const TITLEBAR_PLATFORM_DESCRIPTOR = msg({
-	message: 'Titlebar platform',
+	message: 'Title bar platform',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const DEVELOPER_OPTION_DESCRIPTOR = msg({
 	message: 'Developer option',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const GAME_CAPTURE_INJECTION_METHOD_DESCRIPTOR = msg({
-	message: 'Game capture injection (Windows)',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const DEVELOPER_OPTION_LABEL_FALLBACKS: Partial<Record<keyof DeveloperOptionsState, MessageDescriptor>> = {
 	mockAttachmentStates: ATTACHMENT_MOCKS_DESCRIPTOR,
 };
-export const getDeveloperOptionFallbackLabel = (i18n: I18n, key: keyof DeveloperOptionsState): string => {
+const getDeveloperOptionFallbackLabel = (i18n: I18n, key: keyof DeveloperOptionsState): string => {
 	const descriptor = DEVELOPER_OPTION_LABEL_FALLBACKS[key];
 	return descriptor ? i18n._(descriptor) : humanizeDeveloperStateKey(String(key));
 };
@@ -317,13 +240,7 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 		case 'mockVerificationBarrier':
 		case 'mockMatureContentGateReason':
 		case 'mockMatureMediaGateReason':
-		case 'mockRequiredActionsMode':
-		case 'mockRequiredActionsSelectedTab':
-		case 'mockRequiredActionsPhoneStep':
-		case 'mockRequiredActionsResendOutcome':
 		case 'mockTitlebarPlatformOverride':
-		case 'mockUpdaterState':
-		case 'gameCaptureInjectionMethod':
 			return String(value).replace(/_/g, ' ');
 		case 'premiumSinceOverride':
 		case 'premiumUntilOverride':
@@ -352,60 +269,34 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 			return String(value);
 	}
 };
-export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescriptor => {
+const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescriptor => {
 	switch (key) {
-		case 'bypassSplashScreen':
-			return BYPASS_SPLASH_SCREEN_DESCRIPTOR;
+		case 'bypassLoadingSkeleton':
+			return BYPASS_LOADING_SKELETON_DESCRIPTOR;
+		case 'forceLoadingSkeleton':
+			return FORCE_LOADING_SKELETON_DESCRIPTOR;
 		case 'forceFailMessageSends':
 			return FAIL_MESSAGE_SENDS_DESCRIPTOR;
 		case 'forceFailMessageLoads':
 			return FAIL_MESSAGE_LOADS_DESCRIPTOR;
-		case 'forceRenderPlaceholders':
-			return RENDER_PLACEHOLDERS_DESCRIPTOR;
-		case 'forceEmbedSkeletons':
-			return EMBED_SKELETONS_DESCRIPTOR;
-		case 'forceMediaLoading':
-			return MEDIA_LOADING_STATE_DESCRIPTOR;
-		case 'forceUpdateReady':
-			return ANY_UPDATER_READY_DESCRIPTOR;
-		case 'forceNativeUpdateReady':
-			return NATIVE_UPDATER_READY_DESCRIPTOR;
-		case 'mockNativeUpdateProgress':
-			return NATIVE_UPDATE_PROGRESS_DESCRIPTOR;
-		case 'forceWebUpdateReady':
-			return WEB_UPDATER_READY_DESCRIPTOR;
-		case 'mockUpdaterState':
-			return UPDATER_STATE_DESCRIPTOR;
 		case 'showMyselfTyping':
 			return SHOW_MYSELF_TYPING_DESCRIPTOR;
-		case 'slowAttachmentUpload':
-			return SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR;
 		case 'slowMessageLoad':
 			return SLOW_MESSAGE_LOAD_DESCRIPTOR;
 		case 'slowMessageSend':
 			return SLOW_MESSAGE_SEND_DESCRIPTOR;
-		case 'slowMessageEdit':
-			return SLOW_MESSAGE_EDIT_DESCRIPTOR;
 		case 'slowProfileLoad':
 			return SLOW_PROFILE_LOAD_DESCRIPTOR;
 		case 'forceProfileSkeletons':
 			return PROFILE_SKELETONS_DESCRIPTOR;
 		case 'forceProfileDataWarning':
 			return PROFILE_DATA_WARNING_DESCRIPTOR;
-		case 'useCloudUpload':
-			return CLOUD_UPLOAD_DESCRIPTOR;
-		case 'forceGifPickerLoading':
-			return GIF_PICKER_LOADING_DESCRIPTOR;
 		case 'forceUnknownMessageType':
 			return UNKNOWN_MESSAGE_TYPE_DESCRIPTOR;
 		case 'selfHostedModeOverride':
 			return SELF_HOSTED_MODE_DESCRIPTOR;
 		case 'forceShowVanityURLDisclaimer':
 			return VANITY_URL_DISCLAIMER_DESCRIPTOR;
-		case 'forceShowVoiceConnection':
-			return VOICE_CONNECTION_DEBUG_DESCRIPTOR;
-		case 'gameCaptureInjectionMethod':
-			return GAME_CAPTURE_INJECTION_METHOD_DESCRIPTOR;
 		case 'premiumTypeOverride':
 			return PREMIUM_TYPE_DESCRIPTOR;
 		case 'premiumLifetimeSequenceOverride':
@@ -440,22 +331,6 @@ export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): Messa
 			return FORCE_MATURE_MEDIA_DESCRIPTOR;
 		case 'mockInUK':
 			return UK_GEO_DESCRIPTOR;
-		case 'mockGeoBlocked':
-			return GEO_BLOCK_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsOverlay':
-			return REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsMode':
-			return REQUIRED_ACTION_VARIANT_DESCRIPTOR;
-		case 'mockRequiredActionsSelectedTab':
-			return REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR;
-		case 'mockRequiredActionsPhoneStep':
-			return REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR;
-		case 'mockRequiredActionsResending':
-			return REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR;
-		case 'mockRequiredActionsResendOutcome':
-			return REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR;
-		case 'mockRequiredActionsReverify':
-			return REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR;
 		case 'forceNoSendMessages':
 			return {...NO_SEND_PERMISSION_DESCRIPTOR, values: {sendMessagesPermission: SEND_MESSAGES_PERMISSION}};
 		case 'forceNoAttachFiles':

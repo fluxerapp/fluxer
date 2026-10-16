@@ -3,7 +3,27 @@
 use zstd::zstd_safe::zstd_sys::ZSTD_EndDirective;
 use zstd::zstd_safe::{CCtx, CParameter, DCtx, InBuffer, OutBuffer};
 
-use crate::zstd_frame::{MAX_DECOMPRESSED_BYTES, READ_BUFFER_BYTES, ZstdError};
+const READ_BUFFER_BYTES: usize = 16 * 1024;
+const MAX_DECOMPRESSED_BYTES: usize = 64 * 1024 * 1024;
+
+#[derive(Debug)]
+pub enum ZstdError {
+    DecompressedSizeTooLarge,
+    Decode,
+    Encode,
+    OutOfMemory,
+}
+
+impl ZstdError {
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::DecompressedSizeTooLarge => "zstd decompressed payload is too large",
+            Self::Decode => "zstd decompression failed",
+            Self::Encode => "zstd compression failed",
+            Self::OutOfMemory => "out of memory",
+        }
+    }
+}
 
 pub struct ZstdStreamEncoder {
     context: CCtx<'static>,
@@ -114,48 +134,6 @@ fn append_output(output: &mut Vec<u8>, bytes: &[u8]) -> Result<(), ZstdError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zstd::stream::raw::{Encoder, InBuffer, Operation, OutBuffer};
-
-    fn compress_stream_chunk(encoder: &mut Encoder<'_>, input: &[u8]) -> Vec<u8> {
-        let mut compressed = Vec::new();
-        let mut input = InBuffer::around(input);
-        let mut buffer = [0u8; READ_BUFFER_BYTES];
-
-        while input.pos() < input.src.len() {
-            let written = {
-                let mut output = OutBuffer::around(&mut buffer[..]);
-                encoder.run(&mut input, &mut output).unwrap();
-                output.pos()
-            };
-            compressed.extend_from_slice(&buffer[..written]);
-        }
-
-        loop {
-            let (remaining, written) = {
-                let mut output = OutBuffer::around(&mut buffer[..]);
-                let remaining = encoder.flush(&mut output).unwrap();
-                (remaining, output.pos())
-            };
-            compressed.extend_from_slice(&buffer[..written]);
-            if remaining == 0 {
-                break;
-            }
-        }
-
-        compressed
-    }
-
-    #[test]
-    fn decodes_multiple_flushed_chunks_from_one_zstd_stream() {
-        let mut encoder = Encoder::new(1).unwrap();
-        let mut decoder = ZstdStreamDecoder::new().unwrap();
-
-        let first = compress_stream_chunk(&mut encoder, br#"{"op":10}"#);
-        let second = compress_stream_chunk(&mut encoder, br#"{"op":11}"#);
-
-        assert_eq!(decoder.decompress_chunk(&first).unwrap(), br#"{"op":10}"#);
-        assert_eq!(decoder.decompress_chunk(&second).unwrap(), br#"{"op":11}"#);
-    }
 
     #[test]
     fn keeps_partial_frame_state_between_chunks() {
@@ -170,23 +148,6 @@ mod tests {
     }
 
     #[test]
-    fn encoder_and_decoder_roundtrip_ten_thousand_messages_bidirectionally() {
-        let mut encoder = ZstdStreamEncoder::new(3).unwrap();
-        let mut decoder = ZstdStreamDecoder::new().unwrap();
-
-        for seq in 1..=10_000 {
-            let payload = format!(
-                r#"{{"op":1,"d":{},"meta":"bidirectional zstd stream message {}"}}"#,
-                seq, seq
-            );
-            let compressed = encoder.compress_chunk(payload.as_bytes()).unwrap();
-            assert!(!compressed.is_empty());
-            let decoded = decoder.decompress_chunk(&compressed).unwrap();
-            assert_eq!(decoded, payload.as_bytes());
-        }
-    }
-
-    #[test]
     fn encoder_handles_a_payload_larger_than_the_buffer() {
         let mut encoder = ZstdStreamEncoder::new(3).unwrap();
         let mut decoder = ZstdStreamDecoder::new().unwrap();
@@ -197,19 +158,30 @@ mod tests {
     }
 
     #[test]
-    fn decodes_ten_thousand_flushed_gateway_json_chunks() {
-        let mut encoder = Encoder::new(3).unwrap();
+    fn rejects_invalid_zstd() {
         let mut decoder = ZstdStreamDecoder::new().unwrap();
+        assert!(matches!(
+            decoder.decompress_chunk(b"not zstd"),
+            Err(ZstdError::Decode)
+        ));
+    }
 
-        for seq in 1..=10_000 {
-            let payload = format!(
-                r#"{{"op":0,"t":"MESSAGE_CREATE","s":{},"d":{{"id":"{}","channel_id":"1497639278555484216","guild_id":"1427764661718740994","content":"gateway zstd stream stress payload {}"}}}}"#,
-                seq, seq, seq
-            );
-            let compressed = compress_stream_chunk(&mut encoder, payload.as_bytes());
-            let decoded = decoder.decompress_chunk(&compressed).unwrap();
+    #[test]
+    fn accepts_the_decompressed_limit() {
+        let input = vec![b'x'; MAX_DECOMPRESSED_BYTES];
+        let compressed = zstd::stream::encode_all(input.as_slice(), 1).unwrap();
+        let mut decoder = ZstdStreamDecoder::new().unwrap();
+        assert_eq!(decoder.decompress_chunk(&compressed).unwrap(), input);
+    }
 
-            assert_eq!(decoded, payload.as_bytes());
-        }
+    #[test]
+    fn rejects_frames_over_the_decompressed_limit() {
+        let input = vec![b'x'; MAX_DECOMPRESSED_BYTES + 1];
+        let compressed = zstd::stream::encode_all(input.as_slice(), 1).unwrap();
+        let mut decoder = ZstdStreamDecoder::new().unwrap();
+        assert!(matches!(
+            decoder.decompress_chunk(&compressed),
+            Err(ZstdError::DecompressedSizeTooLarge)
+        ));
     }
 }

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	reportSkeletonFriendsRowCount,
+	SkeletonFriendsTab,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {EmptyStateView} from '@app/features/channel/components/friends/EmptyStateView';
 import {FriendListItem} from '@app/features/channel/components/friends/FriendListItem';
 import {ListSection} from '@app/features/channel/components/friends/FriendsListSection';
@@ -13,6 +17,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useEffect} from 'react';
 
 const NO_PENDING_REQUESTS_DESCRIPTOR = msg({
 	message: 'No pending requests',
@@ -63,7 +68,7 @@ export const PendingFriendsView: React.FC<PendingFriendsViewProps> = observer(
 				return true;
 			}
 			const user = Users.getUser(userId);
-			const nickname = user ? NicknameUtils.getNickname(user) : '';
+			const nickname = user ? NicknameUtils.getNickname(user, null) : '';
 			const username = user?.username ?? '';
 			return `${nickname} ${username}`.toLowerCase().includes(normalizedQuery);
 		};
@@ -72,7 +77,7 @@ export const PendingFriendsView: React.FC<PendingFriendsViewProps> = observer(
 				const userA = Users.getUser(a.id);
 				const userB = Users.getUser(b.id);
 				if (!userA || !userB) return 0;
-				return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+				return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 			});
 		const visibleIncoming = sortByDisplayName(
 			hasSearch ? incomingRequests.filter((request) => matchesSearch(request.id)) : incomingRequests,
@@ -80,6 +85,13 @@ export const PendingFriendsView: React.FC<PendingFriendsViewProps> = observer(
 		const visibleOutgoing = sortByDisplayName(
 			hasSearch ? outgoingRequests.filter((request) => matchesSearch(request.id)) : outgoingRequests,
 		);
+		const visibleRowCount = visibleIncoming.length + visibleOutgoing.length;
+		useEffect(() => {
+			if (hasSearch) {
+				return;
+			}
+			reportSkeletonFriendsRowCount(SkeletonFriendsTab.PENDING, visibleRowCount, visibleIncoming.length);
+		}, [hasSearch, visibleRowCount, visibleIncoming.length]);
 		if (pendingCount === 0) {
 			return (
 				<EmptyStateView

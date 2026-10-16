@@ -1,9 +1,12 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_client).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
--export([voice_state_update/3]).
 -export([voice_state_update/4]).
 -export([do_call/3]).
 -export([request_trace/1]).
@@ -20,7 +23,9 @@
     endpoint => binary(),
     connection_id => binary(),
     voice_state => map(),
-    needs_token => boolean()
+    needs_token => boolean(),
+    p2p => true,
+    ice_servers => [map()]
 }.
 
 -type voice_state_update_rejection() :: #{
@@ -38,18 +43,6 @@
     | {error, circuit_breaker_open}
     | {error, too_many_requests}
     | {error, atom(), atom()}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
--spec voice_state_update(pid(), map(), timeout()) -> voice_state_update_result().
-voice_state_update(GuildPid, Request, Timeout) ->
-    guild_client_circuit_breaker:ensure_table(),
-    case guild_client_circuit_breaker:acquire_slot(GuildPid) of
-        ok -> execute_with_slot(GuildPid, Request, Timeout);
-        {error, Reason} -> {error, Reason}
-    end.
 
 -spec execute_with_slot(pid(), map(), timeout()) -> voice_state_update_result().
 execute_with_slot(TargetPid, Request, Timeout) ->
@@ -225,10 +218,6 @@ require_rejection_response(#{success := false, ack := Ack} = Response) when is_m
     Response.
 
 -ifdef(TEST).
-
-module_exports_test() ->
-    Exports = guild_client:module_info(exports),
-    ?assert(lists:member({voice_state_update, 3}, Exports)).
 
 do_call_ok_reply_returns_error_test() ->
     Pid = start_test_call_server(ok),

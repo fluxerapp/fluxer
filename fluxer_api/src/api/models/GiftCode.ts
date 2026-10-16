@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {GiftCodeDurationType, GiftCodeRow} from '../database/types/PaymentTypes';
-import {addMonthsClamp} from '../stripe/StripeUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {addMonthsClamp} from '@app/api/stripe/StripeUtils';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 
 interface GiftCodeDuration {
 	durationType: GiftCodeDurationType;
@@ -113,6 +114,8 @@ export class GiftCode {
 	readonly stripePaymentIntentId: string | null;
 	readonly visionarySequenceNumber: number | null;
 	readonly checkoutSessionId: string | null;
+	readonly revokedAt: Date | null;
+	readonly premiumReversedSeconds: number | null;
 	readonly version: number;
 
 	constructor(row: GiftCodeRow) {
@@ -128,6 +131,8 @@ export class GiftCode {
 		this.stripePaymentIntentId = row.stripe_payment_intent_id ?? null;
 		this.visionarySequenceNumber = row.visionary_sequence_number ?? null;
 		this.checkoutSessionId = row.checkout_session_id ?? null;
+		this.revokedAt = row.revoked_at ?? null;
+		this.premiumReversedSeconds = row.premium_reversed_seconds ?? null;
 		this.version = row.version;
 	}
 
@@ -144,7 +149,62 @@ export class GiftCode {
 			stripe_payment_intent_id: this.stripePaymentIntentId,
 			visionary_sequence_number: this.visionarySequenceNumber,
 			checkout_session_id: this.checkoutSessionId,
+			revoked_at: this.revokedAt,
+			premium_reversed_seconds: this.premiumReversedSeconds,
 			version: this.version,
 		};
 	}
+}
+
+const CODE_LENGTH = 32;
+
+const MAX_GENERATION_ATTEMPTS = 100;
+
+export async function generateUniqueGiftCode(findGiftCode: (code: string) => Promise<unknown>): Promise<string> {
+	for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+		const candidate = RandomUtils.randomString(CODE_LENGTH);
+		const exists = await findGiftCode(candidate);
+		if (!exists) {
+			return candidate;
+		}
+	}
+	throw new Error(
+		`Failed to generate unique gift code after ${MAX_GENERATION_ATTEMPTS} attempts. ` +
+			'This may indicate a high collision rate or database issues.',
+	);
+}
+
+export function createGiftCodeRow({
+	code,
+	durationType,
+	durationQuantity,
+	createdByUserId,
+	createdAt,
+	durationMonths = null,
+	paymentIntentId = null,
+	checkoutSessionId = null,
+}: {
+	code: string;
+	durationType: GiftCodeDurationType;
+	durationQuantity: number;
+	createdByUserId: UserID;
+	createdAt: Date;
+	durationMonths?: number | null;
+	paymentIntentId?: string | null;
+	checkoutSessionId?: string | null;
+}): GiftCodeRow {
+	return {
+		code,
+		duration_type: durationType,
+		duration_quantity: durationQuantity,
+		duration_months: durationMonths,
+		created_at: createdAt,
+		created_by_user_id: createdByUserId,
+		redeemed_at: null,
+		redeemed_by_user_id: null,
+		stripe_payment_intent_id: paymentIntentId,
+		visionary_sequence_number: null,
+		checkout_session_id: checkoutSessionId,
+		version: 1,
+	};
 }

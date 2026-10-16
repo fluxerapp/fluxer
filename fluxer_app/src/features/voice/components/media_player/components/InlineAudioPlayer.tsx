@@ -8,6 +8,9 @@ import {
 	PLAY_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -17,8 +20,10 @@ import {MediaVolumeControl} from '@app/features/voice/components/media_player/co
 import {useMediaPlayer} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
 import {useMediaProgress} from '@app/features/voice/components/media_player/hooks/useMediaProgress';
 import {useMediaVolume} from '@app/features/voice/components/media_player/hooks/useMediaVolume';
+import {useMetadataPreload} from '@app/features/voice/components/media_player/hooks/useMetadataPreload';
 import styles from '@app/features/voice/components/media_player/InlineAudioPlayer.module.css';
 import {AUDIO_PLAYBACK_RATES} from '@app/features/voice/components/media_player/utils/MediaConstants';
+import {detachMediaElementSource} from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -26,7 +31,7 @@ import {DownloadSimpleIcon, PauseIcon, PlayIcon, StarIcon} from '@phosphor-icons
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 const AUDIO_PLAYER_DESCRIPTOR = msg({
 	message: 'Audio player',
@@ -50,19 +55,6 @@ interface InlineAudioPlayerProps {
 	onDownloadClick?: (e: React.MouseEvent) => void;
 	onContextMenu?: (e: React.MouseEvent) => void;
 	className?: string;
-}
-
-function formatFileSize(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatTime(time: number): string {
-	if (!Number.isFinite(time)) return '0:00';
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.floor(time % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function splitFilename(filename: string): {name: string; extension: string} {
@@ -95,7 +87,7 @@ export function InlineAudioPlayer({
 	const [hasStarted, setHasStarted] = useState(false);
 	const pendingPlayRef = useRef(false);
 	const {mediaRef, state, play, toggle, setPlaybackRate} = useMediaPlayer({
-		persistVolume: true,
+		mediaKind: 'audio',
 	});
 	const {
 		currentTime,
@@ -113,13 +105,21 @@ export function InlineAudioPlayer({
 	const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({
 		mediaRef,
 	});
-	const displayDuration = initialDuration ?? duration;
+	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
+	const handleMediaError = useAttachmentRefreshOnError(src);
+	const displayDuration = duration > 0 ? duration : (initialDuration ?? 0);
+	useLayoutEffect(() => {
+		const media = mediaRef.current;
+		return () => {
+			detachMediaElementSource(media ?? mediaRef.current);
+		};
+	}, [mediaRef, isMobile]);
 	const isLoading = hasStarted && state.isBuffering;
 	const isActive = state.isPlaying || isLoading;
 	const {name: fileName, extension: fileExtension} = extension
 		? {name: title, extension: `.${extension}`}
 		: splitFilename(title);
-	const fileSizeString = fileSize ? formatFileSize(fileSize) : '';
+	const fileSizeString = fileSize ? formatFileSize(i18n.locale, fileSize) : '';
 	useEffect(() => {
 		if (hasStarted && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
@@ -194,12 +194,14 @@ export function InlineAudioPlayer({
 					backgroundColor: isActive ? 'var(--brand-primary)' : 'var(--background-secondary)',
 				}}
 				transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: 'easeOut'}}
+				onPointerEnter={escalateToMetadata}
 				data-flx="voice.media-player.inline-audio-player.mobile-container.context-menu"
 			>
 				<audio
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
-					src={hasStarted ? src : undefined}
-					preload="none"
+					src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
+					preload={preloadAttribute}
+					onError={handleMediaError}
 					data-flx="voice.media-player.inline-audio-player.audio"
 				>
 					<track kind="captions" data-flx="voice.media-player.inline-audio-player.track" />
@@ -309,7 +311,7 @@ export function InlineAudioPlayer({
 					transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: 'easeOut'}}
 					data-flx="voice.media-player.inline-audio-player.mobile-timestamp"
 				>
-					{state.isPlaying ? formatTime(currentTime) : formatTime(displayDuration)}
+					{state.isPlaying ? formatDuration(currentTime) : formatDuration(displayDuration)}
 				</motion.span>
 			</motion.div>
 		);
@@ -320,12 +322,14 @@ export function InlineAudioPlayer({
 			onContextMenu={onContextMenu}
 			role="group"
 			aria-label={i18n._(AUDIO_PLAYER_DESCRIPTOR)}
+			onPointerEnter={escalateToMetadata}
 			data-flx="voice.media-player.inline-audio-player.container.context-menu"
 		>
 			<audio
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
-				src={hasStarted ? src : undefined}
-				preload="none"
+				src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
+				preload={preloadAttribute}
+				onError={handleMediaError}
 				data-flx="voice.media-player.inline-audio-player.audio--2"
 			>
 				<track kind="captions" data-flx="voice.media-player.inline-audio-player.track--2" />
@@ -373,9 +377,7 @@ export function InlineAudioPlayer({
 						</span>
 					</p>
 					<p className={styles.fileMeta} data-flx="voice.media-player.inline-audio-player.file-meta">
-						{fileSizeString}
-						{fileSizeString && displayDuration > 0 && ' · '}
-						{displayDuration > 0 && formatDuration(displayDuration)}
+						{`${fileSizeString}${fileSizeString && displayDuration > 0 ? ' · ' : ''}${displayDuration > 0 ? formatDuration(displayDuration) : ''}`}
 					</p>
 				</div>
 			</div>
@@ -385,6 +387,8 @@ export function InlineAudioPlayer({
 					buffered={buffered}
 					currentTime={currentTime}
 					duration={displayDuration}
+					mediaRef={mediaRef}
+					isPlaying={state.isPlaying}
 					onSeek={handleSeek}
 					onSeekPreview={handleSeekPreview}
 					onSeekStart={startSeeking}

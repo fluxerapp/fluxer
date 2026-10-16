@@ -2,48 +2,34 @@
 
 use axum::{
     Json,
-    http::{HeaderValue, header},
+    http::header,
     response::{IntoResponse, Response},
 };
 use serde_json::json;
 
 pub async fn assetlinks() -> Response {
-    let body = json!([
-        {
+    let body = ["com.fluxer", "com.fluxer.canary"].map(|package_name| {
+        json!({
             "relation": [
                 "delegate_permission/common.handle_all_urls",
                 "delegate_permission/common.get_login_creds"
             ],
             "target": {
                 "namespace": "android_app",
-                "package_name": "com.fluxer",
-                "sha256_cert_fingerprints": [
-                    "91:E4:98:E1:B8:A6:C8:BA:99:41:5E:DB:29:78:29:6B:6C:58:BA:A5:E2:D2:A6:49:CE:C6:2D:A7:A8:29:C7:BC"
-                ]
-            }
-        },
-        {
-            "relation": [
-                "delegate_permission/common.handle_all_urls",
-                "delegate_permission/common.get_login_creds"
-            ],
-            "target": {
-                "namespace": "android_app",
-                "package_name": "com.fluxer.canary",
+                "package_name": package_name,
                 "sha256_cert_fingerprints": [
                     "91:E4:98:E1:B8:A6:C8:BA:99:41:5E:DB:29:78:29:6B:6C:58:BA:A5:E2:D2:A6:49:CE:C6:2D:A7:A8:29:C7:BC",
-                    "CD:19:82:28:32:A8:DE:E0:97:D8:60:D9:21:28:C9:C7:C4:73:A3:72:7E:63:71:9B:A7:BB:3B:98:06:94:1F:6F"
+                    "2D:DE:2A:9D:3D:13:7C:17:87:31:3D:D8:BB:61:F4:59:3C:2A:97:18:05:B3:ED:F6:B8:39:B0:AA:D2:E7:76:C9"
                 ]
             }
-        }
-    ]);
+        })
+    });
 
-    let mut response = Json(body).into_response();
-    response.headers_mut().insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=1800"),
-    );
-    response
+    (
+        [(header::CACHE_CONTROL, "public, max-age=1800")],
+        Json(body),
+    )
+        .into_response()
 }
 
 #[cfg(test)]
@@ -75,7 +61,8 @@ mod tests {
                         "namespace": "android_app",
                         "package_name": "com.fluxer",
                         "sha256_cert_fingerprints": [
-                            "91:E4:98:E1:B8:A6:C8:BA:99:41:5E:DB:29:78:29:6B:6C:58:BA:A5:E2:D2:A6:49:CE:C6:2D:A7:A8:29:C7:BC"
+                            "91:E4:98:E1:B8:A6:C8:BA:99:41:5E:DB:29:78:29:6B:6C:58:BA:A5:E2:D2:A6:49:CE:C6:2D:A7:A8:29:C7:BC",
+                            "2D:DE:2A:9D:3D:13:7C:17:87:31:3D:D8:BB:61:F4:59:3C:2A:97:18:05:B3:ED:F6:B8:39:B0:AA:D2:E7:76:C9"
                         ]
                     }
                 },
@@ -89,7 +76,7 @@ mod tests {
                         "package_name": "com.fluxer.canary",
                         "sha256_cert_fingerprints": [
                             "91:E4:98:E1:B8:A6:C8:BA:99:41:5E:DB:29:78:29:6B:6C:58:BA:A5:E2:D2:A6:49:CE:C6:2D:A7:A8:29:C7:BC",
-                            "CD:19:82:28:32:A8:DE:E0:97:D8:60:D9:21:28:C9:C7:C4:73:A3:72:7E:63:71:9B:A7:BB:3B:98:06:94:1F:6F"
+                            "2D:DE:2A:9D:3D:13:7C:17:87:31:3D:D8:BB:61:F4:59:3C:2A:97:18:05:B3:ED:F6:B8:39:B0:AA:D2:E7:76:C9"
                         ]
                     }
                 }

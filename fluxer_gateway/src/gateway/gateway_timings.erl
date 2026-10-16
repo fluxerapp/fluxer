@@ -7,19 +7,14 @@
     new/0,
     start/0,
     elapsed_us/1,
-    record/3,
-    record/4,
     record_function/4,
     record_function/5,
     span/2,
     span/3,
     merge/2,
-    finalize/1,
     from_state/1,
     put_state/2,
     merge_state/2,
-    record_node_hit/3,
-    record_api_node_from_session_result/2,
     api_remote_from_session_result/1,
     remote_node/2,
     is_recorder/1
@@ -60,14 +55,6 @@ elapsed_us(StartedAtUs) when is_integer(StartedAtUs) ->
     max(start() - StartedAtUs, 0);
 elapsed_us(_) ->
     0.
-
--spec record(term(), integer(), recorder()) -> recorder().
-record(Name, StartedAtUs, Recorder) ->
-    record_function(Name, Name, StartedAtUs, Recorder).
-
--spec record(term(), integer(), map(), recorder()) -> recorder().
-record(Name, StartedAtUs, ChildSteps, Recorder0) ->
-    record_function_with_child_steps(Name, Name, StartedAtUs, ChildSteps, #{}, Recorder0).
 
 -spec record_function(term(), term(), integer(), recorder()) -> recorder().
 record_function(StepName, FunctionName, StartedAtUs, Recorder) ->
@@ -123,17 +110,6 @@ merge(Recorder0, Recorder1) ->
             Recorder
     end.
 
--spec finalize(term()) -> map().
-finalize(Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    Trace = lists:reverse(maps:get(trace, Recorder, [])),
-    #{
-        <<"unit">> => <<"microseconds">>,
-        <<"total_us">> => total_us(Recorder, Trace),
-        <<"pod_name">> => maps:get(pod_name, Recorder, pod_name()),
-        <<"trace">> => Trace
-    }.
-
 -spec from_state(map()) -> recorder().
 from_state(State) when is_map(State) ->
     Candidate = maps:get(gw_timings, State, undefined),
@@ -151,29 +127,6 @@ put_state(Recorder, State) when is_map(State) ->
 -spec merge_state(term(), map()) -> map().
 merge_state(Update, State) ->
     put_state(merge(from_state(State), Update), State).
-
--spec record_node_hit(term(), term(), recorder()) -> recorder().
-record_node_hit(_Role, Node, Recorder0) when Node =:= node() ->
-    ensure_recorder(Recorder0);
-record_node_hit(Role, Node, Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    case remote_node(Role, Node) of
-        NodeInfo when is_map(NodeInfo) ->
-            Recorder#{nodes := merge_nodes(maps:get(nodes, Recorder, []), [NodeInfo])};
-        _ ->
-            Recorder
-    end.
-
--spec record_api_node_from_session_result(term(), recorder()) -> recorder().
-record_api_node_from_session_result({ok, Data}, Recorder) when is_map(Data) ->
-    case maps:get(<<"_timings">>, Data, undefined) of
-        Timings when is_map(Timings) ->
-            record_external_node(<<"api">>, Timings, Recorder);
-        _ ->
-            Recorder
-    end;
-record_api_node_from_session_result(_, Recorder) ->
-    Recorder.
 
 -spec api_remote_from_session_result(term()) -> map() | undefined.
 api_remote_from_session_result({ok, Data}) when is_map(Data) ->
@@ -221,39 +174,6 @@ ensure_recorder(
     Recorder1;
 ensure_recorder(_) ->
     new().
-
--spec total_us(recorder(), [map()]) -> non_neg_integer().
-total_us(Recorder, Trace) ->
-    case Trace of
-        [] -> local_elapsed_us(Recorder);
-        _ -> trace_total_us(Trace)
-    end.
-
--spec local_elapsed_us(recorder()) -> non_neg_integer().
-local_elapsed_us(Recorder) ->
-    case maps:get(started_node, Recorder, undefined) of
-        NodeName when NodeName =:= node() ->
-            elapsed_us(maps:get(started_at_us, Recorder, start()));
-        _ ->
-            0
-    end.
-
--spec trace_total_us([map()]) -> non_neg_integer().
-trace_total_us(Trace) ->
-    sum_non_neg_integers([span_duration_us(Span) || Span <- Trace]).
-
--spec sum_non_neg_integers([non_neg_integer()]) -> non_neg_integer().
-sum_non_neg_integers([]) ->
-    0;
-sum_non_neg_integers([Value | Rest]) ->
-    Value + sum_non_neg_integers(Rest).
-
--spec span_duration_us(map()) -> non_neg_integer().
-span_duration_us(Span) ->
-    case maps:get(<<"duration_us">>, Span, 0) of
-        Value when is_integer(Value), Value >= 0 -> Value;
-        _ -> 0
-    end.
 
 -spec ensure_started_node(map()) -> node() | undefined.
 ensure_started_node(Recorder) ->
@@ -352,12 +272,6 @@ maybe_put_steps(Step, ChildSteps) when is_map(ChildSteps), map_size(ChildSteps) 
     Step#{<<"steps">> => ChildSteps};
 maybe_put_steps(Step, _) ->
     maps:remove(<<"steps">>, Step).
-
--spec record_external_node(binary(), map(), recorder()) -> recorder().
-record_external_node(Role, Timings, Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    NodeInfo = external_node_info(Role, Timings),
-    Recorder#{nodes := merge_nodes(maps:get(nodes, Recorder, []), [NodeInfo])}.
 
 -spec external_node_info(binary(), map()) -> map().
 external_node_info(Role, Timings) ->
@@ -523,8 +437,8 @@ pod_name() ->
 first_runtime_name([], Fallback) ->
     Fallback;
 first_runtime_name([Name | Rest], Fallback) ->
-    case os:getenv(Name) of
-        false -> first_runtime_name(Rest, Fallback);
+    case fluxer_gateway_config:env_value(Name) of
+        undefined -> first_runtime_name(Rest, Fallback);
         Value -> normalize_key(Value)
     end.
 

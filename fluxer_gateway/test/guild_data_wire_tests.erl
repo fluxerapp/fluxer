@@ -79,7 +79,6 @@ payload_stringifies_rpc_atom_keys_and_schema_id_lists_test() ->
         ringing => [400, <<"500">>],
         recipients => [600, <<"700">>],
         mention_roles => [800],
-        nsfw_emojis => [900],
         pinned_dms => [1000],
         permissions => 8
     }),
@@ -91,7 +90,6 @@ payload_stringifies_rpc_atom_keys_and_schema_id_lists_test() ->
     ?assertEqual([<<"400">>, <<"500">>], maps:get(<<"ringing">>, Payload)),
     ?assertEqual([<<"600">>, <<"700">>], maps:get(<<"recipients">>, Payload)),
     ?assertEqual([<<"800">>], maps:get(<<"mention_roles">>, Payload)),
-    ?assertEqual([<<"900">>], maps:get(<<"nsfw_emojis">>, Payload)),
     ?assertEqual([<<"1000">>], maps:get(<<"pinned_dms">>, Payload)),
     ?assertEqual(<<"8">>, maps:get(<<"permissions">>, Payload)).
 
@@ -126,6 +124,156 @@ payload_preserves_fluxer_object_lists_and_non_snowflake_ids_test() ->
 payload_stringifies_snowflake_record_list_values_test() ->
     Payload = payload(#{100 => [200, <<"300">>]}),
     ?assertEqual([<<"200">>, <<"300">>], maps:get(<<"100">>, Payload)).
+
+payload_normalizes_presence_event_test() ->
+    ?assertEqual(presence_event_wire(), payload(presence_event_data())).
+
+payload_normalizes_message_event_test() ->
+    ?assertEqual(message_event_wire(), payload(message_event_data())).
+
+presence_event_data() ->
+    #{
+        <<"user">> => #{
+            <<"id">> => 100000000000000001,
+            <<"username">> => <<"ada">>,
+            <<"global_name">> => <<"Ada">>,
+            <<"avatar">> => null,
+            <<"public_flags">> => 64
+        },
+        <<"guild_id">> => 200000000000000002,
+        <<"status">> => <<"online">>,
+        <<"client_status">> => #{<<"desktop">> => <<"online">>, <<"mobile">> => <<"idle">>},
+        <<"activities">> => [
+            #{
+                <<"name">> => <<"Fluxer">>,
+                <<"type">> => 0,
+                <<"application_id">> => 300000000000000003,
+                <<"session_id">> => <<"3ab8fa1c">>,
+                <<"created_at">> => 1756500000000,
+                <<"party">> => #{<<"id">> => <<"party-a">>, <<"size">> => [2, 5]}
+            }
+        ],
+        <<"roles">> => [400000000000000004, <<"500000000000000005">>],
+        <<"nick">> => <<"Ada">>,
+        <<"premium_since">> => null,
+        <<"member_role_index">> => #{400000000000000004 => true},
+        <<"role_perms_cache">> => #{400000000000000004 => 8},
+        600000000000000006 => [700000000000000007, <<"800000000000000008">>],
+        presence_seq => 42
+    }.
+
+presence_event_wire() ->
+    #{
+        <<"user">> => #{
+            <<"id">> => <<"100000000000000001">>,
+            <<"username">> => <<"ada">>,
+            <<"global_name">> => <<"Ada">>,
+            <<"avatar">> => null,
+            <<"public_flags">> => 64
+        },
+        <<"guild_id">> => <<"200000000000000002">>,
+        <<"status">> => <<"online">>,
+        <<"client_status">> => #{<<"desktop">> => <<"online">>, <<"mobile">> => <<"idle">>},
+        <<"activities">> => [
+            #{
+                <<"name">> => <<"Fluxer">>,
+                <<"type">> => 0,
+                <<"application_id">> => <<"300000000000000003">>,
+                <<"session_id">> => <<"3ab8fa1c">>,
+                <<"created_at">> => 1756500000000,
+                <<"party">> => #{<<"id">> => <<"party-a">>, <<"size">> => [2, 5]}
+            }
+        ],
+        <<"roles">> => [<<"400000000000000004">>, <<"500000000000000005">>],
+        <<"nick">> => <<"Ada">>,
+        <<"premium_since">> => null,
+        <<"600000000000000006">> => [<<"700000000000000007">>, <<"800000000000000008">>],
+        <<"presence_seq">> => 42
+    }.
+
+message_event_data() ->
+    #{
+        <<"id">> => 900000000000000009,
+        <<"channel_id">> => 100000000000000010,
+        <<"guild_id">> => 200000000000000002,
+        <<"author">> => #{
+            <<"id">> => 100000000000000001,
+            <<"username">> => <<"ada">>,
+            <<"avatar">> => <<"a1b2c3">>,
+            <<"bot">> => false
+        },
+        <<"member">> => #{
+            <<"roles">> => [400000000000000004],
+            <<"joined_at">> => <<"2026-08-01T00:00:00Z">>,
+            <<"deaf">> => false
+        },
+        <<"content">> => <<"hey">>,
+        <<"timestamp">> => <<"2026-08-30T12:00:00Z">>,
+        <<"edited_timestamp">> => null,
+        <<"mention_everyone">> => false,
+        <<"mentions">> => [#{<<"id">> => 100000000000000001, <<"username">> => <<"ada">>}],
+        <<"mention_roles">> => [400000000000000004],
+        <<"attachments">> => [
+            #{
+                <<"id">> => 110000000000000011,
+                <<"filename">> => <<"shot.png">>,
+                <<"size">> => 20480
+            }
+        ],
+        <<"embeds">> => [],
+        <<"type">> => 0,
+        <<"nonce">> => <<"120000000000000012">>,
+        <<"session_id">> => <<"3ab8fa1c">>,
+        <<"target_id">> => <<"ref-a">>,
+        <<"permissions">> => 137411140374081,
+        <<"recipient_ids">> => [100000000000000001],
+        <<"nicks">> => #{
+            <<"130000000000000013">> => <<"Ada">>, 170000000000000017 => <<"Grace">>
+        }
+    }.
+
+message_event_wire() ->
+    #{
+        <<"id">> => <<"900000000000000009">>,
+        <<"channel_id">> => <<"100000000000000010">>,
+        <<"guild_id">> => <<"200000000000000002">>,
+        <<"author">> => #{
+            <<"id">> => <<"100000000000000001">>,
+            <<"username">> => <<"ada">>,
+            <<"avatar">> => <<"a1b2c3">>,
+            <<"bot">> => false
+        },
+        <<"member">> => #{
+            <<"roles">> => [<<"400000000000000004">>],
+            <<"joined_at">> => <<"2026-08-01T00:00:00Z">>,
+            <<"deaf">> => false
+        },
+        <<"content">> => <<"hey">>,
+        <<"timestamp">> => <<"2026-08-30T12:00:00Z">>,
+        <<"edited_timestamp">> => null,
+        <<"mention_everyone">> => false,
+        <<"mentions">> => [
+            #{<<"id">> => <<"100000000000000001">>, <<"username">> => <<"ada">>}
+        ],
+        <<"mention_roles">> => [<<"400000000000000004">>],
+        <<"attachments">> => [
+            #{
+                <<"id">> => <<"110000000000000011">>,
+                <<"filename">> => <<"shot.png">>,
+                <<"size">> => 20480
+            }
+        ],
+        <<"embeds">> => [],
+        <<"type">> => 0,
+        <<"nonce">> => <<"120000000000000012">>,
+        <<"session_id">> => <<"3ab8fa1c">>,
+        <<"target_id">> => <<"ref-a">>,
+        <<"permissions">> => <<"137411140374081">>,
+        <<"nicks">> => #{
+            <<"130000000000000013">> => <<"Ada">>,
+            <<"170000000000000017">> => <<"Grace">>
+        }
+    }.
 
 payload(Data) ->
     #{} = guild_data_wire:payload(Data).

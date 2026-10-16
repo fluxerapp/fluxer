@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {userIdToChannelId} from '@app/api/BrandedTypes';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import type {Channel} from '@app/api/models/Channel';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {UserID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import type {IUserRepository} from '../../../user/IUserRepository';
 
 export type DmSearchScope = 'all_dms' | 'open_dms';
 
 interface DmScopeOptions {
 	scope: DmSearchScope;
 	userId: UserID;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	includeChannel?: Channel | null;
 }
 
 export function isDmScopeChannelForUser(channel: Channel, userId: UserID): boolean {
+	if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+		return isPersonalNotesChannelId({userId, channelId: channel.id});
+	}
 	const isDm = channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
 	return isDm && channel.recipientIds.has(userId);
 }
@@ -26,7 +31,7 @@ export async function getDmChannelIdsForScope({
 	includeChannel,
 }: DmScopeOptions): Promise<Array<string>> {
 	const summaryResults = await userRepository.listPrivateChannelSummaries(userId);
-	const channelIdStrings = new Set<string>();
+	const channelIdStrings = new Set<string>([userIdToChannelId(userId).toString()]);
 	for (const summary of summaryResults) {
 		const isDm =
 			summary.channelType === ChannelTypes.DM || summary.channelType === ChannelTypes.GROUP_DM || summary.isGroupDm;

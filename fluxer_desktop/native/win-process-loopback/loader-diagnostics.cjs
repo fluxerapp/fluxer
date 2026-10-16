@@ -1,12 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const {existsSync, readdirSync, readFileSync, statSync} = require('node:fs');
+const {
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	renameSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} = require('node:fs');
 const os = require('node:os');
-const {basename} = require('node:path');
+const {basename, dirname} = require('node:path');
 const {spawnSync} = require('node:child_process');
 const NATIVE_LOAD_ERROR_MARKER = Symbol.for('fluxer.nativeLoadError');
 const MAX_TEXT_LENGTH = 6000;
 const MAX_DIRECTORY_ENTRIES = 80;
+const PREFLIGHT_CHILD_ENV = 'FLUXER_NATIVE_MODULE_PREFLIGHT_CHILD';
+const PROBE_TIMEOUT_ENV = 'FLUXER_NATIVE_PROBE_TIMEOUT_MS';
+const DEFAULT_PROBE_TIMEOUT_MS = 30000;
+const PROBE_CACHE_ENV = 'FLUXER_NATIVE_PROBE_CACHE_FILE';
+const PROBE_CACHE_VERSION = 1;
+const PROBE_REACHED_REQUIRE_MARKER = '__fluxer_native_probe_reached_require__';
+const PROBE_SOURCE = `require('node:fs').writeSync(1, ${JSON.stringify(PROBE_REACHED_REQUIRE_MARKER)});require(process.argv[1]);`;
 
 function trimText(value, limit = MAX_TEXT_LENGTH) {
 	const text = Buffer.isBuffer(value) ? value.toString('utf8') : String(value ?? '');
@@ -446,22 +462,123 @@ function createNativeLoadError({
 	return error;
 }
 
-function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs = 5000}) {
+function resolveProbeTimeoutMs(explicitTimeoutMs) {
+	const configured = Number.parseInt(process.env[PROBE_TIMEOUT_ENV] ?? '', 10);
+	if (Number.isFinite(configured) && configured > 0) return configured;
+	return explicitTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS;
+}
+
+function probeReachedRequire(result) {
+	return typeof result.stdout === 'string' && result.stdout.includes(PROBE_REACHED_REQUIRE_MARKER);
+}
+
+function stripProbeMarker(value) {
+	return typeof value === 'string' ? value.split(PROBE_REACHED_REQUIRE_MARKER).join('') : value;
+}
+
+function nativeBinaryIdentity(nativePath) {
+	try {
+		const stat = statSync(nativePath);
+		return {
+			size: stat.size,
+			mtimeMs: stat.mtimeMs,
+			execPath: process.execPath,
+			runtime: process.versions.electron || process.versions.node,
+			arch: process.arch,
+		};
+	} catch {
+		return null;
+	}
+}
+
+function sameNativeBinaryIdentity(left, right) {
+	return (
+		left != null &&
+		right != null &&
+		left.size === right.size &&
+		left.mtimeMs === right.mtimeMs &&
+		left.execPath === right.execPath &&
+		left.runtime === right.runtime &&
+		left.arch === right.arch
+	);
+}
+
+function readProbeCache(cacheFile) {
+	try {
+		const parsed = JSON.parse(readFileSync(cacheFile, 'utf8'));
+		if (
+			parsed &&
+			parsed.version === PROBE_CACHE_VERSION &&
+			parsed.binaries &&
+			typeof parsed.binaries === 'object' &&
+			!Array.isArray(parsed.binaries)
+		) {
+			return parsed.binaries;
+		}
+	} catch {}
+	return {};
+}
+
+function hasCachedProbePass(nativePath) {
+	const cacheFile = process.env[PROBE_CACHE_ENV];
+	if (!cacheFile) return false;
+	const identity = nativeBinaryIdentity(nativePath);
+	return identity != null && sameNativeBinaryIdentity(readProbeCache(cacheFile)[nativePath], identity);
+}
+
+function recordProbePass(nativePath) {
+	const cacheFile = process.env[PROBE_CACHE_ENV];
+	if (!cacheFile) return;
+	const identity = nativeBinaryIdentity(nativePath);
+	if (identity == null) return;
+	const cached = readProbeCache(cacheFile);
+	if (sameNativeBinaryIdentity(cached[nativePath], identity)) return;
+	const binaries = {};
+	for (const [path, entry] of Object.entries(cached)) {
+		if (entry && entry.execPath === identity.execPath && entry.runtime === identity.runtime) {
+			binaries[path] = entry;
+		}
+	}
+	binaries[nativePath] = identity;
+	const temporary = `${cacheFile}.${process.pid}.${Date.now()}.tmp`;
+	try {
+		mkdirSync(dirname(cacheFile), {recursive: true});
+		writeFileSync(temporary, JSON.stringify({version: PROBE_CACHE_VERSION, binaries}));
+		renameSync(temporary, cacheFile);
+	} catch {
+		try {
+			rmSync(temporary, {force: true});
+		} catch {}
+	}
+}
+
+function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs}) {
 	if (!skipNativeProbeEnv || process.env[skipNativeProbeEnv] === '1') {
 		return null;
 	}
-	const result = spawnSync(process.execPath, ['-e', 'require(process.argv[1])', nativePath], {
+	if (process.env[PREFLIGHT_CHILD_ENV] === '1') {
+		return null;
+	}
+	if (hasCachedProbePass(nativePath)) {
+		return null;
+	}
+	const result = spawnSync(process.execPath, ['-e', PROBE_SOURCE, nativePath], {
 		env: {...process.env, ELECTRON_RUN_AS_NODE: '1', [skipNativeProbeEnv]: '1'},
 		encoding: 'utf8',
 		stdio: ['ignore', 'pipe', 'pipe'],
-		timeout: timeoutMs,
+		timeout: resolveProbeTimeoutMs(timeoutMs),
 	});
-	if (result.status === 0) return null;
+	if (result.status === 0) {
+		recordProbePass(nativePath);
+		return null;
+	}
+	if (!probeReachedRequire(result)) return null;
 	const reason = result.error
 		? result.error.message
 		: result.signal
 			? `safety probe terminated by signal ${result.signal}`
 			: `safety probe exited with code ${result.status}`;
+	const probeStdout = trimText(stripProbeMarker(result.stdout));
 	return createNativeLoadError({
 		moduleName,
 		nativePath,
@@ -470,7 +587,7 @@ function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skip
 		reason,
 		skipNativeProbeEnv,
 		extraDiagnostics: [
-			result.stdout ? {name: 'probeStdout', text: trimText(result.stdout)} : null,
+			probeStdout ? {name: 'probeStdout', text: probeStdout} : null,
 			result.stderr ? {name: 'probeStderr', text: trimText(result.stderr)} : null,
 		],
 	});
@@ -497,7 +614,9 @@ function loadNativeBinding({moduleName, nativePath, nativeRoot, packageDir, skip
 		return {binding: null, loadError: nativeProbeError};
 	}
 	try {
-		return {binding: require(nativePath), loadError: null};
+		const binding = require(nativePath);
+		recordProbePass(nativePath);
+		return {binding, loadError: null};
 	} catch (error) {
 		return {
 			binding: null,

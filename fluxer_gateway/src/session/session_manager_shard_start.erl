@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    build_and_start_session/7,
     build_and_start_session/8
 ]).
 
@@ -14,28 +13,6 @@
 -type session_ref() :: session_manager_shard_lifecycle:session_ref().
 -type state() :: session_manager_shard_lifecycle:state().
 -type start_reply() :: session_manager_shard_lifecycle:start_reply().
-
--spec build_and_start_session(
-    map(),
-    map(),
-    non_neg_integer(),
-    pid(),
-    session_id(),
-    #{session_id() => session_ref()},
-    state()
-) ->
-    {reply, start_reply(), state()}.
-build_and_start_session(Data, IdentifyData, Version, SocketPid, SessionId, Sessions, State) ->
-    build_and_start_session(
-        Data,
-        IdentifyData,
-        Version,
-        SocketPid,
-        SessionId,
-        Sessions,
-        State,
-        gateway_timings:new()
-    ).
 
 -spec build_and_start_session(
     map(),
@@ -137,6 +114,8 @@ check_user_session_limit(
     {reply, start_reply(), state()}.
 handle_user_session_limit_result({error, too_many_sessions}, Ctx) ->
     {reply, {error, too_many_sessions}, maps:get(state, Ctx)};
+handle_user_session_limit_result({error, sharding_required}, Ctx) ->
+    {reply, {error, sharding_required}, maps:get(state, Ctx)};
 handle_user_session_limit_result(ok, Ctx) ->
     UserId = maps:get(user_id, Ctx),
     session_abuse_protection:increment_user_sessions(UserId),

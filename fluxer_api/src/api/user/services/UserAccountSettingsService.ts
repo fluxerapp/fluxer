@@ -1,6 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createUserID,
+	type GuildID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
+import {controlUserGuildSettingsView} from '@app/api/user/UserGuildSettingsThreadView';
+import {dispatchUserUpdate, mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {CHANNEL_OVERRIDE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
+import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	GroupDmAddPermissionFlags,
 	IncomingCallFlags,
@@ -26,41 +53,14 @@ import type {
 	UserGuildSettingsUpdateRequest,
 	UserSettingsUpdateRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {
-	type ChannelID,
-	createChannelID,
-	createGuildID,
-	createUserID,
-	type GuildID,
-	type UserID,
-} from '../../BrandedTypes';
-import type {ChannelOverride, UserGuildSettingsRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import {isUserAdult} from '../../utils/AgeUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import {dedupeGuildFolders} from '../utils/GuildFolderUtils';
-import {CustomStatusValidator} from './CustomStatusValidator';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
 
 interface UserAccountSettingsServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	userSettingsRepository: IUserSettingsRepository;
-	userRelationshipRepository: IUserRelationshipRepository;
+	userAccountRepository: UserRepository;
+
 	updatePropagator: UserAccountUpdatePropagator;
 	gatewayService: IGatewayService;
 	userCacheService: UserCacheService;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	limitConfigService: LimitConfigService;
 }
 
@@ -76,7 +76,7 @@ export class UserAccountSettingsService {
 	}
 
 	async findSettings(userId: UserID): Promise<UserSettings> {
-		const userSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const userSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!userSettings) throw new UnknownUserError();
 		return userSettings;
 	}
@@ -88,7 +88,7 @@ export class UserAccountSettingsService {
 		flags?: bigint;
 	}): Promise<UserSettings> {
 		const {userId, data, dateOfBirth, flags = 0n} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) {
 			throw new UnknownUserError();
 		}
@@ -99,8 +99,6 @@ export class UserAccountSettingsService {
 		if (data.status_resets_at !== undefined) updatedRowData.status_resets_at = data.status_resets_at;
 		if (data.status_resets_to !== undefined) updatedRowData.status_resets_to = data.status_resets_to;
 		if (data.theme !== undefined) {
-			if (data.theme !== currentSettings.theme) {
-			}
 			updatedRowData.theme = data.theme;
 		}
 		if (data.locale !== undefined) updatedRowData.locale = data.locale;
@@ -134,6 +132,10 @@ export class UserAccountSettingsService {
 		}
 		if (data.bot_default_guilds_restricted !== undefined) {
 			updatedRowData.bot_default_guilds_restricted = data.bot_default_guilds_restricted;
+		}
+		if (data.privacy_setup_version !== undefined) {
+			updatedRowData.privacy_setup_version = data.privacy_setup_version;
+			updatedRowData.privacy_setup_completed_at = new Date();
 		}
 		if (data.inline_attachment_media !== undefined) {
 			updatedRowData.inline_attachment_media = data.inline_attachment_media;
@@ -202,7 +204,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = isUserAdult(dateOfBirth);
+		const userIsAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth});
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
@@ -228,11 +230,17 @@ export class UserAccountSettingsService {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
 			}
 			if (data.sensitive_content_non_friend_dm_filter !== undefined) {
-				throw ValidationError.fromPath(
-					'sensitive_content_non_friend_dm_filter',
-					'AGE_RESTRICTED',
-					'Non-adult users cannot modify the non-friend DM content filter',
-				);
+				const allowed =
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLUR ||
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLOCK;
+				if (!allowed) {
+					throw ValidationError.fromPath(
+						'sensitive_content_non_friend_dm_filter',
+						'AGE_RESTRICTED',
+						'Non-adult users can only set non-friend DM filter to blur or block',
+					);
+				}
+				updatedRowData.sensitive_content_non_friend_dm_filter = data.sensitive_content_non_friend_dm_filter;
 			}
 			if (data.sensitive_content_guild_filter !== undefined) {
 				throw ValidationError.fromPath(
@@ -262,7 +270,7 @@ export class UserAccountSettingsService {
 		if (data.synced_preferences !== undefined) {
 			updatedRowData.synced_preferences = normalizeSyncedPreferencesSnapshot(data.synced_preferences);
 		}
-		await this.deps.userSettingsRepository.upsertSettings(updatedRowData);
+		await this.deps.userAccountRepository.upsertSettings(updatedRowData);
 		const updatedSettings = await this.findSettings(userId);
 		await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		if (localeChanged) {
@@ -273,23 +281,20 @@ export class UserAccountSettingsService {
 					{locale: data.locale},
 					user.toRow(),
 				);
-				await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
+				await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 			}
 		}
 		return updatedSettings;
-	}
-
-	async findGuildSettings(userId: UserID, guildId: GuildID | null): Promise<UserGuildSettings | null> {
-		return await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
 	}
 
 	async updateGuildSettings(params: {
 		userId: UserID;
 		guildId: GuildID | null;
 		data: UserGuildSettingsUpdateRequest;
+		viewer?: ThreadViewer;
 	}): Promise<UserGuildSettings> {
 		const {userId, guildId, data} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
+		const currentSettings = await this.deps.userAccountRepository.findGuildSettings(userId, guildId);
 		const resolvedGuildId = guildId ?? createGuildID(0n);
 		const baseRow: UserGuildSettingsRow = currentSettings
 			? {
@@ -328,29 +333,39 @@ export class UserAccountSettingsService {
 		if (data.hide_muted_channels !== undefined) updatedRowData.hide_muted_channels = data.hide_muted_channels;
 		if (data.unread_badges !== undefined) updatedRowData.unread_badges = data.unread_badges ?? null;
 		if (data.channel_overrides !== undefined) {
-			if (data.channel_overrides) {
-				const channelOverrides = new Map<ChannelID, ChannelOverride>();
-				for (const [channelIdStr, override] of Object.entries(data.channel_overrides)) {
-					const channelId = createChannelID(BigInt(channelIdStr));
-					channelOverrides.set(channelId, {
-						collapsed: override.collapsed,
-						message_notifications: override.message_notifications,
-						muted: override.muted,
-						mute_config: override.mute_config
-							? {
-									end_time: override.mute_config.end_time ?? null,
-									selected_time_window: override.mute_config.selected_time_window,
-								}
-							: null,
-						unread_badges: override.unread_badges ?? null,
-					});
-				}
-				updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
-			} else {
-				updatedRowData.channel_overrides = null;
+			const flagsWritable = guildId !== null && params.viewer !== undefined && viewerActive(params.viewer, guildId);
+			const previousOverrides = currentSettings?.channelOverrides ?? new Map<ChannelID, GuildChannelOverride>();
+			const channelOverrides = new Map<ChannelID, ChannelOverride>();
+			for (const [channelIdStr, override] of Object.entries(data.channel_overrides ?? {})) {
+				const channelId = createChannelID(BigInt(channelIdStr));
+				const flags = flagsWritable
+					? override.flags !== undefined
+						? override.flags & CHANNEL_OVERRIDE_FLAG_MASK
+						: previousOverrides.get(channelId)?.flags
+					: previousOverrides.get(channelId)?.flags;
+				channelOverrides.set(channelId, {
+					collapsed: override.collapsed,
+					message_notifications: override.message_notifications,
+					muted: override.muted,
+					mute_config: override.mute_config
+						? {
+								end_time: override.mute_config.end_time ?? null,
+								selected_time_window: override.mute_config.selected_time_window,
+							}
+						: null,
+					unread_badges: override.unread_badges ?? null,
+					...(flags ? {flags} : {}),
+				});
 			}
+			if (!flagsWritable && currentSettings) {
+				const hidden = (await controlUserGuildSettingsView(currentSettings))?.hiddenChannelIds;
+				for (const [channelId, override] of previousOverrides) {
+					if (hidden?.has(channelId.toString())) channelOverrides.set(channelId, override.toChannelOverride());
+				}
+			}
+			updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
 		}
-		const updatedSettings = await this.deps.userSettingsRepository.upsertGuildSettings(updatedRowData);
+		const updatedSettings = await this.deps.userAccountRepository.upsertGuildSettings(updatedRowData);
 		await this.deps.updatePropagator.dispatchUserGuildSettingsUpdate({userId, settings: updatedSettings});
 		return updatedSettings;
 	}
@@ -413,7 +428,7 @@ export class UserAccountSettingsService {
 				);
 			}
 		}
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) throw new UnknownUserError();
 		const settingsUnchanged = currentSettings.defaultShareVoiceActivity === shareVoiceActivity;
 		const updatedSettingsRow = {
@@ -421,24 +436,19 @@ export class UserAccountSettingsService {
 			user_id: userId,
 			default_share_voice_activity: shareVoiceActivity,
 		};
-		await this.deps.userSettingsRepository.upsertSettings(updatedSettingsRow);
+		await this.deps.userAccountRepository.upsertSettings(updatedSettingsRow);
 		const updatedSettings = await this.findSettings(userId);
-		const updatedFriendRows = await this.deps.userRelationshipRepository.bulkUpdateFriendShareVoiceActivity(
+		const updatedFriendRows = await this.deps.userAccountRepository.bulkUpdateFriendShareVoiceActivity(
 			userId,
 			shareVoiceActivity,
 		);
-		const userPartialResolver = (id: UserID) =>
-			getCachedUserPartialResponse({
-				userId: id,
-				userCacheService: this.deps.userCacheService,
-				requestCache,
-			});
+		const userPartialResolver = (id: UserID) => this.deps.userCacheService.getUserPartialResponse(id, requestCache);
 		await Promise.all(
 			updatedFriendRows.flatMap((friendRel) => {
 				const dispatches: Array<Promise<unknown>> = [];
 				dispatches.push(
 					(async () => {
-						const inverse = await this.deps.userRelationshipRepository.getRelationship(
+						const inverse = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -456,12 +466,12 @@ export class UserAccountSettingsService {
 				);
 				dispatches.push(
 					(async () => {
-						const inverseForFriend = await this.deps.userRelationshipRepository.getRelationship(
+						const inverseForFriend = await this.deps.userAccountRepository.getRelationship(
 							userId,
 							friendRel.targetUserId,
 							RelationshipTypes.FRIEND,
 						);
-						const friendOwnRow = await this.deps.userRelationshipRepository.getRelationship(
+						const friendOwnRow = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -487,7 +497,7 @@ export class UserAccountSettingsService {
 			user.toRow(),
 		);
 		const finalUser = updatedUser ?? user;
-		await this.deps.updatePropagator.dispatchUserUpdate(finalUser);
+		await dispatchUserUpdate(this.deps.gatewayService, finalUser);
 		if (!settingsUnchanged) {
 			await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		}

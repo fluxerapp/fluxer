@@ -152,7 +152,7 @@ pub fn danger_button(label: &str) -> Markup {
 }
 
 pub fn secondary_button(label: &str) -> Markup {
-    button_markup(label, "button", SECONDARY_BUTTON_CLASS)
+    button_markup(label, "submit", SECONDARY_BUTTON_CLASS)
 }
 
 pub fn form_field_group(
@@ -222,8 +222,15 @@ pub fn checkbox(name: &str, value: &str, label: &str, checked: bool, enabled: bo
             div class="checkbox-custom" {
                 (PreEscaped(CHECKMARK_SVG))
             }
-            span class="min-w-0 break-all text-sm leading-5 text-neutral-900" { (label) }
+            span class="min-w-0 [overflow-wrap:anywhere] text-sm leading-5 text-neutral-900" { (label) }
         }
+    }
+}
+
+pub fn opt_out_checkbox(name: &str, label: &str) -> Markup {
+    html! {
+        input type="hidden" name={(name) "_present"} value="1";
+        (checkbox(name, "true", label, true, true))
     }
 }
 
@@ -232,6 +239,31 @@ pub fn secondary_button_link(label: &str, href: &str) -> Markup {
         a href=(href) role="button"
             class={(BUTTON_BASE_CLASS) " " (SECONDARY_BUTTON_CLASS)} {
             span { (label) }
+        }
+    }
+}
+
+pub(crate) fn form_field_with_id(
+    label: &str,
+    id: &str,
+    name: &str,
+    input_type: &str,
+    value: &str,
+    placeholder: &str,
+    required: bool,
+) -> Markup {
+    html! {
+        div class="space-y-1" {
+            label for=(id) class="block text-sm font-medium text-neutral-700" {
+                (label)
+            }
+            input type=(input_type) id=(id) name=(name) value=(value)
+                placeholder=(placeholder) required[required]
+                step=[if input_type == "number" { Some("any") } else { None }]
+                class="block w-full rounded-md border border-neutral-300 \
+                       px-3 py-2 text-sm shadow-sm \
+                       focus:border-brand-primary focus:outline-none \
+                       focus:ring-1 focus:ring-brand-primary";
         }
     }
 }

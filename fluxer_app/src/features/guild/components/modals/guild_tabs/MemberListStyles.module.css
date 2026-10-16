@@ -28,10 +28,6 @@
 	color: var(--text-primary-muted);
 }
 
-.searchContainer {
-	flex-shrink: 0;
-}
-
 .searchInput {
 	width: 100%;
 }
@@ -55,43 +51,6 @@
 	overflow: hidden;
 	border-radius: 0.75rem;
 	background-color: var(--background-secondary-alt);
-}
-
-.memberTable {
-	display: flex;
-	flex-direction: column;
-	padding-bottom: 1rem;
-}
-
-.memberRow {
-	display: flex;
-	width: 100%;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.75rem;
-	padding: 0.875rem 1rem;
-	border-radius: 0.5rem;
-	background-color: var(--background-secondary-alt);
-	margin-bottom: 0.5rem;
-	cursor: pointer;
-	transition: background-color 0.15s;
-	-webkit-tap-highlight-color: transparent;
-	border: none;
-	text-align: left;
-}
-
-.memberRow:last-child {
-	margin-bottom: 0;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.memberRow:hover {
-		background-color: var(--background-modifier-hover);
-	}
-
-	.memberRow:active {
-		background-color: var(--background-modifier-selected);
-	}
 }
 
 .memberItemWrapper {
@@ -134,7 +93,6 @@
 	background-color: var(--background-modifier-hover);
 }
 
-.memberContent,
 .memberMain {
 	display: flex;
 	align-items: center;
@@ -196,28 +154,12 @@
 	white-space: nowrap;
 }
 
-.ownerIcon {
-	height: 1rem;
-	width: 1rem;
-	flex-shrink: 0;
-	color: var(--status-idle);
-}
-
 .tag {
 	font-size: 0.8125rem;
 	color: var(--text-tertiary);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-
-.memberRoles {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.375rem;
-	flex-shrink: 0;
-	max-width: 50%;
 }
 
 .memberActions {
@@ -290,31 +232,20 @@
 	padding: 1.5rem;
 }
 
-.emptyState {
-	padding: var(--spacing-3) 0;
-}
-
-.noticeText,
-.emptyStateText {
+.noticeText {
 	margin: 0;
 	text-align: center;
 	color: var(--text-primary-muted);
 }
 
 @media (min-width: 768px) {
-	.memberItem,
-	.memberRow {
+	.memberItem {
 		padding: 0.75rem 1rem;
-	}
-
-	.memberRoles {
-		max-width: none;
 	}
 }
 
 @media (max-width: 767px) {
-	.memberItem,
-	.memberRow {
+	.memberItem {
 		padding: 1rem;
 	}
 

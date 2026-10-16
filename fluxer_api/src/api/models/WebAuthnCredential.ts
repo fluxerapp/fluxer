@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {WebAuthnCredentialRow} from '../database/types/AuthTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {WebAuthnCredentialRow} from '@app/api/database/types/AuthTypes';
 
 export class WebAuthnCredential {
 	readonly credentialId: string;
@@ -12,6 +12,8 @@ export class WebAuthnCredential {
 	readonly createdAt: Date;
 	readonly lastUsedAt: Date | null;
 	readonly version: number;
+	readonly rpId: string | null;
+	readonly supersededBy: string | null;
 
 	constructor(row: WebAuthnCredentialRow) {
 		this.credentialId = row.credential_id;
@@ -22,6 +24,8 @@ export class WebAuthnCredential {
 		this.createdAt = row.created_at;
 		this.lastUsedAt = row.last_used_at ?? null;
 		this.version = row.version;
+		this.rpId = row.rp_id ?? null;
+		this.supersededBy = row.superseded_by ?? null;
 	}
 
 	toRow(userId: UserID): WebAuthnCredentialRow {
@@ -35,6 +39,8 @@ export class WebAuthnCredential {
 			created_at: this.createdAt,
 			last_used_at: this.lastUsedAt,
 			version: this.version,
+			rp_id: this.rpId,
+			superseded_by: this.supersededBy,
 		};
 	}
 }

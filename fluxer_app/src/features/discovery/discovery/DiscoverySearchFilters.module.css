@@ -1,0 +1,112 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.container {
+	position: sticky;
+	top: var(--spacing-5);
+	box-sizing: border-box;
+	max-height: calc(100svh - var(--layout-header-height) - var(--spacing-10));
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-5);
+	width: 17rem;
+	padding: var(--spacing-4);
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-secondary);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	min-width: 0;
+}
+
+.sectionHeading {
+	margin: 0;
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.categoryList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.categoryItem {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	width: 100%;
+	min-width: 0;
+	min-height: 2rem;
+	padding: var(--spacing-2) var(--spacing-3);
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.categoryItem:not(:disabled):hover {
+		background-color: var(--background-modifier-hover);
+		color: var(--text-primary);
+	}
+}
+
+.categoryItemActive {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.categoryItemActive:not(:disabled):hover {
+		background-color: var(--background-modifier-selected);
+		color: var(--text-primary);
+	}
+}
+
+.categoryLabel {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.categoryCount {
+	flex-shrink: 0;
+	min-width: 2.5rem;
+	text-align: right;
+	font-size: 0.75rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+.categoryItemActive .categoryCount {
+	color: var(--text-primary-muted);
+}
+
+@media (max-width: 960px) {
+	.container {
+		position: static;
+		order: -1;
+		width: 100%;
+		max-height: none;
+		overflow-y: visible;
+	}
+}

@@ -2,6 +2,7 @@
 
 import styles from '@app/features/app/components/shared/FriendSelector.module.css';
 import {SEARCH_FRIENDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import {Avatar} from '@app/features/ui/components/Avatar';
@@ -75,40 +76,43 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 		};
 		const relationships = Relationships.getRelationships();
 		const friendUsers = useMemo(() => {
+			const collator = getCachedCollator(i18n.locale || undefined);
 			const friends = relationships.filter(
 				(relationship) => relationship.type === RelationshipTypes.FRIEND && !excludeUserIds.includes(relationship.id),
 			);
 			return friends
 				.map((relationship) => Users.getUser(relationship.id))
 				.filter((user): user is User => Boolean(user))
-				.sort((a, b) => NicknameUtils.getNickname(a).localeCompare(NicknameUtils.getNickname(b)));
-		}, [relationships, excludeUserIds]);
+				.sort((a, b) => collator.compare(NicknameUtils.getNickname(a, null), NicknameUtils.getNickname(b, null)));
+		}, [relationships, excludeUserIds, i18n.locale]);
 		const activeStickyUserIds = useMemo(() => {
 			return stickyUserIds.filter((id) => selectedUserIds.includes(id));
 		}, [stickyUserIds, selectedUserIds]);
 		const groupedFriends = useMemo(() => {
+			const locale = i18n.locale || undefined;
+			const collator = getCachedCollator(locale);
 			const filtered = friendUsers.filter((user) => {
 				if (!searchQuery) return true;
-				return NicknameUtils.getNickname(user).toLowerCase().includes(searchQuery.toLowerCase());
+				return NicknameUtils.getNickname(user, null).toLowerCase().includes(searchQuery.toLowerCase());
 			});
 			const stickySet = new Set(activeStickyUserIds);
 			const groups: Record<string, Array<User>> = {};
 			filtered.forEach((user) => {
 				if (stickySet.has(user.id)) return;
-				const firstLetter = NicknameUtils.getNickname(user)[0].toUpperCase();
+				const firstLetter = NicknameUtils.getNickname(user, null)[0].toLocaleUpperCase(locale);
 				if (!groups[firstLetter]) {
 					groups[firstLetter] = [];
 				}
 				groups[firstLetter].push(user);
 			});
 			const groupArray: Array<FriendGroup> = Object.keys(groups)
-				.sort()
+				.sort((a, b) => collator.compare(a, b))
 				.map((letter) => ({
 					letter,
 					friendIds: groups[letter].map((user) => user.id),
 				}));
 			return groupArray;
-		}, [friendUsers, searchQuery, activeStickyUserIds]);
+		}, [friendUsers, searchQuery, activeStickyUserIds, i18n.locale]);
 		const handleRemovePill = (userId: string) => {
 			onToggle(userId);
 			if (inputRef.current) {
@@ -127,8 +131,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 		const isMaxed = maxSelections !== undefined && selectedUserIds.length >= maxSelections;
 		const isMutableRefObject = (
 			ref: React.Ref<HTMLInputElement> | undefined,
-		): ref is React.MutableRefObject<HTMLInputElement | null> =>
-			typeof ref === 'object' && ref !== null && 'current' in ref;
+		): ref is React.RefObject<HTMLInputElement | null> => typeof ref === 'object' && ref !== null && 'current' in ref;
 		const renderSearchInput = ({inputProps, inputClassName, ref: forwardedRef}: RenderInputArgs) => {
 			const handleRef = (node: HTMLInputElement | null) => {
 				inputRef.current = node;
@@ -153,14 +156,16 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 								data-flx="app.friend-selector.render-search-input.selected-pill"
 							>
 								<Avatar user={user} size={16} data-flx="app.friend-selector.render-search-input.avatar" />
-								<span data-flx="app.friend-selector.render-search-input.span">{NicknameUtils.getNickname(user)}</span>
+								<span data-flx="app.friend-selector.render-search-input.span">
+									{NicknameUtils.getNickname(user, null)}
+								</span>
 								<FocusRing offset={-2} data-flx="app.friend-selector.render-search-input.focus-ring">
 									<button
 										type="button"
 										onClick={() => handleRemovePill(userId)}
 										className={styles.removeButton}
 										aria-label={i18n._(REMOVE_DESCRIPTOR, {
-											displayName: NicknameUtils.getNickname(user),
+											displayName: NicknameUtils.getNickname(user, null),
 										})}
 										data-flx="app.friend-selector.render-search-input.remove-button.remove-pill"
 									>
@@ -252,7 +257,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 															data-flx="app.friend-selector.status-aware-avatar"
 														/>
 														<span className={styles.friendName} data-flx="app.friend-selector.friend-name">
-															{NicknameUtils.getNickname(user)}
+															{NicknameUtils.getNickname(user, null)}
 														</span>
 													</div>
 													<div className={styles.checkboxContainer} data-flx="app.friend-selector.checkbox-container">
@@ -306,7 +311,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 																data-flx="app.friend-selector.status-aware-avatar--2"
 															/>
 															<span className={styles.friendName} data-flx="app.friend-selector.friend-name--2">
-																{NicknameUtils.getNickname(user)}
+																{NicknameUtils.getNickname(user, null)}
 															</span>
 														</div>
 														<div

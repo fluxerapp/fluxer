@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createInviteCode,
+	createVanityURLCode,
+	type GuildID,
+	type UserID,
+	vanityCodeToInviteCode,
+} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {serializeGuildForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -7,21 +19,12 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {
-	createInviteCode,
-	createVanityURLCode,
-	type GuildID,
-	type UserID,
-	vanityCodeToInviteCode,
-} from '../../../BrandedTypes';
-import type {InviteRepository} from '../../../invite/InviteRepository';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildDataHelpers} from './GuildDataHelpers';
+
+const VANITY_AUDIT_KEYS: ReadonlySet<string> = new Set(['vanity_url_code']);
 
 export class GuildVanityService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly inviteRepository: InviteRepository,
 		private readonly helpers: GuildDataHelpers,
 	) {}
@@ -59,7 +62,7 @@ export class GuildVanityService {
 		await checkPermission(Permissions.MANAGE_GUILD);
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) throw new UnknownGuildError();
-		const previousSnapshot = this.helpers.serializeGuildForAudit(guild);
+		const previousSnapshot = serializeGuildForAudit(guild);
 		if (code && !guild.features.has(GuildFeatures.VANITY_URL)) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.VANITY_URL_REQUIRES_FEATURE);
 		}
@@ -77,14 +80,13 @@ export class GuildVanityService {
 				}
 				const updatedGuild = await this.guildRepository.upsertPartial(guildId, {vanity_url_code: null}, guild.toRow());
 				await this.helpers.dispatchGuildUpdate(updatedGuild);
-				await this.helpers.recordAuditLog({
+				await this.helpers.guildAuditLogService.record({
 					guildId,
 					userId,
 					action: AuditLogActionType.GUILD_UPDATE,
 					targetId: guildId,
 					auditLogReason: auditLogReason ?? null,
-					metadata: {vanity_url_code: ''},
-					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 				});
 				return {code: null};
 			}
@@ -116,14 +118,13 @@ export class GuildVanityService {
 			guild.toRow(),
 		);
 		await this.helpers.dispatchGuildUpdate(updatedGuild);
-		await this.helpers.recordAuditLog({
+		await this.helpers.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.GUILD_UPDATE,
 			targetId: guildId,
 			auditLogReason: auditLogReason ?? null,
-			metadata: {vanity_url_code: code},
-			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 		});
 		return {code};
 	}

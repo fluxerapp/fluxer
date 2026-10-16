@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import type {ApplicationRow} from '../database/types/OAuth2Types';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import type {ApplicationRow} from '@app/api/database/types/OAuth2Types';
 
 export class Application {
 	readonly applicationId: ApplicationID;
@@ -50,13 +50,5 @@ export class Application {
 			client_secret_created_at: this.clientSecretCreatedAt,
 			version: this.version,
 		};
-	}
-
-	hasBotUser(): boolean {
-		return this.botUserId !== null;
-	}
-
-	getBotUserId(): UserID | null {
-		return this.botUserId;
 	}
 }

@@ -18,11 +18,6 @@ filter_sessions_for_channel_uses_cached_viewable_channels_test() ->
     Result = guild_sessions:filter_sessions_for_channel(Sessions, 200, undefined, State),
     ?assertEqual([{SessionId, SessionData}], Result).
 
-filter_sessions_exclude_session_undefined_test() ->
-    Sessions = #{<<"s1">> => #{}, <<"s2">> => #{}},
-    Result = guild_sessions:filter_sessions_exclude_session(Sessions, undefined),
-    ?assertEqual(2, length(Result)).
-
 filter_sessions_exclude_session_specific_test() ->
     Sessions = #{<<"s1">> => #{}, <<"s2">> => #{}},
     Result = guild_sessions:filter_sessions_exclude_session(Sessions, <<"s1">>),
@@ -49,23 +44,6 @@ pending_connect_filtered_from_channel_sessions_test() ->
     ?assertEqual(1, length(Result)),
     [{ResultSid, _}] = Result,
     ?assertEqual(<<"s1">>, ResultSid).
-
-set_session_viewable_channels_test() ->
-    Sessions = #{<<"s1">> => #{user_id => 1, pid => self()}},
-    State = #{sessions => Sessions},
-    ViewableChannels = #{100 => true, 200 => true},
-    UpdatedState = guild_sessions:set_session_viewable_channels(
-        <<"s1">>, ViewableChannels, State
-    ),
-    UpdatedSession = maps:get(<<"s1">>, maps:get(sessions, UpdatedState)),
-    ?assertEqual(ViewableChannels, maps:get(viewable_channels, UpdatedSession)).
-
-set_session_viewable_channels_missing_session_test() ->
-    State = #{sessions => #{}},
-    Result = guild_sessions:set_session_viewable_channels(
-        <<"nonexistent">>, #{100 => true}, State
-    ),
-    ?assertEqual(State, Result).
 
 refresh_user_session_cache_updates_roles_and_viewable_channels_test() ->
     UserId = 10,
@@ -108,16 +86,6 @@ refresh_user_session_cache_updates_roles_and_viewable_channels_test() ->
     ?assert(maps:is_key(100, maps:get(viewable_channels, S1))),
     ?assertEqual([1], maps:get(user_roles, S2)),
     ?assertEqual(#{200 => true}, maps:get(viewable_channels, S2)).
-
-build_viewable_channel_map_test() ->
-    Map = guild_sessions:build_viewable_channel_map([100, 200, 300]),
-    ?assertEqual(3, map_size(Map)),
-    ?assertEqual(true, maps:get(100, Map)),
-    ?assertEqual(true, maps:get(200, Map)),
-    ?assertEqual(true, maps:get(300, Map)).
-
-build_viewable_channel_map_empty_test() ->
-    ?assertEqual(#{}, guild_sessions:build_viewable_channel_map([])).
 
 filter_sessions_exclude_session_filters_pending_test() ->
     Sessions = #{

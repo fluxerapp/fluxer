@@ -29,6 +29,7 @@ jobs:
   image:
     needs: approve
     uses: ./.github/workflows/_build-image.yaml
+    secrets: inherit
     with:
       image: fluxer-messages
       dockerfile: fluxer_messages/Dockerfile

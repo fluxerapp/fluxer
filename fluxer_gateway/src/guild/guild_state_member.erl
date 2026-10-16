@@ -25,15 +25,15 @@
 
 -spec handle_member_add(event_data(), guild_data()) -> guild_data().
 handle_member_add(EventData, Data) ->
-    guild_data_index:put_member(EventData, Data).
+    guild_data_index_members:put_member(EventData, Data).
 
 -spec handle_member_update(event_data(), guild_data()) -> guild_data().
 handle_member_update(EventData, Data) ->
     UserId = extract_user_id(EventData),
-    Members = guild_data_index:member_map(Data),
+    Members = guild_data_index_members:member_map(Data),
     case maps:is_key(UserId, Members) of
         true ->
-            guild_data_index:put_member(EventData, Data);
+            guild_data_index_members:put_member(EventData, Data);
         false ->
             Data
     end.
@@ -41,7 +41,7 @@ handle_member_update(EventData, Data) ->
 -spec handle_member_remove(event_data(), guild_data(), guild_state()) -> guild_data().
 handle_member_remove(EventData, Data, _State) ->
     UserId = extract_user_id(EventData),
-    guild_data_index:remove_member(UserId, Data).
+    guild_data_index_members:remove_member(UserId, Data).
 
 -spec sync_member(event_data(), guild_state()) -> ok.
 sync_member(EventData, State) ->
@@ -54,7 +54,7 @@ sync_member(EventData, State) ->
 -spec sync_valid_member(user_id(), guild_state()) -> ok.
 sync_valid_member(UserId, State) ->
     Data = maps:get(data, State, #{}),
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined -> ok;
         Member -> sync_local_nif_member(UserId, Member, State)
     end.
@@ -79,7 +79,7 @@ sync_default_member_list_member(UserId, Member, State) ->
             IsConnected = sets:is_element(UserId, ConnectedUserIds),
             NotOffline = Status =/= <<"offline">> andalso Status =/= <<"invisible">>,
             IsOnline = IsConnected andalso NotOffline,
-            guild_member_list_store:update_member(Ref, UserId, SortKey, RoleIds, IsOnline)
+            guild_member_list_engine:update_member(Ref, UserId, SortKey, RoleIds, IsOnline)
     end.
 
 -spec sync_member_remove(user_id() | undefined, guild_state()) -> ok.
@@ -100,13 +100,13 @@ sync_local_nif_member_remove(UserId, State) ->
 sync_default_member_list_remove(UserId, State) ->
     case member_list_engine_ref(State) of
         undefined -> ok;
-        Ref -> guild_member_list_store:remove_member(Ref, UserId)
+        Ref -> guild_member_list_engine:remove_member(Ref, UserId)
     end.
 
 -spec cleanup_removed_member_sessions(guild_state()) -> guild_state().
 cleanup_removed_member_sessions(State) ->
     Data = state_data(State),
-    MemberUserIds = sets:from_list(guild_data_index:member_ids(Data)),
+    MemberUserIds = sets:from_list(guild_data_index_members:member_ids(Data)),
     Sessions = state_sessions(State),
     FilteredSessions = maps:filter(
         fun(_K, S) ->
@@ -115,7 +115,7 @@ cleanup_removed_member_sessions(State) ->
         end,
         Sessions
     ),
-    State#{sessions => FilteredSessions}.
+    drop_removed_session_refs(Sessions, FilteredSessions, State#{sessions => FilteredSessions}).
 
 -spec cleanup_removed_member_sessions(user_id() | undefined, guild_state()) -> guild_state().
 cleanup_removed_member_sessions(UserId, State) when is_integer(UserId), UserId > 0 ->
@@ -126,18 +126,31 @@ cleanup_removed_member_sessions(UserId, State) when is_integer(UserId), UserId >
         end,
         Sessions
     ),
-    State#{sessions => FilteredSessions};
+    drop_removed_session_refs(Sessions, FilteredSessions, State#{sessions => FilteredSessions});
 cleanup_removed_member_sessions(_UserId, State) ->
     cleanup_removed_member_sessions(State).
 
+-spec drop_removed_session_refs(map(), map(), guild_state()) -> guild_state().
+drop_removed_session_refs(Sessions, FilteredSessions, State) ->
+    maps:fold(
+        fun(SessionId, Session, Acc) ->
+            case maps:is_key(SessionId, FilteredSessions) of
+                true ->
+                    Acc;
+                false ->
+                    guild_sessions_connect:remove_session_ref(
+                        maps:get(mref, Session, undefined), Acc
+                    )
+            end
+        end,
+        State,
+        Sessions
+    ).
+
 -spec maybe_disconnect_removed_member(user_id() | undefined, guild_state()) -> guild_state().
 maybe_disconnect_removed_member(UserId, State) when is_integer(UserId), UserId > 0 ->
-    {reply, _Result, NewState} =
-        guild_voice_disconnect:disconnect_voice_user(
-            #{user_id => UserId, connection_id => null},
-            State
-        ),
-    NewState;
+    ok = guild_voice_lifecycle:cast_disconnect_voice_user(UserId, State),
+    State;
 maybe_disconnect_removed_member(_, State) ->
     State.
 
@@ -179,25 +192,6 @@ state_sessions(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-handle_member_add_test() ->
-    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
-    EventData = #{<<"user">> => #{<<"id">> => <<"2">>}},
-    Result = handle_member_add(EventData, Data),
-    Members = maps:get(<<"members">>, Result),
-    ?assertEqual(2, map_size(Members)).
-
-handle_member_update_test() ->
-    Data = #{
-        <<"members">> => #{
-            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"OldNick">>}
-        }
-    },
-    EventData = #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"NewNick">>},
-    Result = handle_member_update(EventData, Data),
-    Members = maps:get(<<"members">>, Result),
-    Member = maps:get(1, Members),
-    ?assertEqual(<<"NewNick">>, maps:get(<<"nick">>, Member)).
-
 handle_member_update_ignores_non_member_test() ->
     Data = #{
         <<"members">> => #{
@@ -207,7 +201,7 @@ handle_member_update_ignores_non_member_test() ->
     EventData = #{<<"user">> => #{<<"id">> => <<"999">>}, <<"nick">> => <<"new">>},
     Result = handle_member_update(EventData, Data),
     ?assertEqual(1, map_size(maps:get(<<"members">>, Result))),
-    ?assertEqual(undefined, guild_data_index:get_member(999, Result)).
+    ?assertEqual(undefined, guild_data_index_members:get_member(999, Result)).
 
 cleanup_removed_member_sessions_removes_non_members_test() ->
     Data = #{
@@ -235,6 +229,27 @@ cleanup_removed_member_sessions_for_user_removes_only_that_user_test() ->
     Result = cleanup_removed_member_sessions(2, State),
     #{} = NewSessions = maps:get(sessions, Result),
     ?assertEqual([<<"s1">>, <<"s3">>], lists:sort(maps:keys(NewSessions))).
+
+cleanup_removed_member_sessions_drops_removed_session_refs_test() ->
+    R1 = make_ref(),
+    R2 = make_ref(),
+    R3 = make_ref(),
+    Sessions = #{
+        <<"s1">> => #{user_id => 1, mref => R1},
+        <<"s2">> => #{user_id => 2, mref => R2},
+        <<"s3">> => #{user_id => 2, mref => R3}
+    },
+    Refs = #{R1 => <<"s1">>, R2 => <<"s2">>, R3 => <<"s3">>},
+    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
+    State = #{data => Data, sessions => Sessions, guild_session_refs => Refs},
+    ?assertEqual(
+        #{R1 => <<"s1">>},
+        maps:get(guild_session_refs, cleanup_removed_member_sessions(2, State))
+    ),
+    ?assertEqual(
+        #{R1 => <<"s1">>},
+        maps:get(guild_session_refs, cleanup_removed_member_sessions(State))
+    ).
 
 sync_member_updates_loaded_channel_engines_test() ->
     GuildId = 100,

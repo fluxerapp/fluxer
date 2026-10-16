@@ -218,16 +218,6 @@ export type AccessibilitySettings = Message<"fluxer.user.preferences.v1.Accessib
   showMemesInAutocomplete?: boolean | undefined;
 
   /**
-   * @generated from field: fluxer.user.preferences.v1.MediaDimensionSize attachment_media_dimension_size = 42;
-   */
-  attachmentMediaDimensionSize: MediaDimensionSize;
-
-  /**
-   * @generated from field: fluxer.user.preferences.v1.MediaDimensionSize embed_media_dimension_size = 43;
-   */
-  embedMediaDimensionSize: MediaDimensionSize;
-
-  /**
    * @generated from field: optional bool voice_channel_join_requires_double_click = 44;
    */
   voiceChannelJoinRequiresDoubleClick?: boolean | undefined;
@@ -404,32 +394,6 @@ export const ChannelTypingIndicatorModeSchema: GenEnum<ChannelTypingIndicatorMod
   enumDesc(file_fluxer_user_preferences_v1_accessibility, 0);
 
 /**
- * @generated from enum fluxer.user.preferences.v1.MediaDimensionSize
- */
-export enum MediaDimensionSize {
-  /**
-   * @generated from enum value: MEDIA_DIMENSION_SIZE_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: MEDIA_DIMENSION_SIZE_SMALL = 1;
-   */
-  SMALL = 1,
-
-  /**
-   * @generated from enum value: MEDIA_DIMENSION_SIZE_LARGE = 2;
-   */
-  LARGE = 2,
-}
-
-/**
- * Describes the enum fluxer.user.preferences.v1.MediaDimensionSize.
- */
-export const MediaDimensionSizeSchema: GenEnum<MediaDimensionSize> = /*@__PURE__*/
-  enumDesc(file_fluxer_user_preferences_v1_accessibility, 1);
-
-/**
  * @generated from enum fluxer.user.preferences.v1.DmMessagePreviewMode
  */
 export enum DmMessagePreviewMode {
@@ -458,7 +422,7 @@ export enum DmMessagePreviewMode {
  * Describes the enum fluxer.user.preferences.v1.DmMessagePreviewMode.
  */
 export const DmMessagePreviewModeSchema: GenEnum<DmMessagePreviewMode> = /*@__PURE__*/
-  enumDesc(file_fluxer_user_preferences_v1_accessibility, 2);
+  enumDesc(file_fluxer_user_preferences_v1_accessibility, 1);
 
 /**
  * @generated from enum fluxer.user.preferences.v1.HdrDisplayMode
@@ -484,4 +448,4 @@ export enum HdrDisplayMode {
  * Describes the enum fluxer.user.preferences.v1.HdrDisplayMode.
  */
 export const HdrDisplayModeSchema: GenEnum<HdrDisplayMode> = /*@__PURE__*/
-  enumDesc(file_fluxer_user_preferences_v1_accessibility, 3);
+  enumDesc(file_fluxer_user_preferences_v1_accessibility, 2);

@@ -33,14 +33,6 @@ class UserPinnedDM {
 		logger.debug(`Unpinned DM channel ${channelId}`);
 	}
 
-	isPinned(channelId: string): boolean {
-		return this.pinnedDMsArray.includes(channelId);
-	}
-
-	getPinIndex(channelId: string): number {
-		return this.pinnedDMsArray.indexOf(channelId);
-	}
-
 	get pinnedDMs() {
 		return this.pinnedDMsArray;
 	}

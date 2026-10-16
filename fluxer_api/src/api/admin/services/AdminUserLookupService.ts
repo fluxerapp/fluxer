@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {usesUniqueUsernames} from '@app/api/instance/AccountIdentityModeCache';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {findPersonByLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {mapUserToAdminResponse} from '../models/UserTypes';
 
 interface AdminUserLookupServiceDeps {
 	apiContext: ApiContext;
@@ -32,7 +36,7 @@ export class AdminUserLookupService {
 		} else if (/^\d+$/.test(query)) {
 			try {
 				const userId = createUserID(BigInt(query));
-				user = await userRepository.findUnique(userId);
+				user = isSyntheticUserId(userId) ? null : await userRepository.findUnique(userId);
 			} catch (error) {
 				Logger.debug({query, error}, 'Failed to lookup user by numeric ID, invalid ID format');
 				user = null;
@@ -40,10 +44,17 @@ export class AdminUserLookupService {
 		} else if (query.includes('@')) {
 			user = await userRepository.findByEmail(query);
 		} else {
-			user = await userRepository.findByStripeSubscriptionId(query);
+			user = (await this.findPersonByBareUsername(query)) ?? (await userRepository.findByStripeSubscriptionId(query));
 		}
 		return {
 			users: user ? [await mapUserToAdminResponse(user, cacheService, acls)] : [],
 		};
+	}
+
+	private async findPersonByBareUsername(query: string): Promise<User | null> {
+		if (!usesUniqueUsernames()) return null;
+		const handle = parseLoginHandle(query);
+		if (!handle || handle.discriminator !== null) return null;
+		return await findPersonByLoginHandle(this.deps.apiContext.services.users, handle);
 	}
 }

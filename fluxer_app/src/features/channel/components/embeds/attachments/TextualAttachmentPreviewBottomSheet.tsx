@@ -53,7 +53,7 @@ export const TextualAttachmentPreviewBottomSheet = observer(function TextualAtta
 	const fileName = getAttachmentFileName(attachment);
 	let fileSizeLabel = '';
 	if (typeof attachment.size === 'number') {
-		fileSizeLabel = formatFileSize(attachment.size);
+		fileSizeLabel = formatFileSize(i18n.locale, attachment.size);
 	}
 	const handleDownload = useCallback(async () => {
 		const downloadUrl = attachment.proxy_url ?? attachment.url;

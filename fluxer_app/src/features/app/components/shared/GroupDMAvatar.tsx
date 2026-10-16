@@ -5,7 +5,6 @@ import styles from '@app/features/app/components/shared/GroupDMAvatar.module.css
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getGroupDMAccentColor} from '@app/features/channel/utils/GroupDMColorUtils';
-import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import Presence from '@app/features/presence/state/Presence';
 import TransientPresence from '@app/features/presence/state/TransientPresence';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -24,11 +23,15 @@ import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSiz
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {isOfflineStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {I18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {UsersIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useId, useMemo} from 'react';
+
+const STATUS_DESCRIPTOR = msg({message: '{effectiveStatusLabel} status'});
+const TYPING_STATUS_DESCRIPTOR = msg({message: 'Typing indicator, status: {effectiveStatusLabel}'});
 
 const GROUP_STATUS_PRIORITY: ReadonlyArray<StatusType> = [StatusTypes.ONLINE, StatusTypes.IDLE, StatusTypes.DND];
 
@@ -87,7 +90,9 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 					justifyContent: 'center',
 				}}
 				role="img"
-				aria-label={typingMode ? `${statusLabel} typing indicator` : `${statusLabel} status`}
+				aria-label={i18nInstance._(typingMode ? TYPING_STATUS_DESCRIPTOR : STATUS_DESCRIPTOR, {
+					effectiveStatusLabel: statusLabel,
+				})}
 				data-flx="app.group-dm-avatar.render-group-status-dot.status-dot"
 			>
 				{typingMode ? (
@@ -135,8 +140,8 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 					</div>
 				) : (
 					<svg
-						width={layout.innerStatusWidth}
-						height={layout.innerStatusHeight}
+						width={remFromPx(layout.innerStatusWidth)}
+						height={remFromPx(layout.innerStatusHeight)}
 						viewBox="0 0 1 1"
 						aria-hidden
 						data-flx="app.group-dm-avatar.render-group-status-dot.svg"
@@ -147,7 +152,7 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 							width={1}
 							height={1}
 							fill={statusColor}
-							mask={`url(#svg-mask-status-${renderableStatus})`}
+							mask={`url(#flx-mask-presence-${renderableStatus})`}
 							data-flx="app.group-dm-avatar.render-group-status-dot.rect"
 						/>
 					</svg>
@@ -446,13 +451,9 @@ export const GroupDMAvatar: React.FC<GroupDMAvatarProps> = observer(
 						const user = Users.getUser(userId);
 						const {top, left, avatarSize} = getAvatarPosition(count, index, clusterSize);
 						const avatarMaskId = `${groupMaskId}-avatar-${index}`;
-						let avatarUrl: string;
-						if (user) {
-							avatarUrl = AvatarUtils.getUserAvatarURL({id: user.id, avatar: user.avatar});
-						} else {
-							const avatarIndex = index % 6;
-							avatarUrl = cdnUrl(`avatars/${avatarIndex}.png`);
-						}
+						const avatarUrl = user
+							? AvatarUtils.getUserAvatarURL({id: user.id, avatar: user.avatar})
+							: AvatarUtils.getDefaultAvatarURL(userId);
 						return (
 							<image
 								key={userId}

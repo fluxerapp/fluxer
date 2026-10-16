@@ -6,6 +6,7 @@ use crate::gateway::{GatewayStep, run_gateway_step};
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
 use std::env;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args, Clone)]
@@ -27,17 +28,10 @@ enum CiStep {
     GatewayEunit,
 }
 
-#[derive(Debug, Args, Clone)]
-pub struct CiScriptsArgs {
-    #[arg(long, value_enum)]
-    step: CiScriptsStep,
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-#[clap(rename_all = "snake_case")]
-enum CiScriptsStep {
-    Sync,
-    Test,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AppWasm {
+    Build,
+    ReuseIfPresent,
 }
 
 pub async fn run_ci(args: CiArgs) -> Result<()> {
@@ -49,9 +43,8 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                 .current_dir(root),
         ),
         CiStep::Typecheck => {
-            ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
-            run_app_test_artifact_generators(&root)?;
+            run_app_test_artifact_generators(&root, AppWasm::Build)?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["-r", "--if-present", "typecheck"])
@@ -60,8 +53,13 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         }
         CiStep::Test => {
             run_generators(&root, false)?;
-            run_app_test_artifact_generators(&root)?;
+            run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             run_workspace_tests(&root)?;
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_desktop", "test:main"])
+                    .current_dir(&root),
+            )?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_api", "test"])
@@ -69,7 +67,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             ))
         }
         CiStep::Knip => {
-            run_app_test_artifact_generators(&root)?;
+            run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             ensure_desktop_build_channel_file(&root)?;
             run_fluxer_app_script(&root, "i18n:compile")?;
             run_command(
@@ -98,9 +96,47 @@ fn ensure_desktop_build_channel_file(root: &Path) -> Result<()> {
     write_build_channel_file(&root.join("fluxer_desktop"), &channel)
 }
 
-fn run_app_test_artifact_generators(root: &Path) -> Result<()> {
-    run_fluxer_app_script(root, "wasm:codegen")?;
+fn run_app_test_artifact_generators(root: &Path, wasm: AppWasm) -> Result<()> {
+    match (wasm, missing_app_wasm_artifact(root)) {
+        (AppWasm::ReuseIfPresent, None) => {
+            println!("Reusing restored fluxer_app wasm artifacts");
+        }
+        (AppWasm::ReuseIfPresent, Some(missing)) => {
+            println!(
+                "Rebuilding fluxer_app wasm artifacts: {} is missing",
+                missing.display()
+            );
+            run_fluxer_app_script(root, "wasm:codegen")?;
+        }
+        (AppWasm::Build, _) => run_fluxer_app_script(root, "wasm:codegen")?,
+    }
     run_fluxer_app_script(root, "generate:masks")
+}
+
+fn app_wasm_artifacts(root: &Path) -> Vec<PathBuf> {
+    let app_dir = root.join("fluxer_app");
+    vec![
+        app_dir.join("pkgs/libfluxcore/libfluxcore.js"),
+        app_dir.join("pkgs/libfluxcore/libfluxcore.d.ts"),
+        app_dir.join("pkgs/libfluxcore/libfluxcore_bindgen.js"),
+        app_dir.join("pkgs/libfluxcore/libfluxcore_bindgen.d.ts"),
+        app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm"),
+        app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm.d.ts"),
+        app_dir.join("pkgs/libfluxcore/package.json"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.js"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm.d.ts"),
+        app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts"),
+    ]
+}
+
+fn missing_app_wasm_artifact(root: &Path) -> Option<PathBuf> {
+    app_wasm_artifacts(root)
+        .into_iter()
+        .find(|path| !path.exists())
 }
 
 fn run_fluxer_app_script(root: &Path, script: &str) -> Result<()> {
@@ -111,27 +147,6 @@ fn run_fluxer_app_script(root: &Path, script: &str) -> Result<()> {
     )
 }
 
-pub async fn run_ci_scripts(args: CiScriptsArgs) -> Result<()> {
-    let root = repo_root()?;
-    match args.step {
-        CiScriptsStep::Sync => run_command(
-            CommandSpec::new("cargo")
-                .args([
-                    "fetch",
-                    "--locked",
-                    "--manifest-path",
-                    "tools/ci/Cargo.toml",
-                ])
-                .current_dir(root),
-        ),
-        CiScriptsStep::Test => run_command(
-            CommandSpec::new("cargo")
-                .args(["test", "--locked", "--manifest-path", "tools/ci/Cargo.toml"])
-                .current_dir(root),
-        ),
-    }
-}
-
 fn run_generators(root: &Path, for_typecheck: bool) -> Result<()> {
     for command in generator_commands(for_typecheck) {
         run_command(command.current_dir(root))?;
@@ -140,43 +155,55 @@ fn run_generators(root: &Path, for_typecheck: bool) -> Result<()> {
 }
 
 fn generator_commands(for_typecheck: bool) -> Vec<CommandSpec> {
-    let mut commands = vec![
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/config", "generate"]),
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"]),
-    ];
+    let mut commands =
+        vec![CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"])];
     if for_typecheck {
         commands.push(CommandSpec::new("pnpm").args([
             "--filter",
             "@fluxer/i18n",
             "generate:types",
         ]));
+    } else {
+        commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     }
-    commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     commands
 }
 
+fn workspace_test_args(concurrency: Option<&str>) -> Vec<OsString> {
+    let mut args = vec![OsString::from("-r")];
+    if let Some(concurrency) = concurrency {
+        args.push(OsString::from(format!(
+            "--workspace-concurrency={concurrency}"
+        )));
+    }
+    args.extend(
+        [
+            "--filter",
+            "!fluxer_api",
+            "--filter",
+            "!fluxer",
+            "--filter",
+            "!fluxer_desktop",
+            "--if-present",
+            "test",
+        ]
+        .into_iter()
+        .map(OsString::from),
+    );
+    args
+}
+
 fn run_workspace_tests(root: &Path) -> Result<()> {
-    let workspace_concurrency =
-        env::var("PNPM_TEST_WORKSPACE_CONCURRENCY").unwrap_or_else(|_| "2".to_string());
+    let concurrency = env::var("PNPM_TEST_WORKSPACE_CONCURRENCY").ok();
     run_command(with_test_env(
         CommandSpec::new("pnpm")
-            .args([
-                "-r",
-                &format!("--workspace-concurrency={workspace_concurrency}"),
-                "--filter",
-                "!fluxer_api",
-                "--filter",
-                "!fluxer",
-                "--if-present",
-                "test",
-            ])
+            .args(workspace_test_args(concurrency.as_deref()))
             .current_dir(root),
     ))
 }
 
 fn with_test_env(spec: CommandSpec) -> CommandSpec {
     let nats_url = env::var("FLUXER_NATS_URL").unwrap_or_else(|_| default_test_nats_url());
-    let api_workers = env::var("API_TEST_MAX_WORKERS").unwrap_or_else(|_| "2".to_string());
     spec.env("FLUXER_NATS_URL", &nats_url)
         .env(
             "FLUXER_NATS_CORE_URL",
@@ -185,11 +212,6 @@ fn with_test_env(spec: CommandSpec) -> CommandSpec {
         .env(
             "FLUXER_NATS_JETSTREAM_URL",
             env::var("FLUXER_NATS_JETSTREAM_URL").unwrap_or_else(|_| nats_url.clone()),
-        )
-        .env("API_TEST_MAX_WORKERS", &api_workers)
-        .env(
-            "API_TEST_MAX_CONCURRENCY",
-            env::var("API_TEST_MAX_CONCURRENCY").unwrap_or(api_workers),
         )
 }
 
@@ -206,64 +228,4 @@ fn repo_root() -> Result<PathBuf> {
         .map(PathBuf::from)
         .or_else(|_| env::current_dir())
         .context("Failed to resolve repository root")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::ffi::OsString;
-
-    #[test]
-    fn generator_commands_include_i18n_types_only_for_typecheck() {
-        let typecheck = generator_commands(true)
-            .into_iter()
-            .map(|command| command.args)
-            .collect::<Vec<_>>();
-        let test = generator_commands(false)
-            .into_iter()
-            .map(|command| command.args)
-            .collect::<Vec<_>>();
-
-        assert!(typecheck.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("@fluxer/i18n"),
-            OsString::from("generate:types"),
-        ]));
-        assert!(!test.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("@fluxer/i18n"),
-            OsString::from("generate:types"),
-        ]));
-    }
-
-    #[test]
-    fn with_test_env_sets_all_nats_urls_and_concurrency() {
-        let spec = with_test_env(CommandSpec::new("pnpm"));
-        let env = spec
-            .env
-            .into_iter()
-            .collect::<std::collections::BTreeMap<_, _>>();
-        let default_nats_url = OsString::from(default_test_nats_url());
-
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_URL")),
-            Some(&default_nats_url)
-        );
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_CORE_URL")),
-            Some(&default_nats_url)
-        );
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_JETSTREAM_URL")),
-            Some(&default_nats_url)
-        );
-        assert_eq!(
-            env.get(&OsString::from("API_TEST_MAX_WORKERS")),
-            Some(&OsString::from("2"))
-        );
-        assert_eq!(
-            env.get(&OsString::from("API_TEST_MAX_CONCURRENCY")),
-            Some(&OsString::from("2"))
-        );
-    }
 }

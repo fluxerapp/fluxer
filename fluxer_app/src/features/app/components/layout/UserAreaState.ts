@@ -10,7 +10,6 @@ export interface UserAreaMicrophoneSignals {
 	isPermissionMuted: boolean;
 	muteReason: UserAreaMuteReason;
 	isPushToTalkEffective: boolean;
-	isPushToTalkHeld: boolean;
 	isPushToMuteEffective: boolean;
 	isPushToMuteHeld: boolean;
 }
@@ -32,13 +31,13 @@ export function selectUserAreaMicrophoneState(signals: UserAreaMicrophoneSignals
 	if (hardMuted) {
 		return {
 			effectiveMuted: true,
-			muteToggleLocked: muteToggleLocked || signals.isPushToTalkEffective,
+			muteToggleLocked,
 		};
 	}
 	if (signals.isPushToTalkEffective) {
 		return {
-			effectiveMuted: !signals.isPushToTalkHeld,
-			muteToggleLocked: true,
+			effectiveMuted: signals.effectiveAudioMuted || signals.muteReason === 'self',
+			muteToggleLocked,
 		};
 	}
 	return {

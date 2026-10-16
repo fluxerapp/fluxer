@@ -8,9 +8,9 @@ import {
 	validateLockToken,
 } from '@pkgs/cache/src/CacheLockValidation';
 import type {CacheLogger, CacheTelemetry} from '@pkgs/cache/src/CacheProviderTypes';
-import {safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
-import {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import {parseCachedValue, safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
+import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
+import type {IKVPipeline, IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface KVCacheProviderConfig {
 	client: IKVProvider;
@@ -69,16 +69,24 @@ export class KVCacheProvider extends ICacheService {
 		}
 	}
 
-	async get<T>(key: string): Promise<T | null> {
+	private async executePipeline(pipeline: IKVPipeline): Promise<void> {
+		for (const [error] of await pipeline.exec()) {
+			if (error) {
+				throw error;
+			}
+		}
+	}
+
+	async getEntry<T>(key: string): Promise<CacheLookupResult<T>> {
 		return this.instrumented(
 			'get',
 			key,
-			async () => {
+			async (): Promise<CacheLookupResult<T>> => {
 				const value = await this.client.get(key);
-				if (value == null) return null;
-				return safeJsonParse<T>(value, this.logger);
+				if (value == null) return {hit: false};
+				return parseCachedValue<T>(value, this.logger);
 			},
-			(result) => (result == null ? 'miss' : 'hit'),
+			(result) => (result.hit ? 'hit' : 'miss'),
 		);
 	}
 
@@ -93,7 +101,7 @@ export class KVCacheProvider extends ICacheService {
 		});
 	}
 
-	async delete(key: string): Promise<void> {
+	protected async deleteEntry(key: string): Promise<void> {
 		return this.instrumented('delete', key, async () => {
 			await this.client.del(key);
 		});
@@ -129,47 +137,6 @@ export class KVCacheProvider extends ICacheService {
 		});
 	}
 
-	async mset<T>(
-		entries: Array<{
-			key: string;
-			value: T;
-			ttlSeconds?: number;
-		}>,
-	): Promise<void> {
-		if (entries.length === 0) return;
-		const withoutTtl: Array<{
-			key: string;
-			value: T;
-		}> = [];
-		const withTtl: Array<{
-			key: string;
-			value: T;
-			ttlSeconds: number;
-		}> = [];
-		for (const entry of entries) {
-			if (entry.ttlSeconds) {
-				withTtl.push({
-					key: entry.key,
-					value: entry.value,
-					ttlSeconds: entry.ttlSeconds,
-				});
-			} else {
-				withoutTtl.push({
-					key: entry.key,
-					value: entry.value,
-				});
-			}
-		}
-		const pipeline = this.client.pipeline();
-		for (const entry of withoutTtl) {
-			pipeline.set(entry.key, serializeValue(entry.value));
-		}
-		for (const entry of withTtl) {
-			pipeline.setex(entry.key, entry.ttlSeconds, serializeValue(entry.value));
-		}
-		await pipeline.exec();
-	}
-
 	async deletePattern(pattern: string): Promise<number> {
 		const keys = await this.client.scan(pattern, 1000);
 		if (keys.length === 0) return 0;
@@ -197,12 +164,6 @@ export class KVCacheProvider extends ICacheService {
 		return await this.client.extendLock(lockKey, token, ttlSeconds);
 	}
 
-	async getAndRenewTtl<T>(key: string, newTtlSeconds: number): Promise<T | null> {
-		const value = await this.client.getex(key, newTtlSeconds);
-		if (value == null) return null;
-		return safeJsonParse<T>(value, this.logger);
-	}
-
 	async publish(channel: string, message: string): Promise<void> {
 		await this.client.publish(channel, message);
 	}
@@ -213,7 +174,7 @@ export class KVCacheProvider extends ICacheService {
 		if (ttlSeconds) {
 			pipeline.expire(key, ttlSeconds);
 		}
-		await pipeline.exec();
+		await this.executePipeline(pipeline);
 	}
 
 	async srem(key: string, member: string): Promise<void> {

@@ -3,12 +3,10 @@
 -module(guild_dispatch).
 -typing([eqwalizer]).
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([
     handle_dispatch/3,
-    extract_and_remove_session_id/1,
-    decorate_member_data/3,
-    extract_member_for_event/3,
-    collect_and_send_push_notifications/3,
     normalize_event/1,
     is_member_list_updates_enabled/1
 ]).
@@ -18,15 +16,11 @@
 -type event() :: atom().
 -type event_data() :: map().
 
--spec normalize_event(term()) -> event().
+-spec normalize_event(atom() | binary()) -> atom() | binary().
 normalize_event(Event) when is_atom(Event) ->
     Event;
 normalize_event(Event) when is_binary(Event) ->
-    normalized_event_atom(event_atoms:normalize(Event)).
-
--spec normalized_event_atom(atom() | binary()) -> event().
-normalized_event_atom(Event) when is_atom(Event) ->
-    Event.
+    event_atoms:normalize(Event).
 
 -spec handle_dispatch(term(), event_data(), guild_state()) -> {noreply, guild_state()}.
 handle_dispatch(Event, EventData, State) ->
@@ -34,9 +28,18 @@ handle_dispatch(Event, EventData, State) ->
         true ->
             {noreply, State};
         false ->
-            NormalizedEvent = normalize_event(Event),
-            process_dispatch(NormalizedEvent, EventData, State)
+            normalized_event_atom(normalize_event(Event), EventData, State)
     end.
+
+-spec normalized_event_atom(atom() | binary(), event_data(), guild_state()) ->
+    {noreply, guild_state()}.
+normalized_event_atom(Event, EventData, State) when is_atom(Event) ->
+    process_dispatch(Event, EventData, State);
+normalized_event_atom(Event, _EventData, State) when is_binary(Event) ->
+    ?LOG_WARNING("guild dispatch dropped unknown event: event=~ts guild_id=~p", [
+        Event, maps:get(id, State, undefined)
+    ]),
+    {noreply, State}.
 
 -spec should_skip_dispatch(term(), guild_state()) -> boolean().
 should_skip_dispatch(guild_update, _State) ->
@@ -50,17 +53,48 @@ should_skip_dispatch(_Event, State) ->
 
 -spec process_dispatch(event(), event_data(), guild_state()) -> {noreply, guild_state()}.
 process_dispatch(Event, EventData, State) ->
+    case guild_thread_gate:pre_update_filter(Event, EventData, State) of
+        drop ->
+            ok = maybe_self_heal(State),
+            {noreply, guild_thread_flip:hold(Event, EventData, State)};
+        {filtered, FilteredData} ->
+            ok = maybe_self_heal(State),
+            process_regular_dispatch(
+                Event, FilteredData, guild_thread_flip:hold(Event, EventData, State)
+            );
+        pass ->
+            State1 = guild_thread_flip:hold(Event, EventData, State),
+            case guild_thread_dispatch:handles(Event) of
+                true -> guild_thread_dispatch:handle(Event, EventData, State1);
+                false -> process_regular_dispatch(Event, EventData, State1)
+            end
+    end.
+
+-spec maybe_self_heal(guild_state()) -> ok.
+maybe_self_heal(#{id := GuildId}) when is_integer(GuildId) ->
+    case channel_threads_config:guild_active(GuildId) of
+        true -> channel_threads_flip:self_heal(GuildId);
+        false -> ok
+    end;
+maybe_self_heal(_State) ->
+    ok.
+
+-spec process_regular_dispatch(event(), event_data(), guild_state()) ->
+    {noreply, guild_state()}.
+process_regular_dispatch(Event, EventData, State) ->
     GuildId = maps:get(id, State),
     {SessionIdOpt, CleanData} = extract_session_id_if_needed(Event, EventData),
     DecoratedData = CleanData#{<<"guild_id">> => integer_to_binary(GuildId)},
-    FinalData = guild_dispatch_decorate:decorate_member_data(Event, DecoratedData, State),
-    UpdatedState = guild_state:update_state(Event, FinalData, State),
+    FinalData0 = guild_dispatch_decorate:decorate_member_data(Event, DecoratedData, State),
+    UpdatedState0 = guild_state:update_state(Event, FinalData0, State),
+    UpdatedState = guild_state_threads:after_regular_event(Event, FinalData0, UpdatedState0),
     FilterState = filter_state_for_event(Event, State, UpdatedState),
     Sessions = maps:get(sessions, UpdatedState, #{}),
-    FilteredSessions = guild_dispatch_filter:filter_sessions_for_event(
-        Event, FinalData, SessionIdOpt, Sessions, FilterState
+    FilteredSessions = filter_dispatch_sessions(
+        Event, FinalData0, SessionIdOpt, Sessions, FilterState
     ),
-    logger:debug(
+    FinalData = strip_thread_internal(FinalData0, UpdatedState),
+    ?LOG_DEBUG(
         "process_dispatch: event=~p guild_id=~p total_sessions=~p filtered_sessions=~p",
         [Event, GuildId, map_size(Sessions), length(FilteredSessions)]
     ),
@@ -70,6 +104,32 @@ process_dispatch(Event, EventData, State) ->
         Event, FinalData, State, UpdatedState
     ),
     {noreply, FinalState}.
+
+-spec filter_dispatch_sessions(
+    event(), event_data(), binary() | undefined, map(), guild_state()
+) -> [{binary(), map()}].
+filter_dispatch_sessions(Event, Data, SessionIdOpt, Sessions, State) ->
+    case guild_thread_gate:event_scope(Event, Data, State) of
+        open ->
+            guild_dispatch_filter:filter_sessions_for_event(
+                Event, Data, SessionIdOpt, Sessions, State
+            );
+        viewers ->
+            guild_dispatch_filter:filter_sessions_for_event(
+                Event, Data, SessionIdOpt, guild_thread_gate:viewer_sessions(Sessions), State
+            );
+        {thread, ThreadId, Thread} ->
+            guild_thread_gate:thread_sessions(
+                Event, Data, ThreadId, Thread, SessionIdOpt, State
+            )
+    end.
+
+-spec strip_thread_internal(event_data(), guild_state()) -> event_data().
+strip_thread_internal(Data, State) ->
+    case guild_thread_gate:needs_variant(State) of
+        true -> guild_thread_gate:strip_internal(Data);
+        false -> Data
+    end.
 
 -spec filter_state_for_event(event(), guild_state(), guild_state()) -> guild_state().
 filter_state_for_event(channel_delete, PreviousState, _UpdatedState) ->
@@ -86,46 +146,12 @@ extract_session_id_if_needed(message_reaction_remove, EventData) ->
 extract_session_id_if_needed(_, EventData) ->
     {undefined, EventData}.
 
--spec extract_and_remove_session_id(event_data()) -> {binary() | undefined, event_data()}.
-extract_and_remove_session_id(Data) ->
-    guild_dispatch_decorate:extract_and_remove_session_id(Data).
-
--spec decorate_member_data(event(), event_data(), guild_state()) -> event_data().
-decorate_member_data(Event, Data, State) ->
-    guild_dispatch_decorate:decorate_member_data(Event, Data, State).
-
--spec extract_member_for_event(event(), event_data(), guild_state()) -> map() | undefined.
-extract_member_for_event(Event, Data, State) ->
-    guild_dispatch_decorate:extract_member_for_event(Event, Data, State).
-
--spec collect_and_send_push_notifications(event_data(), integer(), guild_state()) -> ok.
-collect_and_send_push_notifications(MessageData, GuildId, State) ->
-    guild_dispatch_push:collect_and_send_push_notifications(MessageData, GuildId, State).
-
 -spec is_member_list_updates_enabled(guild_state()) -> boolean().
 is_member_list_updates_enabled(State) ->
     guild_dispatch_config:is_member_list_updates_enabled(State).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-extract_session_id_if_needed_reaction_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_add, Data),
-    ?assertEqual(<<"sid">>, SessionId),
-    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
-
-extract_session_id_if_needed_other_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"content">> => <<"hi">>},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_create, Data),
-    ?assertEqual(undefined, SessionId),
-    ?assertEqual(Data, CleanData).
-
-extract_session_id_if_needed_reaction_remove_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_remove, Data),
-    ?assertEqual(<<"sid">>, SessionId),
-    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
 
 should_skip_dispatch_guild_update_never_skipped_test() ->
     State = #{
@@ -151,17 +177,16 @@ should_skip_dispatch_unavailable_for_everyone_but_staff_test() ->
     },
     ?assertEqual(true, should_skip_dispatch(message_create, State)).
 
-should_skip_dispatch_normal_guild_test() ->
-    State = #{
-        data => #{
-            <<"guild">> => #{<<"features">> => []}
-        }
-    },
-    ?assertEqual(false, should_skip_dispatch(message_create, State)).
+unknown_binary_event_is_dropped_without_crashing_test() ->
+    State = #{id => 1, data => #{<<"guild">> => #{}}, sessions => #{}},
+    ?assertEqual(
+        {noreply, State},
+        handle_dispatch(<<"FUTURE_EVENT_THE_GATEWAY_HAS_NEVER_SEEN">>, #{}, State)
+    ).
 
-should_skip_dispatch_no_features_test() ->
-    State = #{data => #{<<"guild">> => #{}}},
-    ?assertEqual(false, should_skip_dispatch(message_create, State)).
+normalize_event_keeps_unknown_binaries_test() ->
+    ?assertEqual(<<"FUTURE_EVENT_ZZZ">>, normalize_event(<<"FUTURE_EVENT_ZZZ">>)),
+    ?assertEqual(thread_create, normalize_event(<<"THREAD_CREATE">>)).
 
 channel_delete_dispatch_filters_by_pre_delete_visibility_test() ->
     Parent = self(),
@@ -169,10 +194,14 @@ channel_delete_dispatch_filters_by_pre_delete_visibility_test() ->
     HiddenPid = start_dispatch_capture(hidden, Parent),
     try
         State = build_channel_delete_dispatch_state(VisiblePid, HiddenPid),
-        HiddenMember = guild_permissions:find_member_by_user_id(1001, State),
-        VisibleMember = guild_permissions:find_member_by_user_id(1002, State),
-        ?assertEqual(false, guild_permissions:can_view_channel(1001, 10, HiddenMember, State)),
-        ?assertEqual(true, guild_permissions:can_view_channel(1002, 10, VisibleMember, State)),
+        HiddenMember = guild_permissions_check:find_member_by_user_id(1001, State),
+        VisibleMember = guild_permissions_check:find_member_by_user_id(1002, State),
+        ?assertEqual(
+            false, guild_permissions_check:can_view_channel(1001, 10, HiddenMember, State)
+        ),
+        ?assertEqual(
+            true, guild_permissions_check:can_view_channel(1002, 10, VisibleMember, State)
+        ),
         {noreply, _} = handle_dispatch(channel_delete, #{<<"id">> => <<"10">>}, State),
         assert_visible_channel_delete_dispatched(),
         assert_hidden_channel_delete_not_dispatched()

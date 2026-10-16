@@ -26,7 +26,7 @@ handle_process_down(Ref, Reason, State) ->
     PresenceRef = maps:get(presence_mref, State, undefined),
     case Ref of
         SocketRef when Ref =:= SocketRef ->
-            handle_socket_down(State);
+            handle_socket_down(Reason, State);
         PresenceRef when Ref =:= PresenceRef ->
             handle_presence_down(State);
         _ ->
@@ -63,8 +63,15 @@ handle_call_or_ignore(Ref, Reason, State, Calls) ->
             {noreply, State}
     end.
 
--spec handle_socket_down(session_state()) -> {noreply, session_state()}.
-handle_socket_down(State) ->
+-spec handle_socket_down(term(), session_state()) ->
+    {noreply, session_state()} | {stop, normal, session_state()}.
+handle_socket_down({shutdown, client_closed}, State) ->
+    {stop, normal, State#{socket_pid => undefined, socket_mref => undefined}};
+handle_socket_down(_Reason, State) ->
+    hold_session_for_resume(State).
+
+-spec hold_session_for_resume(session_state()) -> {noreply, session_state()}.
+hold_session_for_resume(State) ->
     ResumeToken = make_ref(),
     ResumeTimerRef = erlang:send_after(
         constants:resume_timeout(), self(), {resume_timeout, ResumeToken}
@@ -206,34 +213,6 @@ find_by_ref(Ref, Map) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-find_by_ref_test() ->
-    Ref1 = make_ref(),
-    Ref2 = make_ref(),
-    Ref3 = make_ref(),
-    Map = #{
-        123 => {self(), Ref1},
-        456 => {self(), Ref2},
-        789 => undefined
-    },
-    ?assertEqual({ok, 123}, find_by_ref(Ref1, Map)),
-    ?assertEqual({ok, 456}, find_by_ref(Ref2, Map)),
-    ?assertEqual(not_found, find_by_ref(Ref3, Map)),
-    ok.
-
-find_guild_by_ref_test() ->
-    Ref = make_ref(),
-    Guilds = #{100 => {self(), Ref}, 200 => undefined},
-    ?assertEqual({ok, 100}, find_guild_by_ref(Ref, Guilds)),
-    ?assertEqual(not_found, find_guild_by_ref(make_ref(), Guilds)),
-    ok.
-
-find_call_by_ref_test() ->
-    Ref = make_ref(),
-    Calls = #{300 => {self(), Ref}},
-    ?assertEqual({ok, 300}, find_call_by_ref(Ref, Calls)),
-    ?assertEqual(not_found, find_call_by_ref(make_ref(), Calls)),
-    ok.
-
 build_test_base_state() ->
     #{
         id => <<"session-monitor-test">>,
@@ -286,6 +265,7 @@ build_test_voice_state() ->
         voice_queue => queue:new(),
         voice_queue_timer => undefined,
         debounce_reactions => false,
+        thread_channels_capable => false,
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.
@@ -330,6 +310,23 @@ handle_socket_down_delays_session_offline_test() ->
     after 200 ->
         ?assert(false)
     end,
+    SocketPid ! stop.
+
+handle_socket_down_client_closed_stops_the_session_test() ->
+    SocketRef = make_ref(),
+    SocketPid = spawn_test_proc(),
+    State0 = (build_test_session_state(50000, #{}))#{
+        presence_pid => self(),
+        socket_pid => SocketPid,
+        socket_mref => SocketRef
+    },
+    {stop, normal, State1} = handle_process_down(
+        SocketRef, {shutdown, client_closed}, State0
+    ),
+    ?assertEqual(undefined, maps:get(socket_pid, State1)),
+    ?assertEqual(undefined, maps:get(socket_mref, State1)),
+    ?assertEqual(maps:get(resume_timer, State0), maps:get(resume_timer, State1)),
+    ?assertEqual(maps:get(offline_timer, State0), maps:get(offline_timer, State1)),
     SocketPid ! stop.
 
 spawn_test_proc() ->

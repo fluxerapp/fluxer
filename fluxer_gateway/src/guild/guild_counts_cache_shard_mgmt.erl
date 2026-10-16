@@ -9,15 +9,12 @@
     start_shards/2,
     start_shard/1,
     restart_shard/2,
-    find_shard_by_ref/2,
-    find_shard_by_pid/2,
     ensure_shard/2,
     ensure_shard_for_index/2,
     select_shard/2,
     forward_call/3,
     call_shard/3,
-    shard_pid/2,
-    determine_shard_count/0
+    shard_pid/2
 ]).
 
 -export([
@@ -34,10 +31,6 @@
 -export_type([shard/0]).
 
 -define(PENDING_HANDOFF_RETRY_MS, 1000).
-
--spec determine_shard_count() -> {pos_integer(), atom() | auto}.
-determine_shard_count() ->
-    clustered_ets_cache:determine_shard_count([guild_counts_cache_shards, guild_shards]).
 
 -spec start_shards(pos_integer(), #{}) -> #{non_neg_integer() => shard()}.
 start_shards(Count, Acc) ->
@@ -149,30 +142,6 @@ handle_shard_liveness(Index, Pid, State) ->
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().
 select_shard(Key, Count) when Count > 0 ->
     clustered_ets_cache:select_shard(Key, Count).
-
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
 
 -spec rebalance_retry_timer_ref(map()) -> reference() | undefined.
 rebalance_retry_timer_ref(State) ->

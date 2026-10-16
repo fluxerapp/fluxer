@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {TermsAcceptanceModal} from '@app/features/auth/components/modals/TermsAcceptanceModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -31,8 +32,8 @@ export const TermsAcceptanceNagbar = observer(({isMobile}: {isMobile: boolean}) 
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#4338ca"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.LEGAL].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.LEGAL].textColor}
 			data-flx="app.app-layout.nagbars.terms-acceptance-nagbar.nagbar"
 		>
 			<NagbarContent

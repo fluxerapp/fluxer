@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const UserRateLimitConfigs = {
 	USER_GET: {
@@ -76,6 +76,10 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:password_change:complete',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_PASSWORD_UPDATE: {
+		bucket: 'user:password:update',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_ACCOUNT_DISABLE: {
 		bucket: 'user:account:disable',
 		config: {limit: 5, windowMs: ms('1 hour')},
@@ -136,10 +140,6 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:friend_request:accept',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	USER_BLOCK: {
-		bucket: 'user:block',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	USER_BULK_IGNORE_FRIEND_REQUESTS: {
 		bucket: 'user:friend_request:bulk_ignore',
 		config: {limit: 5, windowMs: ms('1 minute')},
@@ -192,6 +192,30 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:mfa:backup_codes',
 		config: {limit: 6, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_RECOVERY_KIT_GET: {
+		bucket: 'user:recovery_kit:get',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_RECOVERY_KIT_CREATE: {
+		bucket: 'user:recovery_kit:create',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_START: {
+		bucket: 'user:mfa:backup_codes_challenge:start',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_RESEND: {
+		bucket: 'user:mfa:backup_codes_challenge:resend',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY: {
+		bucket: 'user:mfa:backup_codes_challenge:verify',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE: {
+		bucket: 'user:mfa:backup_codes_challenge:regenerate',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_PUSH_SUBSCRIBE: {
 		bucket: 'user:push:subscribe',
 		config: {limit: 20, windowMs: ms('1 minute')},
@@ -215,6 +239,10 @@ export const UserRateLimitConfigs = {
 	USER_HARVEST_DOWNLOAD: {
 		bucket: 'user:harvest:download',
 		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_HARVEST_DOWNLOAD_FILE: {
+		bucket: 'user:harvest:download_file',
+		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	USER_ENTRANCE_SOUND_LIST: {
 		bucket: 'user:entrance_sound:list',

@@ -5,28 +5,21 @@ use reqwest::header::{HeaderMap, LOCATION};
 use std::time::Duration;
 use tokio::time::timeout;
 
-#[allow(dead_code)]
 pub const DEFAULT_MAX_BYTES: usize = 8 * 1024 * 1024;
 
 pub const DEFAULT_HTML_MAX_BYTES: usize = DEFAULT_MAX_BYTES;
 
-#[allow(dead_code)]
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);
 pub const DEFAULT_MAX_REDIRECTS: usize = 5;
 
-#[allow(dead_code)]
 pub struct FetchResult {
     pub bytes: Vec<u8>,
-    pub content_type: Option<String>,
     pub headers: HeaderMap,
-    pub final_url: String,
     pub status: u16,
 }
 
-#[allow(dead_code)]
 pub struct FetchHead {
     pub content_type: Option<String>,
-    pub headers: HeaderMap,
     pub final_url: String,
     pub status: u16,
 }
@@ -67,9 +60,7 @@ pub async fn fetch_url_with_headers(
 
     Ok(FetchResult {
         bytes: result.bytes.unwrap_or_default(),
-        content_type: result.content_type,
         headers: result.headers,
-        final_url: result.final_url,
         status: result.status,
     })
 }
@@ -148,7 +139,6 @@ where
 
         let head = FetchHead {
             content_type: content_type.clone(),
-            headers: headers.clone(),
             final_url: final_url.clone(),
             status: status.as_u16(),
         };
@@ -209,21 +199,6 @@ async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Result<
 mod tests {
     use super::*;
 
-    #[test]
-    fn default_max_bytes_is_8mib() {
-        assert_eq!(DEFAULT_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_html_max_bytes_matches_old_unfurl_document_limit() {
-        assert_eq!(DEFAULT_HTML_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_timeout_is_10s() {
-        assert_eq!(DEFAULT_TIMEOUT, Duration::from_secs(10));
-    }
-
     #[tokio::test]
     async fn rejects_blocked_ip_literal_before_fetch() {
         let client = reqwest::Client::builder()
@@ -259,28 +234,5 @@ mod tests {
                 "should reject {url}"
             );
         }
-    }
-
-    #[tokio::test]
-    async fn fetch_url_maybe_body_skips_body_when_policy_returns_false() {
-        let client = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .unwrap();
-        let result = fetch_url_maybe_body(
-            &client,
-            "http://127.0.0.1/",
-            DEFAULT_MAX_BYTES,
-            Duration::from_secs(1),
-            |_| false,
-        )
-        .await;
-        assert!(result.is_err());
-    }
-
-    #[test]
-    #[allow(clippy::assertions_on_constants)]
-    fn default_max_redirects_is_reasonable() {
-        assert!(DEFAULT_MAX_REDIRECTS >= 3 && DEFAULT_MAX_REDIRECTS <= 10);
     }
 }

@@ -1,7 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	CHANNEL_RATE_LIMIT_PER_USER_MAX,
+	CHANNEL_RATE_LIMIT_PER_USER_MIN,
+	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
+	VOICE_CHANNEL_CONNECTION_LIMIT_MIN,
+	VOICE_CHANNEL_USER_LIMIT_MIN,
+} from '@fluxer/constants/src/LimitConstants';
+import {ColorType, createStringType, Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
+
+const TEMPLATE_NAME_MAX_LENGTH = 100;
+const TEMPLATE_TOPIC_MAX_LENGTH = 4096;
+const TEMPLATE_FORUM_TAGS_MAX = 100;
+const TEMPLATE_EMOJI_NAME_MAX_LENGTH = 64;
 
 const TemplateEntityId = z
 	.union([
@@ -22,7 +34,19 @@ const TemplateOverwriteType = z
 		}
 		return value;
 	})
+	.pipe(z.number())
 	.describe('The type of overwrite (0/role = role, 1/member = member)');
+const TemplateEmojiReference = z.union([z.string().max(64), z.number().int().nonnegative()]);
+const TemplateForumTag = z.object({
+	name: z.string().max(TEMPLATE_NAME_MAX_LENGTH).describe('The name of the tag'),
+	moderated: z.boolean().nullish().describe('Whether only moderators can apply the tag'),
+	emoji_id: TemplateEmojiReference.nullish().describe('A custom emoji reference, ignored on import'),
+	emoji_name: z.string().max(TEMPLATE_EMOJI_NAME_MAX_LENGTH).nullish().describe('The unicode emoji of the tag'),
+});
+const TemplateReactionEmoji = z.object({
+	emoji_id: TemplateEmojiReference.nullish().describe('A custom emoji reference, ignored on import'),
+	emoji_name: z.string().max(TEMPLATE_EMOJI_NAME_MAX_LENGTH).nullish().describe('The unicode emoji'),
+});
 const TemplatePermissionOverwrite = z.object({
 	id: TemplateEntityId.describe('The ID of the role or user for this overwrite'),
 	type: TemplateOverwriteType,
@@ -32,24 +56,70 @@ const TemplatePermissionOverwrite = z.object({
 
 export const TemplateChannel = z.object({
 	id: TemplateEntityId.describe('The template-local channel ID'),
-	type: z.number().describe('The channel type (0 = text, 2 = voice, 4 = category)'),
+	type: z
+		.number()
+		.describe(
+			'The channel type (0 = text, 2 = voice, 4 = category, 5 = announcement, 13 = stage, 15 = forum, 16 = media)',
+		),
 	name: z
 		.string()
+		.max(TEMPLATE_NAME_MAX_LENGTH)
 		.nullish()
 		.transform((value) => value ?? '')
 		.describe('The name of the channel'),
-	topic: z.string().nullish().describe('The channel topic'),
-	position: z.number().describe('The position of the channel'),
+	topic: z
+		.string()
+		.max(TEMPLATE_TOPIC_MAX_LENGTH)
+		.nullish()
+		.describe('The channel topic or forum guidelines, shortened to the limit for the channel type'),
+	position: Int32Type.describe('The position of the channel'),
 	parent_id: TemplateEntityId.nullish().describe('The template-local ID of the parent category'),
-	bitrate: z.number().nullish().describe('The bitrate for voice channels'),
-	user_limit: z.number().nullish().describe('The user limit for voice channels'),
-	voice_connection_limit: z.number().nullish().describe('The per-user voice connection limit for voice channels'),
-	nsfw: z.boolean().optional().describe('Whether the channel is NSFW'),
-	rate_limit_per_user: z.number().optional().describe('Slowmode rate limit in seconds'),
+	bitrate: z.number().int().nonnegative().nullish().describe('The bitrate for voice channels'),
+	user_limit: z
+		.number()
+		.int()
+		.min(VOICE_CHANNEL_USER_LIMIT_MIN)
+		.nullish()
+		.describe('The user limit for voice channels'),
+	voice_connection_limit: z
+		.number()
+		.int()
+		.min(VOICE_CHANNEL_CONNECTION_LIMIT_MIN)
+		.max(VOICE_CHANNEL_CONNECTION_LIMIT_MAX)
+		.nullish()
+		.describe('The per-user voice connection limit for voice channels'),
+	nsfw: z.boolean().nullish().describe('Whether the channel is NSFW'),
+	rate_limit_per_user: z
+		.number()
+		.int()
+		.min(CHANNEL_RATE_LIMIT_PER_USER_MIN)
+		.max(CHANNEL_RATE_LIMIT_PER_USER_MAX)
+		.nullish()
+		.describe('Slowmode rate limit in seconds'),
 	permission_overwrites: z
 		.array(TemplatePermissionOverwrite)
-		.optional()
+		.nullish()
 		.describe('Permission overwrites for this channel'),
+	available_tags: z
+		.array(TemplateForumTag)
+		.max(TEMPLATE_FORUM_TAGS_MAX)
+		.nullish()
+		.describe('Tags for forum and media channels'),
+	default_reaction_emoji: TemplateReactionEmoji.nullish().describe('Default reaction for forum and media posts'),
+	default_sort_order: z.number().int().nullish().describe('Default post sort order for forum and media channels'),
+	default_forum_layout: z.number().int().nullish().describe('Default layout for forum channels'),
+	default_tag_setting: z.string().max(32).nullish().describe('How posts are filtered by several tags'),
+	default_thread_rate_limit_per_user: z
+		.number()
+		.int()
+		.nullish()
+		.describe('Slowmode in seconds copied onto new threads'),
+	default_auto_archive_duration: z
+		.number()
+		.int()
+		.nullish()
+		.describe('Default auto archive duration in minutes for new threads'),
+	flags: z.number().int().nullish().describe('Channel flags'),
 });
 
 export type TemplateChannel = z.infer<typeof TemplateChannel>;
@@ -58,12 +128,13 @@ export const TemplateRole = z.object({
 	id: TemplateEntityId.describe('The template-local role ID'),
 	name: z
 		.string()
+		.max(TEMPLATE_NAME_MAX_LENGTH)
 		.nullish()
 		.transform((value) => value ?? '')
 		.describe('The name of the role'),
 	permissions: TemplatePermissionBitfield.optional().describe('The permissions bitfield as a string (legacy)'),
 	permissions_new: TemplatePermissionBitfield.optional().describe('The permissions bitfield as a string (preferred)'),
-	color: z.number().optional().describe('The colour of the role as an integer'),
+	color: ColorType.optional().describe('The colour of the role as an integer'),
 	hoist: z.boolean().optional().describe('Whether the role is hoisted'),
 	mentionable: z.boolean().optional().describe('Whether the role is mentionable'),
 	unicode_emoji: z.string().nullish().describe('The unicode emoji for the role icon'),

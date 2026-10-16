@@ -3,13 +3,30 @@
 use crate::config::ServiceConfig;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::{Manager, Pool, Runtime};
-use rustls::RootCertStore;
+use deadpool_postgres::{Client, Manager, Pool, Runtime, Transaction};
+use rustls::{
+    RootCertStore,
+    pki_types::{CertificateDer, pem::PemObject},
+};
 use serde_json::{Map, Number, Value};
-use std::io::Cursor;
 use std::str::FromStr;
-use tokio_postgres::{Config as PgConfig, Row, config::SslMode, types::ToSql};
+use std::time::Duration;
+use tokio_postgres::{
+    Config as PgConfig, Row,
+    config::SslMode,
+    error::SqlState,
+    types::{ToSql, Type},
+};
 use tokio_postgres_rustls::MakeRustlsConnect;
+
+const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE: i32 = 0x4658_4b56;
+const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT: &str = "120s";
+const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT: &str = "30min";
+const POSTGRES_KV_MIGRATION_TABLE: &str = "__fluxer_schema_migrations";
+const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION: &str = "messages_partition_key_v1";
+const POSTGRES_KV_SCHEMA_ATTEMPTS: u32 = 3;
+const POSTGRES_KV_SCHEMA_RETRY_DELAY: Duration = Duration::from_millis(250);
+const CACHED_JSON_FIELDS: &[&str] = &["message_id"];
 
 #[derive(Clone, Debug)]
 pub struct PostgresConfig {
@@ -23,6 +40,7 @@ pub struct PostgresConfig {
     pub ssl_ca: Option<String>,
     pub max_connections: usize,
     pub kv_table: String,
+    pub prepared_statements: bool,
 }
 
 impl PostgresConfig {
@@ -38,12 +56,12 @@ impl PostgresConfig {
             ssl_ca: config.postgres_ssl_ca.clone(),
             max_connections: config.postgres_max_connections,
             kv_table: config.postgres_kv_table.clone(),
+            prepared_statements: config.postgres_prepared_statements,
         }
     }
 }
 
 pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
-    let has_url = config.url.is_some();
     let mut pg = if let Some(url) = &config.url {
         PgConfig::from_str(url).context("failed to parse FLUXER_POSTGRES_URL")?
     } else {
@@ -58,11 +76,7 @@ pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
         pg
     };
 
-    if config.ssl {
-        pg.ssl_mode(SslMode::Require);
-    } else if !has_url {
-        pg.ssl_mode(SslMode::Disable);
-    }
+    apply_ssl_mode(&mut pg, config.ssl);
 
     let tls = if pg.get_ssl_mode() == SslMode::Disable {
         build_disabled_tls_connector()
@@ -86,18 +100,26 @@ pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
         database = config.database,
         max_connections = config.max_connections,
         kv_table = config.kv_table,
+        prepared_statements = config.prepared_statements,
         "connected to Postgres"
     );
     Ok(pool)
+}
+
+fn apply_ssl_mode(pg: &mut PgConfig, ssl: bool) {
+    if ssl {
+        pg.ssl_mode(SslMode::Require);
+    } else if pg.get_ssl_mode() == SslMode::Prefer {
+        pg.ssl_mode(SslMode::Disable);
+    }
 }
 
 fn build_tls_connector(ca_pem: Option<&str>) -> anyhow::Result<MakeRustlsConnect> {
     let _ = rustls::crypto::ring::default_provider().install_default();
     if let Some(ca_pem) = ca_pem.filter(|value| !value.trim().is_empty()) {
         let normalized = ca_pem.replace("\\n", "\n");
-        let mut reader = Cursor::new(normalized.as_bytes());
         let mut roots = RootCertStore::empty();
-        for cert in rustls_pemfile::certs(&mut reader) {
+        for cert in CertificateDer::pem_slice_iter(normalized.as_bytes()) {
             roots.add(cert.context("failed to parse FLUXER_POSTGRES_SSL_CA certificate")?)?;
         }
         if roots.is_empty() {
@@ -125,7 +147,60 @@ fn build_disabled_tls_connector() -> MakeRustlsConnect {
     MakeRustlsConnect::new(tls_config)
 }
 
+async fn row_key_is_c_collated(
+    transaction: &Transaction<'_>,
+    kv_table: &str,
+) -> anyhow::Result<bool> {
+    let row = transaction
+        .query_opt(
+            r#"SELECT col.collname = 'C' AND col.collnamespace = 'pg_catalog'::regnamespace AS c_collated
+FROM pg_attribute att
+JOIN pg_collation col ON col.oid = att.attcollation
+WHERE att.attrelid = to_regclass($1)
+    AND att.attname = 'row_key'
+    AND NOT att.attisdropped"#,
+            &[&kv_table],
+        )
+        .await
+        .context("failed to inspect Postgres KV row_key collation")?;
+    Ok(row.and_then(|row| row.get::<_, Option<bool>>("c_collated")) == Some(true))
+}
+
+fn is_concurrent_ddl_conflict(error: &anyhow::Error) -> bool {
+    error
+        .chain()
+        .filter_map(|cause| cause.downcast_ref::<tokio_postgres::Error>())
+        .filter_map(tokio_postgres::Error::code)
+        .any(|code| {
+            *code == SqlState::UNIQUE_VIOLATION
+                || *code == SqlState::DUPLICATE_TABLE
+                || *code == SqlState::DUPLICATE_OBJECT
+        })
+}
+
 pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
+    let mut attempt = 1;
+    loop {
+        match ensure_kv_schema_once(pool, kv_table).await {
+            Ok(()) => return Ok(()),
+            Err(err) => {
+                if attempt >= POSTGRES_KV_SCHEMA_ATTEMPTS || !is_concurrent_ddl_conflict(&err) {
+                    return Err(err);
+                }
+                tracing::warn!(
+                    error = ?err,
+                    kv_table,
+                    attempt,
+                    "retrying Postgres KV schema after a concurrent DDL conflict"
+                );
+                attempt += 1;
+                tokio::time::sleep(POSTGRES_KV_SCHEMA_RETRY_DELAY).await;
+            }
+        }
+    }
+}
+
+async fn ensure_kv_schema_once(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
     let table = quote_identifier(kv_table)?;
     let old_partition_index = quote_identifier(&format!("{kv_table}_partition_idx"))?;
     let partition_row_index = quote_identifier(&format!("{kv_table}_partition_row_idx"))?;
@@ -134,34 +209,130 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
     let messages_message_index = quote_identifier(&format!("{kv_table}_messages_message_idx"))?;
     let message_reactions_message_index =
         quote_identifier(&format!("{kv_table}_message_reactions_message_idx"))?;
-    let client = pool.get().await?;
-    client
+    let mut client = pool.get().await?;
+    let transaction = client
+        .transaction()
+        .await
+        .context("failed to begin Postgres KV schema transaction")?;
+    transaction
+        .query_one(
+            "SELECT set_config('statement_timeout', $1, true)",
+            &[&POSTGRES_KV_SCHEMA_LOCK_TIMEOUT],
+        )
+        .await
+        .context("failed to configure Postgres KV schema lock timeout")?;
+    transaction
+        .query_one(
+            "SELECT pg_advisory_xact_lock($1, hashtext($2))",
+            &[&POSTGRES_KV_SCHEMA_LOCK_NAMESPACE, &kv_table],
+        )
+        .await
+        .context("failed to acquire Postgres KV schema lock")?;
+    transaction
+        .query_one(
+            "SELECT set_config('statement_timeout', $1, true)",
+            &[&POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT],
+        )
+        .await
+        .context("failed to configure Postgres KV schema migration timeout")?;
+    transaction
         .batch_execute(&format!(
             r#"
 CREATE TABLE IF NOT EXISTS {table} (
     table_name text NOT NULL,
-    partition_key text NOT NULL,
-    row_key text NOT NULL,
+    partition_key text COLLATE "C" NOT NULL,
+    row_key text COLLATE "C" NOT NULL,
     row_data jsonb NOT NULL,
     expires_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (table_name, row_key)
 );
 CREATE INDEX IF NOT EXISTS {partition_row_index} ON {table} (table_name, partition_key, row_key);
-CREATE INDEX IF NOT EXISTS {row_key_c_index} ON {table} (table_name, row_key COLLATE "C");
+"#
+        ))
+        .await
+        .context("failed to ensure Postgres KV schema")?;
+    if !row_key_is_c_collated(&transaction, kv_table).await? {
+        transaction
+            .batch_execute(&format!(
+                r#"CREATE INDEX IF NOT EXISTS {row_key_c_index} ON {table} (table_name, row_key COLLATE "C");"#
+            ))
+            .await
+            .context("failed to ensure Postgres KV schema")?;
+    }
+    transaction
+        .batch_execute(&format!(
+            r#"
 CREATE INDEX IF NOT EXISTS {expires_index} ON {table} (expires_at) WHERE expires_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS {messages_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages';
 CREATE INDEX IF NOT EXISTS {message_reactions_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions';
+"#
+        ))
+        .await
+        .context("failed to ensure Postgres KV schema")?;
+    let migrated = transaction
+        .query_typed_opt(
+            &format!("SELECT 1 FROM {table} WHERE table_name = $1 AND row_key = $2 LIMIT 1"),
+            &[
+                (&POSTGRES_KV_MIGRATION_TABLE, Type::TEXT),
+                (&POSTGRES_KV_MESSAGES_PARTITION_MIGRATION, Type::TEXT),
+            ],
+        )
+        .await
+        .context("failed to read the Postgres KV migration marker")?;
+    if migrated.is_none() {
+        let pending = transaction
+            .query_typed_opt(
+                &format!(
+                    r#"
+SELECT 1
+FROM {table}
+WHERE table_name = 'messages'
+    AND partition_key = row_key
+    AND split_part(row_key, chr(31), 3) <> ''
+LIMIT 1"#
+                ),
+                &[],
+            )
+            .await
+            .context("failed to probe the Postgres KV messages partition backfill")?;
+        if pending.is_some() {
+            transaction
+                .batch_execute(&format!(
+                    r#"
 UPDATE {table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)
 WHERE table_name = 'messages'
     AND partition_key = row_key
     AND split_part(row_key, chr(31), 3) <> '';
-DROP INDEX IF EXISTS {old_partition_index};
 "#
-        ))
+                ))
+                .await
+                .context("failed to backfill Postgres KV message partition keys")?;
+        }
+        transaction
+            .execute_typed(
+                &format!(
+                    r#"INSERT INTO {table} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO NOTHING"#
+                ),
+                &[
+                    (&POSTGRES_KV_MIGRATION_TABLE, Type::TEXT),
+                    (&POSTGRES_KV_MESSAGES_PARTITION_MIGRATION, Type::TEXT),
+                ],
+            )
+            .await
+            .context("failed to record the Postgres KV migration marker")?;
+    }
+    transaction
+        .batch_execute(&format!("DROP INDEX IF EXISTS {old_partition_index};"))
         .await
         .context("failed to ensure Postgres KV schema")?;
+    transaction
+        .commit()
+        .await
+        .context("failed to commit Postgres KV schema transaction")?;
     Ok(())
 }
 
@@ -186,24 +357,102 @@ fn is_safe_identifier(identifier: &str) -> bool {
 #[derive(Clone)]
 pub struct KvClient {
     pool: Pool,
-    table: String,
+    prepared_statements: bool,
+    get_row_sql: String,
+    get_rows_sql: String,
+    get_partition_rows_sql: String,
+    delete_row_sql: String,
 }
 
 impl KvClient {
-    pub fn new(pool: Pool, kv_table: &str) -> anyhow::Result<Self> {
+    pub fn new(pool: Pool, config: &PostgresConfig) -> anyhow::Result<Self> {
+        let table = quote_identifier(&config.kv_table)?;
         Ok(Self {
             pool,
-            table: quote_identifier(kv_table)?,
+            prepared_statements: config.prepared_statements,
+            get_row_sql: format!(
+                "SELECT row_data FROM {table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1"
+            ),
+            get_rows_sql: format!(
+                "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
+            ),
+            get_partition_rows_sql: format!(
+                "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
+            ),
+            delete_row_sql: format!("DELETE FROM {table} WHERE table_name = $1 AND row_key = $2"),
         })
+    }
+
+    async fn query_rows(
+        &self,
+        client: &Client,
+        sql: &str,
+        params: &[(&(dyn ToSql + Sync), Type)],
+    ) -> anyhow::Result<Vec<Row>> {
+        if !self.prepared_statements {
+            return Ok(client.query_typed(sql, params).await?);
+        }
+        let statement = client.prepare_cached(sql).await?;
+        Ok(client.query(&statement, &statement_params(params)).await?)
+    }
+
+    async fn query_row(
+        &self,
+        client: &Client,
+        sql: &str,
+        params: &[(&(dyn ToSql + Sync), Type)],
+    ) -> anyhow::Result<Option<Row>> {
+        if !self.prepared_statements {
+            return Ok(client.query_typed_opt(sql, params).await?);
+        }
+        let statement = client.prepare_cached(sql).await?;
+        Ok(client
+            .query_opt(&statement, &statement_params(params))
+            .await?)
+    }
+
+    async fn execute(
+        &self,
+        client: &Client,
+        sql: &str,
+        params: &[(&(dyn ToSql + Sync), Type)],
+    ) -> anyhow::Result<u64> {
+        if !self.prepared_statements {
+            return Ok(client.execute_typed(sql, params).await?);
+        }
+        let statement = client.prepare_cached(sql).await?;
+        Ok(client
+            .execute(&statement, &statement_params(params))
+            .await?)
+    }
+
+    async fn query_dynamic_rows(
+        &self,
+        client: &Client,
+        sql: &str,
+        field_name: &str,
+        params: &[(&(dyn ToSql + Sync), Type)],
+    ) -> anyhow::Result<Vec<Row>> {
+        if !self.prepared_statements {
+            return Ok(client.query_typed(sql, params).await?);
+        }
+        let statement = if is_cached_json_field(field_name) {
+            client.prepare_cached(sql).await?
+        } else {
+            client.prepare(sql).await?
+        };
+        Ok(client.query(&statement, &statement_params(params)).await?)
     }
 
     pub async fn get_row(&self, table_name: &str, row_key: &str) -> anyhow::Result<Option<Value>> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_data FROM {} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1",
-            self.table
-        );
-        let row = client.query_opt(&sql, &[&table_name, &row_key]).await?;
+        let row = self
+            .query_row(
+                &client,
+                &self.get_row_sql,
+                &[(&table_name, Type::TEXT), (&row_key, Type::TEXT)],
+            )
+            .await?;
         Ok(row.map(|row| row.get::<_, Value>("row_data")))
     }
 
@@ -216,11 +465,13 @@ impl KvClient {
             return Ok(Vec::new());
         }
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client.query(&sql, &[&table_name, &row_keys]).await?;
+        let rows = self
+            .query_rows(
+                &client,
+                &self.get_rows_sql,
+                &[(&table_name, Type::TEXT), (&row_keys, Type::TEXT_ARRAY)],
+            )
+            .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
 
@@ -230,27 +481,12 @@ impl KvClient {
         partition_key: &str,
     ) -> anyhow::Result<Vec<(String, Value)>> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client.query(&sql, &[&table_name, &partition_key]).await?;
-        Ok(rows.into_iter().map(row_key_and_data).collect())
-    }
-
-    pub async fn get_row_key_prefix_rows(
-        &self,
-        table_name: &str,
-        row_key_prefix: &str,
-    ) -> anyhow::Result<Vec<(String, Value)>> {
-        let client = self.pool.get().await?;
-        let upper = format!("{row_key_prefix}\u{10ffff}");
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND row_key COLLATE \"C\" >= $2 AND row_key COLLATE \"C\" < $3 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client
-            .query(&sql, &[&table_name, &row_key_prefix, &upper])
+        let rows = self
+            .query_rows(
+                &client,
+                &self.get_partition_rows_sql,
+                &[(&table_name, Type::TEXT), (&partition_key, Type::TEXT)],
+            )
             .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
@@ -270,32 +506,55 @@ impl KvClient {
         let client = self.pool.get().await?;
         let field_expr = json_field_expr(field_name)?;
         let direction = if desc { "DESC" } else { "ASC" };
-        let base = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
+        let base = &self.get_partition_rows_sql;
         let rows = match bound {
             Some(BigIntBound::LessThan(value)) => {
                 let sql = format!(
                     "{base} AND {field_expr} < $3 ORDER BY {field_expr} {direction} LIMIT $4"
                 );
-                client
-                    .query(&sql, &[&table_name, &partition_key, &value, &limit])
-                    .await?
+                self.query_dynamic_rows(
+                    &client,
+                    &sql,
+                    field_name,
+                    &[
+                        (&table_name, Type::TEXT),
+                        (&partition_key, Type::TEXT),
+                        (&value, Type::INT8),
+                        (&limit, Type::INT8),
+                    ],
+                )
+                .await?
             }
             Some(BigIntBound::GreaterThan(value)) => {
                 let sql = format!(
                     "{base} AND {field_expr} > $3 ORDER BY {field_expr} {direction} LIMIT $4"
                 );
-                client
-                    .query(&sql, &[&table_name, &partition_key, &value, &limit])
-                    .await?
+                self.query_dynamic_rows(
+                    &client,
+                    &sql,
+                    field_name,
+                    &[
+                        (&table_name, Type::TEXT),
+                        (&partition_key, Type::TEXT),
+                        (&value, Type::INT8),
+                        (&limit, Type::INT8),
+                    ],
+                )
+                .await?
             }
             None => {
                 let sql = format!("{base} ORDER BY {field_expr} {direction} LIMIT $3");
-                client
-                    .query(&sql, &[&table_name, &partition_key, &limit])
-                    .await?
+                self.query_dynamic_rows(
+                    &client,
+                    &sql,
+                    field_name,
+                    &[
+                        (&table_name, Type::TEXT),
+                        (&partition_key, Type::TEXT),
+                        (&limit, Type::INT8),
+                    ],
+                )
+                .await?
             }
         };
         Ok(rows.into_iter().map(row_key_and_data).collect())
@@ -313,34 +572,55 @@ impl KvClient {
         }
         let client = self.pool.get().await?;
         let field_expr = json_field_expr(field_name)?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND {field_expr} = ANY($3::bigint[]) AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client
-            .query(&sql, &[&table_name, &partition_key, &values])
+        let base = &self.get_partition_rows_sql;
+        let sql = format!("{base} AND {field_expr} = ANY($3::bigint[])");
+        let rows = self
+            .query_dynamic_rows(
+                &client,
+                &sql,
+                field_name,
+                &[
+                    (&table_name, Type::TEXT),
+                    (&partition_key, Type::TEXT),
+                    (&values, Type::INT8_ARRAY),
+                ],
+            )
             .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
 
     pub async fn delete_row(&self, table_name: &str, row_key: &str) -> anyhow::Result<()> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "DELETE FROM {} WHERE table_name = $1 AND row_key = $2",
-            self.table
-        );
-        client.execute(&sql, &[&table_name, &row_key]).await?;
+        self.execute(
+            &client,
+            &self.delete_row_sql,
+            &[(&table_name, Type::TEXT), (&row_key, Type::TEXT)],
+        )
+        .await?;
         Ok(())
     }
 
     pub async fn query(
         &self,
         sql: &str,
-        params: &[&(dyn ToSql + Sync)],
+        params: &[(&(dyn ToSql + Sync), Type)],
     ) -> anyhow::Result<Vec<Row>> {
         let client = self.pool.get().await?;
-        Ok(client.query(sql, params).await?)
+        if !self.prepared_statements {
+            return Ok(client.query_typed(sql, params).await?);
+        }
+        Ok(client.query(sql, &statement_params(params)).await?)
     }
+}
+
+fn statement_params<'a>(
+    params: &'a [(&'a (dyn ToSql + Sync), Type)],
+) -> Vec<&'a (dyn ToSql + Sync)> {
+    params.iter().map(|(value, _)| *value).collect()
+}
+
+fn is_cached_json_field(field_name: &str) -> bool {
+    CACHED_JSON_FIELDS.contains(&field_name)
 }
 
 fn row_key_and_data(row: Row) -> (String, Value) {
@@ -381,18 +661,8 @@ pub fn kv_key(parts: &[KeyPart<'_>]) -> anyhow::Result<String> {
         .map(|parts| parts.join("\u{001f}"))
 }
 
-pub fn decode_row(value: Value) -> anyhow::Result<Value> {
-    decode_value(value, DecodeDateMode::String)
-}
-
 pub fn decode_row_dates_as_millis(value: Value) -> anyhow::Result<Value> {
-    decode_value(value, DecodeDateMode::Millis)
-}
-
-#[derive(Clone, Copy)]
-enum DecodeDateMode {
-    String,
-    Millis,
+    decode_value(value)
 }
 
 fn encoded_key_part(part: &KeyPart<'_>) -> anyhow::Result<String> {
@@ -413,11 +683,11 @@ fn encoded_key_part(part: &KeyPart<'_>) -> anyhow::Result<String> {
     Ok(serde_json::to_string(&value)?)
 }
 
-fn decode_value(value: Value, date_mode: DecodeDateMode) -> anyhow::Result<Value> {
+fn decode_value(value: Value) -> anyhow::Result<Value> {
     match value {
         Value::Array(values) => values
             .into_iter()
-            .map(|value| decode_value(value, date_mode))
+            .map(decode_value)
             .collect::<anyhow::Result<Vec<_>>>()
             .map(Value::Array),
         Value::Object(mut object) => match object.get("__fluxer_type").and_then(Value::as_str) {
@@ -437,20 +707,17 @@ fn decode_value(value: Value, date_mode: DecodeDateMode) -> anyhow::Result<Value
                     .remove("value")
                     .and_then(|value| value.as_str().map(ToOwned::to_owned))
                     .unwrap_or_default();
-                match date_mode {
-                    DecodeDateMode::String => Ok(Value::String(value)),
-                    DecodeDateMode::Millis => Ok(DateTime::parse_from_rfc3339(&value)
-                        .map(|dt| {
-                            Value::Number(Number::from(dt.with_timezone(&Utc).timestamp_millis()))
-                        })
-                        .unwrap_or(Value::String(value))),
-                }
+                Ok(DateTime::parse_from_rfc3339(&value)
+                    .map(|dt| {
+                        Value::Number(Number::from(dt.with_timezone(&Utc).timestamp_millis()))
+                    })
+                    .unwrap_or(Value::String(value)))
             }
             Some("buffer" | "local_date") => Ok(object.remove("value").unwrap_or(Value::Null)),
             Some("set") => match object.remove("value").unwrap_or(Value::Null) {
                 Value::Array(values) => values
                     .into_iter()
-                    .map(|value| decode_value(value, date_mode))
+                    .map(decode_value)
                     .collect::<anyhow::Result<Vec<_>>>()
                     .map(Value::Array),
                 _ => Ok(Value::Array(Vec::new())),
@@ -458,14 +725,14 @@ fn decode_value(value: Value, date_mode: DecodeDateMode) -> anyhow::Result<Value
             Some("map") => match object.remove("value").unwrap_or(Value::Null) {
                 Value::Array(entries) => entries
                     .into_iter()
-                    .map(|entry| decode_value(entry, date_mode))
+                    .map(decode_value)
                     .collect::<anyhow::Result<Vec<_>>>()
                     .map(Value::Array),
                 _ => Ok(Value::Array(Vec::new())),
             },
             _ => object
                 .into_iter()
-                .map(|(key, value)| decode_value(value, date_mode).map(|value| (key, value)))
+                .map(|(key, value)| decode_value(value).map(|value| (key, value)))
                 .collect::<anyhow::Result<Map<_, _>>>()
                 .map(Value::Object),
         },
@@ -477,6 +744,27 @@ fn decode_value(value: Value, date_mode: DecodeDateMode) -> anyhow::Result<Value
 mod tests {
     use super::*;
     use serde_json::json;
+
+    fn ssl_mode_for(url: &str, ssl: bool) -> SslMode {
+        let mut pg = PgConfig::from_str(url).unwrap();
+        apply_ssl_mode(&mut pg, ssl);
+        pg.get_ssl_mode()
+    }
+
+    #[test]
+    fn ssl_flag_decides_tls_unless_url_names_a_mode() {
+        let socket = "postgres://fluxer@/fluxer?host=/run/postgresql";
+        assert_eq!(SslMode::Disable, ssl_mode_for(socket, false));
+        assert_eq!(SslMode::Require, ssl_mode_for(socket, true));
+        assert_eq!(
+            SslMode::Require,
+            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=require", false)
+        );
+        assert_eq!(
+            SslMode::Require,
+            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=disable", true)
+        );
+    }
 
     #[test]
     fn encodes_row_keys_like_postgres_kv_executor() {
@@ -522,6 +810,76 @@ mod tests {
         assert_eq!(decoded["bytes"], json!("YWJj"));
         assert_eq!(decoded["ids"], json!([1, 2]));
         assert_eq!(decoded["metadata"], json!([["kind", 9]]));
+    }
+
+    fn test_postgres_config(kv_table: &str) -> PostgresConfig {
+        PostgresConfig {
+            url: None,
+            host: "127.0.0.1".to_owned(),
+            port: 5432,
+            database: "fluxer".to_owned(),
+            username: "fluxer".to_owned(),
+            password: None,
+            ssl: false,
+            ssl_ca: None,
+            max_connections: 1,
+            kv_table: kv_table.to_owned(),
+            prepared_statements: true,
+        }
+    }
+
+    fn test_kv_client(kv_table: &str) -> KvClient {
+        let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();
+        let manager = Manager::new(pg, build_disabled_tls_connector());
+        let pool = Pool::builder(manager).max_size(1).build().unwrap();
+        KvClient::new(pool, &test_postgres_config(kv_table)).unwrap()
+    }
+
+    #[test]
+    fn hoists_kv_statements_for_the_quoted_table() {
+        let kv = test_kv_client("fluxer_kv");
+
+        assert_eq!(
+            kv.get_row_sql,
+            "SELECT row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1"
+        );
+        assert_eq!(
+            kv.get_rows_sql,
+            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
+        );
+        assert_eq!(
+            kv.get_partition_rows_sql,
+            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
+        );
+        assert_eq!(
+            kv.delete_row_sql,
+            "DELETE FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2"
+        );
+    }
+
+    #[test]
+    fn passes_the_prepared_statement_switch_onto_the_client() {
+        let mut config = test_postgres_config("fluxer_kv");
+        config.prepared_statements = false;
+        let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();
+        let manager = Manager::new(pg, build_disabled_tls_connector());
+        let pool = Pool::builder(manager).max_size(1).build().unwrap();
+
+        assert!(!KvClient::new(pool, &config).unwrap().prepared_statements);
+        assert!(test_kv_client("fluxer_kv").prepared_statements);
+    }
+
+    #[test]
+    fn caches_only_closed_set_json_fields() {
+        assert!(is_cached_json_field("message_id"));
+        assert!(!is_cached_json_field("user_id"));
+        assert!(!is_cached_json_field("a0"));
+        assert!(!is_cached_json_field(""));
+        assert!(
+            CACHED_JSON_FIELDS
+                .iter()
+                .all(|field| is_safe_identifier(field))
+        );
     }
 
     #[test]

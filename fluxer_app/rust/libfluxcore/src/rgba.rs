@@ -2,7 +2,6 @@
 
 const MAX_TRANSFORM_PIXELS: u64 = 200_000_000;
 const RGBA_BYTES_PER_PIXEL: usize = 4;
-const RGBA_RESULT_HEADER_BYTES: usize = 8;
 const NULL_U32: u32 = u32::MAX;
 
 #[derive(Clone, Copy, Debug)]
@@ -22,10 +21,10 @@ pub struct TransformRequest {
 pub enum TransformError {
     InvalidDimensions,
     InvalidRgbaLength,
+    InvalidOutputLength,
     EmptyCrop,
     EmptyTarget,
     ImageTooLarge,
-    OutOfMemory,
 }
 
 impl TransformError {
@@ -33,10 +32,10 @@ impl TransformError {
         match self {
             Self::InvalidDimensions => "invalid RGBA dimensions",
             Self::InvalidRgbaLength => "RGBA input length does not match dimensions",
+            Self::InvalidOutputLength => "RGBA output length does not match target dimensions",
             Self::EmptyCrop => "Crop area is empty",
             Self::EmptyTarget => "Target dimensions are empty",
             Self::ImageTooLarge => "Image is too large to crop",
-            Self::OutOfMemory => "out of memory",
         }
     }
 }
@@ -71,26 +70,36 @@ struct PixelLayout {
     dst_width: usize,
 }
 
-pub fn crop_rotate_rgba_alloc(
+pub fn crop_rotate_rgba_into(
+    input: &[u8],
+    output: &mut [u8],
+    request: TransformRequest,
+) -> Result<(), TransformError> {
+    let geometry = checked_geometry(input, request)?;
+    if output.len() != rgba_byte_len(geometry.target_width, geometry.target_height)? {
+        return Err(TransformError::InvalidOutputLength);
+    }
+    write_transformed(input, output, request, geometry);
+    Ok(())
+}
+
+fn checked_geometry(
     input: &[u8],
     request: TransformRequest,
-) -> Result<Vec<u8>, TransformError> {
+) -> Result<OutputGeometry, TransformError> {
     let geometry = output_geometry(request)?;
-    let expected_len = rgba_byte_len(request.src_width, request.src_height, 0)?;
-    if input.len() != expected_len {
+    if input.len() != rgba_byte_len(request.src_width, request.src_height)? {
         return Err(TransformError::InvalidRgbaLength);
     }
+    Ok(geometry)
+}
 
-    let output_len = rgba_byte_len(
-        geometry.target_width,
-        geometry.target_height,
-        RGBA_RESULT_HEADER_BYTES,
-    )?;
-    let mut output = try_zeroed_vec(output_len)?;
-    write_u32_le(&mut output, 0, geometry.target_width);
-    write_u32_le(&mut output, 4, geometry.target_height);
-
-    let dst = &mut output[RGBA_RESULT_HEADER_BYTES..];
+fn write_transformed(
+    input: &[u8],
+    dst: &mut [u8],
+    request: TransformRequest,
+    geometry: OutputGeometry,
+) {
     if geometry.target_width == geometry.base_width
         && geometry.target_height == geometry.base_height
     {
@@ -98,8 +107,6 @@ pub fn crop_rotate_rgba_alloc(
     } else {
         copy_rotated_with_nearest_resize(input, dst, request, geometry);
     }
-
-    Ok(output)
 }
 
 fn output_geometry(request: TransformRequest) -> Result<OutputGeometry, TransformError> {
@@ -139,7 +146,7 @@ fn output_geometry(request: TransformRequest) -> Result<OutputGeometry, Transfor
         return Err(TransformError::EmptyTarget);
     }
 
-    rgba_byte_len(target_width, target_height, RGBA_RESULT_HEADER_BYTES)?;
+    rgba_byte_len(target_width, target_height)?;
 
     Ok(OutputGeometry {
         crop,
@@ -162,7 +169,7 @@ fn clamped_crop(src_width: u32, src_height: u32, x: u32, y: u32, width: u32, hei
     }
 }
 
-fn rgba_byte_len(width: u32, height: u32, extra_bytes: usize) -> Result<usize, TransformError> {
+fn rgba_byte_len(width: u32, height: u32) -> Result<usize, TransformError> {
     let pixels = u64::from(width) * u64::from(height);
     if pixels > MAX_TRANSFORM_PIXELS {
         return Err(TransformError::ImageTooLarge);
@@ -170,18 +177,8 @@ fn rgba_byte_len(width: u32, height: u32, extra_bytes: usize) -> Result<usize, T
 
     let byte_len = pixels
         .checked_mul(RGBA_BYTES_PER_PIXEL as u64)
-        .and_then(|len| len.checked_add(extra_bytes as u64))
         .ok_or(TransformError::ImageTooLarge)?;
     usize::try_from(byte_len).map_err(|_| TransformError::ImageTooLarge)
-}
-
-fn try_zeroed_vec(len: usize) -> Result<Vec<u8>, TransformError> {
-    let mut output = Vec::new();
-    output
-        .try_reserve_exact(len)
-        .map_err(|_| TransformError::OutOfMemory)?;
-    output.resize(len, 0);
-    Ok(output)
 }
 
 fn normalized_rotation(rotation_deg: u32) -> u32 {
@@ -197,10 +194,6 @@ fn quarter_turn_rotation(rotation_deg: u32) -> u32 {
 
 fn has_resize(value: u32) -> bool {
     value != NULL_U32 && value > 0
-}
-
-fn write_u32_le(output: &mut [u8], offset: usize, value: u32) {
-    output[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
 }
 
 fn copy_rotated_without_resize(
@@ -352,7 +345,6 @@ fn copy_pixel(input: &[u8], dst: &mut [u8], layout: PixelLayout, src: Point, tar
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::*;
 
     fn request(src_width: u32, src_height: u32) -> TransformRequest {
         TransformRequest {
@@ -375,53 +367,14 @@ mod tests {
             .collect()
     }
 
-    fn payload(output: &[u8]) -> &[u8] {
-        &output[RGBA_RESULT_HEADER_BYTES..]
-    }
-
-    fn dimensions(output: &[u8]) -> (u32, u32) {
-        (
-            u32::from_le_bytes(output[0..4].try_into().unwrap()),
-            u32::from_le_bytes(output[4..8].try_into().unwrap()),
-        )
-    }
-
-    #[test]
-    fn rotate_90_uses_clockwise_quarter_turns() {
-        let mut transform = request(2, 3);
-        transform.rotation_deg = 90;
-        let output = crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
-        assert_eq!(dimensions(&output), (3, 2));
-        assert_eq!(payload(&output), rgba(&[5, 3, 1, 6, 4, 2]));
-    }
-
-    #[test]
-    fn rotate_180_reverses_rows_and_columns() {
-        let mut transform = request(2, 2);
-        transform.rotation_deg = 180;
-        let output = crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4]), transform).unwrap();
-        assert_eq!(dimensions(&output), (2, 2));
-        assert_eq!(payload(&output), rgba(&[4, 3, 2, 1]));
-    }
-
-    #[test]
-    fn rotate_270_uses_clockwise_quarter_turns() {
-        let mut transform = request(2, 3);
-        transform.rotation_deg = 270;
-        let output = crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
-        assert_eq!(dimensions(&output), (3, 2));
-        assert_eq!(payload(&output), rgba(&[2, 4, 6, 1, 3, 5]));
-    }
-
-    #[test]
-    fn applies_nearest_resize_after_rotation() {
-        let mut transform = request(4, 1);
-        transform.x = 1;
-        transform.width = 2;
-        transform.resize_width = 4;
-        let output = crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4]), transform).unwrap();
-        assert_eq!(dimensions(&output), (4, 1));
-        assert_eq!(payload(&output), rgba(&[2, 2, 3, 3]));
+    fn transformed(
+        input: &[u8],
+        request: TransformRequest,
+    ) -> Result<((u32, u32), Vec<u8>), TransformError> {
+        let geometry = output_geometry(request)?;
+        let mut output = vec![0; rgba_byte_len(geometry.target_width, geometry.target_height)?];
+        crop_rotate_rgba_into(input, &mut output, request)?;
+        Ok(((geometry.target_width, geometry.target_height), output))
     }
 
     #[test]
@@ -431,19 +384,19 @@ mod tests {
         transform.y = 1;
         transform.width = 99;
         transform.height = 99;
-        let output = crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
-        assert_eq!(dimensions(&output), (1, 1));
-        assert_eq!(payload(&output), rgba(&[6]));
+        let (size, pixels) = transformed(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
+        assert_eq!(size, (1, 1));
+        assert_eq!(pixels, rgba(&[6]));
     }
 
     #[test]
     fn rejects_invalid_source_shape() {
         assert_eq!(
-            crop_rotate_rgba_alloc(&[], request(0, 1)).unwrap_err(),
+            transformed(&[], request(0, 1)).unwrap_err(),
             TransformError::InvalidDimensions
         );
         assert_eq!(
-            crop_rotate_rgba_alloc(&[0, 0, 0, 0], request(2, 1)).unwrap_err(),
+            transformed(&[0, 0, 0, 0], request(2, 1)).unwrap_err(),
             TransformError::InvalidRgbaLength
         );
     }
@@ -453,24 +406,22 @@ mod tests {
         let mut empty_crop = request(2, 2);
         empty_crop.x = 2;
         assert_eq!(
-            crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4]), empty_crop).unwrap_err(),
+            transformed(&rgba(&[1, 2, 3, 4]), empty_crop).unwrap_err(),
             TransformError::EmptyCrop
         );
 
         let mut empty_target = request(2, 2);
         empty_target.resize_width = 0;
         empty_target.resize_height = 1;
-        assert!(crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4]), empty_target).is_ok());
+        assert!(transformed(&rgba(&[1, 2, 3, 4]), empty_target).is_ok());
     }
 
-    proptest! {
-        #[test]
-        fn identity_transform_preserves_pixels(width in 1u32..16, height in 1u32..16) {
-            let pixel_count = (width * height) as usize;
-            let input = rgba(&(0..pixel_count).map(|index| index as u8).collect::<Vec<_>>());
-            let output = crop_rotate_rgba_alloc(&input, request(width, height)).unwrap();
-            prop_assert_eq!(dimensions(&output), (width, height));
-            prop_assert_eq!(payload(&output), input.as_slice());
-        }
+    #[test]
+    fn into_rejects_an_output_of_the_wrong_length() {
+        let mut output = vec![0; 3 * RGBA_BYTES_PER_PIXEL];
+        assert_eq!(
+            crop_rotate_rgba_into(&rgba(&[1, 2, 3, 4]), &mut output, request(2, 2)).unwrap_err(),
+            TransformError::InvalidOutputLength
+        );
     }
 }

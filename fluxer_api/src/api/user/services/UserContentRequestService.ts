@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Message} from '@app/api/models/Message';
+import type {SavedMessageEntry, UserContentService} from '@app/api/user/services/UserContentService';
+import type {MessageListResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {
-	HarvestCreationResponseSchema,
+	HarvestCreationResponse,
 	HarvestDownloadUrlResponse,
-	HarvestStatusResponseSchema,
+	HarvestStatusResponse,
 } from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {HarvestSelfDataRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {
 	SavedMessageEntryListResponse,
 	SavedMessageEntryResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {z} from 'zod';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {SavedMessageEntry, UserContentService} from './UserContentService';
 
-type HarvestCreationResponse = z.infer<typeof HarvestCreationResponseSchema>;
-type HarvestStatusResponse = z.infer<typeof HarvestStatusResponseSchema>;
 type HarvestLatestResponse = HarvestStatusResponse | null;
 
 interface UserMentionsParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	limit: number;
 	roles: boolean;
 	everyone: boolean;
@@ -44,12 +44,15 @@ interface UserMentionsReadParams {
 
 interface SavedMessagesParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	limit: number;
+	before?: MessageID;
 	requestCache: RequestCache;
 }
 
 interface SaveMessageParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	messageId: MessageID;
 	requestCache: RequestCache;
@@ -89,13 +92,14 @@ export class UserContentRequestService {
 	async listMentions(params: UserMentionsParams): Promise<MessageListResponse> {
 		const messages = await this.userContentService.getRecentMentions({
 			userId: params.userId,
+			viewer: params.viewer,
 			limit: params.limit,
 			everyone: params.everyone,
 			roles: params.roles,
 			guilds: params.guilds,
 			before: params.before,
 		});
-		return this.userContentService.buildMessageResponsesForUser(params.userId, messages);
+		return this.userContentService.buildMessageResponsesForUser(params.userId, params.viewer, messages);
 	}
 
 	async deleteMention(params: UserMentionDeleteParams): Promise<void> {
@@ -107,13 +111,28 @@ export class UserContentRequestService {
 	}
 
 	async listSavedMessages(params: SavedMessagesParams): Promise<SavedMessageEntryListResponse> {
-		const entries = await this.userContentService.getSavedMessages({userId: params.userId, limit: params.limit});
-		return Promise.all(entries.map((entry) => this.mapSavedMessageEntry(params.userId, entry)));
+		const entries = await this.userContentService.getSavedMessages({
+			userId: params.userId,
+			viewer: params.viewer,
+			limit: params.limit,
+			before: params.before,
+		});
+		const messages = entries.map((entry) => entry.message).filter((message): message is Message => message != null);
+		const responses = await this.userContentService.buildMessageResponsesForUser(
+			params.userId,
+			params.viewer,
+			messages,
+		);
+		const responseByMessageId = new Map(responses.map((response) => [response.id, response] as const));
+		return entries.map((entry) =>
+			this.mapSavedMessageEntry(entry, responseByMessageId.get(entry.messageId.toString()) ?? null),
+		);
 	}
 
 	async saveMessage(params: SaveMessageParams): Promise<void> {
 		await this.userContentService.saveMessage({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 			messageId: params.messageId,
 			userCacheService: this.userCacheService,
@@ -145,15 +164,22 @@ export class UserContentRequestService {
 		return this.userContentService.getHarvestDownloadUrl(params.userId, params.harvestId, params.storageService);
 	}
 
-	private async mapSavedMessageEntry(userId: UserID, entry: SavedMessageEntry): Promise<SavedMessageEntryResponse> {
+	async streamHarvestDownload(params: {
+		harvestId: bigint;
+		token: string;
+		range?: string;
+		storageService: IStorageService;
+	}) {
+		return this.userContentService.streamHarvestDownload(params);
+	}
+
+	private mapSavedMessageEntry(entry: SavedMessageEntry, message: MessageResponse | null): SavedMessageEntryResponse {
 		return {
 			id: entry.messageId.toString(),
 			channel_id: entry.channelId.toString(),
 			message_id: entry.messageId.toString(),
 			status: entry.status,
-			message: entry.message
-				? (await this.userContentService.buildMessageResponsesForUser(userId, [entry.message]))[0]
-				: null,
+			message,
 		};
 	}
 }

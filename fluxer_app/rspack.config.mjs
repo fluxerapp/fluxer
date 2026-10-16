@@ -3,8 +3,16 @@
 import {existsSync, mkdirSync, readdirSync, writeFileSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {CopyRspackPlugin, DefinePlugin, HtmlRspackPlugin, SwcJsMinimizerRspackPlugin} from '@rspack/core';
-import {createPoFileRule, getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
+import {
+	Compilation,
+	CopyRspackPlugin,
+	DefinePlugin,
+	HtmlRspackPlugin,
+	LightningCssMinimizerRspackPlugin,
+	SwcJsMinimizerRspackPlugin,
+	sources,
+} from '@rspack/core';
+import {getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +25,61 @@ const PKGS_DIR = path.join(ROOT_DIR, 'pkgs');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'assets');
 const BROWSER_ASSERT_STRICT_MODULE = path.join(SRC_DIR, 'features', 'platform', 'utils', 'BrowserAssertStrict.ts');
 const DEFAULT_DEV_SERVER_PORT = 3000;
+const BOOT_PRELOAD_CHUNK_GROUPS = ['app-bootstrap', 'boot-app'];
+const BOOT_PRELOAD_FONT_FILES = [
+	'FluxerSans/FluxerSans-Regular.woff2',
+	'FluxerSans/FluxerSans-SemiBold.woff2',
+	'FluxerSans/FluxerSans-Bold.woff2',
+];
+const BOOT_LOW_PRIORITY_FONT_FILES = ['FluxerSans/FluxerSans-Medium.woff2'];
+const AUTH_ENTRY_DOCUMENT = 'auth-index.html';
+const ENTRY_STYLESHEET_LINK_PATTERN = /<link href="([^"]+\.css)" rel="stylesheet">/gu;
+const CSS_URL_PATTERN = /url\(\s*['"]?([^'")]+)/gu;
+const DESKTOP_MODULE_ASSET_SOURCES = [
+	{
+		test: /[\\/]fonts[\\/]files[\\/]FluxerSans(JP|KR|SC|TC)[\\/][^\\/]+\.woff2$/u,
+		moduleName: (match) => `fluxer_fonts_${match[1].toLowerCase()}`,
+	},
+	{
+		test: /[\\/]@arborium[\\/]([a-z0-9-]+)[\\/]grammar_bg\.wasm$/u,
+		moduleName: (match) => `fluxer_grammar_${match[1].replace(/-/gu, '_')}`,
+	},
+	{
+		test: /[\\/]deepfilternet3[\\/](df_bg\.wasm|[^\\/]+\.tar\.gz)$/u,
+		moduleName: () => 'fluxer_deepfilter',
+	},
+	{
+		test: /[\\/]onnxruntime-web[\\/]dist[\\/][^\\/]+\.wasm$|[\\/]camera-effects[\\/]models[\\/][^\\/]+\.onnx$/u,
+		moduleName: () => 'fluxer_camera_effects',
+	},
+];
+
+class UnusableDesktopModuleQueryError extends Error {
+	constructor(resource) {
+		super(`${resource} does not match a registered desktop module asset source.`);
+		this.name = 'UnusableDesktopModuleQueryError';
+	}
+}
+
+function desktopModuleAssetRules(isProduction) {
+	return DESKTOP_MODULE_ASSET_SOURCES.map((source) => ({
+		test: source.test,
+		type: 'asset/resource',
+		generator: {
+			filename: (pathData) => {
+				const match = source.test.exec(pathData.filename ?? '');
+				if (match == null) {
+					throw new UnusableDesktopModuleQueryError(pathData.filename ?? '');
+				}
+				const moduleName = source.moduleName(match);
+				const extension = pathData.filename.endsWith('.tar.gz') ? '.tar.gz' : '[ext]';
+				return isProduction
+					? `assets/${moduleName}/[contenthash:16]${extension}`
+					: `assets/${moduleName}/[name].[hash]${extension}`;
+			},
+		},
+	}));
+}
 
 function resolveMode() {
 	const modeIndex = process.argv.indexOf('--mode');
@@ -27,6 +90,29 @@ function resolveMode() {
 		}
 	}
 	return 'production';
+}
+
+const ACCEPTED_CSS_ORDER_CONFLICTS = [
+	['app/components/dialogs/ConfirmModal', 'ui/button/Button'],
+	['app/components/dialogs/Modal', 'ui/button/Button'],
+	['app/components/dialogs/components/SettingsModalHeader', 'ui/button/Button'],
+	['app/components/dialogs/shared/SettingsHeadingLinkButton', 'ui/button/Button'],
+	['ui/tooltip/Tooltip', 'ui/button/Button'],
+];
+
+function isAcceptedCssOrderConflict(warning) {
+	const message = warning.message ?? '';
+	if (!message.includes('Conflicting order between')) {
+		return false;
+	}
+	return ACCEPTED_CSS_ORDER_CONFLICTS.some(([first, second]) => {
+		const firstPath = `./src/features/${first}.module.css`;
+		const secondPath = `./src/features/${second}.module.css`;
+		return (
+			message.includes(`between ${firstPath} and ${secondPath}`) ||
+			message.includes(`between ${secondPath} and ${firstPath}`)
+		);
+	});
 }
 
 function isMainRuntimeChunk(chunk) {
@@ -46,6 +132,164 @@ function isMainRuntimeChunk(chunk) {
 	return false;
 }
 
+function mirrorCacheGroups(groups) {
+	const mirrored = {};
+	for (const [key, group] of Object.entries(groups)) {
+		if (group.chunks != null) {
+			mirrored[key] = group;
+			continue;
+		}
+		mirrored[key] = {...group, chunks: (chunk) => isMainRuntimeChunk(chunk) && chunk.canBeInitial()};
+		mirrored[`${key}Async`] = {
+			...group,
+			name: `${group.name}-async`,
+			chunks: (chunk) => isMainRuntimeChunk(chunk) && !chunk.canBeInitial(),
+		};
+	}
+	return mirrored;
+}
+
+function bootPreloadPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('BootPreloadPlugin', (compilation) => {
+				compilation.hooks.processAssets.tap(
+					{name: 'BootPreloadPlugin', stage: Compilation.PROCESS_ASSETS_STAGE_REPORT},
+					() => {
+						const asset = compilation.getAsset('index.html');
+						if (asset == null) {
+							return;
+						}
+						const html = String(asset.source.source());
+						if (!html.includes('</body>')) {
+							return;
+						}
+						const configuredPublicPath = compilation.outputOptions.publicPath;
+						const base =
+							typeof configuredPublicPath === 'string' && configuredPublicPath !== 'auto' ? configuredPublicPath : '/';
+						const files = new Set();
+						for (const name of BOOT_PRELOAD_CHUNK_GROUPS) {
+							for (const group of compilation.chunkGroups) {
+								if (group.name !== name) {
+									continue;
+								}
+								for (const file of group.getFiles()) {
+									if (!html.includes(file)) {
+										files.add(file);
+									}
+								}
+							}
+						}
+						const ordered = [...files];
+						const links = [
+							...ordered
+								.filter((file) => file.endsWith('.css'))
+								.map((file) => `<link rel="preload" as="style" fetchpriority="low" href="${base}${file}">`),
+							...ordered
+								.filter((file) => file.endsWith('.js'))
+								.map((file) => `<link rel="preload" as="script" fetchpriority="low" href="${base}${file}">`),
+						].join('');
+						if (links === '') {
+							return;
+						}
+						compilation.updateAsset('index.html', new sources.RawSource(html.replace('</body>', `${links}</body>`)));
+					},
+				);
+			});
+		},
+	};
+}
+
+class UninlinableEntryStylesheetError extends Error {
+	constructor(reason) {
+		super(`Cannot inline the entry stylesheet into ${AUTH_ENTRY_DOCUMENT}: ${reason}`);
+		this.name = 'UninlinableEntryStylesheetError';
+	}
+}
+
+function inlineEntryStylesheet(css, href) {
+	const content = css.replace(/\/\*# sourceMappingURL=[^*]*\*\/\s*$/u, '');
+	if (content.includes('</style')) {
+		throw new UninlinableEntryStylesheetError(`${href} contains a closing style tag`);
+	}
+	for (const [, url] of content.matchAll(CSS_URL_PATTERN)) {
+		if (!/^(?:\/|https?:|data:|#)/u.test(url)) {
+			throw new UninlinableEntryStylesheetError(`${href} references ${url} relative to its own location`);
+		}
+	}
+	return `<style>${content}</style><link rel="prefetch" as="style" href="${href}">`;
+}
+
+function authEntryDocumentPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('AuthEntryDocumentPlugin', (compilation) => {
+				compilation.hooks.processAssets.tap(
+					{name: 'AuthEntryDocumentPlugin', stage: Compilation.PROCESS_ASSETS_STAGE_REPORT},
+					() => {
+						const asset = compilation.getAsset('index.html');
+						if (asset == null) {
+							return;
+						}
+						const html = String(asset.source.source());
+						const links = [...html.matchAll(ENTRY_STYLESHEET_LINK_PATTERN)];
+						if (links.length === 0) {
+							throw new UninlinableEntryStylesheetError('index.html links no stylesheet');
+						}
+						let document = html;
+						for (const [link, href] of links) {
+							const name = compilation
+								.getAssets()
+								.find((candidate) => href.endsWith(`/${candidate.name}`) || href === candidate.name)?.name;
+							if (name == null) {
+								throw new UninlinableEntryStylesheetError(`${href} is not an emitted asset`);
+							}
+							const css = String(compilation.getAsset(name).source.source());
+							document = document.replace(link, () => inlineEntryStylesheet(css, href));
+						}
+						compilation.emitAsset(AUTH_ENTRY_DOCUMENT, new sources.RawSource(document));
+					},
+				);
+			});
+		},
+	};
+}
+
+function fontPreloadPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('FontPreloadPlugin', (compilation) => {
+				HtmlRspackPlugin.getCompilationHooks(compilation).alterAssetTagGroups.tap('FontPreloadPlugin', (data) => {
+					const fonts = [];
+					const lowPriority = new Set(BOOT_LOW_PRIORITY_FONT_FILES);
+					for (const sourceName of [...BOOT_PRELOAD_FONT_FILES, ...BOOT_LOW_PRIORITY_FONT_FILES]) {
+						const asset = compilation
+							.getAssets()
+							.find((candidate) => String(candidate.info.sourceFilename ?? '').endsWith(sourceName));
+						if (asset == null) {
+							throw new Error(`Cannot preload ${sourceName}: no emitted asset came from it`);
+						}
+						fonts.push({
+							tagName: 'link',
+							voidTag: true,
+							attributes: {
+								rel: 'preload',
+								as: 'font',
+								type: 'font/woff2',
+								crossorigin: '',
+								href: `${data.publicPath}${asset.name}`,
+								...(lowPriority.has(sourceName) ? {fetchpriority: 'low'} : {}),
+							},
+						});
+					}
+					data.headTags.unshift(...fonts);
+					return data;
+				});
+			});
+		},
+	};
+}
+
 function nodeAssertStrictSchemePlugin() {
 	return {
 		apply(compiler) {
@@ -63,6 +307,7 @@ function nodeAssertStrictSchemePlugin() {
 const mode = resolveMode();
 const isProduction = mode === 'production';
 const isDevelopment = !isProduction;
+const isDesktopRenderer = envString('FLUXER_DESKTOP_RENDERER') === 'true';
 const devJsName = 'assets/[name].js';
 const devCssName = 'assets/[name].css';
 const productionJsName = 'assets/[contenthash:16].js';
@@ -97,19 +342,16 @@ function devServerHeaders() {
 
 function resolveReleaseChannel() {
 	const value = envString('PUBLIC_RELEASE_CHANNEL', envString('RELEASE_CHANNEL', 'canary')).trim().toLowerCase();
-	if (value === 'stable' || value === 'canary') {
+	if (value === 'stable' || value === 'canary' || value === 'development') {
 		return value;
 	}
-	return 'canary';
+	throw new Error(`PUBLIC_RELEASE_CHANNEL must be stable, canary, or development, received ${JSON.stringify(value)}`);
 }
 
 function resolvePublicValues() {
 	return {
-		PUBLIC_API_VERSION: envString('PUBLIC_API_VERSION', '1'),
 		PUBLIC_BUILD_VERSION: envString('PUBLIC_BUILD_VERSION', envString('BUILD_VERSION', 'dev')),
 		PUBLIC_RELEASE_CHANNEL: resolveReleaseChannel(),
-		PUBLIC_BOOTSTRAP_API_ENDPOINT: envString('PUBLIC_BOOTSTRAP_API_ENDPOINT', '/api'),
-		PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: envString('PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT'),
 	};
 }
 
@@ -159,11 +401,10 @@ function jsFilename(pathData) {
 export default () => {
 	const linguiSwcPlugin = getLinguiSwcPluginConfig();
 	const publicValues = resolvePublicValues();
-	const assetBaseUrl = envString('PUBLIC_ASSET_BASE_URL');
-	const staticCdnEndpoint = envString(
-		'PUBLIC_STATIC_CDN_ENDPOINT',
-		envString('FLUXER_STATIC_CDN_ENDPOINT', isProduction ? '' : ''),
-	);
+	const assetBaseUrl = isDesktopRenderer ? undefined : envString('PUBLIC_ASSET_BASE_URL');
+	const staticCdnEndpoint = isDesktopRenderer
+		? ''
+		: envString('PUBLIC_STATIC_CDN_ENDPOINT', envString('FLUXER_STATIC_CDN_ENDPOINT', isProduction ? '' : ''));
 	function resolveArboriumWasmAliases() {
 		const arbDir = path.join(ROOT_DIR, 'node_modules', '@arborium');
 		const aliases = {};
@@ -186,10 +427,12 @@ export default () => {
 	const publicPath = isProduction ? productionPublicPath : developmentPublicPath;
 	return {
 		mode,
-		entry: {
-			main: path.join(SRC_DIR, 'index.tsx'),
-			sw: path.join(SRC_DIR, 'features', 'platform', 'service_worker', 'Worker.ts'),
-		},
+		entry: isDesktopRenderer
+			? {main: path.join(SRC_DIR, 'index.tsx')}
+			: {
+					main: path.join(SRC_DIR, 'index.tsx'),
+					sw: path.join(SRC_DIR, 'features', 'platform', 'service_worker', 'Worker.ts'),
+				},
 		output: {
 			path: DIST_DIR,
 			publicPath,
@@ -206,6 +449,8 @@ export default () => {
 		devtool: 'source-map',
 		target: ['web', 'browserslist'],
 		lazyCompilation: false,
+		performance: false,
+		ignoreWarnings: [isAcceptedCssOrderConflict],
 		resolve: {
 			alias: {
 				...resolveArboriumWasmAliases(),
@@ -222,22 +467,6 @@ export default () => {
 					'bridge',
 					'index.ts',
 				),
-				'@fluxer/voice_engine_v2/runtime': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'runtime',
-					'index.ts',
-				),
-				'@fluxer/voice_engine_v2/testing': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'testing',
-					'index.ts',
-				),
 				'@fluxer': path.join(MONOREPO_ROOT, 'packages'),
 				'@pkgs': PKGS_DIR,
 				'assert/strict': BROWSER_ASSERT_STRICT_MODULE,
@@ -245,20 +474,7 @@ export default () => {
 				'livekit-client/e2ee-worker': path.join(PKGS_DIR, 'livekit-client/src/e2ee/worker/e2ee.worker.ts'),
 				'node:assert/strict': BROWSER_ASSERT_STRICT_MODULE,
 			},
-			extensions: [
-				'.web.tsx',
-				'.web.ts',
-				'.web.jsx',
-				'.web.js',
-				'.tsx',
-				'.ts',
-				'.jsx',
-				'.js',
-				'.json',
-				'.mjs',
-				'.cjs',
-				'.po',
-			],
+			extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js', '.json', '.mjs', '.cjs'],
 			extensionAlias: {
 				'.js': ['.js', '.tsx', '.ts'],
 				'.mjs': ['.mjs', '.mts'],
@@ -279,8 +495,23 @@ export default () => {
 					},
 				},
 				{
+					test: /[\\/]@sapphi-red[\\/]web-noise-suppressor[\\/]dist[\\/][^\\/]+[\\/]workletProcessor\.js$/,
+					type: 'asset/resource',
+					use: [{loader: path.join(ROOT_DIR, 'scripts/build/rspack/noise-suppressor-worklet-loader.cjs')}],
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].worklet.js' : 'assets/[name].[hash].worklet.js',
+					},
+				},
+				{
+					test: /[\\/]src[\\/].+\.worklet\.js$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].worklet.js' : 'assets/[name].[hash].worklet.js',
+					},
+				},
+				{
 					test: /\.(tsx|ts|jsx|js)$/,
-					exclude: /node_modules/,
+					exclude: [/node_modules/, /\.worklet\.js$/],
 					type: 'javascript/auto',
 					parser: {
 						dynamicImport: true,
@@ -292,11 +523,8 @@ export default () => {
 								parser: {
 									syntax: 'typescript',
 									tsx: true,
-									decorators: true,
 								},
 								transform: {
-									legacyDecorator: true,
-									decoratorMetadata: true,
 									react: {
 										runtime: 'automatic',
 										development: isDevelopment,
@@ -311,12 +539,20 @@ export default () => {
 						},
 					},
 				},
-				createPoFileRule(),
 				{
 					test: /\.module\.css$/,
 					use: [{loader: 'postcss-loader'}],
 					type: 'css/module',
-					parser: {namedExports: false},
+					parser: {namedExports: false, dashedIdents: false, grid: false, container: false},
+				},
+				{
+					test: /[\\/]@phosphor-icons[\\/]react[\\/]dist[\\/]defs[\\/][^\\/]+\.es\.js$/,
+					use: [{loader: path.join(ROOT_DIR, 'scripts/build/rspack/phosphor-unused-weights-loader.cjs')}],
+				},
+				{
+					test: /[\\/]node_modules[\\/]katex[\\/]dist[\\/]katex(\.min)?\.css$/,
+					use: [{loader: path.join(ROOT_DIR, 'scripts/build/rspack/katex-legacy-fonts-loader.cjs')}],
+					type: 'css',
 				},
 				{
 					test: /\.css$/,
@@ -372,12 +608,27 @@ export default () => {
 					},
 				},
 				{
-					test: /\.(png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot|mp3|wav|ogg|mp4|webm)$/,
+					test: /[\\/]deepfilternet3[\\/][^\\/]+\.tar\.gz$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].tar.gz' : 'assets/[name].[hash].tar.gz',
+					},
+				},
+				{
+					test: /\.onnx$/,
 					type: 'asset/resource',
 					generator: {
 						filename: isProduction ? 'assets/[contenthash:16][ext]' : 'assets/[name].[hash][ext]',
 					},
 				},
+				{
+					test: /\.(png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|eot|mp3|wav|ogg|mp4|webm)$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16][ext]' : 'assets/[name].[hash][ext]',
+					},
+				},
+				...(isDesktopRenderer ? desktopModuleAssetRules(isProduction) : []),
 			],
 			generator: {
 				'css/module': {
@@ -394,6 +645,9 @@ export default () => {
 		},
 		plugins: [
 			nodeAssertStrictSchemePlugin(),
+			fontPreloadPlugin(),
+			...(isProduction ? [bootPreloadPlugin()] : []),
+			...(isProduction && !isDesktopRenderer ? [authEntryDocumentPlugin()] : []),
 			new HtmlRspackPlugin({
 				template: path.join(ROOT_DIR, 'index.html'),
 				filename: 'index.html',
@@ -401,6 +655,7 @@ export default () => {
 				inject: 'body',
 				scriptLoading: 'module',
 				excludeChunks: ['sw'],
+				...(isDesktopRenderer ? {publicPath: '/'} : {}),
 			}),
 			new CopyRspackPlugin({
 				patterns: [
@@ -409,13 +664,23 @@ export default () => {
 						to: DIST_DIR,
 						noErrorOnMissing: true,
 					},
+					...(isDesktopRenderer
+						? [
+								{
+									from: path.join(MONOREPO_ROOT, 'fluxer_static', 'web'),
+									to: path.join(DIST_DIR, 'web'),
+								},
+							]
+						: []),
 				],
 			}),
 			staticFilesPlugin({
 				staticCdnEndpoint: normalizedStaticCdnEndpoint,
 				fontsDir: path.join(MONOREPO_ROOT, 'packages', 'fonts'),
+				wasmCratesDir: path.join(ROOT_DIR, 'rust'),
 			}),
 			new DefinePlugin({
+				define: 'undefined',
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
 				__FLUXER_SW_VERSION__: JSON.stringify(publicValues.PUBLIC_BUILD_VERSION || 'dev'),
 				'process.env.NODE_ENV': JSON.stringify(mode),
@@ -423,13 +688,7 @@ export default () => {
 				'import.meta.env.PROD': JSON.stringify(isProduction),
 				'import.meta.env.MODE': JSON.stringify(mode),
 				'import.meta.env.PUBLIC_BUILD_VERSION': getPublicEnvVar(publicValues, 'PUBLIC_BUILD_VERSION'),
-				'import.meta.env.PUBLIC_API_VERSION': getPublicEnvVar(publicValues, 'PUBLIC_API_VERSION'),
 				'import.meta.env.PUBLIC_RELEASE_CHANNEL': getPublicEnvVar(publicValues, 'PUBLIC_RELEASE_CHANNEL'),
-				'import.meta.env.PUBLIC_BOOTSTRAP_API_ENDPOINT': getPublicEnvVar(publicValues, 'PUBLIC_BOOTSTRAP_API_ENDPOINT'),
-				'import.meta.env.PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT': getPublicEnvVar(
-					publicValues,
-					'PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT',
-				),
 			}),
 			{
 				apply(compiler) {
@@ -448,7 +707,8 @@ export default () => {
 				? {
 						chunks: (chunk) => isMainRuntimeChunk(chunk),
 						maxInitialRequests: 15,
-						cacheGroups: {
+						maxAsyncSize: 2_000_000,
+						cacheGroups: mirrorCacheGroups({
 							icons: {
 								test: /[\\/]node_modules[\\/]@phosphor-icons[\\/]/,
 								name: 'icons',
@@ -463,8 +723,24 @@ export default () => {
 								enforce: true,
 								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
 							},
+							tts: {
+								test: /[\\/]node_modules[\\/]mespeak[\\/]/,
+								name: 'tts',
+								priority: 54,
+								reuseExistingChunk: true,
+								enforce: true,
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
+							},
+							editor: {
+								test: /[\\/]node_modules[\\/](@codemirror|@lezer|codemirror|style-mod|w3c-keyname|crelt|@marijn)[\\/]/,
+								name: 'editor',
+								priority: 53,
+								reuseExistingChunk: true,
+								enforce: true,
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
+							},
 							livekit: {
-								test: /[\\/]node_modules[\\/](livekit-client|@livekit)[\\/]/,
+								test: /[\\/](node_modules|pkgs)[\\/](livekit-client|@livekit)[\\/]/,
 								name: 'livekit',
 								priority: 50,
 								reuseExistingChunk: true,
@@ -477,7 +753,7 @@ export default () => {
 								maxSize: 100_000,
 							},
 							animation: {
-								test: /[\\/]node_modules[\\/](framer-motion|motion)[\\/]/,
+								test: /[\\/]node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/,
 								name: 'animation',
 								priority: 45,
 								reuseExistingChunk: true,
@@ -488,8 +764,22 @@ export default () => {
 								priority: 43,
 								reuseExistingChunk: true,
 							},
+							i18n: {
+								test: /[\\/]node_modules[\\/]@lingui[\\/]/,
+								name: 'i18n',
+								priority: 42,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							colorPicker: {
+								test: /[\\/]node_modules[\\/](@react-aria[\\/]color|@react-stately[\\/]color)[\\/]/,
+								name: 'color-picker',
+								priority: 42,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
 							reactAria: {
-								test: /[\\/]node_modules[\\/]react-aria-components[\\/]/,
+								test: /[\\/]node_modules[\\/](react-aria-components|@react-aria|@react-stately|@internationalized)[\\/]/,
 								name: 'react-aria',
 								priority: 41,
 								reuseExistingChunk: true,
@@ -537,7 +827,7 @@ export default () => {
 								reuseExistingChunk: true,
 							},
 							utils: {
-								test: /[\\/]node_modules[\\/](lodash|clsx|qrcode|thumbhash|bowser|match-sorter)[\\/]/,
+								test: /[\\/]node_modules[\\/](lodash|clsx|thumbhash|match-sorter)[\\/]/,
 								name: 'utils',
 								priority: 28,
 								reuseExistingChunk: true,
@@ -554,6 +844,62 @@ export default () => {
 								priority: 25,
 								reuseExistingChunk: true,
 							},
+							platform: {
+								test: /[\\/]node_modules[\\/]bowser[\\/]/,
+								name: 'platform',
+								priority: 27,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							phone: {
+								test: /[\\/]node_modules[\\/]libphonenumber-js[\\/]/,
+								name: 'phone',
+								priority: 26,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							qrcode: {
+								test: /[\\/]node_modules[\\/](qrcode|dijkstrajs)[\\/]/,
+								name: 'qrcode',
+								priority: 24,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							lexical: {
+								test: /[\\/]node_modules[\\/](lexical|@lexical)[\\/]/,
+								name: 'lexical',
+								priority: 23,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							calendar: {
+								test: /[\\/]node_modules[\\/](react-day-picker|date-fns|@date-fns)[\\/]/,
+								name: 'calendar',
+								priority: 22,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							webrtc: {
+								test: /[\\/]node_modules[\\/](webrtc-adapter|sdp|sdp-transform)[\\/]/,
+								name: 'webrtc',
+								priority: 21,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							noiseFilter: {
+								test: /[\\/]node_modules[\\/]deepfilternet3-noise-filter[\\/]/,
+								name: 'noise-filter',
+								priority: 20,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
+							virtualizer: {
+								test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+								name: 'virtualizer',
+								priority: 19,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
 							vendor: {
 								test: (module) => {
 									if (!module.resource) return false;
@@ -566,7 +912,7 @@ export default () => {
 								priority: 10,
 								reuseExistingChunk: true,
 							},
-						},
+						}),
 					}
 				: false,
 			runtimeChunk: false,
@@ -578,7 +924,9 @@ export default () => {
 					compress: true,
 					mangle: true,
 					format: {comments: false},
+					exclude: /\.worklet\.js$/,
 				}),
+				new LightningCssMinimizerRspackPlugin(),
 			],
 		},
 		devServer: {
@@ -595,6 +943,5 @@ export default () => {
 				watch: false,
 			},
 		},
-		experiments: {css: true},
 	};
 };

@@ -1,30 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import {AdminRepository, type BannedIpEntry, type BannedIpKind} from '@app/api/admin/AdminRepository';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
+import {createNetworkBlockError, type NetworkBlock} from '@app/api/enforcement/NetworkBlockError';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
+import {Logger} from '@app/api/Logger';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
+import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {RefreshedCache} from '@app/api/utils/RefreshedCache';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import {getSameIpDecisionKey, type IpAddressFamily} from '@fluxer/ip_utils/src/IpAddress';
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {createMiddleware} from 'hono/factory';
-import {AdminRepository} from '../admin/AdminRepository';
-import type {BannedIpEntry, BannedIpKind} from '../admin/IAdminRepository';
-import {Config} from '../Config';
-import {IP_BAN_REFRESH_CHANNEL} from '../constants/IpBan';
-import {Logger} from '../Logger';
-import {isIpBanExempt} from '../risk/IpBanExemptions';
-import type {HonoEnv} from '../types/HonoEnv';
-import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
 
 type FamilyMap<T> = Record<IpAddressFamily, Map<string, T>>;
+
+interface IpBanDecision {
+	decisionId: bigint;
+	reasonCode: number | null;
+}
 
 interface IpBanMetadata {
 	kind: BannedIpKind;
 	expiresAt: Date | null;
+	decision: IpBanDecision | null;
 }
 
 interface IpBanCount {
 	permanent: number;
 	temporary: number;
 	temporaryExpiresAt: Date | null;
+	decision: IpBanDecision | null;
 }
 
 interface SingleCacheEntry {
@@ -43,6 +53,7 @@ interface IpBanMatch {
 	matchedEntry: string;
 	kind: BannedIpKind;
 	expiresAt: Date | null;
+	decision: IpBanDecision | null;
 }
 
 interface IpBanCacheState {
@@ -54,103 +65,49 @@ interface IpBanCacheState {
 const PERMANENT_BAN_METADATA: IpBanMetadata = {
 	kind: 'permanent',
 	expiresAt: null,
+	decision: null,
 };
 
-class IpBanCache {
+const INSTANCE_DISCOVERY_PATH = '/.well-known/fluxer';
+
+class IpBanCache extends RefreshedCache {
 	private singleIpBans: FamilyMap<SingleCacheEntry>;
 	private rangeIpBans: FamilyMap<RangeCacheEntry>;
 	private sameIpDecisionBans: Map<string, IpBanCount>;
-	private isInitialized = false;
 	private adminRepository = new AdminRepository();
-	private consecutiveFailures = 0;
-	private maxConsecutiveFailures = 5;
-	private kvClient: IKVProvider | null = null;
-	private kvSubscription: IKVSubscription | null = null;
-	private subscriberInitialized = false;
-	private messageHandler: ((channel: string) => void) | null = null;
-	private periodicRefreshTimer: NodeJS.Timeout | null = null;
-
+	private decisionRepository = new EnforcementDecisionRepository();
 	constructor() {
+		super({
+			name: 'IP ban cache',
+			channels: [IP_BAN_REFRESH_CHANNEL],
+			periodicIntervalMs: () => {
+				const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
+				return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
+			},
+			onPeriodicRefreshError: (error) =>
+				Logger.warn(
+					{error: error instanceof Error ? error.message : String(error)},
+					'Periodic IP ban cache refresh failed',
+				),
+		});
 		const state = this.createEmptyState();
 		this.singleIpBans = state.singleIpBans;
 		this.rangeIpBans = state.rangeIpBans;
 		this.sameIpDecisionBans = state.sameIpDecisionBans;
 	}
 
-	setRefreshSubscriber(kvClient: IKVProvider | null): void {
-		this.kvClient = kvClient;
-	}
-
-	async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		await this.refresh();
-		this.isInitialized = true;
-		this.setupSubscriber();
-		this.startPeriodicRefresh();
-	}
-
-	private startPeriodicRefresh(): void {
-		if (this.periodicRefreshTimer) return;
-		const intervalMs = Number(process.env.FLUXER_IP_BAN_REFRESH_INTERVAL_MS ?? '300000');
-		if (!Number.isFinite(intervalMs) || intervalMs <= 0) return;
-		this.periodicRefreshTimer = setInterval(() => {
-			this.refresh().catch((err) => {
-				const message = err instanceof Error ? err.message : String(err);
-				Logger.warn({error: message}, 'Periodic IP ban cache refresh failed');
-			});
-		}, intervalMs);
-		if (
-			typeof this.periodicRefreshTimer === 'object' &&
-			this.periodicRefreshTimer &&
-			'unref' in this.periodicRefreshTimer
-		) {
-			(this.periodicRefreshTimer as {unref(): void}).unref();
-		}
-	}
-
-	private setupSubscriber(): void {
-		if (this.subscriberInitialized || !this.kvClient) {
-			return;
-		}
-		const subscription = this.kvClient.duplicate();
-		this.kvSubscription = subscription;
-		this.messageHandler = (channel: string) => {
-			if (channel === IP_BAN_REFRESH_CHANNEL) {
-				this.refresh().catch((err) => {
-					this.consecutiveFailures++;
-					const message = err instanceof Error ? err.message : String(err);
-					if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-						Logger.error({error: message}, 'Failed to refresh IP ban cache after notification');
-					} else {
-						Logger.warn({error: message}, 'Failed to refresh IP ban cache after notification');
-					}
-				});
-			}
-		};
-		subscription
-			.connect()
-			.then(() => subscription.subscribe(IP_BAN_REFRESH_CHANNEL))
-			.then(() => {
-				if (this.messageHandler) {
-					subscription.on('message', this.messageHandler);
-				}
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Failed to subscribe to IP ban refresh channel');
-			});
-		this.subscriberInitialized = true;
-	}
-
-	async refresh(): Promise<void> {
+	protected async load(): Promise<void> {
 		const entries = await this.adminRepository.loadAllBannedIpEntries();
+		const decisionIds = [...new Set(entries.flatMap((entry) => (entry.decisionId === null ? [] : [entry.decisionId])))];
+		const decisions = decisionIds.length > 0 ? await this.decisionRepository.getMany(decisionIds) : [];
+		const reasonCodes = new Map(decisions.map((decision) => [decision.decision_id, decision.reason_code]));
 		const state = this.createEmptyState();
 		for (const entry of entries) {
-			this.addEntryToState(entry.ip, this.metadataFromEntry(entry), state);
+			this.addEntryToState(entry.ip, this.metadataFromEntry(entry, reasonCodes), state);
 		}
 		this.singleIpBans = state.singleIpBans;
 		this.rangeIpBans = state.rangeIpBans;
 		this.sameIpDecisionBans = state.sameIpDecisionBans;
-		this.consecutiveFailures = 0;
 	}
 
 	isBanned(ip: string): boolean {
@@ -164,7 +121,7 @@ class IpBanCache {
 		const sameIpDecisionKey = getSameIpDecisionKey(parsed.canonical);
 		if (sameIpDecisionKey) {
 			const decisionCount = this.sameIpDecisionBans.get(sameIpDecisionKey);
-			if (decisionCount) {
+			if (decisionCount && this.isActive(decisionCount)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: sameIpDecisionKey,
@@ -174,7 +131,7 @@ class IpBanCache {
 		}
 		const singleMap = this.singleIpBans[parsed.family];
 		const single = singleMap.get(parsed.canonical);
-		if (single) {
+		if (single && this.isActive(single.count)) {
 			return {
 				ipAddress: parsed.canonical,
 				matchedEntry: parsed.canonical,
@@ -183,7 +140,7 @@ class IpBanCache {
 		}
 		const rangeMap = this.rangeIpBans[parsed.family];
 		for (const [canonical, range] of rangeMap.entries()) {
-			if (parsed.value >= range.start && parsed.value <= range.end) {
+			if (parsed.value >= range.start && parsed.value <= range.end && this.isActive(range.count)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: canonical,
@@ -202,7 +159,7 @@ class IpBanCache {
 	banTemp(ip: string, ttlSeconds: number): void {
 		if (isIpBanExempt(ip)) return;
 		const expiresAt = Number.isFinite(ttlSeconds) && ttlSeconds > 0 ? new Date(Date.now() + ttlSeconds * 1000) : null;
-		this.addEntry(ip, {kind: 'temporary_24h', expiresAt});
+		this.addEntry(ip, {kind: 'temporary_24h', expiresAt, decision: null});
 	}
 
 	unban(ip: string): void {
@@ -231,10 +188,14 @@ class IpBanCache {
 		};
 	}
 
-	private metadataFromEntry(entry: BannedIpEntry): IpBanMetadata {
+	private metadataFromEntry(entry: BannedIpEntry, reasonCodes: ReadonlyMap<bigint, number>): IpBanMetadata {
 		return {
 			kind: entry.kind,
 			expiresAt: entry.expiresAt,
+			decision:
+				entry.decisionId === null
+					? null
+					: {decisionId: entry.decisionId, reasonCode: reasonCodes.get(entry.decisionId) ?? null},
 		};
 	}
 
@@ -243,10 +204,12 @@ class IpBanCache {
 			permanent: metadata.kind === 'permanent' ? 1 : 0,
 			temporary: metadata.kind === 'temporary_24h' ? 1 : 0,
 			temporaryExpiresAt: metadata.kind === 'temporary_24h' ? metadata.expiresAt : null,
+			decision: metadata.decision,
 		};
 	}
 
 	private incrementCount(count: IpBanCount, metadata: IpBanMetadata): void {
+		count.decision ??= metadata.decision;
 		if (metadata.kind === 'permanent') {
 			count.permanent += 1;
 			return;
@@ -269,14 +232,18 @@ class IpBanCache {
 		return count.permanent <= 0 && count.temporary <= 0;
 	}
 
-	private resolveCount(count: IpBanCount): {
-		kind: BannedIpKind;
-		expiresAt: Date | null;
-	} {
-		if (count.permanent > 0) {
-			return {kind: 'permanent', expiresAt: null};
+	private isActive(count: IpBanCount): boolean {
+		if (count.permanent > 0 || !count.temporaryExpiresAt) {
+			return true;
 		}
-		return {kind: 'temporary_24h', expiresAt: count.temporaryExpiresAt};
+		return count.temporaryExpiresAt.getTime() > Date.now();
+	}
+
+	private resolveCount(count: IpBanCount): Pick<IpBanMatch, 'kind' | 'expiresAt' | 'decision'> {
+		if (count.permanent > 0) {
+			return {kind: 'permanent', expiresAt: null, decision: count.decision};
+		}
+		return {kind: 'temporary_24h', expiresAt: count.temporaryExpiresAt, decision: count.decision};
 	}
 
 	private addEntry(value: string, metadata: IpBanMetadata): void {
@@ -350,38 +317,49 @@ class IpBanCache {
 			}
 		}
 	}
-
-	shutdown(): void {
-		if (this.periodicRefreshTimer) {
-			clearInterval(this.periodicRefreshTimer);
-			this.periodicRefreshTimer = null;
-		}
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			void this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
-		this.subscriberInitialized = false;
-		this.isInitialized = false;
-	}
 }
 
 export const ipBanCache = new IpBanCache();
-export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
-	const clientIp = extractClientIp(ctx.req.raw, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
-	const match = clientIp ? ipBanCache.getMatch(clientIp) : null;
+
+export const SIGN_IN_ROUTES: ReadonlySet<string> = new Set([
+	'/auth/login',
+	'/auth/login/mfa/totp',
+	'/auth/login/mfa/webauthn/authentication-options',
+	'/auth/login/mfa/webauthn',
+	'/auth/webauthn/authentication-options',
+	'/auth/webauthn/authenticate',
+	'/auth/sso/start',
+	'/auth/sso/complete',
+]);
+
+function findNetworkBlock(clientIp: string | null): NetworkBlock | null {
+	if (!clientIp) return null;
+	const match = ipBanCache.getMatch(clientIp);
 	if (match) {
-		throw new IpBannedError({
+		return {
 			ipAddress: match.ipAddress,
 			kind: match.kind,
 			expiresAt: match.expiresAt,
-		});
+			reasonCode: match.decision?.reasonCode ?? null,
+		};
+	}
+	if (!isIpBanExempt(clientIp) && sharedListHas('ip_blocked', clientIp)) {
+		return {ipAddress: clientIp, kind: 'permanent', expiresAt: null, reasonCode: null};
+	}
+	return null;
+}
+
+export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
+	if (ctx.req.path === INSTANCE_DISCOVERY_PATH) {
+		await next();
+		return;
+	}
+	const block = findNetworkBlock(getRequestClientIp(ctx));
+	if (block) {
+		if (ctx.req.method !== 'POST' || !SIGN_IN_ROUTES.has(stripApiPrefix(ctx.req.path))) {
+			throw createNetworkBlockError(block, parseAcceptLanguage(ctx.req.header('accept-language')));
+		}
+		ctx.set('blockedNetworkSignIn', block);
 	}
 	await next();
 });

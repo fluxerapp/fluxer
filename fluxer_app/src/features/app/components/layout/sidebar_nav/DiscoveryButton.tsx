@@ -66,7 +66,9 @@ export const DiscoveryButton = observer(() => {
 							animate={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							initial={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.07, ease: 'easeOut'}}
-							style={isSelected ? {backgroundColor: 'var(--brand-primary)', color: 'white'} : undefined}
+							style={
+								isSelected ? {backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-fill)'} : undefined
+							}
 							data-flx="app.sidebar-nav.discovery-button.div--2"
 						>
 							<CompassIcon

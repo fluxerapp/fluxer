@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import type {Presence} from '@app/features/gateway/types/GatewayPresenceTypes';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -11,6 +10,7 @@ import {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import Relationships from '@app/features/relationship/state/Relationships';
 import Dimension from '@app/features/ui/state/Dimension';
 import Users from '@app/features/user/state/Users';
@@ -21,7 +21,10 @@ import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {ChannelId} from '@fluxer/schema/src/branded/WireIds';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {action, makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
+
+const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
+const staleWindowRefetchedAt = new Map<string, number>();
 
 interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
@@ -29,16 +32,11 @@ interface GuildMemberUpdateAction {
 	member: GuildMemberData;
 }
 
-interface PresenceUpdateAction {
-	type: 'PRESENCE_UPDATE';
-	presence: Presence;
-}
-
 export interface PendingJumpDispatch {
 	messageId: string;
 	flash?: boolean;
 	offset?: number;
-	returnTargetId?: string;
+	returnToMessageId?: string;
 	returnChannelId?: string | null;
 	returnGuildId?: string | null;
 	jumpType?: JumpType;
@@ -49,6 +47,7 @@ class Messages {
 	private messageRefsByAuthor = new Map<string, Map<string, Set<string>>>();
 	private indexedAuthorsByChannel = new Map<string, Map<string, string>>();
 	updateCounter = 0;
+	cacheGeneration = 0;
 	private pendingFullHydration = false;
 
 	constructor() {
@@ -66,7 +65,6 @@ class Messages {
 		return this.updateCounter;
 	}
 
-	@action
 	private notifyChange(): void {
 		this.updateCounter += 1;
 	}
@@ -200,15 +198,20 @@ class Messages {
 		return ChannelMessages.get(channelId);
 	}
 
+	private hasLoadedPage(messages: ChannelMessages): boolean {
+		return messages.ready && messages.length > 0 && !messages.cached;
+	}
+
 	shouldPreloadLatestPage(channelId: string): boolean {
-		if (!GatewayConnection.isConnected || !Channels.getChannel(channelId)) {
+		if (!GatewaySessions.foregroundConnection.isConnected || !Channels.getChannel(channelId)) {
 			return false;
 		}
 		const messages = ChannelMessages.get(channelId);
-		return !messages || (messages.length === 0 && !messages.loadingMore && !messages.ready);
+		if (!messages) return true;
+		if (messages.loadingMore || ChannelMessages.isRetained(channelId)) return false;
+		return messages.length === 0 ? !messages.ready : messages.cached;
 	}
 
-	@action
 	preloadLatestPage(channelId: string, guildId?: string | null): boolean {
 		if (!this.shouldPreloadLatestPage(channelId)) {
 			return false;
@@ -224,22 +227,21 @@ class Messages {
 	}
 
 	getLastEditableMessage(channelId: string): Message | undefined {
-		return this.getMessages(channelId).findNewest((message) => {
-			return message.isCurrentUserAuthor() && message.state === MessageStates.SENT && message.isUserMessage();
+		return this.getMessages(channelId).searchFromNewest((message) => {
+			return (
+				message.isCurrentUserAuthor() &&
+				message.state === MessageStates.SENT &&
+				message.isUserMessage() &&
+				!message.messageSnapshots
+			);
 		});
 	}
 
-	jumpedMessageId(channelId: string): string | null | undefined {
+	hasNewestMessages(channelId: string): boolean {
 		const channel = ChannelMessages.get(channelId);
-		return channel?.jumpTargetId;
+		return channel?.hasNewestMessages() ?? false;
 	}
 
-	hasPresent(channelId: string): boolean {
-		const channel = ChannelMessages.get(channelId);
-		return channel?.hasPresent() ?? false;
-	}
-
-	@action
 	setPendingJumpDispatch(channelId: string, dispatch: PendingJumpDispatch): void {
 		this.pendingJumpDispatches.set(channelId, dispatch);
 	}
@@ -251,48 +253,32 @@ class Messages {
 		return dispatch.messageId === messageId ? dispatch : null;
 	}
 
-	@action
-	handleConnectionClosed(): boolean {
-		let didUpdate = false;
-		ChannelMessages.forEach((messages) => {
-			if (messages.loadingMore) {
-				this.commitMessages(messages.mutate({loadingMore: false}));
-				didUpdate = true;
-			}
-		});
-		if (didUpdate) {
-			this.notifyChange();
-		}
-		return false;
-	}
-
-	@action
 	handleSessionInvalidated(): boolean {
 		const channelIds: Array<string> = [];
-		ChannelMessages.forEach((messages) => channelIds.push(messages.channelId));
+		let discardedLoadedMessages = false;
+		ChannelMessages.forEach((messages) => {
+			channelIds.push(messages.channelId);
+			discardedLoadedMessages ||= messages.length > 0;
+		});
 		for (const channelId of channelIds) {
 			this.clearMessages(channelId);
-			Dimension.clearChannelDimensions(channelId);
+			Dimension.forgetChannelDimensions(channelId);
 		}
 		this.messageRefsByAuthor.clear();
 		this.indexedAuthorsByChannel.clear();
 		this.pendingJumpDispatches.clear();
 		this.pendingFullHydration = true;
+		if (discardedLoadedMessages) {
+			this.cacheGeneration += 1;
+		}
 		this.notifyChange();
 		return true;
 	}
 
-	@action
-	handleResumed(): boolean {
-		ChannelMessages.forEach((messages) => {
-			this.commitMessages(messages.mutate({ready: true}));
-		});
-		this.notifyChange();
-		return true;
-	}
-
-	@action
-	handleConnectionOpen(): boolean {
+	handleGatewayReady(): boolean {
+		if (AccountScopedWork.isSuspended) {
+			return false;
+		}
 		const selectedChannelId = SelectedChannel.currentChannelId;
 		let didHydrateSelectedChannel = false;
 		if (selectedChannelId) {
@@ -309,8 +295,7 @@ class Messages {
 				this.startChannelHydration(messages.channelId, {forceScrollToBottom: this.pendingFullHydration});
 				didHydrateSelectedChannel = true;
 			} else {
-				this.clearMessages(messages.channelId);
-				Dimension.clearChannelDimensions(messages.channelId);
+				this.commitMessages(messages.withPatch({ready: false, loadingMore: false}));
 			}
 		});
 		if (this.pendingFullHydration && !didHydrateSelectedChannel && selectedChannelId) {
@@ -321,7 +306,7 @@ class Messages {
 		if (!didHydrateSelectedChannel && selectedChannelId && Channels.getChannel(selectedChannelId)) {
 			const messages = ChannelMessages.getOrCreate(selectedChannelId);
 			if (!messages.ready && !messages.loadingMore && messages.length === 0) {
-				this.commitMessages(messages.mutate({loadingMore: true}));
+				this.commitMessages(messages.withPatch({loadingMore: true}));
 				MessageCommands.fetchMessages(selectedChannelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 				didHydrateSelectedChannel = true;
 			}
@@ -330,23 +315,17 @@ class Messages {
 		return didHydrateSelectedChannel;
 	}
 
-	private startChannelHydration(
-		channelId: string,
-		options: {
-			forceScrollToBottom?: boolean;
-		} = {},
-	): void {
+	private startChannelHydration(channelId: string, options: {forceScrollToBottom?: boolean} = {}): void {
 		if (!Channels.getChannel(channelId)) return;
 		const {forceScrollToBottom = false} = options;
 		const messages = ChannelMessages.getOrCreate(channelId);
-		this.commitMessages(messages.mutate({loadingMore: true, ready: false, error: false}));
+		this.commitMessages(messages.withPatch({loadingMore: true, ready: false, error: false}));
 		if (forceScrollToBottom) {
-			Dimension.updateChannelDimensions(channelId, 1, 1, 0);
+			Dimension.recordChannelDimensions(channelId, 1, 1, 0);
 		}
 		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 	}
 
-	@action
 	handleChannelSelect(action: {guildId?: string; channelId?: string | null; messageId?: string}): boolean {
 		const channelId = action.channelId ?? action.guildId;
 		if (channelId == null || channelId === ME) {
@@ -361,16 +340,16 @@ class Messages {
 				flash: true,
 				jumpType: JumpTypes.INSTANT,
 			};
-			if (!GatewayConnection.isConnected) {
+			if (!GatewaySessions.foregroundConnection.isConnected) {
 				this.pendingJumpDispatches.set(channelId, dispatch);
 				return true;
 			}
 			MessageCommands.jumpToMessage({channelId, ...dispatch});
 			return false;
 		}
-		if (!GatewayConnection.isConnected || messages.loadingMore || messages.ready) {
-			if (messages.ready && Dimension.isAtBottom(channelId)) {
-				this.commitMessages(messages.truncateTop(MAX_MESSAGES_PER_CHANNEL));
+		if (!GatewaySessions.foregroundConnection.isConnected || messages.loadingMore || this.hasLoadedPage(messages)) {
+			if (this.hasLoadedPage(messages) && Dimension.channelPinnedToEnd(channelId)) {
+				this.commitMessages(messages.trimOldest(MAX_MESSAGES_PER_CHANNEL));
 				this.notifyChange();
 			}
 			return false;
@@ -388,13 +367,12 @@ class Messages {
 		if (!isNonGuildChannel && !guildExists) {
 			return false;
 		}
-		this.commitMessages(messages.mutate({loadingMore: true}));
+		this.commitMessages(messages.withPatch({loadingMore: true}));
 		this.notifyChange();
 		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 		return false;
 	}
 
-	@action
 	handleGuildUnavailable(guildId: string, unavailable: boolean): boolean {
 		if (!unavailable) {
 			return false;
@@ -406,7 +384,7 @@ class Messages {
 			const channel = Channels.getChannel(channelId);
 			if (channel && channel.guildId === guildId) {
 				this.clearMessages(channelId);
-				Dimension.clearChannelDimensions(channelId);
+				Dimension.forgetChannelDimensions(channelId);
 				didUpdate = true;
 				if (channelId === selectedChannelId) {
 					selectedChannelAffected = true;
@@ -422,7 +400,6 @@ class Messages {
 		return didUpdate;
 	}
 
-	@action
 	handleGuildCreate(action: {
 		guild: {
 			id: string;
@@ -442,7 +419,7 @@ class Messages {
 			messageId: undefined,
 		});
 		if (!didChannelSelect && currentMessages && currentMessages.length === 0 && !currentMessages.ready) {
-			this.commitMessages(currentMessages.mutate({loadingMore: true}));
+			this.commitMessages(currentMessages.withPatch({loadingMore: true}));
 			MessageCommands.fetchMessages(selectedChannelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 			this.notifyChange();
 			return true;
@@ -450,26 +427,13 @@ class Messages {
 		return didChannelSelect;
 	}
 
-	@action
 	handleLoadMessages(action: {channelId: string; jump?: JumpOptions}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
-		this.commitMessages(messages.loadStart(action.jump));
+		this.commitMessages(messages.beginLoad(action.jump));
 		this.notifyChange();
 		return false;
 	}
 
-	@action
-	handleTruncateMessages(action: {channelId: string; truncateBottom?: boolean; truncateTop?: boolean}): boolean {
-		const messages = ChannelMessages.getOrCreate(action.channelId).truncate(
-			action.truncateBottom ?? false,
-			action.truncateTop ?? false,
-		);
-		this.commitMessages(messages);
-		this.notifyChange();
-		return false;
-	}
-
-	@action
 	handleLoadMessagesSuccessCached(action: {
 		channelId: string;
 		jump?: JumpOptions;
@@ -479,26 +443,25 @@ class Messages {
 	}): boolean {
 		let messages = ChannelMessages.getOrCreate(action.channelId);
 		if (action.jump?.present) {
-			messages = messages.jumpToPresent(action.limit);
+			messages = messages.jumpToLiveEdge(action.limit);
 		} else if (action.jump?.messageId) {
 			messages = messages.jumpToMessage({
 				messageId: action.jump.messageId,
 				flash: action.jump.flash,
 				offset: action.jump.offset,
-				returnTargetId: action.jump.returnMessageId,
+				returnToMessageId: action.jump.returnToMessageId,
 				returnChannelId: action.jump.returnChannelId,
 				returnGuildId: action.jump.returnGuildId,
 				jumpType: action.jump.jumpType,
 			});
 		} else if (action.before || action.after) {
-			messages = messages.loadFromCache(action.before != null, action.limit);
+			messages = messages.drainBufferedSide(action.before != null, action.limit);
 		}
 		this.commitMessages(messages);
 		this.notifyChange();
 		return false;
 	}
 
-	@action
 	handleLoadMessagesSuccess(action: {
 		channelId: string;
 		isBefore?: boolean;
@@ -509,8 +472,8 @@ class Messages {
 		cached?: boolean;
 		messages: Array<WireMessage>;
 	}): boolean {
-		const messages = ChannelMessages.getOrCreate(action.channelId).loadComplete({
-			newMessages: action.messages,
+		const messages = ChannelMessages.getOrCreate(action.channelId).applyLoadedWindow({
+			windowMessages: action.messages,
 			isBefore: action.isBefore,
 			isAfter: action.isAfter,
 			jump: action.jump,
@@ -520,71 +483,79 @@ class Messages {
 		});
 		this.commitMessages(messages);
 		this.notifyChange();
+		this.refetchStaleWindow(action.channelId, action.cached === true, action.jump);
 		return false;
 	}
 
-	@action
+	private refetchStaleWindow(channelId: string, stale: boolean, jump?: JumpOptions): void {
+		if (!stale || !GatewaySessions.foregroundConnection.isConnected || SelectedChannel.currentChannelId !== channelId) {
+			return;
+		}
+		const lastAttemptAt = staleWindowRefetchedAt.get(channelId) ?? 0;
+		const now = Date.now();
+		if (now - lastAttemptAt < STALE_WINDOW_REFETCH_INTERVAL_MS) {
+			return;
+		}
+		staleWindowRefetchedAt.set(channelId, now);
+		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL, jump, {staleRefetch: true});
+	}
+
 	handleLoadMessagesFailure(action: {channelId: string}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
-		this.commitMessages(messages.mutate({loadingMore: false, error: true}));
+		this.commitMessages(messages.withPatch({loadingMore: false, error: true}));
 		this.notifyChange();
 		return false;
 	}
 
-	@action
 	handleLoadMessagesBlocked(action: {channelId: string}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
 		if (!messages.loadingMore && !messages.error) {
 			return false;
 		}
-		this.commitMessages(messages.mutate({loadingMore: false, error: false}));
+		this.commitMessages(messages.withPatch({loadingMore: false, error: false}));
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleIncomingMessage(action: {channelId: string; message: WireMessage}): boolean {
 		Channels.handleMessageCreate({message: action.message});
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing?.ready) {
 			return false;
 		}
-		const updated = existing.receiveMessage(action.message, Dimension.isAtBottom(action.channelId));
+		const updated = existing.applyIncomingMessage(action.message, Dimension.channelPinnedToEnd(action.channelId));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return false;
 	}
 
-	@action
 	handleSendFailed(action: {channelId: string; nonce: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
-		if (!existing || !existing.has(action.nonce)) return false;
+		if (!existing?.has(action.nonce)) return false;
 		const updated = existing.update(action.nonce, (message) => message.withUpdates({state: MessageStates.FAILED}));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleSendRetry(action: {channelId: string; messageId: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
-		if (!existing || !existing.has(action.messageId)) return false;
+		if (!existing?.has(action.messageId)) return false;
 		const updated = existing.update(action.messageId, (message) => message.withUpdates({state: MessageStates.SENDING}));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleMessageDelete(action: {id: string; channelId: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
-		if (!existing || !existing.has(action.id)) {
+		if (!existing?.has(action.id)) {
 			return false;
 		}
 		let messages = existing;
-		if (messages.revealedMessageId === action.id) {
-			const messageAfter = messages.getAfter(action.id);
-			messages = messages.mutate({revealedMessageId: messageAfter?.id ?? null});
+		if (messages.unblurredMessageId === action.id) {
+			const messageAfter = messages.nextAfter(action.id);
+			messages = messages.withPatch({unblurredMessageId: messageAfter?.id ?? null});
 		}
 		messages = messages.remove(action.id);
 		this.commitMessages(messages);
@@ -592,27 +563,25 @@ class Messages {
 		return true;
 	}
 
-	@action
 	handleMessageDeleteBulk(action: {ids: Array<string>; channelId: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
-		let messages = existing.removeMany(action.ids);
+		let messages = existing.removeIds(action.ids);
 		if (messages === existing) return false;
-		if (messages.revealedMessageId != null && action.ids.includes(messages.revealedMessageId)) {
-			const after = messages.getAfter(messages.revealedMessageId);
-			messages = messages.mutate({revealedMessageId: after?.id ?? null});
+		if (messages.unblurredMessageId != null && action.ids.includes(messages.unblurredMessageId)) {
+			const after = messages.nextAfter(messages.unblurredMessageId);
+			messages = messages.withPatch({unblurredMessageId: after?.id ?? null});
 		}
 		this.commitMessages(messages);
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleMessageUpdate(action: {message: WireMessage}): boolean {
 		const messageId = action.message.id;
 		const channelId = action.message.channel_id;
 		const existing = ChannelMessages.get(channelId);
-		if (!existing || !existing.has(messageId)) return false;
+		if (!existing?.has(messageId)) return false;
 		const updated = existing.update(messageId, (message) => {
 			if (message.isEditing && action.message.state === undefined) {
 				return message.withUpdates({...action.message, state: MessageStates.SENT});
@@ -624,7 +593,6 @@ class Messages {
 		return true;
 	}
 
-	@action
 	handleUserUpdate(action: {
 		user: {
 			id: string;
@@ -641,7 +609,6 @@ class Messages {
 		return hasChanges;
 	}
 
-	@action
 	handleGuildMemberUpdate(action: GuildMemberUpdateAction): boolean {
 		const userId = action.member.user.id;
 		const updatedAuthor = Users.getUser(userId);
@@ -656,39 +623,26 @@ class Messages {
 		return hasChanges;
 	}
 
-	@action
-	handlePresenceUpdate(action: PresenceUpdateAction): boolean {
-		if (!action.presence.user.username && !action.presence.user.avatar && !action.presence.user.discriminator) {
-			return false;
-		}
-		const userId = action.presence.user.id;
-		const updatedAuthor = Users.getUser(userId);
-		if (!updatedAuthor) return false;
-		const authorJson = updatedAuthor.toJSON();
-		const guildId = action.presence.guild_id ?? null;
-		const hasChanges = this.patchAuthorMessages(userId, (message) => message.withUpdates({author: authorJson}), {
-			guildId,
-			patchMissingChannels: true,
+	handleGuildThreadsPurged(guildId: string): void {
+		ChannelMessages.forEach(({channelId}) => {
+			if (Channels.getChannel(channelId)?.guildId === guildId) {
+				this.clearMessages(channelId);
+				Dimension.forgetChannelDimensions(channelId);
+			}
 		});
-		if (hasChanges) {
-			this.notifyChange();
-		}
-		return hasChanges;
 	}
 
-	@action
 	handleCleanup(): boolean {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId) == null) {
 				this.clearMessages(channelId);
-				Dimension.clearChannelDimensions(channelId);
+				Dimension.forgetChannelDimensions(channelId);
 			}
 		});
 		this.notifyChange();
 		return false;
 	}
 
-	@action
 	handleRelationshipUpdate(): boolean {
 		let hasChanges = false;
 		ChannelMessages.forEach((messages) => {
@@ -705,22 +659,20 @@ class Messages {
 		return false;
 	}
 
-	@action
 	handleMessageReveal(action: {channelId: string; messageId: string | null}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
-		this.commitMessages(messages.mutate({revealedMessageId: action.messageId}));
+		this.commitMessages(messages.withPatch({unblurredMessageId: action.messageId}));
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleClearJumpTarget(action: {channelId: string; clearReturnTarget?: boolean}): boolean {
 		const messages = ChannelMessages.get(action.channelId);
 		if (
 			messages &&
-			(messages.jumpTargetId != null ||
-				messages.jumped ||
-				(action.clearReturnTarget === true && messages.jumpReturnTargetId != null))
+			(messages.jumpDestinationId != null ||
+				messages.hasJumped ||
+				(action.clearReturnTarget === true && messages.jumpReturnMessageId != null))
 		) {
 			this.commitMessages(messages.clearJumpTarget({clearReturnTarget: action.clearReturnTarget}));
 			this.notifyChange();
@@ -729,7 +681,6 @@ class Messages {
 		return false;
 	}
 
-	@action
 	handleReaction(action: {
 		type: 'MESSAGE_REACTION_ADD' | 'MESSAGE_REACTION_REMOVE';
 		channelId: string;
@@ -737,27 +688,18 @@ class Messages {
 		userId: string;
 		emoji: ReactionEmoji;
 		optimistic?: boolean;
-		skipReactionStore?: boolean;
 	}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
 		const currentUser = Users.getCurrentUser();
 		const isCurrentUser = currentUser?.id === action.userId;
 		if (action.optimistic && !isCurrentUser) return false;
-		const updated = existing.update(action.messageId, (message) => {
-			if (action.skipReactionStore) {
-				return message.withUpdates({});
-			}
-			return action.type === 'MESSAGE_REACTION_ADD'
-				? message.withReaction(action.emoji, true, isCurrentUser)
-				: message.withReaction(action.emoji, false, isCurrentUser);
-		});
+		const updated = existing.update(action.messageId, (message) => message.withUpdates({}));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;
 	}
 
-	@action
 	handleRemoveAllReactions(action: {channelId: string; messageId: string}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
@@ -767,7 +709,6 @@ class Messages {
 		return true;
 	}
 
-	@action
 	handleRemoveReactionEmoji(action: {channelId: string; messageId: string; emoji: ReactionEmoji}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
@@ -777,7 +718,6 @@ class Messages {
 		return true;
 	}
 
-	@action
 	handleMessagePreload(action: {messages: Record<ChannelId, WireMessage>}): boolean {
 		let hasChanges = false;
 		for (const [channelId, messageData] of Object.entries(action.messages)) {
@@ -785,7 +725,7 @@ class Messages {
 			Channels.handleMessageCreate({message: messageData});
 			const channelMessages = ChannelMessages.getOrCreate(channelId);
 			if (!channelMessages.has(messageData.id)) {
-				this.commitMessages(channelMessages.receiveMessage(messageData, false));
+				this.commitMessages(channelMessages.applyIncomingMessage(messageData, false));
 				hasChanges = true;
 			}
 		}
@@ -793,52 +733,6 @@ class Messages {
 			this.notifyChange();
 		}
 		return hasChanges;
-	}
-
-	@action
-	handleOptimisticEdit(action: {channelId: string; messageId: string; content: string}): {
-		originalContent: string;
-		originalEditedTimestamp: string | null;
-	} | null {
-		const {channelId, messageId, content} = action;
-		const existing = ChannelMessages.get(channelId);
-		if (!existing) return null;
-		const originalMessage = existing.get(messageId);
-		if (!originalMessage) return null;
-		const rollbackData = {
-			originalContent: originalMessage.content,
-			originalEditedTimestamp: originalMessage.editedTimestamp?.toISOString() ?? null,
-		};
-		const updated = existing.update(messageId, (msg) =>
-			msg.withUpdates({
-				content,
-				state: MessageStates.EDITING,
-			}),
-		);
-		this.commitMessages(updated);
-		this.notifyChange();
-		return rollbackData;
-	}
-
-	@action
-	handleEditRollback(action: {
-		channelId: string;
-		messageId: string;
-		originalContent: string;
-		originalEditedTimestamp: string | null;
-	}): void {
-		const {channelId, messageId, originalContent, originalEditedTimestamp} = action;
-		const existing = ChannelMessages.get(channelId);
-		if (!existing || !existing.has(messageId)) return;
-		const updated = existing.update(messageId, (msg) =>
-			msg.withUpdates({
-				content: originalContent,
-				edited_timestamp: originalEditedTimestamp ?? undefined,
-				state: MessageStates.SENT,
-			}),
-		);
-		this.commitMessages(updated);
-		this.notifyChange();
 	}
 
 	subscribe(callback: () => void): () => void {
@@ -850,4 +744,16 @@ class Messages {
 	}
 }
 
-export default new Messages();
+const messages = new Messages();
+
+AccountScopedWork.registerTransition({
+	suspend: () => {},
+	resume: () => {},
+	released: () => {
+		if (GatewaySessions.foregroundConnection.isReady) {
+			messages.handleGatewayReady();
+		}
+	},
+});
+
+export default messages;

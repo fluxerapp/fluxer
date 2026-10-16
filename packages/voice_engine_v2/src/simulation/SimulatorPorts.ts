@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import type {
 	VoiceEngineV2Driver,
 	VoiceEngineV2ExternalEventListener,
-} from '../implementations/VoiceEngineV2ImplementationBase';
-import type {VoiceEngineV2Event} from '../protocol/events';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -15,7 +15,6 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureOptions,
@@ -29,8 +28,8 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
-} from '../protocol/types';
-import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '../runtime/platformPort';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 const SIMULATOR_CLOCK_MAX_NS = 1_000_000_000_000;
 const SIMULATOR_NS_PER_MS = 1_000_000;
@@ -163,14 +162,6 @@ export class VoiceEngineV2SimulatorDriver implements VoiceEngineV2Driver {
 		this.inventory = options.inventory;
 	}
 
-	get capturesActive(): ReadonlyArray<string> {
-		return [...this.activeCaptures];
-	}
-
-	get frameSinksActive(): ReadonlyArray<string> {
-		return [...this.activeFrameSinks];
-	}
-
 	subscribe(listener: VoiceEngineV2ExternalEventListener): () => void {
 		assert.ok(typeof listener === 'function', 'subscribe expects a listener function');
 		this.listeners.add(listener);
@@ -265,19 +256,6 @@ export class VoiceEngineV2SimulatorDriver implements VoiceEngineV2Driver {
 	async collectStats(): Promise<VoiceEngineV2Stats> {
 		this.calls.push({type: 'collectStats'});
 		return {rttMs: 0, outbound: [], inbound: []};
-	}
-
-	async getHardwareEncoderCapabilities(): Promise<VoiceEngineV2HardwareEncoderCapabilities> {
-		return {
-			available: true,
-			backend: 'none',
-			compiled: false,
-			runtime: false,
-			codecs: [],
-			zeroCopy: false,
-			nativeInputs: [],
-			reason: 'simulator',
-		};
 	}
 
 	async checkPermission(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult> {

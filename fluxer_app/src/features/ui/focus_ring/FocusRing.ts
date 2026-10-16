@@ -79,7 +79,7 @@ const FocusRing = React.forwardRef<HTMLElement, FluxerFocusRingProps>(function F
 		if (focused == null || container == null) return;
 		focusedRef.current = focused;
 		if (focused) {
-			ringContext.showElement(container, ringOptions);
+			ringContext.showForElement(container, ringOptions);
 		} else if (focused === false) {
 			ringContext.hide();
 		}
@@ -93,11 +93,11 @@ const FocusRing = React.forwardRef<HTMLElement, FluxerFocusRingProps>(function F
 			if (container == null) return;
 			if (event.currentTarget === event.target) {
 				focusedRef.current = true;
-				ringContext.showElement(container, ringOptions);
+				ringContext.showForElement(container, ringOptions);
 				return;
 			}
 			setFocusWithin(true);
-			if (within) ringContext.showElement(container, ringOptions);
+			if (within) ringContext.showForElement(container, ringOptions);
 		}
 		function onBlur() {
 			ringContext.hide();
@@ -121,10 +121,10 @@ const FocusRing = React.forwardRef<HTMLElement, FluxerFocusRingProps>(function F
 			const container = ringTarget?.current;
 			if (event.currentTarget === event.target) {
 				focusedRef.current = true;
-				ringContext.showElement(container ?? event.currentTarget, ringOptions);
+				ringContext.showForElement(container ?? event.currentTarget, ringOptions);
 			} else {
 				setFocusWithin(true);
-				if (within) ringContext.showElement(container ?? event.currentTarget, ringOptions);
+				if (within) ringContext.showForElement(container ?? event.currentTarget, ringOptions);
 			}
 		},
 		[ringTarget, within, ringContext, ringOptions],
@@ -149,6 +149,9 @@ const FocusRing = React.forwardRef<HTMLElement, FluxerFocusRingProps>(function F
 		mergedChildProps.ref = mergedRef;
 	}
 	for (const [propKey, propValue] of Object.entries(passthroughProps as Record<string, unknown>)) {
+		if (propKey === 'data-flx' && childProps['data-flx'] !== undefined) {
+			continue;
+		}
 		if (propKey === 'className') {
 			mergedChildProps.className = clsx(childProps.className as ClassValue, propValue as ClassValue);
 			continue;

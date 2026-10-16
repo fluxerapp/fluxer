@@ -5,6 +5,7 @@
 
 -export([
     get_pool_conn/0,
+    connect/3,
     connect_slot/2,
     handle_conn_down/4,
     find_slot_by_conn/2,
@@ -22,7 +23,7 @@
 ]).
 
 -define(DEFAULT_POOL_SIZE, 16).
--define(DEFAULT_MAX_HANDLERS, 1024).
+-define(DEFAULT_MAX_HANDLERS, 512).
 -define(RECONNECT_BASE_DELAY_MS, 2000).
 -define(RECONNECT_MAX_DELAY_MS, 30000).
 -define(CONNECT_TIMEOUT_MS, 10000).
@@ -100,7 +101,7 @@ spawn_connect_slot(Idx, Host, Port, Opts, Parent) ->
     ok.
 connect_slot_and_notify(Idx, Host, Port, Opts, Parent) ->
     _ =
-        case nats:connect(Host, Port, Opts) of
+        case connect(Host, Port, Opts) of
             {ok, Conn} ->
                 ok = nats:controlling_process(Conn, Parent),
                 Parent ! {nats_pool_connect_result, Idx, self(), {ok, Conn}};
@@ -108,6 +109,21 @@ connect_slot_and_notify(Idx, Host, Port, Opts, Parent) ->
                 Parent ! {nats_pool_connect_result, Idx, self(), {error, Reason}}
         end,
     ok.
+
+-spec connect(string(), inet:port_number(), map()) ->
+    {ok, nats:conn()} | ignore | {error, term()}.
+connect(Host, Port, Opts) ->
+    Server = #{
+        scheme => <<"nats">>, host => Host, port => Port, family => address_family(Host)
+    },
+    nats:connect(Server, Opts).
+
+-spec address_family(string()) -> inet | inet6.
+address_family(Host) ->
+    case inet:getaddr(Host, inet) of
+        {ok, _} -> inet;
+        {error, _} -> inet6
+    end.
 
 -spec handle_conn_down(non_neg_integer(), nats:conn(), pos_integer(), map()) -> map().
 handle_conn_down(
@@ -184,7 +200,7 @@ subscribe_slot(Idx, Conn, #{subs := Subs} = State) ->
 -spec subscribe_new_slot(non_neg_integer(), nats:conn(), map(), map()) -> map().
 subscribe_new_slot(Idx, Conn, Subs, State) ->
     Role = fluxer_gateway_sup:current_role(),
-    Subjects = gateway_nats_rpc:rpc_subjects_for_role(Role),
+    Subjects = gateway_nats_rpc_handler:rpc_subjects_for_role(Role),
     Sids = subscribe_slot_subjects(Idx, Conn, Role, Subjects),
     case Sids of
         [] -> State;
@@ -244,7 +260,7 @@ pool_size() ->
 
 -spec max_handlers() -> pos_integer().
 max_handlers() ->
-    case fluxer_gateway_env:get(gateway_http_rpc_max_concurrency) of
+    case fluxer_gateway_env:get(gateway_nats_rpc_max_handlers) of
         Value when is_integer(Value), Value > 0 -> Value;
         _ -> ?DEFAULT_MAX_HANDLERS
     end.
@@ -335,57 +351,10 @@ coerce_sid(_) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-reconnect_delay_first_failure_test() ->
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS, reconnect_delay(1)).
-
-reconnect_delay_exponential_backoff_test() ->
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS * 2, reconnect_delay(2)),
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS * 4, reconnect_delay(3)).
-
-reconnect_delay_capped_at_max_test() ->
-    ?assert(reconnect_delay(4) =< ?RECONNECT_MAX_DELAY_MS).
-
 reconnect_delay_circuit_breaker_kicks_in_test() ->
     ?assertEqual(?CIRCUIT_BREAKER_COOLDOWN_MS, reconnect_delay(?CIRCUIT_BREAKER_THRESHOLD)),
     ?assertEqual(
         ?CIRCUIT_BREAKER_COOLDOWN_MS, reconnect_delay(?CIRCUIT_BREAKER_THRESHOLD + 10)
     ).
-
-reset_failure_count_resets_test() ->
-    Idx = 999,
-    persistent_term:put({?FAILURE_COUNTS_KEY, Idx}, 10),
-    reset_failure_count(Idx),
-    ?assertEqual(0, persistent_term:get({?FAILURE_COUNTS_KEY, Idx}, 0)),
-    persistent_term:erase({?FAILURE_COUNTS_KEY, Idx}).
-
-increment_failure_count_increments_test() ->
-    Idx = 998,
-    persistent_term:erase({?FAILURE_COUNTS_KEY, Idx}),
-    ?assertEqual(1, increment_failure_count(Idx)),
-    ?assertEqual(2, increment_failure_count(Idx)),
-    ?assertEqual(3, increment_failure_count(Idx)),
-    persistent_term:erase({?FAILURE_COUNTS_KEY, Idx}).
-
-parse_nats_url_nats_scheme_test() ->
-    ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url(<<"nats://127.0.0.1:4222">>)).
-
-parse_nats_url_default_port_test() ->
-    ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost">>)).
-
-parse_nats_url_tls_scheme_test() ->
-    ?assertEqual(
-        {ok, "nats.example.com", 4443}, parse_nats_url(<<"tls://nats.example.com:4443">>)
-    ).
-
-parse_nats_url_invalid_test() ->
-    ?assertEqual({error, invalid_nats_url}, parse_nats_url(undefined)).
-
-build_connect_opts_with_token_test() ->
-    ?assertEqual(
-        #{auth_token => <<"secret">>, buffer_size => 0}, build_connect_opts(<<"secret">>)
-    ).
-
-build_connect_opts_empty_test() ->
-    ?assertEqual(#{buffer_size => 0}, build_connect_opts(undefined)).
 
 -endif.

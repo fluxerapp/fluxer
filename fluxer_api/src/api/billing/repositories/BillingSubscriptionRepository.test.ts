@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {StripeSubscriptionPayload} from '@app/api/billing/mappers/StripeToBillingMapper';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import type {StripeSubscriptionPayload} from '../mappers/StripeToBillingMapper';
 
 const DAY_SECONDS = 24 * 60 * 60;
 

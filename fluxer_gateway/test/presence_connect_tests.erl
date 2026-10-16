@@ -63,7 +63,8 @@ terminate_session_call_removes_only_matching_sessions_test() ->
         <<"keep">> => terminate_probe_session(<<"keep">>, KeepPid, KeepRef)
     },
     {reply, ok, NewState} = presence_connect:handle_terminate_session_call(
-        [base64url:encode(<<"drop_hash">>)], terminate_probe_state(Sessions)
+        [base64:encode(<<"drop_hash">>, #{mode => urlsafe, padding => false})],
+        terminate_probe_state(Sessions)
     ),
     NewSessions = maps:get(sessions, NewState),
     ?assertEqual(false, maps:is_key(<<"drop">>, NewSessions)),
@@ -227,7 +228,10 @@ terminate_probe_loop(AuthHash, Parent) ->
     end.
 
 handle_terminate_probe_call(AuthHash, Parent, From, SessionIdHashes) ->
-    DecodedHashes = [base64url:decode(Hash) || Hash <- SessionIdHashes],
+    DecodedHashes = [
+        base64:decode(Hash, #{mode => urlsafe, padding => false})
+     || Hash <- SessionIdHashes
+    ],
     case lists:member(AuthHash, DecodedHashes) of
         true ->
             Parent ! {terminate_probe, self(), terminated},

@@ -22,7 +22,7 @@ interface FavoritesGuildContextMenuProps {
 
 export const FavoritesGuildContextMenu: React.FC<FavoritesGuildContextMenuProps> = observer(({onClose}) => {
 	const {i18n} = useLingui();
-	const settings = UserGuildSettings.getSettings(FAVORITES_GUILD_ID);
+	const settings = UserGuildSettings.getSettingsForScope(FAVORITES_GUILD_ID);
 	const isMuted = settings?.muted ?? false;
 	const handleToggleMute = () => {
 		UserGuildSettingsCommands.updateGuildSettings(FAVORITES_GUILD_ID, {muted: !isMuted});

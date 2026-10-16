@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SendSystemDmResponse {
-    pub recipient_count: i64,
+    pub recipient_count: Option<i64>,
 }

@@ -1,0 +1,710 @@
+# The public hostname of the instance, lowercase, for example chat.example.com.
+# Required. Point DNS for it at your ingress controller or at the edge load balancer.
+domain: ""
+
+# The scheme browsers use to reach the instance.
+scheme: https
+
+# The port browsers use to reach the instance.
+port: 443
+
+# The origin browsers see, with no trailing slash. Set it only when browsers
+# reach the instance on an origin that domain, scheme and port do not describe.
+# It wins over those three in every derived URL.
+publicOrigin: ""
+
+# The path the admin panel is served under, with a leading slash and no
+# trailing slash.
+adminBasePath: /admin
+
+# A contact address. It becomes FLUXER_VAPID_EMAIL for web push and the ACME
+# account email. Empty uses admin@<domain> for web push and no ACME email.
+email: ""
+
+# The cluster DNS suffix, used in the gateway discovery name.
+clusterDomain: cluster.local
+
+# Look up namespaces, StorageClasses, IngressClasses and installed APIs before
+# installing, to fail early on a cluster that cannot run the release. Set false
+# when your account cannot read those cluster-scoped objects.
+clusterChecks: true
+
+image:
+  # The registry and owner the Fluxer images come from.
+  registry: ghcr.io/fluxerapp
+  # The tag for every Fluxer image. v1 moves with each release.
+  tag: v1
+  # Always pulls the moving tag whenever a pod starts, including a pod that
+  # restarts by itself. Pin with digests for rollouts you control.
+  pullPolicy: Always
+  # Per-image tag overrides, keyed by image name, for example fluxer-api: 2026.1012.120000.
+  tags: {}
+  # Per-image digests, keyed by image name, for example fluxer-api: sha256:0123.
+  # A digest pins the image whatever the tag.
+  digests: {}
+  # Image pull secrets for every pod, as a list of {name: <secret>}.
+  pullSecrets: []
+  # Any new value restarts every Fluxer pod, which pulls the moving tag again.
+  # Add --set-string image.revision=$(date +%s) to a helm upgrade that passes
+  # your values file to move to the latest v1.
+  revision: ""
+
+# The image of the init container that waits for the backing services.
+initImage:
+  repository: busybox
+  tag: "1.37"
+  # A digest pins the image whatever the tag.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+secrets:
+  # The name of a Secret you manage yourself. The chart then renders no Secret
+  # and never changes this one. It needs every key listed under values below.
+  # After editing it, run kubectl rollout restart for the deployments and
+  # statefulsets of the release.
+  existingSecret: ""
+  # Generate every empty key below on first install and keep it on upgrade.
+  # Set false under Argo CD or helm template, which cannot read the existing
+  # Secret, and give every key here or use existingSecret.
+  generate: true
+  # Keys of the fluxer-env Secret. Empty means generate once, then keep.
+  # Generated values are never rotated by an upgrade. Back up the Secret.
+  values:
+    # Password of the bundled Postgres role. Changing it after the first install
+    # does not change the stored role password.
+    FLUXER_POSTGRES_PASSWORD: ""
+    # Meilisearch master key.
+    FLUXER_SEARCH_API_KEY: ""
+    # S3 access key id. The bundled store installs it on every upgrade.
+    FLUXER_S3_ACCESS_KEY_ID: fluxer
+    # S3 secret key. Letters and digits only for the bundled store.
+    FLUXER_S3_SECRET_ACCESS_KEY: ""
+    # Signs sudo mode tokens.
+    FLUXER_SUDO_MODE_SECRET: ""
+    # Signs connection initiation tokens.
+    FLUXER_CONNECTION_INITIATION_SECRET: ""
+    # Derives hidden profile names. Changing it renames every hidden profile.
+    FLUXER_PROFILE_PSEUDONYM_SECRET: ""
+    # Authenticates RPC between the gateway, push and the api.
+    FLUXER_GATEWAY_RPC_AUTH_TOKEN: ""
+    # Password of the bundled Valkey. Letters and digits only.
+    FLUXER_VALKEY_PASSWORD: ""
+    # Token of the bundled NATS, letters and digits only. With an outside NATS,
+    # its token if it has one.
+    FLUXER_NATS_AUTH_TOKEN: ""
+    # Erlang distribution cookie of the gateway.
+    FLUXER_ERLANG_COOKIE: ""
+    # Signs media proxy URLs.
+    FLUXER_MEDIA_PROXY_SECRET_KEY: ""
+    # Standard base64 of at least 32 random bytes. Signs upload relay tokens.
+    FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: ""
+    # Signs admin panel sessions.
+    FLUXER_ADMIN_SECRET_KEY_BASE: ""
+    # Client secret of the built-in admin OAuth application.
+    FLUXER_ADMIN_OAUTH_CLIENT_SECRET: ""
+    # Setup token the wizard asks for before the first admin account. With
+    # existingSecret, or with generate false and no value here, the API makes
+    # one on its first start and writes it to its log once.
+    FLUXER_SETUP_TOKEN: ""
+    # LiveKit API key.
+    FLUXER_LIVEKIT_API_KEY: fluxer
+    # LiveKit API secret, at least 32 characters.
+    FLUXER_LIVEKIT_API_SECRET: ""
+    # Web push key pair, base64url. Set both or neither.
+    FLUXER_VAPID_PUBLIC_KEY: ""
+    FLUXER_VAPID_PRIVATE_KEY: ""
+  # Optional secret-bearing settings, added to the Secret as given. The keys are
+  # the variable names on the configuration page of the operator docs.
+  extra: {}
+    # A full Postgres URL. Wins over the host, port, database and password.
+    # FLUXER_POSTGRES_URL: postgres://fluxer:secret@db.example.com:5432/fluxer
+    # PEM text of the CA that signed the Postgres server certificate.
+    # FLUXER_POSTGRES_SSL_CA: ""
+    # The URL of an outside key-value store that holds a password.
+    # FLUXER_KV_URL: redis://:secret@cache.example.com:6379/0
+    # The password of an outside search server.
+    # FLUXER_SEARCH_PASSWORD: ""
+    # A temporary S3 session token.
+    # FLUXER_S3_SESSION_TOKEN: ""
+    # Comma-separated base64 secrets that sign attachment URLs.
+    # FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ""
+    # SMTP password for outgoing email.
+    # FLUXER_EMAIL_SMTP_PASSWORD: ""
+    # Secret that authenticates email provider webhooks.
+    # FLUXER_EMAIL_WEBHOOK_SECRET: ""
+    # Stripe secret key.
+    # FLUXER_STRIPE_SECRET_KEY: ""
+    # Stripe webhook signing secret.
+    # FLUXER_STRIPE_WEBHOOK_SECRET: ""
+    # Key of the donation proxy.
+    # FLUXER_API_DONATION_PROXY_KEY: ""
+    # Bearer token of the HTTP cache purge endpoint.
+    # FLUXER_CACHE_PURGE_HTTP_TOKEN: ""
+    # Klipy GIF API key.
+    # FLUXER_KLIPY_API_KEY: ""
+    # YouTube Data API key.
+    # FLUXER_YOUTUBE_API_KEY: ""
+    # Bluesky OAuth signing keys.
+    # FLUXER_AUTH_BLUESKY_KEYS: ""
+    # APNs private key for iOS push.
+    # FLUXER_PUSH_APNS_PRIVATE_KEY: ""
+    # FCM private key for Android push.
+    # FLUXER_PUSH_FCM_PRIVATE_KEY: ""
+
+# Extra non-secret settings for every Fluxer service, as NAME: value. The names
+# and meanings are on the configuration page of the operator docs. An empty
+# value is left out. The chart refuses a secret here. Secrets belong in
+# secrets.extra.
+env: {}
+
+postgres:
+  # Run Postgres in the release. Set false to use your own server.
+  enabled: true
+  image:
+    repository: postgres
+    # A new major needs a dump and restore. The pod refuses a data directory
+    # from another major.
+    tag: 16-alpine
+    digest: ""
+    pullPolicy: IfNotPresent
+  # The user and group id of the postgres user in the image. 70 in the Alpine
+  # images, 999 in the Debian ones.
+  runAsUser: 70
+  # Your own server, used when enabled is false. Its password goes in
+  # secrets.values.FLUXER_POSTGRES_PASSWORD, or a URL in secrets.extra.FLUXER_POSTGRES_URL.
+  # The database and the role have to exist already.
+  external:
+    host: ""
+    port: 5432
+    database: fluxer
+    username: fluxer
+    # true or false. Empty keeps the service default.
+    ssl: ""
+  # The database and role the bundled server creates.
+  database: fluxer
+  username: fluxer
+  # Server settings, passed as -c name=value.
+  parameters:
+    max_connections: "150"
+    shared_buffers: 512MB
+    effective_cache_size: 2GB
+    work_mem: 8MB
+    maintenance_work_mem: 256MB
+    autovacuum_work_mem: 128MB
+    random_page_cost: "1.1"
+    effective_io_concurrency: "200"
+    default_statistics_target: "200"
+    jit: "off"
+    min_wal_size: 512MB
+    max_wal_size: 2GB
+    checkpoint_completion_target: "0.9"
+    wal_buffers: 16MB
+    wal_compression: zstd
+    bgwriter_delay: 50ms
+    bgwriter_lru_maxpages: "1000"
+    autovacuum_vacuum_scale_factor: "0.05"
+    autovacuum_analyze_scale_factor: "0.02"
+    autovacuum_vacuum_cost_limit: "2000"
+    track_io_timing: "on"
+    shared_preload_libraries: pg_stat_statements
+  # Size of the in-memory /dev/shm. Parallel vacuum needs it.
+  shmSize: 1Gi
+  # The size and the class are fixed once the volume exists. To grow a volume
+  # later, edit the PersistentVolumeClaim, not this value.
+  persistence:
+    size: 20Gi
+    # Empty uses the cluster default StorageClass.
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1Gi
+    limits:
+      memory: 5Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+valkey:
+  # Run Valkey in the release. Set false and give external.url to use your own.
+  enabled: true
+  image:
+    repository: valkey/valkey
+    tag: 9.1-alpine
+    digest: ""
+    pullPolicy: IfNotPresent
+  external:
+    # A URL without a password. One with a password goes in secrets.extra.FLUXER_KV_URL.
+    url: ""
+  maxmemory: 192mb
+  maxmemoryPolicy: noeviction
+  appendfsync: everysec
+  persistence:
+    size: 1Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+nats:
+  # Run NATS with JetStream in the release. Set false and give external.url to use your own.
+  enabled: true
+  image:
+    repository: nats
+    tag: 2.14-alpine
+    digest: ""
+    pullPolicy: IfNotPresent
+  external:
+    # Its token, if any, goes in secrets.values.FLUXER_NATS_AUTH_TOKEN.
+    url: ""
+  # 1, or 3 or more for a JetStream cluster.
+  replicas: 1
+  persistence:
+    size: 10Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+meilisearch:
+  # Run Meilisearch in the release. Set false and give external.url to use your own.
+  enabled: true
+  image:
+    repository: getmeili/meilisearch
+    tag: v1.53
+    digest: ""
+    pullPolicy: IfNotPresent
+  external:
+    # Its key goes in secrets.values.FLUXER_SEARCH_API_KEY.
+    url: ""
+  maxIndexingMemory: 256mb
+  maxIndexingThreads: 2
+  persistence:
+    size: 10Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 1536Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+seaweedfs:
+  # Run SeaweedFS as the S3 store and create the buckets. Only its S3 port
+  # listens outside the pod. Set false and give s3.endpoint to use your own
+  # store, with the buckets already created.
+  enabled: true
+  image:
+    repository: chrislusf/seaweedfs
+    tag: "4.47"
+    digest: ""
+    pullPolicy: IfNotPresent
+  # Volumes grown per bucket. 1 keeps the store usable on small disks.
+  volumeGrowth: 1
+  gomemlimit: 1536MiB
+  # Tries, 2 seconds apart, the bucket setup makes before it starts over.
+  initAttempts: 60
+  persistence:
+    size: 20Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 2Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+s3:
+  # The S3 endpoint the services use. Empty uses the bundled SeaweedFS.
+  endpoint: ""
+  # The S3 endpoint browsers use for direct uploads. Empty uses endpoint.
+  publicEndpoint: ""
+  region: us-east-1
+  forcePathStyle: true
+  buckets:
+    cdn: fluxer
+    uploads: fluxer-uploads
+    reports: fluxer-reports
+    harvests: fluxer-harvests
+
+livekit:
+  # Run LiveKit for voice and video. false with no external.url turns voice off.
+  enabled: true
+  # A LiveKit server of your own, used when enabled is false. Its key and
+  # secret go in secrets.values.FLUXER_LIVEKIT_API_KEY and FLUXER_LIVEKIT_API_SECRET.
+  # Point its webhook at <origin>/api/webhooks/livekit, signed with the same key.
+  external:
+    # The address the api uses to reach it, for example http://livekit.voice.svc:7880.
+    url: ""
+    # The address browsers use to reach it, for example wss://livekit.example.com.
+    publicUrl: ""
+  image:
+    repository: livekit/livekit-server
+    tag: v1.12.0
+    digest: ""
+    pullPolicy: IfNotPresent
+  # How clients reach the media ports. hostNetwork binds them on the node and
+  # needs a privileged namespace. loadBalancer and nodePort use the Service
+  # livekit-rtc, which serves TCP and UDP on one address.
+  expose: hostNetwork
+  # The public IP LiveKit advertises. Required for loadBalancer, where it is the
+  # address of the load balancer. Empty finds it over STUN.
+  nodeIP: ""
+  # The address the loadBalancer Service asks for. Reserve it with your
+  # provider first. Some providers take it from an annotation instead.
+  loadBalancerIP: ""
+  # Find the public IP over STUN.
+  useExternalIP: true
+  tcpPort: 7881
+  udpPort: 7882
+  # The node ports in nodePort mode. LiveKit advertises these too.
+  nodePorts:
+    tcp: 30881
+    udp: 30882
+  stunServers:
+    - stun.l.google.com:19302
+    - stun1.l.google.com:19302
+  logLevel: info
+  # More LiveKit configuration, merged over the chart's, for example
+  # {rtc: {ips: {includes: [10.0.0.0/8]}}} to advertise only the node network.
+  extraConfig: {}
+  # The voice region seeded on every api start, as JSON.
+  defaultRegion: '{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}'
+  # Node addresses allowed to reach the edge in hostNetwork mode, for the
+  # LiveKit webhook. Needed only with networkPolicy.ingressNamespaceSelector.
+  # Keep it as narrow as the LiveKit node, for example 10.0.0.12/32 together
+  # with nodeSelector.
+  nodeCIDRs: []
+  # Annotations for the Service livekit-rtc.
+  serviceAnnotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Every Fluxer workload below takes the same keys:
+# replicas, image (registry, tag, digest, pullPolicy), resources, env (NAME: value),
+# extraEnv (a list of Kubernetes env entries), probes (startup, liveness or
+# readiness, each replacing the default probe whole), podAnnotations,
+# nodeSelector, tolerations, affinity, topologySpreadConstraints, pdb
+# (minAvailable or maxUnavailable), hpa (minReplicas, maxReplicas,
+# targetCPUUtilizationPercentage), extraVolumes and extraVolumeMounts.
+
+api:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 768Mi
+    limits:
+      memory: 2560Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+worker:
+  # Must stay 1. The worker runs the cron scheduler.
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 768Mi
+    limits:
+      memory: 2560Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+gateway:
+  replicas: 1
+  terminationGracePeriodSeconds: 30
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+mediaProxy:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+push:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 256Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+admin:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+appProxy:
+  replicas: 1
+  # Settings for app-proxy only: branding, CSP extras, the index upstream,
+  # same-origin hosts and manifest scope, as NAME: value. For example
+  # FLUXER_APP_PRODUCT_NAME, FLUXER_CSP_EXTRA_CONNECT_SRC or RUST_LOG.
+  config: {}
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+staticProxy:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 256Mi
+  env: {}
+  extraEnv: []
+  probes: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  pdb: {}
+  hpa: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+
+# The internal services. Each runs a router Deployment and a shard StatefulSet.
+# router and shard take the workload keys above. shard.replicas sets the shard count.
+svc:
+  gifs:
+    router:
+      replicas: 1
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
+    shard:
+      replicas: 1
+      resources:
+        requests: {cpu: 20m, memory: 64Mi}
+        limits: {memory: 256Mi}
+  messages:
+    router:
+      replicas: 1
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
+    shard:
+      replicas: 1
+      resources:
+        requests: {cpu: 20m, memory: 64Mi}
+        limits: {memory: 256Mi}
+  snowflakes:
+    router:
+      replicas: 1
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
+    shard:
+      replicas: 1
+      resources:
+        requests: {cpu: 20m, memory: 64Mi}
+        limits: {memory: 256Mi}
+  unfurl:
+    router:
+      replicas: 1
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
+    shard:
+      replicas: 1
+      resources:
+        requests: {cpu: 20m, memory: 64Mi}
+        limits: {memory: 256Mi}
+  users:
+    router:
+      replicas: 1
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
+    shard:
+      replicas: 1
+      resources:
+        requests: {cpu: 20m, memory: 64Mi}
+        limits: {memory: 256Mi}
+
+edge:
+  image:
+    repository: caddy
+    tag: 2.11-alpine
+    digest: ""
+    pullPolicy: IfNotPresent
+  # How traffic reaches the edge. ingress puts an Ingress in front of it,
+  # gateway an HTTPRoute, loadBalancer a LoadBalancer Service with its own TLS,
+  # and none leaves only the ClusterIP Service edge on port 8080.
+  expose: ingress
+  ingress:
+    # The IngressClass. Empty uses the cluster default.
+    className: ""
+    # Extra annotations. The chart always adds the ingress-nginx body size and
+    # timeout annotations, which other controllers ignore.
+    annotations: {}
+    tls:
+      # certManager issues a certificate through a namespaced ACME Issuer.
+      # existingSecret uses secretName. none serves plain HTTP behind the controller.
+      mode: certManager
+      secretName: fluxer-tls
+      acmeServer: https://acme-v02.api.letsencrypt.org/directory
+  gateway:
+    # The Gateway the HTTPRoute attaches to, as Gateway API parentRefs.
+    parentRefs: []
+    # HTTPRoute timeouts, for example {request: 0s}. Envoy-based gateways cut
+    # requests at 15 seconds without it.
+    timeouts: {}
+  loadBalancer:
+    # Also publish UDP 443 for HTTP/3. Some clouds cannot mix TCP and UDP on one Service.
+    http3: false
+    annotations: {}
+    # Size of the volume that keeps the certificates.
+    persistence:
+      size: 1Gi
+      storageClassName: ""
+  replicas: 1
+  # Edge settings as NAME: value, overriding the chart's, for example
+  # FLUXER_EDGE_GLOBAL_OPTIONS or FLUXER_EDGE_ENCODE.
+  env: {}
+  extraEnv: []
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+networkPolicy:
+  # Admit traffic to the release pods only from the release itself, to the edge
+  # from anywhere, and to the LiveKit media ports. Network plugins without
+  # NetworkPolicy support ignore it. Add a NetworkPolicy of your own to let
+  # another namespace in, for example a metrics scraper.
+  enabled: true
+  # Namespaces allowed to reach the edge on port 8080, as a namespaceSelector,
+  # for example {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}}.
+  # Empty allows any source.
+  ingressNamespaceSelector: {}

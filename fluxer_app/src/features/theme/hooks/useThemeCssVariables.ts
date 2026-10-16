@@ -2,7 +2,8 @@
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {useEffect} from 'react';
+import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
+import {useLayoutEffect} from 'react';
 
 interface ThemeCssVariablesOptions {
 	effectiveTheme: string;
@@ -14,6 +15,7 @@ interface ThemeCssVariablesOptions {
 	messageGutter: number;
 	messageGroupSpacing: number;
 	hdrDisplayMode: HdrDisplayMode;
+	instanceThemeColor: string | null;
 }
 
 export function useThemeCssVariables({
@@ -26,10 +28,17 @@ export function useThemeCssVariables({
 	messageGutter,
 	messageGroupSpacing,
 	hdrDisplayMode,
+	instanceThemeColor,
 }: ThemeCssVariablesOptions): void {
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
-		htmlNode.classList.add(`theme-${effectiveTheme}`);
+		const themeClass = `theme-${effectiveTheme}`;
+		for (const existingClass of Array.from(htmlNode.classList)) {
+			if (existingClass.startsWith('theme-') && existingClass !== themeClass) {
+				htmlNode.classList.remove(existingClass);
+			}
+		}
+		htmlNode.classList.add(themeClass);
 		htmlNode.style.setProperty('--saturation-factor', saturationFactor.toString());
 		htmlNode.style.setProperty('--user-select', enableTextSelection ? 'auto' : 'none');
 		htmlNode.style.setProperty('--font-size', remFromPx(fontSize));
@@ -46,17 +55,6 @@ export function useThemeCssVariables({
 		} else {
 			htmlNode.style.removeProperty('--markup-strikethrough-color');
 		}
-		return () => {
-			htmlNode.classList.remove(`theme-${effectiveTheme}`);
-			htmlNode.style.removeProperty('--saturation-factor');
-			htmlNode.style.removeProperty('--link-decoration');
-			htmlNode.style.removeProperty('--markup-strikethrough-color');
-			htmlNode.style.removeProperty('--user-select');
-			htmlNode.style.removeProperty('--font-size');
-			htmlNode.style.removeProperty('--chat-horizontal-padding');
-			htmlNode.style.removeProperty('--message-group-spacing');
-			htmlNode.style.removeProperty('dynamic-range-limit');
-		};
 	}, [
 		effectiveTheme,
 		saturationFactor,
@@ -68,4 +66,36 @@ export function useThemeCssVariables({
 		messageGroupSpacing,
 		hdrDisplayMode,
 	]);
+	useLayoutEffect(() => {
+		if (instanceThemeColor === null) return;
+		const variables = getInstanceBrandVariables(instanceThemeColor, effectiveTheme, saturationFactor);
+		if (variables === null) return;
+		const htmlNode = document.documentElement;
+		for (const name of INSTANCE_BRAND_VARIABLES) {
+			htmlNode.style.setProperty(name, variables[name]);
+		}
+		return () => {
+			for (const name of INSTANCE_BRAND_VARIABLES) {
+				htmlNode.style.removeProperty(name);
+			}
+		};
+	}, [instanceThemeColor, effectiveTheme, saturationFactor]);
+	useLayoutEffect(() => {
+		const htmlNode = document.documentElement;
+		return () => {
+			for (const existingClass of Array.from(htmlNode.classList)) {
+				if (existingClass.startsWith('theme-')) {
+					htmlNode.classList.remove(existingClass);
+				}
+			}
+			htmlNode.style.removeProperty('--saturation-factor');
+			htmlNode.style.removeProperty('--link-decoration');
+			htmlNode.style.removeProperty('--markup-strikethrough-color');
+			htmlNode.style.removeProperty('--user-select');
+			htmlNode.style.removeProperty('--font-size');
+			htmlNode.style.removeProperty('--chat-horizontal-padding');
+			htmlNode.style.removeProperty('--message-group-spacing');
+			htmlNode.style.removeProperty('dynamic-range-limit');
+		};
+	}, []);
 }

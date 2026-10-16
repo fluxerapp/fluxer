@@ -49,7 +49,7 @@
 }
 
 :global(.theme-light) .sequenceBadge {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .sequenceBadgeMobile {
@@ -75,4 +75,12 @@
 .link:active,
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard)) .link:hover {
 	text-decoration: none;
+}
+
+.linkButton {
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	color: inherit;
 }

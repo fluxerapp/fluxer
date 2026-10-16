@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::ast::{Node, ParserFlags};
+use crate::ast::Node;
 use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
 use crate::emoji::EmojiContext;
 use crate::normalize::{
@@ -159,6 +159,16 @@ impl RuntimeState<'_> {
             let next_line = &self.lines[self.current_line + consumed].text;
             let trimmed_next = trim_start(next_line);
             if crate::block::is_block_start(trimmed_next, self.parser.flags())
+                || crate::block::is_table_start(
+                    &self.lines,
+                    self.current_line + consumed,
+                    self.parser.flags(),
+                )
+                || crate::block::opens_code_block_midline(
+                    &self.lines,
+                    self.current_line + consumed,
+                    self.parser.flags(),
+                )
                 || trimmed_next.is_empty()
             {
                 break;
@@ -188,9 +198,4 @@ impl RuntimeState<'_> {
         self.current_line += consumed - 1;
         Ok(())
     }
-}
-
-#[allow(dead_code)]
-pub(crate) fn all_flags() -> u32 {
-    ParserFlags::ALL
 }

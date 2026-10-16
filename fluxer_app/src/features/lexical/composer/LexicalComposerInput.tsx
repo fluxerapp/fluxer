@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AutocompleteOption, AutocompleteType} from '@app/features/channel/components/AutocompleteTypes';
+import {registerComposerBlockquote} from '@app/features/lexical/composer/ComposerBlockquote';
 import {registerComposerClipboardCommands} from '@app/features/lexical/composer/ComposerClipboard';
 import {registerComposerCodeIndent} from '@app/features/lexical/composer/ComposerCodeIndent';
 import {
 	type ComposerEmojiResolver,
 	registerComposerEmojiShortcode,
 } from '@app/features/lexical/composer/ComposerEmojiShortcode';
+import {registerComposerEnter} from '@app/features/lexical/composer/ComposerEnter';
 import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
 import {resetComposerHistory} from '@app/features/lexical/composer/ComposerHistory';
 import {registerComposerIMECommandGuard} from '@app/features/lexical/composer/ComposerIME';
@@ -15,6 +17,11 @@ import {registerComposerMarkdownShortcuts} from '@app/features/lexical/composer/
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import {registerComposerPlainText} from '@app/features/lexical/composer/ComposerPlainText';
 import {$hydrateComposerFromDraft, $projectComposer} from '@app/features/lexical/composer/ComposerSerialization';
+import {registerComposerSoftWrapDeletion} from '@app/features/lexical/composer/ComposerSoftWrapDeletion';
+import {
+	COMPOSER_RESCAN_TAG,
+	registerComposerSpecialMention,
+} from '@app/features/lexical/composer/ComposerSpecialMention';
 import {
 	type ComposerTypeaheadActiveState,
 	registerComposerTypeaheadModifierGuard,
@@ -33,6 +40,9 @@ import {
 	$wrapComposerSelection,
 } from '@app/features/lexical/composer/composerOffsets';
 import styles from '@app/features/lexical/composer/LexicalMessageComposer.module.css';
+import {DEFAULT_COMPOSER_MARKDOWN_FLAGS} from '@app/features/lexical/composer/markdownSpans';
+import {ComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
+import {ComposerBlockquoteMarkerNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
 import {ComposerCommandNode} from '@app/features/lexical/composer/nodes/ComposerCommandNode';
 import {ComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {ComposerMentionNode} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
@@ -49,7 +59,6 @@ import {
 	$applyOptionalChoice,
 	$applySlotChoice,
 	$applySlotPayload,
-	$focusFirstInvalidSlashSlot,
 	$getActiveOptionalContext,
 	$getActiveSlotAutocompleteContext,
 	$getActiveSlotChoiceContext,
@@ -91,7 +100,6 @@ import {
 	FOCUS_COMMAND,
 	HISTORY_MERGE_TAG,
 	KEY_ARROW_UP_COMMAND,
-	KEY_ENTER_COMMAND,
 } from 'lexical';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -100,6 +108,8 @@ import {useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, u
 const THEME: InitialConfigType['theme'] = {
 	paragraph: styles.paragraph,
 	syntaxMarker: styles.marker,
+	composerBlockquoteLine: styles.blockquoteLine,
+	composerBlockquoteMarker: styles.blockquoteMarker,
 	composerMention: clsx(styles.mentionHost, markupStyles.inlineFormat),
 	composerCustomEmoji: styles.emojiHost,
 	composerCommand: styles.command,
@@ -123,7 +133,10 @@ export interface LexicalComposerInputProps {
 	slotResolvers?: SlashSlotResolvers;
 	markdown?: boolean;
 	markdownParserFlags?: number;
+	maxWireLength?: number;
+	silentMessagePrefix?: boolean;
 	emojiShortcodeResolver?: ComposerEmojiResolver;
+	specialMentionsAllowed: boolean;
 	channelId?: string;
 	guildId?: string;
 	selectionToolbar?: boolean;
@@ -148,11 +161,27 @@ export interface LexicalComposerInputProps {
 	onChange: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onCursorMove: () => void;
 	onEnter?: () => void;
-	onArrowUp: () => void;
+	onArrowUp: () => boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
 	onSlashCommandStateChange?: (state: SlashCommandComposerState) => void;
+}
+
+function moveSelectionToLineBoundary(event: React.KeyboardEvent<HTMLElement>): boolean {
+	if (event.key !== 'Home' && event.key !== 'End') {
+		return false;
+	}
+	if (event.ctrlKey || event.metaKey || event.altKey) {
+		return false;
+	}
+	const selection = event.currentTarget.ownerDocument.defaultView?.getSelection();
+	if (selection == null || selection.rangeCount === 0) {
+		return false;
+	}
+	selection.modify(event.shiftKey ? 'extend' : 'move', event.key === 'Home' ? 'backward' : 'forward', 'lineboundary');
+	event.preventDefault();
+	return true;
 }
 
 export const LexicalComposerInput = observer((props: LexicalComposerInputProps) => {
@@ -186,13 +215,20 @@ export const LexicalComposerInput = observer((props: LexicalComposerInputProps) 
 			SlashSeparatorNode,
 			SlashOptionalHintNode,
 			SyntaxMarkerNode,
+			ComposerBlockquoteLineNode,
+			ComposerBlockquoteMarkerNode,
 		],
 		theme: THEME,
 	};
 	return (
-		<LexicalComposer initialConfig={config}>
+		<LexicalComposer initialConfig={config} data-flx="lexical.composer.lexical-composer-input.lexical-composer">
 			<ComposerMentionContext.Provider value={mentionContext}>
-				<ComposerInner {...props} plainText={plainText} selectionToolbar={selectionToolbar} />
+				<ComposerInner
+					data-flx="lexical.composer.lexical-composer-input.composer-inner"
+					{...props}
+					plainText={plainText}
+					selectionToolbar={selectionToolbar}
+				/>
 			</ComposerMentionContext.Provider>
 		</LexicalComposer>
 	);
@@ -207,7 +243,10 @@ const ComposerInner = ({
 	slotResolvers,
 	markdown = true,
 	markdownParserFlags,
+	maxWireLength,
+	silentMessagePrefix = false,
 	emojiShortcodeResolver,
+	specialMentionsAllowed,
 	selectionToolbar = true,
 	submitOnEnter = true,
 	focusRingTarget,
@@ -258,6 +297,8 @@ const ComposerInner = ({
 	submitOnEnterRef.current = submitOnEnter;
 	const plainTextRef = useRef(plainText);
 	plainTextRef.current = plainText;
+	const markdownParserFlagsRef = useRef(markdownParserFlags ?? DEFAULT_COMPOSER_MARKDOWN_FLAGS);
+	markdownParserFlagsRef.current = markdownParserFlags ?? DEFAULT_COMPOSER_MARKDOWN_FLAGS;
 	const disabledRef = useRef(disabled);
 	disabledRef.current = disabled;
 	const onSlashCommandStateChangeRef = useRef(onSlashCommandStateChange);
@@ -323,6 +364,7 @@ const ComposerInner = ({
 				);
 				return segments;
 			},
+			getMarkdownParserFlags: () => markdownParserFlagsRef.current,
 			getTextUpToCursor: () => {
 				let text = '';
 				editor.getEditorState().read(
@@ -454,7 +496,7 @@ const ComposerInner = ({
 						$hydrateComposerFromDraft(display, segments, plainTextRef.current);
 						$selectComposerOffset(display.length);
 					},
-					{discrete: true},
+					{discrete: true, tag: COMPOSER_RESCAN_TAG},
 				);
 				resetComposerHistory(editor);
 			},
@@ -484,7 +526,10 @@ const ComposerInner = ({
 			cleanups.push(registerSlashSlotPlugin(editor, () => slotResolversRef.current, typeaheadActiveState));
 			cleanups.push(registerSlashSlotFocus(editor, () => onSlashCommandStateChangeRef.current));
 			if (markdown) {
-				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags));
+				cleanups.push(
+					registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix, maxWireLength),
+				);
+				cleanups.push(registerComposerBlockquote(editor, markdownParserFlags));
 			}
 			cleanups.push(
 				registerComposerEmojiShortcode(editor, (shortcodeName) => {
@@ -518,12 +563,18 @@ const ComposerInner = ({
 			{discrete: true, tag: HISTORY_MERGE_TAG},
 		);
 		return mergeRegister(...cleanups);
-	}, [editor, markdown, markdownParserFlags, plainText]);
+	}, [editor, markdown, markdownParserFlags, maxWireLength, plainText, silentMessagePrefix]);
+
+	useLayoutEffect(
+		() => registerComposerSpecialMention(editor, specialMentionsAllowed, plainText),
+		[editor, plainText, specialMentionsAllowed],
+	);
 
 	useEffect(() => {
 		return mergeRegister(
 			registerContextMenuUndoRedo(editor),
 			registerComposerIMECommandGuard(editor),
+			registerComposerSoftWrapDeletion(editor),
 			registerComposerTypeaheadModifierGuard(editor, typeaheadActiveState),
 			registerComposerMarkdownShortcuts(editor),
 			registerComposerCodeIndent(editor, typeaheadActiveState),
@@ -537,7 +588,12 @@ const ComposerInner = ({
 					if (disabledRef.current) {
 						return false;
 					}
-					selectLastSelectionOrEnd();
+					const selection = $getSelection();
+					if ($isRangeSelection(selection)) {
+						$setSelection(selection.clone());
+					} else {
+						selectLastSelectionOrEnd();
+					}
 					return false;
 				},
 				COMMAND_PRIORITY_LOW,
@@ -550,44 +606,21 @@ const ComposerInner = ({
 				},
 				COMMAND_PRIORITY_LOW,
 			),
-			editor.registerCommand(
-				KEY_ENTER_COMMAND,
-				(event: KeyboardEvent | null) => {
-					if (typeaheadActiveState.current || event == null) {
-						return false;
-					}
-					if (submitOnEnterRef.current && cb.current.onEnter != null) {
-						if (!event.shiftKey) {
-							event.preventDefault();
-							if ($focusFirstInvalidSlashSlot()) {
-								return true;
-							}
-							cb.current.onEnter();
-							return true;
-						}
-						return false;
-					}
-					if ((event.metaKey || event.ctrlKey) && cb.current.onEnter != null) {
-						event.preventDefault();
-						if ($focusFirstInvalidSlashSlot()) {
-							return true;
-						}
-						cb.current.onEnter();
-						return true;
-					}
-					return false;
-				},
-				COMMAND_PRIORITY_HIGH,
-			),
+			registerComposerEnter(editor, {
+				typeaheadActiveState,
+				getSubmitOnEnter: () => submitOnEnterRef.current,
+				getOnEnter: () => cb.current.onEnter,
+			}),
 			editor.registerCommand(
 				KEY_ARROW_UP_COMMAND,
-				(event: KeyboardEvent | null) => {
+				(event: KeyboardEvent) => {
 					if (typeaheadActiveState.current) {
 						return false;
 					}
 					if (event != null && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-						if ($isComposerEmpty()) {
-							cb.current.onArrowUp();
+						if ($isComposerEmpty() && cb.current.onArrowUp()) {
+							event.preventDefault();
+							return true;
 						}
 					}
 					return false;
@@ -602,6 +635,7 @@ const ComposerInner = ({
 			registerComposerClipboardCommands(editor, {
 				getPlainText: () => plainTextRef.current,
 				isEditable: () => !disabledRef.current && editor.isEditable(),
+				getMarkdownParserFlags: () => markdownParserFlagsRef.current,
 			}),
 		[editor],
 	);
@@ -617,6 +651,9 @@ const ComposerInner = ({
 	const handleEditableKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLElement>) => {
 			if (!event.defaultPrevented && !isIMEComposing(event)) {
+				if (moveSelectionToLineBoundary(event)) {
+					return;
+				}
 				if (onKeyDown != null) {
 					onKeyDown(event);
 				}
@@ -630,7 +667,7 @@ const ComposerInner = ({
 			const target = event.target instanceof Element ? event.target : null;
 			const root = editor.getRootElement();
 			const slotHost = target == null ? null : target.closest<HTMLElement>('[data-lexical-composer-slot]');
-			if (slotHost != null && root != null && root.contains(slotHost)) {
+			if (slotHost && root?.contains(slotHost)) {
 				let emptySlot = false;
 				editor.getEditorState().read(
 					() => {
@@ -716,7 +753,12 @@ const ComposerInner = ({
 		<>
 			<PlainTextPlugin
 				contentEditable={
-					<FocusRing offset={-2} ringTarget={focusRingTarget} enabled={focusRingEnabled}>
+					<FocusRing
+						offset={-2}
+						ringTarget={focusRingTarget}
+						enabled={focusRingEnabled}
+						data-flx="lexical.composer.lexical-composer-input.composer-inner.focus-ring"
+					>
 						<ContentEditable
 							className={clsx(styles.editable, className)}
 							id={id}
@@ -737,18 +779,23 @@ const ComposerInner = ({
 							aria-haspopup={autocompleteEnabled ? 'listbox' : undefined}
 							aria-placeholder={placeholder}
 							placeholder={
-								<flx-lexical-composer-input-placeholder className={flxElementClassName(styles.placeholder)}>
+								<flx-lexical-composer-input-placeholder
+									className={flxElementClassName(styles.placeholder)}
+									data-flx="lexical.composer.lexical-composer-input.composer-inner.placeholder"
+								>
 									{placeholder}
 								</flx-lexical-composer-input-placeholder>
 							}
 							data-channel-textarea
 							data-composer-render-mode={plainText ? 'plain' : 'rich'}
+							data-flx="lexical.composer.lexical-composer-input.composer-inner.editable"
 						/>
 					</FocusRing>
 				}
 				ErrorBoundary={LexicalErrorBoundary}
+				data-flx="lexical.composer.lexical-composer-input.composer-inner.plain-text-plugin"
 			/>
-			<HistoryPlugin />
+			<HistoryPlugin data-flx="lexical.composer.lexical-composer-input.composer-inner.history-plugin" />
 			<ComposerTypeaheadPlugin
 				options={autocompleteOptions}
 				type={autocompleteType}
@@ -758,6 +805,7 @@ const ComposerInner = ({
 				enabled={autocompleteEnabled && !slotMenuActive}
 				onSelect={onAutocompleteSelect}
 				activeRef={composerTypeaheadActiveRef}
+				data-flx="lexical.composer.lexical-composer-input.composer-inner.composer-typeahead-plugin.autocomplete-select"
 			/>
 			<SlashSlotAutocompletePlugin
 				options={autocompleteOptions}
@@ -768,8 +816,12 @@ const ComposerInner = ({
 				enabled={autocompleteEnabled && slotMenuActive}
 				onSelect={onAutocompleteSelect}
 				activeRef={slashSlotTypeaheadActiveRef}
+				data-flx="lexical.composer.lexical-composer-input.composer-inner.slash-slot-autocomplete-plugin.autocomplete-select"
 			/>
-			<SelectionFormattingToolbarPlugin enabled={selectionToolbar && !plainText} />
+			<SelectionFormattingToolbarPlugin
+				enabled={selectionToolbar && !plainText}
+				data-flx="lexical.composer.lexical-composer-input.composer-inner.selection-formatting-toolbar-plugin"
+			/>
 		</>
 	);
 };

@@ -22,6 +22,10 @@ const DEVELOPER_TOOLS_DESCRIPTOR = msg({
 	comment: 'Short label in the channel and chat utility buttons. Keep it concise.',
 });
 
+export function isStaffToolsButtonVisible(): boolean {
+	return DeveloperMode.isDeveloper;
+}
+
 interface HeaderUtilityButtonProps {
 	className?: string;
 	'data-flx'?: string;
@@ -45,7 +49,7 @@ export const StaffToolsButton = observer(({className, ...rest}: HeaderUtilityBut
 		},
 		[withTracking],
 	);
-	if (!DeveloperMode.isDeveloper) {
+	if (!isStaffToolsButtonVisible()) {
 		return null;
 	}
 	return (

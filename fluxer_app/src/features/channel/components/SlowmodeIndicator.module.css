@@ -3,7 +3,7 @@
 .container {
 	display: flex;
 	align-items: center;
-	gap: 0.1875rem;
+	gap: 0.25rem;
 	height: var(--slowmode-indicator-height, 1.125rem);
 	max-width: 100%;
 	min-width: 0;
@@ -22,9 +22,9 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-weight: 600;
+	font-weight: 500;
 	font-size: 0.75rem;
-	line-height: 1;
+	line-height: 1rem;
 	font-variant-numeric: tabular-nums;
 }
 

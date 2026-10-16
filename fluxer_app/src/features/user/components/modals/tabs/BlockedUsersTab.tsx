@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {
 	COPY_USER_ID_DESCRIPTOR,
@@ -50,7 +47,7 @@ export const BlockedUsersContent: React.FC = observer(() => {
 				const userA = Users.getUser(a.id);
 				const userB = Users.getUser(b.id);
 				if (!userA || !userB) return 0;
-				return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+				return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 			});
 	}, [relationships]);
 	const handleUnblockUser = (userId: string, event?: {shiftKey?: boolean}) => {
@@ -132,7 +129,7 @@ export const BlockedUsersContent: React.FC = observer(() => {
 					{blockedUsers.map((relationship) => {
 						const user = Users.getUser(relationship.id);
 						if (!user) return null;
-						const displayName = NicknameUtils.getNickname(user);
+						const displayName = NicknameUtils.getNickname(user, null);
 						return (
 							<div key={user.id} className={styles.userCard} data-flx="user.blocked-users-tab.user-card">
 								<div className={styles.userInfo} data-flx="user.blocked-users-tab.user-info">
@@ -162,7 +159,7 @@ export const BlockedUsersContent: React.FC = observer(() => {
 												{displayName}
 											</span>
 											<span className={styles.discriminator} data-flx="user.blocked-users-tab.discriminator">
-												#{user.discriminator}
+												{NicknameUtils.formatUserTagForStreamerMode(user)}
 											</span>
 										</div>
 									</button>
@@ -200,22 +197,3 @@ export const BlockedUsersContent: React.FC = observer(() => {
 		</>
 	);
 });
-
-const BlockedUsersTab: React.FC = observer(() => {
-	return (
-		<SettingsTabContainer data-flx="user.blocked-users-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.blocked-users-tab.settings-tab-content">
-				<SettingsSection
-					id="blocked-users"
-					title={<Trans>Blocked users</Trans>}
-					description={<Trans>Blocked users can't send you friend requests or message you directly.</Trans>}
-					data-flx="user.blocked-users-tab.blocked-users"
-				>
-					<BlockedUsersContent data-flx="user.blocked-users-tab.blocked-users-content" />
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
-	);
-});
-
-export default BlockedUsersTab;

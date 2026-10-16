@@ -22,7 +22,7 @@
 	height: 0.125rem;
 	width: 100%;
 	border-radius: 624.9375rem;
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 	transition:
 		transform 150ms,
 		opacity 150ms;

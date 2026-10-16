@@ -1,85 +1,82 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	selectUserAreaMicrophoneState,
+	type UserAreaMicrophoneSignals,
+} from '@app/features/app/components/layout/UserAreaState';
 import {describe, expect, it} from 'vitest';
-import {selectUserAreaMicrophoneState, type UserAreaMicrophoneSignals} from './UserAreaState';
 
-const baseSignals: UserAreaMicrophoneSignals = {
-	effectiveAudioMuted: false,
-	effectiveAudioDeafened: false,
-	isGuildMuted: false,
-	isGuildDeafened: false,
-	isPermissionMuted: false,
-	muteReason: null,
-	isPushToTalkEffective: false,
-	isPushToTalkHeld: false,
-	isPushToMuteEffective: false,
-	isPushToMuteHeld: false,
-};
+function signals(overrides: Partial<UserAreaMicrophoneSignals>): UserAreaMicrophoneSignals {
+	return {
+		effectiveAudioMuted: false,
+		effectiveAudioDeafened: false,
+		isGuildMuted: false,
+		isGuildDeafened: false,
+		isPermissionMuted: false,
+		muteReason: null,
+		isPushToTalkEffective: false,
+		isPushToMuteEffective: false,
+		isPushToMuteHeld: false,
+		...overrides,
+	};
+}
 
 describe('selectUserAreaMicrophoneState', () => {
-	it('follows normal effective mute state without transmit hold modes', () => {
-		expect(selectUserAreaMicrophoneState(baseSignals)).toEqual({
-			effectiveMuted: false,
-			muteToggleLocked: false,
-		});
-		expect(selectUserAreaMicrophoneState({...baseSignals, effectiveAudioMuted: true})).toMatchObject({
-			effectiveMuted: true,
-		});
+	it('shows the idle push to talk gate as unmuted without locking the toggle', () => {
+		expect(
+			selectUserAreaMicrophoneState(signals({isPushToTalkEffective: true, muteReason: 'voice_push_to_talk'})),
+		).toEqual({effectiveMuted: false, muteToggleLocked: false});
 	});
 
-	it('shows push-to-talk released as muted', () => {
-		expect(selectUserAreaMicrophoneState({...baseSignals, isPushToTalkEffective: true})).toEqual({
-			effectiveMuted: true,
-			muteToggleLocked: true,
-		});
+	it('shows a self-muted push to talk user as muted', () => {
+		expect(
+			selectUserAreaMicrophoneState(
+				signals({isPushToTalkEffective: true, effectiveAudioMuted: true, muteReason: 'self'}),
+			),
+		).toEqual({effectiveMuted: true, muteToggleLocked: false});
 	});
 
-	it('treats push-to-talk without an effective binding as disabled', () => {
-		expect(selectUserAreaMicrophoneState({...baseSignals, isPushToTalkEffective: false})).toEqual({
-			effectiveMuted: false,
+	it('shows a push to talk user muted by the failure latch as muted', () => {
+		expect(selectUserAreaMicrophoneState(signals({isPushToTalkEffective: true, muteReason: 'self'}))).toEqual({
+			effectiveMuted: true,
 			muteToggleLocked: false,
 		});
 	});
 
-	it('shows push-to-talk held as unmuted even with persisted self mute state', () => {
+	it('lets a self-deafened push to talk user click the toggle', () => {
 		expect(
-			selectUserAreaMicrophoneState({
-				...baseSignals,
-				effectiveAudioMuted: true,
-				muteReason: 'self',
-				isPushToTalkEffective: true,
-				isPushToTalkHeld: true,
-			}),
-		).toEqual({
-			effectiveMuted: false,
-			muteToggleLocked: true,
-		});
+			selectUserAreaMicrophoneState(
+				signals({isPushToTalkEffective: true, effectiveAudioMuted: true, effectiveAudioDeafened: true}),
+			),
+		).toEqual({effectiveMuted: true, muteToggleLocked: false});
 	});
 
-	it('does not show push-to-talk held as unmuted through hard mute states', () => {
-		expect(
-			selectUserAreaMicrophoneState({
-				...baseSignals,
-				isPermissionMuted: true,
-				isPushToTalkEffective: true,
-				isPushToTalkHeld: true,
-			}),
-		).toEqual({
-			effectiveMuted: true,
-			muteToggleLocked: true,
-		});
+	it('locks the toggle for server and permission mutes in push to talk', () => {
+		for (const overrides of [
+			{isGuildMuted: true, muteReason: 'guild' as const},
+			{isGuildDeafened: true},
+			{isPermissionMuted: true, muteReason: 'permission' as const},
+		]) {
+			expect(selectUserAreaMicrophoneState(signals({isPushToTalkEffective: true, ...overrides}))).toEqual({
+				effectiveMuted: true,
+				muteToggleLocked: true,
+			});
+		}
 	});
 
-	it('shows push-to-mute held as muted while leaving the mute toggle available', () => {
-		expect(
-			selectUserAreaMicrophoneState({
-				...baseSignals,
-				isPushToMuteEffective: true,
-				isPushToMuteHeld: true,
-			}),
-		).toEqual({
+	it('keeps voice activity and push to mute behaviour unchanged', () => {
+		expect(selectUserAreaMicrophoneState(signals({}))).toEqual({effectiveMuted: false, muteToggleLocked: false});
+		expect(selectUserAreaMicrophoneState(signals({effectiveAudioMuted: true, muteReason: 'self'}))).toEqual({
 			effectiveMuted: true,
 			muteToggleLocked: false,
+		});
+		expect(selectUserAreaMicrophoneState(signals({isPushToMuteEffective: true, isPushToMuteHeld: true}))).toEqual({
+			effectiveMuted: true,
+			muteToggleLocked: false,
+		});
+		expect(selectUserAreaMicrophoneState(signals({isGuildMuted: true}))).toEqual({
+			effectiveMuted: true,
+			muteToggleLocked: true,
 		});
 	});
 });

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{
-    CommandSpec, command_succeeds, output_text, remove_file_if_exists, run_command,
-};
-use crate::desktop::MACOS_UNIVERSAL_ARCH;
+use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
+use crate::desktop::{MACOS_MINIMUM_SYSTEM_VERSION, MACOS_UNIVERSAL_ARCH};
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
 use sha2::{Digest, Sha256};
@@ -15,13 +13,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopNativeAddonArgs {
-    #[arg(long)]
-    addon_root: Option<PathBuf>,
-}
-
-#[derive(Debug, Args, Clone)]
-pub struct TestWebrtcSenderRustArgs {
-    #[arg(long)]
+    #[arg(
+        long,
+        help = "Directory holding the addon crate to build, defaults to the current directory"
+    )]
     addon_root: Option<PathBuf>,
 }
 
@@ -63,6 +58,36 @@ const LINUX_AUDIO_CAPTURE_PKG_CONFIG: &[PkgConfigRequirement] = &[PkgConfigRequi
 }];
 
 const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
+    DesktopNativeAddon {
+        package_dir: "app-store",
+        package_name: "@fluxer/app-store",
+        crate_name: "fluxer_app_store",
+        node_file_stem: "app-store",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
+    DesktopNativeAddon {
+        package_dir: "gateway-socket",
+        package_name: "@fluxer/gateway-socket",
+        crate_name: "fluxer_gateway_socket",
+        node_file_stem: "gateway-socket",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
+    DesktopNativeAddon {
+        package_dir: "hardware-encoder",
+        package_name: "@fluxer/hardware-encoder",
+        crate_name: "fluxer_hardware_encoder",
+        node_file_stem: "hardware-encoder",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
     DesktopNativeAddon {
         package_dir: "linux-audio-capture",
         package_name: "@fluxer/linux-audio-capture",
@@ -108,16 +133,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         package_name: "@fluxer/linux-portals",
         crate_name: "fluxer_linux_portals",
         node_file_stem: "linux-portals",
-        required_platform: Some("linux"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
-        package_dir: "linux-screen-capture",
-        package_name: "@fluxer/linux-screen-capture",
-        crate_name: "fluxer_linux_screen_capture",
-        node_file_stem: "linux-screen-capture",
         required_platform: Some("linux"),
         features: &[],
         pkg_config: &[],
@@ -214,16 +229,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::Webauthn,
     },
     DesktopNativeAddon {
-        package_dir: "webrtc-sender",
-        package_name: "@fluxer/webrtc-sender",
-        crate_name: "fluxer_webrtc_sender",
-        node_file_stem: "webrtc-sender",
-        required_platform: None,
-        features: &["camera-native"],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "win-clipboard",
         package_name: "@fluxer/win-clipboard",
         crate_name: "fluxer_win_clipboard",
@@ -264,16 +269,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::None,
     },
     DesktopNativeAddon {
-        package_dir: "win-toast",
-        package_name: "@fluxer/win-toast",
-        crate_name: "fluxer_win_toast",
-        node_file_stem: "win-toast",
-        required_platform: Some("win32"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "windows-input-hook",
         package_name: "@fluxer/windows-input-hook",
         crate_name: "fluxer_windows_input_hook",
@@ -292,19 +287,6 @@ pub fn run_build_desktop_native_addon(args: BuildDesktopNativeAddonArgs) -> Resu
         .unwrap_or_else(|| env::current_dir().context("Failed to resolve current directory"))?;
     let addon = resolve_addon(&addon_root)?;
     build_desktop_native_addon(&addon_root, addon)
-}
-
-pub fn run_test_webrtc_sender_rust(args: TestWebrtcSenderRustArgs) -> Result<()> {
-    let addon_root = args
-        .addon_root
-        .map(Ok)
-        .unwrap_or_else(|| env::current_dir().context("Failed to resolve current directory"))?;
-    run_command(
-        CommandSpec::new(resolve_cargo_bin())
-            .args(["test", "--features", "publisher,camera-native"])
-            .env("CARGO_INCREMENTAL", "0")
-            .current_dir(addon_root),
-    )
 }
 
 fn build_desktop_native_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> Result<()> {
@@ -328,7 +310,9 @@ fn build_desktop_native_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> 
         DesktopNativeSpecialBuild::Webauthn => {
             copy_webauthn_linux_shared_libraries(&built.out_file, addon_root)?
         }
-        DesktopNativeSpecialBuild::WinGameCapture => build_win_game_capture_artifacts(addon_root)?,
+        DesktopNativeSpecialBuild::WinGameCapture => {
+            remove_stale_win_game_capture_outputs(addon_root, &built.out_file)?
+        }
     }
     Ok(())
 }
@@ -398,6 +382,9 @@ fn build_rust_node_addon_for_arch(
     if platform == "win32" && arch == "arm64" {
         command = configure_windows_arm64_msvc_cc(command);
     }
+    if platform == "darwin" {
+        command = command.env("MACOSX_DEPLOYMENT_TARGET", MACOS_MINIMUM_SYSTEM_VERSION);
+    }
 
     println!("[buildRustNodeAddon] cwd={}", addon_root.display());
     if env::var_os("CARGO_TARGET_DIR").is_some() || platform == "win32" {
@@ -431,7 +418,10 @@ fn build_rust_node_addon_for_arch(
         out_file.display()
     );
     sign_macos_node_addon(&out_file, platform)?;
+    assert_macos_addon_loads_on_minimum_system(&out_file, &source, platform)?;
     assert_no_redistributable_runtime_imports(&out_file, platform)?;
+    assert_system32_dependent_load_flag(&out_file, platform)?;
+    assert_no_disabled_win_game_capture_capabilities(&out_file, addon, platform)?;
     Ok(BuiltNodeAddon {
         out_file,
         source,
@@ -687,252 +677,40 @@ fn should_bundle_linux_library(library_name: &str) -> bool {
     .any(|prefix| library_name.starts_with(prefix))
 }
 
-#[derive(Debug, Clone, Copy)]
-struct HookLayerArch {
-    arch: &'static str,
-    target: &'static str,
-    tag: &'static str,
-}
-
-const WIN_GAME_CAPTURE_ARCHES: &[HookLayerArch] = &[
-    HookLayerArch {
-        arch: "x64",
-        target: "x86_64-pc-windows-msvc",
-        tag: "win32-x64-msvc",
-    },
-    HookLayerArch {
-        arch: "ia32",
-        target: "i686-pc-windows-msvc",
-        tag: "win32-ia32-msvc",
-    },
-    HookLayerArch {
-        arch: "arm64",
-        target: "aarch64-pc-windows-msvc",
-        tag: "win32-arm64-msvc",
-    },
-];
-
-fn build_win_game_capture_artifacts(root: &Path) -> Result<()> {
-    let primary_arch = electron_arch();
-    for arch in WIN_GAME_CAPTURE_ARCHES {
-        let required_for_primary_runtime =
-            arch.arch == primary_arch || (primary_arch == "x64" && arch.arch == "ia32");
-        build_win_game_capture_hook(root, arch, required_for_primary_runtime)?;
-        build_win_game_capture_vulkan_layer(root, arch, arch.arch == primary_arch)?;
-        build_win_game_capture_inject_helper(root, arch, required_for_primary_runtime)?;
+fn remove_stale_win_game_capture_outputs(root: &Path, primary_node: &Path) -> Result<()> {
+    let primary_node_name = primary_node
+        .file_name()
+        .and_then(OsStr::to_str)
+        .ok_or_else(|| {
+            anyhow!(
+                "Invalid win-game-capture output path: {}",
+                primary_node.display()
+            )
+        })?;
+    let mut stale = fs::read_dir(root)
+        .with_context(|| format!("Failed to read {}", root.display()))?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    stale.retain(|path| {
+        if !path.is_file() {
+            return false;
+        }
+        let Some(file_name) = path.file_name().and_then(OsStr::to_str) else {
+            return false;
+        };
+        file_name.starts_with("fluxer-game-hook.")
+            || file_name.starts_with("fluxer-inject-helper.")
+            || file_name.starts_with("fluxer-vulkan-layer.")
+            || (file_name.starts_with("win-game-capture.")
+                && file_name.ends_with(".node")
+                && file_name != primary_node_name)
+    });
+    stale.sort();
+    for path in stale {
+        fs::remove_file(&path).with_context(|| format!("Failed to remove {}", path.display()))?;
+        println!("[win-game-capture] removed stale output {}", path.display());
     }
     Ok(())
-}
-
-fn build_win_game_capture_hook(root: &Path, arch: &HookLayerArch, required: bool) -> Result<()> {
-    build_win_game_capture_extra(
-        "game-capture hook",
-        root,
-        &root.join("hook"),
-        "fluxer_game_hook",
-        &format!("fluxer-game-hook.{}.dll", arch.tag),
-        arch,
-        required,
-    )
-}
-
-fn build_win_game_capture_vulkan_layer(
-    root: &Path,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    let layer_dll_name = format!("fluxer-vulkan-layer.{}.dll", arch.tag);
-    build_win_game_capture_extra(
-        "Vulkan game-capture layer",
-        root,
-        &root.join("vulkan-layer"),
-        "fluxer_vulkan_layer",
-        &layer_dll_name,
-        arch,
-        required,
-    )?;
-    let manifest_path = root.join(format!("fluxer-vulkan-layer.{}.json", arch.tag));
-    if !root.join(&layer_dll_name).exists() {
-        remove_file_if_exists(&manifest_path)?;
-        println!(
-            "[win-game-capture] no {layer_dll_name}; not emitting {} so packages never ship a manifest pointing at an absent layer",
-            manifest_path.display()
-        );
-        return Ok(());
-    }
-    fs::write(&manifest_path, vulkan_layer_manifest(&layer_dll_name))
-        .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
-    println!("[win-game-capture] emitted {}", manifest_path.display());
-    Ok(())
-}
-
-fn build_win_game_capture_inject_helper(
-    root: &Path,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    let helper_root = root.join("inject-helper");
-    ensure_rust_target_or_skip(arch, "inject-helper", required)?;
-    if !try_cargo_build("inject-helper", &helper_root, arch.target) {
-        if required {
-            bail!(
-                "[win-game-capture] required {} inject-helper build failed",
-                arch.arch
-            );
-        }
-        return Ok(());
-    }
-    let helper_source = helper_root
-        .join("target")
-        .join(arch.target)
-        .join("release")
-        .join("fluxer-inject-helper.exe");
-    let helper_out = root.join(format!("fluxer-inject-helper.{}.exe", arch.tag));
-    copy_optional_win_game_capture_artifact(
-        &helper_source,
-        &helper_out,
-        &format!("{} inject-helper", arch.arch),
-        required,
-    )
-}
-
-fn build_win_game_capture_extra(
-    label: &str,
-    root: &Path,
-    cargo_root: &Path,
-    crate_name: &str,
-    output_name: &str,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    ensure_rust_target_or_skip(arch, label, required)?;
-    if !try_cargo_build(label, cargo_root, arch.target) {
-        if required {
-            bail!(
-                "[win-game-capture] required {} {} build failed",
-                arch.arch,
-                label
-            );
-        }
-        return Ok(());
-    }
-    let source = cargo_root
-        .join("target")
-        .join(arch.target)
-        .join("release")
-        .join(cargo_dynamic_library_file_name(crate_name, "win32")?);
-    let output = root.join(output_name);
-    copy_optional_win_game_capture_artifact(
-        &source,
-        &output,
-        &format!("{} {label}", arch.arch),
-        required,
-    )
-}
-
-fn ensure_rust_target_or_skip(arch: &HookLayerArch, label: &str, required: bool) -> Result<()> {
-    if rust_target_installed(arch.target) {
-        return Ok(());
-    }
-    let message = format!(
-        "[win-game-capture] {} {} {}: rust target {} not installed",
-        if required {
-            "missing required"
-        } else {
-            "skipping"
-        },
-        arch.arch,
-        label,
-        arch.target
-    );
-    if required {
-        bail!(message);
-    }
-    eprintln!("{message}");
-    Ok(())
-}
-
-fn rust_target_installed(target: &str) -> bool {
-    let rustup = env::var_os("RUSTUP").unwrap_or_else(|| OsString::from("rustup"));
-    match output_text(CommandSpec::new(rustup).args(["target", "list", "--installed"])) {
-        Ok(output) => output.lines().any(|line| line.trim() == target),
-        Err(error) => {
-            eprintln!(
-                "[win-game-capture] could not query rustup for target {target}; assuming present: {error:#}"
-            );
-            true
-        }
-    }
-}
-
-fn try_cargo_build(label: &str, cwd: &Path, target: &str) -> bool {
-    println!("[win-game-capture] building {label} target={target}");
-    run_command(
-        CommandSpec::new(resolve_cargo_bin())
-            .args([
-                OsString::from("build"),
-                OsString::from("--release"),
-                OsString::from("--target"),
-                OsString::from(target),
-                OsString::from("--manifest-path"),
-                cwd.join("Cargo.toml").into_os_string(),
-            ])
-            .current_dir(cwd),
-    )
-    .map(|_| true)
-    .unwrap_or_else(|error| {
-        eprintln!(
-            "[win-game-capture] skipping {label} for {target}: cargo build failed: {error:#}"
-        );
-        false
-    })
-}
-
-fn copy_optional_win_game_capture_artifact(
-    source: &Path,
-    output: &Path,
-    label: &str,
-    required: bool,
-) -> Result<()> {
-    if !source.exists() {
-        let message = format!(
-            "[win-game-capture] expected {} after {label} build",
-            source.display()
-        );
-        if required {
-            bail!(message);
-        }
-        eprintln!("{message}; skipping copy");
-        return Ok(());
-    }
-    fs::copy(source, output).with_context(|| {
-        format!(
-            "Failed to copy {} to {}",
-            source.display(),
-            output.display()
-        )
-    })?;
-    println!("[win-game-capture] emitted {}", output.display());
-    Ok(())
-}
-
-fn vulkan_layer_manifest(layer_dll_name: &str) -> String {
-    format!(
-        "{{\n\
-\t\"file_format_version\": \"1.2.0\",\n\
-\t\"layer\": {{\n\
-\t\t\"name\": \"VK_LAYER_FLUXER_game_capture\",\n\
-\t\t\"type\": \"GLOBAL\",\n\
-\t\t\"library_path\": \".\\\\\\\\{layer_dll_name}\",\n\
-\t\t\"api_version\": \"1.0.0\",\n\
-\t\t\"implementation_version\": \"1\",\n\
-\t\t\"description\": \"Fluxer Vulkan game capture layer\",\n\
-\t\t\"disable_environment\": {{\n\
-\t\t\t\"DISABLE_FLUXER_VULKAN_CAPTURE\": \"\"\n\
-\t\t}}\n\
-\t}}\n\
-}}\n"
-    )
 }
 
 fn assert_no_redistributable_runtime_imports(node_file_path: &Path, platform: &str) -> Result<()> {
@@ -952,6 +730,221 @@ fn assert_no_redistributable_runtime_imports(node_file_path: &Path, platform: &s
             .collect::<Vec<_>>()
             .join("\n")
     )
+}
+
+const MACHO_MAGIC_64: u32 = 0xfeed_facf;
+const MACHO_HEADER_64_SIZE: usize = 32;
+const MACHO_PLATFORM_MACOS: u32 = 1;
+const MACHO_LC_REQ_DYLD: u32 = 0x8000_0000;
+const MACHO_LC_LOAD_DYLIB: u32 = 0x0c;
+const MACHO_LC_LOAD_WEAK_DYLIB: u32 = 0x18 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_REEXPORT_DYLIB: u32 = 0x1f | MACHO_LC_REQ_DYLD;
+const MACHO_LC_LAZY_LOAD_DYLIB: u32 = 0x20;
+const MACHO_LC_LOAD_UPWARD_DYLIB: u32 = 0x23 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_VERSION_MIN_MACOSX: u32 = 0x24;
+const MACHO_LC_BUILD_VERSION: u32 = 0x32;
+const MACOS_SYSTEM_LIBRARY_ROOTS: &[&str] = &["/System/Library/", "/usr/lib/"];
+
+#[derive(Debug, Default, PartialEq, Eq)]
+struct MachOLoadInfo {
+    minimum_macos: Option<u32>,
+    dylibs: Vec<String>,
+}
+
+fn read_macho_load_info(buffer: &[u8]) -> Option<MachOLoadInfo> {
+    let u32_at = |offset: usize| -> Option<u32> {
+        let bytes = buffer.get(offset..offset.checked_add(4)?)?;
+        Some(u32::from_le_bytes(bytes.try_into().ok()?))
+    };
+    if u32_at(0)? != MACHO_MAGIC_64 {
+        return None;
+    }
+    let command_count = u32_at(16)?;
+    let commands_end = MACHO_HEADER_64_SIZE.checked_add(u32_at(20)? as usize)?;
+    if commands_end > buffer.len() {
+        return None;
+    }
+    let mut info = MachOLoadInfo::default();
+    let mut offset = MACHO_HEADER_64_SIZE;
+    for _ in 0..command_count {
+        let command = u32_at(offset)?;
+        let end = offset.checked_add(u32_at(offset + 4)? as usize)?;
+        if end < offset + 8 || end > commands_end {
+            return None;
+        }
+        let field = |index: usize| -> Option<u32> {
+            let at = offset + index * 4;
+            if at + 4 > end {
+                return None;
+            }
+            u32_at(at)
+        };
+        match command {
+            MACHO_LC_LOAD_DYLIB
+            | MACHO_LC_LOAD_WEAK_DYLIB
+            | MACHO_LC_REEXPORT_DYLIB
+            | MACHO_LC_LAZY_LOAD_DYLIB
+            | MACHO_LC_LOAD_UPWARD_DYLIB => {
+                let name_start = offset.checked_add(field(2)? as usize)?;
+                let name = buffer.get(name_start..end)?;
+                let name = name.split(|byte| *byte == 0).next()?;
+                info.dylibs.push(String::from_utf8_lossy(name).into_owned());
+            }
+            MACHO_LC_VERSION_MIN_MACOSX => info.minimum_macos = Some(field(2)?),
+            MACHO_LC_BUILD_VERSION if field(2)? == MACHO_PLATFORM_MACOS => {
+                info.minimum_macos = Some(field(3)?);
+            }
+            _ => {}
+        }
+        offset = end;
+    }
+    Some(info)
+}
+
+fn pack_macos_version(version: &str) -> Option<u32> {
+    let mut parts = version.split('.');
+    let mut packed = 0;
+    for (shift, limit) in [(16, 0xffff), (8, 0xff), (0, 0xff)] {
+        let part = parts
+            .next()
+            .map_or(Some(0), |part| part.parse::<u32>().ok())?;
+        if part > limit {
+            return None;
+        }
+        packed |= part << shift;
+    }
+    parts.next().is_none().then_some(packed)
+}
+
+fn format_macos_version(packed: u32) -> String {
+    format!(
+        "{}.{}.{}",
+        packed >> 16,
+        (packed >> 8) & 0xff,
+        packed & 0xff
+    )
+}
+
+fn assert_macos_addon_loads_on_minimum_system(
+    node_file_path: &Path,
+    cargo_output_path: &Path,
+    platform: &str,
+) -> Result<()> {
+    if platform != "darwin" {
+        return Ok(());
+    }
+    let buffer = fs::read(node_file_path)
+        .with_context(|| format!("Failed to read {}", node_file_path.display()))?;
+    let info = read_macho_load_info(&buffer).ok_or_else(|| {
+        anyhow!(
+            "{} is not a single-architecture 64-bit Mach-O file",
+            node_file_path.display()
+        )
+    })?;
+    let expected = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).ok_or_else(|| {
+        anyhow!("Unsupported macOS minimum system version: {MACOS_MINIMUM_SYSTEM_VERSION}")
+    })?;
+    ensure!(
+        info.minimum_macos == Some(expected),
+        "{} is linked for macOS {}, expected {}.\nThe addon build sets MACOSX_DEPLOYMENT_TARGET to the oldest macOS the app supports, and the linker picks library install names for that version.\nCargo keeps earlier output for crates that do not track that variable. Delete {} and build again.",
+        node_file_path.display(),
+        info.minimum_macos
+            .map_or_else(|| "an unknown version".to_string(), format_macos_version),
+        format_macos_version(expected),
+        cargo_output_path
+            .parent()
+            .unwrap_or(cargo_output_path)
+            .display()
+    );
+    let unresolved = info
+        .dylibs
+        .iter()
+        .filter(|dylib| {
+            !MACOS_SYSTEM_LIBRARY_ROOTS
+                .iter()
+                .any(|root| dylib.starts_with(root))
+        })
+        .map(|dylib| format!("  - {dylib}"))
+        .collect::<Vec<_>>();
+    ensure!(
+        unresolved.is_empty(),
+        "{} depends on libraries that macOS cannot find when the addon is loaded:\n{}\nA shipped addon has no LC_RPATH and bundles no dylib, so every dependency must be an absolute path under /System/Library/ or /usr/lib/.",
+        node_file_path.display(),
+        unresolved.join("\n")
+    );
+    Ok(())
+}
+
+const DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS: &[&[u8]] = &[
+    b"CreateRemoteThread",
+    b"VirtualAllocEx",
+    b"VirtualFreeEx",
+    b"WriteProcessMemory",
+    b"SetWindowsHookExW",
+    b"fluxer-inject-helper.",
+];
+
+const LOAD_LIBRARY_SEARCH_SYSTEM32: u16 = 0x0800;
+
+fn read_dependent_load_flags(file_path: &Path) -> Option<u16> {
+    let buffer = fs::read(file_path).ok()?;
+    let pe = PeFile { buffer };
+    let header = pe.parse_header()?;
+    if header.load_config_directory_rva == 0 {
+        return None;
+    }
+    let offset = pe.rva_to_offset(&header.sections, header.load_config_directory_rva)?;
+    if offset + 4 > pe.buffer.len() {
+        return None;
+    }
+    let size = pe.u32(offset) as usize;
+    let flags_offset = if header.is_pe32_plus { 0x4e } else { 0x36 };
+    if size <= flags_offset + 2 || offset + flags_offset + 2 > pe.buffer.len() {
+        return None;
+    }
+    Some(pe.u16(offset + flags_offset))
+}
+
+fn assert_system32_dependent_load_flag(node_file_path: &Path, platform: &str) -> Result<()> {
+    if platform != "win32" {
+        return Ok(());
+    }
+    let flags = read_dependent_load_flags(node_file_path);
+    ensure!(
+        flags.is_some_and(|value| value & LOAD_LIBRARY_SEARCH_SYSTEM32 != 0),
+        "{} does not set LOAD_LIBRARY_SEARCH_SYSTEM32 in its load config DependentLoadFlags (read {}).\nEvery import of a shipped addon must resolve from System32 so a planted DLL cannot be loaded in its place.\nSee fluxer_desktop/native/.cargo/config.toml for the /DEPENDENTLOADFLAG:0x800 link argument that sets it.",
+        node_file_path.display(),
+        flags.map_or_else(
+            || "no load config".to_string(),
+            |value| format!("{value:#06x}")
+        )
+    );
+    Ok(())
+}
+
+fn assert_no_disabled_win_game_capture_capabilities(
+    node_file_path: &Path,
+    addon: &DesktopNativeAddon,
+    platform: &str,
+) -> Result<()> {
+    if platform != "win32" || addon.special != DesktopNativeSpecialBuild::WinGameCapture {
+        return Ok(());
+    }
+    let binary = fs::read(node_file_path)
+        .with_context(|| format!("Failed to read {}", node_file_path.display()))?;
+    let present = DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS
+        .iter()
+        .copied()
+        .filter(|marker| binary.windows(marker.len()).any(|window| window == *marker))
+        .map(|marker| String::from_utf8_lossy(marker).into_owned())
+        .collect::<Vec<_>>();
+    ensure!(
+        present.is_empty(),
+        "{} contains disabled game-capture injection capabilities:\n{}",
+        node_file_path.display(),
+        present.join("\n")
+    );
+    Ok(())
 }
 
 fn find_redistributable_runtime_imports(file_path: &Path) -> Vec<String> {
@@ -998,6 +991,8 @@ struct PeFile {
 struct PeHeader {
     sections: Vec<PeSection>,
     import_directory_rva: u32,
+    load_config_directory_rva: u32,
+    is_pe32_plus: bool,
 }
 
 #[derive(Debug)]
@@ -1073,6 +1068,11 @@ impl PeFile {
             return None;
         }
         let import_directory_rva = self.u32(import_directory_entry_offset);
+        let load_config_directory_entry_offset = data_directories_offset + 10 * 8;
+        if load_config_directory_entry_offset + 8 > self.buffer.len() {
+            return None;
+        }
+        let load_config_directory_rva = self.u32(load_config_directory_entry_offset);
         let section_table_offset = optional_header_offset + size_of_optional_header;
         let mut sections = Vec::new();
         for index in 0..number_of_sections {
@@ -1090,6 +1090,8 @@ impl PeFile {
         Some(PeHeader {
             sections,
             import_directory_rva,
+            load_config_directory_rva,
+            is_pe32_plus,
         })
     }
 
@@ -1130,54 +1132,88 @@ mod tests {
     use super::*;
 
     #[test]
-    fn addon_mapping_covers_expected_packages() {
-        let names = DESKTOP_NATIVE_ADDONS
+    fn the_desktop_build_script_builds_and_verifies_every_registered_addon() {
+        let build_script =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/scripts/build.mjs");
+        let source = fs::read_to_string(&build_script)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", build_script.display()));
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                source.contains(&format!("dirName: '{}'", addon.package_dir)),
+                "{} is registered but fluxer_desktop/scripts/build.mjs never builds it",
+                addon.package_dir
+            );
+            assert!(
+                source
+                    .matches(&format!("label: '{}'", addon.package_name))
+                    .count()
+                    >= 2,
+                "{} must appear in both the build list and the artifact verification list in fluxer_desktop/scripts/build.mjs",
+                addon.package_name
+            );
+        }
+    }
+
+    #[test]
+    fn addon_directory_names_stay_within_the_velopack_path_budget() {
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                addon.package_dir.len() <= 20,
+                "{} exceeds the 20 character addon directory budget",
+                addon.package_dir
+            );
+        }
+    }
+
+    #[test]
+    fn the_registry_covers_every_shipped_addon_package() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut shipped = Vec::new();
+        for entry in fs::read_dir(&native_root).expect("failed to read the native addon root") {
+            let entry = entry.expect("failed to read a native addon directory entry");
+            if entry.path().join("package.json").exists() {
+                shipped.push(entry.file_name().to_string_lossy().into_owned());
+            }
+        }
+        shipped.sort();
+        let mut registered = DESKTOP_NATIVE_ADDONS
             .iter()
-            .map(|addon| addon.package_dir)
+            .map(|addon| addon.package_dir.to_string())
             .collect::<Vec<_>>();
-
-        assert!(names.contains(&"linux-audio-capture"));
-        assert!(names.contains(&"webauthn"));
-        assert!(names.contains(&"win-game-capture"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
-    }
-
-    #[test]
-    fn platform_tags_match_legacy_node_helper() {
-        assert_eq!(platform_tag("linux", "x64").unwrap(), "linux-x64-gnu");
-        assert_eq!(platform_tag("darwin", "arm64").unwrap(), "darwin-arm64");
-        assert_eq!(platform_tag("win32", "x64").unwrap(), "win32-x64-msvc");
-    }
-
-    #[test]
-    fn rust_targets_match_legacy_node_helper() {
+        registered.sort();
         assert_eq!(
-            rust_target_for_platform("linux", "arm64").unwrap(),
-            "aarch64-unknown-linux-gnu"
-        );
-        assert_eq!(
-            rust_target_for_platform("darwin", "x64").unwrap(),
-            "x86_64-apple-darwin"
-        );
-        assert_eq!(
-            rust_target_for_platform("win32", "arm64").unwrap(),
-            "aarch64-pc-windows-msvc"
+            shipped, registered,
+            "every fluxer_desktop/native/* directory with a package.json must be registered in DESKTOP_NATIVE_ADDONS"
         );
     }
 
     #[test]
-    fn dynamic_library_names_match_legacy_node_helper() {
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "linux").unwrap(),
-            "libfluxer_webauthn.so"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer-webauthn", "darwin").unwrap(),
-            "libfluxer_webauthn.dylib"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "win32").unwrap(),
-            "fluxer_webauthn.dll"
+    fn every_addon_ships_a_byte_identical_loader_diagnostics_copy() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut canonical: Option<(String, Vec<u8>)> = None;
+        let mut checked = 0;
+        for addon in DESKTOP_NATIVE_ADDONS {
+            let path = native_root
+                .join(addon.package_dir)
+                .join("loader-diagnostics.cjs");
+            if !path.exists() {
+                continue;
+            }
+            let contents = fs::read(&path)
+                .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            match &canonical {
+                None => canonical = Some((addon.package_dir.to_string(), contents)),
+                Some((first_dir, first_contents)) => assert!(
+                    first_contents == &contents,
+                    "{} ships a loader-diagnostics.cjs that differs from {first_dir}",
+                    addon.package_dir
+                ),
+            }
+            checked += 1;
+        }
+        assert!(
+            checked >= DESKTOP_NATIVE_ADDONS.len() - 1,
+            "expected every addon but hardware-encoder to ship loader-diagnostics.cjs, checked {checked}"
         );
     }
 
@@ -1191,31 +1227,173 @@ mod tests {
         assert!(!is_redistributable_runtime_import("vcruntime.dll"));
     }
 
-    #[test]
-    fn linux_library_bundling_denylist_matches_legacy_prefixes() {
-        assert!(!should_bundle_linux_library("libc.so.6"));
-        assert!(!should_bundle_linux_library("ld-linux-x86-64.so.2"));
-        assert!(should_bundle_linux_library("libfido2.so.1"));
+    fn synthetic_pe(pe32_plus: bool, dependent_load_flags: u16) -> Vec<u8> {
+        let opt_size: usize = if pe32_plus { 240 } else { 224 };
+        let load_config_size: usize = if pe32_plus { 0x140 } else { 0xc0 };
+        let flags_offset: usize = if pe32_plus { 0x4e } else { 0x36 };
+        let pe_offset: usize = 0x80;
+        let opt_offset = pe_offset + 4 + 20;
+        let section_offset = opt_offset + opt_size;
+        let raw_pointer = section_offset + 40;
+        let virtual_address: u32 = 0x1000;
+
+        let mut buffer = vec![0u8; raw_pointer + load_config_size];
+        buffer[0..2].copy_from_slice(b"MZ");
+        buffer[0x3c..0x40].copy_from_slice(&(pe_offset as u32).to_le_bytes());
+        buffer[pe_offset..pe_offset + 4].copy_from_slice(&0x4550u32.to_le_bytes());
+        buffer[pe_offset + 6..pe_offset + 8].copy_from_slice(&1u16.to_le_bytes());
+        buffer[pe_offset + 20..pe_offset + 22].copy_from_slice(&(opt_size as u16).to_le_bytes());
+        let magic: u16 = if pe32_plus { 0x20b } else { 0x10b };
+        buffer[opt_offset..opt_offset + 2].copy_from_slice(&magic.to_le_bytes());
+
+        let data_dirs = opt_offset + if pe32_plus { 112 } else { 96 };
+        let load_config_entry = data_dirs + 10 * 8;
+        buffer[load_config_entry..load_config_entry + 4]
+            .copy_from_slice(&virtual_address.to_le_bytes());
+        buffer[load_config_entry + 4..load_config_entry + 8]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+
+        buffer[section_offset + 8..section_offset + 12]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        buffer[section_offset + 12..section_offset + 16]
+            .copy_from_slice(&virtual_address.to_le_bytes());
+        buffer[section_offset + 16..section_offset + 20]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        buffer[section_offset + 20..section_offset + 24]
+            .copy_from_slice(&(raw_pointer as u32).to_le_bytes());
+
+        buffer[raw_pointer..raw_pointer + 4]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        let flags_at = raw_pointer + flags_offset;
+        buffer[flags_at..flags_at + 2].copy_from_slice(&dependent_load_flags.to_le_bytes());
+        buffer
     }
 
     #[test]
-    fn vulkan_layer_manifest_matches_legacy_json_shape() {
-        assert_eq!(
-            vulkan_layer_manifest("fluxer-vulkan-layer.win32-x64-msvc.dll"),
-            "{\n\
-\t\"file_format_version\": \"1.2.0\",\n\
-\t\"layer\": {\n\
-\t\t\"name\": \"VK_LAYER_FLUXER_game_capture\",\n\
-\t\t\"type\": \"GLOBAL\",\n\
-\t\t\"library_path\": \".\\\\\\\\fluxer-vulkan-layer.win32-x64-msvc.dll\",\n\
-\t\t\"api_version\": \"1.0.0\",\n\
-\t\t\"implementation_version\": \"1\",\n\
-\t\t\"description\": \"Fluxer Vulkan game capture layer\",\n\
-\t\t\"disable_environment\": {\n\
-\t\t\t\"DISABLE_FLUXER_VULKAN_CAPTURE\": \"\"\n\
-\t\t}\n\
-\t}\n\
-}\n"
-        );
+    fn dependent_load_flags_are_read_from_both_pe_widths() {
+        for pe32_plus in [false, true] {
+            let dir = tempfile::tempdir().expect("tempdir");
+            let set = dir.path().join("set.bin");
+            let unset = dir.path().join("unset.bin");
+            fs::write(&set, synthetic_pe(pe32_plus, LOAD_LIBRARY_SEARCH_SYSTEM32)).expect("write");
+            fs::write(&unset, synthetic_pe(pe32_plus, 0)).expect("write");
+
+            assert_eq!(
+                read_dependent_load_flags(&set),
+                Some(LOAD_LIBRARY_SEARCH_SYSTEM32),
+                "pe32_plus={pe32_plus}"
+            );
+            assert_eq!(
+                read_dependent_load_flags(&unset),
+                Some(0),
+                "pe32_plus={pe32_plus}"
+            );
+            assert!(assert_system32_dependent_load_flag(&set, "win32").is_ok());
+            assert!(assert_system32_dependent_load_flag(&unset, "win32").is_err());
+            assert!(assert_system32_dependent_load_flag(&unset, "linux").is_ok());
+        }
+    }
+
+    fn synthetic_macho(version_command: u32, minimum_macos: u32, dylibs: &[&str]) -> Vec<u8> {
+        let words = |values: &[u32]| {
+            values
+                .iter()
+                .flat_map(|value| value.to_le_bytes())
+                .collect::<Vec<u8>>()
+        };
+        let mut commands = vec![if version_command == MACHO_LC_BUILD_VERSION {
+            words(&[
+                version_command,
+                24,
+                MACHO_PLATFORM_MACOS,
+                minimum_macos,
+                0,
+                0,
+            ])
+        } else {
+            words(&[version_command, 16, minimum_macos, 0])
+        }];
+        for dylib in dylibs {
+            let size = (24 + dylib.len() + 1).next_multiple_of(8);
+            let mut command = words(&[MACHO_LC_LOAD_DYLIB, size as u32, 24, 2, 0, 0]);
+            command.extend_from_slice(dylib.as_bytes());
+            command.resize(size, 0);
+            commands.push(command);
+        }
+        let body = commands.concat();
+        let mut buffer = words(&[
+            MACHO_MAGIC_64,
+            0,
+            0,
+            6,
+            commands.len() as u32,
+            body.len() as u32,
+            0,
+            0,
+        ]);
+        buffer.extend(body);
+        buffer
+    }
+
+    #[test]
+    fn macos_addons_must_target_the_app_minimum_and_link_only_system_libraries() {
+        let minimum = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).expect("minimum");
+        let sierra = pack_macos_version("10.12").expect("sierra");
+        let core_media = "/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia";
+        let swift_overlay = "@rpath/libswiftCoreMedia.dylib";
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cargo_output = dir.path().join("release/libaddon.dylib");
+        let check = |bytes: Vec<u8>, platform: &str| {
+            let path = dir.path().join("addon.node");
+            fs::write(&path, bytes).expect("write");
+            assert_macos_addon_loads_on_minimum_system(&path, &cargo_output, platform)
+                .map_err(|error| error.to_string())
+        };
+
+        assert_eq!(pack_macos_version("10.14.4"), Some(0x000a_0e04));
+        for version_command in [MACHO_LC_BUILD_VERSION, MACHO_LC_VERSION_MIN_MACOSX] {
+            assert_eq!(
+                read_macho_load_info(&synthetic_macho(
+                    version_command,
+                    sierra,
+                    &[swift_overlay, "/usr/lib/libSystem.B.dylib"]
+                )),
+                Some(MachOLoadInfo {
+                    minimum_macos: Some(sierra),
+                    dylibs: vec![
+                        swift_overlay.to_string(),
+                        "/usr/lib/libSystem.B.dylib".to_string()
+                    ],
+                }),
+                "version_command={version_command:#x}"
+            );
+            assert_eq!(
+                check(
+                    synthetic_macho(
+                        version_command,
+                        minimum,
+                        &[core_media, "/usr/lib/libSystem.B.dylib"]
+                    ),
+                    "darwin"
+                ),
+                Ok(())
+            );
+            let rewritten = check(
+                synthetic_macho(version_command, minimum, &[core_media, swift_overlay]),
+                "darwin",
+            )
+            .expect_err("an @rpath dependency must fail the build");
+            assert!(rewritten.contains("  - @rpath/libswiftCoreMedia.dylib"));
+            assert!(!rewritten.contains("  - /System/Library/"));
+            let older = check(
+                synthetic_macho(version_command, sierra, &[core_media]),
+                "darwin",
+            )
+            .expect_err("an addon linked for an older macOS must fail the build");
+            assert!(older.contains("is linked for macOS 10.12.0"));
+            assert!(older.contains(&dir.path().join("release").display().to_string()));
+        }
+        assert!(check(vec![0; 64], "darwin").is_err());
+        assert_eq!(check(vec![0; 64], "linux"), Ok(()));
     }
 }

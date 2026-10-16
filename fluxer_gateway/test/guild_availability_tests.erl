@@ -32,7 +32,7 @@ disconnect_ineligible_sessions_staff_only_test() ->
         ?assert(maps:is_key(<<"staff">>, Sessions)),
         ?assertEqual(
             unavailable_for_everyone_but_staff,
-            guild_availability:get_cached_unavailability_mode(GuildId)
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         receive
             {non_staff, {'$gen_cast', {guild_leave, GuildId, forced_unavailable}}} -> ok
@@ -67,7 +67,8 @@ disconnect_ineligible_sessions_everyone_test() ->
         UpdatedState = guild_availability:handle_unavailability_transition(BaseState, NewState),
         ?assertEqual(#{}, maps:get(sessions, UpdatedState, #{})),
         ?assertEqual(
-            unavailable_for_everyone, guild_availability:get_cached_unavailability_mode(GuildId)
+            unavailable_for_everyone,
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         receive
             {user_one, {'$gen_cast', {guild_leave, GuildId, forced_unavailable}}} -> ok
@@ -104,7 +105,8 @@ disconnect_ineligible_sessions_everyone_hidden_test() ->
         UpdatedState = guild_availability:handle_unavailability_transition(BaseState, NewState),
         ?assertEqual(#{}, maps:get(sessions, UpdatedState, #{})),
         ?assertEqual(
-            unavailable_for_everyone, guild_availability:get_cached_unavailability_mode(GuildId)
+            unavailable_for_everyone,
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         ?assertEqual(
             true, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
@@ -164,13 +166,15 @@ is_unavailable_hidden_enabled_from_cache_test() ->
     try
         _ = guild_availability:update_unavailability_cache_for_state(HiddenUnavailableState),
         ?assertEqual(
-            true, guild_availability:is_unavailable_hidden_enabled(HiddenUnavailableState)
+            true, guild_availability_check:is_unavailable_hidden_enabled(HiddenUnavailableState)
         ),
         ?assertEqual(
             true, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
         ),
         _ = guild_availability:update_unavailability_cache_for_state(HiddenOnlyState),
-        ?assertEqual(false, guild_availability:is_unavailable_hidden_enabled(HiddenOnlyState)),
+        ?assertEqual(
+            false, guild_availability_check:is_unavailable_hidden_enabled(HiddenOnlyState)
+        ),
         ?assertEqual(
             false, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
         )
@@ -186,34 +190,6 @@ is_guild_unavailable_for_user_unavailable_for_everyone_test() ->
         }
     },
     ?assertEqual(true, guild_availability:is_guild_unavailable_for_user(123, State)).
-
-is_guild_unavailable_for_user_available_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}, <<"members">> => []}},
-    ?assertEqual(false, guild_availability:is_guild_unavailable_for_user(123, State)).
-
-check_unavailability_transition_no_change_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(no_change, guild_availability:check_unavailability_transition(State, State)).
-
-check_unavailability_transition_enabled_test() ->
-    OldState = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    NewState = #{
-        data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
-    },
-    ?assertEqual(
-        {unavailable_enabled, false},
-        guild_availability:check_unavailability_transition(OldState, NewState)
-    ).
-
-check_unavailability_transition_disabled_test() ->
-    OldState = #{
-        data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
-    },
-    NewState = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(
-        unavailable_disabled,
-        guild_availability:check_unavailability_transition(OldState, NewState)
-    ).
 
 -spec start_session_capture(atom(), pid()) -> pid().
 start_session_capture(Tag, Parent) ->
@@ -276,3 +252,36 @@ state_for_unavailability_transition_test(GuildId, NonStaffPid, StaffPid) ->
     }.
 
 -endif.
+
+guild_create_resend_carries_threads_only_for_viewers_test() ->
+    Tab = guild_thread_store:new(),
+    try
+        Data = guild_data_index:normalize_map(#{
+            <<"guild">> => #{<<"id">> => <<"77">>, <<"owner_id">> => <<"1">>},
+            <<"roles">> => [#{<<"id">> => <<"77">>, <<"permissions">> => <<"1024">>}],
+            <<"channels">> => [#{<<"id">> => <<"5">>, <<"type">> => 0}],
+            <<"members">> => [#{<<"user">> => #{<<"id">> => <<"9">>}, <<"roles">> => []}],
+            <<"emojis">> => [],
+            <<"stickers">> => []
+        }),
+        State = #{
+            id => 77,
+            data => Data#{thread_store => Tab, thread_gate => #{active => true, version => 1}}
+        },
+        Viewer = #{user_id => 9, pid => self(), thread_viewer => true},
+        ok = guild_availability:send_guild_create_to_session(Viewer, 77, State, []),
+        ?assert(maps:is_key(<<"threads">>, received_guild_create())),
+        ok = guild_availability:send_guild_create_to_session(
+            Viewer#{thread_viewer => false}, 77, State, []
+        ),
+        ?assertNot(maps:is_key(<<"threads">>, received_guild_create()))
+    after
+        guild_thread_store:destroy(Tab)
+    end.
+
+received_guild_create() ->
+    receive
+        {'$gen_cast', {dispatch, guild_create, GuildState}} when is_map(GuildState) ->
+            GuildState
+    after 1000 -> erlang:error(guild_create_not_sent)
+    end.

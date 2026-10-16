@@ -45,10 +45,6 @@ pub fn table_cell(muted: bool, content: Markup) -> Markup {
     html! { td class=(table_cell_class(muted)) { (content) } }
 }
 
-pub fn table_cell_span(muted: bool, col_span: u32, content: Markup) -> Markup {
-    html! { td class=(table_cell_class(muted)) colspan=(col_span) { (content) } }
-}
-
 fn table_cell_class(muted: bool) -> &'static str {
     if muted {
         "px-3 py-3 text-sm sm:px-6 sm:py-4 text-neutral-600"

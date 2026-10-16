@@ -2,6 +2,7 @@
 
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import mediaStyles from '@app/features/channel/components/embeds/media/MediaContainer.module.css';
+import {shouldShowOverlays} from '@app/features/channel/components/embeds/media/MediaOverlayFit';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
 	DELETE_ATTACHMENT_DESCRIPTOR,
@@ -28,13 +29,6 @@ const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 	message: 'Download media',
 	comment: 'Button or menu action label in the channel and chat media container. Keep it concise.',
 });
-const MIN_SIZE_FOR_OVERLAYS = 120;
-export const shouldShowOverlays = (renderedWidth?: number, renderedHeight?: number): boolean => {
-	if (renderedWidth === undefined || renderedHeight === undefined) {
-		return true;
-	}
-	return renderedWidth >= MIN_SIZE_FOR_OVERLAYS && renderedHeight >= MIN_SIZE_FOR_OVERLAYS;
-};
 
 type LongPressEvent = React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>;
 
@@ -96,10 +90,7 @@ export const MediaContainer = observer(
 				e.stopPropagation();
 				onDeleteClick?.(e);
 			};
-			const isMediaTooSmall =
-				renderedWidth !== undefined &&
-				renderedHeight !== undefined &&
-				(renderedWidth < MIN_SIZE_FOR_OVERLAYS || renderedHeight < MIN_SIZE_FOR_OVERLAYS);
+			const isMediaTooSmall = !shouldShowOverlays(renderedWidth, renderedHeight);
 			const shouldShowFavorite = showFavoriteButton && (forceShowFavoriteButton || !isMediaTooSmall);
 			const shouldShowDownload = showDownloadButton && !isMediaTooSmall;
 			const shouldShowDelete = showDeleteButton && !isMediaTooSmall;

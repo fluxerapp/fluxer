@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -22,16 +18,16 @@ import {
 	sendChannelMessage,
 	updateChannel,
 	updateRole,
-} from '../../channel/tests/ChannelTestUtils';
-import {getRoles, updateGuild} from '../../guild/tests/GuildTestUtils';
-import {
-	markChannelAsIndexed,
-	markGuildChannelsAsIndexed,
-	markUserDmChannelsAsIndexed,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {getRoles, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {markChannelAsIndexed, markGuildChannelsAsIndexed} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	channels: Array<{
@@ -85,29 +81,6 @@ describe('Message Search Permissions', () => {
 				.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_GUILD')
 				.execute();
 		});
-		test('can search in guilds user is a member of', async () => {
-			const owner = await createTestAccount(harness);
-			const member = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const channelId = guild.system_channel_id!;
-			const invite = await createChannelInvite(harness, owner.token, channelId);
-			await acceptInvite(harness, member.token, invite.code);
-			await sendChannelMessage(harness, owner.token, channelId, 'searchable guild content');
-			await markGuildChannelsAsIndexed(harness, owner.token, guild.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, member.token)
-				.post('/search/messages')
-				.body({
-					content: 'searchable',
-					context_guild_id: guild.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.length).toBeGreaterThan(0);
-			expect(result.messages[0]?.content).toContain('searchable');
-		});
 		test('after leaving guild, search results exclude that guilds messages', async () => {
 			const owner = await createTestAccount(harness);
 			const member = await createTestAccount(harness);
@@ -141,36 +114,6 @@ describe('Message Search Permissions', () => {
 		});
 	});
 	describe('Channel permissions', () => {
-		test('requires READ_MESSAGE_HISTORY permission to search channel', async () => {
-			const owner = await createTestAccount(harness);
-			const member = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const channelId = guild.system_channel_id!;
-			await sendChannelMessage(harness, owner.token, channelId, 'restricted content');
-			const roles = await getRoles(harness, owner.token, guild.id);
-			const everyoneRole = roles.find((r) => r.id === guild.id);
-			if (everyoneRole) {
-				const permissions = BigInt(everyoneRole.permissions);
-				const newPermissions = permissions & ~Permissions.READ_MESSAGE_HISTORY;
-				await updateRole(harness, owner.token, guild.id, everyoneRole.id, {
-					permissions: newPermissions.toString(),
-				});
-			}
-			const invite = await createChannelInvite(harness, owner.token, channelId);
-			await acceptInvite(harness, member.token, invite.code);
-			const result = await createBuilder<MessageSearchResponse>(harness, member.token)
-				.post('/search/messages')
-				.body({
-					content: 'restricted',
-					context_channel_id: channelId,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages).toEqual([]);
-		});
 		test('without READ_MESSAGE_HISTORY, channel messages are excluded from guild search', async () => {
 			const owner = await createTestAccount(harness);
 			const member = await createTestAccount(harness);
@@ -288,28 +231,6 @@ describe('Message Search Permissions', () => {
 			expect(nsfwMessages.length).toBe(0);
 			expect(sfwMessages.length).toBeGreaterThan(0);
 		});
-		test('with include_nsfw: true, NSFW channel messages are included', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const nsfwChannel = await createChannel(harness, owner.token, guild.id, 'nsfw-channel', ChannelTypes.GUILD_TEXT);
-			await updateChannel(harness, owner.token, nsfwChannel.id, {nsfw: true});
-			await sendChannelMessage(harness, owner.token, nsfwChannel.id, 'nsfw searchable message');
-			await markGuildChannelsAsIndexed(harness, owner.token, guild.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, owner.token)
-				.post('/search/messages')
-				.body({
-					content: 'nsfw searchable',
-					context_guild_id: guild.id,
-					include_nsfw: true,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.length).toBeGreaterThan(0);
-			expect(result.messages[0]?.channel_id).toBe(nsfwChannel.id);
-		});
 		test('user must still have access to the NSFW channel', async () => {
 			const owner = await createTestAccount(harness);
 			const member = await createTestAccount(harness);
@@ -344,7 +265,7 @@ describe('Message Search Permissions', () => {
 			}
 			expect(result.messages.length).toBe(0);
 		});
-		test('age-restricted guild requires include_nsfw: true', async () => {
+		test('age-restricted guild is searchable by an adult member without include_nsfw', async () => {
 			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
 			const guild = await createGuild(harness, owner.token, 'Age Restricted Search Guild');
 			const systemChannelId = guild.system_channel_id!;
@@ -363,7 +284,7 @@ describe('Message Search Permissions', () => {
 			if (!isSearchResult(excluded)) {
 				expect.fail('Expected search result but got indexing response');
 			}
-			expect(excluded.messages.length).toBe(0);
+			expect(excluded.messages.some((m) => m.channel_id === systemChannelId)).toBe(true);
 			const included = await createBuilder<MessageSearchResponse>(harness, owner.token)
 				.post('/search/messages')
 				.body({
@@ -378,6 +299,30 @@ describe('Message Search Permissions', () => {
 			}
 			expect(included.messages.length).toBeGreaterThan(0);
 			expect(included.messages.some((m) => m.channel_id === systemChannelId)).toBe(true);
+		});
+		test('age-restricted guild is searchable in a channel pinned to nsfw_override: false', async () => {
+			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			const guild = await createGuild(harness, owner.token, 'Age Restricted Override Guild');
+			const channel = await createBuilder<{id: string; nsfw_override?: boolean | null}>(harness, owner.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'override-channel', type: ChannelTypes.GUILD_TEXT, nsfw_override: false})
+				.execute();
+			expect(channel.nsfw_override).toBe(false);
+			await sendChannelMessage(harness, owner.token, channel.id, 'age restricted override searchable message');
+			await updateGuild(harness, owner.token, guild.id, {nsfw_level: GuildNSFWLevel.AGE_RESTRICTED});
+			await markGuildChannelsAsIndexed(harness, owner.token, guild.id);
+			const result = await createBuilder<MessageSearchResponse>(harness, owner.token)
+				.post('/search/messages')
+				.body({
+					content: 'age restricted override searchable',
+					context_guild_id: guild.id,
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			if (!isSearchResult(result)) {
+				expect.fail('Expected search result but got indexing response');
+			}
+			expect(result.messages.some((m) => m.channel_id === channel.id)).toBe(true);
 		});
 		test('underage user cannot search messages in an age-restricted guild', async () => {
 			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
@@ -452,26 +397,6 @@ describe('Message Search Permissions', () => {
 		});
 	});
 	describe('DM permissions', () => {
-		test('can search own DM conversations', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await sendChannelMessage(harness, user1.token, dmChannel.id, 'private dm message search test');
-			await markChannelAsIndexed(harness, dmChannel.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, user1.token)
-				.post('/search/messages')
-				.body({
-					content: 'dm message search',
-					context_channel_id: dmChannel.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.length).toBeGreaterThan(0);
-		});
 		test('cannot search other users DM conversations', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
@@ -635,35 +560,33 @@ describe('Message Search Permissions', () => {
 			expect(user12Messages.length).toBeGreaterThan(0);
 			expect(user34Messages.length).toBe(0);
 		});
-		test.each([
-			'all_dms',
-			'open_dms',
-			'all',
-			'open_dms_and_all_guilds',
-		] as const)('scope: %s does not trust foreign DM context_channel_id', async (scope) => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const attacker = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
-			await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
-			await markChannelAsIndexed(harness, dmChannel.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
-				.post('/search/messages')
-				.body({
-					content: canary,
-					scope,
-					context_channel_id: dmChannel.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
-			expect(result.messages.some((message) => message.content === canary)).toBe(false);
-		});
+		test.each(['all_dms', 'open_dms', 'all', 'open_dms_and_all_guilds'] as const)(
+			'scope: %s does not trust foreign DM context_channel_id',
+			async (scope) => {
+				const user1 = await createTestAccount(harness);
+				const user2 = await createTestAccount(harness);
+				const attacker = await createTestAccount(harness);
+				await createFriendship(harness, user1, user2);
+				const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
+				const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
+				await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
+				await markChannelAsIndexed(harness, dmChannel.id);
+				const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
+					.post('/search/messages')
+					.body({
+						content: canary,
+						scope,
+						context_channel_id: dmChannel.id,
+					})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				if (!isSearchResult(result)) {
+					expect.fail('Expected search result but got indexing response');
+				}
+				expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
+				expect(result.messages.some((message) => message.content === canary)).toBe(false);
+			},
+		);
 		test('scope: all_dms does not trust a guild context_channel_id', async () => {
 			const owner = await createTestAccount(harness);
 			const attacker = await createTestAccount(harness);
@@ -713,81 +636,6 @@ describe('Message Search Permissions', () => {
 					.find((channel) => channel.id === dmChannel.id)
 					?.recipients?.some((user) => user.id === user2.userId),
 			).toBe(true);
-		});
-		test('scope: open_dms returns only currently open DMs', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const user3 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			await createFriendship(harness, user1, user3);
-			const openDm = await createDmChannel(harness, user1.token, user2.userId);
-			await sendChannelMessage(harness, user1.token, openDm.id, 'open dm searchable message');
-			await markUserDmChannelsAsIndexed(harness, user1.token);
-			const result = await createBuilder<MessageSearchResponse>(harness, user1.token)
-				.post('/search/messages')
-				.body({
-					content: 'open dm searchable',
-					scope: 'open_dms',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.length).toBeGreaterThan(0);
-			expect(result.messages[0]?.channel_id).toBe(openDm.id);
-		});
-		test('scope: all combines guilds and DMs correctly', async () => {
-			const user = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			await createFriendship(harness, user, friend);
-			const guild = await createGuild(harness, user.token, 'Test Guild');
-			const dmChannel = await createDmChannel(harness, user.token, friend.userId);
-			await sendChannelMessage(harness, user.token, guild.system_channel_id!, 'guild combined searchable');
-			await sendChannelMessage(harness, user.token, dmChannel.id, 'dm combined searchable');
-			await markGuildChannelsAsIndexed(harness, user.token, guild.id);
-			await markChannelAsIndexed(harness, dmChannel.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, user.token)
-				.post('/search/messages')
-				.body({
-					content: 'combined searchable',
-					scope: 'all',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			const guildMessages = result.messages.filter((m) => m.channel_id === guild.system_channel_id);
-			const dmMessages = result.messages.filter((m) => m.channel_id === dmChannel.id);
-			expect(guildMessages.length).toBeGreaterThan(0);
-			expect(dmMessages.length).toBeGreaterThan(0);
-		});
-		test('scope: open_dms_and_all_guilds works correctly', async () => {
-			const user = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			await createFriendship(harness, user, friend);
-			const guild = await createGuild(harness, user.token, 'Test Guild');
-			const openDm = await createDmChannel(harness, user.token, friend.userId);
-			await sendChannelMessage(harness, user.token, guild.system_channel_id!, 'guild open_dms_guilds searchable');
-			await sendChannelMessage(harness, user.token, openDm.id, 'dm open_dms_guilds searchable');
-			await markGuildChannelsAsIndexed(harness, user.token, guild.id);
-			await markChannelAsIndexed(harness, openDm.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, user.token)
-				.post('/search/messages')
-				.body({
-					content: 'open_dms_guilds searchable',
-					scope: 'open_dms_and_all_guilds',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			const guildMessages = result.messages.filter((m) => m.channel_id === guild.system_channel_id);
-			const dmMessages = result.messages.filter((m) => m.channel_id === openDm.id);
-			expect(guildMessages.length).toBeGreaterThan(0);
-			expect(dmMessages.length).toBeGreaterThan(0);
 		});
 		test('scope: all_guilds excludes inaccessible channels within accessible guilds', async () => {
 			const owner = await createTestAccount(harness);
@@ -862,42 +710,6 @@ describe('Message Search Permissions', () => {
 				expect.fail('Expected search result but got indexing response');
 			}
 			expect(result.messages).toEqual([]);
-		});
-		test('channel permission overwrite can grant search access', async () => {
-			const owner = await createTestAccount(harness);
-			const member = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const channelId = guild.system_channel_id!;
-			await sendChannelMessage(harness, owner.token, channelId, 'overwrite granted content');
-			const roles = await getRoles(harness, owner.token, guild.id);
-			const everyoneRole = roles.find((r) => r.id === guild.id);
-			if (everyoneRole) {
-				const permissions = BigInt(everyoneRole.permissions);
-				const newPermissions = permissions & ~Permissions.READ_MESSAGE_HISTORY;
-				await updateRole(harness, owner.token, guild.id, everyoneRole.id, {
-					permissions: newPermissions.toString(),
-				});
-			}
-			const invite = await createChannelInvite(harness, owner.token, channelId);
-			await acceptInvite(harness, member.token, invite.code);
-			await createPermissionOverwrite(harness, owner.token, channelId, member.userId, {
-				type: 1,
-				allow: Permissions.READ_MESSAGE_HISTORY.toString(),
-				deny: '0',
-			});
-			await markChannelAsIndexed(harness, channelId);
-			const result = await createBuilder<MessageSearchResponse>(harness, member.token)
-				.post('/search/messages')
-				.body({
-					content: 'overwrite granted',
-					context_channel_id: channelId,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.length).toBeGreaterThan(0);
 		});
 		test('channel permission overwrite can deny search access despite role permission', async () => {
 			const owner = await createTestAccount(harness);

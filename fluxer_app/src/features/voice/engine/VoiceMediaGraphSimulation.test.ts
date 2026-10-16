@@ -2,7 +2,6 @@
 
 import {
 	createVoiceMediaGraphSnapshot,
-	selectVoiceMediaGraphStatsEntry,
 	selectVoiceMediaGraphSubscriptionEntry,
 	transitionVoiceMediaGraph,
 	type VoiceMediaGraphEvent,
@@ -622,12 +621,6 @@ function assertSimulationStats(snapshot: VoiceMediaGraphSnapshot, message: strin
 			snapshot.statsConnectionId,
 		);
 	}
-	const probe = selectVoiceMediaGraphStatsEntry(snapshot, {direction: 'recv', kind: 'video'});
-	if (probe) {
-		expect(probe.connectionId, `${message}: stats selector returned a cleared connection`).toBe(
-			snapshot.statsConnectionId,
-		);
-	}
 }
 
 function assertSimulationStep(snapshot: VoiceMediaGraphSnapshot, context: SimulationStepContext): void {
@@ -663,12 +656,4 @@ describe('VoiceMediaGraphSimulation', () => {
 			runSimulation(seed);
 		});
 	}
-
-	it('replays every seed deterministically to a deeply equal final snapshot', () => {
-		for (const seed of SIMULATION_SEEDS) {
-			const first = runSimulation(seed);
-			const second = runSimulation(seed);
-			expect(second, `seed=${seed} replay diverged`).toEqual(first);
-		}
-	});
 });

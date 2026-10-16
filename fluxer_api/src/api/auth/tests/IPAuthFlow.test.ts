@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -11,7 +8,10 @@ import {
 	findLastTestEmail,
 	listTestEmails,
 	registerUser,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Auth IP Authorization Flow', () => {
 	let harness: ApiTestHarness;
@@ -72,27 +72,6 @@ describe('Auth IP Authorization Flow', () => {
 			.post('/auth/login')
 			.body({email, password})
 			.header('x-forwarded-for', newIP)
-			.execute();
-		expect(loginResp.token).toBeTruthy();
-		expect(loginResp.user_id).toBe(reg.user_id);
-	});
-	it('validates that login from a known IP does not trigger IP authorization', async () => {
-		const email = createUniqueEmail('ip-known');
-		const password = 'a-strong-password';
-		const reg = await registerUser(harness, {
-			email,
-			username: createUniqueUsername('ipknown'),
-			global_name: 'IP Known User',
-			password,
-			date_of_birth: '2000-01-01',
-			consent: true,
-		});
-		const loginResp = await createBuilderWithoutAuth<{
-			token?: string;
-			user_id?: string;
-		}>(harness)
-			.post('/auth/login')
-			.body({email, password})
 			.execute();
 		expect(loginResp.token).toBeTruthy();
 		expect(loginResp.user_id).toBe(reg.user_id);

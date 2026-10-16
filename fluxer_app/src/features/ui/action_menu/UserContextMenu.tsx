@@ -1,33 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
-import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
+import {showCloseDMConfirmation} from '@app/features/channel/components/alerts/CloseDMConfirmation';
 import {ChangeGroupDMNicknameModal} from '@app/features/channel/components/modals/ChangeGroupDMNicknameModal';
 import Channels from '@app/features/channel/state/Channels';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
-import {DM_CLOSED_DESCRIPTOR, TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
+import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	ChangeNicknameIcon,
 	CloseDMIcon,
+	PopOutIcon,
 	RemoveFromGroupIcon,
 	TransferOwnershipIcon,
+	ViewDetailsIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import {RingUserMenuItem, StartVoiceCallMenuItem} from '@app/features/ui/action_menu/items/CallMenuItems';
-import {FavoriteChannelMenuItem} from '@app/features/ui/action_menu/items/ChannelMenuItems';
+import {
+	CopyChannelIdMenuItem,
+	FavoriteChannelMenuItem,
+	MarkChannelAsReadMenuItem,
+} from '@app/features/ui/action_menu/items/ChannelMenuItems';
 import {CopyUserIdMenuItem} from '@app/features/ui/action_menu/items/CopyMenuItems';
 import {DebugUserMenuItem} from '@app/features/ui/action_menu/items/DebugMenuItems';
-import {MarkDMAsReadMenuItem} from '@app/features/ui/action_menu/items/DMMenuItems';
+import {MuteDMMenuItem} from '@app/features/ui/action_menu/items/DMMenuItems';
 import {InviteToCommunityMenuItem} from '@app/features/ui/action_menu/items/InviteMenuItems';
 import {MentionUserMenuItem} from '@app/features/ui/action_menu/items/MentionUserMenuItem';
 import {MessageUserMenuItem} from '@app/features/ui/action_menu/items/MessageUserMenuItem';
@@ -38,7 +41,6 @@ import {
 	UnblockUserMenuItem,
 } from '@app/features/ui/action_menu/items/RelationshipMenuItems';
 import {ReportMessageMenuItem} from '@app/features/ui/action_menu/items/ReportMessageMenuItem';
-import {ReportUserMenuItem} from '@app/features/ui/action_menu/items/ReportUserMenuItem';
 import {shouldShowSpammerOverrideMenuItems} from '@app/features/ui/action_menu/items/SpammerOverrideMenuItems';
 import {StaffDeveloperUserControlsMenuItem} from '@app/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem';
 import {shouldShowStaffUserControlsMenuItems} from '@app/features/ui/action_menu/items/StaffUserControlsMenuItems';
@@ -48,19 +50,33 @@ import {
 	EntranceSoundListenerSubmenu,
 	LocalMuteParticipantMenuItem,
 	ParticipantVolumeSlider,
+	SelfDeafenMenuItem,
+	SelfMuteMenuItem,
 } from '@app/features/ui/action_menu/items/VoiceParticipantMenuItems';
+import {
+	POP_OUT_CAMERA_DESCRIPTOR,
+	POP_OUT_USER_DESCRIPTOR,
+	PREVIEW_CAMERA_DESCRIPTOR,
+	SHOW_NON_VIDEO_PARTICIPANTS_DESCRIPTOR,
+} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
+import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
+import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import CallState from '@app/features/voice/state/CallState';
+import PopoutWindowManager, {isVoicePopoutSupported} from '@app/features/voice/state/PopoutWindowManager';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {hasActiveDirectCallWithUser, isActiveCallParticipant} from '@app/features/voice/utils/PrivateCallMenuUtils';
-import {ME} from '@fluxer/constants/src/AppConstants';
+import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -89,10 +105,6 @@ const ARE_YOU_SURE_YOU_WANT_TO_TRANSFER_OWNERSHIP_DESCRIPTOR = msg({
 	message: 'Transfer group ownership to {userName}?',
 	comment: 'Confirm dialog body before transferring ownership of a group DM.',
 });
-const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
-	message: 'Close your DM with {displayName}? You can reopen it anytime.',
-	comment: 'Confirm dialog body before closing a DM channel.',
-});
 const CHANGE_GROUP_NICKNAME_DESCRIPTOR = msg({
 	message: 'Change group nickname',
 	comment: 'Group DM action that opens the change-nickname modal for the selected user.',
@@ -101,7 +113,12 @@ const MAKE_GROUP_OWNER_DESCRIPTOR = msg({
 	message: 'Make group owner',
 	comment: 'Group DM action that transfers ownership of the group to the selected member.',
 });
-const logger = new Logger('UserContextMenu');
+interface PrivateCallMenuContext {
+	connectionId?: string;
+	isConnected: boolean;
+	participantName: string;
+	visualSource: 'camera' | 'user';
+}
 
 interface UserContextMenuProps {
 	user: User;
@@ -109,11 +126,12 @@ interface UserContextMenuProps {
 	guildId?: string;
 	channelId?: string;
 	isCallContext?: boolean;
+	privateCallContext?: PrivateCallMenuContext;
 	message?: Message;
 }
 
 export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
-	({user, onClose, guildId, channelId, isCallContext = false, message}) => {
+	({user, onClose, guildId, channelId, isCallContext = false, privateCallContext, message}) => {
 		const {i18n} = useLingui();
 		const channel = channelId ? Channels.getChannel(channelId) : null;
 		const canSendMessages = channel
@@ -148,6 +166,95 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 		const showPrivateCallParticipantItems =
 			!isCurrentUser && !restrictUserActions && isActiveCallParticipant(channel, user.id);
 		const showStartVoiceCall = !isCurrentUser && !isBot && !hasActiveDirectCallWithUser(user.id);
+		const renderPrivateCallDisplayGroup = () => {
+			if (!privateCallContext || !channel) return null;
+			const participantIdentity = privateCallContext.connectionId
+				? buildVoiceParticipantIdentity(user.id, privateCallContext.connectionId)
+				: `private-call-avatar:${channel.id}:${user.id}`;
+			const canPopOut =
+				isVoicePopoutSupported() &&
+				(privateCallContext.visualSource === 'user' || privateCallContext.connectionId !== undefined);
+			const handlePopOut = () => {
+				const didOpen = PopoutWindowManager.openTilePopout({
+					participantIdentity,
+					source: privateCallContext.visualSource,
+					userId: user.id,
+					connectionId: privateCallContext.connectionId ?? participantIdentity,
+					channelId: channel.id,
+					guildId: channel.guildId ?? null,
+					title: privateCallContext.participantName,
+				});
+				if (didOpen) onClose();
+			};
+			return (
+				<MenuGroup data-flx="ui.action-menu.user-context-menu.render-private-call-display-group.menu-group">
+					{canPopOut && (
+						<MenuItem
+							icon={
+								<PopOutIcon data-flx="ui.action-menu.user-context-menu.render-private-call-display-group.pop-out-icon" />
+							}
+							onClick={handlePopOut}
+							data-flx="ui.action-menu.user-context-menu.render-private-call-display-group.menu-item.pop-out"
+						>
+							{i18n._(
+								privateCallContext.visualSource === 'camera' ? POP_OUT_CAMERA_DESCRIPTOR : POP_OUT_USER_DESCRIPTOR,
+							)}
+						</MenuItem>
+					)}
+					<CheckboxItem
+						checked={VoiceSettings.getShowNonVideoParticipants()}
+						onCheckedChange={(checked) => VoiceSettingsCommands.update({showNonVideoParticipants: checked})}
+						data-flx="ui.action-menu.user-context-menu.render-private-call-display-group.checkbox-item.show-non-video"
+					>
+						{i18n._(SHOW_NON_VIDEO_PARTICIPANTS_DESCRIPTOR)}
+					</CheckboxItem>
+				</MenuGroup>
+			);
+		};
+		const renderSelfPrivateCallControls = () => {
+			if (!privateCallContext?.isConnected || !isCurrentUser) return null;
+			const isDeviceSpecific = Boolean(
+				privateCallContext.connectionId && privateCallContext.connectionId !== MediaEngine.connectionId,
+			);
+			const previewCameraItem =
+				privateCallContext.visualSource === 'user' ? (
+					<MenuItem
+						icon={
+							<ViewDetailsIcon data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.view-details-icon" />
+						}
+						onClick={() => {
+							ModalCommands.pushAfterBottomSheetClose(
+								onClose,
+								modal(() => (
+									<CameraPreviewModalInRoom data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.camera-preview-modal-in-room" />
+								)),
+							);
+						}}
+						data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.menu-item.preview-camera"
+					>
+						{i18n._(PREVIEW_CAMERA_DESCRIPTOR)}
+					</MenuItem>
+				) : null;
+			const showPreviewBeforeVoiceControls = channel?.isDM() === true;
+			return (
+				<MenuGroup data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.menu-group">
+					{showPreviewBeforeVoiceControls && previewCameraItem}
+					<SelfMuteMenuItem
+						onClose={onClose}
+						connectionId={privateCallContext.connectionId}
+						isDeviceSpecific={isDeviceSpecific}
+						data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.self-mute-menu-item"
+					/>
+					<SelfDeafenMenuItem
+						onClose={onClose}
+						connectionId={privateCallContext.connectionId}
+						isDeviceSpecific={isDeviceSpecific}
+						data-flx="ui.action-menu.user-context-menu.render-self-private-call-controls.self-deafen-menu-item"
+					/>
+					{!showPreviewBeforeVoiceControls && previewCameraItem}
+				</MenuGroup>
+			);
+		};
 		const renderReportActions = (restricted: boolean) => {
 			if (restricted || isCurrentUser) {
 				return null;
@@ -161,13 +268,6 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							data-flx="ui.action-menu.user-context-menu.render-report-actions.report-message-menu-item"
 						/>
 					)}
-					<ReportUserMenuItem
-						user={user}
-						guildId={guildId}
-						message={message}
-						onClose={onClose}
-						data-flx="ui.action-menu.user-context-menu.render-report-actions.report-user-menu-item"
-					/>
 					{relationshipType === RelationshipTypes.BLOCKED ? (
 						<UnblockUserMenuItem
 							user={user}
@@ -197,7 +297,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 				)),
 			);
 		}, [channel, onClose, user]);
-		const userDisplayName = NicknameUtils.getNickname(user, channel?.guildId ?? undefined, channel?.id);
+		const userDisplayName = NicknameUtils.getNickname(user, channel?.guildId ?? null, channel?.id);
 		const handleRemoveFromGroup = useCallback(() => {
 			if (!channel) return;
 			ModalCommands.pushAfterBottomSheetClose(
@@ -234,44 +334,12 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			);
 		}, [channel, onClose, user.id, userDisplayName, i18n]);
 		const handleCloseDM = useCallback(() => {
-			if (!channel || !channel.isDM()) return;
+			if (!channel?.isDM()) return;
 			onClose();
 			const displayName = dmPartner ? NicknameUtils.getNickname(dmPartner) : NicknameUtils.getNickname(user);
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(CLOSE_DM_DESCRIPTOR)}
-						description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {displayName})}
-						primaryText={i18n._(CLOSE_DM_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={async () => {
-							try {
-								await ChannelCommands.remove(channel.id);
-								const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
-								if (selectedChannel === channel.id) {
-									RouterUtils.transitionTo(Routes.ME);
-								}
-								ToastCommands.createToast({
-									type: 'success',
-									children: i18n._(DM_CLOSED_DESCRIPTOR),
-								});
-							} catch (error) {
-								logger.error('Failed to close DM:', error);
-								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<DMCloseFailedModal data-flx="ui.action-menu.user-context-menu.handle-close-dm.dm-close-failed-modal" />
-										)),
-									);
-								}, 0);
-							}
-						}}
-						data-flx="ui.action-menu.user-context-menu.handle-close-dm.confirm-modal"
-					/>
-				)),
-			);
+			showCloseDMConfirmation({i18n, channelId: channel.id, displayName});
 		}, [channel, dmPartner, i18n, onClose, user]);
-		const renderAdvancedMenuGroup = () => (
+		const renderAdvancedMenuGroup = (includeChannelId = false) => (
 			<MenuGroup data-flx="ui.action-menu.user-context-menu.render-advanced-menu-group.menu-group">
 				{developerMode && (
 					<DebugUserMenuItem
@@ -285,6 +353,13 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 					onClose={onClose}
 					data-flx="ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"
 				/>
+				{includeChannelId && channel && (
+					<CopyChannelIdMenuItem
+						channel={channel}
+						onClose={onClose}
+						data-flx="ui.action-menu.user-context-menu.render-advanced-menu-group.copy-channel-id-menu-item"
+					/>
+				)}
 			</MenuGroup>
 		);
 		const renderStaffDeveloperControlsMenuGroup = (restricted: boolean) => {
@@ -310,7 +385,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			return (
 				<>
 					<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.menu-group">
-						<MarkDMAsReadMenuItem
+						<MarkChannelAsReadMenuItem
 							channel={channel}
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.mark-dm-as-read-menu-item"
@@ -330,15 +405,28 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.user-profile-menu-item"
 						/>
-						<MenuItem
-							icon={<CloseDMIcon data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.close-dm-icon" />}
-							onClick={handleCloseDM}
-							data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.menu-item.close-dm"
-						>
-							{i18n._(CLOSE_DM_DESCRIPTOR)}
-						</MenuItem>
+						{!privateCallContext && (
+							<MenuItem
+								icon={<CloseDMIcon data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.close-dm-icon" />}
+								onClick={handleCloseDM}
+								data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.menu-item.close-dm"
+							>
+								{i18n._(CLOSE_DM_DESCRIPTOR)}
+							</MenuItem>
+						)}
 					</MenuGroup>
-					{renderAdvancedMenuGroup()}
+					{renderSelfPrivateCallControls()}
+					{privateCallContext && (
+						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.mute-dm-group">
+							<MuteDMMenuItem
+								channel={channel}
+								onClose={onClose}
+								data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.mute-dm-menu-item"
+							/>
+						</MenuGroup>
+					)}
+					{renderPrivateCallDisplayGroup()}
+					{renderAdvancedMenuGroup(privateCallContext !== undefined)}
 				</>
 			);
 		};
@@ -347,7 +435,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			return (
 				<>
 					<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.menu-group">
-						<MarkDMAsReadMenuItem
+						<MarkChannelAsReadMenuItem
 							channel={channel}
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.mark-dm-as-read-menu-item"
@@ -367,7 +455,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.user-profile-menu-item"
 						/>
-						{showCallItems && channelId && (
+						{showCallItems && channelId && !privateCallContext && (
 							<RingUserMenuItem
 								userId={user.id}
 								channelId={channelId}
@@ -412,6 +500,19 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							/>
 						</MenuGroup>
 					)}
+					{showPrivateCallParticipantItems && (
+						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.menu-group--6">
+							<LocalMuteParticipantMenuItem
+								userId={user.id}
+								onClose={onClose}
+								data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.local-mute-participant-menu-item"
+							/>
+							<EntranceSoundListenerSubmenu
+								userId={user.id}
+								data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.entrance-sound-submenu"
+							/>
+						</MenuGroup>
+					)}
 					{!restricted && (
 						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.menu-group--5">
 							{!isBot && (
@@ -430,22 +531,19 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							)}
 						</MenuGroup>
 					)}
-					{showPrivateCallParticipantItems && (
-						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.menu-group--6">
-							<LocalMuteParticipantMenuItem
-								userId={user.id}
+					{renderReportActions(restricted)}
+					{privateCallContext && (
+						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.mute-dm-group">
+							<MuteDMMenuItem
+								channel={channel}
 								onClose={onClose}
-								data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.local-mute-participant-menu-item"
-							/>
-							<EntranceSoundListenerSubmenu
-								userId={user.id}
-								data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.entrance-sound-submenu"
+								data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.mute-dm-menu-item"
 							/>
 						</MenuGroup>
 					)}
-					{renderReportActions(restricted)}
+					{renderPrivateCallDisplayGroup()}
 					{renderStaffDeveloperControlsMenuGroup(restricted)}
-					{renderAdvancedMenuGroup()}
+					{renderAdvancedMenuGroup(privateCallContext !== undefined)}
 				</>
 			);
 		};
@@ -475,7 +573,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-default-menu.user-profile-menu-item"
 						/>
-						{isGroupDM && isCurrentUser && (
+						{isGroupDM && isCurrentUser && !privateCallContext && (
 							<MenuItem
 								icon={
 									<ChangeNicknameIcon data-flx="ui.action-menu.user-context-menu.render-default-menu.change-nickname-icon" />
@@ -500,7 +598,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 								data-flx="ui.action-menu.user-context-menu.render-default-menu.message-user-menu-item"
 							/>
 						)}
-						{showCallItems && channelId && (
+						{showCallItems && channelId && !privateCallContext && (
 							<RingUserMenuItem
 								userId={user.id}
 								channelId={channelId}
@@ -508,7 +606,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 								data-flx="ui.action-menu.user-context-menu.render-default-menu.ring-user-menu-item"
 							/>
 						)}
-						{showStartVoiceCall && !isCallContext && !restricted && (
+						{showStartVoiceCall && (!isCallContext || Boolean(privateCallContext)) && !restricted && (
 							<StartVoiceCallMenuItem
 								user={user}
 								onClose={onClose}
@@ -562,17 +660,21 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 									{i18n._(MAKE_GROUP_OWNER_DESCRIPTOR)}
 								</MenuItem>
 							)}
-							<MenuItem
-								icon={
-									<ChangeNicknameIcon data-flx="ui.action-menu.user-context-menu.render-default-menu.change-nickname-icon--2" />
-								}
-								onClick={handleChangeGroupNickname}
-								data-flx="ui.action-menu.user-context-menu.render-default-menu.menu-item.change-group-nickname--2"
-							>
-								{i18n._(CHANGE_GROUP_NICKNAME_DESCRIPTOR)}
-							</MenuItem>
+							{!privateCallContext && (
+								<MenuItem
+									icon={
+										<ChangeNicknameIcon data-flx="ui.action-menu.user-context-menu.render-default-menu.change-nickname-icon--2" />
+									}
+									onClick={handleChangeGroupNickname}
+									data-flx="ui.action-menu.user-context-menu.render-default-menu.menu-item.change-group-nickname--2"
+								>
+									{i18n._(CHANGE_GROUP_NICKNAME_DESCRIPTOR)}
+								</MenuItem>
+							)}
 						</MenuGroup>
 					)}
+					{renderPrivateCallDisplayGroup()}
+					{renderSelfPrivateCallControls()}
 					{showCallItems && !restricted && (
 						<MenuGroup data-flx="ui.action-menu.user-context-menu.render-default-menu.menu-group--4">
 							<LocalMuteParticipantMenuItem

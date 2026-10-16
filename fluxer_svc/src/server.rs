@@ -3,11 +3,12 @@
 use crate::metrics::ServiceMetrics;
 use axum::Router;
 use axum::body::Body;
-use axum::extract::{Request, State};
+use axum::extract::{ConnectInfo, Request, State};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
+use fluxer_common::metrics::is_loopback_peer;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
@@ -16,8 +17,7 @@ use tokio::net::TcpListener;
 #[derive(Clone)]
 pub struct HttpState {
     pub is_serving: Arc<AtomicBool>,
-    pub metrics: Arc<ServiceMetrics>,
-    pub service_name: String,
+    pub render: Arc<dyn Fn() -> String + Send + Sync>,
 }
 
 pub async fn run_http(
@@ -26,21 +26,27 @@ pub async fn run_http(
     metrics: Arc<ServiceMetrics>,
     service_name: String,
 ) -> anyhow::Result<()> {
-    let state = HttpState {
-        is_serving,
-        metrics,
-        service_name,
-    };
-    let app = Router::new()
+    let render = Arc::new(move || metrics.render_prometheus(&service_name));
+    let app = ops_router(is_serving, render).layer(middleware::from_fn(add_version_header));
+    let listener = TcpListener::bind(addr).await?;
+    tracing::info!(addr = %addr, "health HTTP server listening");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
+    Ok(())
+}
+
+pub fn ops_router(
+    is_serving: Arc<AtomicBool>,
+    render: Arc<dyn Fn() -> String + Send + Sync>,
+) -> Router {
+    Router::new()
         .route("/_health", get(readiness_check))
         .route("/_healthz", get(|| async { "OK" }))
         .route("/_metrics", get(metrics_handler))
-        .with_state(state)
-        .layer(middleware::from_fn(add_version_header));
-    let listener = TcpListener::bind(addr).await?;
-    tracing::info!(addr = %addr, "health HTTP server listening");
-    axum::serve(listener, app).await?;
-    Ok(())
+        .with_state(HttpState { is_serving, render })
 }
 
 async fn readiness_check(State(state): State<HttpState>) -> impl IntoResponse {
@@ -51,8 +57,14 @@ async fn readiness_check(State(state): State<HttpState>) -> impl IntoResponse {
     }
 }
 
-async fn metrics_handler(State(state): State<HttpState>) -> impl IntoResponse {
-    let body = state.metrics.render_prometheus(&state.service_name);
+async fn metrics_handler(
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    State(state): State<HttpState>,
+) -> Response {
+    if !is_loopback_peer(&peer) {
+        return (StatusCode::FORBIDDEN, "FORBIDDEN").into_response();
+    }
+    let body = (state.render)();
     (
         [(
             header::CONTENT_TYPE,
@@ -60,16 +72,14 @@ async fn metrics_handler(State(state): State<HttpState>) -> impl IntoResponse {
         )],
         body,
     )
+        .into_response()
 }
 
 fn build_version() -> &'static str {
     static BUILD_VERSION: OnceLock<String> = OnceLock::new();
     BUILD_VERSION
         .get_or_init(|| {
-            std::env::var("BUILD_VERSION")
-                .ok()
-                .filter(|v| !v.trim().is_empty())
-                .unwrap_or_else(|| "dev".to_owned())
+            crate::config::optional_env("BUILD_VERSION").unwrap_or_else(|| "dev".to_owned())
         })
         .as_str()
 }

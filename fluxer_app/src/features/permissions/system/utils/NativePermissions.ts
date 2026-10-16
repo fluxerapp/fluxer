@@ -5,6 +5,19 @@ import {getElectronAPI, isNativeMacOS} from '@app/features/ui/utils/NativeUtils'
 export type PermissionKind = 'microphone' | 'camera' | 'screen' | 'input-monitoring';
 export type NativePermissionResult = 'granted' | 'denied' | 'not-determined' | 'unsupported';
 
+export const MAC_PERMISSION_KINDS: ReadonlyArray<PermissionKind> = Object.freeze([
+	'microphone',
+	'camera',
+	'screen',
+	'input-monitoring',
+]);
+
+export function settledPermissionKinds(
+	statuses: Readonly<Record<PermissionKind, NativePermissionResult>>,
+): Array<PermissionKind> {
+	return MAC_PERMISSION_KINDS.filter((kind) => statuses[kind] === 'granted' || statuses[kind] === 'unsupported');
+}
+
 const normalizeNativePermissionResult = (value: unknown): NativePermissionResult => {
 	switch (value) {
 		case 'granted':

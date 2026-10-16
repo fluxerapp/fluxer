@@ -1,6 +1,7 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
+		"allowImportingTsExtensions": true,
 		"paths": {
 			"@app/*": ["./src/*"],
 			"@fluxer/*": ["./../packages/*", "./../packages/*/src/index.ts"],

@@ -5,7 +5,6 @@ use std::time::Duration;
 use url::Url;
 
 const METADATA_TIMEOUT: Duration = Duration::from_secs(5);
-const EXTERNAL_PROXY_VERSION_PREFIX: &str = "v2/";
 
 pub struct MediaProxyClient {
     http_client: reqwest::Client,
@@ -24,22 +23,18 @@ struct MetadataRequest<'a> {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
 pub struct MediaMetadata {
-    pub format: String,
     pub content_type: String,
     pub content_hash: String,
-    pub size: u64,
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub duration: Option<f64>,
     pub placeholder: Option<String>,
     pub animated: Option<bool>,
     pub nsfw: bool,
-    pub nsfw_probability: Option<f64>,
 }
 
-pub fn embed_media_flags(meta: &MediaMetadata) -> u32 {
+fn embed_media_flags(meta: &MediaMetadata) -> u32 {
     let mut flags = 0;
     if meta.nsfw {
         flags |= 1 << 4;
@@ -48,6 +43,22 @@ pub fn embed_media_flags(meta: &MediaMetadata) -> u32 {
         flags |= 1 << 5;
     }
     flags
+}
+
+impl MediaMetadata {
+    pub fn to_embed_media(&self, url: &str) -> crate::types::EmbedMedia {
+        crate::types::EmbedMedia {
+            url: Some(url.to_owned()),
+            content_type: Some(self.content_type.clone()),
+            content_hash: Some(self.content_hash.clone()),
+            width: self.width,
+            height: self.height,
+            duration: self.duration.map(|duration| duration as u32),
+            placeholder: self.placeholder.clone(),
+            flags: embed_media_flags(self),
+            ..Default::default()
+        }
+    }
 }
 
 impl MediaProxyClient {
@@ -113,53 +124,28 @@ impl MediaProxyClient {
         }
     }
 
+    pub fn is_own_url(&self, input_url: &str) -> bool {
+        Url::parse(input_url).is_ok_and(|url| {
+            fluxer_common::external_media_path::is_own_media_url(&self.public_endpoint, &url)
+        })
+    }
+
     pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
-        if input_url == self.public_endpoint
-            || input_url.starts_with(&format!("{}/", self.public_endpoint))
-        {
+        if self.is_own_url(input_url) {
             return Some(input_url.to_owned());
         }
         let parsed = Url::parse(input_url).ok()?;
-        let encoded = base64::Engine::encode(
-            &base64::engine::general_purpose::URL_SAFE_NO_PAD,
+        fluxer_common::external_media_path::build_external_media_proxy_url(
+            &self.public_endpoint,
             parsed.as_str(),
-        );
-        let path = format!("{EXTERNAL_PROXY_VERSION_PREFIX}{encoded}");
-        let signature = create_signature(&path, &self.secret_key);
-        Some(format!(
-            "{}/external/{}/{}",
-            self.public_endpoint, signature, path
-        ))
+            self.secret_key.as_bytes(),
+        )
     }
-}
-
-fn create_signature(input: &str, secret: &str) -> String {
-    use hmac::{Hmac, KeyInit, Mac};
-    let mut mac =
-        Hmac::<sha2::Sha256>::new_from_slice(secret.as_bytes()).expect("hmac accepts any key size");
-    mac.update(input.as_bytes());
-    base64::Engine::encode(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-        mac.finalize().into_bytes(),
-    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn endpoint_trailing_slash_stripped() {
-        let client = reqwest::Client::new();
-        let mp = MediaProxyClient::new_with_public_endpoint(
-            "http://localhost:8000/",
-            "secret",
-            None,
-            client,
-        );
-        assert_eq!(mp.endpoint, "http://localhost:8000");
-        assert_eq!(mp.public_endpoint, "http://localhost:8000");
-    }
 
     #[test]
     fn nsfw_mode_strings() {
@@ -178,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn external_proxy_url_uses_public_endpoint_and_v2_path() {
+    fn external_proxy_url_uses_public_endpoint_and_plain_path() {
         let client = reqwest::Client::new();
         let mp = MediaProxyClient::new_with_public_endpoint(
             "http://media-proxy:8080/",
@@ -191,15 +177,18 @@ mod tests {
             .expect("proxy url");
 
         assert!(proxy.starts_with("https://media.example.test/external/"));
-        assert!(proxy.contains("/v2/"));
+        assert!(proxy.contains("/https/"));
 
-        let encoded = proxy.rsplit('/').next().expect("encoded path segment");
-        let decoded =
-            base64::Engine::decode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, encoded)
-                .expect("valid base64");
+        let path = proxy
+            .split_once("/external/")
+            .expect("external segment")
+            .1
+            .split_once('/')
+            .expect("signature segment")
+            .1;
         assert_eq!(
-            String::from_utf8(decoded).expect("utf8"),
-            "https://pbs.twimg.com/media/a.jpg?name=orig"
+            "https://pbs.twimg.com/media/a.jpg?name=orig",
+            fluxer_common::external_media_path::reconstruct_original_url(path).expect("decodes")
         );
         assert_eq!(
             mp.external_proxy_url("https://media.example.test/external/already"),

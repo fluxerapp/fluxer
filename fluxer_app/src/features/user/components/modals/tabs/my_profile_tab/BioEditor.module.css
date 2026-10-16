@@ -33,6 +33,7 @@
 	flex: 1 1 0%;
 	min-width: 0;
 	padding-inline-start: 1rem;
+	overflow: hidden;
 }
 
 :global([dir='rtl']) .editor {

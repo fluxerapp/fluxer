@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	createHash,
-	createHmac,
-	createPrivateKey,
-	createPublicKey,
-	createSign,
-	generateKeyPairSync,
-	randomBytes,
-} from 'node:crypto';
-import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
+import {createHash, createPrivateKey, createPublicKey, createSign, generateKeyPairSync, randomBytes} from 'node:crypto';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+
+export {createTotpSecret, generateTotpCode} from '@app/api/auth/tests/AuthTestUtils';
 
 export interface WebAuthnDevice {
 	privateKey: string;
@@ -19,6 +14,7 @@ export interface WebAuthnDevice {
 	rpId: string;
 	origin: string;
 	signCount: number;
+	transports?: Array<string> | null;
 }
 
 export interface WebAuthnRegistrationOptions {
@@ -45,6 +41,7 @@ export interface WebAuthnAuthenticationOptions {
 	allowCredentials?: Array<{
 		id: string;
 		type: string;
+		transports?: Array<string>;
 	}>;
 	userVerification: string;
 }
@@ -54,10 +51,26 @@ export interface WebAuthnCredentialMetadata {
 	name: string;
 }
 
+export type SudoVerificationBody = Record<string, unknown>;
+
+export type SudoVerificationBodyFactory = () => SudoVerificationBody;
+
+export interface WebAuthnTwoFactorResult {
+	user: {
+		id: string;
+		mfa_enabled: boolean;
+		authenticator_types: Array<number>;
+	};
+	backup_codes: Array<{
+		code: string;
+		consumed: boolean;
+	}> | null;
+}
+
 interface AuthenticatorAttestationResponse {
 	clientDataJSON: string;
 	attestationObject: string;
-	transports: Array<string>;
+	transports?: Array<string>;
 }
 
 interface AuthenticatorAssertionResponse {
@@ -81,30 +94,6 @@ interface WebAuthnAuthenticationResponse {
 	type: string;
 	clientExtensionResults: Record<string, unknown>;
 	response: AuthenticatorAssertionResponse;
-}
-
-export function createTotpSecret(): string {
-	const buf = randomBytes(20);
-	return base32Encode(buf).replace(/=/g, '');
-}
-
-export function generateTotpCode(secret: string, time = Date.now()): string {
-	const key = Buffer.from(base32Decode.asBytes(secret.toUpperCase()));
-	const epoch = Math.floor(time / 1000);
-	const counter = Math.floor(epoch / 30);
-	const counterBuf = Buffer.alloc(8);
-	counterBuf.writeBigUInt64BE(BigInt(counter));
-	const hmac = createHmac('sha1', key);
-	hmac.update(counterBuf);
-	const hash = hmac.digest();
-	const offset = hash[hash.length - 1] & 0x0f;
-	const binary =
-		((hash[offset] & 0x7f) << 24) |
-		((hash[offset + 1] & 0xff) << 16) |
-		((hash[offset + 2] & 0xff) << 8) |
-		(hash[offset + 3] & 0xff);
-	const otp = binary % 1000000;
-	return otp.toString().padStart(6, '0');
 }
 
 function resolveWebAuthnOrigin(): {
@@ -256,8 +245,8 @@ function buildRegistrationAuthData(device: WebAuthnDevice): Buffer {
 	let x: Buffer, y: Buffer;
 	const asn1Offset = pubKeyBuf.indexOf(Buffer.from([0x30, 0x59, 0x30, 0x13]));
 	if (asn1Offset > 0 && pubKeyBuf.length >= asn1Offset + 68) {
-		x = pubKeyBuf.slice(asn1Offset + 4 + 3, asn1Offset + 4 + 35);
-		y = pubKeyBuf.slice(asn1Offset + 4 + 36, asn1Offset + 4 + 68);
+		x = pubKeyBuf.subarray(asn1Offset + 4 + 3, asn1Offset + 4 + 35);
+		y = pubKeyBuf.subarray(asn1Offset + 4 + 36, asn1Offset + 4 + 68);
 	} else {
 		x = randomBytes(32);
 		y = randomBytes(32);
@@ -345,7 +334,7 @@ export function createRegistrationResponse(
 		response: {
 			clientDataJSON: encodeBase64URL(clientDataJSON),
 			attestationObject: encodeBase64URL(attestationObject),
-			transports: ['internal'],
+			...(device.transports === null ? {} : {transports: device.transports ?? ['internal']}),
 		},
 	};
 }
@@ -383,35 +372,79 @@ export function createAuthenticationResponse(
 	};
 }
 
-export function createAuthenticationResponseWithoutUV(
+export async function registerWebAuthnCredential(
+	harness: ApiTestHarness,
+	token: string,
 	device: WebAuthnDevice,
-	options: WebAuthnAuthenticationOptions,
-): WebAuthnAuthenticationResponse {
-	const challenge = decodeBase64URL(options.challenge);
+	createSudoBody: SudoVerificationBodyFactory,
+	name = 'Test Passkey',
+): Promise<void> {
+	const options = await createBuilder<WebAuthnRegistrationOptions>(harness, token)
+		.post('/users/@me/mfa/webauthn/credentials/registration-options')
+		.body(createSudoBody())
+		.execute();
+	if (options.rp.id) {
+		device.rpId = options.rp.id;
+	}
+	await createBuilder(harness, token)
+		.post('/users/@me/mfa/webauthn/credentials')
+		.body({
+			response: createRegistrationResponse(device, options, name),
+			challenge: options.challenge,
+			name,
+			...createSudoBody(),
+		})
+		.expect(204)
+		.execute();
+}
+
+export async function createSudoWebAuthnBody(
+	harness: ApiTestHarness,
+	token: string,
+	device: WebAuthnDevice,
+): Promise<SudoVerificationBody> {
+	const options = await createBuilder<WebAuthnAuthenticationOptions>(harness, token)
+		.post('/users/@me/sudo/webauthn/authentication-options')
+		.body(null)
+		.execute();
 	if (options.rpId) {
 		device.rpId = options.rpId;
 	}
-	const clientData = {
-		type: 'webauthn.get',
-		challenge: encodeBase64URL(challenge),
-		origin: device.origin,
-		crossOrigin: false,
-	};
-	const clientDataJSON = Buffer.from(JSON.stringify(clientData));
-	const authData = buildAssertionAuthData(device, false);
-	const clientDataHash = createHash('sha256').update(clientDataJSON).digest();
-	const sigInput = Buffer.concat([authData, clientDataHash]);
-	const signature = signWithPrivateKey(device, sigInput);
 	return {
-		id: encodeBase64URL(device.credentialId),
-		rawId: encodeBase64URL(device.credentialId),
-		type: 'public-key',
-		clientExtensionResults: {},
-		response: {
-			clientDataJSON: encodeBase64URL(clientDataJSON),
-			authenticatorData: encodeBase64URL(authData),
-			signature: encodeBase64URL(signature),
-			userHandle: encodeBase64URL(device.userHandle),
-		},
+		mfa_method: 'webauthn',
+		webauthn_response: createAuthenticationResponse(device, options),
+		webauthn_challenge: options.challenge,
 	};
+}
+
+export async function setWebAuthnTwoFactor(
+	harness: ApiTestHarness,
+	token: string,
+	enabled: boolean,
+	sudo: SudoVerificationBody,
+): Promise<WebAuthnTwoFactorResult> {
+	return createBuilder<WebAuthnTwoFactorResult>(harness, token)
+		.put('/users/@me/mfa/webauthn/two-factor')
+		.body({enabled, ...sudo})
+		.execute();
+}
+
+export async function loginWithDiscoverablePasskey(harness: ApiTestHarness, device: WebAuthnDevice): Promise<string> {
+	const options = await createBuilderWithoutAuth<WebAuthnAuthenticationOptions>(harness)
+		.post('/auth/webauthn/authentication-options')
+		.body(null)
+		.execute();
+	if (options.rpId) {
+		device.rpId = options.rpId;
+	}
+	const login = await createBuilderWithoutAuth<{
+		token: string;
+	}>(harness)
+		.post('/auth/webauthn/authenticate')
+		.body({
+			response: createAuthenticationResponse(device, options),
+			challenge: options.challenge,
+		})
+		.execute();
+	return login.token;
 }

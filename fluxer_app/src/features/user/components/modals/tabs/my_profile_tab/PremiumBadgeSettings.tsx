@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.module.css';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -101,17 +101,17 @@ export const PremiumBadgeSettings = observer(
 			<div data-flx="user.my-profile-tab.premium-badge-settings.div">
 				<div className={styles.header} data-flx="user.my-profile-tab.premium-badge-settings.header">
 					<h2 className={styles.title} data-flx="user.my-profile-tab.premium-badge-settings.title">
-						{i18n._(PREMIUM_BADGE_PRIVACY_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						{i18n._(PREMIUM_BADGE_PRIVACY_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 					</h2>
 					<p className={styles.description} data-flx="user.my-profile-tab.premium-badge-settings.description">
-						{i18n._(PREMIUM_BADGE_DISPLAY_DESCRIPTION_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						{i18n._(PREMIUM_BADGE_DISPLAY_DESCRIPTION_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 					</p>
 				</div>
 				<div className={styles.switches} data-flx="user.my-profile-tab.premium-badge-settings.switches">
 					<Switch
-						label={i18n._(HIDE_BADGE_ENTIRELY_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						label={i18n._(HIDE_BADGE_ENTIRELY_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						description={i18n._(COMPLETELY_HIDE_YOUR_BADGE_FROM_OTHER_USERS_DESCRIPTOR, {
-							premiumProductName: PREMIUM_PRODUCT_NAME,
+							premiumProductName: getPremiumProductName(),
 						})}
 						value={premiumBadgeHidden}
 						onChange={(value) => onToggle('premium_badge_hidden', value)}
@@ -122,13 +122,13 @@ export const PremiumBadgeSettings = observer(
 						label={
 							premiumSince
 								? i18n._(HIDE_PURCHASE_DATE_DESCRIPTOR, {
-										premiumProductName: PREMIUM_PRODUCT_NAME,
+										premiumProductName: getPremiumProductName(),
 										dateUtilsGetFormattedShortDatePremiumSince: DateUtils.getFormattedShortDate(premiumSince),
 									})
-								: i18n._(HIDE_PURCHASE_DATE_2_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})
+								: i18n._(HIDE_PURCHASE_DATE_2_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
 						}
 						description={i18n._(REMOVE_WHEN_YOU_FIRST_BOUGHT_FROM_YOUR_BADGE_DESCRIPTOR, {
-							premiumProductName: PREMIUM_PRODUCT_NAME,
+							premiumProductName: getPremiumProductName(),
 						})}
 						value={premiumBadgeTimestampHidden}
 						onChange={(value) => onToggle('premium_badge_timestamp_hidden', value)}

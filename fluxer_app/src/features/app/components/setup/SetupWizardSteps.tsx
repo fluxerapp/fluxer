@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
+import {SetupWelcomeGate} from '@app/features/app/components/setup/SetupWelcomeGate';
 import type {SetupBrandingAssetKind} from '@app/features/app/components/setup/SetupWizardClient';
-import {
-	createRandomWelcomeRotationState,
-	createWelcomeRotationState,
-	WELCOME_ROTATION,
-} from '@app/features/app/components/setup/SetupWizardWelcomeRotation';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
+import {credentialRegisterFields} from '@app/features/auth/flow/RegisterFormFields';
 import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {ThemeSelector} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
 import {LanguageSelector} from '@app/features/user/components/modals/tabs/LanguageTab';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
+import {resolveSmtpTlsMode, type SmtpTlsMode, SmtpTlsModes} from '@fluxer/constants/src/SmtpConstants';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -25,7 +31,10 @@ import {ImageIcon, TrashIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion, type Transition, useReducedMotion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useCallback} from 'react';
+
+const PUSH_RELAY_NOTICE_URL = 'https://fluxer.com/push-relay';
+const DEFAULT_THEME_COLOR = 0x4641d9;
 
 export type RegistrationMode = 'open' | 'approval' | 'closed';
 export type PremiumMode = 'mirror' | 'everyone';
@@ -36,15 +45,6 @@ export interface BrandingAssetState {
 	preview: string | null;
 }
 
-const WELCOME_AUTHED_TITLE_DESCRIPTOR = msg({
-	message: 'Welcome to {productName}',
-	comment: 'Setup wizard title shown once the operator is signed in as the instance admin.',
-});
-const WELCOME_AUTHED_BODY_DESCRIPTOR = msg({
-	message:
-		'You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance.',
-	comment: 'Setup wizard body shown to the signed-in instance administrator.',
-});
 const WELCOME_UNAUTHED_TITLE_DESCRIPTOR = msg({
 	message: 'Create the administrator account',
 	comment: 'Setup wizard title prompting the operator to create the first account.',
@@ -57,6 +57,24 @@ const WELCOME_LANGUAGE_LABEL_DESCRIPTOR = msg({
 	message: 'Language',
 	comment: 'Label for the setup wizard language selector.',
 });
+const SETUP_TOKEN_TITLE_DESCRIPTOR = msg({
+	message: 'Enter your setup token',
+	comment: 'Setup wizard title for the step that asks the operator for the setup token of a new instance.',
+});
+const SETUP_TOKEN_BODY_DESCRIPTOR = msg({
+	message: 'The token proves that you run this instance. Only the person who has it can create the admin account.',
+	comment: 'Setup wizard body explaining why the operator has to enter the setup token.',
+});
+const SETUP_TOKEN_LABEL_DESCRIPTOR = msg({
+	message: 'Setup token',
+	comment: 'Label for the setup token input in the setup wizard.',
+});
+const SETUP_TOKEN_HELP_DESCRIPTOR = msg({
+	message:
+		'The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value.',
+	comment:
+		'Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.',
+});
 const THEME_TITLE_DESCRIPTOR = msg({
 	message: 'Choose a theme',
 	comment: 'Setup wizard title for choosing the initial account theme.',
@@ -65,7 +83,90 @@ const THEME_BODY_DESCRIPTOR = msg({
 	message: 'Pick the appearance this administrator account should start with.',
 	comment: 'Setup wizard body for choosing the initial account theme.',
 });
-export const CREATE_ADMIN_ACCOUNT_DESCRIPTOR = msg({
+const SIGN_IN_METHOD_TITLE_DESCRIPTOR = msg({
+	message: 'Choose how people sign in',
+	comment: 'Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.',
+});
+const SIGN_IN_METHOD_BODY_DESCRIPTOR = msg({
+	message: 'You cannot change this once the first account exists.',
+	comment: 'Setup wizard body for the sign-in method step.',
+});
+const SIGN_IN_METHOD_USERNAME_NAME_DESCRIPTOR = msg({
+	message: 'Usernames (recommended)',
+	comment: 'Setup wizard option where people sign in with a username and password and no email is collected.',
+});
+const SIGN_IN_METHOD_USERNAME_DESC_DESCRIPTOR = msg({
+	message:
+		'People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password.',
+	comment: 'Description for the username sign-in option in the setup wizard.',
+});
+const SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR = msg({
+	message: 'Email',
+	comment: 'Setup wizard option where people sign in with an email address and password.',
+});
+const SIGN_IN_METHOD_EMAIL_DESC_DESCRIPTOR = msg({
+	message:
+		'People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later.',
+	comment: 'Description for the email sign-in option in the setup wizard.',
+});
+const SIGN_IN_METHOD_USERNAME_SUMMARY_DESCRIPTOR = msg({
+	message: 'Usernames',
+	comment: 'Summary value on the setup wizard finish step when people sign in with a username.',
+});
+const TAG_STYLE_NONE_SUMMARY_DESCRIPTOR = msg({
+	message: 'No tags',
+	comment: 'Setup wizard finish summary value when usernames are unique and shown without a tag.',
+});
+const TAG_STYLE_RANDOM_SUMMARY_DESCRIPTOR = msg({
+	message: 'Random tags',
+	comment: 'Setup wizard finish summary value when every username gets a random four digit tag.',
+});
+const TAG_STYLE_TITLE_DESCRIPTOR = msg({
+	message: 'Username tags',
+	comment: 'Heading above the choice of how usernames are tagged in the setup wizard.',
+});
+const TAG_STYLE_NONE_NAME_DESCRIPTOR = msg({
+	message: 'No tags (recommended)',
+	comment: 'Setup wizard option where every username is unique and shown without a tag.',
+});
+const TAG_STYLE_NONE_EMAIL_DESC_DESCRIPTOR = msg({
+	message: 'Each name belongs to one person and shows on its own, like alex.',
+	comment: 'Description for the no tags option when people sign in with email. Keep the example name alex.',
+});
+const TAG_STYLE_RANDOM_NAME_DESCRIPTOR = msg({
+	message: 'Random tags',
+	comment: 'Setup wizard option where every username gets a random four digit tag.',
+});
+const TAG_STYLE_RANDOM_EMAIL_DESC_DESCRIPTOR = msg({
+	message: 'Names get a random tag, like alex#4821, so several people can share a name.',
+	comment: 'Description for the random tags option when people sign in with email. Keep alex#4821.',
+});
+const ADMIN_RECOVERY_KIT_TITLE_DESCRIPTOR = msg({
+	message: 'Save your recovery kit',
+	comment: 'Setup wizard title asking the administrator to create an account recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_BODY_DESCRIPTOR = msg({
+	message:
+		'Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe.',
+	comment: 'Setup wizard body explaining why the administrator needs a recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_CREATE_DESCRIPTOR = msg({
+	message: 'Create recovery kit',
+	comment: 'Button in the setup wizard that creates a recovery kit for the administrator account.',
+});
+const ADMIN_RECOVERY_KIT_RECREATE_DESCRIPTOR = msg({
+	message: 'Create a new kit',
+	comment: 'Button in the setup wizard that replaces the administrator recovery kit with a new one.',
+});
+const ADMIN_RECOVERY_KIT_SAVED_DESCRIPTOR = msg({
+	message: 'Your recovery kit is ready. You can continue.',
+	comment: 'Status shown in the setup wizard once the administrator has a recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_MISSING_DESCRIPTOR = msg({
+	message: 'Create a recovery kit to continue.',
+	comment: 'Status shown in the setup wizard while the administrator has no recovery kit.',
+});
+const CREATE_ADMIN_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Create administrator account',
 	comment: 'Button that opens the registration flow to create the first administrator account.',
 });
@@ -153,6 +254,7 @@ const REGISTRATION_BODY_DESCRIPTOR = msg({
 });
 const REGISTRATION_OPEN_NAME_DESCRIPTOR = msg({
 	message: 'Open',
+	context: 'registration-policy',
 	comment: 'Registration mode option allowing anyone to register.',
 });
 const REGISTRATION_OPEN_DESC_DESCRIPTOR = msg({
@@ -214,7 +316,7 @@ const DISABLE_DM_DESC_DESCRIPTOR = msg({
 });
 
 const MEDIA_EXPIRY_TITLE_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Setup wizard media expiry step title.',
 });
 const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
@@ -222,11 +324,11 @@ const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
 	comment: 'Setup wizard media expiry step body.',
 });
 const MEDIA_EXPIRY_ENABLE_LABEL_DESCRIPTOR = msg({
-	message: 'Enable attachment expiry',
+	message: 'Enable attachment expiration',
 	comment: 'Label for enabling attachment expiry during setup.',
 });
 const MEDIA_EXPIRY_ENABLE_DESC_DESCRIPTOR = msg({
-	message: 'Disabled attachments remain available until manually removed.',
+	message: 'When attachment expiration is disabled, attachments remain available until manually removed.',
 	comment: 'Description for the attachment expiry setup switch.',
 });
 const MEDIA_MIN_SIZE_LABEL_DESCRIPTOR = msg({
@@ -250,7 +352,7 @@ const MEDIA_MAX_LIFETIME_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for attachment decay maximum lifetime.',
 });
 const MEDIA_CURVE_LABEL_DESCRIPTOR = msg({
-	message: 'Expiry curve',
+	message: 'Expiration curve',
 	comment: 'Label for attachment decay curve.',
 });
 const MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR = msg({
@@ -260,6 +362,29 @@ const MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR = msg({
 const MEDIA_RENEW_WINDOW_LABEL_DESCRIPTOR = msg({
 	message: 'Renew window (days)',
 	comment: 'Label for attachment decay renewal window.',
+});
+
+const PUSH_RELAY_TITLE_DESCRIPTOR = msg({
+	message: 'Mobile push notifications',
+	comment: 'Setup wizard push relay consent step title.',
+});
+const PUSH_RELAY_BODY_DESCRIPTOR = msg({
+	message:
+		"The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement.",
+	comment: 'Setup wizard push relay consent step body.',
+});
+const PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR = msg({
+	message: 'Accept the push relay supplemental privacy notice',
+	comment: 'Label for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR = msg({
+	message:
+		'Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel.',
+	comment: 'Description for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_NOTICE_LINK_DESCRIPTOR = msg({
+	message: 'Read the supplemental privacy notice',
+	comment: 'Link to the push relay supplemental privacy notice shown during setup.',
 });
 
 const SERVICES_TITLE_DESCRIPTOR = msg({
@@ -312,7 +437,8 @@ const PREMIUM_MIRROR_NAME_DESCRIPTOR = msg({
 	comment: 'Premium model option that mirrors free and premium tiers.',
 });
 const PREMIUM_MIRROR_DESC_DESCRIPTOR = msg({
-	message: 'Keep Free and Premium tiers. You can customize the tiers later.',
+	message:
+		'Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel.',
 	comment: 'Description for the mirror premium model.',
 });
 const PREMIUM_EVERYONE_NAME_DESCRIPTOR = msg({
@@ -349,12 +475,28 @@ const SUMMARY_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	comment: 'Summary row label for the direct messages choice in the setup wizard.',
 });
 const SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Summary row label for the attachment expiry choice in the setup wizard.',
+});
+const SUMMARY_PUSH_RELAY_DESCRIPTOR = msg({
+	message: 'Push relay notice',
+	comment: 'Summary row label for the push relay consent on the setup wizard finish step.',
 });
 const SUMMARY_PREMIUM_DESCRIPTOR = msg({
 	message: 'Premium model',
 	comment: 'Summary row label for the premium model in the setup wizard.',
+});
+const SUMMARY_SIGN_IN_METHOD_DESCRIPTOR = msg({
+	message: 'Sign-in method',
+	comment: 'Summary row label for how people sign in, on the setup wizard finish step.',
+});
+const SUMMARY_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Accepted',
+	comment: 'Summary value when the operator accepted the push relay notice.',
+});
+const SUMMARY_NOT_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Not accepted',
+	comment: 'Summary value when the operator left the push relay notice unaccepted.',
 });
 const SUMMARY_ON_DESCRIPTOR = msg({
 	message: 'Enabled',
@@ -373,7 +515,6 @@ const ASSET_DESCRIPTORS: Record<SetupBrandingAssetKind, MessageDescriptor> = {
 	favicon: ASSET_FAVICON_DESCRIPTOR,
 };
 
-const WELCOME_WORD_INLINE_PADDING_PX = 8;
 const SETUP_LANGUAGE_MENU_MAX_HEIGHT = 220;
 
 interface StepHeaderProps {
@@ -403,65 +544,7 @@ export const WelcomeStep = observer(
 		initialFocusRef?: React.Ref<HTMLElement>;
 	}) => {
 		const {i18n} = useLingui();
-		const prefersReducedMotion = useReducedMotion();
 		const currentLocale = LocaleUtils.getCurrentOrDetectedLocale();
-		const welcomeFrameRef = useRef<HTMLDivElement | null>(null);
-		const welcomeMeasureRef = useRef<HTMLSpanElement | null>(null);
-		const [welcomeScale, setWelcomeScale] = useState(1);
-		const [welcomeRotation, setWelcomeRotation] = useState(() => createWelcomeRotationState(currentLocale));
-		const measureWelcomeScale = useCallback(() => {
-			const frame = welcomeFrameRef.current;
-			const measure = welcomeMeasureRef.current;
-			if (!frame || !measure) return;
-			const availableWidth = Math.max(0, frame.clientWidth - WELCOME_WORD_INLINE_PADDING_PX);
-			const measuredWidth = Math.max(measure.scrollWidth, measure.getBoundingClientRect().width);
-			const nextScale = measuredWidth > 0 && availableWidth > 0 ? Math.min(1, availableWidth / measuredWidth) : 1;
-			setWelcomeScale((currentScale) => (Math.abs(currentScale - nextScale) > 0.005 ? nextScale : currentScale));
-		}, []);
-		useLayoutEffect(() => {
-			measureWelcomeScale();
-			const frame = welcomeFrameRef.current;
-			if (!frame) return undefined;
-			const ownerWindow = frame.ownerDocument.defaultView;
-			const resizeObserver =
-				typeof ownerWindow?.ResizeObserver === 'function' ? new ownerWindow.ResizeObserver(measureWelcomeScale) : null;
-			resizeObserver?.observe(frame);
-			ownerWindow?.addEventListener('resize', measureWelcomeScale);
-			void frame.ownerDocument.fonts?.ready.then(measureWelcomeScale);
-			return () => {
-				resizeObserver?.disconnect();
-				ownerWindow?.removeEventListener('resize', measureWelcomeScale);
-			};
-		}, [measureWelcomeScale, welcomeRotation]);
-		useEffect(() => {
-			setWelcomeRotation(createWelcomeRotationState(currentLocale));
-		}, [currentLocale]);
-		useEffect(() => {
-			const interval = window.setInterval(() => {
-				setWelcomeRotation((rotation) => {
-					if (rotation.position + 1 < rotation.order.length) {
-						return {
-							...rotation,
-							position: rotation.position + 1,
-						};
-					}
-					return createRandomWelcomeRotationState(rotation.order[rotation.position]);
-				});
-			}, 1800);
-			return () => window.clearInterval(interval);
-		}, []);
-		const welcome = WELCOME_ROTATION[welcomeRotation.order[welcomeRotation.position] ?? 0];
-		const motionState = prefersReducedMotion
-			? {
-					initial: {opacity: 0, scale: welcomeScale},
-					animate: {opacity: 1, scale: welcomeScale},
-					exit: {opacity: 0, scale: welcomeScale},
-				}
-			: {
-					initial: {opacity: 0, y: 14, scale: welcomeScale * 0.98},
-					animate: {opacity: 1, y: 0, scale: welcomeScale},
-					exit: {opacity: 0, y: -14, scale: welcomeScale * 0.98},
-				};
 		return (
 			<section
 				ref={initialFocusRef}
@@ -469,45 +552,12 @@ export const WelcomeStep = observer(
 				tabIndex={-1}
 				data-flx="app.self-hosted-setup-wizard-gate.welcome-step"
 			>
-				<div className={styles.welcomeHero} data-flx="app.self-hosted-setup-wizard-gate.welcome-hero">
-					<div
-						ref={welcomeFrameRef}
-						className={styles.welcomeWordFrame}
-						data-flx="app.self-hosted-setup-wizard-gate.welcome-word-frame"
-					>
-						<span
-							ref={welcomeMeasureRef}
-							className={styles.welcomeWordMeasure}
-							aria-hidden="true"
-							data-flx="app.self-hosted-setup-wizard-gate.welcome-word-measure"
-						>
-							{welcome.text}
-						</span>
-						<AnimatePresence mode="wait" initial={false}>
-							<motion.h2
-								key={welcome.code}
-								className={styles.welcomeWord}
-								initial={motionState.initial}
-								animate={motionState.animate}
-								exit={motionState.exit}
-								transition={{duration: prefersReducedMotion ? 0.22 : 0.42, ease: [0.22, 1, 0.36, 1]}}
-								data-flx="app.self-hosted-setup-wizard-gate.welcome-word"
-							>
-								{welcome.text}
-							</motion.h2>
-						</AnimatePresence>
-					</div>
-					{isAuthenticated ? (
-						<>
-							<h3 className={styles.welcomeTitle} data-flx="app.self-hosted-setup-wizard-gate.welcome-title">
-								{i18n._(WELCOME_AUTHED_TITLE_DESCRIPTOR, {productName})}
-							</h3>
-							<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.welcome-body">
-								{i18n._(WELCOME_AUTHED_BODY_DESCRIPTOR)}
-							</p>
-						</>
-					) : null}
-				</div>
+				<SetupWelcomeGate
+					localeCode={currentLocale}
+					productName={productName}
+					isAuthenticated={isAuthenticated}
+					data-flx="app.setup.setup-wizard-steps.welcome-step.setup-welcome-gate"
+				/>
 				<div className={styles.localeBlock} data-flx="app.self-hosted-setup-wizard-gate.locale-block">
 					<div className={styles.fieldLabel} data-flx="app.self-hosted-setup-wizard-gate.locale-label">
 						{i18n._(WELCOME_LANGUAGE_LABEL_DESCRIPTOR)}
@@ -519,8 +569,40 @@ export const WelcomeStep = observer(
 						maxMenuHeight={SETUP_LANGUAGE_MENU_MAX_HEIGHT}
 						menuPlacement="bottom"
 						className={styles.localeSelector}
+						data-flx="app.setup.setup-wizard-steps.welcome-step.locale-selector.set-local-locale"
 					/>
 				</div>
+			</section>
+		);
+	},
+);
+
+export const SetupTokenStep = observer(
+	({value, onChange, error}: {value: string; onChange: (value: string) => void; error: string | null}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.setup-token-step">
+				<StepHeader
+					title={i18n._(SETUP_TOKEN_TITLE_DESCRIPTOR)}
+					body={i18n._(SETUP_TOKEN_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.setup-token-step.step-header"
+				/>
+				<Input
+					label={i18n._(SETUP_TOKEN_LABEL_DESCRIPTOR)}
+					type="text"
+					value={value}
+					onChange={(event) => onChange(event.target.value)}
+					autoComplete="off"
+					spellCheck={false}
+					maxLength={256}
+					error={error ?? undefined}
+					footer={
+						<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.setup-token-help">
+							{i18n._(SETUP_TOKEN_HELP_DESCRIPTOR)}
+						</p>
+					}
+					data-flx="app.self-hosted-setup-wizard-gate.setup-token-input"
+				/>
 			</section>
 		);
 	},
@@ -532,15 +614,109 @@ export const ThemeStep = observer(
 		const themeLabel = i18n._(THEME_TITLE_DESCRIPTOR);
 		return (
 			<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.theme-step">
-				<StepHeader title={themeLabel} body={i18n._(THEME_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={themeLabel}
+					body={i18n._(THEME_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.theme-step.step-header"
+				/>
 				<div className={styles.themeBlock} data-flx="app.self-hosted-setup-wizard-gate.theme-block">
 					<ThemeSelector
 						value={theme}
 						onChange={onThemeChange}
 						ariaLabel={themeLabel}
 						className={styles.themeButtonGroup}
+						data-flx="app.setup.setup-wizard-steps.theme-step.theme-button-group.theme-change"
 					/>
 				</div>
+			</section>
+		);
+	},
+);
+
+export const SignInMethodStep = observer(
+	({
+		mode,
+		tagStyle,
+		disabled,
+		error,
+		onChange,
+		onTagStyleChange,
+	}: {
+		mode: AccountIdentityMode;
+		tagStyle: TagStyle;
+		disabled: boolean;
+		error: string | null;
+		onChange: (mode: AccountIdentityMode) => void;
+		onTagStyleChange: (tagStyle: TagStyle) => void;
+	}) => {
+		const {i18n} = useLingui();
+		const options: ReadonlyArray<RadioOption<AccountIdentityMode>> = [
+			{
+				value: AccountIdentityModes.USERNAME,
+				name: i18n._(SIGN_IN_METHOD_USERNAME_NAME_DESCRIPTOR),
+				desc: i18n._(SIGN_IN_METHOD_USERNAME_DESC_DESCRIPTOR),
+			},
+			{
+				value: AccountIdentityModes.EMAIL,
+				name: i18n._(SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR),
+				desc: i18n._(SIGN_IN_METHOD_EMAIL_DESC_DESCRIPTOR),
+			},
+		];
+		const usernameSignIn = mode === AccountIdentityModes.USERNAME;
+		const tagStyleOptions: ReadonlyArray<RadioOption<TagStyle>> = [
+			{
+				value: TagStyles.NONE,
+				name: i18n._(TAG_STYLE_NONE_NAME_DESCRIPTOR),
+				desc: i18n._(TAG_STYLE_NONE_EMAIL_DESC_DESCRIPTOR),
+			},
+			{
+				value: TagStyles.RANDOM,
+				name: i18n._(TAG_STYLE_RANDOM_NAME_DESCRIPTOR),
+				desc: i18n._(TAG_STYLE_RANDOM_EMAIL_DESC_DESCRIPTOR),
+			},
+		];
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-step">
+				<StepHeader
+					title={i18n._(SIGN_IN_METHOD_TITLE_DESCRIPTOR)}
+					body={i18n._(SIGN_IN_METHOD_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.sign-in-method-step.step-header"
+				/>
+				<RadioGroup
+					options={options}
+					value={mode}
+					onChange={onChange}
+					disabled={disabled}
+					aria-label={i18n._(SIGN_IN_METHOD_TITLE_DESCRIPTOR)}
+					data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-radio-group"
+				/>
+				{!usernameSignIn && (
+					<div className={styles.usernameStyle} data-flx="app.self-hosted-setup-wizard-gate.username-style">
+						<h3
+							className={styles.usernameStyleTitle}
+							data-flx="app.setup.setup-wizard-steps.sign-in-method-step.username-style-title"
+						>
+							{i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+						</h3>
+						<RadioGroup
+							options={tagStyleOptions}
+							value={tagStyle}
+							onChange={onTagStyleChange}
+							disabled={disabled}
+							aria-label={i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+							data-flx="app.self-hosted-setup-wizard-gate.username-style-radio-group"
+						/>
+					</div>
+				)}
+				{error && (
+					<p
+						className={styles.submitError}
+						role="alert"
+						data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-error"
+					>
+						{error}
+					</p>
+				)}
 			</section>
 		);
 	},
@@ -550,40 +726,87 @@ export const AdminIntroStep = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.admin-intro-step">
-			<StepHeader title={i18n._(WELCOME_UNAUTHED_TITLE_DESCRIPTOR)} body={i18n._(WELCOME_UNAUTHED_BODY_DESCRIPTOR)} />
+			<StepHeader
+				title={i18n._(WELCOME_UNAUTHED_TITLE_DESCRIPTOR)}
+				body={i18n._(WELCOME_UNAUTHED_BODY_DESCRIPTOR)}
+				data-flx="app.setup.setup-wizard-steps.admin-intro-step.step-header"
+			/>
 		</section>
 	);
 });
 
-export const AdminAccountStep = observer(({theme}: {theme: ThemeType}) => {
-	const {i18n} = useLingui();
-	return (
-		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
-			<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
-				<AuthRegisterFormCore
-					fields={{
-						showEmail: true,
-						showPassword: true,
-						showPasswordConfirmation: true,
-						showUsernameValidation: true,
-					}}
-					submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
-					redirectPath=""
-					theme={theme}
-					showLegalConsent={false}
-					data-flx="app.self-hosted-setup-wizard-gate.admin-register-form"
+export const AdminAccountStep = observer(
+	({
+		theme,
+		usernameSignIn,
+		setupToken,
+		onSetupTokenRejected,
+	}: {
+		theme: ThemeType;
+		usernameSignIn: boolean;
+		setupToken: string | undefined;
+		onSetupTokenRejected: (message: string) => void;
+	}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
+				<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
+					<AuthRegisterFormCore
+						fields={credentialRegisterFields(usernameSignIn)}
+						submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
+						redirectPath=""
+						runtimeSnapshot={RuntimeConfig.getSnapshot()}
+						offerRecoveryKit={usernameSignIn}
+						theme={theme}
+						showLegalConsent={false}
+						setupToken={setupToken}
+						onSetupTokenRejected={onSetupTokenRejected}
+						data-flx="app.self-hosted-setup-wizard-gate.admin-register-form"
+					/>
+				</div>
+			</section>
+		);
+	},
+);
+
+export const AdminRecoveryKitStep = observer(
+	({hasRecoveryKit, creating, onCreate}: {hasRecoveryKit: boolean; creating: boolean; onCreate: () => void}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-step">
+				<StepHeader
+					title={i18n._(ADMIN_RECOVERY_KIT_TITLE_DESCRIPTOR)}
+					body={i18n._(ADMIN_RECOVERY_KIT_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.admin-recovery-kit-step.step-header"
 				/>
-			</div>
-		</section>
-	);
-});
+				<Button
+					variant={hasRecoveryKit ? 'secondary' : 'primary'}
+					submitting={creating}
+					onClick={onCreate}
+					data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-step.button.create"
+				>
+					{hasRecoveryKit
+						? i18n._(ADMIN_RECOVERY_KIT_RECREATE_DESCRIPTOR)
+						: i18n._(ADMIN_RECOVERY_KIT_CREATE_DESCRIPTOR)}
+				</Button>
+				<p className={styles.body} role="status" data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-status">
+					{hasRecoveryKit ? i18n._(ADMIN_RECOVERY_KIT_SAVED_DESCRIPTOR) : i18n._(ADMIN_RECOVERY_KIT_MISSING_DESCRIPTOR)}
+				</p>
+			</section>
+		);
+	},
+);
 
 export const LoadingStep = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.loading-step">
 			<Spinner size="large" data-flx="app.self-hosted-setup-wizard-gate.loading-spinner" />
-			<StepHeader title={i18n._(LOADING_TITLE_DESCRIPTOR)} body={i18n._(LOADING_BODY_DESCRIPTOR)} />
+			<StepHeader
+				title={i18n._(LOADING_TITLE_DESCRIPTOR)}
+				body={i18n._(LOADING_BODY_DESCRIPTOR)}
+				data-flx="app.setup.setup-wizard-steps.loading-step.step-header"
+			/>
 		</section>
 	);
 });
@@ -621,7 +844,13 @@ const BrandingAssetRow = observer(({asset, disabled, onUpload, onClear}: Brandin
 					variant="secondary"
 					small
 					disabled={disabled}
-					leftIcon={<UploadSimpleIcon size={16} weight="bold" />}
+					leftIcon={
+						<UploadSimpleIcon
+							size={16}
+							weight="bold"
+							data-flx="app.setup.setup-wizard-steps.branding-asset-row.upload-simple-icon"
+						/>
+					}
 					onClick={() => onUpload(asset.kind)}
 					data-flx="app.self-hosted-setup-wizard-gate.asset-upload-button"
 				>
@@ -632,7 +861,13 @@ const BrandingAssetRow = observer(({asset, disabled, onUpload, onClear}: Brandin
 						variant="secondary"
 						small
 						square
-						icon={<TrashIcon size={16} weight="bold" />}
+						icon={
+							<TrashIcon
+								size={16}
+								weight="bold"
+								data-flx="app.setup.setup-wizard-steps.branding-asset-row.trash-icon"
+							/>
+						}
 						aria-label={i18n._(CLEAR_ASSET_DESCRIPTOR)}
 						disabled={disabled}
 						onClick={() => onClear(asset.kind)}
@@ -658,18 +893,22 @@ export const BrandingStep = observer(
 	}: {
 		productName: string;
 		productNameError: boolean;
-		themeColor: number;
+		themeColor: number | null;
 		assets: ReadonlyArray<BrandingAssetState>;
 		disabled: boolean;
 		onProductNameChange: (value: string) => void;
-		onThemeColorChange: (value: number) => void;
+		onThemeColorChange: (value: number | null) => void;
 		onUploadAsset: (kind: SetupBrandingAssetKind) => void;
 		onClearAsset: (kind: SetupBrandingAssetKind) => void;
 	}) => {
 		const {i18n} = useLingui();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.branding-step">
-				<StepHeader title={i18n._(BRANDING_TITLE_DESCRIPTOR)} body={i18n._(BRANDING_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(BRANDING_TITLE_DESCRIPTOR)}
+					body={i18n._(BRANDING_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.branding-step.step-header"
+				/>
 				<Input
 					label={i18n._(PRODUCT_NAME_LABEL_DESCRIPTOR)}
 					value={productName}
@@ -683,8 +922,11 @@ export const BrandingStep = observer(
 				/>
 				<ColorPickerField
 					label={i18n._(THEME_COLOR_LABEL_DESCRIPTOR)}
-					value={themeColor}
+					value={themeColor ?? DEFAULT_THEME_COLOR}
 					onChange={onThemeColorChange}
+					defaultValue={DEFAULT_THEME_COLOR}
+					isDefaultValue={themeColor === null}
+					onReset={() => onThemeColorChange(null)}
 					disabled={disabled}
 					data-flx="app.self-hosted-setup-wizard-gate.theme-color-field"
 				/>
@@ -699,6 +941,7 @@ export const BrandingStep = observer(
 							disabled={disabled}
 							onUpload={onUploadAsset}
 							onClear={onClearAsset}
+							data-flx="app.setup.setup-wizard-steps.branding-step.branding-asset-row"
 						/>
 					))}
 				</div>
@@ -737,7 +980,11 @@ export const RegistrationStep = observer(
 		];
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.registration-step">
-				<StepHeader title={i18n._(REGISTRATION_TITLE_DESCRIPTOR)} body={i18n._(REGISTRATION_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(REGISTRATION_TITLE_DESCRIPTOR)}
+					body={i18n._(REGISTRATION_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.registration-step.step-header"
+				/>
 				<RadioGroup
 					options={options}
 					value={mode}
@@ -774,7 +1021,11 @@ export const CommunityStep = observer(
 		const {i18n} = useLingui();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.community-step">
-				<StepHeader title={i18n._(COMMUNITY_TITLE_DESCRIPTOR)} body={i18n._(COMMUNITY_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(COMMUNITY_TITLE_DESCRIPTOR)}
+					body={i18n._(COMMUNITY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.community-step.step-header"
+				/>
 				<Switch
 					label={i18n._(SINGLE_COMMUNITY_LABEL_DESCRIPTOR)}
 					description={i18n._(SINGLE_COMMUNITY_DESC_DESCRIPTOR)}
@@ -832,21 +1083,14 @@ export interface MediaExpiryDraft {
 	renewWindowDays: string;
 }
 
-export type IntegrationStepKind = 'gif' | 'youtube' | 'captcha' | 'email' | 'bluesky';
+export type IntegrationStepKind = 'gif' | 'youtube' | 'email' | 'bluesky';
 export type IntegrationSetupMode = 'later' | 'configure';
-export type CaptchaProvider = 'hcaptcha' | 'turnstile';
 
 export interface ServiceIntegrationDraft {
 	gifMode: IntegrationSetupMode;
 	klipyApiKey: string;
 	youtubeMode: IntegrationSetupMode;
 	youtubeApiKey: string;
-	captchaMode: IntegrationSetupMode;
-	captchaProvider: CaptchaProvider;
-	hcaptchaSiteKey: string;
-	hcaptchaSecretKey: string;
-	turnstileSiteKey: string;
-	turnstileSecretKey: string;
 	emailMode: IntegrationSetupMode;
 	emailEnabled: boolean;
 	emailFromEmail: string;
@@ -855,7 +1099,7 @@ export interface ServiceIntegrationDraft {
 	smtpPort: string;
 	smtpUsername: string;
 	smtpPassword: string;
-	smtpSecure: boolean;
+	smtpTlsMode: SmtpTlsModeChoice;
 	blueskyMode: IntegrationSetupMode;
 	blueskyEnabled: boolean;
 	blueskyClientName: string;
@@ -899,14 +1143,6 @@ const YOUTUBE_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add a YouTube Data API key to enrich YouTube links.',
 	comment: 'Setup wizard body for YouTube integration credentials.',
 });
-const CAPTCHA_SETUP_TITLE_DESCRIPTOR = msg({
-	message: 'Bot protection',
-	comment: 'Setup wizard title for CAPTCHA integration credentials.',
-});
-const CAPTCHA_SETUP_BODY_DESCRIPTOR = msg({
-	message: 'Choose hCaptcha or Cloudflare Turnstile for signup challenges.',
-	comment: 'Setup wizard body for CAPTCHA integration credentials.',
-});
 const EMAIL_SETUP_TITLE_DESCRIPTOR = msg({
 	message: 'Email delivery',
 	comment: 'Setup wizard title for SMTP integration credentials.',
@@ -923,18 +1159,7 @@ const BLUESKY_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add Bluesky OAuth client metadata and a signing key.',
 	comment: 'Setup wizard body for Bluesky integration credentials.',
 });
-const PROVIDER_LABEL_DESCRIPTOR = msg({
-	message: 'Provider',
-	comment: 'Label for an integration provider choice.',
-});
-const HCAPTCHA_NAME_DESCRIPTOR = msg({message: 'hCaptcha', comment: 'hCaptcha provider option.'});
-const TURNSTILE_NAME_DESCRIPTOR = msg({
-	message: 'Cloudflare Turnstile',
-	comment: 'Cloudflare Turnstile provider option.',
-});
 const API_KEY_LABEL_DESCRIPTOR = msg({message: 'API key', comment: 'Label for an integration API key input.'});
-const SITE_KEY_LABEL_DESCRIPTOR = msg({message: 'Site key', comment: 'Label for a CAPTCHA site key input.'});
-const SECRET_KEY_LABEL_DESCRIPTOR = msg({message: 'Secret key', comment: 'Label for a CAPTCHA secret key input.'});
 const ENABLE_EMAIL_LABEL_DESCRIPTOR = msg({
 	message: 'Enable email delivery',
 	comment: 'Label for enabling SMTP email delivery in setup.',
@@ -951,9 +1176,49 @@ const SMTP_HOST_LABEL_DESCRIPTOR = msg({message: 'SMTP host', comment: 'Label fo
 const SMTP_PORT_LABEL_DESCRIPTOR = msg({message: 'Port', comment: 'Label for SMTP port input.'});
 const SMTP_USERNAME_LABEL_DESCRIPTOR = msg({message: 'Username', comment: 'Label for SMTP username input.'});
 const SMTP_PASSWORD_LABEL_DESCRIPTOR = msg({message: 'Password', comment: 'Label for SMTP password input.'});
-const SMTP_SECURE_LABEL_DESCRIPTOR = msg({
-	message: 'Use TLS',
-	comment: 'Label for SMTP TLS toggle.',
+const SMTP_TLS_MODE_LABEL_DESCRIPTOR = msg({
+	message: 'Encryption',
+	comment: 'Label for the choice of how the SMTP connection is encrypted.',
+});
+const SMTP_TLS_MODE_AUTO_NAME_DESCRIPTOR = msg({
+	message: 'Automatic',
+	comment: 'SMTP encryption option that picks the mode from the port.',
+});
+const SMTP_TLS_MODE_AUTO_DESC_DESCRIPTOR = msg({
+	message: 'Implicit TLS on port 465, required STARTTLS on any other port.',
+	comment: 'Description of the automatic SMTP encryption option.',
+});
+const SMTP_TLS_MODE_IMPLICIT_NAME_DESCRIPTOR = msg({
+	message: 'Implicit TLS',
+	comment: 'SMTP encryption option where the connection starts encrypted.',
+});
+const SMTP_TLS_MODE_IMPLICIT_DESC_DESCRIPTOR = msg({
+	message: 'The connection is encrypted from the start. Usually port 465.',
+	comment: 'Description of the implicit TLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_STARTTLS_NAME_DESCRIPTOR = msg({
+	message: 'STARTTLS',
+	comment: 'SMTP encryption option where a plain connection must upgrade with STARTTLS.',
+});
+const SMTP_TLS_MODE_STARTTLS_DESC_DESCRIPTOR = msg({
+	message: 'The connection must upgrade to TLS before signing in. Usually port 587.',
+	comment: 'Description of the required STARTTLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_OPPORTUNISTIC_NAME_DESCRIPTOR = msg({
+	message: 'STARTTLS when offered',
+	comment: 'SMTP encryption option where STARTTLS is used only if the server offers it.',
+});
+const SMTP_TLS_MODE_OPPORTUNISTIC_DESC_DESCRIPTOR = msg({
+	message: 'The connection upgrades to TLS only if the server offers it.',
+	comment: 'Description of the opportunistic STARTTLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_NONE_NAME_DESCRIPTOR = msg({
+	message: 'None',
+	comment: 'SMTP encryption option that never uses TLS.',
+});
+const SMTP_TLS_MODE_NONE_DESC_DESCRIPTOR = msg({
+	message: 'The connection is never encrypted. Only for a mail server on a network you trust.',
+	comment: 'Description of the SMTP encryption option that never uses TLS.',
 });
 const SMTP_TEST_DESCRIPTOR = msg({
 	message: 'Test SMTP',
@@ -962,6 +1227,10 @@ const SMTP_TEST_DESCRIPTOR = msg({
 const SMTP_TEST_OK_DESCRIPTOR = msg({
 	message: 'SMTP connection verified.',
 	comment: 'Success message after validating SMTP credentials.',
+});
+const SMTP_TEST_FAILED_DESCRIPTOR = msg({
+	message: 'SMTP validation failed.',
+	comment: 'Failure message after validating SMTP credentials when the server returns no error detail.',
 });
 const BLUESKY_ENABLED_LABEL_DESCRIPTOR = msg({
 	message: 'Enable Bluesky OAuth',
@@ -996,6 +1265,44 @@ const BLUESKY_PRIVATE_KEY_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for Bluesky OAuth private key input.',
 });
 
+export type SmtpTlsModeChoice = SmtpTlsMode | 'auto';
+
+export function toSmtpTlsMode(choice: SmtpTlsModeChoice, port: number): SmtpTlsMode {
+	return choice === 'auto' ? resolveSmtpTlsMode(null, port) : choice;
+}
+
+function buildSmtpTlsModeOptions(
+	i18n: ReturnType<typeof useLingui>['i18n'],
+): ReadonlyArray<RadioOption<SmtpTlsModeChoice>> {
+	return [
+		{
+			value: 'auto',
+			name: i18n._(SMTP_TLS_MODE_AUTO_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_AUTO_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.IMPLICIT,
+			name: i18n._(SMTP_TLS_MODE_IMPLICIT_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_IMPLICIT_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.STARTTLS,
+			name: i18n._(SMTP_TLS_MODE_STARTTLS_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_STARTTLS_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.OPPORTUNISTIC,
+			name: i18n._(SMTP_TLS_MODE_OPPORTUNISTIC_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_OPPORTUNISTIC_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.NONE,
+			name: i18n._(SMTP_TLS_MODE_NONE_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_NONE_DESC_DESCRIPTOR),
+		},
+	];
+}
+
 function buildIntegrationModeOptions(
 	i18n: ReturnType<typeof useLingui>['i18n'],
 ): ReadonlyArray<RadioOption<IntegrationSetupMode>> {
@@ -1019,8 +1326,6 @@ function getIntegrationMode(draft: ServiceIntegrationDraft, kind: IntegrationSte
 			return draft.gifMode;
 		case 'youtube':
 			return draft.youtubeMode;
-		case 'captcha':
-			return draft.captchaMode;
 		case 'email':
 			return draft.emailMode;
 		case 'bluesky':
@@ -1034,8 +1339,6 @@ function getIntegrationCopy(kind: IntegrationStepKind): {title: MessageDescripto
 			return {title: GIF_SETUP_TITLE_DESCRIPTOR, body: GIF_SETUP_BODY_DESCRIPTOR};
 		case 'youtube':
 			return {title: YOUTUBE_SETUP_TITLE_DESCRIPTOR, body: YOUTUBE_SETUP_BODY_DESCRIPTOR};
-		case 'captcha':
-			return {title: CAPTCHA_SETUP_TITLE_DESCRIPTOR, body: CAPTCHA_SETUP_BODY_DESCRIPTOR};
 		case 'email':
 			return {title: EMAIL_SETUP_TITLE_DESCRIPTOR, body: EMAIL_SETUP_BODY_DESCRIPTOR};
 		case 'bluesky':
@@ -1069,7 +1372,11 @@ export const MediaExpiryStep = observer(
 		const prefersReducedMotion = useReducedMotion();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.media-expiry-step">
-				<StepHeader title={i18n._(MEDIA_EXPIRY_TITLE_DESCRIPTOR)} body={i18n._(MEDIA_EXPIRY_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(MEDIA_EXPIRY_TITLE_DESCRIPTOR)}
+					body={i18n._(MEDIA_EXPIRY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.media-expiry-step.step-header"
+				/>
 				<Switch
 					label={i18n._(MEDIA_EXPIRY_ENABLE_LABEL_DESCRIPTOR)}
 					description={i18n._(MEDIA_EXPIRY_ENABLE_DESC_DESCRIPTOR)}
@@ -1078,7 +1385,7 @@ export const MediaExpiryStep = observer(
 					disabled={disabled}
 					data-flx="app.self-hosted-setup-wizard-gate.media-expiry-switch"
 				/>
-				<AnimatePresence initial={false}>
+				<AnimatePresence initial={false} data-flx="app.setup.setup-wizard-steps.media-expiry-step.animate-presence">
 					{draft.enabled && (
 						<motion.div
 							key="media-expiry-fields"
@@ -1093,13 +1400,17 @@ export const MediaExpiryStep = observer(
 								className={styles.integrationFields}
 								data-flx="app.self-hosted-setup-wizard-gate.media-expiry-fields"
 							>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid"
+								>
 									<Input
 										label={i18n._(MEDIA_MIN_SIZE_LABEL_DESCRIPTOR)}
 										inputMode="decimal"
 										value={draft.minSizeMb}
 										onChange={(event) => onDraftChange({minSizeMb: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change"
 									/>
 									<Input
 										label={i18n._(MEDIA_MAX_SIZE_LABEL_DESCRIPTOR)}
@@ -1107,6 +1418,7 @@ export const MediaExpiryStep = observer(
 										value={draft.maxSizeMb}
 										onChange={(event) => onDraftChange({maxSizeMb: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--2"
 									/>
 								</div>
 								<Input
@@ -1115,14 +1427,19 @@ export const MediaExpiryStep = observer(
 									value={draft.maxEligibleSizeMb}
 									onChange={(event) => onDraftChange({maxEligibleSizeMb: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--3"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid--2"
+								>
 									<Input
 										label={i18n._(MEDIA_MIN_LIFETIME_LABEL_DESCRIPTOR)}
 										inputMode="numeric"
 										value={draft.minLifetimeDays}
 										onChange={(event) => onDraftChange({minLifetimeDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--4"
 									/>
 									<Input
 										label={i18n._(MEDIA_MAX_LIFETIME_LABEL_DESCRIPTOR)}
@@ -1130,15 +1447,20 @@ export const MediaExpiryStep = observer(
 										value={draft.maxLifetimeDays}
 										onChange={(event) => onDraftChange({maxLifetimeDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--5"
 									/>
 								</div>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid--3"
+								>
 									<Input
 										label={i18n._(MEDIA_CURVE_LABEL_DESCRIPTOR)}
 										inputMode="decimal"
 										value={draft.curve}
 										onChange={(event) => onDraftChange({curve: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--6"
 									/>
 									<Input
 										label={i18n._(MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR)}
@@ -1146,6 +1468,7 @@ export const MediaExpiryStep = observer(
 										value={draft.renewThresholdDays}
 										onChange={(event) => onDraftChange({renewThresholdDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--7"
 									/>
 								</div>
 								<Input
@@ -1154,6 +1477,7 @@ export const MediaExpiryStep = observer(
 									value={draft.renewWindowDays}
 									onChange={(event) => onDraftChange({renewWindowDays: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--8"
 								/>
 							</div>
 						</motion.div>
@@ -1194,9 +1518,6 @@ export const IntegrationStep = observer(
 					case 'youtube':
 						onDraftChange({youtubeMode: next});
 						break;
-					case 'captcha':
-						onDraftChange({captchaMode: next});
-						break;
 					case 'email':
 						onDraftChange({emailMode: next});
 						break;
@@ -1207,19 +1528,20 @@ export const IntegrationStep = observer(
 			},
 			[kind, onDraftChange],
 		);
-		const captchaOptions: ReadonlyArray<RadioOption<CaptchaProvider>> = [
-			{value: 'hcaptcha', name: i18n._(HCAPTCHA_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-			{value: 'turnstile', name: i18n._(TURNSTILE_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-		];
 		return (
 			<section className={styles.step} data-flx={`app.self-hosted-setup-wizard-gate.integration-${kind}-step`}>
-				<StepHeader title={i18n._(copy.title)} body={i18n._(copy.body)} />
+				<StepHeader
+					title={i18n._(copy.title)}
+					body={i18n._(copy.body)}
+					data-flx="app.setup.setup-wizard-steps.integration-step.step-header"
+				/>
 				<RadioGroup
 					options={buildIntegrationModeOptions(i18n)}
 					value={mode}
 					onChange={setMode}
 					disabled={disabled}
 					aria-label={i18n._(copy.title)}
+					data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.set-mode"
 				/>
 				{mode === 'configure' && (
 					<div className={styles.integrationFields} data-flx="app.self-hosted-setup-wizard-gate.integration-fields">
@@ -1229,6 +1551,7 @@ export const IntegrationStep = observer(
 								value={draft.klipyApiKey}
 								onChange={(event) => onDraftChange({klipyApiKey: event.target.value})}
 								disabled={disabled}
+								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change"
 							/>
 						)}
 						{kind === 'youtube' && (
@@ -1237,44 +1560,8 @@ export const IntegrationStep = observer(
 								value={draft.youtubeApiKey}
 								onChange={(event) => onDraftChange({youtubeApiKey: event.target.value})}
 								disabled={disabled}
+								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--2"
 							/>
-						)}
-						{kind === 'captcha' && (
-							<>
-								<div className={styles.fieldLabel}>{i18n._(PROVIDER_LABEL_DESCRIPTOR)}</div>
-								<RadioGroup
-									options={captchaOptions}
-									value={draft.captchaProvider}
-									onChange={(value) => onDraftChange({captchaProvider: value})}
-									disabled={disabled}
-									aria-label={i18n._(PROVIDER_LABEL_DESCRIPTOR)}
-								/>
-								<Input
-									label={i18n._(SITE_KEY_LABEL_DESCRIPTOR)}
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSiteKey : draft.turnstileSiteKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSiteKey: event.target.value}
-												: {turnstileSiteKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-								/>
-								<Input
-									label={i18n._(SECRET_KEY_LABEL_DESCRIPTOR)}
-									type="password"
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSecretKey : draft.turnstileSecretKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSecretKey: event.target.value}
-												: {turnstileSecretKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-								/>
-							</>
 						)}
 						{kind === 'email' && (
 							<>
@@ -1283,25 +1570,32 @@ export const IntegrationStep = observer(
 									value={draft.emailEnabled}
 									onChange={(value) => onDraftChange({emailEnabled: value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change"
 								/>
 								<Input
 									label={i18n._(EMAIL_FROM_EMAIL_LABEL_DESCRIPTOR)}
 									value={draft.emailFromEmail}
 									onChange={(event) => onDraftChange({emailFromEmail: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--4"
 								/>
 								<Input
 									label={i18n._(EMAIL_FROM_NAME_LABEL_DESCRIPTOR)}
 									value={draft.emailFromName}
 									onChange={(event) => onDraftChange({emailFromName: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--5"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-grid"
+								>
 									<Input
 										label={i18n._(SMTP_HOST_LABEL_DESCRIPTOR)}
 										value={draft.smtpHost}
 										onChange={(event) => onDraftChange({smtpHost: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--6"
 									/>
 									<Input
 										label={i18n._(SMTP_PORT_LABEL_DESCRIPTOR)}
@@ -1309,6 +1603,7 @@ export const IntegrationStep = observer(
 										value={draft.smtpPort}
 										onChange={(event) => onDraftChange({smtpPort: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--7"
 									/>
 								</div>
 								<Input
@@ -1316,6 +1611,7 @@ export const IntegrationStep = observer(
 									value={draft.smtpUsername}
 									onChange={(event) => onDraftChange({smtpUsername: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--8"
 								/>
 								<Input
 									label={i18n._(SMTP_PASSWORD_LABEL_DESCRIPTOR)}
@@ -1323,14 +1619,26 @@ export const IntegrationStep = observer(
 									value={draft.smtpPassword}
 									onChange={(event) => onDraftChange({smtpPassword: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password--2"
 								/>
-								<Switch
-									label={i18n._(SMTP_SECURE_LABEL_DESCRIPTOR)}
-									value={draft.smtpSecure}
-									onChange={(value) => onDraftChange({smtpSecure: value})}
+								<div
+									className={styles.fieldLabel}
+									data-flx="app.setup.setup-wizard-steps.integration-step.smtp-tls-mode-label"
+								>
+									{i18n._(SMTP_TLS_MODE_LABEL_DESCRIPTOR)}
+								</div>
+								<RadioGroup
+									options={buildSmtpTlsModeOptions(i18n)}
+									value={draft.smtpTlsMode}
+									onChange={(value) => onDraftChange({smtpTlsMode: value})}
 									disabled={disabled}
+									aria-label={i18n._(SMTP_TLS_MODE_LABEL_DESCRIPTOR)}
+									data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.smtp-tls-mode"
 								/>
-								<div className={styles.integrationActionRow}>
+								<div
+									className={styles.integrationActionRow}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-action-row"
+								>
 									<Button
 										variant="secondary"
 										small
@@ -1343,12 +1651,21 @@ export const IntegrationStep = observer(
 											!draft.smtpPassword.trim()
 										}
 										onClick={onTestSmtp}
+										data-flx="app.setup.setup-wizard-steps.integration-step.button.test-smtp"
 									>
 										{i18n._(SMTP_TEST_DESCRIPTOR)}
 									</Button>
 									{smtpTestResult && (
-										<span className={styles.integrationStatus} role="status">
-											{smtpTestResult === 'ok' ? i18n._(SMTP_TEST_OK_DESCRIPTOR) : smtpTestResult}
+										<span
+											className={styles.integrationStatus}
+											role="status"
+											data-flx="app.setup.setup-wizard-steps.integration-step.integration-status"
+										>
+											{smtpTestResult === 'ok'
+												? i18n._(SMTP_TEST_OK_DESCRIPTOR)
+												: smtpTestResult === 'failed'
+													? i18n._(SMTP_TEST_FAILED_DESCRIPTOR)
+													: smtpTestResult}
 										</span>
 									)}
 								</div>
@@ -1361,37 +1678,46 @@ export const IntegrationStep = observer(
 									value={draft.blueskyEnabled}
 									onChange={(value) => onDraftChange({blueskyEnabled: value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change--3"
 								/>
 								<Input
 									label={i18n._(BLUESKY_CLIENT_NAME_LABEL_DESCRIPTOR)}
 									value={draft.blueskyClientName}
 									onChange={(event) => onDraftChange({blueskyClientName: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--9"
 								/>
 								<Input
 									label={i18n._(BLUESKY_CLIENT_URI_LABEL_DESCRIPTOR)}
 									value={draft.blueskyClientUri}
 									onChange={(event) => onDraftChange({blueskyClientUri: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--10"
 								/>
 								<Input
 									label={i18n._(BLUESKY_LOGO_URI_LABEL_DESCRIPTOR)}
 									value={draft.blueskyLogoUri}
 									onChange={(event) => onDraftChange({blueskyLogoUri: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--11"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-grid--2"
+								>
 									<Input
 										label={i18n._(BLUESKY_TOS_URI_LABEL_DESCRIPTOR)}
 										value={draft.blueskyTosUri}
 										onChange={(event) => onDraftChange({blueskyTosUri: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--12"
 									/>
 									<Input
 										label={i18n._(BLUESKY_POLICY_URI_LABEL_DESCRIPTOR)}
 										value={draft.blueskyPolicyUri}
 										onChange={(event) => onDraftChange({blueskyPolicyUri: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--13"
 									/>
 								</div>
 								<Input
@@ -1399,6 +1725,7 @@ export const IntegrationStep = observer(
 									value={draft.blueskyKeyId}
 									onChange={(event) => onDraftChange({blueskyKeyId: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--14"
 								/>
 								<Input
 									label={i18n._(BLUESKY_PRIVATE_KEY_LABEL_DESCRIPTOR)}
@@ -1406,11 +1733,46 @@ export const IntegrationStep = observer(
 									value={draft.blueskyPrivateKey}
 									onChange={(event) => onDraftChange({blueskyPrivateKey: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password--3"
 								/>
 							</>
 						)}
 					</div>
 				)}
+			</section>
+		);
+	},
+);
+
+export const PushRelayConsentStep = observer(
+	({accepted, disabled, onChange}: {accepted: boolean; disabled: boolean; onChange: (value: boolean) => void}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-step">
+				<StepHeader
+					title={i18n._(PUSH_RELAY_TITLE_DESCRIPTOR)}
+					body={i18n._(PUSH_RELAY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.step-header"
+				/>
+				<Switch
+					label={i18n._(PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR)}
+					description={i18n._(PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR)}
+					value={accepted}
+					onChange={onChange}
+					disabled={disabled}
+					data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-switch"
+				/>
+				<FocusRing data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.focus-ring">
+					<a
+						className={styles.noticeLink}
+						href={PUSH_RELAY_NOTICE_URL}
+						target="_blank"
+						rel="noreferrer"
+						data-flx="app.self-hosted-setup-wizard-gate.push-relay-notice-link"
+					>
+						{i18n._(PUSH_RELAY_NOTICE_LINK_DESCRIPTOR)}
+					</a>
+				</FocusRing>
 			</section>
 		);
 	},
@@ -1432,7 +1794,11 @@ export const ServicesStep = observer(
 		const anyAvailable = available.gif || available.youtube || available.bluesky;
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.services-step">
-				<StepHeader title={i18n._(SERVICES_TITLE_DESCRIPTOR)} body={i18n._(SERVICES_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(SERVICES_TITLE_DESCRIPTOR)}
+					body={i18n._(SERVICES_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.services-step.step-header"
+				/>
 				{!anyAvailable && (
 					<p className={styles.emptyNote} data-flx="app.self-hosted-setup-wizard-gate.services-empty">
 						{i18n._(SERVICES_NONE_DESCRIPTOR)}
@@ -1490,7 +1856,11 @@ export const PremiumStep = observer(
 		];
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.premium-step">
-				<StepHeader title={i18n._(PREMIUM_TITLE_DESCRIPTOR)} body={i18n._(PREMIUM_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(PREMIUM_TITLE_DESCRIPTOR)}
+					body={i18n._(PREMIUM_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.premium-step.step-header"
+				/>
 				<RadioGroup
 					options={options}
 					value={mode}
@@ -1523,18 +1893,24 @@ const SummaryRow: React.FC<SummaryRowProps> = ({label, value}) => (
 export const FinishStep = observer(
 	({
 		productName,
+		accountIdentity,
+		tagStyle,
 		registrationMode,
 		singleCommunityEnabled,
 		directMessagesDisabled,
 		attachmentExpiryEnabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		submitError,
 	}: {
 		productName: string;
+		accountIdentity: AccountIdentityMode;
+		tagStyle: TagStyle;
 		registrationMode: RegistrationMode;
 		singleCommunityEnabled: boolean;
 		directMessagesDisabled: boolean;
 		attachmentExpiryEnabled: boolean;
+		pushRelayConsentAccepted: boolean;
 		premiumMode: PremiumMode;
 		submitError: string | null;
 	}) => {
@@ -1551,23 +1927,67 @@ export const FinishStep = observer(
 		const offLabel = i18n._(SUMMARY_OFF_DESCRIPTOR);
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.finish-step">
-				<StepHeader title={i18n._(FINISH_TITLE_DESCRIPTOR)} body={i18n._(FINISH_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(FINISH_TITLE_DESCRIPTOR)}
+					body={i18n._(FINISH_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.finish-step.step-header"
+				/>
 				<div className={styles.summary} data-flx="app.self-hosted-setup-wizard-gate.summary">
-					<SummaryRow label={i18n._(SUMMARY_PRODUCT_NAME_DESCRIPTOR)} value={productName} />
-					<SummaryRow label={i18n._(SUMMARY_REGISTRATION_DESCRIPTOR)} value={registrationLabel} />
+					<SummaryRow
+						label={i18n._(SUMMARY_PRODUCT_NAME_DESCRIPTOR)}
+						value={productName}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row"
+					/>
+					<SummaryRow
+						label={i18n._(SUMMARY_SIGN_IN_METHOD_DESCRIPTOR)}
+						value={
+							accountIdentity === AccountIdentityModes.USERNAME
+								? i18n._(SIGN_IN_METHOD_USERNAME_SUMMARY_DESCRIPTOR)
+								: i18n._(SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR)
+						}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row.sign-in-method"
+					/>
+					{accountIdentity === AccountIdentityModes.EMAIL && (
+						<SummaryRow
+							label={i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+							value={i18n._(
+								tagStyle === TagStyles.NONE ? TAG_STYLE_NONE_SUMMARY_DESCRIPTOR : TAG_STYLE_RANDOM_SUMMARY_DESCRIPTOR,
+							)}
+							data-flx="app.setup.setup-wizard-steps.finish-step.summary-row.username-style"
+						/>
+					)}
+					<SummaryRow
+						label={i18n._(SUMMARY_REGISTRATION_DESCRIPTOR)}
+						value={registrationLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--2"
+					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_SINGLE_COMMUNITY_DESCRIPTOR)}
 						value={singleCommunityEnabled ? onLabel : offLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--3"
 					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_DIRECT_MESSAGES_DESCRIPTOR)}
 						value={directMessagesDisabled ? offLabel : onLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--4"
 					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR)}
 						value={attachmentExpiryEnabled ? onLabel : offLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--5"
 					/>
-					<SummaryRow label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)} value={premiumLabel} />
+					<SummaryRow
+						label={i18n._(SUMMARY_PUSH_RELAY_DESCRIPTOR)}
+						value={
+							pushRelayConsentAccepted ? i18n._(SUMMARY_ACCEPTED_DESCRIPTOR) : i18n._(SUMMARY_NOT_ACCEPTED_DESCRIPTOR)
+						}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+					/>
+					<SummaryRow
+						label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)}
+						value={premiumLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--7"
+					/>
 				</div>
 				{submitError && (
 					<p className={styles.submitError} role="alert" data-flx="app.self-hosted-setup-wizard-gate.submit-error">

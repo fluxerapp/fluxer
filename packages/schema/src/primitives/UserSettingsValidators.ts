@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	GuildFolderIcons,
 	MentionReplyPreferences,
 	MentionReplyPreferencesDescriptions,
 	ProfilePrivacyLevels,
@@ -22,7 +23,27 @@ import {
 	UserPremiumTypes,
 	UserPremiumTypesDescriptions,
 } from '@fluxer/constants/src/UserConstants';
-import {createInt32EnumType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	createInt32EnumType,
+	createNamedStringLiteralUnion,
+	withOpenApiType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+
+export const GuildFolderIconSchema = withOpenApiType(
+	createNamedStringLiteralUnion(
+		[
+			[GuildFolderIcons.FOLDER, 'FOLDER', 'Classic folder icon'],
+			[GuildFolderIcons.STAR, 'STAR', 'Star icon'],
+			[GuildFolderIcons.HEART, 'HEART', 'Heart icon'],
+			[GuildFolderIcons.BOOKMARK, 'BOOKMARK', 'Bookmark icon'],
+			[GuildFolderIcons.GAME_CONTROLLER, 'GAME_CONTROLLER', 'Game controller icon'],
+			[GuildFolderIcons.SHIELD, 'SHIELD', 'Shield icon'],
+			[GuildFolderIcons.MUSIC_NOTE, 'MUSIC_NOTE', 'Music note icon'],
+		] as const,
+		'Guild folder icon',
+	),
+	'GuildFolderIconType',
+);
 
 export const StickerAnimationOptionsSchema = createInt32EnumType(
 	[

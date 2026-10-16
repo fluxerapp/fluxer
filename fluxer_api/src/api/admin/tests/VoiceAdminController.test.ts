@@ -1,29 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAdminWithAcls} from '@app/api/admin/tests/AdminTestUtils';
+import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {
 	CreateVoiceRegionResponse,
 	CreateVoiceServerResponse,
-	ListVoiceRegionsResponse,
 	UpdateVoiceServerResponse,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {VoiceRepository} from '../../voice/VoiceRepository';
 
 interface VoiceFixture {
 	regionId: string;
 	serverId: string;
 	initialApiKey: string;
 	initialApiSecret: string;
-}
-
-async function createAdminWithAcls(harness: ApiTestHarness, acls: Array<string>): Promise<TestAccount> {
-	const account = await createTestAccount(harness);
-	return await setUserACLs(harness, account, [AdminACLs.AUTHENTICATE, ...acls]);
 }
 
 async function createVoiceFixture(
@@ -38,7 +33,7 @@ async function createVoiceFixture(
 	},
 ): Promise<VoiceFixture> {
 	await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
-		.post('/admin/voice/regions/create')
+		.post('/admin/voice/regions')
 		.body({
 			id: params.regionId,
 			name: `Region ${params.regionId}`,
@@ -49,9 +44,8 @@ async function createVoiceFixture(
 		.expect(HTTP_STATUS.OK)
 		.execute();
 	await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
-		.post('/admin/voice/servers/create')
+		.post(`/admin/voice/regions/${params.regionId}/servers`)
 		.body({
-			region_id: params.regionId,
 			server_id: params.serverId,
 			endpoint: params.endpoint,
 			api_key: params.apiKey,
@@ -77,60 +71,6 @@ describe('VoiceAdminController', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	test('returns servers when listing voice regions with include_servers enabled', async () => {
-		const admin = await createAdminWithAcls(harness, [
-			AdminACLs.VOICE_REGION_CREATE,
-			AdminACLs.VOICE_REGION_LIST,
-			AdminACLs.VOICE_SERVER_CREATE,
-		]);
-		const fixture = await createVoiceFixture(harness, admin, {
-			regionId: 'voice-region-list-with-servers',
-			serverId: 'voice-server-list-with-servers',
-			endpoint: 'https://voice-list.example.com/socket',
-			apiKey: 'list-api-key',
-			apiSecret: 'list-api-secret',
-		});
-		const result = await createBuilder<ListVoiceRegionsResponse>(harness, `${admin.token}`)
-			.post('/admin/voice/regions/list')
-			.body({include_servers: true})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(result.regions).toHaveLength(1);
-		expect(result.regions[0]?.id).toBe(fixture.regionId);
-		expect(result.regions[0]?.servers).toBeDefined();
-		expect(result.regions[0]?.servers).toHaveLength(1);
-		expect(result.regions[0]?.servers?.[0]?.server_id).toBe(fixture.serverId);
-	});
-	test('updates voice server credentials when api key and secret are provided', async () => {
-		const admin = await createAdminWithAcls(harness, [
-			AdminACLs.VOICE_REGION_CREATE,
-			AdminACLs.VOICE_SERVER_CREATE,
-			AdminACLs.VOICE_SERVER_UPDATE,
-		]);
-		const fixture = await createVoiceFixture(harness, admin, {
-			regionId: 'voice-region-credentials-update',
-			serverId: 'voice-server-credentials-update',
-			endpoint: 'https://voice-original.example.com/socket',
-			apiKey: 'original-api-key',
-			apiSecret: 'original-api-secret',
-		});
-		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
-			.post('/admin/voice/servers/update')
-			.body({
-				region_id: fixture.regionId,
-				server_id: fixture.serverId,
-				endpoint: 'https://voice-updated.example.com/socket',
-				api_key: 'updated-api-key',
-				api_secret: 'updated-api-secret',
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const persisted = await voiceRepository.getServer(fixture.regionId, fixture.serverId);
-		expect(persisted).not.toBeNull();
-		expect(persisted?.endpoint).toBe('https://voice-updated.example.com/socket');
-		expect(persisted?.apiKey).toBe('updated-api-key');
-		expect(persisted?.apiSecret).toBe('updated-api-secret');
-	});
 	test('updates api key and api secret independently when only one field is provided', async () => {
 		const admin = await createAdminWithAcls(harness, [
 			AdminACLs.VOICE_REGION_CREATE,
@@ -145,10 +85,8 @@ describe('VoiceAdminController', () => {
 			apiSecret: 'partial-before-api-secret',
 		});
 		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
-			.post('/admin/voice/servers/update')
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
 			.body({
-				region_id: fixture.regionId,
-				server_id: fixture.serverId,
 				api_key: 'partial-after-api-key',
 			})
 			.expect(HTTP_STATUS.OK)
@@ -158,10 +96,8 @@ describe('VoiceAdminController', () => {
 		expect(afterApiKeyUpdate?.apiKey).toBe('partial-after-api-key');
 		expect(afterApiKeyUpdate?.apiSecret).toBe(fixture.initialApiSecret);
 		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
-			.post('/admin/voice/servers/update')
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
 			.body({
-				region_id: fixture.regionId,
-				server_id: fixture.serverId,
 				api_secret: 'partial-after-api-secret',
 			})
 			.expect(HTTP_STATUS.OK)
@@ -185,10 +121,8 @@ describe('VoiceAdminController', () => {
 			apiSecret: 'before-api-secret',
 		});
 		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
-			.post('/admin/voice/servers/update')
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
 			.body({
-				region_id: fixture.regionId,
-				server_id: fixture.serverId,
 				endpoint: 'https://voice-after.example.com/socket',
 			})
 			.expect(HTTP_STATUS.OK)
@@ -198,5 +132,136 @@ describe('VoiceAdminController', () => {
 		expect(persisted?.endpoint).toBe('https://voice-after.example.com/socket');
 		expect(persisted?.apiKey).toBe(fixture.initialApiKey);
 		expect(persisted?.apiSecret).toBe(fixture.initialApiSecret);
+	});
+	test('stores, keeps, and clears a voice server soft connection limit', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_LIST,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const regionId = 'voice-region-soft-limit';
+		const serverId = 'voice-server-soft-limit';
+		await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
+			.post('/admin/voice/regions')
+			.body({
+				id: regionId,
+				name: `Region ${regionId}`,
+				emoji: ':earth_americas:',
+				latitude: 1,
+				longitude: 2,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const created = await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
+			.post(`/admin/voice/regions/${regionId}/servers`)
+			.body({
+				server_id: serverId,
+				endpoint: 'https://voice-soft-limit.example.com/socket',
+				api_key: 'soft-limit-api-key',
+				api_secret: 'soft-limit-api-secret',
+				soft_connection_limit: 250,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(created.server.soft_connection_limit).toBe(250);
+		expect((await voiceRepository.getServer(regionId, serverId))?.softConnectionLimit).toBe(250);
+		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({endpoint: 'https://voice-soft-limit-2.example.com/socket'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect((await voiceRepository.getServer(regionId, serverId))?.softConnectionLimit).toBe(250);
+		const cleared = await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({soft_connection_limit: null})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(cleared.server.soft_connection_limit).toBeNull();
+		expect((await voiceRepository.getServer(regionId, serverId))?.softConnectionLimit).toBeNull();
+	});
+	test('clears voice server restriction lists when empty arrays are supplied', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const regionId = 'voice-region-clear-restrictions';
+		const serverId = 'voice-server-clear-restrictions';
+		await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
+			.post('/admin/voice/regions')
+			.body({
+				id: regionId,
+				name: `Region ${regionId}`,
+				emoji: ':earth_americas:',
+				latitude: 1,
+				longitude: 2,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
+			.post(`/admin/voice/regions/${regionId}/servers`)
+			.body({
+				server_id: serverId,
+				endpoint: 'https://voice-clear.example.com/socket',
+				api_key: 'clear-api-key',
+				api_secret: 'clear-api-secret',
+				required_guild_features: ['VIP_VOICE'],
+				allowed_guild_ids: [1234567890123456789n.toString()],
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const stored = await voiceRepository.getServer(regionId, serverId);
+		expect(Array.from(stored?.restrictions.requiredGuildFeatures ?? [])).toEqual(['VIP_VOICE']);
+		expect(stored?.restrictions.allowedGuildIds.size).toBe(1);
+		const cleared = await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({required_guild_features: [], allowed_guild_ids: []})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(cleared.server.required_guild_features).toEqual([]);
+		expect(cleared.server.allowed_guild_ids).toEqual([]);
+		const persisted = await voiceRepository.getServer(regionId, serverId);
+		expect(persisted?.restrictions.requiredGuildFeatures.size).toBe(0);
+		expect(persisted?.restrictions.allowedGuildIds.size).toBe(0);
+	});
+	test('leaves voice server restriction lists unchanged when they are omitted', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const regionId = 'voice-region-keep-restrictions';
+		const serverId = 'voice-server-keep-restrictions';
+		await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
+			.post('/admin/voice/regions')
+			.body({
+				id: regionId,
+				name: `Region ${regionId}`,
+				emoji: ':earth_americas:',
+				latitude: 1,
+				longitude: 2,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
+			.post(`/admin/voice/regions/${regionId}/servers`)
+			.body({
+				server_id: serverId,
+				endpoint: 'https://voice-keep.example.com/socket',
+				api_key: 'keep-api-key',
+				api_secret: 'keep-api-secret',
+				required_guild_features: ['VIP_VOICE'],
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({is_active: false})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const persisted = await voiceRepository.getServer(regionId, serverId);
+		expect(Array.from(persisted?.restrictions.requiredGuildFeatures ?? [])).toEqual(['VIP_VOICE']);
+		expect(persisted?.isActive).toBe(false);
 	});
 });

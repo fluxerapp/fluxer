@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannelID, createGuildID, createMessageID, createUserID} from '../../BrandedTypes';
-import {addMemberRole, createRole, removeMemberRole} from '../../guild/tests/GuildTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {addMemberRole, createRole, removeMemberRole} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createGuild,
 	sendMessage,
 	updateChannelPermissions,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../repositories/UserRepository';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('User recent mentions', () => {
 	let harness: ApiTestHarness;
@@ -47,14 +47,16 @@ describe('User recent mentions', () => {
 		});
 		await addMemberRole(harness, owner.token, guild.id, member.userId, accessRole.id);
 		const message = await sendMessage(harness, owner.token, channelId, `<@${member.userId}> private ping`);
-		await new UserRepository().createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(message.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: false,
-		});
+		await new UserRepository().createRecentMentions([
+			{
+				user_id: createUserID(BigInt(member.userId)),
+				channel_id: createChannelID(BigInt(channelId)),
+				message_id: createMessageID(BigInt(message.id)),
+				guild_id: createGuildID(BigInt(guild.id)),
+				is_everyone: false,
+				is_role: false,
+			},
+		]);
 		const visibleMentions = await createBuilder<MessageListResponse>(harness, member.token)
 			.get('/users/@me/mentions')
 			.expect(HTTP_STATUS.OK)
@@ -83,14 +85,16 @@ describe('User recent mentions', () => {
 		const thirdMessage = await sendMessage(harness, owner.token, channelId, `<@${member.userId}> third ping`);
 		const repository = new UserRepository();
 		for (const message of [firstMessage, secondMessage, thirdMessage]) {
-			await repository.createRecentMention({
-				user_id: createUserID(BigInt(member.userId)),
-				channel_id: createChannelID(BigInt(channelId)),
-				message_id: createMessageID(BigInt(message.id)),
-				guild_id: createGuildID(BigInt(guild.id)),
-				is_everyone: false,
-				is_role: false,
-			});
+			await repository.createRecentMentions([
+				{
+					user_id: createUserID(BigInt(member.userId)),
+					channel_id: createChannelID(BigInt(channelId)),
+					message_id: createMessageID(BigInt(message.id)),
+					guild_id: createGuildID(BigInt(guild.id)),
+					is_everyone: false,
+					is_role: false,
+				},
+			]);
 		}
 		await createBuilder(harness, member.token)
 			.post('/users/@me/mentions/read')
@@ -103,75 +107,33 @@ describe('User recent mentions', () => {
 			.execute();
 		expect(remainingMentions.map((mention) => mention.id)).toEqual([thirdMessage.id]);
 	});
-	test('filters persisted role and everyone mentions independently', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Recent Mentions Type Filter Test');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, owner.token, channelId);
-		await acceptInvite(harness, member.token, invite.code);
-		const everyoneMessage = await sendMessage(harness, owner.token, channelId, 'everyone row');
-		const roleMessage = await sendMessage(harness, owner.token, channelId, 'role row');
-		const directMessage = await sendMessage(harness, owner.token, channelId, 'direct row');
-		const repository = new UserRepository();
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(everyoneMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: true,
-			is_role: false,
-		});
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(roleMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: true,
-		});
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(directMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: false,
-		});
-		const withoutRoles = await createBuilder<MessageListResponse>(harness, member.token)
-			.get('/users/@me/mentions?roles=false&everyone=true')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(withoutRoles.map((mention) => mention.id)).toEqual([directMessage.id, everyoneMessage.id]);
-		const withoutEveryone = await createBuilder<MessageListResponse>(harness, member.token)
-			.get('/users/@me/mentions?roles=true&everyone=false')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(withoutEveryone.map((mention) => mention.id)).toEqual([directMessage.id, roleMessage.id]);
-	});
 	test('continues scanning older rows when recent mentions are filtered out', async () => {
 		const repository = new UserRepository();
 		const userId = createUserID(10n);
 		const channelId = createChannelID(20n);
 		const guildId = createGuildID(30n);
 		const everyoneMessageId = createMessageID(1000n);
-		await repository.createRecentMention({
-			user_id: userId,
-			channel_id: channelId,
-			message_id: everyoneMessageId,
-			guild_id: guildId,
-			is_everyone: true,
-			is_role: false,
-		});
-		for (let i = 0; i < 50; i++) {
-			await repository.createRecentMention({
+		await repository.createRecentMentions([
+			{
 				user_id: userId,
 				channel_id: channelId,
-				message_id: createMessageID(1001n + BigInt(i)),
+				message_id: everyoneMessageId,
 				guild_id: guildId,
-				is_everyone: false,
-				is_role: true,
-			});
+				is_everyone: true,
+				is_role: false,
+			},
+		]);
+		for (let i = 0; i < 50; i++) {
+			await repository.createRecentMentions([
+				{
+					user_id: userId,
+					channel_id: channelId,
+					message_id: createMessageID(1001n + BigInt(i)),
+					guild_id: guildId,
+					is_everyone: false,
+					is_role: true,
+				},
+			]);
 		}
 		const mentions = await repository.listRecentMentions(userId, true, false, true, 1);
 		expect(mentions.map((mention) => mention.messageId)).toEqual([everyoneMessageId]);

@@ -18,12 +18,12 @@ import {
 	type VoiceMediaGraphClockPort,
 } from '@app/features/voice/engine/VoiceMediaGraphClock';
 import {checkVoiceMediaGraphInvariants} from '@app/features/voice/engine/VoiceMediaGraphInvariants';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 
 const logger = new Logger('VoiceMediaGraphStore');
 const LOGGED_VIOLATION_LIMIT = 256;
 
-export class VoiceMediaGraphStore extends Store {
+class VoiceMediaGraphStore extends Store {
 	graph: VoiceMediaGraphSnapshot = createVoiceMediaGraphSnapshot();
 
 	private readonly clock: VoiceMediaGraphClockPort;
@@ -33,7 +33,7 @@ export class VoiceMediaGraphStore extends Store {
 		super();
 		this.clock = clock;
 		makeObservable(this, {
-			graph: observable.ref,
+			graph: observableRef,
 		});
 	}
 
@@ -73,12 +73,6 @@ export class VoiceMediaGraphStore extends Store {
 		});
 	}
 
-	reset(): void {
-		this.update(() => {
-			this.graph = createVoiceMediaGraphSnapshot();
-		});
-	}
-
 	private checkInvariants(): void {
 		if (!IS_DEV) return;
 		const violations = checkVoiceMediaGraphInvariants(this.graph);
@@ -92,5 +86,3 @@ export class VoiceMediaGraphStore extends Store {
 }
 
 export const voiceMediaGraphStore = new VoiceMediaGraphStore();
-
-export default voiceMediaGraphStore;

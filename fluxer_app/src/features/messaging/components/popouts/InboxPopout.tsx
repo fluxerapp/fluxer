@@ -1,27 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getUnreadChannels, UnreadChannelsContent} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {
+	getMarkableUnreadChannels,
+	UnreadChannelsContent,
+} from '@app/features/app/components/floating/UnreadChannelsContent';
 import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
 import styles from '@app/features/messaging/components/popouts/InboxPopout.module.css';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
-import {ScheduledMessagesContent} from '@app/features/messaging/components/popouts/ScheduledMessagesContent';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING, useResizablePane} from '@app/features/ui/hooks/useResizablePane';
+import {
+	type ResizablePaneHandleLabels,
+	ResizablePaneHandles,
+} from '@app/features/ui/resizable_pane/ResizablePaneHandles';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
-import Users from '@app/features/user/state/Users';
-import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon, ClockIcon} from '@phosphor-icons/react';
+import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -35,10 +39,6 @@ const BOOKMARKS_DESCRIPTOR = msg({
 	message: 'Bookmarks',
 	comment: 'Tab label in the inbox popout listing the user bookmarks.',
 });
-const SCHEDULED_DESCRIPTOR = msg({
-	message: 'Scheduled',
-	comment: 'Tab label in the inbox popout listing the user scheduled messages.',
-});
 const INBOX_TABS_DESCRIPTOR = msg({
 	message: 'Inbox tabs',
 	comment: 'Accessible label for the inbox popout tablist.',
@@ -50,6 +50,22 @@ const MARK_ALL_AS_READ_DESCRIPTOR = msg({
 const MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark all inbox channels as read',
 	comment: 'Accessible label and tooltip for the mark-all-as-read button in the inbox popout.',
+});
+const RESIZE_INBOX_TOP_DESCRIPTOR = msg({
+	message: 'Resize inbox from the top edge',
+	comment: 'Accessible label for the top resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_BOTTOM_DESCRIPTOR = msg({
+	message: 'Resize inbox from the bottom edge',
+	comment: 'Accessible label for the bottom resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_LEFT_DESCRIPTOR = msg({
+	message: 'Resize inbox from the left edge',
+	comment: 'Accessible label for the left resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize inbox from the right edge',
+	comment: 'Accessible label for the right resize handle on the inbox popout.',
 });
 const RESIZE_INBOX_TOP_LEFT_DESCRIPTOR = msg({
 	message: 'Resize inbox from top left',
@@ -72,12 +88,16 @@ const INBOX_POPOUT_DEFAULT_SIZE = {width: 600, height: 900};
 const INBOX_POPOUT_MIN_SIZE = {width: 440, height: 400};
 const INBOX_POPOUT_RESIZING_CLASS = 'inbox-popout-resizing';
 const INBOX_POPOUT_RESIZE_CURSOR_PROPERTY = '--inbox-popout-resize-cursor';
-const INBOX_RESIZE_HANDLES: ReadonlyArray<{edge: ResizeEdge; className: string; label: MessageDescriptor}> = [
-	{edge: 'top-left', className: styles.resizeCornerTopLeft, label: RESIZE_INBOX_TOP_LEFT_DESCRIPTOR},
-	{edge: 'top-right', className: styles.resizeCornerTopRight, label: RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR},
-	{edge: 'bottom-left', className: styles.resizeCornerBottomLeft, label: RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR},
-	{edge: 'bottom-right', className: styles.resizeCornerBottomRight, label: RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR},
-];
+const INBOX_RESIZE_HANDLE_LABELS: ResizablePaneHandleLabels = {
+	top: RESIZE_INBOX_TOP_DESCRIPTOR,
+	bottom: RESIZE_INBOX_BOTTOM_DESCRIPTOR,
+	left: RESIZE_INBOX_LEFT_DESCRIPTOR,
+	right: RESIZE_INBOX_RIGHT_DESCRIPTOR,
+	'top-left': RESIZE_INBOX_TOP_LEFT_DESCRIPTOR,
+	'top-right': RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR,
+	'bottom-left': RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR,
+	'bottom-right': RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR,
+};
 
 interface TabConfig {
 	key: InboxTab;
@@ -92,7 +112,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const {size, getHandleProps} = useResizablePane(containerRef, {
-		storageKey: 'fluxer:ui:inbox-popout-size',
+		storageKey: AppStorageKey.UI_INBOX_POPOUT_SIZE,
 		defaultSize: INBOX_POPOUT_DEFAULT_SIZE,
 		minSize: INBOX_POPOUT_MIN_SIZE,
 		viewportPadding: RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING,
@@ -101,8 +121,8 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	});
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
-	const unreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
-	const baseTabs: Array<TabConfig> = [
+	const markableUnreadChannels = useMemo(() => getMarkableUnreadChannels(), [readStateVersion, settingsVersion]);
+	const tabs: Array<TabConfig> = [
 		{
 			key: 'unreadChannels',
 			label: i18n._(UNREAD_DESCRIPTOR),
@@ -119,15 +139,6 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 			icon: <AtIcon weight="bold" className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--3" />,
 		},
 	];
-	const scheduledTab: TabConfig = {
-		key: 'scheduled',
-		label: i18n._(SCHEDULED_DESCRIPTOR),
-		icon: <ClockIcon className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--4" />,
-	};
-	const currentUser = Users.getCurrentUser();
-	let showScheduledTab = false;
-	if (currentUser != null) showScheduledTab = currentUser.isStaff();
-	const tabs = showScheduledTab ? [...baseTabs, scheduledTab] : baseTabs;
 	const normalizedActiveTab = tabs.some((tab) => tab.key === activeTab) ? activeTab : tabs[0].key;
 	const setActiveTab = useCallback((tab: InboxTab) => {
 		InboxCommands.setTab(tab);
@@ -231,19 +242,6 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 					/>
 				</div>
 			)}
-			{showScheduledTab && normalizedActiveTab === 'scheduled' && (
-				<div
-					id="inbox-panel-scheduled"
-					className={styles.tabContent}
-					role="tabpanel"
-					tabIndex={-1}
-					aria-labelledby="scheduled"
-					data-autofocus=""
-					data-flx="messaging.inbox-popout.inbox-panel-scheduled"
-				>
-					<ScheduledMessagesContent data-flx="messaging.inbox-popout.scheduled-messages-content" />
-				</div>
-			)}
 		</div>
 	);
 	return (
@@ -285,7 +283,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 										type="button"
 										className={styles.sidebarActionButton}
 										onClick={handleMarkAllRead}
-										disabled={unreadChannels.length === 0}
+										disabled={markableUnreadChannels.length === 0}
 										aria-label={i18n._(MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR)}
 										data-flx="messaging.inbox-popout.sidebar-action-button.mark-all-read"
 									>
@@ -303,16 +301,11 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 				<div className={styles.mainPanel} data-flx="messaging.inbox-popout.main-panel">
 					{content}
 				</div>
-				{INBOX_RESIZE_HANDLES.map(({edge, className, label}) => (
-					<button
-						key={edge}
-						type="button"
-						aria-label={i18n._(label)}
-						aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
-						className={clsx(styles.resizeCorner, className)}
-						{...getHandleProps(edge)}
-					/>
-				))}
+				<ResizablePaneHandles
+					getHandleProps={getHandleProps}
+					labels={INBOX_RESIZE_HANDLE_LABELS}
+					data-flx="messaging.inbox-popout.resizable-pane-handles"
+				/>
 			</div>
 		</FocusRingScope>
 	);

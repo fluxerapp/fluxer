@@ -72,7 +72,12 @@ export class SlashOptionalHintNode extends DecoratorNode<JSX.Element> {
 	}
 
 	override decorate(): JSX.Element {
-		return <SlashOptionalHintPill remaining={this.getLatest().__remaining} />;
+		return (
+			<SlashOptionalHintPill
+				remaining={this.getLatest().__remaining}
+				data-flx="lexical.composer.nodes.slash-optional-hint-node.slash-optional-hint-pill"
+			/>
+		);
 	}
 }
 

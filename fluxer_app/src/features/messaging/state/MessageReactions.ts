@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import {
 	emptyMap,
@@ -39,6 +40,7 @@ type Listener = () => void;
 
 const EMPTY_REACTIONS: ReadonlyArray<MessageReaction> = Object.freeze([]);
 const EMPTY_USERS: ReadonlyArray<User> = Object.freeze([]);
+const MAX_TRACKED_REACTION_REQUEST_KEYS = 512;
 const createEmptyReactorEntry = (requestSerial = 0): ReactorEntry => ({
 	snapshot: createReactionUsersSnapshot(requestSerial),
 });
@@ -56,18 +58,17 @@ function isMissingReactionStateNoop(event: ReactionMachineEvent): boolean {
 		case 'reaction.remove':
 		case 'reaction.removeAll':
 		case 'reaction.removeEmoji':
-		case 'reaction.trackReactor':
 		case 'reaction.trackReactors':
-		case 'reaction.untrackReactor':
 			return true;
 	}
 }
 
-export class MessageReactionsManager {
+class MessageReactionsManager {
 	private messageStates: Map<string, MessageReactionState> = new Map();
 	private reactors: Map<string, ReactorEntry> = new Map();
 	private _keysByMessage: Map<string, Set<string>> = new Map();
 	private retiredReactionRequests: Map<string, number> = new Map();
+	private inFlightReactionRequests: Map<string, Set<number>> = new Map();
 	private messageListeners: Map<string, Set<Listener>> = new Map();
 	private reactionListeners: Map<string, Set<Listener>> = new Map();
 	private transactionDepth = 0;
@@ -176,7 +177,7 @@ export class MessageReactionsManager {
 		return entry;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		const messageIds = Array.from(this.messageStates.keys());
 		const reactionKeys = Array.from(this.reactors.keys());
 		for (const key of reactionKeys) this.retireReactionEntry(key);
@@ -247,7 +248,9 @@ export class MessageReactionsManager {
 	handleFetchPending(messageId: string, emoji: ReactionEmoji): number {
 		const entry = this.getOrCreateReactorEntry(messageId, emoji);
 		this.commitReactorEvent(messageId, emoji, entry, {type: 'fetch.pending'});
-		return entry.snapshot.context.activeRequestId ?? entry.snapshot.context.requestSerial;
+		const requestId = entry.snapshot.context.activeRequestId ?? entry.snapshot.context.requestSerial;
+		this.trackInFlightRequest(getReactionKey(messageId, emoji), requestId);
+		return requestId;
 	}
 
 	handleFetchSuccess(
@@ -261,7 +264,9 @@ export class MessageReactionsManager {
 		nextAfter?: string | null,
 	): void {
 		const key = getReactionKey(messageId, emoji);
-		if (this.shouldIgnoreFetchResult(key, requestId)) return;
+		const ignored = this.shouldIgnoreFetchResult(key, requestId);
+		this.settleInFlightRequest(key, requestId);
+		if (ignored) return;
 		const entry = this.getOrCreateReactorEntry(messageId, emoji);
 		Users.cacheUsers(users.slice());
 		this.commitReactorEvent(messageId, emoji, entry, {
@@ -288,7 +293,9 @@ export class MessageReactionsManager {
 		nextAfter?: string | null,
 	): void {
 		const key = getReactionKey(messageId, emoji);
-		if (this.shouldIgnoreFetchResult(key, requestId)) return;
+		const ignored = this.shouldIgnoreFetchResult(key, requestId);
+		this.settleInFlightRequest(key, requestId);
+		if (ignored) return;
 		const entry = this.getOrCreateReactorEntry(messageId, emoji);
 		Users.cacheUsers(users.slice());
 		this.commitReactorEvent(messageId, emoji, entry, {
@@ -306,7 +313,9 @@ export class MessageReactionsManager {
 
 	handleFetchError(messageId: string, emoji: ReactionEmoji, requestId?: number): void {
 		const key = getReactionKey(messageId, emoji);
-		if (this.shouldIgnoreFetchResult(key, requestId)) return;
+		const ignored = this.shouldIgnoreFetchResult(key, requestId);
+		this.settleInFlightRequest(key, requestId);
+		if (ignored) return;
 		this.commitReactorEvent(messageId, emoji, this.getOrCreateReactorEntry(messageId, emoji), {
 			type: 'fetch.error',
 			requestId,
@@ -370,10 +379,37 @@ export class MessageReactionsManager {
 	}
 
 	private retireReactionEntry(key: string, entry = this.reactors.get(key)): void {
+		this.reactors.delete(key);
+		if (!this.inFlightReactionRequests.has(key)) {
+			this.retiredReactionRequests.delete(key);
+			return;
+		}
 		const requestSerial = entry?.snapshot.context.requestSerial ?? 0;
 		const nextRequestId = Math.max(this.retiredReactionRequests.get(key) ?? 0, requestSerial);
 		this.retiredReactionRequests.set(key, nextRequestId);
-		this.reactors.delete(key);
+	}
+
+	private trackInFlightRequest(key: string, requestId: number): void {
+		const requestIds = this.inFlightReactionRequests.get(key) ?? new Set<number>();
+		requestIds.add(requestId);
+		this.inFlightReactionRequests.delete(key);
+		this.inFlightReactionRequests.set(key, requestIds);
+		while (this.inFlightReactionRequests.size > MAX_TRACKED_REACTION_REQUEST_KEYS) {
+			const oldest = this.inFlightReactionRequests.keys().next();
+			if (oldest.done) break;
+			this.inFlightReactionRequests.delete(oldest.value);
+			this.retiredReactionRequests.delete(oldest.value);
+		}
+	}
+
+	private settleInFlightRequest(key: string, requestId?: number): void {
+		if (requestId == null) return;
+		const requestIds = this.inFlightReactionRequests.get(key);
+		if (!requestIds) return;
+		requestIds.delete(requestId);
+		if (requestIds.size > 0) return;
+		this.inFlightReactionRequests.delete(key);
+		this.retiredReactionRequests.delete(key);
 	}
 
 	private shouldIgnoreFetchResult(key: string, requestId?: number): boolean {
@@ -422,4 +458,6 @@ export class MessageReactionsManager {
 	}
 }
 
-export default new MessageReactionsManager();
+const messageReactions = new MessageReactionsManager();
+ResettableStates.register(messageReactions, () => messageReactions.handleGatewayReady());
+export default messageReactions;

@@ -6,8 +6,14 @@ import type {FluxerErrorData} from '@fluxer/errors/src/FluxerError';
 
 type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled';
 
+type PremiumPurchaseBlockingProvider = 'stripe' | 'app_store' | 'google_play';
+
+interface PremiumPurchaseBlockedData extends FluxerErrorData {
+	provider?: PremiumPurchaseBlockingProvider;
+}
+
 export class PremiumPurchaseBlockedError extends ForbiddenError {
-	constructor(reason: PremiumPurchaseBlockedReason = 'purchase_disabled', data: FluxerErrorData = {}) {
+	constructor(reason: PremiumPurchaseBlockedReason = 'purchase_disabled', data: PremiumPurchaseBlockedData = {}) {
 		super({
 			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
 			data: {

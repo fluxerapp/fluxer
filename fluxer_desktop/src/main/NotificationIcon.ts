@@ -2,16 +2,25 @@
 
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import http from 'node:http';
-import https from 'node:https';
 import path from 'node:path';
 import {createChildLogger} from '@electron/common/Logger';
+import {
+	getDesktopOutboundHTTP,
+	parseDesktopHTTPTarget,
+	parseDesktopRedirectTarget,
+	readBoundedMessage,
+	readMessageContentLength,
+} from '@electron/main/DesktopOutboundHTTP';
 import {app, nativeImage} from 'electron';
 
 const logger = createChildLogger('NotificationIcon');
 const NOTIFICATION_ICON_DOWNLOAD_TIMEOUT_MS = 10000;
 const NOTIFICATION_ICON_MAX_BYTES = 3 * 1024 * 1024;
 const NOTIFICATION_ICON_CACHE_MAX_FILES = 512;
+const NOTIFICATION_ICON_MAX_CHUNKS = 4096;
+const NOTIFICATION_ICON_MAX_REDIRECTS = 5;
+const NOTIFICATION_ICON_CONTEXT = 'Notification icon download';
+const NOTIFICATION_ICON_REDIRECT_STATUS_CODES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
 
 type ResolvedNotificationIcon = NonNullable<Electron.NotificationConstructorOptions['icon']>;
 
@@ -146,7 +155,7 @@ export async function resolveNotificationIcon(source: string): Promise<ResolvedN
 		const buffer = await downloadToBuffer(source, {
 			maxBytes: NOTIFICATION_ICON_MAX_BYTES,
 			timeoutMs: NOTIFICATION_ICON_DOWNLOAD_TIMEOUT_MS,
-			redirectsRemaining: 5,
+			redirectsRemaining: NOTIFICATION_ICON_MAX_REDIRECTS,
 		});
 		const image = decodeNotificationIcon(source, buffer);
 		return image ? resolveDecodedNotificationIcon(source, image) : null;
@@ -159,71 +168,48 @@ export async function resolveNotificationIcon(source: string): Promise<ResolvedN
 		}
 		return resolveDecodedNotificationIcon(source, image);
 	}
-	return source;
+	logger.warn('Rejected non-URL notification icon source', {source: describeIconSource(source)});
+	return null;
 }
 
-function downloadToBuffer(url: string, options: DownloadOptions): Promise<Buffer> {
-	return new Promise((resolve, reject) => {
-		const parsedUrl = new URL(url);
-		const protocol = parsedUrl.protocol === 'https:' ? https : http;
-		let settled = false;
-		const finish = (error: Error | null, buffer?: Buffer): void => {
-			if (settled) return;
-			settled = true;
-			if (error) {
-				reject(error);
-			} else {
-				resolve(buffer ?? Buffer.alloc(0));
-			}
-		};
-		const request = protocol.get(parsedUrl, (response) => {
-			const statusCode = response.statusCode ?? 0;
-			if ([301, 302, 303, 307, 308].includes(statusCode)) {
-				const location = response.headers.location;
-				response.resume();
-				if (!location) {
-					finish(new Error(`Notification icon redirect missing Location header (${statusCode})`));
-					return;
-				}
-				if (options.redirectsRemaining <= 0) {
-					finish(new Error('Notification icon download exceeded redirect limit'));
-					return;
-				}
-				const redirectUrl = new URL(location, parsedUrl).toString();
-				downloadToBuffer(redirectUrl, {...options, redirectsRemaining: options.redirectsRemaining - 1})
-					.then(resolve)
-					.catch(reject);
-				settled = true;
-				return;
-			}
-			if (statusCode !== 200) {
-				response.resume();
-				finish(new Error(`Notification icon download failed with HTTP ${statusCode}`));
-				return;
-			}
-			const contentLengthRaw = response.headers['content-length'];
-			const contentLength = Array.isArray(contentLengthRaw) ? Number(contentLengthRaw[0]) : Number(contentLengthRaw);
-			if (Number.isFinite(contentLength) && contentLength > options.maxBytes) {
-				response.resume();
-				finish(new Error(`Notification icon exceeds ${options.maxBytes} bytes`));
-				return;
-			}
-			const chunks: Array<Buffer> = [];
-			let totalBytes = 0;
-			response.on('data', (chunk: Buffer) => {
-				totalBytes += chunk.length;
-				if (totalBytes > options.maxBytes) {
-					request.destroy(new Error(`Notification icon exceeds ${options.maxBytes} bytes`));
-					return;
-				}
-				chunks.push(chunk);
-			});
-			response.on('end', () => finish(null, Buffer.concat(chunks)));
-			response.on('error', finish);
+async function downloadToBuffer(url: string, options: DownloadOptions): Promise<Buffer> {
+	const initialTarget = parseDesktopHTTPTarget(url);
+	if (initialTarget == null) {
+		throw new Error('Notification icon URL must use http or https');
+	}
+	const outboundHTTP = getDesktopOutboundHTTP();
+	let target = initialTarget;
+	let redirectsRemaining = options.redirectsRemaining;
+	for (;;) {
+		const message = await outboundHTTP.get({
+			context: NOTIFICATION_ICON_CONTEXT,
+			timeoutMs: options.timeoutMs,
+			url: target,
 		});
-		request.setTimeout(options.timeoutMs, () => {
-			request.destroy(new Error(`Notification icon download timed out after ${options.timeoutMs}ms`));
+		const statusCode = message.status;
+		if (NOTIFICATION_ICON_REDIRECT_STATUS_CODES.has(statusCode)) {
+			message.message.destroy();
+			if (redirectsRemaining <= 0) {
+				throw new Error('Notification icon download exceeded redirect limit');
+			}
+			const next = parseDesktopRedirectTarget(message.url, message.headers.location);
+			if (next == null) {
+				throw new Error(`Notification icon redirect target is unusable (${statusCode})`);
+			}
+			target = next;
+			redirectsRemaining -= 1;
+			continue;
+		}
+		if (statusCode !== 200) {
+			message.message.destroy();
+			throw new Error(`Notification icon download failed with HTTP ${statusCode}`);
+		}
+		return await readBoundedMessage({
+			declaredBytes: readMessageContentLength(message, NOTIFICATION_ICON_CONTEXT),
+			description: NOTIFICATION_ICON_CONTEXT,
+			maxBytes: options.maxBytes,
+			maxChunks: NOTIFICATION_ICON_MAX_CHUNKS,
+			message: message.message,
 		});
-		request.on('error', finish);
-	});
+	}
 }

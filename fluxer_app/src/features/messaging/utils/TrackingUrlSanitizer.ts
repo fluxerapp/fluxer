@@ -11,7 +11,7 @@ import {
 const MAX_REWRITE_DEPTH = 2;
 const ABSOLUTE_HTTP_URL_PATTERN = /^https?:\/\//i;
 const YOUTUBE_HOST_PATTERN = /(?:^|\.)(?:youtube\.com|youtu\.be|youtube-nocookie\.com)$/i;
-const YOUTUBE_TRACKING_PARAMS = ['si', 'pp'] as const;
+const YOUTUBE_TRACKING_PARAMS = ['si', 'is', 'pp'] as const;
 
 interface DecodeContext {
 	readonly originalURL: string;

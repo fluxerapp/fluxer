@@ -5,11 +5,6 @@ declare const ChannelIdBrand: unique symbol;
 declare const UserIdBrand: unique symbol;
 declare const RoleIdBrand: unique symbol;
 declare const MessageIdBrand: unique symbol;
-declare const WebhookIdBrand: unique symbol;
-declare const EmojiIdBrand: unique symbol;
-declare const StickerIdBrand: unique symbol;
-declare const AttachmentIdBrand: unique symbol;
-declare const InviteCodeBrand: unique symbol;
 
 export type GuildId = string & {
 	readonly __brand: typeof GuildIdBrand;

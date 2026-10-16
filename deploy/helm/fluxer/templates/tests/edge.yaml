@@ -1,0 +1,46 @@
+{{- include "fluxer.validate" . }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fluxer-test-edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" (dict "root" . "name" "fluxer-test" "component" "test") | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  {{- include "fluxer.pullSecrets" . | nindent 2 }}
+  securityContext:
+    {{- include "fluxer.podSecurityContext" (dict "uid" 65532) | nindent 4 }}
+  containers:
+    - name: check
+      image: {{ include "fluxer.thirdPartyImage" .Values.edge.image }}
+      imagePullPolicy: {{ .Values.edge.image.pullPolicy }}
+      command:
+        - sh
+        - -c
+        - |
+          for i in $(seq 1 30); do
+            if wget -q -O /dev/null http://edge:8080/_health && wget -q -O - --header "Host: $DOMAIN" http://edge:8080/.well-known/fluxer > /tmp/discovery && grep -q "$DOMAIN" /tmp/discovery; then
+              echo "edge and discovery answer for $DOMAIN"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "edge or discovery did not answer for $DOMAIN within 60 seconds" >&2
+          exit 1
+      env:
+        - name: DOMAIN
+          value: {{ .Values.domain | quote }}
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 64Mi
+      securityContext:
+        {{- include "fluxer.containerSecurityContext" . | nindent 8 }}

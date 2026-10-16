@@ -3,17 +3,20 @@
 mod android_association;
 mod apple_association;
 mod assets_proxy;
+pub(crate) mod file_stream;
 mod health;
 mod spa_index;
 mod spa_static;
+
+pub use spa_index::present_local_asset_prefixes;
 
 use crate::state::AppState;
 use axum::{
     Router,
     extract::Request,
     http::{HeaderName, HeaderValue, header},
-    middleware::{Next, from_fn, from_fn_with_state},
-    response::Response,
+    middleware::{Next, from_fn},
+    response::{IntoResponse, Response},
     routing::get,
 };
 use rand::RngExt;
@@ -25,14 +28,12 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-const STRICT_TRANSPORT_SECURITY_VALUE: &str = "max-age=31536000; includeSubDomains; preload";
-const REFERRER_POLICY_VALUE: &str = "strict-origin-when-cross-origin";
-const X_FRAME_OPTIONS_VALUE: &str = "DENY";
 const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), ch-dpr=(self), ch-save-data=(self), ch-viewport-width=(self), ch-width=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/_health", get(health::health))
+        .route("/_ready", get(health::ready))
         .route(
             "/.well-known/apple-app-site-association",
             get(apple_association::apple_app_site_association),
@@ -49,15 +50,13 @@ pub fn build_router(state: AppState) -> Router {
         .route("/version.json", get(spa_static::version_json))
         .route("/manifest.json", get(spa_static::manifest_json))
         .route("/browserconfig.xml", get(spa_static::browserconfig_xml))
+        .route("/favicon.ico", get(spa_static::favicon_ico))
         .route("/sw.js", get(spa_static::service_worker))
         .route("/sw.js.map", get(spa_static::service_worker_map))
         .fallback(get(spa_index::spa_catch_all))
         .layer(from_fn(request_id_middleware))
         .layer(from_fn(cache_headers_middleware))
-        .layer(from_fn_with_state(
-            state.clone(),
-            security_headers_middleware,
-        ))
+        .layer(from_fn(security_headers_middleware))
         .layer(
             CompressionLayer::new()
                 .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
@@ -66,29 +65,14 @@ pub fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn security_headers_middleware(
-    axum::extract::State(_state): axum::extract::State<AppState>,
-    request: Request,
-    next: Next,
-) -> Response {
+async fn security_headers_middleware(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
-    let headers = response.headers_mut();
-
-    set_static_header(
-        headers,
-        header::STRICT_TRANSPORT_SECURITY,
-        STRICT_TRANSPORT_SECURITY_VALUE,
-    );
-    set_static_header(headers, header::X_CONTENT_TYPE_OPTIONS, "nosniff");
-    set_static_header(headers, header::REFERRER_POLICY, REFERRER_POLICY_VALUE);
-    set_static_header(headers, header::X_FRAME_OPTIONS, X_FRAME_OPTIONS_VALUE);
-    set_static_header(
-        headers,
-        HeaderName::from_static("permissions-policy"),
-        PERMISSIONS_POLICY_VALUE,
-    );
-
+    set_security_headers(response.headers_mut());
     response
+}
+
+fn set_security_headers(headers: &mut axum::http::HeaderMap) {
+    fluxer_common::server::set_baseline_security_headers(headers, PERMISSIONS_POLICY_VALUE);
 }
 
 async fn cache_headers_middleware(request: Request, next: Next) -> Response {
@@ -125,8 +109,10 @@ fn generate_request_id() -> String {
     hex::encode(bytes)
 }
 
-fn set_static_header(headers: &mut axum::http::HeaderMap, name: HeaderName, value: &'static str) {
-    headers
-        .entry(name)
-        .or_insert(HeaderValue::from_static(value));
+pub(crate) fn capacity_refused_response() -> Response {
+    let mut response = axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    let headers = response.headers_mut();
+    headers.insert(header::RETRY_AFTER, HeaderValue::from_static("1"));
+    headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
 }

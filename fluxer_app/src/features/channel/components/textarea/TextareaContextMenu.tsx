@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
+import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
-import type {SpellcheckEngine} from '@app/features/platform/types/Electron';
-import {CheckboxItem, MenuSeparator} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu, MenuSeparator} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
+import type {SpellcheckEngine} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {
@@ -97,6 +99,11 @@ const SPELLCHECK_SETTINGS_DESCRIPTOR = msg({
 		'Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.',
 });
 
+const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
+	message: 'Show send button',
+	comment: 'Short label in the channel and chat textarea plus menu. Keep it concise.',
+});
+
 export interface TextareaContextMenuEditFlags {
 	canUndo: boolean;
 	canRedo: boolean;
@@ -111,24 +118,27 @@ interface TextareaContextMenuProps {
 	suggestions?: Array<string>;
 	editFlags?: TextareaContextMenuEditFlags;
 	targetElement?: HTMLElement | null;
+	showSendButtonToggle?: boolean;
 	onClose: () => void;
 }
 
 export const TextareaContextMenu = observer(
-	({misspelledWord, suggestions = [], editFlags, targetElement, onClose}: TextareaContextMenuProps) => {
+	({
+		misspelledWord,
+		suggestions = [],
+		editFlags,
+		targetElement,
+		showSendButtonToggle = false,
+		onClose,
+	}: TextareaContextMenuProps) => {
 		const {i18n} = useLingui();
+		const showMessageSendButton = Accessibility.showMessageSendButton;
 		const electronAPI = isElectron() ? getElectronAPI() : null;
 		const focusTargetElement = () => {
 			if (!targetElement?.isConnected) {
 				return;
 			}
 			targetElement.focus({preventScroll: true});
-		};
-		const handleReplaceMisspelling = async (suggestion: string) => {
-			if (electronAPI?.spellcheckReplaceMisspelling) {
-				await electronAPI.spellcheckReplaceMisspelling(suggestion);
-			}
-			onClose();
 		};
 		const handleAddToDictionary = async () => {
 			if (!misspelledWord) return;
@@ -149,6 +159,11 @@ export const TextareaContextMenu = observer(
 			requestAnimationFrame(() => {
 				focusTargetElement();
 				requestAnimationFrame(action);
+			});
+		};
+		const handleReplaceMisspelling = (suggestion: string) => {
+			runAfterClose(() => {
+				void electronAPI?.spellcheckReplaceMisspelling?.(suggestion);
 			});
 		};
 		const execCommand = (command: string) => {
@@ -189,15 +204,19 @@ export const TextareaContextMenu = observer(
 		};
 		const handleOpenSpellcheckSettings = () => {
 			ModalCommands.push(
-				ModalCommands.modal(() => (
-					<UserSettingsModal
-						initialTab="language"
-						data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
-					/>
-				)),
+				ModalCommands.modal(
+					() => (
+						<UserSettingsModal
+							initialTab="language"
+							data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 			onClose();
 		};
+		const isPasswordTarget = targetElement instanceof HTMLInputElement && targetElement.type === 'password';
 		const spellcheckEnabled = Spellcheck.enabled;
 		const hasMisspelling = spellcheckEnabled && misspelledWord && suggestions.length > 0;
 		return (
@@ -288,19 +307,33 @@ export const TextareaContextMenu = observer(
 						{i18n._(SELECT_ALL_DESCRIPTOR)}
 					</MenuItem>
 				</MenuGroup>
-				<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--5">
-					<MenuItemSubmenu
-						label={i18n._(SPELLCHECK_DESCRIPTOR)}
-						render={() => (
-							<SpellcheckSubmenu
-								isElectron={isElectron()}
-								onOpenSpellcheckSettings={handleOpenSpellcheckSettings}
-								data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu"
-							/>
-						)}
-						data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
-					/>
-				</MenuGroup>
+				{!isPasswordTarget && (
+					<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--5">
+						<MenuItemSubmenu
+							label={i18n._(SPELLCHECK_DESCRIPTOR)}
+							render={() => (
+								<SpellcheckSubmenu
+									isElectron={isElectron()}
+									onOpenSpellcheckSettings={handleOpenSpellcheckSettings}
+									data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu"
+								/>
+							)}
+							data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
+						/>
+					</MenuGroup>
+				)}
+				{showSendButtonToggle && (
+					<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--6">
+						<CheckboxItem
+							checked={showMessageSendButton}
+							onCheckedChange={(checked) => AccessibilityCommands.update({showMessageSendButton: checked})}
+							closeOnChange={false}
+							data-flx="channel.textarea.textarea-context-menu.checkbox-item.show-send-button"
+						>
+							{i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
+						</CheckboxItem>
+					</MenuGroup>
+				)}
 			</>
 		);
 	},
@@ -407,7 +440,7 @@ const SpellcheckSubmenu = observer(({isElectron: electron, onOpenSpellcheckSetti
 				onClick={onOpenSpellcheckSettings}
 				data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu.menu-item.open-spellcheck-settings"
 			>
-				{i18n._(SPELLCHECK_SETTINGS_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				{i18n._(SPELLCHECK_SETTINGS_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 			</MenuItem>
 		</>
 	);

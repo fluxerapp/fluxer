@@ -78,12 +78,6 @@
 	width: 1rem;
 }
 
-.divider {
-	height: 1.25rem;
-	width: 0.0625rem;
-	background-color: var(--background-header-secondary);
-}
-
 .closeButton {
 	display: flex;
 	align-items: center;

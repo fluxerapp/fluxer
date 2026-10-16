@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.starter {
+	grid-column: 1 / -1;
+}
+
+.starterDeleted {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	color: var(--text-tertiary);
+	font-style: italic;
+}
+
+.threadName {
+	font-weight: 600;
+}

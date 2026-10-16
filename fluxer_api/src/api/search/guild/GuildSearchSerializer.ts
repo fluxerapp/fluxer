@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {Guild} from '@app/api/models/Guild';
 import {normalizeDiscoveryTag} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, getEffectiveGuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import type {SearchableGuild} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {Guild} from '../../models/Guild';
 
 export interface GuildDiscoveryContext {
 	description: string | null;

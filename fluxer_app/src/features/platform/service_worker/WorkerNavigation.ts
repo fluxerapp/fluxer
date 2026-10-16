@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const APP_NAVIGATION_EXACT_PATHS = new Set([
-	'/',
+	'/app',
 	'/login',
 	'/register',
 	'/forgot',
 	'/reset',
+	'/recover',
 	'/verify',
 	'/authorize-ip',
 	'/wasntme',
@@ -27,7 +28,7 @@ const APP_NAVIGATION_EXACT_PATHS = new Set([
 	'/theme',
 ]);
 
-const APP_NAVIGATION_PREFIXES = ['/channels/', '/users/', '/invite/', '/gift/', '/theme/'];
+const APP_NAVIGATION_PREFIXES = ['/channels/', '/users/', '/invite/', '/gift/', '/theme/', '/migrate/'];
 
 export function isAppNavigationPath(pathname: string): boolean {
 	const normalizedPathname = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;

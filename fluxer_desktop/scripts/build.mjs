@@ -9,69 +9,133 @@ import * as esbuild from 'esbuild';
 const ROOT_DIR = path.resolve(import.meta.dirname, '..');
 const SRC_DIR = path.join(ROOT_DIR, 'src');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
+const BUILD_INFO_FILE_NAME = 'build-info.json';
+const BUILD_IN_PROGRESS_FILE_NAME = '.build-in-progress';
+const BUILD_IN_PROGRESS_FILE = path.join(DIST_DIR, BUILD_IN_PROGRESS_FILE_NAME);
+let compiledBuildChannel = '';
 const NATIVE_DIR = path.join(ROOT_DIR, 'native');
+const MONOREPO_ROOT = path.join(ROOT_DIR, '..');
+const APP_DIST_DIR = path.join(MONOREPO_ROOT, 'fluxer_app', 'dist');
+const RENDERER_DIST_ENTRY_NAME = 'renderer';
+const RENDERER_DIST_DIR = path.join(DIST_DIR, RENDERER_DIST_ENTRY_NAME);
+const SPLASH_SRC_DIR = path.join(SRC_DIR, 'splash');
+const SPLASH_DIST_DIR = path.join(DIST_DIR, 'splash');
+const SPLASH_PRELOAD_FILE_NAME = 'splash.cjs';
+const REQUIRED_RENDERER_ENTRIES = Object.freeze(['index.html', 'assets']);
+const BUNDLED_RENDERER_ENTRIES = Object.freeze([...REQUIRED_RENDERER_ENTRIES, 'version.json']);
+const BUNDLED_RENDERER_VERSION_PATTERN = /^\d+\.\d+\.\d+$/u;
+const FORBIDDEN_RENDERER_ENTRIES = Object.freeze(['sw.js', 'sw.js.map']);
+const SUPPORTED_BUILD_ARGUMENTS = Object.freeze(['--shared-assets', '--use-shared-renderer']);
+const MAIN_BOOTSTRAP_ENTRY_NAME = 'index';
+const MAIN_APP_ENTRY_NAME = 'MainApp';
+const MAIN_APP_OUTPUT_FILE_NAME = `${MAIN_APP_ENTRY_NAME}.js`;
+const MAIN_APP_OUTPUT_FILE_DEFINE = '__FLUXER_MAIN_APP_OUTPUT_FILE__';
+const MAIN_BOOTSTRAP_SOURCE = path.join(SRC_DIR, 'main', 'Bootstrap.ts');
+const MAIN_APP_SOURCE = path.join(SRC_DIR, 'main', 'index.ts');
+const DESKTOP_TSCONFIG = path.join(ROOT_DIR, 'tsconfig.json');
 const requireModule = createRequire(import.meta.url);
 const isProduction =
 	process.env.NODE_ENV === 'production' ||
 	process.env.FLUXER_DESKTOP_PRODUCTION === 'true' ||
 	process.env.GITHUB_ACTIONS === 'true';
 const skipNative = process.env.FLUXER_SKIP_NATIVE === 'true';
-const embeddedBuildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || '';
+let embeddedBuildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || '';
 const embeddedReleaseChannel = process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || '';
-const publicBuildDefines = {
-	'process.env.PUBLIC_BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
-	'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
-	'process.env.PUBLIC_RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-	'process.env.RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-};
+const modulesEnabled = process.env.FLUXER_MODULES === '1' || process.env.FLUXER_MODULES === 'true';
+const offlineBuild = process.env.FLUXER_OFFLINE === '1' || process.env.FLUXER_OFFLINE === 'true';
+function publicBuildDefines() {
+	return {
+		'process.env.PUBLIC_BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
+		'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
+		'process.env.PUBLIC_RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
+		'process.env.RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
+		'process.env.FLUXER_MODULES': JSON.stringify(modulesEnabled ? '1' : ''),
+		'process.env.FLUXER_OFFLINE': JSON.stringify(offlineBuild ? '1' : ''),
+	};
+}
 const electronExternals = [
 	'electron',
 	'electron-log',
-	'update-electron-app',
 	'velopack',
+	'@fluxer/app-store',
+	'@fluxer/gateway-socket',
+	'@fluxer/hardware-encoder',
 	'@fluxer/webauthn',
-	'@fluxer/webrtc-sender',
 	'hunspell-asm',
 ];
-const pathAliasPlugin = {
-	name: 'path-alias',
-	setup(build) {
-		build.onResolve({filter: /^@electron\//}, (args) => {
-			const relativePath = args.path.replace(/^@electron\//, '');
-			const absolutePath = path.join(SRC_DIR, relativePath);
-			const extensions = ['.tsx', '.ts', '.js', '.jsx'];
-			for (const ext of extensions) {
-				const fullPath = absolutePath + ext;
-				if (fs.existsSync(fullPath)) {
-					return {path: fullPath};
-				}
-			}
-			for (const ext of extensions) {
-				const indexPath = path.join(absolutePath, `index${ext}`);
-				if (fs.existsSync(indexPath)) {
-					return {path: indexPath};
-				}
-			}
-			return {path: `${absolutePath}.tsx`};
-		});
-		build.onResolve({filter: /^@fluxer\/voice_engine_v2(?:\/.*)?$/}, (args) => {
-			const packageSrcDir = path.join(ROOT_DIR, '..', 'packages', 'voice_engine_v2', 'src');
-			if (args.path === '@fluxer/voice_engine_v2') {
-				return {path: path.join(packageSrcDir, 'index.ts')};
-			}
-			const relativePath = args.path.replace(/^@fluxer\/voice_engine_v2\//, '');
-			const directTsPath = path.join(packageSrcDir, `${relativePath}.ts`);
-			if (fs.existsSync(directTsPath)) {
-				return {path: directTsPath};
-			}
-			const indexTsPath = path.join(packageSrcDir, relativePath, 'index.ts');
-			if (fs.existsSync(indexTsPath)) {
-				return {path: indexTsPath};
-			}
-			return {path: path.join(packageSrcDir, relativePath)};
-		});
-	},
-};
+class UnsupportedDesktopBuildArgumentError extends Error {
+	constructor(argument) {
+		super(`Unsupported desktop build argument: ${argument}`);
+		this.name = 'UnsupportedDesktopBuildArgumentError';
+	}
+}
+
+class DuplicateDesktopBuildArgumentError extends Error {
+	constructor(argument) {
+		super(`Duplicate desktop build argument: ${argument}`);
+		this.name = 'DuplicateDesktopBuildArgumentError';
+	}
+}
+
+class SharedRendererConsumerConflictError extends Error {
+	constructor() {
+		super('--shared-assets produces the shared renderer and cannot be combined with --use-shared-renderer');
+		this.name = 'SharedRendererConsumerConflictError';
+	}
+}
+
+class RendererOutputIncompleteError extends Error {
+	constructor(location, missing) {
+		super(
+			`Renderer output at ${location} is missing ${missing.join(', ')}. Run \`pnpm --filter fluxer_app build:desktop\`.`,
+		);
+		this.name = 'RendererOutputIncompleteError';
+	}
+}
+
+class BundledRendererMissingError extends Error {
+	constructor(location, missing) {
+		super(`The shell bundles its renderer, so ${location} must still hold ${missing.join(', ')} after the prune step.`);
+		this.name = 'BundledRendererMissingError';
+	}
+}
+
+class BundledRendererVersionError extends Error {
+	constructor(bundledVersion, buildVersion) {
+		super(
+			`The bundled renderer reports version ${JSON.stringify(bundledVersion)} and this shell is ${JSON.stringify(buildVersion)}. A shell that loads modules must bundle the renderer built for the same numeric version, because it serves whichever of the two is newer.`,
+		);
+		this.name = 'BundledRendererVersionError';
+	}
+}
+
+function readBundledRendererVersion() {
+	try {
+		const parsed = JSON.parse(fs.readFileSync(path.join(RENDERER_DIST_DIR, 'version.json'), 'utf8'));
+		return typeof parsed?.version === 'string' ? parsed.version : '';
+	} catch {
+		return '';
+	}
+}
+
+function fallBackToBundledRendererVersion() {
+	if (embeddedBuildVersion !== '') {
+		return;
+	}
+	const bundledVersion = readBundledRendererVersion();
+	if (BUNDLED_RENDERER_VERSION_PATTERN.test(bundledVersion)) {
+		embeddedBuildVersion = bundledVersion;
+	}
+}
+
+class RendererServiceWorkerPresentError extends Error {
+	constructor(present) {
+		super(
+			`The desktop renderer bundle must not contain a service worker, found ${present.join(', ')} in ${RENDERER_DIST_DIR}.`,
+		);
+		this.name = 'RendererServiceWorkerPresentError';
+	}
+}
 
 function findNodeBinary(rootDir) {
 	const matches = [];
@@ -135,7 +199,14 @@ function addFilesFromDirectory(files, packageDir, relativeDir, predicate) {
 
 function collectRuntimeArtifactPaths(packageDir) {
 	const artifacts = new Set();
-	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs', 'pure.cjs']) {
+	for (const fileName of [
+		'index.js',
+		'index.d.ts',
+		'binding.js',
+		'binding.d.ts',
+		'loader-diagnostics.cjs',
+		'pure.cjs',
+	]) {
 		if (fs.existsSync(path.join(packageDir, fileName))) {
 			artifacts.add(fileName);
 		}
@@ -150,43 +221,58 @@ function collectRuntimeArtifactPaths(packageDir) {
 }
 
 function isNativeRuntimeSidecar(fileName) {
-	return (
-		fileName.endsWith('.node') ||
-		/\.so(?:\.|$)/.test(fileName) ||
-		/\.(?:dll|exe)$/i.test(fileName) ||
-		isWindowsNativeRuntimeManifest(fileName)
-	);
+	return fileName.endsWith('.node') || /\.so(?:\.|$)/.test(fileName) || /\.(?:dll|exe)$/i.test(fileName);
 }
 
-function isWindowsNativeRuntimeManifest(fileName) {
-	return (
-		fileName === 'compatibility.json' || /^fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/i.test(fileName)
-	);
+function electronArch() {
+	return process.env.ELECTRON_ARCH || process.env.npm_config_arch || process.arch;
 }
 
-function addWinGameCaptureRuntimeArtifacts(artifacts, tag, arch) {
-	const add = (relativePath) => {
-		artifacts.push({
-			label: '@fluxer/win-game-capture',
-			relativePath,
-			runtimeFiles: [],
-		});
-	};
+function primaryWinGameCaptureNodeFileName() {
+	const arch = electronArch();
+	const tag = platformTag(process.platform, arch);
+	if (!tag || process.platform !== 'win32') {
+		throw new Error(`Cannot resolve the primary win-game-capture node for ${process.platform}/${arch}`);
+	}
+	return `win-game-capture.${tag}.node`;
+}
+
+function removeStaleWinGameCaptureArtifacts(packageDir, primaryNodeFileName) {
+	if (!fs.existsSync(packageDir)) return;
+	const stale = fs
+		.readdirSync(packageDir, {withFileTypes: true})
+		.filter((entry) => {
+			if (!entry.isFile()) return false;
+			return (
+				entry.name.startsWith('fluxer-game-hook.') ||
+				entry.name.startsWith('fluxer-inject-helper.') ||
+				entry.name.startsWith('fluxer-vulkan-layer.') ||
+				(entry.name.startsWith('win-game-capture.') &&
+					entry.name.endsWith('.node') &&
+					entry.name !== primaryNodeFileName)
+			);
+		})
+		.map((entry) => entry.name)
+		.sort();
+	for (const fileName of stale) {
+		const artifactPath = path.join(packageDir, fileName);
+		fs.rmSync(artifactPath);
+		console.log(`  Removed stale @fluxer/win-game-capture artifact ${path.relative(ROOT_DIR, artifactPath)}`);
+	}
+}
+
+function addWinGameCaptureRuntimeArtifacts(artifacts, tag) {
 	artifacts.push({
 		label: '@fluxer/win-game-capture',
 		relativePath: `win-game-capture.${tag}.node`,
 	});
-	add(`fluxer-game-hook.${tag}.dll`);
-	add(`fluxer-inject-helper.${tag}.exe`);
-	add(`fluxer-vulkan-layer.${tag}.dll`);
-	add(`fluxer-vulkan-layer.${tag}.json`);
-	if (arch === 'x64') {
-		add('fluxer-game-hook.win32-ia32-msvc.dll');
-		add('fluxer-inject-helper.win32-ia32-msvc.exe');
-	}
 }
 
 function copyRuntimeArtifactsToInstalledPackages({label, packageDir}) {
+	const primaryNodeFileName = label === '@fluxer/win-game-capture' ? primaryWinGameCaptureNodeFileName() : null;
+	if (primaryNodeFileName) {
+		removeStaleWinGameCaptureArtifacts(packageDir, primaryNodeFileName);
+	}
 	const artifacts = collectRuntimeArtifactPaths(packageDir);
 	if (artifacts.length === 0) {
 		return;
@@ -199,6 +285,9 @@ function copyRuntimeArtifactsToInstalledPackages({label, packageDir}) {
 		return;
 	}
 	for (const installedPackageDir of installedPackageDirs) {
+		if (primaryNodeFileName) {
+			removeStaleWinGameCaptureArtifacts(installedPackageDir, primaryNodeFileName);
+		}
 		for (const artifact of artifacts) {
 			const sourcePath = path.join(packageDir, artifact);
 			const targetPath = path.join(installedPackageDir, artifact);
@@ -218,7 +307,7 @@ function platformTag(platform, arch) {
 	return null;
 }
 
-function expectedNativeRuntimeArtifacts(platform = process.platform, arch = process.env.ELECTRON_ARCH || process.arch) {
+function expectedNativeRuntimeArtifacts(platform = process.platform, arch = electronArch()) {
 	if (platform === 'darwin' && arch === 'universal') {
 		return [
 			...expectedNativeRuntimeArtifactsForArch(platform, 'arm64'),
@@ -238,9 +327,19 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 	});
 	artifacts.push({
-		label: '@fluxer/webrtc-sender',
-		relativePath: `webrtc-sender.${tag}.node`,
+		label: '@fluxer/hardware-encoder',
+		relativePath: `hardware-encoder.${tag}.node`,
 		runtimeFiles: ['index.js'],
+	});
+	artifacts.push({
+		label: '@fluxer/app-store',
+		relativePath: `app-store.${tag}.node`,
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
+	});
+	artifacts.push({
+		label: '@fluxer/gateway-socket',
+		relativePath: `gateway-socket.${tag}.node`,
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 	});
 	if (platform === 'darwin') {
 		artifacts.push({
@@ -270,14 +369,14 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'win32') {
 		artifacts.push({
 			label: '@fluxer/win-process-loopback',
 			relativePath: `win-process-loopback.${tag}.node`,
 		});
-		addWinGameCaptureRuntimeArtifacts(artifacts, tag, arch);
+		addWinGameCaptureRuntimeArtifacts(artifacts, tag);
 		artifacts.push({
 			label: '@fluxer/win-clipboard',
 			relativePath: `win-clipboard.${tag}.node`,
@@ -287,26 +386,18 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 			relativePath: `win-shell.${tag}.node`,
 		});
 		artifacts.push({
-			label: '@fluxer/win-toast',
-			relativePath: `win-toast.${tag}.node`,
-		});
-		artifacts.push({
 			label: '@fluxer/windows-input-hook',
 			relativePath: `windows-input-hook.${tag}.node`,
 		});
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'linux') {
 		artifacts.push({
 			label: '@fluxer/linux-audio-capture',
 			relativePath: `linux-audio-capture.${tag}.node`,
-		});
-		artifacts.push({
-			label: '@fluxer/linux-screen-capture',
-			relativePath: `linux-screen-capture.${tag}.node`,
 		});
 		artifacts.push({
 			label: '@fluxer/linux-portals',
@@ -331,7 +422,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	}
 	return artifacts;
@@ -419,8 +510,20 @@ function buildNativeAddons() {
 		jsEntry: 'index.js',
 	});
 	buildNativeAddon({
-		label: '@fluxer/webrtc-sender',
-		dirName: 'webrtc-sender',
+		label: '@fluxer/hardware-encoder',
+		dirName: 'hardware-encoder',
+		commands: [['pnpm', 'build']],
+		jsEntry: 'index.js',
+	});
+	buildNativeAddon({
+		label: '@fluxer/app-store',
+		dirName: 'app-store',
+		commands: [['pnpm', 'build']],
+		jsEntry: 'index.js',
+	});
+	buildNativeAddon({
+		label: '@fluxer/gateway-socket',
+		dirName: 'gateway-socket',
 		commands: [['pnpm', 'build']],
 		jsEntry: 'index.js',
 	});
@@ -490,12 +593,6 @@ function buildNativeAddons() {
 			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
-			label: '@fluxer/win-toast',
-			dirName: 'win-toast',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
-		});
-		buildNativeAddon({
 			label: '@fluxer/windows-input-hook',
 			dirName: 'windows-input-hook',
 			commands: [['pnpm', 'build']],
@@ -520,12 +617,6 @@ function buildNativeAddons() {
 		buildNativeAddon({
 			label: '@fluxer/linux-audio-capture',
 			dirName: 'linux-audio-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
-		});
-		buildNativeAddon({
-			label: '@fluxer/linux-screen-capture',
-			dirName: 'linux-screen-capture',
 			commands: [['pnpm', 'build']],
 			jsEntry: 'index.js',
 		});
@@ -573,100 +664,286 @@ function buildNativeAddons() {
 
 async function buildMain() {
 	console.log('Building main process...');
-	await Promise.all([
-		esbuild.build({
-			entryPoints: [path.join(SRC_DIR, 'main', 'Bootstrap.ts')],
-			bundle: true,
-			platform: 'node',
-			target: 'node20',
-			format: 'esm',
-			outfile: path.join(DIST_DIR, 'main', 'index.js'),
-			minify: isProduction,
-			sourcemap: true,
-			external: electronExternals,
-			plugins: [pathAliasPlugin],
-			define: {
-				'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-				...publicBuildDefines,
-			},
-			banner: {
-				js: `import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);`,
-			},
-		}),
-		esbuild.build({
-			entryPoints: [path.join(SRC_DIR, 'main', 'index.ts')],
-			bundle: true,
-			platform: 'node',
-			target: 'node20',
-			format: 'esm',
-			outfile: path.join(DIST_DIR, 'main', 'MainApp.js'),
-			minify: isProduction,
-			sourcemap: true,
-			external: electronExternals,
-			plugins: [pathAliasPlugin],
-			define: {
-				'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-				...publicBuildDefines,
-			},
-			banner: {
-				js: `import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);`,
-			},
-		}),
-	]);
+	const result = await esbuild.build({
+		entryPoints: {
+			[MAIN_BOOTSTRAP_ENTRY_NAME]: MAIN_BOOTSTRAP_SOURCE,
+			[MAIN_APP_ENTRY_NAME]: MAIN_APP_SOURCE,
+		},
+		bundle: true,
+		splitting: true,
+		platform: 'node',
+		target: 'node20',
+		format: 'esm',
+		outdir: path.join(DIST_DIR, 'main'),
+		entryNames: '[name]',
+		chunkNames: 'chunks/[name]-[hash]',
+		absWorkingDir: ROOT_DIR,
+		minify: isProduction,
+		sourcemap: true,
+		external: electronExternals,
+		tsconfig: DESKTOP_TSCONFIG,
+		metafile: true,
+		define: {
+			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+			[MAIN_APP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_APP_OUTPUT_FILE_NAME),
+			...publicBuildDefines(),
+		},
+		banner: {
+			js: `import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);`,
+		},
+	});
+	assertMainProcessEntryOutput(
+		result.metafile,
+		MAIN_BOOTSTRAP_SOURCE,
+		path.join(DIST_DIR, 'main', `${MAIN_BOOTSTRAP_ENTRY_NAME}.js`),
+	);
+	assertMainProcessEntryOutput(
+		result.metafile,
+		MAIN_APP_SOURCE,
+		path.join(DIST_DIR, 'main', MAIN_APP_OUTPUT_FILE_NAME),
+	);
 	console.log('Main process build complete.');
 }
 
-async function buildPreload() {
-	console.log('Building preload script...');
-	await esbuild.build({
-		entryPoints: [path.join(SRC_DIR, 'preload', 'index.ts')],
+class MainProcessBuildOutputError extends Error {
+	constructor(entryPoint, expectedOutput, actualOutputs) {
+		super(
+			`Main process entry ${entryPoint} must emit ${expectedOutput} but emitted ${actualOutputs.length === 0 ? 'no entry output' : actualOutputs.join(', ')}`,
+		);
+		this.name = 'MainProcessBuildOutputError';
+	}
+}
+
+function assertMainProcessEntryOutput(metafile, entryPoint, expectedOutput) {
+	const actualOutputs = Object.entries(metafile.outputs)
+		.filter(([, output]) => output.entryPoint != null && path.resolve(ROOT_DIR, output.entryPoint) === entryPoint)
+		.map(([outputPath]) => path.resolve(ROOT_DIR, outputPath));
+	if (actualOutputs.length !== 1 || actualOutputs[0] !== expectedOutput) {
+		throw new MainProcessBuildOutputError(entryPoint, expectedOutput, actualOutputs);
+	}
+}
+
+function copySplashAssets() {
+	console.log('Copying splash assets...');
+	fs.rmSync(SPLASH_DIST_DIR, {force: true, recursive: true});
+	fs.cpSync(SPLASH_SRC_DIR, SPLASH_DIST_DIR, {recursive: true});
+	fs.copyFileSync(
+		path.join(SRC_DIR, 'preload', SPLASH_PRELOAD_FILE_NAME),
+		path.join(DIST_DIR, 'preload', SPLASH_PRELOAD_FILE_NAME),
+	);
+	console.log(`  Splash assets copied to ${path.relative(ROOT_DIR, SPLASH_DIST_DIR)}`);
+}
+
+function parseBuildArguments(argumentList) {
+	const seen = new Set();
+	for (const argument of argumentList) {
+		if (argument === '--') {
+			continue;
+		}
+		if (!SUPPORTED_BUILD_ARGUMENTS.includes(argument)) {
+			throw new UnsupportedDesktopBuildArgumentError(argument);
+		}
+		if (seen.has(argument)) {
+			throw new DuplicateDesktopBuildArgumentError(argument);
+		}
+		seen.add(argument);
+	}
+	const options = Object.freeze({
+		sharedAssetsOnly: seen.has('--shared-assets'),
+		useSharedRenderer: seen.has('--use-shared-renderer'),
+	});
+	if (options.sharedAssetsOnly && options.useSharedRenderer) {
+		throw new SharedRendererConsumerConflictError();
+	}
+	return options;
+}
+
+function cleanDistDirectory({useSharedRenderer}) {
+	if (!fs.existsSync(DIST_DIR)) {
+		return;
+	}
+	for (const entry of fs.readdirSync(DIST_DIR, {withFileTypes: true})) {
+		if (useSharedRenderer && entry.name === RENDERER_DIST_ENTRY_NAME) {
+			continue;
+		}
+		if (entry.name === BUILD_IN_PROGRESS_FILE_NAME) {
+			continue;
+		}
+		fs.rmSync(path.join(DIST_DIR, entry.name), {force: true, recursive: true});
+	}
+}
+
+function findMissingEntries(entries, rootDir) {
+	return entries.filter((entry) => !fs.existsSync(path.join(rootDir, entry)));
+}
+
+function buildRendererBundle() {
+	console.log('Building renderer bundle...');
+	execFileSync('pnpm', ['--filter', 'fluxer_app', 'build:desktop'], {
+		cwd: MONOREPO_ROOT,
+		stdio: 'inherit',
+		env: {...process.env, NODE_ENV: 'production'},
+		shell: process.platform === 'win32',
+	});
+}
+
+function copyRendererIntoDist() {
+	const startedAt = Date.now();
+	const missing = findMissingEntries(REQUIRED_RENDERER_ENTRIES, APP_DIST_DIR);
+	if (missing.length > 0) {
+		throw new RendererOutputIncompleteError(APP_DIST_DIR, missing);
+	}
+	fs.rmSync(RENDERER_DIST_DIR, {force: true, recursive: true});
+	fs.cpSync(APP_DIST_DIR, RENDERER_DIST_DIR, {recursive: true});
+	const present = FORBIDDEN_RENDERER_ENTRIES.filter((entry) => fs.existsSync(path.join(RENDERER_DIST_DIR, entry)));
+	if (present.length > 0) {
+		throw new RendererServiceWorkerPresentError(present);
+	}
+	console.log(
+		`  Renderer assets copied to ${path.relative(ROOT_DIR, RENDERER_DIST_DIR)} in ${Date.now() - startedAt}ms`,
+	);
+}
+
+function preloadBuildOptions(entryFileName, outputFileName) {
+	return {
+		entryPoints: [path.join(SRC_DIR, 'preload', entryFileName)],
 		bundle: true,
 		platform: 'node',
 		target: 'node20',
 		format: 'cjs',
-		outfile: path.join(DIST_DIR, 'preload', 'index.cjs'),
+		outfile: path.join(DIST_DIR, 'preload', outputFileName),
 		minify: isProduction,
 		sourcemap: true,
 		external: electronExternals,
-		plugins: [pathAliasPlugin],
+		tsconfig: DESKTOP_TSCONFIG,
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-			...publicBuildDefines,
+			...publicBuildDefines(),
 		},
-	});
+	};
+}
+
+async function buildPreload() {
+	console.log('Building preload scripts...');
+	await Promise.all([
+		esbuild.build(preloadBuildOptions('index.ts', 'index.cjs')),
+		esbuild.build(preloadBuildOptions('LegacyHarvestPreload.ts', 'legacy-harvest.cjs')),
+	]);
 	console.log('Preload script build complete.');
 }
 
-function ensureBuildChannelFile() {
+function runDesktopBuildStep(step) {
+	const env = {...process.env};
+	if (!env.WORKDIR && !env.GITHUB_WORKSPACE) {
+		env.WORKDIR = MONOREPO_ROOT;
+	}
 	execFileSync(
 		'cargo',
 		[
 			'run',
 			'--manifest-path',
-			path.join(ROOT_DIR, '..', 'tools', 'ci', 'Cargo.toml'),
+			path.join(MONOREPO_ROOT, 'tools', 'ci', 'Cargo.toml'),
 			'--',
 			'build-desktop',
 			'--step',
-			'set_build_channel',
+			step,
 		],
 		{
 			stdio: 'inherit',
-			env: process.env,
+			env,
 		},
 	);
 }
 
-async function build() {
-	console.log(`Building Electron app (${isProduction ? 'production' : 'development'})...`);
-	ensureBuildChannelFile();
-	if (fs.existsSync(DIST_DIR)) {
-		fs.rmSync(DIST_DIR, {recursive: true});
+function ensureBuildChannelFile() {
+	runDesktopBuildStep('set_build_channel');
+	compiledBuildChannel = readGeneratedBuildChannel();
+}
+
+function prunePackedRendererModules() {
+	console.log('Pruning on-demand module assets from the bundled renderer...');
+	const startedAt = Date.now();
+	runDesktopBuildStep('prune_shell_renderer');
+	const missing = findMissingEntries(BUNDLED_RENDERER_ENTRIES, RENDERER_DIST_DIR);
+	if (missing.length > 0) {
+		throw new BundledRendererMissingError(RENDERER_DIST_DIR, missing);
 	}
+	const bundledVersion = readBundledRendererVersion();
+	if (!BUNDLED_RENDERER_VERSION_PATTERN.test(bundledVersion) || bundledVersion !== embeddedBuildVersion) {
+		throw new BundledRendererVersionError(bundledVersion, embeddedBuildVersion);
+	}
+	console.log(`  Bundled renderer pruned in ${Date.now() - startedAt}ms`);
+}
+
+async function build() {
+	const options = parseBuildArguments(process.argv.slice(2));
+	ensureBuildChannelFile();
+	if (options.sharedAssetsOnly) {
+		console.log('Building shared renderer assets...');
+		buildRendererBundle();
+		cleanDistDirectory(options);
+		copyRendererIntoDist();
+		console.log('Shared renderer assets complete!');
+		return;
+	}
+	console.log(`Building Electron app (${isProduction ? 'production' : 'development'})...`);
+	buildNativeAddons();
+	if (!options.useSharedRenderer) {
+		buildRendererBundle();
+	}
+	fs.mkdirSync(DIST_DIR, {recursive: true});
+	fs.writeFileSync(BUILD_IN_PROGRESS_FILE, '');
+	cleanDistDirectory(options);
 	fs.mkdirSync(path.join(DIST_DIR, 'main'), {recursive: true});
 	fs.mkdirSync(path.join(DIST_DIR, 'preload'), {recursive: true});
-	buildNativeAddons();
+	if (!options.useSharedRenderer) {
+		copyRendererIntoDist();
+	}
+	fallBackToBundledRendererVersion();
+	if (modulesEnabled) {
+		prunePackedRendererModules();
+	}
 	await Promise.all([buildMain(), buildPreload()]);
+	copySplashAssets();
+	writeBuildInfo();
+	fs.rmSync(BUILD_IN_PROGRESS_FILE, {force: true});
 	console.log('Build complete!');
+}
+
+function readGeneratedBuildChannel() {
+	const source = fs.readFileSync(path.join(ROOT_DIR, 'src/common/BuildChannel.ts'), 'utf8');
+	const match = /BUILD_CHANNEL = '([^']+)'/.exec(source);
+	return match ? match[1] : '';
+}
+
+class BuildChannelDriftError extends Error {
+	constructor(compiled, current) {
+		super(
+			`src/common/BuildChannel.ts changed from ${compiled} to ${current} while this build was running. It is gitignored and generated, so a concurrent build in the same worktree rewrote it. This build compiled ${compiled} and must not be recorded as ${current}.`,
+		);
+		this.name = 'BuildChannelDriftError';
+	}
+}
+
+function writeBuildInfo() {
+	const currentChannel = readGeneratedBuildChannel();
+	if (currentChannel !== compiledBuildChannel) {
+		throw new BuildChannelDriftError(compiledBuildChannel, currentChannel);
+	}
+	fs.writeFileSync(
+		path.join(DIST_DIR, BUILD_INFO_FILE_NAME),
+		`${JSON.stringify(
+			{
+				buildVersion: embeddedBuildVersion,
+				releaseChannel: embeddedReleaseChannel,
+				buildChannel: compiledBuildChannel,
+				offlineBuild,
+				modulesEnabled,
+			},
+			null,
+			'\t',
+		)}\n`,
+	);
 }
 
 build().catch((error) => {

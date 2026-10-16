@@ -3,7 +3,9 @@
 import {type ClassValue, clsx} from 'clsx';
 import type React from 'react';
 
-export const FLX_ELEMENT_CLASS_NAME = 'flx-element';
+const FLX_ELEMENT_CLASS_NAME = 'flx-element';
+
+export type FlxElementName = `flx-${string}`;
 
 export function flxElementClassName(...values: Array<ClassValue>): string {
 	return clsx(FLX_ELEMENT_CLASS_NAME, ...values);

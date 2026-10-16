@@ -6,15 +6,15 @@ import Nagbar, {type NagbarToggleKey} from '@app/features/ui/state/Nagbar';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-export const USE_ACTUAL_DESCRIPTOR = msg({
+const USE_ACTUAL_DESCRIPTOR = msg({
 	message: 'Use actual',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const FORCE_SHOW_DESCRIPTOR = msg({
+const FORCE_SHOW_DESCRIPTOR = msg({
 	message: 'Force show',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const FORCE_HIDE_DESCRIPTOR = msg({
+const FORCE_HIDE_DESCRIPTOR = msg({
 	message: 'Force hide',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -22,7 +22,7 @@ export const NAGBAR_OVERRIDES_DESCRIPTOR = msg({
 	message: 'Nagbar overrides',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const setNagbarForceShow = (control: NagbarControlDefinition): void => {
+const setNagbarForceShow = (control: NagbarControlDefinition): void => {
 	NagbarCommands.dismissNagbar(control.forceKey);
 	NagbarCommands.setForceHideNagbar(control.forceHideKey, false);
 };
@@ -30,7 +30,7 @@ export const setNagbarUseActual = (control: NagbarControlDefinition): void => {
 	control.resetKeys.forEach((key: NagbarToggleKey) => NagbarCommands.resetNagbar(key));
 	NagbarCommands.setForceHideNagbar(control.forceHideKey, false);
 };
-export const setNagbarForceHide = (control: NagbarControlDefinition): void => {
+const setNagbarForceHide = (control: NagbarControlDefinition): void => {
 	NagbarCommands.setForceHideNagbar(control.forceHideKey, true);
 	NagbarCommands.resetNagbar(control.forceKey);
 };

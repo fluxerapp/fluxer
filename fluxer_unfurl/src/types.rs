@@ -18,9 +18,6 @@ pub enum UnfurlRequest {
         #[serde(default)]
         klipy_api_key: Option<String>,
     },
-    Invalidate {
-        url: String,
-    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -35,13 +32,7 @@ pub enum NsfwMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UnfurlResponse {
     Resolved(Arc<UnfurlResult>),
-    Invalidated(InvalidatedResponse),
     Failed { message: String },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InvalidatedResponse {
-    pub invalidated: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,8 +120,7 @@ pub struct EmbedAuthor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmbedProvider {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
@@ -214,7 +204,18 @@ mod tests {
                 assert!(youtube_api_key.is_none());
                 assert!(klipy_api_key.is_none());
             }
-            UnfurlRequest::Invalidate { .. } => panic!("expected unfurl request"),
         }
+    }
+
+    #[test]
+    fn provider_always_serializes_its_name() {
+        let provider = EmbedProvider {
+            name: "Tenor".to_owned(),
+            url: None,
+        };
+        assert_eq!(
+            serde_json::to_value(&provider).unwrap(),
+            serde_json::json!({"name": "Tenor"})
+        );
     }
 }

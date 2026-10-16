@@ -2,18 +2,12 @@
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export interface MultipartBody {
-	readonly files?: ReadonlyArray<{name: string; file: File | Blob; filename: string}>;
-	readonly fields?: Readonly<Record<string, string>>;
-}
-
 export type RestResponseFormat = 'auto' | 'json' | 'text' | 'binary' | 'none';
 export type RestAuthMode = 'session' | 'none';
 type BodyVariant =
-	| {body?: undefined; multipart?: undefined; raw?: undefined}
-	| {body: unknown; multipart?: undefined; raw?: undefined}
-	| {body?: undefined; multipart: MultipartBody; raw?: undefined}
-	| {body?: undefined; multipart?: undefined; raw: BodyInit};
+	| {body?: undefined; raw?: undefined}
+	| {body: unknown; raw?: undefined}
+	| {body?: undefined; raw: BodyInit};
 
 interface RestRequestOptionsBase {
 	query?: Record<string, string | number | boolean | null | undefined> | URLSearchParams;
@@ -26,7 +20,6 @@ interface RestRequestOptionsBase {
 	retries?: number;
 	signal?: AbortSignal;
 	onProgress?: (event: ProgressEvent) => void;
-	intercept?: RestInterceptor;
 	suppressContentBlockedModal?: boolean;
 }
 
@@ -44,8 +37,7 @@ export interface RestResponse<T = unknown> {
 export type RestInterceptor = (
 	reply: RestResponse,
 	retry: (extraHeaders: Record<string, string>) => Promise<RestResponse>,
-	reject: (error: Error) => void,
-) => boolean | undefined | Promise<RestResponse>;
+) => Promise<RestResponse | undefined> | undefined;
 
 export interface SudoBindings {
 	tokenProvider: () => string | null;
@@ -56,7 +48,6 @@ export interface SudoBindings {
 }
 
 export interface RestClientHooks {
-	prepareRequest?: (handle: RestRequestHandle) => void;
 	intercept?: RestInterceptor;
 }
 

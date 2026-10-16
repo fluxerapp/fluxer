@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 
 export function canSubmitReport(): boolean {
@@ -23,12 +23,15 @@ export function showReportRestrictionDialog(): void {
 	}
 	if (!user.verified) {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="account_security"
-					data-flx="moderation.report-verification-gate.show-report-restriction-dialog.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="account_security"
+						data-flx="moderation.report-verification-gate.show-report-restriction-dialog.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}
 }

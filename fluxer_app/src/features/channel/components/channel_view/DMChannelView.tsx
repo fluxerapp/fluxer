@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	AccountLimitedBarrier,
 	BlockedUserBarrier,
 	SystemDmBarrier,
 	UnclaimedDMBarrier,
@@ -19,7 +20,6 @@ import {CallParticipantsRow} from '@app/features/channel/components/channel_view
 import {
 	CALL_AVAILABLE_DESCRIPTOR,
 	CONNECTING_DESCRIPTOR,
-	getCompactCallHeightKey,
 	IN_CALL_DESCRIPTOR,
 	IN_CALL_ON_ANOTHER_DEVICE_DESCRIPTOR,
 	logger,
@@ -27,19 +27,16 @@ import {
 	VIEW_CALL_DESCRIPTOR,
 	VIEW_INCOMING_CALL_DESCRIPTOR,
 } from '@app/features/channel/components/channel_view/dm_channel_view/shared';
-import {useCompactCallBannerResize} from '@app/features/channel/components/channel_view/dm_channel_view/useCompactCallBannerResize';
 import {useCallHeaderState} from '@app/features/channel/components/channel_view/useCallHeaderState';
 import {useChannelSearchState} from '@app/features/channel/components/channel_view/useChannelSearchState';
 import {useVoiceCallChromePinState} from '@app/features/channel/components/channel_view/useVoiceCallChromePinState';
 import dmStyles from '@app/features/channel/components/direct_message/DMChannelView.module.css';
-import {useMessagesBottomBarVisibility} from '@app/features/channel/components/MessagesBottomBarVisibility';
-import {useChannelMemberListVisibility} from '@app/features/channel/hooks/useChannelMemberListVisibility';
-import {useChannelSearchVisibility} from '@app/features/channel/hooks/useChannelSearchVisibility';
+import {useChannelPanelVisibility} from '@app/features/channel/hooks/useChannelPanelVisibility';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {INCOMING_CALL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useMemberListVisible} from '@app/features/member/hooks/useMemberListVisible';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -51,13 +48,17 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
 import {DirectCallLobbyBottomSheet} from '@app/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet';
 import {CompactVoiceCallStreamHeaderInfo} from '@app/features/voice/components/CompactVoiceCallStreamHeaderInfo';
+import {useCompactVoiceCallResize} from '@app/features/voice/components/compact_voice_call_view/useCompactVoiceCallResize';
 import {useVoiceCallFullscreenViewState} from '@app/features/voice/components/useVoiceCallAppFullscreen';
 import {VoiceCallView} from '@app/features/voice/components/VoiceCallView';
 import {VoiceE2EEIndicator} from '@app/features/voice/components/VoiceE2EEIndicator';
 import {useVoiceParticipantAvatarEntries} from '@app/features/voice/components/VoiceParticipantAvatarList';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useCompactCallExpansionState} from '@app/features/voice/hooks/useCompactCallExpansionState';
-import {COMPACT_VOICE_CALL_HEIGHT_MIN} from '@app/features/voice/state/CompactVoiceCallHeight';
+import {
+	COMPACT_VOICE_CALL_HEIGHT_MIN,
+	getCompactVoiceCallExpansionKey as getCompactCallHeightKey,
+} from '@app/features/voice/state/CompactVoiceCallHeight';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -78,6 +79,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	const recipient = recipientId ? Users.getUser(recipientId) : null;
 	const isRecipientBlocked = recipientId ? Relationships.isBlocked(recipientId) : false;
 	const isCurrentUserUnclaimed = !Users.currentUser?.isClaimed();
+	const isCurrentUserLimited = Users.currentUser?.accountLimited === true;
 	const isSystemDm = channel ? ChannelUtils.isSystemDmChannel(channel) : false;
 	const isDM = channel?.type === ChannelTypes.DM;
 	const isGroupDM = channel?.type === ChannelTypes.GROUP_DM;
@@ -100,10 +102,9 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 		activeSearchQuery,
 		activeSearchSegments,
 	} = searchState;
-	const {onBottomBarVisibilityChange} = useMessagesBottomBarVisibility(channelId);
 	const {enabled: isMobileLayout} = MobileLayout;
 	const isSearchPanelVisible = isSearchActive && !isMobileLayout;
-	useChannelSearchVisibility(channelId, isSearchPanelVisible);
+	useChannelPanelVisibility(channelId, isSearchPanelVisible);
 	const displayName = channel ? ChannelUtils.getDMDisplayName(channel) : null;
 	const title = isDM && displayName ? `@${displayName}` : displayName;
 	useFluxerDocumentTitle(title);
@@ -116,7 +117,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 		channelId: currentChannelId,
 		defaultHiddenForChannel: memberListDefaultHiddenForChannel,
 	});
-	useChannelMemberListVisibility(channelId, isMemberListVisible);
+	useChannelPanelVisibility(channelId, isMemberListVisible);
 	const callExistsAndOngoing = callHeaderState.callExistsAndOngoing;
 	const controlsVariant = callHeaderState.controlsVariant;
 	const showCallBackground = callExistsAndOngoing && controlsVariant !== 'hidden';
@@ -128,18 +129,23 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 		if (!currentChannelId) return null;
 		return getCompactCallHeightKey(currentChannelId, call?.messageId ?? null);
 	}, [call?.messageId, currentChannelId]);
+	const compactCallContainerRef = useRef<HTMLDivElement>(null);
 	const {
-		compactCallBannerHeight,
-		compactCallMaxHeight,
-		isResizingCompactCallBanner,
-		compactCallBannerWrapperStyle,
-		handleCompactCallResizePointerDown,
-		handleCompactCallResizeKeyDown,
-	} = useCompactCallBannerResize({
-		isCompactCallResizable,
-		compactCallHeightKey,
-		compactCallHeightMin,
+		compactHeight: compactCallBannerHeight,
+		maxHeight: compactCallMaxHeight,
+		isResizing: isResizingCompactCallBanner,
+		handleResizePointerDown: handleCompactCallResizePointerDown,
+		handleResizeKeyDown: handleCompactCallResizeKeyDown,
+	} = useCompactVoiceCallResize({
+		containerRef: compactCallContainerRef,
+		heightKey: compactCallHeightKey ?? '',
+		isResizable: isCompactCallResizable && compactCallHeightKey != null,
+		compactHeightMin: compactCallHeightMin,
 	});
+	const compactCallBannerWrapperStyle =
+		isCompactCallResizable && compactCallHeightKey != null && compactCallBannerHeight != null
+			? {height: compactCallBannerHeight, minHeight: compactCallHeightMin, maxHeight: compactCallMaxHeight}
+			: undefined;
 	const [isCallSheetOpen, setIsCallSheetOpen] = useState(false);
 	const {
 		showFullscreenView: showVoiceCallViewForFullscreen,
@@ -160,7 +166,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	});
 	useEffect(() => {
 		if (!showCompactVoiceView || !currentChannelId) return;
-		return ComponentDispatch.subscribe('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', (payload?: unknown) => {
+		return ComponentBus.subscribe('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', (payload?: unknown) => {
 			const {channelId: targetChannelId} = (payload ?? {}) as {channelId?: string};
 			if (targetChannelId && targetChannelId !== currentChannelId) return false;
 			handleToggleCompactCallExpanded();
@@ -412,6 +418,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 										styles.compactCallWrapper,
 										isResizingCompactCallBanner && styles.compactCallWrapperResizing,
 									)}
+									ref={compactCallContainerRef}
 									style={compactCallBannerWrapperStyle}
 									data-flx="channel.channel-view.dm-channel-view.compact-call-wrapper"
 								>
@@ -478,12 +485,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 				chatArea={
 					<ChannelChatLayout
 						messages={
-							<Messages
-								key={channel.id}
-								channel={channel}
-								onBottomBarVisibilityChange={onBottomBarVisibilityChange}
-								data-flx="channel.channel-view.dm-channel-view.messages"
-							/>
+							<Messages key={channel.id} channel={channel} data-flx="channel.channel-view.dm-channel-view.messages" />
 						}
 						textarea={
 							isSystemDm ? (
@@ -491,9 +493,11 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 							) : isDM && isRecipientBlocked && recipient ? (
 								<BlockedUserBarrier
 									userId={recipient.id}
-									username={NicknameUtils.getNickname(recipient)}
+									username={NicknameUtils.getNickname(recipient, null)}
 									data-flx="channel.channel-view.dm-channel-view.blocked-user-barrier"
 								/>
+							) : isCurrentUserLimited && !isPersonalNotes ? (
+								<AccountLimitedBarrier data-flx="channel.channel-view.dm-channel-view.account-limited-barrier" />
 							) : isCurrentUserUnclaimed && isDM && !isPersonalNotes && !isGroupDM ? (
 								<UnclaimedDMBarrier data-flx="channel.channel-view.dm-channel-view.unclaimed-dm-barrier" />
 							) : (

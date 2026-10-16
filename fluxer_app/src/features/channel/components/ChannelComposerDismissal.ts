@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 
 export interface ChannelComposerDismissalRequest {
 	channelId: string;
 }
 
 export function requestChannelComposerAffordanceDismissal(channelId: string): boolean {
-	const result = ComponentDispatch.dispatchToFirstResult(
+	const result = ComponentBus.dispatchToFirstResult(
 		'TEXTAREA_DISMISS_AFFORDANCE',
 		{channelId},
 		(candidate) => candidate === true,

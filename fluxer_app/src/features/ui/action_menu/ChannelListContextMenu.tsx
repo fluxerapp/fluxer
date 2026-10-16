@@ -38,7 +38,7 @@ export const ChannelListContextMenu: React.FC<ChannelListContextMenuProps> = obs
 	});
 	const invitableChannelId = InviteUtils.getInvitableChannelId(guild.id);
 	const canInvite = InviteUtils.canInviteToChannel(invitableChannelId, guild.id);
-	const hideMutedChannels = UserGuildSettings.getSettings(guild.id)?.hide_muted_channels ?? false;
+	const hideMutedChannels = UserGuildSettings.getSettingsForScope(guild.id)?.hide_muted_channels ?? false;
 	const handleToggleHideMutedChannels = useCallback(() => {
 		UserGuildSettingsCommands.toggleHideMutedChannels(guild.id);
 	}, [guild.id]);

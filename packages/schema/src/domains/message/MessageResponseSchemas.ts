@@ -6,7 +6,8 @@ import {
 	MessageFlags,
 	MessageFlagsDescriptions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelResponse, ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {type MessageEmbed, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -49,7 +50,9 @@ export type MessageAttachmentResponse = z.infer<typeof MessageAttachmentResponse
 
 const MessageReferenceResponse = z.object({
 	channel_id: SnowflakeStringType.describe('The ID of the channel containing the referenced message'),
-	message_id: SnowflakeStringType.describe('The ID of the referenced message'),
+	message_id: SnowflakeStringType.nullish().describe(
+		'The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread',
+	),
 	guild_id: SnowflakeStringType.nullish().describe('The ID of the guild containing the referenced message'),
 	type: MessageReferenceTypeSchema,
 });
@@ -72,7 +75,6 @@ export const MessageStickerResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier of the sticker'),
 	name: z.string().describe('The name of the sticker'),
 	animated: z.boolean().describe('Whether the sticker is animated'),
-	nsfw: z.boolean().optional().describe('Whether this sticker is classified as NSFW'),
 });
 
 export type MessageStickerResponse = z.infer<typeof MessageStickerResponse>;
@@ -150,15 +152,15 @@ const MessageBaseResponseSchema = z.object({
 	embeds: z.array(MessageEmbedResponse).nullish().describe('The embeds attached to the message'),
 	attachments: z.array(MessageAttachmentResponse).nullish().describe('The files attached to the message'),
 	stickers: z.array(MessageStickerResponse).nullish().describe('The stickers sent with the message'),
-	nsfw_emojis: z
-		.array(SnowflakeStringType)
-		.optional()
-		.describe('IDs of custom emojis in this message that are classified as NSFW'),
 	reactions: z.array(MessageReactionResponse).nullish().describe('The reactions on the message'),
 	message_reference: MessageReferenceResponse.nullish().describe('Reference data for replies or forwards'),
 	message_snapshots: z.array(MessageSnapshotResponse).nullish().describe('Snapshots of forwarded messages'),
 	nonce: z.string().nullish().describe('A client-provided value for message deduplication'),
 	call: MessageCallResponse.nullish().describe('Call information if this message represents a call'),
+	thread: z
+		.lazy(() => ThreadChannelResponse)
+		.optional()
+		.describe('The thread started from this message, when the viewer can see threads'),
 });
 
 type MessageBaseResponse = z.infer<typeof MessageBaseResponseSchema>;
@@ -169,7 +171,7 @@ export interface MessageResponse extends MessageBaseResponse {
 
 export const MessageResponseSchema = MessageBaseResponseSchema.extend({
 	referenced_message: MessageBaseResponseSchema.nullish().describe(
-		'The message that this message is replying to or forwarding',
+		'The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.',
 	),
 });
 const ChannelPinMessageResponse = MessageResponseSchema.omit({
@@ -212,6 +214,14 @@ export const MessageSearchResultsResponse = z.object({
 	hits_per_page: Int32Type.describe('The maximum number of messages returned per page'),
 	page: Int32Type.describe('The current page number'),
 	cursor: z.array(z.string()).optional().describe('Opaque cursor for fetching the next page of results'),
+	threads: z
+		.array(z.lazy(() => ThreadChannelResponse))
+		.optional()
+		.describe('The threads that contain the returned messages, when the viewer can see threads'),
+	members: z
+		.array(z.lazy(() => ThreadMemberResponse))
+		.optional()
+		.describe('A thread member object for each returned thread the current user has joined'),
 });
 
 export type MessageSearchResultsResponse = z.infer<typeof MessageSearchResultsResponse>;
@@ -240,7 +250,7 @@ export const BulkMessageFetchResponse = z.object({
 export type BulkMessageFetchResponse = z.infer<typeof BulkMessageFetchResponse>;
 
 export interface MessageReference {
-	readonly message_id: string;
+	readonly message_id?: string;
 	readonly channel_id: string;
 	readonly guild_id?: string;
 	readonly type?: number;
@@ -306,12 +316,7 @@ export interface MessageSnapshot {
 	readonly timestamp: string;
 }
 
-export interface MessageStickerItem {
-	readonly id: string;
-	readonly name: string;
-	readonly animated: boolean;
-	readonly nsfw?: boolean;
-}
+export type MessageStickerItem = Readonly<MessageStickerResponse>;
 
 export interface AllowedMentions {
 	readonly parse?: ReadonlyArray<'roles' | 'users' | 'everyone'>;
@@ -320,11 +325,7 @@ export interface AllowedMentions {
 	readonly replied_user?: boolean;
 }
 
-export interface ChannelMention {
-	readonly id: string;
-	readonly type: number;
-	readonly name: string;
-}
+export type ChannelMention = Readonly<MessageChannelMentionResponse>;
 
 export interface MessageMention extends UserPartial {
 	readonly member?: Omit<GuildMemberData, 'user'>;
@@ -352,15 +353,17 @@ export interface Message {
 	readonly embeds?: ReadonlyArray<MessageEmbed>;
 	readonly attachments?: ReadonlyArray<MessageAttachment>;
 	readonly stickers?: ReadonlyArray<MessageStickerItem>;
-	readonly nsfw_emojis?: ReadonlyArray<string>;
 	readonly reactions?: ReadonlyArray<MessageReaction>;
 	readonly message_reference?: MessageReference;
 	readonly referenced_message?: Message | null;
 	readonly message_snapshots?: ReadonlyArray<MessageSnapshot>;
 	readonly call?: MessageCall | null;
+	readonly thread?: ThreadChannelResponse;
 	readonly state?: string;
 	readonly nonce?: string;
 	readonly blocked?: boolean;
 	readonly _allowedMentions?: AllowedMentions;
 	readonly _favoriteMemeId?: string;
 }
+
+export const MessagePurgeResponse = z.object({deleted_count: z.number().int().nonnegative()});

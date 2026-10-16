@@ -18,6 +18,7 @@ import {observer} from 'mobx-react-lite';
 
 const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
+	context: 'microphone-state',
 	comment: 'Short label in the app layout voice state icons.',
 });
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
-import {buildGifPickerGridData} from './GifPickerGridData';
+import {buildGifPickerGridData} from '@app/features/channel/components/pickers/gif/GifPickerGridData';
+import {test} from 'vitest';
 
 function gif(index: number, width = 200 + (index % 80), height = 120 + (index % 160)) {
 	return {
@@ -49,8 +49,8 @@ const FAVORITE_MEMES = Array.from({length: 100}, (_, index) => ({
 	url: `https://cdn.example.test/meme-${index}.mp4`,
 }));
 
-describe('GifPickerGridData benchmarks', () => {
-	bench('builds 500 GIF result items', () => {
+test('GifPickerGridData benchmarks', async ({bench}) => {
+	await bench('builds 500 GIF result items', () => {
 		buildGifPickerGridData({
 			surface: 'results',
 			loading: false,
@@ -65,9 +65,9 @@ describe('GifPickerGridData benchmarks', () => {
 			favoriteTitle: 'Favorites',
 			trendingTitle: 'Trending',
 		});
-	});
+	}).run();
 
-	bench('builds 500 favorite GIF items', () => {
+	await bench('builds 500 favorite GIF items', () => {
 		buildGifPickerGridData({
 			surface: 'favorites',
 			loading: false,
@@ -82,9 +82,9 @@ describe('GifPickerGridData benchmarks', () => {
 			favoriteTitle: 'Favorites',
 			trendingTitle: 'Trending',
 		});
-	});
+	}).run();
 
-	bench('builds featured categories and preview tiles', () => {
+	await bench('builds featured categories and preview tiles', () => {
 		buildGifPickerGridData({
 			surface: 'featured',
 			loading: false,
@@ -99,5 +99,5 @@ describe('GifPickerGridData benchmarks', () => {
 			favoriteTitle: 'Favorites',
 			trendingTitle: 'Trending',
 		});
-	});
+	}).run();
 });

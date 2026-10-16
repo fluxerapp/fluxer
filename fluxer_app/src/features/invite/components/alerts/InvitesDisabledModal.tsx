@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -30,7 +30,9 @@ export const InvitesDisabledModal = observer(({isRaidDetected = false}: InvitesD
 			title={i18n._(INVITES_PAUSED_DESCRIPTOR)}
 			message={
 				isRaidDetected
-					? i18n._(DETECTED_A_POTENTIAL_RAID_IN_THIS_COMMUNITY_SO_DESCRIPTOR, {productName: PRODUCT_NAME})
+					? i18n._(DETECTED_A_POTENTIAL_RAID_IN_THIS_COMMUNITY_SO_DESCRIPTOR, {
+							productName: getActiveInstanceProductName(),
+						})
 					: i18n._(COMMUNITY_ADMINS_HAVE_PAUSED_INVITES_SO_YOU_CAN_DESCRIPTOR)
 			}
 			data-flx="invite.invites-disabled-modal.confirm-modal"

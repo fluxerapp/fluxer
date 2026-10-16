@@ -3,7 +3,7 @@
 import styles from '@app/features/auth/components/pages/OAuthAuthorizePage.module.css';
 import type {AuthorizeParams} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
 import type {AuthorizeFlow} from '@app/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow';
-import {CANCEL_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {BACK_DESCRIPTOR, CANCEL_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
@@ -11,10 +11,6 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'OAuth authorization secondary button. Returns to the previous carousel step.',
-});
 const AUTHORIZE_DESCRIPTOR = msg({
 	message: 'Authorize',
 	comment: 'OAuth authorization primary button. Grants the selected OAuth access.',
@@ -107,11 +103,11 @@ const OAuthAuthorizeActionsBase: React.FC<OAuthAuthorizeActionsProps> = ({
 	);
 };
 
-export const OAuthAuthorizeActions = observer(OAuthAuthorizeActionsBase);
+const OAuthAuthorizeActions = observer(OAuthAuthorizeActionsBase);
 
 type OAuthAuthorizeInlineActionsProps = Omit<OAuthAuthorizeActionsProps, 'layout'>;
 
-export const OAuthAuthorizeInlineActions: React.FC<OAuthAuthorizeInlineActionsProps> = observer((props) => (
+const OAuthAuthorizeInlineActions: React.FC<OAuthAuthorizeInlineActionsProps> = observer((props) => (
 	<div className={styles.actions} data-flx={`${props.dataFlxPrefix}.actions`}>
 		<OAuthAuthorizeActions
 			data-flx="auth.oauth-authorize-page.o-auth-authorize-actions.o-auth-authorize-inline-actions.o-auth-authorize-actions"
@@ -129,7 +125,7 @@ interface OAuthAuthorizeRedirectNoticeProps {
 	hostnameDataFlx: string;
 }
 
-export const OAuthAuthorizeRedirectNotice: React.FC<OAuthAuthorizeRedirectNoticeProps> = ({
+const OAuthAuthorizeRedirectNotice: React.FC<OAuthAuthorizeRedirectNoticeProps> = ({
 	authParams,
 	redirectHostname,
 	dataFlx,

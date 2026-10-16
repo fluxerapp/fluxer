@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {generateKeyPairSync} from 'node:crypto';
 import {existsSync} from 'node:fs';
-import {loadConfig} from '@fluxer/config/src/ConfigLoader';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {afterAll, afterEach, beforeAll} from 'vitest';
-import type {UserID} from '../BrandedTypes';
-import {buildAPIConfigFromMaster, initializeConfig} from '../Config';
-import {setInjectedMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
+import type {UserID} from '@app/api/BrandedTypes';
+import {buildAPIConfigFromMaster, initializeConfig} from '@app/api/Config';
+import {setInjectedMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {APIConfig} from '@app/api/config/APIConfig';
 import {
 	resetCassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
 	shutdownCassandraQueryExecutorForTesting,
-} from '../database/CassandraQueryExecution';
-import type {IUsersServiceClient} from '../infrastructure/UsersServiceClient';
-import {setInjectedUsersServiceClient} from '../infrastructure/UsersServiceClient';
-import {initializeLogger} from '../Logger';
-import {setInjectedKVProvider, setInjectedSnowflakeService} from '../middleware/ServiceRegistry';
-import {getInstanceConfigRepository, getUserRepository} from '../middleware/ServiceSingletons';
-import {drainSearchTasks, enableSearchTaskTracking} from '../search/SearchTaskTracker';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import {InMemoryCassandraQueryExecutor} from './InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from './mocks/MockKVProvider';
-import {MockSnowflakeService} from './mocks/MockSnowflakeService';
-import {NoopLogger} from './mocks/NoopLogger';
-import {RepositoryBackedMessageResponseDataService} from './mocks/RepositoryBackedMessageResponseDataService';
-import {fakeNcmecServer} from './msw/handlers/NcmecHandlers';
-import {server} from './msw/server';
+} from '@app/api/database/CassandraQueryExecution';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {setInjectedUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {initializeLogger} from '@app/api/Logger';
+import {setInjectedKVProvider, setInjectedSnowflakeService} from '@app/api/middleware/ServiceRegistry';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {drainSearchTasks, enableSearchTaskTracking} from '@app/api/search/SearchTaskTracker';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {RepositoryBackedMessageResponseDataService} from '@app/api/test/mocks/RepositoryBackedMessageResponseDataService';
+import {server} from '@app/api/test/msw/server';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {loadConfig} from '@fluxer/config/src/ConfigLoader';
+import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {afterAll, afterEach, beforeAll} from 'vitest';
 
 function defaultNatsUrl(): string {
 	return `nats://${existsSync('/.dockerenv') ? 'nats' : '127.0.0.1'}:4222`;
@@ -53,8 +54,6 @@ function setDefaultTestEnv(): void {
 		FLUXER_NATS_URL: natsUrl,
 		FLUXER_NATS_CORE_URL: natsUrl,
 		FLUXER_NATS_JETSTREAM_URL: natsUrl,
-		FLUXER_INTERNAL_API_ENDPOINT: 'http://127.0.0.1:8088/api',
-		FLUXER_INTERNAL_GATEWAY_ENDPOINT: 'http://127.0.0.1:8088/gateway',
 		FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 		FLUXER_S3_ENDPOINT: 'http://127.0.0.1:3900',
 		FLUXER_S3_REGION: 'local',
@@ -62,17 +61,14 @@ function setDefaultTestEnv(): void {
 		FLUXER_S3_SECRET_ACCESS_KEY: 'test',
 		FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: 'false',
 		FLUXER_MEDIA_PROXY_SECRET_KEY: 'test-media-secret',
+		FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 		FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 		FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
-		FLUXER_MARKETING_SECRET_KEY_BASE: 'test-marketing-secret',
-		FLUXER_APP_PROXY_PORT: '8773',
-		FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 		FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-rpc-token',
-		FLUXER_GATEWAY_PUSH_ENABLED: 'false',
 		FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 		FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
-		FLUXER_VAPID_PUBLIC_KEY: 'test-vapid-public-key',
-		FLUXER_VAPID_PRIVATE_KEY: 'test-vapid-private-key',
+		FLUXER_VAPID_PUBLIC_KEY: 'BB76bTFIuoqmxJtTfZX0yGTn1f_qu9H03B_nkj8OyExJFkN7Y-HBZZzShnHZoEhXKc5ZRy3jFu7OkBbnaQG-4aw',
+		FLUXER_VAPID_PRIVATE_KEY: 'Xgi-3P8J-I3Q6U1HlCcXMuc_tKLGAM9nIfznX3Hz68o',
 		FLUXER_VAPID_EMAIL: 'test@example.com',
 		FLUXER_PASSKEY_RP_NAME: 'Fluxer Test',
 		FLUXER_PASSKEY_RP_ID: 'localhost',
@@ -84,14 +80,12 @@ function setDefaultTestEnv(): void {
 		FLUXER_EMAIL_SMTP_PORT: '1025',
 		FLUXER_EMAIL_SMTP_USERNAME: 'test',
 		FLUXER_EMAIL_SMTP_PASSWORD: 'test',
-		FLUXER_EMAIL_SMTP_SECURE: 'false',
+		FLUXER_EMAIL_SMTP_TLS_MODE: 'none',
 		FLUXER_LIVEKIT_ENABLED: 'false',
 		FLUXER_STRIPE_ENABLED: 'true',
 		FLUXER_SEARCH_ENGINE: 'elasticsearch',
 		FLUXER_SEARCH_URL: 'http://127.0.0.1:9200',
 		FLUXER_SEARCH_API_KEY: 'test',
-		FLUXER_CAPTCHA_ENABLED: 'false',
-		FLUXER_CAPTCHA_PROVIDER: 'none',
 		FLUXER_DISCOVERY_ENABLED: 'true',
 		FLUXER_RELAX_REGISTRATION_RATE_LIMITS: 'true',
 		FLUXER_DISABLE_RATE_LIMITS: 'true',
@@ -121,9 +115,17 @@ class RepositoryBackedUsersServiceClient implements IUsersServiceClient {
 setDefaultTestEnv();
 process.env.FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 ??= 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=';
 
+function generateTestPrivateKeyPem(type: 'ec' | 'rsa'): string {
+	const {privateKey} =
+		type === 'ec'
+			? generateKeyPairSync('ec', {namedCurve: 'prime256v1'})
+			: generateKeyPairSync('rsa', {modulusLength: 2048});
+	return privateKey.export({format: 'pem', type: 'pkcs8'}).toString();
+}
+
 const master = await loadConfig();
 const apiConfig = buildAPIConfigFromMaster(master);
-const testApiConfig = {
+const testApiConfig: APIConfig = {
 	...apiConfig,
 	auth: {
 		...apiConfig.auth,
@@ -143,12 +145,42 @@ const testApiConfig = {
 		secretKey: 'sk_test_fluxer',
 		webhookSecret: 'whsec_test_fluxer',
 	},
-	ncmec: {
-		...apiConfig.ncmec,
+	appStore: {
+		...apiConfig.appStore,
 		enabled: true,
-		baseUrl: fakeNcmecServer.baseUrl,
-		username: 'usr123',
-		password: 'pswd123',
+		issuerId: '57246542-96fe-1a63-e053-0824d011072a',
+		keyId: 'FLUXERTEST',
+		privateKey: generateTestPrivateKeyPem('ec'),
+		privateKeyPath: undefined,
+		apps: [{bundleId: 'com.fluxer', appAppleId: 1234567890}],
+		products: {
+			'com.fluxer.plutonium.monthly': 'monthly',
+			'com.fluxer.plutonium.yearly': 'yearly',
+			'com.fluxer.gift.1month': 'gift_1_month',
+			'com.fluxer.gift.1year': 'gift_1_year',
+		},
+	},
+	googlePlay: {
+		...apiConfig.googlePlay,
+		enabled: true,
+		packages: ['com.fluxer'],
+		clientEmail: 'play-billing@fluxer-test.iam.gserviceaccount.com',
+		privateKey: generateTestPrivateKeyPem('rsa'),
+		privateKeyPath: undefined,
+		serviceAccountJsonPath: undefined,
+		tokenUri: 'https://oauth2.googleapis.com/token',
+		products: {
+			'plutonium:monthly': 'monthly',
+			'plutonium:yearly': 'yearly',
+			gift_1_month: 'gift_1_month',
+			gift_1_year: 'gift_1_year',
+		},
+		pushAudience: 'https://api.fluxer.test/webhooks/google-play',
+		pushServiceAccountEmail: 'rtdn@fluxer-test.iam.gserviceaccount.com',
+	},
+	storeBilling: {
+		sandboxUserIds: [],
+		sandboxEntitlesAll: false,
 	},
 };
 testApiConfig.dev.relaxRegistrationRateLimits = true;
@@ -170,8 +202,6 @@ setInjectedMessageResponseDataService(new RepositoryBackedMessageResponseDataSer
 
 enableSearchTaskTracking();
 
-export {fakeNcmecServer};
-
 beforeAll(async () => {
 	server.listen({
 		onUnhandledRequest: 'error',
@@ -183,7 +213,6 @@ afterEach(async () => {
 	resetCassandraQueryExecutorForTesting();
 	getInstanceConfigRepository().clearCacheForTesting();
 	server.resetHandlers();
-	fakeNcmecServer.reset();
 });
 
 afterAll(async () => {

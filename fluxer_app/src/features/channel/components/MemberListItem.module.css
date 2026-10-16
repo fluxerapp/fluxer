@@ -2,8 +2,8 @@
 
 .button {
 	position: relative;
-	padding-top: 0.25rem;
-	padding-bottom: 0.25rem;
+	padding-top: var(--member-list-item-padding-block);
+	padding-bottom: var(--member-list-item-padding-block);
 	cursor: pointer;
 	border-radius: 0.375rem;
 	color: var(--text-chat);
@@ -44,20 +44,20 @@
 
 .grid {
 	display: grid;
-	min-height: 2rem;
+	min-height: var(--member-list-item-content-height);
 	min-width: 0;
 	grid-template-columns: 1fr auto;
 	align-items: center;
 	gap: 0.25rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-left: var(--member-list-item-padding-inline);
+	padding-right: var(--member-list-item-padding-inline);
 }
 
 .content {
 	display: flex;
 	min-width: 0;
 	align-items: center;
-	gap: 0.625rem;
+	gap: var(--member-list-item-content-gap);
 	font-weight: 500;
 }
 
@@ -83,15 +83,15 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	line-height: 1.25rem;
-	max-height: 1.25rem;
+	line-height: var(--member-list-item-name-line-height);
+	max-height: var(--member-list-item-name-line-height);
 }
 
 .memberCustomStatus {
 	max-width: 100%;
 	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-size: 0.6875rem;
-	line-height: 0.875rem;
+	line-height: var(--member-list-item-status-line-height);
 	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;

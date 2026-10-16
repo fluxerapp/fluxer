@@ -5,14 +5,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    aggregate_counts/2,
-    aggregate_transfer_to/2,
-    aggregate_transfer_to_topology/2,
-    aggregate_handoff_to_topology/2,
-    find_shard_by_ref/2,
-    find_shard_by_pid/2
-]).
+-export([aggregate_counts/2, aggregate_handoff_to_topology/2]).
 
 -export_type([handoff_result/0, shard/0, state/0]).
 
@@ -29,30 +22,6 @@ aggregate_counts(Request, State) ->
     Total = maps:fold(
         fun(_Index, #{pid := Pid}, Acc) ->
             Acc + extract_count(safe_shard_call(Pid, Request))
-        end,
-        0,
-        Shards
-    ),
-    {Total, State}.
-
--spec aggregate_transfer_to(node(), state()) -> {non_neg_integer(), state()}.
-aggregate_transfer_to(TargetNode, State) ->
-    Shards = maps:get(shards, State),
-    Total = maps:fold(
-        fun(_Index, #{pid := Pid}, Acc) ->
-            Acc + extract_count(safe_shard_call(Pid, {transfer_to, TargetNode}))
-        end,
-        0,
-        Shards
-    ),
-    {Total, State}.
-
--spec aggregate_transfer_to_topology([node()], state()) -> {non_neg_integer(), state()}.
-aggregate_transfer_to_topology(TargetNodes, State) ->
-    Shards = maps:get(shards, State),
-    Total = maps:fold(
-        fun(_Index, #{pid := Pid}, Acc) ->
-            Acc + extract_count(safe_shard_call(Pid, {transfer_to_topology, TargetNodes}))
         end,
         0,
         Shards
@@ -115,32 +84,6 @@ safe_shard_call(Pid, Request) ->
         error:_Reason -> unavailable;
         exit:_Reason -> unavailable
     end.
-
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (_Index, _Shard, {ok, _} = Found) -> Found;
-            (Index, #{ref := ExistingRef}, not_found) when ExistingRef =:= Ref -> {ok, Index};
-            (_Index, _Shard, not_found) -> not_found
-        end,
-        not_found,
-        Shards
-    ).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (_Index, _Shard, {ok, _} = Found) -> Found;
-            (Index, #{pid := ExistingPid}, not_found) when ExistingPid =:= Pid -> {ok, Index};
-            (_Index, _Shard, not_found) -> not_found
-        end,
-        not_found,
-        Shards
-    ).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -214,6 +157,21 @@ aggregate_handoff_to_topology_marks_invalid_reply_as_failed_test() ->
         aggregate_handoff_to_topology(['peer@host'], State),
     InvalidShardPid ! stop.
 
+aggregate_handoff_to_topology_counts_unavailable_and_bare_replies_test() ->
+    ExitedShardPid = spawn(fun() -> ok end),
+    ok = gateway_retry_timer:wait(5),
+    BareShardPid = spawn(fun() -> shard_bare_reply_test_loop(2) end),
+    State = #{
+        shards => #{
+            0 => #{pid => ExitedShardPid, ref => make_ref()},
+            1 => #{pid => BareShardPid, ref => make_ref()}
+        },
+        shard_count => 2
+    },
+    {#{attempted := 3, handed_off := 2}, _State} =
+        aggregate_handoff_to_topology(['peer@host'], State),
+    BareShardPid ! stop.
+
 shard_reconnect_test_loop(DrainCount) ->
     receive
         {'$gen_call', From, reconnect_drain} ->
@@ -243,10 +201,13 @@ shard_handoff_test_loop(Result) ->
     end.
 
 shard_invalid_reply_test_loop() ->
+    shard_bare_reply_test_loop(invalid_reply).
+
+shard_bare_reply_test_loop(Reply) ->
     receive
         {'$gen_call', From, _Request} ->
-            gen_server:reply(From, invalid_reply),
-            shard_invalid_reply_test_loop();
+            gen_server:reply(From, Reply),
+            shard_bare_reply_test_loop(Reply);
         stop ->
             ok
     after 5000 ->

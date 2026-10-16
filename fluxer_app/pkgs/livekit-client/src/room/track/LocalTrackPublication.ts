@@ -90,7 +90,7 @@ export default class LocalTrackPublication extends TrackPublication {
 			if (settings.noiseSuppression) {
 				features.add(AudioTrackFeature.TF_NOISE_SUPPRESSION);
 			}
-			if (settings.channelCount && settings.channelCount > 1) {
+			if (this.options?.forceStereo ?? (settings.channelCount !== undefined && settings.channelCount > 1)) {
 				features.add(AudioTrackFeature.TF_STEREO);
 			}
 			if (!this.options?.dtx) {

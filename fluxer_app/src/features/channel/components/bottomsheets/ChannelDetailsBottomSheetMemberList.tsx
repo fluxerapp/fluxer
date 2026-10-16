@@ -11,6 +11,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {resolveMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
+import {resolveMemberListMobile} from '@app/features/member/hooks/useMemberListMobile';
 import {resolveMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
@@ -22,7 +23,7 @@ import {
 } from '@app/features/member/utils/MemberListLayout';
 import {buildMemberListRangeWindow} from '@app/features/member/utils/MemberListRangeUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {OwnerCrownIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -31,12 +32,13 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {MEDIA_PROXY_AVATAR_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 
 const COMMUNITY_OWNER_DESCRIPTOR = msg({
 	message: 'Community owner',
@@ -46,8 +48,6 @@ const MEMBER_ITEM_HEIGHT = 56;
 const INITIAL_MEMBER_RANGE: [number, number] = [0, MEMBER_LIST_RANGE_MAX_SPAN];
 const SCROLL_BUFFER_ROWS = 10;
 const SUBSCRIPTION_OVERSCAN_PAGES = 0;
-const AVATAR_DEFER_AFTER_SCROLL_IDLE_MS = 180;
-const MEMBER_LIST_AVATAR_MEDIA_SIZE = 80;
 
 function isScrollableOverflow(value: string): boolean {
 	return value === 'auto' || value === 'scroll' || value === 'overlay';
@@ -80,7 +80,7 @@ function addVisibleMember(params: {
 	groupedItems.get(groupId)?.push(member);
 }
 
-export const SkeletonMemberItem = () => (
+const SkeletonMemberItem = () => (
 	<div
 		className={styles.skeletonItem}
 		data-flx="channel.channel-details-bottom-sheet-member-list.skeleton-member-item.skeleton-item"
@@ -104,23 +104,24 @@ export const SkeletonMemberItem = () => (
 		</div>
 	</div>
 );
-export const MobileMemberListItem = observer(
+const MobileMemberListItem = observer(
 	({
 		guild,
 		channelId,
 		member,
-		deferAvatarLoad = false,
 		onLongPress,
 	}: {
 		guild: Guild;
 		channelId: string;
 		member: GuildMember;
-		deferAvatarLoad?: boolean;
 		onLongPress?: (member: GuildMember) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const isTyping = TypingIndicator.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
+		const isTyping = RollingTypingStore.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
 		const status = resolveMemberListPresence({guildId: guild.id, channelId, userId: member.user.id});
+		const isMobile = member.isCurrentUser()
+			? undefined
+			: resolveMemberListMobile({guildId: guild.id, channelId, userId: member.user.id});
 		const memberListCustomStatus = resolveMemberListCustomStatus({
 			guildId: guild.id,
 			channelId,
@@ -129,7 +130,9 @@ export const MobileMemberListItem = observer(
 		const handleLongPress = useCallback(() => {
 			onLongPress?.(member);
 		}, [member, onLongPress]);
-		const displayName = member.nick ?? NicknameUtils.getNickname(member.user, guild.id);
+		const displayName = member.nick
+			? NicknameUtils.formatNicknameForStreamerMode(member.nick)
+			: NicknameUtils.getNickname(member.user, guild.id);
 		const avatarUrl = useMemo(
 			() =>
 				AvatarUtils.getGuildMemberDisplayAvatarURL({
@@ -138,7 +141,7 @@ export const MobileMemberListItem = observer(
 					memberAvatar: member.avatar,
 					avatarUnset: member.isAvatarUnset(),
 					animated: false,
-					size: MEMBER_LIST_AVATAR_MEDIA_SIZE,
+					size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 				}),
 			[guild.id, member],
 		);
@@ -150,7 +153,7 @@ export const MobileMemberListItem = observer(
 					memberAvatar: member.avatar,
 					avatarUnset: member.isAvatarUnset(),
 					animated: true,
-					size: MEMBER_LIST_AVATAR_MEDIA_SIZE,
+					size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 				}),
 			[guild.id, member],
 		);
@@ -176,10 +179,10 @@ export const MobileMemberListItem = observer(
 						showOffline={member.user.id === Authentication.currentUserId || isTyping}
 						guildId={guild.id}
 						status={status}
+						isMobile={isMobile}
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}
-						mediaSize={MEMBER_LIST_AVATAR_MEDIA_SIZE}
-						deferImageLoad={deferAvatarLoad}
+						mediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
 						data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.status-aware-avatar"
 					/>
 					<div
@@ -227,7 +230,6 @@ export const MobileMemberListItem = observer(
 								userId={member.user.id}
 								className={styles.memberCustomStatus}
 								showText={true}
-								deferMediaLoad={deferAvatarLoad}
 								data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.member-custom-status"
 							/>
 						)}
@@ -255,12 +257,11 @@ interface LazyMemberListGroupProps {
 	group: {id: string; count: number};
 	channelId: string;
 	members: Array<GuildMember>;
-	deferAvatarLoad?: boolean;
 	onMemberLongPress?: (member: GuildMember) => void;
 }
 
 const LazyMemberListGroup = observer(
-	({guild, group, channelId, members, deferAvatarLoad = false, onMemberLongPress}: LazyMemberListGroupProps) => {
+	({guild, group, channelId, members, onMemberLongPress}: LazyMemberListGroupProps) => {
 		const {i18n} = useLingui();
 		const groupName = (() => {
 			switch (group.id) {
@@ -295,7 +296,6 @@ const LazyMemberListGroup = observer(
 								guild={guild}
 								channelId={channelId}
 								member={member}
-								deferAvatarLoad={deferAvatarLoad}
 								onLongPress={onMemberLongPress}
 								data-flx="channel.channel-details-bottom-sheet-member-list.lazy-member-list-group.mobile-member-list-item"
 							/>
@@ -327,8 +327,6 @@ const LazyGuildMemberList = observer(
 		const subscribedRangesRef = useRef<Array<[number, number]>>([INITIAL_MEMBER_RANGE]);
 		const listContainerRef = useRef<HTMLDivElement | null>(null);
 		const scrollAnimationFrameRef = useRef<number | null>(null);
-		const avatarDeferTimerRef = useRef<number | null>(null);
-		const [deferAvatarLoad, setDeferAvatarLoad] = useState(false);
 		const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 		const currentUserId = Authentication.currentUserId;
 		const lacksMemberViewPermission =
@@ -365,16 +363,6 @@ const LazyGuildMemberList = observer(
 			},
 			[subscribe, totalRows],
 		);
-		const markAvatarLoadingDeferred = useCallback(() => {
-			setDeferAvatarLoad(true);
-			if (avatarDeferTimerRef.current != null) {
-				window.clearTimeout(avatarDeferTimerRef.current);
-			}
-			avatarDeferTimerRef.current = window.setTimeout(() => {
-				avatarDeferTimerRef.current = null;
-				setDeferAvatarLoad(false);
-			}, AVATAR_DEFER_AFTER_SCROLL_IDLE_MS);
-		}, []);
 		useEffect(() => {
 			if (!enabled || memberListUpdatesDisabled || lacksMemberViewPermission) {
 				return;
@@ -392,7 +380,6 @@ const LazyGuildMemberList = observer(
 				updateSubscribedRange(scrollParent.scrollTop, scrollParent.clientHeight);
 			};
 			const handleScroll = () => {
-				markAvatarLoadingDeferred();
 				if (scrollAnimationFrameRef.current !== null) {
 					return;
 				}
@@ -416,18 +403,8 @@ const LazyGuildMemberList = observer(
 					window.cancelAnimationFrame(scrollAnimationFrameRef.current);
 					scrollAnimationFrameRef.current = null;
 				}
-				if (avatarDeferTimerRef.current !== null) {
-					window.clearTimeout(avatarDeferTimerRef.current);
-					avatarDeferTimerRef.current = null;
-				}
 			};
-		}, [
-			enabled,
-			memberListUpdatesDisabled,
-			lacksMemberViewPermission,
-			updateSubscribedRange,
-			markAvatarLoadingDeferred,
-		]);
+		}, [enabled, memberListUpdatesDisabled, lacksMemberViewPermission, updateSubscribedRange]);
 		if (lacksMemberViewPermission) {
 			return (
 				<div
@@ -546,7 +523,6 @@ const LazyGuildMemberList = observer(
 							group={group}
 							channelId={channel.id}
 							members={members}
-							deferAvatarLoad={deferAvatarLoad}
 							onMemberLongPress={onMemberLongPress}
 							data-flx="channel.channel-details-bottom-sheet-member-list.lazy-guild-member-list.lazy-member-list-group"
 						/>

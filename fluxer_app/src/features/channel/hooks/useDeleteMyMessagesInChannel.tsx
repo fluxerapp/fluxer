@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
-import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {useConfirmDeleteMyMessages} from '@app/features/guild/hooks/useConfirmDeleteMyMessages';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -46,9 +40,10 @@ const WE_COULDN_T_DELETE_YOUR_MESSAGES_RIGHT_NOW_DESCRIPTOR = msg({
 	comment:
 		'Error modal body shown when the "delete my messages in channel" request failed. Encourages the user to retry.',
 });
-const logger = new Logger('useDeleteMyMessagesInChannel');
+
 export const useDeleteMyMessagesInChannel = () => {
 	const {i18n} = useLingui();
+	const confirmDelete = useConfirmDeleteMyMessages();
 	return useCallback(
 		(channelId: string) => {
 			const channel = Channels.getChannel(channelId);
@@ -59,40 +54,16 @@ export const useDeleteMyMessagesInChannel = () => {
 			const description = isPrivateConversation
 				? i18n._(THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_IN_THIS_CONVERSATION_DESCRIPTOR)
 				: i18n._(THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_DESCRIPTOR);
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={title}
-						description={description}
-						primaryText={i18n._(DELETE_MY_MESSAGES_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={async () => {
-							try {
-								await ChannelCommands.bulkDeleteMyMessages(channelId);
-								ToastCommands.createToast({
-									type: 'success',
-									children: i18n._(DELETED_YOUR_MESSAGES_DESCRIPTOR),
-								});
-							} catch (error) {
-								logger.error('Failed to delete user messages in channel', error);
-								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<GenericErrorModal
-												title={i18n._(COULDN_T_DELETE_YOUR_MESSAGES_DESCRIPTOR)}
-												message={i18n._(WE_COULDN_T_DELETE_YOUR_MESSAGES_RIGHT_NOW_DESCRIPTOR)}
-												data-flx="channel.use-delete-my-messages-in-channel.generic-error-modal"
-											/>
-										)),
-									);
-								}, 0);
-							}
-						}}
-						data-flx="channel.use-delete-my-messages-in-channel.confirm-modal"
-					/>
-				)),
-			);
+			confirmDelete({
+				title: title,
+				description: description,
+				run: () => ChannelCommands.bulkDeleteMyMessages(channelId),
+				toastText: i18n._(DELETED_YOUR_MESSAGES_DESCRIPTOR),
+				errorTitle: i18n._(COULDN_T_DELETE_YOUR_MESSAGES_DESCRIPTOR),
+				errorMessage: i18n._(WE_COULDN_T_DELETE_YOUR_MESSAGES_RIGHT_NOW_DESCRIPTOR),
+				dataFlx: 'channel.use-delete-my-messages-in-channel.confirm-modal',
+			});
 		},
-		[i18n],
+		[i18n, confirmDelete],
 	);
 };

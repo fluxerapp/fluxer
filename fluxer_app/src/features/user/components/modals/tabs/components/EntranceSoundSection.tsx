@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import Guilds from '@app/features/guild/state/Guilds';
 import {DIRECT_MESSAGES_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {
 	DMS_ENTRANCE_SOUND_SCOPE,
@@ -15,7 +18,7 @@ import {
 	parseEntranceSoundScopeId,
 } from '@app/features/notification/utils/EntranceSoundScopes';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -23,12 +26,17 @@ import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/comp
 import styles from '@app/features/user/components/modals/tabs/components/EntranceSoundSection.module.css';
 import {useEntranceSound} from '@app/features/user/components/modals/tabs/hooks/useEntranceSound';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {
+	SUMMARY_NONE_DESCRIPTOR as NONE_LIBRARY_OPTION_DESCRIPTOR,
+	PREVIEW_SOUND_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {EntranceSoundEntry} from '@app/features/voice/state/EntranceSoundLibrary';
 import {
 	ENTRANCE_SOUND_MAX_BYTES,
 	ENTRANCE_SOUND_MAX_DURATION_MS,
 	ENTRANCE_SOUND_MAX_PER_USER,
 } from '@fluxer/constants/src/EntranceSoundConstants';
+import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -116,10 +124,7 @@ const INHERITED_FROM_DESCRIPTOR = msg({
 	comment:
 		'Short label in the entrance sound section. Keep it concise. Preserve {inheritedFromLabel}; it is inserted by code.',
 });
-const PREVIEW_SOUND_DESCRIPTOR = msg({
-	message: 'Preview sound',
-	comment: 'Short label in the entrance sound section. Keep it concise.',
-});
+
 const APPLIES_TO_DESCRIPTOR = msg({
 	message: 'Applies to',
 	comment: 'Short label in the entrance sound section. Keep it concise.',
@@ -140,10 +145,7 @@ const LIBRARY_COUNT_DESCRIPTOR = msg({
 	message: 'Library: {count} of {max}',
 	comment: 'Label showing how many sounds the user has saved relative to the maximum allowed.',
 });
-const NONE_LIBRARY_OPTION_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Library picker entry meaning no sound is selected for this scope.',
-});
+
 const SOUND_FOR_THIS_SCOPE_DESCRIPTOR = msg({
 	message: 'Sound for this scope',
 	comment: 'Label for the dropdown that picks which library sound to use for the chosen scope.',
@@ -166,12 +168,14 @@ interface LibrarySoundOption extends ComboboxOption<string> {
 
 const NONE_LIBRARY_VALUE = '__none__';
 
-function formatEntranceSoundByteLimit(bytes: number): string {
-	if (bytes >= 1024 * 1024) {
-		const mb = bytes / (1024 * 1024);
-		return `${mb % 1 === 0 ? mb.toFixed(0) : mb.toFixed(1)}MB`;
-	}
-	return `${Math.floor(bytes / 1024)}KB`;
+function formatSoundDuration(durationMs: number, locale: string): string {
+	return getCachedNumberFormat(locale, {
+		style: 'unit',
+		unit: 'second',
+		unitDisplay: 'narrow',
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	}).format(durationMs / MS_PER_SECOND);
 }
 
 interface ScopeArtworkProps {
@@ -183,7 +187,6 @@ interface ScopeArtworkProps {
 function ScopeArtwork({option, selected, compact}: ScopeArtworkProps): React.ReactElement {
 	if (option.guildId) {
 		const iconUrl = option.guildIcon ? AvatarUtils.getGuildIconURL({id: option.guildId, icon: option.guildIcon}) : null;
-		const initial = option.label.trim().charAt(0).toUpperCase() || '?';
 		return iconUrl ? (
 			<span
 				className={clsx(styles.scopeAvatar, compact && styles.scopeAvatarCompact)}
@@ -197,7 +200,10 @@ function ScopeArtwork({option, selected, compact}: ScopeArtworkProps): React.Rea
 				aria-hidden
 				data-flx="user.entrance-sound-section.scope-artwork.scope-avatar-placeholder"
 			>
-				{initial}
+				<GuildAcronym
+					name={option.label}
+					data-flx="user.entrance-sound-section.scope-artwork.scope-avatar-placeholder-acronym"
+				/>
 			</span>
 		);
 	}
@@ -271,8 +277,11 @@ export const EntranceSoundSection: React.FC = observer(() => {
 		[],
 	);
 	const {i18n} = useLingui();
-	const maxDurationSeconds = (ENTRANCE_SOUND_MAX_DURATION_MS / 1000).toFixed(1);
-	const maxSizeLabel = formatEntranceSoundByteLimit(ENTRANCE_SOUND_MAX_BYTES);
+	const maxDurationSeconds = getCachedNumberFormat(i18n.locale, {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	}).format(ENTRANCE_SOUND_MAX_DURATION_MS / MS_PER_SECOND);
+	const maxSizeLabel = formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES);
 	const currentGuildId = SelectedGuild.selectedGuildId;
 	const guilds = Guilds.getGuilds();
 	const [selectedScopeId, setSelectedScopeId] = useState(() =>
@@ -379,7 +388,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 				case 'dms':
 					return i18n._(USED_IN_DIRECT_MESSAGE_CALLS_IF_YOU_DO_DESCRIPTOR);
 				case 'guild':
-					return i18n._(USED_IN_THIS_COMMUNITY_IF_YOU_DO_NOT_DESCRIPTOR, {productName: PRODUCT_NAME});
+					return i18n._(USED_IN_THIS_COMMUNITY_IF_YOU_DO_NOT_DESCRIPTOR, {productName: RuntimeConfig.productName});
 			}
 		},
 		[i18n],
@@ -406,7 +415,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 			...library.map((entry: EntranceSoundEntry) => ({
 				value: entry.id,
 				label: entry.name,
-				description: `${(entry.durationMs / 1000).toFixed(1)}s`,
+				description: formatSoundDuration(entry.durationMs, i18n.locale),
 			})),
 		],
 		[library, i18n.locale],
@@ -433,7 +442,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 							/>
 							<span className={styles.premiumCardTitle} data-flx="user.entrance-sound-section.premium-card-title">
 								{i18n._(CUSTOM_ENTRANCE_SOUNDS_PREMIUM_DESCRIPTOR, {
-									premiumProductName: PREMIUM_PRODUCT_NAME,
+									premiumProductName: getPremiumProductName(),
 								})}
 							</span>
 						</div>
@@ -452,7 +461,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 							onClick={() => PremiumModalCommands.open()}
 							data-flx="user.entrance-sound-section.button.open"
 						>
-							{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						</Button>
 					</div>
 				) : (
@@ -573,7 +582,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 											{resolvedSound.name}
 										</span>
 										<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-											{(resolvedSound.durationMs / 1000).toFixed(1)}s
+											{formatSoundDuration(resolvedSound.durationMs, i18n.locale)}
 										</span>
 									</div>
 								</div>
@@ -653,8 +662,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 														{entry.name}
 													</span>
 													<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-														{(entry.durationMs / 1000).toFixed(1)}s
-														{isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}
+														{`${formatSoundDuration(entry.durationMs, i18n.locale)}${isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}`}
 													</span>
 												</div>
 											</div>

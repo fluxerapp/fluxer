@@ -36,11 +36,6 @@
 	width: var(--studio-row-height-compact);
 }
 
-.active {
-	background: var(--studio-bg-row-active);
-	color: var(--studio-fg-primary);
-}
-
 .danger {
 	color: var(--studio-danger);
 }

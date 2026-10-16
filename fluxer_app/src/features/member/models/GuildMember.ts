@@ -61,45 +61,31 @@ export class GuildMember {
 		this.mentionFlags = (guildMember.mention_flags ?? 0) as MentionReplyPreference;
 	}
 
+	matches(guildMember: GuildMemberData): boolean {
+		const until = guildMember.communication_disabled_until
+			? new Date(guildMember.communication_disabled_until).getTime()
+			: null;
+		return (
+			this.nick === (guildMember.nick ?? null) &&
+			this.avatar === (guildMember.avatar ?? null) &&
+			this.banner === (guildMember.banner ?? null) &&
+			this.accentColor === (guildMember.accent_color ?? null) &&
+			this.mute === (guildMember.mute ?? false) &&
+			this.deaf === (guildMember.deaf ?? false) &&
+			this.profileFlags === (guildMember.profile_flags ?? 0) &&
+			this.mentionFlags === (guildMember.mention_flags ?? 0) &&
+			(this.communicationDisabledUntil?.getTime() ?? null) === until &&
+			this.roles.size === guildMember.roles.length &&
+			guildMember.roles.every((roleId) => this.roles.has(roleId))
+		);
+	}
+
 	isAvatarUnset(): boolean {
 		return (this.profileFlags & GuildMemberProfileFlags.AVATAR_UNSET) !== 0;
 	}
 
 	isBannerUnset(): boolean {
 		return (this.profileFlags & GuildMemberProfileFlags.BANNER_UNSET) !== 0;
-	}
-
-	withUpdates(updates: Partial<GuildMemberData>): GuildMember {
-		return new GuildMember(
-			this.guildId,
-			{
-				user: updates.user ?? this.user.toJSON(),
-				nick: updates.nick ?? this.nick,
-				avatar: updates.avatar ?? this.avatar,
-				banner: updates.banner ?? this.banner,
-				accent_color: updates.accent_color ?? this.accentColor,
-				roles: updates.roles ?? Array.from(this.roles),
-				joined_at: updates.joined_at ?? this.joinedAt.toISOString(),
-				mute: updates.mute ?? this.mute,
-				deaf: updates.deaf ?? this.deaf,
-				communication_disabled_until:
-					updates.communication_disabled_until ?? this.communicationDisabledUntil?.toISOString() ?? null,
-				profile_flags: updates.profile_flags ?? this.profileFlags,
-				mention_flags: updates.mention_flags ?? this.mentionFlags,
-			},
-			{instanceId: this.instanceId, cacheUser: this.cacheUser},
-		);
-	}
-
-	withRoles(roles: Iterable<string>): GuildMember {
-		return new GuildMember(
-			this.guildId,
-			{
-				...this.toJSON(),
-				roles: Array.from(roles),
-			},
-			{instanceId: this.instanceId, cacheUser: this.cacheUser},
-		);
 	}
 
 	getSortedRoles(): ReadonlyArray<GuildRole> {

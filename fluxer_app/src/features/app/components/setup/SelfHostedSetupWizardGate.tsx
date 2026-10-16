@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
 import {
+	classifySetupUnauthorized,
 	fetchInstanceConfig,
 	type SetupBrandingAssetKind,
+	setSetupAccountIdentity,
 	testSmtpConfig,
 	updateInstanceConfig,
 	uploadBrandingAsset,
@@ -18,6 +21,7 @@ import {
 import {
 	AdminAccountStep,
 	AdminIntroStep,
+	AdminRecoveryKitStep,
 	type BrandingAssetState,
 	BrandingStep,
 	CommunityStep,
@@ -29,32 +33,61 @@ import {
 	MediaExpiryStep,
 	type PremiumMode,
 	PremiumStep,
+	PushRelayConsentStep,
 	type RegistrationMode,
 	RegistrationStep,
 	type ServiceAvailability,
 	type ServiceIntegrationDraft,
 	type ServiceSelection,
 	ServicesStep,
+	SetupTokenStep,
+	SignInMethodStep,
 	ThemeStep,
+	toSmtpTlsMode,
 	WelcomeStep,
 } from '@app/features/app/components/setup/SetupWizardSteps';
+import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {AuthRegisterDraftContext, type AuthRegisterFormDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
+import {BACK_DESCRIPTOR, SIGN_OUT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl as fileToBase64} from '@app/features/platform/utils/BlobDataUrl';
+import {failureCode, failureValidationErrors} from '@app/features/platform/utils/ResponseInspection';
 import Theme from '@app/features/theme/state/Theme';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
+import {PortalHostContext} from '@app/features/ui/overlay/PortalHostContext';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
+import ModalState from '@app/features/ui/state/Modal';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
-import {fileToBase64} from '@app/features/user/utils/AvatarUtils';
+import {
+	ModalStackContext,
+	type ModalStackContextValue,
+	UNSTACKED_MODAL_CONTEXT,
+} from '@app/features/ui/utils/ModalStackContext';
+import * as RecoveryKitCommands from '@app/features/user/commands/RecoveryKitCommands';
+import {confirmNewRecoveryKit} from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
+import RecoveryKitStatus from '@app/features/user/state/RecoveryKitStatus';
 import * as FormUtils from '@app/lib/forms';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
+import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon, ArrowRightIcon, CheckIcon, WrenchIcon} from '@phosphor-icons/react';
@@ -64,6 +97,8 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const logger = new Logger('SelfHostedSetupWizardGate');
 
+const BEHIND_STACKED_MODAL_PLACEMENT: ModalStackContextValue = {...UNSTACKED_MODAL_CONTEXT, isTopmost: false};
+
 const SETUP_WIZARD_DESCRIPTOR = msg({
 	message: 'Self-host setup',
 	comment: 'Accessible label for the self-host setup wizard carousel.',
@@ -71,10 +106,6 @@ const SETUP_WIZARD_DESCRIPTOR = msg({
 const HEADER_DESCRIPTOR = msg({
 	message: 'Set up {productName}',
 	comment: 'Title for the self-host setup wizard modal.',
-});
-const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Button that moves to the previous setup wizard step.',
 });
 const NEXT_DESCRIPTOR = msg({
 	message: 'Next',
@@ -84,6 +115,18 @@ const FINISH_DESCRIPTOR = msg({
 	message: 'Finish setup',
 	comment: 'Button that saves the configuration and completes the setup wizard.',
 });
+const SIGN_IN_METHOD_LOCKED_USERNAME_DESCRIPTOR = msg({
+	message: 'This instance already uses usernames to sign in. This can no longer change.',
+	comment: 'Setup wizard error when the operator picks email sign-in but the instance is already fixed to usernames.',
+});
+const USERNAME_STYLE_LOCKED_DESCRIPTOR = msg({
+	message: 'The username tags on this instance are already set. They can no longer change.',
+	comment: 'Setup wizard error when the username style was already fixed because an account exists.',
+});
+const SIGN_IN_METHOD_LOCKED_EMAIL_DESCRIPTOR = msg({
+	message: 'This instance already uses email to sign in. This can no longer change.',
+	comment: 'Setup wizard error when the operator picks username sign-in but the instance is already fixed to email.',
+});
 const LOADING_DESCRIPTOR = msg({
 	message: 'Loading instance configuration',
 	comment: 'Accessible status while the setup wizard loads the instance configuration.',
@@ -91,6 +134,16 @@ const LOADING_DESCRIPTOR = msg({
 const LOAD_ERROR_DESCRIPTOR = msg({
 	message: 'Could not load the instance configuration. Try reloading the page.',
 	comment: 'Error shown when the setup wizard fails to load the instance configuration.',
+});
+const NOT_ADMIN_DESCRIPTOR = msg({
+	message: 'This account is not an admin of this instance. Sign in with an admin account to finish setup.',
+	comment:
+		'Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.',
+});
+const ORIGIN_MISMATCH_DESCRIPTOR = msg({
+	message:
+		'The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload.',
+	comment: 'Error shown when the setup wizard cannot load because the API origin differs from the page origin.',
 });
 const ASSET_UPLOAD_ERROR_DESCRIPTOR = msg({
 	message: 'That image could not be used. Try a different file.',
@@ -116,10 +169,10 @@ const STEP_NAVIGATION_LOCK_MS = 320;
 
 const BRANDING_ASSET_KINDS: ReadonlyArray<SetupBrandingAssetKind> = ['icon', 'symbol', 'logo', 'wordmark', 'favicon'];
 
-function hexToNumber(value: string | null): number {
-	if (!value) return 0;
+function hexToNumber(value: string | null): number | null {
+	if (!value) return null;
 	const match = /^#?([0-9a-fA-F]{6})$/.exec(value.trim());
-	if (!match) return 0;
+	if (!match) return null;
 	return parseInt(match[1], 16) >>> 0;
 }
 
@@ -148,12 +201,6 @@ const DEFAULT_INTEGRATION_DRAFT: ServiceIntegrationDraft = {
 	klipyApiKey: '',
 	youtubeMode: 'later',
 	youtubeApiKey: '',
-	captchaMode: 'later',
-	captchaProvider: 'hcaptcha',
-	hcaptchaSiteKey: '',
-	hcaptchaSecretKey: '',
-	turnstileSiteKey: '',
-	turnstileSecretKey: '',
 	emailMode: 'later',
 	emailEnabled: true,
 	emailFromEmail: '',
@@ -162,7 +209,7 @@ const DEFAULT_INTEGRATION_DRAFT: ServiceIntegrationDraft = {
 	smtpPort: '587',
 	smtpUsername: '',
 	smtpPassword: '',
-	smtpSecure: true,
+	smtpTlsMode: 'auto',
 	blueskyMode: 'later',
 	blueskyEnabled: true,
 	blueskyClientName: '',
@@ -192,8 +239,6 @@ function wizardStepToIntegrationKind(step: WizardStep): IntegrationStepKind | nu
 			return 'gif';
 		case 'integration_youtube':
 			return 'youtube';
-		case 'integration_captcha':
-			return 'captcha';
 		case 'integration_email':
 			return 'email';
 		case 'integration_bluesky':
@@ -270,11 +315,6 @@ function isIntegrationStepValid(kind: IntegrationStepKind, draft: ServiceIntegra
 			return draft.klipyApiKey.trim().length > 0;
 		case 'youtube':
 			return draft.youtubeMode === 'later' || draft.youtubeApiKey.trim().length > 0;
-		case 'captcha':
-			if (draft.captchaMode === 'later') return true;
-			return draft.captchaProvider === 'hcaptcha'
-				? draft.hcaptchaSiteKey.trim().length > 0 && draft.hcaptchaSecretKey.trim().length > 0
-				: draft.turnstileSiteKey.trim().length > 0 && draft.turnstileSecretKey.trim().length > 0;
 		case 'email':
 			if (draft.emailMode === 'later' || !draft.emailEnabled) return true;
 			return (
@@ -296,7 +336,7 @@ function isIntegrationStepValid(kind: IntegrationStepKind, draft: ServiceIntegra
 	}
 }
 
-function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
+function buildIntegrationsPatch(draft: ServiceIntegrationDraft, accountIdentity: AccountIdentityMode) {
 	const integrations: {
 		gif?: {
 			provider: 'klipy';
@@ -304,13 +344,6 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 		};
 		youtube?: {
 			api_key: string;
-		};
-		captcha?: {
-			provider: 'hcaptcha' | 'turnstile';
-			hcaptcha_site_key?: string;
-			hcaptcha_secret_key?: string;
-			turnstile_site_key?: string;
-			turnstile_secret_key?: string;
 		};
 		email?: {
 			enabled: boolean;
@@ -322,7 +355,7 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 				port: number;
 				username: string;
 				password: string;
-				secure: boolean;
+				tls_mode: SmtpTlsMode;
 			};
 		};
 		bluesky?: {
@@ -341,21 +374,8 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 	if (draft.youtubeMode === 'configure') {
 		integrations.youtube = {api_key: draft.youtubeApiKey.trim()};
 	}
-	if (draft.captchaMode === 'configure') {
-		integrations.captcha =
-			draft.captchaProvider === 'hcaptcha'
-				? {
-						provider: 'hcaptcha',
-						hcaptcha_site_key: draft.hcaptchaSiteKey.trim(),
-						hcaptcha_secret_key: draft.hcaptchaSecretKey.trim(),
-					}
-				: {
-						provider: 'turnstile',
-						turnstile_site_key: draft.turnstileSiteKey.trim(),
-						turnstile_secret_key: draft.turnstileSecretKey.trim(),
-					};
-	}
-	if (draft.emailMode === 'configure') {
+	if (draft.emailMode === 'configure' && accountIdentity === AccountIdentityModes.EMAIL) {
+		const smtpPort = parsePort(draft.smtpPort) ?? 587;
 		integrations.email = {
 			enabled: draft.emailEnabled,
 			provider: 'smtp',
@@ -363,10 +383,10 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 			from_name: draft.emailFromName.trim(),
 			smtp: {
 				host: draft.smtpHost.trim(),
-				port: parsePort(draft.smtpPort) ?? 587,
+				port: smtpPort,
 				username: draft.smtpUsername.trim(),
 				password: draft.smtpPassword.trim(),
-				secure: draft.smtpSecure,
+				tls_mode: toSmtpTlsMode(draft.smtpTlsMode, smtpPort),
 			},
 		};
 	}
@@ -417,20 +437,24 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const {i18n} = useLingui();
 	const shouldReduceMotion = useReducedMotion();
 	const authStoreAuthenticated = Authentication.isAuthenticated;
+	const accountWorkAdmitted = !AccountScopedWork.isSuspended;
 	const themeHydrated = Theme.isHydrated;
-	const fallbackProductName = RuntimeConfig.productName;
+	const fallbackProductName = resolveAppShellBranding(RuntimeConfig.getSnapshotOrNull()).productName;
 	const welcomeInitialFocusRef = useRef<HTMLElement | null>(null);
 	const registerFormDraftsRef = useRef<Map<string, AuthRegisterFormDraft>>(new Map());
 	const stepNavigationLockedRef = useRef(false);
 	const stepNavigationUnlockTimerRef = useRef<number | null>(null);
+	const [layerHost, setLayerHost] = useState<HTMLDivElement | null>(null);
+	const modalStackPlacement = ModalState.hasModalOpen() ? BEHIND_STACKED_MODAL_PLACEMENT : UNSTACKED_MODAL_CONTEXT;
 
 	const [config, setConfig] = useState<InstanceConfigResponse | null>(null);
-	const [loadError, setLoadError] = useState(false);
+	const accountIdentity = config?.account_identity.mode ?? RuntimeConfig.accountIdentity;
+	const [loadError, setLoadError] = useState<MessageDescriptor | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [stepNavigationLocked, setStepNavigationLocked] = useState(false);
 	const [wizardSnapshot, setWizardSnapshot] = useState(createSetupWizardSnapshot);
-	const [setupTheme, setSetupTheme] = useState<ThemeType>(ThemeTypes.SYSTEM);
+	const [setupTheme, setSetupTheme] = useState<ThemeType>(ThemeTypes.DARK);
 	const [forceUnauthenticatedSetup, setForceUnauthenticatedSetup] = useState(false);
 	const [integrationDraft, setIntegrationDraft] = useState<ServiceIntegrationDraft>(() => ({
 		...DEFAULT_INTEGRATION_DRAFT,
@@ -440,9 +464,16 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}));
 	const [smtpTesting, setSmtpTesting] = useState(false);
 	const [smtpTestResult, setSmtpTestResult] = useState<string | null>(null);
+	const [signInMethod, setSignInMethod] = useState<AccountIdentityMode>(() => RuntimeConfig.accountIdentity);
+	const [tagStyleChoice, setTagStyleChoice] = useState<TagStyle>(() => RuntimeConfig.tagStyle);
+	const [savingSignInMethod, setSavingSignInMethod] = useState(false);
+	const [signInMethodError, setSignInMethodError] = useState<string | null>(null);
+	const [setupToken, setSetupToken] = useState('');
+	const [setupTokenError, setSetupTokenError] = useState<string | null>(null);
+	const [creatingRecoveryKit, setCreatingRecoveryKit] = useState(false);
 
 	const [productName, setProductName] = useState('');
-	const [themeColor, setThemeColor] = useState(0);
+	const [themeColor, setThemeColor] = useState<number | null>(null);
 	const [registrationMode, setRegistrationMode] = useState<RegistrationMode>('open');
 	const [singleCommunityEnabled, setSingleCommunityEnabled] = useState(false);
 	const [singleCommunityName, setSingleCommunityName] = useState('');
@@ -452,6 +483,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		youtube: false,
 		bluesky: false,
 	});
+	const [pushRelayConsentAccepted, setPushRelayConsentAccepted] = useState(false);
 	const [premiumMode, setPremiumMode] = useState<PremiumMode>('mirror');
 	const [assets, setAssets] = useState<ReadonlyArray<BrandingAssetState>>(() =>
 		BRANDING_ASSET_KINDS.map((kind) => ({kind, url: null, preview: null})),
@@ -530,29 +562,39 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setForceUnauthenticatedSetup(false);
 	}, [authStoreAuthenticated, forceUnauthenticatedSetup]);
 
-	const resetStaleSetupSession = useCallback(async () => {
-		logger.warn('Instance config fetch returned 401 during setup; clearing stale local setup session');
+	const resetSetupSession = useCallback(async () => {
 		setForceUnauthenticatedSetup(true);
 		registerFormDraftsRef.current.clear();
 		setConfig(null);
-		setLoadError(false);
+		setLoadError(null);
 		setSubmitError(null);
 		setSubmitting(false);
 		setWizardSnapshot(createSetupWizardSnapshot());
 		clearStepNavigationLock();
 		setIntegrationDraft({...DEFAULT_INTEGRATION_DRAFT});
 		setMediaExpiryDraft({...DEFAULT_MEDIA_EXPIRY_DRAFT});
+		setPushRelayConsentAccepted(false);
 		setSmtpTesting(false);
 		setSmtpTestResult(null);
+		setSignInMethodError(null);
+		setSavingSignInMethod(false);
+		setSetupToken('');
+		setSetupTokenError(null);
+		setCreatingRecoveryKit(false);
 		try {
 			await SessionManager.logout();
 		} catch (error) {
-			logger.warn('Failed to fully clear stale setup session', error);
+			logger.warn('Failed to fully clear the setup session', error);
 			Authentication.handleSessionStart({token: null});
-			Authentication.setUserId(null);
+			SessionManager.setUserId(null);
 		}
 		Authentication.handleLogout({skipRedirect: true});
 	}, [clearStepNavigationLock]);
+
+	const signOutOfSetup = useCallback(async () => {
+		await resetSetupSession();
+		if (RuntimeConfig.appPublic.setup.setup_token_required !== true) RouterUtils.replaceWith(Routes.LOGIN);
+	}, [resetSetupSession]);
 
 	const hydrateFromConfig = useCallback((next: InstanceConfigResponse) => {
 		setConfig(next);
@@ -562,6 +604,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSingleCommunityEnabled(next.policy.single_community_enabled);
 		setDirectMessagesDisabled(next.policy.direct_messages_disabled);
 		setPremiumMode(next.policy.premium_mode);
+		setPushRelayConsentAccepted(next.push_relay.relay_consent_accepted);
 		setServiceSelection({
 			gif: next.policy.services_resolved.gif_enabled,
 			youtube: next.policy.services_resolved.youtube_enabled,
@@ -569,14 +612,13 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		});
 		setIntegrationDraft((current) => ({
 			...current,
-			captchaProvider: next.integrations.captcha.effective_provider === 'turnstile' ? 'turnstile' : 'hcaptcha',
 			emailEnabled: next.integrations.email.effective_enabled || next.integrations.email.enabled !== false,
 			emailFromEmail: next.integrations.email.from_email ?? current.emailFromEmail,
 			emailFromName: next.integrations.email.from_name ?? current.emailFromName,
 			smtpHost: next.integrations.email.smtp.host ?? current.smtpHost,
 			smtpPort: next.integrations.email.smtp.port ? String(next.integrations.email.smtp.port) : current.smtpPort,
 			smtpUsername: next.integrations.email.smtp.username ?? current.smtpUsername,
-			smtpSecure: next.integrations.email.smtp.secure ?? current.smtpSecure,
+			smtpTlsMode: next.integrations.email.smtp.tls_mode ?? current.smtpTlsMode,
 			blueskyEnabled: next.integrations.bluesky.effective_enabled || next.integrations.bluesky.enabled !== false,
 			blueskyClientName: next.integrations.bluesky.client_name ?? current.blueskyClientName,
 			blueskyClientUri: next.integrations.bluesky.client_uri ?? current.blueskyClientUri,
@@ -603,28 +645,36 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}, []);
 
 	useEffect(() => {
-		if (!isAuthenticated || config) return;
+		if (!isAuthenticated || config || !accountWorkAdmitted) return;
 		let cancelled = false;
-		setLoadError(false);
+		setLoadError(null);
 		void (async () => {
 			try {
 				const next = await fetchInstanceConfig();
 				if (cancelled) return;
 				hydrateFromConfig(next);
 			} catch (error) {
+				if (cancelled || isAccountTransitionAbortError(error)) return;
+				const cause =
+					error instanceof HttpError && error.status === 401 ? await classifySetupUnauthorized() : 'unknown';
 				if (cancelled) return;
-				if (error instanceof HttpError && error.status === 401) {
-					await resetStaleSetupSession();
+				if (cause === 'stale_session') {
+					logger.warn('The setup session token was rejected. Clearing the stale local setup session.');
+					await resetSetupSession();
+					return;
+				}
+				if (error instanceof HttpError && error.status === 403) {
+					setLoadError(NOT_ADMIN_DESCRIPTOR);
 					return;
 				}
 				logger.error('Failed to load instance configuration', error);
-				setLoadError(true);
+				setLoadError(cause === 'origin_mismatch' ? ORIGIN_MISMATCH_DESCRIPTOR : LOAD_ERROR_DESCRIPTOR);
 			}
 		})();
 		return () => {
 			cancelled = true;
 		};
-	}, [isAuthenticated, config, hydrateFromConfig, resetStaleSetupSession]);
+	}, [isAuthenticated, config, accountWorkAdmitted, hydrateFromConfig, resetSetupSession]);
 
 	const serviceAvailability: ServiceAvailability = useMemo(
 		() => ({
@@ -645,15 +695,37 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	);
 
 	const hasConfig = Boolean(config);
+	const identityLocked = RuntimeConfig.appPublic.setup.account_identity_locked === true;
+	const setupTokenRequired = RuntimeConfig.appPublic.setup.setup_token_required === true;
 	const syncedSnapshot =
-		wizardSnapshot.context.isAuthenticated !== isAuthenticated || wizardSnapshot.context.hasConfig !== hasConfig
-			? transitionSetupWizardSnapshot(wizardSnapshot, {type: 'wizard.sync', isAuthenticated, hasConfig})
+		wizardSnapshot.context.isAuthenticated !== isAuthenticated ||
+		wizardSnapshot.context.hasConfig !== hasConfig ||
+		wizardSnapshot.context.accountIdentity !== accountIdentity ||
+		wizardSnapshot.context.identityLocked !== identityLocked ||
+		wizardSnapshot.context.setupTokenRequired !== setupTokenRequired
+			? transitionSetupWizardSnapshot(wizardSnapshot, {
+					type: 'wizard.sync',
+					isAuthenticated,
+					hasConfig,
+					accountIdentity,
+					identityLocked,
+					setupTokenRequired,
+				})
 			: wizardSnapshot;
 	if (syncedSnapshot !== wizardSnapshot) {
 		setWizardSnapshot(syncedSnapshot);
 	}
 	const wizardModel = selectSetupWizardModel(syncedSnapshot);
 	const {step, steps, direction} = wizardModel;
+	const currentUserId = Authentication.currentUserId;
+	const hasRecoveryKit = currentUserId ? (RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit ?? false) : false;
+
+	useEffect(() => {
+		if (step !== 'admin_recovery_kit') return;
+		void RecoveryKitCommands.fetchRecoveryKitStatus().catch((error) => {
+			logger.warn('Failed to load recovery kit status', error);
+		});
+	}, [step]);
 
 	const productNameTrimmed = productName.trim();
 	const productNameError = productNameTrimmed.length < 1 || productNameTrimmed.length > 80;
@@ -664,13 +736,28 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const canAdvance = useMemo(() => {
 		if (step === 'welcome') return !isAuthenticated || Boolean(config);
 		if (step === 'admin_account' || step === 'loading') return false;
+		if (step === 'setup_token') return setupToken.trim().length > 0;
+		if (step === 'sign_in_method') return !savingSignInMethod;
+		if (step === 'admin_recovery_kit') return hasRecoveryKit;
 		if (step === 'branding') return !productNameError;
 		if (step === 'community') return !singleCommunityNameError;
 		if (step === 'media_expiry') return isMediaExpiryStepValid(mediaExpiryDraft);
+		if (step === 'push_relay_consent') return true;
 		const integrationKind = wizardStepToIntegrationKind(step);
 		if (integrationKind) return isIntegrationStepValid(integrationKind, integrationDraft);
 		return true;
-	}, [step, isAuthenticated, config, productNameError, singleCommunityNameError, mediaExpiryDraft, integrationDraft]);
+	}, [
+		step,
+		isAuthenticated,
+		config,
+		productNameError,
+		singleCommunityNameError,
+		mediaExpiryDraft,
+		integrationDraft,
+		savingSignInMethod,
+		hasRecoveryKit,
+		setupToken,
+	]);
 
 	const goNext = useCallback(() => {
 		if (!beginStepNavigation()) return;
@@ -683,6 +770,103 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSubmitError(null);
 		setWizardSnapshot((current) => transitionSetupWizardSnapshot(current, {type: 'wizard.back'}));
 	}, [beginStepNavigation]);
+
+	const handleSetupTokenChange = useCallback((value: string) => {
+		setSetupToken(value);
+		setSetupTokenError(null);
+	}, []);
+
+	const submittedSetupToken = setupToken.trim() || undefined;
+
+	const handleSetupTokenRejected = useCallback((message: string) => {
+		setSetupTokenError(message);
+		setWizardSnapshot((current) => transitionSetupWizardSnapshot(current, {type: 'wizard.setupTokenRejected'}));
+	}, []);
+
+	const submitSignInMethod = useCallback(async () => {
+		if (savingSignInMethod) return;
+		setSavingSignInMethod(true);
+		setSignInMethodError(null);
+		let locked = false;
+		const effectiveTagStyle = signInMethod === AccountIdentityModes.USERNAME ? TagStyles.NONE : tagStyleChoice;
+		try {
+			let saved: Awaited<ReturnType<typeof setSetupAccountIdentity>> | null = null;
+			try {
+				saved = await setSetupAccountIdentity(signInMethod, effectiveTagStyle, submittedSetupToken);
+			} catch (error) {
+				const setupTokenViolation = failureValidationErrors(error)?.find(
+					(violation) => violation.path === 'setup_token',
+				);
+				if (setupTokenViolation) {
+					handleSetupTokenRejected(setupTokenViolation.message);
+					setSavingSignInMethod(false);
+					return;
+				}
+				if (failureCode(error) !== APIErrorCodes.ACCOUNT_IDENTITY_LOCKED) {
+					throw error;
+				}
+				locked = true;
+				logger.info('The sign-in method is already locked');
+			}
+			await RuntimeConfig.refreshDiscovery();
+			if (saved) {
+				RuntimeConfig.applyAccountIdentity(saved.mode, saved.tag_style);
+			}
+		} catch (error) {
+			logger.error('Failed to save the sign-in method', error);
+			setSignInMethodError(FormUtils.extractErrorMessage(i18n, error));
+			setSavingSignInMethod(false);
+			return;
+		}
+		const lockedMode = RuntimeConfig.accountIdentity;
+		const lockedTagStyle = RuntimeConfig.tagStyle;
+		const modeDiffers = lockedMode !== signInMethod;
+		if (locked && (modeDiffers || lockedTagStyle !== effectiveTagStyle)) {
+			setSignInMethod(lockedMode);
+			setTagStyleChoice(lockedTagStyle);
+			setSignInMethodError(
+				i18n._(
+					!modeDiffers
+						? USERNAME_STYLE_LOCKED_DESCRIPTOR
+						: lockedMode === AccountIdentityModes.USERNAME
+							? SIGN_IN_METHOD_LOCKED_USERNAME_DESCRIPTOR
+							: SIGN_IN_METHOD_LOCKED_EMAIL_DESCRIPTOR,
+				),
+			);
+			setSavingSignInMethod(false);
+			return;
+		}
+		setSavingSignInMethod(false);
+		goNext();
+	}, [savingSignInMethod, signInMethod, tagStyleChoice, submittedSetupToken, handleSetupTokenRejected, i18n, goNext]);
+
+	const handleSignInMethodChange = useCallback((mode: AccountIdentityMode) => {
+		setSignInMethod(mode);
+		setSignInMethodError(null);
+	}, []);
+
+	const createRecoveryKit = useCallback(async () => {
+		setCreatingRecoveryKit(true);
+		try {
+			await RecoveryKitCommands.createAndShowRecoveryKit();
+		} catch (error) {
+			logger.error('Failed to create the administrator recovery kit', error);
+			FormUtils.pushApiErrorModal(i18n, error);
+		} finally {
+			setCreatingRecoveryKit(false);
+		}
+	}, [i18n]);
+
+	const knownWithoutRecoveryKit = currentUserId
+		? RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit === false
+		: false;
+	const handleCreateRecoveryKit = useCallback(() => {
+		if (knownWithoutRecoveryKit) {
+			void createRecoveryKit();
+			return;
+		}
+		confirmNewRecoveryKit(i18n, createRecoveryKit);
+	}, [knownWithoutRecoveryKit, i18n, createRecoveryKit]);
 
 	const handleUploadAsset = useCallback(
 		async (kind: SetupBrandingAssetKind) => {
@@ -729,9 +913,9 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				port,
 				username: integrationDraft.smtpUsername.trim(),
 				password: integrationDraft.smtpPassword,
-				secure: integrationDraft.smtpSecure,
+				tls_mode: toSmtpTlsMode(integrationDraft.smtpTlsMode, port),
 			});
-			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'SMTP validation failed.'));
+			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'failed'));
 		} catch (error) {
 			logger.error('Failed to validate SMTP configuration', error);
 			setSmtpTestResult(FormUtils.extractErrorMessage(i18n, error));
@@ -754,13 +938,17 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				}
 			}
 			const nextConfig = await updateInstanceConfig({
-				integrations: buildIntegrationsPatch(integrationDraft),
+				integrations: buildIntegrationsPatch(integrationDraft, accountIdentity),
 				media: buildMediaPatch(mediaExpiryDraft),
+				push_relay:
+					config.push_relay.relay_consent_accepted === pushRelayConsentAccepted
+						? undefined
+						: {relay_consent_accepted: pushRelayConsentAccepted},
 				registration: {mode: registrationMode},
 				app_public: {
 					branding: {
 						product_name: productNameTrimmed,
-						theme_color: numberToHexColor(themeColor),
+						theme_color: themeColor === null ? null : numberToHexColor(themeColor),
 					},
 					setup: {configured: true},
 				},
@@ -786,6 +974,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}, [
 		config,
 		assets,
+		accountIdentity,
 		registrationMode,
 		integrationDraft,
 		mediaExpiryDraft,
@@ -794,6 +983,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		singleCommunityEnabled,
 		singleCommunityNameTrimmed,
 		directMessagesDisabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		serviceAvailability,
 		serviceSelection,
@@ -809,7 +999,8 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const showFooter = !loadError && (showBackButton || showPrimaryButton);
 	const primaryButtonLabel = isLoading ? i18n._(LOADING_DESCRIPTOR) : i18n._(NEXT_DESCRIPTOR);
 	const primaryButtonDisabled = !canAdvance || stepNavigationLocked;
-	const handlePrimaryButton = goNext;
+	const primaryButtonSubmitting = isLoading || savingSignInMethod;
+	const handlePrimaryButton = step === 'sign_in_method' ? submitSignInMethod : goNext;
 	const footerButtonInitial = shouldReduceMotion ? {opacity: 0} : {opacity: 0, y: 4, scale: 0.98};
 	const footerButtonAnimate = shouldReduceMotion ? {opacity: 1} : {opacity: 1, y: 0, scale: 1};
 	const footerButtonExit = shouldReduceMotion ? {opacity: 0} : {opacity: 0, y: -4, scale: 0.98};
@@ -841,216 +1032,335 @@ export const SelfHostedSetupWizardGate = observer(() => {
 
 	return (
 		<AuthRegisterDraftContext.Provider value={authRegisterDraftContextValue}>
-			<div className={styles.backdrop} data-flx="app.self-hosted-setup-wizard-gate.backdrop">
-				<Modal.Root
-					size="medium"
-					centered
-					disableHistoryManagement
-					className={styles.modal}
-					initialFocusRef={welcomeInitialFocusRef}
-					backdropSlot={
-						<div className={styles.backdropVisual} data-flx="app.self-hosted-setup-wizard-gate.backdrop-visual" />
-					}
-					data-flx="app.self-hosted-setup-wizard-gate.modal"
-				>
-					<Modal.Header
-						title={i18n._(HEADER_DESCRIPTOR, {productName: fallbackProductName})}
-						icon={<WrenchIcon size={22} weight="bold" data-flx="app.self-hosted-setup-wizard-gate.header-icon" />}
-						hideCloseButton
-						data-flx="app.self-hosted-setup-wizard-gate.header"
-					/>
-					<Modal.Content className={styles.contentScroller} data-flx="app.self-hosted-setup-wizard-gate.content">
-						<div className={styles.content} data-flx="app.self-hosted-setup-wizard-gate.content-inner">
-							{loadError ? (
-								<div className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.load-error-wrap">
-									<p
-										className={styles.submitError}
-										role="alert"
-										data-flx="app.self-hosted-setup-wizard-gate.load-error"
-									>
-										{i18n._(LOAD_ERROR_DESCRIPTOR)}
-									</p>
-								</div>
-							) : (
-								<SteppedCarousel
-									step={step}
-									steps={steps}
-									direction={direction}
-									focusOnStepChange
-									ariaLabel={i18n._(SETUP_WIZARD_DESCRIPTOR)}
-									data-flx="app.self-hosted-setup-wizard-gate.carousel"
-								>
-									{step === 'welcome' && (
-										<WelcomeStep
-											productName={fallbackProductName}
-											isAuthenticated={isAuthenticated}
-											initialFocusRef={welcomeInitialFocusRef}
-										/>
-									)}
-									{step === 'theme' && <ThemeStep theme={setupTheme} onThemeChange={setSetupTheme} />}
-									{step === 'admin_intro' && <AdminIntroStep />}
-									{step === 'admin_account' && <AdminAccountStep theme={setupTheme} />}
-									{step === 'loading' && <LoadingStep />}
-									{step === 'branding' && (
-										<BrandingStep
-											productName={productName}
-											productNameError={productNameError}
-											themeColor={themeColor}
-											assets={assets}
-											disabled={submitting}
-											onProductNameChange={setProductName}
-											onThemeColorChange={setThemeColor}
-											onUploadAsset={handleUploadAsset}
-											onClearAsset={handleClearAsset}
-										/>
-									)}
-									{step === 'registration' && (
-										<RegistrationStep mode={registrationMode} disabled={submitting} onChange={setRegistrationMode} />
-									)}
-									{step === 'community' && (
-										<CommunityStep
-											singleCommunityEnabled={singleCommunityEnabled}
-											singleCommunityName={singleCommunityName}
-											singleCommunityNameError={singleCommunityNameError}
-											directMessagesDisabled={directMessagesDisabled}
-											disabled={submitting}
-											onToggleSingleCommunity={setSingleCommunityEnabled}
-											onSingleCommunityNameChange={setSingleCommunityName}
-											onToggleDirectMessages={setDirectMessagesDisabled}
-										/>
-									)}
-									{step === 'media_expiry' && (
-										<MediaExpiryStep
-											draft={mediaExpiryDraft}
-											disabled={submitting}
-											onDraftChange={handleMediaExpiryDraftChange}
-										/>
-									)}
-									{wizardStepToIntegrationKind(step) && (
-										<IntegrationStep
-											kind={wizardStepToIntegrationKind(step)!}
-											draft={integrationDraft}
-											disabled={submitting}
-											smtpTesting={smtpTesting}
-											smtpTestResult={smtpTestResult}
-											onDraftChange={handleIntegrationDraftChange}
-											onTestSmtp={handleTestSmtp}
-										/>
-									)}
-									{step === 'services' && (
-										<ServicesStep
-											available={serviceAvailability}
-											selection={serviceSelection}
-											disabled={submitting}
-											onToggle={handleToggleService}
-										/>
-									)}
-									{step === 'premium' && (
-										<PremiumStep mode={premiumMode} disabled={submitting} onChange={setPremiumMode} />
-									)}
-									{step === 'finish' && (
-										<FinishStep
-											productName={productNameTrimmed}
-											registrationMode={registrationMode}
-											singleCommunityEnabled={singleCommunityEnabled}
-											directMessagesDisabled={directMessagesDisabled}
-											attachmentExpiryEnabled={mediaExpiryDraft.enabled}
-											premiumMode={premiumMode}
-											submitError={submitError}
-										/>
-									)}
-								</SteppedCarousel>
-							)}
-						</div>
-					</Modal.Content>
-					<AnimatePresence initial={false} data-flx="app.self-hosted-setup-wizard-gate.footer-presence">
-						{showFooter && (
-							<motion.div
-								key="footer"
-								className={styles.footerReveal}
-								initial={{height: 0, opacity: 0}}
-								animate={{height: 'auto', opacity: 1}}
-								exit={{height: 0, opacity: 0}}
-								transition={shouldReduceMotion ? instantTransition : footerRevealTransition}
-								data-flx="app.self-hosted-setup-wizard-gate.footer-reveal"
+			<div ref={setLayerHost} className={styles.backdrop} data-flx="app.self-hosted-setup-wizard-gate.backdrop">
+				{layerHost && (
+					<PortalHostContext.Provider value={layerHost}>
+						<ModalStackContext.Provider value={modalStackPlacement}>
+							<Modal.Root
+								size="medium"
+								centered
+								disableHistoryManagement
+								className={styles.modal}
+								initialFocusRef={welcomeInitialFocusRef}
+								backdropSlot={
+									<div className={styles.backdropVisual} data-flx="app.self-hosted-setup-wizard-gate.backdrop-visual" />
+								}
+								data-flx="app.self-hosted-setup-wizard-gate.modal"
 							>
-								<Modal.Footer className={styles.footer} data-flx="app.self-hosted-setup-wizard-gate.footer">
-									<div className={styles.footerActions} data-flx="app.self-hosted-setup-wizard-gate.footer-actions">
-										<AnimatePresence initial={false} data-flx="app.self-hosted-setup-wizard-gate.back-presence">
-											{showBackButton && (
-												<motion.div
-													key="back"
-													initial={footerButtonInitial}
-													animate={footerButtonAnimate}
-													exit={footerButtonExit}
-													transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
-													data-flx="app.self-hosted-setup-wizard-gate.back-button-wrap"
+								<Modal.Header
+									title={i18n._(HEADER_DESCRIPTOR, {productName: fallbackProductName})}
+									icon={<WrenchIcon size={22} weight="bold" data-flx="app.self-hosted-setup-wizard-gate.header-icon" />}
+									hideCloseButton
+									data-flx="app.self-hosted-setup-wizard-gate.header"
+								/>
+								<Modal.Content
+									className={styles.contentScroller}
+									contentClassName={styles.contentFrame}
+									data-flx="app.self-hosted-setup-wizard-gate.content"
+								>
+									<div className={styles.content} data-flx="app.self-hosted-setup-wizard-gate.content-inner">
+										{loadError ? (
+											<div className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.load-error-wrap">
+												<p
+													className={styles.submitError}
+													role="alert"
+													data-flx="app.self-hosted-setup-wizard-gate.load-error"
 												>
+													{i18n._(loadError)}
+												</p>
+												{loadError === NOT_ADMIN_DESCRIPTOR && (
 													<Button
 														variant="secondary"
-														disabled={stepNavigationLocked}
-														leftIcon={<ArrowLeftIcon size={18} weight="bold" />}
-														onClick={goBack}
-														data-flx="app.self-hosted-setup-wizard-gate.back-button"
+														onClick={signOutOfSetup}
+														data-flx="app.self-hosted-setup-wizard-gate.load-error-sign-out"
 													>
-														{i18n._(BACK_DESCRIPTOR)}
+														{i18n._(SIGN_OUT_DESCRIPTOR)}
 													</Button>
-												</motion.div>
-											)}
-										</AnimatePresence>
-										<div className={styles.footerPrimary} data-flx="app.self-hosted-setup-wizard-gate.footer-primary">
-											<AnimatePresence
-												mode="wait"
-												initial={false}
-												data-flx="app.self-hosted-setup-wizard-gate.primary-presence"
+												)}
+											</div>
+										) : (
+											<SteppedCarousel
+												step={step}
+												steps={steps}
+												direction={direction}
+												focusOnStepChange
+												ariaLabel={i18n._(SETUP_WIZARD_DESCRIPTOR)}
+												data-flx="app.self-hosted-setup-wizard-gate.carousel"
 											>
-												{showPrimaryButton && isFinish && (
-													<motion.div
-														key="finish"
-														initial={footerButtonInitial}
-														animate={footerButtonAnimate}
-														exit={footerButtonExit}
-														transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
-														data-flx="app.self-hosted-setup-wizard-gate.finish-button-wrap"
-													>
-														<Button
-															submitting={submitting}
-															rightIcon={<CheckIcon size={18} weight="bold" />}
-															onClick={submit}
-															data-flx="app.self-hosted-setup-wizard-gate.finish-button"
-														>
-															{i18n._(FINISH_DESCRIPTOR)}
-														</Button>
-													</motion.div>
+												{step === 'welcome' && (
+													<WelcomeStep
+														productName={fallbackProductName}
+														isAuthenticated={isAuthenticated}
+														initialFocusRef={welcomeInitialFocusRef}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.welcome-step"
+													/>
 												)}
-												{showPrimaryButton && !isFinish && (
-													<motion.div
-														key="next"
-														initial={footerButtonInitial}
-														animate={footerButtonAnimate}
-														exit={footerButtonExit}
-														transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
-														data-flx="app.self-hosted-setup-wizard-gate.next-button-wrap"
-													>
-														<Button
-															disabled={primaryButtonDisabled}
-															submitting={isLoading}
-															rightIcon={<ArrowRightIcon size={18} weight="bold" />}
-															onClick={handlePrimaryButton}
-															data-flx="app.self-hosted-setup-wizard-gate.next-button"
-														>
-															{primaryButtonLabel}
-														</Button>
-													</motion.div>
+												{step === 'setup_token' && (
+													<SetupTokenStep
+														value={setupToken}
+														onChange={handleSetupTokenChange}
+														error={setupTokenError}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.setup-token-step"
+													/>
 												)}
-											</AnimatePresence>
-										</div>
+												{step === 'theme' && (
+													<ThemeStep
+														theme={setupTheme}
+														onThemeChange={setSetupTheme}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.theme-step"
+													/>
+												)}
+												{step === 'sign_in_method' && (
+													<SignInMethodStep
+														mode={signInMethod}
+														tagStyle={tagStyleChoice}
+														onTagStyleChange={(value) => {
+															setTagStyleChoice(value);
+															setSignInMethodError(null);
+														}}
+														disabled={savingSignInMethod}
+														error={signInMethodError}
+														onChange={handleSignInMethodChange}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.sign-in-method-step"
+													/>
+												)}
+												{step === 'admin_intro' && (
+													<AdminIntroStep data-flx="app.setup.self-hosted-setup-wizard-gate.admin-intro-step" />
+												)}
+												{step === 'admin_account' && (
+													<AdminAccountStep
+														theme={setupTheme}
+														usernameSignIn={accountIdentity === AccountIdentityModes.USERNAME}
+														setupToken={submittedSetupToken}
+														onSetupTokenRejected={handleSetupTokenRejected}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.admin-account-step"
+													/>
+												)}
+												{step === 'admin_recovery_kit' && (
+													<AdminRecoveryKitStep
+														hasRecoveryKit={hasRecoveryKit}
+														creating={creatingRecoveryKit}
+														onCreate={handleCreateRecoveryKit}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.admin-recovery-kit-step"
+													/>
+												)}
+												{step === 'loading' && (
+													<LoadingStep data-flx="app.setup.self-hosted-setup-wizard-gate.loading-step" />
+												)}
+												{step === 'branding' && (
+													<BrandingStep
+														productName={productName}
+														productNameError={productNameError}
+														themeColor={themeColor}
+														assets={assets}
+														disabled={submitting}
+														onProductNameChange={setProductName}
+														onThemeColorChange={setThemeColor}
+														onUploadAsset={handleUploadAsset}
+														onClearAsset={handleClearAsset}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.branding-step"
+													/>
+												)}
+												{step === 'registration' && (
+													<RegistrationStep
+														mode={registrationMode}
+														disabled={submitting}
+														onChange={setRegistrationMode}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.registration-step.set-registration-mode"
+													/>
+												)}
+												{step === 'community' && (
+													<CommunityStep
+														singleCommunityEnabled={singleCommunityEnabled}
+														singleCommunityName={singleCommunityName}
+														singleCommunityNameError={singleCommunityNameError}
+														directMessagesDisabled={directMessagesDisabled}
+														disabled={submitting}
+														onToggleSingleCommunity={setSingleCommunityEnabled}
+														onSingleCommunityNameChange={setSingleCommunityName}
+														onToggleDirectMessages={setDirectMessagesDisabled}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.community-step"
+													/>
+												)}
+												{step === 'media_expiry' && (
+													<MediaExpiryStep
+														draft={mediaExpiryDraft}
+														disabled={submitting}
+														onDraftChange={handleMediaExpiryDraftChange}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.media-expiry-step"
+													/>
+												)}
+												{wizardStepToIntegrationKind(step) && (
+													<IntegrationStep
+														kind={wizardStepToIntegrationKind(step)!}
+														draft={integrationDraft}
+														disabled={submitting}
+														smtpTesting={smtpTesting}
+														smtpTestResult={smtpTestResult}
+														onDraftChange={handleIntegrationDraftChange}
+														onTestSmtp={handleTestSmtp}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.integration-step"
+													/>
+												)}
+												{step === 'push_relay_consent' && (
+													<PushRelayConsentStep
+														accepted={pushRelayConsentAccepted}
+														disabled={submitting}
+														onChange={setPushRelayConsentAccepted}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.push-relay-consent-step"
+													/>
+												)}
+												{step === 'services' && (
+													<ServicesStep
+														available={serviceAvailability}
+														selection={serviceSelection}
+														disabled={submitting}
+														onToggle={handleToggleService}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.services-step"
+													/>
+												)}
+												{step === 'premium' && (
+													<PremiumStep
+														mode={premiumMode}
+														disabled={submitting}
+														onChange={setPremiumMode}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.premium-step.set-premium-mode"
+													/>
+												)}
+												{step === 'finish' && (
+													<FinishStep
+														productName={productNameTrimmed}
+														accountIdentity={accountIdentity}
+														tagStyle={config?.account_identity.tag_style ?? RuntimeConfig.tagStyle}
+														registrationMode={registrationMode}
+														singleCommunityEnabled={singleCommunityEnabled}
+														directMessagesDisabled={directMessagesDisabled}
+														attachmentExpiryEnabled={mediaExpiryDraft.enabled}
+														pushRelayConsentAccepted={pushRelayConsentAccepted}
+														premiumMode={premiumMode}
+														submitError={submitError}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.finish-step"
+													/>
+												)}
+											</SteppedCarousel>
+										)}
 									</div>
-								</Modal.Footer>
-							</motion.div>
-						)}
-					</AnimatePresence>
-				</Modal.Root>
+								</Modal.Content>
+								<AnimatePresence initial={false} data-flx="app.self-hosted-setup-wizard-gate.footer-presence">
+									{showFooter && (
+										<motion.div
+											key="footer"
+											className={styles.footerReveal}
+											initial={{height: 0, opacity: 0}}
+											animate={{height: 'auto', opacity: 1}}
+											exit={{height: 0, opacity: 0}}
+											transition={shouldReduceMotion ? instantTransition : footerRevealTransition}
+											data-flx="app.self-hosted-setup-wizard-gate.footer-reveal"
+										>
+											<Modal.Footer className={styles.footer} data-flx="app.self-hosted-setup-wizard-gate.footer">
+												<div
+													className={styles.footerActions}
+													data-flx="app.self-hosted-setup-wizard-gate.footer-actions"
+												>
+													<AnimatePresence initial={false} data-flx="app.self-hosted-setup-wizard-gate.back-presence">
+														{showBackButton && (
+															<motion.div
+																key="back"
+																initial={footerButtonInitial}
+																animate={footerButtonAnimate}
+																exit={footerButtonExit}
+																transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
+																data-flx="app.self-hosted-setup-wizard-gate.back-button-wrap"
+															>
+																<Button
+																	variant="secondary"
+																	disabled={stepNavigationLocked}
+																	leftIcon={
+																		<ArrowLeftIcon
+																			size={18}
+																			weight="bold"
+																			data-flx="app.setup.self-hosted-setup-wizard-gate.arrow-left-icon"
+																		/>
+																	}
+																	onClick={goBack}
+																	data-flx="app.self-hosted-setup-wizard-gate.back-button"
+																>
+																	{i18n._(BACK_DESCRIPTOR)}
+																</Button>
+															</motion.div>
+														)}
+													</AnimatePresence>
+													<div
+														className={styles.footerPrimary}
+														data-flx="app.self-hosted-setup-wizard-gate.footer-primary"
+													>
+														<AnimatePresence
+															mode="wait"
+															initial={false}
+															data-flx="app.self-hosted-setup-wizard-gate.primary-presence"
+														>
+															{showPrimaryButton && isFinish && (
+																<motion.div
+																	key="finish"
+																	initial={footerButtonInitial}
+																	animate={footerButtonAnimate}
+																	exit={footerButtonExit}
+																	transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
+																	data-flx="app.self-hosted-setup-wizard-gate.finish-button-wrap"
+																>
+																	<Button
+																		submitting={submitting}
+																		rightIcon={
+																			<CheckIcon
+																				size={18}
+																				weight="bold"
+																				data-flx="app.setup.self-hosted-setup-wizard-gate.check-icon"
+																			/>
+																		}
+																		onClick={submit}
+																		data-flx="app.self-hosted-setup-wizard-gate.finish-button"
+																	>
+																		{i18n._(FINISH_DESCRIPTOR)}
+																	</Button>
+																</motion.div>
+															)}
+															{showPrimaryButton && !isFinish && (
+																<motion.div
+																	key="next"
+																	initial={footerButtonInitial}
+																	animate={footerButtonAnimate}
+																	exit={footerButtonExit}
+																	transition={shouldReduceMotion ? instantTransition : footerButtonTransition}
+																	data-flx="app.self-hosted-setup-wizard-gate.next-button-wrap"
+																>
+																	<Button
+																		disabled={primaryButtonDisabled}
+																		submitting={primaryButtonSubmitting}
+																		rightIcon={
+																			<ArrowRightIcon
+																				size={18}
+																				weight="bold"
+																				data-flx="app.setup.self-hosted-setup-wizard-gate.arrow-right-icon"
+																			/>
+																		}
+																		onClick={handlePrimaryButton}
+																		data-flx="app.self-hosted-setup-wizard-gate.next-button"
+																	>
+																		{primaryButtonLabel}
+																	</Button>
+																</motion.div>
+															)}
+														</AnimatePresence>
+													</div>
+												</div>
+											</Modal.Footer>
+										</motion.div>
+									)}
+								</AnimatePresence>
+							</Modal.Root>
+						</ModalStackContext.Provider>
+					</PortalHostContext.Provider>
+				)}
 			</div>
 		</AuthRegisterDraftContext.Provider>
 	);

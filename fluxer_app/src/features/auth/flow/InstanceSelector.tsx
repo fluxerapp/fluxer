@@ -1,89 +1,193 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EXAMPLE_INSTANCE_DOMAIN} from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import Config from '@app/features/app/config/Config';
+import {EXAMPLE_DOMAIN} from '@app/features/app/config/I18nDisplayConstants';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import RuntimeConfig, {describeAPIEndpoint} from '@app/features/app/state/RuntimeConfig';
+import {resolveSnapshotInstanceDomain} from '@app/features/auth/AccountDisplayUtils';
 import styles from '@app/features/auth/flow/InstanceSelector.module.css';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {
+	deleteKnownInstance,
+	type InstanceInfo,
+	loadKnownInstances,
+	normalizeInstanceDomain,
+	normalizeInstanceName,
+	resolveInstanceLabel,
+	resolveLocalDevelopmentInstance,
+	saveKnownInstance,
+	shouldSaveKnownInstance,
+} from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
+import {
+	CONNECTING_TO_INSTANCE_DESCRIPTOR,
+	describeInstanceDiscoveryFailure,
+	INSTANCE_ADDRESS_INVALID_DESCRIPTOR,
+} from '@app/features/auth/flow/instance_selector/InstanceDiscoveryFailure';
+import {InstanceDiscoveryStatusIcon} from '@app/features/auth/flow/instance_selector/InstanceDiscoveryStatusIcon';
+import {InstancePickerRows} from '@app/features/auth/flow/instance_selector/InstancePickerRows';
+import {InstanceSelectorStatusRow} from '@app/features/auth/flow/instance_selector/InstanceSelectorStatusRow';
+import {
+	INSTANCE_SELECTOR_STEPS,
+	InstanceDiscoveryStatus,
+	InstanceSelectorStep,
+} from '@app/features/auth/flow/instance_selector/InstanceSelectorTypes';
+import {
+	BACK_DESCRIPTOR,
+	CONTINUE_DESCRIPTOR,
+	INSTANCE_URL_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {Button} from '@app/features/ui/button/Button';
-import {Input} from '@app/features/ui/components/form/FormInput';
-import {Spinner} from '@app/features/ui/components/Spinner';
+import {Button, ButtonVariant} from '@app/features/ui/button/Button';
+import {TextInput} from '@app/features/ui/components/form/FormInput';
+import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import {flxElementClassName} from '@app/lib/react';
+import type {DesktopKnownInstanceRecord} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
+import {NETWORK_ENDPOINT_INPUT_MAX_BYTES} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
+import {officialMarketingOrigin} from '@fluxer/instance_bootstrap/src/OfficialInstance';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
-import {CaretDownIcon, CheckCircleIcon, GlobeIcon, TrashIcon, WarningCircleIcon} from '@phosphor-icons/react';
-import {clsx} from 'clsx';
+import {useLingui} from '@lingui/react/macro';
+import {ArrowLeftIcon, ArrowRightIcon, GlobeIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+	type AriaAttributes,
+	type ChangeEvent,
+	type FormEvent,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useId,
+	useRef,
+	useState,
+} from 'react';
 
-const FAILED_TO_CONNECT_TO_INSTANCE_DESCRIPTOR = msg({
-	message: 'Failed to connect to instance',
-	comment: 'Short label in the authentication instance selector. Keep the tone plain and specific.',
-});
 const ENTER_INSTANCE_URL_E_G_DESCRIPTOR = msg({
-	message: 'Enter instance URL (e.g. {exampleInstanceDomain})',
+	message: 'Enter self-hosted instance URL (e.g. {exampleInstanceDomain})',
 	comment: 'Instance selector text input placeholder. Example instance domain is interpolated.',
 });
-const SHOW_RECENT_INSTANCES_DESCRIPTOR = msg({
-	message: 'Show recent instances',
-	comment: 'Short label in the authentication instance selector. Keep the tone plain and specific.',
+const INSTANCE_URL_REQUIRED_DESCRIPTOR = msg({
+	message: 'Enter an instance URL',
+	comment: 'Validation message shown when the authentication instance selector is submitted empty.',
 });
-const INSTANCE_URL_DESCRIPTOR = msg({
-	message: 'Instance URL',
-	comment: 'Short label in the authentication instance selector. Keep the tone plain and specific.',
+const INSTANCE_URL_TOO_LONG_DESCRIPTOR = msg({
+	message: 'Instance URL is too long',
+	comment: 'Validation message shown when the authentication instance URL exceeds the supported length.',
 });
-const REMOVE_FROM_RECENT_INSTANCES_DESCRIPTOR = msg({
-	message: 'Remove {domain} from recent instances',
-	comment:
-		'Short label in the authentication instance selector. Preserve {domain}; it is inserted by code. Keep the tone plain and specific.',
+const FAILED_TO_REMOVE_INSTANCE_DESCRIPTOR = msg({
+	message: 'Failed to remove instance from recent instances',
+	comment: 'Status message shown when a recent instance cannot be removed from the authentication instance selector.',
 });
-const RECENT_INSTANCES_KEY = 'recent_instances';
-const MAX_RECENT_INSTANCES = 5;
+const INSTANCE_SELECTION_DESCRIPTOR = msg({
+	message: 'Instance selection',
+	comment: 'Accessible label for the authentication instance selector carousel.',
+});
 
-export type InstanceDiscoveryStatus = 'idle' | 'discovering' | 'success' | 'error';
+const logger = new Logger('InstanceSelector');
 
-export interface InstanceInfo {
-	domain: string;
-	name?: string;
-	lastUsed: number;
+interface InstanceDiscoveryRequest {
+	readonly requestId: number;
+	readonly signal: AbortSignal;
+}
+
+class InstanceDiscoveryRequestOwner {
+	private controller: AbortController | null = null;
+	private requestId = 0;
+	private disposed = false;
+
+	public begin(): InstanceDiscoveryRequest {
+		if (this.disposed) {
+			throw new Error('Cannot begin a disposed instance discovery request');
+		}
+		this.controller?.abort();
+		this.requestId += 1;
+		const controller = new AbortController();
+		this.controller = controller;
+		return {requestId: this.requestId, signal: controller.signal};
+	}
+
+	public cancel(): void {
+		this.requestId += 1;
+		if (this.controller != null) {
+			this.controller.abort();
+			this.controller = null;
+		}
+	}
+
+	public complete(request: InstanceDiscoveryRequest): void {
+		if (this.controller != null && this.controller.signal === request.signal) {
+			this.controller = null;
+		}
+	}
+
+	public isCurrent(requestId: number): boolean {
+		return !this.disposed && this.requestId === requestId;
+	}
+
+	public get currentRequestId(): number {
+		return this.requestId;
+	}
+
+	public dispose(): void {
+		if (this.disposed) {
+			return;
+		}
+		this.disposed = true;
+		this.cancel();
+	}
+}
+
+async function recordKnownInstance(record: DesktopKnownInstanceRecord): Promise<InstanceInfo | null> {
+	try {
+		return await saveKnownInstance(record);
+	} catch (error) {
+		logger.warn('Failed to record a resolved instance in the known instance directory', error);
+		return null;
+	}
+}
+
+export interface InstanceDiscoveredEvent {
+	readonly domain: string;
+	readonly instance: InstanceInfo | null;
+	readonly snapshot: RuntimeConfigSnapshot;
 }
 
 interface InstanceSelectorProps {
-	value: string;
-	onChange: (value: string) => void;
-	onInstanceDiscovered?: (domain: string) => void;
-	onDiscoveryStatusChange?: (status: InstanceDiscoveryStatus) => void;
-	disabled?: boolean;
-	className?: string;
+	readonly value: string;
+	readonly onChange: (value: string) => void;
+	readonly onInstanceDiscovered: ((event: InstanceDiscoveredEvent) => void) | null;
+	readonly onDiscoveryStatusChange: ((status: InstanceDiscoveryStatus) => void) | null;
+	readonly onBackActionChange: ((action: (() => void) | null) => void) | null;
+	readonly disabled: boolean;
+	readonly className: string | null;
+	readonly suppressInlineBackButton: boolean;
 }
 
-function loadRecentInstances(): Array<InstanceInfo> {
-	const stored = AppStorage.getJSON<Array<InstanceInfo>>(RECENT_INSTANCES_KEY);
-	if (!stored || !Array.isArray(stored)) {
-		return [];
+function resolveInstanceDisplayName(snapshot: RuntimeConfigSnapshot, productName: string, domain: string): string {
+	const name = normalizeInstanceName(snapshot.appPublic?.branding?.product_name) ?? normalizeInstanceName(productName);
+	return resolveInstanceLabel(name, domain);
+}
+
+interface ProgressMessageRequest {
+	readonly discoveryProgressDomain: string | null;
+	readonly i18n: I18n;
+	readonly isDiscovering: boolean;
+}
+
+function resolveProgressMessage({discoveryProgressDomain, i18n, isDiscovering}: ProgressMessageRequest): string | null {
+	if (!isDiscovering) {
+		return null;
 	}
-	return stored.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, MAX_RECENT_INSTANCES);
-}
-
-function saveRecentInstance(domain: string, name?: string): void {
-	const recent = loadRecentInstances();
-	const normalizedDomain = domain.toLowerCase().trim();
-	const existingIndex = recent.findIndex((inst) => inst.domain.toLowerCase() === normalizedDomain);
-	if (existingIndex !== -1) {
-		recent.splice(existingIndex, 1);
+	if (discoveryProgressDomain == null || discoveryProgressDomain.length === 0) {
+		return null;
 	}
-	recent.unshift({
-		domain: normalizedDomain,
-		name,
-		lastUsed: Date.now(),
-	});
-	AppStorage.setJSON(RECENT_INSTANCES_KEY, recent.slice(0, MAX_RECENT_INSTANCES));
+	return i18n._(CONNECTING_TO_INSTANCE_DESCRIPTOR, {domain: discoveryProgressDomain});
 }
 
-function removeRecentInstance(domain: string): void {
-	const recent = loadRecentInstances();
-	const normalizedDomain = domain.toLowerCase().trim();
-	const filtered = recent.filter((inst) => inst.domain.toLowerCase() !== normalizedDomain);
-	AppStorage.setJSON(RECENT_INSTANCES_KEY, filtered);
+function statusDescriptionAria(statusId: string, statusMessage: string | null): AriaAttributes {
+	if (statusMessage == null || statusMessage.length === 0) {
+		return {};
+	}
+	return {'aria-describedby': statusId};
 }
 
 export const InstanceSelector = observer(function InstanceSelector({
@@ -91,17 +195,38 @@ export const InstanceSelector = observer(function InstanceSelector({
 	onChange,
 	onInstanceDiscovered,
 	onDiscoveryStatusChange,
-	disabled = false,
+	onBackActionChange,
+	disabled,
 	className,
+	suppressInlineBackButton,
 }: InstanceSelectorProps) {
 	const {i18n} = useLingui();
-	const [discoveryStatus, setDiscoveryStatus] = useState<InstanceDiscoveryStatus>('idle');
+	const [step, setStep] = useState<InstanceSelectorStep>(InstanceSelectorStep.PICK);
+	const [discoveryStatus, setDiscoveryStatus] = useState<InstanceDiscoveryStatus>(InstanceDiscoveryStatus.IDLE);
 	const [discoveryError, setDiscoveryError] = useState<string | null>(null);
-	const [recentInstances, setRecentInstances] = useState<Array<InstanceInfo>>(() => loadRecentInstances());
-	const [showDropdown, setShowDropdown] = useState(false);
+	const [discoveryProgressDomain, setDiscoveryProgressDomain] = useState<string | null>(null);
+	const [knownInstances, setKnownInstances] = useState<ReadonlyArray<InstanceInfo>>([]);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const dropdownRef = useRef<HTMLDivElement>(null);
-	const discoveryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const [discoveryRequestOwner] = useState(() => new InstanceDiscoveryRequestOwner());
+	const statusId = useId();
+	const refreshKnownInstances = useCallback(
+		(requestId: number | null) => {
+			loadKnownInstances()
+				.then((instances) => {
+					if (requestId != null && requestId !== discoveryRequestOwner.currentRequestId) {
+						return;
+					}
+					setKnownInstances(instances);
+				})
+				.catch((error) => {
+					logger.warn('Failed to refresh the known instance directory', error);
+				});
+		},
+		[discoveryRequestOwner],
+	);
+	useEffect(() => {
+		refreshKnownInstances(null);
+	}, [refreshKnownInstances]);
 	const updateDiscoveryStatus = useCallback(
 		(status: InstanceDiscoveryStatus) => {
 			setDiscoveryStatus(status);
@@ -110,234 +235,311 @@ export const InstanceSelector = observer(function InstanceSelector({
 		[onDiscoveryStatusChange],
 	);
 	const discoverInstance = useCallback(
-		async (instanceUrl: string) => {
-			if (!instanceUrl.trim()) {
-				updateDiscoveryStatus('idle');
-				setDiscoveryError(null);
-				return;
-			}
-			updateDiscoveryStatus('discovering');
-			setDiscoveryError(null);
+		async (instanceUrl: string, shouldRecordKnownInstance: boolean) => {
+			const submittedUrl = instanceUrl.trim();
+			const request = discoveryRequestOwner.begin();
+			const {requestId, signal} = request;
+			const normalizedDomain = normalizeInstanceDomain(submittedUrl);
+			const displayDomain = normalizedDomain ?? submittedUrl;
 			try {
-				await RuntimeConfig.connectToEndpoint(instanceUrl);
-				updateDiscoveryStatus('success');
-				saveRecentInstance(instanceUrl);
-				setRecentInstances(loadRecentInstances());
-				onInstanceDiscovered?.(instanceUrl);
+				if (submittedUrl.length === 0) {
+					updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+					setDiscoveryError(i18n._(INSTANCE_URL_REQUIRED_DESCRIPTOR));
+					return;
+				}
+				if (instanceUrl.length > NETWORK_ENDPOINT_INPUT_MAX_BYTES) {
+					updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+					setDiscoveryError(i18n._(INSTANCE_URL_TOO_LONG_DESCRIPTOR));
+					return;
+				}
+				if (normalizedDomain == null) {
+					updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+					setDiscoveryError(i18n._(INSTANCE_ADDRESS_INVALID_DESCRIPTOR, {exampleInstanceDomain: EXAMPLE_DOMAIN}));
+					return;
+				}
+				updateDiscoveryStatus(InstanceDiscoveryStatus.DISCOVERING);
+				setDiscoveryProgressDomain(displayDomain);
+				setDiscoveryError(null);
+				const resolution = await RuntimeConfig.resolveEndpoint({input: submittedUrl, signal});
+				if (!discoveryRequestOwner.isCurrent(requestId)) {
+					return;
+				}
+				const snapshot = resolution.snapshot;
+				const submittedDomain = describeAPIEndpoint(snapshot.apiEndpoint);
+				const recordedDomain =
+					normalizedDomain === submittedDomain
+						? (resolveSnapshotInstanceDomain(snapshot) ?? normalizedDomain)
+						: normalizedDomain;
+				const displayName = resolveInstanceDisplayName(snapshot, resolution.productName, recordedDomain);
+				let discoveredInstance: InstanceInfo | null = null;
+				if (shouldRecordKnownInstance && shouldSaveKnownInstance(submittedDomain)) {
+					discoveredInstance = await recordKnownInstance({
+						instanceKey: resolution.instanceKey,
+						domain: recordedDomain,
+						displayName,
+						lastUsed: Date.now(),
+					});
+				}
+				if (!discoveryRequestOwner.isCurrent(requestId)) {
+					return;
+				}
+				updateDiscoveryStatus(InstanceDiscoveryStatus.IDLE);
+				if (onInstanceDiscovered != null) {
+					onInstanceDiscovered({domain: submittedDomain, instance: discoveredInstance, snapshot});
+				} else {
+					onChange(submittedDomain);
+				}
+				refreshKnownInstances(requestId);
 			} catch (error) {
-				updateDiscoveryStatus('error');
-				const errorMessage = error instanceof Error ? error.message : i18n._(FAILED_TO_CONNECT_TO_INSTANCE_DESCRIPTOR);
-				setDiscoveryError(errorMessage);
+				if (!discoveryRequestOwner.isCurrent(requestId)) {
+					return;
+				}
+				logger.warn('Instance discovery failed for', displayDomain, error);
+				updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+				setDiscoveryError(describeInstanceDiscoveryFailure({error, domain: displayDomain, i18n}));
+			} finally {
+				discoveryRequestOwner.complete(request);
 			}
 		},
-		[onInstanceDiscovered, updateDiscoveryStatus, i18n],
+		[discoveryRequestOwner, i18n, onChange, onInstanceDiscovered, refreshKnownInstances, updateDiscoveryStatus],
+	);
+	const startDiscovery = useCallback(
+		(instanceUrl: string, shouldRecordKnownInstance: boolean) => {
+			discoverInstance(instanceUrl, shouldRecordKnownInstance).catch((error) => {
+				logger.error('Instance discovery failed unexpectedly', error);
+			});
+		},
+		[discoverInstance],
 	);
 	const handleInputChange = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = event.target.value;
-			onChange(newValue);
-			updateDiscoveryStatus('idle');
+		(event: ChangeEvent<HTMLInputElement>) => {
+			discoveryRequestOwner.cancel();
+			onChange(event.target.value);
+			updateDiscoveryStatus(InstanceDiscoveryStatus.IDLE);
 			setDiscoveryError(null);
-			if (discoveryTimeoutRef.current) {
-				clearTimeout(discoveryTimeoutRef.current);
-			}
-			if (newValue.trim()) {
-				discoveryTimeoutRef.current = setTimeout(() => {
-					discoverInstance(newValue);
-				}, 800);
-			}
 		},
-		[onChange, discoverInstance, updateDiscoveryStatus],
+		[discoveryRequestOwner, onChange, updateDiscoveryStatus],
 	);
-	const handleSelectRecent = useCallback(
+	const handleSelectOfficial = useCallback(() => {
+		const origin = officialMarketingOrigin(Config.PUBLIC_RELEASE_CHANNEL);
+		onChange(origin);
+		startDiscovery(origin, false);
+	}, [onChange, startDiscovery]);
+	const handleSelectKnown = useCallback(
 		(instance: InstanceInfo) => {
 			onChange(instance.domain);
-			setShowDropdown(false);
-			discoverInstance(instance.domain);
+			startDiscovery(instance.domain, true);
 		},
-		[onChange, discoverInstance],
+		[onChange, startDiscovery],
 	);
-	const handleRemoveRecent = useCallback((event: React.MouseEvent, domain: string) => {
-		event.stopPropagation();
-		removeRecentInstance(domain);
-		setRecentInstances(loadRecentInstances());
-	}, []);
-	const handleConnectClick = useCallback(() => {
-		if (value.trim()) {
-			discoverInstance(value);
-		}
-	}, [value, discoverInstance]);
-	const handleDropdownToggle = useCallback(() => {
-		if (recentInstances.length > 0 && !disabled) {
-			setShowDropdown((prev) => !prev);
-		}
-	}, [recentInstances.length, disabled]);
-	const handleInputFocus = useCallback(() => {
-		if (recentInstances.length > 0 && !value.trim()) {
-			setShowDropdown(true);
-		}
-	}, [recentInstances.length, value]);
-	useEffect(() => {
-		function handleClickOutside(event: MouseEvent) {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node) &&
-				inputRef.current &&
-				!inputRef.current.contains(event.target as Node)
-			) {
-				setShowDropdown(false);
+	const handleRemoveKnownInstance = useCallback(
+		(instance: InstanceInfo) => {
+			deleteKnownInstance(instance.instanceKey)
+				.then(() => {
+					setKnownInstances((current) =>
+						current.filter((knownInstance) => knownInstance.instanceKey !== instance.instanceKey),
+					);
+					updateDiscoveryStatus(InstanceDiscoveryStatus.IDLE);
+					setDiscoveryError(null);
+					refreshKnownInstances(null);
+				})
+				.catch((error) => {
+					logger.warn('Failed to remove a known instance', error);
+					updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+					setDiscoveryError(i18n._(FAILED_TO_REMOVE_INSTANCE_DESCRIPTOR));
+				});
+		},
+		[i18n, refreshKnownInstances, updateDiscoveryStatus],
+	);
+	const handleAddInstance = useCallback(() => {
+		discoveryRequestOwner.cancel();
+		onChange('');
+		updateDiscoveryStatus(InstanceDiscoveryStatus.IDLE);
+		setDiscoveryError(null);
+		setStep(InstanceSelectorStep.ADD);
+	}, [discoveryRequestOwner, onChange, updateDiscoveryStatus]);
+	const handleBackToPicker = useCallback(() => {
+		discoveryRequestOwner.cancel();
+		updateDiscoveryStatus(InstanceDiscoveryStatus.IDLE);
+		setDiscoveryError(null);
+		setStep(InstanceSelectorStep.PICK);
+	}, [discoveryRequestOwner, updateDiscoveryStatus]);
+	const handleSubmit = useCallback(
+		(event: FormEvent<HTMLFormElement>) => {
+			event.preventDefault();
+			if (discoveryStatus === InstanceDiscoveryStatus.DISCOVERING) {
+				return;
 			}
-		}
-		document.addEventListener('mousedown', handleClickOutside);
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, []);
-	useEffect(() => {
-		return () => {
-			if (discoveryTimeoutRef.current) {
-				clearTimeout(discoveryTimeoutRef.current);
+			if (value.trim().length === 0) {
+				updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+				setDiscoveryError(i18n._(INSTANCE_URL_REQUIRED_DESCRIPTOR));
+				inputRef.current?.focus();
+				return;
 			}
-		};
-	}, []);
-	const statusIcon = useMemo(() => {
-		if (discoveryStatus === 'discovering') {
-			return (
-				<Spinner
-					size="small"
-					className={styles.statusSpinner}
-					data-flx="auth.flow.instance-selector.status-icon.status-spinner"
-				/>
-			);
+			if (value.length > NETWORK_ENDPOINT_INPUT_MAX_BYTES) {
+				updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+				setDiscoveryError(i18n._(INSTANCE_URL_TOO_LONG_DESCRIPTOR));
+				inputRef.current?.focus();
+				return;
+			}
+			if (normalizeInstanceDomain(value) == null) {
+				updateDiscoveryStatus(InstanceDiscoveryStatus.ERROR);
+				setDiscoveryError(i18n._(INSTANCE_ADDRESS_INVALID_DESCRIPTOR, {exampleInstanceDomain: EXAMPLE_DOMAIN}));
+				inputRef.current?.focus();
+				return;
+			}
+			startDiscovery(value, true);
+		},
+		[discoveryStatus, i18n, startDiscovery, updateDiscoveryStatus, value],
+	);
+	useEffect(() => () => discoveryRequestOwner.dispose(), [discoveryRequestOwner]);
+	useEffect(() => {
+		if (onBackActionChange == null) {
+			return;
 		}
-		if (discoveryStatus === 'success') {
-			return (
-				<CheckCircleIcon
-					weight="fill"
-					className={styles.statusSuccess}
-					size={remFromPx(18)}
-					data-flx="auth.flow.instance-selector.status-icon.status-success"
-				/>
-			);
+		if (step === InstanceSelectorStep.ADD) {
+			onBackActionChange(handleBackToPicker);
+		} else {
+			onBackActionChange(null);
 		}
-		if (discoveryStatus === 'error') {
-			return (
-				<WarningCircleIcon
-					weight="fill"
-					className={styles.statusError}
-					size={remFromPx(18)}
-					data-flx="auth.flow.instance-selector.status-icon.status-error"
-				/>
-			);
+		return () => onBackActionChange(null);
+	}, [handleBackToPicker, onBackActionChange, step]);
+	const isDiscovering = discoveryStatus === InstanceDiscoveryStatus.DISCOVERING;
+	const progressMessage = resolveProgressMessage({discoveryProgressDomain, i18n, isDiscovering});
+	const statusMessage = progressMessage ?? discoveryError;
+	const canSubmit = value.trim().length > 0 && value.length <= NETWORK_ENDPOINT_INPUT_MAX_BYTES && !disabled;
+	const placeholder = i18n._(ENTER_INSTANCE_URL_E_G_DESCRIPTOR, {exampleInstanceDomain: EXAMPLE_DOMAIN});
+	const renderStatusActions = (): ReactNode => {
+		if (discoveryStatus === InstanceDiscoveryStatus.IDLE) {
+			return null;
 		}
-		return null;
-	}, [discoveryStatus]);
-	const placeholder = i18n._(ENTER_INSTANCE_URL_E_G_DESCRIPTOR, {exampleInstanceDomain: EXAMPLE_INSTANCE_DOMAIN});
-	return (
-		<div className={clsx(styles.container, className)} data-flx="auth.flow.instance-selector.container">
-			<div className={styles.inputContainer} data-flx="auth.flow.instance-selector.input-container">
-				<Input
-					ref={inputRef}
-					value={value}
-					onChange={handleInputChange}
-					onFocus={handleInputFocus}
-					placeholder={placeholder}
+		return (
+			<flx-auth-instance-selector-input-actions
+				className={flxElementClassName(styles.inputActions)}
+				data-flx="auth.flow.instance-selector.render-status-actions.input-actions"
+			>
+				<InstanceDiscoveryStatusIcon
+					status={discoveryStatus}
+					data-flx="auth.flow.instance-selector.render-status-actions.instance-discovery-status-icon"
+				/>
+			</flx-auth-instance-selector-input-actions>
+		);
+	};
+	const renderInlineBackButton = (): ReactNode => {
+		if (suppressInlineBackButton) {
+			return null;
+		}
+		return (
+			<Button
+				type="button"
+				variant={ButtonVariant.SECONDARY}
+				leftIcon={
+					<ArrowLeftIcon
+						size={remFromPx(18)}
+						weight="bold"
+						data-flx="auth.flow.instance-selector.render-inline-back-button.arrow-left-icon"
+					/>
+				}
+				onClick={handleBackToPicker}
+				disabled={disabled || isDiscovering}
+				data-flx="auth.flow.instance-selector.button.back"
+			>
+				{i18n._(BACK_DESCRIPTOR)}
+			</Button>
+		);
+	};
+	let stepContent: ReactNode;
+	if (step === InstanceSelectorStep.PICK) {
+		stepContent = (
+			<flx-auth-instance-selector-pick-step className="flx-element" data-flx="auth.flow.instance-selector.flx-element">
+				<InstancePickerRows
 					disabled={disabled}
-					leftIcon={
-						<GlobeIcon size={remFromPx(18)} weight="regular" data-flx="auth.flow.instance-selector.globe-icon" />
-					}
-					rightElement={
-						<div className={styles.inputActions} data-flx="auth.flow.instance-selector.input-actions">
-							{statusIcon}
-							{recentInstances.length > 0 && (
-								<button
-									type="button"
-									className={styles.dropdownToggle}
-									onClick={handleDropdownToggle}
-									disabled={disabled}
-									aria-label={i18n._(SHOW_RECENT_INSTANCES_DESCRIPTOR)}
-									data-flx="auth.flow.instance-selector.dropdown-toggle.button"
-								>
-									<CaretDownIcon
-										size={remFromPx(16)}
-										weight="bold"
-										className={clsx(styles.caretIcon, showDropdown && styles.caretIconOpen)}
-										data-flx="auth.flow.instance-selector.caret-icon"
-									/>
-								</button>
-							)}
-						</div>
-					}
-					aria-label={i18n._(INSTANCE_URL_DESCRIPTOR)}
-					aria-describedby={discoveryError ? 'instance-error' : undefined}
-					data-flx="auth.flow.instance-selector.input"
+					discoveryStatus={discoveryStatus}
+					instances={knownInstances}
+					pinnedInstance={resolveLocalDevelopmentInstance(knownInstances)}
+					onAddInstance={handleAddInstance}
+					onRemoveInstance={handleRemoveKnownInstance}
+					onSelectOfficial={handleSelectOfficial}
+					onSelectInstance={handleSelectKnown}
+					data-flx="auth.flow.instance-selector.instance-picker-rows"
 				/>
-				{showDropdown && recentInstances.length > 0 && (
-					<div ref={dropdownRef} className={styles.dropdown} data-flx="auth.flow.instance-selector.dropdown">
-						<div className={styles.dropdownHeader} data-flx="auth.flow.instance-selector.dropdown-header">
-							<Trans>Recent instances</Trans>
-						</div>
-						<ul className={styles.dropdownList} data-flx="auth.flow.instance-selector.dropdown-list">
-							{recentInstances.map((instance) => (
-								<li key={instance.domain} data-flx="auth.flow.instance-selector.li">
-									<button
-										type="button"
-										className={styles.dropdownItem}
-										onClick={() => handleSelectRecent(instance)}
-										data-flx="auth.flow.instance-selector.dropdown-item.select-recent.button"
-									>
-										<GlobeIcon
-											size={remFromPx(16)}
-											weight="regular"
-											className={styles.instanceIcon}
-											data-flx="auth.flow.instance-selector.instance-icon"
-										/>
-										<span className={styles.instanceDomain} data-flx="auth.flow.instance-selector.instance-domain">
-											{instance.domain}
-										</span>
-										{instance.name && (
-											<span className={styles.instanceName} data-flx="auth.flow.instance-selector.instance-name">
-												{instance.name}
-											</span>
-										)}
-										<button
-											type="button"
-											className={styles.removeButton}
-											onClick={(e) => handleRemoveRecent(e, instance.domain)}
-											aria-label={i18n._(REMOVE_FROM_RECENT_INSTANCES_DESCRIPTOR, {domain: instance.domain})}
-											data-flx="auth.flow.instance-selector.remove-button.remove-recent"
-										>
-											<TrashIcon
-												size={remFromPx(14)}
-												weight="regular"
-												data-flx="auth.flow.instance-selector.trash-icon"
-											/>
-										</button>
-									</button>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
-			</div>
-			{discoveryError && (
-				<div id="instance-error" className={styles.errorMessage} data-flx="auth.flow.instance-selector.instance-error">
-					{discoveryError}
-				</div>
-			)}
-			{discoveryStatus !== 'success' && value.trim() && (
-				<Button
-					onClick={handleConnectClick}
-					disabled={disabled}
-					submitting={discoveryStatus === 'discovering'}
-					variant="secondary"
-					small
-					className={styles.connectButton}
-					data-flx="auth.flow.instance-selector.connect-button.connect-click"
+				<InstanceSelectorStatusRow
+					status={discoveryStatus}
+					statusId={statusId}
+					statusMessage={statusMessage}
+					data-flx="auth.flow.instance-selector.instance-selector-status-row"
+				/>
+			</flx-auth-instance-selector-pick-step>
+		);
+	} else {
+		stepContent = (
+			<form className={styles.form} onSubmit={handleSubmit} data-flx="auth.flow.instance-selector.form.submit">
+				<flx-auth-instance-selector-input
+					className={flxElementClassName(styles.inputContainer)}
+					data-flx="auth.flow.instance-selector.input-container"
 				>
-					<Trans>Connect</Trans>
-				</Button>
-			)}
-		</div>
+					<TextInput
+						ref={inputRef}
+						value={value}
+						onChange={handleInputChange}
+						maxLength={NETWORK_ENDPOINT_INPUT_MAX_BYTES}
+						placeholder={placeholder}
+						disabled={disabled}
+						leftIcon={
+							<GlobeIcon size={remFromPx(18)} weight="regular" data-flx="auth.flow.instance-selector.globe-icon" />
+						}
+						rightElement={renderStatusActions()}
+						aria-label={i18n._(INSTANCE_URL_DESCRIPTOR)}
+						{...statusDescriptionAria(statusId, progressMessage)}
+						error={discoveryError ?? undefined}
+						data-step-focus="true"
+						data-flx="auth.flow.instance-selector.text-input"
+					/>
+				</flx-auth-instance-selector-input>
+				<InstanceSelectorStatusRow
+					status={discoveryStatus}
+					statusId={statusId}
+					statusMessage={progressMessage}
+					data-flx="auth.flow.instance-selector.instance-selector-status-row--2"
+				/>
+				<flx-auth-instance-selector-footer
+					className={flxElementClassName(styles.footer)}
+					data-flx="auth.flow.instance-selector.footer"
+				>
+					{renderInlineBackButton()}
+					<Button
+						type="submit"
+						disabled={!canSubmit}
+						submitting={isDiscovering}
+						rightIcon={
+							<ArrowRightIcon
+								size={remFromPx(18)}
+								weight="bold"
+								data-flx="auth.flow.instance-selector.arrow-right-icon"
+							/>
+						}
+						data-flx="auth.flow.instance-selector.button.continue"
+					>
+						{i18n._(CONTINUE_DESCRIPTOR)}
+					</Button>
+				</flx-auth-instance-selector-footer>
+			</form>
+		);
+	}
+	return (
+		<flx-auth-instance-selector
+			className={flxElementClassName(styles.container, className)}
+			data-flx="auth.flow.instance-selector.container"
+		>
+			<SteppedCarousel
+				step={step}
+				steps={INSTANCE_SELECTOR_STEPS}
+				focusOnStepChange
+				ariaLabel={i18n._(INSTANCE_SELECTION_DESCRIPTOR)}
+				data-flx="auth.flow.instance-selector.carousel"
+			>
+				{stepContent}
+			</SteppedCarousel>
+		</flx-auth-instance-selector>
 	);
 });

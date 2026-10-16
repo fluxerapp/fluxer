@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {User} from '@app/api/models/User';
 import type {SearchableUser} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {User} from '../../models/User';
 
 export function convertToSearchableUser(user: User): SearchableUser {
 	const createdAt = Math.floor(snowflakeToDate(BigInt(user.id)).getTime() / 1000);
@@ -20,7 +20,6 @@ export function convertToSearchableUser(user: User): SearchableUser {
 		premiumType: user.premiumType,
 		emailVerified: user.emailVerified,
 		emailBounced: user.emailBounced,
-		suspiciousActivityFlags: user.suspiciousActivityFlags,
 		acls: Array.from(user.acls),
 		createdAt,
 		lastActiveAt,

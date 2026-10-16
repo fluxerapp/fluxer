@@ -2,13 +2,13 @@
 
 -module(gateway_rpc_guild_permissions).
 
--typing([eqwalizer]).
-
--export([handle/2, get_permissions_cached_or_rpc/3]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([handle/2, get_permissions_cached_or_rpc/3]).
 
 -define(GUILD_CALL_TIMEOUT, 4000).
 
@@ -30,6 +30,7 @@ handle_get_user_permissions(
     ChannelId = parse_channel_id(CIB),
     case get_permissions_cached_or_rpc(GuildId, UserId, ChannelId) of
         {ok, Perms} -> #{<<"permissions">> => integer_to_binary(Perms)};
+        {error, guild_not_found} -> gateway_rpc_error:raise(<<"guild_not_found">>);
         error -> gateway_rpc_error:raise(<<"permissions_error">>)
     end.
 
@@ -57,7 +58,7 @@ batch_permission_result(GuildId, UserId, ChannelId) when is_integer(GuildId) ->
                 <<"guild_id">> => integer_to_binary(GuildId),
                 <<"permissions">> => integer_to_binary(Permissions)
             };
-        error ->
+        _ ->
             undefined
     end;
 batch_permission_result(_, _, _) ->
@@ -78,7 +79,9 @@ handle_check_permission(
     ChannelId = parse_channel_id(CIB),
     case get_permissions_cached_or_rpc(GuildId, UserId, ChannelId) of
         {ok, Perms} ->
-            #{<<"has_permission">> => permission_bits:has(Perms, Permission)};
+            #{<<"has_permission">> => bitset:has(Perms, Permission)};
+        {error, guild_not_found} ->
+            gateway_rpc_error:raise(<<"guild_not_found">>);
         error ->
             gateway_rpc_error:raise(<<"permission_check_error">>)
     end.
@@ -180,7 +183,7 @@ guild_call_max_pos(Pid, UserId) ->
 
 -spec get_permissions_cached_or_rpc(
     integer(), integer(), integer() | undefined
-) -> {ok, integer()} | error.
+) -> {ok, integer()} | {error, guild_not_found} | error.
 get_permissions_cached_or_rpc(GuildId, UserId, ChannelId) ->
     case guild_permission_cache:get_permissions(GuildId, UserId, ChannelId) of
         {ok, Perms} -> {ok, Perms};
@@ -189,14 +192,14 @@ get_permissions_cached_or_rpc(GuildId, UserId, ChannelId) ->
 
 -spec get_permissions_via_rpc(
     integer(), integer(), integer() | undefined
-) -> {ok, integer()} | error.
+) -> {ok, integer()} | {error, guild_not_found} | error.
 get_permissions_via_rpc(GuildId, UserId, ChannelId) ->
     case gateway_rpc_guild_infra:ensure_guild_pid(GuildId) of
         {ok, Pid} ->
             Msg = {get_user_permissions, #{user_id => UserId, channel_id => ChannelId}},
             get_perms_from_guild(GuildId, Pid, Msg);
         error ->
-            error
+            {error, guild_not_found}
     end.
 
 -spec get_perms_from_guild(integer(), pid(), term()) -> {ok, integer()} | error.
@@ -216,33 +219,34 @@ parse_channel_id(CIB) -> validation:snowflake_or_throw(<<"channel_id">>, CIB).
 
 -spec permission_or_throw(term()) -> non_neg_integer().
 permission_or_throw(Value) ->
-    try permission_bits:parse(Value) of
+    try bitset:parse(Value) of
         Permission when is_integer(Permission) -> Permission
     catch
-        error:{invalid_bitset, _} -> gateway_rpc_error:raise(validation_invalid_params)
+        error:{invalid_bitset, _} -> gateway_rpc_error:raise(<<"invalid_params">>)
     end.
 
 -ifdef(TEST).
-parse_channel_id_test() ->
-    ?assertEqual(undefined, parse_channel_id(<<"0">>)).
-
-permission_or_throw_accepts_zero_test() ->
-    ?assertEqual(0, permission_or_throw(<<"0">>)).
-
-permission_or_throw_rejects_malformed_test() ->
-    ?assertError(
-        {gateway_rpc_error, validation_invalid_params}, permission_or_throw(<<"bad">>)
-    ).
-
-get_user_permissions_batch_rejects_oversized_test() ->
-    GuildIds = [integer_to_binary(N) || N <- lists:seq(1, 101)],
+check_permission_unknown_guild_raises_guild_not_found_test() ->
     Payload = #{
-        <<"guild_ids">> => GuildIds,
-        <<"user_id">> => <<"1">>,
+        <<"guild_id">> => <<"1">>,
+        <<"user_id">> => <<"2">>,
+        <<"permission">> => <<"1">>,
         <<"channel_id">> => <<"0">>
     },
     ?assertError(
-        {gateway_rpc_error, _},
-        handle(<<"guild.get_user_permissions_batch">>, Payload)
+        {gateway_rpc_error, <<"guild_not_found">>},
+        handle(<<"guild.check_permission">>, Payload)
     ).
+
+get_user_permissions_unknown_guild_raises_guild_not_found_test() ->
+    Payload = #{
+        <<"guild_id">> => <<"1">>,
+        <<"user_id">> => <<"2">>,
+        <<"channel_id">> => <<"0">>
+    },
+    ?assertError(
+        {gateway_rpc_error, <<"guild_not_found">>},
+        handle(<<"guild.get_user_permissions">>, Payload)
+    ).
+
 -endif.

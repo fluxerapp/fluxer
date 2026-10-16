@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {wrapDesktopLocalUploadURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
+import {observeResize} from '@app/features/platform/utils/SharedResizeObserver';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import {parseStreamKey} from '@app/features/voice/components/StreamKeys';
@@ -12,6 +14,7 @@ import {
 } from '@app/features/voice/components/voice_participant_tile/previewEncoding';
 import {
 	getScreenShareVideoSubscriptionRecoveryKey,
+	isScreenShareVideoSubscriptionRecoveryWanted,
 	screenShareVideoSubscriptionRecoveryCoordinator,
 } from '@app/features/voice/components/voice_participant_tile/ScreenShareVideoSubscriptionRecovery';
 import {
@@ -25,24 +28,25 @@ import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
-	buildVoiceMediaGraphNativeCameraSubscriptionCommand,
-	selectVoiceMediaGraphHasFailureForStreamKey,
 	selectVoiceMediaGraphViewerStreamKeys,
 	type VoiceMediaGraphSnapshot,
 } from '@app/features/voice/engine/VoiceMediaGraph';
-import type {VoiceMediaGraphVideoQuality} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
 import {
 	asVoiceTrackSource,
 	isScreenShareAudioPublicationLike,
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
-import {pickCameraSubscriptionQuality} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {
+	applyScreenShareViewerDemand,
+	isWithinScreenShareViewerDemandDeadBand,
+	measureScreenShareViewerDemand,
+	releaseScreenShareViewerDemand,
+	SCREEN_SHARE_VIEWER_DEMAND_DEBOUNCE_MS,
 	type ScreenSharePublicationOperation,
+	type ScreenShareViewerDemandDimensions,
 	syncScreenSharePublication,
 	syncWatchedScreenSharePublications,
 } from '@app/features/voice/utils/ScreenShareSubscriptionPolicy';
@@ -61,16 +65,12 @@ import {useContext, useEffect, useMemo, useRef, useState} from 'react';
 const SCREEN_SHARE_SOURCE = VoiceTrackSource.ScreenShare as Track.Source;
 const SCREEN_SHARE_AUDIO_SOURCE = VoiceTrackSource.ScreenShareAudio as Track.Source;
 const VOICE_ENGINE_V2_SCREEN_SOURCE = 'screen';
-export const VIDEO_UNSUBSCRIBE_GRACE_MS = 2000;
+const VIDEO_UNSUBSCRIBE_GRACE_MS = 2000;
 
 export class UnsubscribeGraceGate {
 	private timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(private readonly graceMs: number) {}
-
-	get isPending(): boolean {
-		return this.timeoutId !== null;
-	}
 
 	scheduleDisable(onDisable: () => void): void {
 		if (this.timeoutId !== null) return;
@@ -91,57 +91,10 @@ interface AutoVideoSubscriptionRequest {
 	participantIdentity: string | null;
 	trackSid: string | null;
 	desired: boolean | null;
-	quality: VoiceMediaGraphVideoQuality | null;
 }
 
 function createEmptyAutoVideoSubscriptionRequest(): AutoVideoSubscriptionRequest {
-	return {participantIdentity: null, trackSid: null, desired: null, quality: null};
-}
-
-function subscribeNativeCamera(participantIdentity: string, quality: VoiceMediaGraphVideoQuality): void {
-	VoiceEngineV2AppSubscriptionAdapter.setRemoteTrackSubscription(
-		buildVoiceMediaGraphNativeCameraSubscriptionCommand({participantIdentity, subscribed: true, quality}),
-	).catch((error) => {
-		logger.error('Native camera subscription update failed', error);
-	});
-}
-
-function unsubscribeNativeCamera(participantIdentity: string): void {
-	VoiceEngineV2AppSubscriptionAdapter.setRemoteTrackSubscription(
-		buildVoiceMediaGraphNativeCameraSubscriptionCommand({participantIdentity, subscribed: false}),
-	).catch((error) => {
-		logger.error('Native camera subscription update failed', error);
-	});
-}
-
-export function useNativeCameraSubscriptionQuality<T extends HTMLElement>(
-	ref: React.RefObject<T | null>,
-	enabled: boolean,
-): VoiceMediaGraphVideoQuality {
-	const [quality, setQuality] = useState<VoiceMediaGraphVideoQuality>('low');
-	useEffect(() => {
-		if (!enabled) {
-			setQuality('low');
-			return;
-		}
-		const element = ref.current;
-		if (!element) return;
-		const ownerWindow = element.ownerDocument.defaultView;
-		const measure = (): void => {
-			const ratio = resolveDevicePixelRatio(ownerWindow);
-			setQuality(pickCameraSubscriptionQuality(element.clientWidth * ratio, element.clientHeight * ratio));
-		};
-		measure();
-		if (ownerWindow == null || typeof ownerWindow.ResizeObserver === 'undefined') return;
-		const observer = new ownerWindow.ResizeObserver(measure);
-		observer.observe(element);
-		return () => observer.disconnect();
-	}, [enabled, ref]);
-	return quality;
-}
-
-function isNativeCameraPlaceholderSubscriptionTarget(trackRef: TrackReferenceOrPlaceholder): boolean {
-	return asVoiceTrackSource(trackRef.source) === VoiceTrackSource.Camera && Boolean(trackRef.participant?.identity);
+	return {participantIdentity: null, trackSid: null, desired: null};
 }
 
 interface StreamPreviewUploadUrlCacheEntry extends StreamPreviewUploadUrlCacheEntryLike {
@@ -210,7 +163,7 @@ export function useTileContextMenuActive(tileElRef: React.RefObject<HTMLElement 
 			const cm = ContextMenu.contextMenu;
 			const target = cm?.target?.target;
 			const el = tileElRef.current;
-			setOpen(Boolean(cm && target instanceof Node && el && el.contains(target)));
+			setOpen(Boolean(cm && target instanceof Node && el?.contains(target)));
 		});
 		return () => disposer();
 	}, [tileElRef]);
@@ -218,7 +171,7 @@ export function useTileContextMenuActive(tileElRef: React.RefObject<HTMLElement 
 }
 
 function unsubscribeManagedVideoPublication(
-	managedPublicationRef: React.MutableRefObject<RemoteTrackPublication | null>,
+	managedPublicationRef: React.RefObject<RemoteTrackPublication | null>,
 	publication: RemoteTrackPublication | null,
 ): void {
 	if (!publication) return;
@@ -241,17 +194,8 @@ export function useAutoVideoSubscription(opts: {
 	videoLocallyDisabled: boolean;
 	isLocalParticipant: boolean;
 	isScreenShare: boolean;
-	nativeCameraQuality: VoiceMediaGraphVideoQuality;
 }) {
-	const {
-		enabled,
-		trackRef,
-		isIntersecting,
-		videoLocallyDisabled,
-		isLocalParticipant,
-		isScreenShare,
-		nativeCameraQuality,
-	} = opts;
+	const {enabled, trackRef, isIntersecting, videoLocallyDisabled, isLocalParticipant, isScreenShare} = opts;
 	const lastRequestedRef = useRef<AutoVideoSubscriptionRequest>(createEmptyAutoVideoSubscriptionRequest());
 	const managedPublicationRef = useRef<RemoteTrackPublication | null>(null);
 	const graceGateRef = useRef<UnsubscribeGraceGate | null>(null);
@@ -261,59 +205,16 @@ export function useAutoVideoSubscription(opts: {
 	useEffect(() => {
 		const graceGate = graceGateRef.current;
 		if (!graceGate) return;
-		const isNativeEngine = isVoiceEngineV2NativeProjectionActiveFromMediaEngine();
-		const unsubscribeNativeRequest = (): void => {
-			const previous = lastRequestedRef.current;
-			if (!isNativeEngine || !previous.participantIdentity) return;
-			if (previous.desired !== true && managedPublicationRef.current === null) return;
-			unsubscribeNativeCamera(previous.participantIdentity);
-		};
 		const unsubscribeManagedPublication = (publication: RemoteTrackPublication | null): void => {
 			unsubscribeManagedVideoPublication(managedPublicationRef, publication);
 		};
 		const reset = (): void => {
 			graceGate.cancel();
-			unsubscribeNativeRequest();
 			unsubscribeManagedPublication(managedPublicationRef.current);
 			lastRequestedRef.current = createEmptyAutoVideoSubscriptionRequest();
 		};
 		if (!enabled || isLocalParticipant || isScreenShare) {
 			reset();
-			return;
-		}
-		if (isNativeEngine && !isTrackReference(trackRef) && isNativeCameraPlaceholderSubscriptionTarget(trackRef)) {
-			const participantIdentity = trackRef.participant.identity;
-			const shouldSubscribe = isIntersecting && !videoLocallyDisabled;
-			const desiredQuality = shouldSubscribe ? nativeCameraQuality : null;
-			const previousRequest = lastRequestedRef.current;
-			const requestChanged =
-				previousRequest.trackSid !== null || previousRequest.participantIdentity !== participantIdentity;
-			if (requestChanged && previousRequest.participantIdentity) {
-				unsubscribeNativeCamera(previousRequest.participantIdentity);
-			}
-			if (requestChanged) {
-				lastRequestedRef.current = {participantIdentity, trackSid: null, desired: null, quality: null};
-			}
-			if (lastRequestedRef.current.desired === shouldSubscribe && lastRequestedRef.current.quality === desiredQuality) {
-				return;
-			}
-			lastRequestedRef.current.desired = shouldSubscribe;
-			lastRequestedRef.current.quality = desiredQuality;
-			if (shouldSubscribe) {
-				graceGate.cancel();
-				subscribeNativeCamera(participantIdentity, nativeCameraQuality);
-				managedPublicationRef.current = null;
-				return;
-			}
-			if (videoLocallyDisabled) {
-				graceGate.cancel();
-				unsubscribeNativeCamera(participantIdentity);
-				managedPublicationRef.current = null;
-				return;
-			}
-			graceGate.scheduleDisable(() => {
-				unsubscribeNativeCamera(participantIdentity);
-			});
 			return;
 		}
 		if (!isTrackReference(trackRef)) {
@@ -335,38 +236,8 @@ export function useAutoVideoSubscription(opts: {
 		const previousRequest = lastRequestedRef.current;
 		const requestChanged =
 			previousRequest.trackSid !== trackSid || previousRequest.participantIdentity !== participantIdentity;
-		if (isNativeEngine && requestChanged && previousRequest.participantIdentity && managedPublicationRef.current) {
-			unsubscribeNativeCamera(previousRequest.participantIdentity);
-		}
 		if (requestChanged) {
-			lastRequestedRef.current = {participantIdentity, trackSid, desired: null, quality: null};
-		}
-		if (isNativeEngine) {
-			const desiredQuality = shouldSubscribe ? nativeCameraQuality : null;
-			if (lastRequestedRef.current.desired === shouldSubscribe && lastRequestedRef.current.quality === desiredQuality) {
-				return;
-			}
-			lastRequestedRef.current.desired = shouldSubscribe;
-			lastRequestedRef.current.quality = desiredQuality;
-			if (shouldSubscribe) {
-				graceGate.cancel();
-				subscribeNativeCamera(participantIdentity, nativeCameraQuality);
-				managedPublicationRef.current = pub;
-				return;
-			}
-			if (videoLocallyDisabled) {
-				graceGate.cancel();
-				unsubscribeNativeCamera(participantIdentity);
-				managedPublicationRef.current = null;
-				return;
-			}
-			graceGate.scheduleDisable(() => {
-				unsubscribeNativeCamera(participantIdentity);
-				if (managedPublicationRef.current === pub) {
-					managedPublicationRef.current = null;
-				}
-			});
-			return;
+			lastRequestedRef.current = {participantIdentity, trackSid, desired: null};
 		}
 		if (pub.isSubscribed === shouldSubscribe) {
 			lastRequestedRef.current.desired = shouldSubscribe;
@@ -402,18 +273,10 @@ export function useAutoVideoSubscription(opts: {
 				logger.error('setSubscribed(false) failed after unsubscribe grace period', err);
 			}
 		});
-	}, [enabled, trackRef, isIntersecting, videoLocallyDisabled, isLocalParticipant, isScreenShare, nativeCameraQuality]);
+	}, [enabled, trackRef, isIntersecting, videoLocallyDisabled, isLocalParticipant, isScreenShare]);
 	useEffect(() => {
 		return () => {
 			graceGateRef.current?.cancel();
-			const previous = lastRequestedRef.current;
-			if (
-				isVoiceEngineV2NativeProjectionActiveFromMediaEngine() &&
-				previous.participantIdentity &&
-				(previous.desired === true || managedPublicationRef.current !== null)
-			) {
-				unsubscribeNativeCamera(previous.participantIdentity);
-			}
 			const publication = managedPublicationRef.current;
 			managedPublicationRef.current = null;
 			lastRequestedRef.current = createEmptyAutoVideoSubscriptionRequest();
@@ -500,6 +363,66 @@ export function useScreenShareAudioPublication(
 		};
 	}, [participant, enabled]);
 	return {publication, hasTrack};
+}
+
+let nextScreenShareViewerDemandKey = 0;
+
+export function useScreenShareViewerDemand({
+	enabled,
+	publication,
+	videoRef,
+	onError,
+}: {
+	enabled: boolean;
+	publication: RemoteTrackPublication | null | undefined;
+	videoRef: React.RefObject<HTMLVideoElement | null>;
+	onError?: (operation: ScreenSharePublicationOperation, label: string, error: unknown) => void;
+}): void {
+	const viewerKeyRef = useRef<string | null>(null);
+	if (viewerKeyRef.current === null) {
+		nextScreenShareViewerDemandKey += 1;
+		viewerKeyRef.current = `screen-share-viewer-${nextScreenShareViewerDemandKey}`;
+	}
+	const viewerKey = viewerKeyRef.current;
+	const trackSid = publication?.trackSid ?? null;
+	const onErrorRef = useRef(onError);
+	onErrorRef.current = onError;
+	useEffect(() => {
+		if (!enabled || !publication || !trackSid) return;
+		const element = videoRef.current;
+		if (!element) return;
+		const label = 'screen share video publication';
+		const handleError = (operation: ScreenSharePublicationOperation, errorLabel: string, error: unknown) => {
+			logger.error(`${operation} failed for ${errorLabel}`, error);
+			onErrorRef.current?.(operation, errorLabel, error);
+		};
+		let applied: ScreenShareViewerDemandDimensions | null = null;
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		const apply = () => {
+			timeoutId = null;
+			const target = videoRef.current;
+			const next = measureScreenShareViewerDemand(
+				target,
+				resolveDevicePixelRatio(target?.ownerDocument.defaultView ?? null),
+			);
+			if (!next || isWithinScreenShareViewerDemandDeadBand(applied, next)) return;
+			applied = next;
+			applyScreenShareViewerDemand({publication, label, viewerKey, dimensions: next, onError: handleError});
+		};
+		const schedule = () => {
+			if (timeoutId !== null) return;
+			timeoutId = setTimeout(apply, SCREEN_SHARE_VIEWER_DEMAND_DEBOUNCE_MS);
+		};
+		schedule();
+		const stopObserving = typeof ResizeObserver === 'undefined' ? null : observeResize(element, schedule);
+		return () => {
+			if (timeoutId !== null) {
+				clearTimeout(timeoutId);
+			}
+			stopObserving?.();
+			releaseScreenShareViewerDemand({publication, label, trackSid, viewerKey, onError: handleError});
+		};
+	}, [enabled, publication, trackSid, videoRef, viewerKey]);
 }
 
 export function useScreenshareWatchSubscription(opts: {
@@ -612,14 +535,8 @@ export function useScreenshareWatchSubscription(opts: {
 			publication: pub,
 			streamKey,
 			participantIdentity,
-			isStillWanted: () => {
-				const currentStreamKey = streamKeyRef.current;
-				if (currentStreamKey == null) return false;
-				const graph = getGraphSnapshotRef.current();
-				if (!selectVoiceMediaGraphViewerStreamKeys(graph).includes(currentStreamKey)) return false;
-				if (selectVoiceMediaGraphHasFailureForStreamKey(graph, currentStreamKey)) return false;
-				return true;
-			},
+			isStillWanted: () =>
+				isScreenShareVideoSubscriptionRecoveryWanted(getGraphSnapshotRef.current(), streamKeyRef.current),
 			onRetry: (retry) => {
 				logger.warn('Retrying stalled screen share video subscription', retry);
 			},
@@ -795,8 +712,9 @@ export function useScreensharePreviewUploader(
 					return false;
 				}
 				try {
-					const response = await http.put(uploadUrlResponse.upload_url, {
+					const response = await http.put(wrapDesktopLocalUploadURL(uploadUrlResponse.upload_url), {
 						body,
+						auth: 'none',
 						headers: {'Content-Type': contentType},
 					});
 					if (!isUploadActive()) return false;

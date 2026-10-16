@@ -6,9 +6,9 @@ import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateC
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import Users from '@app/features/user/state/Users';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';

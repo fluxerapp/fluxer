@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {CodesResponse, GenerateGiftCodesRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {Config} from '../../Config';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 function trimTrailingSlash(value: string): string {
 	return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -17,29 +20,41 @@ function trimTrailingSlash(value: string): string {
 
 export function CodesAdminController(app: HonoApp) {
 	app.post(
-		'/admin/codes/gift',
+		'/admin/gift-codes',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_CODE_GENERATION),
 		requireAdminACL(AdminACLs.GIFT_CODES_GENERATE),
 		Validator('json', GenerateGiftCodesRequest),
 		OpenAPI({
-			operationId: 'generate_gift_codes',
-			summary: 'Generate gift codes',
+			operationId: 'create_admin_gift_codes',
+			summary: 'Issue gift codes',
 			description:
-				'Create one-use Plutonium gift codes with an explicit positive duration. Lifetime gifts are not supported.',
+				'Create one-use premium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.',
 			responseSchema: CodesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			if (Config.instance.selfHosted) {
+			if (!isPremiumTieringActive()) {
 				throw new FeatureNotAvailableSelfHostedError();
 			}
+			const adminService = ctx.get('adminService');
 			const {count, duration_type, duration_quantity} = ctx.req.valid('json');
-			const codes = await ctx.get('adminService').codeGenerationService.generateGiftCodes({
+			const codes = await adminService.codeGenerationService.generateGiftCodes({
 				count,
 				durationType: duration_type,
 				durationQuantity: duration_quantity,
+				createdByUserId: Config.instance.selfHosted ? ctx.get('adminUserId') : SYSTEM_USER_ID,
+			});
+			await recordAdminWrite(ctx, {
+				targetType: 'gift_code',
+				targetId: BigInt(0),
+				action: 'generate_gift_codes',
+				metadata: {
+					count: codes.length.toString(),
+					duration_type: duration_type,
+					duration_quantity: duration_quantity.toString(),
+				},
 			});
 			const baseUrl = trimTrailingSlash(Config.endpoints.gift);
 			return ctx.json({

@@ -8,12 +8,17 @@ const OFFICIAL_GIFT_URL_BASES = Object.freeze([
 	'https://canary.fluxer.app/gift',
 	'https://web.fluxer.app/gift',
 	'https://web.canary.fluxer.app/gift',
+	'https://fluxer.com/gift',
+	'https://canary.fluxer.com/gift',
 	'https://fluxer.gift',
 	'https://fluxer.gift/gift',
 ]);
 const GIFT_CONFIG: CodeLinkUtils.CodeLinkConfig = {
 	path: 'gift',
 	get urlBases() {
+		if (RuntimeConfig.isSelfHosted()) {
+			return [RuntimeConfig.giftUrlBase];
+		}
 		return [RuntimeConfig.giftUrlBase, ...OFFICIAL_GIFT_URL_BASES];
 	},
 };

@@ -45,26 +45,6 @@ export function parseSetArguments(args: Array<string | number>): KVSetOptions {
 	};
 }
 
-export function createStringEntriesFromPairs(args: Array<string>): Array<{
-	key: string;
-	value: string;
-}> {
-	if (args.length % 2 !== 0) {
-		throw createInvalidArgumentError('mset requires key/value pairs');
-	}
-	const entries: Array<{
-		key: string;
-		value: string;
-	}> = [];
-	for (let index = 0; index < args.length; index += 2) {
-		entries.push({
-			key: args[index],
-			value: args[index + 1],
-		});
-	}
-	return entries;
-}
-
 export function createZSetMembersFromScorePairs(scoreMembers: Array<number | string>): Array<{
 	score: number;
 	value: string;
@@ -83,7 +63,7 @@ export function createZSetMembersFromScorePairs(scoreMembers: Array<number | str
 			throw createInvalidArgumentError('zadd member must be a string');
 		}
 		members.push({
-			score: parseFiniteNumber(rawScore, 'zadd score'),
+			score: parseNumberArgument(rawScore, 'zadd score'),
 			value: rawMember,
 		});
 	}
@@ -134,14 +114,6 @@ function parseNumberArgument(value: string | number | undefined, label: string):
 		}
 	}
 	throw createInvalidArgumentError(`${label} must be a finite number`);
-}
-
-function parseFiniteNumber(value: string | number, label: string): number {
-	const parsed = parseNumberArgument(value, label);
-	if (!Number.isFinite(parsed)) {
-		throw createInvalidArgumentError(`${label} must be finite`);
-	}
-	return parsed;
 }
 
 function parseNonNegativeInteger(value: string | number | undefined, label: string): number {

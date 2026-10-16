@@ -1,41 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {Config} from '@app/api/Config';
+import type {NetworkBlock} from '@app/api/enforcement/NetworkBlockError';
+import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {BotMfaMirrorService} from '@app/api/oauth/BotMfaMirrorService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
+import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {ISmsService} from '@pkgs/sms/src/ISmsService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {InboundSmsChallengeService} from './auth/services/InboundSmsChallengeService';
-import type {PhoneAttemptRiskService} from './auth/services/PhoneAttemptRiskService';
-import type {IPhoneLookupRepository} from './auth/services/PhoneLookupRepository';
-import type {Config} from './Config';
-import type {IEmailDnsValidationService} from './infrastructure/IEmailDnsValidationService';
-import type {IGatewayService} from './infrastructure/IGatewayService';
-import type {IMediaService} from './infrastructure/IMediaService';
-import type {ISnowflakeService} from './infrastructure/ISnowflakeService';
-import type {BotMfaMirrorService} from './oauth/BotMfaMirrorService';
-import type {IUserRepository} from './user/IUserRepository';
-import type {UserActivityBuffer} from './user/services/UserActivityBuffer';
-import type {UserContactChangeLogService} from './user/services/UserContactChangeLogService';
-import type {WorkerTaskName} from './worker/WorkerLaneConfig';
 
 export interface ApiServices {
-	users: IUserRepository;
+	users: UserRepository;
 	cache: ICacheService;
 	gateway: IGatewayService;
 	kv: IKVProvider;
 	media: IMediaService;
 	email: IEmailService;
-	emailDnsValidation: IEmailDnsValidationService;
-	sms: ISmsService;
+	emailDnsValidation: EmailDnsValidationService;
 	worker: IWorkerService<WorkerTaskName>;
 	snowflake: ISnowflakeService;
 	rateLimit: IRateLimitService;
 	contactChangeLog: UserContactChangeLogService;
-	inboundSmsChallenge: InboundSmsChallengeService | null;
-	phoneLookup: IPhoneLookupRepository | null;
-	phoneAttemptRisk: PhoneAttemptRiskService;
 	botMfaMirror: BotMfaMirrorService;
 	userActivityBuffer: UserActivityBuffer;
 	config: typeof Config;
@@ -45,6 +38,8 @@ export interface RequestScope {
 	requestId: string;
 	clientIp: string | null;
 	userAgent: string | null;
+	locale: string;
+	blockedNetworkSignIn: NetworkBlock | null;
 }
 
 export interface ApiContext {

@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {
+	ALLOW_AV1_SCREEN_SHARE_DESCRIPTOR,
+	ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR,
+	ENCODER_PATH_DESCRIPTOR,
+	SHOW_NEW_DEVICE_ALERTS_DESCRIPTOR,
+	STREAM_PREVIEW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const SHOW_NEW_DEVICE_ALERTS_DESCRIPTOR = msg({
-	message: 'Show new device alerts',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
 const DEVICE_ALERTS_DESCRIPTOR = msg({
 	message: 'Device alerts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -85,33 +87,18 @@ const CHOOSE_THE_VIDEO_CODEC_FOR_SCREEN_SHARING_DESCRIPTOR = msg({
 	message: 'Video codec for screen sharing',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const OPENH264_VIDEO_CODEC_DESCRIPTOR = msg({
-	message: 'OpenH264 video codec',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+
+const ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR = msg({
+	message: 'May cause compatibility issues for viewers. We’re working on improving this.',
+	comment: 'Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.',
 });
-const EMULATE_DECODE_CODEC_DESCRIPTOR = msg({
-	message: 'Emulate decode codec (testing)',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+const AV1_KEYWORD_DESCRIPTOR = msg({
+	message: 'AV1',
+	comment: 'Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.',
 });
-const CODEC_NEGOTIATION_TESTING_DESCRIPTOR = msg({
-	message: 'Codec negotiation testing',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ADVERTISE_A_CAPPED_DECODE_CODEC_TO_FORCE_PUBLISHER_MIGRATION_DESCRIPTOR = msg({
-	message: 'Advertise a capped decode codec to force publisher migration',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
-const H264_DESCRIPTOR = msg({
-	message: 'H.264',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CISCO_DESCRIPTOR = msg({
-	message: 'Cisco',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ENABLE_OPENH264_SOFTWARE_ENCODING_AND_DECODING_ON_LINUX_DESCRIPTOR = msg({
-	message: 'OpenH264 software codec on Linux',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+const HEVC_KEYWORD_DESCRIPTOR = msg({
+	message: 'HEVC',
+	comment: 'Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.',
 });
 const SCREEN_SHARE_PREVIEW_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'Screen share preview behavior',
@@ -122,17 +109,14 @@ const SCREEN_SHARE_PREVIEW_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PICTURE_IN_PICTURE_DESCRIPTOR = msg({
-	message: 'Picture in picture',
+	message: 'Picture-in-picture',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PIP_DESCRIPTOR = msg({
 	message: 'PiP',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const STREAM_PREVIEW_DESCRIPTOR = msg({
-	message: 'Stream preview',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CONTROL_BACKGROUND_PREVIEW_POPOUT_AND_STREAM_THUMBNAIL_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'Preview, popout, and stream thumbnail behavior',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
@@ -141,10 +125,7 @@ const SCREEN_SHARE_ENCODER_CONTROLS_DESCRIPTOR = msg({
 	message: 'Screen share encoder controls',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
-const ENCODER_PATH_DESCRIPTOR = msg({
-	message: 'Encoder path',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SOFTWARE_ENCODER_DESCRIPTOR = msg({
 	message: 'Software encoder',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -157,12 +138,8 @@ const SVC_DESCRIPTOR = msg({
 	message: 'SVC',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const BITRATE_DESCRIPTOR = msg({
-	message: 'Bitrate',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR = msg({
-	message: 'Encoder, SVC, backup stream, and bitrate presets',
+	message: 'Encoder path, SVC mode, and content hint',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
@@ -208,25 +185,24 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 		tags: ['media', 'voice'],
 	},
 	{
-		id: 'voice-video-emulated-decode-codec-cap',
+		id: 'voice-video-screen-share-av1-opt-in',
 		tabType: 'voice_video',
 		sectionId: 'video',
-		label: EMULATE_DECODE_CODEC_DESCRIPTOR,
-		keywords: [CODEC_NEGOTIATION_TESTING_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
-		description: ADVERTISE_A_CAPPED_DECODE_CODEC_TO_FORCE_PUBLISHER_MIGRATION_DESCRIPTOR,
+		label: ALLOW_AV1_SCREEN_SHARE_DESCRIPTOR,
+		keywords: [AV1_KEYWORD_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
+		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['media', 'voice'],
 	},
 	{
-		id: 'voice-video-openh264-codec',
+		id: 'voice-video-screen-share-hevc-opt-in',
 		tabType: 'voice_video',
 		sectionId: 'video',
-		label: OPENH264_VIDEO_CODEC_DESCRIPTOR,
-		keywords: [H264_DESCRIPTOR, CODEC_DESCRIPTOR, CISCO_DESCRIPTOR],
-		description: ENABLE_OPENH264_SOFTWARE_ENCODING_AND_DECODING_ON_LINUX_DESCRIPTOR,
+		label: ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR,
+		keywords: [HEVC_KEYWORD_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
+		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['media', 'voice'],
-		isVisible: () => isDesktop() && getElectronAPI()?.platform === 'linux',
 	},
 	{
 		id: 'voice-video-screen-share-preview-behavior',
@@ -253,7 +229,6 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 			SOFTWARE_ENCODER_DESCRIPTOR,
 			HARDWARE_ENCODER_DESCRIPTOR,
 			SVC_DESCRIPTOR,
-			BITRATE_DESCRIPTOR,
 			PRODUCT_NAME,
 		],
 		description: TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR,

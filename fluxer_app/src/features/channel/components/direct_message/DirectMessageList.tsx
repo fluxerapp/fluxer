@@ -3,8 +3,10 @@
 import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {LongPressable} from '@app/features/app/components/LongPressable';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {reportSkeletonDMSidebarLayout} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {PersonalNotesPurgeFailedModal} from '@app/features/channel/components/alerts/PersonalNotesPurgeFailedModal';
 import {CreateDMBottomSheet} from '@app/features/channel/components/bottomsheets/CreateDMBottomSheet';
 import styles from '@app/features/channel/components/direct_message/DirectMessageList.module.css';
@@ -22,7 +24,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {AddFriendSheet} from '@app/features/relationship/components/modals/AddFriendSheet';
 import Relationships from '@app/features/relationship/state/Relationships';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -59,7 +61,7 @@ import {
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const PURGE_PERSONAL_NOTES_DESCRIPTOR = msg({
 	message: 'Purge personal notes',
@@ -76,7 +78,7 @@ const PURGE_DESCRIPTOR = msg({
 	comment: 'Confirm button label on the purge-personal-notes destructive alert.',
 });
 const PURGED_MESSAGES_FROM_PERSONAL_NOTES_DESCRIPTOR = msg({
-	message: 'Purged {deletedCount} messages from personal notes',
+	message: 'Purged {deletedCount, plural, one {# message} other {# messages}} from personal notes',
 	comment: 'Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.',
 });
 const PERSONAL_NOTES_WERE_ALREADY_EMPTY_DESCRIPTOR = msg({
@@ -96,6 +98,16 @@ const CREATE_DM_DESCRIPTOR = msg({
 	comment: 'Accessible label for the create-DM trigger in the DM list header.',
 });
 const logger = new Logger('DMList');
+const DM_ROW_INFO_SELECTOR = `.${styles.dmItemInfo}`;
+
+function readDMRowSubtextFlags(container: HTMLElement | null, rowCount: number): ReadonlyArray<boolean> {
+	const flags: Array<boolean> = [];
+	const infoElements = container?.querySelectorAll(DM_ROW_INFO_SELECTOR);
+	for (let index = 0; index < rowCount; index++) {
+		flags.push((infoElements?.item(index)?.childElementCount ?? 0) > 1);
+	}
+	return flags;
+}
 const ClickableItem = observer(
 	({
 		isSelected,
@@ -224,14 +236,12 @@ export const DMList = observer(() => {
 		},
 		[requestPurgePersonalNotes],
 	);
-	const filteredDmChannels = useMemo(() => getSortedDmChannels(dmChannels, currentUserId), [dmChannels, currentUserId]);
+	const filteredDmChannels = getSortedDmChannels(dmChannels, currentUserId);
 	const dmListNavigationRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-dm-list-focus-item="true"]',
-		orientation: 'vertical',
-		loop: true,
+
 		enabled: KeyboardMode.keyboardModeEnabled,
 		restoreFocusOnWindowFocus: false,
-		manageTabIndex: true,
 	});
 	const routeDmChannelId = getDmRouteChannelId(location.pathname);
 	const isMobileDmIndexRoute = isMobile && location.pathname === Routes.ME;
@@ -249,6 +259,29 @@ export const DMList = observer(() => {
 		(routeDmChannelId === currentUserId || (isMobileDmIndexRoute && lastSelectedDmChannelId === currentUserId));
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const showMobilePlutoniumButton = showPremiumFeatures && !isMobile;
+	const personalNotesVisible = currentUserId != null;
+	const displayedDmChannelCount = filteredDmChannels.length;
+	const dmRowsContainerRef = useRef<HTMLDivElement | null>(null);
+	const dmChannelListRef = useMergeRefs<HTMLDivElement>([dmListNavigationRef, dmRowsContainerRef]);
+	const dmSidebarSkeletonSubtextFlags = readDMRowSubtextFlags(dmRowsContainerRef.current, displayedDmChannelCount);
+	const dmSidebarSkeletonChangeKey = [
+		isMobile,
+		personalNotesVisible,
+		showMobilePlutoniumButton,
+		filteredDmChannels.map((channel) => channel.id).join(','),
+		dmSidebarSkeletonSubtextFlags.map((flag) => (flag ? '1' : '0')).join(''),
+	].join(':');
+	useSkeletonLayoutReport(() => {
+		reportSkeletonDMSidebarLayout({
+			isMobile,
+			friendsVisible: !isMobile,
+			personalNotesVisible,
+			premiumVisible: showMobilePlutoniumButton,
+			sectionVisible: !isMobile,
+			channelRowCount: displayedDmChannelCount,
+			channelSubtextFlags: dmSidebarSkeletonSubtextFlags,
+		});
+	}, dmSidebarSkeletonChangeKey);
 	const navigateTo = (path: string) => () => {
 		if (Routes.isDMRoute(path)) {
 			if (path === Routes.ME) {
@@ -324,6 +357,7 @@ export const DMList = observer(() => {
 					data-flx="channel.direct-message.dm-list.mobile-scroller"
 				>
 					<div
+						ref={dmRowsContainerRef}
 						className={styles.mobileScrollerContent}
 						data-flx="channel.direct-message.dm-list.mobile-scroller-content"
 					>
@@ -410,7 +444,7 @@ export const DMList = observer(() => {
 												className={styles.mobileSpecialButtonLabel}
 												data-flx="channel.direct-message.dm-list.mobile-special-button-label--2"
 											>
-												{PREMIUM_PRODUCT_NAME}
+												{getPremiumProductName()}
 											</span>
 										</div>
 									</div>
@@ -553,6 +587,7 @@ export const DMList = observer(() => {
 					)}
 					{showPremiumFeatures && (
 						<ClickableItem
+							isSelected={location.pathname === Routes.PLUTONIUM}
 							onClick={() => PremiumModalCommands.open()}
 							data-flx="channel.direct-message.dm-list.clickable-item.open"
 						>
@@ -574,7 +609,7 @@ export const DMList = observer(() => {
 									className={styles.clickableItemText}
 									data-flx="channel.direct-message.dm-list.clickable-item-text--3"
 								>
-									{PREMIUM_PRODUCT_NAME}
+									{getPremiumProductName()}
 								</span>
 							</div>
 						</ClickableItem>
@@ -631,7 +666,7 @@ export const DMList = observer(() => {
 					</div>
 					<div
 						className={styles.dmChannelList}
-						ref={dmListNavigationRef}
+						ref={dmChannelListRef}
 						role="list"
 						data-flx="channel.direct-message.dm-list.dm-channel-list"
 					>

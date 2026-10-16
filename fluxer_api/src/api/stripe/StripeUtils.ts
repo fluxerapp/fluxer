@@ -24,3 +24,17 @@ export function addMonthsClamp(date: Date, months: number): Date {
 	}
 	return d;
 }
+
+export function isMissingOrCancelledSubscriptionError(error: unknown): boolean {
+	if (!(error instanceof Error)) {
+		return false;
+	}
+	const normalizedMessage = error.message.toLowerCase();
+	return (
+		normalizedMessage.includes('no such subscription') ||
+		normalizedMessage.includes('cannot cancel a canceled subscription') ||
+		normalizedMessage.includes('cannot cancel a cancelled subscription') ||
+		normalizedMessage.includes('subscription is canceled') ||
+		normalizedMessage.includes('subscription is cancelled')
+	);
+}

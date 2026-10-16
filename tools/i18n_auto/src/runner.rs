@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -14,12 +15,14 @@ use crate::config::{
     DEFAULT_OPENROUTER_BASE_URL, DEFAULT_OPENROUTER_FALLBACK_MODELS,
     DEFAULT_OPENROUTER_HTTP_REFERER, DEFAULT_OPENROUTER_MODEL, DEFAULT_OPENROUTER_PROVIDER_SORT,
     DEFAULT_PROGRESS_INTERVAL_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS, DEFAULT_STRING_CONCURRENCY,
-    EnvOverlay, SOURCE_LOCALE, default_app_dir, env_value, is_auto_i18n_unchanged_comment,
-    locales_dir, positive_float_env, positive_int_env, trim_trailing_slash,
+    EmptyFallback, EnvOverlay, SOURCE_LOCALE, default_app_dir, env_value, locales_dir,
+    positive_float_env, positive_int_env, trim_trailing_slash,
 };
-use crate::llm::{
-    LocalizationClient, LocalizationResult, base_options, clean_translation_response,
+use crate::json_catalog::{
+    StaticJsonCatalogConfig, read_static_json_entries, rebuild_static_json_allow_replacing,
+    reset_static_json_translations,
 };
+use crate::llm::{LocalizationClient, base_options};
 use crate::locales::{display_name, is_supported_locale};
 use crate::openrouter::{
     OpenRouterClient, OpenRouterClientConfig, parse_openrouter_fallback_models,
@@ -36,10 +39,7 @@ use crate::tokens::{
     normalize_localized_capitalization, restore_masked_tokens, should_keep_unchanged,
     validate_locale_specific_localization, validate_localization,
 };
-use crate::ts_catalog::{
-    StaticTsCatalogConfig, StaticTsCatalogKind, read_static_ts_entries,
-    rebuild_static_ts_allow_replacing, reset_static_ts_translations,
-};
+use crate::ts_catalog::StaticTsCatalogKind;
 
 const FULL_TRANSLATION_ATTEMPTS: usize = 3;
 const SEGMENT_TRANSLATION_ATTEMPTS: usize = 2;
@@ -64,16 +64,13 @@ pub struct TranslateArgs {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CatalogLayout {
     NestedMessages,
-    FlatPo,
-    StaticTs(StaticTsCatalogConfig),
+    StaticJson(StaticJsonCatalogConfig),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
 pub enum CatalogName {
     #[value(name = "app")]
     App,
-    #[value(name = "marketing")]
-    Marketing,
     #[value(name = "errors")]
     Errors,
     #[value(name = "api-content", alias = "content")]
@@ -86,7 +83,6 @@ impl CatalogName {
     fn label(self) -> &'static str {
         match self {
             CatalogName::App => "app",
-            CatalogName::Marketing => "marketing",
             CatalogName::Errors => "errors",
             CatalogName::ApiContent => "api-content",
             CatalogName::Email => "email",
@@ -99,6 +95,7 @@ pub struct RuntimeConfig {
     pub app_dir: PathBuf,
     pub catalog_layout: CatalogLayout,
     pub locales_dir: PathBuf,
+    pub reviewed_unchanged_path: PathBuf,
     pub openrouter_api_key: String,
     pub openrouter_app_title: String,
     pub openrouter_base_url: String,
@@ -109,79 +106,77 @@ pub struct RuntimeConfig {
     pub request_timeout_seconds: f64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CatalogPaths {
+    pub locales_dir: PathBuf,
+    pub catalog_layout: CatalogLayout,
+    pub reviewed_unchanged_path: PathBuf,
+}
+
+pub fn catalog_paths(app_dir: &Path, catalog: CatalogName) -> CatalogPaths {
+    let repo_root = app_dir
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    match catalog {
+        CatalogName::App => {
+            let locales_dir = locales_dir(app_dir);
+            CatalogPaths {
+                reviewed_unchanged_path: locales_dir.join(AUTO_I18N_REVIEWED_UNCHANGED_FILE),
+                locales_dir,
+                catalog_layout: CatalogLayout::NestedMessages,
+            }
+        }
+        CatalogName::Errors => static_json_catalog_paths(
+            repo_root
+                .join("packages")
+                .join("errors")
+                .join("src")
+                .join("i18n"),
+            StaticTsCatalogKind::SimpleMessages,
+        ),
+        CatalogName::ApiContent => static_json_catalog_paths(
+            repo_root
+                .join("fluxer_api")
+                .join("src")
+                .join("api")
+                .join("content_i18n"),
+            StaticTsCatalogKind::SimpleMessages,
+        ),
+        CatalogName::Email => static_json_catalog_paths(
+            repo_root
+                .join("fluxer_api")
+                .join("pkgs")
+                .join("email")
+                .join("src")
+                .join("email_i18n"),
+            StaticTsCatalogKind::EmailTemplates,
+        ),
+    }
+}
+
+fn static_json_catalog_paths(i18n_dir: PathBuf, kind: StaticTsCatalogKind) -> CatalogPaths {
+    let weblate_dir = i18n_dir.join("weblate");
+    CatalogPaths {
+        locales_dir: weblate_dir.join("locales"),
+        catalog_layout: CatalogLayout::StaticJson(StaticJsonCatalogConfig {
+            kind,
+            source_path: weblate_dir.join("messages.json"),
+        }),
+        reviewed_unchanged_path: i18n_dir
+            .join("locales")
+            .join(AUTO_I18N_REVIEWED_UNCHANGED_FILE),
+    }
+}
+
 impl RuntimeConfig {
     pub fn from_env(env_overrides: &EnvOverlay, catalog: CatalogName) -> Self {
         let app_dir = default_app_dir();
-        let repo_root = app_dir
-            .parent()
-            .map(Path::to_path_buf)
-            .unwrap_or_else(|| PathBuf::from("."));
-        let (locales_dir, catalog_layout) = match catalog {
-            CatalogName::App => (locales_dir(&app_dir), CatalogLayout::NestedMessages),
-            CatalogName::Marketing => (
-                repo_root.join("packages/i18n/marketing"),
-                CatalogLayout::FlatPo,
-            ),
-            CatalogName::Errors => (
-                repo_root
-                    .join("packages")
-                    .join("errors")
-                    .join("src")
-                    .join("i18n")
-                    .join("locales"),
-                CatalogLayout::StaticTs(StaticTsCatalogConfig {
-                    kind: StaticTsCatalogKind::SimpleMessages,
-                    source_path: repo_root
-                        .join("packages")
-                        .join("errors")
-                        .join("src")
-                        .join("i18n")
-                        .join("ErrorI18nMessages.ts"),
-                    source_export: "ERROR_I18N_MESSAGES".to_string(),
-                    locale_function: "defineErrorI18nLocaleMessages".to_string(),
-                }),
-            ),
-            CatalogName::ApiContent => (
-                repo_root
-                    .join("fluxer_api")
-                    .join("src")
-                    .join("api")
-                    .join("content_i18n")
-                    .join("locales"),
-                CatalogLayout::StaticTs(StaticTsCatalogConfig {
-                    kind: StaticTsCatalogKind::SimpleMessages,
-                    source_path: repo_root
-                        .join("fluxer_api")
-                        .join("src")
-                        .join("api")
-                        .join("content_i18n")
-                        .join("ContentI18nMessages.ts"),
-                    source_export: "CONTENT_I18N_MESSAGES".to_string(),
-                    locale_function: "defineContentI18nLocaleMessages".to_string(),
-                }),
-            ),
-            CatalogName::Email => (
-                repo_root
-                    .join("fluxer_api")
-                    .join("pkgs")
-                    .join("email")
-                    .join("src")
-                    .join("email_i18n")
-                    .join("locales"),
-                CatalogLayout::StaticTs(StaticTsCatalogConfig {
-                    kind: StaticTsCatalogKind::EmailTemplates,
-                    source_path: repo_root
-                        .join("fluxer_api")
-                        .join("pkgs")
-                        .join("email")
-                        .join("src")
-                        .join("email_i18n")
-                        .join("EmailI18nMessages.ts"),
-                    source_export: "EMAIL_I18N_MESSAGES".to_string(),
-                    locale_function: "defineEmailI18nLocaleMessages".to_string(),
-                }),
-            ),
-        };
+        let CatalogPaths {
+            locales_dir,
+            catalog_layout,
+            reviewed_unchanged_path,
+        } = catalog_paths(&app_dir, catalog);
         let openrouter_base_url = trim_trailing_slash(&env_value(
             "OPENROUTER_BASE_URL",
             env_overrides,
@@ -219,6 +214,7 @@ impl RuntimeConfig {
             app_dir,
             catalog_layout,
             locales_dir,
+            reviewed_unchanged_path,
             openrouter_api_key,
             openrouter_app_title,
             openrouter_base_url,
@@ -228,16 +224,6 @@ impl RuntimeConfig {
             openrouter_provider_sort,
             request_timeout_seconds,
         }
-    }
-}
-
-trait EmptyFallback {
-    fn if_empty(self, fallback: impl FnOnce() -> String) -> String;
-}
-
-impl EmptyFallback for String {
-    fn if_empty(self, fallback: impl FnOnce() -> String) -> String {
-        if self.is_empty() { fallback() } else { self }
     }
 }
 
@@ -272,14 +258,9 @@ struct RawTranslateArgs {
     #[arg(
         long,
         value_enum,
-        help = "Catalog target to translate: app, marketing, errors, api-content, or email"
+        help = "Catalog target to translate: app, errors, api-content, or email"
     )]
     catalog: Option<CatalogName>,
-    #[arg(
-        long,
-        help = "Deprecated alias for --catalog marketing; use packages/i18n/marketing flat gettext catalogs"
-    )]
-    marketing: bool,
     #[arg(
         long = "msgctxt",
         help = "Only translate entries with this PO msgctxt or static catalog key; repeatable. Email fields use <template>.<subject|body>."
@@ -318,8 +299,6 @@ struct RawTranslateArgs {
     progress_interval: Option<f64>,
     #[arg(long)]
     dry_run: bool,
-    #[arg(long)]
-    self_test: bool,
 }
 
 pub fn translate_main(argv: &[String], env_overrides: &EnvOverlay) -> Result<u8> {
@@ -332,10 +311,6 @@ pub fn translate_main(argv: &[String], env_overrides: &EnvOverlay) -> Result<u8>
             return Ok(error.exit_code() as u8);
         }
     };
-    if raw.self_test {
-        run_self_test()?;
-        return Ok(0);
-    }
     let args = normalize_args(raw, env_overrides)?;
     let config = RuntimeConfig::from_env(env_overrides, args.catalog);
     run_translation(&config, &args)
@@ -363,15 +338,7 @@ fn normalize_args(raw: RawTranslateArgs, env_overrides: &EnvOverlay) -> Result<T
         reset = true;
         all = true;
     }
-    let catalog = match (raw.catalog, raw.marketing) {
-        (Some(CatalogName::Marketing), true) | (None, true) => CatalogName::Marketing,
-        (Some(catalog), false) => catalog,
-        (None, false) => CatalogName::App,
-        (Some(catalog), true) => bail!(
-            "--marketing cannot be combined with --catalog {}; use --catalog marketing",
-            catalog.label()
-        ),
-    };
+    let catalog = raw.catalog.unwrap_or(CatalogName::App);
     if !all && raw.locales.is_empty() {
         all = true;
     }
@@ -424,13 +391,12 @@ pub fn run_translation(config: &RuntimeConfig, args: &TranslateArgs) -> Result<u
             "Catalog layout: {}",
             match &config.catalog_layout {
                 CatalogLayout::NestedMessages => "nested messages.po",
-                CatalogLayout::FlatPo => "flat .po",
-                CatalogLayout::StaticTs(_) => "static TypeScript locale map",
+                CatalogLayout::StaticJson(_) => "weblate JSON locale catalog",
             }
         ),
         false,
     );
-    if let CatalogLayout::StaticTs(static_config) = &config.catalog_layout {
+    if let CatalogLayout::StaticJson(static_config) = &config.catalog_layout {
         log(
             &format!("Source catalog: {}", static_config.source_path.display()),
             false,
@@ -579,19 +545,9 @@ fn available_locales(config: &RuntimeConfig) -> Result<Vec<String>> {
                 }
                 entry.file_name().to_string_lossy().to_string()
             }
-            CatalogLayout::FlatPo => {
+            CatalogLayout::StaticJson(_) => {
                 let path = entry.path();
-                if path.extension().and_then(|ext| ext.to_str()) != Some("po") {
-                    continue;
-                }
-                let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) else {
-                    continue;
-                };
-                stem.to_string()
-            }
-            CatalogLayout::StaticTs(_) => {
-                let path = entry.path();
-                if path.extension().and_then(|ext| ext.to_str()) != Some("ts") {
+                if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
                     continue;
                 }
                 let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) else {
@@ -606,10 +562,6 @@ fn available_locales(config: &RuntimeConfig) -> Result<Vec<String>> {
     }
     locales.sort();
     Ok(locales)
-}
-
-pub fn should_translate_entry(entry: &Entry, locale: &str, args: &TranslateArgs) -> bool {
-    should_translate_entry_with_reviewed_unchanged(entry, locale, args, false)
 }
 
 fn should_translate_entry_with_reviewed_unchanged(
@@ -630,12 +582,8 @@ fn should_translate_entry_with_reviewed_unchanged(
         return true;
     }
     if args.refresh_source_equal
-        && locale != "en-GB"
+        && refreshes_source_equal_locale(locale, args)
         && entry.msgstr == entry.msgid
-        && !entry
-            .comments
-            .iter()
-            .any(|comment| is_auto_i18n_unchanged_comment(comment))
         && !reviewed_unchanged
     {
         return !should_keep_unchanged(&entry.msgid, locale);
@@ -643,8 +591,23 @@ fn should_translate_entry_with_reviewed_unchanged(
     false
 }
 
-fn reviewed_unchanged_path(config: &RuntimeConfig) -> PathBuf {
-    config.locales_dir.join(AUTO_I18N_REVIEWED_UNCHANGED_FILE)
+fn refreshes_source_equal_locale(locale: &str, args: &TranslateArgs) -> bool {
+    locale != "en-GB" || (!args.all && args.locales.iter().any(|selected| selected == locale))
+}
+
+fn prune_reviewed_unchanged(
+    store: &mut ReviewedUnchangedStore,
+    locale: &str,
+    entries: &[Entry],
+) -> usize {
+    let unchanged = entries
+        .iter()
+        .filter(|entry| entry.msgstr == entry.msgid)
+        .map(|entry| (entry.msgctxt.as_deref(), entry.msgid.as_str()))
+        .collect::<HashSet<_>>();
+    store.retain_locale(locale, |entry| {
+        unchanged.contains(&(entry.msgctxt.as_deref(), entry.msgid.as_str()))
+    })
 }
 
 pub fn build_locale_plan(
@@ -661,7 +624,7 @@ pub fn build_locale_plan(
     }
     let catalog_path = catalog_path(config, locale);
     let entries = read_catalog_entries(config, &catalog_path, args.reset)?;
-    let reviewed_unchanged = ReviewedUnchangedStore::load(reviewed_unchanged_path(config))?;
+    let reviewed_unchanged = ReviewedUnchangedStore::load(&config.reviewed_unchanged_path)?;
     let pending = entries
         .iter()
         .filter(|entry| {
@@ -725,7 +688,7 @@ pub fn process_locale<C: LocalizationClient>(
     let prompt_guidance = load_prompt_guidance(&config.app_dir, locale)?;
     let mut content = fs::read_to_string(&catalog_path)
         .with_context(|| format!("failed to read {}", catalog_path.display()))?;
-    let mut reviewed_unchanged = ReviewedUnchangedStore::load(reviewed_unchanged_path(config))?;
+    let mut reviewed_unchanged = ReviewedUnchangedStore::load(&config.reviewed_unchanged_path)?;
     if args.reset {
         content = reset_catalog_translations(config, &content)?;
         if !args.dry_run {
@@ -741,6 +704,21 @@ pub fn process_locale<C: LocalizationClient>(
         log(&format!("[{locale}] Reset catalog translations"), false);
     }
     let entries = read_catalog_entries_from_content(config, &content, false)?;
+    if !args.dry_run {
+        let pruned = prune_reviewed_unchanged(&mut reviewed_unchanged, locale, &entries);
+        if pruned > 0 {
+            reviewed_unchanged.save_if_dirty().with_context(|| {
+                format!(
+                    "failed to update reviewed-unchanged sidecar {}",
+                    reviewed_unchanged.path().display()
+                )
+            })?;
+            log(
+                &format!("[{locale}] Pruned {pruned} stale reviewed-unchanged entries"),
+                false,
+            );
+        }
+    }
     let pending = entries
         .into_iter()
         .filter(|entry| {
@@ -1155,10 +1133,10 @@ pub fn sync_source_locale(
     catalog_path: &Path,
     args: &TranslateArgs,
 ) -> Result<LocaleResult> {
-    if matches!(&config.catalog_layout, CatalogLayout::StaticTs(_)) {
+    if matches!(&config.catalog_layout, CatalogLayout::StaticJson(_)) {
         log(
             &format!(
-                "[{SOURCE_LOCALE}] Source strings live in the static source catalog; nothing to sync"
+                "[{SOURCE_LOCALE}] Source strings are in the static source catalog; nothing to sync"
             ),
             false,
         );
@@ -1214,7 +1192,7 @@ fn read_catalog_entries_from_content(
     reset: bool,
 ) -> Result<Vec<Entry>> {
     match &config.catalog_layout {
-        CatalogLayout::NestedMessages | CatalogLayout::FlatPo => {
+        CatalogLayout::NestedMessages => {
             let content = if reset {
                 reset_po_translations(content)?
             } else {
@@ -1222,18 +1200,18 @@ fn read_catalog_entries_from_content(
             };
             parse_po(&content)
         }
-        CatalogLayout::StaticTs(static_config) => {
-            let source_content = read_static_source_catalog(static_config)?;
-            read_static_ts_entries(static_config, &source_content, content, reset)
+        CatalogLayout::StaticJson(static_config) => {
+            let source_content = read_static_source_catalog(&static_config.source_path)?;
+            read_static_json_entries(static_config, &source_content, content, reset)
         }
     }
 }
 
 fn reset_catalog_translations(config: &RuntimeConfig, content: &str) -> Result<String> {
     match &config.catalog_layout {
-        CatalogLayout::NestedMessages | CatalogLayout::FlatPo => reset_po_translations(content),
-        CatalogLayout::StaticTs(static_config) => {
-            reset_static_ts_translations(static_config, content)
+        CatalogLayout::NestedMessages => reset_po_translations(content),
+        CatalogLayout::StaticJson(static_config) => {
+            reset_static_json_translations(static_config, content)
         }
     }
 }
@@ -1244,26 +1222,28 @@ fn rebuild_catalog_allow_replacing(
     translations: &[Translation],
 ) -> Result<String> {
     match &config.catalog_layout {
-        CatalogLayout::NestedMessages | CatalogLayout::FlatPo => {
-            rebuild_po_allow_replacing(content, translations)
-        }
-        CatalogLayout::StaticTs(static_config) => {
-            let source_content = read_static_source_catalog(static_config)?;
-            rebuild_static_ts_allow_replacing(static_config, &source_content, content, translations)
+        CatalogLayout::NestedMessages => rebuild_po_allow_replacing(content, translations),
+        CatalogLayout::StaticJson(static_config) => {
+            let source_content = read_static_source_catalog(&static_config.source_path)?;
+            rebuild_static_json_allow_replacing(
+                static_config,
+                &source_content,
+                content,
+                translations,
+            )
         }
     }
 }
 
-fn read_static_source_catalog(config: &StaticTsCatalogConfig) -> Result<String> {
-    fs::read_to_string(&config.source_path)
-        .with_context(|| format!("failed to read {}", config.source_path.display()))
+fn read_static_source_catalog(source_path: &Path) -> Result<String> {
+    fs::read_to_string(source_path)
+        .with_context(|| format!("failed to read {}", source_path.display()))
 }
 
 fn catalog_path(config: &RuntimeConfig, locale: &str) -> PathBuf {
     match &config.catalog_layout {
         CatalogLayout::NestedMessages => config.locales_dir.join(locale).join("messages.po"),
-        CatalogLayout::FlatPo => config.locales_dir.join(format!("{locale}.po")),
-        CatalogLayout::StaticTs(_) => config.locales_dir.join(format!("{locale}.ts")),
+        CatalogLayout::StaticJson(_) => config.locales_dir.join(format!("{locale}.json")),
     }
 }
 
@@ -1386,22 +1366,6 @@ pub fn localize_string<C: LocalizationClient>(
 struct BatchLocalizationOutcome {
     translations: Vec<Translation>,
     failed_entries: Vec<(Entry, String)>,
-}
-
-pub fn localize_batch<C: LocalizationClient>(
-    client: &C,
-    entries: &[Entry],
-    locale: &str,
-    prompt_guidance: &[String],
-) -> Result<Vec<Translation>> {
-    let outcome = localize_batch_partial(client, entries, locale, prompt_guidance)?;
-    if let Some((entry, reason)) = outcome.failed_entries.first() {
-        bail!(
-            "Batch response failed validation for {:?}: {reason}",
-            entry.msgid
-        );
-    }
-    Ok(outcome.translations)
 }
 
 fn localize_batch_partial<C: LocalizationClient>(
@@ -1627,12 +1591,7 @@ fn batch_value_to_str(value: &Value) -> Option<&str> {
 }
 
 fn sleep_before_retry(attempt: usize, base_seconds: f64) {
-    #[cfg(not(test))]
     std::thread::sleep(Duration::from_secs_f64(base_seconds * attempt as f64));
-    #[cfg(test)]
-    {
-        let _ = (attempt, base_seconds);
-    }
 }
 
 fn try_literal_token_localization<C: LocalizationClient>(
@@ -2096,725 +2055,5 @@ fn log(message: &str, error: bool) {
         eprintln!("{message}");
     } else {
         println!("{message}");
-    }
-}
-
-pub fn run_self_test() -> Result<()> {
-    let sample = "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain\\n\"\n\n\
-		#. Greeting shown on the welcome screen.\n\
-		#. placeholder {0}: user.name\n\
-		#: src/example.tsx:1\n\
-		msgctxt \"welcome title\"\n\
-		msgid \"Hello \\\"world\\\"\"\n\
-		msgstr \"\"\n\n\
-		#. Action label for account removal.\n\
-		#: src/example.tsx:2\n\
-		msgctxt \"verb\"\n\
-		msgid \"Delete\"\n\
-		msgstr \"\"\n\n\
-		#. Label for delete keyboard key.\n\
-		#: src/example.tsx:3\n\
-		msgctxt \"keyboard key\"\n\
-		msgid \"Delete\"\n\
-		msgstr \"\"\n\n\
-		#: src/example.tsx:4\n\
-		msgid \"C++\"\n\
-		msgstr \"C++\"\n\n\
-		#: src/example.tsx:5\n\
-		msgid \"Line one\\nLine two\"\n\
-		msgstr \"\"\n";
-    let entries = parse_po(sample)?;
-    if entries.len() != 5 {
-        bail!("Expected 5 entries, got {}", entries.len());
-    }
-    let welcome = entries
-        .iter()
-        .find(|entry| entry.msgctxt.as_deref() == Some("welcome title"))
-        .context("missing welcome entry")?;
-    if welcome.msgid != "Hello \"world\"" {
-        bail!("Failed to parse msgctxt entry");
-    }
-    let context = build_translation_context(welcome);
-    if !context.contains("Lingui msgctxt: welcome title") {
-        bail!("Failed to include msgctxt in context");
-    }
-    if !context.contains("Greeting shown on the welcome screen.") {
-        bail!("Failed to preserve translator comments");
-    }
-    if context.contains("placeholder {0}: user.name") {
-        bail!("Placeholder comment leaked into translator comments");
-    }
-    if !extract_placeholder_hints(welcome).contains(&"placeholder {0}: user.name".to_string()) {
-        bail!("Failed to extract placeholder hints");
-    }
-    let source_equal = Entry {
-        msgid: "Hello".to_string(),
-        msgstr: "Hello".to_string(),
-        ..Entry::default()
-    };
-    if should_translate_entry(
-        &source_equal,
-        "es-ES",
-        &TranslateArgs::for_test(false, None, false),
-    ) {
-        bail!("Source-equal entries should not refresh by default");
-    }
-    if !should_translate_entry(
-        &source_equal,
-        "es-ES",
-        &TranslateArgs::for_test(false, None, true),
-    ) {
-        bail!("Source-equal entries should refresh only when requested");
-    }
-    let reset = reset_po_translations(sample)?;
-    if parse_po(&reset)?
-        .iter()
-        .any(|entry| !entry.msgstr.is_empty())
-    {
-        bail!("Reset did not clear msgstr values");
-    }
-    let rebuilt = rebuild_po_allow_replacing(
-        &reset,
-        &[
-            Translation::new(
-                Some("welcome title".to_string()),
-                "Hello \"world\"",
-                "Bonjour \"monde\"",
-            ),
-            Translation::new(Some("verb".to_string()), "Delete", "Supprimer"),
-            Translation::new(Some("keyboard key".to_string()), "Delete", "Suppr"),
-            Translation {
-                msgctxt: None,
-                msgid: "C++".to_string(),
-                msgstr: "C++".to_string(),
-                reviewed_unchanged: true,
-                notes: String::new(),
-            },
-            Translation::new(None, "Line one\nLine two", "Ligne un\nLigne deux"),
-        ],
-    )?;
-    let rebuilt_entries = parse_po(&rebuilt)?;
-    if rebuilt_entries
-        .iter()
-        .find(|entry| entry.msgid == "Hello \"world\"")
-        .context("missing rebuilt welcome")?
-        .msgstr
-        != "Bonjour \"monde\""
-    {
-        bail!("Failed to update empty msgstr");
-    }
-    if rebuilt_entries
-        .iter()
-        .find(|entry| entry.msgctxt.as_deref() == Some("verb") && entry.msgid == "Delete")
-        .context("missing verb")?
-        .msgstr
-        != "Supprimer"
-    {
-        bail!("Failed to update msgctxt-specific translation");
-    }
-    if rebuilt_entries
-        .iter()
-        .find(|entry| entry.msgctxt.as_deref() == Some("keyboard key") && entry.msgid == "Delete")
-        .context("missing keyboard key")?
-        .msgstr
-        != "Suppr"
-    {
-        bail!("Failed to keep duplicate msgid translations separate by msgctxt");
-    }
-    validate_localization(
-        &Entry {
-            msgid: "{0, plural, one {# match} other {# matches}}".to_string(),
-            comments: vec!["#. placeholder {0}: matchCount".to_string()],
-            ..Entry::default()
-        },
-        "{0, plural, one {# coincidencia} other {# coincidencias}}",
-    )?;
-    validate_localization(
-        &Entry {
-            msgid: "{0} {1, plural, one {member} other {members}}".to_string(),
-            comments: vec!["#. placeholder {0}: count".to_string()],
-            ..Entry::default()
-        },
-        "{0} {1, plural, one {miembro} other {miembros}}",
-    )?;
-    let en_gb_prompt = build_translate_prompt(
-        &Entry::with_msgid("US color settings"),
-        "en-GB",
-        &[],
-        None,
-        true,
-    );
-    if !en_gb_prompt
-        .system_prompt
-        .contains("Do not translate \"US\" to \"UK\"")
-    {
-        bail!("Failed to include strict en-GB US/UK preservation guidance");
-    }
-    if !en_gb_prompt.system_prompt.contains("Keep our words.") {
-        bail!("Failed to include strict en-GB wording preservation guidance");
-    }
-    if !en_gb_prompt
-        .user_prompt
-        .contains("Source string:\nUS color settings")
-    {
-        bail!("Failed to isolate source string in translation prompt");
-    }
-    let masked_prompt = build_translate_prompt(
-        &Entry::with_msgid("{productName} needs {permissionName}."),
-        "fr",
-        &[],
-        None,
-        true,
-    );
-    if !masked_prompt
-        .user_prompt
-        .contains("Source string:\n{FLUXER_TOKEN_0} needs {FLUXER_TOKEN_1}.")
-    {
-        bail!("Failed to mask preserved tokens in source prompt");
-    }
-    if restore_masked_tokens(
-        "{FLUXER_TOKEN_0} a besoin de {FLUXER_TOKEN_1}.",
-        &masked_prompt.token_aliases,
-    ) != "{productName} a besoin de {permissionName}."
-    {
-        bail!("Failed to restore masked preserved tokens");
-    }
-    let long_permission_source = "{productName} needs access to screen recording. Open {macosSystemSettingsName} \u{2192} {macosPrivacyAndSecuritySettingsName} \u{2192} {macosScreenRecordingPermissionName}, allow {productName2}, then fully quit and restart {productName3}. If {productName4} is already enabled, fully quit and restart {productName5} so macOS applies the permission.";
-    let fallback_segments = split_source_for_segment_fallback(long_permission_source);
-    if fallback_segments.len() < 5 {
-        bail!("Failed to split long placeholder-heavy source for segmented fallback");
-    }
-    if !fallback_segments
-        .iter()
-        .any(|segment| segment.contains("{productName3}"))
-    {
-        bail!("Segment fallback did not isolate later placeholders");
-    }
-    if join_localized_segments(&["A,".to_string(), "B.".to_string(), "C !".to_string()])
-        != "A, B. C!"
-    {
-        bail!("Failed to join localized fallback segments cleanly");
-    }
-    struct FakeClient;
-    impl LocalizationClient for FakeClient {
-        fn base_url(&self) -> &str {
-            "http://fake"
-        }
-        fn model(&self) -> &str {
-            "fake"
-        }
-        fn request_timeout_seconds(&self) -> f64 {
-            1.0
-        }
-        fn localize(
-            &self,
-            _options: &Map<String, Value>,
-            _system_prompt: &str,
-            user_prompt: &str,
-        ) -> Result<LocalizationResult> {
-            if let Some((_before, draft)) =
-                user_prompt.split_once("Draft localization to polish:\n")
-            {
-                return Ok(LocalizationResult::localized(draft.trim()));
-            }
-            if !user_prompt.contains("Segment fallback:") {
-                bail!("force segmented fallback");
-            }
-            let source = user_prompt
-                .split_once("Source string:\n")
-                .map(|(_before, source)| source.trim())
-                .unwrap_or_default();
-            Ok(LocalizationResult::localized(source))
-        }
-    }
-    let segmented_translation = localize_string(
-        &FakeClient,
-        &Entry::with_msgid(long_permission_source),
-        "de",
-        &[],
-    )?;
-    if segmented_translation.msgstr != long_permission_source {
-        bail!("Segmented fallback failed to restore placeholders and source text");
-    }
-    if segmented_translation.notes != "segmented fallback" {
-        bail!("Segmented fallback did not report fallback note");
-    }
-    validate_locale_specific_localization(
-        &Entry::with_msgid("US color settings"),
-        "en-GB",
-        "US colour settings",
-    )?;
-    let error = validate_locale_specific_localization(
-        &Entry::with_msgid("US color settings"),
-        "en-GB",
-        "UK colour settings",
-    )
-    .unwrap_err();
-    if !error.to_string().contains("protected source term US") {
-        return Err(error);
-    }
-    if clean_translation_response("Translation: Bonjour") != "Bonjour" {
-        bail!("Failed to clean label-prefixed translation response");
-    }
-    if clean_translation_response("\"Bonjour\"") != "Bonjour" {
-        bail!("Failed to clean quoted translation response");
-    }
-    if normalize_localized_capitalization(
-        &Entry::with_msgid("(No content)"),
-        "es-ES",
-        "(Sin contenido)",
-    ) != "(sin contenido)"
-    {
-        bail!("Failed to normalize parenthesized localized label capitalization");
-    }
-    println!("i18n-auto self-test passed");
-    Ok(())
-}
-
-impl TranslateArgs {
-    fn for_test(dry_run: bool, limit: Option<usize>, refresh_source_equal: bool) -> Self {
-        Self {
-            all: false,
-            batch_size: 1,
-            catalog: CatalogName::App,
-            dry_run,
-            limit,
-            locales: Vec::new(),
-            msgctxts: Vec::new(),
-            refresh_source_equal,
-            reset: false,
-            string_concurrency: 1,
-            locale_concurrency: 1,
-            progress_interval: Duration::from_secs(1),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
-
-    struct EchoClient;
-
-    impl LocalizationClient for EchoClient {
-        fn base_url(&self) -> &str {
-            "http://fake"
-        }
-
-        fn model(&self) -> &str {
-            "fake"
-        }
-
-        fn request_timeout_seconds(&self) -> f64 {
-            1.0
-        }
-
-        fn localize(
-            &self,
-            _options: &Map<String, Value>,
-            _system_prompt: &str,
-            user_prompt: &str,
-        ) -> Result<LocalizationResult> {
-            let source = user_prompt
-                .split_once("Source string:\n")
-                .map(|(_before, source)| source.trim())
-                .unwrap_or_default();
-            Ok(LocalizationResult::localized(source))
-        }
-    }
-
-    #[test]
-    fn parses_batch_response_after_echoed_input_json() {
-        let object = parse_batch_response_object(
-            r#"Items JSON:
-[{"id":"0","source":"Search: {searchQuery}"}]
-
-{"0":"Suchen: {searchQuery}"}"#,
-        )
-        .unwrap();
-        assert_eq!(
-            object.get("0").and_then(Value::as_str),
-            Some("Suchen: {searchQuery}")
-        );
-    }
-
-    #[test]
-    fn parses_wrapped_batch_response_object() {
-        let object = parse_batch_response_object(
-            r#"{"translations":{"0":"Hallo","1":{"localized":"Welt"}}}"#,
-        )
-        .unwrap();
-        assert_eq!(object.get("0").and_then(Value::as_str), Some("Hallo"));
-        assert_eq!(
-            object
-                .get("1")
-                .and_then(Value::as_object)
-                .and_then(|value| value.get("localized"))
-                .and_then(Value::as_str),
-            Some("Welt")
-        );
-    }
-
-    #[test]
-    fn parses_array_batch_response() {
-        let object = parse_batch_response_object(
-            r#"[{"id":"0","localized":"Bonjour"},{"id":1,"translation":"Monde"}]"#,
-        )
-        .unwrap();
-        assert_eq!(object.get("0").and_then(Value::as_str), Some("Bonjour"));
-        assert_eq!(object.get("1").and_then(Value::as_str), Some("Monde"));
-    }
-
-    #[test]
-    fn parses_fenced_batch_response_with_trailing_token() {
-        let object =
-            parse_batch_response_object("```json\n{\"0\":\"bonjour\"}\n```<|im_end|>").unwrap();
-        assert_eq!(object.get("0").and_then(Value::as_str), Some("bonjour"));
-    }
-
-    #[test]
-    fn selects_supported_non_source_locales_for_all() {
-        let temp = tempdir().unwrap();
-        let locales_dir = temp.path().join("src/features/i18n/locales");
-        for locale in ["en-US", "de", "fr", "zz"] {
-            fs::create_dir_all(locales_dir.join(locale)).unwrap();
-        }
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs {
-            all: true,
-            ..TranslateArgs::for_test(true, Some(0), false)
-        };
-        assert_eq!(select_locales(&config, &args).unwrap(), vec!["de", "fr"]);
-    }
-
-    #[test]
-    fn rejects_unsupported_explicit_locale() {
-        let temp = tempdir().unwrap();
-        fs::create_dir_all(temp.path().join("locales")).unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir: temp.path().join("locales"),
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs {
-            locales: vec!["zz".to_string()],
-            ..TranslateArgs::for_test(true, Some(0), false)
-        };
-        assert!(
-            select_locales(&config, &args)
-                .unwrap_err()
-                .to_string()
-                .contains("Unsupported locale")
-        );
-    }
-
-    #[test]
-    fn source_equal_refresh_respects_reviewed_unchanged_marker() {
-        let reviewed = Entry {
-            msgid: "Hello".to_string(),
-            msgstr: "Hello".to_string(),
-            comments: vec![crate::config::AUTO_I18N_UNCHANGED_COMMENT.to_string()],
-            ..Entry::default()
-        };
-        let legacy_reviewed = Entry {
-            msgid: "Goodbye".to_string(),
-            msgstr: "Goodbye".to_string(),
-            comments: vec![crate::config::AUTO_I18N_LEGACY_UNCHANGED_COMMENT.to_string()],
-            ..Entry::default()
-        };
-        let unreviewed = Entry {
-            msgid: "Welcome".to_string(),
-            msgstr: "Welcome".to_string(),
-            ..Entry::default()
-        };
-        let args = TranslateArgs::for_test(false, None, true);
-        assert!(!should_translate_entry(&reviewed, "de", &args));
-        assert!(!should_translate_entry(&legacy_reviewed, "de", &args));
-        assert!(should_translate_entry(&unreviewed, "de", &args));
-    }
-
-    #[test]
-    fn source_equal_refresh_respects_reviewed_unchanged_sidecar() {
-        let temp = tempdir().unwrap();
-        let locales_dir = temp.path().join("src/features/i18n/locales");
-        let de_dir = locales_dir.join("de");
-        fs::create_dir_all(&de_dir).unwrap();
-        fs::write(
-            de_dir.join("messages.po"),
-            "msgid \"\"\nmsgstr \"\"\n\n#: src/example.tsx:1\nmsgid \"Hello\"\nmsgstr \"Hello\"\n",
-        )
-        .unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs::for_test(true, None, true);
-        assert_eq!(build_locale_plan(&config, "de", &args).unwrap().pending, 1);
-
-        let mut reviewed_unchanged =
-            ReviewedUnchangedStore::load(reviewed_unchanged_path(&config)).unwrap();
-        reviewed_unchanged.mark("de", None, "Hello");
-        reviewed_unchanged.save_if_dirty().unwrap();
-
-        assert_eq!(build_locale_plan(&config, "de", &args).unwrap().pending, 0);
-    }
-
-    #[test]
-    fn reset_dry_run_plans_without_writing_file() {
-        let temp = tempdir().unwrap();
-        let locales_dir = temp.path().join("src/features/i18n/locales");
-        let de_dir = locales_dir.join("de");
-        fs::create_dir_all(&de_dir).unwrap();
-        let po_path = de_dir.join("messages.po");
-        let original =
-            "msgid \"\"\nmsgstr \"\"\n\n#: src/example.tsx:1\nmsgid \"Hello\"\nmsgstr \"Hallo\"\n";
-        fs::write(&po_path, original).unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs {
-            reset: true,
-            dry_run: true,
-            limit: Some(0),
-            ..TranslateArgs::for_test(true, Some(0), false)
-        };
-        let plan = build_locale_plan(&config, "de", &args).unwrap();
-        assert_eq!(plan.pending, 1);
-        let result = process_locale(&config, &EchoClient, "de", &args).unwrap();
-        assert_eq!(result.translated, 0);
-        assert_eq!(fs::read_to_string(&po_path).unwrap(), original);
-    }
-
-    #[test]
-    fn reset_write_clears_file_when_not_dry_run() {
-        let temp = tempdir().unwrap();
-        let locales_dir = temp.path().join("src/features/i18n/locales");
-        let de_dir = locales_dir.join("de");
-        fs::create_dir_all(&de_dir).unwrap();
-        let po_path = de_dir.join("messages.po");
-        fs::write(
-            &po_path,
-            "msgid \"\"\nmsgstr \"\"\n\n#: src/example.tsx:1\nmsgid \"Hello\"\nmsgstr \"Hallo\"\n",
-        )
-        .unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs {
-            reset: true,
-            dry_run: false,
-            limit: Some(0),
-            ..TranslateArgs::for_test(false, Some(0), false)
-        };
-        process_locale(&config, &EchoClient, "de", &args).unwrap();
-        let entries = parse_po(&fs::read_to_string(&po_path).unwrap()).unwrap();
-        assert_eq!(entries[0].msgstr, "");
-    }
-
-    #[test]
-    fn static_ts_catalog_processes_missing_entries() {
-        let temp = tempdir().unwrap();
-        let source_path = temp.path().join("SourceMessages.ts");
-        fs::write(
-            &source_path,
-            "export const SOURCE_MESSAGES = {\n\t'hello': 'Hello',\n\t'bye': 'Bye',\n} as const;\n",
-        )
-        .unwrap();
-        let locales_dir = temp.path().join("locales");
-        fs::create_dir_all(&locales_dir).unwrap();
-        let locale_path = locales_dir.join("de.ts");
-        fs::write(
-            &locale_path,
-            "import {defineLocaleMessages} from '../Messages';\n\nexport const DE = defineLocaleMessages({\n\t'hello': 'Hallo',\n});\n",
-        )
-        .unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::StaticTs(StaticTsCatalogConfig {
-                kind: StaticTsCatalogKind::SimpleMessages,
-                source_path,
-                source_export: "SOURCE_MESSAGES".to_string(),
-                locale_function: "defineLocaleMessages".to_string(),
-            }),
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        let args = TranslateArgs {
-            catalog: CatalogName::Errors,
-            dry_run: false,
-            ..TranslateArgs::for_test(false, None, false)
-        };
-        let plan = build_locale_plan(&config, "de", &args).unwrap();
-        assert_eq!(plan.pending, 1);
-        let result = process_locale(&config, &EchoClient, "de", &args).unwrap();
-        assert_eq!(result.translated, 1);
-        assert!(
-            fs::read_to_string(&locale_path)
-                .unwrap()
-                .contains("'bye': 'Bye',")
-        );
-    }
-
-    #[test]
-    fn process_locale_runs_strings_concurrently() {
-        let temp = tempdir().unwrap();
-        let locales_dir = temp.path().join("src/features/i18n/locales");
-        let de_dir = locales_dir.join("de");
-        fs::create_dir_all(&de_dir).unwrap();
-        let po_path = de_dir.join("messages.po");
-        fs::write(
-            &po_path,
-            "msgid \"\"\nmsgstr \"\"\n\n\
-			#: src/example.tsx:1\nmsgid \"Alpha\"\nmsgstr \"\"\n\n\
-			#: src/example.tsx:2\nmsgid \"Bravo\"\nmsgstr \"\"\n\n\
-			#: src/example.tsx:3\nmsgid \"Charlie\"\nmsgstr \"\"\n\n\
-			#: src/example.tsx:4\nmsgid \"Delta\"\nmsgstr \"\"\n",
-        )
-        .unwrap();
-        let config = RuntimeConfig {
-            app_dir: temp.path().to_path_buf(),
-            catalog_layout: CatalogLayout::NestedMessages,
-            locales_dir,
-            openrouter_api_key: "fake".to_string(),
-            openrouter_app_title: "fake".to_string(),
-            openrouter_base_url: "http://fake".to_string(),
-            openrouter_fallback_models: Vec::new(),
-            openrouter_http_referer: "http://fake".to_string(),
-            openrouter_model: "fake".to_string(),
-            openrouter_provider_sort: "throughput".to_string(),
-            request_timeout_seconds: 1.0,
-        };
-        struct TrackingClient {
-            active: std::sync::atomic::AtomicUsize,
-            max_active: std::sync::atomic::AtomicUsize,
-        }
-        impl TrackingClient {
-            fn record_active(&self, active: usize) {
-                let mut observed = self.max_active.load(std::sync::atomic::Ordering::SeqCst);
-                while active > observed {
-                    match self.max_active.compare_exchange(
-                        observed,
-                        active,
-                        std::sync::atomic::Ordering::SeqCst,
-                        std::sync::atomic::Ordering::SeqCst,
-                    ) {
-                        Ok(_) => break,
-                        Err(next_observed) => observed = next_observed,
-                    }
-                }
-            }
-        }
-        impl LocalizationClient for TrackingClient {
-            fn base_url(&self) -> &str {
-                "http://fake"
-            }
-
-            fn model(&self) -> &str {
-                "fake"
-            }
-
-            fn request_timeout_seconds(&self) -> f64 {
-                1.0
-            }
-
-            fn localize(
-                &self,
-                _options: &Map<String, Value>,
-                _system_prompt: &str,
-                user_prompt: &str,
-            ) -> Result<LocalizationResult> {
-                let active = self
-                    .active
-                    .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
-                    + 1;
-                self.record_active(active);
-                std::thread::sleep(Duration::from_millis(40));
-                self.active
-                    .fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
-                let source = user_prompt
-                    .split_once("Source string:\n")
-                    .map(|(_before, source)| source.trim())
-                    .unwrap_or_default();
-                Ok(LocalizationResult::localized(source))
-            }
-        }
-        let client = TrackingClient {
-            active: std::sync::atomic::AtomicUsize::new(0),
-            max_active: std::sync::atomic::AtomicUsize::new(0),
-        };
-        let args = TranslateArgs {
-            string_concurrency: 2,
-            dry_run: true,
-            ..TranslateArgs::for_test(true, None, false)
-        };
-        let result = process_locale(&config, &client, "de", &args).unwrap();
-        assert_eq!(result.translated, 4);
-        assert_eq!(result.errors, 0);
-        assert!(
-            client.max_active.load(std::sync::atomic::Ordering::SeqCst) >= 2,
-            "expected at least two active localization calls"
-        );
-    }
-
-    #[test]
-    fn self_test_passes() {
-        run_self_test().unwrap();
     }
 }

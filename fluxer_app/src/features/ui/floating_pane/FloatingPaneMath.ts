@@ -10,8 +10,6 @@ export type ResizeEdge =
 	| 'top-right'
 	| 'bottom-left'
 	| 'bottom-right';
-
-export const ALL_CORNERS: ReadonlyArray<Corner> = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
 export const ALL_RESIZE_EDGES: ReadonlyArray<ResizeEdge> = [
 	'top',
 	'bottom',
@@ -23,7 +21,7 @@ export const ALL_RESIZE_EDGES: ReadonlyArray<ResizeEdge> = [
 	'bottom-right',
 ];
 
-export interface Size {
+interface Size {
 	width: number;
 	height: number;
 }
@@ -64,7 +62,7 @@ export interface FlingOptions {
 	axisVelocityFloor: number;
 }
 
-export const DEFAULT_FLING_OPTIONS: FlingOptions = {
+const DEFAULT_FLING_OPTIONS: FlingOptions = {
 	lookaheadSeconds: 0.2,
 	strongVelocity: 550,
 	axisVelocityFloor: 180,
@@ -85,12 +83,12 @@ export function getPaneHeight(width: number, aspectRatio: number): number {
 	return Math.round(width / aspectRatio);
 }
 
-export interface WidthRange {
+interface WidthRange {
 	min: number;
 	max: number;
 }
 
-export function getEffectiveWidthRange(geometry: FloatingPaneGeometry): WidthRange {
+function getEffectiveWidthRange(geometry: FloatingPaneGeometry): WidthRange {
 	const {viewport, edgePadding, topInset, aspectRatio, minWidth, maxWidth} = geometry;
 	const availableWidth = Math.max(0, viewport.width - edgePadding * 2);
 	const availableHeight = Math.max(0, viewport.height - edgePadding * 2 - topInset);
@@ -117,7 +115,7 @@ export function getDragBounds(geometry: FloatingPaneGeometry, width: number): Dr
 	return {minX, maxX, minY, maxY};
 }
 
-export function clampPoint(point: Point, bounds: DragBounds): Point {
+function clampPoint(point: Point, bounds: DragBounds): Point {
 	return {
 		x: clamp(point.x, bounds.minX, bounds.maxX),
 		y: clamp(point.y, bounds.minY, bounds.maxY),
@@ -137,7 +135,7 @@ export function getCornerPoint(corner: Corner, bounds: DragBounds): Point {
 	}
 }
 
-export function snapPointToCorner(point: Point, bounds: DragBounds): Corner {
+function snapPointToCorner(point: Point, bounds: DragBounds): Corner {
 	const midX = (bounds.minX + bounds.maxX) / 2;
 	const midY = (bounds.minY + bounds.maxY) / 2;
 	const isRight = point.x >= midX;
@@ -214,23 +212,4 @@ export function computeResize(
 	const bounds = getDragBounds(geometry, nextWidth);
 	const offset = clampPoint({x: paneStartX + offsetXDelta, y: paneStartY + offsetYDelta}, bounds);
 	return {width: nextWidth, offset};
-}
-
-export interface GeometryReconcileInput {
-	corner: Corner;
-	width: number;
-	geometry: FloatingPaneGeometry;
-}
-
-export interface GeometryReconcileOutput {
-	corner: Corner;
-	width: number;
-	offset: Point;
-}
-
-export function reconcileToGeometry({corner, width, geometry}: GeometryReconcileInput): GeometryReconcileOutput {
-	const nextWidth = clampWidth(width, geometry);
-	const bounds = getDragBounds(geometry, nextWidth);
-	const offset = getCornerPoint(corner, bounds);
-	return {corner, width: nextWidth, offset};
 }

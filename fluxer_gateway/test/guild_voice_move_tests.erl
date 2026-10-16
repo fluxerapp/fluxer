@@ -271,6 +271,9 @@ guild_server_stub(StateData, TestPid) ->
 
 guild_server_stub_loop(StateData, TestPid) ->
     receive
+        {'$gen_call', From, {get_voice_guild_state}} ->
+            gen:reply(From, undefined),
+            guild_server_stub_loop(StateData, TestPid);
         {'$gen_call', From, {get_sessions}} ->
             gen:reply(From, StateData),
             guild_server_stub_loop(StateData, TestPid);

@@ -19,7 +19,7 @@ interface PurchaseHistorySectionProps {
 export const PurchaseHistorySection: React.FC<PurchaseHistorySectionProps> = observer(
 	({premiumState, loadingPortal, handleOpenCustomerPortal}) => {
 		const invoices = premiumState?.billing.invoices ?? [];
-		const [invoicesExpanded, setInvoicesExpanded] = useState(invoices.length > 0);
+		const [invoicesExpanded, setInvoicesExpanded] = useState(false);
 		return (
 			<section className={styles.section} data-flx="app.plutonium.purchase-history-section.section">
 				<div className={styles.card} data-flx="app.plutonium.purchase-history-section.card">
@@ -28,12 +28,6 @@ export const PurchaseHistorySection: React.FC<PurchaseHistorySectionProps> = obs
 							<h3 className={styles.title} data-flx="app.plutonium.purchase-history-section.title">
 								<Trans>Purchase history</Trans>
 							</h3>
-							<p className={styles.description} data-flx="app.plutonium.purchase-history-section.description">
-								<Trans>
-									Your recent invoices. To change the payment method for your subscription, add or choose one in the
-									billing portal and make it the default.
-								</Trans>
-							</p>
 						</div>
 						<Button
 							variant="secondary"

@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from '../core/state';
-import type {VoiceEngineV2Participant, VoiceEngineV2Track, VoiceEngineV2TrackSource} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2Participant,
+	VoiceEngineV2Track,
+	VoiceEngineV2TrackSource,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {test} from 'vitest';
 
 const PARTICIPANT_COUNT = 8;
 const TRACKS_PER_PARTICIPANT = 4;
@@ -52,16 +56,16 @@ function buildRealisticSnapshot(): VoiceEngineV2Snapshot {
 const realisticSnapshot = buildRealisticSnapshot();
 const serializedSnapshot = JSON.stringify(realisticSnapshot);
 
-describe('voice engine v2 snapshot serialise/deserialise baseline', () => {
-	bench('JSON.stringify snapshot (8 participants × 4 tracks)', () => {
+test('voice engine v2 snapshot serialise/deserialise baseline', async ({bench}) => {
+	await bench('JSON.stringify snapshot (8 participants × 4 tracks)', () => {
 		JSON.stringify(realisticSnapshot);
-	});
+	}).run();
 
-	bench('JSON.parse snapshot (8 participants × 4 tracks)', () => {
+	await bench('JSON.parse snapshot (8 participants × 4 tracks)', () => {
 		JSON.parse(serializedSnapshot);
-	});
+	}).run();
 
-	bench('JSON.stringify + JSON.parse round-trip', () => {
+	await bench('JSON.stringify + JSON.parse round-trip', () => {
 		JSON.parse(JSON.stringify(realisticSnapshot));
-	});
+	}).run();
 });

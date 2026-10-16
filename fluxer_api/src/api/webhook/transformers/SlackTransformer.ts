@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {safeUrl} from '@app/api/utils/StringUtils';
 import type {
 	SlackWebhookRequest,
 	WebhookMessageRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import {ColorType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {safeUrl} from '../../utils/StringUtils';
 
 type SlackAttachment = NonNullable<SlackWebhookRequest['attachments']>[number];
 type SlackAttachmentField = NonNullable<SlackAttachment['fields']>[number];

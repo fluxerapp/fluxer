@@ -15,7 +15,8 @@ use shard_impl::GifsShard;
 async fn main() -> anyhow::Result<()> {
     fluxer_svc::init_tracing();
     let config = ServiceConfig::from_env()?;
-    let transport = NatsTransport::connect(&config.nats_url).await?;
+    let transport =
+        NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref()).await?;
 
     tracing::info!(
         service = config.service_name,
@@ -32,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
             fluxer_svc::router::run_router(&config, router, transport).await
         }
         Mode::Shard => {
-            let shard = GifsShard::new(&config)?;
+            let shard = GifsShard::new()?;
             fluxer_svc::shard::run_shard(&config, shard, transport).await
         }
     }

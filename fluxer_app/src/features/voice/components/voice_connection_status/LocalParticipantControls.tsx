@@ -3,24 +3,21 @@
 import {TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
-import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {ActiveScreenShareMenu} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {
 	CameraPreviewModalInRoom,
 	CameraPreviewModalStandalone,
 } from '@app/features/voice/components/modals/CameraPreviewModal';
 import {
 	openScreenSharePickerModal,
-	openScreenShareSourceSwitcherModal,
 	preloadScreenSharePickerSources,
 } from '@app/features/voice/components/modals/ScreenSharePickerModal';
-import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
 import styles from '@app/features/voice/components/VoiceConnectionStatus.module.css';
 import {VoiceCameraSettingsMenu} from '@app/features/voice/components/VoiceSettingsMenus';
 import {selectLocalParticipantControlsViewState} from '@app/features/voice/components/voice_connection_status/LocalParticipantControlsStateMachine';
@@ -36,6 +33,10 @@ import {
 	VOICE_SHARE_SCREEN_DESCRIPTOR,
 	VOICE_TURN_ON_CAMERA_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR as NO_CAMERA_PERMISSION_DESCRIPTOR,
+	NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -45,27 +46,12 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent as ReactMouseEvent, useCallback} from 'react';
 
-const CHANGE_SOURCE_DESCRIPTOR = msg({
-	message: 'Change source',
-	comment: 'Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.',
-});
-const END_SCREEN_SHARE_DESCRIPTOR = msg({
-	message: 'End screen share',
-	comment: 'Button label that stops the current screen share.',
-});
 const WAITING_FOR_CONNECTION_DESCRIPTOR = msg({
 	message: 'Waiting for connection...',
 	comment:
 		'Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.',
 });
-const NO_CAMERA_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment: 'Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.',
-});
-const NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't share your screen in this channel",
-	comment: 'Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.',
-});
+
 const CONFIGURE_OR_END_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'Configure or end screen share',
 	comment: 'Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.',
@@ -146,56 +132,20 @@ export const LocalParticipantControls = observer(() => {
 			if (!isConnected || !isScreenShareEnabled) return;
 			event.preventDefault();
 			event.stopPropagation();
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<>
-					<MenuGroup data-flx="voice.voice-connection-status.open-screen-share-menu.menu-group">
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-connection-status.open-screen-share-menu.icon"
-								/>
-							}
-							onClick={async () => {
-								onClose();
-								try {
-									await openScreenShareSourceSwitcherModal();
-								} catch (error) {
-									logger.error('Failed to open screen share source switcher:', error);
-								}
-							}}
-							data-flx="voice.voice-connection-status.open-screen-share-menu.menu-item.close"
-						>
-							{i18n._(CHANGE_SOURCE_DESCRIPTOR)}
-						</MenuItem>
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-connection-status.open-screen-share-menu.icon--2"
-								/>
-							}
-							danger
-							onClick={async () => {
-								onClose();
-								await MediaEngine.setScreenShareEnabled(false);
-							}}
-							data-flx="voice.voice-connection-status.open-screen-share-menu.menu-item.close--2"
-						>
-							{i18n._(END_SCREEN_SHARE_DESCRIPTOR)}
-						</MenuItem>
-					</MenuGroup>
-					<StreamSettingsMenuContent
-						displayShareEnvironment={displayShareEnvironment}
-						shareContext={ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display'}
-						data-flx="voice.voice-connection-status.open-screen-share-menu.stream-settings-menu-content"
-					/>
-				</>
+				<ActiveScreenShareMenu
+					onClose={onClose}
+					displayShareEnvironment={displayShareEnvironment}
+					shareContext={shareContext}
+					shareContextResolved={shareContextResolved}
+					iconClassName={styles.icon}
+					data-flx="voice.voice-connection-status.open-screen-share-menu.active-screen-share-menu"
+				/>
 			));
 		},
-		[displayShareEnvironment, isConnected, isScreenShareEnabled, i18n],
+		[displayShareEnvironment, isConnected, isScreenShareEnabled],
 	);
 	const handleScreenShare = useCallback(async () => {
 		if (!isConnected) return;

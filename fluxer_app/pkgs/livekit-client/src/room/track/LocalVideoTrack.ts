@@ -11,13 +11,14 @@ import {
 import type {SignalClient} from '../../api/SignalClient.ts';
 import type {StructuredLogger} from '../../logger.ts';
 import {TrackEvent} from '../events.ts';
-import {ScalabilityMode} from '../participant/publishUtils.ts';
+import {computeTrackBackupEncodings, computeVideoEncodings, ScalabilityMode} from '../participant/publishUtils.ts';
 import type {VideoSenderStats} from '../stats.ts';
 import {computeBitrate, monitorFrequency} from '../stats.ts';
 import type {LoggerOptions} from '../types.ts';
-import {isFireFox, isMobile, isSVCCodec, isWeb} from '../utils.ts';
+import {isFireFox, isMobile, isSVCCodec, isSVCSimulcast, isWeb} from '../utils.ts';
 import LocalTrack from './LocalTrack.ts';
-import type {VideoCaptureOptions, VideoCodec} from './options.ts';
+import type {TrackPublishOptions, VideoCaptureOptions, VideoCodec} from './options.ts';
+import {isBackupVideoCodec} from './options.ts';
 import type {TrackProcessor} from './processor/types.ts';
 import {Track, VideoQuality} from './Track.ts';
 import {constraintsForOptions} from './utils.ts';
@@ -39,6 +40,33 @@ export class SimulcastTrackInfo {
 
 const refreshSubscribedCodecAfterNewCodec = 5000;
 
+function restoreSecondarySenderTrack(
+	sender: RTCRtpSender | undefined,
+	track: MediaStreamTrack | null,
+): Promise<void> | undefined {
+	if (!sender) return undefined;
+	if (sender.track === track) return undefined;
+	if (track != null && track.readyState !== 'live') return undefined;
+	return sender.replaceTrack(track);
+}
+
+function createProcessorRecoveryError(
+	primaryError: unknown,
+	cleanupErrors: ReadonlyArray<unknown>,
+	rollbackErrors: ReadonlyArray<unknown>,
+): AggregateError {
+	const recoveryErrors: Array<AggregateError> = [];
+	if (cleanupErrors.length > 0) {
+		recoveryErrors.push(new AggregateError(cleanupErrors, 'Video processor candidate cleanup failed'));
+	}
+	if (rollbackErrors.length > 0) {
+		recoveryErrors.push(new AggregateError(rollbackErrors, 'Video processor secondary sender rollback failed'));
+	}
+	return new AggregateError(recoveryErrors, 'Video processor apply failed and recovery was incomplete', {
+		cause: primaryError,
+	});
+}
+
 export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 	signalClient?: SignalClient;
 
@@ -57,7 +85,8 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 	private isCpuConstrained: boolean = false;
 
 	private optimizeForPerformance: boolean = false;
-
+	publishOptions?: TrackPublishOptions;
+	lastEncodedDimensions?: Track.Dimensions;
 	override get sender(): RTCRtpSender | undefined {
 		return this._sender;
 	}
@@ -155,7 +184,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 
 			if (this.source === Track.Source.Camera && !this.isUserProvided) {
 				this.log.debug('reacquiring camera track', this.logContext);
-				await this.restartTrack();
+				await this.restart(undefined, true);
 			}
 			await super.unmute();
 			return this;
@@ -225,6 +254,10 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		return items;
 	}
 
+	private isSvcPublish(codec?: string): boolean {
+		return isSVCCodec(codec) && !isSVCSimulcast(codec, this.publishOptions);
+	}
+
 	setPublishingQuality(maxQuality: VideoQuality) {
 		const qualities: Array<SubscribedQuality> = [];
 		for (let q = VideoQuality.LOW; q <= VideoQuality.HIGH; q += 1) {
@@ -236,7 +269,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 			);
 		}
 		this.log.debug(`setting publishing quality. max quality ${maxQuality}`, this.logContext);
-		this.setPublishingLayers(isSVCCodec(this.codec), qualities);
+		this.setPublishingLayers(this.isSvcPublish(this.codec), qualities);
 	}
 
 	async restartTrack(options?: VideoCaptureOptions) {
@@ -251,35 +284,205 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 
 		this.isCpuConstrained = false;
 
+		const processedTrack = this.processor?.processedTrack;
+
 		for await (const sc of this.simulcastCodecs.values()) {
 			if (sc.sender && sc.sender.transport?.state !== 'closed') {
-				sc.mediaStreamTrack = this.mediaStreamTrack.clone();
-				await sc.sender.replaceTrack(sc.mediaStreamTrack);
+				const previousTrack = sc.mediaStreamTrack;
+				const nextTrack = this._mediaStreamTrack.clone();
+				try {
+					await sc.sender.replaceTrack(processedTrack ?? nextTrack);
+					sc.mediaStreamTrack = nextTrack;
+					previousTrack.stop();
+				} catch (error) {
+					nextTrack.stop();
+					throw error;
+				}
 			}
+		}
+
+		await this.onSenderTrackSwapped();
+	}
+
+	protected override async onSenderTrackSwapped(): Promise<void> {
+		await this.refreshSenderEncodings();
+	}
+
+	private async refreshSenderEncodings() {
+		if (!this.sender || !this.publishOptions || this.optimizeForPerformance) {
+			return;
+		}
+		const unlock = await this.senderLock.lock();
+		try {
+			let dims: Track.Dimensions;
+			try {
+				dims = await this.waitForDimensions();
+			} catch (e) {
+				this.log.warn('could not determine new track dimensions, skipping encoding recompute', {
+					...this.logContext,
+					error: e,
+				});
+				return;
+			}
+
+			if (
+				this.lastEncodedDimensions &&
+				this.lastEncodedDimensions.width === dims.width &&
+				this.lastEncodedDimensions.height === dims.height
+			) {
+				return;
+			}
+
+			const isScreenShare = this.source === Track.Source.ScreenShare;
+			const newEncodings = computeVideoEncodings(isScreenShare, dims.width, dims.height, {
+				...this.publishOptions,
+			});
+
+			await this.applyEncodingsToSender(this.sender, newEncodings);
+			this.encodings = newEncodings;
+			this.lastEncodedDimensions = dims;
+
+			for (const [codec, sc] of this.simulcastCodecs) {
+				if (!sc.sender || sc.sender.transport?.state === 'closed') {
+					continue;
+				}
+				if (!isBackupVideoCodec(codec)) {
+					continue;
+				}
+				const backupOpts: TrackPublishOptions = {...this.publishOptions};
+				const backupEncodings = computeTrackBackupEncodings(this, codec, backupOpts);
+				if (!backupEncodings) {
+					continue;
+				}
+				await this.applyEncodingsToSender(sc.sender, backupEncodings);
+				sc.encodings = backupEncodings;
+			}
+		} catch (e) {
+			this.log.warn('failed to apply recomputed encodings', {
+				...this.logContext,
+				error: e,
+			});
+		} finally {
+			unlock();
 		}
 	}
 
-	override async setProcessor(processor: TrackProcessor<Track.Kind.Video>, showProcessedStreamLocally = true) {
-		await super.setProcessor(processor, showProcessedStreamLocally);
-
-		if (this.processor?.processedTrack) {
-			for await (const sc of this.simulcastCodecs.values()) {
-				await sc.sender?.replaceTrack(this.processor.processedTrack);
+	private async applyEncodingsToSender(sender: RTCRtpSender, encodings: Array<RTCRtpEncodingParameters>) {
+		const params = sender.getParameters();
+		if (!params.encodings || params.encodings.length !== encodings.length) {
+			return;
+		}
+		params.encodings.forEach((existing, idx) => {
+			if (existing.active === false) {
+				return;
 			}
+			const next = encodings[idx];
+			if (next.scaleResolutionDownBy !== undefined) {
+				existing.scaleResolutionDownBy = next.scaleResolutionDownBy;
+			}
+			if (next.maxBitrate !== undefined) {
+				existing.maxBitrate = next.maxBitrate;
+			}
+			if (next.maxFramerate !== undefined) {
+				existing.maxFramerate = next.maxFramerate;
+			}
+			if (next.priority !== undefined) {
+				existing.priority = next.priority;
+				existing.networkPriority = next.priority;
+			}
+		});
+		this.log.debug('updating sender encodings after track restart', {
+			...this.logContext,
+			encodings: params.encodings,
+		});
+		await sender.setParameters(params);
+	}
+
+	override async setProcessor(processor: TrackProcessor<Track.Kind.Video>, showProcessedStreamLocally = true) {
+		const secondarySenderSnapshots = Array.from(this.simulcastCodecs.values(), (trackInfo) => ({
+			sender: trackInfo.sender,
+			track: trackInfo.sender?.track ?? null,
+		}));
+		try {
+			await super.setProcessor(processor, showProcessedStreamLocally);
+			if (this.processor?.processedTrack) {
+				for await (const sc of this.simulcastCodecs.values()) {
+					await sc.sender?.replaceTrack(this.processor.processedTrack);
+				}
+			}
+		} catch (error) {
+			const cleanupErrors: Array<unknown> = [];
+			if (this.processor === processor) {
+				try {
+					await this.stopProcessor(false);
+				} catch (cleanupError) {
+					cleanupErrors.push(cleanupError);
+				}
+			}
+			const rollbackResults = await Promise.allSettled(
+				secondarySenderSnapshots.map(({sender, track}) => restoreSecondarySenderTrack(sender, track)),
+			);
+			const rollbackErrors = rollbackResults.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+			if (cleanupErrors.length === 0 && rollbackErrors.length === 0) {
+				throw error;
+			}
+			throw createProcessorRecoveryError(error, cleanupErrors, rollbackErrors);
+		}
+	}
+
+	protected override async internalStopProcessor(keepElement = true) {
+		const processor = this.processor;
+		if (!processor) {
+			await super.internalStopProcessor(keepElement);
+			return;
+		}
+		const secondarySenderSnapshots = Array.from(this.simulcastCodecs.values(), (trackInfo) => ({
+			sender: trackInfo.sender,
+			track: trackInfo.sender?.track ?? null,
+			replacement: trackInfo.mediaStreamTrack,
+		}));
+		try {
+			for (const {sender, replacement} of secondarySenderSnapshots) {
+				await sender?.replaceTrack(replacement);
+			}
+			await super.internalStopProcessor(keepElement);
+		} catch (error) {
+			const rollbackResults = await Promise.allSettled(
+				secondarySenderSnapshots.map(({sender, track}) => restoreSecondarySenderTrack(sender, track)),
+			);
+			const rollbackErrors = rollbackResults.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+			if (rollbackErrors.length === 0) {
+				throw error;
+			}
+			throw new AggregateError(
+				rollbackErrors,
+				'Video processor stop failed and secondary sender recovery was incomplete',
+				{
+					cause: error,
+				},
+			);
 		}
 	}
 
 	async setDegradationPreference(preference: RTCDegradationPreference) {
 		this.degradationPreference = preference;
-		if (this.sender) {
-			try {
-				this.log.debug(`setting degradationPreference to ${preference}`, this.logContext);
-				const params = this.sender.getParameters();
-				params.degradationPreference = preference;
-				this.sender.setParameters(params);
-			} catch (e: unknown) {
-				this.log.warn(`failed to set degradationPreference`, {error: e, ...this.logContext});
-			}
+		await this.applyDegradationPreference(this.sender);
+		for (const sc of this.simulcastCodecs.values()) {
+			await this.applyDegradationPreference(sc.sender);
+		}
+	}
+
+	private async applyDegradationPreference(sender?: RTCRtpSender) {
+		if (!sender) {
+			return;
+		}
+		try {
+			this.log.debug(`setting degradationPreference to ${this.degradationPreference}`, this.logContext);
+			const params = sender.getParameters();
+			params.degradationPreference = this.degradationPreference;
+			await sender.setParameters(params);
+		} catch (e: unknown) {
+			this.log.warn(`failed to set degradationPreference`, {error: e, ...this.logContext});
 		}
 	}
 
@@ -290,7 +493,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		}
 		const simulcastCodecInfo: SimulcastTrackInfo = {
 			codec,
-			mediaStreamTrack: this.mediaStreamTrack.clone(),
+			mediaStreamTrack: this._mediaStreamTrack.clone(),
 			sender: undefined,
 			encodings,
 		};
@@ -298,12 +501,19 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		return simulcastCodecInfo;
 	}
 
-	setSimulcastTrackSender(codec: VideoCodec, sender: RTCRtpSender) {
+	async setSimulcastTrackSender(codec: VideoCodec, sender: RTCRtpSender) {
 		const simulcastCodecInfo = this.simulcastCodecs.get(codec);
 		if (!simulcastCodecInfo) {
 			return;
 		}
 		simulcastCodecInfo.sender = sender;
+		const processedTrack = this.processor?.processedTrack;
+		if (processedTrack) {
+			void sender.replaceTrack(processedTrack).catch((error: unknown) => {
+				this.log.warn('failed to route processed track to secondary sender', {...this.logContext, error});
+			});
+		}
+		await this.applyDegradationPreference(sender);
 
 		setTimeout(() => {
 			if (this.subscribedCodecs) {
@@ -319,7 +529,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 			currentCodec: this.codec,
 		});
 		if (!this.codec && codecs.length > 0) {
-			await this.setPublishingLayers(isSVCCodec(codecs[0].codec), codecs[0].qualities);
+			await this.setPublishingLayers(this.isSvcPublish(codecs[0].codec), codecs[0].qualities);
 
 			return [];
 		}
@@ -329,14 +539,14 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		const newCodecs: Array<VideoCodec> = [];
 		for await (const codec of codecs) {
 			if (!this.codec || this.codec === codec.codec) {
-				await this.setPublishingLayers(isSVCCodec(codec.codec), codec.qualities);
+				await this.setPublishingLayers(this.isSvcPublish(codec.codec), codec.qualities);
 			} else {
 				const simulcastCodecInfo = this.simulcastCodecs.get(codec.codec as VideoCodec);
 				this.log.debug(`try setPublishingCodec for ${codec.codec}`, {
 					...this.logContext,
 					simulcastCodecInfo,
 				});
-				if (!simulcastCodecInfo || !simulcastCodecInfo.sender) {
+				if (!simulcastCodecInfo?.sender) {
 					for (const q of codec.qualities) {
 						if (q.enabled) {
 							newCodecs.push(codec.codec as VideoCodec);
@@ -350,7 +560,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 						simulcastCodecInfo.encodings!,
 						codec.qualities,
 						this.senderLock,
-						isSVCCodec(codec.codec),
+						this.isSvcPublish(codec.codec),
 						this.log,
 						this.logContext,
 					);

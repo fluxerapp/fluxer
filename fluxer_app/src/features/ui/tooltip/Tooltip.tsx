@@ -3,12 +3,19 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/ui/tooltip/Tooltip.module.css';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
+import {
+	getTooltipScrollSuppressRemainingMs,
+	subscribeTooltipScrollHide,
+} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {
 	createTooltipSnapshot,
 	getTooltipStateValue,
@@ -25,19 +32,18 @@ import {
 	subscribeWindowHoverControlsChange,
 } from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import {elementSupportsRef} from '@app/lib/react';
+import type {ExtendedDocument} from '@app/types/browser.d';
 import {FloatingPortal} from '@floating-ui/react';
 import {arrow, autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/react-dom';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {getTooltipScrollSuppressRemainingMs, subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 const logger = new Logger('Tooltip');
 
 export type TooltipPosition = 'top' | 'left' | 'right' | 'bottom';
-export type TooltipType = 'normal' | 'error';
+type TooltipType = 'normal' | 'error';
 
 const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,
@@ -45,6 +51,20 @@ const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	elementResize: true,
 	layoutShift: true,
 } as const;
+
+export const getFullscreenOverflowBoundary = (target: HTMLElement): HTMLElement | null => {
+	const ownerDocument = target.ownerDocument as ExtendedDocument;
+	const ownerWindow = ownerDocument.defaultView;
+	if (!ownerWindow) return null;
+	const fullscreenElement =
+		ownerDocument.fullscreenElement ??
+		ownerDocument.webkitFullscreenElement ??
+		ownerDocument.mozFullScreenElement ??
+		ownerDocument.msFullscreenElement ??
+		null;
+	if (!(fullscreenElement instanceof ownerWindow.HTMLElement)) return null;
+	return fullscreenElement.contains(target) ? fullscreenElement : null;
+};
 
 const tooltipPortalRoots = new WeakMap<Document, HTMLElement>();
 
@@ -77,8 +97,8 @@ export const useTooltipPortalRoot = (enabled = true, targetDocument?: Document):
 	return scopedPortalHost ?? root;
 };
 const MAX_WIDTH_MAP = {
-	default: 190,
-	xl: 350,
+	default: remFromPx(190),
+	xl: remFromPx(350),
 	none: 'none' as const,
 };
 const TooltipPositionToStyle: Record<TooltipPosition, string> = {
@@ -388,14 +408,17 @@ export const Tooltip = observer(
 					left: '-9999px',
 					top: '-9999px',
 				} as CSSStyleDeclaration);
+				const overflowBoundary = getFullscreenOverflowBoundary(target);
+				const boundaryOptions = overflowBoundary ? {boundary: overflowBoundary} : undefined;
 				const middleware = [
 					offset(padding + nudge),
-					flip(),
-					shift({padding: 8}),
+					flip(boundaryOptions),
+					shift({padding: 8, ...boundaryOptions}),
 					...(arrowRef.current ? [arrow({element: arrowRef.current})] : []),
 				];
 				const {x, y, placement, middlewareData} = await computePosition(target, tooltip, {
 					placement: position,
+					strategy: 'fixed',
 					middleware,
 				});
 				if (
@@ -447,9 +470,10 @@ export const Tooltip = observer(
 		}, [updatePositionNow, cancelRaf, getTooltipOwnerWindow]);
 		const getVisibilityDriverDelayMs = useCallback(() => {
 			const scrollSuppressRemainingMs = getTooltipScrollSuppressRemainingMs();
+			const openDelay = isTooltipHandoffWarm() ? 0 : delay;
 			switch (true) {
-				case delay > 0 || scrollSuppressRemainingMs > 0:
-					return Math.max(delay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
+				case openDelay > 0 || scrollSuppressRemainingMs > 0:
+					return Math.max(openDelay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
 				default:
 					return 0;
 			}
@@ -585,6 +609,10 @@ export const Tooltip = observer(
 		}, [cancelRaf, clearDelayTimer, clearPointerFocusTimeout]);
 		useEffect(() => {
 			if (!shouldRenderTooltip) return;
+			return markTooltipOpen();
+		}, [shouldRenderTooltip]);
+		useEffect(() => {
+			if (!shouldRenderTooltip) return;
 			return subscribeTooltipScrollHide(dismissTooltip);
 		}, [dismissTooltip, shouldRenderTooltip]);
 		useEffect(() => {
@@ -615,7 +643,7 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!openOnMountHover || !hasChild || mobileLayout.enabled || isDisabled) return;
 			const target = targetRef.current;
-			if (!target || !target.matches(':hover')) return;
+			if (!target?.matches(':hover')) return;
 			beginVisibilityDriver('hover');
 		}, [beginVisibilityDriver, hasChild, isDisabled, mobileLayout.enabled, openOnMountHover]);
 		useEffect(() => {
@@ -651,7 +679,7 @@ export const Tooltip = observer(
 			let frameId: number | null = null;
 			const verifyTargetHover = () => {
 				const target = targetRef.current;
-				if (!target || !target.matches(':hover')) {
+				if (!target?.matches(':hover')) {
 					endVisibilityDriver('hover');
 					frameId = null;
 					return;

@@ -1,24 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.container {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-}
-
-.header {
-	margin-bottom: 0.5rem;
-	font-weight: 600;
-	font-size: 1.25rem;
-	line-height: 1.75rem;
-}
-
-.description {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
 .regionOption {
 	display: flex;
 	min-width: 0;
@@ -48,26 +29,6 @@
 	justify-content: center;
 	font-size: 1rem;
 	line-height: 1;
-}
-
-.voiceQualityLabel {
-	margin-bottom: 0.5rem;
-	font-weight: 500;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary);
-}
-
-.sliderContainer {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.sliderDescription {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--text-primary-muted);
 }
 
 .topicInput {
@@ -121,13 +82,6 @@
 	color: var(--text-primary);
 }
 
-.urlDescription {
-	margin-top: 0.25rem;
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--text-primary-muted);
-}
-
 .sectionWrapper {
 	display: flex;
 	flex-direction: column;
@@ -145,59 +99,6 @@
 .settingsGroup:first-child {
 	padding-top: 0;
 	border-top: none;
-}
-
-.sectionHeader {
-	margin-bottom: 0.5rem;
-	font-weight: 600;
-	font-size: 1.25rem;
-	line-height: 1.75rem;
-}
-
-.sectionDescription {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
-.fieldDescription {
-	margin-top: 0.25rem;
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--text-primary-muted);
-}
-
-.fieldLabel {
-	margin-bottom: 0.5rem;
-	font-weight: 500;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary);
-}
-
-.fieldLabelRow {
-	display: flex;
-	min-width: 0;
-	min-height: 1.5rem;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.fieldLabelRow .fieldLabel {
-	flex: 1;
-	margin-bottom: 0;
-}
-
-.fieldContent {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.fieldNote {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--text-primary-muted);
 }
 
 .settingsControlRow {
@@ -267,25 +168,6 @@
 .settingsControlRowStacked .settingsSliderControl {
 	flex: none;
 	min-width: 0;
-}
-
-.selectField {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-.selectLabel {
-	font-weight: 500;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary);
-}
-
-.selectDescription {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
 }
 
 @media (max-width: 640px) {

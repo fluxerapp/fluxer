@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isEditableElement} from '@app/features/app/keybindings/utils/EditableElement';
 import {SEEK_STEP, VOLUME_STEP} from '@app/features/voice/components/media_player/utils/MediaConstants';
 import {useCallback, useEffect} from 'react';
 
@@ -32,17 +33,6 @@ const VOLUME_DOWN_KEYS = ['ArrowDown'] as const;
 const MUTE_KEYS = ['m', 'M'] as const;
 const FULLSCREEN_KEYS = ['f', 'F'] as const;
 const SEEK_PERCENTAGE_KEYS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
-const NON_TEXT_INPUT_TYPES = new Set([
-	'button',
-	'checkbox',
-	'color',
-	'file',
-	'image',
-	'radio',
-	'range',
-	'reset',
-	'submit',
-]);
 const CONTROL_SELECTOR = [
 	'a[href]',
 	'button',
@@ -72,15 +62,6 @@ function hasShortcutModifier(event: React.KeyboardEvent | KeyboardEvent): boolea
 	return event.ctrlKey || event.metaKey || event.altKey;
 }
 
-function isEditableTarget(target: EventTarget | null): target is HTMLElement {
-	if (!(target instanceof HTMLElement)) return false;
-	if (target.isContentEditable) return true;
-	if (target.tagName === 'TEXTAREA') return true;
-	if (target.tagName !== 'INPUT') return false;
-	const type = ((target as HTMLInputElement).type || '').toLowerCase();
-	return !NON_TEXT_INPUT_TYPES.has(type);
-}
-
 function shouldFocusedControlOwnKey(event: React.KeyboardEvent | KeyboardEvent, container: HTMLElement): boolean {
 	const target = event.target;
 	if (!(target instanceof HTMLElement) || !container.contains(target)) return false;
@@ -101,7 +82,7 @@ function shouldFocusedControlOwnKey(event: React.KeyboardEvent | KeyboardEvent, 
 	if (control.tagName === 'BUTTON' || role === 'button') {
 		return key === ' ' || key === 'Space' || key === 'Spacebar' || key === 'Enter';
 	}
-	return isEditableTarget(control);
+	return isEditableElement(control);
 }
 
 function stopKeyboardEvent(event: KeyboardEvent): void {
@@ -175,7 +156,7 @@ export function useMediaKeyboard(options: UseMediaKeyboardOptions): UseMediaKeyb
 			const container = containerRef.current;
 			if (container && shouldFocusedControlOwnKey(event, container)) return false;
 			const target = event.target as HTMLElement;
-			if (!options.allowEditableTarget && isEditableTarget(target)) {
+			if (!options.allowEditableTarget && isEditableElement(target)) {
 				return false;
 			}
 			const {key} = event;

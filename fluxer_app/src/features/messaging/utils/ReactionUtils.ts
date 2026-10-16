@@ -4,31 +4,22 @@ import i18n from '@app/app/I18n';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Channels from '@app/features/channel/state/Channels';
 import type {UnicodeEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
+import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
-import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg, plural} from '@lingui/core/macro';
 
 const REACTED_BY_DESCRIPTOR = msg({
-	message: '{emojiName} reacted by {reactors}',
-	comment: 'Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.',
+	message: '{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}',
+	comment:
+		'Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.',
 });
-const listFormatterCache = new Map<string, Intl.ListFormat>();
-
-function getReactorListFormatter(locale: string): Intl.ListFormat {
-	let formatter = listFormatterCache.get(locale);
-	if (!formatter) {
-		formatter = new Intl.ListFormat(locale, {type: 'conjunction', style: 'long'});
-		listFormatterCache.set(locale, formatter);
-	}
-	return formatter;
-}
 
 export interface ReactionEmoji {
 	id?: string | null;
@@ -46,14 +37,15 @@ export function getReactionTooltip(message: Message, emoji: ReactionEmoji) {
 		return '';
 	}
 	const reaction = message.getReaction(emoji);
-	const othersCount = Math.max(0, (reaction?.count || 0) - users.length);
+	const reactorCount = Math.max(users.length, reaction?.count ?? 0);
+	const othersCount = Math.max(0, reactorCount - users.length);
 	const emojiName = getEmojiNameWithColons(emoji);
 	const parts: Array<string> = [...users];
 	if (othersCount > 0) {
 		parts.push(plural({count: othersCount}, {one: '# other', other: '# others'}));
 	}
-	const reactors = getReactorListFormatter(getCurrentLocale()).format(parts);
-	return i18n._(REACTED_BY_DESCRIPTOR, {emojiName, reactors});
+	const reactors = getCachedListFormat(getCurrentLocale(), {type: 'conjunction', style: 'long'}).format(parts);
+	return i18n._(REACTED_BY_DESCRIPTOR, {emojiName, reactors, reactorCount});
 }
 
 const isCustomEmoji = (emoji: UnicodeEmoji | ReactionEmoji): emoji is ReactionEmoji =>
@@ -101,7 +93,7 @@ export function getEmojiNameWithColons(emoji: ReactionEmoji): string {
 export function useEmojiURL({
 	emoji,
 	isHovering = false,
-	size = 128,
+	size,
 	forceAnimate = false,
 }: {
 	emoji: ReactionEmoji;
@@ -111,11 +103,11 @@ export function useEmojiURL({
 }): string | null {
 	const shouldAnimate = useShouldAnimate({
 		kind: 'emoji',
+		isAnimated: emoji.animated === true,
 		isHovering: isHovering || forceAnimate,
 	});
 	if (emoji.id == null) {
 		return EmojiUtils.getEmojiURL(UnicodeEmojis.normalizeEmojiNameToSurrogate(emoji.name));
 	}
-	const url = AvatarUtils.getEmojiURL({id: emoji.id, animated: shouldAnimate});
-	return setUrlQueryParams(url, {size, quality: 'lossless'});
+	return buildCustomEmojiURL({id: emoji.id, animated: emoji.animated === true && shouldAnimate, size});
 }

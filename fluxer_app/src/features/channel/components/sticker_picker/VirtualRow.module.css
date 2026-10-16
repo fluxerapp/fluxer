@@ -20,6 +20,11 @@
 	padding: 0 0 0.5rem;
 }
 
+.stickerGridFixedTrack {
+	grid-auto-flow: column;
+	justify-content: start;
+}
+
 .stickerButton {
 	position: relative;
 	display: flex;
@@ -51,34 +56,6 @@
 	width: 100%;
 	border-radius: 0.25rem;
 	object-fit: contain;
-}
-
-.gifBadge {
-	position: absolute;
-	top: 0.25rem;
-	left: 0.25rem;
-	border-radius: 0.25rem;
-	background-color: rgba(0, 0, 0, 0.6);
-	padding: 0.25rem 0.125rem;
-	font-weight: 600;
-	color: white;
-	font-size: 0.75rem;
-	line-height: 1;
-}
-
-.starIconFilled {
-	height: 1rem;
-	width: 1rem;
-}
-
-.starIcon {
-	height: 1rem;
-	width: 1rem;
-}
-
-.clipboardIcon {
-	height: 1rem;
-	width: 1rem;
 }
 
 .guildIconSmall {

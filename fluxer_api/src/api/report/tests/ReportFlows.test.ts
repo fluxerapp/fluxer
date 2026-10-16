@@ -1,0 +1,764 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {createTestAccount, type TestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createReportID} from '@app/api/BrandedTypes';
+import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {
+	createChannel,
+	createDmChannel,
+	createFriendship,
+	getChannel,
+	leaveGuild,
+	sendChannelMessage,
+	setupTestGuildWithMembers,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
+import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
+import {ReportRepository} from '@app/api/report/ReportRepository';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {
+	ReportFlowResponse,
+	ReportFlowSurface,
+	ReportFlowTargetType,
+} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+
+interface ReportResponse {
+	report_id: string;
+	status: string;
+	reported_at: string;
+}
+
+interface ErrorResponse {
+	code: string;
+	step_index?: number;
+	errors?: Array<{path: string; code: string}>;
+}
+
+interface MessageTarget {
+	reporter: TestAccount;
+	author: TestAccount;
+	guildId: string;
+	channelId: string;
+	messageId: string;
+}
+
+const HAS_SESSION_STARTED = 1n << 39n;
+const RATE_LIMIT_HEADER = 'x-fluxer-test-enable-rate-limits';
+
+const SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [{screen_id: 'root_message', option_id: 'spam'}];
+const USER_SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
+	{screen_id: 'profile_intro'},
+	{screen_id: 'profile_parts', item_ids: ['name']},
+	{screen_id: 'root_user', option_id: 'spam'},
+	{screen_id: 'spam_profile', option_id: 'spam_profile'},
+];
+const PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStepInput> = [
+	{screen_id: 'root_message', option_id: 'private_info'},
+	{screen_id: 'private_info', item_ids: ['phone', 'email']},
+];
+const CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'minor_sexual'},
+	{screen_id: 'minor_sexual', option_id: 'csam'},
+];
+const USER_PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStepInput> = [
+	{screen_id: 'profile_intro'},
+	{screen_id: 'profile_parts', item_ids: ['profile_text']},
+	{screen_id: 'root_user', option_id: 'something_else'},
+	{screen_id: 'something_else_user', option_id: 'private_info'},
+	{screen_id: 'profile_private_info', item_ids: ['phone', 'address']},
+];
+
+class CapturingPublisher implements ActivityPublisher {
+	readonly payloads: Array<string> = [];
+
+	async publish(_subject: string, payload: string): Promise<void> {
+		this.payloads.push(payload);
+	}
+}
+
+function currentHash(target: ReportFlowTargetType, surface: ReportFlowSurface = 'in_app'): string {
+	return getReportFlowVariant(target, surface).revisionHash;
+}
+
+async function readReport(reportId: string) {
+	const report = await new ReportRepository().getReport(createReportID(BigInt(reportId)));
+	if (!report) {
+		throw new Error(`Report ${reportId} was not stored`);
+	}
+	return report;
+}
+
+async function countReports(): Promise<number> {
+	return (await new ReportRepository().listAllReportsPaginated(100)).length;
+}
+
+async function setupMessage(harness: ApiTestHarness): Promise<MessageTarget> {
+	const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+	const author = members[0];
+	const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
+	const message = await sendChannelMessage(harness, author.token, channel.id, 'Reported message');
+	return {reporter: owner, author, guildId: guild.id, channelId: channel.id, messageId: message.id};
+}
+
+async function setupDmMessages(
+	harness: ApiTestHarness,
+	reporter: TestAccount,
+	count: number,
+): Promise<{channelId: string; messageIds: Array<string>}> {
+	const author = await createTestAccount(harness);
+	await createFriendship(harness, reporter, author);
+	const channel = await createDmChannel(harness, author.token, reporter.userId);
+	const messageIds: Array<string> = [];
+	for (let index = 0; index < count; index++) {
+		messageIds.push((await sendChannelMessage(harness, author.token, channel.id, `DM message ${index}`)).id);
+	}
+	return {channelId: channel.id, messageIds};
+}
+
+function messageBody(target: {channelId: string; messageId: string}, steps = SPAM_WALK, extra = {}) {
+	return {
+		channel_id: target.channelId,
+		message_id: target.messageId,
+		revision_hash: currentHash('message'),
+		steps,
+		...extra,
+	};
+}
+
+function userBody(userId: string, steps = USER_SPAM_WALK, extra = {}) {
+	return {user_id: userId, revision_hash: currentHash('user'), steps, ...extra};
+}
+
+function submitMessage(harness: ApiTestHarness, token: string, body: unknown) {
+	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/message/submissions').body(body);
+}
+
+function submitUser(harness: ApiTestHarness, token: string, body: unknown) {
+	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/user/submissions').body(body);
+}
+
+function legacyMessage(harness: ApiTestHarness, token: string, target: {channelId: string; messageId: string}) {
+	return createBuilder<ReportResponse>(harness, token)
+		.post('/reports/message')
+		.body({channel_id: target.channelId, message_id: target.messageId, category: 'spam'});
+}
+
+function legacyUser(harness: ApiTestHarness, token: string, userId: string) {
+	return createBuilder<ReportResponse>(harness, token)
+		.post('/reports/user')
+		.body({user_id: userId, category: 'spam_account'});
+}
+
+async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
+	await createBuilder(harness, '').patch(`/test/users/${userId}/flags`).body({flags: flags.toString()}).execute();
+}
+
+describe('Report flows', () => {
+	let harness: ApiTestHarness;
+
+	beforeEach(async () => {
+		harness = await createApiTestHarness({search: 'enabled'});
+	});
+
+	afterEach(async () => {
+		resetActivityEventsForTests();
+		await harness?.shutdown();
+	});
+
+	describe('Fetch', () => {
+		test('the default surface is in app and the hash is locale independent', async () => {
+			const english = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/message?locale=en-US')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const german = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/message?locale=de')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(english.surface).toBe('in_app');
+			expect(english.revision_hash).toBe(german.revision_hash);
+			expect(english.revision_hash).toMatch(/^[0-9a-f]{16}$/);
+		});
+
+		test('works logged out and sends no-cache headers', async () => {
+			const {response, json} = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/user')
+				.expect(HTTP_STATUS.OK)
+				.executeWithResponse();
+			expect(json.start_screen_id).toBe('profile_intro');
+			expect(response.headers.get('cache-control')).toBe('private, no-cache');
+			expect(response.headers.get('vary')).toContain('Accept-Language');
+		});
+
+		test('the guild flow exists only on the DSA surface', async () => {
+			for (const path of ['/reports/flows/guild', '/reports/flows/guild?surface=in_app']) {
+				const error = await createBuilderWithoutAuth<ErrorResponse>(harness)
+					.get(path)
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+					.execute();
+				expect(error.errors?.map((entry) => entry.path)).toEqual(['surface']);
+			}
+			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/guild?surface=dsa')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(flow.start_screen_id).toBe('community_parts');
+		});
+	});
+
+	describe('Submit, user', () => {
+		test('the guild context is kept', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const result = await submitUser(
+				harness,
+				owner.token,
+				userBody(members[0].userId, USER_SPAM_WALK, {guild_id: guild.id}),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const report = await readReport(result.report_id);
+			expect(report.reportedGuildId?.toString()).toBe(guild.id);
+			expect(report.reason).toBe('spam');
+		});
+
+		test('a guild the reporter has not joined is answered like an unknown guild', async () => {
+			const {members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [target, formerMember] = members;
+			const outsider = await createTestAccount(harness);
+			const unknown = await submitUser(
+				harness,
+				outsider.token,
+				userBody(target.userId, USER_SPAM_WALK, {guild_id: TEST_IDS.NONEXISTENT_GUILD}),
+			)
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_GUILD)
+				.executeRaw();
+			const notJoined = await submitUser(
+				harness,
+				outsider.token,
+				userBody(target.userId, USER_SPAM_WALK, {guild_id: guild.id}),
+			)
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_GUILD)
+				.executeRaw();
+			expect(notJoined.text).toBe(unknown.text);
+			await leaveGuild(harness, formerMember.token, guild.id);
+			const left = await submitUser(
+				harness,
+				formerMember.token,
+				userBody(target.userId, USER_SPAM_WALK, {guild_id: guild.id}),
+			)
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_GUILD)
+				.executeRaw();
+			expect(left.text).toBe(unknown.text);
+			expect(await countReports()).toBe(0);
+			await submitUser(harness, outsider.token, userBody(target.userId)).expect(HTTP_STATUS.OK).execute();
+			expect(await countReports()).toBe(1);
+		});
+	});
+
+	describe('Invalid walks', () => {
+		test('shape errors are standard validation errors', async () => {
+			const target = await setupMessage(harness);
+			const seventeen = Array.from({length: 17}, () => ({screen_id: 'root_message', option_id: 'spam'}));
+			const shapes = [
+				messageBody(target, seventeen),
+				messageBody(target, []),
+				messageBody(target, [
+					{screen_id: 'root_message', option_id: 'private_info'},
+					{screen_id: 'private_info', item_ids: []},
+				]),
+				messageBody(target, [{screen_id: 'x'.repeat(49), option_id: 'spam'}]),
+				{...messageBody(target), revision_hash: undefined},
+			];
+			for (const body of shapes) {
+				await submitMessage(harness, target.reporter.token, body)
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+					.execute();
+			}
+			expect(await countReports()).toBe(0);
+		});
+
+		test('invalid walks leave no row, spend no service allowance and leave no reservation', async () => {
+			const target = await setupMessage(harness);
+			for (let attempt = 0; attempt < 6; attempt++) {
+				await submitMessage(
+					harness,
+					target.reporter.token,
+					messageBody(target, [{screen_id: 'root_message', option_id: 'dislike'}]),
+				)
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+					.execute();
+			}
+			expect(await countReports()).toBe(0);
+			await submitMessage(harness, target.reporter.token, messageBody(target)).expect(HTTP_STATUS.OK).execute();
+			expect(await countReports()).toBe(1);
+		});
+	});
+
+	describe('Revision', () => {
+		test('a stale hash with a valid walk is accepted and stored', async () => {
+			const target = await setupMessage(harness);
+			const result = await submitMessage(
+				harness,
+				target.reporter.token,
+				messageBody(target, SPAM_WALK, {revision_hash: '0000000000000000'}),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const report = await readReport(result.report_id);
+			expect(report.flowRevision).toBe('0000000000000000');
+			expect(report.reason).toBe('spam');
+		});
+
+		test('a stale hash with an invalid walk is outdated', async () => {
+			const target = await setupMessage(harness);
+			await submitMessage(
+				harness,
+				target.reporter.token,
+				messageBody(target, [{screen_id: 'root_message', option_id: 'retired_option'}], {
+					revision_hash: '0000000000000000',
+				}),
+			)
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.REPORT_FLOW_OUTDATED)
+				.execute();
+			const reporter = await createTestAccount(harness);
+			const user = await createTestAccount(harness);
+			await submitUser(
+				harness,
+				reporter.token,
+				userBody(user.userId, [{screen_id: 'profile_parts', item_ids: ['photo']}], {
+					revision_hash: '0000000000000000',
+				}),
+			)
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.REPORT_FLOW_OUTDATED)
+				.execute();
+			expect(await countReports()).toBe(0);
+		});
+
+		test('the current hash with an invalid walk is a 400', async () => {
+			const target = await setupMessage(harness);
+			await submitMessage(
+				harness,
+				target.reporter.token,
+				messageBody(target, [{screen_id: 'root_message', option_id: 'retired_option'}]),
+			)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+				.execute();
+		});
+	});
+
+	describe('Legacy rules', () => {
+		test('the author cannot report their own message', async () => {
+			const target = await setupMessage(harness);
+			await submitMessage(harness, target.author.token, messageBody(target))
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CANNOT_REPORT_OWN_MESSAGE)
+				.execute();
+		});
+
+		test('a user cannot report their own profile', async () => {
+			const reporter = await createTestAccount(harness);
+			await submitUser(harness, reporter.token, userBody(reporter.userId))
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CANNOT_REPORT_YOURSELF)
+				.execute();
+		});
+
+		test('an unverified reporter is refused before the walk is checked', async () => {
+			const target = await setupMessage(harness);
+			const unverified = await createTestAccount(harness, {skipEmailVerification: true});
+			await submitMessage(harness, unverified.token, messageBody(target, [{screen_id: 'nope', option_id: 'x'}]))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED)
+				.execute();
+			await submitUser(harness, unverified.token, userBody(target.author.userId))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED)
+				.execute();
+		});
+
+		test('an unclaimed reporter is refused', async () => {
+			const target = await setupMessage(harness);
+			await unclaimAccount(harness, target.reporter.userId);
+			await submitMessage(harness, target.reporter.token, messageBody(target))
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS)
+				.execute();
+		});
+
+		test('a report-banned reporter is refused', async () => {
+			const target = await setupMessage(harness);
+			await setUserFlags(harness, target.reporter.userId, HAS_SESSION_STARTED | UserFlags.REPORT_BANNED);
+			await submitMessage(harness, target.reporter.token, messageBody(target))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.REPORT_BANNED)
+				.execute();
+			await submitUser(harness, target.reporter.token, userBody(target.author.userId))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.REPORT_BANNED)
+				.execute();
+		});
+
+		test('bots and logged out callers cannot submit', async () => {
+			const target = await setupMessage(harness);
+			const bot = await createTestBotAccount(harness);
+			await submitMessage(harness, `Bot ${bot.botToken}`, messageBody(target))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCESS_DENIED)
+				.execute();
+			await submitUser(harness, `Bot ${bot.botToken}`, userBody(target.author.userId))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCESS_DENIED)
+				.execute();
+			await submitMessage(harness, '', messageBody(target)).expect(HTTP_STATUS.UNAUTHORIZED).execute();
+		});
+
+		test('channel access is checked as on the legacy route', async () => {
+			const target = await setupMessage(harness);
+			const outsider = await createTestAccount(harness);
+			await submitMessage(harness, outsider.token, messageBody(target))
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCESS_DENIED)
+				.execute();
+			await legacyMessage(harness, outsider.token, target)
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCESS_DENIED)
+				.execute();
+			await submitMessage(harness, target.reporter.token, {
+				...messageBody(target),
+				channel_id: TEST_IDS.NONEXISTENT_CHANNEL,
+			})
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_CHANNEL)
+				.execute();
+			await submitUser(harness, target.reporter.token, userBody(TEST_IDS.NONEXISTENT_USER))
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
+				.execute();
+			expect(await countReports()).toBe(0);
+		});
+	});
+
+	describe('Dedupe', () => {
+		test('v2 and legacy message reports share the reservation', async () => {
+			const first = await setupMessage(harness);
+			await legacyMessage(harness, first.reporter.token, first).expect(HTTP_STATUS.OK).execute();
+			await submitMessage(harness, first.reporter.token, messageBody(first))
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			const second = await setupMessage(harness);
+			await submitMessage(harness, second.reporter.token, messageBody(second)).expect(HTTP_STATUS.OK).execute();
+			await legacyMessage(harness, second.reporter.token, second)
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			expect(await countReports()).toBe(2);
+		});
+
+		test('v2 and legacy user reports share a 24 hour reservation', async () => {
+			const reporter = await createTestAccount(harness);
+			const first = await createTestAccount(harness);
+			const second = await createTestAccount(harness);
+			await legacyUser(harness, reporter.token, first.userId).expect(HTTP_STATUS.OK).execute();
+			await submitUser(harness, reporter.token, userBody(first.userId))
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			await submitUser(harness, reporter.token, userBody(second.userId)).expect(HTTP_STATUS.OK).execute();
+			await legacyUser(harness, reporter.token, second.userId)
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			const other = await createTestAccount(harness);
+			await submitUser(harness, other.token, userBody(first.userId)).expect(HTTP_STATUS.OK).execute();
+			expect(await countReports()).toBe(3);
+		});
+
+		test('parallel message submissions file one report', async () => {
+			const reporter = await createTestAccount(harness);
+			const {channelId, messageIds} = await setupDmMessages(harness, reporter, 2);
+			const v2 = await Promise.all(
+				[0, 1, 2].map(() =>
+					submitMessage(harness, reporter.token, messageBody({channelId, messageId: messageIds[0]})).executeRaw(),
+				),
+			);
+			expect(v2.map(({response}) => response.status).sort()).toEqual([200, 409, 409]);
+			const legacy = await Promise.all(
+				[0, 1, 2].map(() => legacyMessage(harness, reporter.token, {channelId, messageId: messageIds[1]}).executeRaw()),
+			);
+			expect(legacy.map(({response}) => response.status).sort()).toEqual([200, 409, 409]);
+			expect(await countReports()).toBe(2);
+		});
+
+		test('parallel user submissions file one report', async () => {
+			const reporter = await createTestAccount(harness);
+			const first = await createTestAccount(harness);
+			const second = await createTestAccount(harness);
+			const v2 = await Promise.all(
+				[0, 1, 2].map(() => submitUser(harness, reporter.token, userBody(first.userId)).executeRaw()),
+			);
+			expect(v2.map(({response}) => response.status).sort()).toEqual([200, 409, 409]);
+			const legacy = await Promise.all(
+				[0, 1, 2].map(() => legacyUser(harness, reporter.token, second.userId).executeRaw()),
+			);
+			expect(legacy.map(({response}) => response.status).sort()).toEqual([200, 409, 409]);
+			expect(await countReports()).toBe(2);
+		});
+
+		test('a rate limited message report releases its reservation', async () => {
+			const reporter = await createTestAccount(harness);
+			const {channelId, messageIds} = await setupDmMessages(harness, reporter, 4);
+			for (const messageId of messageIds.slice(0, 3)) {
+				await submitMessage(harness, reporter.token, messageBody({channelId, messageId}))
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			}
+			const limited = {channelId, messageId: messageIds[3]};
+			for (let attempt = 0; attempt < 2; attempt++) {
+				await submitMessage(harness, reporter.token, messageBody(limited))
+					.expect(429, APIErrorCodes.RATE_LIMITED)
+					.execute();
+			}
+			await getRateLimitService().resetLimit(`report:message:channel:user:${reporter.userId}:${channelId}`);
+			await submitMessage(harness, reporter.token, messageBody(limited)).expect(HTTP_STATUS.OK).execute();
+			expect(await countReports()).toBe(4);
+		});
+
+		test('a repeat user submission past the reporter allowance is rate limited', async () => {
+			const reporter = await createTestAccount(harness);
+			const users = await Promise.all([0, 1, 2, 3, 4].map(() => createTestAccount(harness)));
+			for (const user of users) {
+				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
+			}
+			await submitUser(harness, reporter.token, userBody(users[0].userId))
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			await getRateLimitService().resetLimit(`report:create:user:${reporter.userId}`);
+			await submitUser(harness, reporter.token, userBody(users[0].userId))
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			expect(await countReports()).toBe(5);
+		});
+
+		test('a rate limited user report releases its reservation', async () => {
+			const reporter = await createTestAccount(harness);
+			for (let index = 0; index < 5; index++) {
+				const user = await createTestAccount(harness);
+				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
+			}
+			const limited = await createTestAccount(harness);
+			for (let attempt = 0; attempt < 2; attempt++) {
+				await submitUser(harness, reporter.token, userBody(limited.userId))
+					.expect(429, APIErrorCodes.RATE_LIMITED)
+					.execute();
+			}
+			await getRateLimitService().resetLimit(`report:create:user:${reporter.userId}`);
+			await submitUser(harness, reporter.token, userBody(limited.userId)).expect(HTTP_STATUS.OK).execute();
+			await submitUser(harness, reporter.token, userBody(limited.userId))
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+				.execute();
+			expect(await countReports()).toBe(6);
+		});
+	});
+
+	describe('Limits', () => {
+		test('a message report refused by the guild limit spends no other allowance', async () => {
+			const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+			const author = members[0];
+			const second = await createChannel(harness, owner.token, guild.id, 'second-channel');
+			const first: Array<string> = [];
+			for (let index = 0; index < 3; index++) {
+				first.push((await sendChannelMessage(harness, author.token, systemChannel.id, `First ${index}`)).id);
+			}
+			const other: Array<string> = [];
+			for (let index = 0; index < 2; index++) {
+				other.push((await sendChannelMessage(harness, author.token, second.id, `Second ${index}`)).id);
+			}
+			for (const messageId of first) {
+				await submitMessage(harness, owner.token, messageBody({channelId: systemChannel.id, messageId}))
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			}
+			await submitMessage(harness, owner.token, messageBody({channelId: second.id, messageId: other[0]}))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const limited = {channelId: second.id, messageId: other[1]};
+			const remaining = async (identifier: string, maxAttempts: number) =>
+				(await getRateLimitService().peekLimit({identifier, maxAttempts, windowMs: 3_600_000})).remaining;
+			const budgets = async () => ({
+				reporter: await remaining(`report:create:user:${owner.userId}`, 5),
+				channel: await remaining(`report:message:channel:user:${owner.userId}:${second.id}`, 3),
+				target: await remaining(`report:message:target:${limited.messageId}`, 20),
+				guild: await remaining(`report:message:guild:user:${owner.userId}:${guild.id}`, 4),
+			});
+			expect(await budgets()).toEqual({reporter: 1, channel: 2, target: 20, guild: 0});
+			for (let attempt = 0; attempt < 2; attempt++) {
+				await submitMessage(harness, owner.token, messageBody(limited))
+					.expect(429, APIErrorCodes.RATE_LIMITED)
+					.execute();
+			}
+			expect(await budgets()).toEqual({reporter: 1, channel: 2, target: 20, guild: 0});
+			await getRateLimitService().resetLimit(`report:message:guild:user:${owner.userId}:${guild.id}`);
+			await submitMessage(harness, owner.token, messageBody(limited)).expect(HTTP_STATUS.OK).execute();
+			expect(await budgets()).toEqual({reporter: 0, channel: 1, target: 19, guild: 3});
+			expect(await countReports()).toBe(5);
+		});
+
+		test('the service limit is shared with the legacy routes', async () => {
+			const reporter = await createTestAccount(harness);
+			const dmA = await setupDmMessages(harness, reporter, 2);
+			const dmB = await setupDmMessages(harness, reporter, 1);
+			await legacyMessage(harness, reporter.token, {channelId: dmA.channelId, messageId: dmA.messageIds[0]})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dmA.channelId, messageId: dmA.messageIds[1]}),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dmB.channelId, messageId: dmB.messageIds[0]}),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const users = await Promise.all([0, 1, 2].map(() => createTestAccount(harness)));
+			await legacyUser(harness, reporter.token, users[0].userId).expect(HTTP_STATUS.OK).execute();
+			await submitUser(harness, reporter.token, userBody(users[1].userId)).expect(HTTP_STATUS.OK).execute();
+			await submitUser(harness, reporter.token, userBody(users[2].userId))
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			expect(await countReports()).toBe(5);
+		});
+
+		test('the route bucket is shared and invalid walks spend a route token but no service token', async () => {
+			const reporter = await createTestAccount(harness);
+			const dm = await setupDmMessages(harness, reporter, 3);
+			for (let attempt = 0; attempt < 6; attempt++) {
+				await submitMessage(
+					harness,
+					reporter.token,
+					messageBody({channelId: dm.channelId, messageId: dm.messageIds[0]}, [
+						{screen_id: 'root_message', option_id: 'dislike'},
+					]),
+				)
+					.header(RATE_LIMIT_HEADER, 'true')
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+					.execute();
+			}
+			await legacyMessage(harness, reporter.token, {channelId: dm.channelId, messageId: dm.messageIds[0]})
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await submitMessage(harness, reporter.token, messageBody({channelId: dm.channelId, messageId: dm.messageIds[1]}))
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const users = await Promise.all([0, 1, 2].map(() => createTestAccount(harness)));
+			await legacyUser(harness, reporter.token, users[0].userId)
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await submitUser(harness, reporter.token, userBody(users[1].userId))
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await submitUser(harness, reporter.token, userBody(users[2].userId))
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			expect(await countReports()).toBe(4);
+			await submitUser(harness, reporter.token, userBody(users[2].userId)).expect(HTTP_STATUS.OK).execute();
+		});
+	});
+
+	describe('Content filter', () => {
+		test('a blocked phrase equal to an item id does not block a submission', async () => {
+			const target = await setupMessage(harness);
+			const phrases = ['email', 'phone', 'private_info', 'root_message'];
+			for (const phrase of phrases) phraseBlocklistCache.add(phrase);
+			try {
+				const result = await submitMessage(harness, target.reporter.token, messageBody(target, PRIVATE_INFO_WALK))
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				expect((await readReport(result.report_id)).reason).toBe('doxxing');
+			} finally {
+				for (const phrase of phrases) phraseBlocklistCache.remove(phrase);
+			}
+		});
+	});
+
+	describe('Events', () => {
+		test('report_filed keeps the legacy category and target type', async () => {
+			const publisher = new CapturingPublisher();
+			await startActivityEvents({publisher, kv: new MockKVProvider()});
+			const target = await setupMessage(harness);
+			await submitMessage(harness, target.reporter.token, messageBody(target, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const reporter = await createTestAccount(harness);
+			await submitUser(harness, reporter.token, userBody(target.author.userId, USER_PRIVATE_INFO_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const filed = () =>
+				publisher.payloads
+					.map((payload) => JSON.parse(payload) as {kind: string; data: Record<string, unknown>})
+					.filter((event) => event.kind === 'report_filed');
+			await vi.waitFor(() => expect(filed()).toHaveLength(2));
+			const events = filed().map((event) => event.data);
+			expect(events).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						category: 'child_safety',
+						target_type: 'message',
+						message_id: target.messageId,
+						reported_user_id: target.author.userId,
+					}),
+					expect.objectContaining({
+						category: 'inappropriate_profile',
+						target_type: 'user',
+						reported_user_id: target.author.userId,
+					}),
+				]),
+			);
+			for (const event of events) {
+				expect(Object.keys(event).sort()).toEqual(
+					[
+						'category',
+						'channel_id',
+						'guild_id',
+						'message_id',
+						'report_id',
+						'reported_user_id',
+						'reporter_id',
+						'target_type',
+					].sort(),
+				);
+			}
+		});
+	});
+
+	describe('Legacy routes', () => {
+		test('the legacy message, user and guild routes still file reports with empty flow fields', async () => {
+			const target = await setupMessage(harness);
+			const message = await legacyMessage(harness, target.reporter.token, target).expect(HTTP_STATUS.OK).execute();
+			const user = await createBuilder<ReportResponse>(harness, target.reporter.token)
+				.post('/reports/user')
+				.body({user_id: target.author.userId, category: 'inappropriate_profile', guild_id: target.guildId})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const guild = await createBuilder<ReportResponse>(harness, target.author.token)
+				.post('/reports/guild')
+				.body({guild_id: target.guildId, category: 'raid_coordination'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const reports = await Promise.all([message, user, guild].map((result) => readReport(result.report_id)));
+			expect(reports.map((report) => report.category)).toEqual(['spam', 'inappropriate_profile', 'raid_coordination']);
+			for (const report of reports) {
+				expect(report.reason).toBeNull();
+				expect(report.flowRevision).toBeNull();
+				expect(report.flowSteps).toBeNull();
+				expect(report.flowLocale).toBeNull();
+				expect(report.flowSurface).toBeNull();
+				expect(report.reporterGoodFaithConfirmed).toBeNull();
+			}
+		});
+	});
+});

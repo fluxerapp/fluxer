@@ -1,25 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {SourceFault, SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2CommandType} from './commands';
-
-export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
-
-export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
-	type: 'sourceLifecycle.transitioned';
-	sourceId: string;
-	kind: VoiceEngineV2SourceLifecycleTransitionKind;
-	since: bigint;
-	attempts: number;
-	fault: SourceFault | null;
-	atMs: number;
-}
-
+import type {VoiceEngineV2CommandType} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
-	VoiceEngineV2Capabilities,
 	VoiceEngineV2ConnectOptions,
 	VoiceEngineV2DataOptions,
 	VoiceEngineV2DeviceChangeReason,
@@ -28,20 +13,13 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayDesiredVoiceState,
-	VoiceEngineV2GatewayVoiceServer,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2InboundVideoFrame,
-	VoiceEngineV2InboundVideoFrameStats,
 	VoiceEngineV2InboundVideoTrackSubscription,
 	VoiceEngineV2LifecycleReason,
-	VoiceEngineV2LiveKitRoomState,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2NativeAudioDeviceModuleStatus,
 	VoiceEngineV2NativeAudioTapOptions,
-	VoiceEngineV2NativeCaptureFrame,
 	VoiceEngineV2NativeCaptureOptions,
 	VoiceEngineV2NativeFrameSinkOptions,
 	VoiceEngineV2OperationId,
@@ -58,10 +36,30 @@ import type {
 	VoiceEngineV2Stats,
 	VoiceEngineV2TimerOptions,
 	VoiceEngineV2Track,
-	VoiceEngineV2VideoCodec,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from './types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {
+	SourceFault,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
+
+export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
+
+export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
+	type: 'sourceLifecycle.transitioned';
+	sourceId: string;
+	kind: VoiceEngineV2SourceLifecycleTransitionKind;
+	since: bigint;
+	attempts: number;
+	fault: SourceFault | null;
+	atMs: number;
+}
+
+export interface VoiceEngineV2SourceLifecycleRemovedEvent {
+	type: 'sourceLifecycle.removed';
+	sourceId: string;
+}
 
 export type VoiceEngineV2Event =
 	| {type: 'implementation.prewarmRequested'}
@@ -101,8 +99,6 @@ export type VoiceEngineV2Event =
 	| {type: 'gateway.voiceStateClearSucceeded'; operationId: VoiceEngineV2OperationId}
 	| {type: 'gateway.voiceStateClearFailed'; operationId: VoiceEngineV2OperationId; error: VoiceEngineV2Error}
 	| {type: 'gateway.voiceStateUpdated'; voiceState: VoiceEngineV2GatewayVoiceState | null}
-	| {type: 'gateway.voiceServerUpdated'; voiceServer: VoiceEngineV2GatewayVoiceServer | null}
-	| {type: 'livekit.roomStateChanged'; room: VoiceEngineV2LiveKitRoomState}
 	| {type: 'connection.connectRequested'; options: VoiceEngineV2ConnectOptions}
 	| {type: 'connection.connectSucceeded'; operationId: VoiceEngineV2OperationId}
 	| {type: 'connection.connectFailed'; operationId: VoiceEngineV2OperationId; error: VoiceEngineV2Error}
@@ -162,18 +158,6 @@ export type VoiceEngineV2Event =
 	| {type: 'stats.collectRequested'}
 	| {type: 'stats.collected'; operationId: VoiceEngineV2OperationId; stats: VoiceEngineV2Stats}
 	| {type: 'stats.collectFailed'; operationId: VoiceEngineV2OperationId; error: VoiceEngineV2Error}
-	| {type: 'capabilities.changed'; capabilities: VoiceEngineV2Capabilities}
-	| {type: 'capabilities.hardwareEncoderQueryRequested'}
-	| {
-			type: 'capabilities.hardwareEncoderChanged';
-			operationId: VoiceEngineV2OperationId | null;
-			capabilities: VoiceEngineV2HardwareEncoderCapabilities;
-	  }
-	| {
-			type: 'capabilities.hardwareEncoderQueryFailed';
-			operationId: VoiceEngineV2OperationId;
-			error: VoiceEngineV2Error;
-	  }
 	| {type: 'permissions.checkRequested'; name: VoiceEngineV2PermissionName}
 	| {type: 'permissions.requestRequested'; name: VoiceEngineV2PermissionName}
 	| {
@@ -198,11 +182,6 @@ export type VoiceEngineV2Event =
 	| {type: 'devices.selectAudioInputRequested'; deviceId: string | null}
 	| {type: 'devices.selectAudioOutputRequested'; deviceId: string | null}
 	| {type: 'devices.selectCameraRequested'; deviceId: string | null}
-	| {
-			type: 'nativeAudioDeviceModule.statusChanged';
-			status: VoiceEngineV2NativeAudioDeviceModuleStatus;
-			detail?: string | null;
-	  }
 	| {type: 'audioControls.changed'; controls: VoiceEngineV2AudioControlsPatch}
 	| {type: 'nativeCapture.startRequested'; options: VoiceEngineV2NativeCaptureOptions}
 	| {type: 'nativeCapture.updateRequested'; options: VoiceEngineV2NativeCaptureOptions}
@@ -215,7 +194,6 @@ export type VoiceEngineV2Event =
 			captureId: string;
 			error: VoiceEngineV2Error;
 	  }
-	| {type: 'nativeCapture.frame'; frame: VoiceEngineV2NativeCaptureFrame}
 	| {type: 'nativeAudioTap.startRequested'; options: VoiceEngineV2NativeAudioTapOptions}
 	| {type: 'nativeAudioTap.stopRequested'; tapId: string}
 	| {type: 'nativeFrameSink.attachRequested'; options: VoiceEngineV2NativeFrameSinkOptions}
@@ -228,7 +206,6 @@ export type VoiceEngineV2Event =
 	| {type: 'timer.cancelRequested'; timerId: string}
 	| {type: 'timer.fired'; timerId: string; operationId: VoiceEngineV2OperationId | null}
 	| {type: 'diagnostics.logRequested'; entry: VoiceEngineV2DiagnosticEntry}
-	| {type: 'diagnostics.logged'; operationId: VoiceEngineV2OperationId | null; entry: VoiceEngineV2DiagnosticEntry}
 	| {type: 'lifecycle.teardownRequested'; reason: VoiceEngineV2LifecycleReason}
 	| {type: 'lifecycle.teardownSucceeded'; operationId: VoiceEngineV2OperationId}
 	| {type: 'lifecycle.teardownFailed'; operationId: VoiceEngineV2OperationId; error: VoiceEngineV2Error}
@@ -238,36 +215,10 @@ export type VoiceEngineV2Event =
 	| {type: 'room.trackUnpublished'; trackSid: string}
 	| {type: 'room.trackMuted'; trackSid: string}
 	| {type: 'room.trackUnmuted'; trackSid: string}
-	| {
-			type: 'codecNegotiation.overrideSetRequested';
-			source: VoiceEngineV2LocalStreamSource;
-			codec: VoiceEngineV2VideoCodec | null;
-	  }
-	| {type: 'codecNegotiation.localCapabilityChanged'; supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>}
-	| {
-			type: 'codecNegotiation.streamRegistered';
-			source: VoiceEngineV2LocalStreamSource;
-			streamIdentity: string;
-			preferredCodec: VoiceEngineV2VideoCodec;
-	  }
-	| {type: 'codecNegotiation.streamUnregistered'; source: VoiceEngineV2LocalStreamSource}
-	| {
-			type: 'codecNegotiation.viewerChanged';
-			source: VoiceEngineV2LocalStreamSource;
-			viewerIdentity: string;
-			watching: boolean;
-			supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	  }
-	| {
-			type: 'codecNegotiation.remoteCapabilityChanged';
-			identity: string;
-			supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	  }
 	| {type: 'watchedStream.watchRequested'; stream: VoiceEngineV2WatchedStream}
 	| {type: 'watchedStream.unwatchRequested'; stream: VoiceEngineV2WatchedStreamKey}
 	| {type: 'watchedStreams.replaced'; streams: Array<VoiceEngineV2WatchedStream>}
 	| {type: 'inboundVideo.trackSubscribed'; track: VoiceEngineV2InboundVideoTrackSubscription}
-	| {type: 'inboundVideo.trackUnsubscribed'; trackSid: string}
 	| {type: 'inboundVideo.frameReceived'; frame: VoiceEngineV2InboundVideoFrame}
-	| {type: 'inboundVideo.frameStats'; stats: VoiceEngineV2InboundVideoFrameStats}
-	| VoiceEngineV2SourceLifecycleTransitionedEvent;
+	| VoiceEngineV2SourceLifecycleTransitionedEvent
+	| VoiceEngineV2SourceLifecycleRemovedEvent;

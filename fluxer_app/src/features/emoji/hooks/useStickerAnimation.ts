@@ -6,6 +6,7 @@ import {useState} from 'react';
 interface UseStickerAnimationOptions {
 	respectUserSettings?: boolean;
 	isInteracting?: boolean;
+	isAnimated?: boolean;
 }
 
 interface UseStickerAnimationResult {
@@ -19,11 +20,12 @@ interface UseStickerAnimationResult {
 }
 
 export function useStickerAnimation(options: UseStickerAnimationOptions = {}): UseStickerAnimationResult {
-	const {respectUserSettings = true, isInteracting: isInteractingOverride} = options;
+	const {respectUserSettings = true, isInteracting: isInteractingOverride, isAnimated = true} = options;
 	const [isInteracting, setIsInteracting] = useState(false);
 	const effectiveInteraction = isInteractingOverride ?? isInteracting;
 	const shouldAnimate = useShouldAnimate({
 		kind: 'sticker',
+		isAnimated,
 		isHovering: respectUserSettings ? effectiveInteraction : true,
 		isFocused: respectUserSettings ? effectiveInteraction : true,
 	});

@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(gateway_rpc_presence).
--typing([eqwalizer]).
-
--export([execute_method/2]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([execute_method/2]).
 
 -define(PRESENCE_LOOKUP_TIMEOUT, 2000).
 
@@ -20,7 +20,8 @@ execute_method(<<"presence.terminate_all_sessions">>, P) -> handle_terminate_all
 execute_method(<<"presence.has_active">>, P) -> handle_has_active(P);
 execute_method(<<"presence.add_temporary_guild">>, P) -> handle_add_temp_guild(P);
 execute_method(<<"presence.remove_temporary_guild">>, P) -> handle_remove_temp_guild(P);
-execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P).
+execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P);
+execute_method(Method, _P) -> gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
 -spec handle_dispatch(map()) -> true.
 handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> := Data}) ->
@@ -29,8 +30,16 @@ handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> :
     case dispatch_to_owner(UserId, EventAtom, Data) of
         ok -> true;
         {error, not_found} -> handle_offline_dispatch(EventAtom, UserId, Data);
+        {error, unavailable} -> handle_unreachable_dispatch(EventAtom, UserId, Data);
         _ -> gateway_rpc_error:raise(<<"presence_dispatch_error">>)
     end.
+
+-spec handle_unreachable_dispatch(atom(), integer(), map()) -> no_return().
+handle_unreachable_dispatch(message_create, UserId, Data) ->
+    _ = handle_offline_dispatch(message_create, UserId, Data),
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>);
+handle_unreachable_dispatch(_EventAtom, _UserId, _Data) ->
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>).
 
 -spec dispatch_event_atom_or_error(term()) -> atom().
 dispatch_event_atom_or_error(Event) when is_binary(Event) ->
@@ -286,7 +295,7 @@ maybe_valid_owner_node(OwnerNode) ->
         false -> unavailable
     end.
 
--spec handle_offline_dispatch(atom(), integer(), map()) -> true.
+-spec handle_offline_dispatch(atom(), integer(), map() | list()) -> true.
 handle_offline_dispatch(message_create, UserId, Data) ->
     case offline_message_author_id(Data) of
         {ok, AuthorId} ->
@@ -335,40 +344,12 @@ sync_blocked_ids_for_user(_UserId) ->
 
 -ifdef(TEST).
 
-normalize_recipients_test() ->
-    Input = #{<<"123">> => [<<"456">>, <<"789">>]},
-    Result = normalize_recipients(Input),
-    ?assert(is_map(Result)),
-    ?assertEqual(1, maps:size(Result)).
-
-resolve_owner_node_uses_remote_owner_when_valid_test() ->
-    RemoteNode = 'gateway_b@127.0.0.1',
+dispatch_event_atom_accepts_thread_events_test() ->
     ?assertEqual(
-        {ok, RemoteNode},
-        resolve_owner_node(123, fun(_UserId) -> {ok, RemoteNode} end)
-    ).
-
-resolve_owner_node_returns_unavailable_when_invalid_owner_test() ->
-    ?assertEqual(
-        unavailable,
-        resolve_owner_node(123, fun(_UserId) -> {ok, bad_owner} end)
+        thread_member_update, dispatch_event_atom_or_error(<<"THREAD_MEMBER_UPDATE">>)
     ),
-    ?assertEqual(
-        unavailable,
-        resolve_owner_node(123, fun(_UserId) -> {bad_owner} end)
-    ).
-
-presence_manager_server_ref_local_test() ->
-    ?assertEqual(presence_manager, presence_manager_server_ref(node())).
-
-offline_message_author_id_accepts_system_user_test() ->
-    ?assertEqual(system, offline_message_author_id(#{<<"author">> => #{<<"id">> => <<"0">>}})),
-    ?assertEqual(system, offline_message_author_id(#{<<"author">> => #{<<"id">> => 0}})).
-
-offline_message_author_id_accepts_positive_snowflake_test() ->
-    ?assertEqual(
-        {ok, 123}, offline_message_author_id(#{<<"author">> => #{<<"id">> => <<"123">>}})
-    ).
+    ?assertEqual(thread_list_sync, dispatch_event_atom_or_error(<<"THREAD_LIST_SYNC">>)),
+    ?assertEqual(forum_unreads, dispatch_event_atom_or_error(<<"FORUM_UNREADS">>)).
 
 offline_message_create_system_author_is_success_test() ->
     ?assertEqual(

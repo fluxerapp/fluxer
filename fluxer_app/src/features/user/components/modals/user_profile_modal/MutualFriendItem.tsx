@@ -55,7 +55,7 @@ export const MutualFriendItem: React.FC<MutualFriendItemProps> = ({
 					className={userProfileModalStyles.mutualFriendName}
 					data-flx="user.user-profile-modal.mutual-friend-item.span"
 				>
-					{NicknameUtils.getNickname(user, profile?.guildId ?? undefined)}
+					{NicknameUtils.getNickname(user, profile?.guildId ?? null)}
 				</span>
 				<span
 					className={userProfileModalStyles.mutualFriendUsername}

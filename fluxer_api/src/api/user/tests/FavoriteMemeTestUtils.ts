@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {FavoriteMemeResponse} from '@fluxer/schema/src/domains/meme/MemeSchemas';
-import {loadFixture, sendMessageWithAttachments} from '../../channel/tests/AttachmentTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface MessageWithAttachment {
 	id: string;
@@ -19,14 +19,6 @@ interface MessageWithAttachment {
 
 export async function listFavoriteMemes(harness: ApiTestHarness, token: string): Promise<Array<FavoriteMemeResponse>> {
 	return createBuilder<Array<FavoriteMemeResponse>>(harness, token).get('/users/@me/memes').execute();
-}
-
-export async function getFavoriteMeme(
-	harness: ApiTestHarness,
-	token: string,
-	memeId: string,
-): Promise<FavoriteMemeResponse> {
-	return createBuilder<FavoriteMemeResponse>(harness, token).get(`/users/@me/memes/${memeId}`).execute();
 }
 
 export async function createFavoriteMemeFromMessage(
@@ -65,26 +57,6 @@ export async function createFavoriteMemeFromUrl(
 		.post('/users/@me/memes')
 		.body(data)
 		.expect(HTTP_STATUS.CREATED)
-		.execute();
-}
-
-export async function updateFavoriteMeme(
-	harness: ApiTestHarness,
-	token: string,
-	memeId: string,
-	data: {
-		name?: string;
-		alt_text?: string | null;
-		tags?: Array<string>;
-	},
-): Promise<FavoriteMemeResponse> {
-	return createBuilder<FavoriteMemeResponse>(harness, token).patch(`/users/@me/memes/${memeId}`).body(data).execute();
-}
-
-export async function deleteFavoriteMeme(harness: ApiTestHarness, token: string, memeId: string): Promise<void> {
-	await createBuilder<void>(harness, token)
-		.delete(`/users/@me/memes/${memeId}`)
-		.expect(HTTP_STATUS.NO_CONTENT)
 		.execute();
 }
 

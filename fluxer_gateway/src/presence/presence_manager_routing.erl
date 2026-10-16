@@ -126,8 +126,6 @@ extract_user_id_from_request({lookup, UserId}) when is_integer(UserId) ->
     UserId;
 extract_user_id_from_request({dispatch, UserId, _, _}) when is_integer(UserId) ->
     UserId;
-extract_user_id_from_request({terminate_all_sessions, UserId}) when is_integer(UserId) ->
-    UserId;
 extract_user_id_from_request({start_or_lookup, #{user_id := UserId}}) when is_integer(UserId) ->
     UserId;
 extract_user_id_from_request(_) ->

@@ -5,7 +5,6 @@ import {makeAutoObservable, onBecomeObserved, onBecomeUnobserved, reaction} from
 
 class TickRegistryImpl {
 	nowSecond: number = Math.floor(Date.now() / 1000);
-	nowMinute: number = Math.floor(Date.now() / 60000);
 	private intervalId: number | null = null;
 	private observed = false;
 
@@ -20,9 +19,9 @@ class TickRegistryImpl {
 			this.stop();
 		});
 		reaction(
-			() => Window.focused,
-			(focused) => {
-				if (focused) this.start();
+			() => Window.visible,
+			(visible) => {
+				if (visible) this.start();
 				else this.stop();
 			},
 			{fireImmediately: true},
@@ -30,7 +29,7 @@ class TickRegistryImpl {
 	}
 
 	private start(): void {
-		if (!this.observed || !Window.focused || this.intervalId !== null) return;
+		if (!this.observed || !Window.visible || this.intervalId !== null) return;
 		this.tick();
 		this.intervalId = window.setInterval(() => this.tick(), 1000);
 	}
@@ -44,9 +43,7 @@ class TickRegistryImpl {
 	private tick(): void {
 		const now = Date.now();
 		const second = Math.floor(now / 1000);
-		const minute = Math.floor(now / 60000);
 		if (second !== this.nowSecond) this.nowSecond = second;
-		if (minute !== this.nowMinute) this.nowMinute = minute;
 	}
 }
 

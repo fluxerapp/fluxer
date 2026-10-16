@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResultExt},
+        enforcement::api_error_message,
+        generated::types::CommunityRemovalBasis,
+    },
     middleware::{
         auth::AuthContext,
         csrf,
@@ -10,7 +14,10 @@ use crate::{
     },
     routes::guild_tabs,
     state::AppState,
-    templates,
+    templates::{
+        self,
+        components::enforcement_fields::{BasisSubmission, basis_from_form},
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -82,23 +89,19 @@ async fn guilds_list(
                 }
             }
         }
-        Some((guilds, Some(params.requested_ids.len() as u64), false))
+        Some((guilds, params.requested_ids.len() as u64))
     } else if params.has_search() {
-        let offset = params.page.saturating_mul(params.limit);
+        let offset = u64::from(params.page) * u64::from(params.limit);
         client
             .search_guilds(params.search_query(), params.limit, offset)
             .await
             .log_error("search guilds")
-            .map(|response| {
-                let has_more = u64::from(offset) + (response.guilds.len() as u64) < response.total;
-                (response.guilds, Some(response.total), has_more)
-            })
+            .map(|response| (response.guilds, response.total))
     } else {
         None
     };
     let result_guilds = results.as_ref().map(|result| result.0.as_slice());
-    let total = results.as_ref().and_then(|result| result.1);
-    let has_more = results.as_ref().is_some_and(|result| result.2);
+    let total = results.as_ref().map(|result| result.1);
 
     let markup = templates::pages::guilds_list::guilds_list_page(
         config,
@@ -106,7 +109,6 @@ async fn guilds_list(
         &params,
         result_guilds,
         total,
-        has_more,
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
@@ -139,6 +141,7 @@ async fn guild_detail(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
+    let username_sign_in = state.account_identity(&client).await.is_username();
     let tab_body = if let Some(guild) = guild.as_ref() {
         guild_tabs::render(
             &client,
@@ -157,6 +160,7 @@ async fn guild_detail(
                 active_tab,
                 &csrf_token,
                 admin_acls,
+                username_sign_in,
             ))
         })
     } else {
@@ -171,6 +175,7 @@ async fn guild_detail(
         active_tab,
         tab_body,
         is_detail_fragment,
+        username_sign_in,
     );
     Html(markup.into_string()).into_response()
 }
@@ -191,7 +196,7 @@ async fn guild_detail_post(
             return flash::redirect_with_flash(
                 &format!("{base}/guilds/{guild_id}"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -203,7 +208,7 @@ async fn guild_detail_post(
     } else {
         format!("{base}/guilds/{guild_id}?tab={tab}")
     };
-    flash::redirect_with_flash(&redirect, flash, config.is_production())
+    flash::redirect_with_flash(&redirect, flash, config.secure_cookies())
 }
 
 async fn dispatch_guild_action(
@@ -310,11 +315,7 @@ async fn dispatch_guild_action(
             "Guild shutdown requested",
             "Failed to shut down guild",
         ),
-        "delete_guild" => action_result(
-            client.delete_guild(guild_id).await,
-            "Guild deleted",
-            "Failed to delete guild",
-        ),
+        "delete_guild" => remove_community(client, guild_id, form).await,
         "update_settings" => {
             let mut settings = serde_json::Map::new();
             for key in &[
@@ -324,8 +325,12 @@ async fn dispatch_guild_action(
                 "default_message_notifications",
                 "disabled_operations",
             ] {
-                if let Some(v) = form.parse_i64(key) {
-                    settings.insert(key.to_string(), serde_json::json!(v));
+                let value = match form.parse_value::<i64>(key) {
+                    Ok(value) => value,
+                    Err(_) => return FlashData::error(format!("Invalid {key} value")),
+                };
+                if let Some(value) = value {
+                    settings.insert(key.to_string(), serde_json::json!(value));
                 }
             }
             if form.contains_key("nsfw_submitted") {
@@ -356,11 +361,12 @@ async fn dispatch_guild_action(
             )
         }
         "update_disabled_operations" => {
-            let disabled_operations = form
-                .list_values_any(&["disabled_operations[]", "disabled_operations"])
-                .iter()
-                .filter_map(|value| value.parse::<i64>().ok())
-                .fold(0_i64, |acc, value| acc | value);
+            let Ok(operations) =
+                form.parse_list_values::<i64>(&["disabled_operations[]", "disabled_operations"])
+            else {
+                return FlashData::error("Invalid disabled operation value");
+            };
+            let disabled_operations = operations.into_iter().fold(0_i64, |acc, value| acc | value);
             let settings = serde_json::json!({
                 "disabled_operations": disabled_operations,
             });
@@ -415,7 +421,7 @@ async fn dispatch_guild_action(
                 return FlashData::error("Emoji ID is required");
             };
             action_result(
-                client.purge_assets(&[emoji_id]).await,
+                client.purge_assets(guild_id, &[emoji_id]).await,
                 "Emoji deleted",
                 "Failed to delete emoji",
             )
@@ -425,9 +431,19 @@ async fn dispatch_guild_action(
                 return FlashData::error("Sticker ID is required");
             };
             action_result(
-                client.purge_assets(&[sticker_id]).await,
+                client.purge_assets(guild_id, &[sticker_id]).await,
                 "Sticker deleted",
                 "Failed to delete sticker",
+            )
+        }
+        "delete_thread" => {
+            let Some(thread_id) = get("thread_id") else {
+                return FlashData::error("Thread ID is required");
+            };
+            action_result(
+                client.delete_thread_channel(&thread_id).await,
+                "Thread deleted",
+                "Failed to delete thread",
             )
         }
         "trigger_archive" => {
@@ -439,6 +455,37 @@ async fn dispatch_guild_action(
             )
         }
         _ => FlashData::error("Unknown guild action"),
+    }
+}
+
+async fn remove_community(
+    client: &AdminApiClient,
+    guild_id: &str,
+    form: &MultiValueForm,
+) -> FlashData {
+    let basis = match basis_from_form(form) {
+        Ok(basis) => basis,
+        Err(message) => return FlashData::error(message),
+    };
+    let community_basis = match &basis {
+        BasisSubmission::Enforcement(submission) => {
+            CommunityRemovalBasis::Enforcement(submission.decision.clone())
+        }
+        BasisSubmission::HolderRequest(_) => CommunityRemovalBasis::HolderRequest,
+        BasisSubmission::Housekeeping(_) => return FlashData::error("Choose a basis"),
+    };
+    match client
+        .delete_guild(guild_id, community_basis, basis.internal_note())
+        .await
+    {
+        Ok(_) => FlashData::success("Community removed"),
+        Err(error) => {
+            tracing::warn!(%error, guild_id, "admin API request failed: remove community");
+            FlashData::error(api_error_message(&error).map_or_else(
+                || "Failed to remove the community".to_owned(),
+                |message| format!("Failed to remove the community: {message}"),
+            ))
+        }
     }
 }
 
@@ -508,6 +555,7 @@ async fn guild_tab(
             normalize_guild_tab(&tab),
             &csrf_token,
             admin_acls,
+            state.account_identity(&client).await.is_username(),
         ),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" {

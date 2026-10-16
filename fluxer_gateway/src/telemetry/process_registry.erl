@@ -6,7 +6,6 @@
 -export([
     init/0,
     build_process_key/2,
-    build_process_name/2,
     registry_whereis/1,
     registry_unregister/1,
     register_and_monitor/3,
@@ -72,10 +71,6 @@ prefix_to_atom("presence") -> presence;
 prefix_to_atom("session") -> session;
 prefix_to_atom("session_group") -> session_group;
 prefix_to_atom("voice") -> voice.
-
--spec build_process_name(process_prefix(), process_id()) -> process_key().
-build_process_name(Prefix, Id) ->
-    build_process_key(Prefix, Id).
 
 -spec registry_whereis(process_key()) -> pid() | undefined.
 registry_whereis(Key) ->

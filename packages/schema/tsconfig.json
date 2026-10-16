@@ -2,6 +2,7 @@
 	"extends": "../../tsconfigs/base.json",
 	"compilerOptions": {
 		"lib": ["ESNext", "DOM"],
+		"types": ["node"],
 		"paths": {
 			"@fluxer/*": ["./../../packages/*"]
 		}

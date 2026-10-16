@@ -1,30 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {
+	BatchBuilder,
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import type {
 	OAuth2AccessTokenByUserRow,
 	OAuth2AccessTokenRow,
 	OAuth2AuthorizationCodeRow,
 	OAuth2RefreshTokenByUserRow,
 	OAuth2RefreshTokenRow,
-} from '../../database/types/OAuth2Types';
-import {OAuth2AccessToken} from '../../models/OAuth2AccessToken';
-import {OAuth2AuthorizationCode} from '../../models/OAuth2AuthorizationCode';
-import {OAuth2RefreshToken} from '../../models/OAuth2RefreshToken';
+} from '@app/api/database/types/OAuth2Types';
+import {OAuth2AccessToken} from '@app/api/models/OAuth2AccessToken';
+import {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
+import {OAuth2RefreshToken} from '@app/api/models/OAuth2RefreshToken';
+import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
 import {
 	OAuth2AccessTokens,
 	OAuth2AccessTokensByUser,
 	OAuth2AuthorizationCodes,
 	OAuth2RefreshTokens,
 	OAuth2RefreshTokensByUser,
-} from '../../Tables';
-import {ACCESS_TOKEN_TTL_SECONDS} from '../OAuth2TokenConstants';
-import type {IOAuth2TokenRepository} from './IOAuth2TokenRepository';
+} from '@app/api/Tables';
 
 function isAccessTokenExpired(createdAt: Date): boolean {
 	return Date.now() - createdAt.getTime() > ACCESS_TOKEN_TTL_SECONDS * 1000;
 }
+
+function isAuthorizationCodeExpired(createdAt: Date): boolean {
+	return Date.now() - createdAt.getTime() > AUTHORIZATION_CODE_TTL_SECONDS * 1000;
+}
+
+const TOKEN_DELETE_BATCH_STATEMENTS = 60;
 
 const SELECT_AUTHORIZATION_CODE = OAuth2AuthorizationCodes.selectCql({
 	where: OAuth2AuthorizationCodes.where.eq('code'),
@@ -44,35 +56,43 @@ const SELECT_REFRESH_TOKENS_BY_USER = OAuth2RefreshTokensByUser.selectCql({
 	where: OAuth2RefreshTokensByUser.where.eq('user_id'),
 });
 
-export class OAuth2TokenRepository implements IOAuth2TokenRepository {
+export class OAuth2TokenRepository {
 	async createAuthorizationCode(data: OAuth2AuthorizationCodeRow): Promise<OAuth2AuthorizationCode> {
-		await upsertOne(OAuth2AuthorizationCodes.insert(data));
+		await upsertOne(OAuth2AuthorizationCodes.insertWithTtl(data, AUTHORIZATION_CODE_TTL_SECONDS));
 		return new OAuth2AuthorizationCode(data);
 	}
 
 	async getAuthorizationCode(code: string): Promise<OAuth2AuthorizationCode | null> {
 		const row = await fetchOne<OAuth2AuthorizationCodeRow>(SELECT_AUTHORIZATION_CODE, {code});
-		return row ? new OAuth2AuthorizationCode(row) : null;
+		if (!row) {
+			return null;
+		}
+		if (isAuthorizationCodeExpired(row.created_at)) {
+			return null;
+		}
+		return new OAuth2AuthorizationCode(row);
 	}
 
 	async deleteAuthorizationCode(code: string): Promise<void> {
 		await deleteOneOrMany(OAuth2AuthorizationCodes.deleteByPk({code}));
 	}
 
+	async consumeAuthorizationCode(code: string, applicationId: ApplicationID): Promise<boolean> {
+		return executeConditional(OAuth2AuthorizationCodes.conditionalDeleteByPk({code}, {application_id: applicationId}));
+	}
+
 	async createAccessToken(data: OAuth2AccessTokenRow): Promise<OAuth2AccessToken> {
 		const batch = new BatchBuilder();
 		batch.addPrepared(OAuth2AccessTokens.insertWithTtl(data, ACCESS_TOKEN_TTL_SECONDS));
-		if (data.user_id !== null) {
-			batch.addPrepared(
-				OAuth2AccessTokensByUser.insertWithTtl(
-					{
-						user_id: data.user_id,
-						token_: data.token_,
-					},
-					ACCESS_TOKEN_TTL_SECONDS,
-				),
-			);
-		}
+		batch.addPrepared(
+			OAuth2AccessTokensByUser.insertWithTtl(
+				{
+					user_id: data.user_id,
+					token_: data.token_,
+				},
+				ACCESS_TOKEN_TTL_SECONDS,
+			),
+		);
 		await batch.execute();
 		return new OAuth2AccessToken(data);
 	}
@@ -88,15 +108,6 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 		return new OAuth2AccessToken(row);
 	}
 
-	async deleteAccessToken(token: string, _applicationId: ApplicationID, userId: UserID | null): Promise<void> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(OAuth2AccessTokens.deleteByPk({token_: token}));
-		if (userId !== null) {
-			batch.addPrepared(OAuth2AccessTokensByUser.deleteByPk({user_id: userId, token_: token}));
-		}
-		await batch.execute();
-	}
-
 	async deleteAllAccessTokensForUser(userId: UserID): Promise<void> {
 		const tokens = await fetchMany<OAuth2AccessTokenByUserRow>(SELECT_ACCESS_TOKENS_BY_USER, {
 			user_id: userId,
@@ -109,7 +120,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 			batch.addPrepared(OAuth2AccessTokens.deleteByPk({token_: tokenRow.token_}));
 			batch.addPrepared(OAuth2AccessTokensByUser.deleteByPk({user_id: userId, token_: tokenRow.token_}));
 		}
-		await batch.execute();
+		await batch.executeChunked(TOKEN_DELETE_BATCH_STATEMENTS, true);
 	}
 
 	async createRefreshToken(data: OAuth2RefreshTokenRow): Promise<OAuth2RefreshToken> {
@@ -130,11 +141,14 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 		return row ? new OAuth2RefreshToken(row) : null;
 	}
 
-	async deleteRefreshToken(token: string, _applicationId: ApplicationID, userId: UserID): Promise<void> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(OAuth2RefreshTokens.deleteByPk({token_: token}));
-		batch.addPrepared(OAuth2RefreshTokensByUser.deleteByPk({user_id: userId, token_: token}));
-		await batch.execute();
+	async consumeRefreshToken(token: string, applicationId: ApplicationID, userId: UserID): Promise<boolean> {
+		const consumed = await executeConditional(
+			OAuth2RefreshTokens.conditionalDeleteByPk({token_: token}, {application_id: applicationId, user_id: userId}),
+		);
+		if (consumed) {
+			await deleteOneOrMany(OAuth2RefreshTokensByUser.deleteByPk({user_id: userId, token_: token}));
+		}
+		return consumed;
 	}
 
 	async deleteAllRefreshTokensForUser(userId: UserID): Promise<void> {
@@ -149,7 +163,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 			batch.addPrepared(OAuth2RefreshTokens.deleteByPk({token_: tokenRow.token_}));
 			batch.addPrepared(OAuth2RefreshTokensByUser.deleteByPk({user_id: userId, token_: tokenRow.token_}));
 		}
-		await batch.execute();
+		await batch.executeChunked(TOKEN_DELETE_BATCH_STATEMENTS, true);
 	}
 
 	async listRefreshTokensForUser(userId: UserID): Promise<Array<OAuth2RefreshToken>> {

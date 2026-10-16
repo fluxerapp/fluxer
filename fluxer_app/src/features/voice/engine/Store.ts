@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {makeObservable, observable, runInAction} from 'mobx';
+import {makeObservable, observableRef, runInAction} from 'mobx';
 import {useSyncExternalStore} from 'react';
 
 export type StoreListener = () => void;
@@ -20,7 +20,7 @@ export class Store implements StoreLike {
 
 	constructor() {
 		makeObservable<this, 'storeVersion'>(this, {
-			storeVersion: observable.ref,
+			storeVersion: observableRef,
 		});
 	}
 

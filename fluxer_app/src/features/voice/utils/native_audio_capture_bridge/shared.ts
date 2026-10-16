@@ -12,16 +12,17 @@ export const GENERATOR_AUDIO_PREBUFFER_STEP_US = 100_000;
 export const GENERATOR_AUDIO_PREBUFFER_TIMEOUT_MS = 250;
 export const GENERATOR_AUDIO_REBUFFER_GAP_MS = 160;
 export const MAX_GENERATOR_BUFFERED_AUDIO_US = 1_500_000;
-export const MIN_NATIVE_AUDIO_SAMPLE_RATE = 8000;
-export const MAX_NATIVE_AUDIO_SAMPLE_RATE = 192000;
-export const MAX_NATIVE_AUDIO_CHANNELS = 8;
-export const MAX_NATIVE_AUDIO_FRAME_SECONDS = 1;
+const MIN_NATIVE_AUDIO_SAMPLE_RATE = 8000;
+const MAX_NATIVE_AUDIO_SAMPLE_RATE = 192000;
+const MAX_NATIVE_AUDIO_CHANNELS = 8;
+const MAX_NATIVE_AUDIO_FRAME_SECONDS = 1;
 
 export type ArmedNativeAudioCapture =
 	| {
 			kind: 'capture';
 			captureId: string;
 			includeSelfWindowAudio?: boolean;
+			winEndpoints?: Array<string>;
 	  }
 	| {
 			kind: 'linux-routing';
@@ -32,17 +33,57 @@ export type ArmedNativeAudioCapture =
 			kind: 'self-window-web-audio';
 	  };
 
+type NativeAudioBridgeCleanup = (stopRemote?: boolean, endDetail?: string) => Promise<void>;
+
 export interface NativeAudioBridgeHandle {
 	track: MediaStreamTrack;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
 }
 
 export interface ActiveNativeAudioBridge {
 	captureId: string;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
+	linuxRule?: NativeAudioRoutingRule;
+	includeSelfWindowAudio?: boolean;
+	winEndpoints?: Array<string>;
 }
 
-export interface GeneratorAudioTrack extends MediaStreamTrack {
+export type NativeAudioRoutingRule = NonNullable<NativeAudioStartOptions['linuxRule']>;
+
+function routingPatternsEqual(a: NativeAudioRoutingRule['include'], b: NativeAudioRoutingRule['include']): boolean {
+	const left = a ?? [];
+	const right = b ?? [];
+	if (left.length !== right.length) return false;
+	const serialize = (entry: Record<string, unknown>): string =>
+		JSON.stringify(
+			Object.entries(entry)
+				.filter(([, value]) => typeof value === 'string')
+				.sort(([x], [y]) => x.localeCompare(y)),
+		);
+	const serializedLeft = left.map(serialize).sort();
+	const serializedRight = right.map(serialize).sort();
+	return serializedLeft.every((entry, index) => entry === serializedRight[index]);
+}
+
+export function nativeAudioRoutingRulesEqual(
+	a: NativeAudioRoutingRule | undefined,
+	b: NativeAudioRoutingRule | undefined,
+): boolean {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	if (!routingPatternsEqual(a.include, b.include)) return false;
+	if (!routingPatternsEqual(a.exclude, b.exclude)) return false;
+	return (
+		Boolean(a.ignoreDevices) === Boolean(b.ignoreDevices) &&
+		Boolean(a.ignoreInputMedia) === Boolean(b.ignoreInputMedia) &&
+		Boolean(a.ignoreVirtual) === Boolean(b.ignoreVirtual) &&
+		Boolean(a.workaround) === Boolean(b.workaround) &&
+		Boolean(a.onlySpeakers) === Boolean(b.onlySpeakers) &&
+		Boolean(a.onlyDefaultSpeakers) === Boolean(b.onlyDefaultSpeakers)
+	);
+}
+
+interface GeneratorAudioTrack extends MediaStreamTrack {
 	writable: WritableStream<unknown>;
 }
 
@@ -85,11 +126,27 @@ export interface NativeAudioBridgeStats {
 	maxFramePeak: number;
 	maxFrameRms: number;
 	nonSilentFrameCount: number;
+	lastNonSilentFrameAt: number | null;
+	silentFrameStreak: number;
+	maxSilentRunMs: number;
+	sustainedSilenceWarned: boolean;
 	prebufferTargetMs: number | null;
 	frameDurationMs: number | null;
 	endReason: string | null;
 	endDetail: string | null;
 	endedAt: number | null;
+}
+
+export interface NativeAudioBridgeEndedCapture {
+	captureId: string;
+	bridgeMode: 'generator' | 'script-processor' | null;
+	startedAt: number | null;
+	endedAt: number | null;
+	endReason: string | null;
+	endDetail: string | null;
+	framesReceived: number;
+	nonSilentFrameCount: number;
+	lastFramePeak: number | null;
 }
 
 export interface NativeAudioBridgeFrameMetrics {
@@ -119,6 +176,10 @@ export const initialBridgeStats: NativeAudioBridgeStats = {
 	maxFramePeak: 0,
 	maxFrameRms: 0,
 	nonSilentFrameCount: 0,
+	lastNonSilentFrameAt: null,
+	silentFrameStreak: 0,
+	maxSilentRunMs: 0,
+	sustainedSilenceWarned: false,
 	prebufferTargetMs: null,
 	frameDurationMs: null,
 	endReason: null,
@@ -154,7 +215,7 @@ export function getNativeAudioApi() {
 	return getElectronAPI()?.nativeAudio ?? null;
 }
 
-export function isArrayBuffer(value: unknown): value is ArrayBuffer {
+function isArrayBuffer(value: unknown): value is ArrayBuffer {
 	return value instanceof ArrayBuffer || Object.prototype.toString.call(value) === '[object ArrayBuffer]';
 }
 
@@ -305,15 +366,7 @@ export async function replaceStreamAudioTrack(stream: MediaStream, nextTrack: Me
 	stream.addTrack(nextTrack);
 }
 
-export function stopStreamTracks(stream: MediaStream): void {
-	for (const track of stream.getTracks()) {
-		try {
-			track.stop();
-		} catch {}
-	}
-}
-
-export function restoreTrackStop(track: MediaStreamTrack, originalStop: MediaStreamTrack['stop']): void {
+function restoreTrackStop(track: MediaStreamTrack, originalStop: MediaStreamTrack['stop']): void {
 	try {
 		Object.defineProperty(track, 'stop', {
 			value: originalStop,
@@ -360,6 +413,28 @@ export function getArmedCaptureId(capture: ArmedNativeAudioCapture | null): stri
 
 export function unsupportedPlatformAvailability(): NativeAudioAvailability {
 	return {available: false, reason: 'unsupported-platform'};
+}
+
+export interface WindowsDesktopAudioSelection {
+	all: boolean;
+	devices: Array<string>;
+}
+
+export function selectWindowsDesktopAudioStart(
+	selection: WindowsDesktopAudioSelection,
+	availability: NativeAudioAvailability | null,
+): Pick<NativeAudioStartOptions, 'winCaptureScope' | 'winEndpoints'> {
+	if (availability?.capabilities?.endpointSelect !== true || selection.all) {
+		return {winCaptureScope: 'system'};
+	}
+	return {winCaptureScope: 'session-mixer', winEndpoints: [...selection.devices]};
+}
+
+export function windowsEndpointsEqual(a: Array<string>, b: Array<string>): boolean {
+	if (a.length !== b.length) return false;
+	const sortedA = [...a].sort();
+	const sortedB = [...b].sort();
+	return sortedA.every((entry, index) => entry === sortedB[index]);
 }
 
 export function shouldMixSelfWindowAudioIntoSystemCapture(_availability: NativeAudioAvailability): boolean {

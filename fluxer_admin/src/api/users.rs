@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{bool_param, user_flags};
+
+use reqwest::Method;
+
+use crate::api::generated::{snowflake, types as generated_types};
+
+use crate::templates::components::enforcement_fields::BasisSubmission;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     AdminUser, AdminUserMeResponse, GuildInfo, ListUserGuildsResponse, LookupUserResponse,
-    SearchUsersResponse, TerminateSessionsResponse, UserMutationResponse,
+    PasswordResetLinkResponse, SearchUsersResponse, TerminateSessionsResponse,
+    UserMutationResponse,
 };
 
 impl AdminApiClient {
@@ -15,65 +22,47 @@ impl AdminApiClient {
         email: Option<&str>,
         last_active_ip: Option<&str>,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchUsersResponse> {
-        let body = generated_types::SearchUsersRequest {
-            email: nonempty_string(email),
-            last_active_ip: nonempty_string(last_active_ip),
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
-            ),
-            offset: Some(i64::from(offset)),
-            query: nonempty_string(query),
-        };
+        let limit = limit.to_string();
+        let offset = offset.to_string();
         let response = self
             .generated()
-            .search_users(&body)
+            .list_admin_users(
+                nonempty(email),
+                nonempty(last_active_ip),
+                Some(limit.as_str()),
+                Some(offset.as_str()),
+                nonempty(query),
+                None,
+                None,
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         let response = response.into_inner();
         Ok(SearchUsersResponse {
             users: self.generated_value(response.users)?,
-            total: response.total as u64,
+            total: crate::api::generated::number_to_u64(response.total, "total")
+                .map_err(ApiError::Parse)?,
         })
-    }
-
-    pub async fn lookup_user(&self, query: &str) -> ApiResult<Option<AdminUser>> {
-        let body = generated_types::LookupUserRequest::Query(query.to_owned());
-        let response = self
-            .generated()
-            .lookup_user(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: LookupUserResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.users.into_iter().next())
     }
 
     pub async fn lookup_users_by_ids(&self, user_ids: &[String]) -> ApiResult<Vec<AdminUser>> {
         if user_ids.is_empty() {
             return Ok(vec![]);
         }
-        let body = generated_types::LookupUserRequest::UserIds(
-            user_ids
-                .iter()
-                .cloned()
-                .map(generated_types::SnowflakeType::from)
-                .collect(),
-        );
-        let response = self
-            .generated()
-            .lookup_user(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: LookupUserResponse = self.generated_value(response.into_inner())?;
+        let query_params: Vec<(&str, &str)> = user_ids
+            .iter()
+            .map(|user_id| ("user_id", user_id.as_str()))
+            .collect();
+        let resp: LookupUserResponse = self.get("/admin/users", Some(&query_params)).await?;
         Ok(resp.users)
     }
 
     pub async fn get_user_by_id(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::LookupUserRequest::Query(user_id.to_owned());
         let response = self
             .generated()
-            .lookup_user(&body)
+            .get_admin_user(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: LookupUserResponse = self.generated_value(response.into_inner())?;
@@ -89,7 +78,7 @@ impl AdminApiClient {
     pub async fn get_current_admin(&self) -> ApiResult<AdminUser> {
         let response = self
             .generated()
-            .get_authenticated_admin_user()
+            .get_current_admin_user()
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: AdminUserMeResponse = self.generated_value(response.into_inner())?;
@@ -102,14 +91,13 @@ impl AdminApiClient {
         add_flags: &[String],
         remove_flags: &[String],
     ) -> ApiResult<AdminUser> {
-        let body = generated_types::UpdateUserFlagsRequest {
-            add_flags: user_flags(add_flags),
-            remove_flags: user_flags(remove_flags),
-            user_id: snowflake(user_id),
+        let body = generated_types::AdminUserFlagsUpdateRequest {
+            add_flags: user_flags(add_flags)?,
+            remove_flags: user_flags(remove_flags)?,
         };
         let response = self
             .generated()
-            .update_user_flags(&body)
+            .update_admin_user_flags(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -124,19 +112,19 @@ impl AdminApiClient {
         after: Option<&str>,
         with_counts: Option<bool>,
     ) -> ApiResult<Vec<GuildInfo>> {
-        let body = generated_types::ListUserGuildsRequest {
-            after: after.map(|id| generated_types::SnowflakeType::from(id.to_owned())),
-            before: before.map(|id| generated_types::SnowflakeType::from(id.to_owned())),
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit.unwrap_or(200), "limit")
-                    .map_err(ApiError::Parse)?,
-            ),
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-            with_counts: Some(with_counts.unwrap_or(true)),
-        };
+        let after = after.map(snowflake);
+        let before = before.map(snowflake);
+        let limit = limit.unwrap_or(200).to_string();
+        let with_counts = bool_param(with_counts.unwrap_or(true));
         let response = self
             .generated()
-            .list_user_guilds(&body)
+            .list_admin_user_guilds(
+                &snowflake(user_id),
+                after.as_ref(),
+                before.as_ref(),
+                Some(limit.as_str()),
+                Some(with_counts),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: ListUserGuildsResponse = self.generated_value(response.into_inner())?;
@@ -147,12 +135,9 @@ impl AdminApiClient {
         &self,
         user_id: &str,
     ) -> ApiResult<super::types::ListUserSessionsResponse> {
-        let body = generated_types::ListUserSessionsRequest {
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
         let response = self
             .generated()
-            .list_user_sessions(&body)
+            .list_admin_user_sessions(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -162,12 +147,9 @@ impl AdminApiClient {
         &self,
         user_id: &str,
     ) -> ApiResult<TerminateSessionsResponse> {
-        let body = generated_types::TerminateSessionsRequest {
-            user_id: snowflake(user_id),
-        };
         let response = self
             .generated()
-            .terminate_user_sessions(&body)
+            .terminate_admin_user_sessions(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -177,12 +159,9 @@ impl AdminApiClient {
         &self,
         user_id: &str,
     ) -> ApiResult<super::types::ListUserRelationshipsResponse> {
-        let body = generated_types::ListUserRelationshipsRequest {
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
         let response = self
             .generated()
-            .admin_list_user_relationships(&body)
+            .list_admin_user_relationships(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -195,18 +174,18 @@ impl AdminApiClient {
         after: Option<&str>,
         limit: Option<u32>,
     ) -> ApiResult<super::types::ListUserDmChannelsResponse> {
-        let body = generated_types::ListUserDmChannelsRequest {
-            after: after.map(|id| generated_types::SnowflakeType::from(id.to_owned())),
-            before: before.map(|id| generated_types::SnowflakeType::from(id.to_owned())),
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit.unwrap_or(50), "limit")
-                    .map_err(ApiError::Parse)?,
-            ),
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
+        let after = after.map(snowflake);
+        let before = before.map(snowflake);
+        let limit = limit.unwrap_or(50).to_string();
         let response = self
             .generated()
-            .list_user_dm_channels(&body)
+            .list_admin_user_dm_channels(
+                &snowflake(user_id),
+                after.as_ref(),
+                before.as_ref(),
+                Some(limit.as_str()),
+                Some(generated_types::AdminUserDmChannelType::Dm),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -216,12 +195,15 @@ impl AdminApiClient {
         &self,
         user_id: &str,
     ) -> ApiResult<super::types::ListUserGroupDmChannelsResponse> {
-        let body = generated_types::ListUserGroupDmChannelsRequest {
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
         let response = self
             .generated()
-            .list_user_group_dm_channels(&body)
+            .list_admin_user_dm_channels(
+                &snowflake(user_id),
+                None,
+                None,
+                None,
+                Some(generated_types::AdminUserDmChannelType::GroupDm),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -233,28 +215,13 @@ impl AdminApiClient {
         add_flags: &[i32],
         remove_flags: &[i32],
     ) -> ApiResult<AdminUser> {
-        let body = generated_types::UpdatePremiumFlagsRequest {
+        let body = generated_types::AdminUserPremiumFlagsUpdateRequest {
             add_flags: premium_flags(add_flags),
             remove_flags: premium_flags(remove_flags),
-            user_id: snowflake(user_id),
         };
         let response = self
             .generated()
-            .update_user_premium_flags(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
-    pub async fn update_suspicious_flags(&self, user_id: &str, flags: i32) -> ApiResult<AdminUser> {
-        let body = generated_types::UpdateSuspiciousActivityFlagsRequest {
-            flags: generated_types::SuspiciousActivityFlags::from(flags),
-            user_id: snowflake(user_id),
-        };
-        let response = self
-            .generated()
-            .update_suspicious_activity_flags(&body)
+            .update_admin_user_premium_flags(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -262,13 +229,12 @@ impl AdminApiClient {
     }
 
     pub async fn set_user_acls(&self, user_id: &str, acls: &[String]) -> ApiResult<AdminUser> {
-        let body = generated_types::SetUserAclsRequest {
-            acls: acls.to_vec(),
-            user_id: snowflake(user_id),
+        let body = generated_types::AdminUserAclsRequest {
+            acls: super::admin_api_keys::parse_acls(acls),
         };
         let response = self
             .generated()
-            .set_user_acls(&body)
+            .set_admin_user_acls(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -276,13 +242,12 @@ impl AdminApiClient {
     }
 
     pub async fn set_user_traits(&self, user_id: &str, traits: &[String]) -> ApiResult<AdminUser> {
-        let body = generated_types::SetUserTraitsRequest {
+        let body = generated_types::AdminUserTraitsRequest {
             traits: traits.to_vec(),
-            user_id: snowflake(user_id),
         };
         let response = self
             .generated()
-            .set_user_traits(&body)
+            .set_admin_user_traits(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -290,52 +255,25 @@ impl AdminApiClient {
     }
 
     pub async fn disable_mfa(&self, user_id: &str) -> ApiResult<()> {
-        let body = generated_types::DisableMfaRequest {
-            user_id: snowflake(user_id),
-        };
         self.generated()
-            .disable_user_mfa(&body)
+            .disable_admin_user_mfa(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
     }
 
     pub async fn resend_verification_email(&self, user_id: &str) -> ApiResult<()> {
-        let body = generated_types::ResendVerificationEmailRequest {
-            user_id: snowflake(user_id),
-        };
         self.generated()
-            .admin_resend_verification_email(&body)
+            .resend_admin_user_verification_email(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
     }
 
     pub async fn verify_email(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::VerifyUserEmailRequest {
-            user_id: snowflake(user_id),
-        };
         let response = self
             .generated()
-            .verify_user_email(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
-    pub async fn update_has_verified_phone(
-        &self,
-        user_id: &str,
-        has_verified_phone: bool,
-    ) -> ApiResult<AdminUser> {
-        let body = generated_types::UpdateHasVerifiedPhoneRequest {
-            has_verified_phone,
-            user_id: snowflake(user_id),
-        };
-        let response = self
-            .generated()
-            .update_user_has_verified_phone(&body)
+            .verify_admin_user_email(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -346,33 +284,38 @@ impl AdminApiClient {
         &self,
         user_id: &str,
         fields: &[String],
+        basis: &BasisSubmission,
     ) -> ApiResult<AdminUser> {
         let fields = fields
             .iter()
-            .map(generated_types::ClearUserFieldsRequestFieldsItem::try_from)
+            .map(|field| {
+                generated_types::AdminUserClearFieldsRequestFieldsItem::try_from(field.as_str())
+            })
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| ApiError::Parse(e.to_string()))?;
-        let body = generated_types::ClearUserFieldsRequest {
+        let body = generated_types::AdminUserClearFieldsRequest {
+            basis: basis.moderation_basis(),
             fields,
-            user_id: snowflake(user_id),
         };
-        let response = self
-            .generated()
-            .clear_user_fields(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
+        let response: UserMutationResponse = self
+            .send(
+                Method::DELETE,
+                &format!(
+                    "/admin/users/{}/profile-fields",
+                    urlencoding::encode(user_id)
+                ),
+                Some(&body),
+                basis.internal_note(),
+            )
+            .await?;
+        Ok(response.user)
     }
 
     pub async fn set_bot_status(&self, user_id: &str, is_bot: bool) -> ApiResult<AdminUser> {
-        let body = generated_types::SetUserBotStatusRequest {
-            bot: is_bot,
-            user_id: snowflake(user_id),
-        };
+        let body = generated_types::AdminUserBotStatusRequest { bot: is_bot };
         let response = self
             .generated()
-            .set_user_bot_status(&body)
+            .set_admin_user_bot_status(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -380,13 +323,10 @@ impl AdminApiClient {
     }
 
     pub async fn set_system_status(&self, user_id: &str, is_system: bool) -> ApiResult<AdminUser> {
-        let body = generated_types::SetUserSystemStatusRequest {
-            system: is_system,
-            user_id: snowflake(user_id),
-        };
+        let body = generated_types::AdminUserSystemStatusRequest { system: is_system };
         let response = self
             .generated()
-            .set_user_system_status(&body)
+            .set_admin_user_system_status(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -399,18 +339,14 @@ impl AdminApiClient {
         username: &str,
         discriminator: Option<&str>,
     ) -> ApiResult<AdminUser> {
-        let body = generated_types::ChangeUsernameRequest {
+        let body = generated_types::AdminUserUsernameUpdateRequest {
             discriminator: discriminator
-                .map(generated_types::DiscriminatorType::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            user_id: snowflake(user_id),
-            username: generated_types::UsernameType::try_from(username)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
+                .map(|value| generated_types::DiscriminatorType::String(value.to_owned())),
+            username: generated_types::UsernameType::from(username.to_owned()),
         };
         let response = self
             .generated()
-            .change_user_username(&body)
+            .update_admin_user_username(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -418,97 +354,59 @@ impl AdminApiClient {
     }
 
     pub async fn change_email(&self, user_id: &str, email: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::ChangeEmailRequest {
+        let body = generated_types::AdminUserEmailUpdateRequest {
             email: generated_types::EmailType::from(email.to_owned()),
-            user_id: snowflake(user_id),
         };
         let response = self
             .generated()
-            .change_user_email(&body)
+            .update_admin_user_email(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
         Ok(resp.user)
     }
 
-    pub async fn temp_ban_user(
+    pub async fn unban_user(
         &self,
         user_id: &str,
-        duration_hours: u32,
-        reason: Option<&str>,
         private_reason: Option<&str>,
     ) -> ApiResult<AdminUser> {
-        let body = generated_types::TempBanUserRequest {
-            duration_hours: i32::try_from(duration_hours)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            reason: reason.map(std::borrow::ToOwned::to_owned),
-            user_id: snowflake(user_id),
-        };
+        let response = self
+            .generated_with_reason(private_reason)?
+            .unban_admin_user(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
+        Ok(resp.user)
+    }
+
+    pub async fn cancel_deletion(
+        &self,
+        user_id: &str,
+        expected_pending_deletion_at: &str,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<AdminUser> {
+        let body = serde_json::json!({
+            "expected_pending_deletion_at": expected_pending_deletion_at,
+        });
         let resp: UserMutationResponse = self
-            .post_typed_with_reason("/admin/users/temp-ban", &body, private_reason)
+            .send(
+                Method::DELETE,
+                &format!("/admin/users/{}/deletion", urlencoding::encode(user_id)),
+                Some(&body),
+                audit_log_reason,
+            )
             .await?;
         Ok(resp.user)
     }
 
-    pub async fn unban_user(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::DisableMfaRequest {
-            user_id: snowflake(user_id),
-        };
-        let response = self
-            .generated()
-            .unban_user(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
-    pub async fn schedule_deletion(
-        &self,
-        user_id: &str,
-        reason_code: i32,
-        public_reason: Option<&str>,
-        days_until_deletion: u32,
-    ) -> ApiResult<AdminUser> {
-        let body = generated_types::ScheduleAccountDeletionRequest {
-            days_until_deletion: Some(
-                crate::api::generated::nonzero_u32(days_until_deletion, "days_until_deletion")
-                    .map_err(ApiError::Parse)?,
-            ),
-            public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
-            reason_code,
-            user_id: snowflake(user_id),
-        };
-        let response = self
-            .generated()
-            .schedule_account_deletion(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
-    pub async fn cancel_deletion(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::DisableMfaRequest {
-            user_id: snowflake(user_id),
-        };
-        let response = self
-            .generated()
-            .cancel_account_deletion(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
     pub async fn change_dob(&self, user_id: &str, dob: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::ChangeDobRequest {
+        let body = generated_types::AdminUserDobUpdateRequest {
             date_of_birth: dob.to_owned(),
-            user_id: snowflake(user_id),
         };
         let response = self
             .generated()
-            .change_user_dob(&body)
+            .update_admin_user_date_of_birth(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -516,11 +414,28 @@ impl AdminApiClient {
     }
 
     pub async fn send_password_reset(&self, user_id: &str) -> ApiResult<()> {
-        let body = generated_types::SendPasswordResetRequest {
-            user_id: snowflake(user_id),
-        };
         self.generated()
-            .send_password_reset(&body)
+            .send_admin_user_password_reset(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        Ok(())
+    }
+
+    pub async fn create_password_reset_link(
+        &self,
+        user_id: &str,
+    ) -> ApiResult<PasswordResetLinkResponse> {
+        let response = self
+            .generated()
+            .create_admin_user_password_reset_link(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
+    pub async fn revoke_recovery_kit(&self, user_id: &str) -> ApiResult<()> {
+        self.generated()
+            .revoke_admin_user_recovery_kit(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -532,14 +447,10 @@ impl AdminApiClient {
         target_id: &str,
         category: &str,
     ) -> ApiResult<()> {
-        let body = generated_types::RemoveUserRelationshipRequest {
-            category: generated_types::RemoveUserRelationshipRequestCategory::try_from(category)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            target_user_id: snowflake(target_id),
-            user_id: snowflake(user_id),
-        };
+        let category = generated_types::RelationshipCategoryEnum::try_from(category)
+            .map_err(|e| ApiError::Parse(e.to_string()))?;
         self.generated()
-            .remove_user_relationship(&body)
+            .remove_admin_user_relationship(&snowflake(user_id), &snowflake(target_id), category)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -550,16 +461,11 @@ impl AdminApiClient {
         user_id: &str,
         category: &str,
     ) -> ApiResult<super::types::RemoveRelationshipsResponse> {
-        let body = generated_types::RemoveUserRelationshipsByCategoryRequest {
-            category: generated_types::RemoveUserRelationshipsByCategoryRequestCategory::try_from(
-                category,
-            )
-            .map_err(|e| ApiError::Parse(e.to_string()))?,
-            user_id: snowflake(user_id),
-        };
+        let category = generated_types::RelationshipCategoryEnum::try_from(category)
+            .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .remove_user_relationships_by_category(&body)
+            .clear_admin_user_relationships(&snowflake(user_id), category)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -570,12 +476,8 @@ impl AdminApiClient {
         user_id: &str,
         credential_id: &str,
     ) -> ApiResult<()> {
-        let body = generated_types::DeleteWebAuthnCredentialRequest {
-            credential_id: credential_id.to_owned(),
-            user_id: snowflake(user_id),
-        };
         self.generated()
-            .delete_user_webauthn_credential(&body)
+            .delete_admin_user_webauthn_credential(&snowflake(user_id), credential_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -586,17 +488,10 @@ impl AdminApiClient {
         user_id: &str,
         limit: Option<u32>,
     ) -> ApiResult<super::types::ListUserChangeLogResponse> {
-        let body = generated_types::ListUserChangeLogRequest {
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit.unwrap_or(50), "limit")
-                    .map_err(ApiError::Parse)?,
-            ),
-            page_token: None,
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
+        let limit = limit.unwrap_or(50).to_string();
         let response = self
             .generated()
-            .get_user_change_log(&body)
+            .list_admin_user_change_log(&snowflake(user_id), Some(limit.as_str()), None)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -606,24 +501,18 @@ impl AdminApiClient {
         &self,
         user_id: &str,
     ) -> ApiResult<super::types::WebAuthnCredentialListResponse> {
-        let body = generated_types::ListWebAuthnCredentialsRequest {
-            user_id: generated_types::SnowflakeType::from(user_id.to_owned()),
-        };
         let response = self
             .generated()
-            .list_user_webauthn_credentials(&body)
+            .list_admin_user_webauthn_credentials(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn cancel_bulk_message_deletion(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let body = generated_types::CancelBulkMessageDeletionRequest {
-            user_id: snowflake(user_id),
-        };
         let response = self
             .generated()
-            .admin_cancel_bulk_message_deletion(&body)
+            .cancel_admin_user_message_deletion(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -631,22 +520,8 @@ impl AdminApiClient {
     }
 }
 
-fn nonempty_string(value: Option<&str>) -> Option<String> {
-    value
-        .filter(|value| !value.is_empty())
-        .map(std::borrow::ToOwned::to_owned)
-}
-
-fn snowflake(value: &str) -> generated_types::SnowflakeType {
-    generated_types::SnowflakeType::from(value.to_owned())
-}
-
-fn user_flags(values: &[String]) -> Vec<generated_types::UserFlags> {
-    values
-        .iter()
-        .cloned()
-        .map(generated_types::UserFlags::from)
-        .collect()
+fn nonempty(value: Option<&str>) -> Option<&str> {
+    value.filter(|value| !value.is_empty())
 }
 
 fn premium_flags(values: &[i32]) -> Vec<generated_types::PremiumFlags> {
