@@ -13050,10 +13050,22 @@ msgstr "완료"
 msgid "Double-click"
 msgstr "더블 클릭"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced preference that edits your own message or replies to someone else's when you double-click it.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click a message to edit or reply"
+msgstr "메시지를 더블 클릭하여 수정하거나 답장하세요"
+
 #. Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.
 #: src/features/voice/components/StreamWatchHoverCard.tsx
 msgid "Double-click someone to watch their stream."
 msgstr "다른 사람을 더블 클릭하여 스트림을 시청하세요."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click your own message to edit it, or someone else's message to reply to it"
+msgstr "자신의 메시지를 더블 클릭하여 수정하거나, 다른 사람의 메시지를 더블 클릭하여 답장하세요"
 
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
@@ -26460,6 +26472,11 @@ msgstr "{fileName}에서 빠른 CSS를 교체했습니다."
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Quick reactions"
 msgstr "빠른 반응"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Quick reply"
+msgstr "빠른 답장"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

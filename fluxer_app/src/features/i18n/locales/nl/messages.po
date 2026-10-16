@@ -13050,10 +13050,22 @@ msgstr "Klaar"
 msgid "Double-click"
 msgstr "Dubbelklik"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced preference that edits your own message or replies to someone else's when you double-click it.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click a message to edit or reply"
+msgstr "Dubbelklik op een bericht om het te bewerken of erop te antwoorden"
+
 #. Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.
 #: src/features/voice/components/StreamWatchHoverCard.tsx
 msgid "Double-click someone to watch their stream."
 msgstr "Dubbelklik op iemand om hun stream te bekijken."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click your own message to edit it, or someone else's message to reply to it"
+msgstr "Dubbelklik op je eigen bericht om het te bewerken, of op het bericht van iemand anders om erop te antwoorden"
 
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
@@ -26460,6 +26472,11 @@ msgstr "Snelle CSS vervangen vanuit {fileName}."
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Quick reactions"
 msgstr "Snelle reacties"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Quick reply"
+msgstr "Snelle reactie"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

@@ -105,6 +105,8 @@ const MOVEMENT_THRESHOLD = 10;
 const HIGHLIGHT_DELAY = 100;
 const SUPPRESS_POST_LONG_PRESS_CLICK_MS = 750;
 const NESTED_LONG_PRESS_OWNER_SELECTOR = '[data-long-press-owner="true"]';
+const DOUBLE_CLICK_INTERACTIVE_TARGET_SELECTOR =
+	'a, button, input, textarea, select, video, audio, [role="button"], [contenteditable="true"]';
 const mobileLongPressScrollCancelHandlers = new Set<() => void>();
 
 let mobileLongPressScrollListenerAttached = false;
@@ -166,6 +168,8 @@ const getElementFromEventTarget = (target: EventTarget | null): Element | null =
 };
 const isNestedLongPressOwnerTarget = (target: EventTarget | null): boolean =>
 	getElementFromEventTarget(target)?.closest(NESTED_LONG_PRESS_OWNER_SELECTOR) != null;
+const isDoubleClickInteractiveTarget = (target: EventTarget | null): boolean =>
+	getElementFromEventTarget(target)?.closest(DOUBLE_CLICK_INTERACTIVE_TARGET_SELECTOR) != null;
 const normalizeAriaLabelText = (text: string): string => text.replace(/\s+/g, ' ').trim();
 const truncateAriaLabelText = (text: string): string => {
 	const normalized = normalizeAriaLabelText(text);
@@ -313,25 +317,25 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	);
 	const handleDoubleClick = useCallback(
 		(event: React.MouseEvent) => {
-			if (behaviorOverrides?.disableDoubleClick || !Accessibility.doubleClickMessageActions) {
-				event.preventDefault();
+			if (
+				behaviorOverrides?.disableDoubleClick ||
+				!Accessibility.doubleClickMessageActions ||
+				mobileLayoutEnabled ||
+				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
+				message.state !== MessageStates.SENT ||
+				!message.isUserMessage() ||
+				isEditing ||
+				isDoubleClickInteractiveTarget(event.target)
+			) {
 				return;
 			}
-			if (
-				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
-				message.state === MessageStates.SENDING ||
-				isEditing
-			)
-				return;
-
-			const permission = getMessagePermissions(message, channel);
-			if (!permission?.canSendMessages) return;
-			event.preventDefault();
-			if (permission?.canEditMessage && message.isCurrentUserAuthor()) {
+			const permissions = getMessagePermissions(message, channel);
+			if (!permissions?.canSendMessages) return;
+			if (permissions.canEditMessage && !message.messageSnapshots) {
 				startMessageEdit(message);
 				return;
 			}
-			if (!isReplying) requestMessageReply(message);
+			if (!isReplying) requestMessageReply(message, {sourceChannel: channel});
 		},
 		[
 			previewContext,
@@ -339,8 +343,8 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			channel,
 			isEditing,
 			isReplying,
+			mobileLayoutEnabled,
 			behaviorOverrides?.disableDoubleClick,
-			Accessibility.doubleClickMessageActions,
 		],
 	);
 	const handleAltKeyDown = useCallback(

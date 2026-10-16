@@ -10,6 +10,7 @@ import {
 	ANIMATIONS_DESCRIPTOR,
 	COLON_AUTOCOMPLETE_DESCRIPTOR,
 	COMPOSER_BUTTONS_DESCRIPTOR,
+	DOUBLE_CLICK_DESCRIPTOR,
 	EMOTICONS_DESCRIPTOR,
 	EXPRESSION_AUTOCOMPLETE_DESCRIPTOR,
 	INBOX_DESCRIPTOR,
@@ -415,13 +416,16 @@ const CHOOSE_HOW_CHAT_MOVES_AFTER_YOU_SEND_A_MESSAGE_DESCRIPTOR = msg({
 });
 
 const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
-	message: 'Edit/Reply by double clicking on message',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI',
+	message: 'Double-click a message to edit or reply',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
-
-const CHOOSE_WHAT_DOUBLE_CLICK_MESSAGE_DOES_DESCRIPTOR = msg({
-	message: 'Choose what happens when you double click a message',
+const DOUBLE_CLICK_EDITS_OR_REPLIES_DESCRIPTOR = msg({
+	message: "Double-click your own message to edit it, or someone else's message to reply to it",
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+const QUICK_REPLY_DESCRIPTOR = msg({
+	message: 'Quick reply',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
 const MARK_ALL_AS_READ_DESCRIPTOR = msg({
@@ -723,14 +727,8 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 		tabType: 'chat_settings',
 		sectionId: 'input',
 		label: DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR,
-		keywords: [
-			MESSAGE_HOVER_DESCRIPTOR,
-			MESSAGE_ACTION_BAR_DESCRIPTOR,
-			SENT_MESSAGES_DESCRIPTOR,
-			MORE_BUTTON_DESCRIPTOR,
-			MESSAGE_BUTTONS_DESCRIPTOR,
-		],
-		description: CHOOSE_WHAT_DOUBLE_CLICK_MESSAGE_DOES_DESCRIPTOR,
+		keywords: [DOUBLE_CLICK_DESCRIPTOR, QUICK_REPLY_DESCRIPTOR, MESSAGE_EDITING_DESCRIPTOR],
+		description: DOUBLE_CLICK_EDITS_OR_REPLIES_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['chat'],
 	},

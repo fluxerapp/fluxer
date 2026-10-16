@@ -123,8 +123,9 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 });
 
 const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
-	message: 'Edit/Reply by double clicking on message',
-	comment: 'Short label for an advanced message double click preference.',
+	message: 'Double-click a message to edit or reply',
+	comment:
+		"Short label for an advanced preference that edits your own message or replies to someone else's when you double-click it.",
 });
 
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_PROMPT_DESCRIPTOR = msg({

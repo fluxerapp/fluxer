@@ -13050,10 +13050,22 @@ msgstr "Τέλος"
 msgid "Double-click"
 msgstr "Διπλό κλικ"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced preference that edits your own message or replies to someone else's when you double-click it.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click a message to edit or reply"
+msgstr "Διπλό κλικ σε ένα μήνυμα για επεξεργασία ή απάντηση"
+
 #. Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.
 #: src/features/voice/components/StreamWatchHoverCard.tsx
 msgid "Double-click someone to watch their stream."
 msgstr "Κάντε διπλό κλικ σε κάποιον για να παρακολουθήσετε τη ροή του."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Double-click your own message to edit it, or someone else's message to reply to it"
+msgstr "Διπλό κλικ στο δικό σας μήνυμα για επεξεργασία, ή στο μήνυμα κάποιου άλλου για απάντηση"
 
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
@@ -26460,6 +26472,11 @@ msgstr "Το γρήγορο CSS αντικαταστάθηκε από το {file
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Quick reactions"
 msgstr "Γρήγορες αντιδράσεις"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Quick reply"
+msgstr "Γρήγορη απάντηση"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
