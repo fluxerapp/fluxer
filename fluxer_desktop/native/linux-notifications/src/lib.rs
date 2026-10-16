@@ -266,7 +266,7 @@ impl FreedesktopNotifications {
         let method_conn = open_blocking_connection()
             .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
         let stop_signal_thread = Arc::new(AtomicBool::new(false));
-        let signal_thread = spawn_signal_thread(event_callback.clone(), stop_signal_thread.clone())
+        let signal_thread = spawn_signal_thread(event_callback.clone(), method_conn.clone(), stop_signal_thread.clone())
             .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
 
         Ok(Self {
@@ -536,6 +536,7 @@ fn build_hints(hints: &NotifyHints) -> HashMap<&'static str, Value<'_>> {
 
 fn spawn_signal_thread(
     event_callback: EventThreadsafeFunction,
+    method_conn: BlockingConnection,
     stop: Arc<AtomicBool>,
 ) -> std::result::Result<JoinHandle<()>, String> {
     let (ready_tx, ready_rx) = mpsc::sync_channel(1);
@@ -544,7 +545,7 @@ fn spawn_signal_thread(
         .name("fluxer-linux-notifications-signals".to_string())
         .spawn(move || {
             let setup = future::block_on(async {
-                let conn = zbus::Connection::session().await?;
+                let conn = method_conn.inner();
                 let rule = MatchRule::builder()
                     .msg_type(MessageType::Signal)
                     .path(NOTIFY_PATH)?
