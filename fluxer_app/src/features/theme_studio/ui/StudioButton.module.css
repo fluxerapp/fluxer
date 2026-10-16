@@ -80,7 +80,7 @@
 .dangerSolid {
 	--bg: var(--studio-danger);
 	--bg-hover: var(--studio-danger-hover);
-	--fg: var(--studio-fg-on-accent);
+	--fg: var(--studio-fg-on-danger);
 }
 
 .leadingIcon {

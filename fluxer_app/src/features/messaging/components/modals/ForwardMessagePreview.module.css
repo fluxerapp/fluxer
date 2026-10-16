@@ -144,7 +144,7 @@
 	position: absolute;
 	inset: 0;
 	margin: auto;
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 }
 
 .overflowCount {

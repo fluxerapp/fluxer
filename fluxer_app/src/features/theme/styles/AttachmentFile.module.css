@@ -25,7 +25,7 @@
 @media (hover: hover) {
 	.deleteButton:hover {
 		background-color: var(--status-danger);
-		color: var(--text-on-brand-primary);
+		color: var(--text-on-dark);
 	}
 }
 

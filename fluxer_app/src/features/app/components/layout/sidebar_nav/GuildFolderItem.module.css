@@ -269,10 +269,10 @@
 
 :global(.theme-light) .dropIndicatorTop::before,
 :global(.theme-light) .dropIndicatorBottom::after {
-	background: var(--brand-primary);
+	background: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .dropIndicatorInside .collapsedFolder,
 :global(.theme-light) .dropIndicatorInside .folderHeaderButton {
-	outline-color: var(--brand-primary);
+	outline-color: var(--brand-primary-foreground);
 }

@@ -16,7 +16,7 @@
 	align-items: center;
 	justify-content: center;
 	border-radius: 0.5rem;
-	border: 0.125rem dashed var(--brand-primary);
+	border: 0.125rem dashed var(--brand-primary-foreground);
 	background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
@@ -28,13 +28,13 @@
 }
 
 .dragIcon {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .dragText {
 	font-weight: 500;
 	font-size: 1.125rem;
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .freeUserContainer {
@@ -131,7 +131,7 @@
 	border: none;
 	background: none;
 	font-size: 0.75rem;
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 	cursor: pointer;
 }
 
@@ -218,7 +218,7 @@
 	animation: spin 1s linear infinite;
 	border-radius: 50%;
 	border: 0.125rem solid var(--background-modifier-accent);
-	border-top-color: var(--brand-primary);
+	border-top-color: var(--brand-primary-foreground);
 }
 
 @keyframes spin {
@@ -314,7 +314,7 @@
 }
 
 .selectedIcon {
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .statsText {

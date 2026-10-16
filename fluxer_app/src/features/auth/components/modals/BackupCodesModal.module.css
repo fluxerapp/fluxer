@@ -49,7 +49,7 @@
 .checkIcon {
 	height: 0.625rem;
 	width: 0.625rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .code {

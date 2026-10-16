@@ -95,7 +95,7 @@ function buildEditorTheme(baseTheme: ThemeStudioBaseTheme): Extension {
 			},
 			'.cm-tooltip-autocomplete > ul > li[aria-selected]': {
 				backgroundColor: 'var(--studio-accent, rgba(120, 160, 220, 0.3))',
-				color: 'var(--studio-fg-primary)',
+				color: 'var(--studio-fg-on-accent)',
 			},
 			'.cm-tooltip-autocomplete > ul > li': {
 				fontFamily: 'var(--studio-font-mono)',

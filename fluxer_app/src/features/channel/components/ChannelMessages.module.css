@@ -155,7 +155,7 @@
 	background: none;
 	border: none;
 	padding: 0 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-size: 0.875rem;
 	font-weight: 500;
 	overflow: hidden;
@@ -172,7 +172,7 @@
 	background: none;
 	border: none;
 	padding: 0 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-size: 0.875rem;
 	font-weight: 600;
 	flex-shrink: 0;

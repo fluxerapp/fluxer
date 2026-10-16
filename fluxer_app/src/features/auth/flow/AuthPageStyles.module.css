@@ -157,7 +157,7 @@ img.entityIcon {
 .themeIcon {
 	height: 2.5rem;
 	width: 2.5rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .form {

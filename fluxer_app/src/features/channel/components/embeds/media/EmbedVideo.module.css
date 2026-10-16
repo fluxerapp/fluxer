@@ -149,7 +149,7 @@
 	border: none;
 	border-radius: var(--radius-full);
 	background-color: rgba(0, 0, 0, 0.6);
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	cursor: pointer;
 	z-index: 2;
 	transition: background-color 150ms ease;

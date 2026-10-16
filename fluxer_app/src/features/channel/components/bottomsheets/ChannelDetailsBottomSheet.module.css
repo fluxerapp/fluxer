@@ -170,7 +170,7 @@
 }
 
 :global(.theme-light) .tabButtonActive {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .tabButtonInactive {
@@ -367,7 +367,7 @@
 }
 
 .newGroupIconWhite {
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .newGroupContent {
@@ -555,12 +555,13 @@
 
 .quickActionButtonActive {
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.quickActionButtonActive:hover {
 		background-color: var(--brand-primary-light);
+		color: var(--brand-primary-light-fill);
 	}
 }
 

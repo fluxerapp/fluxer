@@ -364,11 +364,15 @@
 
 .itemSelected {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .itemSelected.itemHighlighted {
 	background-color: var(--brand-primary);
+}
+
+.itemSelected .itemText :where(*) {
+	color: inherit;
 }
 
 .itemRendered {

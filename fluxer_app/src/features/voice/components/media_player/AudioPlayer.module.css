@@ -80,6 +80,7 @@
 
 .playButton:hover {
 	background-color: var(--brand-primary-light);
+	color: var(--text-on-brand-primary-light);
 }
 
 .playButton:active {

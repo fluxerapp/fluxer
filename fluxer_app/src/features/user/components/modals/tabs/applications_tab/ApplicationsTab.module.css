@@ -86,7 +86,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-weight: 600;
 	font-size: 0.875rem;
 }

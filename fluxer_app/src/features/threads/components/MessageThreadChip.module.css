@@ -47,7 +47,7 @@
 }
 
 :global(.theme-light) .count {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .preview {

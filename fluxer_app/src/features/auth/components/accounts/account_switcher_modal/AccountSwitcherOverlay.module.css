@@ -100,7 +100,7 @@
 
 .noAccounts {
 	margin-bottom: 1rem;
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	font-size: 0.9375rem;
 	font-weight: 600;
 	line-height: 1.25rem;

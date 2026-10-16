@@ -298,7 +298,7 @@
 }
 
 .channelItemAutocompleteHighlight {
-	box-shadow: 0 0 0 0.125rem var(--brand-primary);
+	box-shadow: 0 0 0 0.125rem var(--brand-primary-foreground);
 }
 
 .categoryContent {

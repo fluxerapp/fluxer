@@ -13,7 +13,7 @@
 }
 
 :global(.theme-light) .channelBadgeSelectedIcon {
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .favoriteItemContainer {
@@ -85,7 +85,7 @@
 	align-items: center;
 	justify-content: center;
 	border-radius: 624.9375rem;
-	background-color: white;
+	background-color: var(--brand-primary-fill);
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--brand-primary);

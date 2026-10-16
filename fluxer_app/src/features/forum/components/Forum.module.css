@@ -570,14 +570,14 @@
 }
 
 :global(.theme-light) .cardUnreadLabel {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .newBadge {
 	padding: 0 0.375rem;
 	border-radius: 0.25rem;
 	background-color: var(--status-danger);
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	font-size: 0.6875rem;
 	font-weight: 700;
 	line-height: 1.125rem;
@@ -625,7 +625,7 @@
 	padding: 0.5rem;
 	border-radius: 50%;
 	background-color: rgb(0 0 0 / 0.6);
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 	transform: translate(-50%, -50%);
 }
 
@@ -664,14 +664,14 @@
 }
 
 .reactionActive {
-	background-color: color-mix(in srgb, var(--brand-primary) 36%, var(--background-secondary) 64%);
-	border-color: var(--brand-primary);
-	color: var(--text-on-brand-primary);
+	background-color: var(--brand-tint);
+	border-color: var(--brand-tint-border);
+	color: var(--text-on-brand-tint);
 }
 
 .reactionActive:hover:not(:disabled) {
-	background-color: color-mix(in srgb, var(--brand-primary) 48%, var(--background-secondary) 52%);
-	border-color: var(--brand-primary);
+	background-color: var(--brand-tint-hover);
+	border-color: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .reaction {
@@ -681,9 +681,9 @@
 }
 
 :global(.theme-light) .reactionActive {
-	background-color: color-mix(in srgb, var(--brand-primary) 12%, var(--background-primary) 88%);
-	border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent 55%);
-	color: var(--brand-primary);
+	background-color: var(--brand-tint);
+	border-color: var(--brand-tint-border);
+	color: var(--text-on-brand-tint);
 }
 
 .notice {

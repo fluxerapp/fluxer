@@ -157,12 +157,12 @@
 .editIcon {
 	height: 1.25rem;
 	width: 1.25rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .editLabel {
 	font-weight: 500;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .section {

@@ -317,5 +317,5 @@
 
 :global(.theme-light) .dropIndicatorLeft::before,
 :global(.theme-light) .dropIndicatorRight::after {
-	background: var(--brand-primary);
+	background: var(--brand-primary-foreground);
 }

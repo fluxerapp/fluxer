@@ -201,7 +201,7 @@ html.platform-native .fluxer-boot-app {
 .fluxer-boot-item[data-selected='1'] .fluxer-boot-fluxer-icon {
 	border-radius: 30%;
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 .fluxer-boot-action-icon {
 	display: flex;
@@ -218,7 +218,7 @@ html.platform-native .fluxer-boot-app {
 .fluxer-boot-item[data-selected='1'] .fluxer-boot-action-icon {
 	border-radius: 30%;
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 .fluxer-boot-glyph-lg {
 	height: 1.75rem;

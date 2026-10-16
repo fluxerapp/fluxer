@@ -140,7 +140,7 @@
 }
 
 :global(.theme-light) .checkIcon {
-	color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
 }
 
 .emptyState {

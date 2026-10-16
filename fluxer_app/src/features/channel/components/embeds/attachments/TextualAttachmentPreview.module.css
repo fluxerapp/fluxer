@@ -403,11 +403,15 @@
 
 .languageItemSelected {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .languageItemSelected.languageItemHighlighted {
 	background-color: var(--brand-primary);
+}
+
+.languageItemSelected .languageOptionCanonical {
+	color: inherit;
 }
 
 .languageItemIndicator {

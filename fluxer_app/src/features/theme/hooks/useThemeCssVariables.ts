@@ -68,7 +68,7 @@ export function useThemeCssVariables({
 	]);
 	useLayoutEffect(() => {
 		if (instanceThemeColor === null) return;
-		const variables = getInstanceBrandVariables(instanceThemeColor);
+		const variables = getInstanceBrandVariables(instanceThemeColor, effectiveTheme, saturationFactor);
 		if (variables === null) return;
 		const htmlNode = document.documentElement;
 		for (const name of INSTANCE_BRAND_VARIABLES) {
@@ -79,7 +79,7 @@ export function useThemeCssVariables({
 				htmlNode.style.removeProperty(name);
 			}
 		};
-	}, [instanceThemeColor]);
+	}, [instanceThemeColor, effectiveTheme, saturationFactor]);
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		return () => {

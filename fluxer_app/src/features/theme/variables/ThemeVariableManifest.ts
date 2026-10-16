@@ -106,8 +106,15 @@ export type ThemeVariableName =
 	| "--border-color-hover"
 	| "--brand-primary"
 	| "--brand-primary-fill"
+	| "--brand-primary-foreground"
 	| "--brand-primary-light"
+	| "--brand-primary-light-fill"
+	| "--brand-primary-pressed"
+	| "--brand-primary-shade"
 	| "--brand-secondary"
+	| "--brand-tint"
+	| "--brand-tint-border"
+	| "--brand-tint-hover"
 	| "--button-danger-active-fill"
 	| "--button-danger-fill"
 	| "--button-danger-outline-active-border"
@@ -421,6 +428,9 @@ export type ThemeVariableName =
 	| "--text-code"
 	| "--text-link"
 	| "--text-on-brand-primary"
+	| "--text-on-brand-primary-light"
+	| "--text-on-brand-tint"
+	| "--text-on-dark"
 	| "--text-primary"
 	| "--text-primary-muted"
 	| "--text-secondary"
@@ -570,8 +580,15 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--border-color-hover", kind: "color", groupId: "borders", groupLabel: "Borders & focus", source: "color-system"},
 	{name: "--brand-primary", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-primary-fill", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-foreground", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-primary-light", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-light-fill", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-pressed", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-primary-shade", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--brand-secondary", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint-border", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--brand-tint-hover", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--button-danger-active-fill", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-danger-fill", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
 	{name: "--button-danger-outline-active-border", kind: "color", groupId: "buttons", groupLabel: "Buttons", source: "color-system"},
@@ -885,6 +902,9 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--text-code", kind: "color", groupId: "code", groupLabel: "Code & terminal", source: "color-system"},
 	{name: "--text-link", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-on-brand-primary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-brand-primary-light", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-brand-tint", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
+	{name: "--text-on-dark", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-primary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-primary-muted", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
 	{name: "--text-secondary", kind: "color", groupId: "text", groupLabel: "Text", source: "color-system"},
@@ -1035,8 +1055,15 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--border-color-hover",
 	"--brand-primary",
 	"--brand-primary-fill",
+	"--brand-primary-foreground",
 	"--brand-primary-light",
+	"--brand-primary-light-fill",
+	"--brand-primary-pressed",
+	"--brand-primary-shade",
 	"--brand-secondary",
+	"--brand-tint",
+	"--brand-tint-border",
+	"--brand-tint-hover",
 	"--button-danger-active-fill",
 	"--button-danger-fill",
 	"--button-danger-outline-active-border",
@@ -1350,6 +1377,9 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--text-code",
 	"--text-link",
 	"--text-on-brand-primary",
+	"--text-on-brand-primary-light",
+	"--text-on-brand-tint",
+	"--text-on-dark",
 	"--text-primary",
 	"--text-primary-muted",
 	"--text-secondary",
@@ -1500,8 +1530,15 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--border-color-hover": "hsla(258, calc(10% * var(--saturation-factor)), 50%, 0.3)",
 	"--brand-primary": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-foreground": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-light": "hsl(242, calc(100% * var(--saturation-factor)), 84%)",
+	"--brand-primary-light-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-pressed": "color-mix(in srgb, hsl(242, calc(70% * var(--saturation-factor)), 55%) 90%, hsl(0, 0%, 0%))",
+	"--brand-primary-shade": "hsl(0, 0%, 0%)",
 	"--brand-secondary": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
+	"--brand-tint": "color-mix(in srgb, var(--brand-primary) 36%, var(--background-secondary) 64%)",
+	"--brand-tint-border": "var(--brand-primary)",
+	"--brand-tint-hover": "color-mix(in srgb, var(--brand-primary) 48%, var(--background-secondary) 52%)",
 	"--button-danger-active-fill": "hsl(359, calc(65% * var(--saturation-factor)), 45%)",
 	"--button-danger-fill": "hsl(359, calc(70% * var(--saturation-factor)), 54%)",
 	"--button-danger-outline-active-border": "transparent",
@@ -1815,6 +1852,9 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--text-code": "color-mix(in srgb, hsl(258, calc(10% * var(--saturation-factor)), 90.36%) 82%, hsl(340, calc(50% * var(--saturation-factor)), 90%) 18%)",
 	"--text-link": "hsl(198, calc(92% * var(--saturation-factor)), 70%)",
 	"--text-on-brand-primary": "hsl(0, 0%, 98%)",
+	"--text-on-brand-primary-light": "hsl(0, 0%, 98%)",
+	"--text-on-brand-tint": "var(--text-on-brand-primary)",
+	"--text-on-dark": "hsl(0, 0%, 98%)",
 	"--text-primary": "hsl(258, calc(10% * var(--saturation-factor)), 96%)",
 	"--text-primary-muted": "hsl(258, calc(10% * var(--saturation-factor)), 81.42%)",
 	"--text-secondary": "hsl(258, calc(10% * var(--saturation-factor)), 90.36%)",
@@ -1965,8 +2005,15 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--border-color-hover": "hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.25)",
 	"--brand-primary": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-foreground": "hsl(242, calc(70% * var(--saturation-factor)), 55%)",
 	"--brand-primary-light": "hsl(242, calc(100% * var(--saturation-factor)), 84%)",
+	"--brand-primary-light-fill": "hsl(0, 0%, 100%)",
+	"--brand-primary-pressed": "color-mix(in srgb, hsl(242, calc(70% * var(--saturation-factor)), 55%) 90%, hsl(0, 0%, 0%))",
+	"--brand-primary-shade": "hsl(0, 0%, 0%)",
 	"--brand-secondary": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
+	"--brand-tint": "color-mix(in srgb, var(--brand-primary) 12%, var(--background-primary) 88%)",
+	"--brand-tint-border": "color-mix(in srgb, var(--brand-primary) 45%, transparent 55%)",
+	"--brand-tint-hover": "color-mix(in srgb, var(--brand-primary) 18%, var(--background-primary) 82%)",
 	"--button-danger-active-fill": "hsl(359, calc(65% * var(--saturation-factor)), 45%)",
 	"--button-danger-fill": "hsl(359, calc(70% * var(--saturation-factor)), 54%)",
 	"--button-danger-outline-active-border": "transparent",
@@ -2280,6 +2327,9 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--text-code": "color-mix(in srgb, hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 72%, hsl(340, calc(50% * var(--saturation-factor)), 38%) 28%)",
 	"--text-link": "hsl(198, calc(92% * var(--saturation-factor)), 45%)",
 	"--text-on-brand-primary": "hsl(0, 0%, 98%)",
+	"--text-on-brand-primary-light": "hsl(0, 0%, 98%)",
+	"--text-on-brand-tint": "var(--brand-primary)",
+	"--text-on-dark": "hsl(0, 0%, 98%)",
 	"--text-primary": "hsl(220, calc(10% * var(--saturation-factor)), 15%)",
 	"--text-primary-muted": "hsl(220, calc(10% * var(--saturation-factor)), 42.2%)",
 	"--text-secondary": "hsl(220, calc(10% * var(--saturation-factor)), 33.78%)",

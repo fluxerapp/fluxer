@@ -204,6 +204,10 @@
 	color: var(--brand-primary-fill);
 }
 
+.overwriteItemSelected .lockIcon {
+	color: inherit;
+}
+
 .roleDot {
 	width: 0.75rem;
 	height: 0.75rem;

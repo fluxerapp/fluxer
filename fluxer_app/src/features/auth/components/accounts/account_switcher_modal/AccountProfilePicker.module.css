@@ -6,7 +6,7 @@
 	--account-profile-slot-width: 14.875rem;
 	--account-profile-instance-badge-size: 3rem;
 	--account-profile-state-badge-size: 2.25rem;
-	--account-profile-name-color: var(--text-on-brand-primary);
+	--account-profile-name-color: var(--text-on-dark);
 	--account-profile-domain-height: 0;
 	--account-profile-domain-gap: 0;
 	--account-profile-name-gap: 0.625rem;

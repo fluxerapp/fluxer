@@ -116,6 +116,7 @@
 }
 
 .switchThumb[data-state='checked'] {
+	background-color: var(--brand-primary-fill);
 	transform: translateX(1.375rem);
 }
 

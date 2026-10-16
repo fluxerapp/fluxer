@@ -54,6 +54,10 @@
 	color: white;
 }
 
+.iconContainerBrand .actionIcon {
+	color: var(--brand-primary-fill);
+}
+
 .actionIconSecondary {
 	color: var(--text-primary);
 }

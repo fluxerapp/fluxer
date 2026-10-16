@@ -219,7 +219,7 @@
 .guildIconSelected.guildIconNoImage {
 	border-radius: 30%;
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -231,7 +231,7 @@
 	.guildListItem.contextMenuHover .guildIconNoImage {
 		border-radius: 30%;
 		background-color: var(--brand-primary);
-		color: white;
+		color: var(--brand-primary-fill);
 	}
 }
 
@@ -363,7 +363,7 @@
 
 .fluxerButtonIconSelected {
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -374,7 +374,7 @@
 		.fluxerButtonIcon:hover,
 	.fluxerButton.contextMenuHover .fluxerButtonIcon {
 		background-color: var(--brand-primary);
-		color: white;
+		color: var(--brand-primary-fill);
 	}
 }
 
@@ -782,10 +782,10 @@
 :global(.theme-light) .dropIndicatorTop::before,
 :global(.theme-light) .dropIndicatorBottom::after,
 :global(.theme-light) .guildListDropZoneActive::after {
-	background: var(--brand-primary);
+	background: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .combinePreviewGrid {
 	background-color: color-mix(in srgb, var(--background-secondary) 92%, var(--brand-primary) 8%);
-	outline-color: var(--brand-primary);
+	outline-color: var(--brand-primary-foreground);
 }

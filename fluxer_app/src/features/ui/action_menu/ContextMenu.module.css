@@ -295,7 +295,7 @@
 
 .checkboxChecked {
 	background-color: var(--brand-primary);
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 .checkboxChecked::after {
@@ -305,7 +305,7 @@
 	top: 50%;
 	width: 0.25rem;
 	height: 0.5625rem;
-	border: solid white;
+	border: solid var(--brand-primary-fill);
 	border-width: 0 0.15625rem 0.15625rem 0;
 	transform: translate(-50%, -60%) rotate(45deg);
 }

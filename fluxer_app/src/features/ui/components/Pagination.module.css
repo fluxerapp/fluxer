@@ -46,7 +46,7 @@
 
 .pageButtonActive {
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .pageButtonActive:hover {

@@ -291,7 +291,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 				ref={visibilityRef}
 				className={styles.backgroundItem}
 				style={{
-					borderColor: isSelected ? 'var(--brand-primary)' : 'var(--background-modifier-accent)',
+					borderColor: isSelected ? 'var(--brand-primary-foreground)' : 'var(--background-modifier-accent)',
 				}}
 				onClick={handleClick}
 				onKeyDown={handleKeyDown}

@@ -110,5 +110,5 @@
 
 :global(.theme-light) .progressBarIndeterminate,
 :global(.theme-light) .progressBarNormal {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

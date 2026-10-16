@@ -2,24 +2,17 @@
 
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative} from 'node:path';
-
-interface ColorFamily {
-	hue: number;
-	saturation: number;
-	useSaturationFactor: boolean;
-}
-
-interface ScaleStop {
-	name: string;
-	position?: number;
-}
-
-interface Scale {
-	family: string;
-	range: [number, number];
-	curve: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
-	stops: Array<ScaleStop>;
-}
+import {
+	BRAND_PRESSED_RATIO,
+	brandTintMix,
+	COLOR_FAMILIES,
+	COLOR_SCALES,
+	type ColorFamily,
+	type Scale,
+	scaleStopLightness,
+	THEME_PALETTES,
+} from '@app/features/theme/utils/ColorSystemPalette';
+import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 
 interface TokenDef {
 	name?: string;
@@ -295,142 +288,8 @@ const LIGHT_CODE_TOKENS: Array<TokenDef> = [
 	{name: '--ansi-bg-bright-white', value: 'color-mix(in srgb, hsl(0, 0%, 90%) 90%, var(--code-block-bg) 10%)'},
 ];
 const CONFIG: Config = {
-	families: {
-		neutralDark: {hue: 258, saturation: 10, useSaturationFactor: true},
-		neutralLight: {hue: 220, saturation: 10, useSaturationFactor: true},
-		brand: {hue: 242, saturation: 70, useSaturationFactor: true},
-		link: {hue: 198, saturation: 92, useSaturationFactor: true},
-		accentPurple: {hue: 278, saturation: 85, useSaturationFactor: true},
-		statusOnline: {hue: 152, saturation: 72, useSaturationFactor: true},
-		legacyDark: {hue: 220, saturation: 13, useSaturationFactor: true},
-		legacyLink: {hue: 210, saturation: 100, useSaturationFactor: true},
-		legacyAccentPurple: {hue: 270, saturation: 80, useSaturationFactor: true},
-		legacyStatusOnline: {hue: 142, saturation: 76, useSaturationFactor: true},
-		statusIdle: {hue: 45, saturation: 93, useSaturationFactor: true},
-		statusDnd: {hue: 0, saturation: 84, useSaturationFactor: true},
-		statusOffline: {hue: 218, saturation: 11, useSaturationFactor: true},
-		statusDanger: {hue: 1, saturation: 77, useSaturationFactor: true},
-		textCode: {hue: 340, saturation: 50, useSaturationFactor: true},
-		brandIcon: {hue: 38, saturation: 92, useSaturationFactor: true},
-	},
-	scales: {
-		darkSurface: {
-			family: 'neutralDark',
-			range: [5, 24],
-			curve: 'easeOut',
-			stops: [
-				{name: '--background-primary', position: 0},
-				{name: '--background-secondary', position: 0.16},
-				{name: '--background-secondary-lighter', position: 0.22},
-				{name: '--background-secondary-alt', position: 0.28},
-				{name: '--background-tertiary', position: 0.4},
-				{name: '--background-channel-header', position: 0.34},
-				{name: '--guild-list-foreground', position: 0.38},
-				{name: '--background-header-secondary', position: 0.5},
-				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.3},
-				{name: '--background-header-primary-hover', position: 0.85},
-			],
-		},
-		coalSurface: {
-			family: 'neutralDark',
-			range: [1, 12],
-			curve: 'easeOut',
-			stops: [
-				{name: '--background-primary', position: 0},
-				{name: '--background-secondary', position: 0.16},
-				{name: '--background-secondary-alt', position: 0.28},
-				{name: '--background-tertiary', position: 0.4},
-				{name: '--background-channel-header', position: 0.34},
-				{name: '--guild-list-foreground', position: 0.38},
-				{name: '--background-header-secondary', position: 0.5},
-				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.3},
-				{name: '--background-header-primary-hover', position: 0.85},
-			],
-		},
-		darkText: {
-			family: 'neutralDark',
-			range: [60, 96],
-			curve: 'easeInOut',
-			stops: [
-				{name: '--text-tertiary-secondary', position: 0},
-				{name: '--text-tertiary-muted', position: 0.2},
-				{name: '--text-tertiary', position: 0.38},
-				{name: '--text-primary-muted', position: 0.55},
-				{name: '--text-chat-muted', position: 0.55},
-				{name: '--text-secondary', position: 0.72},
-				{name: '--text-chat', position: 0.82},
-				{name: '--text-primary', position: 1},
-			],
-		},
-		lightSurface: {
-			family: 'neutralLight',
-			range: [86, 98.5],
-			curve: 'easeIn',
-			stops: [
-				{name: '--background-header-primary-hover', position: 0},
-				{name: '--background-header-primary', position: 0.12},
-				{name: '--background-header-secondary', position: 0.2},
-				{name: '--guild-list-foreground', position: 0.35},
-				{name: '--background-tertiary', position: 0.42},
-				{name: '--background-channel-header', position: 0.5},
-				{name: '--background-secondary-alt', position: 0.63},
-				{name: '--background-secondary', position: 0.74},
-				{name: '--background-secondary-lighter', position: 0.83},
-				{name: '--background-textarea', position: 0.88},
-				{name: '--background-primary', position: 1},
-			],
-		},
-		lightText: {
-			family: 'neutralLight',
-			range: [15, 54],
-			curve: 'easeOut',
-			stops: [
-				{name: '--text-primary', position: 0},
-				{name: '--text-chat', position: 0.08},
-				{name: '--text-secondary', position: 0.28},
-				{name: '--text-chat-muted', position: 0.45},
-				{name: '--text-primary-muted', position: 0.45},
-				{name: '--text-tertiary', position: 0.6},
-				{name: '--text-tertiary-secondary', position: 0.75},
-				{name: '--text-tertiary-muted', position: 0.85},
-			],
-		},
-		legacyDarkSurface: {
-			family: 'legacyDark',
-			range: [5, 26],
-			curve: 'easeOut',
-			stops: [
-				{name: '--background-primary', position: 0},
-				{name: '--background-secondary', position: 0.16},
-				{name: '--background-secondary-lighter', position: 0.22},
-				{name: '--background-secondary-alt', position: 0.28},
-				{name: '--background-tertiary', position: 0.4},
-				{name: '--background-channel-header', position: 0.34},
-				{name: '--guild-list-foreground', position: 0.38},
-				{name: '--background-header-secondary', position: 0.5},
-				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.3},
-				{name: '--background-header-primary-hover', position: 0.85},
-			],
-		},
-		legacyDarkText: {
-			family: 'legacyDark',
-			range: [52, 96],
-			curve: 'easeInOut',
-			stops: [
-				{name: '--text-tertiary-secondary', position: 0},
-				{name: '--text-tertiary-muted', position: 0.2},
-				{name: '--text-tertiary', position: 0.38},
-				{name: '--text-primary-muted', position: 0.55},
-				{name: '--text-chat-muted', position: 0.55},
-				{name: '--text-secondary', position: 0.72},
-				{name: '--text-chat', position: 0.82},
-				{name: '--text-primary', position: 1},
-			],
-		},
-	},
+	families: COLOR_FAMILIES,
+	scales: COLOR_SCALES,
 	tokens: {
 		root: [
 			{scale: 'darkSurface'},
@@ -447,7 +306,7 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 			{name: '--panel-control-divider', family: 'neutralDark', saturation: 30, lightness: 55, alpha: 0.35},
 			{name: '--panel-control-highlight', value: 'hsla(0, 0%, 100%, 0.04)'},
 			{name: '--background-modifier-hover', family: 'neutralDark', lightness: 100, alpha: 0.05},
-			{name: '--background-modifier-selected', family: 'neutralDark', lightness: 100, alpha: 0.1},
+			{name: '--background-modifier-selected', ...THEME_PALETTES[ThemeTypes.DARK].selectedOverlay},
 			{name: '--background-modifier-accent', family: 'neutralDark', saturation: 13, lightness: 80, alpha: 0.15},
 			{name: '--background-modifier-accent-focus', family: 'neutralDark', saturation: 13, lightness: 80, alpha: 0.22},
 			{name: '--control-button-normal-bg', value: 'transparent'},
@@ -480,6 +339,41 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 				lightness: 100,
 				instanceOverride: '--instance-brand-primary-fill',
 			},
+			{
+				name: '--brand-primary-shade',
+				hue: 0,
+				saturation: 0,
+				lightness: 0,
+				instanceOverride: '--instance-brand-primary-shade',
+			},
+			{
+				name: '--brand-primary-pressed',
+				value: `color-mix(in srgb, var(--brand-primary) ${BRAND_PRESSED_RATIO}%, var(--brand-primary-shade))`,
+			},
+			{
+				name: '--brand-primary-foreground',
+				family: 'brand',
+				lightness: 55,
+				instanceOverride: '--instance-brand-primary-foreground',
+			},
+			{
+				name: '--brand-primary-light-fill',
+				hue: 0,
+				saturation: 0,
+				lightness: 100,
+				instanceOverride: '--instance-brand-primary-light-fill',
+			},
+			{
+				name: '--brand-tint',
+				value: brandTintMix(THEME_PALETTES[ThemeTypes.DARK].brandTint, 'rest'),
+				instanceOverride: '--instance-brand-tint',
+			},
+			{
+				name: '--brand-tint-hover',
+				value: brandTintMix(THEME_PALETTES[ThemeTypes.DARK].brandTint, 'hover'),
+				instanceOverride: '--instance-brand-tint-hover',
+			},
+			{name: '--brand-tint-border', value: 'var(--brand-primary)', instanceOverride: '--instance-brand-tint-border'},
 			{name: '--status-online', family: 'statusOnline', lightness: 40},
 			{name: '--status-idle', family: 'statusIdle', lightness: 50},
 			{name: '--status-dnd', family: 'statusDnd', lightness: 60},
@@ -500,6 +394,19 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 				lightness: 98,
 				instanceOverride: '--instance-text-on-brand-primary',
 			},
+			{
+				name: '--text-on-brand-primary-light',
+				hue: 0,
+				saturation: 0,
+				lightness: 98,
+				instanceOverride: '--instance-text-on-brand-primary-light',
+			},
+			{
+				name: '--text-on-brand-tint',
+				value: 'var(--text-on-brand-primary)',
+				instanceOverride: '--instance-text-on-brand-tint',
+			},
+			{name: '--text-on-dark', hue: 0, saturation: 0, lightness: 98},
 			...DARK_CODE_TOKENS,
 			{name: '--text-selection', hue: 198, saturation: 92, useSaturationFactor: true, lightness: 70, alpha: 0.35},
 			{name: '--markup-mention-text', value: 'var(--text-link)'},
@@ -623,7 +530,7 @@ hsl(245, calc(100% * var(--saturation-factor)), 80%) 40%
 			{name: '--panel-control-divider', family: 'neutralLight', saturation: 30, lightness: 35, alpha: 0.2},
 			{name: '--panel-control-highlight', value: 'hsla(0, 0%, 100%, 0.65)'},
 			{name: '--background-modifier-hover', family: 'neutralLight', saturation: 10, lightness: 10, alpha: 0.05},
-			{name: '--background-modifier-selected', family: 'neutralLight', saturation: 10, lightness: 10, alpha: 0.1},
+			{name: '--background-modifier-selected', ...THEME_PALETTES[ThemeTypes.LIGHT].selectedOverlay},
 			{name: '--background-modifier-accent', family: 'neutralLight', saturation: 10, lightness: 40, alpha: 0.22},
 			{name: '--background-modifier-accent-focus', family: 'neutralLight', saturation: 10, lightness: 40, alpha: 0.32},
 			{name: '--control-button-normal-bg', value: 'transparent'},
@@ -667,6 +574,22 @@ hsl(245, calc(100% * var(--saturation-factor)), 80%) 40%
 			{name: '--plutonium-text', value: 'var(--text-on-brand-primary)'},
 			{name: '--plutonium-icon', family: 'brandIcon', lightness: 45},
 			{name: '--invite-verified-icon-color', value: 'var(--brand-primary)'},
+			{
+				name: '--brand-tint',
+				value: brandTintMix(THEME_PALETTES[ThemeTypes.LIGHT].brandTint, 'rest'),
+				instanceOverride: '--instance-brand-tint',
+			},
+			{
+				name: '--brand-tint-hover',
+				value: brandTintMix(THEME_PALETTES[ThemeTypes.LIGHT].brandTint, 'hover'),
+				instanceOverride: '--instance-brand-tint-hover',
+			},
+			{
+				name: '--brand-tint-border',
+				value: 'color-mix(in srgb, var(--brand-primary) 45%, transparent 55%)',
+				instanceOverride: '--instance-brand-tint-border',
+			},
+			{name: '--text-on-brand-tint', value: 'var(--brand-primary)', instanceOverride: '--instance-text-on-brand-tint'},
 			{name: '--border-color', family: 'neutralLight', lightness: 40, alpha: 0.15},
 			{name: '--border-color-hover', family: 'neutralLight', lightness: 40, alpha: 0.25},
 			{name: '--border-color-focus', hue: 210, saturation: 90, useSaturationFactor: true, lightness: 50, alpha: 0.4},
@@ -707,8 +630,10 @@ hsl(245, calc(100% * var(--saturation-factor)), 80%) 40%
 		],
 		coal: [
 			{scale: 'coalSurface'},
-			{name: '--background-secondary', value: 'var(--background-primary)'},
-			{name: '--background-secondary-lighter', value: 'var(--background-primary)'},
+			...Object.entries(THEME_PALETTES[ThemeTypes.COAL].surfaceAliases).map(([name, target]) => ({
+				name,
+				value: `var(${target})`,
+			})),
 			{
 				name: '--panel-control-bg',
 				value: `color-mix(
@@ -721,7 +646,7 @@ hsl(258, calc(10% * var(--saturation-factor)), 0%) 10%
 			{name: '--panel-control-divider', family: 'neutralDark', saturation: 20, lightness: 25, alpha: 0.28},
 			{name: '--panel-control-highlight', value: 'hsla(0, 0%, 100%, 0.06)'},
 			{name: '--background-modifier-hover', family: 'neutralDark', lightness: 100, alpha: 0.04},
-			{name: '--background-modifier-selected', family: 'neutralDark', lightness: 100, alpha: 0.08},
+			{name: '--background-modifier-selected', ...THEME_PALETTES[ThemeTypes.COAL].selectedOverlay},
 			{name: '--background-modifier-accent', family: 'neutralDark', saturation: 10, lightness: 65, alpha: 0.18},
 			{name: '--background-modifier-accent-focus', family: 'neutralDark', saturation: 10, lightness: 70, alpha: 0.26},
 			{name: '--control-button-normal-bg', value: 'transparent'},
@@ -776,7 +701,7 @@ hsl(220, calc(13% * var(--saturation-factor)), 2%) 10%
 			{name: '--panel-control-border', family: 'legacyDark', saturation: 30, lightness: 65, alpha: 0.45},
 			{name: '--panel-control-divider', family: 'legacyDark', saturation: 30, lightness: 55, alpha: 0.35},
 			{name: '--background-modifier-hover', family: 'legacyDark', lightness: 100, alpha: 0.05},
-			{name: '--background-modifier-selected', family: 'legacyDark', lightness: 100, alpha: 0.1},
+			{name: '--background-modifier-selected', ...THEME_PALETTES[ThemeTypes.DARK_LEGACY].selectedOverlay},
 			{name: '--background-modifier-accent', family: 'legacyDark', saturation: 13, lightness: 80, alpha: 0.15},
 			{name: '--background-modifier-accent-focus', family: 'legacyDark', saturation: 13, lightness: 80, alpha: 0.22},
 			{name: '--control-button-hover-bg', family: 'legacyDark', lightness: 22},
@@ -820,48 +745,13 @@ interface OutputToken {
 	instanceOverride?: string;
 }
 
-function clamp01(value: number): number {
-	return Math.min(1, Math.max(0, value));
-}
-
-function applyCurve(curve: Scale['curve'], t: number): number {
-	switch (curve) {
-		case 'easeIn':
-			return t * t;
-		case 'easeOut':
-			return 1 - (1 - t) * (1 - t);
-		case 'easeInOut':
-			if (t < 0.5) {
-				return 2 * t * t;
-			}
-			return 1 - 2 * (1 - t) * (1 - t);
-		default:
-			return t;
-	}
-}
-
 function buildScaleTokens(scale: Scale): Array<OutputToken> {
-	const lastIndex = Math.max(scale.stops.length - 1, 1);
-	const tokens: Array<OutputToken> = [];
-	for (let i = 0; i < scale.stops.length; i++) {
-		const stop = scale.stops[i];
-		let pos: number;
-		if (stop.position !== undefined) {
-			pos = clamp01(stop.position);
-		} else {
-			pos = i / lastIndex;
-		}
-		const eased = applyCurve(scale.curve, pos);
-		let lightness = scale.range[0] + (scale.range[1] - scale.range[0]) * eased;
-		lightness = Math.round(lightness * 1000) / 1000;
-		tokens.push({
-			type: 'tone',
-			name: stop.name,
-			family: scale.family,
-			lightness,
-		});
-	}
-	return tokens;
+	return scale.stops.map((stop, index) => ({
+		type: 'tone',
+		name: stop.name,
+		family: scale.family,
+		lightness: scaleStopLightness(scale, index),
+	}));
 }
 
 function expandTokens(defs: Array<TokenDef>, scales: Record<string, Scale>): Array<OutputToken> {
@@ -881,6 +771,7 @@ function expandTokens(defs: Array<TokenDef>, scales: Record<string, Scale>): Arr
 				type: 'literal',
 				name: def.name!,
 				value: def.value.trim(),
+				instanceOverride: def.instanceOverride,
 			});
 		} else {
 			tokens.push({
@@ -945,11 +836,8 @@ function formatTone(token: OutputToken, families: Record<string, ColorFamily>): 
 }
 
 function formatValue(token: OutputToken, families: Record<string, ColorFamily>): string {
-	if (token.type === 'tone') {
-		const tone = formatTone(token, families);
-		return token.instanceOverride ? `var(${token.instanceOverride}, ${tone})` : tone;
-	}
-	return token.value!.trim();
+	const value = token.type === 'tone' ? formatTone(token, families) : token.value!.trim();
+	return token.instanceOverride ? `var(${token.instanceOverride}, ${value})` : value;
 }
 
 function renderBlock(selector: string, tokens: Array<OutputToken>, families: Record<string, ColorFamily>): string {

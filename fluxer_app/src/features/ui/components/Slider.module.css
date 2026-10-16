@@ -160,7 +160,7 @@
 .barFill {
 	background: linear-gradient(
 		90deg,
-		var(--brand-primary, #5865f2),
+		var(--brand-primary-foreground, #5865f2),
 		color-mix(in srgb, var(--brand-primary-light, #7983f5) 84%, #fff 16%)
 	);
 	border-radius: inherit;
@@ -171,7 +171,7 @@
 .vertical .barFill {
 	background: linear-gradient(
 		0deg,
-		var(--brand-primary, #5865f2),
+		var(--brand-primary-foreground, #5865f2),
 		color-mix(in srgb, var(--brand-primary-light, #7983f5) 84%, #fff 16%)
 	);
 	width: 100%;
@@ -180,8 +180,8 @@
 :global(.theme-light) .barFill {
 	background: linear-gradient(
 		90deg,
-		var(--brand-primary, #5865f2),
-		color-mix(in srgb, var(--brand-primary, #5865f2) 72%, #111 28%)
+		var(--brand-primary-foreground, #5865f2),
+		color-mix(in srgb, var(--brand-primary-foreground, #5865f2) 72%, #111 28%)
 	);
 	box-shadow: none;
 }
@@ -189,8 +189,8 @@
 :global(.theme-light) .vertical .barFill {
 	background: linear-gradient(
 		0deg,
-		var(--brand-primary, #5865f2),
-		color-mix(in srgb, var(--brand-primary, #5865f2) 72%, #111 28%)
+		var(--brand-primary-foreground, #5865f2),
+		color-mix(in srgb, var(--brand-primary-foreground, #5865f2) 72%, #111 28%)
 	);
 }
 

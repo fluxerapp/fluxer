@@ -14,7 +14,7 @@
 }
 
 .radioButtonSelected {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 	background-color: var(--brand-primary);
 }
 
@@ -27,7 +27,7 @@
 	height: 0.375rem;
 	width: 0.375rem;
 	border-radius: 50%;
-	background-color: white;
+	background-color: var(--brand-primary-fill);
 }
 
 .labelContent {

@@ -99,7 +99,7 @@
 .checkIcon {
 	width: 0.75rem;
 	height: 0.75rem;
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .chevronIcon {

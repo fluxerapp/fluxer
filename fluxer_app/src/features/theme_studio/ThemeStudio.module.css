@@ -24,6 +24,7 @@
 	--studio-fg-muted: var(--text-secondary);
 	--studio-fg-subtle: var(--text-tertiary);
 	--studio-fg-on-accent: var(--text-on-brand-primary);
+	--studio-fg-on-danger: var(--text-on-dark);
 
 	--studio-accent: var(--brand-primary);
 	--studio-accent-hover: var(--brand-secondary);
@@ -31,7 +32,7 @@
 	--studio-focus: var(--focus-primary);
 
 	--studio-button-primary: var(--brand-primary);
-	--studio-button-primary-hover: color-mix(in srgb, var(--brand-primary) 88%, var(--text-primary) 12%);
+	--studio-button-primary-hover: var(--studio-accent-hover);
 	--studio-button-secondary: var(--button-secondary-fill);
 	--studio-button-secondary-hover: var(--button-secondary-active-fill);
 

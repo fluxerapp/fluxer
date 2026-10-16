@@ -114,7 +114,7 @@
 .actionButton:hover {
 	border-color: var(--brand-primary);
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .deleteButton:hover {

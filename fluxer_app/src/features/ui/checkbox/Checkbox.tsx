@@ -167,7 +167,6 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 								<CheckIcon
 									size={checkIconSizeRem}
 									weight="bold"
-									color={'#ffffff'}
 									className={styles.checkIcon}
 									data-flx="ui.checkbox.checkbox.check-icon"
 								/>
@@ -224,7 +223,6 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 								<CheckIcon
 									size={checkIconSizeRem}
 									weight="bold"
-									color={'#ffffff'}
 									className={styles.checkIcon}
 									data-flx="ui.checkbox.checkbox.check-icon--2"
 								/>
