@@ -555,7 +555,7 @@ fn spawn_signal_thread(
                     .path(NOTIFY_PATH)?
                     .interface(NOTIFY_IFACE)?
                     .build();
-                let stream = MessageStream::for_match_rule(rule, &conn, Some(64)).await?;
+                let stream = MessageStream::for_match_rule(rule, conn, Some(64)).await?;
                 zbus::Result::Ok((conn, stream))
             });
 
