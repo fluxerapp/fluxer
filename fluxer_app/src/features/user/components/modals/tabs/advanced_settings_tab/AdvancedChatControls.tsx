@@ -127,11 +127,6 @@ const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced message double click preference.',
 });
 
-const HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
-	message: 'Hide muted channels by default',
-	comment: 'Short label for an advanced sidebar preference.',
-});
-
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_PROMPT_DESCRIPTOR = msg({
 	message: 'Hide muted channels by default?',
 	comment: 'Confirmation prompt in advanced settings.',
