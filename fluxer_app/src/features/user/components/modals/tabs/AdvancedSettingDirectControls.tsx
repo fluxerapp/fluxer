@@ -20,6 +20,7 @@ import {
 import {
 	AutoSendGifsControl,
 	ConvertEmoticonsAdvancedControl,
+	DoubleClickMessageActionsControl,
 	ExpressionAutocompleteControl,
 	HideMutedChannelsByDefaultControl,
 	InputButtonsControl,
@@ -33,7 +34,6 @@ import {
 	SearchEnginesControl,
 	SequentialFileSendControl,
 	SkipMarkAllAsReadControl,
-	DoubleClickMessageActionsControl,
 	StripTrackingControl,
 	TranslatorsControl,
 	TrustAllDomainsControl,
