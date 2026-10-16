@@ -266,8 +266,12 @@ impl FreedesktopNotifications {
         let method_conn = open_blocking_connection()
             .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
         let stop_signal_thread = Arc::new(AtomicBool::new(false));
-        let signal_thread = spawn_signal_thread(event_callback.clone(), method_conn.clone(), stop_signal_thread.clone())
-            .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
+        let signal_thread = spawn_signal_thread(
+            event_callback.clone(),
+            method_conn.clone(),
+            stop_signal_thread.clone(),
+        )
+        .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
 
         Ok(Self {
             inner: Arc::new(Inner {
