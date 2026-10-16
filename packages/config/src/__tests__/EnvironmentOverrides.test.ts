@@ -46,8 +46,38 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				FLUXER_AUTH_BLUESKY_KEYS: blank,
 				FLUXER_EMAIL_FROM_NAME: blank,
 				FLUXER_EMAIL_REPLY_TO_EMAIL: blank,
+				FLUXER_EMAIL_FALLBACK_DOMAINS: blank,
+				FLUXER_EMAIL_FALLBACK_SMTP_HOST: blank,
 			}),
 		).toEqual({});
+	});
+
+	test('maps the email fallback variables onto the fallback section', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_EMAIL_FALLBACK_DOMAINS: 'gmail.com, googlemail.com',
+				FLUXER_EMAIL_FALLBACK_SMTP_HOST: 'smtp.sendgrid.net',
+				FLUXER_EMAIL_FALLBACK_SMTP_PORT: '587',
+				FLUXER_EMAIL_FALLBACK_SMTP_USERNAME: 'apikey',
+				FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD: 'secret',
+				FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE: 'STARTTLS',
+			}),
+		).toEqual({
+			integrations: {
+				email: {
+					fallback: {
+						domains: ['gmail.com', 'googlemail.com'],
+						smtp: {
+							host: 'smtp.sendgrid.net',
+							port: 587,
+							username: 'apikey',
+							password: 'secret',
+							tls_mode: 'starttls',
+						},
+					},
+				},
+			},
+		});
 	});
 
 	test('maps the setup token onto the instance setup section', () => {

@@ -19,6 +19,14 @@ export interface TrustedCallerConfig {
 	buckets: Array<string>;
 }
 
+interface SmtpConfig {
+	host: string;
+	port: number;
+	username: string;
+	password: string;
+	tlsMode: SmtpTlsMode | null;
+}
+
 interface APICachePurgeTarget {
 	endpoint: string;
 	token: string;
@@ -162,12 +170,10 @@ export interface APIConfig {
 		fromName: string;
 		replyToEmail: string;
 		appBaseUrl: string;
-		smtp?: {
-			host: string;
-			port: number;
-			username: string;
-			password: string;
-			tlsMode: SmtpTlsMode | null;
+		smtp?: SmtpConfig;
+		fallback?: {
+			domains: Array<string>;
+			smtp: SmtpConfig;
 		};
 	};
 	blocklistFeeds: {

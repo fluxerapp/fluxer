@@ -130,6 +130,8 @@ secrets:
     # FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ""
     # SMTP password for outgoing email.
     # FLUXER_EMAIL_SMTP_PASSWORD: ""
+    # SMTP password of the email fallback provider.
+    # FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD: ""
     # Secret that authenticates email provider webhooks.
     # FLUXER_EMAIL_WEBHOOK_SECRET: ""
     # Stripe secret key.

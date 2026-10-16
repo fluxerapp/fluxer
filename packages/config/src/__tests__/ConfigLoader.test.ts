@@ -485,6 +485,68 @@ describe('ConfigLoader', () => {
 		);
 	});
 
+	const emailFallbackEnv = {
+		FLUXER_EMAIL_FALLBACK_DOMAINS: ' Gmail.com, googlemail.com ,gmail.com',
+		FLUXER_EMAIL_FALLBACK_SMTP_HOST: 'smtp.sendgrid.net',
+		FLUXER_EMAIL_FALLBACK_SMTP_USERNAME: 'apikey',
+		FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD: 'secret',
+	};
+
+	test('leaves the email fallback unset by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.integrations.email.fallback).toBeUndefined();
+	});
+
+	test('loads the email fallback with normalized domains and port 587', async () => {
+		stubMinimalEnv(emailFallbackEnv);
+		const config = await loadConfig();
+		expect(config.integrations.email.fallback).toEqual({
+			domains: ['gmail.com', 'googlemail.com'],
+			smtp: {host: 'smtp.sendgrid.net', port: 587, username: 'apikey', password: 'secret'},
+		});
+	});
+
+	test('loads the email fallback port and TLS mode', async () => {
+		stubMinimalEnv({
+			...emailFallbackEnv,
+			FLUXER_EMAIL_FALLBACK_SMTP_PORT: '465',
+			FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE: 'implicit',
+		});
+		const config = await loadConfig();
+		expect(config.integrations.email.fallback?.smtp).toMatchObject({port: 465, tls_mode: 'implicit'});
+	});
+
+	test.each([
+		'FLUXER_EMAIL_FALLBACK_DOMAINS',
+		'FLUXER_EMAIL_FALLBACK_SMTP_HOST',
+		'FLUXER_EMAIL_FALLBACK_SMTP_USERNAME',
+		'FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD',
+	] as const)('rejects an email fallback without %s', async (missing) => {
+		stubMinimalEnv({...emailFallbackEnv, [missing]: ''});
+		await expect(loadConfig()).rejects.toThrow(`${missing} is required when an email fallback provider is set`);
+	});
+
+	test('rejects email fallback domains without an SMTP provider', async () => {
+		stubMinimalEnv({FLUXER_EMAIL_FALLBACK_DOMAINS: 'gmail.com'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_EMAIL_FALLBACK_SMTP_HOST is required');
+	});
+
+	test.each(['@gmail.com', 'user@gmail.com', 'gmail', '*.gmail.com', 'gmail.com:25', '-gmail.com', 'gmail..com'])(
+		'rejects the email fallback domain %j',
+		async (domain) => {
+			stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_DOMAINS: domain});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_EMAIL_FALLBACK_DOMAINS entry');
+		},
+	);
+
+	test('rejects an out of range email fallback port', async () => {
+		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_SMTP_PORT: '70000'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_EMAIL_FALLBACK_SMTP_PORT must be an integer between 1 and 65535',
+		);
+	});
+
 	test.each(['sequential', 'zero_first'])('rejects the tag style %j', async (raw) => {
 		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_TAG_STYLE must be none or random');

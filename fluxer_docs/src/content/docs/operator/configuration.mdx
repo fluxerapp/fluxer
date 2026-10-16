@@ -839,6 +839,32 @@ The API reads `FLUXER_EMAIL_WEBHOOK_SECRET` for inbound delivery webhooks. `.env
 
 The API registers `POST /webhooks/sweego` on every deployment. The route authenticates the Standard Webhooks header triple `webhook-id`, `webhook-timestamp`, and `webhook-signature` against that secret, and answers 404 `Email not enabled` while email is off. The route sits outside the client-IP exempt list that covers `/webhooks/livekit`, so give the provider a delivery URL that goes through the edge, `https://chat.example.com/api/webhooks/sweego`.
 
+A second SMTP provider can take the mail for chosen recipient domains while everything else keeps going through the one above. It is off by default. Setting any fallback variable turns it on, and from then on the domains, host, username and password are all required, or startup fails with the name of the one that is missing. The sender, `Reply-To` header and bounced-address check are the same for both providers. Email still has to be on with the main SMTP provider complete, because the fallback never sends on its own. The admin dashboard has no fields for it, and the SMTP test only checks the main provider. Bounce webhooks come only from the provider behind `/webhooks/sweego`, so a hard bounce at the fallback provider does not mark the address as bounced.
+
+#### `FLUXER_EMAIL_FALLBACK_DOMAINS`
+
+Default empty. The recipient domains that go through the fallback provider, comma separated, such as `gmail.com,googlemail.com`. Matching ignores case and takes the part of the address after the last `@`. Only an exact match counts, so `gmail.com` leaves `mail.gmail.com` on the main provider. An entry that is not a bare domain fails startup. `.env.example` lists it commented out.
+
+#### `FLUXER_EMAIL_FALLBACK_SMTP_HOST`
+
+Default empty. The fallback SMTP host. Required when the domains are set.
+
+#### `FLUXER_EMAIL_FALLBACK_SMTP_PORT`
+
+Default `587`. The fallback SMTP port.
+
+#### `FLUXER_EMAIL_FALLBACK_SMTP_USERNAME`
+
+Default empty. The fallback SMTP login. Required when the domains are set.
+
+#### `FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD`
+
+Default empty. The fallback SMTP password. Required when the domains are set.
+
+#### `FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE`
+
+Default empty. How the fallback connection is encrypted, with the same four values as `FLUXER_EMAIL_SMTP_TLS_MODE`. An empty value picks `implicit` on port 465 and `starttls` on every other port. A failed send through the fallback is logged as `SMTP send failed` with the fallback host.
+
 Only `api` and `worker` build the mail service, so recreating those two is enough after a change.
 
 ## CAPTCHA

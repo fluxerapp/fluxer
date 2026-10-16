@@ -15,6 +15,15 @@ export const TAG_STYLE_NAMES = ['none', 'random'] as const;
 type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
 type SmtpTlsModeName = 'implicit' | 'starttls' | 'opportunistic' | 'none';
 
+interface SmtpConfig {
+	host: string;
+	port: number;
+	username: string;
+	password: string;
+	tls_mode?: SmtpTlsModeName;
+	secure?: boolean;
+}
+
 interface InstanceBrandingConfig {
 	product_name: string;
 	icon_url?: string;
@@ -185,13 +194,10 @@ export interface MasterConfig {
 			reply_to_email: string;
 			app_base_url: string;
 			webhook_secret?: string;
-			smtp?: {
-				host: string;
-				port: number;
-				username: string;
-				password: string;
-				tls_mode?: SmtpTlsModeName;
-				secure?: boolean;
+			smtp?: SmtpConfig;
+			fallback?: {
+				domains: Array<string>;
+				smtp: SmtpConfig;
 			};
 		};
 		voice: {

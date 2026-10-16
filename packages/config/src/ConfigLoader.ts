@@ -327,6 +327,32 @@ function validateReplyToEmail(value: string): void {
 	}
 }
 
+const EMAIL_DOMAIN_PATTERN =
+	/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/u;
+const DEFAULT_SMTP_PORT = 587;
+
+function normalizeEmailFallbackConfig(config: MasterConfig): void {
+	const email = config.integrations.email;
+	if (!email.fallback) return;
+	const {domains, smtp}: Partial<NonNullable<typeof email.fallback>> = email.fallback;
+	const missing = (envName: string) => new Error(`${envName} is required when an email fallback provider is set`);
+	if (!domains?.length) throw missing('FLUXER_EMAIL_FALLBACK_DOMAINS');
+	if (!smtp?.host?.trim()) throw missing('FLUXER_EMAIL_FALLBACK_SMTP_HOST');
+	if (!smtp.username?.trim()) throw missing('FLUXER_EMAIL_FALLBACK_SMTP_USERNAME');
+	if (!smtp.password?.trim()) throw missing('FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD');
+	const port: unknown = smtp.port ?? DEFAULT_SMTP_PORT;
+	assertIntegerInRange(port, 'FLUXER_EMAIL_FALLBACK_SMTP_PORT', 1, 65_535);
+	const normalizedDomains = domains.map((domain) => domain.trim().toLowerCase());
+	for (const domain of normalizedDomains) {
+		if (!EMAIL_DOMAIN_PATTERN.test(domain)) {
+			throw new Error(
+				`FLUXER_EMAIL_FALLBACK_DOMAINS entry ${JSON.stringify(domain)} must be a domain such as gmail.com`,
+			);
+		}
+	}
+	email.fallback = {domains: [...new Set(normalizedDomains)], smtp: {...smtp, port}};
+}
+
 function validateUploadRelaySecret(value: string): void {
 	const trimmed = value.trim();
 	if (trimmed.length === 0) {
@@ -626,6 +652,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);
 	validateReplyToEmail(config.integrations.email.reply_to_email);
+	normalizeEmailFallbackConfig(config);
 	normalizeAppOriginAliases(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(
