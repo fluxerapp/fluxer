@@ -22,6 +22,7 @@ impl ParserFlags {
     pub const ALLOW_TABLES: u32 = 1 << 14;
     pub const ALLOW_ALERTS: u32 = 1 << 15;
     pub const ALLOW_AUTOLINKS: u32 = 1 << 16;
+    pub const ALLOW_CHECKBOX: u32 = 1 << 17;
 
     pub const ALL: u32 = Self::ALLOW_SPOILERS
         | Self::ALLOW_HEADINGS
@@ -39,7 +40,8 @@ impl ParserFlags {
         | Self::ALLOW_SUBTEXT
         | Self::ALLOW_TABLES
         | Self::ALLOW_ALERTS
-        | Self::ALLOW_AUTOLINKS;
+        | Self::ALLOW_AUTOLINKS
+        | Self::ALLOW_CHECKBOX;
 
     #[inline]
     pub fn has(flags: u32, flag: u32) -> bool {
@@ -139,6 +141,8 @@ pub struct ListItem {
     pub children: Vec<Node>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ordinal: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checked: Option<bool>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]

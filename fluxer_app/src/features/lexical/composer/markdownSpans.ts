@@ -51,7 +51,8 @@ export const DEFAULT_COMPOSER_MARKDOWN_FLAGS =
 	ParserFlags.ALLOW_COMMAND_MENTIONS |
 	ParserFlags.ALLOW_GUILD_NAVIGATIONS |
 	ParserFlags.ALLOW_TABLES |
-	ParserFlags.ALLOW_ALERTS;
+	ParserFlags.ALLOW_ALERTS |
+	ParserFlags.ALLOW_CHECKBOX;
 
 interface MarkdownRecoveredRange {
 	start: number;

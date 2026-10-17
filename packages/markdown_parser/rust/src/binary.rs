@@ -73,8 +73,13 @@ fn write_node(out: &mut Vec<u8>, node: &Node) {
             out.push(9);
             out.push(u8::from(*ordered));
             write_varint(out, items.len() as u64);
-            for ListItem { children, ordinal } in items {
+            for ListItem { children, ordinal, checked } in items {
                 write_optional_varint(out, ordinal.map(|value| value as u64));
+                if let &Some(checkbox_state) = checked {
+                    out.push(if checkbox_state { 2 } else { 1 });
+                } else {
+                    out.push(0);
+                }
                 write_nodes(out, children);
             }
         }
