@@ -215,6 +215,13 @@
 	color: var(--text-tertiary);
 }
 
+.settingsItemExternalIcon {
+	flex-shrink: 0;
+	height: 1rem;
+	width: 1rem;
+	color: var(--text-tertiary);
+}
+
 .divider {
 	height: 0.0625rem;
 	margin-left: 0.75rem;

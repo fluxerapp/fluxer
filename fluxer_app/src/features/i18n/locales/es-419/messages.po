@@ -24449,6 +24449,11 @@ msgstr "Se volvió a abrir el hilo"
 msgid "Opens in a new tab"
 msgstr "Se abre en una pestaña nueva"
 
+#. Screen-reader-only hint on a settings menu entry that opens a web page in the browser instead of a settings page.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Opens in your browser"
+msgstr "Se abre en tu navegador"
+
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx
 msgid "Opens the Members page. Press Space or Enter to open."
@@ -39091,6 +39096,11 @@ msgstr "Lo que estás compartiendo no se está actualizando"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "What's happening?"
 msgstr "¿Qué pasa?"
+
+#. Settings menu entry that opens the latest patch notes for the app on the website.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "What's new"
+msgstr "Novedades"
 
 #. DSA report page: title of the reason step while its questions load or when they could not be loaded.
 #: src/features/moderation/components/report/ReportStepReason.tsx

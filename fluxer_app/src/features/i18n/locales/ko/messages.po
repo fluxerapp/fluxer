@@ -24449,6 +24449,11 @@ msgstr "스레드를 다시 열었습니다"
 msgid "Opens in a new tab"
 msgstr "새 탭에서 열립니다"
 
+#. Screen-reader-only hint on a settings menu entry that opens a web page in the browser instead of a settings page.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Opens in your browser"
+msgstr "브라우저에서 열립니다"
+
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx
 msgid "Opens the Members page. Press Space or Enter to open."
@@ -39091,6 +39096,11 @@ msgstr "공유 중인 화면이 업데이트되지 않고 있습니다"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "What's happening?"
 msgstr "무슨 일이 일어나고 있나요?"
+
+#. Settings menu entry that opens the latest patch notes for the app on the website.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "What's new"
+msgstr "새로운 기능"
 
 #. DSA report page: title of the reason step while its questions load or when they could not be loaded.
 #: src/features/moderation/components/report/ReportStepReason.tsx

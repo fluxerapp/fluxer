@@ -9,7 +9,6 @@ import {
 import Authentication from '@app/features/auth/state/Authentication';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
 import {GuildDeleteModal} from '@app/features/guild/components/modals/GuildDeleteModal';
-import styles from '@app/features/guild/components/modals/GuildSettingsModal.module.css';
 import type {Guild} from '@app/features/guild/models/Guild';
 import GuildMemberLayout from '@app/features/guild/state/GuildMemberLayout';
 import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUtils';
@@ -118,9 +117,12 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 				presentTab={(tab) => ({
 					label:
 						tab.type === 'members' ? (
-							<span className={styles.externalTabLabel} data-flx="app.desktop-guild-settings-view.external-tab-label">
+							<span
+								className={settingsModalStyles.externalTabLabel}
+								data-flx="app.desktop-guild-settings-view.external-tab-label"
+							>
 								<span
-									className={styles.externalTabLabelText}
+									className={settingsModalStyles.externalTabLabelText}
 									data-flx="app.desktop-guild-settings-view.external-tab-label-text"
 								>
 									{tab.label}
@@ -134,7 +136,7 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 								<ArrowSquareOutIcon
 									size={remFromPx(16)}
 									weight="bold"
-									className={styles.externalTabIcon}
+									className={settingsModalStyles.externalTabIcon}
 									aria-hidden="true"
 									data-flx="app.desktop-guild-settings-view.external-tab-icon"
 								/>

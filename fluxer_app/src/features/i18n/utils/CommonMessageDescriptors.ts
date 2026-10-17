@@ -610,6 +610,15 @@ export const SIGN_OUT_DESCRIPTOR = msg({
 	message: 'Sign out',
 	comment: 'Generic action label that signs the current user out of the app.',
 });
+export const WHATS_NEW_DESCRIPTOR = msg({
+	message: "What's new",
+	comment: 'Settings menu entry that opens the latest patch notes for the app on the website.',
+});
+export const OPENS_IN_BROWSER_DESCRIPTOR = msg({
+	message: 'Opens in your browser',
+	comment:
+		'Screen-reader-only hint on a settings menu entry that opens a web page in the browser instead of a settings page.',
+});
 export const SCREEN_READER_DESCRIPTOR = msg({
 	message: 'Screen reader',
 	comment: 'Section heading for screen-reader related accessibility settings.',

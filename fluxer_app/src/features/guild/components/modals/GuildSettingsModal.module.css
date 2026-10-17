@@ -56,24 +56,3 @@
 	height: 1rem;
 	width: 1rem;
 }
-
-.externalTabLabel {
-	display: flex;
-	align-items: center;
-	gap: 0.375rem;
-	width: 100%;
-	min-width: 0;
-}
-
-.externalTabLabelText {
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.externalTabIcon {
-	flex-shrink: 0;
-	margin-left: auto;
-	color: var(--text-tertiary);
-}
