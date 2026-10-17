@@ -379,8 +379,11 @@ function normalizeEmailFallbackConfig(config: MasterConfig): void {
 	assertIntegerInRange(port, 'FLUXER_EMAIL_FALLBACK_SMTP_PORT', 1, 65_535);
 	validateSmtpHeaders(smtp.headers, 'FLUXER_EMAIL_FALLBACK_SMTP_HEADERS');
 	const normalizedDomains = domains.map((domain) => domain.trim().toLowerCase());
+	if (normalizedDomains.includes('*') && new Set(normalizedDomains).size > 1) {
+		throw new Error('FLUXER_EMAIL_FALLBACK_DOMAINS must be either * or a list of domains');
+	}
 	for (const domain of normalizedDomains) {
-		if (!EMAIL_DOMAIN_PATTERN.test(domain)) {
+		if (domain !== '*' && !EMAIL_DOMAIN_PATTERN.test(domain)) {
 			throw new Error(
 				`FLUXER_EMAIL_FALLBACK_DOMAINS entry ${JSON.stringify(domain)} must be a domain such as gmail.com`,
 			);

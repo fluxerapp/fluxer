@@ -30,6 +30,16 @@ describe('DomainRoutedEmailProvider', () => {
 		expect(result).toBe(route === 'primary');
 	});
 
+	it('sends every address through the fallback provider when the domains are *', async () => {
+		const primary = {sendEmail: vi.fn().mockResolvedValue(true)};
+		const fallback = {sendEmail: vi.fn().mockResolvedValue(true)};
+		const provider = new DomainRoutedEmailProvider(primary, fallback, ['*']);
+		await provider.sendEmail(message('user@example.com'));
+		await provider.sendEmail(message('user@gmail.com'));
+		expect(fallback.sendEmail).toHaveBeenCalledTimes(2);
+		expect(primary.sendEmail).not.toHaveBeenCalled();
+	});
+
 	it('never reaches either provider for a bounced address', async () => {
 		const primary = {sendEmail: vi.fn().mockResolvedValue(true)};
 		const fallback = {sendEmail: vi.fn().mockResolvedValue(true)};

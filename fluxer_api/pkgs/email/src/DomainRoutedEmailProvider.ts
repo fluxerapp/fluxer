@@ -21,7 +21,7 @@ export class DomainRoutedEmailProvider implements IEmailProvider {
 			.slice(message.to.lastIndexOf('@') + 1)
 			.trim()
 			.toLowerCase();
-		const useFallback = this.fallbackDomains.has(domain);
+		const useFallback = this.fallbackDomains.has('*') || this.fallbackDomains.has(domain);
 		logger.debug({domain, provider: useFallback ? 'fallback' : 'primary'}, 'Routing email');
 		return (useFallback ? this.fallback : this.primary).sendEmail(message);
 	}

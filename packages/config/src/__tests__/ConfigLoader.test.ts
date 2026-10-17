@@ -540,6 +540,17 @@ describe('ConfigLoader', () => {
 		},
 	);
 
+	test('loads * as the email fallback domains', async () => {
+		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_DOMAINS: ' * '});
+		const config = await loadConfig();
+		expect(config.integrations.email.fallback?.domains).toEqual(['*']);
+	});
+
+	test('rejects * mixed with email fallback domains', async () => {
+		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_DOMAINS: '*,gmail.com'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_EMAIL_FALLBACK_DOMAINS must be either * or a list of domains');
+	});
+
 	test('loads the email fallback headers', async () => {
 		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: '{"X-Tracking":"{\\"enable\\":0}"}'});
 		const config = await loadConfig();

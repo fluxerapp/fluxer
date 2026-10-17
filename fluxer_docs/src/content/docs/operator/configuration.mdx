@@ -843,7 +843,7 @@ A second SMTP provider can take the mail for chosen recipient domains while ever
 
 #### `FLUXER_EMAIL_FALLBACK_DOMAINS`
 
-Default empty. The recipient domains that go through the fallback provider, comma separated, such as `gmail.com,googlemail.com`. Matching ignores case and takes the part of the address after the last `@`. Only an exact match counts, so `gmail.com` leaves `mail.gmail.com` on the main provider. An entry that is not a bare domain fails startup. `.env.example` lists it commented out.
+Default empty. The recipient domains that go through the fallback provider, comma separated, such as `gmail.com,googlemail.com`. Matching ignores case and takes the part of the address after the last `@`. Only an exact match counts, so `gmail.com` leaves `mail.gmail.com` on the main provider. Set it to `*` alone to send every email through the fallback provider. An entry that is not a bare domain or `*` fails startup. `.env.example` lists it commented out.
 
 #### `FLUXER_EMAIL_FALLBACK_SMTP_HOST`
 
