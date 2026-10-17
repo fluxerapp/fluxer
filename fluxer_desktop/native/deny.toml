@@ -9,7 +9,11 @@ feature-depth = 1
 version = 2
 yanked = "deny"
 unmaintained = "all"
-ignore = []
+ignore = [
+  { id = "RUSTSEC-2026-0370", reason = "zvariant merged into zbus 6.0.0; the Linux crates stay on zbus 5 until they move off its removed blocking API" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names merged into zbus 6.0.0; the Linux crates stay on zbus 5 until they move off its removed blocking API" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive merged into zbus 6.0.0; the Linux crates stay on zbus 5 until they move off its removed blocking API" },
+]
 
 [licenses]
 version = 2

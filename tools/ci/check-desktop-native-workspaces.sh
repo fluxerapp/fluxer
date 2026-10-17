@@ -108,6 +108,7 @@ run_dependencies() {
 		-D warnings \
 		-A unmatched-skip \
 		-A unnecessary-skip \
+		-A advisory-not-detected \
 		-D duplicate
 }
 
