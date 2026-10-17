@@ -407,7 +407,7 @@ export const TemplateImportForm = observer(() => {
 		urlValue,
 		jsonValue,
 	]);
-	const accountGate = renderGuildCreateAccountGate(i18n, 'guild.add-guild-modal.template-import-form');
+	const accountGate = renderGuildCreateAccountGate('guild.add-guild-modal.template-import-form');
 	if (accountGate) {
 		return accountGate;
 	}

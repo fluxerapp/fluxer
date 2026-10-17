@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {EXAMPLE_FLUXER_TAG_FULL, EXAMPLE_USERNAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import {useVerifyEmailAction} from '@app/features/auth/hooks/useVerifyEmailAction';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
-import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import {getSendFriendRequestErrorMessage} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
@@ -59,6 +57,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [resultStatus, setResultStatus] = useState<'success' | 'error' | null>(null);
 	const [errorCode, setErrorCode] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const verifyEmailAction = useVerifyEmailAction();
 	const currentUser = Users.currentUser;
 	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
 	const isClaimed = currentUser?.isClaimed() ?? true;
@@ -87,19 +86,9 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 				description={<Trans>You need to verify your email address before you can send friend requests.</Trans>}
 				actions={[
 					{
-						text: i18n._(VERIFY_EMAIL_DESCRIPTOR),
-						onClick: () =>
-							ModalCommands.push(
-								modal(
-									() => (
-										<UserSettingsModal
-											initialTab="account_security"
-											data-flx="channel.direct-message.add-friend-form.on-click.user-settings-modal"
-										/>
-									),
-									'user-settings',
-								),
-							),
+						text: verifyEmailAction.text,
+						onClick: verifyEmailAction.onClick,
+						submitting: verifyEmailAction.submitting,
 						variant: 'primary',
 					},
 				]}

@@ -10451,7 +10451,7 @@ msgid "Couldn't send the friend request. Try again."
 msgstr "無法傳送好友邀請。請再試一次。"
 
 #. Title of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Couldn't send the verification email"
 msgstr "無法傳送驗證電子郵件"
 
@@ -27910,8 +27910,10 @@ msgstr "重新傳送（{secondsRemaining} 秒）"
 msgid "Resend code"
 msgstr "重新傳送驗證碼"
 
+#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "重寄驗證信"
 
@@ -29939,6 +29941,11 @@ msgstr "傳送 TTS 訊息"
 msgid "Send verification code"
 msgstr "傳送驗證碼"
 
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Send verification email"
+msgstr "寄送驗證信件"
+
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
@@ -31695,7 +31702,7 @@ msgid "Something went wrong while saving this setting. Please try again in a mom
 msgstr "儲存此設定時發生錯誤。請稍後再試一次。"
 
 #. Body of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Something went wrong while sending your verification email. Please try again in a moment."
 msgstr "傳送驗證電子郵件時發生錯誤。請稍後再試一次。"
 
@@ -37744,8 +37751,8 @@ msgstr "驗證碼"
 msgid "Verification code sent"
 msgstr "驗證碼已送出"
 
-#. Toast confirmation in the email verification alert after a verification email has been sent.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#. Toast confirmation shown after a verification email has been sent.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Verification email sent. Check your inbox."
 msgstr "驗證電子郵件已寄出。請檢查您的收件匣。"
 
@@ -40176,7 +40183,7 @@ msgstr "您編輯訊息的速度太快了"
 #. Title of the error modal shown when resending a verification email is rate-limited.
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -40340,7 +40347,7 @@ msgid "You've received a gift"
 msgstr "您收到一份禮物"
 
 #. Body of the error modal shown when resending a verification email is rate-limited.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "您已要求傳送太多驗證電子郵件。請稍候片刻再試一次。"
 

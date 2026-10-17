@@ -2,15 +2,15 @@
 
 import i18n from '@app/app/I18n';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import {useVerifyEmailAction} from '@app/features/auth/hooks/useVerifyEmailAction';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import type {UnaddableRecipient} from '@app/features/channel/components/modals/UnaddableRecipientsConfirmModal';
 import {UnaddableRecipientsConfirmModal} from '@app/features/channel/components/modals/UnaddableRecipientsConfirmModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getDuplicateGroupDMChannels, getMaxGroupDmOtherRecipients} from '@app/features/channel/utils/GroupDmUtils';
-import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -150,6 +150,7 @@ export const CreateDMRestrictionSlate: React.FC<
 > = ({restriction, fullHeight = true, ...props}) => {
 	const {i18n: lingui} = useLingui();
 	const isUnclaimed = restriction === 'unclaimed';
+	const verifyEmailAction = useVerifyEmailAction();
 	return (
 		<div data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.div" {...props}>
 			<StatusSlate
@@ -157,27 +158,18 @@ export const CreateDMRestrictionSlate: React.FC<
 				title={lingui._(isUnclaimed ? CLAIM_YOUR_ACCOUNT_DESCRIPTOR : VERIFY_YOUR_EMAIL_DESCRIPTOR)}
 				description={getCreateDMRestrictionMessage(lingui, restriction)}
 				actions={[
-					{
-						text: lingui._(isUnclaimed ? CLAIM_ACCOUNT_DESCRIPTOR : VERIFY_EMAIL_DESCRIPTOR),
-						onClick: () => {
-							if (isUnclaimed) {
-								openClaimAccountModal({force: true});
-								return;
+					isUnclaimed
+						? {
+								text: lingui._(CLAIM_ACCOUNT_DESCRIPTOR),
+								onClick: () => openClaimAccountModal({force: true}),
+								variant: 'primary',
 							}
-							ModalCommands.push(
-								modal(
-									() => (
-										<UserSettingsModal
-											initialTab="account_security"
-											data-flx="channel.create-dm-modal-utils.restriction-slate.user-settings-modal"
-										/>
-									),
-									'user-settings',
-								),
-							);
-						},
-						variant: 'primary',
-					},
+						: {
+								text: verifyEmailAction.text,
+								onClick: verifyEmailAction.onClick,
+								submitting: verifyEmailAction.submitting,
+								variant: 'primary',
+							},
 				]}
 				fullHeight={fullHeight}
 				data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.status-slate"

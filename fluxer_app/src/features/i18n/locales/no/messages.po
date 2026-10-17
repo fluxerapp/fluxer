@@ -10451,7 +10451,7 @@ msgid "Couldn't send the friend request. Try again."
 msgstr "Kunne ikke sende venneforespørselen. Prøv igjen."
 
 #. Title of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Couldn't send the verification email"
 msgstr "Kunne ikke sende bekreftelseseposten"
 
@@ -27910,8 +27910,10 @@ msgstr "Send på nytt ({secondsRemaining} s)"
 msgid "Resend code"
 msgstr "Send kode på nytt"
 
+#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "Send e-post på nytt"
 
@@ -29939,6 +29941,11 @@ msgstr "Send tekst-til-tale-meldinger"
 msgid "Send verification code"
 msgstr "Send bekreftelseskode"
 
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Send verification email"
+msgstr "Send bekreftelsesepost"
+
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
@@ -31695,7 +31702,7 @@ msgid "Something went wrong while saving this setting. Please try again in a mom
 msgstr "Noe gikk galt under lagring av denne innstillingen. Prøv igjen om en liten stund."
 
 #. Body of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Something went wrong while sending your verification email. Please try again in a moment."
 msgstr "Noe gikk galt under sending av bekreftelses-e-posten din. Prøv igjen om et øyeblikk."
 
@@ -37744,8 +37751,8 @@ msgstr "Bekreftelseskode"
 msgid "Verification code sent"
 msgstr "Bekreftelseskode sendt"
 
-#. Toast confirmation in the email verification alert after a verification email has been sent.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#. Toast confirmation shown after a verification email has been sent.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Verification email sent. Check your inbox."
 msgstr "E-post for bekreftelse er sendt. Sjekk innboksen din."
 
@@ -40176,7 +40183,7 @@ msgstr "Du redigerer meldinger for raskt"
 #. Title of the error modal shown when resending a verification email is rate-limited.
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -40340,7 +40347,7 @@ msgid "You've received a gift"
 msgstr "Du har mottatt en gave"
 
 #. Body of the error modal shown when resending a verification email is rate-limited.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Du har bedt om for mange bekreftelses-e-poster. Vent litt og prøv igjen."
 

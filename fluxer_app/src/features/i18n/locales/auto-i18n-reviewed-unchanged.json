@@ -1427,6 +1427,7 @@
 		"Send messages in threads",
 		"Send messages, images, GIFs and emoji",
 		"Send report",
+		"Send verification email",
 		"Sends both channels of a stereo microphone. Needs all processing off and a channel at 64 kbps or higher.",
 		"Sequential send",
 		"Serial send",

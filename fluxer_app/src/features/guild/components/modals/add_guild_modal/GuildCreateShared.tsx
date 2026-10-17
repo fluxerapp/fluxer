@@ -2,12 +2,12 @@
 
 import {Routes} from '@app/app/Routes';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {AVATAR_RECOMMENDED_SIZE_LABEL, STATIC_IMAGE_FORMATS} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import {useVerifyEmailAction} from '@app/features/auth/hooks/useVerifyEmailAction';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
@@ -23,7 +23,6 @@ import {
 import {
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
-	VERIFY_EMAIL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
@@ -149,7 +148,21 @@ export function useGuildCreateIconField({
 	return {previewIconUrl, iconName, handleOpenIconUpload, handleClearIcon};
 }
 
-export function renderGuildCreateAccountGate(i18n: I18n, dataFlx: string): React.ReactNode {
+const GuildCreateVerifyEmailButton = ({dataFlx}: {dataFlx: string}) => {
+	const verifyEmailAction = useVerifyEmailAction();
+	return (
+		<Button
+			onClick={verifyEmailAction.onClick}
+			disabled={verifyEmailAction.submitting}
+			submitting={verifyEmailAction.submitting}
+			data-flx={`${dataFlx}.button.push`}
+		>
+			{verifyEmailAction.text}
+		</Button>
+	);
+};
+
+export function renderGuildCreateAccountGate(dataFlx: string): React.ReactNode {
 	const currentUser = Users.currentUser;
 	if (currentUser != null && !currentUser.isClaimed()) {
 		return (
@@ -177,19 +190,10 @@ export function renderGuildCreateAccountGate(i18n: I18n, dataFlx: string): React
 					<p data-flx={`${dataFlx}.p--2`}>
 						<Trans>You need to verify your email address before you can create a community.</Trans>
 					</p>
-					<Button
-						onClick={() =>
-							ModalCommands.push(
-								modal(
-									() => <UserSettingsModal initialTab="account_security" data-flx={`${dataFlx}.user-settings-modal`} />,
-									'user-settings',
-								),
-							)
-						}
-						data-flx={`${dataFlx}.button.push`}
-					>
-						{i18n._(VERIFY_EMAIL_DESCRIPTOR)}
-					</Button>
+					<GuildCreateVerifyEmailButton
+						dataFlx={dataFlx}
+						data-flx="guild.add-guild-modal.guild-create-shared.render-guild-create-account-gate.guild-create-verify-email-button"
+					/>
 				</div>
 			</div>
 		);

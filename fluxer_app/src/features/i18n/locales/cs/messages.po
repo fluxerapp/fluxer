@@ -10451,7 +10451,7 @@ msgid "Couldn't send the friend request. Try again."
 msgstr "Nepodařilo se odeslat žádost o přátelství. Zkuste to znovu."
 
 #. Title of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Couldn't send the verification email"
 msgstr "Ověřovací e-mail se nepodařilo odeslat"
 
@@ -27910,8 +27910,10 @@ msgstr "Znovu odeslat ({secondsRemaining} s)"
 msgid "Resend code"
 msgstr "Znovu odeslat kód"
 
+#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "Znovu odeslat e-mail"
 
@@ -29939,6 +29941,11 @@ msgstr "Odesílat zprávy převodem textu na řeč"
 msgid "Send verification code"
 msgstr "Odeslat ověřovací kód"
 
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Send verification email"
+msgstr "Odeslat ověřovací e-mail"
+
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
@@ -31695,7 +31702,7 @@ msgid "Something went wrong while saving this setting. Please try again in a mom
 msgstr "Při ukládání tohoto nastavení se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
 #. Body of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Something went wrong while sending your verification email. Please try again in a moment."
 msgstr "Při odesílání ověřovacího e-mailu se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
@@ -37744,8 +37751,8 @@ msgstr "Ověřovací kód"
 msgid "Verification code sent"
 msgstr "Ověřovací kód odeslán"
 
-#. Toast confirmation in the email verification alert after a verification email has been sent.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#. Toast confirmation shown after a verification email has been sent.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Verification email sent. Check your inbox."
 msgstr "Ověřovací e-mail byl odeslán. Zkontrolujte si doručenou poštu."
 
@@ -40176,7 +40183,7 @@ msgstr "Zprávy upravujete příliš rychle"
 #. Title of the error modal shown when resending a verification email is rate-limited.
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -40340,7 +40347,7 @@ msgid "You've received a gift"
 msgstr "Dostali jste dárek"
 
 #. Body of the error modal shown when resending a verification email is rate-limited.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Vyžádali jste si příliš mnoho ověřovacích e-mailů. Počkejte chvíli a zkuste to znovu."
 

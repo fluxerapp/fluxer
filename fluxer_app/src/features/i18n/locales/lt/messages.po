@@ -10451,7 +10451,7 @@ msgid "Couldn't send the friend request. Try again."
 msgstr "Nepavyko išsiųsti draugystės užklausos. Bandykite dar kartą."
 
 #. Title of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Couldn't send the verification email"
 msgstr "Nepavyko išsiųsti patvirtinimo el. laiško"
 
@@ -27911,8 +27911,10 @@ msgstr "Siųsti iš naujo ({secondsRemaining} s)"
 msgid "Resend code"
 msgstr "Siųsti kodą iš naujo"
 
+#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "Iš naujo siųsti el. laišką"
 
@@ -29940,6 +29942,11 @@ msgstr "Siųsti TTS žinutes"
 msgid "Send verification code"
 msgstr "Siųsti patvirtinimo kodą"
 
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Send verification email"
+msgstr "Siųsti patvirtinimo el. laišką"
+
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
@@ -31696,7 +31703,7 @@ msgid "Something went wrong while saving this setting. Please try again in a mom
 msgstr "Nepavyko išsaugoti šio nustatymo. Bandykite dar kartą po akimirkos."
 
 #. Body of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Something went wrong while sending your verification email. Please try again in a moment."
 msgstr "Nepavyko išsiųsti patvirtinimo el. laiško. Bandykite dar kartą po akimirkos."
 
@@ -37745,8 +37752,8 @@ msgstr "Patvirtinimo kodas"
 msgid "Verification code sent"
 msgstr "Patvirtinimo kodas išsiųstas"
 
-#. Toast confirmation in the email verification alert after a verification email has been sent.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#. Toast confirmation shown after a verification email has been sent.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Verification email sent. Check your inbox."
 msgstr "Patvirtinimo el. laiškas išsiųstas. Patikrinkite gautuosius."
 
@@ -40177,7 +40184,7 @@ msgstr "Per greitai redaguojate žinutes"
 #. Title of the error modal shown when resending a verification email is rate-limited.
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -40341,7 +40348,7 @@ msgid "You've received a gift"
 msgstr "Gavote dovaną"
 
 #. Body of the error modal shown when resending a verification email is rate-limited.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Išsiuntėte per daug patvirtinimo el. laiškų. Palaukite ir bandykite dar kartą."
 

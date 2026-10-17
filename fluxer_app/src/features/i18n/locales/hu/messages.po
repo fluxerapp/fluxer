@@ -10451,7 +10451,7 @@ msgid "Couldn't send the friend request. Try again."
 msgstr "Nem sikerült elküldeni az ismerősjelölést. Próbáld újra."
 
 #. Title of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Couldn't send the verification email"
 msgstr "Nem sikerült elküldeni az ellenőrző e-mailt"
 
@@ -27910,8 +27910,10 @@ msgstr "Újraküldés ({secondsRemaining} mp)"
 msgid "Resend code"
 msgstr "Kód újraküldése"
 
+#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "E-mail újraküldése"
 
@@ -29939,6 +29941,11 @@ msgstr "TTS-üzenetek küldése"
 msgid "Send verification code"
 msgstr "Ellenőrző kód küldése"
 
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Send verification email"
+msgstr "Küldj egy ellenőrző e-mailt"
+
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
@@ -31695,7 +31702,7 @@ msgid "Something went wrong while saving this setting. Please try again in a mom
 msgstr "Hiba történt a beállítás mentésekor. Próbáld újra egy kis idő múlva."
 
 #. Body of the error modal shown when sending the verification email fails unexpectedly.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Something went wrong while sending your verification email. Please try again in a moment."
 msgstr "Hiba történt a megerősítő e-mail elküldésekor. Próbáld újra egy kis idő múlva."
 
@@ -37744,8 +37751,8 @@ msgstr "Ellenőrző kód"
 msgid "Verification code sent"
 msgstr "Ellenőrző kód elküldve"
 
-#. Toast confirmation in the email verification alert after a verification email has been sent.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#. Toast confirmation shown after a verification email has been sent.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Verification email sent. Check your inbox."
 msgstr "Ellenőrző e-mail elküldve. Nézd meg a beérkező üzeneteidet."
 
@@ -40176,7 +40183,7 @@ msgstr "Túl gyorsan szerkeszted az üzeneteket"
 #. Title of the error modal shown when resending a verification email is rate-limited.
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -40340,7 +40347,7 @@ msgid "You've received a gift"
 msgstr "Ajándékot kaptál"
 
 #. Body of the error modal shown when resending a verification email is rate-limited.
-#: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Túl sok ellenőrző e-mailt kértél. Kérjük, várj egy kicsit, majd próbáld újra."
 

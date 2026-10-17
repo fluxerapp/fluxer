@@ -4,6 +4,7 @@ import {EmailVerificationAlert} from '@app/features/app/components/dialogs/compo
 import {UnclaimedAccountAlert} from '@app/features/app/components/dialogs/components/UnclaimedAccountAlert';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import {canResendVerificationEmail} from '@app/features/auth/hooks/useVerifyEmailAction';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -177,7 +178,7 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(
 						/>
 					)}
 				</AccountSecurityCard>
-				{RuntimeConfig.emailsEnabled && isClaimed && !usesUsernameSignIn && user.email && !user.verified && (
+				{canResendVerificationEmail(user) && (
 					<EmailVerificationAlert data-flx="user.account-security-tab.account-tab.account-tab-content.email-verification-alert" />
 				)}
 			</>
