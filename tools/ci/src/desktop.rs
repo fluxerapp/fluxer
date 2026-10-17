@@ -3358,10 +3358,8 @@ fn velopack_path_lengths(nupkg: &Path, prefix: &Path) -> Result<Vec<ArchivePathL
     let mut entries = Vec::new();
     for index in 0..archive.len() {
         let entry = archive.by_index(index)?;
-        let normalized = entry
-            .name()
-            .trim_start_matches(['/', '\\'])
-            .replace('\\', "/");
+        let name = entry.name()?.into_owned();
+        let normalized = name.trim_start_matches(['/', '\\']).replace('\\', "/");
         let full = if normalized.is_empty() {
             prefix.to_path_buf()
         } else {
@@ -3369,7 +3367,7 @@ fn velopack_path_lengths(nupkg: &Path, prefix: &Path) -> Result<Vec<ArchivePathL
         };
         entries.push(ArchivePathLength {
             length: full.to_string_lossy().len(),
-            name: entry.name().to_string(),
+            name,
         });
     }
     entries.sort_by(|a, b| b.length.cmp(&a.length).then_with(|| a.name.cmp(&b.name)));
@@ -4291,7 +4289,7 @@ fn extract_zip_safely(archive_path: &Path, destination: &Path) -> Result<()> {
         let relative = entry.enclosed_name().ok_or_else(|| {
             anyhow!(
                 "Refusing to extract unsafe archive path '{}' from {}",
-                entry.name(),
+                entry.name().unwrap_or_default(),
                 archive_path.display()
             )
         })?;
