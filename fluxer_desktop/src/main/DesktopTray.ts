@@ -258,7 +258,7 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	const key = `${appearance}:${indicator}`;
 	let image = trayIconCache.get(key);
 	if (!image) {
-		image = renderTrayIcon(trayBaseIcon, appearance, indicator);
+		image = renderTrayIcon(trayBaseIcon, appearance, indicator, process.platform);
 		trayIconCache.set(key, image);
 	}
 	return {key, image};

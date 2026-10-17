@@ -5,6 +5,11 @@ import {type NativeImage, nativeImage} from 'electron';
 export type TrayIconAppearance = 'colored' | 'template' | 'white' | 'black';
 
 type Bgr = Readonly<[number, number, number]>;
+interface TrayBitmap {
+	buffer: Buffer;
+	width: number;
+	height: number;
+}
 
 const DOT_RADIUS_RATIO = 0.22;
 const DOT_GAP_RATIO = 0.0625;
@@ -12,6 +17,8 @@ const SUBSAMPLES = 4;
 const MIN_GLYPH_CONTRAST = 32;
 const GLYPH_CUTOUT_START = 0.1;
 const GLYPH_CUTOUT_END = 0.5;
+const LINUX_MONOCHROME_CANVAS_RATIO = 22 / 16;
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const DOT_BGR: Bgr = [0x00, 0x00, 0xdd];
 const TEMPLATE_DOT_BGR: Bgr = [0x00, 0x00, 0x00];
 const GLYPH_BGR: Readonly<Record<'white' | 'black', Bgr>> = {
@@ -114,26 +121,97 @@ export function paintTrayIndicatorDot(bitmap: Buffer, width: number, height: num
 	}
 }
 
-export function renderTrayIcon(base: NativeImage, appearance: TrayIconAppearance, indicator: boolean): NativeImage {
+function cropTrayGlyph(buffer: Buffer, width: number, height: number): TrayBitmap | null {
+	let left = width;
+	let top = height;
+	let right = 0;
+	let bottom = 0;
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			if (buffer[(y * width + x) * 4 + 3] === 0) continue;
+			left = Math.min(left, x);
+			top = Math.min(top, y);
+			right = Math.max(right, x + 1);
+			bottom = Math.max(bottom, y + 1);
+		}
+	}
+	if (right <= left || bottom <= top) return null;
+	const glyphWidth = right - left;
+	const glyphHeight = bottom - top;
+	const size = Math.max(glyphWidth, glyphHeight);
+	const target = Buffer.alloc(size * size * 4);
+	const offsetX = Math.floor((size - glyphWidth) / 2);
+	const offsetY = Math.floor((size - glyphHeight) / 2);
+	for (let y = 0; y < glyphHeight; y++) {
+		const start = ((top + y) * width + left) * 4;
+		buffer.copy(target, ((offsetY + y) * size + offsetX) * 4, start, start + glyphWidth * 4);
+	}
+	return {buffer: target, width: size, height: size};
+}
+
+function addMonochromeTrayMargins(bitmap: TrayBitmap, size: number): TrayBitmap {
+	const inset = Math.floor((size - bitmap.width) / 2);
+	const buffer = Buffer.alloc(size * size * 4);
+	for (let y = 0; y < bitmap.height; y++) {
+		bitmap.buffer.copy(buffer, ((inset + y) * size + inset) * 4, y * bitmap.width * 4, (y + 1) * bitmap.width * 4);
+	}
+	return {buffer, width: size, height: size};
+}
+
+export function renderTrayIcon(
+	base: NativeImage,
+	appearance: TrayIconAppearance,
+	indicator: boolean,
+	platform: NodeJS.Platform,
+): NativeImage {
 	const monochrome = appearance === 'white' || appearance === 'black';
 	if (!monochrome && !indicator) {
 		return base;
 	}
 	const result = nativeImage.createEmpty();
 	const scaleFactors = base.getScaleFactors();
+	const linuxMonochrome = platform === 'linux' && monochrome;
+	const representations: Array<{scaleFactor: number; bitmap: TrayBitmap}> = [];
 	for (const scaleFactor of scaleFactors.length > 0 ? scaleFactors : [1]) {
+		if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) continue;
 		const size = base.getSize(scaleFactor);
-		const width = Math.round(size.width * scaleFactor);
-		const height = Math.round(size.height * scaleFactor);
-		const bitmap = Buffer.from(base.toBitmap({scaleFactor}));
-		if (width === 0 || height === 0 || bitmap.length !== width * height * 4) continue;
+		let width = Math.round(size.width * scaleFactor);
+		let height = Math.round(size.height * scaleFactor);
+		const buffer = Buffer.from(base.toBitmap({scaleFactor}));
+		if (buffer.length === 0 || buffer.length % 4 !== 0) continue;
+		if (buffer.length !== width * height * 4) {
+			const png = base.toPNG({scaleFactor});
+			if (png.length < 24 || !png.subarray(0, 8).equals(PNG_SIGNATURE) || png.toString('ascii', 12, 16) !== 'IHDR') {
+				continue;
+			}
+			width = png.readUInt32BE(16);
+			height = png.readUInt32BE(20);
+		}
+		if (width <= 0 || height <= 0 || buffer.length !== width * height * 4) continue;
+		const bitmap = linuxMonochrome ? cropTrayGlyph(buffer, width, height) : {buffer, width, height};
+		if (!bitmap) continue;
+		representations.push({scaleFactor, bitmap});
+	}
+	if (representations.length === 0) return base;
+	const logicalCanvasSize = Math.ceil(
+		Math.max(...representations.map(({scaleFactor, bitmap}) => bitmap.width / scaleFactor)) *
+			LINUX_MONOCHROME_CANVAS_RATIO,
+	);
+	for (const {scaleFactor, bitmap: source} of representations) {
+		let bitmap = source;
 		if (monochrome) {
-			paintMonochromeGlyph(bitmap, GLYPH_BGR[appearance]);
+			paintMonochromeGlyph(bitmap.buffer, GLYPH_BGR[appearance]);
 		}
 		if (indicator) {
-			paintTrayIndicatorDot(bitmap, width, height, appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR);
+			paintTrayIndicatorDot(
+				bitmap.buffer,
+				bitmap.width,
+				bitmap.height,
+				appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR,
+			);
 		}
-		result.addRepresentation({scaleFactor, width, height, buffer: bitmap});
+		if (linuxMonochrome) bitmap = addMonochromeTrayMargins(bitmap, Math.ceil(logicalCanvasSize * scaleFactor));
+		result.addRepresentation({scaleFactor, ...bitmap});
 	}
 	if (result.isEmpty()) {
 		return base;
