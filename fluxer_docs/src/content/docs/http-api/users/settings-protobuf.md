@@ -164,7 +164,7 @@ The `accessibility` field has display, motion, message, media, voice, and intera
 | dim_strikethrough_text? | bool | Whether strikethrough text is visually dimmed |
 | sequential_file_send? | bool | Whether multiple selected files are sent one message at a time |
 | mobile_splash_zoom_animation? | bool | Whether the mobile splash screen plays its zoom animation |
-| double_click_message_actions? | bool | Whether double-clicking a message edits your own message or replies to someone else's |
+| message_double_click_actions? | bool | Whether double-clicking a message edits your own message or replies to someone else's |
 
 <sup>1</sup> A multiplier applied to interface colour, where 1 leaves colour unchanged
 

@@ -319,7 +319,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		(event: React.MouseEvent) => {
 			if (
 				behaviorOverrides?.disableDoubleClick ||
-				!Accessibility.doubleClickMessageActions ||
+				!Accessibility.messageDoubleClickActions ||
 				mobileLayoutEnabled ||
 				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
 				message.state !== MessageStates.SENT ||

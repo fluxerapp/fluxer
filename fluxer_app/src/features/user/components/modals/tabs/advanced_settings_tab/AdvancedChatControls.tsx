@@ -622,8 +622,8 @@ export const DoubleClickMessageActionsControl = observer(() => {
 	return (
 		<Switch
 			ariaLabel={i18n._(DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR)}
-			value={Accessibility.doubleClickMessageActions}
-			onChange={(value) => AccessibilityCommands.update({doubleClickMessageActions: value})}
+			value={Accessibility.messageDoubleClickActions}
+			onChange={(value) => AccessibilityCommands.update({messageDoubleClickActions: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.double-click-message-actions"
 		/>
