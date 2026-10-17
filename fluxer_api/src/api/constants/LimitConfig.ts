@@ -103,7 +103,7 @@ export function mergeWithCurrentDefaults(
 	const mergedRules: Array<LimitRule> = [];
 	const existingRulesMap = new Map<string, LimitRule>();
 	for (const rule of stored.rules) {
-		existingRulesMap.set(rule.id, {...rule, limits: clampToAllowedRange(rule.limits)});
+		existingRulesMap.set(rule.id, {...rule, limits: readKnownLimits(rule.limits)});
 	}
 	for (const defaultRule of newDefaults.rules) {
 		const existingRule = existingRulesMap.get(defaultRule.id);
@@ -125,6 +125,9 @@ export function mergeWithCurrentDefaults(
 		existingRulesMap.delete(defaultRule.id);
 	}
 	for (const [, rule] of existingRulesMap) {
+		if (Object.keys(rule.limits).length === 0) {
+			continue;
+		}
 		const modifiedFields = findModifiedLimits(rule.limits, defaultBaseRule.limits);
 		mergedRules.push({
 			id: rule.id,
@@ -231,16 +234,17 @@ function wasSavedUnderOtherDefaults(
 	);
 }
 
-function clampToAllowedRange(limits: Partial<Record<LimitKey, number>>): Partial<Record<LimitKey, number>> {
-	const clamped = {...limits};
+function readKnownLimits(limits: Partial<Record<LimitKey, number>>): Partial<Record<LimitKey, number>> {
+	const known: Partial<Record<LimitKey, number>> = {};
 	for (const key of LIMIT_KEYS) {
-		const value = clamped[key];
-		const {min = 0, max} = LIMIT_KEY_METADATA[key];
-		if (value !== undefined && max !== undefined) {
-			clamped[key] = Math.min(Math.max(value, min), max);
+		const value = limits[key];
+		if (value === undefined) {
+			continue;
 		}
+		const {min = 0, max} = LIMIT_KEY_METADATA[key];
+		known[key] = max === undefined ? value : Math.min(Math.max(value, min), max);
 	}
-	return clamped;
+	return known;
 }
 
 function pickModifiedLimits(

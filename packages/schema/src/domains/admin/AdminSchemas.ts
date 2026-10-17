@@ -951,14 +951,12 @@ const LimitRuleSchema = z.object({
 	filters: LimitFilterSchema.optional().describe('Optional filters that scope the rule'),
 	limits: z
 		.record(z.string(), NonNegativeSafeIntegerType)
-		.refine(
-			(limits) => {
-				const limitKeys = Object.keys(limits);
-				return limitKeys.every((key) => (LIMIT_KEYS as ReadonlyArray<string>).includes(key));
-			},
-			{error: 'Invalid limit key detected'},
-		)
 		.superRefine((limits, ctx) => {
+			for (const key of Object.keys(limits)) {
+				if (!(LIMIT_KEYS as ReadonlyArray<string>).includes(key)) {
+					ctx.addIssue({code: 'custom', message: ValidationErrorCodes.INVALID_FORMAT, path: [key]});
+				}
+			}
 			for (const key of LIMIT_KEYS) {
 				const value = limits[key];
 				const {min = 0, max} = LIMIT_KEY_METADATA[key];
