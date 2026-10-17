@@ -29,7 +29,6 @@ import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants'
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import props from 'lodash/fp/props';
 
 export class MessageInteractionService {
 	readonly authService: MessageInteractionAuthService;
