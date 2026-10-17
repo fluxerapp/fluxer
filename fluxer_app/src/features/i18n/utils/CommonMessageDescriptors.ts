@@ -614,6 +614,10 @@ export const WHATS_NEW_DESCRIPTOR = msg({
 	message: "What's new",
 	comment: 'Settings menu entry that opens the latest patch notes for the app on the website.',
 });
+export const SUBMIT_FEEDBACK_DESCRIPTOR = msg({
+	message: 'Submit feedback',
+	comment: 'Settings menu entry that opens the feedback website, where people suggest features and report problems.',
+});
 export const OPENS_IN_BROWSER_DESCRIPTOR = msg({
 	message: 'Opens in your browser',
 	comment:

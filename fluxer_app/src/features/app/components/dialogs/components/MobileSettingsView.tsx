@@ -18,6 +18,7 @@ import {
 	OPENS_IN_BROWSER_DESCRIPTOR,
 	SETTINGS_DESCRIPTOR,
 	SIGN_OUT_DESCRIPTOR,
+	SUBMIT_FEEDBACK_DESCRIPTOR,
 	WHATS_NEW_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
@@ -61,6 +62,7 @@ import {
 	ArrowClockwiseIcon,
 	ArrowLeftIcon,
 	ArrowSquareOutIcon,
+	ChatCircleDotsIcon,
 	type IconWeight,
 	SignOutIcon,
 	SparkleIcon,
@@ -417,6 +419,7 @@ const MobileSettingsList = observer(
 			ModalCommands.push(modal(() => <LogoutModal data-flx="app.mobile-settings-view.handle-logout.logout-modal" />));
 		}, []);
 		const patchNotesUrl = Routes.patchNotes();
+		const feedbackUrl = Routes.feedback();
 		const categories = Object.entries(mobileVisibleTabs);
 		const lastCategoryIndex = categories.length - 1;
 		return (
@@ -496,6 +499,19 @@ const MobileSettingsList = observer(
 										data-flx="app.mobile-settings-view.mobile-settings-list.mobile-settings-action-item.whats-new"
 									/>
 									<div className={styles.divider} data-flx="app.mobile-settings-view.mobile-settings-list.divider--2" />
+								</>
+							)}
+							{categoryIndex === lastCategoryIndex && feedbackUrl && (
+								<>
+									<MobileSettingsActionItem
+										icon={ChatCircleDotsIcon}
+										iconWeight="fill"
+										label={i18n._(SUBMIT_FEEDBACK_DESCRIPTOR)}
+										onClick={() => void openExternalUrl(feedbackUrl)}
+										external={true}
+										data-flx="app.mobile-settings-view.mobile-settings-list.mobile-settings-action-item.submit-feedback"
+									/>
+									<div className={styles.divider} data-flx="app.mobile-settings-view.mobile-settings-list.divider--3" />
 								</>
 							)}
 							{categoryIndex === lastCategoryIndex && (

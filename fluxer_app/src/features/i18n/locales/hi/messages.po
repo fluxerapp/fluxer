@@ -32741,6 +32741,11 @@ msgstr "सबमेनू"
 msgid "Submit application"
 msgstr "आवेदन जमा करें"
 
+#. Settings menu entry that opens the feedback website, where people suggest features and report problems.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Submit feedback"
+msgstr "फ़ीडबैक सबमिट करें"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Submitting"
 msgstr "सबमिट किया जा रहा है"

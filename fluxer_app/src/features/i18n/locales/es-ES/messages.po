@@ -32741,6 +32741,11 @@ msgstr "Submenú"
 msgid "Submit application"
 msgstr "Enviar solicitud"
 
+#. Settings menu entry that opens the feedback website, where people suggest features and report problems.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Submit feedback"
+msgstr "Enviar comentarios"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Submitting"
 msgstr "Enviando"

@@ -51,6 +51,7 @@ export const Routes = {
 	help: (): string | null => hostedMarketingUrl('help'),
 	helpArticle: (slug: string): string | null => hostedMarketingUrl(`help/${slug}`),
 	patchNotes: (): string | null => hostedMarketingUrl('patch-notes'),
+	feedback: (): string | null => (RuntimeConfig.isSelfHosted() ? null : 'https://feedback.fluxer.com'),
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,
 	favoritesChannel: (channelId: string) => `/channels/@favorites/${channelId}`,
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,

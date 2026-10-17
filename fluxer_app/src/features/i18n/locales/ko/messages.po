@@ -32741,6 +32741,11 @@ msgstr "하위 메뉴"
 msgid "Submit application"
 msgstr "신청서 제출"
 
+#. Settings menu entry that opens the feedback website, where people suggest features and report problems.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Submit feedback"
+msgstr "피드백 제출"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Submitting"
 msgstr "제출 중"
