@@ -174,6 +174,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['integrations', 'email', 'fallback', 'smtp', 'tls_mode'],
 		parse: parseSmtpTlsMode,
 	},
+	FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: {
+		path: ['integrations', 'email', 'fallback', 'smtp', 'headers'],
+		parse: parseJsonObject,
+	},
 	FLUXER_LIVEKIT_ENABLED: {path: ['integrations', 'voice', 'enabled'], parse: parseBoolean},
 	FLUXER_LIVEKIT_API_KEY: {path: ['integrations', 'voice', 'api_key']},
 	FLUXER_LIVEKIT_API_SECRET: {path: ['integrations', 'voice', 'api_secret']},

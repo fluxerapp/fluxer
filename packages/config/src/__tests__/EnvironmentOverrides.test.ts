@@ -48,6 +48,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				FLUXER_EMAIL_REPLY_TO_EMAIL: blank,
 				FLUXER_EMAIL_FALLBACK_DOMAINS: blank,
 				FLUXER_EMAIL_FALLBACK_SMTP_HOST: blank,
+				FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: blank,
 			}),
 		).toEqual({});
 	});
@@ -61,6 +62,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				FLUXER_EMAIL_FALLBACK_SMTP_USERNAME: 'apikey',
 				FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD: 'secret',
 				FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE: 'STARTTLS',
+				FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: '{"X-Tracking":"off"}',
 			}),
 		).toEqual({
 			integrations: {
@@ -73,6 +75,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 							username: 'apikey',
 							password: 'secret',
 							tls_mode: 'starttls',
+							headers: {'X-Tracking': 'off'},
 						},
 					},
 				},

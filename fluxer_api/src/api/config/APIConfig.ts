@@ -173,7 +173,7 @@ export interface APIConfig {
 		smtp?: SmtpConfig;
 		fallback?: {
 			domains: Array<string>;
-			smtp: SmtpConfig;
+			smtp: SmtpConfig & {headers?: Record<string, string>};
 		};
 	};
 	blocklistFeeds: {

@@ -865,6 +865,10 @@ Default empty. The fallback SMTP password. Required when the domains are set.
 
 Default empty. How the fallback connection is encrypted, with the same four values as `FLUXER_EMAIL_SMTP_TLS_MODE`. An empty value picks `implicit` on port 465 and `starttls` on every other port. A failed send through the fallback is logged as `SMTP send failed` with the fallback host.
 
+#### `FLUXER_EMAIL_FALLBACK_SMTP_HEADERS`
+
+Default empty. Extra headers added to every message sent through the fallback provider, as a JSON object of header name to string value, such as `{"X-Example-Tracking":"off"}` for a provider that reads a header to turn off link tracking. Values are sent exactly as given, never encoded or folded. A name must be a valid header field name, a value must be printable ASCII without line breaks, and each header has to fit on one 998 character line. `From`, `To`, `Cc`, `Bcc`, `Subject`, `Reply-To`, `Message-ID`, `Date`, `Content-Type` and `MIME-Version` cannot be set here. Anything else fails startup with the reason. `.env.example` lists it commented out.
+
 Only `api` and `worker` build the mail service, so recreating those two is enough after a change.
 
 ## CAPTCHA

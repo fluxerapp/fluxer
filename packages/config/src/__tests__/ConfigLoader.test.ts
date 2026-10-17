@@ -540,6 +540,30 @@ describe('ConfigLoader', () => {
 		},
 	);
 
+	test('loads the email fallback headers', async () => {
+		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: '{"X-Tracking":"{\\"enable\\":0}"}'});
+		const config = await loadConfig();
+		expect(config.integrations.email.fallback?.smtp.headers).toEqual({'X-Tracking': '{"enable":0}'});
+	});
+
+	test.each([
+		{headers: '["X-Tracking"]', error: 'must be a JSON object'},
+		{headers: '{"X-Tracking":{"enable":0}}', error: 'value of X-Tracking must be a string'},
+		{headers: '{"X-Tracking":0}', error: 'value of X-Tracking must be a string'},
+		{headers: '{"X Tracking":"off"}', error: 'header name "X Tracking" is not a valid header field name'},
+		{headers: '{"X-Tracking:":"off"}', error: 'header name "X-Tracking:" is not a valid header field name'},
+		{headers: '{"X-Tracking\\r\\nBcc":"off"}', error: 'is not a valid header field name'},
+		{headers: '{"X-Tracking":"off\\r\\nBcc: user@example.com"}', error: 'must be printable ASCII without line breaks'},
+		{headers: '{"X-Tracking":"off\\n"}', error: 'must be printable ASCII without line breaks'},
+		{headers: `{"X-Tracking":"${'a'.repeat(990)}"}`, error: 'must fit on one 998 character line'},
+		...['From', 'to', 'Cc', 'BCC', 'Subject', 'Reply-To', 'Message-ID', 'Date', 'content-type', 'MIME-Version'].map(
+			(name) => ({headers: JSON.stringify({[name]: 'x'}), error: `must not set the ${name} header`}),
+		),
+	])('rejects the email fallback headers $headers', async ({headers, error}) => {
+		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: headers});
+		await expect(loadConfig()).rejects.toThrow(error);
+	});
+
 	test('rejects an out of range email fallback port', async () => {
 		stubMinimalEnv({...emailFallbackEnv, FLUXER_EMAIL_FALLBACK_SMTP_PORT: '70000'});
 		await expect(loadConfig()).rejects.toThrow(

@@ -25,4 +25,33 @@ describe('SmtpEmailProvider', () => {
 		new SmtpEmailProvider({host: 'smtp.example.com', port, username: 'user', password: 'pass', tlsMode});
 		expect(createTransport).toHaveBeenCalledWith(expect.objectContaining(expected));
 	});
+
+	const message = {
+		to: 'user@example.com',
+		from: {email: 'noreply@example.com', name: 'Example'},
+		subject: 'Hi',
+		text: 'Body',
+	};
+
+	it('sends the configured headers verbatim', async () => {
+		const provider = new SmtpEmailProvider({
+			host: 'smtp.example.com',
+			port: 587,
+			username: 'user',
+			password: 'pass',
+			headers: {'X-Tracking': '{"enable":0}'},
+		});
+		await provider.sendEmail(message);
+		const {sendMail} = createTransport.mock.results[0].value;
+		expect(sendMail).toHaveBeenCalledWith(
+			expect.objectContaining({headers: {'X-Tracking': {prepared: true, value: '{"enable":0}'}}}),
+		);
+	});
+
+	it('sends no extra headers when none are configured', async () => {
+		const provider = new SmtpEmailProvider({host: 'smtp.example.com', port: 587, username: 'user', password: 'pass'});
+		await provider.sendEmail(message);
+		const {sendMail} = createTransport.mock.results[0].value;
+		expect(sendMail.mock.calls[0][0]).not.toHaveProperty('headers');
+	});
 });

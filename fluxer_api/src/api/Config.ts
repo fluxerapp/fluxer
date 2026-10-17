@@ -307,7 +307,10 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			fallback: master.integrations.email.fallback
 				? {
 						domains: master.integrations.email.fallback.domains,
-						smtp: toSmtpConfig(master.integrations.email.fallback.smtp),
+						smtp: {
+							...toSmtpConfig(master.integrations.email.fallback.smtp),
+							headers: master.integrations.email.fallback.smtp.headers,
+						},
 					}
 				: undefined,
 		},
