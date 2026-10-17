@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {clearTestEmails, createUniqueEmail, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
-import {DSAReportEmailVerifications, DSAReportTickets, IARSubmissions} from '@app/api/Tables';
+import {DSAReportEmailVerifications, DSAReportTickets, IARReportNotes, IARSubmissions} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -28,6 +28,11 @@ describe('report table TTLs', () => {
 	it('keeps reports without a table TTL', () => {
 		expect(IARSubmissions.defaultTtlSeconds).toBeUndefined();
 		expect(schemaOptions(IARSubmissions.name)).not.toContain('default_time_to_live');
+	});
+
+	it('keeps report notes without a table TTL, so they go only with the report', () => {
+		expect(IARReportNotes.defaultTtlSeconds).toBeUndefined();
+		expect(schemaOptions(IARReportNotes.name)).not.toContain('default_time_to_live');
 	});
 });
 

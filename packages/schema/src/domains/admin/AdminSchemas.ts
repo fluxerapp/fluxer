@@ -12,6 +12,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
 import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import {ReportNoteResponse} from '@fluxer/schema/src/domains/admin/AdminReportNoteSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {CaptchaConfigResponse, CaptchaConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {
@@ -1672,6 +1673,10 @@ export const ReportAdminResponseSchema = z.object({
 		.nullable()
 		.optional()
 		.describe('Why the report is held. Returned by the report detail only. Null when the report has no hold.'),
+	notes: z
+		.array(ReportNoteResponse)
+		.optional()
+		.describe('Internal staff notes on the report, oldest first. Returned by the report detail only.'),
 	reason: z.string().nullable().optional(),
 	reason_label: z.string().nullable().optional(),
 	reason_highest_priority: z.boolean().nullable().optional(),

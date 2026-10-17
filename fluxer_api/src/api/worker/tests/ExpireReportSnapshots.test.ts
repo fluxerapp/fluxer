@@ -354,6 +354,43 @@ describe('report retention', () => {
 		});
 	});
 
+	it('deletes the notes with an expired report and keeps the notes of a retained one', async () => {
+		const expired = await seed({resolvedDaysAgo: 365});
+		const contextExpired = await seed({resolvedDaysAgo: 200, outcome: 'no_violation', additionalInfo: 'details'});
+		const kept = await seed({resolvedDaysAgo: 10});
+		for (const {reportId} of [expired, contextExpired, kept]) {
+			await repository.addNote({
+				report_id: reportId,
+				note_id: nextId(),
+				author_id: nextId(),
+				body: 'Staff context',
+				created_at: NOW,
+			});
+		}
+
+		const summary = await run();
+
+		expect(summary).toMatchObject({deleted: 1, contextCleared: 1});
+		expect(await repository.listNotes(expired.reportId)).toEqual([]);
+		expect(await repository.listNotes(contextExpired.reportId)).toHaveLength(1);
+		expect(await repository.listNotes(kept.reportId)).toHaveLength(1);
+	});
+
+	it('keeps the notes in a dry run', async () => {
+		const expired = await seed({resolvedDaysAgo: 365});
+		await repository.addNote({
+			report_id: expired.reportId,
+			note_id: nextId(),
+			author_id: nextId(),
+			body: 'Staff context',
+			created_at: NOW,
+		});
+
+		await run({dryRun: true});
+
+		expect(await repository.listNotes(expired.reportId)).toHaveLength(1);
+	});
+
 	it('keeps a pending report however old it is', async () => {
 		const pending = await seed({ageDays: 4000, attachment: newAttachment(), profile: true});
 

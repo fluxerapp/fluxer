@@ -8,6 +8,7 @@ import {
 	DSAReportEmailVerifications,
 	DSAReportTickets,
 	GuildReportSubmissionsByReporter,
+	IARReportNotes,
 	IARSubmissions,
 	MessageReportSubmissionsByReporter,
 	UserReportSubmissionsByReporter,
@@ -52,6 +53,7 @@ const IAR_MESSAGE_CONTEXT_FIELDS = {
 
 const REPORT_TABLES = [
 	IARSubmissions,
+	IARReportNotes,
 	MessageReportSubmissionsByReporter,
 	UserReportSubmissionsByReporter,
 	GuildReportSubmissionsByReporter,

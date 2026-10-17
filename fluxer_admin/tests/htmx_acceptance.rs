@@ -141,6 +141,128 @@ async fn report_legal_hold_form_places_and_clears_the_hold() {
 }
 
 #[tokio::test]
+async fn report_notes_show_the_author_and_time_and_the_form_adds_one() {
+    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::get(|| async { json_response(report_with_note()) }),
+        )
+        .route(
+            "/admin/reports/1800000000000000001/notes",
+            routing::post(move |Json(body): Json<Value>| {
+                let sink = sink.clone();
+                async move {
+                    sink.lock().unwrap().push(body.clone());
+                    json_response(json!({
+                        "note_id": "1950000000000000002",
+                        "author_id": "1500000000000000000",
+                        "body": body["body"],
+                        "created_at": "2026-05-27T08:00:00.000Z"
+                    }))
+                }
+            }),
+        )
+        .route(
+            "/admin/users",
+            routing::get(|| async {
+                json_response(json!({ "users": [user("1500000000000000000", "AdminUser")] }))
+            }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let note_start = page
+        .find(r#"data-note="1950000000000000001""#)
+        .unwrap_or_else(|| panic!("missing note\n{page}"));
+    let note = &page[note_start..page[note_start..].find("</li>").unwrap() + note_start];
+    assert!(
+        note.contains(r#"href="/users/1500000000000000000""#),
+        "{note}"
+    );
+    assert!(note.contains("AdminUser"), "{note}");
+    assert!(note.contains("May 26, 2026, 1:30 PM UTC"), "{note}");
+    assert!(
+        note.contains("Reporter sent more context by email"),
+        "{note}"
+    );
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(&page, "/reports/1800000000000000001/notes", &csrf_token);
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            let (status, headers, text) = post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/notes",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await;
+            assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+            headers
+                .get("X-Fluxer-Admin-Toast")
+                .and_then(|value| value.to_str().ok())
+                .unwrap_or_else(|| panic!("missing toast header\n{text}"))
+                .to_owned()
+        }
+    };
+
+    let toast = post(format!(
+        "_csrf={csrf_token}&body=++Waiting+on+the+guild+owner++"
+    ))
+    .await;
+    assert!(toast.contains("success"), "{toast}");
+    assert!(toast.contains("Note added"), "{toast}");
+    let toast = post(format!("_csrf={csrf_token}&body=+")).await;
+    assert!(toast.contains("error"), "{toast}");
+    assert!(toast.contains("Write a note first"), "{toast}");
+    assert_eq!(
+        *received.lock().unwrap(),
+        vec![json!({"body": "Waiting on the guild owner"})]
+    );
+}
+
+#[tokio::test]
+async fn report_notes_hide_the_form_without_report_resolve() {
+    let api = Router::new()
+        .route(
+            "/admin/users/@me",
+            routing::get(|| async {
+                let mut admin = user("1500000000000000000", "AdminUser");
+                admin["acls"] = json!(["report:view"]);
+                json_response(json!({ "user": admin }))
+            }),
+        )
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::get(|| async { json_response(report_with_note()) }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (_, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    assert!(
+        page.contains("Reporter sent more context by email"),
+        "{page}"
+    );
+    assert!(
+        page.contains(r#"href="/users/1500000000000000000""#),
+        "{page}"
+    );
+    assert!(
+        !page.contains(r#"action="/reports/1800000000000000001/notes""#),
+        "{page}"
+    );
+}
+
+#[tokio::test]
 async fn report_delete_form_confirms_sends_the_reason_and_toasts_a_held_report() {
     let received = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
     let sink = received.clone();
@@ -744,6 +866,17 @@ fn searched_report() -> Value {
         "reported_user_id": "1500000000000000001",
         "reported_user_tag": "SearchedUser#0001"
     })
+}
+
+fn report_with_note() -> Value {
+    let mut report = searched_report();
+    report["notes"] = json!([{
+        "note_id": "1950000000000000001",
+        "author_id": "1500000000000000000",
+        "body": "Reporter sent more context by email",
+        "created_at": "2026-05-26T13:30:00.000Z"
+    }]);
+    report
 }
 
 fn report_reasons() -> Value {

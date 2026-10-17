@@ -5655,7 +5655,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieves detailed information about a specific report including content, reporter, reason, and the message context and profile snapshot captured when it was filed. Requires REPORT_VIEW permission.",
+				"description": "Retrieves detailed information about a specific report including content, reporter, reason, the message context and profile snapshot captured when it was filed, and its internal notes. Requires REPORT_VIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5782,7 +5782,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Deletes a report now: its record with the captured message context and profile snapshot, its stored evidence copies, its search index entry, and the duplicate-report reservation it holds for the reporter. An evidence copy that another report also uses is kept. A report under a legal hold that has not ended is refused with REPORT_UNDER_LEGAL_HOLD. This cannot be undone. Creates an audit log entry. Requires REPORT_DELETE permission.",
+				"description": "Deletes a report now: its record with the captured message context and profile snapshot, its notes, its stored evidence copies, its search index entry, and the duplicate-report reservation it holds for the reporter. An evidence copy that another report also uses is kept. A report under a legal hold that has not ended is refused with REPORT_UNDER_LEGAL_HOLD. This cannot be undone. Creates an audit log entry. Requires REPORT_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5864,6 +5864,138 @@
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportLegalHoldRequest"}}}
+				}
+			}
+		},
+		"/admin/reports/{report_id}/notes": {
+			"get": {
+				"operationId": "list_admin_report_notes",
+				"summary": "List report notes",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportNoteListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the internal notes on a report, oldest first. Notes are staff only and are deleted with the report. Requires REPORT_VIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "report_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the report",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the report"
+					}
+				]
+			},
+			"post": {
+				"operationId": "annotate_admin_report",
+				"summary": "Add a note to a report",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportNoteResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Appends an internal note to a report. Notes are staff only, never change and are deleted with the report. Creates audit log entry. Requires REPORT_RESOLVE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "report_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the report",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the report"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportNoteRequest"}}}
 				}
 			}
 		},
@@ -10969,6 +11101,34 @@
 					}
 				]
 			},
+			"ReportNoteRequest": {
+				"type": "object",
+				"properties": {"body": {"description": "The internal note. Staff only", "type": "string"}},
+				"required": ["body"]
+			},
+			"ReportNoteResponse": {
+				"type": "object",
+				"properties": {
+					"note_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"author_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"body": {"type": "string"},
+					"created_at": {"type": "string"}
+				},
+				"required": ["note_id", "author_id", "body", "created_at"],
+				"additionalProperties": false
+			},
+			"ReportNoteListResponse": {
+				"type": "object",
+				"properties": {
+					"notes": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportNoteResponse"},
+						"description": "The notes on the report, oldest first"
+					}
+				},
+				"required": ["notes"],
+				"additionalProperties": false
+			},
 			"ReportLegalHoldRequest": {
 				"type": "object",
 				"properties": {
@@ -11405,6 +11565,11 @@
 						"description": "Why the report is held. Returned by the report detail only. Null when the report has no hold.",
 						"nullable": true,
 						"type": "string"
+					},
+					"notes": {
+						"description": "Internal staff notes on the report, oldest first. Returned by the report detail only.",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportNoteResponse"}
 					},
 					"reason": {"nullable": true, "type": "string"},
 					"reason_label": {"nullable": true, "type": "string"},

@@ -245,7 +245,9 @@ import {
 	type DSAReportTicketRow,
 	GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type GuildReportSubmissionByReporterRow,
+	IAR_REPORT_NOTE_COLUMNS,
 	IAR_SUBMISSION_COLUMNS,
+	type IARReportNoteRow,
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
@@ -940,6 +942,12 @@ export const IARSubmissions = defineTable<IARSubmissionRow, 'report_id'>({
 	name: 'iar_submissions',
 	columns: IAR_SUBMISSION_COLUMNS,
 	primaryKey: ['report_id'],
+});
+export const IARReportNotes = defineTable<IARReportNoteRow, 'report_id' | 'note_id', 'report_id'>({
+	name: 'iar_report_notes',
+	columns: IAR_REPORT_NOTE_COLUMNS,
+	primaryKey: ['report_id', 'note_id'],
+	partitionKey: ['report_id'],
 });
 export const MessageReportSubmissionsByReporter = defineTable<
 	MessageReportSubmissionByReporterRow,

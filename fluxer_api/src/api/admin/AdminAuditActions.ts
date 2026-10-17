@@ -42,6 +42,7 @@ export const AdminAuditReadActions = {
 	LIST_GUILD_THREADS: 'list_guild_threads',
 	LIST_NETWORK_BLOCK_CANDIDATES: 'list_network_block_candidates',
 	LIST_PENDING_REGISTRATIONS: 'list_pending_registrations',
+	LIST_REPORT_NOTES: 'list_report_notes',
 	LIST_REPORT_REASONS: 'list_report_reasons',
 	LIST_USER_APPLICATIONS: 'list_user_applications',
 	LIST_USER_CHANGE_LOG: 'list_user_change_log',

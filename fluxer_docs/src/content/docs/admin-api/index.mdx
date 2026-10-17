@@ -291,6 +291,7 @@ An entry with one of these actions has `access` set to `read`.
 | list_guild_stickers | The stickers of a guild were listed |
 | list_guild_threads | The threads of a guild were listed |
 | list_pending_registrations | Pending registrations were read |
+| list_report_notes | The internal notes on a report were listed |
 | list_report_reasons | The report reason catalogue was listed |
 | list_user_applications | The applications an account owns were read |
 | list_user_change_log | The contact change log of an account was read |
@@ -316,6 +317,7 @@ An entry with any other action has `access` set to `write`.
 | Value | Description |
 | --- | --- |
 | annotate_enforcement_decision | A note was added to an enforcement decision |
+| annotate_report | A note was added to a report |
 | approve_discovery_application | A discovery application was approved |
 | approve_registration | A pending registration was approved |
 | auto_resolve_reports_on_deletion | The pending reports against an account were processed as part of its deletion |
@@ -589,8 +591,8 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | message:shred | Queues an explicit message shred job and reads its state |
 | registration:review | Reads and decides [pending registrations](/admin-api/instance/#list-pending-registrations) |
 | report:delete | Deletes a [report](/admin-api/reports/#delete-report) with its stored evidence |
-| report:resolve | Updates and resolves [reports](/admin-api/reports/), and places legal holds on them |
-| report:view | Reads and searches reports |
+| report:resolve | Updates and resolves [reports](/admin-api/reports/), adds notes to them, and places legal holds on them |
+| report:view | Reads and searches reports and their notes |
 | report:view:reporter_pii<sup>6</sup> | Unredacts the contact fields a reporter supplied |
 | system_dm:send | Sends an official direct message from the instance to one or many accounts |
 | user:cancel:bulk_message_deletion | Cancels the bulk message deletion an account scheduled for itself |

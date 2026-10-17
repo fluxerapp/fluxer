@@ -29,7 +29,8 @@ pub fn action_badge_variant(action: &str) -> BadgeVariant {
         | "set_acls"
         | "update_settings"
         | "annotate_ban"
-        | "annotate_enforcement_decision" => BadgeVariant::Info,
+        | "annotate_enforcement_decision"
+        | "annotate_report" => BadgeVariant::Info,
         "delete_message" | "warn_user" => BadgeVariant::Warning,
         _ => BadgeVariant::Default,
     }

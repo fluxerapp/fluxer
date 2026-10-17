@@ -234,6 +234,25 @@ describe('DELETE /admin/reports/:report_id', () => {
 		});
 	});
 
+	test('deletes the notes with the report and keeps the notes of other reports', async () => {
+		const deleted = await seedMessageReport(newEvidence());
+		const other = await seedMessageReport(newEvidence());
+		for (const seeded of [deleted, other]) {
+			await repository.addNote({
+				report_id: seeded.reportId,
+				note_id: nextId(),
+				author_id: BigInt(admin.userId),
+				body: 'Staff context',
+				created_at: new Date(),
+			});
+		}
+
+		await deleteRequest(admin, deleted.reportId).expect(HTTP_STATUS.NO_CONTENT).execute();
+
+		expect(await repository.listNotes(deleted.reportId)).toEqual([]);
+		expect(await repository.listNotes(other.reportId)).toHaveLength(1);
+	});
+
 	test('keeps an evidence copy another report still uses', async () => {
 		const shared = newEvidence();
 		const deleted = await seedMessageReport(shared);

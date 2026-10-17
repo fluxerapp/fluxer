@@ -23,6 +23,7 @@ import {
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import type {IARReportNoteRow} from '@app/api/database/types/ReportTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -32,6 +33,7 @@ import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {describeReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {findReportReason, listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import type {IARMessageContext, IARSubmission} from '@app/api/report/ReportModels';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
@@ -44,6 +46,7 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 import type {ReportSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
+import type {ReportNoteListResponse, ReportNoteResponse} from '@fluxer/schema/src/domains/admin/AdminReportNoteSchemas';
 import type {
 	AdminReportReasonsResponse,
 	ReportItemOutcome,
@@ -58,6 +61,7 @@ import {seconds} from 'itty-time';
 interface AdminReportServiceDeps {
 	apiContext: ApiContext;
 	reportService: ReportService;
+	reportRepository: ReportRepository;
 	guildRepository: GuildRepository;
 	channelRepository: ChannelRepository;
 	storageService: IStorageService;
@@ -136,6 +140,15 @@ function mapMissingAttachmentToResponse(attachment: MessageAttachment) {
 	};
 }
 
+function toReportNoteResponse(note: IARReportNoteRow): ReportNoteResponse {
+	return {
+		note_id: note.note_id.toString(),
+		author_id: note.author_id.toString(),
+		body: note.body,
+		created_at: note.created_at.toISOString(),
+	};
+}
+
 function mapReportReasonFields(report: IARSubmission) {
 	const reason = report.reason ? findReportReason(report.reason) : null;
 	const flow =
@@ -197,7 +210,30 @@ export class AdminReportService {
 		const report = await reportService.getReport(reportId);
 		const requestCache = createRequestCache();
 		const reportLookupCache = createReportLookupCache();
-		return this.mapReportToResponse(report, true, requestCache, acls, reportLookupCache);
+		const [response, notes] = await Promise.all([
+			this.mapReportToResponse(report, true, requestCache, acls, reportLookupCache),
+			this.deps.reportRepository.listNotes(reportId),
+		]);
+		return {...response, notes: notes.map(toReportNoteResponse)};
+	}
+
+	async listNotes(reportId: ReportID): Promise<ReportNoteListResponse> {
+		await this.deps.reportService.getReport(reportId);
+		const notes = await this.deps.reportRepository.listNotes(reportId);
+		return {notes: notes.map(toReportNoteResponse)};
+	}
+
+	async addNote(reportId: ReportID, body: string, authorId: UserID): Promise<ReportNoteResponse> {
+		await this.deps.reportService.getReport(reportId);
+		const note: IARReportNoteRow = {
+			report_id: reportId,
+			note_id: await this.deps.apiContext.services.snowflake.generate(),
+			author_id: authorId,
+			body,
+			created_at: new Date(),
+		};
+		await this.deps.reportRepository.addNote(note);
+		return toReportNoteResponse(note);
 	}
 
 	async resolveReport(

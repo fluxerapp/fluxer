@@ -89,6 +89,14 @@ export interface IARSubmissionRow {
 	reporter_outcome?: string | null;
 }
 
+export interface IARReportNoteRow {
+	report_id: bigint;
+	note_id: bigint;
+	author_id: bigint;
+	body: string;
+	created_at: Date;
+}
+
 export interface DSAReportEmailVerificationRow {
 	email_lower: string;
 	code_hash: string;
@@ -186,6 +194,13 @@ export const IAR_SUBMISSION_COLUMNS = [
 	'legal_hold_reason',
 	'reporter_outcome',
 ] as const satisfies ReadonlyArray<keyof IARSubmissionRow>;
+export const IAR_REPORT_NOTE_COLUMNS = [
+	'report_id',
+	'note_id',
+	'author_id',
+	'body',
+	'created_at',
+] as const satisfies ReadonlyArray<keyof IARReportNoteRow>;
 export const DSA_REPORT_EMAIL_VERIFICATION_COLUMNS = [
 	'email_lower',
 	'code_hash',

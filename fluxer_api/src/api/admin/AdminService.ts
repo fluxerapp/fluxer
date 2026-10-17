@@ -38,6 +38,7 @@ import {
 	getEnforcementDecisionRepository,
 	getGuildDiscoveryRepository,
 	getKVAccountDeletionQueue,
+	getReportRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
@@ -120,6 +121,7 @@ export class AdminService {
 		this.reportServiceAggregate = new AdminReportService({
 			apiContext: this.apiContext,
 			reportService: this.reportService,
+			reportRepository: getReportRepository(),
 			guildRepository: this.guildRepository,
 			channelRepository: this.channelRepository,
 			storageService: this.storageService,

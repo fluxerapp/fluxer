@@ -5,8 +5,8 @@ use reqwest::Method;
 use crate::api::generated::{
     snowflake,
     types::{
-        UpdateReportRequest, UpdateReportRequestOutcome, UpdateReportRequestResolution,
-        UpdateReportRequestStatus,
+        ReportNoteRequest, ReportNoteResponse, UpdateReportRequest, UpdateReportRequestOutcome,
+        UpdateReportRequestResolution, UpdateReportRequestStatus,
     },
 };
 
@@ -89,6 +89,20 @@ impl AdminApiClient {
                 urlencoding::encode(report_id)
             ),
             Some(&body),
+            None,
+        )
+        .await
+    }
+
+    pub async fn annotate_report(
+        &self,
+        report_id: &str,
+        body: String,
+    ) -> ApiResult<ReportNoteResponse> {
+        self.send(
+            Method::POST,
+            &format!("/admin/reports/{}/notes", urlencoding::encode(report_id)),
+            Some(&ReportNoteRequest { body }),
             None,
         )
         .await

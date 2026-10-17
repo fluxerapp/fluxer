@@ -6,7 +6,7 @@ description: Report listing and search, captured evidence, report resolution, re
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, resolve a report with a comment shown to the reporter, hold a report past its retention period, and delete a report before it.
+A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, resolve a report with a comment shown to the reporter, keep internal notes on a report, hold a report past its retention period, and delete a report before it.
 
 Report submission belongs to the public [Reports](/http-api/reports/) resource, which defines the [report categories](/http-api/reports/#report-categories) and the [report reasons](/http-api/reports/#report-reasons) a report is filed under.
 
@@ -201,6 +201,7 @@ The detail object extends the [Admin report object](#admin-report-object) with t
 | reported_profile_snapshot?<sup>4</sup> | ?[report profile snapshot](#report-profile-snapshot-object) object | The reported profile as it was when the report was filed |
 | legal_hold_until?<sup>5</sup> | ?ISO8601 timestamp | When the legal hold on the report ends |
 | legal_hold_reason?<sup>5</sup> | ?string | Why the report is held |
+| notes?<sup>6</sup> | array[[report note](#report-note-object) object] | The internal notes on the report, oldest first |
 
 <sup>1</sup> Set only for a USER report that has both a reporter and a reported account, and null when the two share no direct message channel
 
@@ -211,6 +212,8 @@ The detail object extends the [Admin report object](#admin-report-object) with t
 <sup>4</sup> Always emitted. Null for a report filed before profile snapshots were stored, for a report about a message a webhook sent, and when the stored snapshot cannot be read
 
 <sup>5</sup> Always emitted. Null when the report has no hold. [Set report legal hold](#set-report-legal-hold) places and clears the hold, and [Report retention](#report-retention) describes its effect
+
+<sup>6</sup> Always emitted. Empty when the report has no notes
 
 :::note[The live array can be shorter than the capture]
 Fluxer skips an entry when neither the capture nor the report records its channel. It also omits a message that no longer exists, or whose channel can no longer be read.
@@ -519,9 +522,33 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 }
 ```
 
+## Report note object
+
+A note is internal context a staff member adds to a report. Notes are staff only. Fluxer never shows them to the reporter or the reported account, and never puts them in a notice, email or direct message. A note never changes once it is written. Notes have no retention period of their own and are deleted together with the report.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| note_id | snowflake | The ID of the note |
+| author_id | snowflake | The staff member who wrote it |
+| body | string | The note |
+| created_at | ISO8601 timestamp | When it was written |
+
+### Example
+
+```json
+{
+  "note_id": "1502771904419102999",
+  "author_id": "1483920011884392001",
+  "body": "Reporter sent more context by email",
+  "created_at": "2026-03-05T09:14:02.118Z"
+}
+```
+
 ## Report retention
 
-A pending report is kept until it is resolved. Once a report is resolved, Fluxer deletes it when its retention period ends, together with its stored evidence: the captured message context, the profile snapshot and its images, the attachment copies, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
+A pending report is kept until it is resolved. Once a report is resolved, Fluxer deletes it when its retention period ends, together with its notes and its stored evidence: the captured message context, the profile snapshot and its images, the attachment copies, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
 
 The retention period ends 365 days after `resolved_at`, or the number of days in `FLUXER_REPORT_RETENTION_DAYS`. Some reports are kept longer, whatever that setting says:
 
@@ -529,7 +556,7 @@ The retention period ends 365 days after `resolved_at`, or the number of days in
 - A report listed in the `report_ids` of an [enforcement decision](/admin-api/enforcement/#enforcement-decision-object) is kept for at least 365 days after the newest such decision was recorded, as long as the decision's evidence.
 - A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends.
 
-A report resolved with the outcome `no_violation` loses its copied context 184 days after it was resolved, which covers the six months the Digital Services Act gives a reporter to contest the outcome. Fluxer then removes the captured message context, the profile snapshot, the reporter's additional information, and the stored evidence copies, and keeps the rest of the record and its search index entry until the end of the retention period. This does not apply to a `child_safety` report, to a report linked to an enforcement decision, or while a legal hold has not ended.
+A report resolved with the outcome `no_violation` loses its copied context 184 days after it was resolved, which covers the six months the Digital Services Act gives a reporter to contest the outcome. Fluxer then removes the captured message context, the profile snapshot, the reporter's additional information, and the stored evidence copies, and keeps the rest of the record, its notes and its search index entry until the end of the retention period. This does not apply to a `child_safety` report, to a report linked to an enforcement decision, or while a legal hold has not ended.
 
 An evidence copy that a retained report also uses is kept for that report.
 
@@ -638,7 +665,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="GET" path="/v1/admin/reports/{report_id}" auditReason />
 
-Returns one [Admin report detail](#admin-report-detail-object) object, which adds the captured message context and the live state of those messages. Requires `report:view`.
+Returns one [Admin report detail](#admin-report-detail-object) object, which adds the captured message context, the live state of those messages, and the notes on the report. Requires `report:view`.
 
 The operation answers even when the report search index is unavailable. Reporter contact fields are redacted here exactly as they are in [List reports](#list-reports).
 
@@ -729,6 +756,73 @@ A reporter who does not already have the system channel open receives [Channel C
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
+## List report notes
+
+<RouteHeader method="GET" path="/v1/admin/reports/{report_id}/notes" auditReason />
+
+Returns the [notes](#report-note-object) on one report, oldest first. Requires `report:view`. [Get report](#get-report) returns the same notes in `notes`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| notes | array[[report note](#report-note-object) object] | The notes on the report, oldest first |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The notes were returned |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_report_notes`, target type `report`, the report ID as target ID, and the metadata key `result_count`. A 404 records nothing.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Add a note to a report
+
+<RouteHeader method="POST" path="/v1/admin/reports/{report_id}/notes" auditReason />
+
+Appends an internal note to one report and returns the [report note](#report-note-object) object. Requires `report:resolve`. A note can be added to a pending or a resolved report.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| body | string | The note (1-2000 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report note](#report-note-object) object | The note was added |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `body` is empty or longer than 2000 characters |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `annotate_report`, target type `report`, the report ID as target ID, and the metadata keys `report_id` and `note_id`. The note text is not recorded. A rejected request records nothing.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
 ## Set report legal hold
 
 <RouteHeader method="POST" path="/v1/admin/reports/{report_id}/legal-hold" auditReason />
@@ -776,7 +870,7 @@ Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) wit
 
 Deletes one report straight away. Requires `report:delete`, which `report:resolve` does not include.
 
-This is the deletion [report retention](#report-retention) runs at the end of the retention period, without waiting for it. It removes the report record with its captured message context and profile snapshot, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
+This is the deletion [report retention](#report-retention) runs at the end of the retention period, without waiting for it. It removes the report record with its captured message context and profile snapshot, its notes, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
 
 :::caution[Deletion is permanent]
 Deleted evidence cannot be restored. A report with a legal hold that has not ended is refused. Clear the hold first when the report should go.

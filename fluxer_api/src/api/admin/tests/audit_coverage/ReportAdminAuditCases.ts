@@ -9,6 +9,7 @@ import {createReportID} from '@app/api/BrandedTypes';
 import {getReportRepository} from '@app/api/middleware/ServiceSingletons';
 import {listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {expect} from 'vitest';
 
 interface FiledUserReport {
 	reportId: string;
@@ -321,6 +322,42 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			},
 		}),
 	),
+	{
+		method: 'GET',
+		route: '/admin/reports/:report_id/notes',
+		async prepare(context) {
+			const {reportId} = await fileUserReport(context);
+			await createBuilder(context.harness, context.admin.token)
+				.post(`/admin/reports/${reportId}/notes`)
+				.body({body: 'Coverage note'})
+				.execute();
+			return {
+				request: {path: `/admin/reports/${reportId}/notes`},
+				expected: {
+					action: 'list_report_notes',
+					targetType: 'report',
+					targetId: reportId,
+					metadata: {result_count: '1'},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/reports/:report_id/notes',
+		async prepare(context) {
+			const {reportId} = await fileUserReport(context);
+			return {
+				request: {path: `/admin/reports/${reportId}/notes`, body: {body: 'Coverage note'}},
+				expected: {
+					action: 'annotate_report',
+					targetType: 'report',
+					targetId: reportId,
+					metadata: {report_id: reportId, note_id: expect.any(String)},
+				},
+			};
+		},
+	},
 	{
 		method: 'POST',
 		route: '/admin/reports/:report_id/legal-hold',

@@ -22,6 +22,7 @@ pub mod report_category;
 pub mod report_webhook;
 pub mod resource_link;
 pub mod section_card;
+pub mod staff_notes;
 pub mod table;
 pub mod tooltip;
 pub mod user_display;

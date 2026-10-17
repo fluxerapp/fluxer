@@ -171,6 +171,16 @@ pub struct ReportEntry {
     pub legal_hold_until: Option<String>,
     #[serde(default)]
     pub legal_hold_reason: Option<String>,
+    #[serde(default)]
+    pub notes: Vec<ReportNoteEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportNoteEntry {
+    pub note_id: String,
+    pub author_id: String,
+    pub body: String,
+    pub created_at: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

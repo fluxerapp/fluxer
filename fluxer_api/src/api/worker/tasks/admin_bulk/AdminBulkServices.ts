@@ -89,6 +89,7 @@ export function createWorkerEnforcementServices(deps: WorkerDependencies): Worke
 		adminReportService: new AdminReportService({
 			apiContext,
 			reportService,
+			reportRepository: deps.reportRepository,
 			guildRepository: deps.guildRepository,
 			channelRepository: deps.channelRepository,
 			storageService: deps.storageService,

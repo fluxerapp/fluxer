@@ -10,12 +10,19 @@ import {
 	createUserID,
 	createWebhookID,
 } from '@app/api/BrandedTypes';
-import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
 	GuildReportSubmissionByReporterRow,
+	IARReportNoteRow,
 	MessageReportSubmissionByReporterRow,
 	UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
@@ -32,6 +39,7 @@ import {
 	DSAReportEmailVerifications,
 	DSAReportTickets,
 	GuildReportSubmissionsByReporter,
+	IARReportNotes,
 	IARSubmissions,
 	MessageReportSubmissionsByReporter,
 	UserReportSubmissionsByReporter,
@@ -44,6 +52,10 @@ import {parseReportProfileSnapshot} from '@fluxer/schema/src/domains/report/Repo
 const GET_REPORT_QUERY = IARSubmissions.select({
 	where: IARSubmissions.where.eq('report_id'),
 	limit: 1,
+});
+const LIST_NOTES_QUERY = IARReportNotes.select({
+	where: IARReportNotes.where.eq('report_id'),
+	orderBy: {col: 'note_id', direction: 'ASC'},
 });
 const createFetchAllReportsPaginatedQuery = (limit: number) =>
 	IARSubmissions.select({
@@ -216,9 +228,18 @@ export class ReportRepository {
 			return;
 		}
 		await this.releaseReporterReservation(report);
+		await deleteOneOrMany(IARReportNotes.deletePartition({report_id: reportId}));
 		await executeConditional(
 			IARSubmissions.conditionalDeleteByPk({report_id: reportId}, {report_type: report.reportType}),
 		);
+	}
+
+	async addNote(note: IARReportNoteRow): Promise<void> {
+		await upsertOne(IARReportNotes.insert(note));
+	}
+
+	async listNotes(reportId: ReportID): Promise<Array<IARReportNoteRow>> {
+		return fetchMany<IARReportNoteRow>(LIST_NOTES_QUERY.bind({report_id: reportId}));
 	}
 
 	private async releaseReporterReservation(report: IARSubmission): Promise<void> {

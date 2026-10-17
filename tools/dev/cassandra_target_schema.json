@@ -6132,6 +6132,33 @@
 			"options": ""
 		},
 		{
+			"name": "iar_report_notes",
+			"columns": [
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "note_id",
+					"type": "bigint"
+				},
+				{
+					"name": "author_id",
+					"type": "bigint"
+				},
+				{
+					"name": "body",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((report_id), note_id)",
+			"options": "CLUSTERING ORDER BY (note_id ASC)"
+		},
+		{
 			"name": "iar_submissions",
 			"columns": [
 				{

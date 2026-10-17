@@ -23,7 +23,8 @@ use crate::{
             form::{csrf_input, form_actions, submit_button},
             page_container::{page_header, page_header_with_back},
             section_card::section_card_simple,
-            user_display::format_user_display,
+            staff_notes::{StaffNote, StaffNoteForm, staff_notes_section},
+            user_display::{SYSTEM_USER_ID, user_link},
         },
         layout::admin_layout,
     },
@@ -31,8 +32,6 @@ use crate::{
 };
 use maud::{Markup, html};
 
-const SYSTEM_USER_ID: &str = "0";
-const NOTE_MAX_CHARS: usize = 2000;
 const CORRECTION_LINE: &str = "If this decision was reported to an authority, file a correction.";
 const DECISIONS_PAGE_KEY: &str = "decisions";
 const PERMANENT_SUSPENSION_THRESHOLD_YEARS: i32 = 50;
@@ -220,32 +219,6 @@ pub fn end_decision_form(form: &EndDecisionForm<'_>) -> Markup {
                 (form_actions(submit_button("End decision")))
             }
         }
-    }
-}
-
-fn user_name(users: &[AdminUser], id: &str) -> String {
-    if id == SYSTEM_USER_ID {
-        return "System".to_owned();
-    }
-    users.iter().find(|user| user.id == id).map_or_else(
-        || id.to_owned(),
-        |user| {
-            format_user_display(
-                user.global_name.as_deref(),
-                Some(&user.username),
-                Some(&user.discriminator),
-                user.bot,
-            )
-        },
-    )
-}
-
-fn user_link(base: &str, users: &[AdminUser], id: &str) -> Markup {
-    if id == SYSTEM_USER_ID {
-        return html! { "System" };
-    }
-    html! {
-        a href={(base) "/users/" (id)} class="text-blue-600 hover:underline" { (user_name(users, id)) }
     }
 }
 
@@ -527,44 +500,29 @@ fn notes_section(
     can_annotate: bool,
     csrf_token: &str,
 ) -> Markup {
-    let note_id = format!("note-{}", decision.decision_id.as_str());
-    html! {
-        (section_card_simple("Notes", html! {
-            div class="space-y-4" {
-                @if decision.notes.is_empty() {
-                    p class="text-sm text-neutral-500" { "No notes." }
-                } @else {
-                    ol class="space-y-3" {
-                        @for note in &decision.notes {
-                            li class="space-y-1" data-note=(note.note_id.as_str()) {
-                                p class="text-xs text-neutral-500" {
-                                    (user_link(base, users, &note.author_id))
-                                    " on " (format_admin_timestamp(&note.created_at))
-                                }
-                                p class="whitespace-pre-wrap break-words text-sm text-neutral-900" { (note.body) }
-                            }
-                        }
-                    }
-                }
-                @if can_annotate {
-                    form method="post"
-                        action={(base) "/decisions/" (decision.decision_id.as_str()) "?action=add_note"}
-                        data-admin-refresh-on-success="#decision-detail" {
-                        (csrf_input(csrf_token))
-                        div class="space-y-3" {
-                            div class="space-y-1" {
-                                (field_label(&note_id, "Add a note"))
-                                textarea id=(note_id) name="body" rows="2" required maxlength=(NOTE_MAX_CHARS)
-                                    class=(FIELD_INPUT_CLASS) {}
-                                p class=(FIELD_HELP_CLASS) { "Staff only. Notes cannot be changed and expire after a year." }
-                            }
-                            (form_actions(submit_button("Add note")))
-                        }
-                    }
-                }
-            }
-        }))
-    }
+    let notes: Vec<StaffNote> = decision
+        .notes
+        .iter()
+        .map(|note| StaffNote {
+            note_id: note.note_id.as_str(),
+            author: user_link(base, users, &note.author_id),
+            body: &note.body,
+            created_at: &note.created_at,
+        })
+        .collect();
+    staff_notes_section(
+        &notes,
+        can_annotate.then(|| StaffNoteForm {
+            action: format!(
+                "{base}/decisions/{}?action=add_note",
+                decision.decision_id.as_str()
+            ),
+            refresh_target: "#decision-detail",
+            field_id: format!("note-{}", decision.decision_id.as_str()),
+            help: "Staff only. Notes cannot be changed and expire after a year.",
+            csrf_token,
+        }),
+    )
 }
 
 pub fn decision_user_ids(decision: &EnforcementDecisionResponse) -> Vec<String> {
