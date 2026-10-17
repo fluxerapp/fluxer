@@ -449,6 +449,38 @@ mod tests {
         std::fs::remove_dir_all(root).unwrap();
     }
 
+    #[tokio::test]
+    async fn every_response_asks_search_engines_not_to_index_it() {
+        let root = static_dir_with_generated_files();
+        std::fs::write(root.join("robots.txt"), "User-agent: *\nAllow: /\n").unwrap();
+
+        for path in [
+            "/",
+            "/login",
+            "/channels/@me",
+            "/invite/abc",
+            "/gift/abc",
+            "/robots.txt",
+            "/manifest.json",
+            "/version.json",
+            "/_health",
+            "/web/missing.png",
+        ] {
+            let response = fetch(state_serving(&root, false), path).await;
+            assert_eq!(
+                response
+                    .headers()
+                    .get("x-robots-tag")
+                    .and_then(|value| value.to_str().ok()),
+                Some("noindex, nofollow"),
+                "{path} answered {} without a noindex directive",
+                response.status()
+            );
+        }
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     const GENERATED_BROWSERCONFIG: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <browserconfig>
   <msapplication>

@@ -29,6 +29,7 @@ use tower_http::{
 };
 
 const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), ch-dpr=(self), ch-save-data=(self), ch-viewport-width=(self), ch-width=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
+const X_ROBOTS_TAG_VALUE: &str = "noindex, nofollow";
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
@@ -73,6 +74,10 @@ async fn security_headers_middleware(request: Request, next: Next) -> Response {
 
 fn set_security_headers(headers: &mut axum::http::HeaderMap) {
     fluxer_common::server::set_baseline_security_headers(headers, PERMISSIONS_POLICY_VALUE);
+    headers.insert(
+        HeaderName::from_static("x-robots-tag"),
+        HeaderValue::from_static(X_ROBOTS_TAG_VALUE),
+    );
 }
 
 async fn cache_headers_middleware(request: Request, next: Next) -> Response {
