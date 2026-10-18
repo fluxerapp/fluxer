@@ -64,6 +64,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 		observer.observe(inertRoot, {attributes: true, attributeFilter: ['inert']});
 		return () => observer.disconnect();
 	}, []);
+	void Messages.version;
 	const sourceMessage = messageId ? Messages.getMessage(parent.id, messageId) : undefined;
 	const draftKey = `thread-create:${parent.id}`;
 	const accountKey = Users.viewAccountKey;
