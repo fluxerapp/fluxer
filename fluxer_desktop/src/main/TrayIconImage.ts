@@ -18,6 +18,7 @@ const MIN_GLYPH_CONTRAST = 32;
 const GLYPH_CUTOUT_START = 0.1;
 const GLYPH_CUTOUT_END = 0.5;
 const LINUX_MONOCHROME_CANVAS_RATIO = 22 / 16;
+const LINUX_MAX_PIXMAP_SIZE = 256;
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const DOT_BGR: Bgr = [0x00, 0x00, 0xdd];
 const TEMPLATE_DOT_BGR: Bgr = [0x00, 0x00, 0x00];
@@ -149,6 +150,36 @@ function cropTrayGlyph(buffer: Buffer, width: number, height: number): TrayBitma
 	return {buffer: target, width: size, height: size};
 }
 
+function downscaleTrayBitmap(bitmap: TrayBitmap, size: number): TrayBitmap {
+	if (bitmap.width <= size) return bitmap;
+	const scale = bitmap.width / size;
+	const buffer = Buffer.alloc(size * size * 4);
+	const sums = [0, 0, 0, 0];
+	for (let y = 0; y < size; y++) {
+		const top = y * scale;
+		const bottom = top + scale;
+		for (let x = 0; x < size; x++) {
+			const left = x * scale;
+			const right = left + scale;
+			sums.fill(0);
+			for (let sy = Math.floor(top); sy < Math.min(bitmap.height, Math.ceil(bottom)); sy++) {
+				const weightY = Math.min(bottom, sy + 1) - Math.max(top, sy);
+				for (let sx = Math.floor(left); sx < Math.min(bitmap.width, Math.ceil(right)); sx++) {
+					const weight = weightY * (Math.min(right, sx + 1) - Math.max(left, sx));
+					const offset = (sy * bitmap.width + sx) * 4;
+					for (let channel = 0; channel < 4; channel++) {
+						sums[channel] += bitmap.buffer[offset + channel] * weight;
+					}
+				}
+			}
+			for (let channel = 0; channel < 4; channel++) {
+				buffer[(y * size + x) * 4 + channel] = Math.round(sums[channel] / (scale * scale));
+			}
+		}
+	}
+	return {buffer, width: size, height: size};
+}
+
 function addMonochromeTrayMargins(bitmap: TrayBitmap, size: number): TrayBitmap {
 	const inset = Math.floor((size - bitmap.width) / 2);
 	const buffer = Buffer.alloc(size * size * 4);
@@ -210,7 +241,13 @@ export function renderTrayIcon(
 				appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR,
 			);
 		}
-		if (linuxMonochrome) bitmap = addMonochromeTrayMargins(bitmap, Math.ceil(logicalCanvasSize * scaleFactor));
+		if (linuxMonochrome) {
+			const canvasSize = Math.min(Math.ceil(logicalCanvasSize * scaleFactor), LINUX_MAX_PIXMAP_SIZE);
+			bitmap = addMonochromeTrayMargins(
+				downscaleTrayBitmap(bitmap, Math.floor(canvasSize / LINUX_MONOCHROME_CANVAS_RATIO)),
+				canvasSize,
+			);
+		}
 		result.addRepresentation({scaleFactor, ...bitmap});
 	}
 	if (result.isEmpty()) {

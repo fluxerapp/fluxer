@@ -98,6 +98,17 @@ describe('renderTrayIcon', () => {
 		assert.deepEqual(pixel(bitmap, 32, 6, 16), [0xff, 0xff, 0xff, 0xff]);
 	});
 
+	test('keeps the Linux monochrome pixmap within 256 pixels', () => {
+		const result = renderTrayIcon(FakeNativeImage.fromBitmap(256), 'white', false, 'linux');
+		const [representation] = result.representations.values();
+		assert.equal(representation.width, 256);
+		assert.equal(representation.height, 256);
+		const bitmap = result.toBitmap();
+		assert.deepEqual(pixel(bitmap, 256, 128, 50), [0xff, 0xff, 0xff, 0xff]);
+		assert.deepEqual(pixel(bitmap, 256, 128, 128), [0, 0, 0, 0]);
+		assert.deepEqual(pixel(bitmap, 256, 20, 128), [0, 0, 0, 0]);
+	});
+
 	test('skips representations whose bitmap does not match their size', () => {
 		const base = FakeNativeImage.fromBitmap(16);
 		base.toBitmap = () => Buffer.alloc(3);
