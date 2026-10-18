@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::config::{AppProxyConfig, HttpEndpoint};
+use crate::csp::InstanceCspSources;
 use axum::http::header;
 use reqwest::Url;
 use std::sync::Arc;
@@ -14,6 +15,15 @@ const BRANDING_IMAGES: [(&str, &str); 5] = [
     ("logo_url", "FLUXER_APP_LOGO_URL"),
     ("wordmark_url", "FLUXER_APP_WORDMARK_URL"),
     ("favicon_url", "FLUXER_APP_FAVICON_URL"),
+];
+const CONNECT_ENDPOINTS: [&str; 7] = [
+    "api",
+    "api_client",
+    "api_public",
+    "gateway",
+    "media",
+    "upload_relay",
+    "static_cdn",
 ];
 const PRODUCT_NAME: (&str, &str) = ("product_name", "FLUXER_APP_PRODUCT_NAME");
 const ICON_URL: (&str, &str) = ("icon_url", "FLUXER_APP_ICON_URL");
@@ -33,9 +43,45 @@ where
 
 pub fn snapshot_from_discovery(discovery: &serde_json::Value) -> Option<BrandingSnapshot> {
     let branding = discovery.pointer("/app_public/branding")?.as_object()?;
-    Some(snapshot_from_fields(|(key, _)| {
-        branding.get(key)?.as_str().map(str::to_owned)
-    }))
+    Some(BrandingSnapshot {
+        instance_sources: instance_sources_from_discovery(discovery),
+        ..snapshot_from_fields(|(key, _)| branding.get(key)?.as_str().map(str::to_owned))
+    })
+}
+
+fn instance_sources_from_discovery(discovery: &serde_json::Value) -> InstanceCspSources {
+    let endpoint = |key: &str| {
+        discovery
+            .pointer(&format!("/endpoints/{key}"))
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+    };
+    let http_origin = |key: &'static str| {
+        endpoint(key).and_then(|value| HttpEndpoint::origin_of(key, value).ok())
+    };
+    let mut connect_origins: Vec<String> = Vec::new();
+    for key in CONNECT_ENDPOINTS {
+        let Some(origin) = endpoint(key).and_then(connect_origin) else {
+            continue;
+        };
+        if !connect_origins.contains(&origin) {
+            connect_origins.push(origin);
+        }
+    }
+    InstanceCspSources {
+        static_cdn_endpoint: http_origin("static_cdn"),
+        media_endpoint: http_origin("media"),
+        connect_origins,
+    }
+}
+
+fn connect_origin(value: &str) -> Option<String> {
+    let url = Url::parse(value).ok()?;
+    if !matches!(url.scheme(), "http" | "https" | "ws" | "wss") || url.host_str().is_none() {
+        return None;
+    }
+    Some(url.origin().ascii_serialization())
 }
 
 fn snapshot_from_fields(
@@ -50,6 +96,7 @@ fn snapshot_from_fields(
     let favicon_url = non_empty(field(FAVICON_URL)).or_else(|| icon_url.clone());
     BrandingSnapshot {
         image_origins: image_origins.into(),
+        instance_sources: InstanceCspSources::default(),
         product_name: non_empty(field(PRODUCT_NAME)).map(Into::into),
         icon_url: icon_url.as_deref().and_then(absolute_url).map(Into::into),
         favicon_url: favicon_url
@@ -137,6 +184,7 @@ async fn fetch_discovery(
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct BrandingSnapshot {
     pub image_origins: Arc<[HttpEndpoint]>,
+    pub instance_sources: InstanceCspSources,
     pub product_name: Option<Arc<str>>,
     pub icon_url: Option<Arc<str>>,
     pub favicon_url: Option<Arc<str>>,
@@ -161,6 +209,10 @@ impl InstanceBranding {
 
     pub fn image_origins(&self) -> Arc<[HttpEndpoint]> {
         self.0.borrow().image_origins.clone()
+    }
+
+    pub fn instance_sources(&self) -> InstanceCspSources {
+        self.0.borrow().instance_sources.clone()
     }
 
     pub fn snapshot(&self) -> Arc<BrandingSnapshot> {
@@ -191,6 +243,7 @@ impl InstanceBranding {
                 .collect();
             tracing::info!(
                 ?origins,
+                instance_origins = ?snapshot.instance_sources.connect_origins,
                 product_name = snapshot.product_name.as_deref(),
                 icon_url = snapshot.icon_url.as_deref(),
                 favicon_url = snapshot.favicon_url.as_deref(),
@@ -336,6 +389,46 @@ mod tests {
                 .unwrap()
                 .image_origins
                 .is_empty()
+        );
+    }
+
+    #[test]
+    fn discovery_endpoints_yield_the_instance_origins_the_page_must_reach() {
+        let discovery = serde_json::json!({
+            "endpoints": {
+                "api": "https://chat.example.com/api",
+                "api_client": "https://chat.example.com/api",
+                "gateway": "wss://chat.example.com/gateway",
+                "media": "https://chat.example.com/media",
+                "static_cdn": "https://static.example.com",
+                "marketing": "https://www.example.com",
+            },
+            "app_public": {"branding": {}},
+        });
+        let sources = snapshot_from_discovery(&discovery)
+            .unwrap()
+            .instance_sources;
+        assert_eq!(
+            sources.connect_origins,
+            vec![
+                "https://chat.example.com",
+                "wss://chat.example.com",
+                "https://static.example.com",
+            ]
+        );
+        assert_eq!(
+            sources
+                .media_endpoint
+                .as_ref()
+                .map(HttpEndpoint::csp_origin),
+            Some("https://chat.example.com")
+        );
+        assert_eq!(
+            sources
+                .static_cdn_endpoint
+                .as_ref()
+                .map(HttpEndpoint::csp_origin),
+            Some("https://static.example.com")
         );
     }
 

@@ -80,6 +80,13 @@ fn has_src_attribute(attributes: &str) -> bool {
         })
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct InstanceCspSources {
+    pub static_cdn_endpoint: Option<HttpEndpoint>,
+    pub media_endpoint: Option<HttpEndpoint>,
+    pub connect_origins: Vec<String>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct RuntimeCspSources {
     pub static_cdn_endpoint: Option<HttpEndpoint>,
@@ -206,6 +213,7 @@ impl CompiledCspPolicy {
             &[InlineScriptHash::of("")],
             configured_sources,
             &[],
+            &InstanceCspSources::default(),
         ))
         .map_err(CspCompileError::InvalidSpaPolicy)?;
         Ok(Self {
@@ -223,12 +231,14 @@ impl CompiledCspPolicy {
         &self,
         script_hashes: &[InlineScriptHash],
         branding_image_origins: &[HttpEndpoint],
+        instance_sources: &InstanceCspSources,
     ) -> CspHeaderValues {
         let enforced = HeaderValue::from_str(&build_csp(
             &self.config,
             script_hashes,
             &self.runtime_sources,
             branding_image_origins,
+            instance_sources,
         ))
         .expect(
             "every CSP source is a validated keyword, scheme, ASCII origin, or base64 hash, so a \
@@ -246,18 +256,27 @@ fn build_csp(
     script_hashes: &[InlineScriptHash],
     runtime_sources: &RuntimeCspSources,
     branding_image_origins: &[HttpEndpoint],
+    instance_sources: &InstanceCspSources,
 ) -> String {
     build_csp_directives(
         config,
         Some(script_hashes),
         runtime_sources,
         branding_image_origins,
+        instance_sources,
     )
     .join("; ")
 }
 
 fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> String {
-    build_csp_directives(config, None, runtime_sources, &[]).join("; ")
+    build_csp_directives(
+        config,
+        None,
+        runtime_sources,
+        &[],
+        &InstanceCspSources::default(),
+    )
+    .join("; ")
 }
 
 fn build_csp_directives(
@@ -265,6 +284,7 @@ fn build_csp_directives(
     script_hashes: Option<&[InlineScriptHash]>,
     runtime_sources: &RuntimeCspSources,
     branding_image_origins: &[HttpEndpoint],
+    instance_sources: &InstanceCspSources,
 ) -> Vec<String> {
     let mut directives = Vec::with_capacity(14);
 
@@ -281,17 +301,17 @@ fn build_csp_directives(
         script.splice(1..1, hashes.iter().map(|hash| hash.as_source().to_owned()));
     }
     extend_from(&mut script, &config.extra_script_src, SCRIPT_SOURCES);
-    extend_runtime_sources(&mut script, runtime_sources, true, false);
+    extend_runtime_sources(&mut script, runtime_sources, instance_sources, true, false);
     directives.push(format!("script-src {}", script.join(" ")));
 
     let mut style = vec!["'self'".to_owned(), "'unsafe-inline'".to_owned()];
     extend_from(&mut style, &config.extra_style_src, STYLE_SOURCES);
-    extend_runtime_sources(&mut style, runtime_sources, true, true);
+    extend_runtime_sources(&mut style, runtime_sources, instance_sources, true, true);
     directives.push(format!("style-src {}", style.join(" ")));
 
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut img, &config.extra_img_src, IMAGE_SOURCES);
-    extend_runtime_sources(&mut img, runtime_sources, true, true);
+    extend_runtime_sources(&mut img, runtime_sources, instance_sources, true, true);
     for origin in branding_image_origins {
         push_endpoint_source(&mut img, Some(origin));
     }
@@ -299,18 +319,23 @@ fn build_csp_directives(
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
     extend_from(&mut media, &config.extra_media_src, MEDIA_SOURCES);
-    extend_runtime_sources(&mut media, runtime_sources, true, true);
+    extend_runtime_sources(&mut media, runtime_sources, instance_sources, true, true);
     directives.push(format!("media-src {}", media.join(" ")));
 
     let mut font = vec!["'self'".to_owned(), "data:".to_owned()];
     extend_from(&mut font, &config.extra_font_src, FONT_SOURCES);
-    extend_runtime_sources(&mut font, runtime_sources, true, true);
+    extend_runtime_sources(&mut font, runtime_sources, instance_sources, true, true);
     directives.push(format!("font-src {}", font.join(" ")));
 
     let mut connect = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut connect, &config.extra_connect_src, CONNECT_SOURCES);
-    extend_runtime_sources(&mut connect, runtime_sources, true, true);
+    extend_runtime_sources(&mut connect, runtime_sources, instance_sources, true, true);
     extend_runtime_s3_sources(&mut connect, runtime_sources);
+    for origin in &instance_sources.connect_origins {
+        if !connect.contains(origin) {
+            connect.push(origin.clone());
+        }
+    }
     directives.push(format!("connect-src {}", connect.join(" ")));
 
     let mut frame = vec!["'self'".to_owned()];
@@ -319,12 +344,18 @@ fn build_csp_directives(
 
     let mut worker = vec!["'self'".to_owned(), "blob:".to_owned()];
     extend_from(&mut worker, &config.extra_worker_src, WORKER_SOURCES);
-    extend_runtime_sources(&mut worker, runtime_sources, true, false);
+    extend_runtime_sources(&mut worker, runtime_sources, instance_sources, true, false);
     directives.push(format!("worker-src {}", worker.join(" ")));
 
     let mut manifest = vec!["'self'".to_owned()];
     extend_from(&mut manifest, &config.extra_manifest_src, MANIFEST_SOURCES);
-    extend_runtime_sources(&mut manifest, runtime_sources, true, false);
+    extend_runtime_sources(
+        &mut manifest,
+        runtime_sources,
+        instance_sources,
+        true,
+        false,
+    );
     directives.push(format!("manifest-src {}", manifest.join(" ")));
 
     directives.push("object-src 'none'".to_owned());
@@ -341,14 +372,17 @@ fn build_csp_directives(
 fn extend_runtime_sources(
     target: &mut Vec<String>,
     runtime_sources: &RuntimeCspSources,
+    instance_sources: &InstanceCspSources,
     include_static: bool,
     include_media: bool,
 ) {
     if include_static {
         push_endpoint_source(target, runtime_sources.static_cdn_endpoint.as_ref());
+        push_endpoint_source(target, instance_sources.static_cdn_endpoint.as_ref());
     }
     if include_media {
         push_endpoint_source(target, runtime_sources.media_endpoint.as_ref());
+        push_endpoint_source(target, instance_sources.media_endpoint.as_ref());
     }
 }
 
@@ -448,7 +482,13 @@ mod tests {
     #[test]
     fn build_csp_includes_required_directives() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         assert!(csp.contains("default-src"));
         assert!(csp.contains("script-src"));
         assert!(csp.contains("style-src"));
@@ -467,7 +507,13 @@ mod tests {
     #[test]
     fn build_csp_allows_the_apex_domain_for_images_and_media() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         for name in ["img-src ", "media-src "] {
             let directive = csp
                 .split("; ")
@@ -485,7 +531,13 @@ mod tests {
     #[test]
     fn build_csp_allows_blob_connections_for_camera_background_media() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         let connect = csp
             .split("; ")
             .find(|directive| directive.starts_with("connect-src "))
@@ -520,6 +572,7 @@ mod tests {
             &[hash_of("first()"), hash_of("second()")],
             &runtime_sources(),
             &[],
+            &InstanceCspSources::default(),
         );
         let script = csp
             .split("; ")
@@ -548,6 +601,7 @@ mod tests {
             &[hash_of("boot()")],
             &runtime_sources(),
             &[],
+            &InstanceCspSources::default(),
         );
         assert!(!csp.contains("hcaptcha"));
         assert!(!csp.contains("challenges.cloudflare.com"));
@@ -556,7 +610,13 @@ mod tests {
     #[test]
     fn csp_no_double_spaces_or_trailing_semicolons() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         assert!(!csp.contains("  "), "CSP contains double spaces");
         assert!(!csp.ends_with(';'), "CSP ends with semicolon");
         assert!(!csp.ends_with("; "), "CSP ends with semicolon+space");
@@ -574,14 +634,26 @@ mod tests {
             ),
             ..Default::default()
         };
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         assert!(csp.contains("report-uri https://example.com/csp-report"));
     }
 
     #[test]
     fn build_csp_excludes_report_uri_when_none() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources(),
+            &[],
+            &InstanceCspSources::default(),
+        );
         assert!(!csp.contains("report-uri"));
     }
 
@@ -593,7 +665,13 @@ mod tests {
             media_endpoint: Some(endpoint("https://media.example.test")),
             ..Default::default()
         };
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources, &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources,
+            &[],
+            &InstanceCspSources::default(),
+        );
         assert!(csp.contains("style-src 'self' 'unsafe-inline'"));
         assert!(csp.contains("https://static.example.test"));
         assert!(csp.contains("https://media.example.test"));
@@ -635,7 +713,13 @@ mod tests {
             ..Default::default()
         };
 
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources, &[]);
+        let csp = build_csp(
+            &config,
+            &[hash_of("boot()")],
+            &runtime_sources,
+            &[],
+            &InstanceCspSources::default(),
+        );
 
         assert!(csp.contains("http://localhost:3900"));
         assert!(csp.contains("http://fluxer-uploads.localhost:3900"));
@@ -673,7 +757,7 @@ mod tests {
         };
         let policy = CompiledCspPolicy::compile(default_csp_config(), &configured).unwrap();
 
-        let headers = policy.spa_headers(&[hash_of("boot()")], &[]);
+        let headers = policy.spa_headers(&[hash_of("boot()")], &[], &InstanceCspSources::default());
         let header = headers.enforced.to_str().unwrap();
 
         assert!(header.contains(hash_of("boot()").as_source()));
@@ -689,7 +773,7 @@ mod tests {
         config.media_endpoint = Some(endpoint("https://media.configured.test/"));
         let policy = CompiledCspPolicy::from_config(&config).unwrap();
 
-        let headers = policy.spa_headers(&[hash_of("boot()")], &[]);
+        let headers = policy.spa_headers(&[hash_of("boot()")], &[], &InstanceCspSources::default());
         let header = headers.enforced.to_str().unwrap();
         for directive in [
             "img-src",
@@ -740,8 +824,18 @@ mod tests {
         );
         let hashes = [hash_of("boot()")];
         assert_eq!(
-            policy.spa_headers(&hashes, &[]).enforced.to_str().unwrap(),
-            build_csp(&config, &hashes, &sources, &[])
+            policy
+                .spa_headers(&hashes, &[], &InstanceCspSources::default())
+                .enforced
+                .to_str()
+                .unwrap(),
+            build_csp(
+                &config,
+                &hashes,
+                &sources,
+                &[],
+                &InstanceCspSources::default()
+            )
         );
     }
 
@@ -753,7 +847,11 @@ mod tests {
             endpoint("http://assets.example.test:8443"),
         ];
 
-        let headers = policy.spa_headers(&[hash_of("boot()")], &branding);
+        let headers = policy.spa_headers(
+            &[hash_of("boot()")],
+            &branding,
+            &InstanceCspSources::default(),
+        );
         let header = headers.enforced.to_str().unwrap();
 
         for directive in header.split("; ") {
@@ -781,6 +879,43 @@ mod tests {
     }
 
     #[test]
+    fn discovered_instance_origins_are_granted_to_the_page() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        let instance = InstanceCspSources {
+            static_cdn_endpoint: None,
+            media_endpoint: Some(endpoint("https://chat.example.com/media")),
+            connect_origins: vec![
+                "https://chat.example.com".to_owned(),
+                "wss://chat.example.com".to_owned(),
+            ],
+        };
+
+        let headers = policy.spa_headers(&[hash_of("boot()")], &[], &instance);
+        let header = headers.enforced.to_str().unwrap();
+        let directive = |name: &str| {
+            header
+                .split("; ")
+                .find(|directive| directive.starts_with(&format!("{name} ")))
+                .unwrap()
+                .split(' ')
+                .collect::<Vec<_>>()
+        };
+
+        assert!(directive("connect-src").contains(&"wss://chat.example.com"));
+        assert!(directive("connect-src").contains(&"https://chat.example.com"));
+        assert!(directive("img-src").contains(&"https://chat.example.com"));
+        assert!(directive("media-src").contains(&"https://chat.example.com"));
+        assert!(!directive("script-src").contains(&"https://chat.example.com"));
+        assert!(
+            !policy
+                .asset_header()
+                .to_str()
+                .unwrap()
+                .contains("chat.example.com")
+        );
+    }
+
+    #[test]
     fn a_branding_image_origin_the_policy_already_grants_is_not_repeated() {
         let configured = RuntimeCspSources {
             media_endpoint: Some(endpoint("https://media.example.test/media")),
@@ -791,6 +926,7 @@ mod tests {
         let headers = policy.spa_headers(
             &[hash_of("boot()")],
             &[endpoint("https://media.example.test")],
+            &InstanceCspSources::default(),
         );
         let header = headers.enforced.to_str().unwrap();
         let img = header
