@@ -240,7 +240,7 @@ function Show-FluxerUsage {
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
 	Write-FluxerLine '  -Email <address>        Contact email for web push. Default: admin@<domain>.'
 	Write-FluxerLine '  -Engine <command>       Container engine to drive. Default: docker, or podman when'
-	Write-FluxerLine '                          docker is absent.'
+	Write-FluxerLine '                          docker is absent or does not answer.'
 	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
 	Write-FluxerLine '                          directory, or the working directory itself when -Update or'
 	Write-FluxerLine '                          -Rollback is given and it holds an instance.'
@@ -385,6 +385,14 @@ function Invoke-FluxerPreflight {
 		$script:FluxerEngine = $Engine
 	} elseif ($null -ne (Get-Command docker -ErrorAction SilentlyContinue)) {
 		$script:FluxerEngine = 'docker'
+		if ($null -ne (Get-Command podman -ErrorAction SilentlyContinue) -and (Invoke-FluxerCapture @('info')).Code -ne 0) {
+			$script:FluxerEngine = 'podman'
+			if ((Invoke-FluxerCapture @('info')).Code -eq 0) {
+				Write-FluxerLine 'docker does not answer and podman does, so this run drives podman. Pass -Engine docker to use docker instead.'
+			} else {
+				$script:FluxerEngine = 'docker'
+			}
+		}
 	} elseif ($null -ne (Get-Command podman -ErrorAction SilentlyContinue)) {
 		$script:FluxerEngine = 'podman'
 	} else {

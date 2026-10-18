@@ -214,7 +214,7 @@ Options:
   --domain <host>          Hostname the instance answers on. Prompted when absent.
   --email <address>        Contact email for web push. Default admin@<domain>.
   --engine <command>       Container engine to drive. Default docker, or podman
-                           when docker is absent.
+                           when docker is absent or does not answer.
   --dir <path>             Working directory. Default ~/fluxer, or the working
                            directory itself when --update or --rollback is given
                            and it holds an instance.
@@ -561,6 +561,10 @@ fluxer_resolve_engine() {
 		fluxer_engine=$opt_engine
 	elif command -v docker >/dev/null 2>&1; then
 		fluxer_engine='docker'
+		if command -v podman >/dev/null 2>&1 && ! docker info >/dev/null 2>&1 && podman info >/dev/null 2>&1; then
+			fluxer_engine='podman'
+			fluxer_say 'docker does not answer and podman does, so this run drives podman. Pass --engine docker to use docker instead.'
+		fi
 	elif command -v podman >/dev/null 2>&1; then
 		fluxer_engine='podman'
 	else
@@ -576,18 +580,11 @@ fluxer_preflight() {
 		fluxer_fail 2 'Running as root. Use an account in the docker group, or pass --allow-root.'
 	fi
 	fluxer_resolve_engine
-	if ! $fluxer_engine compose version >/dev/null 2>&1; then
-		fluxer_fail 2 "$fluxer_engine has no compose subcommand. $(fluxer_docker_hint)"
-	fi
-	if $fluxer_engine compose version 2>/dev/null | grep -q '^podman-compose version'; then
-		fluxer_fail 2 "$fluxer_engine compose runs podman-compose, which lacks compose ps -a and compose config --images that this script runs. $(fluxer_docker_hint)"
-	fi
 	fluxer_engine_report=$($fluxer_engine --version 2>/dev/null)
 	fluxer_engine_kind=$(printf '%s\n' "$fluxer_engine_report" | sed -n 's/^\([A-Za-z][A-Za-z]*\) version .*/\1/p' | tr 'A-Z' 'a-z')
 	fluxer_engine_version=$(printf '%s\n' "$fluxer_engine_report" | sed -n 's/^[A-Za-z][A-Za-z]* version v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
-	fluxer_compose_version=$($fluxer_engine compose version --short 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
-	if [ -z "$fluxer_engine_version" ] || [ -z "$fluxer_compose_version" ]; then
-		fluxer_fail 2 "Cannot read the engine and Compose versions from $fluxer_engine. It answered \"$fluxer_engine_report\" to --version."
+	if [ -z "$fluxer_engine_version" ]; then
+		fluxer_fail 2 "Cannot read the engine version from $fluxer_engine. It answered \"$fluxer_engine_report\" to --version."
 	fi
 	case $fluxer_engine_kind in
 		podman)
@@ -600,7 +597,17 @@ fluxer_preflight() {
 			;;
 	esac
 	if ! fluxer_version_ge "$fluxer_engine_version" "$fluxer_min_engine"; then
-		fluxer_fail 2 "$fluxer_engine_label $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs $fluxer_engine_label $fluxer_min_engine or newer."
+		fluxer_fail 2 "$fluxer_engine_label $fluxer_engine_version. Fluxer needs $fluxer_engine_label $fluxer_min_engine or newer. $(fluxer_docker_hint)"
+	fi
+	if ! $fluxer_engine compose version >/dev/null 2>&1; then
+		fluxer_fail 2 "$fluxer_engine has no compose subcommand. $(fluxer_docker_hint)"
+	fi
+	if $fluxer_engine compose version 2>/dev/null | grep -q '^podman-compose version'; then
+		fluxer_fail 2 "$fluxer_engine compose runs podman-compose, which lacks compose ps -a and compose config --images that this script runs. $(fluxer_docker_hint)"
+	fi
+	fluxer_compose_version=$($fluxer_engine compose version --short 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
+	if [ -z "$fluxer_compose_version" ]; then
+		fluxer_fail 2 "Cannot read the Compose version from $fluxer_engine compose version --short."
 	fi
 	if ! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE"; then
 		fluxer_fail 2 "$fluxer_engine_label $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs Compose $FLUXER_MIN_COMPOSE or newer."
@@ -837,7 +844,11 @@ fluxer_print_plan() {
 		fluxer_say "  email         admin@$opt_domain, derived by compose"
 		fluxer_plan_non_secret=$((fluxer_plan_non_secret - 1))
 	fi
-	fluxer_say '  action        download the stack files, write .env, start the stack'
+	if [ "$opt_no_start" -eq 1 ]; then
+		fluxer_say '  action        download the stack files, write .env, leave the stack stopped'
+	else
+		fluxer_say '  action        download the stack files, write .env, start the stack'
+	fi
 	fluxer_say "  .env keys     $fluxer_plan_non_secret non-secret values and $(fluxer_secret_keys | wc -l | tr -d ' ') secrets"
 	fluxer_say '  files         docker-compose.yml docker-compose.proxy.yml tunnel.compose.yml Caddyfile .env.example'
 	if [ -e "$opt_dir/.env" ]; then
@@ -2195,9 +2206,29 @@ fluxer_run_rollback() {
 	exit 0
 }
 
+# Podman writes a health_status event to the journal for every healthcheck run,
+# with every label of the container in it, and this stack runs two dozen checks
+# every ten seconds. Compose and this script read health from inspect, so the
+# events have no reader here. An operator who set the key either way keeps it.
+fluxer_quiet_podman_health_events() {
+	[ "$fluxer_engine_kind" = 'podman' ] || return 0
+	[ "$opt_dry_run" -eq 0 ] || return 0
+	if [ "$(id -u)" -eq 0 ]; then
+		fluxer_conf_dir=/etc/containers/containers.conf.d
+	else
+		fluxer_conf_dir=${XDG_CONFIG_HOME:-$HOME/.config}/containers/containers.conf.d
+	fi
+	if grep -qs '^[[:space:]]*healthcheck_events[[:space:]]*=' /usr/share/containers/containers.conf /etc/containers/containers.conf /etc/containers/containers.conf.d/*.conf "${XDG_CONFIG_HOME:-$HOME/.config}/containers/containers.conf" "${XDG_CONFIG_HOME:-$HOME/.config}/containers/containers.conf.d/"*.conf; then
+		return 0
+	fi
+	mkdir -p "$fluxer_conf_dir" && printf '[engine]\nhealthcheck_events = false\n' > "$fluxer_conf_dir/fluxer-healthcheck-events.conf" || return 0
+	fluxer_say "Wrote $fluxer_conf_dir/fluxer-healthcheck-events.conf, which stops Podman from logging every healthcheck run to the journal. Health checks still run."
+}
+
 fluxer_preflight
 fluxer_validate_options
 fluxer_resolve_values
+fluxer_quiet_podman_health_events
 
 if [ "$opt_update" -eq 1 ]; then
 	fluxer_refresh_installer

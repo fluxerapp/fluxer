@@ -58,6 +58,8 @@ If both answer, skip ahead. On a Mac or a Windows PC, install [Docker Desktop](h
 
 Debian and Ubuntu need Docker's apt repository from [Install Docker Engine](https://docs.docker.com/engine/install/), because the distribution's own `docker.io` package ships no Compose plugin. Follow the [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/) to add your user to the `docker` group, then log out and back in so the commands below run without `sudo`.
 
+Podman 5 works too, with `docker-compose` installed so `podman compose` has a provider. The installer picks Podman when `docker` is missing or does not answer. Podman logs every healthcheck run to the journal by default, so with Podman the installer writes `fluxer-healthcheck-events.conf` to `~/.config/containers/containers.conf.d/` (or `/etc/containers/containers.conf.d/` as root) to turn that off. Health checks still run. If you set `healthcheck_events` yourself, the installer leaves it alone.
+
 Linux also needs `curl` and `openssl`, which the steps below use:
 
 ```bash
@@ -184,7 +186,7 @@ Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the publi
 | `--update` | Upgrade: record, back up, refresh, pull, recreate, verify |
 | `--rollback` | Restore the images and stack files that the newest `--update` run recorded |
 | `--allow-root` | Permit running as root |
-| `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent |
+| `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent or does not answer |
 
 Run `--dry-run` first to see what a set of flags does. The PowerShell script takes the same flags as `-Domain`, `-Email` and so on, and has no `-AllowRoot`. [Upgrading](/operator/upgrading/#run-the-upgrade) has the flags that only `--update` and `--rollback` read, and the exit codes.
 
