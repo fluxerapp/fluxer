@@ -21,6 +21,11 @@ on:
         required: false
         default: ""
         type: string
+      electron_build_run_id:
+        description: Successful manual main-branch build desktop Electron workflow run supplying the patched Linux Electron distributions. Required when building Linux.
+        required: false
+        default: ""
+        type: string
       shell_contract:
         description: "Did the shell contract change since the oldest shell these modules still reach? unchanged refuses if it did. compatible keeps older shells on these modules because the renderer still works on them. raise stops sending these modules to shells without the new contract: Linux and managed shells keep their current renderer, Windows and macOS update their shell first."
         required: true
@@ -51,6 +56,7 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+      actions: read
     outputs:
       version: ${{ steps.meta.outputs.version }}
       pub_date: ${{ steps.meta.outputs.pub_date }}
@@ -63,6 +69,30 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Validate patched Electron build
+        env:
+          ELECTRON_BUILD_RUN_ID: ${{ inputs.electron_build_run_id }}
+          SKIP_TARGETS: ${{ inputs.skip_targets }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          skipped=",$(printf '%s' "$SKIP_TARGETS" | tr '[:space:]' ','),"
+          if [[ "$skipped" == *,linux,* ]] || \
+             { [[ "$skipped" == *,linux-x64,* ]] && [[ "$skipped" == *,linux-arm64,* ]]; }; then
+            exit 0
+          fi
+          if ! [[ "$ELECTRON_BUILD_RUN_ID" =~ ^[1-9][0-9]*$ ]]; then
+            echo 'Provide electron_build_run_id from a successful build desktop Electron workflow.' >&2
+            exit 1
+          fi
+          if ! gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ELECTRON_BUILD_RUN_ID" \
+            --jq 'select(.status == "completed" and .conclusion == "success" and .event == "workflow_dispatch" and .head_branch == "main" and .repository.full_name != null and .head_repository.full_name == .repository.full_name and .path == ".github/workflows/build-desktop-electron.yaml") | .id' \
+            | grep -qx "$ELECTRON_BUILD_RUN_ID"; then
+            echo 'Use a successful manual build desktop Electron run from this repository on main.' >&2
+            exit 1
+          fi
 
       - name: Set up Rust toolchain (CI helpers)
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
@@ -613,12 +643,22 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step analyse_velopack_paths
 
+      - name: Download patched Electron distribution (Linux)
+        if: matrix.platform == 'linux'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.electron_build_run_id }}
+          name: desktop-electron-linux-${{ matrix.arch }}
+          path: ${{ runner.temp }}/fluxer-electron-dist
+
       - name: Build Electron app (Linux)
         if: matrix.platform == 'linux'
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop
         env:
           BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
           USE_SYSTEM_FPM: true
+          FLUXER_ELECTRON_DIST: ${{ runner.temp }}/fluxer-electron-dist
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step build_app_linux

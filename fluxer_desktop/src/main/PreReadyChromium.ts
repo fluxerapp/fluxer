@@ -7,6 +7,7 @@ import {
 	getDesktopWindowBehaviorSettings,
 } from '@electron/common/DesktopConfig';
 import {
+	addLinuxHardwareVideoDecodeFeatures,
 	addLinuxHardwareVideoEncodeFeatures,
 	addWindowsHardwareVideoEncodeFeatures,
 	appendConfiguredChromiumSwitches,
@@ -53,6 +54,7 @@ export function applyPreReadyChromiumConfiguration(channel: BuildChannel, argv: 
 	const disabledChromiumFeatures = new Set(BASE_DISABLED_CHROMIUM_FEATURES);
 	const enabledChromiumFeatures = new Set<string>();
 	if (!disableHardwareAcceleration) {
+		addLinuxHardwareVideoDecodeFeatures(enabledChromiumFeatures);
 		addLinuxHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 		addWindowsHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 	}

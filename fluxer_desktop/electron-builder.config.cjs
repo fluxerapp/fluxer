@@ -63,7 +63,22 @@ if (!channel) {
 
 const isCanary = buildChannel === 'canary';
 const isStable = buildChannel === 'stable';
-const isLinuxBuild = process.argv.includes('--linux');
+const platformArguments = new Set(process.argv.map((argument) => argument.split('=', 1)[0]));
+const linuxRequested = ['--linux', '-l'].some((selector) => platformArguments.has(selector));
+const macRequested = ['--mac', '--macos', '-m', '-o'].some((selector) => platformArguments.has(selector));
+const windowsRequested = ['--win', '--windows', '-w'].some((selector) => platformArguments.has(selector));
+const targetPlatform = linuxRequested
+	? 'linux'
+	: macRequested
+		? 'darwin'
+		: windowsRequested
+			? 'win32'
+			: process.platform;
+const isLinuxBuild = targetPlatform === 'linux';
+const customLinuxElectron =
+	isLinuxBuild && process.env.FLUXER_ELECTRON_DIST?.trim() ? require('./scripts/custom-electron.cjs') : null;
+const linuxElectronDist = customLinuxElectron?.resolveLinuxElectronDist() ?? null;
+const verifiedLinuxElectronArtifacts = new Map();
 const productName = channel.productName;
 const linuxOptDirName = channel.linuxOptDirName;
 const installedProductName = isLinuxBuild ? linuxOptDirName : productName;
@@ -99,9 +114,6 @@ const legacyLinuxCanaryOptDir = '/opt/Fluxer Canary';
 const legacyLinuxOptDirSweepScript = path.resolve(__dirname, 'packaging/linux/rpm-post-transaction.sh');
 const legacyLinuxOptDirRpmFpmArgs = isCanary ? ['--rpm-posttrans', legacyLinuxOptDirSweepScript] : [];
 const macOSMinimumSystemVersion = '13.0';
-const isMacBuild = process.argv.includes('--mac');
-const isWindowsBuild = process.argv.includes('--win');
-const targetPlatform = isLinuxBuild ? 'linux' : isMacBuild ? 'darwin' : isWindowsBuild ? 'win32' : process.platform;
 const metadataName = isLinuxBuild ? linuxPackageName : packageName;
 const shellVersion = process.env.VERSION || readBundledRendererVersion();
 const supportedTargetArchs = ['x64', 'arm64'];
@@ -797,6 +809,27 @@ async function verifyNativePackageInputs(context) {
 	await verifyDarwinNativeArchitectures(platform, arch, entries, 'before packaging');
 }
 
+async function beforePack(context) {
+	if (linuxElectronDist && context.electronPlatformName !== 'linux') {
+		throw new Error(
+			'The patched Linux Electron distribution cannot package other platforms. Use separate electron-builder invocations for Linux and macOS or Windows.',
+		);
+	}
+	if (context.electronPlatformName === 'linux') {
+		if (!linuxElectronDist) {
+			throw new Error(
+				'Linux packaging requires patched Electron. Set FLUXER_ELECTRON_DIST to the directory containing its ZIP and build manifest.',
+			);
+		}
+		const arch = context.arch === 1 ? 'x64' : context.arch === 3 ? 'arm64' : context.arch;
+		verifiedLinuxElectronArtifacts.set(
+			arch,
+			await customLinuxElectron.verifyLinuxElectronArchive(linuxElectronDist, arch),
+		);
+	}
+	await verifyNativePackageInputs(context);
+}
+
 async function verifyPackagedNativeArtifacts(context) {
 	const platform = context.electronPlatformName;
 	const arch = normalizeArch(context.arch);
@@ -1147,6 +1180,15 @@ async function readAsarEntry(asarPath, entryPath) {
 }
 
 async function afterPack(context) {
+	if (context.electronPlatformName === 'linux') {
+		if (!customLinuxElectron) {
+			throw new Error('Custom Electron was not configured before Linux packaging.');
+		}
+		await customLinuxElectron.verifyPackagedLinuxElectron(
+			path.join(context.appOutDir, linuxPackageName),
+			verifiedLinuxElectronArtifacts.get(normalizeArch(context.arch)),
+		);
+	}
 	await copyMissingPackagedNativeArtifacts(context);
 	await cleanupNativeBuildIntermediates(context);
 	await addLinuxLegacyBinarySymlink(context);
@@ -1613,6 +1655,9 @@ async function verifyLinuxArtifactContracts(buildResult) {
 }
 
 module.exports = {
+	...(customLinuxElectron
+		? {electronVersion: customLinuxElectron.expectedElectronVersion, electronDist: linuxElectronDist}
+		: {}),
 	appId,
 	productName: installedProductName,
 	copyright: 'Copyright © 2026 Fluxer Platform AB',
@@ -1732,7 +1777,7 @@ module.exports = {
 			schemes: [channel.protocolScheme],
 		},
 	],
-	beforePack: verifyNativePackageInputs,
+	beforePack,
 	afterPack,
 	afterAllArtifactBuild: verifyLinuxArtifactContracts,
 	toolsets: {

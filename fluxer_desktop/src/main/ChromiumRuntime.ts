@@ -294,6 +294,11 @@ export function appendLinuxChromiumFlagsConfig(channel: BuildChannel): void {
 	}
 }
 
+export function addLinuxHardwareVideoDecodeFeatures(features: Set<string>): void {
+	if (process.platform !== 'linux') return;
+	features.add('VaapiOnNvidiaGPUs');
+}
+
 export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void {
 	if (process.platform !== 'linux') return;
 	features.add('AcceleratedVideoEncoder');

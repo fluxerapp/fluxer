@@ -1,0 +1,108 @@
+name: build desktop Electron
+
+on:
+  workflow_dispatch:
+    inputs:
+      prebuilt_release_tag:
+        description: Draft release containing prebuilt Electron distributions. Leave empty to compile Electron on the build runner instead.
+        required: false
+        default: desktop-electron-runtime-44.4.1-fluxer.1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-electron-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build patched Electron (linux-${{ matrix.arch }})
+    if: inputs.prebuilt_release_tag == ''
+    runs-on: [self-hosted, Linux, X64, fluxer-electron-build]
+    timeout-minutes: 1440
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Build patched Electron distribution
+        env:
+          CONTAINER_ENGINE: podman
+          CONTAINER_CPUS: "8"
+          CONTAINER_MEMORY: 48g
+          BUILD_JOBS: "8"
+        run: >-
+          bash fluxer_desktop/electron/build-linux.sh
+          --arch "${{ matrix.arch }}"
+          --build-root /srv/fluxer-electron-build/work
+          --output-dir "${{ runner.temp }}/fluxer-electron-artifacts"
+
+      - name: Upload patched Electron distribution
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-electron-linux-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.zip
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.fluxer.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+  import:
+    name: Import patched Electron (linux-${{ matrix.arch }})
+    if: inputs.prebuilt_release_tag != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+
+      - name: Download and verify build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREBUILT_RELEASE_TAG: ${{ inputs.prebuilt_release_tag }}
+          ELECTRON_ARCH: ${{ matrix.arch }}
+          FLUXER_ELECTRON_DIST: ${{ runner.temp }}/fluxer-electron-artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$PREBUILT_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft --jq '.isDraft' | grep -qx true
+          gh release download "$PREBUILT_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "electron-v44.4.1-linux-$ELECTRON_ARCH.zip" \
+            --pattern "electron-v44.4.1-linux-$ELECTRON_ARCH.fluxer.json" \
+            --dir "$FLUXER_ELECTRON_DIST"
+          node <<'NODE'
+          const {verifyLinuxElectronArchive} = require('./fluxer_desktop/scripts/custom-electron.cjs');
+          verifyLinuxElectronArchive(process.env.FLUXER_ELECTRON_DIST, process.env.ELECTRON_ARCH)
+            .then(() => console.log('Patched Electron artifact verified.'))
+            .catch((error) => { console.error(error); process.exitCode = 1; });
+          NODE
+
+      - name: Upload patched Electron distribution
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-electron-linux-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.zip
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.fluxer.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
