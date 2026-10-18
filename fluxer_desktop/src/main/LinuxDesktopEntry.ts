@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import child_process from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -27,6 +28,7 @@ const LEGACY_DESKTOP_FILE_BASENAME = `${LEGACY_LINUX_DESKTOP_ENTRY_ID}.desktop`;
 const GENERIC_NAME_DEFAULT = 'Instant Messenger';
 const COMMENT_DEFAULT = 'Instant messaging and VoIP';
 export const GENERATED_MARKER = '# X-Generated-By=fluxer-desktop';
+const GENERATED_DIGEST_PREFIX = '# X-Generated-Digest=';
 const DESKTOP_ACTIONS = [
 	{
 		id: 'open-settings',
@@ -137,7 +139,7 @@ function buildLocalizedEntryLines(key: string, defaultValue: string, localizedVa
 	return lines;
 }
 
-export function buildDesktopFileContents(execPath: string, hidden: boolean): string {
+function buildDesktopFileBody(execPath: string, hidden: boolean): string {
 	const execLine = `${quoteExecArg(execPath)} %U`;
 	return [
 		'[Desktop Entry]',
@@ -160,6 +162,18 @@ export function buildDesktopFileContents(execPath: string, hidden: boolean): str
 		...buildDesktopActionEntries(execPath),
 		'',
 	].join('\n');
+}
+
+function digestDesktopFileBody(body: string): string {
+	return crypto.createHash('sha256').update(body, 'utf8').digest('hex');
+}
+
+export function buildDesktopFileContents(execPath: string, hidden: boolean): string {
+	const body = buildDesktopFileBody(execPath, hidden);
+	return body.replace(
+		`${GENERATED_MARKER}\n`,
+		`${GENERATED_MARKER}\n${GENERATED_DIGEST_PREFIX}${digestDesktopFileBody(body)}\n`,
+	);
 }
 
 function readDesktopEntryValue(contents: string, key: string): string | null {
@@ -185,6 +199,18 @@ function isStaleDesktopFile(contents: string): boolean {
 	const tryExec = readDesktopEntryValue(contents, 'TryExec');
 	if (tryExec === null || !tryExec.startsWith('/')) return false;
 	return !isExecutableFile(tryExec);
+}
+
+function isUnmodifiedGeneratedFile(contents: string, execPath: string): boolean {
+	if (!contents.includes(GENERATED_MARKER)) return false;
+	const lines = contents.split('\n');
+	const digestIndex = lines.findIndex((line) => line.startsWith(GENERATED_DIGEST_PREFIX));
+	if (digestIndex === -1) {
+		return contents === buildDesktopFileBody(execPath, false) || contents === buildDesktopFileBody(execPath, true);
+	}
+	const digest = lines[digestIndex].slice(GENERATED_DIGEST_PREFIX.length).trim();
+	const body = lines.filter((_, index) => index !== digestIndex).join('\n');
+	return digestDesktopFileBody(body) === digest;
 }
 
 function readExistingDesktopFile(filePath: string): string | null {
@@ -280,14 +306,15 @@ function syncUserDesktopEntry(): boolean {
 	const filePath = getDesktopFilePath();
 	const existing = readExistingDesktopFile(filePath);
 	const systemEntry = findSystemDesktopEntry();
+	const owned = existing !== null && (isUnmodifiedGeneratedFile(existing, execPath) || isStaleDesktopFile(existing));
 	if (systemEntry) {
-		if (existing !== null && (existing.includes(GENERATED_MARKER) || isStaleDesktopFile(existing))) {
+		if (owned) {
 			return removeFile(filePath, 'Removed a user .desktop entry shadowing the system entry');
 		}
 		logger.debug('System-wide .desktop entry detected; skipping user-local copy', {systemEntry});
 		return false;
 	}
-	if (existing !== null && !existing.includes(GENERATED_MARKER) && !isStaleDesktopFile(existing)) {
+	if (existing !== null && !owned) {
 		logger.debug('Linux .desktop entry was hand-edited; leaving untouched', {filePath});
 		return false;
 	}
