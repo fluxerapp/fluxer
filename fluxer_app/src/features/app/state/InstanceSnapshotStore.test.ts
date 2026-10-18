@@ -480,6 +480,28 @@ describe('InstanceSnapshotStore.resolve on an official web page', () => {
 		expect(resolution.snapshot.webAppEndpoint).toBe('https://alias.example.test');
 	});
 
+	test('an alias host also takes over the gateway and media the canonical host serves', async () => {
+		stubBrowserDocument('https://gateway-alias.example.test', {servesOwnApi: true});
+		const canonical = discoveryDocument('canonical.example.test');
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () =>
+				jsonResponse({
+					...canonical,
+					endpoints: {
+						...canonical.endpoints,
+						gateway: 'wss://canonical.example.test/gateway',
+						media: 'https://canonical.example.test/media',
+					},
+				}),
+			),
+		);
+		const resolution = await InstanceSnapshotStore.resolve({input: 'https://gateway-alias.example.test', signal: null});
+		expect(resolution.snapshot.gatewayEndpoint).toBe('wss://gateway-alias.example.test/gateway');
+		expect(resolution.snapshot.mediaEndpoint).toBe('https://gateway-alias.example.test/media');
+		expect(resolution.snapshot.staticCdnEndpoint).toBe('https://cdn.canonical.example.test');
+	});
+
 	test('a host that is not marked as serving its own API still refuses a foreign API declaration', async () => {
 		stubBrowserDocument('https://fluxer.com');
 		vi.stubGlobal('fetch', serveLikeProduction('https://web.fluxer.app'));

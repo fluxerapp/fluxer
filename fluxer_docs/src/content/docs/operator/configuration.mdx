@@ -1656,7 +1656,7 @@ Default `60000`. How often discovery is refetched, in milliseconds, and so the l
 
 #### `FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS`
 
-Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api` to the API. Invalid entries are logged and dropped.
+Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. The Gateway, media, upload relay and static CDN endpoints move to that host too when discovery puts them on the same host as the API, so `wss://chat.example.com/gateway` becomes `wss://<host>/gateway`. Endpoints on other hosts stay as they are. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api`, `/gateway` and `/media` like the main one. Invalid entries are logged and dropped.
 
 #### `FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS`
 
