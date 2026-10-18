@@ -144,33 +144,6 @@ function appendUniquePattern(patterns, pattern) {
 	patterns.push(normalized);
 }
 
-function inventoryPatternsForTargetPids(pids) {
-	if (!(binding && typeof binding.AudioBridge === 'function')) return [];
-	const wanted = new Set(pids.map((pid) => String(pid)));
-	const patterns = [];
-	let bridge = null;
-	try {
-		bridge = new binding.AudioBridge();
-		const inventory = bridge.inventory();
-		if (!Array.isArray(inventory)) return patterns;
-		for (const props of inventory) {
-			if (!props || typeof props !== 'object') continue;
-			if (props['media.class'] !== 'Stream/Output/Audio') continue;
-			const processId = props['application.process.id'] || props['pipewire.sec.pid'];
-			if (!wanted.has(String(processId || ''))) continue;
-			appendUniquePattern(patterns, {'object.serial': String(props['object.serial'] || '')});
-			appendUniquePattern(patterns, {'node.name': String(props['node.name'] || '')});
-			appendUniquePattern(patterns, {'client.id': String(props['client.id'] || '')});
-		}
-	} catch {
-	} finally {
-		try {
-			bridge?.release?.();
-		} catch {}
-	}
-	return patterns;
-}
-
 function routingRuleFromTarget(target, options) {
 	if (target && typeof target === 'object') {
 		return normalizeRoutingRule(target.linuxRule || target);
@@ -179,9 +152,8 @@ function routingRuleFromTarget(target, options) {
 	if (!Number.isSafeInteger(pid) || pid <= 0) {
 		throw new TypeError('ProcessLoopback target pid must be a positive integer');
 	}
-	const targetPids = targetPidList(pid, Boolean(options?.includeProcessTree));
-	const include = inventoryPatternsForTargetPids(targetPids);
-	for (const candidate of targetPids) {
+	const include = [];
+	for (const candidate of targetPidList(pid, Boolean(options?.includeProcessTree))) {
 		appendUniquePattern(include, {'application.process.id': String(candidate)});
 		appendUniquePattern(include, {'pipewire.sec.pid': String(candidate)});
 	}
