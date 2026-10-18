@@ -103,11 +103,45 @@ describe('desktop discovery for an account stored on the migrated official domai
 		});
 	}
 
-	test('another instance that serves a foreign API is still refused', async () => {
-		network.served.set('https://chat.example.test', officialDocument('https://web.fluxer.app'));
+	test('an alias domain that declares another API resolves the instance it declares', async () => {
+		network.served.set('https://domain2.example.test', officialDocument('https://domain1.example.test'));
+		network.served.set('https://domain1.example.test', officialDocument('https://domain1.example.test'));
 
-		await assert.rejects(resolveDesktopRuntimePlan({input: 'https://chat.example.test/api', signal: null}), {
+		const plan = await resolveDesktopRuntimePlan({input: 'https://domain2.example.test/api', signal: null});
+
+		assert.equal(plan.instanceKey, 'https://domain1.example.test/api');
+		assert.equal(plan.endpoints.apiEndpoint, 'https://domain1.example.test/api');
+		assert.equal(network.anchored.length, 1);
+		assert.equal(network.anchored[0].anchorOrigin, 'https://domain1.example.test');
+		assert.deepEqual(
+			network.fetched
+				.filter((request) => new URL(request.url).origin === 'https://domain1.example.test')
+				.map((request) => request.expectedOrigin),
+			['https://domain1.example.test'],
+		);
+	});
+
+	test('the declared instance must declare itself, so a chain stops after one hop', async () => {
+		network.served.set('https://a.example.test', officialDocument('https://b.example.test'));
+		network.served.set('https://b.example.test', officialDocument('https://c.example.test'));
+		network.served.set('https://c.example.test', officialDocument('https://c.example.test'));
+
+		await assert.rejects(resolveDesktopRuntimePlan({input: 'https://a.example.test/api', signal: null}), {
 			name: 'DesktopRuntimeDiscoveryFailedError',
 		});
+		assert.equal(
+			network.fetched.some((request) => new URL(request.url).origin === 'https://c.example.test'),
+			false,
+		);
+		assert.equal(network.anchored.length, 0);
+	});
+
+	test('a declared instance that serves no discovery is refused', async () => {
+		network.served.set('https://chat.example.test', officialDocument('https://gone.example.test'));
+
+		await assert.rejects(resolveDesktopRuntimePlan({input: 'https://chat.example.test/api', signal: null}), {
+			name: /DesktopRuntimeDiscovery/,
+		});
+		assert.equal(network.anchored.length, 0);
 	});
 });
