@@ -9,7 +9,7 @@ use crate::metrics::{JobKind, JobRejection, Provider, elapsed_ms};
 use crate::payload;
 use crate::providers::{self, SendOutcome};
 use crate::retry::{self, RETRY_DEADLINE};
-use crate::rpc::RpcError;
+use crate::rpc::{RpcClient, RpcError};
 use crate::server::AppState;
 use crate::subscription::{Platform, Subscription};
 use crate::unix_millis;
@@ -353,13 +353,7 @@ async fn run_message_job(
 ) -> anyhow::Result<()> {
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(&job.user_ids),
-            state.rpc.push_subscriptions(&job.user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, &job.user_ids, deadline).await?;
     state.metrics.record_recipients(job.user_ids.len() as u64);
 
     let envelopes = job
@@ -410,13 +404,7 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(user_ids),
-            state.rpc.push_subscriptions(user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, user_ids, deadline).await?;
     state.metrics.record_recipients(1);
 
     let envelope = payload::web_push_clear(&job, badge_of(&badges, &job.user_id));
@@ -501,6 +489,24 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
         .metrics
         .record_job_completed(JobKind::Ring, duration_ms);
     Ok(())
+}
+
+async fn lookup_recipients(
+    rpc: &RpcClient,
+    user_ids: &[String],
+    deadline: Instant,
+) -> Result<(HashMap<String, u32>, HashMap<String, Vec<Subscription>>), RpcError> {
+    let subscriptions = lookup(deadline, || rpc.push_subscriptions(user_ids)).await?;
+    let subscribed_ids: Vec<String> = user_ids
+        .iter()
+        .filter(|user_id| subscribed(&subscriptions, user_id))
+        .cloned()
+        .collect();
+    if subscribed_ids.is_empty() {
+        return Ok((HashMap::new(), subscriptions));
+    }
+    let badges = lookup(deadline, || rpc.badge_counts(&subscribed_ids)).await?;
+    Ok((badges, subscriptions))
 }
 
 async fn lookup<T, F, Fut>(deadline: Instant, mut call: F) -> Result<T, RpcError>
@@ -707,5 +713,96 @@ mod tests {
     fn a_standard_push_ignores_the_capability() {
         assert!(Audience::Standard.admits(&subscription("ios_apns", false)));
         assert!(Audience::Standard.admits(&subscription("ios_apns", true)));
+    }
+
+    async fn fake_api(
+        subscribed: &'static [&'static str],
+    ) -> (RpcClient, Arc<std::sync::Mutex<Vec<Value>>>) {
+        let calls = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let recorded = Arc::clone(&calls);
+        let app = axum::Router::new().route(
+            "/",
+            axum::routing::post(move |body: axum::body::Bytes| {
+                let recorded = Arc::clone(&recorded);
+                async move {
+                    let request: Value = serde_json::from_slice(&body).unwrap();
+                    recorded.lock().unwrap().push(request.clone());
+                    let user_ids = request["user_ids"].as_array().cloned().unwrap_or_default();
+                    let data = match request["type"].as_str().unwrap() {
+                        "get_push_subscriptions" => serde_json::json!(
+                            subscribed
+                                .iter()
+                                .map(|user_id| {
+                                    (
+                                        (*user_id).to_owned(),
+                                        serde_json::json!([{
+                                            "subscription_id": "sub",
+                                            "endpoint": "token",
+                                            "p256dh_key": null,
+                                            "auth_key": null,
+                                            "platform": "android_fcm",
+                                            "app_id": null,
+                                            "provider_environment": null
+                                        }]),
+                                    )
+                                })
+                                .collect::<serde_json::Map<_, _>>()
+                        ),
+                        "get_badge_counts" => serde_json::json!({
+                            "badge_counts": user_ids
+                                .iter()
+                                .map(|user_id| (user_id.as_str().unwrap().to_owned(), serde_json::json!(3)))
+                                .collect::<serde_json::Map<_, _>>()
+                        }),
+                        other => panic!("unexpected rpc {other}"),
+                    };
+                    serde_json::json!({ "data": data }).to_string()
+                }
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let rpc = RpcClient::new(
+            &crate::config::RpcConfig {
+                url,
+                auth_token: fluxer_common::secret::SecretString::new("token".to_owned()),
+            },
+            reqwest::Client::new(),
+            Arc::new(crate::metrics::Metrics::new()),
+        );
+        (rpc, calls)
+    }
+
+    fn badge_requests(calls: &std::sync::Mutex<Vec<Value>>) -> Vec<Value> {
+        calls
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|call| call["type"] == "get_badge_counts")
+            .map(|call| call["user_ids"].clone())
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn badge_counts_are_read_only_for_recipients_with_a_device() {
+        let (rpc, calls) = fake_api(&["2"]).await;
+        let user_ids: Vec<String> = (1..=500).map(|id| id.to_string()).collect();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let (badges, subscriptions) = lookup_recipients(&rpc, &user_ids, deadline).await.unwrap();
+        assert_eq!(badge_requests(&calls), vec![serde_json::json!(["2"])]);
+        assert_eq!(badges, HashMap::from([("2".to_owned(), 3)]));
+        assert!(subscribed(&subscriptions, "2"));
+    }
+
+    #[tokio::test]
+    async fn no_badge_counts_are_read_when_nobody_has_a_device() {
+        let (rpc, calls) = fake_api(&[]).await;
+        let user_ids: Vec<String> = (1..=500).map(|id| id.to_string()).collect();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let (badges, _subscriptions) = lookup_recipients(&rpc, &user_ids, deadline).await.unwrap();
+        assert!(badge_requests(&calls).is_empty());
+        assert!(badges.is_empty());
+        assert_eq!(calls.lock().unwrap().len(), 1);
     }
 }
