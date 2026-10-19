@@ -22,7 +22,7 @@ A guild ban object names the banned account, the moderator, the reason, and any 
 | --- | --- | --- |
 | user | [partial user](/http-api/users/#partial-user-object) object | The banned account |
 | reason<sup>1</sup> | ?string | The stored ban reason, or null when none was recorded |
-| moderator_id | snowflake | The account that issued or most recently replaced the ban |
+| moderator_id | snowflake | The account that issued or most recently replaced the ban, or `0` for the Fluxer system user when Fluxer staff placed it |
 | banned_at<sup>2</sup> | ISO8601 timestamp | Time the ban was issued or most recently replaced |
 | expires_at<sup>3</sup> | ?ISO8601 timestamp | Time a temporary ban stops applying, or null for a permanent ban |
 

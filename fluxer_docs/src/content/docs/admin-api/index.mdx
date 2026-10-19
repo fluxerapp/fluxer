@@ -404,6 +404,7 @@ An entry with any other action has `access` set to `write`.
 | unban_email | An address was removed from the email blocklist |
 | unban_file_sha | A file hash was removed from the attachment blocklist |
 | unban_ip | An address was removed from the IP blocklist |
+| unban_member | A guild ban was removed |
 | unban_phrase | A phrase was removed from the message phrase blocklist |
 | unban_profile_substring | A substring was removed from the profile substring blocklist |
 | unban_url | A URL was removed from the URL blocklist |
@@ -568,7 +569,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | gateway:reload_all | Reloads guilds across the main Gateway |
 | gift_codes:generate | Generates [gift codes](/admin-api/gift-codes/) |
 | guild:audit_log:view | Reads a guild's ordinary audit log |
-| guild:ban_member | Bans a guild member |
+| guild:ban_member | Bans a guild member and removes a guild ban |
 | guild:delete | Deletes a guild |
 | guild:force_add_member | Adds an account to a guild |
 | guild:kick_member | Removes a guild member |

@@ -103,6 +103,13 @@ export const KickGuildMemberRequest = z.object({
 
 export type KickGuildMemberRequest = z.infer<typeof KickGuildMemberRequest>;
 
+export const UnbanGuildMemberRequest = z.object({
+	guild_id: SnowflakeType,
+	user_id: SnowflakeType,
+});
+
+export type UnbanGuildMemberRequest = z.infer<typeof UnbanGuildMemberRequest>;
+
 export const GetProcessMemoryStatsQuery = z.object({
 	limit: createQueryIntegerType({defaultValue: 100, minValue: 100, maxValue: 1000}).describe(
 		'Maximum number of guild processes to return (100-1000, default 100)',

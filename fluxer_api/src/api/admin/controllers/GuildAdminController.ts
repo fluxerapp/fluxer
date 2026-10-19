@@ -353,7 +353,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'kick_admin_guild_member',
 			summary: 'Remove guild member',
 			description:
-				'Temporarily removes a user from a guild. User can rejoin. Logged to audit log. Requires GUILD_KICK_MEMBER permission.',
+				'Removes a user from a guild as the Fluxer system user, without guild membership or guild permissions. User can rejoin. Refuses the guild owner. Logged to audit log. Requires GUILD_KICK_MEMBER permission.',
 			responseSchema: null,
 			statusCode: 204,
 			security: 'adminApiKey',
@@ -382,7 +382,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'ban_admin_guild_member',
 			summary: 'Ban guild member',
 			description:
-				'Bans a user from a guild, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
+				'Bans a user from a guild as the Fluxer system user, without guild membership or guild permissions, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Refuses the guild owner. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
 			responseSchema: null,
 			statusCode: 204,
 			security: 'adminApiKey',
@@ -395,6 +395,34 @@ export function GuildAdminController(app: HonoApp) {
 			const params = ctx.req.valid('param');
 			await adminService.guildServiceAggregate.membershipService.banMember(
 				{...ctx.req.valid('json'), guild_id: params.guild_id, user_id: params.user_id},
+				adminUserId,
+				auditLogReason,
+			);
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/admin/guilds/:guild_id/bans/:user_id',
+		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.GUILD_BAN_MEMBER),
+		Validator('param', GuildIdUserIdParam),
+		OpenAPI({
+			operationId: 'unban_admin_guild_member',
+			summary: 'Unban guild member',
+			description:
+				'Removes a guild ban as the Fluxer system user, without guild membership or guild permissions. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const params = ctx.req.valid('param');
+			await adminService.guildServiceAggregate.membershipService.unbanMember(
+				{guild_id: params.guild_id, user_id: params.user_id},
 				adminUserId,
 				auditLogReason,
 			);
