@@ -402,6 +402,7 @@ mod tests {
             http_client: reqwest::Client::new(),
             spa_index_source: crate::state::SpaIndexSource::bundled(""),
             local_asset_prefixes: None,
+            bundled_app_assets: false,
             budgets,
             local_files,
         }

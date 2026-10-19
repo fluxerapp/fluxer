@@ -4,7 +4,7 @@ use crate::branding_images::InstanceBranding;
 use crate::config::{AppProxyConfig, HttpUrl};
 use crate::csp::CompiledCspPolicy;
 use crate::local_files::LocalFileStore;
-use crate::routes::present_local_asset_prefixes;
+use crate::routes::{bundles_app_assets, present_local_asset_prefixes};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
@@ -87,6 +87,7 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub spa_index_source: SpaIndexSource,
     pub local_asset_prefixes: Option<Arc<[&'static str]>>,
+    pub bundled_app_assets: bool,
     pub budgets: AppProxyBudgets,
     pub(crate) local_files: LocalFileStore,
 }
@@ -103,6 +104,7 @@ impl AppState {
         let spa_index_source = SpaIndexSource::load(&config).await?;
         let local_asset_prefixes = (!spa_index_source.is_upstream())
             .then(|| present_local_asset_prefixes(&config.static_dir));
+        let bundled_app_assets = bundles_app_assets(&config.static_dir);
         Ok(Self {
             branding: InstanceBranding::from_config(&config),
             config,
@@ -110,6 +112,7 @@ impl AppState {
             http_client,
             spa_index_source,
             local_asset_prefixes,
+            bundled_app_assets,
             budgets,
             local_files,
         })

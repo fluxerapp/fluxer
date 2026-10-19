@@ -23,14 +23,17 @@ pub async fn proxy_assets(
     Path(path): Path<String>,
     request: axum::extract::Request,
 ) -> Response {
-    let Some(cdn_endpoint) = &state.config.static_cdn_endpoint else {
-        return serve_local_asset(
-            &state.local_files,
-            &format!("assets/{path}"),
-            request.headers(),
-            state.csp.asset_header(),
-        )
-        .await;
+    let cdn_endpoint = match &state.config.static_cdn_endpoint {
+        Some(endpoint) if !state.bundled_app_assets => endpoint,
+        _ => {
+            return serve_local_asset(
+                &state.local_files,
+                &format!("assets/{path}"),
+                request.headers(),
+                state.csp.asset_header(),
+            )
+            .await;
+        }
     };
 
     if path
@@ -146,6 +149,18 @@ fn upstream_asset_body(
     ))
 }
 
+pub fn bundles_app_assets(static_dir: &str) -> bool {
+    let Ok(entries) = std::fs::read_dir(std::path::Path::new(static_dir).join("assets")) else {
+        return false;
+    };
+    entries.flatten().any(|entry| {
+        entry
+            .path()
+            .extension()
+            .is_some_and(|extension| extension == "js")
+    })
+}
+
 pub(super) async fn serve_local_asset(
     files: &LocalFileStore,
     relative_path: &str,
@@ -241,6 +256,7 @@ mod tests {
             http_client: build_http_client().unwrap(),
             spa_index_source: SpaIndexSource::bundled(""),
             local_asset_prefixes: None,
+            bundled_app_assets: false,
             budgets,
             local_files,
         }
@@ -1190,5 +1206,79 @@ mod tests {
             b"console.log(1)",
             "a response served past the read slot count had the wrong bytes"
         );
+    }
+
+    async fn spawn_counting_upstream() -> (String, Arc<AtomicU64>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let hits = Arc::new(AtomicU64::new(0));
+        let counter = Arc::clone(&hits);
+        let router = Router::new().fallback(move || {
+            let counter = Arc::clone(&counter);
+            async move {
+                counter.fetch_add(1, Ordering::Relaxed);
+                Response::new(Body::from("cdn-bytes"))
+            }
+        });
+        tokio::spawn(async move {
+            axum::serve(listener, router).await.unwrap();
+        });
+        (format!("http://{addr}"), hits)
+    }
+
+    fn cdn_and_local_state(cdn_endpoint: &str, static_dir: &str) -> AppState {
+        let mut state = upstream_backed_state(cdn_endpoint);
+        let mut config = (*state.config).clone();
+        config.static_dir = static_dir.to_owned();
+        state.local_files =
+            LocalFileStore::load_blocking(std::path::Path::new(static_dir), &state.budgets)
+                .unwrap();
+        state.config = Arc::new(config);
+        state.bundled_app_assets = bundles_app_assets(static_dir);
+        state
+    }
+
+    async fn get_asset(state: AppState, asset_path: &str) -> Response {
+        super::super::build_router(state)
+            .oneshot(
+                HttpRequest::builder()
+                    .uri(format!("/assets/{asset_path}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn an_image_with_the_app_built_in_serves_assets_itself_when_a_cdn_is_set() {
+        let fixture = LocalAssetDir::with_asset("356aaade04a117b1.js", b"local-bytes");
+        let (endpoint, hits) = spawn_counting_upstream().await;
+        let state = cdn_and_local_state(&endpoint, fixture.dir());
+        assert!(state.bundled_app_assets);
+
+        let response = get_asset(state, "356aaade04a117b1.js").await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(body_bytes(response).await, b"local-bytes");
+        assert_eq!(
+            hits.load(Ordering::Relaxed),
+            0,
+            "a cdn that pulls from this instance would send the request back here"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_image_without_the_app_built_in_still_takes_assets_from_the_cdn() {
+        let fixture = LocalAssetDir::with_asset("fonts-latin.txt", b"font list");
+        let (endpoint, hits) = spawn_counting_upstream().await;
+        let state = cdn_and_local_state(&endpoint, fixture.dir());
+        assert!(!state.bundled_app_assets);
+
+        let response = get_asset(state, "356aaade04a117b1.js").await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(body_bytes(response).await, b"cdn-bytes");
+        assert_eq!(hits.load(Ordering::Relaxed), 1);
     }
 }
