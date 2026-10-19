@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {existsSync, mkdirSync, readdirSync, writeFileSync} from 'node:fs';
+import {existsSync, readdirSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
@@ -692,12 +692,19 @@ export default () => {
 			}),
 			{
 				apply(compiler) {
-					compiler.hooks.afterEmit.tap('VersionJsonPlugin', () => {
-						const versionData = {
-							version: publicValues.PUBLIC_BUILD_VERSION,
-						};
-						mkdirSync(DIST_DIR, {recursive: true});
-						writeFileSync(path.join(DIST_DIR, 'version.json'), JSON.stringify(versionData));
+					compiler.hooks.thisCompilation.tap('VersionJsonPlugin', (compilation) => {
+						const {Compilation} = compiler.rspack;
+						compilation.hooks.processAssets.tap(
+							{name: 'VersionJsonPlugin', stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL},
+							() => {
+								const {RawSource} = compiler.rspack.sources;
+								const versionData = {
+									version: publicValues.PUBLIC_BUILD_VERSION,
+								};
+								const source = new RawSource(JSON.stringify(versionData));
+								compilation.emitAsset('version.json', source);
+							},
+						);
 					});
 				},
 			},
