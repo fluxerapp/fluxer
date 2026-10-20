@@ -51,7 +51,7 @@ common_children() ->
 -spec role_children(atom()) -> [supervisor:child_spec()].
 role_children(Role) ->
     RoleSpecs =
-        presence_bus_children(Role) ++
+        presence_bus_children(Role) ++ push_outbox_children(Role) ++
             lists:append(
                 [
                     role_child_specs(sessions, Role),
@@ -68,6 +68,15 @@ presence_bus_children(Role) ->
     case role_enabled(presence, Role) orelse role_enabled(guilds, Role) of
         true ->
             [child_spec(presence_bus, presence_bus)];
+        false ->
+            []
+    end.
+
+-spec push_outbox_children(atom()) -> [supervisor:child_spec()].
+push_outbox_children(Role) ->
+    case role_enabled(push, Role) orelse role_enabled(calls, Role) of
+        true ->
+            [child_spec(push_outbox, push_outbox)];
         false ->
             []
     end.
@@ -101,10 +110,7 @@ role_specs(guilds, _Role) ->
 role_specs(calls, Role) ->
     [child_spec(call_manager, call_manager)] ++ calls_voice_state_counts_sync_children(Role);
 role_specs(push, _Role) ->
-    [
-        child_spec(push_outbox, push_outbox),
-        child_spec(push, push)
-    ].
+    [child_spec(push, push)].
 
 -spec role_handoff_children(atom()) -> [supervisor:child_spec()].
 role_handoff_children(Role) ->
@@ -228,6 +234,20 @@ calls_role_starts_ets_owner_before_call_workers_test() ->
     ?assert(lists:member(guild_ets_owner, Ids)),
     ?assert(owner_precedes(guild_ets_owner, call_manager, Ids)),
     ?assert(owner_precedes(guild_ets_owner, voice_state_counts_sync, Ids)).
+
+calls_role_starts_the_push_outbox_for_rings_test() ->
+    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => calls}),
+    ?assertEqual(1, count_id(push_outbox, Ids)),
+    ?assert(owner_precedes(push_outbox, call_manager, Ids)).
+
+push_role_starts_the_push_outbox_before_push_test() ->
+    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => push}),
+    ?assertEqual(1, count_id(push_outbox, Ids)),
+    ?assert(owner_precedes(push_outbox, push, Ids)).
+
+all_role_starts_a_single_push_outbox_test() ->
+    Ids = init_child_ids(#{cluster_enabled => true, gateway_role => all}),
+    ?assertEqual(1, count_id(push_outbox, Ids)).
 
 all_role_starts_single_ets_owner_test() ->
     Ids = init_child_ids(#{cluster_enabled => true, gateway_role => all}),
