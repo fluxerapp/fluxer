@@ -747,7 +747,6 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-sequential-file-send',
 		tabType: 'advanced_settings',
-		sectionId: 'chat',
 		label: SEQUENTIAL_FILE_SEND_DESCRIPTOR,
 		keywords: [
 			SEQUENTIAL_SEND_DESCRIPTOR,
