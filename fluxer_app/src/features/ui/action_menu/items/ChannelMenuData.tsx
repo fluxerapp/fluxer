@@ -431,7 +431,7 @@ export function useChannelMenuData(
 
 		if (guild && (state.isTextChannel || state.isVoiceChannel || state.isLinkChannel || channel.isThreadOnly())) {
 			const voiceItems: Array<MenuItemType> = [];
-			if (state.isVoiceChannel && !Accessibility.voiceChannelJoinRequiresDoubleClick) {
+			if (state.isVoiceChannel) {
 				voiceItems.push({
 					icon: <MessageUserIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.open-chat-icon" />,
 					label: i18n._(OPEN_CHAT_DESCRIPTOR),
