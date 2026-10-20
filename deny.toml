@@ -19,7 +19,9 @@ unmaintained = "all"
 # Placeholder for future per-advisory ignores. Prefer fixing/upgrading the
 # crate before adding an entry here. Each entry should be a string ID, e.g.
 # "RUSTSEC-2024-0000", optionally as { id = "...", reason = "..." }.
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2026-0381", reason = "webpki-roots 0.26.11 only re-exports webpki-roots 1.x, which is locked at 1.0.10 without the emSign root" },
+]
 
 # ---------------------------------------------------------------------------
 # Licenses
