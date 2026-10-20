@@ -41,25 +41,6 @@ export class MessagePinService {
 		private readonly guildAuditLogService: GuildAuditLogService,
 	) {}
 
-	private async assertMessageHistoryAccess({
-		authChannel,
-		messageId,
-	}: {
-		authChannel: AuthenticatedChannel;
-		messageId: MessageID;
-	}): Promise<void> {
-		if (!authChannel.guild) {
-			return;
-		}
-		if (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY)) {
-			return;
-		}
-		const cutoff = authChannel.guild.message_history_cutoff;
-		if (!cutoff || snowflakeToDate(messageId).getTime() < new Date(cutoff).getTime()) {
-			throw new UnknownMessageError();
-		}
-	}
-
 	async getChannelPins({
 		authChannel,
 		userId,
@@ -161,7 +142,6 @@ export class MessagePinService {
 		}
 		ensureTextChannel(channel);
 		assertThreadInteractionAllowed(authChannel, 'pin');
-		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
 		this.validateMessagePinnable(message);
@@ -214,7 +194,6 @@ export class MessagePinService {
 		}
 		ensureTextChannel(channel);
 		assertThreadInteractionAllowed(authChannel, 'pin');
-		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
 		this.validateMessagePinnable(message);

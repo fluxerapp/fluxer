@@ -1872,7 +1872,6 @@ Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. 
 ### Limitations
 
 - A guild caller requires [PIN_MESSAGES](/http-api/permissions/) and channel access.
-- A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can pin only a message on or after the guild's message history cutoff.
 - A one-to-one direct message caller must satisfy the recipient's direct message policy, and one who may not send fails with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
 - A one-to-one direct message pin is refused with 403 `NEW_CONVERSATIONS_LIMITED` when the caller is under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit), the recipient is not a friend or a bot, and the recipient has not written in that direct message.
 - A group direct message and the personal notes channel apply no send policy.
@@ -1899,7 +1898,7 @@ Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. 
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `PIN_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is under a new conversation limit in a direct message the recipient has not written in, and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 403 | [error response](/http-api/#error-response) | Caller is timed out in a thread and the request returns `COMMUNICATION_DISABLED` |
-| 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
+| 404 | [error response](/http-api/#error-response) | Channel or message does not exist |
 
 ### Side effects
 
@@ -1944,7 +1943,7 @@ Unpins a message. Returns 204 with an empty body on success. Emits [Message Upda
 | 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `PIN_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | Caller is timed out in a thread and the request returns `COMMUNICATION_DISABLED` |
-| 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
+| 404 | [error response](/http-api/#error-response) | Channel or message does not exist |
 
 ### Side effects
 
