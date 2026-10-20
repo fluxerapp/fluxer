@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {CHANNEL_RECORD_DESCRIPTOR, RecordDebugModal} from '@app/features/devtools/components/debug/RecordDebugModal';
 import {
 	COPY_LINK_DESCRIPTOR as D_COPY_THREAD_LINK_DESCRIPTOR,
@@ -129,6 +131,7 @@ export function buildThreadNotificationItems(i18n: I18n, thread: Channel): Array
 
 export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => void}): {groups: Array<MenuGroupType>} {
 	const {i18n} = useLingui();
+	const deleteMyMessagesInChannel = useDeleteMyMessagesInChannel();
 	const joined = ThreadMemberships.isMember(thread.id);
 	const muted = ThreadMemberships.isMuted(thread.id);
 	const moderator = isThreadModeratorFor(thread);
@@ -261,6 +264,14 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 			},
 		});
 	}
+	manageItems.push({
+		icon: <DeleteIcon size={20} data-flx="threads.use-thread-menu-data.delete-icon" />,
+		label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),
+		danger: true,
+		onClick: () => {
+			ModalCommands.runAfterBottomSheetClose(onClose, () => deleteMyMessagesInChannel(thread.id));
+		},
+	});
 	if (manageItems.length > 0) groups.push({items: manageItems});
 	const copyItems: Array<MenuSheetItem> = [
 		{

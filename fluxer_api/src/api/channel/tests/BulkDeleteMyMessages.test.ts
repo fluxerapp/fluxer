@@ -8,8 +8,13 @@ import {
 	sendChannelMessage,
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -42,8 +47,10 @@ describe('Bulk delete my messages', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 	afterAll(async () => {
+		clearChannelThreadsTaintCacheForTesting();
 		await harness?.shutdown();
 	});
 	it('deletes the caller messages in a single guild channel immediately', async () => {
@@ -59,6 +66,35 @@ describe('Bulk delete my messages', () => {
 			.execute();
 		const messages = await listMessages(harness, member.token, systemChannel.id);
 		expectMessageVisibility(messages, [memberMessage.id], [ownerMessage.id, ownerMessage2.id]);
+	});
+	it('deletes the caller messages in a thread and keeps those in its parent channel', async () => {
+		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		await ensureSessionStarted(harness, member.token);
+		const parentMessage = await sendChannelMessage(harness, owner.token, systemChannel.id, 'parent should stay');
+		const thread = await threadsRequest<ThreadChannelResponse>(harness, owner.token)
+			.post(`/channels/${systemChannel.id}/threads`)
+			.body({name: 'cleanup', type: ChannelTypes.PUBLIC_THREAD})
+			.expect(201)
+			.execute();
+		const ownerThreadMessage = await threadsRequest<MessageResponse>(harness, owner.token)
+			.post(`/channels/${thread.id}/messages`)
+			.body({content: 'thread cleanup target'})
+			.execute();
+		const memberThreadMessage = await threadsRequest<MessageResponse>(harness, member.token)
+			.post(`/channels/${thread.id}/messages`)
+			.body({content: 'thread should stay'})
+			.execute();
+		await threadsRequest(harness, owner.token)
+			.post(`/channels/${thread.id}/messages/bulk-delete-mine`)
+			.body({password: owner.password})
+			.expect(202)
+			.execute();
+		const threadMessages = await threadsRequest<Array<MessageResponse>>(harness, member.token)
+			.get(`/channels/${thread.id}/messages`)
+			.execute();
+		expectMessageVisibility(threadMessages, [memberThreadMessage.id], [ownerThreadMessage.id]);
+		expectMessageVisibility(await listMessages(harness, member.token, systemChannel.id), [parentMessage.id], []);
 	});
 	it('deletes the caller messages across every channel in a guild immediately', async () => {
 		const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);

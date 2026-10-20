@@ -12000,6 +12000,11 @@ msgstr "Delete your messages in this community?"
 msgid "Delete your messages in this conversation?"
 msgstr "Delete your messages in this conversation?"
 
+#. Confirmation modal title for the destructive "delete all my messages in this thread" action. Also shown for forum and media posts.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "Delete your messages in this thread?"
+msgstr "Delete your messages in this thread?"
+
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "Deleted {duration} of the member's recent message history"
@@ -34965,6 +34970,11 @@ msgstr "This will permanently delete every message you have ever sent in this ch
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
 msgstr "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
+
+#. Confirmation modal description warning that every message the caller has sent in this thread will be deleted. Also shown for forum and media posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this thread. This cannot be undone."
+msgstr "This will permanently delete every message you have ever sent in this thread. This cannot be undone."
 
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
 msgid "This will replace your current custom theme. You can edit it later in {themeSettingsPath}."
