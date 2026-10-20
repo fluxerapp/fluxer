@@ -1754,7 +1754,9 @@ It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no i
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/bulk-delete-mine" bot mfa />
 
-Deletes every message the caller authored in one channel. Returns 202 with an empty body. Emits a [Message Delete Bulk](/gateway/events/#message-delete-bulk) Gateway event.
+Deletes every message the caller authored in one channel and in every thread under it, active or archived. Returns 202 with an empty body. Emits a [Message Delete Bulk](/gateway/events/#message-delete-bulk) Gateway event in each channel and thread that held such messages.
+
+When `channel_id` is a thread, only that thread is cleared. For a forum or media channel, the deleted messages are the ones in its posts.
 
 ### Limitations
 
@@ -1762,7 +1764,6 @@ Deletes every message the caller authored in one channel. Returns 202 with an em
 - The caller must be able to resolve the channel and be in [sudo mode](/http-api/users/mfa/#sudo-mode), established by the `X-Fluxer-Sudo-Mode-JWT` header or by supplying a proof in the body.
 - A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`, which report `totp`, `webauthn`, and `backup_codes`.
 - An account that holds no verifiable credential at all, meaning it is not a bot, has no TOTP secret, no registered WebAuthn credential, and no stored password, satisfies the sudo requirement with an empty body.
-- A thread is a separate channel. The operation leaves the caller's messages in the threads of the channel, and a forum or media channel has no message of its own to delete.
 
 The deletion runs inside the request despite the 202 status, so every matching message is gone by the time the response is returned.
 
@@ -1770,7 +1771,7 @@ The deletion runs inside the request despite the 202 status, so every matching m
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the channel whose caller-authored messages are deleted |
+| channel_id | snowflake | The ID of the channel or thread whose caller-authored messages are deleted |
 
 ### Request headers
 

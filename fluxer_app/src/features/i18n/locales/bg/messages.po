@@ -12000,6 +12000,11 @@ msgstr "Да изтриеш ли съобщенията си в тази общ�
 msgid "Delete your messages in this conversation?"
 msgstr "Да изтриеш ли съобщенията си в този разговор?"
 
+#. Confirmation modal title for the destructive "delete all my messages in this thread" action. Also shown for forum and media posts.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "Delete your messages in this thread?"
+msgstr "Изтрий съобщенията си в тази тема?"
+
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "Deleted {duration} of the member's recent message history"
@@ -20717,12 +20722,6 @@ msgstr "Измерване…"
 msgid "Media"
 msgstr "Медия"
 
-#. Chat settings section for image, video, embed, and media preferences.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgctxt "chat-settings-section"
-msgid "Media"
-msgstr "Медия"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Media attachment buttons"
@@ -20799,11 +20798,6 @@ msgstr "Предишна песен"
 #: src/features/voice/components/media_player/components/MediaProgressBar.tsx
 msgid "Media progress"
 msgstr "Напредък на медията"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgid "Media size"
-msgstr "Размер на медия"
 
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
@@ -34956,6 +34950,11 @@ msgstr "Това ще извести <0>{memberCount, plural, one {# член} o
 msgid "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "Това ще извести до <0>{memberCount, plural, one {# онлайн член} other {# онлайн членове}}</0> в този канал. Сигурен ли си, че искаш да го направиш?"
 
+#. Confirmation modal description warning that every message the caller has sent in this channel and in all of its threads, active or archived, will be deleted. Also shown for forum and media channels, where the threads are their posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this channel and its threads. This cannot be undone."
+msgstr "Това ще изтрие завинаги всяко съобщение, което някога сте изпратили в този канал и неговите нишки. Това не може да бъде отменено."
+
 #. Confirmation modal description warning that every message the caller has sent in this channel will be deleted. Cannot be undone.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this channel. This cannot be undone."
@@ -34965,6 +34964,11 @@ msgstr "Това ще изтрие завинаги всяко съобщени�
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
 msgstr "Това ще изтрие завинаги всяко съобщение, което си изпращал в този разговор. Това действие не може да бъде отменено."
+
+#. Confirmation modal description warning that every message the caller has sent in this thread will be deleted. Also shown for forum and media posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this thread. This cannot be undone."
+msgstr "Това ще изтрие завинаги всяко съобщение, което някога сте изпратили в тази нишка. Това не може да бъде отменено."
 
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
 msgid "This will replace your current custom theme. You can edit it later in {themeSettingsPath}."

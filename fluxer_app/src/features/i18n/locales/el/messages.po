@@ -12000,6 +12000,11 @@ msgstr "Να διαγραφούν τα μηνύματά σας σε αυτήν �
 msgid "Delete your messages in this conversation?"
 msgstr "Να διαγραφούν τα μηνύματά σας σε αυτήν τη συνομιλία;"
 
+#. Confirmation modal title for the destructive "delete all my messages in this thread" action. Also shown for forum and media posts.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "Delete your messages in this thread?"
+msgstr "Διαγραφή μηνυμάτων σε αυτό το νήμα;"
+
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "Deleted {duration} of the member's recent message history"
@@ -20717,12 +20722,6 @@ msgstr "Μέτρηση…"
 msgid "Media"
 msgstr "Πολυμέσα"
 
-#. Chat settings section for image, video, embed, and media preferences.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgctxt "chat-settings-section"
-msgid "Media"
-msgstr "Πολυμέσα"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Media attachment buttons"
@@ -20799,11 +20798,6 @@ msgstr "Προηγούμενο κομμάτι"
 #: src/features/voice/components/media_player/components/MediaProgressBar.tsx
 msgid "Media progress"
 msgstr "Πρόοδος πολυμέσων"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgid "Media size"
-msgstr "Μέγεθος πολυμέσων"
 
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
@@ -34956,6 +34950,11 @@ msgstr "Αυτό θα ειδοποιήσει <0>{memberCount, plural, one {# μ�
 msgid "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "Αυτό θα ειδοποιήσει έως και <0>{memberCount, plural, one {# συνδεδεμένο μέλος} other {# συνδεδεμένα μέλη}}</0> σε αυτό το κανάλι. Είστε σίγουροι ότι θέλετε να το κάνετε;"
 
+#. Confirmation modal description warning that every message the caller has sent in this channel and in all of its threads, active or archived, will be deleted. Also shown for forum and media channels, where the threads are their posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this channel and its threads. This cannot be undone."
+msgstr "Αυτό θα διαγράψει μόνιμα κάθε μήνυμα που έχετε στείλει ποτέ σε αυτό το κανάλι και στα νήματά του. Αυτό δεν μπορεί να αναιρεθεί."
+
 #. Confirmation modal description warning that every message the caller has sent in this channel will be deleted. Cannot be undone.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this channel. This cannot be undone."
@@ -34965,6 +34964,11 @@ msgstr "Αυτό θα διαγράψει οριστικά κάθε μήνυμα 
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
 msgstr "Αυτό θα διαγράψει οριστικά κάθε μήνυμα που έχετε στείλει ποτέ σε αυτήν τη συνομιλία. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+
+#. Confirmation modal description warning that every message the caller has sent in this thread will be deleted. Also shown for forum and media posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this thread. This cannot be undone."
+msgstr "Αυτό θα διαγράψει οριστικά κάθε μήνυμα που έχετε στείλει ποτέ σε αυτό το νήμα. Η ενέργεια αυτή δεν μπορεί να αναιρεθεί."
 
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
 msgid "This will replace your current custom theme. You can edit it later in {themeSettingsPath}."

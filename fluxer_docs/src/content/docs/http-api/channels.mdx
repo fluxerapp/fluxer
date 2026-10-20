@@ -618,7 +618,7 @@ Deleting a guild channel destroys the channel record, every message in it, every
 | Field | Type | Description |
 | --- | --- | --- |
 | silent?<sup>1</sup> | boolean | Whether to suppress the leave system message of a group direct message (default false) |
-| delete_messages?<sup>1</sup> | boolean | Whether to delete the caller's own messages in this channel first (default false) |
+| delete_messages?<sup>1</sup> | boolean | Whether to delete the caller's own messages in this channel and its threads first (default false) |
 
 <sup>1</sup> Only the exact trimmed values `true`, `True`, and `1` are true. An absent parameter and every other value, including `TRUE` and `yes`, are false
 
@@ -681,7 +681,7 @@ Remaining recipients receive [Channel Recipient Remove](/gateway/events/#channel
 
 Leaving as the final recipient permanently deletes the channel's messages and the channel record, with no system message.
 
-Setting `delete_messages` deletes the caller's authored messages in this channel after sudo verification and before the channel operation runs, and the response waits for that deletion to finish.
+Setting `delete_messages` deletes the caller's authored messages in this channel and its threads after sudo verification and before the channel operation runs, and the response waits for that deletion to finish.
 
 ### Rate limit
 

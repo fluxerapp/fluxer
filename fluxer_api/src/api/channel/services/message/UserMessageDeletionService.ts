@@ -164,6 +164,16 @@ export class UserMessageDeletionService {
 			for (const channelId of scope.channelIds) {
 				allowlist.add(channelId.toString());
 			}
+			const channels = await this.deps.channelRepository.channelData.listChannels([...scope.channelIds]);
+			for (const channel of channels) {
+				if (!channel.guildId) continue;
+				const threadIds = await this.deps.channelRepository.threads.listGuildThreadIds(channel.guildId, {
+					parents: [channel],
+				});
+				for (const threadId of threadIds) {
+					allowlist.add(threadId.toString());
+				}
+			}
 		}
 		if (scope.guildId) {
 			const channels = await this.deps.channelRepository.channelData.listGuildChannels(scope.guildId, 'complete');

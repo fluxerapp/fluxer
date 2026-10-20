@@ -612,7 +612,7 @@ export function useChannelMenuData(
 					danger: true,
 				});
 			}
-			if (state.isTextChannel || state.isVoiceChannel) {
+			if (state.isTextChannel || state.isVoiceChannel || channel.isThreadOnly()) {
 				destructiveItems.push({
 					icon: <DeleteIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.delete-icon--3" />,
 					label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),

@@ -4,7 +4,9 @@ import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {useConfirmDeleteMyMessages} from '@app/features/guild/hooks/useConfirmDeleteMyMessages';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -28,6 +30,12 @@ const THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_DESCRIPTOR = msg({
 	message: 'This will permanently delete every message you have ever sent in this channel. This cannot be undone.',
 	comment:
 		'Confirmation modal description warning that every message the caller has sent in this channel will be deleted. Cannot be undone.',
+});
+const THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_IN_THIS_CHANNEL_AND_ITS_THREADS_DESCRIPTOR = msg({
+	message:
+		'This will permanently delete every message you have ever sent in this channel and its threads. This cannot be undone.',
+	comment:
+		'Confirmation modal description warning that every message the caller has sent in this channel and in all of its threads, active or archived, will be deleted. Also shown for forum and media channels, where the threads are their posts. Cannot be undone.',
 });
 const THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_IN_THIS_CONVERSATION_DESCRIPTOR = msg({
 	message: 'This will permanently delete every message you have ever sent in this conversation. This cannot be undone.',
@@ -67,6 +75,12 @@ function getConfirmDescriptors(channel: Channel | undefined): {
 		return {
 			title: DELETE_YOUR_MESSAGES_IN_THIS_THREAD_DESCRIPTOR,
 			description: THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_IN_THIS_THREAD_DESCRIPTOR,
+		};
+	}
+	if (channel && ThreadGuilds.isActive(channel.guildId) && THREAD_PARENT_CHANNEL_TYPES.has(channel.type)) {
+		return {
+			title: DELETE_YOUR_MESSAGES_IN_THIS_CHANNEL_DESCRIPTOR,
+			description: THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_IN_THIS_CHANNEL_AND_ITS_THREADS_DESCRIPTOR,
 		};
 	}
 	return {

@@ -272,7 +272,7 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 			ModalCommands.runAfterBottomSheetClose(onClose, () => deleteMyMessagesInChannel(thread.id));
 		},
 	});
-	if (manageItems.length > 0) groups.push({items: manageItems});
+	groups.push({items: manageItems});
 	const copyItems: Array<MenuSheetItem> = [
 		{
 			icon: <CopyLinkIcon size={20} data-flx="threads.use-thread-menu-data.copy-link-icon" />,

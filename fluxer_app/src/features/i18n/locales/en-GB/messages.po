@@ -20722,12 +20722,6 @@ msgstr "Measuring…"
 msgid "Media"
 msgstr "Media"
 
-#. Chat settings section for image, video, embed, and media preferences.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgctxt "chat-settings-section"
-msgid "Media"
-msgstr "Media"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Media attachment buttons"
@@ -20804,11 +20798,6 @@ msgstr "Media previous"
 #: src/features/voice/components/media_player/components/MediaProgressBar.tsx
 msgid "Media progress"
 msgstr "Media progress"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts
-msgid "Media size"
-msgstr "Media size"
 
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
@@ -34960,6 +34949,11 @@ msgstr "This will notify <0>{memberCount, plural, one {# member} other {# member
 #: src/features/channel/components/MentionEveryonePopout.tsx
 msgid "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
+
+#. Confirmation modal description warning that every message the caller has sent in this channel and in all of its threads, active or archived, will be deleted. Also shown for forum and media channels, where the threads are their posts. Cannot be undone.
+#: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
+msgid "This will permanently delete every message you have ever sent in this channel and its threads. This cannot be undone."
+msgstr "This will permanently delete every message you have ever sent in this channel and its threads. This cannot be undone."
 
 #. Confirmation modal description warning that every message the caller has sent in this channel will be deleted. Cannot be undone.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
