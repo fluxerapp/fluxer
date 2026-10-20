@@ -4,11 +4,14 @@ import {Message as MessageComponent} from '@app/features/channel/components/Chan
 import {LexicalChannelTextareaContent} from '@app/features/channel/components/LexicalChannelTextareaContent';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
+import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {SendMessageFunction} from '@app/features/messaging/hooks/useMessageSubmission';
 import Drafts from '@app/features/messaging/state/MessagingDrafts';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
+import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
+import {parseAndRenderToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
@@ -34,6 +37,8 @@ import {useLingui} from '@lingui/react/macro';
 import {ChatsIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
+
+const THREAD_NAME_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO);
 
 interface ThreadCreatePaneProps {
 	parent: Channel;
@@ -64,7 +69,19 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 		observer.observe(inertRoot, {attributes: true, attributeFilter: ['inert']});
 		return () => observer.disconnect();
 	}, []);
+	void Messages.version;
 	const sourceMessage = messageId ? Messages.getMessage(parent.id, messageId) : undefined;
+	const suggestedName = sourceMessage?.content
+		? parseAndRenderToPlaintext(sourceMessage.content, THREAD_NAME_PARSER_FLAGS, {
+				channelId: parent.id,
+				includeEmojiNames: true,
+				mentionChannels: sourceMessage.mentionChannels,
+				i18n,
+			})
+				.replace(/\s+/g, ' ')
+				.trim()
+				.slice(0, THREAD_NAME_MAX_LENGTH)
+		: '';
 	const draftKey = `thread-create:${parent.id}`;
 	const accountKey = Users.viewAccountKey;
 	const draft = Drafts.getDraft(draftKey);
@@ -78,10 +95,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 	const disabled = cooldownSeconds > 0 || (!canPublic && !canPrivate);
 	const handleSubmit: SendMessageFunction = useCallback(
 		(content, hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId) => {
-			const threadName = (nameRef.current.trim() || sourceMessage?.content.trim() || '').slice(
-				0,
-				THREAD_NAME_MAX_LENGTH,
-			);
+			const threadName = (nameRef.current.trim() || suggestedName).slice(0, THREAD_NAME_MAX_LENGTH);
 			if (!threadName) {
 				setNameError(i18n._(D.THREAD_NAME_REQUIRED_DESCRIPTOR));
 				return false;
@@ -122,7 +136,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 				});
 			return true;
 		},
-		[draftKey, i18n, messageId, parent, privateSelected, sourceMessage],
+		[draftKey, i18n, messageId, parent, privateSelected, suggestedName],
 	);
 	return (
 		<div className={styles.pane} data-flx="threads.thread-create-pane.pane">
@@ -138,7 +152,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 						setNameError(undefined);
 					}}
 					label={i18n._(D.THREAD_NAME_DESCRIPTOR)}
-					placeholder={sourceMessage?.content.slice(0, THREAD_NAME_MAX_LENGTH) || i18n._(D.NEW_THREAD_DESCRIPTOR)}
+					placeholder={suggestedName || i18n._(D.NEW_THREAD_DESCRIPTOR)}
 					maxLength={THREAD_NAME_MAX_LENGTH}
 					autoComplete="off"
 					error={nameError}

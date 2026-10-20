@@ -34,6 +34,7 @@ mod tests {
             http_client: build_http_client().unwrap(),
             spa_index_source: SpaIndexSource::bundled(""),
             local_asset_prefixes: None,
+            bundled_app_assets: false,
             budgets,
             local_files,
         }

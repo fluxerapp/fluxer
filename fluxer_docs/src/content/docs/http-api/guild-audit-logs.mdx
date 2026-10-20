@@ -77,7 +77,7 @@ One recorded guild change. An entry is immutable once written, except for a run 
 | options?<sup>4</sup> | [audit log options](#audit-log-options-object) object | The context fields this [audit action](#audit-actions) records |
 | changes?<sup>5</sup> | array[[audit log change](#audit-log-change-object) object] | The fields the mutation changed |
 
-<sup>1</sup> Every entry has the acting user ID, and an entry produced by consolidation has the actor of the consolidated run
+<sup>1</sup> Every entry has the acting user ID, and an entry produced by consolidation has the actor of the consolidated run. An entry for a member removal, ban or ban removal made by Fluxer staff has `0`, the Fluxer system user
 
 <sup>2</sup> A decimal snowflake string for every action except [INVITE_CREATE](#audit-actions) and [INVITE_DELETE](#audit-actions), where it is the invite code, and null for [MESSAGE_BULK_DELETE](#audit-actions)
 

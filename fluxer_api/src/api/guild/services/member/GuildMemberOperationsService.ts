@@ -10,7 +10,7 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {assertMutableUserId} from '@app/api/constants/Core';
+import {assertMutableUserId, SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {resolveMaxGuildMembersLimit} from '@app/api/guild/GuildMemberLimitUtils';
@@ -378,6 +378,20 @@ export class GuildMemberOperationsService {
 			throw new UnknownGuildMemberError();
 		}
 		await checkTargetMember(targetId);
+		await this.deleteKickedMember(targetMember, userId);
+	}
+
+	async removeMemberAsSystem({targetId, guildId}: {targetId: UserID; guildId: GuildID}): Promise<void> {
+		const guild = await this.guildRepository.findUnique(guildId);
+		if (!guild) throw new UnknownGuildError();
+		const targetMember = await this.guildRepository.getMember(guildId, targetId);
+		if (!targetMember) throw new UnknownGuildMemberError();
+		if (guild.ownerId === targetId) throw new MissingPermissionsError();
+		await this.deleteKickedMember(targetMember, SYSTEM_USER_ID);
+	}
+
+	private async deleteKickedMember(targetMember: GuildMember, actorId: UserID): Promise<void> {
+		const {guildId, userId: targetId} = targetMember;
 		await this.snapshotMembershipMetadata(targetMember);
 		const guild = await this.guildRepository.findUnique(guildId);
 		await this.guildRepository.deleteMember(guildId, targetId);
@@ -389,7 +403,7 @@ export class GuildMemberOperationsService {
 			);
 		}
 		await this.gatewayService.leaveGuild({userId: targetId, guildId});
-		await emitGuildMemberRemoved({guildId, userId: targetId, actorId: userId, kind: 'kicked'});
+		await emitGuildMemberRemoved({guildId, userId: targetId, actorId, kind: 'kicked'});
 	}
 
 	async addUserToGuild(

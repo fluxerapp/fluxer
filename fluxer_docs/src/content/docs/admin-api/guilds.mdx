@@ -6,7 +6,7 @@ description: Guild search, detail, mutation, deletion, membership, expressions, 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most need no membership in the guild and no guild permission. [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the exceptions.
+Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. None of them need membership in the guild or any guild permission.
 
 [Archives](/admin-api/archives/) owns the archive lifecycle and the downloads.
 
@@ -549,9 +549,7 @@ One Admin audit entry is recorded with the action `force_add_to_guild`, the targ
 
 Removes a member from a guild without banning them and returns 204 with an empty body. Requires `guild:kick_member`.
 
-:::caution[Removal also needs KICK_MEMBERS in the guild]
-The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions/) in it, and rank above the target. A guild at [MFA level](/http-api/guilds/#mfa-levels) 1 also requires an enrolled authenticator.
-:::
+Fluxer checks only the Admin ACL. The acting account needs no membership, no permission and no role position in the guild. Fluxer removes the member as the Fluxer system user, whose ID is `0`, and the guild owner cannot be removed.
 
 ### Path parameters
 
@@ -565,21 +563,18 @@ The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Member was removed |
-| 400 | [error response](/admin-api/#error-response) | `TWO_FACTOR_REQUIRED` in an MFA level 1 guild |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | `MISSING_ACCESS` when the acting account cannot see the guild, or `MISSING_PERMISSIONS` when `KICK_MEMBERS` is absent |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_MEMBER`, because the target is not a member, is the guild owner, or is the acting account |
-
-<sup>1</sup> `MISSING_PERMISSIONS` also covers a target who outranks the acting account
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` because the target is the guild owner |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` because the guild does not exist, or `UNKNOWN_MEMBER` because the target is not a member |
 
 ### Side effects
 
 The user loses membership and disappears from guild member search. Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A later rejoin restores a communication timeout that is still in force. The rejoined member starts with no nickname and no roles.
 
-[Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
+[Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry gives the Fluxer system user as the actor and has no reason, so the `X-Audit-Log-Reason` header and the acting Admin account never appear in the guild. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
 
 The removal creates no ban record, so the user can rejoin.
 
-One Admin audit entry is recorded with the action `kick_member`, the target type `guild_member`, the removed user as the target, and the guild and user IDs in the metadata.
+One Admin audit entry is recorded with the action `kick_member`, the target type `guild_member` and the removed user as the target. It names the acting Admin account and has the audit reason. Its metadata has the guild ID, the user ID and `acl` set to `guild:kick_member`.
 
 ### Rate limit
 
@@ -591,9 +586,7 @@ One Admin audit entry is recorded with the action `kick_member`, the target type
 
 Bans a user from a guild, optionally removes their recent messages, and returns 204 with an empty body. The target need not be a member. Requires `guild:ban_member`.
 
-:::caution[A ban also needs BAN_MEMBERS in the guild]
-The acting account must hold [BAN_MEMBERS](/http-api/permissions/) in the guild, and must rank above a target who is a member. A guild at [MFA level](/http-api/guilds/#mfa-levels) 1 also requires an enrolled authenticator.
-:::
+Fluxer checks only the Admin ACL. The acting account needs no membership, no permission and no role position in the guild. Fluxer bans the user as the Fluxer system user, whose ID is `0`, and the guild owner cannot be banned.
 
 ### Path parameters
 
@@ -608,7 +601,7 @@ The acting account must hold [BAN_MEMBERS](/http-api/permissions/) in the guild,
 | --- | --- | --- |
 | delete_message_seconds?<sup>1</sup> | integer | The window of recent messages to delete, in seconds (0-604800) |
 | delete_message_days?<sup>1</sup> | integer | The window of recent messages to delete, in days (0-7, default 0) |
-| reason? | ?string | The guild ban reason stored on the ban record (at most 512 characters) |
+| reason? | ?string | The guild ban reason (at most 512 characters). Omitting it stores no reason |
 | ban_duration_seconds?<sup>2</sup> | integer | The ban duration in seconds, either exactly 0 or between 60 and 63072000 |
 
 <sup>1</sup> `delete_message_seconds` wins when both are supplied, and `delete_message_days` is otherwise multiplied by 86400. A resolved window of 0 deletes no message
@@ -620,9 +613,9 @@ The acting account must hold [BAN_MEMBERS](/http-api/permissions/) in the guild,
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | User was banned |
-| 400 | [error response](/admin-api/#error-response) | Duration, reason, or message window validation fails, or `TWO_FACTOR_REQUIRED` in an MFA level 1 guild |
-| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` because `BAN_MEMBERS` is absent in the guild or the target member outranks the acting account |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_MEMBER` because the target is the acting account, or `UNKNOWN_USER` because the user does not exist |
+| 400 | [error response](/admin-api/#error-response) | Duration, reason, or message window validation fails |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` because the target is the guild owner |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` for a missing guild, `UNKNOWN_MEMBER` for the system user, or `UNKNOWN_USER` for a missing user |
 
 :::caution[The ban can also delete messages]
 A ban removes current membership and blocks later joins until its expiry or explicit removal. Messages inside the resolved deletion window are permanently deleted and are not restored when the ban ends.
@@ -630,13 +623,50 @@ A ban removes current membership and blocks later joins until its expiry or expl
 
 ### Side effects
 
-The ban record names the acting Admin account as moderator. It has the expiry, the reason, the target's lowercased email address, and the target's last known IP address unless that address is on the ban exemption list. While the ban exists the guild also blocks that address and that email, as described by [Guild moderation](/http-api/guild-moderation/#guild-ban-object), and removing the ban releases both.
+The ban record gives the Fluxer system user as `moderator_id`. It has the expiry, the reason, the target's lowercased email address, and the target's last known IP address unless that address is on the ban exemption list. While the ban exists the guild also blocks that address and that email, as described by [Guild moderation](/http-api/guild-moderation/#guild-ban-object), and removing the ban releases both.
 
 A positive deletion window queues a background job that deletes the target's matching messages after the response, which fires [Message Delete Bulk](/gateway/events/#message-delete-bulk) as deletion progresses.
 
-[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A communication timeout in force at the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log and emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
+[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A communication timeout in force at the ban is not restored on a later rejoin.
 
-One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, and the banned user as the target. Its metadata has the guild ID, the user ID, the `delete_message_days` value, and any supplied reason and duration.
+A `MEMBER_BAN_ADD` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry gives the Fluxer system user as the actor and has the body `reason` when one is supplied. The `X-Audit-Log-Reason` header and the acting Admin account never appear in the guild. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
+
+One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member` and the banned user as the target. It names the acting Admin account and has the audit reason. Its metadata has the guild ID, the user ID, the `delete_message_days` value, `acl` set to `guild:ban_member`, and any supplied reason and duration.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## Unban guild member
+
+<RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/bans/{user_id}" auditReason />
+
+Removes a guild ban and returns 204 with an empty body. Requires `guild:ban_member`. The operation takes no request body.
+
+Fluxer checks only the Admin ACL. The acting account needs no membership and no permission in the guild. Fluxer removes the ban as the Fluxer system user, whose ID is `0`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The banned user |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Ban was removed |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `USER_IS_NOT_BANNED` against `user_id`, because the user has no ban |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` because the guild does not exist |
+
+### Side effects
+
+The user can join the guild again, and the guild stops blocking the email address and IP address stored on the ban. [Guild Ban Remove](/gateway/events/#guild-ban-remove) fires to the guild.
+
+A `MEMBER_BAN_REMOVE` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry gives the Fluxer system user as the actor and has no reason, so the `X-Audit-Log-Reason` header and the acting Admin account never appear in the guild. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
+
+One Admin audit entry is recorded with the action `unban_member`, the target type `guild_member` and the unbanned user as the target. It names the acting Admin account and has the audit reason. Its metadata has the guild ID, the user ID and `acl` set to `guild:ban_member`.
 
 ### Rate limit
 

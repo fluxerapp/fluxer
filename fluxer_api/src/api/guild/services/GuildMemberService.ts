@@ -2,6 +2,7 @@
 
 import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
@@ -244,6 +245,18 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.operationsService.removeMember(params);
+		await this.finishMemberKick({guildId, targetId, actorId: userId}, auditLogReason ?? null);
+	}
+
+	async removeMemberAsSystem(params: {targetId: UserID; guildId: GuildID}): Promise<void> {
+		await this.operationsService.removeMemberAsSystem(params);
+		await this.finishMemberKick({...params, actorId: SYSTEM_USER_ID}, null);
+	}
+
+	private async finishMemberKick(
+		{guildId, targetId, actorId}: {guildId: GuildID; targetId: UserID; actorId: UserID},
+		auditLogReason: string | null,
+	): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
 		if (searchIndexOptions) {
@@ -252,11 +265,11 @@ export class GuildMemberService {
 		await this.eventService.dispatchGuildMemberRemove({guildId, userId: targetId});
 		await this.guildAuditLogService.record({
 			guildId,
-			userId,
+			userId: actorId,
 			action: AuditLogActionType.MEMBER_KICK,
 			changes: null,
 			targetId: targetId,
-			auditLogReason: auditLogReason ?? null,
+			auditLogReason,
 		});
 	}
 

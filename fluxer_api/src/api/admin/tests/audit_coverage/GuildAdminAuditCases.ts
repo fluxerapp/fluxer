@@ -205,7 +205,8 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		method: 'DELETE',
 		route: '/admin/guilds/:guild_id/members/:user_id',
 		async prepare({harness, admin}) {
-			const guild = await createGuild(harness, admin.token, 'Audit Kick Guild');
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Kick Guild');
 			const target = await createTestAccount(harness);
 			await addMember(harness, admin, guild.id, target);
 			return {
@@ -214,7 +215,7 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'kick_member',
 					targetType: 'guild_member',
 					targetId: target.userId,
-					metadata: {guild_id: guild.id, user_id: target.userId},
+					metadata: {guild_id: guild.id, user_id: target.userId, acl: 'guild:kick_member'},
 				},
 			};
 		},
@@ -222,8 +223,9 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'PUT',
 		route: '/admin/guilds/:guild_id/bans/:user_id',
-		async prepare({harness, admin}) {
-			const guild = await createGuild(harness, admin.token, 'Audit Ban Guild');
+		async prepare({harness}) {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Ban Guild');
 			const target = await createTestAccount(harness);
 			return {
 				request: {path: `/admin/guilds/${guild.id}/bans/${target.userId}`, body: {}, expectStatus: 204},
@@ -231,7 +233,35 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'ban_member',
 					targetType: 'guild_member',
 					targetId: target.userId,
-					metadata: {guild_id: guild.id, user_id: target.userId, delete_message_days: '0'},
+					metadata: {
+						guild_id: guild.id,
+						user_id: target.userId,
+						delete_message_days: '0',
+						acl: 'guild:ban_member',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id/bans/:user_id',
+		async prepare({harness, admin}) {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Unban Guild');
+			const target = await createTestAccount(harness);
+			await createBuilder(harness, admin.token)
+				.put(`/admin/guilds/${guild.id}/bans/${target.userId}`)
+				.body({})
+				.expect(204)
+				.execute();
+			return {
+				request: {path: `/admin/guilds/${guild.id}/bans/${target.userId}`, expectStatus: 204},
+				expected: {
+					action: 'unban_member',
+					targetType: 'guild_member',
+					targetId: target.userId,
+					metadata: {guild_id: guild.id, user_id: target.userId, acl: 'guild:ban_member'},
 				},
 			};
 		},

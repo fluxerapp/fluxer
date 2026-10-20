@@ -2,6 +2,7 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -16,6 +17,8 @@ import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -23,6 +26,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildBanResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -31,6 +35,13 @@ import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 const SECONDS_PER_DAY = 86_400;
 const GUILD_MODERATION_PERMISSIONS =
 	Permissions.ADMINISTRATOR | Permissions.BAN_MEMBERS | Permissions.KICK_MEMBERS | Permissions.MANAGE_GUILD;
+
+interface GuildBanOptions {
+	deleteMessageDays?: number;
+	deleteMessageSeconds?: number;
+	reason?: string | null;
+	banDurationSeconds?: number;
+}
 
 export class GuildModerationService {
 	private readonly searchIndexService: GuildMemberSearchIndexService;
@@ -55,30 +66,14 @@ export class GuildModerationService {
 	}
 
 	async banMember(
-		params: {
+		params: GuildBanOptions & {
 			userId: UserID;
 			targetId: UserID;
 			guildId: GuildID;
-			deleteMessageDays?: number;
-			deleteMessageSeconds?: number;
-			reason?: string | null;
-			banDurationSeconds?: number;
-			skipGuildAuditLog?: boolean;
-			by?: BanBy;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {
-			userId,
-			guildId,
-			targetId,
-			deleteMessageDays,
-			deleteMessageSeconds,
-			reason,
-			banDurationSeconds,
-			skipGuildAuditLog,
-			by = 'moderator',
-		} = params;
+		const {userId, guildId, targetId} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		if (userId === targetId) throw new UnknownGuildMemberError();
 		const targetUser = await this.userRepository.findUnique(targetId);
@@ -90,6 +85,64 @@ export class GuildModerationService {
 			const canManage = await this.gatewayService.checkTargetMember({guildId, userId, targetUserId: targetId});
 			if (!canManage) throw new MissingPermissionsError();
 		}
+		await this.applyBan({
+			...params,
+			actorId: userId,
+			by: 'moderator',
+			targetUser,
+			targetMember,
+			guild: await this.guildRepository.findUnique(guildId),
+			guildAuditLogReason: auditLogReason ?? (params.reason || null),
+		});
+	}
+
+	async banMemberAsSystem(params: GuildBanOptions & {targetId: UserID; guildId: GuildID}): Promise<void> {
+		const {guildId, targetId} = params;
+		const guild = await this.guildRepository.findUnique(guildId);
+		if (!guild) throw new UnknownGuildError();
+		if (targetId === SYSTEM_USER_ID) throw new UnknownGuildMemberError();
+		if (guild.ownerId === targetId) throw new MissingPermissionsError();
+		const targetUser = await this.userRepository.findUnique(targetId);
+		if (!targetUser) {
+			throw new UnknownUserError();
+		}
+		await this.applyBan({
+			...params,
+			actorId: SYSTEM_USER_ID,
+			by: 'staff',
+			targetUser,
+			targetMember: await this.guildRepository.getMember(guildId, targetId),
+			guild,
+			guildAuditLogReason: params.reason || null,
+		});
+	}
+
+	private async applyBan(
+		params: GuildBanOptions & {
+			targetId: UserID;
+			guildId: GuildID;
+			actorId: UserID;
+			by: BanBy;
+			targetUser: User;
+			targetMember: GuildMember | null;
+			guild: Guild | null;
+			guildAuditLogReason: string | null;
+		},
+	): Promise<void> {
+		const {
+			actorId,
+			guildId,
+			targetId,
+			deleteMessageDays,
+			deleteMessageSeconds,
+			reason,
+			banDurationSeconds,
+			by,
+			targetUser,
+			targetMember,
+			guild: guildBeforeBan,
+			guildAuditLogReason,
+		} = params;
 		const effectiveDeleteMessageSeconds =
 			deleteMessageSeconds ?? (deleteMessageDays !== undefined ? deleteMessageDays * SECONDS_PER_DAY : undefined);
 		if (effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0) {
@@ -105,37 +158,34 @@ export class GuildModerationService {
 		if (banDurationSeconds && banDurationSeconds > 0) {
 			expiresAt = new Date(Date.now() + banDurationSeconds * 1000);
 		}
-		const guildBeforeBan = await this.guildRepository.findUnique(guildId);
 		const targetModerator = await this.isGuildModerator(guildId, targetId, guildBeforeBan, targetMember !== null);
 		const ban = await this.guildRepository.upsertBan({
 			guild_id: guildId,
 			user_id: targetId,
-			moderator_id: userId,
+			moderator_id: actorId,
 			banned_at: new Date(),
 			expires_at: expiresAt,
 			reason: reason || null,
 			ip: targetIp,
 			email: targetEmail,
 		});
-		if (!skipGuildAuditLog) {
-			const metadata: Record<string, string> | undefined =
-				effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0
-					? {delete_message_seconds: String(effectiveDeleteMessageSeconds)}
-					: undefined;
-			await this.guildAuditLogService.record({
-				guildId,
-				userId,
-				action: AuditLogActionType.MEMBER_BAN_ADD,
-				targetId: targetId,
-				auditLogReason: auditLogReason ?? (reason || null),
-				metadata,
-				changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
-			});
-		}
+		const metadata: Record<string, string> | undefined =
+			effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0
+				? {delete_message_seconds: String(effectiveDeleteMessageSeconds)}
+				: undefined;
+		await this.guildAuditLogService.record({
+			guildId,
+			userId: actorId,
+			action: AuditLogActionType.MEMBER_BAN_ADD,
+			targetId: targetId,
+			auditLogReason: guildAuditLogReason,
+			metadata,
+			changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
+		});
 		await emitGuildMemberBanned({
 			guildId,
 			userId: targetId,
-			moderatorId: userId,
+			moderatorId: actorId,
 			by,
 			memberCount: guildBeforeBan?.memberCount ?? 0,
 			targetModerator,
@@ -188,24 +238,36 @@ export class GuildModerationService {
 			userId: UserID;
 			targetId: UserID;
 			guildId: GuildID;
-			by?: BanBy;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {userId, guildId, targetId, by = 'moderator'} = params;
+		const {userId, guildId, targetId} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
+		await this.removeBan({guildId, targetId, actorId: userId, by: 'moderator'}, auditLogReason ?? null);
+	}
+
+	async unbanMemberAsSystem(params: {targetId: UserID; guildId: GuildID}): Promise<void> {
+		const guild = await this.guildRepository.findUnique(params.guildId);
+		if (!guild) throw new UnknownGuildError();
+		await this.removeBan({...params, actorId: SYSTEM_USER_ID, by: 'staff'}, null);
+	}
+
+	private async removeBan(
+		{guildId, targetId, actorId, by}: {guildId: GuildID; targetId: UserID; actorId: UserID; by: BanBy},
+		auditLogReason: string | null,
+	): Promise<void> {
 		const ban = await this.guildRepository.getBan(guildId, targetId);
 		if (!ban) {
 			throw InputValidationError.fromCode('user_id', ValidationErrorCodes.USER_IS_NOT_BANNED);
 		}
 		await this.guildRepository.deleteBan(guildId, targetId);
-		await emitGuildMemberUnbanned({guildId, userId: targetId, moderatorId: userId, by});
+		await emitGuildMemberUnbanned({guildId, userId: targetId, moderatorId: actorId, by});
 		await this.guildAuditLogService.record({
 			guildId,
-			userId,
+			userId: actorId,
 			action: AuditLogActionType.MEMBER_BAN_REMOVE,
 			targetId: targetId,
-			auditLogReason: auditLogReason ?? null,
+			auditLogReason,
 			changes: this.guildAuditLogService.computeChanges(this.serializeBanForAudit(ban), null),
 		});
 		await this.gatewayService.dispatchGuild({

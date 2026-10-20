@@ -3697,7 +3697,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Bans a user from a guild, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Logged to audit log. Requires GUILD_BAN_MEMBER permission.",
+				"description": "Bans a user from a guild as the Fluxer system user, without guild membership or guild permissions, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Refuses the guild owner. Logged to audit log. Requires GUILD_BAN_MEMBER permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -3719,6 +3719,70 @@
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BanGuildMemberBody"}}}
 				}
+			},
+			"delete": {
+				"operationId": "unban_admin_guild_member",
+				"summary": "Unban guild member",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes a guild ban as the Fluxer system user, without guild membership or guild permissions. Logged to audit log. Requires GUILD_BAN_MEMBER permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
 			}
 		},
 		"/admin/guilds/{guild_id}/emojis": {
@@ -3980,7 +4044,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Temporarily removes a user from a guild. User can rejoin. Logged to audit log. Requires GUILD_KICK_MEMBER permission.",
+				"description": "Removes a user from a guild as the Fluxer system user, without guild membership or guild permissions. User can rejoin. Refuses the guild owner. Logged to audit log. Requires GUILD_KICK_MEMBER permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{

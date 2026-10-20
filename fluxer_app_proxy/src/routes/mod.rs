@@ -8,6 +8,7 @@ mod health;
 mod spa_index;
 mod spa_static;
 
+pub use assets_proxy::bundles_app_assets;
 pub use spa_index::present_local_asset_prefixes;
 
 use crate::state::AppState;

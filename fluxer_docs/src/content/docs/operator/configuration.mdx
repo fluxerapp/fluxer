@@ -250,6 +250,8 @@ Defaults to the derived endpoint. The public Media Proxy URL. The `gifs` service
 
 Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, and `app-proxy`. When it is unset, `admin` gets the public origin, and every other service derives it itself.
 
+The web app's JavaScript and CSS are built into the `app-proxy` image, which serves them under `/assets/` on the instance's own address whatever this is set to. In the web app, this setting moves only the favicon and the icons used when someone installs the app. To cache the web app's files on a CDN, put the CDN in front of the instance's own hostname. Every file under `/assets/` has a content hash in its name and is sent with a one-year cache lifetime.
+
 #### `FLUXER_ADMIN_ENDPOINT`
 
 Defaults to the derived endpoint. The admin origin. The API accepts exactly this value plus `/oauth2_callback` as the admin OAuth redirect URI. Compose forwards it from `.env`, and builds it from the public origin and `FLUXER_ADMIN_BASE_PATH` when it is unset.
