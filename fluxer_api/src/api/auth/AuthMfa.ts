@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import crypto from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {
@@ -151,6 +152,11 @@ export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams
 				(bc) => !bc.consumed && constantTimeEquals(normalizeBackupCode(bc.code), normalizedCode),
 			);
 			if (backupCode) {
+				const hashedCode = crypto.createHash('sha256').update(normalizedCode).digest('hex');
+				const lockToken = await cache.acquireLock(`mfa-backup:${userId}:${hashedCode}`, seconds('90 seconds'));
+				if (!lockToken) {
+					return false;
+				}
 				await users.consumeMfaBackupCode(userId, backupCode.code);
 				return true;
 			}

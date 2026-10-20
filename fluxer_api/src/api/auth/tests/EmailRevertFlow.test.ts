@@ -122,6 +122,45 @@ function uniquePassword(): string {
 	return `Sup3r-${Date.now()}-Pass!`;
 }
 
+async function changeEmailAndGetRevertToken(harness: ApiTestHarness, account: TestAccount): Promise<string> {
+	const startResp = await startEmailChange(harness, account, account.password);
+	let originalProof: string;
+	if (startResp.require_original) {
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const originalEmail = findLastTestEmail(emails, 'email_change_original');
+		expect(originalEmail?.metadata?.code).toBeDefined();
+		const originalCode = originalEmail!.metadata!.code!;
+		originalProof = await verifyOriginalEmailChange(harness, account, startResp.ticket, originalCode, account.password);
+	} else {
+		originalProof = startResp.original_proof!;
+	}
+	const newEmail = `integration-revert-${Date.now()}@example.com`;
+	await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
+	const newEmails = await listTestEmails(harness, {recipient: newEmail});
+	const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
+	expect(newEmailData?.metadata?.code).toBeDefined();
+	const newCode = newEmailData!.metadata!.code!;
+	const emailToken = await verifyNewEmailChange(
+		harness,
+		account,
+		startResp.ticket,
+		newCode,
+		originalProof,
+		account.password,
+	);
+	await createBuilder(harness, account.token)
+		.patch('/users/@me')
+		.body({
+			email_token: emailToken,
+			password: account.password,
+		})
+		.execute();
+	const revertEmails = await listTestEmails(harness, {recipient: account.email});
+	const revertEmail = findLastTestEmail(revertEmails, 'email_change_revert');
+	expect(revertEmail?.metadata?.token).toBeDefined();
+	return revertEmail!.metadata!.token!;
+}
+
 describe('Email revert flow', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
@@ -137,6 +176,20 @@ describe('Email revert flow', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
+	it('accepts a revert token for only one of several concurrent reverts', async () => {
+		const account = await createTestAccount(harness);
+		const revertToken = await changeEmailAndGetRevertToken(harness, account);
+		const results = await Promise.all(
+			Array.from({length: 4}, () =>
+				createBuilderWithoutAuth(harness)
+					.post('/auth/email-revert')
+					.body({token: revertToken, password: uniquePassword()})
+					.executeRaw(),
+			),
+		);
+		const statuses = results.map(({response}) => response.status).sort();
+		expect(statuses).toEqual([200, 400, 400, 400].sort());
+	});
 	it('restores original email and clears mfa', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
@@ -145,48 +198,7 @@ describe('Email revert flow', () => {
 			.expect(200)
 			.execute();
 		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
-		const startResp = await startEmailChange(harness, account, account.password);
-		let originalProof: string;
-		if (startResp.require_original) {
-			const emails = await listTestEmails(harness, {recipient: account.email});
-			const originalEmail = findLastTestEmail(emails, 'email_change_original');
-			expect(originalEmail?.metadata?.code).toBeDefined();
-			const originalCode = originalEmail!.metadata!.code!;
-			originalProof = await verifyOriginalEmailChange(
-				harness,
-				account,
-				startResp.ticket,
-				originalCode,
-				account.password,
-			);
-		} else {
-			originalProof = startResp.original_proof!;
-		}
-		const newEmail = `integration-revert-${Date.now()}@example.com`;
-		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const newCode = newEmailData!.metadata!.code!;
-		const emailToken = await verifyNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newCode,
-			originalProof,
-			account.password,
-		);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me')
-			.body({
-				email_token: emailToken,
-				password: account.password,
-			})
-			.execute();
-		const revertEmails = await listTestEmails(harness, {recipient: account.email});
-		const revertEmail = findLastTestEmail(revertEmails, 'email_change_revert');
-		expect(revertEmail?.metadata?.token).toBeDefined();
-		const revertToken = revertEmail!.metadata!.token!;
+		const revertToken = await changeEmailAndGetRevertToken(harness, account);
 		const newPassword = uniquePassword();
 		addJob.mockClear();
 		const revertResp = await createBuilderWithoutAuth<EmailRevertResponse>(harness)

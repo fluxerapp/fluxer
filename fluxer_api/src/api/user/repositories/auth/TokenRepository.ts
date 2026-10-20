@@ -31,6 +31,7 @@ const FETCH_PASSWORD_RESET_TOKENS_BY_USER_CQL = PasswordResetTokensByUserId.sele
 	where: PasswordResetTokensByUserId.where.eq('user_id'),
 });
 export const PASSWORD_RESET_TOKEN_TTL_SECONDS = seconds('1 hour');
+export const EMAIL_REVERT_TOKEN_TTL_SECONDS = seconds('24 hours');
 
 const FETCH_EMAIL_REVERT_TOKEN_CQL = EmailRevertTokens.selectCql({
 	where: EmailRevertTokens.where.eq('token_'),
@@ -97,7 +98,7 @@ export class TokenRepository {
 	}
 
 	async createEmailRevertToken(tokenData: EmailRevertTokenRow): Promise<EmailRevertToken> {
-		await upsertOne(EmailRevertTokens.insertWithTtl(tokenData, seconds('24 hours')));
+		await upsertOne(EmailRevertTokens.insertWithTtl(tokenData, EMAIL_REVERT_TOKEN_TTL_SECONDS));
 		return new EmailRevertToken(tokenData);
 	}
 
