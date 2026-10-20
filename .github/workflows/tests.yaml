@@ -151,6 +151,9 @@ jobs:
       - name: Check desktop native dependencies
         run: tools/ci/check-desktop-native-workspaces.sh dependencies
 
+      - name: Check advisories in every Cargo.lock
+        run: tools/ci/check-cargo-lockfiles.sh
+
       - name: Cache native media dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
