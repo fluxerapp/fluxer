@@ -20,6 +20,7 @@ import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
 import {DESKTOP_RUNTIME_DISCOVERY_UNREACHABLE_ERROR_NAME} from '@fluxer/desktop_ipc/src/LocalAppRuntimeContract';
 import {
 	buildInstanceDiscoveryCandidates,
+	InstanceDiscoveryOriginMismatchError,
 	parseInstanceDiscoveryDocument,
 	requireDiscoveryDeclaresItsOwnOrigin,
 } from '@fluxer/instance_bootstrap/src/Discovery';
@@ -79,6 +80,15 @@ class DesktopRuntimeDiscoveryFailedError extends Error {
 	}
 }
 
+class DesktopRuntimeDiscoveryDeclaredElsewhereError extends DesktopRuntimeDiscoveryFailedError {
+	public readonly declaredApiEndpoint: string;
+
+	public constructor(apiEndpoint: string, attempts: ReadonlyArray<DiscoveryAttempt>, declaredApiEndpoint: string) {
+		super(apiEndpoint, attempts);
+		this.declaredApiEndpoint = declaredApiEndpoint;
+	}
+}
+
 class DesktopRuntimeDiscoveryUnreachableError extends DesktopRuntimeDiscoveryFailedError {
 	public constructor(apiEndpoint: string, attempts: ReadonlyArray<DiscoveryAttempt>) {
 		super(apiEndpoint, attempts);
@@ -98,9 +108,28 @@ export async function resolveDesktopRuntimePlan({
 	input,
 	signal,
 }: ResolveDesktopRuntimeConfigInput): Promise<LocalAppRuntimePlan> {
+	try {
+		return await resolveDesktopRuntimePlanAt(input, signal);
+	} catch (error) {
+		if (!(error instanceof DesktopRuntimeDiscoveryDeclaredElsewhereError)) {
+			throw error;
+		}
+		log.info('Instance discovery declared another API origin, resolving that instance', {
+			input,
+			declaredApiEndpoint: error.declaredApiEndpoint,
+		});
+		return resolveDesktopRuntimePlanAt(error.declaredApiEndpoint, signal, true);
+	}
+}
+
+async function resolveDesktopRuntimePlanAt(
+	input: string,
+	signal: AbortSignal | null,
+	followed = false,
+): Promise<LocalAppRuntimePlan> {
 	const apiEndpoint = requireDesktopRuntimeAPIEndpoint(input);
 	const anchorOrigin = requireDesktopHTTPOrigin(new URL(apiEndpoint).origin);
-	const resolved = await fetchRuntimePlan(apiEndpoint, anchorOrigin, signal);
+	const resolved = await fetchRuntimePlan(apiEndpoint, anchorOrigin, signal, followed);
 	let anchorRequirement: DesktopAddressRequirement;
 	try {
 		anchorRequirement = await getDesktopOutboundHTTP().registerAnchoredOrigins({
@@ -147,9 +176,11 @@ async function fetchRuntimePlan(
 	apiEndpoint: string,
 	anchorOrigin: string,
 	signal: AbortSignal | null,
+	followed: boolean,
 ): Promise<ResolvedRuntimePlan> {
 	const candidates = buildInstanceDiscoveryCandidates({input: apiEndpoint});
 	const attempts: Array<DiscoveryAttempt> = [];
+	let declaredApiEndpoint: string | null = null;
 	let instanceUnreachable = candidates.length > 0;
 	for (const url of candidates) {
 		let document: unknown;
@@ -165,10 +196,16 @@ async function fetchRuntimePlan(
 			return {plan, served: {url, document}, rememberedAnchorRequirement: null, attempts};
 		} catch (error) {
 			instanceUnreachable = false;
+			if (error instanceof InstanceDiscoveryOriginMismatchError) {
+				declaredApiEndpoint ??= error.declared;
+			}
 			attempts.push({url, reason: error instanceof Error ? error.message : String(error)});
 		}
 	}
 	if (!instanceUnreachable) {
+		if (declaredApiEndpoint !== null && !followed) {
+			throw new DesktopRuntimeDiscoveryDeclaredElsewhereError(apiEndpoint, attempts, declaredApiEndpoint);
+		}
 		throw new DesktopRuntimeDiscoveryFailedError(apiEndpoint, attempts);
 	}
 	const lastServed = await readLastServedDiscovery(apiEndpoint);
