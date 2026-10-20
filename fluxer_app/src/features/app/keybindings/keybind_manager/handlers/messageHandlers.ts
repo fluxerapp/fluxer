@@ -2,6 +2,7 @@
 
 import type {HandlerHost} from '@app/features/app/keybindings/keybind_manager/handlers/types';
 import {
+	getMessagePermissions,
 	requestAdjacentMessageReply,
 	requestCopyMessageId,
 	requestCopyMessageLink,
@@ -26,7 +27,8 @@ export function registerMessageHandlers(host: HandlerHost, i18n: I18n): void {
 	host.register('message_edit', ({type, context}) => {
 		if (type !== 'press') return;
 		const message = context?.focusedMessage ?? MessageFocus.getFocusedMessage();
-		if (!message) return;
+		if (!message?.isUserMessage()) return;
+		if (!getMessagePermissions(message, context?.focusedChannel)?.canEditMessage) return;
 		startMessageEdit(message);
 	});
 	host.register('message_delete', ({type, context}) => {

@@ -170,6 +170,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					enableReply={false}
 					enableEditLast={false}
 					enableSlashCommands={false}
+					submitOnEnter={false}
 					draftChannelId={draftKey}
 					placeholder={i18n._(media ? D.POST_MEDIA_PLACEHOLDER_DESCRIPTOR : D.POST_MESSAGE_PLACEHOLDER_DESCRIPTOR)}
 					bare

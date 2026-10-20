@@ -469,7 +469,6 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-auto-send-gifs',
 		tabType: 'chat_settings',
-		sectionId: 'media',
 		label: AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR,
 		keywords: [
 			ANIMATION_DESCRIPTOR,
@@ -487,7 +486,6 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-save-gif-favorites',
 		tabType: 'chat_settings',
-		sectionId: 'media',
 		label: SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR,
 		keywords: [
 			ANIMATION_DESCRIPTOR,
@@ -508,7 +506,6 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-media-buttons',
 		tabType: 'chat_settings',
-		sectionId: 'media',
 		label: MEDIA_BUTTONS_DESCRIPTOR,
 		keywords: [
 			MEDIA_ATTACHMENT_BUTTONS_DESCRIPTOR,
@@ -750,7 +747,6 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-sequential-file-send',
 		tabType: 'advanced_settings',
-		sectionId: 'chat',
 		label: SEQUENTIAL_FILE_SEND_DESCRIPTOR,
 		keywords: [
 			SEQUENTIAL_SEND_DESCRIPTOR,

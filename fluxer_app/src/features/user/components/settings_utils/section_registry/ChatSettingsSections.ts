@@ -116,10 +116,6 @@ const INLINE_DESCRIPTOR = msg({
 	message: 'Inline',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MEDIA_SIZE_DESCRIPTOR = msg({
-	message: 'Media size',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const AUTOCOMPLETE_DESCRIPTOR = msg({
 	message: 'Autocomplete',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -174,11 +170,6 @@ const DISPLAY_DESCRIPTOR = msg({
 	context: 'chat-settings-section',
 	comment: 'Chat settings section for message display preferences.',
 });
-const MEDIA_DESCRIPTOR = msg({
-	message: 'Media',
-	context: 'chat-settings-section',
-	comment: 'Chat settings section for image, video, embed, and media preferences.',
-});
 
 const MANAGE_MESSAGES_PERMISSION_DESCRIPTOR = getPermissionTitleDescriptor(Permissions.MANAGE_MESSAGES)!;
 export const chatSettingsSections = [
@@ -194,10 +185,19 @@ export const chatSettingsSections = [
 			INLINE_MEDIA_DESCRIPTOR,
 			EMBEDDED_MEDIA_DESCRIPTOR,
 			UPLOADED_MEDIA_DESCRIPTOR,
+			MEDIA_2_DESCRIPTOR,
+			INLINE_DESCRIPTOR,
+			IMAGES_DESCRIPTOR,
+			VIDEOS_DESCRIPTOR,
 			ATTACHMENTS_DESCRIPTOR,
 			LINK_PREVIEWS_DESCRIPTOR,
 			WEBSITE_PREVIEWS_DESCRIPTOR,
 			SHOW_EMBEDS_DESCRIPTOR,
+			EMBEDS_DESCRIPTOR,
+			PREVIEWS_DESCRIPTOR,
+			LINKS_DESCRIPTOR,
+			URL_PREVIEW_DESCRIPTOR,
+			LINK_PREVIEW_DESCRIPTOR,
 			SPOILERS_DESCRIPTOR,
 			SPOILER_DESCRIPTOR,
 			HIDE_DESCRIPTOR,
@@ -240,24 +240,5 @@ export const chatSettingsSections = [
 		],
 		isAdvanced: false,
 		tags: ['chat'],
-	},
-	{
-		id: 'media',
-		tabType: 'chat_settings',
-		label: MEDIA_DESCRIPTOR,
-		keywords: [
-			EMBEDS_DESCRIPTOR,
-			PREVIEWS_DESCRIPTOR,
-			LINKS_DESCRIPTOR,
-			URL_PREVIEW_DESCRIPTOR,
-			LINK_PREVIEW_DESCRIPTOR,
-			MEDIA_2_DESCRIPTOR,
-			IMAGES_DESCRIPTOR,
-			VIDEOS_DESCRIPTOR,
-			ATTACHMENTS_DESCRIPTOR,
-			INLINE_DESCRIPTOR,
-			MEDIA_SIZE_DESCRIPTOR,
-		],
-		isAdvanced: false,
 	},
 ] as const satisfies ReadonlyArray<SectionDefinition>;
