@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IS_DEV} from '@app/features/platform/types/Env';
+import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import {makeAutoObservable} from 'mobx';
 
 const IDLE_DURATION_MS = 1000 * (IS_DEV ? 10 : 60 * 10);
@@ -12,6 +13,7 @@ interface DesktopIdleApi {
 }
 
 function getDesktopIdleApi(): Required<DesktopIdleApi> | null {
+	if (!isElectron()) return null;
 	const electronApi = (
 		window as {
 			electron?: DesktopIdleApi | null;
