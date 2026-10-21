@@ -119,7 +119,7 @@ function useCommunityCardView(message: Message, sourceGuildId: string | null): C
 			onlineCount: card.approximate_presence_count,
 			memberCount: card.approximate_member_count,
 			isMember: false,
-			canJoin: card.discoverable && !RuntimeConfig.singleCommunityEnabled,
+			canJoin: card.discoverable && RuntimeConfig.discoveryAvailable,
 		},
 	};
 }

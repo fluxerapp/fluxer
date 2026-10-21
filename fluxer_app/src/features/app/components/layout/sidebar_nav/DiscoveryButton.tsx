@@ -6,7 +6,6 @@ import guildStyles from '@app/features/app/components/layout/GuildsLayout.module
 import styles from '@app/features/app/components/layout/sidebar_nav/DiscoveryButton.module.css';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -33,9 +32,6 @@ export const DiscoveryButton = observer(() => {
 	const handleClick = useCallback(() => {
 		Navigation.navigateToDiscover();
 	}, []);
-	if (RuntimeConfig.singleCommunityEnabled) {
-		return null;
-	}
 	return (
 		<div className={guildStyles.createGuildButton} data-flx="app.sidebar-nav.discovery-button.div">
 			<Tooltip

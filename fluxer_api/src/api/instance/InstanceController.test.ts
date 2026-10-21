@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {SsoService} from '@app/api/auth/services/SsoService';
+import {Config} from '@app/api/Config';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {InstanceController} from '@app/api/instance/InstanceController';
@@ -69,6 +70,25 @@ describe('InstanceController discovery captcha', () => {
 		await repository.updateCaptchaConfig({enabled: false});
 
 		await expect(readCaptcha(repository)).resolves.toEqual({provider: 'none'});
+	});
+
+	it('publishes whether discovery is enabled', async () => {
+		const previousDiscoveryEnabled = Config.discovery.enabled;
+		const app = createApp(createRepository());
+		const readDiscoveryEnabled = async () => {
+			const response = await app.request('http://localhost/.well-known/fluxer');
+			expect(response.status).toBe(200);
+			return ((await response.json()) as {features: {discovery_enabled?: boolean}}).features.discovery_enabled;
+		};
+		try {
+			Config.discovery.enabled = false;
+			await expect(readDiscoveryEnabled()).resolves.toBe(false);
+
+			Config.discovery.enabled = true;
+			await expect(readDiscoveryEnabled()).resolves.toBe(true);
+		} finally {
+			Config.discovery.enabled = previousDiscoveryEnabled;
+		}
 	});
 
 	it('publishes the domain migration kill switch and anonymous rollout without the targeting lists', async () => {

@@ -281,7 +281,7 @@ const ExpressionSourceGuildRow = observer(function ExpressionSourceGuildRow({
 			modalKey,
 		);
 	}, [guild, kind, expressionName, i18n, onClose]);
-	const canJoin = isDiscoverable && !RuntimeConfig.singleCommunityEnabled;
+	const canJoin = isDiscoverable && RuntimeConfig.discoveryAvailable;
 	const activate = isMember ? handleJump : canJoin ? handleJoin : null;
 	const accessibleName = isMember
 		? i18n._(GO_TO_NAMED_COMMUNITY_DESCRIPTOR, {communityName: guild.name})

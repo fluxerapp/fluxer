@@ -15,6 +15,7 @@ import {
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {
 	skeletonDirectMessagesDisabled,
+	skeletonDiscoveryAvailable,
 	skeletonSingleCommunityEnabled,
 } from '@app/features/app/components/skeleton/SkeletonRuntimeConfig';
 import {SkeletonEmphasis, SkeletonRadius} from '@app/features/app/components/skeleton/SkeletonStyle';
@@ -467,7 +468,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 	const selectedItemIndex = rememberedLayout?.selectedItemIndex ?? SKELETON_NO_SELECTED_RAIL_ITEM_INDEX;
 	const fluxerVisible = rememberedLayout?.fluxerVisible ?? !skeletonDirectMessagesDisabled();
 	const favoritesVisible = rememberedLayout?.favoritesVisible ?? true;
-	const discoveryVisible = rememberedLayout?.discoveryVisible ?? communityActionsAvailable;
+	const discoveryVisible = rememberedLayout?.discoveryVisible ?? skeletonDiscoveryAvailable();
 	const addGuildVisible = rememberedLayout?.addGuildVisible ?? communityActionsAvailable;
 	const downloadVisible = rememberedLayout?.downloadVisible ?? SHOWS_DOWNLOAD_ACTION;
 	const helpVisible = rememberedLayout?.helpVisible ?? true;

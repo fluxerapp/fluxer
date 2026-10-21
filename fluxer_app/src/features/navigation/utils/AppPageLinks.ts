@@ -55,7 +55,7 @@ function isWebAppHost(host: string): boolean {
 
 function isPageAvailable(page: AppPageDefinition): boolean {
 	if (page.id === 'plutonium') return shouldShowPremiumFeatures();
-	if (page.id === 'discovery') return !RuntimeConfig.singleCommunityEnabled;
+	if (page.id === 'discovery') return RuntimeConfig.discoveryAvailable;
 	if (page.id === 'direct_messages') return !RuntimeConfig.directMessagesDisabled;
 	return true;
 }

@@ -114,6 +114,7 @@ export interface GuildSettingsTab {
 	iconWeight?: IconWeight;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 interface GuildSettingsTabDescriptor {
@@ -124,6 +125,7 @@ interface GuildSettingsTabDescriptor {
 	iconWeight?: IconWeight;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
@@ -176,6 +178,7 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		icon: CompassIcon,
 		iconWeight: 'fill',
 		permission: Permissions.MANAGE_GUILD,
+		requireDiscovery: true,
 	},
 	{
 		type: 'vanity_url',

@@ -144,6 +144,39 @@ describe('applySnapshot', () => {
 	});
 });
 
+describe('discovery', () => {
+	test('treats an instance that does not report discovery as enabled', () => {
+		RuntimeConfig.applySnapshot(runtimeSnapshotFromDiscovery(parsedDocument('legacy-discovery.test')));
+		expect(RuntimeConfig.discoveryEnabled).toBe(true);
+		expect(RuntimeConfig.discoveryAvailable).toBe(true);
+	});
+
+	test('follows an instance that switches discovery off', () => {
+		const document = discoveryDocument('no-discovery.test');
+		RuntimeConfig.applySnapshot(
+			runtimeSnapshotFromDiscovery(
+				parseInstanceDiscoveryDocument({...document, features: {...document.features, discovery_enabled: false}}),
+			),
+		);
+		expect(RuntimeConfig.discoveryEnabled).toBe(false);
+		expect(RuntimeConfig.discoveryAvailable).toBe(false);
+	});
+
+	test('keeps discovery unavailable on a single-community instance', () => {
+		const document = discoveryDocument('single-community.test');
+		RuntimeConfig.applySnapshot(
+			runtimeSnapshotFromDiscovery(
+				parseInstanceDiscoveryDocument({
+					...document,
+					community: {...document.community, single_community: true, single_community_guild_id: '1400000000000000001'},
+				}),
+			),
+		);
+		expect(RuntimeConfig.discoveryEnabled).toBe(true);
+		expect(RuntimeConfig.discoveryAvailable).toBe(false);
+	});
+});
+
 describe('applySnapshotAndWaitForDesktop', () => {
 	test('applies immediately when no desktop shell exposes the runtime bridge', async () => {
 		await RuntimeConfig.applySnapshotAndWaitForDesktop({

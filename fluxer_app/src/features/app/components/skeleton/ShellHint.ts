@@ -41,6 +41,7 @@ import {
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {
 	skeletonDirectMessagesDisabled,
+	skeletonDiscoveryAvailable,
 	skeletonGifEnabled,
 	skeletonSelfHosted,
 	skeletonSingleCommunityEnabled,
@@ -182,7 +183,7 @@ function resolveRailProjection(layout: RememberedSkeletonGuildRailLayout | null)
 		outageVisible: layout?.outageVisible ?? false,
 		organizedItems: layout?.organizedItems ?? SKELETON_GUILD_RAIL_FALLBACK_ITEMS,
 		selectedItemIndex: layout?.selectedItemIndex ?? NO_SELECTED_ROW_INDEX,
-		discoveryVisible: layout?.discoveryVisible ?? communityActionsAvailable,
+		discoveryVisible: layout?.discoveryVisible ?? skeletonDiscoveryAvailable(),
 		addGuildVisible: layout?.addGuildVisible ?? communityActionsAvailable,
 		downloadVisible: layout?.downloadVisible ?? SHOWS_DOWNLOAD_ACTION,
 		helpVisible: layout?.helpVisible ?? true,

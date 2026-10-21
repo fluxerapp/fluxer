@@ -26,6 +26,7 @@ import {
 	usesUniqueUsernames,
 	usesUsernameSignIn,
 } from '@app/features/app/utils/AccountIdentityFeatures';
+import {discoveryEnabledOf, isDiscoveryAvailable} from '@app/features/app/utils/DiscoveryFeatures';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -752,6 +753,14 @@ class RuntimeConfig {
 
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
+	}
+
+	get discoveryEnabled(): boolean {
+		return discoveryEnabledOf(this.features);
+	}
+
+	get discoveryAvailable(): boolean {
+		return isDiscoveryAvailable(this);
 	}
 
 	get accountIdentity(): AccountIdentityMode {

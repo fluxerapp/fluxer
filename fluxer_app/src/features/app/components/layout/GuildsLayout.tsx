@@ -207,6 +207,7 @@ interface GuildNavigationVisibility {
 
 function useGuildNavigationVisibility(): GuildNavigationVisibility {
 	const communityActionsVisible = !RuntimeConfig.singleCommunityEnabled;
+	const discoveryVisible = RuntimeConfig.discoveryAvailable;
 	const fluxerVisible = !RuntimeConfig.directMessagesDisabled;
 	const favoritesVisible = Accessibility.showFavorites;
 	const downloadVisible = !Platform.isElectron && !Platform.isPWA && !HiddenGuildListButtons.downloadButtonHidden;
@@ -216,12 +217,12 @@ function useGuildNavigationVisibility(): GuildNavigationVisibility {
 			Object.freeze({
 				fluxerVisible,
 				favoritesVisible,
-				discoveryVisible: communityActionsVisible,
+				discoveryVisible,
 				addGuildVisible: communityActionsVisible,
 				downloadVisible,
 				helpVisible,
 			}),
-		[communityActionsVisible, downloadVisible, favoritesVisible, fluxerVisible, helpVisible],
+		[communityActionsVisible, discoveryVisible, downloadVisible, favoritesVisible, fluxerVisible, helpVisible],
 	);
 }
 

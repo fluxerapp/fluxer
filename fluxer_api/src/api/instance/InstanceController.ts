@@ -85,6 +85,7 @@ function buildDiscoveryStaticInput(
 			self_hosted: Config.instance.selfHosted,
 			presigned_attachment_uploads: Config.presignedAttachmentUploadsEnabled,
 			emails_enabled: runtime.emailEnabled,
+			discovery_enabled: Config.discovery.enabled,
 			phone_verification_enabled: false,
 			account_identity: runtime.accountIdentity.mode,
 			tag_style: runtime.accountIdentity.tagStyle,

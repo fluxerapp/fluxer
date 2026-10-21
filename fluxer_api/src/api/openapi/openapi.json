@@ -33940,6 +33940,7 @@
 						"description": "Whether desktop clients may load downloadable modules",
 						"type": "boolean"
 					},
+					"discovery_enabled": {"description": "Whether community discovery is enabled", "type": "boolean"},
 					"account_deletion_grace_period_hours": {
 						"description": "Hours between a deletion request and the permanent deletion of the account",
 						"type": "integer",

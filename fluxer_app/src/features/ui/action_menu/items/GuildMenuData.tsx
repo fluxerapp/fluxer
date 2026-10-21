@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
@@ -284,6 +285,7 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 		}),
 		[channels, deleteMyMessagesInGuild, guild, i18n.locale, leaveGuild, onClose],
 	);
+	const discoveryEnabled = RuntimeConfig.discoveryEnabled;
 	const availableSettingsTabs = useMemo(() => {
 		const allTabs = getGuildSettingsTabs(i18n);
 		return allTabs.filter((tab) => {
@@ -296,9 +298,12 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 			if (tab.requireFeature && !guild.features.has(tab.requireFeature)) {
 				return false;
 			}
+			if (tab.requireDiscovery && !discoveryEnabled) {
+				return false;
+			}
 			return true;
 		});
-	}, [guild.features, guild.id, i18n.locale]);
+	}, [discoveryEnabled, guild.features, guild.id, i18n.locale]);
 	const groups = useMemo(() => {
 		const menuGroups: Array<MenuGroupType> = [];
 		const quickActions: Array<MenuItemType | MenuSubmenuItemType> = [];

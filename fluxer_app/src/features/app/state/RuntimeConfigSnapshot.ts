@@ -247,6 +247,10 @@ function readFeatures(value: unknown): InstanceFeatures {
 	if (desktopModulesEnabled !== undefined) {
 		features.desktop_modules_enabled = desktopModulesEnabled;
 	}
+	const discoveryEnabled = readOptionalBoolean(source, 'discovery_enabled', 'features.discovery_enabled');
+	if (discoveryEnabled !== undefined) {
+		features.discovery_enabled = discoveryEnabled;
+	}
 	const deletionGracePeriod = readOptionalBoundedInteger(
 		source,
 		'account_deletion_grace_period_hours',

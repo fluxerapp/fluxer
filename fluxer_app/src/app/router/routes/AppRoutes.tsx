@@ -10,6 +10,7 @@ import {DiscoveryLayout} from '@app/features/app/components/layout/DiscoveryLayo
 import {FavoritesLayout} from '@app/features/app/components/layout/FavoritesLayout';
 import {GuildsLayout} from '@app/features/app/components/layout/GuildsLayout';
 import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
+import {isDiscoveryAvailable} from '@app/features/app/utils/DiscoveryFeatures';
 import {
 	AuthenticatedRuntimeInvariantError,
 	readAuthenticatedRuntimeContext,
@@ -40,12 +41,20 @@ import {type ReactNode, useEffect, useState} from 'react';
 
 type AppRouteComponentProps = Record<string, unknown>;
 
-function authenticatedRuntimeDisablesDirectMessages(): boolean {
+function requireAuthenticatedRuntime() {
 	const runtimeContext = readAuthenticatedRuntimeContext();
 	if (runtimeContext === null) {
 		throw new AuthenticatedRuntimeInvariantError('An authenticated route requires an active account runtime');
 	}
-	return runtimeContext.runtime.community.direct_messages_disabled;
+	return runtimeContext.runtime;
+}
+
+function authenticatedRuntimeDisablesDirectMessages(): boolean {
+	return requireAuthenticatedRuntime().community.direct_messages_disabled;
+}
+
+function authenticatedRuntimeHasDiscovery(): boolean {
+	return isDiscoveryAvailable(requireAuthenticatedRuntime());
 }
 
 const YouPage = createNamedLoadableComponent<AppRouteComponentProps>({
@@ -228,6 +237,16 @@ const discoverRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
 	id: 'discover',
 	path: '/channels/@discover',
+	onEnter: whenAuthenticated(() => {
+		if (authenticatedRuntimeHasDiscovery()) {
+			return undefined;
+		}
+		if (!authenticatedRuntimeDisablesDirectMessages()) {
+			return new Redirect(Routes.ME);
+		}
+		const fallback = getDirectMessagesFallbackPath();
+		return fallback === Routes.DISCOVER || fallback === Routes.ME ? undefined : new Redirect(fallback);
+	}),
 	component: () => <DiscoveryLayout data-flx="app.router.app-routes.discovery-layout" />,
 });
 const plutoniumRoute = createRoute({

@@ -62,6 +62,7 @@ const FEATURE_FLAG_KEYS = Object.freeze([
 	'stripe_serviceable',
 	'phone_verification_enabled',
 	'desktop_modules_enabled',
+	'discovery_enabled',
 ] as const) satisfies ReadonlyArray<keyof InstanceFeatures>;
 
 const BRANDING_URL_KEYS = Object.freeze([

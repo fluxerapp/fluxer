@@ -150,6 +150,7 @@ export const InstanceFeaturesSchema = z
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
 		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
 		desktop_modules_enabled: z.boolean().optional().describe('Whether desktop clients may load downloadable modules'),
+		discovery_enabled: z.boolean().optional().describe('Whether community discovery is enabled'),
 		account_deletion_grace_period_hours: z
 			.number()
 			.int()

@@ -992,7 +992,7 @@ function parseGuildRailLayout(value: unknown, now: number): OptionalParseResult<
 		typeof value.addGuildVisible !== 'boolean' ||
 		typeof value.downloadVisible !== 'boolean' ||
 		typeof value.helpVisible !== 'boolean' ||
-		value.discoveryVisible !== value.addGuildVisible ||
+		(value.discoveryVisible && !value.addGuildVisible) ||
 		(!value.fluxerVisible && inlineDmRowCount > 0) ||
 		!Array.isArray(value.organizedItems) ||
 		value.organizedItems.length > SKELETON_GUILD_RAIL_ORGANIZED_VISUAL_ROW_LIMIT
@@ -2842,7 +2842,7 @@ export function reportSkeletonGuildRailLayout(layout: Omit<RememberedSkeletonGui
 		typeof layout.addGuildVisible !== 'boolean' ||
 		typeof layout.downloadVisible !== 'boolean' ||
 		typeof layout.helpVisible !== 'boolean' ||
-		layout.discoveryVisible !== layout.addGuildVisible ||
+		(layout.discoveryVisible && !layout.addGuildVisible) ||
 		(!layout.fluxerVisible && inlineDmRowCount > 0) ||
 		!Array.isArray(layout.organizedItems) ||
 		!Array.isArray(layout.inlineDmUnreadFlags)
