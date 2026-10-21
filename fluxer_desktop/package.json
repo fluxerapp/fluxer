@@ -31,7 +31,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "24.13.5",
-		"electron": "44.4.1",
+		"electron": "44.9.1",
 		"electron-builder": "27.0.0-alpha.8",
 		"esbuild": "catalog:",
 		"typescript": "catalog:ts7"

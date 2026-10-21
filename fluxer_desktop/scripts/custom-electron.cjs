@@ -6,8 +6,8 @@ const path = require('node:path');
 const {promisify} = require('node:util');
 
 const execFileAsync = promisify(execFile);
-const expectedElectronVersion = '44.4.1';
-const expectedElectronRevision = '09d1a6590e3148a1a2132b07a5b107b7c2414191';
+const expectedElectronVersion = '44.9.1';
+const expectedElectronRevision = 'e02265be96c5e13ae43644ef482b718e1e800499';
 const chromiumPatchPath = path.join(
 	__dirname,
 	'../electron/patches/fix_synchronize_vaapi_surfaces_before_output.patch',
@@ -89,12 +89,7 @@ async function verifyLinuxElectronArchive(directory, arch) {
 			throw new Error(`Custom Electron manifest ${field} must be ${JSON.stringify(expected)}: ${manifestPath}`);
 		}
 	}
-	const patchSha256 = await sha256File(chromiumPatchPath);
-	const acceptedPatchSha256s = new Set([patchSha256]);
-	if (patchSha256 === '21ea23b8a566f3f2dbdb69d0b361039dd9128c5e34a7ae89a8a61d7099808b8e') {
-		acceptedPatchSha256s.add('d39d05d4a00cd09eca43c7cd83383eaefa18cae7ec1b7efc26987bdc0f23c83e');
-	}
-	if (!acceptedPatchSha256s.has(manifest?.chromiumPatchSha256)) {
+	if ((await sha256File(chromiumPatchPath)) !== manifest?.chromiumPatchSha256) {
 		throw new Error(`Custom Electron manifest chromiumPatchSha256 does not match the current patch: ${manifestPath}`);
 	}
 	if (!/^[a-f0-9]{64}$/.test(manifest.archiveSha256)) {

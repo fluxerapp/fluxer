@@ -6,7 +6,7 @@ on:
       prebuilt_release_tag:
         description: Draft release containing prebuilt Electron distributions. Leave empty to compile Electron on the build runner instead.
         required: false
-        default: desktop-electron-runtime-44.4.1-fluxer.1
+        default: desktop-electron-runtime-44.9.1-fluxer.1
         type: string
 
 permissions:
@@ -48,8 +48,8 @@ jobs:
         with:
           name: desktop-electron-linux-${{ matrix.arch }}
           path: |
-            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.zip
-            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.fluxer.json
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.9.1-linux-${{ matrix.arch }}.zip
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.9.1-linux-${{ matrix.arch }}.fluxer.json
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
@@ -86,8 +86,8 @@ jobs:
           gh release view "$PREBUILT_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
             --json isDraft --jq '.isDraft' | grep -qx true
           gh release download "$PREBUILT_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
-            --pattern "electron-v44.4.1-linux-$ELECTRON_ARCH.zip" \
-            --pattern "electron-v44.4.1-linux-$ELECTRON_ARCH.fluxer.json" \
+            --pattern "electron-v44.9.1-linux-$ELECTRON_ARCH.zip" \
+            --pattern "electron-v44.9.1-linux-$ELECTRON_ARCH.fluxer.json" \
             --dir "$FLUXER_ELECTRON_DIST"
           node <<'NODE'
           const {verifyLinuxElectronArchive} = require('./fluxer_desktop/scripts/custom-electron.cjs');
@@ -101,8 +101,8 @@ jobs:
         with:
           name: desktop-electron-linux-${{ matrix.arch }}
           path: |
-            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.zip
-            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.4.1-linux-${{ matrix.arch }}.fluxer.json
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.9.1-linux-${{ matrix.arch }}.zip
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v44.9.1-linux-${{ matrix.arch }}.fluxer.json
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
