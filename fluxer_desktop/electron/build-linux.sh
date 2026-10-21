@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly ELECTRON_VERSION=44.4.1
-readonly ELECTRON_REVISION=09d1a6590e3148a1a2132b07a5b107b7c2414191
+readonly ELECTRON_VERSION=44.9.1
+readonly ELECTRON_REVISION=e02265be96c5e13ae43644ef482b718e1e800499
 readonly DEPOT_TOOLS_REVISION=889099791deff38466d471fa6590951c91a1d8ab
 readonly BUILD_IMAGE='ghcr.io/electron/build:daad061f4b99a0ae1c841be4aa09188280a9c8a4@sha256:7a161ad561103ebbfb5ff18eaf47cb579ca0c528bb7ec9ed8cad30a41d5fa63e'
 readonly PATCH_NAME=fix_synchronize_vaapi_surfaces_before_output.patch
@@ -13,13 +13,13 @@ die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
 usage() {
 	cat <<'USAGE'
-Build patched Electron 44.4.1 on a Linux x64 host with Podman or Docker.
+Build patched Electron 44.9.1 on a Linux x64 host with Podman or Docker.
 
 Usage: build-linux.sh [--arch x64|arm64|all] [--build-root PATH] [--output-dir PATH] [--check]
 
 --arch        Target architecture; all builds x64 then arm64 (default: all).
 --build-root  Dedicated persistent cache, source and output tree.
-              Default: ${XDG_CACHE_HOME:-$HOME/.cache}/fluxer/electron-44.4.1
+              Default: ${XDG_CACHE_HOME:-$HOME/.cache}/fluxer/electron-44.9.1
 --output-dir  Distribution ZIPs and .fluxer.json manifests (default: BUILD_ROOT/artifacts).
 --check       Validate host resources and configuration without pulling or compiling.
 
