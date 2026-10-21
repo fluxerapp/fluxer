@@ -218,10 +218,11 @@ const meRoute = createRoute({
 	id: 'me',
 	path: '/channels/@me',
 	onEnter: whenAuthenticated(() => {
-		if (authenticatedRuntimeDisablesDirectMessages()) {
-			return new Redirect(getDirectMessagesFallbackPath());
+		if (!authenticatedRuntimeDisablesDirectMessages()) {
+			return undefined;
 		}
-		return undefined;
+		const fallback = getDirectMessagesFallbackPath();
+		return fallback === Routes.ME ? undefined : new Redirect(fallback);
 	}),
 	component: observer(() => {
 		const isMobileLayout = MobileLayout.enabled;
@@ -241,11 +242,7 @@ const discoverRoute = createRoute({
 		if (authenticatedRuntimeHasDiscovery()) {
 			return undefined;
 		}
-		if (!authenticatedRuntimeDisablesDirectMessages()) {
-			return new Redirect(Routes.ME);
-		}
-		const fallback = getDirectMessagesFallbackPath();
-		return fallback === Routes.DISCOVER || fallback === Routes.ME ? undefined : new Redirect(fallback);
+		return new Redirect(Routes.ME);
 	}),
 	component: () => <DiscoveryLayout data-flx="app.router.app-routes.discovery-layout" />,
 });

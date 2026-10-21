@@ -23,7 +23,7 @@ export function getDirectMessagesFallbackPath(): string {
 	if (Accessibility.showFavorites) {
 		return Routes.FAVORITES;
 	}
-	if (!RuntimeConfig.singleCommunityEnabled) {
+	if (RuntimeConfig.discoveryAvailable) {
 		return Routes.DISCOVER;
 	}
 	return Routes.ME;
