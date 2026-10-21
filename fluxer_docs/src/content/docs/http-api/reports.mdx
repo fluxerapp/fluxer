@@ -660,7 +660,7 @@ Files a report about another user's profile from the reporter's answers to the `
 ### Limitations
 
 - A reporter naming their own account receives 400 `CANNOT_REPORT_YOURSELF`.
-- A `user_id` that resolves to no account returns 404 `UNKNOWN_USER`.
+- A `user_id` that resolves to no account, or to the system account, returns 404 `UNKNOWN_USER`.
 - A `guild_id` that resolves to no guild, or to a guild the reporter is not a member of, returns 404 `UNKNOWN_GUILD`.
 
 Fluxer checks the answers right after the claimed account and verified email checks, before the report ban check and before it looks up the user. An invalid walk still counts against the `report:create` bucket but not against the per-reporter allowance below.
@@ -689,7 +689,7 @@ Fluxer checks the answers right after the claimed account and verified email che
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
-| 404 | [error response](/http-api/#error-response) | The reported user does not exist and the request returns `UNKNOWN_USER` |
+| 404 | [error response](/http-api/#error-response) | The reported user does not exist or is the system account, and the request returns `UNKNOWN_USER` |
 | 404 | [error response](/http-api/#error-response) | The supplied `guild_id` is not a guild the reporter is in and the request returns `UNKNOWN_GUILD` |
 | 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
 | 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this user within 24 hours, returning `CONFLICT` |

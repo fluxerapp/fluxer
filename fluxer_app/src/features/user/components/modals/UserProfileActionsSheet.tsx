@@ -357,7 +357,7 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 							},
 						]
 					: []),
-				...(showReportUserProfile
+				...(showReportUserProfile && !user.system
 					? [
 							{
 								icon: <FlagIcon className={styles.icon} data-flx="user.user-profile-actions-sheet.icon--12" />,
@@ -385,7 +385,9 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 					});
 				}
 			}
-			menuGroups.push({items: reportBlockItems});
+			if (reportBlockItems.length > 0) {
+				menuGroups.push({items: reportBlockItems});
+			}
 		}
 		return (
 			<MenuBottomSheet

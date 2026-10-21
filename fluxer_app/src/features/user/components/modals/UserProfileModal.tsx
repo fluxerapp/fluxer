@@ -321,9 +321,6 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 			}
 		};
 		const renderBlockMenuItem = (onClose: () => void) => {
-			if (displayUser?.system) {
-				return null;
-			}
 			switch (relationshipType) {
 				case RelationshipTypes.BLOCKED:
 					return (
@@ -449,7 +446,7 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 							</MenuItem>
 						</MenuGroup>
 					)}
-					{!isCurrentUser && (
+					{!isCurrentUser && !displayUser.system && (
 						<MenuGroup data-flx="user.user-profile-modal.open-more-options-menu.menu-group--5">
 							<MenuItem
 								icon={<FlagIcon data-flx="user.user-profile-modal.open-more-options-menu.flag-icon" />}

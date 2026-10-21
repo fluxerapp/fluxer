@@ -25,6 +25,7 @@ import {
 	guildToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
+import {isSyntheticUserId} from '@app/api/constants/Core';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {
 	DSAReportTicketRow,
@@ -408,7 +409,7 @@ export class ReportService {
 			throw new CannotReportYourselfError();
 		}
 		const reportedUser = await this.userRepository.findUnique(reportedUserId);
-		if (!reportedUser) {
+		if (!reportedUser || isSyntheticUserId(reportedUserId)) {
 			throw new UnknownUserError();
 		}
 		const reportId = createReportID(await this.snowflakeService.generate());

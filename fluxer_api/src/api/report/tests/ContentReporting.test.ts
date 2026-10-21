@@ -180,6 +180,13 @@ describe('Content Reporting', () => {
 			expect((await readReport(member.report_id)).reportedGuildId?.toString()).toBe(guild.id);
 			expect(await countReports()).toBe(2);
 		});
+		test('should reject a report against the system account', async () => {
+			const reporter = await createTestAccount(harness);
+			await reportUser(harness, reporter.token, '0')
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
+				.execute();
+			expect(await countReports()).toBe(0);
+		});
 		test('sends a localized system DM and email marker when a report is reviewed with a public comment', async () => {
 			const reporter = await createTestAccount(harness);
 			const targetUser = await createTestAccount(harness);
