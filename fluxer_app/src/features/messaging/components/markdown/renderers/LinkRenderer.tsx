@@ -966,8 +966,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const shouldShowAccessDeniedModal = Boolean(jumpTarget && !jumpChannel);
 	let isInternal = false;
 	let handleClick: ((e: React.MouseEvent) => void) | undefined;
-	let isExternalDestination = false;
-	let isTrustedExternalDestination = false;
+	let isUntrustedExternalDestination = false;
 	if (userProfileId) {
 		handleClick = (event) => {
 			event.preventDefault();
@@ -1123,8 +1122,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 			}
 			if (!isInternal && !inviteCode) {
 				const isTrusted = TrustedDomain.isTrustedDomain(parsed.hostname);
-				isExternalDestination = true;
-				isTrustedExternalDestination = isTrusted;
+				isUntrustedExternalDestination = !isTrusted;
 				if (!isTrusted) {
 					handleClick = (e) => {
 						e.preventDefault();
@@ -1145,7 +1143,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	}
 	const href = AttachmentUrlRefresher.fresh(url);
 	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
-	const showDestinationTooltip = isExternalDestination && text != null;
+	const showDestinationTooltip = text != null;
 	const linkElement = (
 		<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
 			<a
@@ -1180,7 +1178,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 		? url
 		: () => (
 				<span className={linkRendererStyles.destination} data-flx="messaging.markdown.renderers.link-renderer.span">
-					{!isTrustedExternalDestination && (
+					{isUntrustedExternalDestination && (
 						<WarningIcon
 							size={16}
 							weight="fill"
