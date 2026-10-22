@@ -35,6 +35,7 @@ class Idle {
 	private afkThresholdMs = IDLE_DURATION_MS;
 	private lastLocalActivityTime = Date.now();
 	private lastSystemActivityTime = 0;
+	private lastNonZeroSystemIdleTime = Date.now();
 	private checkInterval: NodeJS.Timeout | null = null;
 	private systemIdleCheckInFlight = false;
 	private lastSystemIdleFailureAt = 0;
@@ -110,10 +111,14 @@ class Idle {
 		this.systemIdleCheckInFlight = true;
 		try {
 			const idleTimeMs = normalizeIdleTimeMs(await desktopIdleApi.getSystemIdleTimeMs());
+			const now = Date.now();
 			if (idleTimeMs === null) {
-				this.lastSystemIdleFailureAt = Date.now();
-			} else {
-				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, Date.now() - idleTimeMs);
+				this.lastSystemIdleFailureAt = now;
+			} else if (idleTimeMs > 0) {
+				this.lastNonZeroSystemIdleTime = now;
+				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, now - idleTimeMs);
+			} else if (now - this.lastNonZeroSystemIdleTime < Math.min(IDLE_DURATION_MS, this.afkThresholdMs)) {
+				this.lastSystemActivityTime = now;
 			}
 		} catch {
 			this.lastSystemIdleFailureAt = Date.now();
