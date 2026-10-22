@@ -17225,15 +17225,15 @@ msgstr "HEVC"
 msgid "Hex value for {tokenLabel}"
 msgstr "ค่าเลขฐานสิบหกสำหรับ {tokenLabel}"
 
+#. Nagbar warning shown when the current user still needs to verify email. A verification email is sent when the account is created. displayName is the user display name.
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx
+msgid "Hey {displayName}, check your inbox for the email we sent to verify your address."
+msgstr "สวัสดี {displayName} โปรดตรวจสอบอีเมลของคุณเพื่อยืนยันที่อยู่อีเมล"
+
 #. Nagbar warning shown to unclaimed-account users. displayName is the current user display name.
 #: src/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar.tsx
 msgid "Hey {displayName}, claim your account to prevent losing access."
 msgstr "สวัสดี {displayName} โปรดยืนยันบัญชีของคุณเพื่อป้องกันการสูญเสียสิทธิ์เข้าถึง"
-
-#. Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.
-#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx
-msgid "Hey {displayName}, please verify your email address."
-msgstr "สวัสดี {displayName} โปรดยืนยันที่อยู่อีเมลของคุณ"
 
 #. Nagbar warning shown when emails to the current user address bounce, so the address cannot be verified. displayName is the user display name.
 #: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx
@@ -27904,12 +27904,15 @@ msgstr "ส่งอีกครั้ง ({secondsRemaining} วินาที
 msgid "Resend code"
 msgstr "ส่งรหัสอีกครั้ง"
 
-#. Button label that sends another verification email after one was already sent. Keep it concise.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
-#: src/features/auth/hooks/useVerifyEmailAction.tsx
 msgid "Resend email"
 msgstr "ส่งอีเมลอีกครั้ง"
+
+#. Button label on prompts that ask the user to verify their email, such as the add friend form. A verification email was already sent when the account was created, so this sends another one. Keep it concise.
+#: src/features/auth/hooks/useVerifyEmailAction.tsx
+msgid "Resend verification email"
+msgstr "ส่งอีเมลยืนยันอีกครั้ง"
 
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
 msgid "Resent"
@@ -29934,11 +29937,6 @@ msgstr "ส่งข้อความ TTS"
 #: src/features/moderation/components/report/ReportStepEmail.tsx
 msgid "Send verification code"
 msgstr "ส่งรหัสยืนยัน"
-
-#. Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.
-#: src/features/auth/hooks/useVerifyEmailAction.tsx
-msgid "Send verification email"
-msgstr "ส่งอีเมลยืนยัน"
 
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.

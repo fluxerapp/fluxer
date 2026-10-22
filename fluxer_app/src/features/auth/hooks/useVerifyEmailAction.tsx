@@ -38,14 +38,10 @@ const SEND_FAILED_MESSAGE_DESCRIPTOR = msg({
 	message: 'Something went wrong while sending your verification email. Please try again in a moment.',
 	comment: 'Body of the error modal shown when sending the verification email fails unexpectedly.',
 });
-const SEND_VERIFICATION_EMAIL_DESCRIPTOR = msg({
-	message: 'Send verification email',
+const RESEND_VERIFICATION_EMAIL_DESCRIPTOR = msg({
+	message: 'Resend verification email',
 	comment:
-		'Button label on prompts that ask the user to verify their email, such as the add friend form. Sends a verification email right away. Keep it concise.',
-});
-const RESEND_EMAIL_DESCRIPTOR = msg({
-	message: 'Resend email',
-	comment: 'Button label that sends another verification email after one was already sent. Keep it concise.',
+		'Button label on prompts that ask the user to verify their email, such as the add friend form. A verification email was already sent when the account was created, so this sends another one. Keep it concise.',
 });
 
 function showVerificationEmailErrorModal(result: VerificationResult): void {
@@ -74,14 +70,12 @@ export function canResendVerificationEmail(user: User | null | undefined): boole
 export function useResendVerificationEmail() {
 	const {i18n} = useLingui();
 	const [isSending, setIsSending] = useState(false);
-	const [sent, setSent] = useState(false);
 	const resend = async () => {
 		if (isSending) return;
 		setIsSending(true);
 		const result = await AuthenticationCommands.resendVerificationEmail(currentInstanceTarget());
 		switch (result) {
 			case VerificationResult.SUCCESS:
-				setSent(true);
 				ToastCommands.success(i18n._(VERIFICATION_EMAIL_SENT_PLEASE_CHECK_YOUR_INBOX_DESCRIPTOR));
 				break;
 			case VerificationResult.RATE_LIMITED:
@@ -93,7 +87,7 @@ export function useResendVerificationEmail() {
 		}
 		setIsSending(false);
 	};
-	return {isSending, sent, resend};
+	return {isSending, resend};
 }
 
 function openAccountSecuritySettings(): void {
@@ -113,7 +107,7 @@ function openBouncedEmailChange(): void {
 
 export function useVerifyEmailAction() {
 	const {i18n} = useLingui();
-	const {isSending, sent, resend} = useResendVerificationEmail();
+	const {isSending, resend} = useResendVerificationEmail();
 	const user = Users.currentUser;
 	if (user?.emailBounced === true) {
 		return {text: i18n._(VERIFY_EMAIL_DESCRIPTOR), onClick: openBouncedEmailChange, submitting: false};
@@ -122,7 +116,7 @@ export function useVerifyEmailAction() {
 		return {text: i18n._(VERIFY_EMAIL_DESCRIPTOR), onClick: openAccountSecuritySettings, submitting: false};
 	}
 	return {
-		text: i18n._(sent ? RESEND_EMAIL_DESCRIPTOR : SEND_VERIFICATION_EMAIL_DESCRIPTOR),
+		text: i18n._(RESEND_VERIFICATION_EMAIL_DESCRIPTOR),
 		onClick: () => void resend(),
 		submitting: isSending,
 	};

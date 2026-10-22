@@ -15,9 +15,9 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const EMAIL_VERIFICATION_NAGBAR_MESSAGE_DESCRIPTOR = msg({
-	message: 'Hey {displayName}, please verify your email address.',
+	message: 'Hey {displayName}, check your inbox for the email we sent to verify your address.',
 	comment:
-		'Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.',
+		'Nagbar warning shown when the current user still needs to verify email. A verification email is sent when the account is created. displayName is the user display name.',
 });
 const EMAIL_BOUNCED_NAGBAR_MESSAGE_DESCRIPTOR = msg({
 	message: "Hey {displayName}, we can't deliver email to your address. Add a working email to verify your account.",
