@@ -4,7 +4,7 @@ import {MESSAGE_COUNT_DESCRIPTOR as D_MESSAGE_COUNT_DESCRIPTOR} from '@app/featu
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/MessageThreadChip.module.css';
 import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
@@ -33,7 +33,7 @@ export const MessageThreadChip = observer(({message}: {message: Message}) => {
 			<button
 				type="button"
 				className={styles.chip}
-				onClick={() => openThread(thread)}
+				onClick={(event) => openThreadFromEvent(thread, event)}
 				onContextMenu={(event) =>
 					ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 						<ThreadContextMenu

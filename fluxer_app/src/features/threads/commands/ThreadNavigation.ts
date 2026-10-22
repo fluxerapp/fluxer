@@ -8,6 +8,10 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 
+export interface ThreadOpenEvent {
+	readonly shiftKey: boolean;
+}
+
 export function openThread(thread: Channel, messageId?: string): void {
 	const guildId = thread.guildId;
 	if (!guildId || !thread.parentId) return;
@@ -28,6 +32,14 @@ export function openThreadFullView(thread: Channel, messageId?: string): void {
 	if (!thread.guildId) return;
 	ThreadPanel.closeCreate();
 	NavigationCommands.selectChannel(thread.guildId, thread.id, messageId);
+}
+
+export function openThreadFromEvent(thread: Channel, event: ThreadOpenEvent): void {
+	if (event.shiftKey) {
+		openThreadFullView(thread);
+		return;
+	}
+	openThread(thread);
 }
 
 export function closeThreadPanel(): void {

@@ -19,7 +19,7 @@ import {buildMessageNotificationBody} from '@app/features/notification/utils/Mes
 import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -140,7 +140,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	const pinned = isPinnedPost(post);
 	const open = Navigation.threadId === post.id;
 	const lastActivity = new Date(SnowflakeUtils.extractTimestamp(lastActivityId(post)));
-	const handleOpen = useCallback(() => openThread(post), [post]);
+	const handleOpen = useCallback((event: ThreadOpenEvent) => openThreadFromEvent(post, event), [post]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			if (MobileLayout.enabled) {
@@ -171,7 +171,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 					onKeyDown={(event) => {
 						if (event.key === 'Enter' || event.key === ' ') {
 							event.preventDefault();
-							handleOpen();
+							handleOpen(event);
 						}
 					}}
 					onContextMenu={handleContextMenu}
