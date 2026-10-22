@@ -194,6 +194,10 @@ const navigateForTarget = (target: DeepLinkTarget) => {
 	RouterUtils.transitionTo(dest);
 };
 
+export function isAppDeepLink(rawUrl: string): boolean {
+	return isAppProtocolUrl(rawUrl) && parseDeepLink(rawUrl) !== null;
+}
+
 export function handleDeepLinkUrl(rawUrl: string): boolean {
 	const target = parseDeepLink(rawUrl);
 	if (!target) return false;
