@@ -350,6 +350,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const {viewerIds, viewerUsers, spectatorEntries} = useStreamSpectators(isScreenShare ? streamKey : '', userId);
 	const hasSpectatorDemand = viewerIds.length > 0;
 	const isCameraTile = isCameraSource(trackRef.source);
+	const isMirroredOwnCamera = isCameraTile && isLocalParticipant && VoiceSettings.mirrorCamera;
 	const cameraLocallyDisabled = callId !== '' && isCameraTile && CallMediaPrefs.isVideoDisabled(callId, identity);
 	const screenSharePublicationMigrationVersion = ScreenSharePublicationMigration.version;
 	const publication = useMemo(() => {
@@ -920,6 +921,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 					ref={videoRef}
 					trackRef={trackRef}
 					manageSubscription={false}
+					className={clsx(isMirroredOwnCamera && styles.mirroredVideo)}
 					data-flx="voice.voice-participant-tile.media-node.video-track"
 				/>
 			);
@@ -1000,6 +1002,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		hasVideo,
 		isActuallySpeaking,
 		isFocusedPlaceholderTile,
+		isMirroredOwnCamera,
 		isOwnScreenShare,
 		isScreenShare,
 		participantUser,

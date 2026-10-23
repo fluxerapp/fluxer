@@ -120,12 +120,12 @@ export function runVoiceEngineV2ConformanceSuite(
 			await waitForRuntime();
 			runtime.dispatch({
 				type: 'camera.publishRequested',
-				options: {deviceId: 'camera-1', width: 1280, height: 720, mirror: false},
+				options: {deviceId: 'camera-1', width: 1280, height: 720},
 			});
 			await waitForRuntime();
 			runtime.dispatch({
 				type: 'camera.updateEncodingRequested',
-				options: {width: 1920, height: 1080, frameRate: 60, mirror: true, backgroundMode: 'blur'},
+				options: {width: 1920, height: 1080, frameRate: 60, backgroundMode: 'blur'},
 			});
 			await waitForRuntime();
 
@@ -135,7 +135,6 @@ export function runVoiceEngineV2ConformanceSuite(
 				width: 1920,
 				height: 1080,
 				frameRate: 60,
-				mirror: true,
 				backgroundMode: 'blur',
 			});
 		});

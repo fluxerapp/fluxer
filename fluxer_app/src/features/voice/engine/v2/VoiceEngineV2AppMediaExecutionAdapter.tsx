@@ -1111,7 +1111,6 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			width: options.width,
 			height: options.height,
 			frameRate: options.frameRate,
-			mirror: options.mirror,
 			backgroundMode: options.backgroundMode,
 		});
 	}
@@ -1159,13 +1158,12 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		options: VoiceEngineV2CameraEncodingOptions,
 	): Promise<void> {
 		const touchesEffects =
-			options.mirror !== undefined ||
 			options.backgroundMode !== undefined ||
 			options.backgroundBlurStrength !== undefined ||
 			options.backgroundCustomMediaPath !== undefined;
 		if (!touchesEffects) return;
 		try {
-			await applyBackgroundProcessor(track, options.mirror === undefined ? undefined : {mirrorCamera: options.mirror});
+			await applyBackgroundProcessor(track);
 		} catch (error) {
 			logger.warn('Failed to apply in-place camera effects', {error});
 		}

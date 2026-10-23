@@ -521,13 +521,13 @@ describe('transitionVoiceEngineV2', () => {
 		expect(updated.snapshot.screen.desired?.maxFramerate).toBe(60);
 	});
 
-	it('updates camera encoding in place for mirror, background, resolution, and frame rate', () => {
+	it('updates camera encoding in place for background, resolution, and frame rate', () => {
 		const snapshot = applyEvents(initialSnapshot(), [
 			{type: 'connection.connectRequested', options: {url: 'wss://voice', token: 'token'}},
 			{type: 'connection.connectSucceeded', operationId: 1},
 			{
 				type: 'camera.publishRequested',
-				options: {deviceId: 'camera-1', width: 1280, height: 720, frameRate: 30, mirror: false},
+				options: {deviceId: 'camera-1', width: 1280, height: 720, frameRate: 30},
 			},
 			{type: 'camera.publishSucceeded', operationId: 2},
 		]);
@@ -538,7 +538,6 @@ describe('transitionVoiceEngineV2', () => {
 				width: 1920,
 				height: 1080,
 				frameRate: 60,
-				mirror: true,
 				backgroundMode: 'blur',
 				backgroundBlurStrength: 80,
 			},
@@ -552,7 +551,6 @@ describe('transitionVoiceEngineV2', () => {
 					width: 1920,
 					height: 1080,
 					frameRate: 60,
-					mirror: true,
 					backgroundMode: 'blur',
 					backgroundBlurStrength: 80,
 				},
@@ -565,7 +563,6 @@ describe('transitionVoiceEngineV2', () => {
 			width: 1920,
 			height: 1080,
 			frameRate: 60,
-			mirror: true,
 			backgroundMode: 'blur',
 			backgroundBlurStrength: 80,
 		});
@@ -575,22 +572,24 @@ describe('transitionVoiceEngineV2', () => {
 		const snapshot = applyEvents(initialSnapshot(), [
 			{type: 'connection.connectRequested', options: {url: 'wss://voice', token: 'token'}},
 			{type: 'connection.connectSucceeded', operationId: 1},
-			{type: 'camera.publishRequested', options: {deviceId: 'camera-1', width: 1280, height: 720, mirror: false}},
+			{type: 'camera.publishRequested', options: {deviceId: 'camera-1', width: 1280, height: 720}},
 			{type: 'camera.publishSucceeded', operationId: 2},
 		]);
 
 		const updated = transitionVoiceEngineV2(snapshot, {
 			type: 'camera.updateEncodingRequested',
-			options: {mirror: true},
+			options: {backgroundMode: 'blur'},
 		});
 		const succeeded = transitionVoiceEngineV2(updated.snapshot, {
 			type: 'camera.updateEncodingSucceeded',
 			operationId: 3,
 		});
 
-		expect(updated.commands).toEqual([{type: 'camera.updateEncoding', operationId: 3, options: {mirror: true}}]);
+		expect(updated.commands).toEqual([
+			{type: 'camera.updateEncoding', operationId: 3, options: {backgroundMode: 'blur'}},
+		]);
 		expect(succeeded.snapshot.camera.status).toBe('published');
-		expect(succeeded.snapshot.camera.published).toMatchObject({deviceId: 'camera-1', mirror: true});
+		expect(succeeded.snapshot.camera.published).toMatchObject({deviceId: 'camera-1', backgroundMode: 'blur'});
 	});
 
 	it('republishes the camera when the device id or codec changes', () => {
@@ -634,7 +633,7 @@ describe('transitionVoiceEngineV2', () => {
 
 		const updated = transitionVoiceEngineV2(snapshot, {
 			type: 'camera.updateEncodingRequested',
-			options: {mirror: true},
+			options: {backgroundMode: 'blur'},
 		});
 
 		expect(updated.commands).toEqual([]);
@@ -646,13 +645,13 @@ describe('transitionVoiceEngineV2', () => {
 		const snapshot = applyEvents(initialSnapshot(), [
 			{type: 'connection.connectRequested', options: {url: 'wss://voice', token: 'token'}},
 			{type: 'connection.connectSucceeded', operationId: 1},
-			{type: 'camera.publishRequested', options: {deviceId: 'camera-1', width: 1280, height: 720, mirror: true}},
+			{type: 'camera.publishRequested', options: {deviceId: 'camera-1', width: 1280, height: 720}},
 			{type: 'camera.publishSucceeded', operationId: 2},
 		]);
 
 		const updated = transitionVoiceEngineV2(snapshot, {
 			type: 'camera.updateEncodingRequested',
-			options: {width: 1280, height: 720, mirror: true},
+			options: {width: 1280, height: 720},
 		});
 
 		expect(updated.commands).toEqual([]);

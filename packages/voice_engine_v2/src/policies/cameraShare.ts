@@ -57,7 +57,6 @@ export function applyVoiceEngineV2CameraEncodingOptions(
 	if (update.frameRate !== undefined) desired.frameRate = update.frameRate;
 	if (update.codec !== undefined) desired.codec = update.codec;
 	if (update.maxBitrateBps !== undefined) desired.maxBitrateBps = update.maxBitrateBps;
-	if (update.mirror !== undefined) desired.mirror = update.mirror;
 	if (update.backgroundMode !== undefined) desired.backgroundMode = update.backgroundMode;
 	if (update.backgroundBlurStrength !== undefined) desired.backgroundBlurStrength = update.backgroundBlurStrength;
 	if (update.backgroundCustomMediaPath !== undefined) {
@@ -76,7 +75,6 @@ function sameCameraEncodingState(a: VoiceEngineV2CameraOptions, b: VoiceEngineV2
 	if (a.frameRate !== b.frameRate) return false;
 	if (a.codec !== b.codec) return false;
 	if (a.maxBitrateBps !== b.maxBitrateBps) return false;
-	if (a.mirror !== b.mirror) return false;
 	if (a.backgroundMode !== b.backgroundMode) return false;
 	if (a.backgroundBlurStrength !== b.backgroundBlurStrength) return false;
 	if (a.backgroundCustomMediaPath !== b.backgroundCustomMediaPath) return false;

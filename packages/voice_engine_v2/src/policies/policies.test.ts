@@ -71,7 +71,6 @@ interface CameraShareEncodingPlanFixture {
 	expectedAction: string;
 	expectedReason: string;
 	expectedCodec?: string;
-	expectedMirror?: boolean;
 	expectedBackgroundMode?: string;
 	expectedWidth?: number;
 	expectedFrameRate?: number;
@@ -135,9 +134,6 @@ describe('voice engine v2 policies', () => {
 			expect(plan.reason).toBe(fixture.expectedReason);
 			if (fixture.expectedCodec !== undefined) {
 				expect(plan.desired?.codec).toBe(fixture.expectedCodec);
-			}
-			if (fixture.expectedMirror !== undefined) {
-				expect(plan.desired?.mirror).toBe(fixture.expectedMirror);
 			}
 			if (fixture.expectedBackgroundMode !== undefined) {
 				expect(plan.desired?.backgroundMode).toBe(fixture.expectedBackgroundMode);
