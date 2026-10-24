@@ -34,6 +34,7 @@ import {
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import React, {useEffect, useRef} from 'react';
+import { Checkbox } from '@app/features/ui/checkbox/Checkbox';
 
 const NOTE_DESCRIPTOR = msg({
 	message: 'Note',
@@ -112,6 +113,16 @@ export function ListRenderer({node, id, renderChildren, options}: RendererProps<
 						className={clsx(isInlineContext && markupStyles.inlineFormat)}
 						data-flx="messaging.markdown.renderers.common.block-elements.list-renderer.li"
 					>
+						{item.checked !== undefined && (
+							<Checkbox
+								checked={item.checked}
+								data-flx="messaging.markdown.renders.common.block-elements.list-renderer.li.checkmark"
+								readOnly={true}
+								size="small"
+								aria-hidden={true}
+								taskList={true}
+							></Checkbox>
+						)}
 						{renderChildren(item.children)}
 					</li>
 				))}
@@ -138,6 +149,16 @@ export function ListRenderer({node, id, renderChildren, options}: RendererProps<
 					className={clsx(isInlineContext && markupStyles.inlineFormat)}
 					data-flx="messaging.markdown.renderers.common.block-elements.list-renderer.li--2"
 				>
+					{item.checked !== undefined && (
+						<Checkbox
+							checked={item.checked}
+							data-flx="messaging.markdown.renders.common.block-elements.list-renderer.li.checkmark"
+							readOnly={true}
+							size="small"
+							aria-hidden={true}
+							taskList={true}
+						></Checkbox>
+					)}
 					{renderChildren(item.children)}
 				</li>
 			))}

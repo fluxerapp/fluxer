@@ -52,6 +52,7 @@ pub(crate) struct ListMatch<'a> {
     indent_level: usize,
     content: &'a str,
     ordinal: Option<usize>,
+    checked: Option<bool>,
 }
 
 #[derive(Clone, Debug)]
@@ -108,7 +109,7 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
         return parse_blockquote(state.parser, &state.lines, current, state.parser.node_count);
     }
 
-    if let Some(list_match) = match_list_item(&line) {
+    if let Some(list_match) = match_list_item(&line, state.parser.flags()) {
         if ParserFlags::has(state.parser.flags(), ParserFlags::ALLOW_LISTS) {
             let list = parse_list(
                 state.parser,
@@ -820,7 +821,7 @@ fn parse_list(
         if starts_with(trimmed_line, "#") || is_blockquote_start(trimmed_line, parser.flags()) {
             break;
         }
-        if let Some(item) = match_list_item(current_line) {
+        if let Some(item) = match_list_item(current_line, parser.flags()) {
             let ordinal = normalise_ordinal(&items, item.ordinal, ordered);
             if item.indent_level < indent_level {
                 break;
@@ -830,7 +831,7 @@ fn parse_list(
                     break;
                 }
                 let mut children = Vec::new();
-                if let Some(inline_item) = match_list_item(item.content) {
+                if let Some(inline_item) = match_list_item(item.content, parser.flags()) {
                     let mut nested_items = Vec::new();
                     let inline_nodes = crate::inline::parse_inline(
                         parser,
@@ -840,6 +841,7 @@ fn parse_list(
                     nested_items.push(ListItem {
                         children: inline_nodes,
                         ordinal: None,
+                        checked: inline_item.checked,
                     });
                     if let Some(nested) = try_parse_nested_list(
                         parser,
@@ -888,7 +890,11 @@ fn parse_list(
                         new_count += content_nodes.len();
                     }
                 }
-                items.push(ListItem { children, ordinal });
+                items.push(ListItem {
+                    children,
+                    ordinal,
+                    checked: item.checked,
+                });
             } else if item.indent_level == indent_level + 1 && depth < 9 {
                 let nested = parse_list(
                     parser,
@@ -962,7 +968,7 @@ fn try_parse_nested_list(
             new_node_count: node_count + 1,
         }));
     }
-    if let Some(item) = match_list_item(&lines[current].text)
+    if let Some(item) = match_list_item(&lines[current].text, parser.flags())
         && item.indent_level > parent_indent
         && depth < 9
     {
@@ -980,7 +986,24 @@ fn try_parse_nested_list(
     Ok(None)
 }
 
-pub(crate) fn match_list_item(line: &str) -> Option<ListMatch<'_>> {
+fn match_checkbox(line: &str, flags: u32) -> (&str, Option<bool>) {
+    if ParserFlags::has(flags, ParserFlags::ALLOW_CHECKBOX) {
+            let mut pos = 0;
+            while pos < line.len() && byte_at(line, pos) == b' ' {
+                pos += 1;
+            }
+            if pos < line.len() && byte_at(line, pos) == b'[' && byte_at(line, pos + 2) == b']' && byte_at(line, pos + 3) == b' ' {
+                return match byte_at(line, pos + 1) {
+            b'x' | b'X' => (&line[pos + 4..], Some(true)),
+            b' ' => (&line[pos + 4..], Some(false)),
+            _ => (line, None)
+        }
+            }
+        }
+    (line, None)
+}
+
+pub(crate) fn match_list_item(line: &str, flags: u32) -> Option<ListMatch<'_>> {
     let mut indent = 0usize;
     while indent < line.len() && byte_at(line, indent) == b' ' {
         indent += 1;
@@ -995,11 +1018,13 @@ pub(crate) fn match_list_item(line: &str) -> Option<ListMatch<'_>> {
     let marker = byte_at(line, indent);
     if matches!(marker, b'*' | b'-') && indent + 1 < line.len() && byte_at(line, indent + 1) == b' '
     {
+        let (content, checked) = match_checkbox(&line[indent + 2..], flags);
         return Some(ListMatch {
             ordered: false,
             indent_level,
-            content: &line[indent + 2..],
+            content,
             ordinal: None,
+            checked,
         });
     }
     if marker.is_ascii_digit() {
@@ -1008,15 +1033,17 @@ pub(crate) fn match_list_item(line: &str) -> Option<ListMatch<'_>> {
             pos += 1;
         }
         if pos < line.len()
-            && byte_at(line, pos) == b'.'
+            && (byte_at(line, pos) == b'.' || byte_at(line, pos) == b')')
             && pos + 1 < line.len()
             && byte_at(line, pos + 1) == b' '
         {
+            let (content, checked) = match_checkbox(&line[pos + 2..], flags);
             return Some(ListMatch {
                 ordered: true,
                 indent_level,
-                content: &line[pos + 2..],
+                content,
                 ordinal: line[indent..pos].parse::<usize>().ok().or(Some(1)),
+                checked,
             });
         }
     }
@@ -1188,7 +1215,7 @@ pub(crate) fn is_block_start(line: &str, flags: u32) -> bool {
     starts_with(line, "#")
         || (ParserFlags::has(flags, ParserFlags::ALLOW_SUBTEXT) && starts_with(line, "-#"))
         || (ParserFlags::has(flags, ParserFlags::ALLOW_CODE_BLOCKS) && starts_with(line, "```"))
-        || (ParserFlags::has(flags, ParserFlags::ALLOW_LISTS) && match_list_item(line).is_some())
+        || (ParserFlags::has(flags, ParserFlags::ALLOW_LISTS) && match_list_item(line, flags).is_some())
         || is_blockquote_start(line, flags)
 }
 
@@ -1311,7 +1338,7 @@ fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) 
 }
 
 fn is_bullet_point_text(text: &str) -> bool {
-    if match_list_item(text).is_some() {
+    if match_list_item(text, 0).is_some() { // it's probably not necessary for this to know if the current thing is a checkbox or not
         return false;
     }
     let trimmed_text = trim_start(text);

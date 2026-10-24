@@ -34,7 +34,7 @@ fn timestamp_golden_bytes() {
 
 #[test]
 fn ordered_list_golden_bytes() {
-    assert_eq!(encode("4. a"), [1, 1, 9, 1, 1, 1, 4, 1, 0, 1, b'a']);
+    assert_eq!(encode("4. a"), [1, 1, 9, 1, 1, 1, 4, 0, 1, 0, 1, b'a']);
 }
 
 #[test]
