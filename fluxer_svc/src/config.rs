@@ -53,6 +53,38 @@ pub enum DatabaseBackend {
 }
 
 impl ServiceConfig {
+    #[cfg(test)]
+    pub(crate) fn for_test(mode: Mode, shard_id: u32, shard_count: u32) -> Self {
+        ServiceConfig {
+            service_name: "test".to_owned(),
+            mode,
+            database_backend: DatabaseBackend::Postgres,
+            shard_id,
+            shard_count,
+            listen_addr: "127.0.0.1:0".parse().unwrap(),
+            nats_url: "memory".to_owned(),
+            nats_auth_token: None,
+            cache_max_entries: 100,
+            cache_ttl: Duration::from_secs(30),
+            max_concurrent_requests: 16,
+            scylla_hosts: Vec::new(),
+            scylla_keyspace: "fluxer".to_owned(),
+            scylla_username: None,
+            scylla_password: None,
+            postgres_url: None,
+            postgres_host: "127.0.0.1".to_owned(),
+            postgres_port: 5432,
+            postgres_database: "fluxer".to_owned(),
+            postgres_username: "fluxer".to_owned(),
+            postgres_password: Some("fluxer".to_owned()),
+            postgres_ssl: false,
+            postgres_ssl_ca: None,
+            postgres_max_connections: 1,
+            postgres_kv_table: "fluxer_kv".to_owned(),
+            postgres_prepared_statements: true,
+        }
+    }
+
     pub fn from_env() -> anyhow::Result<Self> {
         Self::from_env_reader(fluxer_common::config::env_value)
     }

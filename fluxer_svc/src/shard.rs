@@ -5,15 +5,18 @@ use crate::metrics::ServiceMetrics;
 use crate::transport::{
     Transport, TransportMessage, TransportSubscriber, reply_bytes, reply_json_error,
 };
-use anyhow::Context;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError, oneshot};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
 const MAX_SHARD_REQUEST_BYTES: usize = 2 * 1024 * 1024;
+const SHARD_DRAIN_LINGER: Duration = Duration::from_millis(500);
+const SHARD_ANNOUNCE_TIMEOUT: Duration = Duration::from_secs(1);
+const DRAIN_IDLE_UNSUBSCRIBE: Duration = Duration::from_millis(250);
+const DRAIN_UNSUBSCRIBE_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum WireEncoding {
@@ -73,9 +76,11 @@ where
     serve(
         config,
         Endpoint {
+            announce: Some((name.clone(), config.shard_id)),
             name,
             subject,
             queue_group: None,
+            linger: SHARD_DRAIN_LINGER,
         },
         metrics,
         transport,
@@ -87,6 +92,7 @@ where
                 handler_metrics.clone(),
             )
         },
+        crate::shutdown::wait_for_shutdown(),
     )
     .await
 }
@@ -161,6 +167,51 @@ pub(crate) struct Endpoint {
     pub(crate) name: String,
     pub(crate) subject: String,
     pub(crate) queue_group: Option<String>,
+    pub(crate) announce: Option<(String, u32)>,
+    pub(crate) linger: Duration,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum ShardState {
+    Draining,
+    Ready,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub(crate) struct ShardStateNotice {
+    pub(crate) shard_id: u32,
+    pub(crate) state: ShardState,
+}
+
+pub(crate) fn control_subject(service_name: &str) -> String {
+    format!("svc.{service_name}.ctl")
+}
+
+async fn announce_state(
+    transport: &impl Transport,
+    announce: &Option<(String, u32)>,
+    state: ShardState,
+) {
+    let Some((service_name, shard_id)) = announce else {
+        return;
+    };
+    let notice = ShardStateNotice {
+        shard_id: *shard_id,
+        state,
+    };
+    let payload = serde_json::to_vec(&notice).expect("shard state notices are JSON-serializable");
+    let announce = async {
+        transport
+            .publish(&control_subject(service_name), &payload)
+            .await?;
+        transport.flush().await
+    };
+    match tokio::time::timeout(SHARD_ANNOUNCE_TIMEOUT, announce).await {
+        Ok(Ok(())) => {}
+        Ok(Err(error)) => warn!(error = %error, ?state, "failed to announce shard state"),
+        Err(_) => warn!(?state, "timed out announcing shard state"),
+    }
 }
 
 pub(crate) async fn serve<T, H, F>(
@@ -169,6 +220,7 @@ pub(crate) async fn serve<T, H, F>(
     metrics: Arc<ServiceMetrics>,
     transport: T,
     handle: H,
+    shutdown: impl std::future::Future<Output = ()>,
 ) -> anyhow::Result<()>
 where
     T: Transport,
@@ -179,9 +231,11 @@ where
         name,
         subject,
         queue_group,
+        announce,
+        linger,
     } = endpoint;
     let health_addr = config.listen_addr;
-    let is_serving = Arc::new(AtomicBool::new(true));
+    let is_serving = Arc::new(AtomicBool::new(false));
     let request_permits = Arc::new(Semaphore::new(config.max_concurrent_requests));
 
     let mut tasks = JoinSet::new();
@@ -193,9 +247,18 @@ where
     });
 
     let listen_is_serving = is_serving.clone();
-    let (stop_requests, mut stop_requests_rx) = oneshot::channel();
+    let listen_announce = announce.clone();
+    let listen_transport = transport.clone();
+    let (stop_requests, mut stop_requests_rx) = oneshot::channel::<()>();
     let request_task = tasks.spawn(async move {
+        let transport = listen_transport;
         let mut requests = JoinSet::new();
+        let mut draining = false;
+        let mut unsubscribed = false;
+        let mut announced = false;
+        let mut unsubscribe_deadline = tokio::time::Instant::now();
+        let idle = tokio::time::sleep(DRAIN_IDLE_UNSUBSCRIBE);
+        tokio::pin!(idle);
         'listening: loop {
             let subscribe = async {
                 match queue_group.as_deref() {
@@ -207,15 +270,35 @@ where
                 _ = &mut stop_requests_rx => break 'listening,
                 result = subscribe => result?,
             };
+            transport.flush().await?;
             info!(
                 subject,
                 max_concurrent_requests = request_permits.available_permits(),
                 "listening for requests"
             );
+            if !announced {
+                announced = true;
+                listen_is_serving.store(true, Ordering::SeqCst);
+                announce_state(&transport, &listen_announce, ShardState::Ready).await;
+            }
 
             loop {
                 tokio::select! {
-                    _ = &mut stop_requests_rx => break 'listening,
+                    _ = &mut stop_requests_rx, if !draining => {
+                        draining = true;
+                        unsubscribe_deadline = tokio::time::Instant::now() + DRAIN_UNSUBSCRIBE_TIMEOUT;
+                        idle.as_mut().reset(tokio::time::Instant::now() + DRAIN_IDLE_UNSUBSCRIBE);
+                        if let Err(error) = sub.drain().await {
+                            warn!(error = %error, subject, "failed to drain subscription");
+                            unsubscribed = true;
+                            unsubscribe(&mut sub, &subject).await;
+                        }
+                        info!(subject, "draining subscription");
+                    }
+                    _ = &mut idle, if draining && !unsubscribed => {
+                        unsubscribed = true;
+                        unsubscribe(&mut sub, &subject).await;
+                    }
                     result = requests.join_next(), if !requests.is_empty() => {
                         if let Err(err) = result.expect("nonempty request set") {
                             warn!(error = %err, "request task failed");
@@ -223,17 +306,23 @@ where
                     }
                     msg_opt = sub.next() => {
                         let Some(msg) = msg_opt else {
+                            if draining {
+                                break 'listening;
+                            }
                             warn!("subscription stream ended, will re-subscribe");
                             break;
                         };
+                        if draining {
+                            idle.as_mut().reset(
+                                unsubscribe_deadline
+                                    .min(tokio::time::Instant::now() + DRAIN_IDLE_UNSUBSCRIBE),
+                            );
+                        }
 
                         while let Some(result) = requests.try_join_next() {
                             if let Err(err) = result {
                                 warn!(error = %err, "request task failed");
                             }
-                        }
-                        if !listen_is_serving.load(Ordering::SeqCst) {
-                            continue;
                         }
 
                         let permit = match request_permits.clone().try_acquire_owned() {
@@ -247,13 +336,9 @@ where
                             }
                             Err(TryAcquireError::Closed) => return anyhow::Ok(()),
                         };
-                        let is_serving = listen_is_serving.clone();
                         let request = handle(msg);
                         requests.spawn(async move {
                             let _permit = permit;
-                            if !is_serving.load(Ordering::SeqCst) {
-                                return;
-                            }
                             request.await;
                         });
                     }
@@ -261,7 +346,12 @@ where
             }
         }
         while let Some(result) = requests.join_next().await {
-            result.context("request task failed while draining")?;
+            if let Err(err) = result {
+                warn!(error = %err, "request task failed while draining");
+            }
+        }
+        if let Err(error) = transport.flush().await {
+            warn!(error = %error, subject, "failed to flush replies while draining");
         }
         anyhow::Ok(())
     });
@@ -275,31 +365,38 @@ where
                 None => Ok(()),
             }
         }
-        _ = crate::shutdown::wait_for_shutdown() => {
+        _ = shutdown => {
             info!("shutting down, beginning graceful drain");
 
             is_serving.store(false, Ordering::SeqCst);
+            announce_state(&transport, &announce, ShardState::Draining).await;
+            tokio::time::sleep(linger).await;
 
             let _ = stop_requests.send(());
             let drain = async {
-                loop {
-                    let (task_id, result) = tasks.join_next_with_id().await
-                        .expect("running listener while draining")
-                        .context("service task failed while draining")?;
-                    result?;
+                while let Some(joined) = tasks.join_next_with_id().await {
+                    let task_id = match joined {
+                        Ok((task_id, Ok(()))) => task_id,
+                        Ok((task_id, Err(error))) => {
+                            warn!(error = %error, "service task failed while draining");
+                            task_id
+                        }
+                        Err(error) => {
+                            warn!(error = %error, "service task panicked while draining");
+                            error.id()
+                        }
+                    };
                     if task_id == request_task.id() {
-                        return anyhow::Ok(());
+                        return;
                     }
                 }
             };
             match tokio::time::timeout(crate::shutdown::DEFAULT_DRAIN_TIMEOUT, drain).await {
-                Ok(result) => {
-                    result?;
+                Ok(()) => {
                     info!(
                         max_concurrent_requests = config.max_concurrent_requests,
-                        "all in-flight requests drained"
+                        "graceful drain completed"
                     );
-                    info!("graceful drain completed");
                 }
                 Err(_) => {
                     warn!(
@@ -315,10 +412,17 @@ where
     }
 }
 
+async fn unsubscribe(sub: &mut impl TransportSubscriber, subject: &str) {
+    match sub.unsubscribe().await {
+        Ok(()) => info!(subject, "unsubscribed while draining"),
+        Err(error) => warn!(error = %error, subject, "failed to unsubscribe while draining"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DatabaseBackend, Mode, ServiceConfig};
+    use crate::config::Mode;
     use crate::transport::InMemoryTransport;
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
@@ -371,7 +475,7 @@ mod tests {
     #[tokio::test]
     async fn shard_replies_in_the_request_encoding() {
         let transport = InMemoryTransport::new();
-        let config = test_config(4);
+        let config = ServiceConfig::for_test(Mode::Shard, 0, 1);
         let shard_transport = transport.clone();
         let shard_task =
             tokio::spawn(async move { run_shard(&config, EchoShard, shard_transport).await });
@@ -406,34 +510,59 @@ mod tests {
         shard_task.abort();
     }
 
-    fn test_config(max_concurrent_requests: usize) -> ServiceConfig {
-        ServiceConfig {
-            service_name: "mock".to_owned(),
-            mode: Mode::Shard,
-            database_backend: DatabaseBackend::Postgres,
-            shard_id: 0,
-            shard_count: 1,
-            listen_addr: "127.0.0.1:0".parse().unwrap(),
-            nats_url: "memory".to_owned(),
-            nats_auth_token: None,
-            cache_max_entries: 100,
-            cache_ttl: Duration::from_secs(30),
-            max_concurrent_requests,
-            scylla_hosts: Vec::new(),
-            scylla_keyspace: "fluxer".to_owned(),
-            scylla_username: None,
-            scylla_password: None,
-            postgres_url: None,
-            postgres_host: "127.0.0.1".to_owned(),
-            postgres_port: 5432,
-            postgres_database: "fluxer".to_owned(),
-            postgres_username: "fluxer".to_owned(),
-            postgres_password: Some("fluxer".to_owned()),
-            postgres_ssl: false,
-            postgres_ssl_ca: None,
-            postgres_max_connections: 1,
-            postgres_kv_table: "fluxer_kv".to_owned(),
-            postgres_prepared_statements: true,
+    #[tokio::test]
+    async fn requests_arriving_after_sigterm_are_answered_before_exit() {
+        let transport = InMemoryTransport::new();
+        let config = ServiceConfig::for_test(Mode::Shard, 0, 1);
+        let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+        let release = Arc::new(tokio::sync::Notify::new());
+        let handler_release = release.clone();
+        let handler_transport = transport.clone();
+        let server_transport = transport.clone();
+        let server = tokio::spawn(async move {
+            serve(
+                &config,
+                Endpoint {
+                    name: "mock".to_owned(),
+                    subject: "svc.mock.shard.0".to_owned(),
+                    queue_group: None,
+                    announce: None,
+                    linger: Duration::from_millis(50),
+                },
+                Arc::new(ServiceMetrics::default()),
+                server_transport,
+                move |msg| {
+                    let transport = handler_transport.clone();
+                    let release = handler_release.clone();
+                    async move {
+                        release.notified().await;
+                        reply_bytes(&msg, &transport, msg.payload()).await
+                    }
+                },
+                async {
+                    let _ = shutdown_rx.await;
+                },
+            )
+            .await
+        });
+        tokio::time::sleep(Duration::from_millis(25)).await;
+        shutdown_tx.send(()).unwrap();
+        tokio::time::sleep(Duration::from_millis(10)).await;
+
+        let requests = tokio::spawn(futures::future::join_all((0..8u8).map(|i| {
+            let transport = transport.clone();
+            async move {
+                transport
+                    .request("svc.mock.shard.0", &[i], Duration::from_secs(1))
+                    .await
+            }
+        })));
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        release.notify_waiters();
+
+        for (i, response) in requests.await.unwrap().into_iter().enumerate() {
+            assert_eq!(response.unwrap(), vec![i as u8]);
         }
+        server.await.unwrap().unwrap();
     }
 }
