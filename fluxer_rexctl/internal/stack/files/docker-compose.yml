@@ -769,6 +769,7 @@ services:
 
   snowflakes:
     <<: *fluxer-service
+    stop_grace_period: 30s
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-snowflakes:${FLUXER_IMAGE_TAG:-v1}
     deploy:
       resources:
@@ -784,6 +785,7 @@ services:
 
   users:
     <<: *fluxer-service
+    stop_grace_period: 30s
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-users:${FLUXER_IMAGE_TAG:-v1}
     deploy:
       resources:
@@ -801,6 +803,7 @@ services:
 
   gifs:
     <<: *fluxer-service
+    stop_grace_period: 30s
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-gifs:${FLUXER_IMAGE_TAG:-v1}
     deploy:
       resources:
@@ -817,6 +820,7 @@ services:
 
   messages:
     <<: *fluxer-service
+    stop_grace_period: 30s
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-messages:${FLUXER_IMAGE_TAG:-v1}
     deploy:
       resources:
@@ -834,6 +838,7 @@ services:
 
   unfurl:
     <<: *fluxer-service
+    stop_grace_period: 30s
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-unfurl:${FLUXER_IMAGE_TAG:-v1}
     deploy:
       resources:
