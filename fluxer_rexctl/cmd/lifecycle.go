@@ -286,12 +286,21 @@ type progress struct {
 	verb       string
 	images     map[string]bool
 	layers     map[string][2]int64
+	states     map[string]string
+	samples    []byteSample
 	containers map[string]engine.Event
 	verbose    bool
 }
 
+type byteSample struct {
+	at    time.Time
+	bytes int64
+}
+
+const rateWindow = 5 * time.Second
+
 func (a *App) progress(s *ui.Step, verb string) func(engine.Event) {
-	pr := &progress{app: a, step: s, verb: verb, images: map[string]bool{}, layers: map[string][2]int64{}, containers: map[string]engine.Event{}, verbose: a.UI.Verbose()}
+	pr := &progress{app: a, step: s, verb: verb, images: map[string]bool{}, layers: map[string][2]int64{}, states: map[string]string{}, containers: map[string]engine.Event{}, verbose: a.UI.Verbose()}
 	return pr.on
 }
 
@@ -324,21 +333,75 @@ func (pr *progress) on(ev engine.Event) {
 	case ev.Kind == "container":
 		pr.containers[ev.ID] = ev
 		pr.step.Progress(0, 0)
+		pr.step.Rate(0)
 		pr.showContainers()
-	case ev.Parent != "" && ev.Total > 0:
-		pr.layers[ev.ID] = [2]int64{ev.Current, ev.Total}
-		var cur, total int64
-		for _, l := range pr.layers {
-			cur, total = cur+l[0], total+l[1]
+	case ev.Parent != "":
+		pr.states[ev.ID] = ev.Text
+		l, known := pr.layers[ev.ID]
+		switch {
+		case ev.Text == "Downloading" && ev.Total > 0:
+			pr.layers[ev.ID] = [2]int64{ev.Current, ev.Total}
+		case known && ev.Text != "Downloading":
+			pr.layers[ev.ID] = [2]int64{l[1], l[1]}
+		case !known && ev.Text != "Extracting" && ev.Total > 0:
+			pr.layers[ev.ID] = [2]int64{ev.Current, ev.Total}
 		}
-		pr.step.Progress(cur, total)
+		pr.showPull()
 	case ev.Kind == "image" || ev.Parent == "" && ev.Total > 0:
 		pr.images[ev.ID] = pr.images[ev.ID] || done
-		pr.step.Title(fmt.Sprintf("Downloading Fluxer, %d of %d images", count(pr.images), len(pr.images)))
 		if ev.Total > 0 {
+			pr.step.Title(pr.pullTitle())
 			pr.step.Progress(ev.Current, ev.Total)
+			return
+		}
+		pr.showPull()
+	}
+}
+
+func (pr *progress) pullTitle() string {
+	title := fmt.Sprintf("Downloading Fluxer, %d of %d images", count(pr.images), len(pr.images))
+	if pr.unpacking() {
+		title += ", unpacking"
+	}
+	return title
+}
+
+func (pr *progress) unpacking() bool {
+	extracting := false
+	for _, state := range pr.states {
+		switch state {
+		case "Pulling fs layer", "Waiting", "Downloading", "Verifying Checksum":
+			return false
+		case "Extracting":
+			extracting = true
 		}
 	}
+	return extracting
+}
+
+func (pr *progress) showPull() {
+	var cur, total int64
+	for _, l := range pr.layers {
+		cur, total = cur+l[0], total+l[1]
+	}
+	pr.step.Title(pr.pullTitle())
+	pr.step.Progress(cur, total)
+	if pr.unpacking() {
+		pr.samples = nil
+		pr.step.Rate(0)
+		return
+	}
+	now := time.Now()
+	pr.samples = append(pr.samples, byteSample{at: now, bytes: cur})
+	for len(pr.samples) > 1 && now.Sub(pr.samples[0].at) > rateWindow {
+		pr.samples = pr.samples[1:]
+	}
+	first := pr.samples[0]
+	if elapsed := now.Sub(first.at); elapsed >= time.Second && cur > first.bytes {
+		pr.step.Rate(int64(float64(cur-first.bytes) / elapsed.Seconds()))
+		return
+	}
+	pr.step.Rate(0)
 }
 
 func count(m map[string]bool) int {

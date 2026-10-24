@@ -26,6 +26,7 @@ type Step struct {
 	logs      []string
 	cur       int64
 	total     int64
+	rate      int64
 	waitFor   string
 	since     time.Time
 	announce  bool
@@ -90,6 +91,12 @@ func (s *Step) Progress(current, total int64) {
 	s.mu.Unlock()
 }
 
+func (s *Step) Rate(bytesPerSecond int64) {
+	s.mu.Lock()
+	s.rate = bytesPerSecond
+	s.mu.Unlock()
+}
+
 func (s *Step) Logs() []string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -103,10 +110,14 @@ func (s *Step) status() (string, string) {
 	if s.total <= 0 && s.cur <= 0 {
 		return title, ""
 	}
-	if s.total <= 0 {
-		return title, Bytes(s.cur)
+	progress := Bytes(s.cur)
+	if s.total > 0 {
+		progress += " of " + Bytes(s.total)
 	}
-	return title, Bytes(s.cur) + " of " + Bytes(s.total)
+	if s.rate > 0 {
+		progress += ", " + Bytes(s.rate) + "/s"
+	}
+	return title, progress
 }
 
 func (s *Step) doneText() string {
