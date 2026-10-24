@@ -96,7 +96,14 @@ import {
 } from '@app/features/user/utils/SettingsModalLayoutUtils';
 import type {I18n} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowSquareOutIcon, ChatCircleDotsIcon, HandHeartIcon, SignOutIcon, SparkleIcon} from '@phosphor-icons/react';
+import {
+	ArrowSquareOutIcon,
+	ChatCircleDotsIcon,
+	HandHeartIcon,
+	PencilIcon,
+	SignOutIcon,
+	SparkleIcon,
+} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -511,9 +518,28 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 					data-flx="app.desktop-settings-view.user-profile.profile-tab-select"
 				>
 					<div className={userSettingsStyles.userProfileInfo} data-flx="app.desktop-settings-view.div--3">
-						<StatusAwareAvatar size={32} user={currentUser!} data-flx="app.desktop-settings-view.status-aware-avatar" />
-						<div className={userSettingsStyles.userProfileName} data-flx="app.desktop-settings-view.div--4">
-							{currentUser?.displayName}
+						<StatusAwareAvatar size={40} user={currentUser!} data-flx="app.desktop-settings-view.status-aware-avatar" />
+						<div className={userSettingsStyles.userProfileText} data-flx="app.desktop-settings-view.user-profile-text">
+							<div className={userSettingsStyles.userProfileName} data-flx="app.desktop-settings-view.div--4">
+								{currentUser?.displayName}
+							</div>
+							<div
+								className={userSettingsStyles.userProfileHint}
+								data-flx="app.desktop-settings-view.user-profile-hint"
+							>
+								<PencilIcon
+									size={remFromPx(12)}
+									weight="bold"
+									className={userSettingsStyles.userProfileHintIcon}
+									data-flx="app.desktop-settings-view.user-profile-hint-icon"
+								/>
+								<span
+									className={userSettingsStyles.userProfileHintText}
+									data-flx="app.desktop-settings-view.user-profile-hint-text"
+								>
+									<Trans>Edit your profile</Trans>
+								</span>
+							</div>
 						</div>
 					</div>
 				</button>
