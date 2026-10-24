@@ -17,6 +17,34 @@ import (
 
 var ErrNeedsRoot = errors.New("host: needs root or sudo")
 
+var (
+	holdMu   sync.Mutex
+	holdTerm = func() func() { return func() {} }
+)
+
+func SetTerminalHold(hold func() func()) {
+	holdMu.Lock()
+	holdTerm = hold
+	holdMu.Unlock()
+}
+
+func authenticate(ctx context.Context, sudo string) error {
+	if exec.CommandContext(ctx, sudo, "-n", "true").Run() == nil {
+		return nil
+	}
+	holdMu.Lock()
+	hold := holdTerm
+	holdMu.Unlock()
+	release := hold()
+	defer release()
+	cmd := exec.CommandContext(ctx, sudo, "-v")
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stderr, os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("sudo: %w", err)
+	}
+	return nil
+}
+
 func privileged(name string, args ...string) (string, []string, error) {
 	if isRoot() {
 		return name, args, nil
@@ -36,6 +64,11 @@ func output(ctx context.Context, quiet bool, name string, args ...string) ([]byt
 	if quiet && bin != name {
 		argv = append([]string{"-n"}, argv...)
 	}
+	if !quiet && bin != name {
+		if err := authenticate(ctx, bin); err != nil {
+			return nil, err
+		}
+	}
 	cmd := exec.CommandContext(ctx, bin, argv...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -53,6 +86,11 @@ func stream(ctx context.Context, log func(string), name string, args ...string) 
 	bin, argv, err := privileged(name, args...)
 	if err != nil {
 		return err
+	}
+	if bin != name {
+		if err := authenticate(ctx, bin); err != nil {
+			return err
+		}
 	}
 	cmd := exec.CommandContext(ctx, bin, argv...)
 	cmd.Stdin = os.Stdin

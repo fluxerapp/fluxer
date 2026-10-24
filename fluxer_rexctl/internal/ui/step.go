@@ -122,6 +122,7 @@ type spinner struct {
 	frame  int
 	width  int
 	drawn  bool
+	held   bool
 	stop   chan struct{}
 	wg     sync.WaitGroup
 }
@@ -158,7 +159,9 @@ func (sp *spinner) run() {
 		case <-t.C:
 			sp.u.mu.Lock()
 			sp.frame++
-			sp.draw()
+			if !sp.held {
+				sp.draw()
+			}
 			sp.u.mu.Unlock()
 		}
 	}
@@ -198,6 +201,22 @@ func (u *UI) stopSpinner(sp *spinner) {
 	sp.clear()
 	u.spin = nil
 	u.mu.Unlock()
+}
+
+func (u *UI) Hold() func() {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	sp := u.spin
+	if sp == nil {
+		return func() {}
+	}
+	sp.clear()
+	sp.held = true
+	return func() {
+		u.mu.Lock()
+		sp.held = false
+		u.mu.Unlock()
+	}
 }
 
 func (u *UI) Step(ctx context.Context, title string, fn func(ctx context.Context, s *Step) error) error {

@@ -18,6 +18,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -52,6 +53,7 @@ func (a *App) init(c *cobra.Command) {
 		Stdout:  c.OutOrStdout(),
 		Stderr:  c.ErrOrStderr(),
 	})
+	host.SetTerminalHold(a.UI.Hold)
 	if a.Flags.Verbose {
 		engine.SetDetail(detailWriter{a.UI})
 	}
