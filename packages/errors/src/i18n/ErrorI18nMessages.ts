@@ -12,6 +12,7 @@ export const ERROR_I18N_MESSAGES = {
 	'account.session_token_mismatch': 'Session token mismatch.',
 	'account.suspended_permanently': 'This account has been permanently suspended.',
 	'account.suspended_temporarily': 'This account has been temporarily suspended.',
+	'account.synced_preferences_conflict': 'Your preferences changed on another device. Try again.',
 	'account.too_new_for_guild': 'Your account is too new to send messages in this community.',
 	'account.trusted_domains_wildcard_conflict': "The wildcard (*) can't be combined with specific domains.",
 	'account.unauthorized': 'Unauthorized.',

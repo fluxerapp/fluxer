@@ -408,6 +408,12 @@ export const UserSettingsUpdateRequest = z
 			.describe(
 				'Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it.',
 			),
+		synced_preferences_base_hash: z
+			.string()
+			.regex(/^[0-9a-f]{64}$/u)
+			.describe(
+				'Lowercase hex SHA-256 of the decoded bytes of the synced_preferences snapshot this update was built on, as last returned by the server. An empty snapshot hashes as zero bytes. When it does not match the stored snapshot, nothing is written and the request fails with SYNCED_PREFERENCES_CONFLICT. Only checked when synced_preferences is present.',
+			),
 	})
 	.partial();
 

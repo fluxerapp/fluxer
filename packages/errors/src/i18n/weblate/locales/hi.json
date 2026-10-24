@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "सेशन टोकन मेल नहीं खा रहा।",
 	"account.suspended_permanently": "यह अकाउंट स्थायी रूप से सस्पेंड कर दिया गया है।",
 	"account.suspended_temporarily": "यह अकाउंट अस्थायी रूप से सस्पेंड कर दिया गया है।",
+	"account.synced_preferences_conflict": "आपके दूसरे डिवाइस पर आपकी प्राथमिकताएँ बदल गई हैं। फिर से प्रयास करें।",
 	"account.too_new_for_guild": "इस कम्युनिटी में मैसेज भेजने के लिए आपका अकाउंट बहुत नया है।",
 	"account.trusted_domains_wildcard_conflict": "वाइल्डकार्ड (*) को विशिष्ट डोमेन के साथ नहीं जोड़ा जा सकता।",
 	"account.unauthorized": "अनधिकृत।",

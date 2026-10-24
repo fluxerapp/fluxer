@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token phiên không khớp.",
 	"account.suspended_permanently": "Tài khoản này đã bị đình chỉ vĩnh viễn.",
 	"account.suspended_temporarily": "Tài khoản này đã bị đình chỉ tạm thời.",
+	"account.synced_preferences_conflict": "Tùy chọn của bạn đã thay đổi trên một thiết bị khác. Thử lại.",
 	"account.too_new_for_guild": "Tài khoản của bạn quá mới để gửi tin nhắn trong cộng đồng này.",
 	"account.trusted_domains_wildcard_conflict": "Không thể kết hợp ký tự đại diện (*) với các tên miền cụ thể.",
 	"account.unauthorized": "Không được phép.",

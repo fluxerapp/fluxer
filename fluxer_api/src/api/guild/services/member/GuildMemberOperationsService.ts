@@ -668,7 +668,7 @@ export class GuildMemberOperationsService {
 			}
 		}
 		if (needsUpdate) {
-			const updatedSettings = await this.userRepository.upsertSettings(settingsRow);
+			const updatedSettings = await this.userRepository.upsertSettings(settingsRow, userSettings.toRow());
 			await this.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		}
 		if (!user.isBot && userSettings.defaultHideMutedChannels) {

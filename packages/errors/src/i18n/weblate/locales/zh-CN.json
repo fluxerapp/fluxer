@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "会话令牌不匹配。",
 	"account.suspended_permanently": "此账号已被永久封禁。",
 	"account.suspended_temporarily": "此账号已被暂时封禁。",
+	"account.synced_preferences_conflict": "您在其他设备上更改了偏好设置。请重试。",
 	"account.too_new_for_guild": "你的账号太新，无法在此社区发送消息。",
 	"account.trusted_domains_wildcard_conflict": "通配符（*）不能与特定域名组合使用。",
 	"account.unauthorized": "未授权。",

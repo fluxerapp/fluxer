@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Токен сессии не совпадает.",
 	"account.suspended_permanently": "Этот аккаунт заблокирован навсегда.",
 	"account.suspended_temporarily": "Этот аккаунт временно заблокирован.",
+	"account.synced_preferences_conflict": "Ваши настройки изменились на другом устройстве. Попробуйте снова.",
 	"account.too_new_for_guild": "Твой аккаунт слишком новый, чтобы отправлять сообщения в этом сообществе.",
 	"account.trusted_domains_wildcard_conflict": "Символ подстановки (*) нельзя использовать вместе с конкретными доменами.",
 	"account.unauthorized": "Нет доступа.",

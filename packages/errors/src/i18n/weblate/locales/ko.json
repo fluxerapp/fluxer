@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "세션 토큰이 일치하지 않아요.",
 	"account.suspended_permanently": "계정이 영구적으로 정지되었어요.",
 	"account.suspended_temporarily": "계정이 일시적으로 정지되었어요.",
+	"account.synced_preferences_conflict": "다른 기기에서 설정이 변경되었습니다. 다시 시도해 보세요.",
 	"account.too_new_for_guild": "계정을 만든 지 얼마 되지 않아 이 커뮤니티에서는 메시지를 보낼 수 없어요.",
 	"account.trusted_domains_wildcard_conflict": "와일드카드(*)는 특정 도메인과 함께 사용할 수 없어요.",
 	"account.unauthorized": "권한이 없어요.",

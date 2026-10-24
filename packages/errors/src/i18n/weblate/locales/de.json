@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Das Sitzungstoken stimmt nicht überein.",
 	"account.suspended_permanently": "Dieser Account wurde dauerhaft gesperrt.",
 	"account.suspended_temporarily": "Dieser Account wurde vorübergehend gesperrt.",
+	"account.synced_preferences_conflict": "Deine Einstellungen wurden auf einem anderen Gerät geändert. Versuche es erneut.",
 	"account.too_new_for_guild": "Dein Account ist zu neu, um Nachrichten in dieser Community zu senden.",
 	"account.trusted_domains_wildcard_conflict": "Der Platzhalter (*) kann nicht mit bestimmten Domains kombiniert werden.",
 	"account.unauthorized": "Keine Berechtigung.",

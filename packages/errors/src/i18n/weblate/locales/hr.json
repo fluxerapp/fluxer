@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token sesije se ne podudara.",
 	"account.suspended_permanently": "Ovaj je račun trajno obustavljen.",
 	"account.suspended_temporarily": "Ovaj je račun privremeno obustavljen.",
+	"account.synced_preferences_conflict": "Vaše su se postavke promijenile na drugom uređaju. Pokušajte ponovno.",
 	"account.too_new_for_guild": "Tvoj je račun previše nov za slanje poruka u ovoj zajednici.",
 	"account.trusted_domains_wildcard_conflict": "Zamjenski znak (*) ne može se kombinirati s određenim domenama.",
 	"account.unauthorized": "Nemaš ovlaštenje.",

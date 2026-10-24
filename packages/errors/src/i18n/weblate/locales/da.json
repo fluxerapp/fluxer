@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Sessionstokenet stemmer ikke overens.",
 	"account.suspended_permanently": "Denne konto er blevet permanent suspenderet.",
 	"account.suspended_temporarily": "Denne konto er blevet midlertidigt suspenderet.",
+	"account.synced_preferences_conflict": "Dine indstillinger blev ændret på en anden enhed. Prøv igen.",
 	"account.too_new_for_guild": "Din konto er for ny til at sende beskeder i dette fællesskab.",
 	"account.trusted_domains_wildcard_conflict": "Wildcard-tegnet (*) kan ikke kombineres med specifikke domæner.",
 	"account.unauthorized": "Uautoriseret.",

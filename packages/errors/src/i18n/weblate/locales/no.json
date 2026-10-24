@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Økttokenet samsvarer ikke.",
 	"account.suspended_permanently": "Denne kontoen er permanent suspendert.",
 	"account.suspended_temporarily": "Denne kontoen er midlertidig suspendert.",
+	"account.synced_preferences_conflict": "Innstillinger dine ble endret på en annen enhet. Prøv igjen.",
 	"account.too_new_for_guild": "Kontoen din er for ny til å sende meldinger i dette fellesskapet.",
 	"account.trusted_domains_wildcard_conflict": "Jokertegnet (*) kan ikke kombineres med spesifikke domener.",
 	"account.unauthorized": "Uautorisert.",

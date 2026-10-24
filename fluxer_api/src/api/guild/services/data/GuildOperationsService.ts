@@ -457,7 +457,7 @@ export class GuildOperationsService {
 				});
 				if (modified) {
 					settingsRow.guild_folders = nextFolders;
-					const updatedSettings = await this.userRepository.upsertSettings(settingsRow);
+					const updatedSettings = await this.userRepository.upsertSettings(settingsRow, userSettings.toRow());
 					await this.gatewayService.dispatchPresence({
 						userId: user.id,
 						event: 'USER_SETTINGS_UPDATE',

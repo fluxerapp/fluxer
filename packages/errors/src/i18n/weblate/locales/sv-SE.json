@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Sessionstoken matchar inte.",
 	"account.suspended_permanently": "Det här kontot har stängts av permanent.",
 	"account.suspended_temporarily": "Detta konto är tillfälligt avstängt.",
+	"account.synced_preferences_conflict": "Dina inställningar ändrades på en annan enhet. Försök igen.",
 	"account.too_new_for_guild": "Ditt konto är för nytt för att skicka meddelanden i denna community.",
 	"account.trusted_domains_wildcard_conflict": "Jokertecknet (*) kan inte kombineras med specifika domäner.",
 	"account.unauthorized": "Du saknar behörighet.",

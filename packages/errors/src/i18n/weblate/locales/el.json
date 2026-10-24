@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Ασυμφωνία token συνεδρίας.",
 	"account.suspended_permanently": "Αυτός ο λογαριασμός έχει ανασταλεί οριστικά.",
 	"account.suspended_temporarily": "Αυτός ο λογαριασμός έχει ανασταλεί προσωρινά.",
+	"account.synced_preferences_conflict": "Οι προτιμήσεις σας άλλαξαν σε άλλη συσκευή. Προσπαθήστε ξανά.",
 	"account.too_new_for_guild": "Ο λογαριασμός σου είναι πολύ καινούριος για να στείλεις μηνύματα σε αυτήν την κοινότητα.",
 	"account.trusted_domains_wildcard_conflict": "Ο χαρακτήρας μπαλαντέρ (*) δεν μπορεί να συνδυαστεί με συγκεκριμένους τομείς.",
 	"account.unauthorized": "Μη εξουσιοδοτημένο.",

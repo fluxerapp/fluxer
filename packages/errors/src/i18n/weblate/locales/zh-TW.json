@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "工作階段權杖不符。",
 	"account.suspended_permanently": "這個帳號已遭永久停權。",
 	"account.suspended_temporarily": "這個帳號已遭暫時停權。",
+	"account.synced_preferences_conflict": "你的偏好設定在另一台裝置上已變更。請再試一次。",
 	"account.too_new_for_guild": "你的帳號太新，無法在這個社群傳送訊息。",
 	"account.trusted_domains_wildcard_conflict": "萬用字元 (*) 無法與特定網域搭配使用。",
 	"account.unauthorized": "未經授權。",

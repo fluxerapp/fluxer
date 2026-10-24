@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token sesi tidak cocok.",
 	"account.suspended_permanently": "Akun ini telah ditangguhkan secara permanen.",
 	"account.suspended_temporarily": "Akun ini telah ditangguhkan sementara.",
+	"account.synced_preferences_conflict": "Preferensi Anda berubah di perangkat lain. Coba lagi.",
 	"account.too_new_for_guild": "Akunmu terlalu baru untuk mengirim pesan di komunitas ini.",
 	"account.trusted_domains_wildcard_conflict": "Wildcard (*) tidak dapat digabungkan dengan domain tertentu.",
 	"account.unauthorized": "Tidak diizinkan.",

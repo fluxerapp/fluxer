@@ -1585,15 +1585,16 @@ export class RpcService {
 			const needsGroupDmRepair = settings.groupDmAddPermissionFlags === 0;
 			if (needsIncomingCallRepair || needsGroupDmRepair) {
 				const isAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth: user.dateOfBirth});
+				const baseRow = settings.toRow();
 				const updatedRow = {
-					...settings.toRow(),
+					...baseRow,
 					...(needsIncomingCallRepair && {
 						incoming_call_flags: isAdult ? IncomingCallFlags.EVERYONE : IncomingCallFlags.FRIENDS_ONLY,
 					}),
 					...(needsGroupDmRepair && {group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY}),
 				};
 				await timeUserDataStep('repair_user_settings_defaults', async () =>
-					this.userRepository.upsertSettings(updatedRow),
+					this.userRepository.upsertSettings(updatedRow, baseRow),
 				);
 				settings = new UserSettings(updatedRow);
 			}

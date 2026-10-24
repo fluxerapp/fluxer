@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Несъответствие на токена за сесия.",
 	"account.suspended_permanently": "Този акаунт е окончателно спрян.",
 	"account.suspended_temporarily": "Този акаунт е временно спрян.",
+	"account.synced_preferences_conflict": "Предпочитанията ви са се променили на друго устройство. Опитайте отново.",
 	"account.too_new_for_guild": "Акаунтът ти е твърде нов, за да изпращаш съобщения в тази общност.",
 	"account.trusted_domains_wildcard_conflict": "Заместващият символ (*) не може да се комбинира с конкретни домейни.",
 	"account.unauthorized": "Нямаш достъп.",

@@ -25330,6 +25330,11 @@
 					"synced_preferences": {
 						"description": "Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it.",
 						"anyOf": [{"type": "string", "maxLength": 699052}, {"type": "null"}]
+					},
+					"synced_preferences_base_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 of the decoded bytes of the synced_preferences snapshot this update was built on, as last returned by the server. An empty snapshot hashes as zero bytes. When it does not match the stored snapshot, nothing is written and the request fails with SYNCED_PREFERENCES_CONFLICT. Only checked when synced_preferences is present."
 					}
 				}
 			},
@@ -40273,6 +40278,7 @@
 					"DONATION_MAGIC_LINK_INVALID",
 					"DONATION_MAGIC_LINK_USED",
 					"SUDO_MODE_REQUIRED",
+					"SYNCED_PREFERENCES_CONFLICT",
 					"TAG_ALREADY_TAKEN",
 					"TEMPORARY_INVITE_REQUIRES_PRESENCE",
 					"TEST_HARNESS_DISABLED",
@@ -40576,6 +40582,7 @@
 					"Magic link is invalid.",
 					"Magic link has already been used.",
 					"Sudo mode is required.",
+					"Your preferences changed on another device. Try again.",
 					"This tag is already taken.",
 					"Temporary invite requires presence.",
 					"Test harness is disabled.",

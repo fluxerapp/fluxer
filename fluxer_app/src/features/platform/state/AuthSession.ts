@@ -48,7 +48,6 @@ import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootM
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {setSyncedFieldSessionManager} from '@app/features/user/state/SyncedField';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {actionBound, makeAutoObservable} from 'mobx';
@@ -656,6 +655,5 @@ export function createSessionManager(dependencies?: AuthSessionDependencies): Au
 }
 
 const SessionManager = createSessionManager();
-setSyncedFieldSessionManager(SessionManager);
 
 export default SessionManager;

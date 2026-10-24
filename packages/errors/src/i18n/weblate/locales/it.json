@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token di sessione non corrispondente.",
 	"account.suspended_permanently": "Questo account è stato sospeso in modo permanente.",
 	"account.suspended_temporarily": "Questo account è stato sospeso temporaneamente.",
+	"account.synced_preferences_conflict": "Le tue preferenze sono cambiate su un altro dispositivo. Riprova.",
 	"account.too_new_for_guild": "Il tuo account è troppo nuovo per inviare messaggi in questa community.",
 	"account.trusted_domains_wildcard_conflict": "Il carattere jolly (*) non può essere combinato con domini specifici.",
 	"account.unauthorized": "Non autorizzato.",

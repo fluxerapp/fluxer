@@ -242,6 +242,7 @@ Further members are accepted and ignored. Nothing reads `guild_positions`, and o
 | profile_privacy? | integer | [Profile privacy level](/http-api/users/#profile-privacy-levels) |
 | privacy_setup_version?<sup>14</sup> | integer | The privacy setup version the user just reviewed (1-1000) |
 | synced_preferences?<sup>13</sup> | ?string | The base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` snapshot, or null to clear it |
+| synced_preferences_base_hash?<sup>15</sup> | string | The lowercase hex SHA-256 of the decoded bytes of the stored snapshot the new one was built on |
 | guild_positions? | array[snowflake] | Accepted and ignored (max 200) |
 | default_share_voice_activity? | boolean | Accepted and ignored |
 
@@ -272,6 +273,8 @@ Further members are accepted and ignored. Nothing reads `guild_positions`, and o
 <sup>13</sup> The value runs to at most 699052 characters of base64 and decodes to at most 524288 bytes, the 512 KiB ceiling. A longer string returns 400 `INVALID_FORM_BODY`, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
 
 <sup>14</sup> Fluxer stores the value as given and sets `privacy_setup_completed_at` to the time of the update
+
+<sup>15</sup> Fluxer checks the hash only when `synced_preferences` is also present. It hashes the stored snapshot exactly as the settings object returns it, and an empty snapshot hashes as zero bytes. When the hashes differ, Fluxer writes nothing and returns 409 `SYNCED_PREFERENCES_CONFLICT`. Without the field, the snapshot replaces the stored one unchecked
 
 Fluxer decodes an accepted `synced_preferences` value, re-encodes it canonically, and stores the result, so a snapshot with only zero values is stored as cleared and read back as the empty string.
 
@@ -394,6 +397,7 @@ The body uses the [user settings update object](#user-settings-update-object).
 | 403 | [error response](/http-api/#error-response) | Custom status text is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the body sets a custom status, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Settings do not exist and the request returns `UNKNOWN_USER` |
+| 409 | [error response](/http-api/#error-response) | `synced_preferences_base_hash` does not match the stored snapshot, and the request returns `SYNCED_PREFERENCES_CONFLICT`. Fetch the settings before retrying |
 
 ### Side effects
 

@@ -782,12 +782,15 @@ class Accessibility {
 			persistLocalZoomLevel(this.zoomLevel);
 			persistLocalMotionSettings(this.localMotionSettingsSnapshot);
 		}
-		this.customThemeCss = readLocalCustomThemeCss();
-		this.customThemeCssSyncAcrossDevices = readLocalCustomThemeCssSyncAcrossDevices();
 		this.showNeko = readAndMigrateLocalShowNeko();
 		this.keepNekoStill = readAndMigrateLocalKeepNekoStill();
 		this.showVideoSeekPreviewThumbnails = readLocalVideoSeekPreviewThumbnails();
 		makeAutoObservable(this, {mediaQuery: false}, {autoBind: true});
+		initializeStore(this, () => this.initPersistence());
+		runInAction(() => {
+			this.customThemeCss = readLocalCustomThemeCss();
+			this.customThemeCssSyncAcrossDevices = readLocalCustomThemeCssSyncAcrossDevices();
+		});
 		this.initializeMotionDetection();
 		this.initializeZoomStorageSync();
 		this.initializeMotionStorageSync();
@@ -796,7 +799,6 @@ class Accessibility {
 		this.initializeVideoSeekPreviewThumbnailsStorageSync();
 		this.initializeCustomThemeCssStorageSync();
 		this.applyStartupPresentationSettings();
-		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -991,7 +993,9 @@ class Accessibility {
 				if (m.showMemesInAutocomplete !== undefined) s.showMemesInExpressionAutocomplete = m.showMemesInAutocomplete;
 				if (m.voiceChannelJoinRequiresDoubleClick !== undefined)
 					s.voiceChannelJoinRequiresDoubleClick = m.voiceChannelJoinRequiresDoubleClick;
-				if (m.customThemeCss !== undefined) {
+				if (m.customThemeCss === undefined) {
+					s.serverCustomThemeCss = null;
+				} else {
 					const customThemeCss = normalizeCustomThemeCss(m.customThemeCss);
 					s.serverCustomThemeCss = customThemeCss;
 					if (s.customThemeCssSyncAcrossDevices) {

@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Istuntotunnus ei täsmää.",
 	"account.suspended_permanently": "Tämä tili on jäädytetty pysyvästi.",
 	"account.suspended_temporarily": "Tämä tili on jäädytetty väliaikaisesti.",
+	"account.synced_preferences_conflict": "Asetuksesi muuttuivat toisella laitteella. Yritä uudelleen.",
 	"account.too_new_for_guild": "Tilisi on liian uusi lähettääksesi viestejä tässä yhteisössä.",
 	"account.trusted_domains_wildcard_conflict": "Jokerimerkkiä (*) ei voi yhdistää yksittäisiin verkkotunnuksiin.",
 	"account.unauthorized": "Ei valtuutettu.",

@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "El token de sesión no coincide.",
 	"account.suspended_permanently": "Esta cuenta ha sido suspendida permanentemente.",
 	"account.suspended_temporarily": "Esta cuenta ha sido suspendida temporalmente.",
+	"account.synced_preferences_conflict": "Tus preferencias cambiaron en otro dispositivo. Intenta de nuevo.",
 	"account.too_new_for_guild": "Tu cuenta es demasiado nueva para enviar mensajes en esta comunidad.",
 	"account.trusted_domains_wildcard_conflict": "El comodín (*) no se puede combinar con dominios específicos.",
 	"account.unauthorized": "No autorizado.",

@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "セッショントークンが一致しません。",
 	"account.suspended_permanently": "このアカウントは永久停止されました。",
 	"account.suspended_temporarily": "このアカウントは一時停止されました。",
+	"account.synced_preferences_conflict": "他のデバイスで設定が変更されました。もう一度お試しください。",
 	"account.too_new_for_guild": "アカウントを作成してから日が浅いため、このコミュニティではメッセージを送信できません。",
 	"account.trusted_domains_wildcard_conflict": "ワイルドカード（*）は、特定のドメインと組み合わせることはできません。",
 	"account.unauthorized": "認証されていません。",

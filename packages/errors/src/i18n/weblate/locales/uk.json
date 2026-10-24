@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Токен сесії не збігається.",
 	"account.suspended_permanently": "Дію цього акаунта припинено назавжди.",
 	"account.suspended_temporarily": "Дію цього акаунта тимчасово призупинено.",
+	"account.synced_preferences_conflict": "Ваші налаштування змінилися на іншому пристрої. Спробуйте ще раз.",
 	"account.too_new_for_guild": "Твій акаунт занадто новий, щоб надсилати повідомлення в цій спільноті.",
 	"account.trusted_domains_wildcard_conflict": "Символ підстановки (*) не можна поєднувати з конкретними доменами.",
 	"account.unauthorized": "Неавторизовано.",

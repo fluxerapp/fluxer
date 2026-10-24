@@ -114,7 +114,7 @@ export async function removeGuildFromUserFolders(params: {
 		});
 	if (modified) {
 		settingsRow.guild_folders = updatedFolders;
-		const updatedSettings = await userRepository.upsertSettings(settingsRow);
+		const updatedSettings = await userRepository.upsertSettings(settingsRow, userSettings.toRow());
 		await gatewayService.dispatchPresence({
 			userId,
 			event: 'USER_SETTINGS_UPDATE',

@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token de sesiune necorespunzător.",
 	"account.suspended_permanently": "Acest cont a fost suspendat permanent.",
 	"account.suspended_temporarily": "Acest cont a fost suspendat temporar.",
+	"account.synced_preferences_conflict": "Preferințele tale s-au modificat pe alt dispozitiv. Încearcă din nou.",
 	"account.too_new_for_guild": "Contul tău este prea nou pentru a trimite mesaje în această comunitate.",
 	"account.trusted_domains_wildcard_conflict": "Wildcardul (*) nu poate fi combinat cu domenii specifice.",
 	"account.unauthorized": "Neautorizat.",

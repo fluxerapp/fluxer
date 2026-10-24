@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Oturum belirteci uyuşmuyor.",
 	"account.suspended_permanently": "Bu hesap kalıcı olarak askıya alındı.",
 	"account.suspended_temporarily": "Bu hesap geçici olarak askıya alındı.",
+	"account.synced_preferences_conflict": "Diğer cihazda ayarların değişti. Tekrar dene.",
 	"account.too_new_for_guild": "Bu toplulukta mesaj göndermek için hesabın çok yeni.",
 	"account.trusted_domains_wildcard_conflict": "Joker karakter (*) belirli alan adlarıyla birlikte kullanılamaz.",
 	"account.unauthorized": "Yetkisiz.",

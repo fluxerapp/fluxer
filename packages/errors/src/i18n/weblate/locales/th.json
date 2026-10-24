@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "โทเค็นเซสชันไม่ตรงกัน",
 	"account.suspended_permanently": "บัญชีนี้ถูกระงับอย่างถาวร",
 	"account.suspended_temporarily": "บัญชีนี้ถูกระงับชั่วคราว",
+	"account.synced_preferences_conflict": "การตั้งค่าของคุณมีการเปลี่ยนแปลงในอุปกรณ์อื่น ลองอีกครั้ง",
 	"account.too_new_for_guild": "บัญชีของคุณใหม่เกินไปที่จะส่งข้อความในคอมมูนิตี้นี้",
 	"account.trusted_domains_wildcard_conflict": "ไม่สามารถใช้เครื่องหมายดอกจัน (*) ร่วมกับโดเมนที่ระบุได้",
 	"account.unauthorized": "ไม่ได้รับอนุญาต",

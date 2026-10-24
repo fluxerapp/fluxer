@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "عدم تطابق رمز الجلسة.",
 	"account.suspended_permanently": "هذا الحساب موقوف بشكل دائم.",
 	"account.suspended_temporarily": "هذا الحساب موقوف مؤقتًا.",
+	"account.synced_preferences_conflict": "تغيرت تفضيلاتك على جهاز آخر. حاول مرة أخرى.",
 	"account.too_new_for_guild": "حسابك جديد جدًا لإرسال الرسائل في هذا المجتمع.",
 	"account.trusted_domains_wildcard_conflict": "لا يمكن دمج حرف البدل (*) مع نطاقات محددة.",
 	"account.unauthorized": "غير مصرّح به.",

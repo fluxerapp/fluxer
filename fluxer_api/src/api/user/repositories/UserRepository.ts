@@ -217,8 +217,8 @@ export class UserRepository {
 		return this.settingsRepo.findSettings(userId);
 	}
 
-	async upsertSettings(settings: UserSettingsRow): Promise<UserSettings> {
-		return this.settingsRepo.upsertSettings(settings);
+	async upsertSettings(settings: UserSettingsRow, base?: UserSettingsRow): Promise<UserSettings> {
+		return this.settingsRepo.upsertSettings(settings, base);
 	}
 
 	async deleteUserSettings(userId: UserID): Promise<void> {

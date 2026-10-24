@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Niezgodność tokenu sesji.",
 	"account.suspended_permanently": "Konto trwale zawieszone.",
 	"account.suspended_temporarily": "Konto tymczasowo zawieszone.",
+	"account.synced_preferences_conflict": "Twoje preferencje zmieniły się na innym urządzeniu. Spróbuj ponownie.",
 	"account.too_new_for_guild": "Twoje konto jest zbyt nowe, aby wysyłać wiadomości w tej społeczności.",
 	"account.trusted_domains_wildcard_conflict": "Znak wieloznaczny (*) nie może być łączony z konkretnymi domenami.",
 	"account.unauthorized": "Brak dostępu.",

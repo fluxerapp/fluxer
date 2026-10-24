@@ -151,6 +151,7 @@ vi.mock('@app/features/user/state/UserSettings', () => ({
 			hydrated: false,
 			syncedPreferences: {},
 			wireSyncedPreferences: {},
+			wireSyncedPreferencesBase: null,
 			dirtySyncedPreferenceFields: [],
 			recentlyAckedSyncedPreferenceFields: [],
 			syncConsecutive429s: 0,

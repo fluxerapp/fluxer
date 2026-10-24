@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token relace nesouhlasí.",
 	"account.suspended_permanently": "Tento účet byl trvale pozastaven.",
 	"account.suspended_temporarily": "Tento účet byl dočasně pozastaven.",
+	"account.synced_preferences_conflict": "Vaše nastavení se změnilo na jiném zařízení. Zkuste to znovu.",
 	"account.too_new_for_guild": "Váš účet je příliš nový na odesílání zpráv v této komunitě.",
 	"account.trusted_domains_wildcard_conflict": "Zástupný znak (*) nelze kombinovat s konkrétními doménami.",
 	"account.unauthorized": "Nemáte oprávnění.",

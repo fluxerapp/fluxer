@@ -88,7 +88,7 @@ export class UserSettingsRepository {
 		return new UserGuildSettings({...settings, version: result.finalVersion ?? 1});
 	}
 
-	async upsertSettings(settings: UserSettingsRow): Promise<UserSettings> {
+	async upsertSettings(settings: UserSettingsRow, base?: UserSettingsRow): Promise<UserSettings> {
 		const userId = settings.user_id;
 		const result = await executeVersionedUpdate<UserSettingsRow, 'user_id'>(
 			() =>
@@ -103,7 +103,12 @@ export class UserSettingsRepository {
 				patch: buildPatchFromData(settings, current, USER_SETTINGS_COLUMNS, ['user_id']),
 			}),
 			UserSettingsTable,
+			base ? {initialData: base} : undefined,
 		);
+		if (base) {
+			const stored = await this.findSettings(userId);
+			if (stored) return stored;
+		}
 		return new UserSettings({...settings, version: result.finalVersion ?? 1});
 	}
 }

@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "אי-התאמה באסימון הסשן.",
 	"account.suspended_permanently": "החשבון הזה הושעה לצמיתות.",
 	"account.suspended_temporarily": "החשבון הזה הושעה זמנית.",
+	"account.synced_preferences_conflict": "ההעדפות שלך השתנו במכשיר אחר. נסה שוב.",
 	"account.too_new_for_guild": "החשבון שלך חדש מדי כדי לשלוח הודעות בקהילה זו.",
 	"account.trusted_domains_wildcard_conflict": "לא ניתן לשלב את התו הכללי (*) עם דומיינים ספציפיים.",
 	"account.unauthorized": "אין הרשאה.",

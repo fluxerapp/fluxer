@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Token de sessão incompatível.",
 	"account.suspended_permanently": "Esta conta foi suspensa permanentemente.",
 	"account.suspended_temporarily": "Esta conta foi suspensa temporariamente.",
+	"account.synced_preferences_conflict": "Suas preferências foram alteradas em outro dispositivo. Tente novamente.",
 	"account.too_new_for_guild": "Sua conta é muito nova para enviar mensagens nesta comunidade.",
 	"account.trusted_domains_wildcard_conflict": "O curinga (*) não pode ser combinado com domínios específicos.",
 	"account.unauthorized": "Não autorizado.",

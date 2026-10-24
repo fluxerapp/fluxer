@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Incompatibilité du jeton de session.",
 	"account.suspended_permanently": "Ce compte a été suspendu définitivement.",
 	"account.suspended_temporarily": "Ce compte a été suspendu temporairement.",
+	"account.synced_preferences_conflict": "Vos préférences ont été modifiées sur un autre appareil. Réessayez.",
 	"account.too_new_for_guild": "Votre compte est trop récent pour envoyer des messages dans cette communauté.",
 	"account.trusted_domains_wildcard_conflict": "Le caractère générique (*) ne peut pas être combiné avec des domaines spécifiques.",
 	"account.unauthorized": "Non autorisé.",

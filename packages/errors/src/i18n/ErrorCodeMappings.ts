@@ -274,6 +274,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.DONATION_MAGIC_LINK_INVALID]: 'donation.magic_link_invalid',
 	[APIErrorCodes.DONATION_MAGIC_LINK_USED]: 'donation.magic_link_used',
 	[APIErrorCodes.SUDO_MODE_REQUIRED]: 'auth_and_oauth.sudo_mode_required',
+	[APIErrorCodes.SYNCED_PREFERENCES_CONFLICT]: 'account.synced_preferences_conflict',
 	[APIErrorCodes.TAG_ALREADY_TAKEN]: 'usernames_and_tags.tag_already_taken',
 	[APIErrorCodes.TEMPORARY_INVITE_REQUIRES_PRESENCE]: 'channels_and_guilds.temporary_invite_requires_presence',
 	[APIErrorCodes.TEST_HARNESS_DISABLED]: 'admin_and_system.test_harness_disabled',

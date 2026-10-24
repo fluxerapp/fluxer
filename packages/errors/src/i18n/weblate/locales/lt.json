@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Seanso žetonas neatitinka.",
 	"account.suspended_permanently": "Ši paskyra buvo visam laikui sustabdyta.",
 	"account.suspended_temporarily": "Ši paskyra buvo laikinai sustabdyta.",
+	"account.synced_preferences_conflict": "Jūsų nuostatos pasikeitė kitame įrenginyje. Pabandykite dar kartą.",
 	"account.too_new_for_guild": "Tavo paskyra per nauja, kad galėtum siųsti žinutes šioje bendruomenėje.",
 	"account.trusted_domains_wildcard_conflict": "Pakaitos simbolis (*) negali būti derinamas su konkrečiais domenais.",
 	"account.unauthorized": "Neturi leidimo.",

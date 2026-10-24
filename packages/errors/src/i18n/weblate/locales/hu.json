@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "A munkamenettoken nem egyezik.",
 	"account.suspended_permanently": "Ez a fiók véglegesen fel van függesztve.",
 	"account.suspended_temporarily": "Ez a fiók ideiglenesen fel van függesztve.",
+	"account.synced_preferences_conflict": "A beállításaid megváltoztak egy másik eszközön. Próbáld újra.",
 	"account.too_new_for_guild": "Fiókod túl új ahhoz, hogy üzeneteket küldj ebben a közösségben.",
 	"account.trusted_domains_wildcard_conflict": "A helyettesítő karakter (*) nem kombinálható konkrét domainekkel.",
 	"account.unauthorized": "Nincs engedélyed.",

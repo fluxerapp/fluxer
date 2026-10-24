@@ -9,6 +9,7 @@
 	"account.session_token_mismatch": "Sessietoken komt niet overeen.",
 	"account.suspended_permanently": "Dit account is permanent geschorst.",
 	"account.suspended_temporarily": "Dit account is tijdelijk geschorst.",
+	"account.synced_preferences_conflict": "Je instellingen zijn op een ander apparaat gewijzigd. Probeer het opnieuw.",
 	"account.too_new_for_guild": "Je account is te nieuw om berichten te versturen in deze community.",
 	"account.trusted_domains_wildcard_conflict": "Het jokerteken (*) kan niet worden gecombineerd met specifieke domeinen.",
 	"account.unauthorized": "Niet geautoriseerd.",

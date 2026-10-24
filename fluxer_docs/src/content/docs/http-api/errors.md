@@ -1106,6 +1106,10 @@ Stripe webhook signature is missing
 
 Sudo mode is required
 
+### `SYNCED_PREFERENCES_CONFLICT`
+
+Your preferences changed on another device
+
 ### `TAG_ALREADY_TAKEN`
 
 This tag is already taken
