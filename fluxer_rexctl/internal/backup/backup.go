@@ -106,6 +106,38 @@ func List(dir string) ([]Info, error) {
 	return out, nil
 }
 
+func NewestOf(list []Info, release string) *Info {
+	var best *Info
+	for i := range list {
+		b := &list[i]
+		if b.Release != release {
+			continue
+		}
+		if best == nil || b.CreatedAt.After(best.CreatedAt) {
+			best = b
+		}
+	}
+	return best
+}
+
+func Prune(dir string, keep int, protect ...string) ([]Info, error) {
+	list, err := List(dir)
+	if err != nil || keep <= 0 || len(list) <= keep {
+		return nil, err
+	}
+	var removed []Info
+	for _, b := range list[keep:] {
+		if slices.ContainsFunc(protect, func(p string) bool { return p != "" && samePath(p, b.Path) }) {
+			continue
+		}
+		if err := os.Remove(b.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return removed, err
+		}
+		removed = append(removed, b)
+	}
+	return removed, nil
+}
+
 func fileName(domain string, at time.Time, n int) string {
 	var b strings.Builder
 	for _, r := range strings.ToLower(domain) {

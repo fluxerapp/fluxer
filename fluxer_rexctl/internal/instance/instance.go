@@ -42,6 +42,9 @@ const (
 	CertsDir       = "certs"
 	CaddyDropInDir = "caddy.d"
 	KeepReleases   = 3
+
+	DefaultKeepBackups = 3
+	KeepAllBackups     = -1
 )
 
 var legacyComposeNames = []string{"compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml"}
@@ -176,7 +179,19 @@ func (i *Instance) SetDir(version string) string {
 	return filepath.Join(i.ReleaseDir(version), StackDir)
 }
 
-func (i *Instance) BackupDir() string { return i.Path(BackupsDir) }
+func (i *Instance) BackupDir() string {
+	if i.State != nil && i.State.BackupDir != "" {
+		return i.State.BackupDir
+	}
+	return i.Path(BackupsDir)
+}
+
+func (i *Instance) KeepBackups() int {
+	if i.State == nil || i.State.KeepBackups == 0 {
+		return DefaultKeepBackups
+	}
+	return i.State.KeepBackups
+}
 
 func (i *Instance) Project() string {
 	if i.State != nil {

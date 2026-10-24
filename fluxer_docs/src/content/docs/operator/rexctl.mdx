@@ -60,12 +60,36 @@ Back up your instance. Fluxer pauses while uploads are copied.
 rexctl backup
 ```
 
+### rexctl backup keep
+
+Show or change how many backups rexctl keeps. After each backup, rexctl deletes the oldest ones beyond this number, except the backup that rexctl rollback needs. Pass all to keep every backup.
+
+```sh
+rexctl backup keep [count|all] [flags]
+```
+
+- `--json`
+
+  Print JSON.
+
 ### rexctl backup list
 
 List your backups.
 
 ```sh
 rexctl backup list [flags]
+```
+
+- `--json`
+
+  Print JSON.
+
+### rexctl backup location
+
+Show the folder rexctl saves backups in, or pass a full path to save new backups there. Backups that are already saved stay where they are.
+
+```sh
+rexctl backup location [folder] [flags]
 ```
 
 - `--json`

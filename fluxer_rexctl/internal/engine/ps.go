@@ -123,7 +123,7 @@ func (e *Engine) Volumes(ctx context.Context, project string) ([]Volume, error) 
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		out = append(out, Volume{Name: v.Name, Project: labels[api.ProjectLabel], Labels: labels})
+		out = append(out, Volume{Name: v.Name, Project: labels[api.ProjectLabel], Labels: labels, Mountpoint: v.Mountpoint, Device: v.Options["device"]})
 	}
 	slices.SortFunc(out, func(a, b Volume) int { return strings.Compare(a.Name, b.Name) })
 	return out, nil

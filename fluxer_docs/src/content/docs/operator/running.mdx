@@ -32,6 +32,8 @@ rexctl backup
 
 This saves your settings, database and uploads in one file in the `backups` folder of your instance. Fluxer pauses while it copies uploads. Keep a copy of your backups on another machine.
 
+rexctl keeps the newest 3 backups and deletes older ones after each backup, but it always keeps the one `rexctl rollback` needs. To keep more, run `rexctl backup keep 10`, or `rexctl backup keep all` to keep every backup. To save backups on another drive, run `rexctl backup location /mnt/backups/fluxer`.
+
 To put your instance back the way it was when a backup was made, find the file with `rexctl backup list` and pass its path to `rexctl restore`.
 
 ```sh

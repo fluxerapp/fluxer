@@ -236,16 +236,7 @@ func upgradeBackup(inst *instance.Instance, prev string) (*backup.Info, error) {
 	if err != nil {
 		return nil, ui.Wrap(err, "Couldn't read your backups.", "Run rexctl backup list to see why.")
 	}
-	var best *backup.Info
-	for i := range list {
-		b := &list[i]
-		if b.Release != prev {
-			continue
-		}
-		if best == nil || b.CreatedAt.After(best.CreatedAt) {
-			best = b
-		}
-	}
+	best := backup.NewestOf(list, prev)
 	if best == nil {
 		return nil, ui.Refused(fmt.Sprintf("There's no backup from Fluxer %s on this machine.", prev), "Run rexctl restore with a backup file you kept somewhere else.")
 	}

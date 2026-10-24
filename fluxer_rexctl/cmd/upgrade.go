@@ -461,6 +461,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		if err := setPhase(inst, from, to, release.PhaseBackedUp); err != nil {
 			return err
 		}
+		pruneBackups(app, inst)
 	}
 	if err := setPhase(inst, from, to, release.PhaseMigrated); err != nil {
 		return abortUpgrade(ctx, app, inst, e, err, ui.Wrap(err, "Couldn't save your settings.", "Run rexctl upgrade --verbose to see why."))

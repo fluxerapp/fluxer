@@ -142,9 +142,11 @@ type Container struct {
 }
 
 type Volume struct {
-	Name    string
-	Project string
-	Labels  map[string]string
+	Name       string
+	Project    string
+	Labels     map[string]string
+	Mountpoint string
+	Device     string
 }
 
 type ProjectInfo struct {

@@ -41,6 +41,8 @@ type State struct {
 	Rendered        map[string]string `json:"rendered"`
 	Mounted         map[string]string `json:"mounted"`
 	Ejected         *Ejected          `json:"ejected"`
+	BackupDir       string            `json:"backup_dir,omitempty"`
+	KeepBackups     int               `json:"keep_backups,omitempty"`
 	InstalledAt     time.Time         `json:"installed_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 
@@ -133,7 +135,7 @@ var stateFields = map[string]bool{
 	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "failed_release": true,
 	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
 	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "ejected": true,
-	"installed_at": true, "updated_at": true,
+	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true,
 }
 
 func parseState(data []byte, dir string) (*State, error) {
