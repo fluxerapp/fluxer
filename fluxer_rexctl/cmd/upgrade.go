@@ -607,6 +607,23 @@ func retiredFix(name, fromShort string) string {
 	return fmt.Sprintf("%s Remove %s from %s, then run rexctl upgrade again.", still, name, instance.CustomCompose)
 }
 
+func volumeMismatch(inst *instance.Instance, keys []string, toShort string) error {
+	names := make([]string, len(keys))
+	for i, k := range keys {
+		names[i] = inst.Project() + "_" + k
+	}
+	still := "Your instance hasn't changed."
+	if pend := inst.State.Upgrade; pend != nil {
+		fromShort, _ := versionPair(pend.From, pend.To)
+		still = fmt.Sprintf("You're still on %s.", fluxerName(fromShort))
+	}
+	fix := "Run rexctl doctor to see what's wrong, then run rexctl upgrade again."
+	if fileExists(inst.Path(instance.CustomCompose)) {
+		fix = fmt.Sprintf("Compare them with docker volume inspect, change %s to match how they were made, then run rexctl upgrade again.", instance.CustomCompose)
+	}
+	return ui.Refused(fmt.Sprintf("Fluxer %s can't use %s, because they were made with other options than the compose files ask for. %s", toShort, strings.Join(names, ", "), still), fix)
+}
+
 func nextState(inst *instance.Instance, set *stack.Set, images stack.ImageSet, to string) (*instance.State, []string, error) {
 	cur := inst.State
 	next := *cur
@@ -673,6 +690,9 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 			return ctx.Err()
 		}
 		return ui.Wrap(engineFailure(err), fmt.Sprintf("Fluxer %s doesn't accept the settings on this machine.", toShort), "Run rexctl upgrade --verbose to see why.")
+	}
+	if plan, err := p.Plan(ctx); engine.ClassOf(err) == engine.ClassVolumeChanged {
+		return volumeMismatch(inst, plan.Volumes, toShort)
 	}
 	err = app.UI.Step(ctx, "Downloading Fluxer "+toShort, func(ctx context.Context, s *ui.Step) error {
 		if err := p.Pull(ctx, app.progress(s, "Downloading")); err != nil {
