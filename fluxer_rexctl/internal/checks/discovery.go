@@ -8,6 +8,12 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
+)
+
+const (
+	discoveryAttempts = 6
+	discoveryRetry    = 2 * time.Second
 )
 
 func init() {
@@ -25,7 +31,15 @@ func runDiscovery(ctx context.Context, e *Env) Result {
 	if e.Instance == nil || e.Domain == "" || !e.running(ctx, "edge") || !e.running(ctx, "api") {
 		return skip("")
 	}
-	out, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/.well-known/fluxer")
+	out, err := e.discoveryDoc(ctx)
+	for attempt := 1; err != nil && attempt < discoveryAttempts; attempt++ {
+		select {
+		case <-ctx.Done():
+			return skip("")
+		case <-time.After(discoveryRetry):
+		}
+		out, err = e.discoveryDoc(ctx)
+	}
 	if err != nil {
 		r := fail("Apps can't load your instance's details.", "Run rexctl logs api to see why.")
 		r.Details = []string{out}
@@ -45,6 +59,10 @@ func runDiscovery(ctx context.Context, e *Env) Result {
 			"Run rexctl doctor --fix to apply your instance's address."))
 	}
 	return pass(fmt.Sprintf("Apps are told to connect to %s.", e.Domain))
+}
+
+func (e *Env) discoveryDoc(ctx context.Context) (string, error) {
+	return e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/.well-known/fluxer")
 }
 
 func endpointHost(s string) string {
