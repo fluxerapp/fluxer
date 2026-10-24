@@ -220,9 +220,12 @@ export class DesktopHandoffService {
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
-		await this.checkAttemptLimit(pollerIp);
 		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
+		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
+		if (!secretMatchesHash(pollSecret, tokenData?.pollSecretHash ?? handoffData?.pollSecretHash)) {
+			await this.checkAttemptLimit(pollerIp);
+		}
 		if (tokenData) {
 			if (!secretMatchesHash(pollSecret, tokenData.pollSecretHash)) {
 				await this.recordFailedAttempt(pollerIp);
@@ -244,7 +247,6 @@ export class DesktopHandoffService {
 				userId: tokenData.userId,
 			};
 		}
-		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		if (handoffData) {
 			return {status: handoffData.denied ? 'denied' : 'pending'};
 		}
