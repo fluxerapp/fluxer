@@ -10,7 +10,7 @@ export interface VoiceGrant {
 	guildId: string;
 }
 
-/** `code` is the gateway error code, 'P2P_GRANT', 'TIMEOUT' or 'NOT_CONNECTED'. */
+/** `code` is the gateway error code, 'P2P_GRANT', 'E2EE', 'TIMEOUT' or 'NOT_CONNECTED'. */
 export class VoiceJoinError extends Error {
 	constructor(readonly code: string) {
 		super(`Voice join failed: ${code}`);
@@ -204,6 +204,7 @@ export class GatewayClient extends EventEmitter {
 				this.onInvalidSession();
 				break;
 			case OP.GatewayError:
+				// Opcode 12 doesn't name the channel it refused, so every pending join fails.
 				this.failPendingVoice(String(payload.d?.code ?? 'GATEWAY_ERROR'));
 				break;
 			case OP.Dispatch:
@@ -284,15 +285,17 @@ export class GatewayClient extends EventEmitter {
 		const pending = this.pendingVoice.find((p) => p.channelId === d.channel_id);
 		if (!pending) return;
 		this.removePending(pending);
-		if (d.p2p) {
-			// The bot never takes part in P2P calls: release the connection the grant opened.
+		// The bot takes part in neither P2P calls nor end-to-end encrypted ones:
+		// release the connection the grant opened.
+		const refusal = d.p2p ? 'P2P_GRANT' : d.e2ee_key !== undefined && d.e2ee_key !== null ? 'E2EE' : null;
+		if (refusal) {
 			if (typeof d.connection_id === 'string') {
 				this.send({
 					op: OP.VoiceStateUpdate,
 					d: {guild_id: d.guild_id ?? null, channel_id: null, connection_id: d.connection_id},
 				});
 			}
-			pending.reject(new VoiceJoinError('P2P_GRANT'));
+			pending.reject(new VoiceJoinError(refusal));
 			return;
 		}
 		pending.resolve({

@@ -256,6 +256,48 @@ describe('GatewayClient', () => {
 			});
 		});
 
+		it('joinVoice rejects an end-to-end encrypted grant and leaves', async () => {
+			make();
+			await client.connect();
+			const grant = client.joinVoice('g1', 'ch1');
+			await until(() => voiceFrame(server) !== undefined);
+			server.dispatch(server.sockets[0] as ServerSocket, 'VOICE_SERVER_UPDATE', 2, {
+				token: 'lk-token',
+				endpoint: 'wss://lk',
+				connection_id: 'conn-e',
+				channel_id: 'ch1',
+				guild_id: 'g1',
+				e2ee_key: 'secret-key',
+			});
+			await expect(grant).rejects.toMatchObject({code: 'E2EE'});
+			await until(() => (server.frames[0] ?? []).filter((f) => f.op === 4).length === 2);
+			expect((server.frames[0] ?? []).filter((f) => f.op === 4)[1]?.d).toEqual({
+				guild_id: 'g1',
+				channel_id: null,
+				connection_id: 'conn-e',
+			});
+		});
+
+		it.each(['VOICE_P2P_CONSENT_REQUIRED', 'VOICE_P2P_UNAVAILABLE'])('joinVoice rejects with %s', async (code) => {
+			make();
+			await client.connect();
+			const grant = client.joinVoice('g1', 'ch1');
+			await until(() => voiceFrame(server) !== undefined);
+			server.sockets[0]?.send(JSON.stringify({op: 12, d: {code, message: 'p2p'}}));
+			await expect(grant).rejects.toMatchObject({code});
+		});
+
+		it('a gateway error rejects every pending join (op 12 names no channel)', async () => {
+			make();
+			await client.connect();
+			const a = client.joinVoice('g1', 'ch1');
+			const b = client.joinVoice('g1', 'ch2');
+			await until(() => (server.frames[0] ?? []).filter((f) => f.op === 4).length === 2);
+			server.sockets[0]?.send(JSON.stringify({op: 12, d: {code: 'VOICE_CHANNEL_FULL', message: 'full'}}));
+			await expect(a).rejects.toMatchObject({code: 'VOICE_CHANNEL_FULL'});
+			await expect(b).rejects.toMatchObject({code: 'VOICE_CHANNEL_FULL'});
+		});
+
 		it('joinVoice rejects on gateway error', async () => {
 			make();
 			await client.connect();
