@@ -30,7 +30,7 @@ import {type Participant, RoomEvent, RpcError} from 'livekit-client';
 
 const SLOW_RPC_TIMEOUT_MS = 30000;
 const DEFAULT_RPC_TIMEOUT_MS = 10000;
-const QUEUE_PAGE_SIZE = 50;
+const QUEUE_PAGE_SIZE = 20;
 
 function isTimeoutError(error: unknown): boolean {
 	if (!(error instanceof RpcError)) return false;
