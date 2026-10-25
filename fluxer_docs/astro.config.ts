@@ -167,6 +167,7 @@ export default defineConfig({
 						'operator/reverse-proxy',
 						'operator/sign-in',
 						'operator/kubernetes',
+						'operator/docker-compose',
 						'operator/rexctl',
 					],
 				},

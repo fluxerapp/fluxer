@@ -16,6 +16,12 @@ This upgrades rexctl and Fluxer together. It backs up your instance before Fluxe
 
 To see whether there's a new version without upgrading, run `rexctl upgrade --check`.
 
+If you installed Fluxer before rexctl existed, upgrade it with the current install script. It installs rexctl and hands your instance to it with your data and settings as they are.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- --update --dir /path/to/your/instance
+```
+
 ## Roll back
 
 ```sh
