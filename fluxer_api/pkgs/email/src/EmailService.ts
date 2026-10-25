@@ -240,7 +240,7 @@ export function reportResolvedSlots(template: EmailTemplate, reportId: string, p
 	return {
 		intro: `${template.about}\n${template.intro}`,
 		...facts([template.report_label, reportId], [template.comment_label, publicComment]),
-		text_1: template.thanks,
+		text_1: publicComment ? undefined : template.thanks,
 	};
 }
 
