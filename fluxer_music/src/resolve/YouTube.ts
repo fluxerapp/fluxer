@@ -52,7 +52,8 @@ export class YouTubeResolver {
 	constructor(private readonly run: YtDlpRunner) {}
 
 	async video(url: string): Promise<ResolvedTrack> {
-		const info = parseJson(await this.run(['-J', '--', url]));
+		const info = parseJson(await this.run(['-J', '--no-playlist', '--', url]));
+		if (info.entries || !info.id) throw new MusicError('SOURCE_FAILED');
 		if (isLive(info)) throw new MusicError('LIVE_NOT_SUPPORTED');
 		if ((info.duration ?? 0) * 1000 > MAX_DURATION_MS) throw new MusicError('TOO_LONG');
 		return toTrack(info);
@@ -77,7 +78,7 @@ export class YouTubeResolver {
 	}
 
 	async streamUrl(url: string): Promise<string> {
-		const out = await this.run(['-f', 'bestaudio', '--get-url', '--', url]);
+		const out = await this.run(['-f', 'bestaudio', '--no-playlist', '--get-url', '--', url]);
 		const first = out.split('\n')[0]?.trim();
 		if (!first) throw new MusicError('SOURCE_FAILED');
 		return first;

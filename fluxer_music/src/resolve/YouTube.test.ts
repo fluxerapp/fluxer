@@ -40,7 +40,7 @@ describe('YouTubeResolver', () => {
 			url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
 			source: 'youtube',
 		});
-		expect(calls[0]).toEqual(['-J', '--', 'https://youtu.be/dQw4w9WgXcQ']);
+		expect(calls[0]).toEqual(['-J', '--no-playlist', '--', 'https://youtu.be/dQw4w9WgXcQ']);
 	});
 
 	test('video falls back to uploader, last thumbnail and constructed url', async () => {
@@ -49,6 +49,25 @@ describe('YouTubeResolver', () => {
 		);
 		const track = await new YouTubeResolver(run).video('u');
 		expect(track).toMatchObject({author: 'U', thumbnailUrl: 'b', url: 'https://www.youtube.com/watch?v=x1'});
+	});
+
+	test('video passes --no-playlist before --', async () => {
+		const {run, calls} = fakeRunner(fixture('video.json'));
+		await new YouTubeResolver(run).video('u');
+		const args = calls[0] ?? [];
+		expect(args.indexOf('--no-playlist')).toBeGreaterThan(-1);
+		expect(args.indexOf('--no-playlist')).toBeLessThan(args.indexOf('--'));
+	});
+
+	test('streamUrl passes --no-playlist', async () => {
+		const {run, calls} = fakeRunner('https://cdn/a\n');
+		await new YouTubeResolver(run).streamUrl('u');
+		expect(calls[0]).toContain('--no-playlist');
+	});
+
+	test('video with playlist JSON → SOURCE_FAILED', async () => {
+		const {run} = fakeRunner(fixture('playlist.json'));
+		expect(await code(new YouTubeResolver(run).video('u'))).toBe('SOURCE_FAILED');
 	});
 
 	test('video refuses live', async () => {
@@ -93,7 +112,7 @@ describe('YouTubeResolver', () => {
 	test('streamUrl returns the first line', async () => {
 		const {run, calls} = fakeRunner('https://cdn/a\nhttps://cdn/b\n');
 		expect(await new YouTubeResolver(run).streamUrl('u')).toBe('https://cdn/a');
-		expect(calls[0]).toEqual(['-f', 'bestaudio', '--get-url', '--', 'u']);
+		expect(calls[0]).toEqual(['-f', 'bestaudio', '--no-playlist', '--get-url', '--', 'u']);
 	});
 });
 
