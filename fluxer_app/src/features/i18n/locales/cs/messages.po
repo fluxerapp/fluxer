@@ -29651,6 +29651,11 @@ msgstr "Změnit velikost panelu Doručené tažením za levý horní roh"
 msgid "Resize inbox from top right"
 msgstr "Změnit velikost panelu Doručené tažením za pravý horní roh"
 
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "Změnit velikost řádku členů"
+
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx
 msgid "Resize picture-in-picture"

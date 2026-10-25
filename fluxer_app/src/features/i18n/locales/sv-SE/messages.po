@@ -29651,6 +29651,11 @@ msgstr "Ändra storlek på inkorgen från övre vänstra hörnet"
 msgid "Resize inbox from top right"
 msgstr "Ändra storlek på inkorgen från övre högra hörnet"
 
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "Ändra storlek på medlemsrad"
+
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx
 msgid "Resize picture-in-picture"

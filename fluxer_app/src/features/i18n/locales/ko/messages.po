@@ -29651,6 +29651,11 @@ msgstr "왼쪽 상단에서 받은편지함 크기 조절"
 msgid "Resize inbox from top right"
 msgstr "오른쪽 상단에서 받은편지함 크기 조절"
 
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "멤버 행 크기 조절"
+
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx
 msgid "Resize picture-in-picture"
