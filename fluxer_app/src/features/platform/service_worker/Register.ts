@@ -42,9 +42,7 @@ async function clearFluxerServiceWorkerCaches(): Promise<Array<string>> {
 }
 
 export function shouldDisableServiceWorkersForLocalDev(): boolean {
-	return (
-		import.meta.env.MODE === 'development' || (Config.BUILD_VERSION ?? 'dev').trim().toLowerCase() === 'dev'
-	);
+	return import.meta.env.MODE === 'development' || (Config.BUILD_VERSION ?? 'dev').trim().toLowerCase() === 'dev';
 }
 
 async function unregisterFluxerServiceWorkers({
