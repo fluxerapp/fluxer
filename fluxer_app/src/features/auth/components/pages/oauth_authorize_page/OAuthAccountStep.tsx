@@ -64,8 +64,12 @@ function initialSignInPurpose(
 	return null;
 }
 
+function currentPagePath(): string {
+	return `${window.location.pathname}${window.location.search}`;
+}
+
 function currentPageLoginPath(): string {
-	return setPathQueryParams(Routes.LOGIN, {redirect_to: `${window.location.pathname}${window.location.search}`});
+	return setPathQueryParams(Routes.LOGIN, {redirect_to: currentPagePath()});
 }
 
 interface OAuthAccountStepProps {
@@ -167,7 +171,7 @@ export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(
 						<AccountSwitcherAuthFlow
 							purpose={signInPurpose}
 							renderFrame={null}
-							redirectAfterLogin={null}
+							redirectAfterLogin={currentPagePath()}
 							focusOnEntry={focusSignInOnShow}
 							exitCancels={accounts.length === 0}
 							onExit={accounts.length === 0 ? onCancel : backToAccounts}
