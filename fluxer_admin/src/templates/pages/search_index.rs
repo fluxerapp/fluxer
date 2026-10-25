@@ -6,7 +6,9 @@ use crate::{
     middleware::auth::AuthContext,
     templates::{
         components::{
-            auto_refresh::auto_refresh, form::csrf_input, page_container::page_header,
+            auto_refresh::auto_refresh,
+            form::{csrf_input, submit_button},
+            page_container::page_header,
             section_card::section_card_simple,
         },
         layout::admin_layout,
@@ -43,6 +45,25 @@ fn disabled_reindex_button(title: &str) -> Markup {
     }
 }
 
+fn reindex_everything(base: &str, csrf_token: &str) -> Markup {
+    section_card_simple(
+        "Reindex everything",
+        html! {
+            p class="text-sm text-neutral-500 mb-3" {
+                "Rebuilds every index on this page, the members and threads of every guild, \
+                 and the messages in every channel and DM, one at a time. Search shows \
+                 partial results until it finishes, which can take hours on a large instance."
+            }
+            form method="post" action={(base) "/search-index?action=reindex"} class="w-fit"
+                onsubmit="return confirm('Rebuild every search index? Search shows partial results until it finishes.')" {
+                (csrf_input(csrf_token))
+                input type="hidden" name="index_type" value="all";
+                (submit_button("Reindex everything"))
+            }
+        },
+    )
+}
+
 fn reindex_controls(base: &str, csrf_token: &str) -> Markup {
     section_card_simple(
         "Global Search Indexes",
@@ -76,6 +97,21 @@ fn reindex_controls(base: &str, csrf_token: &str) -> Markup {
     )
 }
 
+fn phase_label(phase: &str) -> Option<&'static str> {
+    match phase {
+        "queued" => Some("Waiting for a worker to start"),
+        "users" => Some("Rebuilding users"),
+        "guilds" => Some("Rebuilding guilds"),
+        "discovery" => Some("Rebuilding the Explore index"),
+        "reports" => Some("Rebuilding reports"),
+        "audit_logs" => Some("Rebuilding audit logs"),
+        "guild_members" => Some("Rebuilding guild members, counted in guilds"),
+        "threads" => Some("Rebuilding threads, counted in guilds"),
+        "messages" => Some("Rebuilding messages, counted in channels"),
+        _ => None,
+    }
+}
+
 fn format_status_label(status: &str) -> &str {
     match status {
         "in_progress" => "In progress",
@@ -89,6 +125,7 @@ fn format_status_label(status: &str) -> &str {
 pub struct RefreshStatus<'a> {
     pub job_id: &'a str,
     pub status: Option<&'a str>,
+    pub phase: Option<&'a str>,
     pub total: Option<u64>,
     pub indexed: Option<u64>,
     pub started_at: Option<&'a str>,
@@ -121,6 +158,9 @@ fn status_section(base: &str, rs: &RefreshStatus) -> Markup {
                 }
 
                 @if is_in_progress {
+                    @if let Some(label) = rs.phase.and_then(phase_label) {
+                        p class="text-sm text-neutral-700" { (label) }
+                    }
                     @if let (Some(idx), Some(tot)) = (rs.indexed, rs.total) {
                         @let pct = (u128::from(idx) * 100).checked_div(u128::from(tot)).unwrap_or(0);
                         div class="space-y-2" {
@@ -182,6 +222,7 @@ pub fn search_index_page(
     let content = html! {
         (page_header("Search Index Management", None))
         div class="space-y-6" {
+            (reindex_everything(base, csrf_token))
             (reindex_controls(base, csrf_token))
             @if let Some(rs) = refresh {
                 (status_section(base, rs))

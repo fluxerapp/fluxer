@@ -53,6 +53,7 @@ fn index_refresh_status(
         generated_types::IndexRefreshStatusResponse::Variant1 {
             status,
             index_type,
+            phase,
             total,
             indexed,
             started_at,
@@ -62,6 +63,7 @@ fn index_refresh_status(
         } => Ok(IndexRefreshStatusResponse::Progress {
             status: status.to_string(),
             index_type: Some(index_type),
+            phase,
             total: total
                 .map(|value| float_to_u64(value, "total"))
                 .transpose()?,
