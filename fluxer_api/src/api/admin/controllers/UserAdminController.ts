@@ -52,6 +52,8 @@ import {
 	AdminUserTraitsRequest,
 	AdminUserUsernameUpdateRequest,
 	AdminUserWebAuthnCredentialParam,
+	ListAppSessionsQuery,
+	ListAppSessionsResponse,
 	ListUserChangeLogResponseSchema,
 	ListUserRelationshipsResponse,
 	ListUserSessionsResponse,
@@ -534,6 +536,38 @@ export function UserAdminController(app: HonoApp) {
 					adminUserAcls,
 				),
 			);
+		},
+	);
+	app.get(
+		'/admin/app-sessions',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.USER_LIST_SESSIONS),
+		Validator('query', ListAppSessionsQuery),
+		OpenAPI({
+			operationId: 'list_admin_app_sessions',
+			summary: 'List native app sessions by platform and release channel',
+			responseSchema: ListAppSessionsResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Lists active sessions whose native app last reported the given platform and release channel, with the app version, build number and beta number it reported. Pages hold up to 200 sessions and can hold fewer while next_cursor is still set. Requires USER_LIST_SESSIONS permission.',
+		}),
+		async (ctx) => {
+			const query = ctx.req.valid('query');
+			const result = await ctx.get('adminService').userService.securityService.listAppSessions(query);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_APP_SESSIONS,
+				metadata: {
+					platform: query.platform,
+					release_channel: query.release_channel,
+					has_cursor: query.after !== undefined,
+					result_count: result.sessions.length,
+				},
+			});
+			return ctx.json(result);
 		},
 	);
 	app.delete(

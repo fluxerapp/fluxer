@@ -39,12 +39,14 @@ import {
 	type AttachmentUploadTraceByKeyRow,
 } from '@app/api/database/types/AttachmentUploadTypes';
 import {
+	AUTH_SESSION_BY_APP_CHANNEL_COLUMNS,
 	AUTH_SESSION_COLUMNS,
 	AUTH_SESSION_TOMBSTONE_COLUMNS,
 	AUTHORIZED_IP_COLUMNS,
 	AUTHORIZED_IP_TRUST_KEY_COLUMNS,
 	type AuthorizedIpRow,
 	type AuthorizedIpTrustKeyRow,
+	type AuthSessionByAppChannelRow,
 	type AuthSessionRow,
 	type AuthSessionTombstoneRow,
 	EMAIL_CHANGE_TICKET_COLUMNS,
@@ -1079,6 +1081,16 @@ export const AuthSessionsByUserId = defineTable<
 	name: 'auth_sessions_by_user_id',
 	columns: ['user_id', 'session_id_hash'],
 	primaryKey: ['user_id', 'session_id_hash'],
+});
+export const AuthSessionsByAppChannel = defineTable<
+	AuthSessionByAppChannelRow,
+	'app_platform' | 'app_release_channel' | 'session_id_hash',
+	'app_platform' | 'app_release_channel'
+>({
+	name: 'auth_sessions_by_app_channel',
+	columns: AUTH_SESSION_BY_APP_CHANNEL_COLUMNS,
+	primaryKey: ['app_platform', 'app_release_channel', 'session_id_hash'],
+	partitionKey: ['app_platform', 'app_release_channel'],
 });
 export const AuthSessionTombstones = defineTable<AuthSessionTombstoneRow, 'user_id' | 'session_id_hash'>({
 	name: 'auth_session_tombstones',

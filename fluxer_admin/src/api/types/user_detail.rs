@@ -13,6 +13,10 @@ pub struct UserSession {
     pub client_os: Option<String>,
     pub client_platform: Option<String>,
     pub client_location: Option<String>,
+    pub app_version: Option<String>,
+    pub app_release_channel: Option<String>,
+    pub app_build_number: Option<i32>,
+    pub app_beta_number: Option<i32>,
     pub deleted_at: Option<String>,
 }
 

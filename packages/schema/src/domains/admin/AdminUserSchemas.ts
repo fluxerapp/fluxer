@@ -168,6 +168,13 @@ const UserSessionResponse = z.object({
 	client_os: z.string().nullable().describe('Client operating system, if detected'),
 	client_platform: z.string().nullable().describe('Client platform, if detected'),
 	client_location: z.string().nullable().describe('Approximate geo location label for the client IP, if available'),
+	app_platform: z.string().nullable().describe('Platform the native app last reported for this session'),
+	app_version: z.string().nullable().describe('App version the native app last reported for this session'),
+	app_release_channel: z.string().nullable().describe('Release channel the native app last reported for this session'),
+	app_build_number: Int32Type.nullable().describe(
+		'Platform build number the native app last reported for this session',
+	),
+	app_beta_number: Int32Type.nullable().describe('Beta number the native app last reported, for beta builds only'),
 	deleted_at: z.string().nullable().describe('ISO timestamp when the session was terminated, or null if still active'),
 });
 
@@ -176,6 +183,36 @@ export const ListUserSessionsResponse = z.object({
 });
 
 export type ListUserSessionsResponse = z.infer<typeof ListUserSessionsResponse>;
+
+export const ListAppSessionsQuery = z.object({
+	platform: z.enum(['android', 'ios', 'linux', 'desktop']).describe('Native app platform to list sessions for'),
+	release_channel: z.enum(['stable', 'beta', 'canary']).describe('Release channel to list sessions for'),
+	after: createStringType(1, 128)
+		.optional()
+		.describe('The next_cursor value from the previous page. Leave it out for the first page'),
+});
+
+export type ListAppSessionsQuery = z.infer<typeof ListAppSessionsQuery>;
+
+const AppSessionResponse = z.object({
+	user_id: SnowflakeStringType.describe('ID of the user who owns the session'),
+	session_id_hash: createStringType(8, 256).describe('Hashed session identifier (base64url)'),
+	created_at: z.string().describe('ISO timestamp when the session was created'),
+	approx_last_used_at: z.string().describe('ISO timestamp of the session last usage (approximate)'),
+	app_version: z.string().nullable().describe('App version the session last reported'),
+	app_build_number: Int32Type.nullable().describe('Platform build number the session last reported'),
+	app_beta_number: Int32Type.nullable().describe('Beta number the session last reported, for beta builds only'),
+});
+
+export const ListAppSessionsResponse = z.object({
+	sessions: z.array(AppSessionResponse),
+	next_cursor: z
+		.string()
+		.nullable()
+		.describe('Pass this as after to read the next page, or null when this is the last page'),
+});
+
+export type ListAppSessionsResponse = z.infer<typeof ListAppSessionsResponse>;
 
 export const ListUserDmChannelsRequest = z
 	.object({

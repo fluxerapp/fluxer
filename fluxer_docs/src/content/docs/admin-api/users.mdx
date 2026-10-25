@@ -278,9 +278,32 @@ One sign-in session of an account. Ended sessions stay in the list with `deleted
 | client_os | ?string | The operating system from the user agent |
 | client_platform | ?string | The platform from the user agent |
 | client_location<sup>1</sup> | ?string | The approximate location of that address |
+| app_platform<sup>2</sup> | ?string | The app platform, one of `android`, `ios`, `linux` or `desktop` |
+| app_version<sup>2</sup> | ?string | The app version |
+| app_release_channel<sup>2</sup> | ?string | The release channel, one of `stable`, `beta` or `canary` |
+| app_build_number<sup>2</sup> | ?integer | The platform build number |
+| app_beta_number<sup>2</sup> | ?integer | The beta number, only on `beta` builds |
 | deleted_at | ?ISO8601 timestamp | When the session ended, or null while it is active |
 
 <sup>1</sup> Needs `user:view:ip`. Without it `client_ip` is `[redacted]` and the other two are null
+
+<sup>2</sup> From the `X-Fluxer-Client-Properties` header of the last request the session made, and null when that header is missing or on ended sessions
+
+## Admin app session object
+
+One active session with the app version and build that its last `X-Fluxer-Client-Properties` header sent.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The account the session belongs to |
+| session_id_hash | string | The base64url hash of the session ID (8-256 characters) |
+| created_at | ISO8601 timestamp | When the session started |
+| approx_last_used_at | ISO8601 timestamp | About when the session was last used |
+| app_version | ?string | The app version |
+| app_build_number | ?integer | The platform build number |
+| app_beta_number | ?integer | The beta number, only on `beta` builds |
 
 ## Admin resolved user object
 
@@ -1407,6 +1430,35 @@ Lists the account's active and ended sessions, active first and then newest firs
 | 503 | [error response](/admin-api/#error-response) | `SERVICE_UNAVAILABLE` when every location lookup failed |
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## List app sessions
+
+<RouteHeader method="GET" path="/v1/admin/app-sessions" auditReason />
+
+Lists the active sessions whose last `X-Fluxer-Client-Properties` header sent the given platform and release channel. You need `user:list:sessions`. A page has up to 200 sessions and can have fewer while `next_cursor` is set, so keep reading until it is null.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | One of `android`, `ios`, `linux` or `desktop` |
+| release_channel | string | One of `stable`, `beta` or `canary` |
+| after? | string | The `next_cursor` from the previous page (1-128 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sessions | array[[Admin app session](#admin-app-session-object) object] | The sessions on this page |
+| next_cursor | ?string | The value to send as `after` for the next page, or null on the last page |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The page was returned, even with no sessions |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Terminate user sessions
 

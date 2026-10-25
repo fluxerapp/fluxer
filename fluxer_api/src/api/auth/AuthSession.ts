@@ -16,7 +16,11 @@ import type {User} from '@app/api/models/User';
 import {BELOW_MINIMUM_AGE_TRAIT} from '@app/api/user/UserTraits';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
-import {isFluxerNativeUserAgent, parseReportedClientOs} from '@app/api/utils/SessionClientIdentity';
+import {
+	isFluxerNativeUserAgent,
+	parseReportedClientApp,
+	parseReportedClientOs,
+} from '@app/api/utils/SessionClientIdentity';
 import {AccountBelowMinimumAgeError} from '@fluxer/errors/src/domains/auth/AccountBelowMinimumAgeError';
 import {BotUserAuthSessionCreationDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthSessionCreationDeniedError';
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
@@ -103,6 +107,11 @@ export async function createAuthSession(
 		client_user_agent: origin.userAgent,
 		client_os: origin.clientOs,
 		client_country: clientCountry,
+		app_platform: null,
+		app_version: null,
+		app_release_channel: null,
+		app_build_number: null,
+		app_beta_number: null,
 		version: 1,
 	});
 	return [token, authSession];
@@ -143,8 +152,16 @@ export async function getAuthSessions(
 	return await mapAuthSessionsToResponse({authSessions, currentSessionIdHash});
 }
 
-export async function updateAuthSessionLastUsed(ctx: ApiContext, tokenHash: Uint8Array): Promise<void> {
-	await ctx.services.userActivityBuffer.recordAuthSessionActivity(Buffer.from(tokenHash), new Date());
+export async function updateAuthSessionLastUsed(
+	ctx: ApiContext,
+	tokenHash: Uint8Array,
+	request: Request,
+): Promise<void> {
+	const userAgent = request.headers.get('user-agent');
+	const app = isFluxerNativeUserAgent(userAgent)
+		? parseReportedClientApp(request.headers.get('x-fluxer-client-properties'))
+		: null;
+	await ctx.services.userActivityBuffer.recordAuthSessionActivity(Buffer.from(tokenHash), new Date(), app);
 }
 
 export async function revokeToken(ctx: ApiContext, token: string): Promise<void> {

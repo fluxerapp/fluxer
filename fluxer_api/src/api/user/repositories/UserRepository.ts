@@ -257,6 +257,14 @@ export class UserRepository {
 		return this.authSessionRepository.listAuthSessions(userId);
 	}
 
+	async listAuthSessionsByAppChannel(params: {
+		platform: string;
+		releaseChannel: string;
+		after: Buffer | null;
+	}): Promise<{sessions: Array<AuthSession>; nextCursor: Buffer | null}> {
+		return this.authSessionRepository.listAuthSessionsByAppChannel(params);
+	}
+
 	async listAuthSessionTombstones(userId: UserID): Promise<Array<AuthSessionTombstone>> {
 		return this.authSessionRepository.listAuthSessionTombstones(userId);
 	}

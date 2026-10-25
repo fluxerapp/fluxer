@@ -357,6 +357,93 @@
 				]
 			}
 		},
+		"/admin/app-sessions": {
+			"get": {
+				"operationId": "list_admin_app_sessions",
+				"summary": "List native app sessions by platform and release channel",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ListAppSessionsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists active sessions whose native app last reported the given platform and release channel, with the app version, build number and beta number it reported. Pages hold up to 200 sessions and can hold fewer while next_cursor is still set. Requires USER_LIST_SESSIONS permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "platform",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": ["android", "ios", "linux", "desktop"],
+							"description": "Native app platform to list sessions for"
+						},
+						"description": "Native app platform to list sessions for"
+					},
+					{
+						"name": "release_channel",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": ["stable", "beta", "canary"],
+							"description": "Release channel to list sessions for"
+						},
+						"description": "Release channel to list sessions for"
+					},
+					{
+						"name": "after",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "The next_cursor value from the previous page. Leave it out for the first page",
+							"type": "string"
+						},
+						"description": "The next_cursor value from the previous page. Leave it out for the first page"
+					}
+				]
+			}
+		},
 		"/admin/applications": {
 			"get": {
 				"operationId": "list_admin_applications",
@@ -12844,6 +12931,31 @@
 									"description": "Approximate geo location label for the client IP, if available",
 									"type": "string"
 								},
+								"app_platform": {
+									"nullable": true,
+									"description": "Platform the native app last reported for this session",
+									"type": "string"
+								},
+								"app_version": {
+									"nullable": true,
+									"description": "App version the native app last reported for this session",
+									"type": "string"
+								},
+								"app_release_channel": {
+									"nullable": true,
+									"description": "Release channel the native app last reported for this session",
+									"type": "string"
+								},
+								"app_build_number": {
+									"nullable": true,
+									"description": "Platform build number the native app last reported for this session",
+									"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+								},
+								"app_beta_number": {
+									"nullable": true,
+									"description": "Beta number the native app last reported, for beta builds only",
+									"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+								},
 								"deleted_at": {
 									"nullable": true,
 									"description": "ISO timestamp when the session was terminated, or null if still active",
@@ -12859,6 +12971,11 @@
 								"client_os",
 								"client_platform",
 								"client_location",
+								"app_platform",
+								"app_version",
+								"app_release_channel",
+								"app_build_number",
+								"app_beta_number",
 								"deleted_at"
 							],
 							"additionalProperties": false
@@ -18575,6 +18692,66 @@
 					"application": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/ApplicationAdminResponse"}]}
 				},
 				"required": ["application"],
+				"additionalProperties": false
+			},
+			"ListAppSessionsResponse": {
+				"type": "object",
+				"properties": {
+					"sessions": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"user_id": {
+									"description": "ID of the user who owns the session",
+									"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+								},
+								"session_id_hash": {
+									"description": "Hashed session identifier (base64url)",
+									"type": "string",
+									"minLength": 8,
+									"maxLength": 256
+								},
+								"created_at": {"type": "string", "description": "ISO timestamp when the session was created"},
+								"approx_last_used_at": {
+									"type": "string",
+									"description": "ISO timestamp of the session last usage (approximate)"
+								},
+								"app_version": {
+									"nullable": true,
+									"description": "App version the session last reported",
+									"type": "string"
+								},
+								"app_build_number": {
+									"nullable": true,
+									"description": "Platform build number the session last reported",
+									"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+								},
+								"app_beta_number": {
+									"nullable": true,
+									"description": "Beta number the session last reported, for beta builds only",
+									"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+								}
+							},
+							"required": [
+								"user_id",
+								"session_id_hash",
+								"created_at",
+								"approx_last_used_at",
+								"app_version",
+								"app_build_number",
+								"app_beta_number"
+							],
+							"additionalProperties": false
+						}
+					},
+					"next_cursor": {
+						"nullable": true,
+						"description": "Pass this as after to read the next page, or null when this is the last page",
+						"type": "string"
+					}
+				},
+				"required": ["sessions", "next_cursor"],
 				"additionalProperties": false
 			},
 			"DeleteApiKeyResponse": {

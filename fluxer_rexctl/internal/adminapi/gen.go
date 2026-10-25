@@ -2476,6 +2476,21 @@ type LastSessionCleanupModeSchema string
 // ListUserSessionsResponse defines model for ListUserSessionsResponse.
 type ListUserSessionsResponse struct {
 	Sessions []struct {
+		// AppBetaNumber Beta number the native app last reported, for beta builds only
+		AppBetaNumber *Int32Type `json:"app_beta_number"`
+
+		// AppBuildNumber Platform build number the native app last reported for this session
+		AppBuildNumber *Int32Type `json:"app_build_number"`
+
+		// AppPlatform Platform the native app last reported for this session
+		AppPlatform *string `json:"app_platform"`
+
+		// AppReleaseChannel Release channel the native app last reported for this session
+		AppReleaseChannel *string `json:"app_release_channel"`
+
+		// AppVersion App version the native app last reported for this session
+		AppVersion *string `json:"app_version"`
+
 		// ApproxLastUsedAt ISO timestamp of the session last usage (approximate)
 		ApproxLastUsedAt string `json:"approx_last_used_at"`
 

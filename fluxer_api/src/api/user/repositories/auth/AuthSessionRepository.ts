@@ -7,7 +7,7 @@ import type {AuthSessionRow, AuthSessionTombstoneRow} from '@app/api/database/ty
 import {Logger} from '@app/api/Logger';
 import {getCacheService, getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
 import {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
-import {AuthSessions, AuthSessionsByUserId, AuthSessionTombstones} from '@app/api/Tables';
+import {AuthSessions, AuthSessionsByAppChannel, AuthSessionsByUserId, AuthSessionTombstones} from '@app/api/Tables';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {isValidTimestamp} from '@app/api/utils/TimestampUtils';
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
@@ -17,6 +17,7 @@ const AUTH_SESSION_CACHE_TTL_SECONDS = 30;
 const AUTH_SESSION_MISS_CACHE_TTL_SECONDS = 5;
 const AUTH_SESSION_READ_SLICE = 100;
 const AUTH_SESSIONS_PER_BATCH = 20;
+const APP_CHANNEL_PAGE_SIZE = 200;
 
 interface CachedAuthSession {
 	user_id: string;
@@ -27,6 +28,11 @@ interface CachedAuthSession {
 	client_user_agent: string | null;
 	client_os: string | null;
 	client_country: string | null;
+	app_platform?: string | null;
+	app_version?: string | null;
+	app_release_channel?: string | null;
+	app_build_number?: number | null;
+	app_beta_number?: number | null;
 	version: number;
 }
 
@@ -41,6 +47,11 @@ const CachedAuthSessionSchema = z.object({
 	client_user_agent: z.string().nullable(),
 	client_os: z.string().nullable(),
 	client_country: z.string().nullable(),
+	app_platform: z.string().nullish(),
+	app_version: z.string().nullish(),
+	app_release_channel: z.string().nullish(),
+	app_build_number: z.int().nullish(),
+	app_beta_number: z.int().nullish(),
 	version: z.int().nonnegative(),
 }) satisfies z.ZodType<CachedAuthSession>;
 
@@ -58,6 +69,11 @@ function encodeCachedAuthSession(row: AuthSessionRow): CachedAuthSession {
 		client_user_agent: row.client_user_agent,
 		client_os: row.client_os,
 		client_country: row.client_country,
+		app_platform: row.app_platform,
+		app_version: row.app_version,
+		app_release_channel: row.app_release_channel,
+		app_build_number: row.app_build_number,
+		app_beta_number: row.app_beta_number,
 		version: row.version,
 	};
 }
@@ -80,6 +96,11 @@ function decodeCachedAuthSession(value: unknown, sessionIdHash: Buffer): AuthSes
 		client_user_agent: cached.client_user_agent,
 		client_os: cached.client_os,
 		client_country: cached.client_country,
+		app_platform: cached.app_platform ?? null,
+		app_version: cached.app_version ?? null,
+		app_release_channel: cached.app_release_channel ?? null,
+		app_build_number: cached.app_build_number ?? null,
+		app_beta_number: cached.app_beta_number ?? null,
 		version: cached.version,
 	};
 }
@@ -107,6 +128,20 @@ const FETCH_AUTH_SESSION_BY_TOKEN_CQL = AuthSessions.selectCql({
 const FETCH_AUTH_SESSION_HASHES_BY_USER_ID_CQL = AuthSessionsByUserId.selectCql({
 	columns: ['session_id_hash'],
 	where: AuthSessionsByUserId.where.eq('user_id'),
+});
+const FETCH_APP_CHANNEL_SESSIONS_FIRST = AuthSessionsByAppChannel.select({
+	columns: ['session_id_hash'],
+	where: [AuthSessionsByAppChannel.where.eq('app_platform'), AuthSessionsByAppChannel.where.eq('app_release_channel')],
+	limit: APP_CHANNEL_PAGE_SIZE,
+});
+const FETCH_APP_CHANNEL_SESSIONS_AFTER = AuthSessionsByAppChannel.select({
+	columns: ['session_id_hash'],
+	where: [
+		AuthSessionsByAppChannel.where.eq('app_platform'),
+		AuthSessionsByAppChannel.where.eq('app_release_channel'),
+		AuthSessionsByAppChannel.where.gt('session_id_hash', 'after'),
+	],
+	limit: APP_CHANNEL_PAGE_SIZE,
 });
 const FETCH_AUTH_SESSION_TOMBSTONES_BY_USER_ID_CQL = AuthSessionTombstones.selectCql({
 	where: AuthSessionTombstones.where.eq('user_id'),
@@ -163,6 +198,26 @@ export class AuthSessionRepository {
 		if (sessionHashes.length === 0) return [];
 		const sessions = await fetchAuthSessionRows(sessionHashes.map((s) => s.session_id_hash));
 		return sessions.filter((session) => session.user_id === userId).map((session) => new AuthSession(session));
+	}
+
+	async listAuthSessionsByAppChannel(params: {
+		platform: string;
+		releaseChannel: string;
+		after: Buffer | null;
+	}): Promise<{sessions: Array<AuthSession>; nextCursor: Buffer | null}> {
+		const partition = {app_platform: params.platform, app_release_channel: params.releaseChannel};
+		const refs = await fetchMany<{session_id_hash: Buffer}>(
+			params.after === null
+				? FETCH_APP_CHANNEL_SESSIONS_FIRST.bind(partition)
+				: FETCH_APP_CHANNEL_SESSIONS_AFTER.bind({...partition, after: params.after}),
+		);
+		const rows = refs.length === 0 ? [] : await fetchAuthSessionRows(refs.map((ref) => ref.session_id_hash));
+		return {
+			sessions: rows
+				.filter((row) => row.app_platform === params.platform && row.app_release_channel === params.releaseChannel)
+				.map((row) => new AuthSession(row)),
+			nextCursor: refs.length === APP_CHANNEL_PAGE_SIZE ? refs[refs.length - 1]!.session_id_hash : null,
+		};
 	}
 
 	async listAuthSessionTombstones(userId: UserID): Promise<Array<AuthSessionTombstone>> {
@@ -260,6 +315,15 @@ function revokeStatements(
 	const statements: Array<PreparedQuery> = [];
 	if (options.deletePrimary) statements.push(AuthSessions.deleteByPk({session_id_hash: sessionIdHash}));
 	statements.push(AuthSessionsByUserId.deleteByPk({user_id: userId, session_id_hash: sessionIdHash}));
+	if (original?.app_platform && original.app_release_channel) {
+		statements.push(
+			AuthSessionsByAppChannel.deleteByPk({
+				app_platform: original.app_platform,
+				app_release_channel: original.app_release_channel,
+				session_id_hash: sessionIdHash,
+			}),
+		);
+	}
 	if (original) statements.push(AuthSessionTombstones.insert(toTombstoneRow(original, options.deletedAt)));
 	return statements;
 }
