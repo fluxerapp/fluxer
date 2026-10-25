@@ -161,7 +161,8 @@ export class UserAccountRepository {
 	}
 
 	async completeDeletion(user: User): Promise<void> {
-		await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		const {updatedData} = await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		await this.searchRepo.updateUser(new User(updatedData));
 	}
 
 	private async patchAccount(

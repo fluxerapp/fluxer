@@ -32,6 +32,10 @@ export function isAccountClosed(user: Pick<User, 'flags' | 'deletionStartedAt'>)
 	return (user.flags & UserFlags.DELETED) !== 0n || user.deletionStartedAt != null;
 }
 
+export function isDeletionComplete(user: Pick<User, 'flags' | 'pendingDeletionAt'>): boolean {
+	return (user.flags & UserFlags.DELETED) !== 0n && user.pendingDeletionAt === null;
+}
+
 export function isTemporarilyBanned(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
 	return (
 		(user.flags & UserFlags.DISABLED) !== 0n && user.tempBannedUntil != null && user.tempBannedUntil.getTime() > now
