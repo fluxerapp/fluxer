@@ -10,6 +10,8 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {formatClientBuildInfo, getClientInfo, getClientInfoSync} from '@app/features/platform/utils/ClientInfo';
 import Presence from '@app/features/presence/state/Presence';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import UserSettings from '@app/features/user/state/UserSettings';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -72,6 +74,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 			selfDeaf: LocalVoiceState.getSelfDeaf(),
 			presenceStatus: toTrayStatus(resolvePresenceStatus()),
 			hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+			customCssOff: ThemeSettingsState.customCssOff,
 		});
 	};
 	void getClientInfo()
@@ -93,6 +96,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 				selfDeaf: LocalVoiceState.getSelfDeaf(),
 				status: resolvePresenceStatus(),
 				hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+				customCssOff: ThemeSettingsState.customCssOff,
 			};
 		},
 		pushState,
@@ -126,6 +130,10 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 			}
 			case 'open-account-switcher': {
 				openAccountSwitcherModal();
+				break;
+			}
+			case 'toggle-custom-css': {
+				ThemeSettingsCommands.toggleCustomCss();
 				break;
 			}
 		}

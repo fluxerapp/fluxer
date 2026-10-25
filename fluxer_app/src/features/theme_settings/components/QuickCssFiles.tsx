@@ -25,12 +25,16 @@ import {
 	showThemeSettingsErrorModal,
 	WE_COULDN_T_SAVE_THAT_THEME_DESCRIPTOR,
 } from '@app/features/theme_settings/utils/ThemeSettingsErrorModal';
-import {THEME_SAVED_DESCRIPTOR} from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
+import {
+	CUSTOM_CSS_IS_OFF_DESCRIPTOR,
+	THEME_SAVED_DESCRIPTOR,
+} from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
+import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {copyText, readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {QUICK_CSS_SECTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/ThemesSections';
@@ -98,6 +102,11 @@ const THEME_PREVIEW_DESCRIPTOR = msg({
 const THEME_OFF_DESCRIPTOR = msg({
 	message: 'Turn this theme on to see your changes in the app.',
 	comment: 'Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.',
+});
+const USE_THIS_THEME_DESCRIPTOR = msg({
+	message: 'Use this theme',
+	comment:
+		'Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.',
 });
 const QUICK_CSS_REPLACED_FROM_DESCRIPTOR = msg({
 	message: 'Quick CSS replaced from {fileName}.',
@@ -290,7 +299,9 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 		);
 	};
 	let previewStatus: React.ReactNode = null;
-	if (!livePreview) {
+	if (ThemeSettingsState.customCssOff) {
+		previewStatus = i18n._(CUSTOM_CSS_IS_OFF_DESCRIPTOR);
+	} else if (!livePreview) {
 		previewStatus = unapplied ? i18n._(NOT_APPLIED_YET_DESCRIPTOR) : i18n._(APPLY_TO_SEE_CHANGES_DESCRIPTOR);
 	} else if (target === ThemeProfile.activeTarget) {
 		previewStatus = i18n._(CHANGES_SHOW_AS_YOU_TYPE_DESCRIPTOR);
@@ -486,10 +497,27 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 			)
 			.finally(() => setSaving(false));
 	};
-	let actions: React.ReactNode = null;
+	const enabledSwitch = (
+		<Switch
+			compact
+			label={i18n._(USE_THIS_THEME_DESCRIPTOR)}
+			value={enabled}
+			onChange={(value) => {
+				void ThemeProfileCommands.setThemeEnabled(theme.id, value, ThemeEditTarget.target);
+			}}
+			className={styles.themeSwitch}
+			data-flx="theme-settings.quick-css-files.theme-file.switch.enabled"
+		/>
+	);
+	let actions: React.ReactNode = (
+		<div className={styles.actions} data-flx="theme-settings.quick-css-files.theme-file.read-only-actions">
+			{enabledSwitch}
+		</div>
+	);
 	if (!readOnly) {
 		actions = (
 			<div className={styles.actions} data-flx="theme-settings.quick-css-editor-window.theme-file.actions">
+				{enabledSwitch}
 				<Button
 					small
 					leftIcon={
@@ -514,7 +542,8 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 		);
 	}
 	let previewStatus: React.ReactNode = null;
-	if (!readOnly && !enabled) previewStatus = i18n._(THEME_OFF_DESCRIPTOR);
+	if (ThemeSettingsState.customCssOff) previewStatus = i18n._(CUSTOM_CSS_IS_OFF_DESCRIPTOR);
+	else if (!readOnly && !enabled) previewStatus = i18n._(THEME_OFF_DESCRIPTOR);
 	else if (!readOnly && EditorPreferences.livePreview) previewStatus = i18n._(THEME_PREVIEW_DESCRIPTOR);
 	return (
 		<QuickCssEditor
@@ -534,18 +563,20 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 						<p className={styles.line} data-flx="theme-settings.quick-css-editor-window.theme-file.line">
 							{linkedLine}
 						</p>
-						<div data-flx="theme-settings.quick-css-editor-window.theme-file.div">
-							<Button
-								variant="secondary"
-								small
-								onClick={() => void ThemeLibrary.unlinkTheme(theme.id)}
-								data-flx="theme-settings.quick-css-editor-window.theme-file.button"
-							>
-								<Trans comment="Button that stops a theme following its CSS file on disk and turns it back into an editable copy.">
-									Unlink
-								</Trans>
-							</Button>
-						</div>
+						{ThemeLibrary.isWatchedFolderTheme(theme) ? null : (
+							<div data-flx="theme-settings.quick-css-editor-window.theme-file.div">
+								<Button
+									variant="secondary"
+									small
+									onClick={() => void ThemeLibrary.unlinkTheme(theme.id)}
+									data-flx="theme-settings.quick-css-editor-window.theme-file.button"
+								>
+									<Trans comment="Button that stops a theme following its CSS file on disk and turns it back into an editable copy.">
+										Unlink
+									</Trans>
+								</Button>
+							</div>
+						)}
 					</div>
 				) : null
 			}

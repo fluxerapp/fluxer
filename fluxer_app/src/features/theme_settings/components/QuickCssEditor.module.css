@@ -42,9 +42,14 @@
 	cursor: pointer;
 }
 
-.toolButton:hover {
+.toolButton:hover:not(:disabled) {
 	color: var(--text-primary);
 	background: var(--background-modifier-hover);
+}
+
+.toolButton:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
 }
 
 .toolButtonPressed {

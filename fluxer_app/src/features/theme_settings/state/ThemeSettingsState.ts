@@ -2,6 +2,7 @@
 
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {readCustomCssOff, writeCustomCssOff} from '@app/features/theme_settings/state/CustomCssOff';
 import {makeAutoObservable} from 'mobx';
 
 const EXPANDED_GROUPS_STORAGE_KEY = 'ThemeStudio:expandedGroups';
@@ -51,6 +52,7 @@ class ThemeSettingsState {
 	missingReferences: ReadonlyArray<string> = [];
 	blockedUrls: ReadonlyArray<string> = [];
 	themePreview: ThemePreview | null = null;
+	customCssOff = readCustomCssOff();
 	editorWindow: Window | null = null;
 	editorFileRequestHandler: ((file: string) => void) | null = null;
 	quickCssWriteFlusher: (() => void) | null = null;
@@ -166,6 +168,11 @@ class ThemeSettingsState {
 	recordBlockedUrl(url: string): void {
 		if (this.blockedUrls.includes(url)) return;
 		this.blockedUrls = [...this.blockedUrls, url].slice(-BLOCKED_URL_LIMIT);
+	}
+
+	setCustomCssOff(off: boolean): void {
+		this.customCssOff = off;
+		writeCustomCssOff(off);
 	}
 
 	setThemePreview(preview: ThemePreview | null): void {

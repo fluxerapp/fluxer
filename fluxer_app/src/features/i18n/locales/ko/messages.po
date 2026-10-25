@@ -8741,6 +8741,11 @@ msgstr "더 선명한 텍스트"
 msgid "Clearing trusted domains..."
 msgstr "신뢰하는 도메인 지우는 중..."
 
+#. Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "요소를 클릭해서 셀렉터를 추가하세요. {parentKey}를 누르면 부모를 선택하고 Escape로 선택을 멈출 수 있어요."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
 msgstr "버튼을 눌러 피드백 토스트 알림을 확인하세요."
@@ -11897,6 +11902,11 @@ msgstr "차단 기간 직접 지정(초)"
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "사용자 지정 CSS"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "커스텀 CSS가 꺼져 있어요."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -16687,6 +16697,16 @@ msgstr "Fluxer가 에셋 \"{name}\"을(를) 찾을 수 없어요."
 msgid "Fluxer can't find the file \"{path}\"."
 msgstr "Fluxer가 파일 \"{path}\"을(를) 찾을 수 없어요."
 
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Fluxer에서 이 폴더를 찾을 수 없어요. 폴더가 돌아오면 테마를 다시 불러올 거예요."
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Fluxer에서 이 폴더를 열 수 없습니다. 계속 감시하려면 다시 가져오세요."
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -17314,6 +17334,11 @@ msgstr "보낸 사람"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "{creatorTag}님으로부터"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "{folder}에서 가져옴"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -19094,6 +19119,11 @@ msgstr "데이터를 내보내거나 메시지를 먼저 삭제하려면 계속�
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "이 멤버들이 특정 날짜 이후에 전송된 지난 메시지를 볼 수 있도록 하려면 이 기능을 켜고 아래에서 기준일을 선택하세요."
+
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "CSS 때문에 앱이 깨지면 {shortcut}를 눌러서 꺼보세요."
 
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
@@ -25450,6 +25480,11 @@ msgstr "CSS 텍스트만 기기 간에 동기화됩니다. 업로드된 에셋, 
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "CSS 텍스트만 동기화됩니다. 업로드된 에셋과 로컬 파일 참조는 이 기기에 유지됩니다."
 
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "이 폴더의 CSS 파일 중 처음 200개만 불러와요."
+
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
 msgstr "그룹 소유자만 초대를 관리할 수 있습니다."
@@ -27082,6 +27117,16 @@ msgstr "번역 공급자 선택"
 msgid "Pick a web search provider"
 msgstr "웹 검색 공급자 선택"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "요소 선택"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "앱에서 요소 선택"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -27106,6 +27151,11 @@ msgstr "사전 하나 이상을 선택하세요. 선택된 사전의 단어는 �
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "사용자 이름 뒤에 오는 4자리 숫자 선택"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "선택 중에 부모 요소 선택"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -34935,10 +34985,21 @@ msgstr "2단계 인증에 패스키 사용을 중단하시겠어요?"
 msgid "Stop watching"
 msgstr "시청 중지"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "감시 중지"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "스트림 시청 중지"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "이 폴더 감시를 중지할까요?"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -36550,6 +36611,11 @@ msgstr "테마를 사용할 수 없습니다"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "테마"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "이 폴더의 테마가 \"내 테마\"에서 사라져요."
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -38494,6 +38560,11 @@ msgstr "튀르키예어"
 msgid "Turn a comment on or off"
 msgstr "주석 켜기/끄기"
 
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "커스텀 CSS 켜기/끄기"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -38525,6 +38596,11 @@ msgstr "인증 앱 사용 중지"
 msgid "Turn off camera"
 msgstr "카메라 끄기"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "커스텀 CSS 끄기"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -38545,7 +38621,9 @@ msgstr "스트림 끄기"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "로그인 또는 계정 보안 세부 정보를 보려면 스트리밍 개인 정보 보호를 끄세요."
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "켜기"
@@ -38578,6 +38656,11 @@ msgstr "OBS 또는 XSplit 감지 시 자동으로 켜기"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Turn on camera"
 msgstr "카메라 켜기"
+
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "커스텀 CSS 켜기"
 
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
@@ -40252,6 +40335,11 @@ msgstr "이 기기의 시스템 동작 줄이기 설정 사용"
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "이 기기의 시스템 동작 줄이기 설정을 사용하거나 아래에서 직접 조정하세요."
 
+#. Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "이 테마 사용하기"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -41438,6 +41526,11 @@ msgstr "스트림 시청"
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "Watching"
 msgstr "시청 중"
+
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "{path} 감시 중"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts

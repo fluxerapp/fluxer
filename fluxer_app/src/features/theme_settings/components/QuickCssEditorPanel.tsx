@@ -107,6 +107,16 @@ export const QuickCssEditorPanel: React.FC<{children: React.ReactNode}> = observ
 	const rect = liveRect ?? QuickCssPanelLayout.rectFor(viewport);
 	const animate = interaction === null && !Accessibility.useReducedMotion;
 	const label = i18n._(QUICK_CSS_EDITOR_DESCRIPTOR);
+	const [portalRoot] = useState(() => {
+		const root = document.createElement('div');
+		root.style.setProperty('display', 'contents', 'important');
+		return root;
+	});
+
+	useLayoutEffect(() => {
+		document.documentElement.appendChild(portalRoot);
+		return () => portalRoot.remove();
+	}, [portalRoot]);
 
 	useLayoutEffect(() => {
 		const host = hostRef.current;
@@ -375,6 +385,6 @@ export const QuickCssEditorPanel: React.FC<{children: React.ReactNode}> = observ
 				</MirroredDocumentPortal>
 			) : null}
 		</div>,
-		document.body,
+		portalRoot,
 	);
 });

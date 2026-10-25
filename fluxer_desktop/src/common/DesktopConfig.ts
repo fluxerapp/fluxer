@@ -18,6 +18,7 @@ import log from 'electron-log';
 export type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 
 const CONFIG_FILE_NAME = 'settings.json';
+const THEME_FOLDERS_MAX = 20;
 const MINIMIZE_TO_TRAY_STORAGE_KEY_V2 = 'minimizeToTrayV2';
 const CLOSE_TO_TRAY_STORAGE_KEY_V2 = 'closeToTrayV2';
 
@@ -26,6 +27,7 @@ interface DesktopConfig extends Record<string, unknown> {
 	window_behavior?: PersistedDesktopWindowBehaviorSettings;
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
 	theme_allowed_local_files?: Array<string>;
+	theme_folders?: Array<string>;
 	app_origin?: string;
 	preboot_theme?: string;
 	instance_product_names?: Array<PersistedInstanceProductName>;
@@ -342,6 +344,13 @@ function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 	} else {
 		delete nextConfig.theme_allowed_local_files;
 	}
+	if (Array.isArray(value.theme_folders)) {
+		nextConfig.theme_folders = value.theme_folders
+			.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+			.slice(0, THEME_FOLDERS_MAX);
+	} else {
+		delete nextConfig.theme_folders;
+	}
 	const prebootTheme = sanitizePrebootTheme(value.preboot_theme);
 	if (prebootTheme) {
 		nextConfig.preboot_theme = prebootTheme;
@@ -580,6 +589,26 @@ export function addAllowedThemeLocalFiles(paths: ReadonlyArray<string>): Array<s
 	return getAllowedThemeLocalFiles();
 }
 
+export function getThemeFolders(): Array<string> {
+	return Array.isArray(config.theme_folders) ? [...config.theme_folders] : [];
+}
+
+export function addThemeFolder(folder: string): boolean {
+	const current = getThemeFolders();
+	if (current.includes(folder)) return true;
+	if (current.length >= THEME_FOLDERS_MAX) return false;
+	config.theme_folders = [...current, folder];
+	saveDesktopConfig();
+	return true;
+}
+
+export function removeThemeFolder(folder: string): void {
+	const current = getThemeFolders();
+	if (!current.includes(folder)) return;
+	config.theme_folders = current.filter((entry) => entry !== folder);
+	saveDesktopConfig();
+}
+
 export function getPrebootTheme(): string | null {
 	return sanitizePrebootTheme(config.preboot_theme) ?? null;
 }
@@ -628,5 +657,6 @@ export function markMacScreenRecordingRequested(): void {
 
 export function clearAllowedThemeLocalFiles(): void {
 	delete config.theme_allowed_local_files;
+	delete config.theme_folders;
 	saveDesktopConfig();
 }

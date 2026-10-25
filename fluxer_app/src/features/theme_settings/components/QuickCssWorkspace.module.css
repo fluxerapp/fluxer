@@ -143,6 +143,12 @@
 	gap: var(--spacing-2);
 }
 
+.themeSwitch {
+	flex: 0 0 auto;
+	width: auto;
+	gap: var(--spacing-2);
+}
+
 .unsaved {
 	font-size: 0.875rem;
 	color: var(--text-primary-muted);

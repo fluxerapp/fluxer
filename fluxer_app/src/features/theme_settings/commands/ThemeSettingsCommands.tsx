@@ -70,7 +70,7 @@ function rememberFocus(): void {
 	focusBeforeOpen = active instanceof HTMLElement && active !== document.body ? active : null;
 }
 
-function focusQuickCssEditor(): void {
+export function focusQuickCssEditor(): void {
 	if (ThemeSettingsState.editorPlacement === 'window') {
 		ThemeSettingsState.editorWindow?.focus();
 		void getElectronAPI()?.popoutFocus?.(QUICK_CSS_EDITOR_WINDOW_KEY);
@@ -129,6 +129,10 @@ export function toggleQuickCssEditorFocus(): void {
 	}
 	rememberFocus();
 	focusQuickCssEditor();
+}
+
+export function toggleCustomCss(): void {
+	ThemeSettingsState.setCustomCssOff(!ThemeSettingsState.customCssOff);
 }
 
 export function moveQuickCssEditor(placement: QuickCssEditorPlacement): void {

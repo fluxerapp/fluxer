@@ -2,7 +2,7 @@
 
 import {keyboardEventMatchesCombo} from '@app/features/app/keybindings/KeybindEventUtils';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Keybind from '@app/features/input/state/InputKeybind';
+import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import AccountThemeMode from '@app/features/theme/state/AccountThemeMode';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
@@ -263,12 +263,22 @@ export const QuickCssWorkspace: React.FC = observer(() => {
 			},
 			hasFocus: () => ownerDocument.hasFocus() && root.contains(ownerDocument.activeElement),
 		});
+		const matches = (action: KeybindCommand, event: KeyboardEvent): boolean =>
+			Keybind.getActiveCombosForAction(action).some((combo) =>
+				keyboardEventMatchesCombo(combo, event, {isMacOS: isNativeMacOS()}),
+			);
 		const handleKeyDown = (event: KeyboardEvent): void => {
-			const combos = Keybind.getActiveCombosForAction('system_open_theme_studio_popout');
-			if (!combos.some((combo) => keyboardEventMatchesCombo(combo, event, {isMacOS: isNativeMacOS()}))) return;
-			event.preventDefault();
-			event.stopPropagation();
-			ThemeSettingsCommands.toggleQuickCssEditorFocus();
+			if (matches('system_open_theme_studio_popout', event)) {
+				event.preventDefault();
+				event.stopPropagation();
+				ThemeSettingsCommands.toggleQuickCssEditorFocus();
+				return;
+			}
+			if (matches('system_toggle_custom_css', event)) {
+				event.preventDefault();
+				event.stopPropagation();
+				ThemeSettingsCommands.toggleCustomCss();
+			}
 		};
 		ownerDocument.addEventListener('keydown', handleKeyDown, true);
 		return () => {

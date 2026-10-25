@@ -41,7 +41,7 @@ export function showAppHighlights(elements: ReadonlyArray<Element>): () => void 
 		box.style.cssText = `${BOX_STYLE};left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px`;
 		host.appendChild(box);
 	}
-	document.body.appendChild(host);
+	document.documentElement.appendChild(host);
 	host.showPopover();
 	return () => host.remove();
 }

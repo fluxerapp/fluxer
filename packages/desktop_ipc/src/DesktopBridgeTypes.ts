@@ -100,6 +100,31 @@ export interface ThemeLinkedFileChange {
 	error?: ThemeLinkedFileError;
 }
 
+export type ThemeFolderStatus = 'live' | 'missing' | 'not_allowed';
+
+export interface ThemeFolderRename {
+	from: string;
+	to: string;
+	fileName: string;
+}
+
+export interface ThemeFolderChange {
+	folder: string;
+	status: ThemeFolderStatus;
+	truncated: boolean;
+	snapshot: boolean;
+	added: Array<ThemeDirectoryCssFile>;
+	changed: Array<ThemeDirectoryCssFile>;
+	removed: Array<string>;
+	renamed: Array<ThemeFolderRename>;
+}
+
+export interface ThemeFolderImportResult {
+	folder: string;
+	files: Array<ThemeDirectoryCssFile>;
+	truncated: boolean;
+}
+
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
 
 export interface VoiceBackgroundMediaCacheRequest {
@@ -298,6 +323,7 @@ export interface TrayRuntimeStatePayload {
 	presenceStatus: TrayPresenceStatus | null;
 	buildInfo: string | null;
 	hidePersonalInformation: boolean;
+	customCssOff: boolean | null;
 }
 
 export type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';

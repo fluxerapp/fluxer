@@ -8741,6 +8741,11 @@ msgstr "ज़्यादा स्पष्ट टेक्स्ट"
 msgid "Clearing trusted domains..."
 msgstr "भरोसेमंद डोमेन हटाए जा रहे हैं..."
 
+#. Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "किसी एलिमेंट पर क्लिक करें ताकि उसका सेलेक्टर जोड़ सकें। {parentKey} से उसका पैरेंट चुनें और Escape से चुनना बंद करें।"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
 msgstr "फ़ीडबैक के साथ टोस्ट नोटिफ़िकेशन देखने के लिए किसी भी बटन पर क्लिक करें।"
@@ -11897,6 +11902,11 @@ msgstr "बैन की कस्टम अवधि (सेकंड)"
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "कस्टम सीएसएस"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "कस्टम CSS बंद है।"
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -16687,6 +16697,16 @@ msgstr "फ्लक्सर को एसेट \"{name}\" नहीं मि
 msgid "Fluxer can't find the file \"{path}\"."
 msgstr "फ्लक्सर को फाइल \"{path}\" नहीं मिली।"
 
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Fluxer को यह फ़ोल्डर नहीं मिल रहा है। जब फ़ोल्डर वापस आएगा, थीम फिर से लोड हो जाएंगी।"
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Fluxer इस फ़ोल्डर को नहीं खोल सकता। इसे फिर से इंपोर्ट करें ताकि Fluxer इसे देखता रहे।"
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -17314,6 +17334,11 @@ msgstr "भेजने वाला"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "{creatorTag} से"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "{folder} से"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -19094,6 +19119,11 @@ msgstr "अगर आप पहले अपना डेटा एक्सप�
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "अगर आप चाहते हैं कि ये सदस्य किसी खास तारीख के बाद भेजे गए पुराने मैसेज एक्सेस कर पाएं, तो इस फ़ीचर को चालू करें और नीचे थ्रेशोल्ड चुनें।"
+
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "अगर आपकी CSS से ऐप खराब हो जाए, तो {shortcut} दबाएं ताकि इसे बंद कर सकें।"
 
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
@@ -25450,6 +25480,11 @@ msgstr "केवल CSS टेक्स्ट डिवाइसों मे�
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "केवल CSS टेक्स्ट सिंक होता है। अपलोड की गई एसेट और लोकल फ़ाइल रेफ़रेंस इसी डिवाइस पर रहते हैं।"
 
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "इस फ़ोल्डर की सिर्फ पहली 200 CSS फाइलें लोड होती हैं।"
+
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
 msgstr "केवल ग्रुप का मालिक ही इनवाइट मैनेज कर सकता है।"
@@ -27082,6 +27117,16 @@ msgstr "अनुवाद प्रोवाइडर चुनें"
 msgid "Pick a web search provider"
 msgstr "वेब सर्च प्रोवाइडर चुनें"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "एलिमेंट चुनें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "ऐप में कोई एलिमेंट चुनें"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -27106,6 +27151,11 @@ msgstr "एक या ज़्यादा शब्दकोश चुने�
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "अपने यूज़रनेम के बाद 4-अंकीय संख्या चुनें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "चुनते समय पैरेंट एलिमेंट चुनें"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -34935,10 +34985,21 @@ msgstr "दो-कारक प्रमाणीकरण के लिए प�
 msgid "Stop watching"
 msgstr "देखना बंद करें"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "देखना बंद करें"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "स्ट्रीम देखना बंद करें"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "इस फ़ोल्डर को देखना बंद करें?"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -36550,6 +36611,11 @@ msgstr "थीम उपलब्ध नहीं है"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "थीम"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "इस फ़ोल्डर की थीम \"आपकी थीम\" से हटा दी जाएंगी।"
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -38494,6 +38560,11 @@ msgstr "तुर्की"
 msgid "Turn a comment on or off"
 msgstr "कमेंट ऑन या ऑफ करें"
 
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "कस्टम CSS चालू या बंद करें"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -38525,6 +38596,11 @@ msgstr "ऑथेंटिकेटर ऐप बंद करें"
 msgid "Turn off camera"
 msgstr "कैमरा बंद करें"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "कस्टम CSS बंद करें"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -38545,7 +38621,9 @@ msgstr "स्ट्रीम बंद करें"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "लॉगिन या अकाउंट सुरक्षा विवरण देखने से पहले स्ट्रीमिंग गोपनीयता बंद करें।"
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "चालू करें"
@@ -38578,6 +38656,11 @@ msgstr "OBS या XSplit का पता चलने पर अपने आ�
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Turn on camera"
 msgstr "कैमरा चालू करें"
+
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "कस्टम CSS चालू करें"
 
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
@@ -40252,6 +40335,11 @@ msgstr "इस डिवाइस की सिस्टम रिड्यू�
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "इस डिवाइस की सिस्टम रिड्यूस्ड मोशन प्राथमिकता का उपयोग करें या इसे नीचे कस्टमाइज़ करें।"
 
+#. Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "इस थीम का इस्तेमाल करें"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -41438,6 +41526,11 @@ msgstr "स्ट्रीम देखें"
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "Watching"
 msgstr "देख रहा है"
+
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "{path} देख रहे हैं"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts

@@ -209,9 +209,10 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		instanceThemeColor: instanceBrandStyle.themeColor,
 	});
 	useInstanceCustomCss(instanceBrandStyle.customCss);
+	const userCssApplied = !isAuthLayout && !ThemeSettingsState.customCssOff;
 	useCustomThemeStyle({
-		enabledThemeCss: isAuthLayout ? null : ThemeProfile.activeThemeCss,
-		customThemeCss: isAuthLayout ? null : ThemeProfile.customThemeCss,
+		enabledThemeCss: userCssApplied ? ThemeProfile.activeThemeCss : null,
+		customThemeCss: userCssApplied ? ThemeProfile.customThemeCss : null,
 		themeLibraryAssets: ThemeLibrary.assets,
 		themeLibraryLocalFiles: ThemeLibrary.localFiles,
 		themeLibraryRevision: ThemeLibrary.revision,

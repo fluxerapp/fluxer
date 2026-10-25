@@ -91,6 +91,8 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.update.failedDetail': 'The update did not download or install. Try again or download it yourself.',
 	'desktop.update.stillDownloadingDetail': 'The update is still downloading. Try again in a few minutes.',
 	'desktop.tray.copyBuildInfo': 'Copy build info',
+	'desktop.tray.turnOffCustomCss': 'Turn off custom CSS',
+	'desktop.tray.turnOnCustomCss': 'Turn on custom CSS',
 	'desktop.tray.restart': 'Restart {appName}',
 	'desktop.tray.quit': 'Quit {appName}',
 	'desktop.autostart.portalReason': 'Start {appName} automatically when you sign in.',

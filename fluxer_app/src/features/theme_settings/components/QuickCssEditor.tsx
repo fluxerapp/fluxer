@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
+import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
@@ -28,6 +29,13 @@ import {
 	registerLiveEditorCapture,
 	writeCachedEditorState,
 } from '@app/features/theme_settings/editor/EditorStateCache';
+import {
+	isElementPickerActive,
+	startElementPicker,
+	stopElementPicker,
+	stopElementPickerFor,
+	trackLastPointer,
+} from '@app/features/theme_settings/editor/ElementPicker';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getThemeBaseKind, type ThemeBaseKind} from '@app/features/theme_settings/utils/ThemeDefaultVariables';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
@@ -64,7 +72,7 @@ import {
 import {tags as t} from '@lezer/highlight';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GearSixIcon, type Icon, ListBulletsIcon, MagicWandIcon} from '@phosphor-icons/react';
+import {CursorClickIcon, GearSixIcon, type Icon, ListBulletsIcon, MagicWandIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
@@ -82,6 +90,16 @@ const OUTLINE_DESCRIPTOR = msg({
 const EDITOR_SETTINGS_DESCRIPTOR = msg({
 	message: 'Editor settings',
 	comment: 'Button in the quick CSS editor that opens settings such as font size and line wrapping.',
+});
+const PICK_AN_ELEMENT_DESCRIPTOR = msg({
+	message: 'Pick an element',
+	comment:
+		'Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.',
+});
+const PICKER_HINT_DESCRIPTOR = msg({
+	message: 'Click an element to add its selector. {parentKey} picks its parent and Escape stops picking.',
+	comment:
+		'Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.',
 });
 const FIX_ERRORS_BEFORE_FORMATTING_DESCRIPTOR = msg({
 	message: 'Fix the errors in your CSS before formatting it.',
@@ -282,15 +300,17 @@ interface ToolButtonProps {
 	icon: Icon;
 	onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	pressed?: boolean;
+	disabled?: boolean;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({label, icon: IconComponent, onClick, pressed}) => (
+const ToolButton: React.FC<ToolButtonProps> = ({label, icon: IconComponent, onClick, pressed, disabled}) => (
 	<Tooltip text={label} position="bottom" data-flx="theme-settings.quick-css-editor.tool-button.tooltip">
 		<button
 			type="button"
 			className={clsx(styles.toolButton, pressed && styles.toolButtonPressed)}
 			aria-label={label}
 			aria-pressed={pressed}
+			disabled={disabled}
 			onClick={onClick}
 			data-flx="theme-settings.quick-css-editor.tool-button.button"
 		>
@@ -387,7 +407,25 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			return true;
 		}, []);
 
+		const togglePicker = useCallback(
+			(target: EditorView) => {
+				if (isElementPickerActive()) {
+					stopElementPicker();
+					return true;
+				}
+				if (target.state.readOnly) return false;
+				startElementPicker(target, {
+					hint: i18n._(PICKER_HINT_DESCRIPTOR, {parentKey: formatKeyCombo(i18n, {key: 'ArrowUp', alt: true})}),
+					onDone: ThemeSettingsCommands.focusQuickCssEditor,
+				});
+				return true;
+			},
+			[i18n],
+		);
+
 		const runFormatRef = useRef(runFormat);
+		const togglePickerRef = useRef(togglePicker);
+		togglePickerRef.current = togglePicker;
 		runFormatRef.current = runFormat;
 		const openOutlineRef = useRef(openOutline);
 		openOutlineRef.current = openOutline;
@@ -443,6 +481,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 						},
 						{key: 'Mod-Shift-f', run: (target) => runFormatRef.current(target)},
 						{key: 'Mod-Shift-o', run: () => openOutlineRef.current()},
+						{key: 'Mod-Shift-c', run: (target) => togglePickerRef.current(target)},
 					]),
 				),
 				cssNumberStep(),
@@ -520,11 +559,14 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			if (cached) created.scrollDOM.scrollTop = cached.scrollTop;
 			status.set(readStatus(created.state, revision));
 			setView(created);
+			const stopTrackingPointer = trackLastPointer();
 			const unregisterCapture = registerLiveEditorCapture(capture);
 			const unregisterView = ThemeSettingsCommands.registerQuickCssEditorView(created);
 			return () => {
 				unregisterView();
 				unregisterCapture();
+				stopTrackingPointer();
+				stopElementPickerFor(created);
 				capture();
 				PopoutCommands.close(COLOR_PICKER_POPOUT_KEY);
 				currentView = null;
@@ -627,6 +669,16 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 								if (view && !readOnly) runFormat(view);
 							}}
 							data-flx="theme-settings.quick-css-editor.tool-button.format"
+						/>
+						<ToolButton
+							label={i18n._(PICK_AN_ELEMENT_DESCRIPTOR)}
+							icon={CursorClickIcon}
+							pressed={isElementPickerActive()}
+							disabled={readOnly}
+							onClick={() => {
+								if (view) togglePicker(view);
+							}}
+							data-flx="theme-settings.quick-css-editor.tool-button.pick"
 						/>
 						<ToolButton
 							label={i18n._(OUTLINE_DESCRIPTOR)}

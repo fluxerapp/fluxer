@@ -5,6 +5,7 @@ import Keybind, {type KeyCombo} from '@app/features/input/state/InputKeybind';
 import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {isApplePlatform} from '@app/features/platform/utils/PlatformHelpers';
 import styles from '@app/features/theme_settings/components/QuickCssEditor.module.css';
+import {TURN_CUSTOM_CSS_ON_OR_OFF_DESCRIPTOR} from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MessageDescriptor} from '@lingui/core';
@@ -52,6 +53,20 @@ const ROWS: ReadonlyArray<ShortcutRow> = [
 	{
 		description: msg({message: 'Show the outline', comment: 'Row in the quick CSS editor shortcuts dialog.'}),
 		combos: [mod('o', {shift: true})],
+	},
+	{
+		description: msg({
+			message: 'Pick an element in the app',
+			comment: 'Row in the quick CSS editor shortcuts dialog.',
+		}),
+		combos: [mod('c', {shift: true})],
+	},
+	{
+		description: msg({
+			message: 'Pick the parent element while picking',
+			comment: 'Row in the quick CSS editor shortcuts dialog.',
+		}),
+		combos: [{key: 'ArrowUp', alt: true}],
 	},
 	{
 		description: msg({message: 'Show completions', comment: 'Row in the quick CSS editor shortcuts dialog.'}),
@@ -165,8 +180,14 @@ const ShortcutKeys: React.FC<{combo: KeyCombo}> = ({combo}) => {
 export const QuickCssShortcutsModal: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const focusCombos = Keybind.getActiveCombosForAction('system_open_theme_studio_popout');
-	const rows: ReadonlyArray<ShortcutRow> =
-		focusCombos.length > 0 ? [...ROWS, {description: MOVE_FOCUS_DESCRIPTOR, combos: focusCombos.slice(0, 1)}] : ROWS;
+	const customCssCombos = Keybind.getActiveCombosForAction('system_toggle_custom_css');
+	const rows: ReadonlyArray<ShortcutRow> = [
+		...ROWS,
+		...(focusCombos.length > 0 ? [{description: MOVE_FOCUS_DESCRIPTOR, combos: focusCombos.slice(0, 1)}] : []),
+		...(customCssCombos.length > 0
+			? [{description: TURN_CUSTOM_CSS_ON_OR_OFF_DESCRIPTOR, combos: customCssCombos.slice(0, 1)}]
+			: []),
+	];
 	return (
 		<Modal.Root
 			size="small"

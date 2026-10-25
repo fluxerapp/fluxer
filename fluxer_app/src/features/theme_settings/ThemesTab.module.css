@@ -39,6 +39,11 @@
 	border-top: none;
 }
 
+.rowIcon {
+	flex: 0 0 auto;
+	color: var(--text-primary-muted);
+}
+
 .rowText {
 	display: flex;
 	flex: 1 1 auto;

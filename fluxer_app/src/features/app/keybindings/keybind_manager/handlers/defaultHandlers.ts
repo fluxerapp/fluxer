@@ -197,6 +197,10 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		ThemeSettingsCommands.toggleQuickCssEditorFocus();
 	});
+	host.register('system_toggle_custom_css', ({type}) => {
+		if (type !== 'press') return;
+		ThemeSettingsCommands.toggleCustomCss();
+	});
 	host.register('voice_push_to_talk', ({type, sourceId}) => {
 		if (type === 'release') {
 			Keybind.releaseHoldSource('voice_push_to_talk', sourceId, () => MediaEngine.applyPushToTalkHold(false));

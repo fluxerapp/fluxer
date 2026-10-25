@@ -8741,6 +8741,11 @@ msgstr "Klarere tekst"
 msgid "Clearing trusted domains..."
 msgstr "Rydder godkendte domæner..."
 
+#. Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "Klik på et element for at tilføje dets vælger. {parentKey} vælger dets overordnede, og Escape stopper valget."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
 msgstr "Klik på en knap for at se notifikationer med feedback."
@@ -11897,6 +11902,11 @@ msgstr "Brugerdefineret varighed for udelukkelse (sekunder)"
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "Brugerdefineret CSS"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "Brugerdefineret CSS er slået fra."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -16687,6 +16697,16 @@ msgstr "Fluxer kan ikke finde ressourcen \"{name}\"."
 msgid "Fluxer can't find the file \"{path}\"."
 msgstr "Fluxer kan ikke finde filen \"{path}\"."
 
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Fluxer kan ikke finde denne mappe. Temaerne bliver indlæst igen, når mappen er tilbage."
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Fluxer kan ikke åbne denne mappe. Importer den igen for at fortsætte overvågningen."
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -17314,6 +17334,11 @@ msgstr "Fra"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "Fra {creatorTag}"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "Fra {folder}"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -19094,6 +19119,11 @@ msgstr "Hvis du vil eksportere dine data eller slette dine beskeder først, kan 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "Hvis du vil give disse medlemmer adgang til tidligere beskeder sendt efter en bestemt dato, skal du aktivere denne funktion og vælge en skæringsdato nedenfor."
+
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "Hvis din CSS ødelægger appen, skal du trykke på {shortcut} for at slå den fra."
 
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
@@ -25450,6 +25480,11 @@ msgstr "Kun CSS-teksten synkroniseres på tværs af enheder. Uploadede ressource
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "Kun CSS-teksten synkroniseres. Uploadede ressourcer og lokale filreferencer bliver på denne enhed."
 
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "Kun de første 200 CSS-filer i denne mappe bliver indlæst."
+
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
 msgstr "Kun gruppeejeren kan administrere invitationer."
@@ -27082,6 +27117,16 @@ msgstr "Vælg en oversættelsesudbyder"
 msgid "Pick a web search provider"
 msgstr "Vælg en søgemaskine"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "Vælg et element"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "Vælg et element i appen"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -27106,6 +27151,11 @@ msgstr "Vælg en eller flere ordbøger. Ord fra enhver valgt ordbog accepteres, 
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "Vælg det 4-cifrede nummer efter dit brugernavn"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "Vælg det overordnede element under valg"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -34935,10 +34985,21 @@ msgstr "Vil du stoppe med at bruge adgangsnøgler til tofaktorgodkendelse?"
 msgid "Stop watching"
 msgstr "Stop med at se"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "Stop overvågning"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "Stop med at se stream"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "Stop overvågning af denne mappe?"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -36550,6 +36611,11 @@ msgstr "Tema ikke tilgængeligt"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "Temaer"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "Temaer fra denne mappe fjernes fra \"Dine temaer\"."
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -38494,6 +38560,11 @@ msgstr "Tyrkisk"
 msgid "Turn a comment on or off"
 msgstr "Slå en kommentar til eller fra"
 
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "Slå brugerdefineret CSS til eller fra"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -38525,6 +38596,11 @@ msgstr "Slå godkendelsesapp fra"
 msgid "Turn off camera"
 msgstr "Slå kamera fra"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "Slå brugerdefineret CSS fra"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -38545,7 +38621,9 @@ msgstr "Slå stream fra"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Slå privatlivsbeskyttelse under streaming fra, før du ser login- eller kontosikkerhedsoplysninger."
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "Slå til"
@@ -38578,6 +38656,11 @@ msgstr "Slå til automatisk, når OBS eller XSplit registreres"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Turn on camera"
 msgstr "Slå kamera til"
+
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "Slå brugerdefineret CSS til"
 
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
@@ -40252,6 +40335,11 @@ msgstr "Brug enhedens systemindstilling for reduceret bevægelse"
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "Brug enhedens systemindstilling for reduceret bevægelse, eller tilpas den nedenfor."
 
+#. Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "Brug dette tema"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -41438,6 +41526,11 @@ msgstr "Se stream"
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "Watching"
 msgstr "Ser"
+
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "Overvåger {path}"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts

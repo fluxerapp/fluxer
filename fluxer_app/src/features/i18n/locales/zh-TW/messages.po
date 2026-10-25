@@ -8741,6 +8741,11 @@ msgstr "文字更清晰"
 msgid "Clearing trusted domains..."
 msgstr "正在清除信任的網域…"
 
+#. Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "點擊元素以加入其選擇器。{parentKey} 選擇父元素，Escape 停止選取。"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
 msgstr "點擊任一按鈕，即可查看帶有回饋的快顯通知。"
@@ -11897,6 +11902,11 @@ msgstr "自訂停權期間（秒）"
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "自訂 CSS"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "自訂 CSS 已關閉。"
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -16687,6 +16697,16 @@ msgstr "Fluxer 找不到素材「{name}」。"
 msgid "Fluxer can't find the file \"{path}\"."
 msgstr "Fluxer 找不到檔案「{path}」。"
 
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Fluxer 找不到這個資料夾。當資料夾回來時會重新載入主題。"
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Fluxer 無法開啟這個資料夾。請重新匯入以繼續監控。"
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -17314,6 +17334,11 @@ msgstr "來自"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "來自 {creatorTag}"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "來自 {folder}"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -19094,6 +19119,11 @@ msgstr "如果您想先匯出資料或刪除訊息，請在繼續之前前往{pr
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "如果您希望這些成員能查看特定日期之後傳送的歷史訊息，請啟用此功能並在下方選擇門檻日期。"
+
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "如果你的 CSS 讓應用程式出錯，請按 {shortcut} 關閉它。"
 
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
@@ -25450,6 +25480,11 @@ msgstr "只有 CSS 文字會在裝置間同步。上傳的素材、桌面檔案�
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "只會同步 CSS 文字。上傳的素材和本機檔案參考會保留在此裝置上。"
 
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "這個資料夾只會載入前 200 個 CSS 檔案。"
+
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
 msgstr "只有群組擁有者可以管理邀請。"
@@ -27082,6 +27117,16 @@ msgstr "選擇翻譯服務供應商"
 msgid "Pick a web search provider"
 msgstr "選擇網路搜尋服務供應商"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "選取元素"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "在應用程式中選取元素"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -27106,6 +27151,11 @@ msgstr "選擇一個或多個字典。系統會接受任何選定字典中的字
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "選擇您名稱後面的 4 位數字"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "選取時選擇父元素"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -34935,10 +34985,21 @@ msgstr "要停止使用通行金鑰進行雙重驗證嗎？"
 msgid "Stop watching"
 msgstr "停止觀看"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "停止監看"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "停止觀看直播"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "要停止監看這個資料夾嗎？"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -36550,6 +36611,11 @@ msgstr "主題無法使用"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "主題"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "來自這個資料夾的主題會從「你的佈景主題」移除。"
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -38494,6 +38560,11 @@ msgstr "土耳其文"
 msgid "Turn a comment on or off"
 msgstr "開啟或關閉註解"
 
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "開啟或關閉自訂 CSS"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -38525,6 +38596,11 @@ msgstr "關閉驗證器應用程式"
 msgid "Turn off camera"
 msgstr "關閉相機"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "關閉自訂 CSS"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -38545,7 +38621,9 @@ msgstr "關閉直播"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "請先關閉直播隱私設定，才能查看登入或帳號安全詳細資訊。"
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "開啟"
@@ -38578,6 +38656,11 @@ msgstr "偵測到 OBS 或 XSplit 時自動開啟"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Turn on camera"
 msgstr "開啟相機"
+
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "開啟自訂 CSS"
 
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
@@ -40252,6 +40335,11 @@ msgstr "使用此裝置的系統減少動態偏好設定"
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "使用此裝置的系統減少動態偏好設定，或在下方自訂。"
 
+#. Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "使用這個主題"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -41438,6 +41526,11 @@ msgstr "觀看直播"
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "Watching"
 msgstr "正在觀看"
+
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "正在監看 {path}"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts
