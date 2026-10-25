@@ -14,6 +14,7 @@ import (
 	"github.com/distribution/reference"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
 )
 
@@ -109,16 +110,12 @@ func (e *Engine) Volumes(ctx context.Context, project string) ([]Volume, error) 
 	if err != nil {
 		return nil, err
 	}
-	opts := client.VolumeListOptions{}
-	if project != "" {
-		opts.Filters = projectFilter(project)
-	}
-	res, err := c.VolumeList(ctx, opts)
+	items, err := projectVolumes(ctx, c, project)
 	if err != nil {
 		return nil, &Error{Op: "volumes", Class: ClassOf(err), Err: err}
 	}
-	out := make([]Volume, 0, len(res.Items))
-	for _, v := range res.Items {
+	out := make([]Volume, 0, len(items))
+	for _, v := range items {
 		labels := v.Labels
 		if labels == nil {
 			labels = map[string]string{}
@@ -127,6 +124,28 @@ func (e *Engine) Volumes(ctx context.Context, project string) ([]Volume, error) 
 	}
 	slices.SortFunc(out, func(a, b Volume) int { return strings.Compare(a.Name, b.Name) })
 	return out, nil
+}
+
+func projectVolumes(ctx context.Context, c client.APIClient, project string) ([]volume.Volume, error) {
+	if project == "" {
+		res, err := c.VolumeList(ctx, client.VolumeListOptions{})
+		return res.Items, err
+	}
+	res, err := c.VolumeList(ctx, client.VolumeListOptions{Filters: projectFilter(project)})
+	if err != nil {
+		return nil, err
+	}
+	named, err := c.VolumeList(ctx, client.VolumeListOptions{Filters: make(client.Filters).Add("name", project+"_")})
+	if err != nil {
+		return nil, err
+	}
+	items := res.Items
+	for _, v := range named.Items {
+		if v.Labels[api.ProjectLabel] == "" && strings.HasPrefix(v.Name, project+"_") {
+			items = append(items, v)
+		}
+	}
+	return items, nil
 }
 
 func (e *Engine) Projects(ctx context.Context) ([]ProjectInfo, error) {

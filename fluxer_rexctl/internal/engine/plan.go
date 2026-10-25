@@ -162,7 +162,7 @@ func (p *Project) planVolumes(ctx context.Context, plan *Plan) error {
 	if err != nil {
 		return err
 	}
-	res, err := c.VolumeList(ctx, client.VolumeListOptions{Filters: projectFilter(p.Name)})
+	items, err := projectVolumes(ctx, c, p.Name)
 	if err != nil {
 		return &Error{Op: "plan", Class: ClassOf(err), Err: err}
 	}
@@ -171,7 +171,7 @@ func (p *Project) planVolumes(ctx context.Context, plan *Plan) error {
 		if want.External {
 			continue
 		}
-		for _, v := range res.Items {
+		for _, v := range items {
 			if v.Labels[api.VolumeLabel] != key && v.Name != want.Name {
 				continue
 			}

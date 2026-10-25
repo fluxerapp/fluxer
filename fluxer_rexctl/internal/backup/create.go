@@ -44,6 +44,14 @@ type CreateOptions struct {
 	OnEvent  func(engine.Event)
 }
 
+type MissingDataError struct {
+	Volume string
+}
+
+func (e *MissingDataError) Error() string {
+	return fmt.Sprintf("backup: no database data found in volume %s or a bind mount", e.Volume)
+}
+
 type DiskError struct {
 	Dir       string
 	Need      uint64
@@ -118,6 +126,9 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 			return nil, err
 		}
 		if _, ok := dataVolume(model, p.Name, have, "postgres-data"); !ok {
+			if ps, err := p.PS(ctx); err == nil && len(ps) > 0 {
+				return nil, &MissingDataError{Volume: p.Name + "_postgres-data"}
+			}
 			return nil, ErrNeverStarted
 		}
 	}
