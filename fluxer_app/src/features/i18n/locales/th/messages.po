@@ -29611,11 +29611,6 @@ msgstr "ปรับขนาดตัวเลือกอิโมจิจา
 msgid "Resize expression picker from top right"
 msgstr "ปรับขนาดตัวเลือกอิโมจิจากมุมบนขวา"
 
-#. Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).
-#: src/features/ui/floating_pane/FloatingPaneResizeHandles.tsx
-msgid "Resize floating panel"
-msgstr "ปรับขนาดแผงแบบลอย"
-
 #. Accessible label for the bottom-left resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from bottom left"

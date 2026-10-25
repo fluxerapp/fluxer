@@ -1,63 +1,89 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
+import type {Corner, ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
 import styles from '@app/features/ui/floating_pane/FloatingPaneResizeHandles.module.css';
-import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import FocusRingContext from '@app/features/ui/focus_ring/FocusRingContext';
+import {clsx} from 'clsx';
 import type React from 'react';
-import {useMemo} from 'react';
+import {useCallback, useContext, useMemo} from 'react';
 
-const RESIZE_HANDLE_LABEL = msg({
-	message: 'Resize floating panel',
-	comment: 'Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).',
-});
+type ResizePointerHandler = (event: React.PointerEvent<HTMLElement>) => void;
 
-interface HandleSpec {
-	edge: ResizeEdge;
-	className: string;
-}
+const HANDLE_CLASS_BY_EDGE: Record<ResizeEdge, string> = {
+	top: styles.edgeTop,
+	bottom: styles.edgeBottom,
+	left: styles.edgeLeft,
+	right: styles.edgeRight,
+	'top-left': styles.cornerTopLeft,
+	'top-right': styles.cornerTopRight,
+	'bottom-left': styles.cornerBottomLeft,
+	'bottom-right': styles.cornerBottomRight,
+};
 
-const HANDLES: ReadonlyArray<HandleSpec> = [
-	{edge: 'top', className: styles.edgeTop},
-	{edge: 'bottom', className: styles.edgeBottom},
-	{edge: 'left', className: styles.edgeLeft},
-	{edge: 'right', className: styles.edgeRight},
-	{edge: 'top-left', className: `${styles.handle} ${styles.cornerTopLeft}`},
-	{edge: 'top-right', className: `${styles.handle} ${styles.cornerTopRight}`},
-	{edge: 'bottom-left', className: `${styles.handle} ${styles.cornerBottomLeft}`},
-	{edge: 'bottom-right', className: `${styles.handle} ${styles.cornerBottomRight}`},
-];
+const EDGES = Object.keys(HANDLE_CLASS_BY_EDGE) as ReadonlyArray<ResizeEdge>;
 
 export interface FloatingPaneResizeHandlesProps {
-	createResizeHandler: (edge: ResizeEdge) => (event: React.PointerEvent<HTMLButtonElement>) => void;
-	label: string | null;
+	createResizeHandler: (edge: ResizeEdge) => ResizePointerHandler;
+	label: string;
+	gripCorner: Corner;
+	onGripKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
+	onGripDoubleClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function FloatingPaneResizeHandles({createResizeHandler, label}: FloatingPaneResizeHandlesProps) {
-	const {i18n} = useLingui();
-	let resolvedLabel = i18n._(RESIZE_HANDLE_LABEL);
-	if (label != null) resolvedLabel = label;
+function stopDoubleClick(event: React.MouseEvent) {
+	event.stopPropagation();
+}
+
+export function FloatingPaneResizeHandles({
+	createResizeHandler,
+	label,
+	gripCorner,
+	onGripKeyDown,
+	onGripDoubleClick,
+}: FloatingPaneResizeHandlesProps) {
+	const ringContext = useContext(FocusRingContext);
+	const handleGripKeyDown = useCallback(
+		(event: React.KeyboardEvent<HTMLButtonElement>) => {
+			onGripKeyDown(event);
+			requestAnimationFrame(() => ringContext.invalidate());
+		},
+		[onGripKeyDown, ringContext],
+	);
 	const handlerByEdge = useMemo(() => {
-		const entries = {} as Record<ResizeEdge, (event: React.PointerEvent<HTMLButtonElement>) => void>;
-		for (const {edge} of HANDLES) {
+		const entries = {} as Record<ResizeEdge, ResizePointerHandler>;
+		for (const edge of EDGES) {
 			entries[edge] = createResizeHandler(edge);
 		}
 		return entries;
 	}, [createResizeHandler]);
 	return (
 		<>
-			{HANDLES.map(({edge, className}) => (
-				<button
+			{EDGES.filter((edge) => edge !== gripCorner).map((edge) => (
+				<div
 					key={edge}
-					type="button"
-					aria-label={resolvedLabel}
-					className={className.includes(styles.handle) ? className : `${styles.handle} ${className}`}
+					aria-hidden
+					className={clsx(styles.handle, HANDLE_CLASS_BY_EDGE[edge])}
 					onPointerDown={handlerByEdge[edge]}
-					onDoubleClick={(event) => event.stopPropagation()}
+					onDoubleClick={stopDoubleClick}
 					data-floating-pane-resize-edge={edge}
-					data-flx="ui.floating-pane.floating-pane-resize-handles.handle.edge.button"
+					data-flx="ui.floating-pane.floating-pane-resize-handles.handle"
 				/>
 			))}
+			<FocusRing offset={4} data-flx="ui.floating-pane.floating-pane-resize-handles.focus-ring">
+				<button
+					type="button"
+					aria-label={label}
+					className={clsx(styles.handle, styles.grip, HANDLE_CLASS_BY_EDGE[gripCorner])}
+					onPointerDown={handlerByEdge[gripCorner]}
+					onKeyDown={handleGripKeyDown}
+					onDoubleClick={onGripDoubleClick}
+					data-floating-pane-resize-edge={gripCorner}
+					data-flx="ui.floating-pane.floating-pane-resize-handles.grip"
+				>
+					<span className={styles.gripMark} data-flx="ui.floating-pane.floating-pane-resize-handles.grip-mark" />
+				</button>
+			</FocusRing>
 		</>
 	);
 }
