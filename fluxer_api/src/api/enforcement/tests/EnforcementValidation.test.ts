@@ -227,6 +227,35 @@ describe('Enforcement decision validation', () => {
 		);
 	});
 
+	test('a user report covers the direct message between the reporter and the reported user', async () => {
+		const target = await createTestAccount(harness);
+		const recipient = await createTestAccount(harness);
+		const bystander = await createTestAccount(harness);
+		await createFriendship(harness, target, recipient);
+		const dm = await createDmChannel(harness, target.token, recipient.userId);
+		const message = await sendChannelMessage(harness, target.token, dm.id, 'send me your password');
+		const evidence = [{channel_id: dm.id, message_id: message.id}];
+		const userReport = async (reporter: TestAccount) =>
+			(
+				await createBuilder<{report_id: string}>(harness, reporter.token)
+					.post('/reports/user')
+					.body({user_id: target.userId, category: 'harassment'})
+					.expect(HTTP_STATUS.OK)
+					.execute()
+			).report_id;
+		const fromBystander = await userReport(bystander);
+		expect(
+			await refusedSuspension(target, decisionBody({source: 'report', report_ids: [fromBystander], evidence})),
+		).toMatchObject({code: ValidationErrorCodes.ENFORCEMENT_EVIDENCE_DM_UNREPORTED});
+		const fromRecipient = await userReport(recipient);
+		await suspend(
+			harness,
+			staff,
+			target.userId,
+			decisionBody({source: 'report', report_ids: [fromRecipient], evidence}),
+		);
+	});
+
 	test('a decision needs evidence or a note to the user', async () => {
 		const target = await createTestAccount(harness);
 		expect(await refusedSuspension(target, decisionBody({statement: undefined}))).toMatchObject({

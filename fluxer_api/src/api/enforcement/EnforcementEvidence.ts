@@ -9,7 +9,7 @@ import type {EvidenceMessageLocation} from '@app/api/enforcement/EnforcementNoti
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import type {IARMessageContext, IARSubmission} from '@app/api/report/ReportModels';
+import {type IARMessageContext, type IARSubmission, ReportType} from '@app/api/report/ReportModels';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -21,6 +21,18 @@ function isAuthoredContent(type: number): boolean {
 
 function isConversation(type: number): boolean {
 	return type === ChannelTypes.DM || type === ChannelTypes.GROUP_DM;
+}
+
+function coversConversation(report: IARSubmission, channel: Channel): boolean {
+	if (report.reportedChannelId === channel.id) return true;
+	return (
+		report.reportType === ReportType.USER &&
+		channel.type === ChannelTypes.DM &&
+		report.reporterId !== null &&
+		report.reportedUserId !== null &&
+		channel.recipientIds.has(report.reporterId) &&
+		channel.recipientIds.has(report.reportedUserId)
+	);
 }
 
 function attachmentMetadata(attachment: MessageAttachment): MessageAttachment {
@@ -192,7 +204,7 @@ export async function collectEvidence({
 			throw InputValidationError.fromCode(entryPath, ValidationErrorCodes.ENFORCEMENT_EVIDENCE_NOT_SUBJECT);
 		}
 		const channel = await findChannel(channelId);
-		if (channel && isConversation(channel.type) && !reports.some((report) => report.reportedChannelId === channelId)) {
+		if (channel && isConversation(channel.type) && !reports.some((report) => coversConversation(report, channel))) {
 			throw InputValidationError.fromCode(entryPath, ValidationErrorCodes.ENFORCEMENT_EVIDENCE_DM_UNREPORTED);
 		}
 		collected.set(message.id, fromLiveMessage(message, subject.type === 'user' ? subject : UNKNOWN_AUTHOR));
