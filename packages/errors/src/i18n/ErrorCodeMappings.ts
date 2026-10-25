@@ -41,6 +41,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED]: 'channels_and_guilds.channel_type_conversion_not_supported',
 	[APIErrorCodes.DIRECT_MESSAGES_DISABLED]: 'friends_and_dms.direct_messages_disabled',
 	[APIErrorCodes.FRIENDS_DISABLED]: 'friends_and_dms.friends_disabled',
+	[APIErrorCodes.PERSONAL_NOTES_DISABLED]: 'friends_and_dms.personal_notes_disabled',
 	[APIErrorCodes.NEW_CONVERSATIONS_LIMITED]: 'friends_and_dms.new_conversations_limited',
 	[APIErrorCodes.BOTS_CANNOT_CREATE_GUILDS]: 'channels_and_guilds.bots_cannot_create_guilds',
 	[APIErrorCodes.FOLLOW_TARGET_CONTENT_WARNING_REQUIRED]: 'channels_and_guilds.follow_target_content_warning_required',

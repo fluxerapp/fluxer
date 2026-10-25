@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "このインスタンスでは、友だち申請は無効になっています。",
 	"friends_and_dms.new_conversations_limited": "現在、新しい会話を開始することはできません。後でもう一度お試しください。",
 	"friends_and_dms.not_friends": "このユーザーとは友だちではありません。",
+	"friends_and_dms.personal_notes_disabled": "このインスタンスでは、個人メモは無効になっています。",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "受信者IDを空にすることはできません。",
 	"harvest.expired": "データエクスポートのリクエストの有効期限が切れました。新しいエクスポートをリクエストしてください。",
 	"harvest.failed": "データエクスポートのリクエストに失敗しました。もう一度お試しください。",

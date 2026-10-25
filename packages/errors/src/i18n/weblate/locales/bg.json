@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Поканите за приятелство са изключени в тази инстанция.",
 	"friends_and_dms.new_conversations_limited": "В момента не можеш да започваш нови разговори. Опитай отново по-късно.",
 	"friends_and_dms.not_friends": "Не си приятел с този потребител.",
+	"friends_and_dms.personal_notes_disabled": "Личните бележки са изключени в тази инстанция.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-тата на получателите не могат да са празни.",
 	"harvest.expired": "Заявката ти за експорт на данни изтече. Заяви нов експорт.",
 	"harvest.failed": "Заявката ти за експорт на данни не успя. Опитай отново.",

@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Friend requests are disabled on this instance.",
 	"friends_and_dms.new_conversations_limited": "You can't start new conversations right now. Please try again later.",
 	"friends_and_dms.not_friends": "You're not friends with this user.",
+	"friends_and_dms.personal_notes_disabled": "Personal notes are turned off on this instance.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Recipient IDs can't be empty.",
 	"harvest.expired": "Your data export request has expired. Please request a new export.",
 	"harvest.failed": "Your data export request failed. Please try again.",

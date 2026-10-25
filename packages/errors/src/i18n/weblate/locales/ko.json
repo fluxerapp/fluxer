@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "이 인스턴스에서는 친구 요청이 비활성화되어 있어요.",
 	"friends_and_dms.new_conversations_limited": "지금은 새 대화를 시작할 수 없어요. 나중에 다시 시도해 주세요.",
 	"friends_and_dms.not_friends": "이 사용자와 친구가 아니에요.",
+	"friends_and_dms.personal_notes_disabled": "이 인스턴스에서는 개인 노트가 꺼져 있어요.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "수신자 ID는 비워둘 수 없어요.",
 	"harvest.expired": "데이터 내보내기 요청이 만료되었어요. 새 내보내기를 요청해 주세요.",
 	"harvest.failed": "데이터 내보내기 요청에 실패했어요. 다시 시도해 주세요.",

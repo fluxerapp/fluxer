@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "此實例已停用好友邀請。",
 	"friends_and_dms.new_conversations_limited": "你目前無法開始新的對話。請稍後再試。",
 	"friends_and_dms.not_friends": "你不是此使用者的好友。",
+	"friends_and_dms.personal_notes_disabled": "此實例已關閉個人筆記。",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "成員 ID 不能為空。",
 	"harvest.expired": "你的資料匯出請求已過期。請重新要求匯出。",
 	"harvest.failed": "你的資料匯出請求失敗。請再試一次。",

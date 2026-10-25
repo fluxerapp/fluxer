@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "इस इंस्टेंस पर फ्रेंड रिक्वेस्ट डिसेबल हैं।",
 	"friends_and_dms.new_conversations_limited": "आप अभी नई बातचीत शुरू नहीं कर सकते हैं। कृपया बाद में फिर से कोशिश करें।",
 	"friends_and_dms.not_friends": "आप इस यूज़र के दोस्त नहीं हैं।",
+	"friends_and_dms.personal_notes_disabled": "इस इंस्टेंस पर निजी नोट्स बंद हैं।",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "रिसीपिएंट IDs खाली नहीं होनी चाहिए।",
 	"harvest.expired": "आपकी डेटा एक्सपोर्ट रिक्वेस्ट एक्सपायर हो गई है। कृपया नया एक्सपोर्ट रिक्वेस्ट करें।",
 	"harvest.failed": "आपकी डेटा एक्सपोर्ट रिक्वेस्ट फेल हो गई। कृपया फिर से कोशिश करें।",

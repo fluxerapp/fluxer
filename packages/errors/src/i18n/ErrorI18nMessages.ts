@@ -445,6 +445,7 @@ export const ERROR_I18N_MESSAGES = {
 	'friends_and_dms.already_friends': "You're already friends with this user.",
 	'friends_and_dms.direct_messages_disabled': 'Direct messages are disabled on this instance.',
 	'friends_and_dms.friends_disabled': 'Friend requests are disabled on this instance.',
+	'friends_and_dms.personal_notes_disabled': 'Personal notes are turned off on this instance.',
 	'friends_and_dms.new_conversations_limited': "You can't start new conversations right now. Please try again later.",
 	'friends_and_dms.bots_cannot_send_friend_requests': "Bots can't send friend requests.",
 	'friends_and_dms.cannot_add_yourself_to_group_dm': "You can't add yourself to a group DM.",

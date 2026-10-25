@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Venneforespørsler er deaktivert på denne instansen.",
 	"friends_and_dms.new_conversations_limited": "Du kan ikke starte nye samtaler akkurat nå. Prøv igjen senere.",
 	"friends_and_dms.not_friends": "Du er ikke venn med denne brukeren.",
+	"friends_and_dms.personal_notes_disabled": "Personlige notater er slått av på denne instansen.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Mottaker-ID-er kan ikke være tomme.",
 	"harvest.expired": "Forespørselen din om dataeksport har utløpt. Be om en ny eksport.",
 	"harvest.failed": "Forespørselen din om dataeksport mislyktes. Prøv igjen.",

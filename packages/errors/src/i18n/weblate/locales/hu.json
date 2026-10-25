@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Az ismerősjelölések le vannak tiltva ezen a példányon.",
 	"friends_and_dms.new_conversations_limited": "Jelenleg nem kezdhetsz új beszélgetést. Próbáld újra később.",
 	"friends_and_dms.not_friends": "Nem vagytok ismerősök ezzel a felhasználóval.",
+	"friends_and_dms.personal_notes_disabled": "A személyes jegyzetek ki vannak kapcsolva ezen a példányon.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "A címzettazonosítók nem lehetnek üresek.",
 	"harvest.expired": "Az adatexportálási kérelmed lejárt. Kérj új exportálást.",
 	"harvest.failed": "Az adatexportálási kérelmed sikertelen volt. Próbáld újra.",

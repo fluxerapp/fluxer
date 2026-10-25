@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Le richieste di amicizia sono disabilitate su questa istanza.",
 	"friends_and_dms.new_conversations_limited": "Al momento non puoi iniziare nuove conversazioni. Riprova più tardi.",
 	"friends_and_dms.not_friends": "Non sei amico di questo utente.",
+	"friends_and_dms.personal_notes_disabled": "Le note personali sono disattivate su questa istanza.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Gli ID dei destinatari non possono essere vuoti.",
 	"harvest.expired": "La tua richiesta di esportazione dati è scaduta. Richiedine una nuova.",
 	"harvest.failed": "La tua richiesta di esportazione dati è fallita. Riprova.",

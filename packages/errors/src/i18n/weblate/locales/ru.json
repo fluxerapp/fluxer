@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Запросы в друзья отключены на этом экземпляре.",
 	"friends_and_dms.new_conversations_limited": "Сейчас ты не можешь начинать новые чаты. Попробуй ещё раз позже.",
 	"friends_and_dms.not_friends": "Ты не дружишь с этим пользователем.",
+	"friends_and_dms.personal_notes_disabled": "Личные заметки отключены на этом экземпляре.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID получателей не могут быть пустыми.",
 	"harvest.expired": "Срок действия твоего запроса на экспорт данных истёк. Создай новый запрос.",
 	"harvest.failed": "Твой запрос на экспорт данных не удался. Попробуй ещё раз.",

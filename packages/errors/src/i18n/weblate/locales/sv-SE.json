@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Vänförfrågningar är inaktiverade på den här instansen.",
 	"friends_and_dms.new_conversations_limited": "Du kan inte starta nya konversationer just nu. Försök igen senare.",
 	"friends_and_dms.not_friends": "Du är inte vän med den här användaren.",
+	"friends_and_dms.personal_notes_disabled": "Personliga anteckningar är avstängda på den här instansen.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Mottagar-ID:n får inte vara tomma.",
 	"harvest.expired": "Din begäran om dataexport har gått ut. Begär en ny export.",
 	"harvest.failed": "Din begäran om dataexport misslyckades. Försök igen.",

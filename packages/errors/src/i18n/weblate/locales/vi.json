@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Lời mời kết bạn đã bị tắt trên phiên bản này.",
 	"friends_and_dms.new_conversations_limited": "Hiện bạn không thể bắt đầu cuộc trò chuyện mới. Vui lòng thử lại sau.",
 	"friends_and_dms.not_friends": "Bạn không phải là bạn bè với người dùng này.",
+	"friends_and_dms.personal_notes_disabled": "Ghi chú cá nhân đã bị tắt trên phiên bản này.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID của người nhận không được để trống.",
 	"harvest.expired": "Yêu cầu xuất dữ liệu của bạn đã hết hạn. Vui lòng yêu cầu bản xuất mới.",
 	"harvest.failed": "Yêu cầu xuất dữ liệu của bạn không thành công. Vui lòng thử lại.",

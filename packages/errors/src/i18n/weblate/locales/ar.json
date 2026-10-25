@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "طلبات الصداقة معطلة في هذا المثيل.",
 	"friends_and_dms.new_conversations_limited": "لا يمكنك بدء محادثات جديدة في الوقت الحالي. حاول مجددًا لاحقًا.",
 	"friends_and_dms.not_friends": "لست صديقًا لهذا المستخدم.",
+	"friends_and_dms.personal_notes_disabled": "الملاحظات الشخصية معطلة في هذا المثيل.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "لا يمكن أن تكون معرفات المستلمين فارغة.",
 	"harvest.expired": "لقد انتهت صلاحية طلب تصدير بياناتك. اطلب تصديرًا جديدًا.",
 	"harvest.failed": "فشل طلب تصدير بياناتك. حاول مجددًا.",

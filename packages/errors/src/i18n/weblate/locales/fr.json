@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Les demandes d'ami sont désactivées sur cette instance.",
 	"friends_and_dms.new_conversations_limited": "Vous ne pouvez pas démarrer de nouvelles conversations pour le moment. Réessayez plus tard.",
 	"friends_and_dms.not_friends": "Cet utilisateur ne figure pas dans votre liste d’amis.",
+	"friends_and_dms.personal_notes_disabled": "Les notes personnelles sont désactivées sur cette instance.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Les identifiants de destinataire ne peuvent pas être vides.",
 	"harvest.expired": "Votre demande d’export de données a expiré. Demandez un nouvel export.",
 	"harvest.failed": "Votre demande d’export de données a échoué. Réessayez.",

@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Permintaan pertemanan dinonaktifkan di instance ini.",
 	"friends_and_dms.new_conversations_limited": "Kamu tidak dapat memulai percakapan baru saat ini. Coba lagi nanti.",
 	"friends_and_dms.not_friends": "Kamu tidak berteman dengan pengguna ini.",
+	"friends_and_dms.personal_notes_disabled": "Catatan pribadi dinonaktifkan di instance ini.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID penerima tidak boleh kosong.",
 	"harvest.expired": "Permintaan ekspor datamu sudah kedaluwarsa. Silakan minta ekspor baru.",
 	"harvest.failed": "Permintaan ekspor datamu gagal. Coba lagi.",

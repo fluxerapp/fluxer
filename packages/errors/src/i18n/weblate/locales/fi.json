@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Kaveripyynnöt on poistettu käytöstä tässä instanssissa.",
 	"friends_and_dms.new_conversations_limited": "Et voi aloittaa uusia keskusteluja juuri nyt. Yritä uudelleen myöhemmin.",
 	"friends_and_dms.not_friends": "Et ole tämän käyttäjän kaveri.",
+	"friends_and_dms.personal_notes_disabled": "Omat muistiinpanot on poistettu käytöstä tässä instanssissa.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Vastaanottajien tunnukset eivät voi olla tyhjiä.",
 	"harvest.expired": "Tietojen vientipyyntösi on vanhentunut. Pyydä uusi vienti.",
 	"harvest.failed": "Tietojen vientipyyntösi epäonnistui. Yritä uudelleen.",

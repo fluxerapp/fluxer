@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Bu kurulumda arkadaşlık istekleri devre dışı.",
 	"friends_and_dms.new_conversations_limited": "Şu anda yeni sohbet başlatamazsın. Lütfen daha sonra tekrar dene.",
 	"friends_and_dms.not_friends": "Bu kullanıcıyla arkadaş değilsin.",
+	"friends_and_dms.personal_notes_disabled": "Bu kurulumda kişisel notlar kapalı.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Alıcı kimlikleri boş olamaz.",
 	"harvest.expired": "Veri dışa aktarma isteğinin süresi doldu. Yeni bir dışa aktarma isteği gönder.",
 	"harvest.failed": "Veri dışa aktarma isteğin başarısız oldu. Tekrar dene.",

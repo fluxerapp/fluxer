@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Zahtjevi za prijateljstvo onemogućeni su na ovoj instanci.",
 	"friends_and_dms.new_conversations_limited": "Trenutačno ne možeš započeti nove razgovore. Pokušaj ponovno kasnije.",
 	"friends_and_dms.not_friends": "Nisi prijatelj s ovim korisnikom.",
+	"friends_and_dms.personal_notes_disabled": "Osobne bilješke isključene su na ovoj instanci.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-ovi primatelja ne mogu biti prazni.",
 	"harvest.expired": "Tvoj zahtjev za izvoz podataka je istekao. Zatraži novi izvoz.",
 	"harvest.failed": "Tvoj zahtjev za izvoz podataka nije uspio. Pokušaj ponovno.",

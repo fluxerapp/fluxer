@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Cererile de prietenie sunt dezactivate pe această instanță.",
 	"friends_and_dms.new_conversations_limited": "Nu poți începe conversații noi acum. Încearcă din nou mai târziu.",
 	"friends_and_dms.not_friends": "Nu ești prieten cu acest utilizator.",
+	"friends_and_dms.personal_notes_disabled": "Notele personale sunt dezactivate pe această instanță.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-urile destinatarilor nu pot fi goale.",
 	"harvest.expired": "Cererea ta de export de date a expirat. Solicită un nou export.",
 	"harvest.failed": "Cererea ta de export de date a eșuat. Încearcă din nou.",

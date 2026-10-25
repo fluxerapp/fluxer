@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "คำขอเป็นเพื่อนถูกปิดใช้งานบนอินสแตนซ์นี้",
 	"friends_and_dms.new_conversations_limited": "ไม่สามารถเริ่มการสนทนาใหม่ได้ในขณะนี้ โปรดลองอีกครั้งในภายหลัง",
 	"friends_and_dms.not_friends": "คุณไม่ได้เป็นเพื่อนกับผู้ใช้นี้",
+	"friends_and_dms.personal_notes_disabled": "บันทึกส่วนตัวถูกปิดใช้งานบนอินสแตนซ์นี้",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID ผู้รับไม่สามารถเป็นค่าว่างได้",
 	"harvest.expired": "คำขอส่งออกข้อมูลของคุณหมดอายุแล้ว โปรดขอส่งออกใหม่อีกครั้ง",
 	"harvest.failed": "คำขอส่งออกข้อมูลของคุณล้มเหลว โปรดลองอีกครั้ง",

@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Draugystės užklausos šioje instancijoje išjungtos.",
 	"friends_and_dms.new_conversations_limited": "Šiuo metu negali pradėti naujų pokalbių. Pabandyk dar kartą vėliau.",
 	"friends_and_dms.not_friends": "Su šiuo naudotoju nedraugauji.",
+	"friends_and_dms.personal_notes_disabled": "Asmeniniai užrašai šioje instancijoje išjungti.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Gavėjų ID negali būti palikti tušti.",
 	"harvest.expired": "Tavo duomenų eksporto užklausa nebegalioja. Paprašyk naujo eksporto.",
 	"harvest.failed": "Tavo duomenų eksporto užklausa nepavyko. Pabandyk dar kartą.",

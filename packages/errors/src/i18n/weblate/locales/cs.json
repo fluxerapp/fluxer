@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Žádosti o přátelství jsou na této instanci zakázány.",
 	"friends_and_dms.new_conversations_limited": "Momentálně nemůžete zahajovat nové konverzace. Zkuste to znovu později.",
 	"friends_and_dms.not_friends": "Tohoto uživatele nemáte mezi přáteli.",
+	"friends_and_dms.personal_notes_disabled": "Osobní poznámky jsou na této instanci vypnuté.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID příjemců nesmí být prázdná.",
 	"harvest.expired": "Platnost vaší žádosti o export dat vypršela. Požádejte o nový export.",
 	"harvest.failed": "Vaše žádost o export dat selhala. Zkuste to znovu.",

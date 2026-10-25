@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Запити в друзі вимкнено на цьому екземплярі.",
 	"friends_and_dms.new_conversations_limited": "Зараз ти не можеш починати нові чати. Спробуй пізніше.",
 	"friends_and_dms.not_friends": "Ти не дружиш з цим користувачем.",
+	"friends_and_dms.personal_notes_disabled": "Особисті нотатки вимкнено на цьому екземплярі.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Ідентифікатори одержувачів не можуть бути порожніми.",
 	"harvest.expired": "Термін дії твого запиту на експорт даних закінчився. Подай запит на новий експорт.",
 	"harvest.failed": "Не вдалося виконати твій запит на експорт даних. Спробуй ще раз.",

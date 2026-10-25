@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Vriendschapsverzoeken zijn uitgeschakeld op deze instantie.",
 	"friends_and_dms.new_conversations_limited": "Je kunt op dit moment geen nieuwe gesprekken starten. Probeer het later opnieuw.",
 	"friends_and_dms.not_friends": "Je bent niet bevriend met deze gebruiker.",
+	"friends_and_dms.personal_notes_disabled": "Persoonlijke notities zijn uitgeschakeld op deze instantie.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Ontvanger-ID's kunnen niet leeg zijn.",
 	"harvest.expired": "Je data-exportverzoek is verlopen. Vraag een nieuwe export aan.",
 	"harvest.failed": "Je data-exportverzoek is mislukt. Probeer het opnieuw.",

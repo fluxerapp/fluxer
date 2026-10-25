@@ -347,6 +347,7 @@
 	"friends_and_dms.friends_disabled": "Zaproszenia do znajomych są wyłączone w tej instancji.",
 	"friends_and_dms.new_conversations_limited": "Nie możesz teraz rozpoczynać nowych rozmów. Spróbuj ponownie później.",
 	"friends_and_dms.not_friends": "Ten użytkownik nie jest na Twojej liście znajomych.",
+	"friends_and_dms.personal_notes_disabled": "Notatki osobiste są wyłączone w tej instancji.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID odbiorców nie mogą być puste.",
 	"harvest.expired": "Twoja prośba o eksport danych wygasła. Poproś o nowy eksport.",
 	"harvest.failed": "Coś poszło nie tak z eksportem danych. Spróbuj ponownie.",
