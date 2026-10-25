@@ -37,14 +37,15 @@ func (p *Project) Up(ctx context.Context, o UpOptions) error {
 	if err != nil {
 		return err
 	}
-	if err := p.finishStop(ctx, c); err != nil {
+	keep := context.WithoutCancel(ctx)
+	if err := p.finishStop(keep, c); err != nil {
 		return err
 	}
-	plan, err := p.Plan(ctx)
+	plan, err := p.Plan(keep)
 	if err != nil {
 		return err
 	}
-	if err := p.pullMissing(ctx, o.OnEvent); err != nil {
+	if err := p.pullMissing(keep, o.OnEvent); err != nil {
 		return err
 	}
 	stop := c.bus.listen(p.Name, o.OnEvent)
@@ -52,15 +53,15 @@ func (p *Project) Up(ctx context.Context, o UpOptions) error {
 	model := copyModel(p.Model)
 	if len(o.Services) == 0 {
 		if len(plan.Remove) > 0 {
-			if err := p.removeServices(ctx, c, plan.Remove); err != nil {
+			if err := p.removeServices(keep, c, plan.Remove); err != nil {
 				return err
 			}
 		}
-		if hashless, err := p.hashlessNetworks(ctx, plan.Networks); err != nil {
+		if hashless, err := p.hashlessNetworks(keep, plan.Networks); err != nil {
 			return err
 		} else if len(hashless) > 0 {
 			detailf("engine: network %v has no config hash, taking the project down to recreate it", hashless)
-			if err := c.svc.Down(ctx, p.Name, api.DownOptions{Project: model}); err != nil {
+			if err := c.svc.Down(keep, p.Name, api.DownOptions{Project: model}); err != nil {
 				return p.wrap("up", err)
 			}
 		}
@@ -80,28 +81,24 @@ func (p *Project) Up(ctx context.Context, o UpOptions) error {
 		}
 	}
 	policy := recreatePolicy(o.Recreate)
-	opts := api.UpOptions{
-		Create: api.CreateOptions{
-			Recreate:             policy,
-			RecreateDependencies: policy,
-			RemoveOrphans:        o.RemoveOrphans,
-			Inherit:              true,
-			QuietPull:            true,
-		},
-		Start: api.StartOptions{
-			Project:     model,
-			Wait:        o.Wait,
-			WaitTimeout: o.WaitTimeout,
-		},
+	create := api.CreateOptions{
+		Recreate:             policy,
+		RecreateDependencies: policy,
+		RemoveOrphans:        o.RemoveOrphans,
+		Inherit:              true,
+		QuietPull:            true,
 	}
-	err = c.svc.Up(ctx, model, opts)
+	err = c.svc.Create(keep, model, create)
 	if imageGone(err) {
-		if err := p.pullMissing(ctx, o.OnEvent); err != nil {
+		if err := p.pullMissing(keep, o.OnEvent); err != nil {
 			return err
 		}
-		err = c.svc.Up(ctx, model, opts)
+		err = c.svc.Create(keep, model, create)
 	}
-	return p.wrap("up", err)
+	if err != nil {
+		return p.wrap("up", err)
+	}
+	return p.wrap("up", c.svc.Start(ctx, p.Name, api.StartOptions{Project: model, Wait: o.Wait, WaitTimeout: o.WaitTimeout}))
 }
 
 func (p *Project) hashlessNetworks(ctx context.Context, keys []string) ([]string, error) {

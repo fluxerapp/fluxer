@@ -809,7 +809,7 @@ func composeProblem(err error) string {
 }
 
 func upAll(ctx context.Context, p *engine.Project, onEvent func(engine.Event)) error {
-	err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, OnEvent: onEvent})
+	err := p.Up(ctx, engine.UpOptions{RemoveOrphans: true, WaitTimeout: readyTimeout, OnEvent: onEvent})
 	if engine.ClassOf(err) != engine.ClassDependencyFailed {
 		return err
 	}
@@ -823,7 +823,7 @@ func startEach(ctx context.Context, p *engine.Project, stopOnCrash bool) error {
 				return err
 			}
 		}
-		if err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{Services: []string{s}, NoDeps: true}); err != nil {
+		if err := p.Up(ctx, engine.UpOptions{Services: []string{s}, NoDeps: true}); err != nil {
 			return err
 		}
 	}
@@ -833,7 +833,14 @@ func startEach(ctx context.Context, p *engine.Project, stopOnCrash bool) error {
 func failedStart(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, p *engine.Project, waiting []string, cause error) error {
 	pend := inst.State.Upgrade
 	fromShort, toShort := versionPair(pend.From, pend.To)
-	app.UI.Fail(fmt.Sprintf("Fluxer %s didn't start.", toShort), "")
+	if len(waiting) == 0 {
+		waiting = notRunning(context.WithoutCancel(ctx), p)
+	}
+	msg := fmt.Sprintf("Fluxer %s didn't start.", toShort)
+	if len(waiting) > 0 {
+		msg = fmt.Sprintf("Fluxer %s didn't start because %s", toShort, checks.Services(waiting, "isn't ready.", "aren't ready."))
+	}
+	app.UI.Fail(msg, "")
 	app.UI.Detail("%v", cause)
 	logPath := writeFailureLog(ctx, inst, p, "upgrade-"+release.DirName(pend.To)+".log", cause, waiting)
 	if err := goBack(ctx, inst, e, pend.From); err != nil {
