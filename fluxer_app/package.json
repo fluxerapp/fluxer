@@ -171,6 +171,7 @@
 		"@fluxer/geo_utils": "workspace:*",
 		"@fluxer/instance_bootstrap": "workspace:*",
 		"@fluxer/limits": "workspace:*",
+		"@fluxer/music_protocol": "workspace:*",
 		"@fluxer/number_utils": "workspace:*",
 		"@fluxer/record_utils": "workspace:*",
 		"@fluxer/schema": "workspace:*",

@@ -1380,6 +1380,9 @@ importers:
       '@fluxer/limits':
         specifier: workspace:*
         version: link:../packages/limits
+      '@fluxer/music_protocol':
+        specifier: workspace:*
+        version: link:../packages/music_protocol
       '@fluxer/number_utils':
         specifier: workspace:*
         version: link:../packages/number_utils

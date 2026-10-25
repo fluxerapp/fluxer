@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import MusicStore from '@app/features/music/state/MusicStore';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
@@ -122,6 +123,7 @@ export function bindRoomEvents(
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
+	let musicDisposer: (() => void) | null = null;
 	let screenShareNegotiationBound = false;
 	let roomReconnecting = false;
 	let screenSharePublicationAwaitingReconnect: LocalTrackPublication | null = null;
@@ -321,6 +323,7 @@ export function bindRoomEvents(
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
 			observeExistingRemoteScreenSharePublications();
 			bindScreenShareNegotiation();
+			if (!isVoiceMeshRoom(room)) musicDisposer = MusicStore.bind(room, {guildId, channelId});
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
 			await callbacks.onConnected();
@@ -350,6 +353,8 @@ export function bindRoomEvents(
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
 			participantSpeakingDisposers.clear();
 			unbindScreenShareNegotiation();
+			musicDisposer?.();
+			musicDisposer = null;
 			clearAllScreenShareDecodeMonitors();
 			clearAllRemoteTrackLifecycleBindings();
 			dependencies.remoteSpeaking.clear();
