@@ -5,10 +5,10 @@ import {RoomLink} from './audio/RoomLink';
 import {loadConfig} from './Config';
 import {CommandHandler} from './chat/CommandHandler';
 import {LiveCard} from './chat/LiveCard';
+import {createDispatchHandler} from './Dispatch';
 import {FluxerRest} from './fluxer/FluxerRest';
 import {GatewayClient} from './fluxer/GatewayClient';
 import {VoiceStates} from './fluxer/VoiceStates';
-import type {MessageWire, ReactionWire, VoiceStateWire} from './fluxer/Wire';
 import {startHealthServer} from './Health';
 import {Resolver} from './resolve/Resolver';
 import {SpotifyClient} from './resolve/Spotify';
@@ -19,10 +19,6 @@ import {SessionManager} from './session/SessionManager';
 
 const DEFAULT_BITRATE = 64_000;
 const SHUTDOWN_MS = 10_000;
-
-/** A voice state as the gateway sends it; `member.user.bot` says whether the participant is a bot. */
-type VoiceStateDispatch = VoiceStateWire & {member?: {user?: {bot?: boolean}} | null};
-type GuildCreateDispatch = {id: string; voice_states?: Array<VoiceStateDispatch>};
 
 function log(message: string): void {
 	console.log(`[music] ${message}`);
@@ -41,9 +37,6 @@ async function main(): Promise<void> {
 
 	const voiceStates = new VoiceStates();
 	const bots = new Set<string>();
-	const noteBot = (state: VoiceStateDispatch): void => {
-		if (state.member?.user?.bot) bots.add(state.user_id);
-	};
 
 	const resolver = new Resolver(
 		new YouTubeResolver(createYtDlpRunner({bin: config.ytDlpBin, cookiesFile: config.cookiesFile})),
@@ -81,42 +74,7 @@ async function main(): Promise<void> {
 		botSessionId: () => gateway.sessionId,
 	});
 
-	const guard = (what: string, work: Promise<void>): void => {
-		work.catch((err) => console.error(`[music] ${what} failed: ${describeError(err)}`));
-	};
-
-	gateway.on('dispatch', (type: string, d: unknown) => {
-		switch (type) {
-			case 'GUILD_CREATE': {
-				const guild = d as GuildCreateDispatch;
-				const states = (guild.voice_states ?? []).map((s) => ({...s, guild_id: s.guild_id ?? guild.id}));
-				for (const state of states) noteBot(state);
-				voiceStates.applyGuild(guild.id, states);
-				// Connections left over from before a restart; skip the ones a live session owns.
-				const botId = gateway.userId;
-				if (botId === null) return;
-				for (const conn of voiceStates.connectionsOf(botId)) {
-					if (sessions.get(conn.channelId)?.connectionId === conn.connectionId) continue;
-					gateway.leaveVoice(conn.guildId, conn.connectionId);
-				}
-				return;
-			}
-			case 'VOICE_STATE_UPDATE': {
-				const state = d as VoiceStateDispatch;
-				noteBot(state);
-				voiceStates.apply(state);
-				const botId = gateway.userId;
-				if (botId !== null) sessions.onVoiceState(state, botId);
-				return;
-			}
-			case 'MESSAGE_CREATE':
-				guard('message handler', commands.onMessageCreate(d as MessageWire));
-				return;
-			case 'MESSAGE_REACTION_ADD':
-				guard('reaction handler', commands.onReactionAdd(d as ReactionWire));
-				return;
-		}
-	});
+	gateway.on('dispatch', createDispatchHandler({voiceStates, sessions, commands, gateway, bots}));
 
 	gateway.on('fatal', (code: number) => {
 		console.error(`[music] gateway closed with fatal code ${code}`);
