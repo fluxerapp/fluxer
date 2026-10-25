@@ -105,7 +105,7 @@ describe('profile badges', () => {
 			},
 			{
 				kind: 'visionary',
-				label: 'Fluxer Visionary since October 2026',
+				label: 'Fluxer Visionary since October 15, 2026',
 				asset: PROFILE_BADGE_ASSETS.visionary,
 				aspect_ratio: null,
 				caption: null,

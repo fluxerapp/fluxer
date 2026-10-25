@@ -1820,10 +1820,10 @@ msgstr "{onlineCount} online"
 msgid "{operatorPassName} from {senderName}"
 msgstr "{operatorPassName} de la {senderName}"
 
-#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceMonth} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceDate} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
-msgid "{operatorPassName} since {sinceMonth}"
-msgstr "{operatorPassName} din {sinceMonth}"
+msgid "{operatorPassName} since {sinceDate}"
+msgstr "{operatorPassName} din {sinceDate}"
 
 #. Screen-reader label for an optional slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
@@ -25733,7 +25733,7 @@ msgstr "Oferte de Operator Pass"
 msgid "Operator Pass purchase"
 msgstr "Achiziție Operator Pass"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
 msgid "Operator Pass since {since}"
 msgstr "Operator Pass din {since}"

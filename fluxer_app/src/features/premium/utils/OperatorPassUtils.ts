@@ -7,7 +7,6 @@ import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
 import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
-import {formatSinceMonthYear} from '@fluxer/date_utils/src/SinceMonthYear';
 import {
 	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
 	type OperatorPassOfferResponse,
@@ -118,8 +117,8 @@ export function hasOperatorPassTimePassed(iso: string | null | undefined, now: n
 	return Number.isNaN(at) || at <= now;
 }
 
-export function formatOperatorPassSinceMonth(iso: string | Date): string {
-	return formatSinceMonthYear(new Date(iso), getCurrentOrDetectedLocale());
+export function formatOperatorPassSinceDate(iso: string | Date): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long'}).format(new Date(iso));
 }
 
 export type OperatorPassWallNameProblem = 'required' | 'too_long';

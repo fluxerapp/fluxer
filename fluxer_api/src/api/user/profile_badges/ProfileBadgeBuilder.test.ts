@@ -79,7 +79,7 @@ describe('buildProfileBadges', () => {
 				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				premiumSince: new Date('2026-10-31T23:30:00Z'),
 			});
-			expect(build({user})[0]!.label).toBe('Fluxer Plutonium subscriber since October 2026');
+			expect(build({user})[0]!.label).toBe('Fluxer Plutonium subscriber since October 31, 2026');
 		});
 
 		test('every profile badge key is translated and keeps its variables in every locale', () => {
