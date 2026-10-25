@@ -672,7 +672,7 @@ export class GatewayService {
 		}>('guild.list_members_cursor', {
 			guild_id: guildId.toString(),
 			limit,
-			...(after !== undefined && {after: after.toString()}),
+			...(after !== undefined && after > 0n && {after: after.toString()}),
 		});
 		return {
 			members: result.members ?? [],
