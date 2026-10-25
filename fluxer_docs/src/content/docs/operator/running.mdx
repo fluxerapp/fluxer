@@ -134,3 +134,5 @@ This checks your instance and the machine, and tells you how to fix each problem
 ## Manage it without rexctl
 
 To run your instance yourself with docker compose, run `rexctl eject`. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
+
+To upgrade Fluxer while you manage it yourself, run `rexctl takeover`, `rexctl upgrade` and `rexctl eject` one after the other. You can also [upgrade with the compose bundle](/operator/docker-compose/#upgrade) of the new version, the same way as an instance that never used rexctl.
