@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Nota da nossa equipe",
 		"footer_reason": "Você recebeu este e-mail porque enviou uma denúncia nos termos da Lei dos Serviços Digitais no {product_name}.",
-		"intro": "{outcome, select, removed {Removemos o conteúdo que você denunciou porque ele violava nossas regras.} restricted {A conta que você denunciou violou nossas regras, e nós a restringimos. Não informamos o que fizemos com a conta de outra pessoa.} action_taken {O que você denunciou violou nossas regras, e tomamos providências. Não informamos o que fizemos com a conta de outra pessoa.} no_violation {O que você denunciou não viola nossas regras, então deixamos como está.} other {Encerramos sua denúncia.}}",
+		"intro": "{outcome, select, removed {Removemos o conteúdo que você denunciou porque ele violava nossas regras.} restricted {A conta que você denunciou violou nossas regras, e tomamos providências. Não informamos quais providências tomamos.} action_taken {O que você denunciou violou nossas regras, e tomamos providências. Não informamos quais providências tomamos.} no_violation {O que você denunciou não viola nossas regras, então deixamos como está.} other {Encerramos sua denúncia.}}",
 		"note": "{reply, select, yes {Se você não concordar, responda a este e-mail em até 60 dias.} other {{appeals_email, select, null {} other {Se você não concordar, escreva para <mail>{appeals_email}</mail> em até 60 dias e informe o ID da denúncia.}}}}{appeals_email, select, null {} other { Na UE, você também pode recorrer a um <dsa>organismo de resolução extrajudicial de litígios</dsa> certificado ou apresentar uma reclamação ao coordenador dos serviços digitais do seu país.}}",
 		"report_label": "ID da denúncia",
 		"signoff": "Equipe do {product_name}",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Nota da nossa equipe",
 		"footer_reason": "Você recebeu este e-mail porque enviou uma denúncia no {product_name}.",
-		"intro": "{outcome, select, removed {Removemos o conteúdo que você denunciou porque ele violava nossas regras.} restricted {A conta que você denunciou violou nossas regras, e nós a restringimos. Não informamos o que fizemos com a conta de outra pessoa.} action_taken {O que você denunciou violou nossas regras, e tomamos providências. Não informamos o que fizemos com a conta de outra pessoa.} no_violation {O que você denunciou não viola nossas regras, então deixamos como está.} other {Encerramos sua denúncia.}}",
+		"intro": "{outcome, select, removed {Removemos o conteúdo que você denunciou porque ele violava nossas regras.} restricted {A conta que você denunciou violou nossas regras, e tomamos providências. Não informamos quais providências tomamos.} action_taken {O que você denunciou violou nossas regras, e tomamos providências. Não informamos quais providências tomamos.} no_violation {O que você denunciou não viola nossas regras, então deixamos como está.} other {Encerramos sua denúncia.}}",
 		"note": "{reply, select, yes {Se você não concordar, responda a este e-mail em até 60 dias.} other {{appeals_email, select, null {} other {Se você não concordar, escreva para <mail>{appeals_email}</mail> em até 60 dias e informe o ID da denúncia.}}}}{appeals_email, select, null {} other { Na UE, você também pode recorrer a um <dsa>organismo de resolução extrajudicial de litígios</dsa> certificado ou apresentar uma reclamação ao coordenador dos serviços digitais do seu país.}}",
 		"report_label": "ID da denúncia",
 		"signoff": "Equipe do {product_name}",

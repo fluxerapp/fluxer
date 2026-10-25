@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "团队留言",
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上根据《数字服务法》提交了举报。",
-		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已对其进行限制。我们不会透露对他人账号采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露对他人账号采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
+		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
 		"note": "{reply, select, yes {如果你不同意，请在 60 天内回复此邮件。} other {{appeals_email, select, null {} other {如果你不同意，请在 60 天内发送邮件至 <mail>{appeals_email}</mail>，并附上举报 ID。}}}}{appeals_email, select, null {} other {如果你身在欧盟，还可以求助于经认证的<dsa>庭外争议解决机构</dsa>，或向你所在国家的数字服务协调员投诉。}}",
 		"report_label": "举报 ID",
 		"signoff": "{product_name} 团队",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "团队留言",
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上提交了一份举报。",
-		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已对其进行限制。我们不会透露对他人账号采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露对他人账号采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
+		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
 		"note": "{reply, select, yes {如果你不同意，请在 60 天内回复此邮件。} other {{appeals_email, select, null {} other {如果你不同意，请在 60 天内发送邮件至 <mail>{appeals_email}</mail>，并附上举报 ID。}}}}{appeals_email, select, null {} other {如果你身在欧盟，还可以求助于经认证的<dsa>庭外争议解决机构</dsa>，或向你所在国家的数字服务协调员投诉。}}",
 		"report_label": "举报 ID",
 		"signoff": "{product_name} 团队",

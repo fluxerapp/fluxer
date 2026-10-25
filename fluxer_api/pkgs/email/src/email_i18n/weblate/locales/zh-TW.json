@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "團隊留言",
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上提交了數位服務法檢舉。",
-		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已對其加以限制。我們不會透露對他人帳號採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露對他人帳號採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
+		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
 		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調官提出申訴。}}",
 		"report_label": "檢舉 ID",
 		"signoff": "{product_name} 團隊",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "團隊留言",
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上提交了檢舉。",
-		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已對其加以限制。我們不會透露對他人帳號採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露對他人帳號採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
+		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
 		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調官提出申訴。}}",
 		"report_label": "檢舉 ID",
 		"signoff": "{product_name} 團隊",

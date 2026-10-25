@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Napomena našeg tima",
 		"footer_reason": "Ovu si e-poruku primio jer si podnio prijavu prema Aktu o digitalnim uslugama na platformi {product_name}.",
-		"intro": "{outcome, select, removed {Uklonili smo sadržaj koji si prijavio jer je kršio naša pravila.} restricted {Račun koji si prijavio prekršio je naša pravila i ograničili smo ga. Ne otkrivamo što smo poduzeli prema tuđem računu.} action_taken {Ono što si prijavio prekršilo je naša pravila i poduzeli smo mjere. Ne otkrivamo što smo poduzeli prema tuđem računu.} no_violation {Ono što si prijavio ne krši naša pravila, pa smo to ostavili kakvo jest.} other {Zatvorili smo tvoju prijavu.}}",
+		"intro": "{outcome, select, removed {Uklonili smo sadržaj koji si prijavio jer je kršio naša pravila.} restricted {Račun koji si prijavio prekršio je naša pravila i poduzeli smo mjere. Ne otkrivamo koje smo mjere poduzeli.} action_taken {Ono što si prijavio prekršilo je naša pravila i poduzeli smo mjere. Ne otkrivamo koje smo mjere poduzeli.} no_violation {Ono što si prijavio ne krši naša pravila, pa smo to ostavili kakvo jest.} other {Zatvorili smo tvoju prijavu.}}",
 		"note": "{reply, select, yes {Ako se ne slažeš, odgovori na ovu e-poruku u roku od 60 dana.} other {{appeals_email, select, null {} other {Ako se ne slažeš, piši na <mail>{appeals_email}</mail> u roku od 60 dana i navedi ID prijave.}}}}{appeals_email, select, null {} other { U EU-u se možeš obratiti i certificiranom <dsa>tijelu za izvansudsko rješavanje sporova</dsa> ili podnijeti pritužbu koordinatoru za digitalne usluge u svojoj državi.}}",
 		"report_label": "ID prijave",
 		"signoff": "Tim platforme {product_name}",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Napomena našeg tima",
 		"footer_reason": "Ovu si e-poruku primio jer si podnio prijavu na {product_name}.",
-		"intro": "{outcome, select, removed {Uklonili smo sadržaj koji si prijavio jer je kršio naša pravila.} restricted {Račun koji si prijavio prekršio je naša pravila i ograničili smo ga. Ne otkrivamo što smo poduzeli prema tuđem računu.} action_taken {Ono što si prijavio prekršilo je naša pravila i poduzeli smo mjere. Ne otkrivamo što smo poduzeli prema tuđem računu.} no_violation {Ono što si prijavio ne krši naša pravila, pa smo to ostavili kakvo jest.} other {Zatvorili smo tvoju prijavu.}}",
+		"intro": "{outcome, select, removed {Uklonili smo sadržaj koji si prijavio jer je kršio naša pravila.} restricted {Račun koji si prijavio prekršio je naša pravila i poduzeli smo mjere. Ne otkrivamo koje smo mjere poduzeli.} action_taken {Ono što si prijavio prekršilo je naša pravila i poduzeli smo mjere. Ne otkrivamo koje smo mjere poduzeli.} no_violation {Ono što si prijavio ne krši naša pravila, pa smo to ostavili kakvo jest.} other {Zatvorili smo tvoju prijavu.}}",
 		"note": "{reply, select, yes {Ako se ne slažeš, odgovori na ovu e-poruku u roku od 60 dana.} other {{appeals_email, select, null {} other {Ako se ne slažeš, piši na <mail>{appeals_email}</mail> u roku od 60 dana i navedi ID prijave.}}}}{appeals_email, select, null {} other { U EU-u se možeš obratiti i certificiranom <dsa>tijelu za izvansudsko rješavanje sporova</dsa> ili podnijeti pritužbu koordinatoru za digitalne usluge u svojoj državi.}}",
 		"report_label": "ID prijave",
 		"signoff": "Tim platforme {product_name}",

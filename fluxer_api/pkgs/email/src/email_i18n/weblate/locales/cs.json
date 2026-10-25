@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Poznámka od našeho týmu",
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste podali nahlášení podle nařízení o digitálních službách na {product_name}.",
-		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme ho omezili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
+		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
 		"note": "{reply, select, yes {Pokud nesouhlasíte, odpovězte na tento e-mail do 60 dnů.} other {{appeals_email, select, null {} other {Pokud nesouhlasíte, napište do 60 dnů na <mail>{appeals_email}</mail> a uveďte ID nahlášení.}}}}{appeals_email, select, null {} other { V EU se také můžete obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa> nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}",
 		"report_label": "ID nahlášení",
 		"signoff": "Tým {product_name}",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Poznámka od našeho týmu",
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste odeslali nahlášení na {product_name}.",
-		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme ho omezili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
+		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
 		"note": "{reply, select, yes {Pokud nesouhlasíte, odpovězte na tento e-mail do 60 dnů.} other {{appeals_email, select, null {} other {Pokud nesouhlasíte, napište do 60 dnů na <mail>{appeals_email}</mail> a uveďte ID nahlášení.}}}}{appeals_email, select, null {} other { V EU se také můžete obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa> nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}",
 		"report_label": "ID nahlášení",
 		"signoff": "Tým {product_name}",

@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "チームからのコメント",
 		"footer_reason": "このメールは、{product_name}でデジタルサービス法に基づく報告を送信されたため送信されました。",
-		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、制限しました。他の人のアカウントに対して行った措置の内容はお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。他の人のアカウントに対して行った措置の内容はお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
+		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
 		"note": "{reply, select, yes {この結果に同意できない場合は、60日以内にこのメールに返信してください。} other {{appeals_email, select, null {} other {この結果に同意できない場合は、60日以内に報告IDを添えて<mail>{appeals_email}</mail>までメールでご連絡ください。}}}}{appeals_email, select, null {} other {EU域内の方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用することや、お住まいの国のデジタルサービス調整官に苦情を申し立てることもできます。}}",
 		"report_label": "報告ID",
 		"signoff": "{product_name}チーム",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "チームからのコメント",
 		"footer_reason": "このメールは、{product_name}で報告を送信されたため送信されました。",
-		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、制限しました。他の人のアカウントに対して行った措置の内容はお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。他の人のアカウントに対して行った措置の内容はお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
+		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
 		"note": "{reply, select, yes {この結果に同意できない場合は、60日以内にこのメールに返信してください。} other {{appeals_email, select, null {} other {この結果に同意できない場合は、60日以内に報告IDを添えて<mail>{appeals_email}</mail>までメールでご連絡ください。}}}}{appeals_email, select, null {} other {EU域内の方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用することや、お住まいの国のデジタルサービス調整官に苦情を申し立てることもできます。}}",
 		"report_label": "報告ID",
 		"signoff": "{product_name}チーム",

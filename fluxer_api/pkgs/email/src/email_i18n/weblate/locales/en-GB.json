@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Note from our team",
 		"footer_reason": "You received this email because you submitted a Digital Services Act report on {product_name}.",
-		"intro": "{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we restricted it. We don't share what we did to another person's account.} action_taken {What you reported broke our rules, and we took action. We don't share what we did to another person's account.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+		"intro": "{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we took action on it. We don't share which action we took.} action_taken {What you reported broke our rules, and we took action. We don't share which action we took.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
 		"note": "{reply, select, yes {If you disagree, reply to this email within 60 days.} other {{appeals_email, select, null {} other {If you disagree, email <mail>{appeals_email}</mail> within 60 days and include the report ID.}}}}{appeals_email, select, null {} other { In the EU, you can also go to a certified <dsa>out-of-court dispute settlement body</dsa> or complain to the Digital Services Coordinator in your country.}}",
 		"report_label": "Report ID",
 		"signoff": "The {product_name} team",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Note from our team",
 		"footer_reason": "You received this email because you submitted a report on {product_name}.",
-		"intro": "{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we restricted it. We don't share what we did to another person's account.} action_taken {What you reported broke our rules, and we took action. We don't share what we did to another person's account.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+		"intro": "{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we took action on it. We don't share which action we took.} action_taken {What you reported broke our rules, and we took action. We don't share which action we took.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
 		"note": "{reply, select, yes {If you disagree, reply to this email within 60 days.} other {{appeals_email, select, null {} other {If you disagree, email <mail>{appeals_email}</mail> within 60 days and include the report ID.}}}}{appeals_email, select, null {} other { In the EU, you can also go to a certified <dsa>out-of-court dispute settlement body</dsa> or complain to the Digital Services Coordinator in your country.}}",
 		"report_label": "Report ID",
 		"signoff": "The {product_name} team",

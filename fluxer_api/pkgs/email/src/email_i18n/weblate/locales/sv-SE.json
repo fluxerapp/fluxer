@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Kommentar från vårt team",
 		"footer_reason": "Du fick det här mejlet eftersom du skickade in en anmälan enligt förordningen om digitala tjänster på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har begränsat det. Vi berättar inte vad vi har gjort med någon annans konto.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vad vi har gjort med någon annans konto.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
+		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
 		"note": "{reply, select, yes {Om du inte håller med kan du svara på det här mejlet inom 60 dagar.} other {{appeals_email, select, null {} other {Om du inte håller med kan du mejla <mail>{appeals_email}</mail> inom 60 dagar och ange anmälnings-ID:t.}}}}{appeals_email, select, null {} other { Inom EU kan du också vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa> eller klaga hos samordnaren för digitala tjänster i ditt land.}}",
 		"report_label": "Anmälnings-ID",
 		"signoff": "{product_name}-teamet",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Kommentar från vårt team",
 		"footer_reason": "Du fick det här mejlet eftersom du skickade in en anmälan på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har begränsat det. Vi berättar inte vad vi har gjort med någon annans konto.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vad vi har gjort med någon annans konto.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
+		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
 		"note": "{reply, select, yes {Om du inte håller med kan du svara på det här mejlet inom 60 dagar.} other {{appeals_email, select, null {} other {Om du inte håller med kan du mejla <mail>{appeals_email}</mail> inom 60 dagar och ange anmälnings-ID:t.}}}}{appeals_email, select, null {} other { Inom EU kan du också vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa> eller klaga hos samordnaren för digitala tjänster i ditt land.}}",
 		"report_label": "Anmälnings-ID",
 		"signoff": "{product_name}-teamet",

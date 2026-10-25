@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Ekibimizden not",
 		"footer_reason": "Bu e-postayı, {product_name} üzerinde bir Dijital Hizmetler Yasası raporu gönderdiğiniz için aldınız.",
-		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve hesabı kısıtladık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
+		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
 		"note": "{reply, select, yes {Karara katılmıyorsanız 60 gün içinde bu e-postayı yanıtlayın.} other {{appeals_email, select, null {} other {Karara katılmıyorsanız 60 gün içinde <mail>{appeals_email}</mail> adresine yazın ve rapor kimliğini ekleyin.}}}}{appeals_email, select, null {} other { AB içindeyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> da başvurabilir veya ülkenizdeki Dijital Hizmetler Koordinatörüne şikâyette bulunabilirsiniz.}}",
 		"report_label": "Rapor Kimliği",
 		"signoff": "{product_name} ekibi",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Ekibimizden not",
 		"footer_reason": "Bu e-postayı, {product_name} üzerinde bir rapor gönderdiğiniz için aldınız.",
-		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve hesabı kısıtladık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
+		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
 		"note": "{reply, select, yes {Karara katılmıyorsanız 60 gün içinde bu e-postayı yanıtlayın.} other {{appeals_email, select, null {} other {Karara katılmıyorsanız 60 gün içinde <mail>{appeals_email}</mail> adresine yazın ve rapor kimliğini ekleyin.}}}}{appeals_email, select, null {} other { AB içindeyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> da başvurabilir veya ülkenizdeki Dijital Hizmetler Koordinatörüne şikâyette bulunabilirsiniz.}}",
 		"report_label": "Rapor Kimliği",
 		"signoff": "{product_name} ekibi",

@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Besked fra vores team",
 		"footer_reason": "Du modtog denne e-mail, fordi du indsendte en anmeldelse i henhold til Digital Services Act på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har begrænset den. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, så svar på denne e-mail inden for 60 dage.} other {{appeals_email, select, null {} other {Hvis du er uenig, så skriv til <mail>{appeals_email}</mail> inden for 60 dage, og angiv anmeldelses-ID’et.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et certificeret <dsa>organ for udenretslig tvistbilæggelse</dsa> eller klage til koordinatoren for digitale tjenester i dit land.}}",
 		"report_label": "Anmeldelses-ID",
 		"signoff": "Teamet bag {product_name}",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Besked fra vores team",
 		"footer_reason": "Du har modtaget denne e-mail, fordi du har indsendt en anmeldelse på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har begrænset den. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, så svar på denne e-mail inden for 60 dage.} other {{appeals_email, select, null {} other {Hvis du er uenig, så skriv til <mail>{appeals_email}</mail> inden for 60 dage, og angiv anmeldelses-ID’et.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et certificeret <dsa>organ for udenretslig tvistbilæggelse</dsa> eller klage til koordinatoren for digitale tjenester i dit land.}}",
 		"report_label": "Anmeldelses-ID",
 		"signoff": "Teamet bag {product_name}",

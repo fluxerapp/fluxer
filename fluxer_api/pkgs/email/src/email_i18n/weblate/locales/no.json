@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Merknad fra teamet vårt",
 		"footer_reason": "Du mottok denne e-posten fordi du sendte inn en rapport i henhold til Digital Services Act på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet innholdet du rapporterte, fordi det brøt reglene våre.} restricted {Kontoen du rapporterte, brøt reglene våre, og vi har begrenset den. Vi forteller ikke hva vi har gjort med en annen persons konto.} action_taken {Det du rapporterte, brøt reglene våre, og vi har gjort noe med det. Vi forteller ikke hva vi har gjort med en annen persons konto.} no_violation {Det du rapporterte, bryter ikke reglene våre, så vi har latt det være.} other {Vi har avsluttet rapporten din.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet innholdet du rapporterte, fordi det brøt reglene våre.} restricted {Kontoen du rapporterte, brøt reglene våre, og vi har grepet inn. Vi forteller ikke hvordan vi grep inn.} action_taken {Det du rapporterte, brøt reglene våre, og vi har grepet inn. Vi forteller ikke hvordan vi grep inn.} no_violation {Det du rapporterte, bryter ikke reglene våre, så vi har latt det være.} other {Vi har avsluttet rapporten din.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, kan du svare på denne e-posten innen 60 dager.} other {{appeals_email, select, null {} other {Hvis du er uenig, kan du sende en e-post til <mail>{appeals_email}</mail> innen 60 dager og oppgi rapport-ID-en.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa> eller klage til koordinatoren for digitale tjenester i landet ditt.}}",
 		"report_label": "Rapport-ID",
 		"signoff": "{product_name}-teamet",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Merknad fra teamet vårt",
 		"footer_reason": "Du mottok denne e-posten fordi du sendte inn en rapport på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet innholdet du rapporterte, fordi det brøt reglene våre.} restricted {Kontoen du rapporterte, brøt reglene våre, og vi har begrenset den. Vi forteller ikke hva vi har gjort med en annen persons konto.} action_taken {Det du rapporterte, brøt reglene våre, og vi har gjort noe med det. Vi forteller ikke hva vi har gjort med en annen persons konto.} no_violation {Det du rapporterte, bryter ikke reglene våre, så vi har latt det være.} other {Vi har avsluttet rapporten din.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet innholdet du rapporterte, fordi det brøt reglene våre.} restricted {Kontoen du rapporterte, brøt reglene våre, og vi har grepet inn. Vi forteller ikke hvordan vi grep inn.} action_taken {Det du rapporterte, brøt reglene våre, og vi har grepet inn. Vi forteller ikke hvordan vi grep inn.} no_violation {Det du rapporterte, bryter ikke reglene våre, så vi har latt det være.} other {Vi har avsluttet rapporten din.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, kan du svare på denne e-posten innen 60 dager.} other {{appeals_email, select, null {} other {Hvis du er uenig, kan du sende en e-post til <mail>{appeals_email}</mail> innen 60 dager og oppgi rapport-ID-en.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa> eller klage til koordinatoren for digitale tjenester i landet ditt.}}",
 		"report_label": "Rapport-ID",
 		"signoff": "{product_name}-teamet",

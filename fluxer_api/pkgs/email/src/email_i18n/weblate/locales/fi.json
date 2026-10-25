@@ -50,7 +50,7 @@
 	"dsa_report_resolved": {
 		"comment_label": "Tiimimme huomautus",
 		"footer_reason": "Sait tämän sähköpostin, koska lähetit digipalvelusäädöksen mukaisen ilmoituksen {product_name}-palvelussa.",
-		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja rajoitimme sitä. Emme kerro, mitä teimme toisen henkilön tilille.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mitä teimme toisen henkilön tilille.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
+		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
 		"note": "{reply, select, yes {Jos olet eri mieltä, vastaa tähän sähköpostiin 60 päivän kuluessa.} other {{appeals_email, select, null {} other {Jos olet eri mieltä, lähetä sähköpostia osoitteeseen <mail>{appeals_email}</mail> 60 päivän kuluessa ja mainitse ilmoituksen tunnus.}}}}{appeals_email, select, null {} other { EU:ssa voit myös kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen tai tehdä valituksen maasi digitaalisten palvelujen koordinaattorille.}}",
 		"report_label": "Ilmoituksen tunnus",
 		"signoff": "{product_name}-tiimi",
@@ -424,7 +424,7 @@
 	"report_resolved": {
 		"comment_label": "Tiimimme huomautus",
 		"footer_reason": "Sait tämän sähköpostin, koska teit ilmoituksen {product_name}-palvelussa.",
-		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja rajoitimme sitä. Emme kerro, mitä teimme toisen henkilön tilille.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mitä teimme toisen henkilön tilille.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
+		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
 		"note": "{reply, select, yes {Jos olet eri mieltä, vastaa tähän sähköpostiin 60 päivän kuluessa.} other {{appeals_email, select, null {} other {Jos olet eri mieltä, lähetä sähköpostia osoitteeseen <mail>{appeals_email}</mail> 60 päivän kuluessa ja mainitse ilmoituksen tunnus.}}}}{appeals_email, select, null {} other { EU:ssa voit myös kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen tai tehdä valituksen maasi digitaalisten palvelujen koordinaattorille.}}",
 		"report_label": "Ilmoituksen tunnus",
 		"signoff": "{product_name}-tiimi",
