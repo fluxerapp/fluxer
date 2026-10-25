@@ -337,12 +337,20 @@ func newUsersCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if u.DeletionFinished() {
+				app.UI.OK("Account %s is already deleted.", u.ID)
+				return nil
+			}
 			if err := app.UI.ConfirmDestructive(fmt.Sprintf("This deletes %s and everything they posted.", u.Username), inst.Domain(), confirm); err != nil {
 				return err
 			}
 			if err := api.DeleteUser(ctx, u.ID); err != nil {
 				if errors.Is(err, adminapi.ErrDeletionPending) {
 					app.UI.OK("%s is already being deleted.", u.Username)
+					return nil
+				}
+				if errors.Is(err, adminapi.ErrAlreadyDeleted) {
+					app.UI.OK("Account %s is already deleted.", u.ID)
 					return nil
 				}
 				return err

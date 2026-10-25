@@ -28,7 +28,11 @@ type User struct {
 	Banned    bool   `json:"banned"`
 	MFA       bool   `json:"mfa"`
 	CreatedAt string `json:"created_at"`
+
+	deletionFinished bool
 }
+
+func (u User) DeletionFinished() bool { return u.deletionFinished }
 
 type UserDetail struct {
 	User
@@ -40,6 +44,8 @@ type UserDetail struct {
 }
 
 var ErrDeletionPending = errors.New("adminapi: the account is already being deleted")
+
+var ErrAlreadyDeleted = errors.New("adminapi: the account was already deleted")
 
 type BanBlocksDeletionError struct{ Username string }
 
@@ -78,6 +84,8 @@ func toUser(u UserAdminResponseSchema) User {
 		Banned:    bannedNow(u.TempBannedUntil),
 		MFA:       u.HasTotp || len(u.AuthenticatorTypes) > 0,
 		CreatedAt: SnowflakeTime(u.Id),
+
+		deletionFinished: deletionFinished(u),
 	}
 	if u.Email != nil {
 		out.Email = *u.Email
@@ -121,6 +129,10 @@ func SnowflakeTime(id string) string {
 func isDeleted(u UserAdminResponseSchema) bool {
 	flags, _ := strconv.ParseUint(u.Flags, 10, 64)
 	return flags&userFlagDeleted != 0
+}
+
+func deletionFinished(u UserAdminResponseSchema) bool {
+	return isDeleted(u) && u.PendingDeletionAt == nil
 }
 
 func (c *Client) ListUsers(ctx context.Context, search string, admins bool) ([]User, error) {
@@ -409,6 +421,9 @@ func (c *Client) DeleteUser(ctx context.Context, id string) error {
 	u, err := c.getUser(ctx, id)
 	if err != nil {
 		return err
+	}
+	if deletionFinished(*u) {
+		return ErrAlreadyDeleted
 	}
 	basis, err := c.deletionBasis(ctx, *u)
 	if err != nil {
