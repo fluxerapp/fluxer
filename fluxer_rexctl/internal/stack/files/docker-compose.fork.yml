@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 services:
+  edge:
+    # The bot uses https://${FLUXER_DOMAIN}; the host only redirects 443 for
+    # outside traffic, so in-network clients must reach edge directly.
+    networks:
+      fluxer:
+        aliases: ["${FLUXER_DOMAIN}"]
+
   music:
     image: fluxer-fork/music:main
     pull_policy: build
