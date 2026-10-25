@@ -350,7 +350,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS]: 'account.unclaimed_cannot_join_calls',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS]: 'account.unclaimed_cannot_join_voice',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES]: 'account.unclaimed_cannot_make_purchases',
-	[APIErrorCodes.PURCHASE_RECEIPT_EMAIL_REQUIRED]: 'account.purchase_receipt_email_required',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES]: 'account.unclaimed_cannot_send_direct_messages',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS]: 'account.unclaimed_cannot_send_friend_requests',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES]: 'account.unclaimed_cannot_send_messages',

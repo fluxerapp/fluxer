@@ -10,7 +10,6 @@
 	"account.limited": "O envio de mensagens está pausado na sua conta. Confira seu e-mail para concluir uma etapa rápida e continuar.",
 	"account.mfa_email_verification_required": "Confirme seu endereço de e-mail para usar a autenticação de dois fatores ou chaves de acesso.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Defina uma senha para manter esta conta. Esta instância não pode enviar códigos por e-mail.} local_credential_basis {Defina uma senha para manter esta conta. Esta instância exige uma senha ou chave de acesso em todas as contas.} other {Defina uma senha para manter esta conta.}}",
-	"account.purchase_receipt_email_required": "Compras precisam de um e-mail para receber os recibos, e esta conta não tem um.",
 	"account.sensitive_content_filter_age_restricted": "Este filtro de conteúdo sensível não está disponível para sua faixa etária.",
 	"account.session_timeout": "A sessão expirou. Atualize a página e entre novamente.",
 	"account.session_token_mismatch": "Token de sessão incompatível.",

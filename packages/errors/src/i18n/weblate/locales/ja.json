@@ -10,7 +10,6 @@
 	"account.limited": "アカウントのメッセージ機能は一時停止中です。メールでご案内しているかんたんな手続きを済ませると、再開できます。",
 	"account.mfa_email_verification_required": "2段階認証またはパスキーを使用するには、メールアドレスを確認してください。",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {このアカウントを残すには、パスワードを設定してください。このインスタンスではメールコードを送信できません。} local_credential_basis {このアカウントを残すには、パスワードを設定してください。このインスタンスでは、すべてのアカウントにパスワードまたはパスキーが必要です。} other {このアカウントを残すには、パスワードを設定してください。}}",
-	"account.purchase_receipt_email_required": "購入には領収書の送信先となるメールアドレスが必要ですが、このアカウントにはありません。",
 	"account.sensitive_content_filter_age_restricted": "このセンシティブコンテンツフィルターは、現在の年齢層ではご利用いただけません。",
 	"account.session_timeout": "セッションがタイムアウトしました。ページを更新して、もう一度ログインしてください。",
 	"account.session_token_mismatch": "セッショントークンが一致しません。",

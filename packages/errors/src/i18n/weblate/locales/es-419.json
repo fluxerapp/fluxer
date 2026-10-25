@@ -10,7 +10,6 @@
 	"account.limited": "El envío de mensajes está en pausa en tu cuenta. Revisa tu correo para completar un paso rápido y continuar.",
 	"account.mfa_email_verification_required": "Confirma tu dirección de correo electrónico para usar la autenticación de dos factores o las llaves de acceso.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Crea una contraseña para conservar esta cuenta. Esta instancia no puede enviar códigos por correo electrónico.} local_credential_basis {Crea una contraseña para conservar esta cuenta. Esta instancia pide una contraseña o una llave de acceso en todas las cuentas.} other {Crea una contraseña para conservar esta cuenta.}}",
-	"account.purchase_receipt_email_required": "Para comprar se necesita un correo electrónico al que enviar los recibos, y esta cuenta no tiene uno.",
 	"account.sensitive_content_filter_age_restricted": "Este filtro de contenido sensible no está disponible para tu edad.",
 	"account.session_timeout": "Tu sesión expiró. Actualiza la página e inicia sesión de nuevo.",
 	"account.session_token_mismatch": "El token de sesión no coincide.",

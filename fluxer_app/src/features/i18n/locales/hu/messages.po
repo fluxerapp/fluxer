@@ -1855,11 +1855,6 @@ msgstr "A(z) {premiumProductName} most kevesebbe kerül. A havi díjad {currentP
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "A(z) {premiumProductName} most kevesebbe kerül. Az éves díjad {currentPrice} helyett {newPrice} lesz ettől a naptól: {effectiveDate}. A váltásért ma nem számítunk fel díjat."
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "A(z) {premiumProductName} igénybevételéhez e-mail-cím kell a nyugták küldéséhez, de az ezen a példányon lévő fiókoknak nincs ilyen."
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "Ajándékok jelenleg nem érhetők el a fiókodhoz."
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "Jelenleg nem lehet ajándékot vásárolni."
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "Az ajándékokhoz e-mail-cím kell a nyugták küldéséhez, de az ezen a példányon lévő fiókoknak nincs ilyen."
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "Ennyi volt az összes."
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "Az {operatorPassName} még nem érhető el az országodban."
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "A(z) {operatorPassName} megvásárlásához e-mail-cím kell a nyugták küldéséhez, de ennek a fióknak nincs ilyen."
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

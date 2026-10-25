@@ -1855,11 +1855,6 @@ msgstr "{premiumProductName} kostet jetzt weniger. Wechsle ab dem {effectiveDate
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} kostet jetzt weniger. Wechsle ab dem {effectiveDate} von {currentPrice} auf {newPrice} pro Jahr. Heute wird nichts abgebucht."
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "{premiumProductName} braucht für Belege eine E-Mail-Adresse, und Accounts auf dieser Instanz haben keine."
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "Geschenke sind für deinen Account derzeit nicht verfügbar."
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "Geschenke sind im Moment nicht verfügbar."
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "Geschenke brauchen für Belege eine E-Mail-Adresse, und Accounts auf dieser Instanz haben keine."
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "Das waren alle."
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "Der {operatorPassName} ist in deinem Land noch nicht erhältlich."
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "Der {operatorPassName} braucht für Belege eine E-Mail-Adresse, und dieser Account hat keine."
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

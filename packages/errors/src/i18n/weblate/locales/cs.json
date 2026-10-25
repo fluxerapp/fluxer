@@ -10,7 +10,6 @@
 	"account.limited": "U vašeho účtu je posílání zpráv na pauze. Podívejte se do e-mailu: stačí jeden rychlý krok a můžete pokračovat.",
 	"account.mfa_email_verification_required": "Potvrďte svou e-mailovou adresu, abyste mohli používat dvoufaktorové ověřování nebo přístupové klíče.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Nastavte si heslo, abyste si tento účet ponechali. Tato instance nemůže odesílat e-mailové kódy.} local_credential_basis {Nastavte si heslo, abyste si tento účet ponechali. Tato instance vyžaduje u každého účtu heslo nebo přístupový klíč.} other {Nastavte si heslo, abyste si tento účet ponechali.}}",
-	"account.purchase_receipt_email_required": "Nákupy vyžadují e-mailovou adresu, na kterou pošleme potvrzení o nákupu, a tento účet žádnou nemá.",
 	"account.sensitive_content_filter_age_restricted": "Tento filtr citlivého obsahu není pro vaši věkovou skupinu dostupný.",
 	"account.session_timeout": "Platnost relace vypršela. Obnovte stránku a přihlaste se znovu.",
 	"account.session_token_mismatch": "Token relace nesouhlasí.",

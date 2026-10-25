@@ -10,7 +10,6 @@
 	"account.limited": "إرسال الرسائل متوقف مؤقتًا في حسابك. ستجد في بريدك الإلكتروني خطوة سريعة واحدة للمتابعة.",
 	"account.mfa_email_verification_required": "أكّد عنوان بريدك الإلكتروني لاستخدام المصادقة الثنائية أو مفاتيح المرور.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {عيّن كلمة مرور للاحتفاظ بهذا الحساب. لا يمكن لهذا المثيل إرسال رموز البريد الإلكتروني.} local_credential_basis {عيّن كلمة مرور للاحتفاظ بهذا الحساب. يطلب هذا المثيل كلمة مرور أو مفتاح مرور لكل حساب.} other {عيّن كلمة مرور للاحتفاظ بهذا الحساب.}}",
-	"account.purchase_receipt_email_required": "تحتاج عمليات الشراء إلى عنوان بريد إلكتروني لإرسال الإيصالات إليه، وهذا الحساب ليس لديه عنوان.",
 	"account.sensitive_content_filter_age_restricted": "فلتر المحتوى الحساس هذا غير متاح لفئتك العمرية.",
 	"account.session_timeout": "انتهت صلاحية الجلسة. حدّث الصفحة وسجّل الدخول مرة أخرى.",
 	"account.session_token_mismatch": "عدم تطابق رمز الجلسة.",

@@ -1855,11 +1855,6 @@ msgstr "{premiumProductName} kini lebih murah. Beralih dari {currentPrice} ke {n
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} kini lebih murah. Beralih dari {currentPrice} ke {newPrice} per tahun mulai {effectiveDate}, dan tidak ada yang ditagihkan hari ini."
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "{premiumProductName} memerlukan email untuk tanda terima, dan akun di instance ini tidak memilikinya."
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "Hadiah tidak tersedia untuk akunmu saat ini."
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "Hadiah tidak tersedia saat ini."
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "Hadiah memerlukan email untuk tanda terima, dan akun di instance ini tidak memilikinya."
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "Sudah semuanya."
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "{operatorPassName} belum tersedia di negaramu."
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "{operatorPassName} memerlukan email untuk tanda terima, dan akun ini tidak memilikinya."
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

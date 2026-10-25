@@ -10,7 +10,6 @@
 	"account.limited": "Beskeder er sat på pause på din konto. Tjek din e-mail for et hurtigt trin, så du kan fortsætte.",
 	"account.mfa_email_verification_required": "Bekræft din e-mailadresse for at bruge tofaktorgodkendelse eller adgangsnøgler.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Vælg en adgangskode for at beholde denne konto. Denne instans kan ikke sende e-mail-koder.} local_credential_basis {Vælg en adgangskode for at beholde denne konto. Denne instans kræver en adgangskode eller adgangsnøgle på alle konti.} other {Vælg en adgangskode for at beholde denne konto.}}",
-	"account.purchase_receipt_email_required": "Køb kræver en e-mailadresse at sende kvitteringer til, og denne konto har ingen.",
 	"account.sensitive_content_filter_age_restricted": "Dette filter til følsomt indhold er ikke tilgængeligt for din aldersgruppe.",
 	"account.session_timeout": "Sessionen er udløbet. Opdater siden, og log ind igen.",
 	"account.session_token_mismatch": "Sessionstokenet stemmer ikke overens.",

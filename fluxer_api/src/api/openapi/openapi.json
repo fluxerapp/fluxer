@@ -42175,7 +42175,6 @@
 					"COUNTRY_UNAVAILABLE",
 					"EMAIL_UNVERIFIED",
 					"UNCLAIMED",
-					"NO_RECEIPT_EMAIL",
 					"PURCHASE_DISABLED",
 					"PAYMENT_DISPUTE_OPEN",
 					"REMOVED"
@@ -42185,7 +42184,6 @@
 					"The pass is not on sale in the country of the buyer right now",
 					"The account email is not verified",
 					"The account is not claimed",
-					"The account has no email to send receipts to",
 					"Purchases are disabled for the account",
 					"A payment dispute the account made is open, purchases come back when it closes",
 					"The pass was removed from the account permanently under the Operator Pass terms"
@@ -42195,7 +42193,6 @@
 					"country_unavailable",
 					"email_unverified",
 					"unclaimed",
-					"no_receipt_email",
 					"purchase_disabled",
 					"payment_dispute_open",
 					"removed"
@@ -44571,7 +44568,6 @@
 					"PROFILE_EMAIL_VERIFICATION_REQUIRED",
 					"PUBLISHED_MESSAGE_EDIT_RATE_LIMITED",
 					"PURCHASE_EMAIL_VERIFICATION_REQUIRED",
-					"PURCHASE_RECEIPT_EMAIL_REQUIRED",
 					"REACTION_EMAIL_VERIFICATION_REQUIRED",
 					"REPORT_EMAIL_VERIFICATION_REQUIRED",
 					"REGISTRATION_CLOSED",
@@ -44933,7 +44929,6 @@
 					"Email verification is required for this action.",
 					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
 					"Email verification is required for this action.",
-					"Purchases need an email address to send receipts to, and this account doesn't have one.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Registration is closed on this instance.",

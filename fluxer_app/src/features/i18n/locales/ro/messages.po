@@ -1855,11 +1855,6 @@ msgstr "{premiumProductName} costă mai puțin acum. Treci de la {currentPrice} 
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} costă mai puțin acum. Treci de la {currentPrice} la {newPrice} pe an începând cu {effectiveDate}, iar astăzi nu se percepe nicio taxă."
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "{premiumProductName} necesită o adresă de e-mail pentru chitanțe, iar conturile din această instanță nu au una."
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "Cadourile nu sunt disponibile momentan pentru contul tău."
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "Cadourile nu sunt disponibile momentan."
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "Cadourile necesită un e-mail pentru chitanțe, iar conturile de pe această instanță nu au unul."
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "Asta-i tot."
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "{operatorPassName} nu este încă disponibil în țara ta."
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "Pentru {operatorPassName} este necesar un e-mail pentru chitanțe, iar acest cont nu are unul."
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

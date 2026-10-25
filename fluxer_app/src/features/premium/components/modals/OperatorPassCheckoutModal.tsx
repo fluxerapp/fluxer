@@ -91,7 +91,6 @@ type Notice =
 	| {kind: 'country_unavailable'}
 	| {kind: 'email_unverified'}
 	| {kind: 'unclaimed'}
-	| {kind: 'no_receipt_email'}
 	| {kind: 'purchase_disabled'}
 	| {kind: 'payment_dispute_open'}
 	| {kind: 'removed'}
@@ -241,11 +240,6 @@ const NO_EMAIL_NOTICE_DESCRIPTOR = msg({
 	comment:
 		'Notice in the Operator Pass checkout dialog for accounts that have no email yet. Operator Pass is a product name.',
 });
-const NO_RECEIPT_EMAIL_NOTICE_DESCRIPTOR = msg({
-	message: "The {operatorPassName} needs an email for receipts, and this account doesn't have one.",
-	comment:
-		'Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.',
-});
 const REMOVED_NOTICE_DESCRIPTOR = msg({
 	message: "This account can't buy the {operatorPassName} again.",
 	comment:
@@ -283,7 +277,6 @@ const BLOCKING_NOTICE_KINDS: ReadonlySet<Notice['kind']> = new Set([
 	'country_unavailable',
 	'email_unverified',
 	'unclaimed',
-	'no_receipt_email',
 	'purchase_disabled',
 	'payment_dispute_open',
 	'removed',
@@ -322,8 +315,6 @@ function noticeForBlockedReason(reason: OperatorPassPurchaseBlockedReason | null
 			return {kind: 'email_unverified'};
 		case 'unclaimed':
 			return {kind: 'unclaimed'};
-		case 'no_receipt_email':
-			return {kind: 'no_receipt_email'};
 		case 'purchase_disabled':
 			return {kind: 'purchase_disabled'};
 		case 'payment_dispute_open':
@@ -411,11 +402,7 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 	useEffect(() => {
 		if (accountTierRef.current === accountTier) return;
 		accountTierRef.current = accountTier;
-		setNotice((current) =>
-			current?.kind === 'email_unverified' || current?.kind === 'unclaimed' || current?.kind === 'no_receipt_email'
-				? null
-				: current,
-		);
+		setNotice((current) => (current?.kind === 'email_unverified' || current?.kind === 'unclaimed' ? null : current));
 		void load();
 	}, [accountTier, load]);
 	const locale = getCurrentLocale();
@@ -564,9 +551,6 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 			case APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES:
 				setNotice({kind: 'unclaimed'});
 				return;
-			case APIErrorCodes.PURCHASE_RECEIPT_EMAIL_REQUIRED:
-				setNotice({kind: 'no_receipt_email'});
-				return;
 			case APIErrorCodes.PREMIUM_PURCHASE_BLOCKED: {
 				const reason = error instanceof HttpError ? getPremiumPurchaseBlockedReason(error.body) : null;
 				setNotice({kind: reason === 'payment_dispute_open' ? 'payment_dispute_open' : 'purchase_disabled'});
@@ -680,8 +664,6 @@ export const OperatorPassCheckoutModal = observer(function OperatorPassCheckoutM
 							: NO_EMAIL_NOTICE_DESCRIPTOR,
 						{operatorPassName: OPERATOR_PASS_NAME},
 					);
-				case 'no_receipt_email':
-					return i18n._(NO_RECEIPT_EMAIL_NOTICE_DESCRIPTOR, {operatorPassName: OPERATOR_PASS_NAME});
 				case 'payment_dispute_open':
 					return i18n._(PAYMENT_DISPUTE_NOTICE_DESCRIPTOR);
 				case 'removed':

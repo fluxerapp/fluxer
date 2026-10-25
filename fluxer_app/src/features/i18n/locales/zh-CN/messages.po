@@ -1855,11 +1855,6 @@ msgstr "{premiumProductName} 现在价格更低了。从每月 {currentPrice} �
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} 现在价格更低了。从每年 {currentPrice} 切换到每年 {newPrice}，自 {effectiveDate} 起生效，今天不会收取任何费用。"
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "{premiumProductName} 需要邮箱来接收收据，但此实例上的账号没有邮箱。"
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "你的账号目前无法使用礼物功能。"
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "暂时无法购买礼物。"
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "赠送礼物需要邮箱来接收收据，但此实例上的账号没有邮箱。"
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "到底了。"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "{operatorPassName} 尚未在你所在的国家/地区提供。"
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "{operatorPassName} 需要邮箱来接收收据，但此账号未设置邮箱。"
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx

@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {setCachedAccountIdentity} from '@app/api/instance/AccountIdentityModeCache';
+import {setCachedEmailDeliveryState} from '@app/api/instance/AccountsConfigCache';
 import {getCachedInstancePremiumMode, setCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
@@ -29,6 +31,8 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {getCurrencyPreferences, getGiftCurrencyPreferences, isLocalizedCurrency} from '@app/api/utils/CurrencyUtils';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
+import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {PremiumStateResponse, PriceIdsResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -500,6 +504,37 @@ describe('operator billing catalog', () => {
 				stripeHandlers.spies.createdCheckoutSessions[0]?.custom_text?.terms_of_service_acceptance?.message;
 			expect(message).toContain('Premium');
 			expect(message).not.toContain('Plutonium');
+		});
+
+		test('lets an account without an email buy on a username instance and leaves the email to checkout', async () => {
+			const account = await createAccount();
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+			await getUserRepository().patchUpsert(user.id, {email: null, email_verified: false}, user.toRow());
+			setCachedAccountIdentity({mode: AccountIdentityModes.USERNAME, tagStyle: TagStyles.NONE});
+			setCachedEmailDeliveryState(EmailDeliveryStates.OFF_DISABLED);
+			try {
+				await createBuilder<{url: string}>(harness, account.token)
+					.post('/stripe/checkout/gift')
+					.body({price_id: 'price_opgbpgiftmonth'})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				await createBuilder<{url: string}>(harness, account.token)
+					.post('/stripe/checkout/subscription')
+					.body({price_id: 'price_opgbpmonthly'})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			} finally {
+				setCachedAccountIdentity(null);
+				setCachedEmailDeliveryState(null);
+			}
+			const sessions = stripeHandlers.spies.createdCheckoutSessions;
+			expect(sessions.map((session) => session.mode)).toEqual(['payment', 'subscription']);
+			const customerId = (await getUserRepository().findUniqueAssert(user.id)).stripeCustomerId;
+			expect(customerId).toBeTruthy();
+			for (const session of sessions) {
+				expect(session.customer).toBe(customerId);
+				expect(session.customer_email).toBeUndefined();
+			}
 		});
 	});
 

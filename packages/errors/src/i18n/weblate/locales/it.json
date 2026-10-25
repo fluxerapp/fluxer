@@ -10,7 +10,6 @@
 	"account.limited": "L'invio di messaggi è in pausa sul tuo account. Controlla la tua email per completare un passaggio veloce e continuare.",
 	"account.mfa_email_verification_required": "Conferma il tuo indirizzo email per usare l'autenticazione a due fattori o le passkey.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Imposta una password per tenere questo account. Questa istanza non può inviare codici via email.} local_credential_basis {Imposta una password per tenere questo account. Questa istanza richiede una password o una passkey per ogni account.} other {Imposta una password per tenere questo account.}}",
-	"account.purchase_receipt_email_required": "Gli acquisti richiedono un indirizzo email a cui inviare le ricevute, e questo account non ne ha uno.",
 	"account.sensitive_content_filter_age_restricted": "Questo filtro per contenuti sensibili non è disponibile per la tua età.",
 	"account.session_timeout": "Sessione scaduta. Aggiorna la pagina e accedi di nuovo.",
 	"account.session_token_mismatch": "Token di sessione non corrispondente.",

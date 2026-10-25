@@ -10,7 +10,6 @@
 	"account.limited": "Viestien lähettäminen on tililläsi tauolla. Löydät sähköpostistasi yhden nopean vaiheen, jolla pääset jatkamaan.",
 	"account.mfa_email_verification_required": "Vahvista sähköpostiosoitteesi käyttääksesi kaksivaiheista todennusta tai pääsyavaimia.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Aseta salasana, jotta voit pitää tämän tilin. Tämä instanssi ei voi lähettää sähköpostikoodeja.} local_credential_basis {Aseta salasana, jotta voit pitää tämän tilin. Tämä instanssi vaatii jokaiselta tililtä salasanan tai pääsyavaimen.} other {Aseta salasana, jotta voit pitää tämän tilin.}}",
-	"account.purchase_receipt_email_required": "Ostoksiin tarvitaan sähköpostiosoite, johon kuitit lähetetään, eikä tällä tilillä ole sellaista.",
 	"account.sensitive_content_filter_age_restricted": "Tätä arkaluontoista sisältöä koskevaa suodatinta ei ole saatavilla ikäsi vuoksi.",
 	"account.session_timeout": "Istunto aikakatkesi. Päivitä sivu ja kirjaudu sisään uudelleen.",
 	"account.session_token_mismatch": "Istuntotunnus ei täsmää.",

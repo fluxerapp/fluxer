@@ -286,7 +286,6 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `PROFILE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` | This published message has reached its editing limit |
 | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
-| `PURCHASE_RECEIPT_EMAIL_REQUIRED` | Purchases need an email address to send receipts to, and this account doesn't have one |
 | `RATE_LIMITED` | You're being rate limited |
 | `REACTION_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `REGISTRATION_CLOSED` | Registration is closed on this instance |

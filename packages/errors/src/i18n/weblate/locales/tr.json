@@ -10,7 +10,6 @@
 	"account.limited": "Hesabınızda mesajlaşma şimdilik duraklatıldı. Devam etmek için e-postanıza göz atın, sizi tek bir kısa adım bekliyor.",
 	"account.mfa_email_verification_required": "İki faktörlü kimlik doğrulama veya geçiş anahtarlarını kullanmak için e-posta adresinizi onaylayın.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Bu hesabı kaybetmemek için bir şifre belirleyin. Bu kurulum e-posta kodu gönderemiyor.} local_credential_basis {Bu hesabı kaybetmemek için bir şifre belirleyin. Bu kurulum her hesaptan bir şifre veya geçiş anahtarı istiyor.} other {Bu hesabı kaybetmemek için bir şifre belirleyin.}}",
-	"account.purchase_receipt_email_required": "Satın almalar için makbuzların gönderileceği bir e-posta adresi gerekir, ancak bu hesabın e-posta adresi yok.",
 	"account.sensitive_content_filter_age_restricted": "Bu hassas içerik filtresi yaş grubun için kullanılamıyor.",
 	"account.session_timeout": "Oturum zaman aşımına uğradı. Sayfayı yenile ve tekrar giriş yap.",
 	"account.session_token_mismatch": "Oturum belirteci uyuşmuyor.",

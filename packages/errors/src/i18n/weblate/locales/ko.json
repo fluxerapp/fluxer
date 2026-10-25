@@ -10,7 +10,6 @@
 	"account.limited": "계정의 메시지 기능이 잠시 멈춰 있어요. 이메일로 안내해 드린 간단한 단계 하나만 마치면 다시 이용할 수 있어요.",
 	"account.mfa_email_verification_required": "2단계 인증이나 패스키를 사용하려면 이메일 주소를 인증하세요.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {이 계정을 유지하려면 비밀번호를 설정하세요. 이 인스턴스에서는 이메일 코드를 보낼 수 없어요.} local_credential_basis {이 계정을 유지하려면 비밀번호를 설정하세요. 이 인스턴스에서는 모든 계정에 비밀번호나 패스키가 필요해요.} other {이 계정을 유지하려면 비밀번호를 설정하세요.}}",
-	"account.purchase_receipt_email_required": "구매하려면 영수증을 받을 이메일 주소가 필요한데, 이 계정에는 없어요.",
 	"account.sensitive_content_filter_age_restricted": "이 민감한 콘텐츠 필터는 현재 연령대에서는 사용할 수 없어요.",
 	"account.session_timeout": "세션이 만료되었어요. 페이지를 새로고침하고 다시 로그인해 주세요.",
 	"account.session_token_mismatch": "세션 토큰이 일치하지 않아요.",

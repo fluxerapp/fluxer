@@ -104,7 +104,6 @@ export type TierDenialError = ValueOf<typeof TierDenialErrors>;
 export const PurchaseBlockedReasons = {
 	UNCLAIMED: 'unclaimed',
 	EMAIL_UNVERIFIED: 'email_unverified',
-	NO_RECEIPT_EMAIL: 'no_receipt_email',
 } as const;
 
 export type PurchaseBlockedReason = ValueOf<typeof PurchaseBlockedReasons>;

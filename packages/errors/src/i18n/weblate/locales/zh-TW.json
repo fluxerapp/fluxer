@@ -10,7 +10,6 @@
 	"account.limited": "您帳號的訊息功能已暫停。請查看電子郵件，完成一個簡單步驟即可繼續使用。",
 	"account.mfa_email_verification_required": "請確認你的電子郵件地址，以便使用雙重驗證或通行金鑰。",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {請設定密碼以保留此帳號。此實例無法傳送電子郵件驗證碼。} local_credential_basis {請設定密碼以保留此帳號。此實例要求每個帳號都設定密碼或通行金鑰。} other {請設定密碼以保留此帳號。}}",
-	"account.purchase_receipt_email_required": "購買需要一個用來接收收據的電子郵件地址，但此帳號沒有。",
 	"account.sensitive_content_filter_age_restricted": "這個敏感內容篩選器不適用於你的年齡層。",
 	"account.session_timeout": "工作階段逾時。請重新整理頁面並重新登入。",
 	"account.session_token_mismatch": "工作階段權杖不符。",

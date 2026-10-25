@@ -253,11 +253,6 @@ export const PURCHASE_BLOCKED_VERIFY_DESCRIPTOR = msg({
 	comment:
 		'Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.',
 });
-export const PURCHASE_BLOCKED_NO_RECEIPT_EMAIL_DESCRIPTOR = msg({
-	message: "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one.",
-	comment:
-		'Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.',
-});
 export const PAGE_LABEL_DESCRIPTOR = msg({
 	message: '{premiumProductName} page',
 	comment: 'Accessible label of the Plutonium page region. premiumProductName is the paid tier name.',

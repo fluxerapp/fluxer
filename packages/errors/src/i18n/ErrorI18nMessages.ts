@@ -13,8 +13,6 @@ export const ERROR_I18N_MESSAGES = {
 	'account.unclaimed_cannot_join_calls': 'Claim your account to start or join calls.',
 	'account.unclaimed_cannot_join_group_dms': 'Claim your account to join group chats.',
 	'account.unclaimed_cannot_join_voice': 'Claim your account to join voice channels.',
-	'account.purchase_receipt_email_required':
-		"Purchases need an email address to send receipts to, and this account doesn't have one.",
 	'account.unclaimed_cannot_make_purchases': 'Claim your account to make purchases.',
 	'account.unclaimed_cannot_send_direct_messages': 'Claim your account to send direct messages.',
 	'account.unclaimed_cannot_send_friend_requests': 'Claim your account to send friend requests.',

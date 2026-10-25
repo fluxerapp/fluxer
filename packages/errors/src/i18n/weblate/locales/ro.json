@@ -10,7 +10,6 @@
 	"account.limited": "Trimiterea de mesaje este în pauză pentru contul tău. Uită-te în e-mail: te așteaptă un pas rapid ca să poți continua.",
 	"account.mfa_email_verification_required": "Confirmă-ți adresa de e-mail pentru a folosi autentificarea în doi pași sau cheile de acces.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Setează o parolă ca să păstrezi acest cont. Instanța aceasta nu poate trimite coduri prin e-mail.} local_credential_basis {Setează o parolă ca să păstrezi acest cont. Instanța aceasta cere o parolă sau o cheie de acces pentru fiecare cont.} other {Setează o parolă ca să păstrezi acest cont.}}",
-	"account.purchase_receipt_email_required": "Pentru cumpărături e nevoie de o adresă de e-mail la care să trimitem chitanțele, iar acest cont nu are una.",
 	"account.sensitive_content_filter_age_restricted": "Acest filtru de conținut sensibil nu este disponibil pentru grupa ta de vârstă.",
 	"account.session_timeout": "Sesiunea a expirat. Reîmprospătează pagina și conectează-te din nou.",
 	"account.session_token_mismatch": "Token de sesiune necorespunzător.",

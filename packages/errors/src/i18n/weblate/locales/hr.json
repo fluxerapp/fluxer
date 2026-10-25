@@ -10,7 +10,6 @@
 	"account.limited": "Slanje poruka na vašem računu je pauzirano. Pogledajte e-poštu: dovoljan je jedan brzi korak za nastavak.",
 	"account.mfa_email_verification_required": "Potvrdite svoju adresu e-pošte kako biste mogli koristiti dvostruku provjeru autentičnosti ili pristupne ključeve.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Postavite lozinku kako biste zadržali ovaj račun. Ova instanca ne može slati kodove putem e-pošte.} local_credential_basis {Postavite lozinku kako biste zadržali ovaj račun. Ova instanca traži lozinku ili pristupni ključ za svaki račun.} other {Postavite lozinku kako biste zadržali ovaj račun.}}",
-	"account.purchase_receipt_email_required": "Za kupnje je potrebna adresa e-pošte na koju se šalju potvrde o kupnji, a ovaj račun je nema.",
 	"account.sensitive_content_filter_age_restricted": "Ovaj filtar osjetljivog sadržaja nije dostupan za tvoju dobnu skupinu.",
 	"account.session_timeout": "Sesija je istekla. Osvježi stranicu i prijavi se ponovno.",
 	"account.session_token_mismatch": "Token sesije se ne podudara.",

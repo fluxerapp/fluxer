@@ -10,7 +10,6 @@
 	"account.limited": "Tính năng nhắn tin trên tài khoản của bạn đang tạm dừng. Hãy kiểm tra email và làm một bước đơn giản để tiếp tục.",
 	"account.mfa_email_verification_required": "Xác nhận địa chỉ email của bạn để sử dụng xác thực hai yếu tố hoặc khóa truy cập.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Đặt mật khẩu để giữ tài khoản này. Máy chủ này không thể gửi mã qua email.} local_credential_basis {Đặt mật khẩu để giữ tài khoản này. Máy chủ này yêu cầu mọi tài khoản phải có mật khẩu hoặc khóa truy cập.} other {Đặt mật khẩu để giữ tài khoản này.}}",
-	"account.purchase_receipt_email_required": "Cần có địa chỉ email để gửi biên lai khi mua hàng, nhưng tài khoản này chưa có.",
 	"account.sensitive_content_filter_age_restricted": "Bộ lọc nội dung nhạy cảm này không khả dụng cho độ tuổi của bạn.",
 	"account.session_timeout": "Phiên đã hết hạn. Hãy làm mới trang và đăng nhập lại.",
 	"account.session_token_mismatch": "Token phiên không khớp.",

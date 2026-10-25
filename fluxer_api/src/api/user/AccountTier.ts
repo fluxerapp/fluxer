@@ -235,7 +235,7 @@ export function assertCanRegisterPasskey(user: GatedUser): void {
 export type PurchaseEligibility = {allowed: true} | {allowed: false; blocked: PurchaseBlockedReason};
 
 export function resolvePurchaseEligibility(user: TierUser): PurchaseEligibility {
-	const blocked = resolvePurchaseBlockedReason({tier: getAccountTier(user), hasEmail: user.email !== null});
+	const blocked = resolvePurchaseBlockedReason({tier: getAccountTier(user)});
 	return blocked === null ? {allowed: true} : {allowed: false, blocked};
 }
 

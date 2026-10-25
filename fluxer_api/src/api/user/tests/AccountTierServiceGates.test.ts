@@ -21,16 +21,13 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
 import {User} from '@app/api/models/User';
-import {assertUserCanPurchase} from '@app/api/stripe/services/StripeCheckoutService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
-import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {PurchaseReceiptEmailRequiredError} from '@fluxer/errors/src/domains/user/PurchaseReceiptEmailRequiredError';
 import {MfaBackupCodesResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -178,15 +175,5 @@ describe('account tier service wiring', () => {
 			.expect(HttpStatus.FORBIDDEN, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS)
 			.execute();
 		expect((await getInstanceConfigRepository().getInstancePolicyConfig()).single_community_guild_id).toBeNull();
-	});
-});
-
-describe('purchase eligibility', () => {
-	it('requires a receipt address to purchase on username instances', () => {
-		Config.instance.selfHosted = true;
-		setCachedAccountIdentity({mode: AccountIdentityModes.USERNAME, tagStyle: TagStyles.NONE});
-		setCachedEmailDeliveryState(EmailDeliveryStates.OFF_DISABLED);
-		const user = createUser({email: null, email_verified: false});
-		expect(() => assertUserCanPurchase(user)).toThrowError(PurchaseReceiptEmailRequiredError);
 	});
 });

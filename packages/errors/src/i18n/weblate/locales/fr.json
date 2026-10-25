@@ -10,7 +10,6 @@
 	"account.limited": "L'envoi de messages a été mis en pause sur votre compte. Consultez vos e-mails pour savoir comment y remédier en une étape rapide.",
 	"account.mfa_email_verification_required": "Confirmez votre adresse e-mail pour utiliser l'authentification à deux facteurs ou les clés d'accès.",
 	"account.password_required_to_claim": "{reason, select, email_delivery_off {Définissez un mot de passe pour conserver ce compte. Cette instance ne peut pas envoyer de codes par e-mail.} local_credential_basis {Définissez un mot de passe pour conserver ce compte. Cette instance demande un mot de passe ou une clé d'accès pour chaque compte.} other {Définissez un mot de passe pour conserver ce compte.}}",
-	"account.purchase_receipt_email_required": "Les achats nécessitent une adresse e-mail pour recevoir les reçus, et ce compte n'en a pas.",
 	"account.sensitive_content_filter_age_restricted": "Ce filtre de contenu sensible n’est pas disponible pour votre tranche d’âge.",
 	"account.session_timeout": "La session a expiré. Actualisez la page et reconnectez-vous.",
 	"account.session_token_mismatch": "Incompatibilité du jeton de session.",

@@ -1855,11 +1855,6 @@ msgstr "{premiumProductName} अब कम कीमत पर उपलब्�
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} अब कम कीमत पर उपलब्ध है। {effectiveDate} से {currentPrice} प्रति वर्ष के बजाय {newPrice} प्रति वर्ष पर स्विच करें, और आज कोई शुल्क नहीं लिया जाएगा।"
 
-#. Plutonium page note under disabled buttons on an instance where people sign in with a username and accounts have no email. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
-msgid "{premiumProductName} needs an email for receipts, and accounts on this instance don't have one."
-msgstr "{premiumProductName} को रसीदों के लिए ईमेल की आवश्यकता है, और इस इंस्टेंस पर अकाउंट में ईमेल नहीं है।"
-
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "{premiumProductName} page"
@@ -17612,11 +17607,6 @@ msgstr "आपके अकाउंट के लिए अभी उपहा�
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx
 msgid "Gifts aren't available right now."
 msgstr "अभी उपहार उपलब्ध नहीं हैं।"
-
-#. Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.
-#: src/features/premium/components/modals/GiftPlutoniumModal.tsx
-msgid "Gifts need an email for receipts, and accounts on this instance don't have one."
-msgstr "उपहारों की रसीदें भेजने के लिए ईमेल चाहिए, और इस इंस्टेंस पर अकाउंट में ईमेल नहीं होता।"
 
 #. Error shown when the user sends a new forum post without a title.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -35416,11 +35406,6 @@ msgstr "बस इतना ही था।"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The {operatorPassName} isn't available in your country yet."
 msgstr "{operatorPassName} अभी आपके देश में उपलब्ध नहीं है।"
-
-#. Notice in the Operator Pass checkout dialog for accounts that cannot have an email, so no receipt can be sent. Operator Pass is a product name.
-#: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
-msgid "The {operatorPassName} needs an email for receipts, and this account doesn't have one."
-msgstr "{operatorPassName} की रसीदें भेजने के लिए ईमेल चाहिए, और इस अकाउंट में ईमेल नहीं है।"
 
 #. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
