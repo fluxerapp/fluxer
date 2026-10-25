@@ -308,7 +308,7 @@ impl NatsMessage {
     }
 }
 
-#[cfg(feature = "mock")]
+#[cfg(any(test, feature = "mock"))]
 mod in_memory {
     use super::{NoResponders, Transport, TransportMessage, TransportSubscriber};
     use async_trait::async_trait;
@@ -518,5 +518,5 @@ mod in_memory {
     }
 }
 
-#[cfg(feature = "mock")]
+#[cfg(any(test, feature = "mock"))]
 pub use in_memory::InMemoryTransport;
