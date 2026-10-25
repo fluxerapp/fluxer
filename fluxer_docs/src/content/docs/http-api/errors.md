@@ -280,6 +280,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `PASSKEY_AUTHENTICATION_FAILED` | Passkey authentication failed |
 | `PASSWORD_REQUIRED_TO_CLAIM` | Set a password to keep this account |
 | `PASSWORD_SIGN_IN_REQUIRED` | Sign in to this account with its password |
+| `PERSONAL_NOTES_DISABLED` | Personal notes are turned off on this instance |
 | `PREMIUM_PURCHASE_BLOCKED` | No active subscription |
 | `PREVIEW_MUST_BE_JPEG` | Preview must be JPEG |
 | `PROCESSING_FAILED` | We couldn't process the request |

@@ -693,6 +693,7 @@ const InstancePolicyResponse = z.object({
 	direct_messages_disabled: z.boolean(),
 	direct_messages_locked: z.boolean(),
 	friends_disabled: z.boolean().describe('Whether friend requests are disabled instance-wide'),
+	personal_notes_enabled: z.boolean().describe('Whether people can use personal notes'),
 	guild_create_access: z.boolean(),
 	premium_mode: z.enum(['mirror', 'everyone']),
 	services: z.object({
@@ -848,6 +849,10 @@ const InstancePolicyUpdateSchema = z.object({
 		.describe(
 			'Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value',
 		),
+	personal_notes_enabled: z
+		.boolean()
+		.optional()
+		.describe('Whether people can use personal notes. Off by default on self-hosted instances'),
 	premium_mode: z.enum(['mirror', 'everyone']).optional(),
 	guild_create_access: z.boolean().optional(),
 	services: z

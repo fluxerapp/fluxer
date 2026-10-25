@@ -9,6 +9,7 @@ import type {
 } from '@app/api/channel/services/AuthenticatedChannel';
 import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
 import {
+	assertPersonalNotesEnabled,
 	ensurePersonalNotesChannelExists,
 	isPersonalNotesChannelId,
 } from '@app/api/channel/services/PersonalNotesChannelRepair';
@@ -120,6 +121,7 @@ export abstract class BaseChannelAuthService {
 		access?: ChannelAccess;
 	}): Promise<AuthenticatedChannel> {
 		if (isPersonalNotesChannelId({userId, channelId})) {
+			await assertPersonalNotesEnabled();
 			const channel = await ensurePersonalNotesChannelExists({
 				channelRepository: this.channelRepository.channelData,
 				userId,

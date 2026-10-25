@@ -2,7 +2,7 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import {userIdToChannelId} from '@app/api/BrandedTypes';
-import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {isPersonalNotesChannelId, personalNotesEnabled} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -31,7 +31,7 @@ export async function getDmChannelIdsForScope({
 	includeChannel,
 }: DmScopeOptions): Promise<Array<string>> {
 	const summaryResults = await userRepository.listPrivateChannelSummaries(userId);
-	const channelIdStrings = new Set<string>([userIdToChannelId(userId).toString()]);
+	const channelIdStrings = new Set<string>();
 	for (const summary of summaryResults) {
 		const isDm =
 			summary.channelType === ChannelTypes.DM || summary.channelType === ChannelTypes.GROUP_DM || summary.isGroupDm;
@@ -51,6 +51,12 @@ export async function getDmChannelIdsForScope({
 	}
 	if (includeChannel && isDmScopeChannelForUser(includeChannel, userId)) {
 		channelIdStrings.add(includeChannel.id.toString());
+	}
+	const personalNotesChannelId = userIdToChannelId(userId).toString();
+	if (await personalNotesEnabled()) {
+		channelIdStrings.add(personalNotesChannelId);
+	} else {
+		channelIdStrings.delete(personalNotesChannelId);
 	}
 	return Array.from(channelIdStrings);
 }

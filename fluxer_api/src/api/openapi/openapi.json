@@ -37561,6 +37561,10 @@
 						"description": "Whether friend requests are disabled instance-wide. Missing means direct_messages_disabled decides",
 						"type": "boolean"
 					},
+					"personal_notes_enabled": {
+						"description": "Whether people can use personal notes. Missing means they can",
+						"type": "boolean"
+					},
 					"guild_create_access": {
 						"type": "boolean",
 						"description": "Whether every account can create communities. When false, only admins and accounts granted the feature_guild_create limit can"
@@ -44724,6 +44728,7 @@
 					"STRIPE_WEBHOOK_SIGNATURE_MISSING",
 					"DIRECT_MESSAGES_DISABLED",
 					"FRIENDS_DISABLED",
+					"PERSONAL_NOTES_DISABLED",
 					"NEW_CONVERSATIONS_LIMITED",
 					"DONATION_AMOUNT_INVALID",
 					"DONATION_MAGIC_LINK_EXPIRED",
@@ -45086,6 +45091,7 @@
 					"Stripe webhook signature is missing.",
 					"Direct messages are disabled on this instance.",
 					"Friend requests are disabled on this instance.",
+					"Personal notes are turned off on this instance.",
 					"You can't start new conversations right now. Please try again later.",
 					"Donation amount is invalid.",
 					"Magic link has expired.",
