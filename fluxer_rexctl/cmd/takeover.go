@@ -148,6 +148,9 @@ func describeTakeover(u *ui.UI, r *instance.ImportReport) {
 	} else {
 		u.Info("Found a Fluxer instance in %s.", r.Dir)
 	}
+	if r.Release != "" {
+		u.Info("Your instance now runs Fluxer %s. rexctl takes it over on that release.", release.Short(r.Release))
+	}
 	u.Info("After this, rexctl manages it. Fluxer keeps running as it is, and your data and secrets stay.")
 	for _, f := range r.CustomFiles {
 		if f != instance.CustomCompose {

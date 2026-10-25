@@ -79,6 +79,18 @@ func imageLines(compose []byte) ([]imageLine, error) {
 	return out, nil
 }
 
+func ComposeImages(compose []byte) map[string]string {
+	found, err := imageLines(compose)
+	if err != nil {
+		return nil
+	}
+	out := make(map[string]string, len(found))
+	for _, img := range found {
+		out[img.service] = img.value
+	}
+	return out
+}
+
 func mappingValue(n *yaml.Node, key string) *yaml.Node {
 	if n == nil || n.Kind != yaml.MappingNode {
 		return nil

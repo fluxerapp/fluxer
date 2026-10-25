@@ -156,6 +156,18 @@ func RenderCompose(set *Set, images map[string]string, project string) ([]byte, 
 	return nameProject(compose, project), nil
 }
 
+func Hashes(set *Set, selected []Overlay, images map[string]string, project string) (map[string]string, error) {
+	files, _, err := renderFiles(set, selected, images, project)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]string, len(files))
+	for _, f := range files {
+		out[f.name] = Hash(f.data)
+	}
+	return out, nil
+}
+
 func ReadFile(set *Set, name string) ([]byte, error) {
 	if set == nil || set.Files == nil {
 		return nil, fmt.Errorf("%w: %s", ErrMissingFile, name)

@@ -76,6 +76,7 @@ func runEject(ctx context.Context, app *App) error {
 			u.Info("Your containers come back after a restart of this machine only once Podman's own podman-restart.service starts them.")
 		}
 		u.Info("If %s recreates Fluxer's containers the first time, that's expected. Your data stays.", tool)
+		u.Info("To upgrade Fluxer later, run rexctl takeover, rexctl upgrade and rexctl eject one after the other.")
 		u.OK("You manage this instance with %s in %s from here on. Run rexctl takeover to hand it back to rexctl.", tool, inst.Dir)
 		return nil
 	})

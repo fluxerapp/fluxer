@@ -55,6 +55,7 @@ type ImportReport struct {
 	EngineProxies bool
 	RemovedEnv    bool
 	Images        map[string]string
+	Release       string
 }
 
 func (r *ImportReport) DroppedLine() string {
