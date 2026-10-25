@@ -26,7 +26,7 @@ function tr(n: number) {
 	};
 }
 
-function setup(opts: {session?: boolean; member?: boolean} = {}) {
+function setup(opts: {session?: boolean; member?: boolean; channelType?: number} = {}) {
 	const voiceStates = new VoiceStates();
 	if (opts.member !== false) {
 		voiceStates.apply({guild_id: 'g1', channel_id: CH, user_id: 'u1', connection_id: 'cn1'});
@@ -55,6 +55,7 @@ function setup(opts: {session?: boolean; member?: boolean} = {}) {
 	const rest = {
 		sendMessage: vi.fn(async () => ({id: 'r1'})),
 		removeUserReaction: vi.fn(async () => {}),
+		getChannel: vi.fn(async (id: string) => ({id, guildId: 'g1', type: opts.channelType ?? 2, bitrate: null})),
 	};
 	const handler = new CommandHandler({
 		sessions: sessions as unknown as SessionManager,
@@ -95,6 +96,33 @@ describe('CommandHandler messages', () => {
 		expect(sessions.getOrStart).not.toHaveBeenCalled();
 	});
 
+	it('ignores commands outside guild voice channel chats', async () => {
+		const {handler, rest, sessions} = setup({channelType: 0});
+		await handler.onMessageCreate(msg('!help'));
+		await handler.onMessageCreate(msg('!play x'));
+		expect(rest.sendMessage).not.toHaveBeenCalled();
+		expect(sessions.getOrStart).not.toHaveBeenCalled();
+	});
+
+	it('caches the channel type per channel', async () => {
+		const {handler, rest} = setup();
+		await handler.onMessageCreate(msg('!help'));
+		await handler.onMessageCreate(msg('!help'));
+		expect(rest.getChannel).toHaveBeenCalledTimes(1);
+		expect(rest.getChannel).toHaveBeenCalledWith(CH);
+		expect(rest.sendMessage).toHaveBeenCalledTimes(2);
+	});
+
+	it('stays silent when the channel lookup fails', async () => {
+		const {handler, rest} = setup();
+		rest.getChannel.mockRejectedValueOnce(new Error('HTTP 500'));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		await handler.onMessageCreate(msg('!help'));
+		expect(rest.sendMessage).not.toHaveBeenCalled();
+		expect(error).toHaveBeenCalled();
+		error.mockRestore();
+	});
+
 	it('requires being in the channel', async () => {
 		const {handler, rest, sessions} = setup({member: false});
 		await handler.onMessageCreate(msg('!play x'));
@@ -121,6 +149,20 @@ describe('CommandHandler messages', () => {
 		sessions.getOrStart.mockRejectedValueOnce(new VoiceJoinError('P2P_GRANT'));
 		await handler.onMessageCreate(msg('!play x'));
 		expect(reply(rest)[1].content).toBe("Music needs a channel that isn't peer-to-peer.");
+	});
+
+	it.each(['VOICE_P2P_CONSENT_REQUIRED', 'VOICE_P2P_UNAVAILABLE'])('%s replies with the P2P message', async (code) => {
+		const {handler, rest, sessions} = setup();
+		sessions.getOrStart.mockRejectedValueOnce(new VoiceJoinError(code));
+		await handler.onMessageCreate(msg('!play x'));
+		expect(reply(rest)[1].content).toBe("Music needs a channel that isn't peer-to-peer.");
+	});
+
+	it('an E2EE join failure replies with the encryption message', async () => {
+		const {handler, rest, sessions} = setup();
+		sessions.getOrStart.mockRejectedValueOnce(new VoiceJoinError('E2EE'));
+		await handler.onMessageCreate(msg('!play x'));
+		expect(reply(rest)[1].content).toBe("Music doesn't work in end-to-end encrypted voice channels yet.");
 	});
 
 	it('other join failures reply with the code', async () => {

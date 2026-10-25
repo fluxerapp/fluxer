@@ -20,6 +20,8 @@ export interface CommandHandlerDeps {
 }
 
 const PAGE_SIZE = 10;
+const GUILD_VOICE = 2;
+const P2P_CODES = new Set(['P2P_GRANT', 'VOICE_P2P_CONSENT_REQUIRED', 'VOICE_P2P_UNAVAILABLE']);
 const QUEUE_LIMIT = 500;
 const VARIATION_SELECTOR = '️';
 const NEXT_LOOP: Record<LoopMode, LoopMode> = {off: 'track', track: 'queue', queue: 'off'};
@@ -48,6 +50,9 @@ function describeError(err: unknown): string {
 }
 
 export class CommandHandler {
+	/** Channel id → channel type. A channel's type never changes. */
+	private readonly channelTypes = new Map<string, number>();
+
 	constructor(private readonly deps: CommandHandlerDeps) {}
 
 	async onMessageCreate(msg: MessageWire): Promise<void> {
@@ -55,6 +60,8 @@ export class CommandHandler {
 		if (msg.guild_id === undefined) return;
 		const command = parseCommand(msg.content);
 		if (!command) return;
+		// Commands only work in the chat of a guild voice channel.
+		if (!(await this.isVoiceChannel(msg.channel_id))) return;
 
 		if (command.name === 'help') return this.reply(msg, HELP);
 		if (command.name === 'invalid') return this.reply(msg, `Usage: ${command.usage}`);
@@ -92,6 +99,20 @@ export class CommandHandler {
 		} catch (err) {
 			console.error(`reaction removal failed: ${describeError(err)}`);
 		}
+	}
+
+	private async isVoiceChannel(channelId: string): Promise<boolean> {
+		let type = this.channelTypes.get(channelId);
+		if (type === undefined) {
+			try {
+				type = (await this.deps.rest.getChannel(channelId)).type;
+			} catch (err) {
+				console.error(`channel lookup failed: ${describeError(err)}`);
+				return false;
+			}
+			this.channelTypes.set(channelId, type);
+		}
+		return type === GUILD_VOICE;
 	}
 
 	private async react(session: ChannelSession, by: string, emoji: string): Promise<void> {
@@ -192,9 +213,9 @@ export class CommandHandler {
 	private errorText(err: unknown): string {
 		if (err instanceof MusicError) return err.message;
 		if (err instanceof VoiceJoinError) {
-			return err.code === 'P2P_GRANT'
-				? "Music needs a channel that isn't peer-to-peer."
-				: `Couldn't join the voice channel (${err.code}).`;
+			if (P2P_CODES.has(err.code)) return "Music needs a channel that isn't peer-to-peer.";
+			if (err.code === 'E2EE') return "Music doesn't work in end-to-end encrypted voice channels yet.";
+			return `Couldn't join the voice channel (${err.code}).`;
 		}
 		console.error(`command failed: ${describeError(err)}`);
 		return 'Something went wrong.';
