@@ -231,7 +231,7 @@ func (a *App) Admin(ctx context.Context) (*adminapi.Client, *instance.Instance, 
 func (a *App) adminClient(inst *instance.Instance, p *engine.Project) *adminapi.Client {
 	c := adminapi.New(adminapi.NewExec(p), a.Version)
 	c.OnSkew = func(apiVersion string) {
-		if inst.State != nil && inst.State.Release == a.Version {
+		if inst.State != nil && (inst.State.Release == a.Version || inst.State.Upgrade != nil && inst.State.Upgrade.To == a.Version) {
 			return
 		}
 		if inst.State != nil && inst.State.FailedRelease == a.Version {
