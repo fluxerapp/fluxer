@@ -15,7 +15,7 @@ const BRANDING_ASSET_KINDS: ReadonlyArray<SetupBrandingAssetKind> = [
 	'favicon_dark',
 ];
 
-export type BrandingAssetError = 'too_large' | 'unsupported' | 'unreadable' | 'not_saved';
+export type BrandingAssetError = 'too_large' | 'unsupported' | 'unreadable' | 'not_saved' | 'not_loaded';
 
 export interface BrandingAssetState {
 	kind: SetupBrandingAssetKind;
@@ -36,7 +36,7 @@ export function validateBrandingFile(kind: SetupBrandingAssetKind, file: File): 
 	if (!Object.values(policy.mimes).includes(file.type) && !isExtensionAllowed(policyKind, extension)) {
 		return 'unsupported';
 	}
-	if (file.size > policy.maxBytes) {
+	if (kind !== 'sign_in_backdrop' && file.size > policy.maxBytes) {
 		return 'too_large';
 	}
 	return null;

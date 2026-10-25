@@ -445,7 +445,7 @@ export const BrandingFields = observer(
 			if (disabled || handledError.current === error) return;
 			handledError.current = error;
 			const failed = stepRef.current?.querySelector<HTMLElement>(
-				'[data-branding-error="not_saved"] button[data-flx^="app.self-hosted-setup-wizard-gate.asset-"]:not(:disabled)',
+				':is([data-branding-error="not_saved"], [data-branding-error="not_loaded"]) button[data-flx^="app.self-hosted-setup-wizard-gate.asset-"]:not(:disabled)',
 			);
 			if (failed) {
 				failed.focus();

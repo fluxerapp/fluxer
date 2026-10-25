@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ASSET_COPY} from '@app/features/app/components/setup/SetupBrandingAssetField';
 import {
 	brandingAssetPolicyKind,
 	brandingAssetUrl,
@@ -12,18 +13,40 @@ import {
 	type updateInstanceConfig,
 	uploadBrandingAsset,
 } from '@app/features/app/components/setup/SetupWizardClient';
+import {fitImageWithin, ImageOptimizationSizeError} from '@app/features/expressions/utils/ImageCropUtils';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {readBlobAsDataUrl as fileToBase64} from '@app/features/platform/utils/BlobDataUrl';
 import {int2hex} from '@app/features/theme/utils/ColorUtils';
 import * as FormUtils from '@app/lib/forms';
-import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
+import {getAcceptString, getPolicy} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {type RefObject, useCallback} from 'react';
 
 const logger = new Logger('SelfHostedSetupWizardGate');
+const IMAGE_NOT_LOADED_DESCRIPTOR = msg({
+	message: '"{label}" was saved but could not be loaded back.',
+	comment:
+		'Error at the bottom of the setup wizard branding step when an uploaded image could not be loaded from the server. label is the name of the image field, such as Sign-in background.',
+});
+
+function imageLoads(url: string): Promise<boolean> {
+	return new Promise((resolve) => {
+		const image = new Image();
+		image.onload = () => resolve(true);
+		image.onerror = () => resolve(false);
+		image.src = url;
+	});
+}
+
+async function prepareBrandingImage(kind: SetupBrandingAssetKind, file: File): Promise<Blob> {
+	if (kind !== 'sign_in_backdrop') return file;
+	const policy = getPolicy(brandingAssetPolicyKind(kind));
+	return fitImageWithin(file, policy.dims?.max ?? Number.POSITIVE_INFINITY, policy.maxBytes);
+}
 
 interface BrandingStepProps {
 	config: InstanceConfigResponse | null;
@@ -49,8 +72,15 @@ export const BrandingStep = observer(
 				if (image === undefined) continue;
 				try {
 					const next = await uploadBrandingAsset(asset.kind, image);
-					updateAsset(asset.kind, {url: brandingAssetUrl(next, asset.kind), preview: null, error: null});
+					const url = brandingAssetUrl(next, asset.kind);
 					onConfigUpdate(next);
+					if (url !== null && !(await imageLoads(url))) {
+						logger.error('A saved branding image could not be loaded back', {kind: asset.kind, url});
+						updateAsset(asset.kind, {url, error: 'not_loaded'});
+						onError(i18n._(IMAGE_NOT_LOADED_DESCRIPTOR, {label: i18n._(ASSET_COPY[asset.kind].label)}));
+						return;
+					}
+					updateAsset(asset.kind, {url, preview: null, error: null});
 				} catch (error) {
 					logger.error('Failed to upload a branding image', error);
 					updateAsset(asset.kind, {error: 'not_saved'});
@@ -77,11 +107,14 @@ export const BrandingStep = observer(
 				}
 				updateAsset(kind, {reading: true, error: null});
 				try {
-					const dataUrl = await fileToBase64(file);
+					const dataUrl = await fileToBase64(await prepareBrandingImage(kind, file));
 					updateAsset(kind, {preview: dataUrl, reading: false});
 				} catch (readError) {
 					logger.error('Failed to read branding asset file', readError);
-					updateAsset(kind, {reading: false, error: 'unreadable'});
+					updateAsset(kind, {
+						reading: false,
+						error: readError instanceof ImageOptimizationSizeError ? 'too_large' : 'unreadable',
+					});
 				}
 			},
 			[updateAsset],

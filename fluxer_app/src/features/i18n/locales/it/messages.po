@@ -19,6 +19,11 @@ msgstr ""
 msgid "... turn dense mode on. Nice!"
 msgstr "... attiva la modalità compatta. Ottimo!"
 
+#. Error at the bottom of the setup wizard branding step when an uploaded image could not be loaded from the server. label is the name of the image field, such as Sign-in background.
+#: src/features/app/components/setup/SetupBrandingStep.tsx
+msgid "\"{label}\" was saved but could not be loaded back."
+msgstr "\"{label}\" è stato salvato ma non è stato possibile ricaricarlo."
+
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx
@@ -36434,6 +36439,11 @@ msgstr "Questo gruppo non è contrassegnato per contenuti per adulti. Il proprie
 #: src/features/auth/flow/HandoffCodeDisplay.tsx
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Questo codice di trasferimento è scaduto. Generane uno nuovo per continuare."
+
+#. Error on a branding image field in the setup wizard when the image was uploaded but loading it from the server failed. "Continue" is the label of the button that saves the step.
+#: src/features/app/components/setup/SetupBrandingAssetField.tsx
+msgid "This image could not be loaded after saving. Press \"Continue\" to try again, or choose a different file."
+msgstr "Impossibile caricare questa immagine dopo il salvataggio. Premi \"Continua\" per riprovare o scegli un altro file."
 
 #. Error modal body shown when an animated image fails to decode during cropping.
 #: src/features/messaging/components/modals/ImageCropModal.tsx

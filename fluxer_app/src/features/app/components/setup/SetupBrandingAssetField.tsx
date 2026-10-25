@@ -79,6 +79,11 @@ const ERROR_NOT_SAVED_DESCRIPTOR = msg({
 	comment:
 		'Error on a branding image field in the setup wizard when saving the image failed. "Continue" is the label of the button that saves the step.',
 });
+const ERROR_NOT_LOADED_DESCRIPTOR = msg({
+	message: 'This image could not be loaded after saving. Press "Continue" to try again, or choose a different file.',
+	comment:
+		'Error on a branding image field in the setup wizard when the image was uploaded but loading it from the server failed. "Continue" is the label of the button that saves the step.',
+});
 const MORE_ABOUT_IMAGE_DESCRIPTOR = msg({
 	message: 'More about this image',
 	comment:
@@ -339,6 +344,9 @@ export const BrandingAssetField = observer(
 				break;
 			case 'not_saved':
 				errorText = i18n._(ERROR_NOT_SAVED_DESCRIPTOR);
+				break;
+			case 'not_loaded':
+				errorText = i18n._(ERROR_NOT_LOADED_DESCRIPTOR);
 				break;
 		}
 		const warnings: Array<string> = [];
