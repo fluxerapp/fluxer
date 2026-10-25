@@ -2128,10 +2128,13 @@ type InstanceConfigResponse struct {
 		DirectMessagesLocked   bool `json:"direct_messages_locked"`
 
 		// FriendsDisabled Whether friend requests are disabled instance-wide
-		FriendsDisabled   bool                                    `json:"friends_disabled"`
-		GuildCreateAccess bool                                    `json:"guild_create_access"`
-		PremiumMode       InstanceConfigResponsePolicyPremiumMode `json:"premium_mode"`
-		Services          struct {
+		FriendsDisabled   bool `json:"friends_disabled"`
+		GuildCreateAccess bool `json:"guild_create_access"`
+
+		// PersonalNotesEnabled Whether people can use personal notes
+		PersonalNotesEnabled bool                                    `json:"personal_notes_enabled"`
+		PremiumMode          InstanceConfigResponsePolicyPremiumMode `json:"premium_mode"`
+		Services             struct {
 			BlueskyEnabled *bool `json:"bluesky_enabled"`
 			GifEnabled     *bool `json:"gif_enabled"`
 			YoutubeEnabled *bool `json:"youtube_enabled"`
@@ -2341,10 +2344,13 @@ type InstanceConfigUpdateRequest struct {
 		DirectMessagesLocked   *InstanceConfigUpdateRequestPolicyDirectMessagesLocked `json:"direct_messages_locked,omitempty"`
 
 		// FriendsDisabled Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value
-		FriendsDisabled   *bool                                         `json:"friends_disabled,omitempty"`
-		GuildCreateAccess *bool                                         `json:"guild_create_access,omitempty"`
-		PremiumMode       *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
-		Services          *struct {
+		FriendsDisabled   *bool `json:"friends_disabled,omitempty"`
+		GuildCreateAccess *bool `json:"guild_create_access,omitempty"`
+
+		// PersonalNotesEnabled Whether people can use personal notes. Off by default on self-hosted instances
+		PersonalNotesEnabled *bool                                         `json:"personal_notes_enabled,omitempty"`
+		PremiumMode          *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
+		Services             *struct {
 			BlueskyEnabled *bool `json:"bluesky_enabled,omitempty"`
 			GifEnabled     *bool `json:"gif_enabled,omitempty"`
 			YoutubeEnabled *bool `json:"youtube_enabled,omitempty"`

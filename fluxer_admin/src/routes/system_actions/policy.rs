@@ -22,6 +22,9 @@ pub(super) fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdate
     let friends_disabled = form
         .first("policy_friends_disabled")
         .map(|value| value == "true");
+    let personal_notes_enabled = form
+        .first("policy_personal_notes_enabled")
+        .map(|value| value == "true");
     let direct_messages_locked = (form.bool_value("policy_direct_messages_unlock")
         && direct_messages_disabled == Some(true))
     .then_some(false);
@@ -52,6 +55,7 @@ pub(super) fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdate
             direct_messages_disabled,
             direct_messages_locked,
             friends_disabled,
+            personal_notes_enabled,
             guild_create_access,
             premium_mode,
             services,

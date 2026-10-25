@@ -16054,6 +16054,7 @@
 								"type": "boolean",
 								"description": "Whether friend requests are disabled instance-wide"
 							},
+							"personal_notes_enabled": {"type": "boolean", "description": "Whether people can use personal notes"},
 							"guild_create_access": {"type": "boolean"},
 							"premium_mode": {"type": "string", "enum": ["mirror", "everyone"]},
 							"services": {
@@ -16093,6 +16094,7 @@
 							"direct_messages_disabled",
 							"direct_messages_locked",
 							"friends_disabled",
+							"personal_notes_enabled",
 							"guild_create_access",
 							"premium_mode",
 							"services",
@@ -16830,6 +16832,10 @@
 							"direct_messages_locked": {"type": "boolean", "enum": [false]},
 							"friends_disabled": {
 								"description": "Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value",
+								"type": "boolean"
+							},
+							"personal_notes_enabled": {
+								"description": "Whether people can use personal notes. Off by default on self-hosted instances",
 								"type": "boolean"
 							},
 							"premium_mode": {"type": "string", "enum": ["mirror", "everyone"]},
@@ -24609,6 +24615,7 @@
 					"STRIPE_WEBHOOK_SIGNATURE_MISSING",
 					"DIRECT_MESSAGES_DISABLED",
 					"FRIENDS_DISABLED",
+					"PERSONAL_NOTES_DISABLED",
 					"NEW_CONVERSATIONS_LIMITED",
 					"DONATION_AMOUNT_INVALID",
 					"DONATION_MAGIC_LINK_EXPIRED",
@@ -24971,6 +24978,7 @@
 					"Stripe webhook signature is missing.",
 					"Direct messages are disabled on this instance.",
 					"Friend requests are disabled on this instance.",
+					"Personal notes are turned off on this instance.",
 					"You can't start new conversations right now. Please try again later.",
 					"Donation amount is invalid.",
 					"Magic link has expired.",
