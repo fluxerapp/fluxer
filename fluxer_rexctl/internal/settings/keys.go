@@ -85,7 +85,7 @@ var named = buildNamed()
 func buildNamed() []Key {
 	keys := []Key{
 		{Name: Domain, Type: "hostname", Vars: []string{"FLUXER_DOMAIN"}, Validate: validHostname,
-			Help:    "The domain people use to reach Fluxer",
+			Help:    "The domain Fluxer runs on",
 			Confirm: "Fluxer gets a new certificate for the new domain. Passkeys made for the old domain stop working. The domain_migration settings help people move over."},
 		{Name: EdgeMode, Type: "choice", Options: []string{EdgeBundled, EdgeProxy, EdgeTunnel}, Validate: oneOf(EdgeBundled, EdgeProxy, EdgeTunnel),
 			Help: "Whether Fluxer serves HTTPS itself, sits behind your reverse proxy or behind a tunnel"},
@@ -106,7 +106,7 @@ func buildNamed() []Key {
 		{Name: VoicePublicIP, Type: "ip", Vars: []string{"FLUXER_LIVEKIT_NODE_IP", "FLUXER_LIVEKIT_USE_EXTERNAL_IP"}, Validate: validIP,
 			Help: "The public IP address voice and video use, when Fluxer can't find it by itself"},
 		{Name: StorageEndpoint, Type: "url", Vars: []string{"FLUXER_S3_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,
-			Help: "An S3-compatible object store to use instead of the bundled one"},
+			Help: "Your own S3-compatible object store"},
 		{Name: StoragePublic, Type: "url", Vars: []string{"FLUXER_S3_PUBLIC_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,
 			Help: "The object store address browsers use, when it differs from the one Fluxer uses"},
 		{Name: StorageRegion, Type: "text", Vars: []string{"FLUXER_S3_REGION"}, Validate: validText, Confirm: storageConfirm,
@@ -122,7 +122,7 @@ func buildNamed() []Key {
 		{Name: HTTPSProxy, Type: "url", Vars: []string{"HTTPS_PROXY"}, Validate: validURL,
 			Help: "The proxy Fluxer uses for outgoing HTTPS requests"},
 		{Name: NoProxy, Type: "list", Vars: []string{"NO_PROXY"}, Validate: validText,
-			Help: "Hosts Fluxer reaches without the proxy"},
+			Help: "Hosts Fluxer connects to without the proxy"},
 		{Name: IPv6, Type: "bool", Validate: validBool, Confirm: "Every Fluxer service restarts.",
 			Help: "Whether Fluxer's network uses IPv6"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
