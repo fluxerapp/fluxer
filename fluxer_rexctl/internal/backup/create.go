@@ -19,6 +19,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -95,11 +98,17 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 		m.Release = inst.State.Release
 	}
 	values := instanceValues(inst)
+	model := p.Model
+	if model == nil {
+		if loaded, err := deploy.Load(ctx, inst, p.Engine); err == nil {
+			model = loaded.Model
+		}
+	}
 	bundledDB := !externalPostgres(values)
 	if !bundledDB {
 		m.Skipped = append(m.Skipped, SkippedDatabase)
 	}
-	volumes, err := volumesToCopy(ctx, inst, values, p, m)
+	volumes, err := volumesToCopy(ctx, inst, values, p, model, m)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +117,7 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := findVolume(have, p.Name, "postgres-data"); !ok {
+		if _, ok := dataVolume(model, p.Name, have, "postgres-data"); !ok {
 			return nil, ErrNeverStarted
 		}
 	}
@@ -225,9 +234,34 @@ func externalUploads(inst *instance.Instance, values map[string]string) bool {
 type volumeRef struct {
 	short string
 	full  string
+	bind  string
 }
 
-func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, m *Manifest) ([]volumeRef, error) {
+func (v volumeRef) mount(target string, readOnly bool) engine.Mount {
+	return engine.Mount{Volume: v.full, Bind: v.bind, Target: target, ReadOnly: readOnly}
+}
+
+func dataVolume(model *types.Project, project string, have []engine.Volume, short string) (volumeRef, bool) {
+	if full, ok := findVolume(have, project, short); ok {
+		return volumeRef{short: short, full: full}, true
+	}
+	dm, ok := stack.DataMounts[short]
+	if !ok || model == nil {
+		return volumeRef{}, false
+	}
+	svc, ok := model.Services[dm.Service]
+	if !ok {
+		return volumeRef{}, false
+	}
+	for _, v := range svc.Volumes {
+		if v.Type == types.VolumeTypeBind && v.Target == dm.Target && v.Source != "" {
+			return volumeRef{short: short, bind: v.Source}, true
+		}
+	}
+	return volumeRef{}, false
+}
+
+func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, model *types.Project, m *Manifest) ([]volumeRef, error) {
 	skipUploads := externalUploads(inst, values)
 	if skipUploads {
 		m.Skipped = append(m.Skipped, SkippedUploads)
@@ -241,8 +275,8 @@ func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[stri
 		if skipUploads && short == "seaweedfs-data" {
 			continue
 		}
-		if full, ok := findVolume(have, p.Name, short); ok {
-			out = append(out, volumeRef{short: short, full: full})
+		if v, ok := dataVolume(model, p.Name, have, short); ok {
+			out = append(out, v)
 		}
 	}
 	return out, nil
@@ -323,7 +357,7 @@ func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volume
 	var paths []string
 	for i, v := range volumes {
 		mp := "/v/" + strconv.Itoa(i)
-		mounts = append(mounts, engine.Mount{Volume: v.full, Target: mp, ReadOnly: true})
+		mounts = append(mounts, v.mount(mp, true))
 		paths = append(paths, mp)
 	}
 	var out bytes.Buffer
@@ -557,7 +591,7 @@ func copyVolume(ctx context.Context, w *archiveWriter, p *engine.Project, image 
 			Image:      image,
 			Entrypoint: []string{"sh", "-c"},
 			Command:    []string{volumeTarScript},
-			Mounts:     []engine.Mount{{Volume: v.full, Target: "/data", ReadOnly: true}},
+			Mounts:     []engine.Mount{v.mount("/data", true)},
 			Stdout:     pw,
 			Stderr:     &stderr,
 		})

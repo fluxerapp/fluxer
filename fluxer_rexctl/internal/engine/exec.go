@@ -217,6 +217,10 @@ func (p *Project) Helper(ctx context.Context, o HelperOptions) error {
 	}
 	mounts := make([]mount.Mount, 0, len(o.Mounts))
 	for _, m := range o.Mounts {
+		if m.Bind != "" {
+			mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: m.Bind, Target: m.Target, ReadOnly: m.ReadOnly})
+			continue
+		}
 		mounts = append(mounts, mount.Mount{Type: mount.TypeVolume, Source: p.volumeName(ctx, c, m.Volume), Target: m.Target, ReadOnly: m.ReadOnly})
 	}
 	for attempt := 1; ; attempt++ {

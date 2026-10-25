@@ -21,6 +21,19 @@ var Volumes = []string{
 
 var BackupVolumes = []string{"seaweedfs-data", "valkey-data", "nats-data", "meilisearch-data"}
 
+type DataMount struct {
+	Service string
+	Target  string
+}
+
+var DataMounts = map[string]DataMount{
+	"postgres-data":    {Service: "postgres", Target: "/var/lib/postgresql/data"},
+	"valkey-data":      {Service: "valkey", Target: "/data"},
+	"nats-data":        {Service: "nats", Target: "/data"},
+	"meilisearch-data": {Service: "meilisearch", Target: "/meili_data"},
+	"seaweedfs-data":   {Service: "seaweedfs", Target: "/data"},
+}
+
 var PublishedPorts = []Port{
 	{Number: 80, Proto: "tcp"},
 	{Number: 443, Proto: "tcp"},

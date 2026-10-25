@@ -110,6 +110,7 @@ type HelperOptions struct {
 
 type Mount struct {
 	Volume   string
+	Bind     string
 	Target   string
 	ReadOnly bool
 }

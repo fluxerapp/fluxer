@@ -140,12 +140,6 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 		return nil, &RestoreError{Part: "containers", Err: err}
 	}
 
-	if m.Database != "" {
-		progress(StageDatabase)
-		if err := startPostgres(ctx, p); err != nil {
-			return nil, err
-		}
-	}
 	vols, err := e.Volumes(ctx, p.Name)
 	if err != nil {
 		return nil, err
@@ -153,6 +147,17 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	image, err := helperImage(ctx, inst, p)
 	if err != nil {
 		return nil, err
+	}
+	if m.Database != "" {
+		progress(StageDatabase)
+		if v, ok := dataVolume(p.Model, p.Name, vols, "postgres-data"); ok && v.bind != "" {
+			if err := helper(ctx, p, image, []engine.Mount{v.mount("/data", false)}, nil, io.Discard, "find", "/data", "-mindepth", "1", "-delete"); err != nil {
+				return nil, &RestoreError{Part: "database", Err: err}
+			}
+		}
+		if err := startPostgres(ctx, p); err != nil {
+			return nil, err
+		}
 	}
 	if err := restoreData(ctx, path, p, image, m, vols, progress); err != nil {
 		return nil, err
@@ -395,7 +400,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 	var sink *volumeSink
 	closeSink := func(failed error) error {
 		if sink == nil {
-			return nil
+			return failed
 		}
 		s := sink
 		sink = nil
@@ -416,7 +421,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		return nil
 	}
 	openSink := func(short string) error {
-		full, ok := findVolume(vols, p.Name, short)
+		v, ok := dataVolume(p.Model, p.Name, vols, short)
 		if !ok {
 			return &RestoreError{Part: short, Err: errors.New("the volume wasn't created")}
 		}
@@ -427,7 +432,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 				Image:      image,
 				Entrypoint: []string{"sh", "-c"},
 				Command:    []string{"find /data -mindepth 1 -delete && exec tar -xf - -C /data"},
-				Mounts:     []engine.Mount{{Volume: full, Target: "/data"}},
+				Mounts:     []engine.Mount{v.mount("/data", false)},
 				Stdin:      pr,
 				Stderr:     s.out,
 			})
