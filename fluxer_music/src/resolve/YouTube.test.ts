@@ -96,6 +96,38 @@ describe('YouTubeResolver', () => {
 		]);
 	});
 
+	test('playlist drops private, deleted, zero-length and upcoming entries', async () => {
+		const {run} = fakeRunner(fixture('playlist-unavailable.json'));
+		const tracks = await new YouTubeResolver(run).playlist('https://youtube.com/playlist?list=PLu');
+		expect(tracks.map((t) => t.title)).toEqual(['Good 1', 'Good 2']);
+	});
+
+	test('playlist with nothing playable → NO_RESULTS', async () => {
+		const unavailable = JSON.parse(fixture('playlist-unavailable.json')) as {entries: Array<{title: string}>};
+		unavailable.entries = unavailable.entries.filter((e) => !e.title.startsWith('Good'));
+		const {run} = fakeRunner(JSON.stringify(unavailable));
+		expect(await code(new YouTubeResolver(run).playlist('u'))).toBe('NO_RESULTS');
+	});
+
+	test('empty playlist → NO_RESULTS', async () => {
+		const {run} = fakeRunner(JSON.stringify({id: 'PL0', entries: []}));
+		expect(await code(new YouTubeResolver(run).playlist('u'))).toBe('NO_RESULTS');
+	});
+
+	test('search drops entries without a duration and upcoming ones', async () => {
+		const lines = JSON.parse(fixture('playlist-unavailable.json')).entries.map((e: unknown) => JSON.stringify(e));
+		const {run} = fakeRunner(`${lines.join('\n')}\n`);
+		const tracks = await new YouTubeResolver(run).search('q');
+		expect(tracks.map((t) => t.title)).toEqual(['Good 1', 'Good 2']);
+	});
+
+	test('video refuses an upcoming premiere', async () => {
+		const {run} = fakeRunner(
+			JSON.stringify({id: 'up1', title: 'Soon', duration: 180, is_live: false, live_status: 'is_upcoming'}),
+		);
+		expect(await code(new YouTubeResolver(run).video('u'))).toBe('LIVE_NOT_SUPPORTED');
+	});
+
 	test('search returns at most limit and puts the query after --', async () => {
 		const {run, calls} = fakeRunner(fixture('search.jsonl'));
 		const tracks = await new YouTubeResolver(run).search('-rf');

@@ -1,0 +1,111 @@
+{
+	"id": "PLu",
+	"title": "With gaps",
+	"_type": "playlist",
+	"entries": [
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "good0000001",
+			"url": "https://www.youtube.com/watch?v=good0000001",
+			"title": "Good 1",
+			"channel": "Chan",
+			"duration": 215,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/good0000001/hq.jpg"
+				}
+			],
+			"live_status": "not_live"
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "priv0000001",
+			"url": "https://www.youtube.com/watch?v=priv0000001",
+			"title": "[Private video]",
+			"channel": null,
+			"duration": null,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/priv0000001/hq.jpg"
+				}
+			],
+			"live_status": null
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "dele0000001",
+			"url": "https://www.youtube.com/watch?v=dele0000001",
+			"title": "[Deleted video]",
+			"channel": null,
+			"duration": null,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/dele0000001/hq.jpg"
+				}
+			],
+			"live_status": null
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "zero0000001",
+			"url": "https://www.youtube.com/watch?v=zero0000001",
+			"title": "Zero length",
+			"channel": "Chan",
+			"duration": 0,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/zero0000001/hq.jpg"
+				}
+			],
+			"live_status": "not_live"
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "miss0000001",
+			"url": "https://www.youtube.com/watch?v=miss0000001",
+			"title": "No duration",
+			"channel": "Chan",
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/miss0000001/hq.jpg"
+				}
+			],
+			"live_status": "not_live"
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "upco0000001",
+			"url": "https://www.youtube.com/watch?v=upco0000001",
+			"title": "Premiere soon",
+			"channel": "Chan",
+			"duration": 180,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/upco0000001/hq.jpg"
+				}
+			],
+			"live_status": "is_upcoming"
+		},
+		{
+			"_type": "url",
+			"ie_key": "Youtube",
+			"id": "good0000002",
+			"url": "https://www.youtube.com/watch?v=good0000002",
+			"title": "Good 2",
+			"channel": "Chan",
+			"duration": 190,
+			"thumbnails": [
+				{
+					"url": "https://i.ytimg.com/vi/good0000002/hq.jpg"
+				}
+			],
+			"live_status": "not_live"
+		}
+	]
+}

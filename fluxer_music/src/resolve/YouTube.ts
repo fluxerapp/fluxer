@@ -22,7 +22,7 @@ interface YtDlpInfo {
 }
 
 function isLive(info: YtDlpInfo): boolean {
-	return info.is_live === true || info.live_status === 'is_live';
+	return info.is_live === true || info.live_status === 'is_live' || info.live_status === 'is_upcoming';
 }
 
 function toTrack(info: YtDlpInfo): ResolvedTrack {
@@ -36,8 +36,13 @@ function toTrack(info: YtDlpInfo): ResolvedTrack {
 	};
 }
 
+/** Drops live and upcoming entries, over-long ones and those with no duration (private or deleted videos). */
 function playable(infos: Array<YtDlpInfo>): Array<ResolvedTrack> {
-	return infos.filter((i) => !isLive(i) && (i.duration ?? 0) * 1000 <= MAX_DURATION_MS).map(toTrack);
+	return infos
+		.filter(
+			(i) => !isLive(i) && typeof i.duration === 'number' && i.duration > 0 && i.duration * 1000 <= MAX_DURATION_MS,
+		)
+		.map(toTrack);
 }
 
 function parseJson(text: string): YtDlpInfo {
@@ -63,7 +68,9 @@ export class YouTubeResolver {
 		const info = parseJson(
 			await this.run(['-J', '--flat-playlist', '--playlist-end', String(PLAYLIST_LIMIT), '--', url]),
 		);
-		return playable(info.entries ?? []).slice(0, PLAYLIST_LIMIT);
+		const tracks = playable(info.entries ?? []).slice(0, PLAYLIST_LIMIT);
+		if (tracks.length === 0) throw new MusicError('NO_RESULTS');
+		return tracks;
 	}
 
 	async search(query: string, limit = 10): Promise<Array<ResolvedTrack>> {
