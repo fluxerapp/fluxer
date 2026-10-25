@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"unicode"
@@ -55,6 +56,8 @@ type UI struct {
 	themeOnce sync.Once
 	mu        sync.Mutex
 	spin      *spinner
+	self      *regexp.Regexp
+	selfName  string
 }
 
 func New(opts Options) *UI {
@@ -143,11 +146,22 @@ func (u *UI) themed() Theme {
 	return u.theme
 }
 
+func (u *UI) CallSelf(name string, commands []string) {
+	if name == "" || len(commands) == 0 {
+		return
+	}
+	u.self = regexp.MustCompile(`(^|[\s(])rexctl (` + strings.Join(commands, "|") + `)\b`)
+	u.selfName = strings.ReplaceAll(name, "$", "$$")
+}
+
 func (u *UI) emit(s string) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if u.spin != nil {
 		u.spin.clear()
+	}
+	if u.self != nil {
+		s = u.self.ReplaceAllString(s, "${1}"+u.selfName+" ${2}")
 	}
 	fmt.Fprint(u.errw, s)
 }
