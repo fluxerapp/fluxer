@@ -31,6 +31,14 @@ pub(in crate::server) fn animated_param(
         .unwrap_or(default_value)
 }
 
+pub(in crate::server) fn requests_transform(params: &HashMap<String, String>) -> bool {
+    params.contains_key("width")
+        || params.contains_key("height")
+        || params.contains_key("format")
+        || params.contains_key("quality")
+        || animated_param(params, false)
+}
+
 pub(in crate::server) fn explicit_output_format(
     params: &HashMap<String, String>,
 ) -> Result<Option<AssetExtension>, ()> {

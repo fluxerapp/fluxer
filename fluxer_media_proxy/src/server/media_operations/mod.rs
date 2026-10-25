@@ -19,13 +19,23 @@ use crate::{
     nsfw::NSFWPolicy,
     output_format::OutputFormat,
     server::{
+        external::serve_external,
         format_policy::image_extension_from_filename,
+        self_origin::{self, ServedRoute, ServedVariant},
         state::AppState,
+        stored,
         transform::execution::{deadline_instant, run_transform, transform_error_is_timeout},
     },
 };
+use axum::{
+    body::to_bytes,
+    http::{HeaderMap, Method, StatusCode},
+};
 use bytes::Bytes;
 use input::LoadedMediaInput;
+use std::{sync::Arc, time::Duration};
+
+const SERVED_VARIANT_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub(in crate::server) struct MetadataOutput {
     pub(in crate::server) metadata: serde_json::Value,
@@ -33,11 +43,15 @@ pub(in crate::server) struct MetadataOutput {
 }
 
 pub(in crate::server) async fn resolve_metadata(
-    app: &AppState,
+    app: &Arc<AppState>,
     input: MediaInput,
     scan_nsfw: bool,
     include_data: bool,
 ) -> Result<MetadataOutput, MediaFailure> {
+    let served = match &input {
+        MediaInput::External { url, .. } if !include_data => self_origin::served_variant(app, url),
+        _ => None,
+    };
     let mut input = load_media_input(app, input, MediaInputLimit::INTERNAL_REQUEST).await?;
     if include_data && input.data.len() > constants::MAX_MEDIA_PROXY_BYTES {
         return Err(MediaFailure::MetadataDecodedTooLarge);
@@ -51,9 +65,70 @@ pub(in crate::server) async fn resolve_metadata(
         app.media.nsfw().record_declined_scan();
         NSFWPolicy::Disabled
     };
+    let mut metadata = extract_metadata(app, &input, true, nsfw).await?;
+    let is_image = metadata["content_type"]
+        .as_str()
+        .is_some_and(|content_type| content_type.starts_with("image/"));
+    if let Some(served) = served.filter(|_| is_image)
+        && let Some(mut served) = served_variant_metadata(app, served).await
+    {
+        for field in ["width", "height", "content_type", "format"] {
+            metadata[field] = served[field].take();
+        }
+    }
+    Ok(MetadataOutput {
+        metadata,
+        data: include_data.then_some(input.data),
+    })
+}
+
+async fn served_variant_metadata(
+    app: &Arc<AppState>,
+    served: ServedVariant,
+) -> Option<serde_json::Value> {
+    let ServedVariant { route, params } = served;
+    let headers = HeaderMap::new();
+    let work = async {
+        let response = match route {
+            ServedRoute::Asset(asset) => {
+                stored::serve_asset_image(app, Method::GET, asset, &params, &headers).await
+            }
+            ServedRoute::Attachment { key } => {
+                stored::serve_attachment(app, Method::GET, &key, &params, &headers).await
+            }
+            ServedRoute::External { rest } => {
+                serve_external(app, Method::GET, &rest, &params, &headers).await
+            }
+        };
+        if response.status() != StatusCode::OK {
+            return None;
+        }
+        let data = to_bytes(response.into_body(), constants::MAX_MEDIA_PROXY_BYTES)
+            .await
+            .ok()?;
+        let input = LoadedMediaInput {
+            data,
+            filename: "served".to_owned(),
+        };
+        extract_metadata(app, &input, false, NSFWPolicy::Disabled)
+            .await
+            .ok()
+    };
+    tokio::time::timeout(SERVED_VARIANT_TIMEOUT, work)
+        .await
+        .ok()
+        .flatten()
+}
+
+async fn extract_metadata(
+    app: &AppState,
+    input: &LoadedMediaInput,
+    placeholder: bool,
+    nsfw: NSFWPolicy,
+) -> Result<serde_json::Value, MediaFailure> {
     let runtime = app.media.transforms();
     let options = media_process::MetadataOptions {
-        placeholder: true,
+        placeholder,
         nsfw,
         deadline_ms: runtime.transform_deadline_ms(),
     };
@@ -84,10 +159,7 @@ pub(in crate::server) async fn resolve_metadata(
     let json = media_process::finish_metadata(prepared, app.media.nsfw())
         .await
         .map_err(|err| extraction_failed(&err))?;
-    Ok(MetadataOutput {
-        metadata: serde_json::from_str(&json).unwrap_or_else(|_| serde_json::json!({})),
-        data: include_data.then_some(input.data),
-    })
+    Ok(serde_json::from_str(&json).unwrap_or_else(|_| serde_json::json!({})))
 }
 
 fn metadata_input_is_svg(input: &LoadedMediaInput) -> bool {

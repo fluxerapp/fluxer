@@ -8,7 +8,7 @@ use crate::{
     server::{
         params::{
             animated_param, bool_param, explicit_output_format, parse_effort,
-            parse_optional_dimension_param,
+            parse_optional_dimension_param, requests_transform,
         },
         response::error::text_with_reason,
     },
@@ -68,11 +68,7 @@ pub(in crate::server) fn validate_transform_parameters(
         animated,
         effort,
         requested_download: bool_param(params, "download", false),
-        has_transform_request: params.contains_key("width")
-            || params.contains_key("height")
-            || params.contains_key("format")
-            || params.contains_key("quality")
-            || animated,
+        has_transform_request: requests_transform(params),
     })
 }
 

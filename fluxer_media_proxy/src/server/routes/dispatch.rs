@@ -228,7 +228,9 @@ fn storage_key_decode_response(err: StorageKeyDecodeError) -> Response {
     )
 }
 
-fn without_signature_parameters(params: &HashMap<String, String>) -> HashMap<String, String> {
+pub(in crate::server) fn without_signature_parameters(
+    params: &HashMap<String, String>,
+) -> HashMap<String, String> {
     params
         .iter()
         .filter(|(name, _)| !SIGNATURE_PARAMETER_NAMES.contains(&name.as_str()))

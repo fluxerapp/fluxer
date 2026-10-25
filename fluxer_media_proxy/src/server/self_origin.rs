@@ -6,12 +6,15 @@ use crate::{
     public_net_policy,
     server::{
         asset_path::{
-            decode_storage_key, parse_entrance_sound_path, parse_guild_member_asset_path,
-            parse_simple_asset_path, parse_standard_asset_path,
+            ParsedAssetPath, decode_storage_key, parse_entrance_sound_path,
+            parse_guild_member_asset_path, parse_simple_asset_path, parse_standard_asset_path,
         },
+        params::requests_transform,
+        routes::dispatch::without_signature_parameters,
         state::AppState,
     },
 };
+use std::collections::HashMap;
 
 pub(in crate::server) enum SelfOrigin {
     Stored {
@@ -24,9 +27,20 @@ pub(in crate::server) enum SelfOrigin {
     },
 }
 
+pub(in crate::server) struct ServedVariant {
+    pub(in crate::server) route: ServedRoute,
+    pub(in crate::server) params: HashMap<String, String>,
+}
+
+pub(in crate::server) enum ServedRoute {
+    Asset(ParsedAssetPath),
+    Attachment { key: String },
+    External { rest: String },
+}
+
 pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin> {
     let endpoint = app.cfg.public_endpoint.as_deref()?;
-    let path = own_path(endpoint, url)?;
+    let (path, _) = own_path(endpoint, url)?;
     let cdn = &app.cfg.storage.bucket_cdn;
     if app.cfg.mode == DeploymentMode::Static {
         return stored(
@@ -59,15 +73,53 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
     if let Some(key) = parse_entrance_sound_path(path) {
         return stored(cdn, key);
     }
-    let asset = parse_guild_member_asset_path(path)
-        .or_else(|| parse_simple_asset_path(path, AssetKind::Emoji))
-        .or_else(|| parse_simple_asset_path(path, AssetKind::Sticker))
-        .or_else(|| parse_standard_asset_path(path))?;
+    let asset = parse_asset_path(path)?;
     Some(SelfOrigin::Stored {
         bucket: cdn.clone(),
         key: asset.storage_key,
         fallback_ext: Some(asset.original_ext),
     })
+}
+
+pub(in crate::server) fn served_variant(app: &AppState, url: &str) -> Option<ServedVariant> {
+    let endpoint = app.cfg.public_endpoint.as_deref()?;
+    let (path, query) = own_path(endpoint, url)?;
+    if app.cfg.mode == DeploymentMode::Static {
+        return None;
+    }
+    let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
+        .into_owned()
+        .collect();
+    if let Some(rest) = path.strip_prefix("/external/") {
+        return requests_transform(&params).then(|| ServedVariant {
+            route: ServedRoute::External {
+                rest: rest.to_owned(),
+            },
+            params,
+        });
+    }
+    if path.starts_with("/attachments/") {
+        let params = without_signature_parameters(&params);
+        let key = decode_storage_key(path).ok()?;
+        return requests_transform(&params).then_some(ServedVariant {
+            route: ServedRoute::Attachment { key },
+            params,
+        });
+    }
+    if path.starts_with("/themes/") || parse_entrance_sound_path(path).is_some() {
+        return None;
+    }
+    Some(ServedVariant {
+        route: ServedRoute::Asset(parse_asset_path(path)?),
+        params,
+    })
+}
+
+fn parse_asset_path(path: &str) -> Option<ParsedAssetPath> {
+    parse_guild_member_asset_path(path)
+        .or_else(|| parse_simple_asset_path(path, AssetKind::Emoji))
+        .or_else(|| parse_simple_asset_path(path, AssetKind::Sticker))
+        .or_else(|| parse_standard_asset_path(path))
 }
 
 fn stored(bucket: &str, key: String) -> Option<SelfOrigin> {
@@ -78,7 +130,7 @@ fn stored(bucket: &str, key: String) -> Option<SelfOrigin> {
     })
 }
 
-fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<&'a str> {
+fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<(&'a str, &'a str)> {
     let base = public_net_policy::parse_url(endpoint).ok()?;
     let target = public_net_policy::parse_url(url).ok()?;
     if !base.scheme.eq_ignore_ascii_case(target.scheme) {
@@ -90,16 +142,14 @@ fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<&'a str> {
     if effective_port(base.scheme, base.port) != effective_port(target.scheme, target.port) {
         return None;
     }
-    let prefix = path_of(base.path_query).trim_end_matches('/');
-    let rest = path_of(target.path_query).strip_prefix(prefix)?;
-    rest.starts_with('/').then_some(rest)
+    let prefix = split_query(base.path_query).0.trim_end_matches('/');
+    let (path, query) = split_query(target.path_query);
+    let rest = path.strip_prefix(prefix)?;
+    rest.starts_with('/').then_some((rest, query))
 }
 
-fn path_of(path_query: &str) -> &str {
-    path_query
-        .split_once('?')
-        .map(|(path, _)| path)
-        .unwrap_or(path_query)
+fn split_query(path_query: &str) -> (&str, &str) {
+    path_query.split_once('?').unwrap_or((path_query, ""))
 }
 
 fn effective_port(scheme: &str, port: Option<u16>) -> u16 {

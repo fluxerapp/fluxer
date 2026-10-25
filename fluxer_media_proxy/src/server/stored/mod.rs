@@ -21,8 +21,8 @@ use crate::{
         },
         media_operations::spool_stored_media,
         params::{
-            animated_param, asset_manual_format_override, asset_wants_animated, bool_param,
-            filename_from_storage_key,
+            asset_manual_format_override, asset_wants_animated, bool_param,
+            filename_from_storage_key, requests_transform,
         },
         response::{
             GeneratedMediaResponse, MediaResponse, content_disposition_header,
@@ -323,13 +323,7 @@ async fn read_attachment(
     headers: &HeaderMap,
 ) -> Response {
     let filename = filename_from_storage_key(key);
-    let animated = animated_param(params, false);
-    let wants_transform = params.contains_key("width")
-        || params.contains_key("height")
-        || params.contains_key("format")
-        || params.contains_key("quality")
-        || animated;
-    if !wants_transform {
+    if !requests_transform(params) {
         return serve_stored_passthrough_stream(
             app,
             method,
