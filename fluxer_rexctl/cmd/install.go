@@ -62,18 +62,20 @@ type installFlags struct {
 }
 
 type installer struct {
-	answers *setup.Answers
-	storage *storageChoice
-	app     *App
-	c       *cobra.Command
-	f       *installFlags
-	dir     string
-	host    *host.Info
-	engine  *engine.Engine
-	found   *engine.Engine
-	findErr error
-	ran     map[string]bool
-	plan    []string
+	answers      *setup.Answers
+	storage      *storageChoice
+	app          *App
+	c            *cobra.Command
+	f            *installFlags
+	dir          string
+	host         *host.Info
+	engine       *engine.Engine
+	found        *engine.Engine
+	findErr      error
+	ran          map[string]bool
+	plan         []string
+	offered      bool
+	lowPortsSaid bool
 }
 
 func newInstallCmd(app *App) *cobra.Command {
@@ -167,11 +169,16 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 		if in.runChecks(ctx, checks.Preinstall, "engine", "podman-subids", "windows-linux-containers") {
 			return notReady()
 		}
+	} else {
+		in.ran["engine"], in.ran["podman-subids"], in.ran["windows-linux-containers"] = true, true, true
+	}
+	if err := in.offerProxy(); err != nil {
+		return err
+	}
+	if in.engine != nil {
 		if err := in.preparePodman(ctx); err != nil {
 			return err
 		}
-	} else {
-		in.ran["engine"], in.ran["podman-subids"], in.ran["windows-linux-containers"] = true, true, true
 	}
 	if err := app.UI.Ask(c, ui.Field{
 		Flag:     "domain",
@@ -217,7 +224,11 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 		if err := in.write(ctx, inst, *deleteOld); err != nil {
 			return err
 		}
-		return in.start(ctx, inst)
+		if err := in.start(ctx, inst); err != nil {
+			return err
+		}
+		in.proxyNote()
+		return nil
 	})
 }
 
@@ -280,10 +291,8 @@ func validateInstallFlags(f *installFlags) error {
 			return ui.Usage(fmt.Sprintf("%s isn't an IP address.", f.VoiceIP))
 		}
 	}
-	if f.BehindProxy {
-		if _, _, err := net.SplitHostPort(f.Bind); err != nil {
-			return ui.Usage("Pass --bind as an address and port, like 127.0.0.1:8080.")
-		}
+	if f.BehindProxy && validateBind(f.Bind) != nil {
+		return ui.Usage("Pass --bind as an address and port, like 127.0.0.1:8080.")
 	}
 	for _, p := range []int{f.VoiceTCPPort, f.VoiceUDPPort} {
 		if p < 0 || p > 65535 {
@@ -303,6 +312,13 @@ func validateInstallFlags(f *installFlags) error {
 		if err := validateDomain(f.Domain); err != nil {
 			return ui.Usage(err.Error())
 		}
+	}
+	return nil
+}
+
+func validateBind(v string) error {
+	if _, _, err := net.SplitHostPort(v); err != nil {
+		return setupInputError("Enter an address and port, like 127.0.0.1:8080.")
 	}
 	return nil
 }
@@ -554,7 +570,9 @@ func (in *installer) allowLowPorts(ctx context.Context) error {
 	if in.f.BehindProxy || !host.LowPortsBlocked(in.engine.Rootless) {
 		return nil
 	}
-	in.app.UI.Info("Rootless Podman needs this to serve Fluxer on ports 80 and 443.")
+	if !in.lowPortsSaid {
+		in.app.UI.Info("Rootless Podman needs this to serve Fluxer on ports 80 and 443.")
+	}
 	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Let programs that don't run as root use ports 80 and up on this machine?")
 	if err != nil {
 		return err
@@ -571,6 +589,104 @@ func (in *installer) allowLowPorts(ctx context.Context) error {
 	}
 	in.app.UI.OK("Programs that don't run as root can use ports 80 and up.")
 	return nil
+}
+
+type proxyHint struct {
+	Interactive bool
+	Decided     bool
+	Busy        []int
+	Owner       string
+	LowPorts    string
+}
+
+func (h proxyHint) offer() (reason string, def bool, ok bool) {
+	if !h.Interactive || h.Decided {
+		return "", false, false
+	}
+	if len(h.Busy) > 0 {
+		nums := make([]string, len(h.Busy))
+		for i, n := range h.Busy {
+			nums[i] = strconv.Itoa(n)
+		}
+		subject := fmt.Sprintf("Port %s on this machine is", nums[0])
+		if len(nums) > 1 {
+			subject = fmt.Sprintf("Ports %s on this machine are", ui.JoinAnd(nums))
+		}
+		switch {
+		case checks.ContainerOwner(h.Owner):
+			return subject + " already in use by a container.", true, true
+		case h.Owner != "":
+			return fmt.Sprintf("%s already in use by %s.", subject, h.Owner), true, true
+		}
+		return subject + " already in use.", true, true
+	}
+	if h.LowPorts != "" {
+		return fmt.Sprintf("Rootless %s can't use ports 80 and 443 without a change to this machine.", h.LowPorts), false, true
+	}
+	return "", false, false
+}
+
+func (in *installer) proxyHint() proxyHint {
+	h := proxyHint{
+		Interactive: in.app.UI.Interactive(),
+		Decided:     in.f.BehindProxy || in.c.Flags().Changed("behind-proxy") || in.c.Flags().Changed("bind"),
+	}
+	if !h.Interactive || h.Decided {
+		return h
+	}
+	sameOwner := true
+	for _, port := range []int{80, 443} {
+		used, owner, err := host.PortInUse("tcp", port)
+		if err != nil || !used {
+			continue
+		}
+		if len(h.Busy) == 0 {
+			h.Owner = owner
+		} else if owner != h.Owner {
+			sameOwner = false
+		}
+		h.Busy = append(h.Busy, port)
+	}
+	if !sameOwner {
+		h.Owner = ""
+	}
+	if in.engine != nil && host.LowPortsBlocked(in.engine.Rootless) {
+		h.LowPorts = in.engine.Kind.Name()
+	}
+	return h
+}
+
+func (in *installer) offerProxy() error {
+	h := in.proxyHint()
+	reason, def, ok := h.offer()
+	if !ok {
+		return nil
+	}
+	in.offered, in.lowPortsSaid = true, len(h.Busy) == 0
+	in.app.UI.Info("%s", reason)
+	yes, err := in.app.UI.Confirm("Use your own reverse proxy in front of Fluxer?", def)
+	if err != nil || !yes {
+		return err
+	}
+	if err := in.app.UI.Ask(in.c, ui.Field{
+		Flag:     "bind",
+		Title:    "Which address should your proxy connect to?",
+		Value:    &in.f.Bind,
+		Validate: validateBind,
+	}); err != nil {
+		return err
+	}
+	in.f.BehindProxy = true
+	in.plan = append(in.plan, fmt.Sprintf("Serve Fluxer over plain HTTP on %s for your reverse proxy.", in.f.Bind))
+	return nil
+}
+
+func (in *installer) proxyNote() {
+	if !in.offered || !in.f.BehindProxy {
+		return
+	}
+	in.app.UI.Info("Set up your proxy to forward https://%s to http://%s.", normaliseDomain(in.f.Domain), in.f.Bind)
+	in.app.UI.Info("See https://docs.fluxer.app/operator/reverse-proxy/ for what your proxy needs to do.")
 }
 
 func (in *installer) installDocker(ctx context.Context) error {

@@ -31,6 +31,10 @@ var containerOwners = map[string]bool{
 	"wslrelay":           true,
 }
 
+func ContainerOwner(name string) bool {
+	return containerOwners[name]
+}
+
 func runPorts(ctx context.Context, e *Env) Result {
 	wanted := e.wantedPorts()
 	var numbers, busy []string
