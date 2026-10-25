@@ -16,6 +16,7 @@ import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware
 import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {
 	assertCredentialsNotSsoManaged,
@@ -131,6 +132,7 @@ export function UserAccountController(app: HonoApp) {
 	);
 	app.patch(
 		'/users/@me',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.USER_UPDATE_SELF),
 		LoginRequired,
 		DefaultUserOnly,

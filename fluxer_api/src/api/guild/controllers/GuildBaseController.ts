@@ -14,6 +14,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -209,6 +210,7 @@ export function GuildBaseController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id',
+		RequestBodyLimit(jsonAssetBodyLimit({guild_icon: 1, banner: 1, splash: 1, embed_splash: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
