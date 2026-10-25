@@ -1994,21 +1994,22 @@ type InstanceConfigResponse struct {
 	Accounts  AccountsConfigSchema `json:"accounts"`
 	AppPublic struct {
 		Branding struct {
-			CustomCss                    *string `json:"custom_css"`
-			FaviconDarkUrl               *string `json:"favicon_dark_url"`
-			FaviconUrl                   *string `json:"favicon_url"`
-			IconUrl                      *string `json:"icon_url"`
-			LogoUrl                      *string `json:"logo_url"`
-			PremiumInfoUrl               *string `json:"premium_info_url"`
-			PremiumProductName           string  `json:"premium_product_name"`
-			ProductName                  string  `json:"product_name"`
-			SignInBackdropUrl            *string `json:"sign_in_backdrop_url"`
-			StatusPageIncidentHistoryUrl *string `json:"status_page_incident_history_url"`
-			StatusPageUrl                *string `json:"status_page_url"`
-			SymbolUrl                    *string `json:"symbol_url"`
-			ThemeColor                   *string `json:"theme_color"`
-			UploadLimitMessage           *string `json:"upload_limit_message"`
-			WordmarkUrl                  *string `json:"wordmark_url"`
+			CustomCss                    *string  `json:"custom_css"`
+			FaviconDarkUrl               *string  `json:"favicon_dark_url"`
+			FaviconUrl                   *string  `json:"favicon_url"`
+			IconUrl                      *string  `json:"icon_url"`
+			LogoUrl                      *string  `json:"logo_url"`
+			PremiumInfoUrl               *string  `json:"premium_info_url"`
+			PremiumProductName           string   `json:"premium_product_name"`
+			ProductName                  string   `json:"product_name"`
+			SignInBackdropUrl            *string  `json:"sign_in_backdrop_url"`
+			StatusPageIncidentHistoryUrl *string  `json:"status_page_incident_history_url"`
+			StatusPageUrl                *string  `json:"status_page_url"`
+			SymbolUrl                    *string  `json:"symbol_url"`
+			ThemeColor                   *string  `json:"theme_color"`
+			TrustedDomains               []string `json:"trusted_domains"`
+			UploadLimitMessage           *string  `json:"upload_limit_message"`
+			WordmarkUrl                  *string  `json:"wordmark_url"`
 		} `json:"branding"`
 		Legal struct {
 			GuidelinesUrl *string `json:"guidelines_url"`
@@ -2225,21 +2226,22 @@ type InstanceConfigUpdateRequest struct {
 	Accounts  *AccountsConfigUpdateRequest `json:"accounts,omitempty"`
 	AppPublic *struct {
 		Branding *struct {
-			CustomCss                    *string `json:"custom_css,omitempty"`
-			FaviconDarkUrl               *string `json:"favicon_dark_url,omitempty"`
-			FaviconUrl                   *string `json:"favicon_url,omitempty"`
-			IconUrl                      *string `json:"icon_url,omitempty"`
-			LogoUrl                      *string `json:"logo_url,omitempty"`
-			PremiumInfoUrl               *string `json:"premium_info_url,omitempty"`
-			PremiumProductName           *string `json:"premium_product_name,omitempty"`
-			ProductName                  *string `json:"product_name,omitempty"`
-			SignInBackdropUrl            *string `json:"sign_in_backdrop_url,omitempty"`
-			StatusPageIncidentHistoryUrl *string `json:"status_page_incident_history_url,omitempty"`
-			StatusPageUrl                *string `json:"status_page_url,omitempty"`
-			SymbolUrl                    *string `json:"symbol_url,omitempty"`
-			ThemeColor                   *string `json:"theme_color,omitempty"`
-			UploadLimitMessage           *string `json:"upload_limit_message,omitempty"`
-			WordmarkUrl                  *string `json:"wordmark_url,omitempty"`
+			CustomCss                    *string   `json:"custom_css,omitempty"`
+			FaviconDarkUrl               *string   `json:"favicon_dark_url,omitempty"`
+			FaviconUrl                   *string   `json:"favicon_url,omitempty"`
+			IconUrl                      *string   `json:"icon_url,omitempty"`
+			LogoUrl                      *string   `json:"logo_url,omitempty"`
+			PremiumInfoUrl               *string   `json:"premium_info_url,omitempty"`
+			PremiumProductName           *string   `json:"premium_product_name,omitempty"`
+			ProductName                  *string   `json:"product_name,omitempty"`
+			SignInBackdropUrl            *string   `json:"sign_in_backdrop_url,omitempty"`
+			StatusPageIncidentHistoryUrl *string   `json:"status_page_incident_history_url,omitempty"`
+			StatusPageUrl                *string   `json:"status_page_url,omitempty"`
+			SymbolUrl                    *string   `json:"symbol_url,omitempty"`
+			ThemeColor                   *string   `json:"theme_color,omitempty"`
+			TrustedDomains               *[]string `json:"trusted_domains,omitempty"`
+			UploadLimitMessage           *string   `json:"upload_limit_message,omitempty"`
+			WordmarkUrl                  *string   `json:"wordmark_url,omitempty"`
 		} `json:"branding,omitempty"`
 		Legal *struct {
 			GuidelinesUrl *string `json:"guidelines_url,omitempty"`

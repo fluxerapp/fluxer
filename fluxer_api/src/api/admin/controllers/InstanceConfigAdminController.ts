@@ -26,6 +26,7 @@ import {
 	deriveSsoRedirectUri,
 	normalizeAndValidateSsoConfig,
 	normalizeSsoButtonLabel,
+	normalizeTrustedDomains,
 } from '@app/api/instance/SsoConfigValidation';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -117,6 +118,13 @@ function attachmentExpiryRulesChanged(
 
 function readOptionalField<T extends object, K extends keyof T>(value: T, key: K): T[K] | undefined {
 	return Object.hasOwn(value, key) ? value[key] : undefined;
+}
+
+function readTrustedDomains(branding: {trusted_domains?: Array<string> | null}): Array<string> | undefined {
+	const domains = readOptionalField(branding, 'trusted_domains');
+	return domains === undefined
+		? undefined
+		: normalizeTrustedDomains(domains ?? [], 'app_public.branding.trusted_domains');
 }
 
 function readSmtpTlsModeUpdate(
@@ -332,6 +340,7 @@ function assertSelfHostedBillingSections(data: InstanceConfigUpdateRequest): voi
 		'favicon_dark_url',
 		'custom_css',
 		'upload_limit_message',
+		'trusted_domains',
 	] as const) {
 		if (readOptionalField(branding, field) !== undefined) {
 			throw InputValidationError.create(
@@ -736,6 +745,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 							sign_in_backdrop_url: readOptionalField(appPublic.branding, 'sign_in_backdrop_url'),
 							custom_css: readOptionalField(appPublic.branding, 'custom_css'),
 							upload_limit_message: readOptionalField(appPublic.branding, 'upload_limit_message'),
+							trusted_domains: readTrustedDomains(appPublic.branding),
 						})
 					: undefined,
 				legal: appPublic.legal

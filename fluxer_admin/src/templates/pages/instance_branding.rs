@@ -16,6 +16,7 @@ use maud::{Markup, PreEscaped, html};
 
 pub const CUSTOM_CSS_FIELD: &str = "app_custom_css";
 pub const UPLOAD_LIMIT_MESSAGE_FIELD: &str = "app_upload_limit_message";
+pub const TRUSTED_DOMAINS_FIELD: &str = "app_trusted_domains";
 
 const FLUXER_LOGO_SVG: &str = include_str!("../../../static/fluxer-logo-color.svg");
 const FLUXER_WORDMARK_SVG: &str = include_str!("../../../static/fluxer-wordmark.svg");
@@ -127,6 +128,19 @@ pub(super) fn branding_section(
                         ))
                         p class="text-xs leading-5 text-neutral-500" {
                             "Shows when someone picks a file over their upload limit, in place of \"This limit is configured by your instance administrator.\" Markdown links work. Up to 500 characters. Leave it empty to keep the default sentence."
+                        }
+                    }
+                    div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {
+                        (textarea_input(
+                            TRUSTED_DOMAINS_FIELD,
+                            "Trusted link domains",
+                            "example.com\n*.example.com",
+                            &app_public.branding.trusted_domains.join("\n"),
+                            3,
+                            false,
+                        ))
+                        p class="text-xs leading-5 text-neutral-500" {
+                            "Links to these domains open without the external link warning for everyone on this instance. Put one domain on each line, up to 50. Start a line with *. to also cover its subdomains, as in *.example.com. Your instance's own addresses are always trusted."
                         }
                     }
                     div class="grid grid-cols-1 gap-4 border-t border-neutral-200 pt-6 sm:grid-cols-2" {

@@ -37424,6 +37424,11 @@
 					"upload_limit_message": {
 						"description": "Optional Markdown a self-hosted instance shows when a file is over the upload limit, in place of the default note",
 						"type": ["string", "null"]
+					},
+					"trusted_domains": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Extra domains a self-hosted instance trusts, so links to them open without a warning. Each entry is a hostname, or a hostname with a *. prefix that also covers its subdomains"
 					}
 				},
 				"required": [
@@ -37441,7 +37446,8 @@
 					"premium_info_url",
 					"sign_in_backdrop_url",
 					"custom_css",
-					"upload_limit_message"
+					"upload_limit_message",
+					"trusted_domains"
 				],
 				"additionalProperties": false,
 				"description": "Branding values safe to expose to clients"

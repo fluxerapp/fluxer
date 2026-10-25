@@ -6,7 +6,9 @@ use crate::{
         AppSetupConfigUpdateRequest, CUSTOM_CSS_MAX_CHARS, InstanceConfigUpdateRequest,
     },
     middleware::flash::FlashData,
-    templates::pages::instance_branding::{CUSTOM_CSS_FIELD, UPLOAD_LIMIT_MESSAGE_FIELD},
+    templates::pages::instance_branding::{
+        CUSTOM_CSS_FIELD, TRUSTED_DOMAINS_FIELD, UPLOAD_LIMIT_MESSAGE_FIELD,
+    },
     utils::{
         forms::{MultiValueForm, clean_string},
         plural::group_digits,
@@ -58,6 +60,9 @@ pub(super) fn build_app_public_update(
                 upload_limit_message: form
                     .contains_key(UPLOAD_LIMIT_MESSAGE_FIELD)
                     .then(|| form.clean(UPLOAD_LIMIT_MESSAGE_FIELD)),
+                trusted_domains: form
+                    .contains_key(TRUSTED_DOMAINS_FIELD)
+                    .then(|| form.list_values(TRUSTED_DOMAINS_FIELD)),
                 ..Default::default()
             }),
             setup: Some(AppSetupConfigUpdateRequest {

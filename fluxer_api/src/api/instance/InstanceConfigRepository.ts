@@ -514,6 +514,7 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			sign_in_backdrop_url: normalizeOptionalString(Config.instance.branding.signInBackdropUrl),
 			custom_css: null,
 			upload_limit_message: null,
+			trusted_domains: [],
 		},
 		setup: {
 			configured: !Config.instance.selfHosted || Config.instance.setup.configured,
@@ -982,6 +983,9 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 				branding.upload_limit_message,
 				defaults.branding.upload_limit_message,
 			),
+			trusted_domains: Config.instance.selfHosted
+				? (branding.trusted_domains ?? defaults.branding.trusted_domains)
+				: defaults.branding.trusted_domains,
 		},
 		setup: {
 			configured: setup.configured ?? defaults.setup.configured,

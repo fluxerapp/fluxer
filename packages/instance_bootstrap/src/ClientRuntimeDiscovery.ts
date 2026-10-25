@@ -138,6 +138,7 @@ function projectAppPublic(appPublic: InstanceDiscoveryDocument['appPublic']): In
 			sign_in_backdrop_url: value.branding.sign_in_backdrop_url ?? null,
 			custom_css: value.branding.custom_css ?? null,
 			upload_limit_message: value.branding.upload_limit_message ?? null,
+			trusted_domains: value.branding.trusted_domains ?? [],
 		},
 		setup: {
 			...value.setup,

@@ -447,6 +447,8 @@ pub struct AppBrandingConfigResponse {
     pub custom_css: Option<String>,
     #[serde(default)]
     pub upload_limit_message: Option<String>,
+    #[serde(default)]
+    pub trusted_domains: Vec<String>,
 }
 
 impl Default for AppBrandingConfigResponse {
@@ -467,6 +469,7 @@ impl Default for AppBrandingConfigResponse {
             sign_in_backdrop_url: None,
             custom_css: None,
             upload_limit_message: None,
+            trusted_domains: Vec::new(),
         }
     }
 }
@@ -1146,6 +1149,8 @@ pub struct AppBrandingConfigUpdateRequest {
     pub custom_css: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub upload_limit_message: Option<Option<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trusted_domains: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

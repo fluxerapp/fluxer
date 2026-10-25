@@ -613,6 +613,7 @@ const AppPublicConfigResponse = z.object({
 		sign_in_backdrop_url: z.string().nullable(),
 		custom_css: z.string().nullable(),
 		upload_limit_message: z.string().nullable(),
+		trusted_domains: z.array(z.string()),
 	}),
 	setup: z.object({
 		configured: z.boolean(),
@@ -638,6 +639,8 @@ function isAbsoluteHttpUrl(value: string): boolean {
 
 export const UPLOAD_LIMIT_MESSAGE_MAX_LENGTH = 500;
 
+export const TRUSTED_DOMAINS_MAX = 50;
+
 const HEX_THEME_COLOR_PATTERN = /^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$/;
 
 const AppPublicConfigUpdateRequest = z.object({
@@ -658,6 +661,7 @@ const AppPublicConfigUpdateRequest = z.object({
 			sign_in_backdrop_url: z.string().trim().max(2048).nullish(),
 			custom_css: z.string().trim().max(32_768).nullish(),
 			upload_limit_message: z.string().trim().max(UPLOAD_LIMIT_MESSAGE_MAX_LENGTH).nullish(),
+			trusted_domains: z.array(z.string().max(255)).max(TRUSTED_DOMAINS_MAX).nullish(),
 		})
 		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),

@@ -40,6 +40,7 @@ export function getSsoRequestUrlPolicy(): RequestUrlPolicy {
 }
 const DOMAIN_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const SsoAllowedDomainsSchema = InstanceConfigResponse.shape.sso.shape.allowed_domains;
+const TrustedDomainsSchema = InstanceConfigResponse.shape.app_public.shape.branding.shape.trusted_domains;
 
 function normalizeOptionalSsoString(value: string | null): string | null {
 	if (typeof value !== 'string') {
@@ -92,7 +93,20 @@ export function isTestSsoProvider(
 }
 
 export function normalizeAllowedEmailDomains(domains: unknown, field = 'allowed_domains'): Array<string> {
-	const result = SsoAllowedDomainsSchema.safeParse(domains);
+	return normalizeDomainList(SsoAllowedDomainsSchema, domains, field, false);
+}
+
+export function normalizeTrustedDomains(domains: unknown, field: string): Array<string> {
+	return normalizeDomainList(TrustedDomainsSchema, domains, field, true);
+}
+
+function normalizeDomainList(
+	schema: typeof SsoAllowedDomainsSchema,
+	domains: unknown,
+	field: string,
+	allowWildcard: boolean,
+): Array<string> {
+	const result = schema.safeParse(domains);
 	if (!result.success) throw InputValidationError.fromCode(field, ValidationErrorCodes.INVALID_FORMAT);
 	const normalized = new Set<string>();
 	for (const rawDomain of result.data) {
@@ -101,19 +115,20 @@ export function normalizeAllowedEmailDomains(domains: unknown, field = 'allowed_
 			continue;
 		}
 		const lowered = entry.toLowerCase();
+		const wildcard = allowWildcard && lowered.startsWith('*.');
+		const host = wildcard ? lowered.slice(2) : lowered;
 		if (
-			lowered.includes('@') ||
-			lowered.includes('/') ||
-			lowered.includes('\\') ||
-			lowered.includes(':') ||
-			lowered.startsWith('.') ||
-			lowered.endsWith('.') ||
-			lowered.startsWith('*.') ||
-			lowered.includes('*')
+			host.includes('@') ||
+			host.includes('/') ||
+			host.includes('\\') ||
+			host.includes(':') ||
+			host.startsWith('.') ||
+			host.endsWith('.') ||
+			host.includes('*')
 		) {
 			throwInvalidDomain(field, entry);
 		}
-		const asciiDomain = domainToASCII(lowered);
+		const asciiDomain = domainToASCII(host);
 		if (!asciiDomain || asciiDomain.length > 253 || !asciiDomain.includes('.')) {
 			throwInvalidDomain(field, entry);
 		}
@@ -121,7 +136,7 @@ export function normalizeAllowedEmailDomains(domains: unknown, field = 'allowed_
 		if (labels.some((label) => !DOMAIN_LABEL_REGEX.test(label)) || /^\d+$/.test(labels[labels.length - 1] ?? '')) {
 			throwInvalidDomain(field, entry);
 		}
-		normalized.add(asciiDomain);
+		normalized.add(wildcard ? `*.${asciiDomain}` : asciiDomain);
 	}
 	return Array.from(normalized);
 }

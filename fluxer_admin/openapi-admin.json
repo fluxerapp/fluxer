@@ -15872,7 +15872,8 @@
 									"premium_info_url": {"nullable": true, "type": "string"},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string"},
 									"custom_css": {"nullable": true, "type": "string"},
-									"upload_limit_message": {"nullable": true, "type": "string"}
+									"upload_limit_message": {"nullable": true, "type": "string"},
+									"trusted_domains": {"type": "array", "items": {"type": "string"}}
 								},
 								"required": [
 									"product_name",
@@ -15889,7 +15890,8 @@
 									"premium_info_url",
 									"sign_in_backdrop_url",
 									"custom_css",
-									"upload_limit_message"
+									"upload_limit_message",
+									"trusted_domains"
 								],
 								"additionalProperties": false
 							},
@@ -16532,7 +16534,13 @@
 									"premium_info_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"custom_css": {"nullable": true, "type": "string", "maxLength": 32768},
-									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500}
+									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500},
+									"trusted_domains": {
+										"nullable": true,
+										"maxItems": 50,
+										"type": "array",
+										"items": {"type": "string", "maxLength": 255}
+									}
 								}
 							},
 							"setup": {"nullable": true, "type": "object", "properties": {"configured": {"type": "boolean"}}},

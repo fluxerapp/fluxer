@@ -484,6 +484,9 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 				: null,
 			custom_css: readOptionalText(branding, 'custom_css'),
 			upload_limit_message: readOptionalText(branding, 'upload_limit_message'),
+			trusted_domains: Object.hasOwn(branding, 'trusted_domains')
+				? readStringArray(branding.trusted_domains, 'appPublic.branding.trusted_domains')
+				: [],
 		},
 		setup: {
 			configured: readBoolean(setup, 'configured', 'appPublic.setup.configured'),
