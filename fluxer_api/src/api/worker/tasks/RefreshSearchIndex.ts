@@ -31,7 +31,12 @@ import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {JobCancelledError, type WorkerTaskHandler, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {
+	JobCancelledError,
+	JobFailedError,
+	type WorkerTaskHandler,
+	type WorkerTaskHelpers,
+} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 
 const INDEX_TYPES = [
@@ -470,13 +475,17 @@ async function runRefresh(
 		return indexedCount;
 	} catch (error) {
 		Logger.error({error, payload}, 'Failed to refresh search index');
+		const message = error instanceof Error ? error.message : 'Unknown error';
 		await setProgress(kvClient, progressKey, {
 			status: 'failed',
 			index_type: indexType,
-			error: error instanceof Error ? error.message : 'Unknown error',
+			error: message,
 			failed_at: new Date().toISOString(),
 		});
-		throw error;
+		if (error instanceof JobCancelledError) {
+			throw error;
+		}
+		throw new JobFailedError(message);
 	}
 }
 const refreshSearchIndex: WorkerTaskHandler = async (payload, helpers) => {
@@ -492,11 +501,6 @@ const refreshSearchIndex: WorkerTaskHandler = async (payload, helpers) => {
 	}
 	try {
 		return {indexed: await runRefresh(validated, helpers, kvClient)};
-	} catch (error) {
-		if (error instanceof JobCancelledError) {
-			throw error;
-		}
-		return {error: error instanceof Error ? error.message : 'Unknown error'};
 	} finally {
 		await finishSearchReindexAll(kvClient, validated.job_id);
 	}
