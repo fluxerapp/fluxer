@@ -320,8 +320,20 @@ func (u *UI) ReportError(err error) {
 	} else {
 		u.Fail(msg, ee.Fix)
 	}
-	if ee.Err != nil && ee.Msg != "" {
-		u.Detail("%v", ee.Err)
+	if ee.Msg == "" {
+		return
+	}
+	for cause := ee.Err; cause != nil; {
+		var inner *ExitError
+		if !errors.As(cause, &inner) {
+			u.Detail("%v", cause)
+			return
+		}
+		if inner.Err == nil {
+			u.Detail("%v", inner)
+			return
+		}
+		cause = inner.Err
 	}
 }
 

@@ -673,7 +673,9 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 			files[i] = filepath.Join(scratch, f)
 		}
 	}
-	if fileExists(inst.Path(instance.CustomCompose)) {
+	base := slices.Clone(files)
+	custom := fileExists(inst.Path(instance.CustomCompose))
+	if custom {
 		files = append(files, inst.Path(instance.CustomCompose))
 	}
 	var admin map[string]string
@@ -684,15 +686,34 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Fluxer %s doesn't accept the settings on this machine.", toShort), "Run rexctl upgrade --verbose to see why.")
 	}
+	still := "Your instance hasn't changed."
+	if pend := inst.State.Upgrade; pend != nil {
+		fromShort, _ := versionPair(pend.From, pend.To)
+		still = fmt.Sprintf("Your instance is still on %s.", fluxerName(fromShort))
+	}
 	p, err := e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: files, Env: env})
 	if err != nil {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if custom && engine.ClassOf(err) == engine.ClassInvalidConfig {
+			return ui.Refused(fmt.Sprintf("%s doesn't work with Fluxer %s: %s.", instance.CustomCompose, toShort, composeProblem(err)),
+				fmt.Sprintf("Change %s, then run rexctl upgrade again. %s", instance.CustomCompose, still))
+		}
 		return ui.Wrap(engineFailure(err), fmt.Sprintf("Fluxer %s doesn't accept the settings on this machine.", toShort), "Run rexctl upgrade --verbose to see why.")
 	}
 	if plan, err := p.Plan(ctx); engine.ClassOf(err) == engine.ClassVolumeChanged {
 		return volumeMismatch(inst, plan.Volumes, toShort)
+	}
+	if custom {
+		shipped, err := e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: base, Env: env})
+		if err != nil {
+			return ui.Wrap(engineFailure(err), fmt.Sprintf("Fluxer %s doesn't accept the settings on this machine.", toShort), "Run rexctl upgrade --verbose to see why.")
+		}
+		if dropped := p.DroppedMounts(shipped); len(dropped) > 0 {
+			return ui.Refused(fmt.Sprintf("%s leaves out what Fluxer %s mounts at %s.", instance.CustomCompose, toShort, strings.Join(dropped, ", ")),
+				fmt.Sprintf("Add those mounts back to %s, then run rexctl upgrade again. %s", instance.CustomCompose, still))
+		}
 	}
 	err = app.UI.Step(ctx, "Downloading Fluxer "+toShort, func(ctx context.Context, s *ui.Step) error {
 		if err := p.Pull(ctx, app.progress(s, "Downloading")); err != nil {
@@ -707,11 +728,6 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	still := "Your instance hasn't changed."
-	if pend := inst.State.Upgrade; pend != nil {
-		fromShort, _ := versionPair(pend.From, pend.To)
-		still = fmt.Sprintf("Your instance is still on %s.", fluxerName(fromShort))
-	}
 	report := engineFailure(err)
 	var ee *ui.ExitError
 	if errors.As(report, &ee) && ee.Err != nil {
@@ -719,6 +735,14 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 		return ee
 	}
 	return ui.Wrap(err, fmt.Sprintf("Couldn't download Fluxer %s. %s", toShort, still), "Check this machine's internet connection, then run rexctl upgrade again.")
+}
+
+func composeProblem(err error) string {
+	var ee *engine.Error
+	if errors.As(err, &ee) && ee.Err != nil {
+		err = ee.Err
+	}
+	return strings.TrimSuffix(strings.TrimSpace(err.Error()), ": invalid compose project")
 }
 
 func upAll(ctx context.Context, p *engine.Project, onEvent func(engine.Event)) error {
