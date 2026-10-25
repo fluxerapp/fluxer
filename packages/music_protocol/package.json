@@ -1,0 +1,18 @@
+{
+	"name": "@fluxer/music_protocol",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./*"
+	},
+	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"typescript": "catalog:ts7",
+		"vitest": "catalog:"
+	}
+}

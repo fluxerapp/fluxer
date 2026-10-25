@@ -2084,6 +2084,15 @@ importers:
         specifier: catalog:ts7
         version: 7.0.2
 
+  packages/music_protocol:
+    devDependencies:
+      typescript:
+        specifier: catalog:ts7
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.6)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.4(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+
   packages/number_utils:
     dependencies:
       '@fluxer/constants':
