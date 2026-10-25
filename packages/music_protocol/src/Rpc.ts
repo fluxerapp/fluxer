@@ -66,7 +66,7 @@ const ERROR_CODES: ReadonlyArray<MusicErrorCode> = [
 	'BAD_REQUEST',
 ];
 const LOOP_MODES: ReadonlyArray<string> = ['off', 'track', 'queue'];
-const MAX_QUEUE_PAGE = 50;
+const MAX_QUEUE_PAGE = 20;
 
 export function encodeRpcResult<T>(r: RpcResult<T>): string {
 	if (r.ok) return JSON.stringify({...r.value, ok: true});

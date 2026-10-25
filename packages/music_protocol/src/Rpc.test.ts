@@ -19,7 +19,7 @@ describe('Rpc', () => {
 		expect(decodeRpcPayload('music.seek', '{"ms":5000}')).toEqual({ms: 5000});
 		expect(decodeRpcPayload('music.seek', '{"ms":"5"}')).toBeNull();
 		expect(decodeRpcPayload('music.loop', '{"mode":"forever"}')).toBeNull();
-		expect(decodeRpcPayload('music.queue', '{"offset":0,"limit":999}')).toEqual({offset: 0, limit: 50});
+		expect(decodeRpcPayload('music.queue', '{"offset":0,"limit":999}')).toEqual({offset: 0, limit: 20});
 		expect(decodeRpcPayload('music.add', '{"input":""}')).toBeNull();
 	});
 	test('payload-less methods accept {}', () => {
