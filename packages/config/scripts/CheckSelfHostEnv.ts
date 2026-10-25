@@ -185,9 +185,12 @@ function checkComposeForwarding(): void {
 	if (!init.includes('could not configure the S3 identity') || !/exit 1;?\s*$/u.test(init)) {
 		problems.push('seaweedfs-init must exit 1 when the S3 identity write fails');
 	}
+	if (!readSelfHosting('docker-compose.yml').includes('${FLUXER_SETTINGS_LOADED:?')) {
+		problems.push('docker-compose.yml must require FLUXER_SETTINGS_LOADED');
+	}
 	for (const name of OBJECT_STORE_CREDENTIALS) {
-		if (!environment('seaweedfs-init')[name]?.startsWith(`\${${name}:?`)) {
-			problems.push(`seaweedfs-init must require ${name}`);
+		if (environment('seaweedfs-init')[name] !== `\${${name}:-}`) {
+			problems.push(`seaweedfs-init must forward ${name}`);
 		}
 	}
 	if (environment('media-proxy').FLUXER_S3_READ_SIGNED !== `\${FLUXER_S3_READ_SIGNED:-true}`) {

@@ -1,12 +1,14 @@
 name: fluxer
 
+x-fluxer-settings: ${FLUXER_SETTINGS_LOADED:?rexctl manages this instance. Run rexctl commands here, or run rexctl eject to use docker compose}
+
 x-fluxer-postgres-env: &fluxer-postgres-env
   FLUXER_DATABASE_BACKEND: postgres
   FLUXER_POSTGRES_HOST: ${FLUXER_POSTGRES_HOST:-postgres}
   FLUXER_POSTGRES_PORT: ${FLUXER_POSTGRES_PORT:-}
   FLUXER_POSTGRES_DATABASE: ${FLUXER_POSTGRES_DATABASE:-}
   FLUXER_POSTGRES_USERNAME: ${FLUXER_POSTGRES_USERNAME:-}
-  FLUXER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
   FLUXER_POSTGRES_URL: ${FLUXER_POSTGRES_URL:-}
   FLUXER_POSTGRES_SSL: ${FLUXER_POSTGRES_SSL:-}
   FLUXER_POSTGRES_SSL_CA: ${FLUXER_POSTGRES_SSL_CA:-}
@@ -25,7 +27,7 @@ x-fluxer-env: &fluxer-env
   https_proxy: ${HTTPS_PROXY:-}
   no_proxy: localhost,127.0.0.1,::1,edge,postgres,valkey,nats,meilisearch,seaweedfs,livekit,api,worker,gateway,media-proxy,push,static-proxy,app-proxy,snowflakes,users,gifs,messages,unfurl,admin${NO_PROXY:+,${NO_PROXY:-}}
   FLUXER_SELF_HOSTED: "true"
-  FLUXER_BASE_DOMAIN: ${FLUXER_DOMAIN:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_BASE_DOMAIN: ${FLUXER_DOMAIN:-}
   FLUXER_PUBLIC_SCHEME: ${FLUXER_PUBLIC_SCHEME:-https}
   FLUXER_PUBLIC_PORT: ${FLUXER_PUBLIC_PORT:-443}
   FLUXER_PUBLIC_ORIGIN: ${FLUXER_PUBLIC_ORIGIN:-}
@@ -43,13 +45,13 @@ x-fluxer-env: &fluxer-env
 
   FLUXER_API_ENDPOINT: ${FLUXER_API_ENDPOINT:-}
   FLUXER_API_CLIENT_ENDPOINT: ${FLUXER_API_CLIENT_ENDPOINT:-}
-  FLUXER_APP_ENDPOINT: ${FLUXER_APP_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
+  FLUXER_APP_ENDPOINT: ${FLUXER_APP_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
   FLUXER_GATEWAY_ENDPOINT: ${FLUXER_GATEWAY_ENDPOINT:-}
-  FLUXER_MEDIA_ENDPOINT: ${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media}
-  FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT:-${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media}}
+  FLUXER_MEDIA_ENDPOINT: ${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}
+  FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT:-${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}}
   FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-}
-  FLUXER_ADMIN_ENDPOINT: ${FLUXER_ADMIN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}${FLUXER_ADMIN_BASE_PATH:-/admin}}
-  FLUXER_MARKETING_ENDPOINT: ${FLUXER_MARKETING_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
+  FLUXER_ADMIN_ENDPOINT: ${FLUXER_ADMIN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}${FLUXER_ADMIN_BASE_PATH:-/admin}}
+  FLUXER_MARKETING_ENDPOINT: ${FLUXER_MARKETING_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
   FLUXER_INVITE_ENDPOINT: ${FLUXER_INVITE_ENDPOINT:-}
   FLUXER_GIFT_ENDPOINT: ${FLUXER_GIFT_ENDPOINT:-}
   FLUXER_STATIC_CDN_DOMAIN: ${FLUXER_STATIC_CDN_DOMAIN:-}
@@ -80,7 +82,7 @@ x-fluxer-env: &fluxer-env
 
   FLUXER_SEARCH_ENGINE: ${FLUXER_SEARCH_ENGINE:-meilisearch}
   FLUXER_SEARCH_URL: ${FLUXER_SEARCH_URL:-http://meilisearch:7700}
-  FLUXER_SEARCH_API_KEY: ${MEILI_MASTER_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_SEARCH_API_KEY: ${MEILI_MASTER_KEY:-}
   FLUXER_SEARCH_USERNAME: ${FLUXER_SEARCH_USERNAME:-}
   FLUXER_SEARCH_PASSWORD: ${FLUXER_SEARCH_PASSWORD:-}
   FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED: ${FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED:-}
@@ -88,8 +90,8 @@ x-fluxer-env: &fluxer-env
   FLUXER_S3_ENDPOINT: ${FLUXER_S3_ENDPOINT:-http://seaweedfs:8333}
   FLUXER_S3_PUBLIC_ENDPOINT: ${FLUXER_S3_PUBLIC_ENDPOINT:-${FLUXER_S3_ENDPOINT:-http://seaweedfs:8333}}
   FLUXER_S3_REGION: ${FLUXER_S3_REGION:-us-east-1}
-  FLUXER_S3_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_S3_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_S3_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:-}
+  FLUXER_S3_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:-}
   FLUXER_S3_FORCE_PATH_STYLE: "${FLUXER_S3_FORCE_PATH_STYLE:-true}"
   FLUXER_S3_BUCKET_CDN: ${FLUXER_S3_BUCKET_CDN:-fluxer}
   FLUXER_S3_BUCKET_UPLOADS: ${FLUXER_S3_BUCKET_UPLOADS:-fluxer-uploads}
@@ -108,11 +110,11 @@ x-fluxer-env: &fluxer-env
   FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS: ${FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS:-}
 
   FLUXER_LIVEKIT_ENABLED: "${FLUXER_LIVEKIT_ENABLED:-true}"
-  FLUXER_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+  FLUXER_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
   FLUXER_LIVEKIT_INTERNAL_URL: ${FLUXER_LIVEKIT_INTERNAL_URL:-http://livekit:7880}
   FLUXER_LIVEKIT_DEFAULT_REGION: '${FLUXER_LIVEKIT_DEFAULT_REGION:-{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}}'
-  FLUXER_LIVEKIT_URL: ${FLUXER_LIVEKIT_URL:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}:${FLUXER_PUBLIC_PORT:-443}}/livekit}
+  FLUXER_LIVEKIT_URL: ${FLUXER_LIVEKIT_URL:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}:${FLUXER_PUBLIC_PORT:-443}}/livekit}
   FLUXER_VOICE_P2P_STUN_URLS: ${FLUXER_VOICE_P2P_STUN_URLS:-}
 
   FLUXER_KLIPY_API_KEY: ${FLUXER_KLIPY_API_KEY:-}
@@ -122,7 +124,7 @@ x-fluxer-env: &fluxer-env
   FLUXER_EMAIL_ENABLED: ${FLUXER_EMAIL_ENABLED:-}
   FLUXER_EMAIL_PROVIDER: ${FLUXER_EMAIL_PROVIDER:-}
   FLUXER_EMAIL_DELIVERY: ${FLUXER_EMAIL_DELIVERY:-}
-  FLUXER_EMAIL_FROM_EMAIL: ${FLUXER_EMAIL_FROM_EMAIL:-noreply@${FLUXER_DOMAIN}}
+  FLUXER_EMAIL_FROM_EMAIL: ${FLUXER_EMAIL_FROM_EMAIL:-noreply@${FLUXER_DOMAIN:-}}
   FLUXER_EMAIL_FROM_NAME: ${FLUXER_EMAIL_FROM_NAME:-}
   FLUXER_EMAIL_REPLY_TO_EMAIL: ${FLUXER_EMAIL_REPLY_TO_EMAIL:-}
   FLUXER_EMAIL_APP_BASE_URL: ${FLUXER_EMAIL_APP_BASE_URL:-}
@@ -193,26 +195,26 @@ x-fluxer-env: &fluxer-env
   FLUXER_PUSH_APNS_PRIVATE_KEY_PATH: ${FLUXER_PUSH_APNS_PRIVATE_KEY_PATH:-}
   FLUXER_PUSH_APNS_APPS: ${FLUXER_PUSH_APNS_APPS:-}
 
-  FLUXER_SUDO_MODE_SECRET: ${FLUXER_SUDO_MODE_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_CONNECTION_INITIATION_SECRET: ${FLUXER_CONNECTION_INITIATION_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_PROFILE_PSEUDONYM_SECRET: ${FLUXER_PROFILE_PSEUDONYM_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_SUDO_MODE_SECRET: ${FLUXER_SUDO_MODE_SECRET:-}
+  FLUXER_CONNECTION_INITIATION_SECRET: ${FLUXER_CONNECTION_INITIATION_SECRET:-}
+  FLUXER_PROFILE_PSEUDONYM_SECRET: ${FLUXER_PROFILE_PSEUDONYM_SECRET:-}
   FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES: ${FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES:-}
-  FLUXER_VAPID_PUBLIC_KEY: ${FLUXER_VAPID_PUBLIC_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_VAPID_PRIVATE_KEY: ${FLUXER_VAPID_PRIVATE_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_VAPID_EMAIL: ${FLUXER_VAPID_EMAIL:-admin@${FLUXER_DOMAIN}}
-  FLUXER_PASSKEY_RP_ID: ${FLUXER_PASSKEY_RP_ID:-${FLUXER_DOMAIN}}
+  FLUXER_VAPID_PUBLIC_KEY: ${FLUXER_VAPID_PUBLIC_KEY:-}
+  FLUXER_VAPID_PRIVATE_KEY: ${FLUXER_VAPID_PRIVATE_KEY:-}
+  FLUXER_VAPID_EMAIL: ${FLUXER_VAPID_EMAIL:-admin@${FLUXER_DOMAIN:-}}
+  FLUXER_PASSKEY_RP_ID: ${FLUXER_PASSKEY_RP_ID:-${FLUXER_DOMAIN:-}}
   FLUXER_PASSKEY_RP_NAME: ${FLUXER_PASSKEY_RP_NAME:-}
-  FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: ${FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
-  FLUXER_GATEWAY_RPC_AUTH_TOKEN: ${FLUXER_GATEWAY_RPC_AUTH_TOKEN:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_MEDIA_PROXY_SECRET_KEY: ${FLUXER_MEDIA_PROXY_SECRET_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: ${FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
+  FLUXER_GATEWAY_RPC_AUTH_TOKEN: ${FLUXER_GATEWAY_RPC_AUTH_TOKEN:-}
+  FLUXER_MEDIA_PROXY_SECRET_KEY: ${FLUXER_MEDIA_PROXY_SECRET_KEY:-}
+  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64:-}
   FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ${FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64:-}
-  FLUXER_ADMIN_SECRET_KEY_BASE: ${FLUXER_ADMIN_SECRET_KEY_BASE:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-  FLUXER_ADMIN_OAUTH_CLIENT_SECRET: ${FLUXER_ADMIN_OAUTH_CLIENT_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+  FLUXER_ADMIN_SECRET_KEY_BASE: ${FLUXER_ADMIN_SECRET_KEY_BASE:-}
+  FLUXER_ADMIN_OAUTH_CLIENT_SECRET: ${FLUXER_ADMIN_OAUTH_CLIENT_SECRET:-}
 
   FLUXER_INTERNAL_API_ENDPOINT: http://api:8080
   FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
-  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media}
+  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}
   FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES:-}
   FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS:-}
   FLUXER_MEDIA_PROXY_UPLOAD_RELAY_KEEP_DIRECT_COUNTRIES: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_KEEP_DIRECT_COUNTRIES:-}
@@ -265,12 +267,12 @@ services:
       - "${FLUXER_HTTPS_PORT:-443}:443"
       - "${FLUXER_HTTPS_PORT:-443}:443/udp"
     environment:
-      FLUXER_EDGE_SITE_ADDRESS: ${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}}}
+      FLUXER_EDGE_SITE_ADDRESS: ${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
       FLUXER_EDGE_TRUSTED_PROXIES: ${FLUXER_EDGE_TRUSTED_PROXIES:-127.0.0.1/32}
       FLUXER_EDGE_ENCODE: ${FLUXER_EDGE_ENCODE:-zstd gzip}
       FLUXER_EDGE_PROTOCOLS: ${FLUXER_EDGE_PROTOCOLS:-h1 h2 h3}
       FLUXER_EDGE_GLOBAL_OPTIONS: ${FLUXER_EDGE_GLOBAL_OPTIONS:-}
-      FLUXER_EDGE_TLS_DIRECTIVE: ${FLUXER_EDGE_TLS:+tls ${FLUXER_EDGE_TLS}}
+      FLUXER_EDGE_TLS_DIRECTIVE: ${FLUXER_EDGE_TLS:+tls ${FLUXER_EDGE_TLS:-}}
       FLUXER_ADMIN_BASE_PATH: ${FLUXER_ADMIN_BASE_PATH:-/admin}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -325,7 +327,7 @@ services:
     environment:
       POSTGRES_DB: ${FLUXER_POSTGRES_DATABASE:-fluxer}
       POSTGRES_USER: ${FLUXER_POSTGRES_USERNAME:-fluxer}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -387,7 +389,7 @@ services:
       MEILI_MAX_INDEXING_MEMORY: ${FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY:-256mb}
       MEILI_MAX_INDEXING_THREADS: ${FLUXER_MEILISEARCH_MAX_INDEXING_THREADS:-2}
       MEILI_LOG_LEVEL: ${FLUXER_MEILISEARCH_LOG_LEVEL:-WARN}
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-}
     volumes:
       - meilisearch-data:/meili_data
     healthcheck:
@@ -425,8 +427,8 @@ services:
       seaweedfs: {condition: service_healthy, restart: true}
     restart: "no"
     environment:
-      FLUXER_S3_ACCESS_KEY: ${FLUXER_S3_ACCESS_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
-      FLUXER_S3_SECRET_KEY: ${FLUXER_S3_SECRET_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+      FLUXER_S3_ACCESS_KEY: ${FLUXER_S3_ACCESS_KEY:-}
+      FLUXER_S3_SECRET_KEY: ${FLUXER_S3_SECRET_KEY:-}
       FLUXER_S3_BUCKET_CDN: ${FLUXER_S3_BUCKET_CDN:-fluxer}
       FLUXER_S3_BUCKET_UPLOADS: ${FLUXER_S3_BUCKET_UPLOADS:-fluxer-uploads}
       FLUXER_S3_BUCKET_REPORTS: ${FLUXER_S3_BUCKET_REPORTS:-fluxer-reports}
@@ -488,7 +490,7 @@ services:
           memory: ${FLUXER_LIVEKIT_MEMORY_LIMIT:-512mb}
     environment:
       GOMEMLIMIT: ${FLUXER_LIVEKIT_GOMEMLIMIT:-435MiB}
-      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}: ${LIVEKIT_API_SECRET:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}"
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-}: ${LIVEKIT_API_SECRET:-}"
       LIVEKIT_CONFIG: |
         port: 7880
         log_level: ${FLUXER_LIVEKIT_LOG_LEVEL:-info}
@@ -501,7 +503,7 @@ services:
             - ${FLUXER_LIVEKIT_STUN_PRIMARY:-stun.l.google.com:19302}
             - ${FLUXER_LIVEKIT_STUN_SECONDARY:-stun1.l.google.com:19302}
         webhook:
-          api_key: ${LIVEKIT_API_KEY:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+          api_key: ${LIVEKIT_API_KEY:-}
           urls:
             - http://api:8080/webhooks/livekit
     ports:
@@ -591,8 +593,8 @@ services:
     environment:
       <<: *fluxer-env
       FLUXER_GATEWAY_PORT: "8080"
-      FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT:-${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media}}
-      FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_GATEWAY_STATIC_CDN_ENDPOINT:-${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}}
+      FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT:-${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}}
+      FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_GATEWAY_STATIC_CDN_ENDPOINT:-${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}}
       FLUXER_GATEWAY_LOGGER_LEVEL: ${FLUXER_GATEWAY_LOGGER_LEVEL:-}
       LOGGER_LEVEL: ${LOGGER_LEVEL:-}
       FLUXER_GATEWAY_PUSH_ENABLED: ${FLUXER_GATEWAY_PUSH_ENABLED:-}
@@ -610,7 +612,7 @@ services:
       FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_MEMBER: ${FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_MEMBER:-}
       FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_USER: ${FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_USER:-}
       FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_IP: ${FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_IP:-}
-      FLUXER_ERLANG_COOKIE: ${FLUXER_ERLANG_COOKIE:?rexctl manages this instance. Use rexctl, docker compose -p fluxer ps or logs, or run rexctl eject to use docker compose here}
+      FLUXER_ERLANG_COOKIE: ${FLUXER_ERLANG_COOKIE:-}
       FLUXER_ERLANG_SCHEDULERS: ${FLUXER_ERLANG_SCHEDULERS:-}
       FLUXER_ERLANG_SCHEDULERS_MIN: ${FLUXER_ERLANG_SCHEDULERS_MIN:-}
       FLUXER_ERLANG_SCHEDULERS_MAX: ${FLUXER_ERLANG_SCHEDULERS_MAX:-}
@@ -637,7 +639,7 @@ services:
       FLUXER_MEDIA_PROXY_MODE: upload
       FLUXER_MEDIA_PROXY_STORAGE_BACKEND: s3
       FLUXER_MEDIA_PROXY_CORS_MODE: ${FLUXER_MEDIA_PROXY_CORS_MODE:-}
-      FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS: ${FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}:${FLUXER_PUBLIC_PORT:-443}}}
+      FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS: ${FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}:${FLUXER_PUBLIC_PORT:-443}}}
       FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE: ${FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE:-}
       FLUXER_MEDIA_PROXY_READ_ONLY: ${FLUXER_MEDIA_PROXY_READ_ONLY:-}
       FLUXER_MEDIA_PROXY_NSFW_THRESHOLD: ${FLUXER_MEDIA_PROXY_NSFW_THRESHOLD:-}
@@ -866,7 +868,7 @@ services:
       FLUXER_ADMIN_BASE_PATH: ${FLUXER_ADMIN_BASE_PATH:-/admin}
       FLUXER_API_ENDPOINT: http://api:8080
       FLUXER_API_PUBLIC_ENDPOINT: ${FLUXER_API_ENDPOINT:-}
-      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
+      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health HTTP/1.0\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck

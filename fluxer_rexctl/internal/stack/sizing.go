@@ -134,6 +134,8 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 
 const EmbeddedWorkerVar = "FLUXER_API_EMBEDDED_WORKER"
 
+const SettingsLoadedVar = "FLUXER_SETTINGS_LOADED"
+
 func embeddedWorker(hw Hardware, fixed map[string]string) bool {
 	return strings.ToLower(strings.TrimSpace(fixed[EmbeddedWorkerVar])) == "true"
 }
