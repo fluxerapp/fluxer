@@ -32,6 +32,7 @@ import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPe
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
+import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -253,23 +254,11 @@ export class GatewayService {
 		return error instanceof Error ? error : new Error(String(error));
 	}
 
-	private logBatchFailures(method: string, failures: Array<PromiseRejectedResult>): void {
-		if (failures.length === 0) {
+	private logBatchFailure(method: string, key: string, error: Error): void {
+		if (error instanceof FluxerError && error.status < 500) {
 			return;
 		}
-		const reasonCounts = new Map<string, number>();
-		for (const failure of failures) {
-			const reason = failure.reason instanceof Error ? failure.reason.message : String(failure.reason);
-			reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + 1);
-		}
-		const reasonSummary = Array.from(reasonCounts.entries())
-			.sort(([, a], [, b]) => b - a)
-			.slice(0, 3)
-			.map(([reason, count]) => ({reason, count}));
-		Logger.error(
-			{method, failureCount: failures.length, reasonSummary},
-			`[gateway-batch] ${method} batch operation failed`,
-		);
+		Logger.error({method, key, error}, `[gateway-batch] ${method} batch operation failed`);
 	}
 
 	private settlePendingRequest(request: SettleableRequest, settle: () => void): void {
@@ -414,7 +403,7 @@ export class GatewayService {
 		} catch (error) {
 			const transformedError = this.transformGatewayError(error);
 			this.rejectPendingRequests(pending, transformedError);
-			this.logBatchFailures('guild.get_data', [{status: 'rejected', reason: error}]);
+			this.logBatchFailure('guild.get_data', key, transformedError);
 		}
 	}
 
@@ -436,7 +425,7 @@ export class GatewayService {
 		} catch (error) {
 			const transformedError = this.transformGatewayError(error);
 			this.rejectPendingRequests(pending, transformedError);
-			this.logBatchFailures('guild.get_member', [{status: 'rejected', reason: error}]);
+			this.logBatchFailure('guild.get_member', key, transformedError);
 		}
 	}
 
@@ -459,7 +448,7 @@ export class GatewayService {
 		} catch (error) {
 			const transformedError = this.transformGatewayError(error);
 			this.rejectPendingRequests(pending, transformedError);
-			this.logBatchFailures('guild.check_permission', [{status: 'rejected', reason: error}]);
+			this.logBatchFailure('guild.check_permission', key, transformedError);
 		}
 	}
 
@@ -482,7 +471,7 @@ export class GatewayService {
 			const transformedError = this.transformGatewayError(error);
 			if (!this.isAuthContextUnsupportedError(transformedError)) {
 				this.rejectPendingRequests(pending, transformedError);
-				this.logBatchFailures('guild.get_auth_context', [{status: 'rejected', reason: error}]);
+				this.logBatchFailure('guild.get_auth_context', key, transformedError);
 				return;
 			}
 			this.authContextUnsupportedUntil = Date.now() + this.AUTH_CONTEXT_FALLBACK_MS;
@@ -504,7 +493,6 @@ export class GatewayService {
 		} catch (error) {
 			const transformedError = this.transformGatewayError(error);
 			this.rejectPendingRequests(pending, transformedError);
-			this.logBatchFailures('guild.get_data', [{status: 'rejected', reason: error}]);
 		}
 	}
 
