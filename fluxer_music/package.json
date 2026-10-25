@@ -7,6 +7,7 @@
 		"./*": "./*"
 	},
 	"scripts": {
+		"build": "esbuild src/Main.ts --bundle --platform=node --format=esm --target=node26 --external:@livekit/rtc-node --outfile=dist/Main.js",
 		"test": "vitest run",
 		"test:integration": "vitest run --config vitest.integration.config.ts",
 		"test:watch": "vitest",
@@ -19,6 +20,7 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@types/ws": "8.18.1",
+		"esbuild": "catalog:",
 		"livekit-server-sdk": "catalog:",
 		"typescript": "catalog:ts7",
 		"vitest": "catalog:",

@@ -35,8 +35,8 @@ export type RpcHandlers = {
 };
 
 export interface RoomLinkOptions {
-	/** Opus max bitrate in bits per second (the voice channel's bitrate). */
-	bitrate: number;
+	/** Opus max bitrate in bits per second (the voice channel's bitrate). A function is read each time the room is joined. */
+	bitrate: number | (() => number);
 }
 
 /** Joins a LiveKit room, publishes the audio track, broadcasts state and serves RPC. Emits 'disconnected'. */
@@ -44,13 +44,14 @@ export class RoomLink extends EventEmitter {
 	readonly sink: AudioSink;
 
 	private readonly source = new AudioSource(SAMPLE_RATE, CHANNELS);
-	private readonly bitrate: number;
+	private readonly bitrate: () => number;
 	private room: Room | null = null;
 	private handlers: RpcHandlers | null = null;
 
 	constructor(opts: RoomLinkOptions) {
 		super();
-		this.bitrate = opts.bitrate;
+		const {bitrate} = opts;
+		this.bitrate = typeof bitrate === 'function' ? bitrate : () => bitrate;
 		this.sink = {
 			captureFrame: (samples) =>
 				this.source.captureFrame(new AudioFrame(samples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES_PER_CHANNEL)),
@@ -93,7 +94,7 @@ export class RoomLink extends EventEmitter {
 				track,
 				new TrackPublishOptions({
 					source: TrackSource.SOURCE_MICROPHONE,
-					audioEncoding: {maxBitrate: BigInt(this.bitrate)},
+					audioEncoding: {maxBitrate: BigInt(this.bitrate())},
 				}),
 			);
 		} catch (err) {

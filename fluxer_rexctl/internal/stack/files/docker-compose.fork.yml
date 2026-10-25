@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+services:
+  music:
+    image: fluxer-fork/music:main
+    pull_policy: build
+    build: {context: ../../../.., dockerfile: fluxer_music/Dockerfile}
+    restart: unless-stopped
+    networks: [fluxer]
+    read_only: true
+    tmpfs: [/tmp]
+    user: "10001:10001"
+    environment:
+      FLUXER_BASE_URL: https://${FLUXER_DOMAIN}
+      FLUXER_MUSIC_BOT_TOKEN: ${FLUXER_MUSIC_BOT_TOKEN:?set FLUXER_MUSIC_BOT_TOKEN in .env}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
+    volumes:
+      - music-ytdlp:/var/lib/ytdlp
+      - ../../../../secrets:/run/music-secrets:ro
+    healthcheck: {test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8099/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"], interval: 30s, timeout: 5s, retries: 3, start_period: 120s}
+    deploy: {resources: {limits: {memory: 768mb}}}
+
+volumes:
+  music-ytdlp:

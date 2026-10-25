@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Build context for fluxer_music/Dockerfile is the repo root: keep only what the filtered install and build need.
+*
+
+# Workspace manifests (pnpm validates the lockfile against every workspace project)
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc
+!patches
+!**/package.json
+
+!tsconfigs
+!packages/music_protocol
+!fluxer_music
+
+**/node_modules
+**/dist
+**/.env
+**/.env.*

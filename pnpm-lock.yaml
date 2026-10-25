@@ -1884,6 +1884,9 @@ importers:
       '@types/ws':
         specifier: 8.18.1
         version: 8.18.1
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       livekit-server-sdk:
         specifier: 'catalog:'
         version: 2.19.0
