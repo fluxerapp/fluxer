@@ -28,12 +28,14 @@ import {server} from '@app/api/test/msw/server';
 import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {fetchUserMe} from '@app/api/user/tests/UserTestUtils';
 import {getCurrencyPreferences, getGiftCurrencyPreferences, isLocalizedCurrency} from '@app/api/utils/CurrencyUtils';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {PremiumStateResponse, PriceIdsResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -504,6 +506,31 @@ describe('operator billing catalog', () => {
 				stripeHandlers.spies.createdCheckoutSessions[0]?.custom_text?.terms_of_service_acceptance?.message;
 			expect(message).toContain('Premium');
 			expect(message).not.toContain('Plutonium');
+		});
+
+		test('blocks checkout for an account with the purchases limit but lets it redeem a gift', async () => {
+			const token = await createPurchaser();
+			const {json: me} = await fetchUserMe(harness, token);
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(me.id)));
+			const code = `limit${crypto.randomUUID().replaceAll('-', '').slice(0, 20)}`;
+			await createBuilder(harness, token)
+				.post(`/test/gifts/${code}`)
+				.body({duration_type: 'months', duration_quantity: 1, created_by_user_id: me.id})
+				.execute();
+			await getUserRepository().patchUpsert(user.id, {premium_flags: PremiumFlags.PURCHASE_DISABLED}, user.toRow());
+			await createBuilder(harness, token)
+				.post('/stripe/checkout/subscription')
+				.body({price_id: 'price_opgbpmonthly'})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.PREMIUM_PURCHASE_BLOCKED)
+				.execute();
+			await createBuilder(harness, token)
+				.post('/stripe/checkout/gift')
+				.body({price_id: 'price_opgbpgiftmonth'})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.PREMIUM_PURCHASE_BLOCKED)
+				.execute();
+			expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
+			await createBuilder(harness, token).post(`/gifts/${code}/redeem`).expect(HTTP_STATUS.NO_CONTENT).execute();
+			expect((await getUserRepository().findUniqueAssert(user.id)).premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
 		});
 
 		test('lets an account without an email buy on a username instance and leaves the email to checkout', async () => {

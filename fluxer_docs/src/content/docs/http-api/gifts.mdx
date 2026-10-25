@@ -100,7 +100,6 @@ A gift adds its duration after any premium the account already has and pushes ba
 | 400 | [error response](/http-api/#error-response) | `STRIPE_ERROR` when the payment provider rejects the change to an active subscription. The code stays unredeemed |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY` when the account has lifetime premium |
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_VERIFICATION_REQUIRED` for an unclaimed account |
-| 403 | [error response](/http-api/#error-response) | `PREMIUM_PURCHASE_BLOCKED` when purchases are blocked for the account |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_GIFT_CODE` when the code does not exist or was revoked |
 
 The rate limit is 10 requests per minute, on the `gift:redeem` bucket.
