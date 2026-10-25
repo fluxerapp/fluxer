@@ -202,13 +202,7 @@ func (p *Project) startNamed(ctx context.Context, c *conn, services []string) er
 	if err != nil {
 		return err
 	}
-	labelled := true
-	for _, ct := range containers {
-		if slices.Contains(services, ct.Service) && ct.Labels[api.ConfigHashLabel] == "" {
-			labelled = false
-		}
-	}
-	if labelled {
+	if composeCanStart(containers, services) {
 		return p.wrap("start", c.svc.Start(ctx, p.Name, api.StartOptions{AttachTo: services}))
 	}
 	cli := c.cli.Client()
@@ -221,6 +215,33 @@ func (p *Project) startNamed(ctx context.Context, c *conn, services []string) er
 		}
 	}
 	return nil
+}
+
+func composeCanStart(containers []Container, services []string) bool {
+	byService := make(map[string]Container, len(containers))
+	for _, ct := range containers {
+		byService[ct.Service] = ct
+	}
+	pending := slices.Clone(services)
+	seen := map[string]bool{}
+	for len(pending) > 0 {
+		name := pending[len(pending)-1]
+		pending = pending[:len(pending)-1]
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		ct, ok := byService[name]
+		if !ok || ct.Labels[api.ConfigHashLabel] == "" {
+			return false
+		}
+		for dep := range strings.SplitSeq(ct.Labels[api.DependenciesLabel], ",") {
+			if dep, _, _ = strings.Cut(dep, ":"); dep != "" {
+				pending = append(pending, dep)
+			}
+		}
+	}
+	return true
 }
 
 func (p *Project) present(ctx context.Context, op string, services []string) error {
