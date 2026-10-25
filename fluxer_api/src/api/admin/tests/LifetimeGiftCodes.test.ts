@@ -3,6 +3,7 @@
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
+import {setCachedEmailDeliveryState} from '@app/api/instance/AccountsConfigCache';
 import {getCachedInstancePremiumMode, setCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {
 	getInstanceConfigRepository,
@@ -14,7 +15,9 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {fetchUserMe} from '@app/api/user/tests/UserTestUtils';
+import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
+import {AccountTiers} from '@fluxer/constants/src/AccountTierConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -82,6 +85,26 @@ describe('lifetime gift codes on a self-hosted instance', () => {
 		await createBuilder(harness, account.token).post(`/gifts/${code}/redeem`).expect(HTTP_STATUS.NO_CONTENT).execute();
 		const {json: me} = await fetchUserMe(harness, account.token);
 		expect(me.premium_type).toBe(UserPremiumTypes.LIFETIME);
+	});
+
+	it('lets an account with an unconfirmed email redeem a code', async () => {
+		setCachedEmailDeliveryState(EmailDeliveryStates.ON);
+		try {
+			const code = await generate({duration_type: 'months', duration_quantity: 1});
+			const account = await createTestAccount(harness);
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+			await getUserRepository().patchUpsert(user.id, {email_verified: false}, user.toRow());
+			const {json: before} = await fetchUserMe(harness, account.token);
+			expect(before.account_tier).toBe(AccountTiers.UNVERIFIED);
+			await createBuilder(harness, account.token)
+				.post(`/gifts/${code}/redeem`)
+				.expect(HTTP_STATUS.NO_CONTENT)
+				.execute();
+			const {json: me} = await fetchUserMe(harness, account.token);
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+		} finally {
+			setCachedEmailDeliveryState(null);
+		}
 	});
 
 	it('grants lifetime premium without taking a visionary number', async () => {

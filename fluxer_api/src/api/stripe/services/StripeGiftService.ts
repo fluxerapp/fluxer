@@ -17,17 +17,17 @@ import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {isPastStripeTrialLimit} from '@app/api/stripe/StripeGiftTrialMetadata';
 import {mirrorSubscription} from '@app/api/stripe/StripeMirror';
-import {assertUserCanPurchase} from '@app/api/stripe/services/StripeCheckoutService';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {GiftTrialExtension, StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import {bumpGiftInventory} from '@app/api/user/GiftInventory';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {CannotRedeemPlutoniumWithVisionaryError} from '@fluxer/errors/src/domains/payment/CannotRedeemPlutoniumWithVisionaryError';
 import {GiftCodeAlreadyRedeemedError} from '@fluxer/errors/src/domains/payment/GiftCodeAlreadyRedeemedError';
 import {NoActiveSubscriptionError} from '@fluxer/errors/src/domains/payment/NoActiveSubscriptionError';
+import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeGiftRedemptionInProgressError} from '@fluxer/errors/src/domains/payment/StripeGiftRedemptionInProgressError';
 import {UnknownGiftCodeError} from '@fluxer/errors/src/domains/payment/UnknownGiftCodeError';
@@ -124,8 +124,9 @@ export class StripeGiftService {
 				},
 				'Loaded redeemer state for gift redemption',
 			);
-			assertUserCanPurchase(user, {needsReceiptEmail: false});
-			Logger.debug({userId, giftCode: code}, 'Redeemer passed gift purchase validation');
+			if (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) {
+				throw new PremiumPurchaseBlockedError('purchase_disabled');
+			}
 			if (user.premiumType === UserPremiumTypes.LIFETIME) {
 				Logger.debug({userId, giftCode: code}, 'Rejecting redemption for lifetime user');
 				throw new CannotRedeemPlutoniumWithVisionaryError((await getBillingBranding()).premiumName);
