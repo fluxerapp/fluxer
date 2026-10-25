@@ -78,8 +78,12 @@ func runHealth(ctx context.Context, e *Env) Result {
 	if err != nil || !slices.ContainsFunc(states, func(s ServiceState) bool { return s.Name == "edge" && s.Running() }) {
 		return skip("")
 	}
-	if e.mode() == modeProxy && !e.edgePublished() {
-		if _, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/_health"); err != nil {
+	if !e.edgePublished() {
+		probe := "http://127.0.0.1:8088/_edge"
+		if e.mode() == modeProxy {
+			probe = "http://127.0.0.1:8080/_health"
+		}
+		if _, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "/dev/null", probe); err != nil {
 			return fail("Fluxer doesn't answer inside the edge container.", "Run rexctl logs edge to see why.")
 		}
 		return pass("Fluxer answers inside the edge container.")
