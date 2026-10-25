@@ -1,0 +1,13 @@
+{
+	"id": "longlong001",
+	"title": "Ten Hour Loop",
+	"uploader": "Looper",
+	"duration": 36000,
+	"thumbnails": [
+		{"url": "https://i.ytimg.com/vi/longlong001/default.jpg"},
+		{"url": "https://i.ytimg.com/vi/longlong001/hq720.jpg"}
+	],
+	"webpage_url": "https://www.youtube.com/watch?v=longlong001",
+	"is_live": false,
+	"live_status": "not_live"
+}
