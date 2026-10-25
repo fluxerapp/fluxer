@@ -369,6 +369,49 @@ describe('ChannelSession', () => {
 		expect(room.disconnect).toHaveBeenCalled();
 	});
 
+	it('flapping room (reconnect succeeds then drops) ends with room-lost', async () => {
+		const {session, room, voice, card, ended} = setup();
+		room.reconnect.mockImplementation(async () => {
+			setTimeout(() => room.emit('disconnected'), 10);
+		});
+		await session.start();
+		room.emit('disconnected');
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(room.reconnect).toHaveBeenCalledTimes(5);
+		expect(voice.refresh).toHaveBeenCalledTimes(5);
+		expect(card.notice).toHaveBeenCalledWith('Lost the voice connection.');
+		expect(ended).toEqual(['room-lost']);
+	});
+
+	it('a room lost again during its reconnect counts toward the cap and backs off', async () => {
+		const {session, room, voice, ended} = setup();
+		room.reconnect.mockImplementation(async () => {
+			room.emit('disconnected');
+		});
+		await session.start();
+		room.emit('disconnected');
+		await flush();
+		expect(voice.refresh).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(999);
+		expect(voice.refresh).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(1);
+		expect(voice.refresh).toHaveBeenCalledTimes(2);
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(voice.refresh).toHaveBeenCalledTimes(5);
+		expect(ended).toEqual(['room-lost']);
+	});
+
+	it('rejoin attempts spread over more than 2 minutes do not end the session', async () => {
+		const {session, room, voice, ended} = setup({idleMs: 3_600_000});
+		await session.start();
+		for (let i = 0; i < 8; i++) {
+			room.emit('disconnected');
+			await vi.advanceTimersByTimeAsync(40_000);
+		}
+		expect(voice.refresh).toHaveBeenCalledTimes(8);
+		expect(ended).toEqual([]);
+	});
+
 	it('end during an in-flight reconnect leaves no room connected', async () => {
 		const {session, room} = setup();
 		const reconnecting = deferred<void>();

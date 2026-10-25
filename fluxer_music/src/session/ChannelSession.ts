@@ -43,7 +43,7 @@ export interface SessionOptions {
 
 const MAX_STATE_UPCOMING = 25;
 const LOOKAHEAD = 3;
-const REJOIN_MAX_FAILURES = 5;
+const REJOIN_MAX_ATTEMPTS = 5;
 const REJOIN_WINDOW_MS = 120_000;
 const REJOIN_DELAY_MIN_MS = 1_000;
 const REJOIN_DELAY_MAX_MS = 15_000;
@@ -86,7 +86,7 @@ export class ChannelSession extends EventEmitter {
 	private rejoining = false;
 	private disconnectedAgain = false;
 	private pausedForRejoin = false;
-	private rejoinFailures: Array<number> = [];
+	private rejoinAttempts: Array<number> = [];
 	private isEnded = false;
 	private endPromise: Promise<void> | null = null;
 
@@ -502,10 +502,26 @@ export class ChannelSession extends EventEmitter {
 		void this.rejoin();
 	}
 
+	/**
+	 * Rejoins until the room is stable. Every attempt, successful or not, counts toward the cap:
+	 * once the 2-minute window holds REJOIN_MAX_ATTEMPTS and the room is lost again, the session ends.
+	 */
 	private async rejoin(): Promise<void> {
 		this.rejoining = true;
 		try {
 			while (!this.ended) {
+				this.pruneRejoinAttempts();
+				const recent = this.rejoinAttempts.length;
+				if (recent >= REJOIN_MAX_ATTEMPTS) {
+					this.notice(ROOM_LOST_NOTICE);
+					void this.end('room-lost');
+					return;
+				}
+				if (recent > 0) {
+					await this.wait(Math.min(REJOIN_DELAY_MIN_MS * 2 ** (recent - 1), REJOIN_DELAY_MAX_MS));
+					if (this.ended) return;
+				}
+				this.rejoinAttempts.push(this.deps.now());
 				this.disconnectedAgain = false;
 				try {
 					const connectionId = this.conn;
@@ -520,16 +536,6 @@ export class ChannelSession extends EventEmitter {
 				} catch (err) {
 					if (this.ended) return;
 					console.error(`voice rejoin failed: ${describeError(err)}`);
-					const now = this.deps.now();
-					this.rejoinFailures = this.rejoinFailures.filter((t) => now - t < REJOIN_WINDOW_MS);
-					this.rejoinFailures.push(now);
-					if (this.rejoinFailures.length >= REJOIN_MAX_FAILURES) {
-						this.notice(ROOM_LOST_NOTICE);
-						void this.end('room-lost');
-						return;
-					}
-					const attempt = this.rejoinFailures.length;
-					await this.wait(Math.min(REJOIN_DELAY_MIN_MS * 2 ** (attempt - 1), REJOIN_DELAY_MAX_MS));
 				}
 			}
 			if (this.ended) return;
@@ -541,6 +547,11 @@ export class ChannelSession extends EventEmitter {
 		} finally {
 			this.rejoining = false;
 		}
+	}
+
+	private pruneRejoinAttempts(): void {
+		const now = this.deps.now();
+		this.rejoinAttempts = this.rejoinAttempts.filter((t) => now - t < REJOIN_WINDOW_MS);
 	}
 
 	private wait(ms: number): Promise<void> {
