@@ -11,6 +11,7 @@ packages:
   - fluxer_desktop
   - fluxer_admin
   - fluxer_docs
+  - fluxer_music
 
 allowBuilds:
   '@bufbuild/buf': true
