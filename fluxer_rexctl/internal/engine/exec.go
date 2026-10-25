@@ -281,7 +281,7 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 				api.OneoffLabel:  "True",
 			},
 		},
-		HostConfig: &container.HostConfig{Mounts: mounts, NetworkMode: "none"},
+		HostConfig: &container.HostConfig{Mounts: mounts, NetworkMode: "none", LogConfig: container.LogConfig{Type: "none"}},
 		Name:       p.Name + "-rexctl-helper-" + randomID(),
 	})
 	if err != nil {
