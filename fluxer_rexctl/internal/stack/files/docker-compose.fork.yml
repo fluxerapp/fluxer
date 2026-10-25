@@ -21,5 +21,13 @@ services:
     healthcheck: {test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8099/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"], interval: 30s, timeout: 5s, retries: 3, start_period: 120s}
     deploy: {resources: {limits: {memory: 768mb}}}
 
+  app-proxy:
+    image: fluxer-fork/app-proxy:main
+    pull_policy: build
+    build:
+      context: ../../../..
+      dockerfile: fluxer_app_proxy/Dockerfile
+      args: {FLUXER_SELF_HOSTED: "true", BUNDLE_LOCAL_ASSETS: "true", PUBLIC_ASSET_BASE_URL: ""}
+
 volumes:
   music-ytdlp:
