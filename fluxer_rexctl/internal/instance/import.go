@@ -11,6 +11,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	"go.yaml.in/yaml/v4"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -539,6 +541,95 @@ func RetiredService(dir string) string {
 		return name
 	}
 	return ""
+}
+
+func DropMergedShards(dir string) ([]string, error) {
+	path := filepath.Join(dir, CustomCompose)
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	out, dropped := withoutMergedShards(data)
+	if len(dropped) == 0 {
+		return nil, nil
+	}
+	return dropped, envfile.WriteFileAtomic(path, out, false)
+}
+
+func withoutMergedShards(data []byte) ([]byte, []string) {
+	var doc yaml.Node
+	var before map[string]any
+	if yaml.Unmarshal(data, &doc) != nil || yaml.Unmarshal(data, &before) != nil || len(doc.Content) == 0 {
+		return nil, nil
+	}
+	root := doc.Content[0]
+	if root.Kind != yaml.MappingNode {
+		return nil, nil
+	}
+	var services *yaml.Node
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		if root.Content[i].Value == "services" {
+			services = root.Content[i+1]
+		}
+	}
+	decoded, _ := before["services"].(map[string]any)
+	if services == nil || services.Kind != yaml.MappingNode || services.Style&yaml.FlowStyle != 0 || decoded == nil {
+		return nil, nil
+	}
+	lines := strings.Split(string(data), "\n")
+	remove := make([]bool, len(lines))
+	var dropped []string
+	for i := 0; i+1 < len(services.Content); i += 2 {
+		key := services.Content[i]
+		base, ok := strings.CutSuffix(key.Value, "-shard")
+		if !ok || !slices.Contains(stack.Services, base) || slices.Contains(stack.Services, key.Value) {
+			continue
+		}
+		shard, have := decoded[key.Value]
+		if want, ok := decoded[base]; !have || !ok || !reflect.DeepEqual(shard, want) {
+			continue
+		}
+		start, end := key.Line-1, key.Line
+		for end < len(lines) && (strings.TrimSpace(lines[end]) == "" || indent(lines[end]) >= key.Column) {
+			end++
+		}
+		for end > start+1 && strings.TrimSpace(lines[end-1]) == "" {
+			end--
+		}
+		for j := start; j < end; j++ {
+			remove[j] = true
+		}
+		dropped = append(dropped, key.Value)
+	}
+	if len(dropped) == 0 {
+		return nil, nil
+	}
+	kept := make([]string, 0, len(lines))
+	for i, l := range lines {
+		if !remove[i] {
+			kept = append(kept, l)
+		}
+	}
+	out := []byte(strings.Join(kept, "\n"))
+	var after map[string]any
+	if yaml.Unmarshal(out, &after) != nil {
+		return nil, nil
+	}
+	for _, name := range dropped {
+		delete(decoded, name)
+	}
+	if !reflect.DeepEqual(before, after) {
+		return nil, nil
+	}
+	slices.Sort(dropped)
+	return out, dropped
+}
+
+func indent(line string) int {
+	return len(line) - len(strings.TrimLeft(line, " "))
 }
 
 func readCustom(dir string) []byte {

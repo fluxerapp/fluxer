@@ -373,6 +373,18 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		clearUpgrade(inst)
 		return ui.Wrap(err, "This rexctl has no Fluxer release built in.", "Download rexctl again, then run rexctl upgrade.")
 	}
+	merged, err := instance.DropMergedShards(inst.Dir)
+	if err != nil {
+		clearUpgrade(inst)
+		return ui.Wrap(err, fmt.Sprintf("Couldn't update %s.", instance.CustomCompose), "Check that you can write to it, then run rexctl upgrade again.")
+	}
+	if len(merged) > 0 {
+		bases := make([]string, len(merged))
+		for i, name := range merged {
+			bases[i] = strings.TrimSuffix(name, "-shard")
+		}
+		app.UI.Info("Removed %s from %s. Fluxer %s runs them inside %s, which already have the same changes.", ui.JoinAnd(merged), instance.CustomCompose, toShort, ui.JoinAnd(bases))
+	}
 	if retired := instance.RetiredService(inst.Dir); retired != "" {
 		clearUpgrade(inst)
 		return ui.Refused(fmt.Sprintf("%s changes %s, which Fluxer %s no longer runs.", instance.CustomCompose, retired, toShort), retiredFix(retired, fromShort))
