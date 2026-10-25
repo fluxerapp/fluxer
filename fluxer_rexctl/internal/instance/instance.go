@@ -41,7 +41,6 @@ const (
 	BackupsDir     = "backups"
 	CertsDir       = "certs"
 	CaddyDropInDir = "caddy.d"
-	KeepReleases   = 3
 
 	DefaultKeepBackups = 3
 	KeepAllBackups     = -1
