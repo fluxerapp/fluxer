@@ -75,14 +75,17 @@ export function renderCard(state: MusicState, now: number): Embed {
 			lines.push(`${i + 1}. ${t.title}`);
 		});
 	}
-	let footer = `${state.queueLength} in queue · loop ${state.loop}`;
-	if (state.lastAction) footer += ` · ${actionText(state.lastAction, state)}`;
+	// Footers are plain text, so the action line (which may mention someone) goes in the description.
+	if (state.lastAction) {
+		if (lines.length > 0) lines.push('');
+		lines.push(actionText(state.lastAction, state));
+	}
 
 	const embed: Embed = {title: current?.title ?? 'Nothing playing'};
 	if (current) embed.url = current.url;
 	if (current?.thumbnailUrl) embed.thumbnail = {url: current.thumbnailUrl};
 	if (lines.length > 0) embed.description = lines.join('\n');
-	embed.footer = {text: footer};
+	embed.footer = {text: `${state.queueLength} in queue · loop ${state.loop}`};
 	return embed;
 }
 
@@ -90,7 +93,10 @@ function describeError(err: unknown): string {
 	return err instanceof Error ? err.message : String(err);
 }
 
-/** The "now playing" message: edited on change (at most once per minEditMs) and every refreshMs while playing. */
+/**
+ * The "now playing" message: edited on change (at most once per minEditMs) and every refreshMs while playing.
+ * Every HTTP call for the card runs on one queue, so "Music stopped." is always the last write.
+ */
 export class LiveCard {
 	private readonly minEditMs: number;
 	private readonly refreshMs: number;
@@ -102,6 +108,7 @@ export class LiveCard {
 	private editTimer: ReturnType<typeof setTimeout> | null = null;
 	private refreshTimer: ReturnType<typeof setInterval> | null = null;
 	private finished = false;
+	private queue: Promise<unknown> = Promise.resolve();
 
 	constructor(
 		private readonly channelId: string,
@@ -132,9 +139,11 @@ export class LiveCard {
 		this.id = null;
 		this.clearRefreshTimer();
 		if (old !== null) {
-			await this.rest
-				.deleteMessage(this.channelId, old)
-				.catch((err) => console.error(`card delete failed: ${describeError(err)}`));
+			await this.enqueue(() =>
+				this.rest
+					.deleteMessage(this.channelId, old)
+					.catch((err) => console.error(`card delete failed: ${describeError(err)}`)),
+			);
 		}
 		this.clearEditTimer();
 		if (await this.post(state)) this.track(state);
@@ -142,19 +151,33 @@ export class LiveCard {
 
 	async notice(text: string): Promise<void> {
 		if (this.id === null) return;
-		await this.rest.sendMessage(this.channelId, {content: text});
+		await this.enqueue(() => this.rest.sendMessage(this.channelId, {content: text}));
 	}
 
 	async finish(): Promise<void> {
 		this.finished = true;
 		this.clearEditTimer();
 		this.clearRefreshTimer();
-		if (this.id === null) return;
-		await this.rest.editMessage(this.channelId, this.id, {content: STOPPED_TEXT, embeds: []});
+		await this.enqueue(async () => {
+			if (this.id === null) return;
+			await this.rest.editMessage(this.channelId, this.id, {content: STOPPED_TEXT, embeds: []});
+		});
+	}
+
+	/** Runs `fn` after every card call queued before it, whether those succeeded or not. */
+	private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+		const result = this.queue.then(fn);
+		this.queue = result.catch(() => {});
+		return result;
 	}
 
 	/** Sends the card; on failure logs and stays card-less. Returns whether a card exists. */
-	private async post(state: MusicState): Promise<boolean> {
+	private post(state: MusicState): Promise<boolean> {
+		return this.enqueue(() => this.send(state));
+	}
+
+	private async send(state: MusicState): Promise<boolean> {
+		if (this.finished) return false;
 		let id: string;
 		try {
 			({id} = await this.rest.sendMessage(this.channelId, {embeds: [renderCard(state, this.now())]}));
@@ -200,10 +223,15 @@ export class LiveCard {
 	private edit(): void {
 		if (this.finished || this.id === null || this.latest === null) return;
 		this.lastEditAt = this.now();
-		const embed = renderCard(this.latest, this.lastEditAt);
-		this.rest
-			.editMessage(this.channelId, this.id, {embeds: [embed]})
-			.catch((err) => console.error(`card edit failed: ${describeError(err)}`));
+		void this.enqueue(async () => {
+			// Re-checked here: finish() or repost() may have run while this edit waited its turn.
+			if (this.finished || this.id === null || this.latest === null) return;
+			const id = this.id;
+			const embed = renderCard(this.latest, this.now());
+			await this.rest
+				.editMessage(this.channelId, id, {embeds: [embed]})
+				.catch((err) => console.error(`card edit failed: ${describeError(err)}`));
+		});
 	}
 
 	private clearEditTimer(): void {

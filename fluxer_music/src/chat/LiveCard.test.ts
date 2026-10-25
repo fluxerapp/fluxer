@@ -54,9 +54,11 @@ describe('renderCard', () => {
 			2. Song 3
 			3. Song 4
 			4. Song 5
-			5. Song 6",
+			5. Song 6
+
+			⏭ <@42> skipped Old",
 			  "footer": {
-			    "text": "6 in queue · loop queue · ⏭ <@42> skipped Old",
+			    "text": "6 in queue · loop queue",
 			  },
 			  "thumbnail": {
 			    "url": "https://img/1.jpg",
@@ -75,9 +77,26 @@ describe('renderCard', () => {
 
 	it('describes failures', () => {
 		const at = (kind: 'failed' | 'unmatched') =>
-			renderCard(state({lastAction: {kind, by: null, at: 0, trackTitle: 'Song'}}), 0).footer?.text;
-		expect(at('failed')).toBe("2 in queue · loop off · ⚠ couldn't play Song");
-		expect(at('unmatched')).toBe('2 in queue · loop off · ⚠ no YouTube match for Song');
+			renderCard(state({lastAction: {kind, by: null, at: 0, trackTitle: 'Song'}}), 0)
+				.description?.split('\n')
+				.at(-1);
+		expect(at('failed')).toBe("⚠ couldn't play Song");
+		expect(at('unmatched')).toBe('⚠ no YouTube match for Song');
+	});
+
+	it('puts the last action in the description when idle', () => {
+		const embed = renderCard(
+			state({
+				status: 'idle',
+				current: null,
+				upcoming: [],
+				queueLength: 0,
+				lastAction: {kind: 'clear', by: '7', at: 0, trackTitle: null},
+			}),
+			0,
+		);
+		expect(embed.description).toBe('🧹 <@7> cleared the queue');
+		expect(embed.footer?.text).toBe('0 in queue · loop off');
 	});
 });
 
@@ -124,6 +143,7 @@ describe('LiveCard', () => {
 		await card.start(state({status: 'paused'}));
 		await advance(5_000);
 		card.update(state({status: 'paused', loop: 'track'}));
+		await advance(0);
 		expect(rest.editMessage).toHaveBeenCalledTimes(1);
 		card.update(state({status: 'paused', loop: 'queue'}));
 		card.update(state({status: 'paused', loop: 'off', queueLength: 9}));
@@ -198,6 +218,58 @@ describe('LiveCard', () => {
 		await card.finish();
 		expect(rest.editMessage).not.toHaveBeenCalled();
 		log.mockRestore();
+	});
+
+	it('finish is the last write even while an edit is in flight', async () => {
+		const card = make();
+		await card.start(state({status: 'paused'}));
+		let release = () => {};
+		rest.editMessage.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					release = resolve;
+				}),
+		);
+		await advance(5_000);
+		card.update(state({status: 'paused', loop: 'track'}));
+		await advance(0);
+		expect(rest.editMessage).toHaveBeenCalledTimes(1);
+		const finished = card.finish();
+		await advance(0);
+		expect(rest.editMessage).toHaveBeenCalledTimes(1);
+		release();
+		await finished;
+		expect(rest.editMessage).toHaveBeenCalledTimes(2);
+		expect(rest.editMessage.mock.calls.at(-1)).toEqual(['c1', 'm1', {content: 'Music stopped.', embeds: []}]);
+	});
+
+	it('finish waits for a card that is still being posted', async () => {
+		let release = (_v: {id: string}) => {};
+		rest.sendMessage.mockImplementationOnce(
+			() =>
+				new Promise<{id: string}>((resolve) => {
+					release = resolve;
+				}),
+		);
+		const card = make();
+		const started = card.start(state());
+		await advance(0);
+		expect(rest.sendMessage).toHaveBeenCalledTimes(1);
+		const finished = card.finish();
+		release({id: 'm1'});
+		await started;
+		await finished;
+		expect(rest.editMessage.mock.calls).toEqual([['c1', 'm1', {content: 'Music stopped.', embeds: []}]]);
+	});
+
+	it('a card not yet sent when finish is called is never sent', async () => {
+		const card = make();
+		const started = card.start(state());
+		const finished = card.finish();
+		await started;
+		await finished;
+		expect(rest.sendMessage).not.toHaveBeenCalled();
+		expect(rest.editMessage).not.toHaveBeenCalled();
 	});
 
 	it('finish edits to Music stopped and stops timers', async () => {
