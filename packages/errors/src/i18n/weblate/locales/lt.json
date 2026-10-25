@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Šio el. pašto domeno negalima naudoti prisijungimui per SSO.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nepavyko gauti SSO naudotojo duomenų. Pabandyk dar kartą.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nepavyko nuskaityti SSO teikėjo atsakymo. Pabandyk dar kartą.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Iš jūsų tinklo per daug bandymų prisijungti. Bandykite dar kartą po {minutes} min.",
+	"auth_and_oauth.handoff_code_already_used": "Šis kodas jau panaudotas. Pradėkite naują prisijungimą programėlėje.",
 	"auth_and_oauth.handoff_code_expired": "Perdavimo kodas nebegalioja.",
 	"auth_and_oauth.handoff_code_invalid": "Negaliojantis perdavimo kodas.",
 	"auth_and_oauth.invalid_code": "Negaliojantis kodas.",

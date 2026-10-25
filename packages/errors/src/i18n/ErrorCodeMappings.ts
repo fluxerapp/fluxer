@@ -134,6 +134,8 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.GONE]: 'http.gone',
 	[APIErrorCodes.GUILD_TEMPLATE_INVALID]: 'channels_and_guilds.guild_template_invalid',
 	[APIErrorCodes.GUILD_VERIFICATION_REQUIRED]: 'account.guild_verification_required',
+	[APIErrorCodes.HANDOFF_ATTEMPTS_EXCEEDED]: 'auth_and_oauth.handoff_attempts_exceeded',
+	[APIErrorCodes.HANDOFF_CODE_ALREADY_USED]: 'auth_and_oauth.handoff_code_already_used',
 	[APIErrorCodes.HANDOFF_CODE_EXPIRED]: 'auth_and_oauth.handoff_code_expired',
 	[APIErrorCodes.HARVEST_EXPIRED]: 'harvest.expired',
 	[APIErrorCodes.HARVEST_FAILED]: 'harvest.failed',

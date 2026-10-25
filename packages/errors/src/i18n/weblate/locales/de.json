@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Diese E-Mail-Domain ist für Single Sign-on nicht zugelassen.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Wir konnten deine SSO-Benutzerinformationen nicht abrufen. Bitte versuch es erneut.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Wir konnten die Antwort deines SSO-Anbieters nicht lesen. Versuche es bitte erneut.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Zu viele Anmeldeversuche aus deinem Netzwerk. Versuche es in {minutes, plural, one {# Minute} other {# Minuten}} erneut.",
+	"auth_and_oauth.handoff_code_already_used": "Dieser Code wurde bereits verwendet. Starte eine neue Anmeldung in der App.",
 	"auth_and_oauth.handoff_code_expired": "Handoff-Code abgelaufen.",
 	"auth_and_oauth.handoff_code_invalid": "Ungültiger Handoff-Code.",
 	"auth_and_oauth.invalid_code": "Ungültiger Code.",

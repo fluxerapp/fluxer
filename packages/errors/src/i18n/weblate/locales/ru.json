@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Этот почтовый домен не разрешён для SSO.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Не удалось получить данные пользователя SSO. Попробуй ещё раз.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Не удалось прочитать ответ от твоего провайдера SSO. Попробуй ещё раз.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Слишком много попыток входа из вашей сети. Попробуйте снова через {minutes} мин.",
+	"auth_and_oauth.handoff_code_already_used": "Этот код уже использован. Начните новый вход в приложении.",
 	"auth_and_oauth.handoff_code_expired": "Срок действия кода входа истёк.",
 	"auth_and_oauth.handoff_code_invalid": "Недействительный код входа.",
 	"auth_and_oauth.invalid_code": "Недействительный код.",

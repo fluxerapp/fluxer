@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Ce domaine d'e-mail n'est pas autorisé pour l'authentification unique.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Impossible de récupérer vos informations d’utilisateur SSO. Réessayez.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Impossible de lire la réponse de votre fournisseur SSO. Réessayez.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Trop de tentatives de connexion depuis votre réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+	"auth_and_oauth.handoff_code_already_used": "Ce code a déjà été utilisé. Lancez une nouvelle connexion depuis l'application.",
 	"auth_and_oauth.handoff_code_expired": "Le code de transfert a expiré.",
 	"auth_and_oauth.handoff_code_invalid": "Code de transfert non valide.",
 	"auth_and_oauth.invalid_code": "Code non valide.",

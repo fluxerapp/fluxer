@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Този имейл домейн не е позволен за SSO.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Не успяхме да извлечем информацията за SSO потребителя ти. Опитай отново.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Не успяхме да прочетем отговора от твоя SSO доставчик. Опитай отново.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Твърде много опити за вход от твоята мрежа. Опитай отново след {minutes} мин.",
+	"auth_and_oauth.handoff_code_already_used": "Този код вече е използван. Започни нов вход от приложението.",
 	"auth_and_oauth.handoff_code_expired": "Кодът за прехвърляне е изтекъл.",
 	"auth_and_oauth.handoff_code_invalid": "Невалиден код за прехвърляне.",
 	"auth_and_oauth.invalid_code": "Невалиден код.",

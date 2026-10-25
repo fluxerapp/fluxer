@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "ไม่อนุญาตให้ใช้โดเมนอีเมลนี้สำหรับการเข้าสู่ระบบแบบ SSO",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "ไม่สามารถดึงข้อมูลผู้ใช้ SSO ของคุณได้ โปรดลองอีกครั้ง",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "ไม่สามารถอ่านการตอบกลับจากผู้ให้บริการ SSO ของคุณได้ โปรดลองอีกครั้ง",
+	"auth_and_oauth.handoff_attempts_exceeded": "มีการพยายามลงชื่อเข้าใช้จากเครือข่ายของคุณมากเกินไป ลองอีกครั้งใน {minutes} นาที",
+	"auth_and_oauth.handoff_code_already_used": "รหัสนี้ถูกใช้ไปแล้ว เริ่มการลงชื่อเข้าใช้ใหม่จากแอป",
 	"auth_and_oauth.handoff_code_expired": "รหัส handoff หมดอายุแล้ว",
 	"auth_and_oauth.handoff_code_invalid": "รหัส handoff ไม่ถูกต้อง",
 	"auth_and_oauth.invalid_code": "รหัสไม่ถูกต้อง",

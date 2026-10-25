@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "此電子郵件網域不允許用於單一登入。",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "無法取得你的 SSO 使用者資訊。請再試一次。",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "無法讀取來自 SSO 提供者的回應。請再試一次。",
+	"auth_and_oauth.handoff_attempts_exceeded": "你的網路登入嘗試次數過多。請在 {minutes} 分鐘後再試一次。",
+	"auth_and_oauth.handoff_code_already_used": "此代碼已被使用。請從應用程式重新開始登入。",
 	"auth_and_oauth.handoff_code_expired": "交接碼已過期。",
 	"auth_and_oauth.handoff_code_invalid": "交接碼無效。",
 	"auth_and_oauth.invalid_code": "無效的代碼。",

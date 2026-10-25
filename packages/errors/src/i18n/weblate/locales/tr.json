@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Tek oturum açma için bu e-posta alan adına izin verilmiyor.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "SSO kullanıcı bilgilerini alamadık. Tekrar dene.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "SSO sağlayıcının yanıtını okuyamadık. Tekrar dene.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Ağınızdan çok fazla giriş denemesi yapıldı. {minutes} dakika sonra tekrar deneyin.",
+	"auth_and_oauth.handoff_code_already_used": "Bu kod zaten kullanıldı. Uygulamadan yeni bir giriş başlatın.",
 	"auth_and_oauth.handoff_code_expired": "Aktarım kodunun süresi doldu.",
 	"auth_and_oauth.handoff_code_invalid": "Geçersiz aktarım kodu.",
 	"auth_and_oauth.invalid_code": "Geçersiz kod.",

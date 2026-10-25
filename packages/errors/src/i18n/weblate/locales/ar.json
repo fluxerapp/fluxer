@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "نطاق البريد الإلكتروني هذا غير مسموح به لتسجيل الدخول الموحد.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "لم نتمكن من جلب معلومات مستخدم SSO. حاول مجددًا.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "لم نتمكن من قراءة الاستجابة من مزوّد SSO. حاول مجددًا.",
+	"auth_and_oauth.handoff_attempts_exceeded": "محاولات تسجيل دخول كثيرة جدًا من شبكتك. حاول مرة أخرى بعد {minutes} دقيقة.",
+	"auth_and_oauth.handoff_code_already_used": "تم استخدام هذا الرمز بالفعل. ابدأ تسجيل دخول جديدًا من التطبيق.",
 	"auth_and_oauth.handoff_code_expired": "انتهت صلاحية رمز التحويل.",
 	"auth_and_oauth.handoff_code_invalid": "رمز تحويل غير صالح.",
 	"auth_and_oauth.invalid_code": "رمز غير صالح.",

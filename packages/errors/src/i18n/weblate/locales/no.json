@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Dette e-postdomenet er ikke tillatt for enkeltpålogging.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Vi kunne ikke hente SSO-brukerinformasjonen din. Prøv igjen.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Vi kunne ikke lese svaret fra SSO-leverandøren din. Prøv igjen.",
+	"auth_and_oauth.handoff_attempts_exceeded": "For mange påloggingsforsøk fra nettverket ditt. Prøv igjen om {minutes, plural, one {# minutt} other {# minutter}}.",
+	"auth_and_oauth.handoff_code_already_used": "Denne koden er allerede brukt. Start en ny pålogging fra appen.",
 	"auth_and_oauth.handoff_code_expired": "Overføringskoden er utløpt.",
 	"auth_and_oauth.handoff_code_invalid": "Ugyldig overføringskode.",
 	"auth_and_oauth.invalid_code": "Ugyldig kode.",

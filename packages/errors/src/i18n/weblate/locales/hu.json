@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Ez az e-mail-domain nem használható az egységes bejelentkezéshez (SSO).",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nem sikerült lekérni az SSO-felhasználói adataidat. Próbáld újra.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nem sikerült feldolgozni az SSO-szolgáltatód válaszát. Próbáld újra.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Túl sok bejelentkezési kísérlet érkezett a hálózatodról. Próbáld újra {minutes} perc múlva.",
+	"auth_and_oauth.handoff_code_already_used": "Ezt a kódot már felhasználták. Indíts új bejelentkezést az alkalmazásból.",
 	"auth_and_oauth.handoff_code_expired": "Az átadási kód lejárt.",
 	"auth_and_oauth.handoff_code_invalid": "Az átadási kód érvénytelen.",
 	"auth_and_oauth.invalid_code": "A kód érvénytelen.",

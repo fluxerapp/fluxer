@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Цей домен електронної пошти не дозволено для єдиного входу (SSO).",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Не вдалося отримати твої дані користувача SSO. Спробуй ще раз.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Не вдалося прочитати відповідь від твого SSO-провайдера. Спробуй ще раз.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Забагато спроб входу з вашої мережі. Спробуйте знову через {minutes} хв.",
+	"auth_and_oauth.handoff_code_already_used": "Цей код уже використано. Почніть новий вхід у застосунку.",
 	"auth_and_oauth.handoff_code_expired": "Термін дії коду передачі закінчився.",
 	"auth_and_oauth.handoff_code_invalid": "Недійсний код передачі.",
 	"auth_and_oauth.invalid_code": "Недійсний код.",

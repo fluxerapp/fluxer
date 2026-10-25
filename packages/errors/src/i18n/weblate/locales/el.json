@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Αυτός ο τομέας email δεν επιτρέπεται για ενιαία σύνδεση (SSO).",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Δεν μπορέσαμε να ανακτήσουμε τα στοιχεία χρήστη SSO. Δοκίμασε ξανά.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Δεν μπορέσαμε να διαβάσουμε την απάντηση από τον πάροχο SSO. Δοκίμασε ξανά.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Πάρα πολλές προσπάθειες σύνδεσης από το δίκτυό σου. Δοκίμασε ξανά σε {minutes, plural, one {# λεπτό} other {# λεπτά}}.",
+	"auth_and_oauth.handoff_code_already_used": "Αυτός ο κωδικός έχει ήδη χρησιμοποιηθεί. Ξεκίνα νέα σύνδεση από την εφαρμογή.",
 	"auth_and_oauth.handoff_code_expired": "Ο κωδικός handoff έχει λήξει.",
 	"auth_and_oauth.handoff_code_invalid": "Ο κωδικός handoff είναι μη έγκυρος.",
 	"auth_and_oauth.invalid_code": "Μη έγκυρος κωδικός.",

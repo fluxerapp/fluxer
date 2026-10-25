@@ -16503,6 +16503,11 @@ msgstr "تعذّر على Fluxer الاتصال بـ {host}."
 msgid "Fluxer couldn't connect to {host}. The server said: \"{error}\""
 msgstr "تعذّر على Fluxer الاتصال بـ {host}. رد الخادم: \"{error}\""
 
+#. Status shown in the desktop app when it stopped checking the browser sign-in because the instance could not be reached. instanceName is the server name, such as Fluxer. "Try again" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "Fluxer couldn't reach {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
+msgstr "تعذّر على Fluxer الوصول إلى {instanceName} للتحقق مما إذا كان متصفحك قد وافق على تسجيل الدخول هذا. تحقق من اتصالك، ثم اختر \"حاول مرة أخرى\"."
+
 #. Status shown when browser sign-in status polling gives up after repeated failures.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
@@ -18725,6 +18730,11 @@ msgstr "إذا كان شخص ما في خطر وشيك، فاتصل بخدمات
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "إذا طلب منك أحد لصق شيء ما هنا، فهذه عملية احتيال يمكن أن تمنحهم حق الوصول إلى حسابك في {productName}."
+
+#. Hint in the desktop app while it waits for the browser, for people with more than one Fluxer app installed. "Signing in on another device?" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
+msgstr "إذا فتح الرابط تطبيق Fluxer آخر، فاختر \"تسجيل الدخول على جهاز آخر؟\" واكتب الرمز في متصفحك بدلًا من ذلك."
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -36184,6 +36194,11 @@ msgstr "هذا الرمز غير صالح أو مستخدم بالفعل."
 msgid "This code was already redeemed."
 msgstr "تم تفعيل هذا الرمز بالفعل."
 
+#. Shown on the browser sign-in page when the code the user typed or opened was already used to approve a sign-in.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "This code was already used. Start a new sign-in from the app."
+msgstr "تم استخدام هذا الرمز بالفعل. ابدأ تسجيل دخول جديدًا من التطبيق."
+
 #. Warning under the theme color picker in the setup wizard when the chosen color is very dark.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the dark theme background, so buttons may be hard to see there."
@@ -37390,6 +37405,11 @@ msgstr "درجات اللون"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "تحويل درجات ألوان صور HDR إلى النطاق القياسي لتقليل ذروة السطوع."
+
+#. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+msgstr "محاولات كثيرة جدًا من شبكتك. حاول مرة أخرى بعد {minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx

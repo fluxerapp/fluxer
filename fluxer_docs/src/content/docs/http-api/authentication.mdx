@@ -1169,6 +1169,8 @@ Returns [handoff information](#handoff-information-object) so the signed-in devi
 | --- | --- | --- |
 | 200 | [handoff information](#handoff-information-object) object | The handoff was found or has expired |
 | 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed or was looked up 3 times |
+| 400 | [error response](/http-api/#error-response) | `HANDOFF_CODE_ALREADY_USED` when the same network already approved this code |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes, with `retry_after` |
 
 The rate limit is 10 requests per minute, on the `auth:handoff:info` bucket.
 
@@ -1194,7 +1196,9 @@ Approves a handoff and creates a session for the other device. Send the approvin
 | 200 | [handoff completion](#handoff-completion-object) object | The handoff was approved with `deep_link` |
 | 204 | empty | The handoff was approved with `code` |
 | 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` or `HANDOFF_CODE_EXPIRED` when the code is unknown or expired |
+| 400 | [error response](/http-api/#error-response) | `HANDOFF_CODE_ALREADY_USED` when the same network already approved this code |
 | 401 | [error response](/http-api/#error-response) | `INVALID_TOKEN` when the approving session is not active |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes, with `retry_after` |
 
 The rate limit is 10 requests per minute, on the `auth:handoff:complete` bucket.
 
@@ -1210,6 +1214,7 @@ Declines a handoff and returns 204, and the other device sees `denied`.
 | --- | --- | --- |
 | 204 | empty | The handoff was denied |
 | 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is unknown, expired or not looked up first |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes, with `retry_after` |
 
 The rate limit is 10 requests per minute, on the `auth:handoff:deny` bucket.
 
@@ -1224,7 +1229,8 @@ Returns the [handoff status](#handoff-status-object) without the token, and repo
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [handoff status](#handoff-status-object) object | The status was returned |
-| 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed or this IP address has 5 failed handoff attempts |
+| 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes, with `retry_after` |
 
 The rate limit is 60 requests per minute, on the `auth:handoff:status` bucket.
 
@@ -1246,7 +1252,8 @@ Returns the [handoff status](#handoff-status-object) and, once, the new session 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [handoff status](#handoff-status-object) object | The status was returned |
-| 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed or this IP address has 5 failed handoff attempts |
+| 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes and the poll secret is wrong, with `retry_after` |
 
 The rate limit is 60 requests per minute, on the shared `auth:handoff:status` bucket.
 

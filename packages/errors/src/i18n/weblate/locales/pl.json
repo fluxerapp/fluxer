@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Ta domena e-mail jest niedozwolona przy logowaniu jednokrotnym.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nie udało się pobrać informacji o użytkowniku SSO. Spróbuj ponownie.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nie udało się odczytać odpowiedzi od dostawcy SSO. Spróbuj ponownie.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Zbyt wiele prób logowania z Twojej sieci. Spróbuj ponownie za {minutes} min.",
+	"auth_and_oauth.handoff_code_already_used": "Ten kod został już użyty. Rozpocznij nowe logowanie w aplikacji.",
 	"auth_and_oauth.handoff_code_expired": "Kod przekazania logowania stracił ważność.",
 	"auth_and_oauth.handoff_code_invalid": "Nieprawidłowy kod przekazania logowania.",
 	"auth_and_oauth.invalid_code": "Nieprawidłowy kod.",

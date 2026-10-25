@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Den här e-postdomänen är inte tillåten för enkel inloggning (SSO).",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Vi kunde inte hämta dina användaruppgifter från SSO-tjänsten. Försök igen.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Vi kunde inte tolka svaret från din SSO-leverantör. Försök igen.",
+	"auth_and_oauth.handoff_attempts_exceeded": "För många inloggningsförsök från ditt nätverk. Försök igen om {minutes, plural, one {# minut} other {# minuter}}.",
+	"auth_and_oauth.handoff_code_already_used": "Den här koden har redan använts. Starta en ny inloggning från appen.",
 	"auth_and_oauth.handoff_code_expired": "Överlämningskoden har gått ut.",
 	"auth_and_oauth.handoff_code_invalid": "Ogiltig överlämningskod.",
 	"auth_and_oauth.invalid_code": "Ogiltig kod.",

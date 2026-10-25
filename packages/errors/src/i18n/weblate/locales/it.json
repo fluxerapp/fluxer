@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Questo dominio email non è consentito per il single sign-on.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Non è stato possibile recuperare le informazioni utente SSO. Riprova.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Non è stato possibile leggere la risposta del tuo provider SSO. Riprova.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Troppi tentativi di accesso dalla tua rete. Riprova tra {minutes, plural, one {# minuto} other {# minuti}}.",
+	"auth_and_oauth.handoff_code_already_used": "Questo codice è già stato usato. Avvia un nuovo accesso dall'app.",
 	"auth_and_oauth.handoff_code_expired": "Codice di trasferimento scaduto.",
 	"auth_and_oauth.handoff_code_invalid": "Codice di trasferimento non valido.",
 	"auth_and_oauth.invalid_code": "Codice non valido.",

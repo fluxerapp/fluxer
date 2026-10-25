@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Tato e-mailová doména není pro jednotné přihlášení povolena.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nepodařilo se načíst vaše uživatelské údaje SSO. Zkuste to znovu.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nepodařilo se přečíst odpověď od vašeho poskytovatele SSO. Zkuste to znovu.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Z vaší sítě přišlo příliš mnoho pokusů o přihlášení. Zkuste to znovu za {minutes} min.",
+	"auth_and_oauth.handoff_code_already_used": "Tento kód už byl použit. Začněte nové přihlášení z aplikace.",
 	"auth_and_oauth.handoff_code_expired": "Kód pro předání vypršel.",
 	"auth_and_oauth.handoff_code_invalid": "Neplatný kód pro předání.",
 	"auth_and_oauth.invalid_code": "Neplatný kód.",
