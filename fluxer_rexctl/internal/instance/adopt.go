@@ -528,16 +528,23 @@ func overlayFor(path, dir string) string {
 }
 
 func isShipped(name string, data []byte) bool {
-	sum := sha256.Sum256(normalizeLF(data))
+	data = normalizeLF(data)
+	if name == stack.ComposeFile {
+		data = stack.UnpinImages(data)
+	}
+	sum := sha256.Sum256(data)
 	h := hex.EncodeToString(sum[:])
 	if slices.Contains(shippedHashes[name], h) {
 		return true
+	}
+	if name == ".env.example" {
+		return string(data) == BundleEnv()
 	}
 	current, err := fs.ReadFile(stack.Embedded().Files, name)
 	if err != nil {
 		return false
 	}
-	return bytes.Equal(normalizeLF(current), normalizeLF(data))
+	return bytes.Equal(normalizeLF(current), data)
 }
 
 func normalizeLF(data []byte) []byte {

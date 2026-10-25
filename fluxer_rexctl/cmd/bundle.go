@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -37,7 +35,7 @@ func newBundleCmd(app *App) *cobra.Command {
 			if err := stack.Bundle(out, images.Images); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
-			if err := os.WriteFile(filepath.Join(out, ".env.example"), []byte(bundleEnv()), 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(out, ".env.example"), []byte(instance.BundleEnv()), 0o644); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
 			return nil
@@ -45,19 +43,4 @@ func newBundleCmd(app *App) *cobra.Command {
 	}
 	c.Flags().StringVar(&out, "out", "", "folder to write")
 	return c
-}
-
-func bundleEnv() string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "%s=true\n", stack.SettingsLoadedVar)
-	b.WriteString("FLUXER_DOMAIN=\n")
-	fmt.Fprintf(&b, "%s=\n", instance.SetupTokenVar)
-	for _, s := range secrets.Required {
-		value := ""
-		if s.Kind == secrets.KindFixed {
-			value = s.Fixed
-		}
-		fmt.Fprintf(&b, "%s=%s\n", s.Key, value)
-	}
-	return b.String()
 }
