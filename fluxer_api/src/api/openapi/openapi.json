@@ -25463,6 +25463,7 @@
 					"icon_url": {"description": "Override the default icon of the webhook", "type": "string"},
 					"attachments": {
 						"description": "Array of attachment objects",
+						"maxItems": 100,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -25475,6 +25476,7 @@
 								"title_link": {"description": "URL to link from the title", "type": "string"},
 								"fields": {
 									"description": "Array of field objects",
+									"maxItems": 100,
 									"type": "array",
 									"items": {
 										"type": "object",
@@ -25573,6 +25575,7 @@
 					},
 					"embeds": {
 						"description": "Array of embed objects to include in the message",
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"}
 					},
@@ -25990,8 +25993,12 @@
 							"previous_status": {"type": ["string", "null"]},
 							"new_status": {"type": ["string", "null"]},
 							"snooze_until": {"type": ["string", "null"]},
-							"previous_tags": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]},
-							"new_tags": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]},
+							"previous_tags": {
+								"anyOf": [{"maxItems": 1000, "type": "array", "items": {"type": "string"}}, {"type": "null"}]
+							},
+							"new_tags": {
+								"anyOf": [{"maxItems": 1000, "type": "array", "items": {"type": "string"}}, {"type": "null"}]
+							},
 							"assigned_to": {"anyOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}, {"type": "null"}]},
 							"type": {"type": ["string", "null"]},
 							"status": {"type": ["string", "null"]},
@@ -26013,7 +26020,11 @@
 							},
 							"attachments": {
 								"anyOf": [
-									{"type": "array", "items": {"type": "object", "properties": {"name": {"type": ["string", "null"]}}}},
+									{
+										"maxItems": 1000,
+										"type": "array",
+										"items": {"type": "object", "properties": {"name": {"type": ["string", "null"]}}}
+									},
 									{"type": "null"}
 								]
 							},
@@ -26080,6 +26091,7 @@
 									"incident_updates": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26099,6 +26111,7 @@
 									"affected_components": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26135,6 +26148,7 @@
 									"maintenance_updates": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26153,6 +26167,7 @@
 									"affected_components": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26246,6 +26261,7 @@
 											"pull_requests": {
 												"anyOf": [
 													{
+														"maxItems": 1000,
 														"type": "array",
 														"items": {
 															"type": "object",
@@ -26273,6 +26289,7 @@
 									"pull_requests": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26300,6 +26317,7 @@
 									"pull_requests": {
 										"anyOf": [
 											{
+												"maxItems": 1000,
 												"type": "array",
 												"items": {
 													"type": "object",
@@ -26345,6 +26363,7 @@
 					"commits": {
 						"anyOf": [
 							{
+								"maxItems": 2048,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -26568,6 +26587,7 @@
 					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 					"embeds": {
 						"description": "Array of embed objects to include in the message",
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"}
 					},
@@ -26603,6 +26623,7 @@
 					},
 					"attachments": {
 						"description": "Array of multipart attachment metadata objects",
+						"maxItems": 100,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -26665,6 +26686,7 @@
 					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 					"embeds": {
 						"description": "Array of embed objects to include in the message",
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"}
 					},
@@ -26700,6 +26722,7 @@
 					},
 					"attachments": {
 						"description": "Array of attachments uploaded through the presigned upload endpoint",
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"}
 					},
@@ -27466,17 +27489,20 @@
 					"theme": {"$ref": "#/components/schemas/UserThemeType"},
 					"guild_positions": {
 						"description": "Ordered array of guild IDs for sidebar positioning",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
 					"locale": {"$ref": "#/components/schemas/Locale"},
 					"restricted_guilds": {
 						"description": "Guilds with DM restrictions",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
 					"bot_restricted_guilds": {
 						"description": "Guilds with bot DM restrictions",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
@@ -27532,6 +27558,7 @@
 								},
 								"guild_ids": {
 									"description": "Guild IDs in this folder",
+									"maxItems": 10000,
 									"type": "array",
 									"items": {"$ref": "#/components/schemas/SnowflakeType"}
 								}
@@ -27577,11 +27604,17 @@
 					},
 					"suppress_unprivileged_self_mentions_bypass_user_ids": {
 						"description": "User IDs that bypass self-mention suppression",
-						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}}, {"type": "null"}]
+						"anyOf": [
+							{"maxItems": 1000, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
+							{"type": "null"}
+						]
 					},
 					"staff_dm_access_user_ids": {
 						"description": "User IDs with Staff DM Access enabled",
-						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}}, {"type": "null"}]
+						"anyOf": [
+							{"maxItems": 1000, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
+							{"type": "null"}
+						]
 					},
 					"profile_privacy": {
 						"$ref": "#/components/schemas/ProfilePrivacyLevelInput",
@@ -28881,7 +28914,7 @@
 					"alt_text": {"description": "Alternative text description for accessibility", "type": ["string", "null"]},
 					"tags": {
 						"description": "New tags for categorizing and searching the meme",
-						"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
+						"anyOf": [{"maxItems": 1000, "type": "array", "items": {"type": "string"}}, {"type": "null"}]
 					}
 				}
 			},
@@ -28971,7 +29004,7 @@
 					"tags": {
 						"description": "Tags for categorizing and searching the meme",
 						"default": [],
-						"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
+						"anyOf": [{"maxItems": 1000, "type": "array", "items": {"type": "string"}}, {"type": "null"}]
 					},
 					"url": {
 						"type": "string",
@@ -30981,6 +31014,7 @@
 					},
 					"cursor": {
 						"description": "Opaque cursor for search_after pagination. When provided, page is ignored.",
+						"maxItems": 16,
 						"type": "array",
 						"items": {"type": "string"}
 					},
@@ -33323,6 +33357,7 @@
 				"additionalProperties": false
 			},
 			"GuildRoleHoistPositionsRequest": {
+				"maxItems": 10000,
 				"type": "array",
 				"items": {
 					"type": "object",
@@ -33339,6 +33374,7 @@
 				}
 			},
 			"GuildRolePositionsRequest": {
+				"maxItems": 10000,
 				"type": "array",
 				"items": {
 					"type": "object",
@@ -33872,6 +33908,7 @@
 				}
 			},
 			"ChannelPositionUpdateRequest": {
+				"maxItems": 10000,
 				"type": "array",
 				"items": {
 					"type": "object",
@@ -35097,7 +35134,7 @@
 					"tags": {
 						"description": "Tags for categorizing and searching the meme",
 						"default": [],
-						"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
+						"anyOf": [{"maxItems": 1000, "type": "array", "items": {"type": "string"}}, {"type": "null"}]
 					},
 					"attachment_id": {
 						"description": "ID of the message attachment to save as a meme",
@@ -35166,6 +35203,7 @@
 				"properties": {
 					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 					"embeds": {
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
@@ -35177,6 +35215,7 @@
 					"flags": {"$ref": "#/components/schemas/MessageFlags", "description": "Message flags bitfield"},
 					"attachments": {
 						"description": "Array of attachment objects to keep or add",
+						"maxItems": 100,
 						"type": "array",
 						"items": {
 							"anyOf": [
@@ -35263,11 +35302,13 @@
 				"properties": {
 					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 					"embeds": {
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
 					"attachments": {
+						"maxItems": 100,
 						"type": "array",
 						"items": {
 							"anyOf": [
@@ -35377,6 +35418,7 @@
 				"properties": {
 					"recipients": {
 						"description": "User IDs to ring for the call",
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
@@ -35479,6 +35521,7 @@
 							},
 							"permission_overwrites": {
 								"description": "Permission overwrites for roles and members",
+								"maxItems": 10000,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -35575,6 +35618,7 @@
 							},
 							"permission_overwrites": {
 								"description": "Permission overwrites for roles and members",
+								"maxItems": 10000,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -35671,6 +35715,7 @@
 							},
 							"permission_overwrites": {
 								"description": "Permission overwrites for roles and members",
+								"maxItems": 10000,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -35763,6 +35808,7 @@
 							},
 							"permission_overwrites": {
 								"description": "Permission overwrites for roles and members",
+								"maxItems": 10000,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -35855,6 +35901,7 @@
 							},
 							"permission_overwrites": {
 								"description": "Permission overwrites for roles and members",
+								"maxItems": 10000,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -36032,6 +36079,7 @@
 								"id": {"type": "string"},
 								"type": {"type": "string", "const": "public-key"},
 								"transports": {
+									"maxItems": 16,
 									"type": "array",
 									"items": {
 										"type": "string",
@@ -38082,6 +38130,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -38159,6 +38208,7 @@
 					},
 					"available_tags": {
 						"description": "Tags that can be applied to posts (max 20)",
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
 					},
@@ -38195,6 +38245,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -38272,6 +38323,7 @@
 					},
 					"available_tags": {
 						"description": "Tags that can be applied to posts (max 20)",
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
 					},
@@ -39000,6 +39052,7 @@
 				"properties": {
 					"parse": {
 						"description": "Types of mentions to parse from content",
+						"maxItems": 10,
 						"type": "array",
 						"items": {
 							"description": "Types of mentions to parse from content",
@@ -40162,11 +40215,13 @@
 						"properties": {
 							"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 							"embeds": {
+								"maxItems": 100,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 								"description": "Array of embed objects to include in the message"
 							},
 							"attachments": {
+								"maxItems": 100,
 								"type": "array",
 								"items": {
 									"anyOf": [
@@ -40233,11 +40288,13 @@
 				"properties": {
 					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
 					"embeds": {
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
 					"attachments": {
+						"maxItems": 100,
 						"type": "array",
 						"items": {
 							"anyOf": [
@@ -40379,11 +40436,13 @@
 					"afk_timeout": {"description": "The AFK timeout in seconds", "type": "number"},
 					"system_channel_flags": {"description": "The system channel flags", "type": "number"},
 					"roles": {
+						"maxItems": 250,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/TemplateRole"},
 						"description": "The roles in the template"
 					},
 					"channels": {
+						"maxItems": 500,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/TemplateChannel"},
 						"description": "The channels in the template"
@@ -40442,6 +40501,7 @@
 						"description": "Permission overwrites for this channel",
 						"anyOf": [
 							{
+								"maxItems": 250,
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -40931,6 +40991,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -40991,6 +41052,7 @@
 					},
 					"available_tags": {
 						"description": "Tags that can be applied to posts (max 20)",
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
 					},
@@ -41028,6 +41090,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -41088,6 +41151,7 @@
 					},
 					"available_tags": {
 						"description": "Tags that can be applied to posts (max 20)",
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
 					},
@@ -41126,6 +41190,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -41202,6 +41267,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -41278,6 +41344,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -41354,6 +41421,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -41438,6 +41506,7 @@
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for roles and members",
+						"maxItems": 10000,
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -43931,6 +44000,7 @@
 							"attestationObject": {"type": "string"},
 							"authenticatorData": {"type": "string"},
 							"transports": {
+								"maxItems": 16,
 								"type": "array",
 								"items": {"type": "string", "enum": ["ble", "cable", "hybrid", "internal", "nfc", "smart-card", "usb"]}
 							},

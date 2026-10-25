@@ -88,7 +88,7 @@ const WebhookMultipartAttachmentRequest = z.object({
 const WebhookMessageRequestBase = z
 	.object({
 		content: MessageContentRequest.nullish(),
-		embeds: z.array(RichEmbedRequest).optional().describe('Array of embed objects to include in the message'),
+		embeds: z.array(RichEmbedRequest).max(100).optional().describe('Array of embed objects to include in the message'),
 		message_reference: MessageReferenceRequest.nullish().describe(
 			'Reference to another message (for replies or forwards)',
 		),
@@ -134,6 +134,7 @@ const WebhookThreadIdQuery = withSchemaMetadata(
 export const WebhookMessageRequest = WebhookMessageRequestBase.extend({
 	attachments: z
 		.array(ClientUploadedAttachmentRequest)
+		.max(100)
 		.optional()
 		.describe('Array of attachments uploaded through the presigned upload endpoint'),
 	...WebhookForumPostRequestFields,
@@ -144,6 +145,7 @@ export type WebhookMessageRequest = z.infer<typeof WebhookMessageRequest>;
 export const WebhookMultipartMessageRequest = WebhookMessageRequestBase.extend({
 	attachments: z
 		.array(WebhookMultipartAttachmentRequest)
+		.max(100)
 		.optional()
 		.describe('Array of multipart attachment metadata objects'),
 	...WebhookForumPostRequestFields,
@@ -156,7 +158,7 @@ export const WebhookMessageEditRequest = z
 		content: MessageContentRequest.nullish().describe(
 			`The new message content (up to ${MAX_MESSAGE_LENGTH_PREMIUM} characters)`,
 		),
-		embeds: z.array(RichEmbedRequest).optional().describe('Array of embed objects to include in the message'),
+		embeds: z.array(RichEmbedRequest).max(100).optional().describe('Array of embed objects to include in the message'),
 		flags: createBitflagInt32Type(
 			MessageFlags,
 			MessageFlagsDescriptions,
@@ -195,7 +197,7 @@ const SlackAttachmentSchema = z.object({
 	color: createUnboundedStringType().optional().describe('Colour of the attachment sidebar (hex code or preset)'),
 	title: createUnboundedStringType().optional().describe('Title of the attachment'),
 	title_link: createUnboundedStringType().optional().describe('URL to link from the title'),
-	fields: z.array(SlackAttachmentFieldSchema).optional().describe('Array of field objects'),
+	fields: z.array(SlackAttachmentFieldSchema).max(100).optional().describe('Array of field objects'),
 	footer: createUnboundedStringType().optional().describe('Footer text displayed at the bottom'),
 	ts: SlackUnixSecondsSchema.optional().describe('Unix timestamp for the attachment footer'),
 	author_name: createUnboundedStringType().optional().describe('Name of the author'),
@@ -208,7 +210,7 @@ export const SlackWebhookRequest = z.object({
 	text: createUnboundedStringType().optional().describe('Main text content of the message'),
 	username: WebhookNameType.optional().describe('Override the default username of the webhook'),
 	icon_url: createUnboundedStringType().optional().describe('Override the default icon of the webhook'),
-	attachments: z.array(SlackAttachmentSchema).optional().describe('Array of attachment objects'),
+	attachments: z.array(SlackAttachmentSchema).max(100).optional().describe('Array of attachment objects'),
 });
 
 export type SlackWebhookRequest = z.infer<typeof SlackWebhookRequest>;

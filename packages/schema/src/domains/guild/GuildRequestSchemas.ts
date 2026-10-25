@@ -340,7 +340,7 @@ const GuildRoleHoistPositionItem = z.object({
 	hoist_position: z.number().int().describe('The new hoist position for the role'),
 });
 
-export const GuildRoleHoistPositionsRequest = z.array(GuildRoleHoistPositionItem);
+export const GuildRoleHoistPositionsRequest = z.array(GuildRoleHoistPositionItem).max(10000);
 
 export type GuildRoleHoistPositionsRequest = z.infer<typeof GuildRoleHoistPositionsRequest>;
 
@@ -349,7 +349,7 @@ const GuildRolePositionItem = z.object({
 	position: z.number().int().optional().describe('The new position for the role'),
 });
 
-export const GuildRolePositionsRequest = z.array(GuildRolePositionItem);
+export const GuildRolePositionsRequest = z.array(GuildRolePositionItem).max(10000);
 
 export type GuildRolePositionsRequest = z.infer<typeof GuildRolePositionsRequest>;
 

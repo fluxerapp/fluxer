@@ -34,7 +34,7 @@ export const WebAuthnRegistrationResponse = WebAuthnCredentialBase.extend({
 		clientDataJSON: z.string(),
 		attestationObject: z.string(),
 		authenticatorData: z.string().optional(),
-		transports: z.array(AuthenticatorTransportSchema).optional(),
+		transports: z.array(AuthenticatorTransportSchema).max(16).optional(),
 		publicKeyAlgorithm: z.number().int().optional(),
 		publicKey: z.string().optional(),
 	}),
@@ -49,7 +49,7 @@ export const WebAuthnAuthenticationOptions = z.looseObject({
 			z.looseObject({
 				id: z.string(),
 				type: z.literal('public-key'),
-				transports: z.array(AuthenticatorTransportSchema).optional(),
+				transports: z.array(AuthenticatorTransportSchema).max(16).optional(),
 			}),
 		)
 		.optional(),
