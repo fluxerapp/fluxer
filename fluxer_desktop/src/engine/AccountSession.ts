@@ -12,7 +12,7 @@ import {
 	type GatewayResumeState,
 } from '@electron/engine/GatewayClient';
 import type {GatewayTransportFactory} from '@electron/engine/GatewayTransport';
-import type {EngineAccountRecord, EngineLogLevel} from '@electron/engine/HostProtocol';
+import type {AdmittedGateway, EngineAccountRecord, EngineLogLevel} from '@electron/engine/HostProtocol';
 import {SCHEDULER_LIMITS, type SchedulerClient, type SessionScheduler} from '@electron/engine/SessionScheduler';
 import {
 	ACCOUNT_ENGINE_LIMITS,
@@ -45,11 +45,6 @@ const INVALID_SESSION_MIN_DELAY_MS = 1_000;
 const INVALID_SESSION_MAX_DELAY_MS = 5_000;
 const DECODE_RETRY_DELAY_MS = 1_000;
 const SUBSCRIPTION_RELEASE_SETTLE_MS = 250;
-
-export interface AdmittedGateway {
-	readonly url: string;
-	readonly address: string | null;
-}
 
 export interface AccountSessionDependencies {
 	readonly clock: EngineClock;
@@ -645,6 +640,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		const client: GatewayClient = new GatewayClient({
 			gatewayUrl: admitted.url,
 			address: admitted.address,
+			proxy: admitted.proxy,
 			token: this.token,
 			config,
 			resume,

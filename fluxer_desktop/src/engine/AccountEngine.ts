@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	AccountSession,
-	type AdmittedGateway,
-	accountTokenTag,
-	type PersistedAccountSummary,
-} from '@electron/engine/AccountSession';
+import {AccountSession, accountTokenTag, type PersistedAccountSummary} from '@electron/engine/AccountSession';
 import {CacheDatabase} from '@electron/engine/CacheDatabase';
 import {DispatchPump} from '@electron/engine/DispatchPump';
 import type {EngineClock, EngineTimer} from '@electron/engine/EngineClock';
@@ -14,6 +9,7 @@ import type {GatewayTransportFactory} from '@electron/engine/GatewayTransport';
 import type {EngineMessagePort} from '@electron/engine/HostChannel';
 import {
 	ACCOUNT_ENGINE_HOST_PROTOCOL_VERSION,
+	type AdmittedGateway,
 	type EngineAccountRecord,
 	type EngineInitMessage,
 	type EngineLogLevel,
@@ -561,7 +557,7 @@ export class AccountEngine {
 		if (response.type !== 'admitResult' || !response.ok || response.url === null) {
 			throw new Error(response.type === 'admitResult' ? (response.error ?? 'Admission refused') : 'Admission refused');
 		}
-		return {url: response.url, address: response.address};
+		return {url: response.url, address: response.address, proxy: response.proxy};
 	}
 
 	private hostRequest(message: Extract<EngineToHostMessage, {type: 'admit' | 'http'}>): Promise<HostToEngineMessage> {

@@ -4,7 +4,7 @@ import type {LookupAddress} from 'node:dns';
 import {createRequire} from 'node:module';
 import {isIP, type LookupFunction} from 'node:net';
 import {errorMessage} from '@electron/common/ErrorMessage';
-import {Agent, WebSocket} from 'undici';
+import {Agent, type Dispatcher, ProxyAgent, WebSocket} from 'undici';
 
 export type GatewayTransportEvent =
 	| {readonly kind: 'open'}
@@ -22,6 +22,7 @@ export interface GatewayTransportConnection {
 interface GatewayTransportConnectRequest {
 	readonly url: string;
 	readonly address: string | null;
+	readonly proxy: string | null;
 	readonly onEvent: (event: GatewayTransportEvent) => void;
 }
 
@@ -112,13 +113,16 @@ interface WebSocketGatewayTransportOptions {
 function createWebSocketGatewayTransport(options: WebSocketGatewayTransportOptions = {}): GatewayTransportFactory {
 	const trustedCertificates = options.trustedCertificates ?? [];
 	const trust = trustedCertificates.length > 0 ? {ca: [...trustedCertificates]} : {};
-	return ({url, address, onEvent}) => {
-		const dispatcher = new Agent({
-			connect: {
-				...(address === null ? {} : {lookup: pinnedLookup(address)}),
-				...trust,
-			},
-		});
+	return ({url, address, proxy, onEvent}) => {
+		const dispatcher: Dispatcher =
+			proxy === null
+				? new Agent({
+						connect: {
+							...(address === null ? {} : {lookup: pinnedLookup(address)}),
+							...trust,
+						},
+					})
+				: new ProxyAgent({uri: proxy, proxyTunnel: true, requestTls: trust, proxyTls: trust});
 		let terminated = false;
 		const finish = (event: GatewayTransportEvent): void => {
 			if (terminated) {
@@ -177,24 +181,29 @@ export function resolveGatewayTransport({
 	preferWebSocket,
 	trustedCertificates,
 }: GatewayTransportPreferences): ResolvedGatewayTransport {
-	const fallback = (): GatewayTransportFactory => createWebSocketGatewayTransport({trustedCertificates});
+	const websocket = createWebSocketGatewayTransport({trustedCertificates});
 	if (preferWebSocket) {
-		return {factory: fallback(), kind: 'websocket', loadError: null};
+		return {factory: websocket, kind: 'websocket', loadError: null};
 	}
 	try {
 		const requireModule = typeof require === 'function' ? require : createRequire(import.meta.url);
 		const addon = requireModule('@fluxer/gateway-socket') as {connect: NativeConnect | null; loadError: Error | null};
 		if (addon.connect !== null) {
-			return {factory: createNativeGatewayTransport(addon.connect), kind: 'native', loadError: null};
+			const native = createNativeGatewayTransport(addon.connect);
+			return {
+				factory: (request) => (request.proxy === null ? native(request) : websocket(request)),
+				kind: 'native',
+				loadError: null,
+			};
 		}
 		return {
-			factory: fallback(),
+			factory: websocket,
 			kind: 'websocket',
 			loadError: addon.loadError?.message ?? 'The gateway socket addon has no connect binding',
 		};
 	} catch (error) {
 		return {
-			factory: fallback(),
+			factory: websocket,
 			kind: 'websocket',
 			loadError: errorMessage(error),
 		};

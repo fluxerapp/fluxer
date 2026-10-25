@@ -29,6 +29,12 @@ export interface EngineInitMessage {
 	readonly trustedCertificates: ReadonlyArray<string>;
 }
 
+export interface AdmittedGateway {
+	readonly url: string;
+	readonly address: string | null;
+	readonly proxy: string | null;
+}
+
 export type HostToEngineMessage =
 	| EngineInitMessage
 	| {readonly type: 'accounts'; readonly accounts: ReadonlyArray<EngineAccountRecord>}
@@ -40,6 +46,7 @@ export type HostToEngineMessage =
 			readonly ok: boolean;
 			readonly url: string | null;
 			readonly address: string | null;
+			readonly proxy: string | null;
 			readonly error: string | null;
 	  }
 	| {
