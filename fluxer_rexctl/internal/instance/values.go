@@ -91,7 +91,7 @@ func importValues(in valueInput) (*valueResult, error) {
 			r.defaults = append(r.defaults, k)
 			continue
 		}
-		if ex, ok := in.examples[k]; ok && ex == v && !isGeneratedSecret(k) {
+		if ex, ok := in.examples[k]; ok && ex == v && !isGeneratedSecret(k) && isPlaceholderValue(v) {
 			r.placeholders = append(r.placeholders, k)
 		}
 	}
@@ -248,6 +248,11 @@ func equalsDefault(defs []string, v string, env map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func isPlaceholderValue(v string) bool {
+	lower := strings.ToLower(strings.TrimSpace(v))
+	return strings.Contains(lower, "example.") || lower == "change_me" || lower == "changeme"
 }
 
 func isGeneratedSecret(name string) bool {
