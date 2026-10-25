@@ -41,8 +41,6 @@ const logger = new Logger('CodeElementsRenderer');
 const KATEX_CODE_BLOCK_LANGUAGES = new Set(['katex', 'latex', 'tex']);
 const ANSI_CODE_BLOCK_LANGUAGES = new Set(['ansi']);
 const KATEX_CONTROL_SEQUENCE_REGEX = /\\(?:[a-zA-Z@]+|.)/gu;
-const KATEX_MACRO_DEFINITION_REGEX =
-	/\\(?:def|gdef|edef|xdef|global|let|futurelet|newcommand|renewcommand|providecommand)(?![a-zA-Z@])/u;
 const KATEX_MAX_EXPAND = 512;
 
 type KatexModule = typeof katexDefault;
@@ -96,9 +94,6 @@ function countKatexControlSequences(content: string): number {
 
 function shouldRenderKatexSource(content: string): boolean {
 	if (content.length > MAX_KATEX_RENDER_SOURCE_LENGTH) {
-		return false;
-	}
-	if (KATEX_MACRO_DEFINITION_REGEX.test(content)) {
 		return false;
 	}
 	return countKatexControlSequences(content) <= MAX_KATEX_RENDER_CONTROL_SEQUENCE_COUNT;
