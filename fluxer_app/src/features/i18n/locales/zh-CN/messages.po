@@ -14091,6 +14091,11 @@ msgstr "每个按键只能触发一个全局快捷键。"
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "每项都需要提供商的 API 密钥。留空即可跳过，之后可以在管理面板中添加。"
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "每个人都会有一个私人频道，可以给自己写消息。"
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "按住 Shift、Ctrl 或 Alt 时，此快捷键不会生效。请在系统设置中添加备用按键。"
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "首页"
@@ -24385,6 +24392,11 @@ msgstr "否，每个用户名唯一"
 msgid "No, keep everything"
 msgstr "否，全部保留"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "任何人都无法打开或编写个人笔记。"
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "个人词典"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "个人笔记"
@@ -32186,6 +32200,11 @@ msgstr "请缩短你的“关于我”内容，然后重试。"
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "是否删除旧附件以节省磁盘空间？"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "大家可以使用个人笔记吗？"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "之后你可以在管理面板中切换社区数量。"
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "稍后可以在管理面板中重新开启私信和好友请求。"
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "稍后可以在管理面板中开启个人笔记。"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

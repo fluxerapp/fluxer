@@ -14091,6 +14091,11 @@ msgstr "แต่ละคีย์ใช้กับปุ่มลัดทั
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "แต่ละอย่างต้องใช้คีย์ API จากผู้ให้บริการ เว้นว่างไว้เพื่อข้าม แล้วเพิ่มภายหลังในแผงผู้ดูแลระบบ"
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "แต่ละคนจะมีช่องส่วนตัวที่เขียนข้อความถึงตัวเองได้"
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "การกด Shift, Ctrl หรือ Alt ค้างไว้จะทำให้ปุ่มลัดนี้ไม่ทำงาน เพิ่มปุ่มสำรองได้ในการตั้งค่าระบบ"
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "หน้าหลัก"
@@ -24385,6 +24392,11 @@ msgstr "ไม่ ชื่อผู้ใช้ไม่ซ้ำกัน"
 msgid "No, keep everything"
 msgstr "ไม่ เก็บทุกอย่างไว้"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "ไม่มีใครเปิดหรือเขียนบันทึกส่วนตัวได้"
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "พจนานุกรมส่วนตัว"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "บันทึกส่วนตัว"
@@ -32186,6 +32200,11 @@ msgstr "ย่อ \"เกี่ยวกับฉัน\" ของคุณแ
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "ลบไฟล์แนบเก่าเพื่อประหยัดพื้นที่ดิสก์หรือไม่"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "ผู้คนจะมีบันทึกส่วนตัวได้หรือไม่"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "คุณสามารถสลับระหว่างชุมช
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "คุณสามารถเปิดข้อความส่วนตัวและการขอเป็นเพื่อนได้อีกครั้งในภายหลังที่แผงผู้ดูแลระบบ"
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "คุณสามารถเปิดบันทึกส่วนตัวได้ในภายหลังที่แผงผู้ดูแลระบบ"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

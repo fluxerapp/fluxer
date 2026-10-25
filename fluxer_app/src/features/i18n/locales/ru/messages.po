@@ -14091,6 +14091,11 @@ msgstr "Одна клавиша может запускать только од�
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "Для каждого нужен ключ API от поставщика. Оставьте поля пустыми, чтобы пропустить, и добавьте ключи позже в панели администратора."
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "Каждый получает личный канал, где может писать сообщения самому себе."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "Пока зажаты Shift, Ctrl или Alt, это сочетание не срабатывает. Добавьте альтернативные сочетания в настройках системы."
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "Главная"
@@ -24385,6 +24392,11 @@ msgstr "Нет, каждое имя пользователя уникально"
 msgid "No, keep everything"
 msgstr "Нет, хранить всё"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "Никто не может открывать личные заметки или писать в них."
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "Личный словарь"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "Личные заметки"
@@ -32186,6 +32200,11 @@ msgstr "Сократите текст «О себе» и попробуйте с
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "Удалять старые вложения, чтобы экономить место на диске?"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "Будут ли у людей личные заметки?"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "Вы сможете переключиться между одним с�
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "Вы сможете снова включить личные сообщения и запросы в друзья позже в панели администратора."
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "Вы сможете включить личные заметки позже в панели администратора."
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

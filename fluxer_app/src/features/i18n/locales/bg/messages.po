@@ -14091,6 +14091,11 @@ msgstr "Всеки клавиш може да задейства само едн
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "За всяко е нужен API ключ от доставчика му. Остави полетата празни, за да ги пропуснеш, и ги добави по-късно в административния панел."
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "Всеки получава личен канал, в който може да пише съобщения до себе си."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "Задържането на Shift, Ctrl или Alt блокира тази клавишна комбинация. Добави алтернативни в системните настройки."
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "Начало"
@@ -24385,6 +24392,11 @@ msgstr "Не, всяко потребителско име е уникално"
 msgid "No, keep everything"
 msgstr "Не, запазване на всичко"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "Никой не може да отваря лични бележки или да пише в тях."
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "Личен речник"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "Лични бележки"
@@ -32186,6 +32200,11 @@ msgstr "Съкрати секцията „За мен“ и опитай отн
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "Да се изтриват ли старите прикачени файлове, за да се пести място на диска?"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "Да имат ли хората лични бележки?"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "Можете да превключвате между една общн�
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "Можете да включите личните съобщения и заявките за приятелство по-късно в административния панел."
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "Можете да включите личните бележки по-късно в административния панел."
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

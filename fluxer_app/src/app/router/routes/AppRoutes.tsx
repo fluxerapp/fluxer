@@ -52,13 +52,15 @@ function requireAuthenticatedRuntime() {
 	return runtimeContext.runtime;
 }
 
-function authenticatedRuntimeDisablesDirectMessages(): boolean {
-	return requireAuthenticatedRuntime().community.direct_messages_disabled;
-}
-
-function personalNotesHomePath(directMessagesDisabled: boolean, friendsDisabled: boolean): string | null {
+function personalNotesHomePath(
+	directMessagesDisabled: boolean,
+	friendsDisabled: boolean,
+	personalNotesEnabled: boolean,
+): string | null {
 	const userId = SessionManager.userId;
-	return directMessagesDisabled && friendsDisabled && userId != null ? Routes.dmChannel(userId) : null;
+	return directMessagesDisabled && friendsDisabled && personalNotesEnabled && userId != null
+		? Routes.dmChannel(userId)
+		: null;
 }
 
 function authenticatedRuntimePersonalNotesHomePath(): string | null {
@@ -66,11 +68,16 @@ function authenticatedRuntimePersonalNotesHomePath(): string | null {
 	return personalNotesHomePath(
 		community.direct_messages_disabled,
 		community.friends_disabled ?? community.direct_messages_disabled,
+		community.personal_notes_enabled ?? true,
 	);
 }
 
 function redirectsDirectMessageRoute(guildId: string, channelId: string): boolean {
-	return guildId === ME && channelId !== SessionManager.userId && authenticatedRuntimeDisablesDirectMessages();
+	if (guildId !== ME) return false;
+	const {community} = requireAuthenticatedRuntime();
+	return channelId === SessionManager.userId
+		? !(community.personal_notes_enabled ?? true)
+		: community.direct_messages_disabled;
 }
 
 function authenticatedRuntimeHasDiscovery(): boolean {
@@ -240,7 +247,11 @@ const meRoute = createRoute({
 		const isMobileLayout = MobileLayout.enabled;
 		const homeFallbackPath = isAccountHandoffArrival(Routes.ME)
 			? null
-			: personalNotesHomePath(RuntimeConfig.directMessagesDisabled, RuntimeConfig.friendsDisabled);
+			: personalNotesHomePath(
+					RuntimeConfig.directMessagesDisabled,
+					RuntimeConfig.friendsDisabled,
+					RuntimeConfig.personalNotesEnabled,
+				);
 		useEffect(() => {
 			if (!isMobileLayout && SelectedChannel.selectedChannelIds.has(ME)) {
 				SelectedChannel.clearGuildSelection(ME);

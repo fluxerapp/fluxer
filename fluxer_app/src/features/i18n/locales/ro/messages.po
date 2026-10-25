@@ -14091,6 +14091,11 @@ msgstr "Fiecare tastă poate rula o singură comandă rapidă la nivel de sistem
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "Fiecare are nevoie de o cheie API de la furnizorul său. Lasă câmpurile goale ca să le sari și adaugă-le mai târziu în panoul de administrare."
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "Fiecare persoană primește un canal privat în care își poate scrie mesaje sieși."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "Dacă ții apăsat Shift, Ctrl sau Alt, această comandă rapidă nu funcționează. Adaugă alternative în setările sistemului."
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "Acasă"
@@ -24385,6 +24392,11 @@ msgstr "Nu, fiecare nume de utilizator este unic"
 msgid "No, keep everything"
 msgstr "Nu, păstrează tot"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "Nimeni nu poate deschide sau scrie note personale."
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "Dicționar personal"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "Note personale"
@@ -32186,6 +32200,11 @@ msgstr "Scurtează secțiunea „Despre mine” și încearcă din nou."
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "Ștergem atașamentele vechi ca să economisim spațiu pe disc?"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "Să aibă oamenii note personale?"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "Poți comuta între o comunitate și mai multe comunități mai târziu 
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "Poți reactiva mesajele directe și cererile de prietenie mai târziu în panoul de administrare."
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "Poți activa notele personale mai târziu în panoul de administrare."
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

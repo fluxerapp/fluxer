@@ -264,7 +264,7 @@ export const DMList = observer(() => {
 		(routeDmChannelId === currentUserId || (isMobileDmIndexRoute && lastSelectedDmChannelId === currentUserId));
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const showMobilePlutoniumButton = showPremiumFeatures && !isMobile;
-	const personalNotesVisible = currentUserId != null;
+	const personalNotesVisible = currentUserId != null && RuntimeConfig.personalNotesEnabled;
 	const displayedDmChannelCount = filteredDmChannels.length;
 	const dmRowsContainerRef = useRef<HTMLDivElement | null>(null);
 	const dmChannelListRef = useMergeRefs<HTMLDivElement>([dmListNavigationRef, dmRowsContainerRef]);
@@ -369,7 +369,7 @@ export const DMList = observer(() => {
 						className={styles.mobileScrollerContent}
 						data-flx="channel.direct-message.dm-list.mobile-scroller-content"
 					>
-						{currentUserId && (
+						{personalNotesVisible && (
 							<FocusRing offset={-2} data-flx="channel.direct-message.dm-list.focus-ring--3">
 								<LongPressable
 									onLongPress={() => setPersonalNotesSheetOpen(true)}
@@ -572,7 +572,7 @@ export const DMList = observer(() => {
 							</div>
 						</ClickableItem>
 					)}
-					{currentUserId && (
+					{personalNotesVisible && (
 						<ClickableItem
 							isSelected={shouldHighlightPersonalNotes}
 							onClick={navigateTo(personalNotesPath)}

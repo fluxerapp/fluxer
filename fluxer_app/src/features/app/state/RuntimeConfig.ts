@@ -737,6 +737,7 @@ class RuntimeConfig {
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
 				friends_disabled: config.policy.friends_disabled,
+				personal_notes_enabled: config.policy.personal_notes_enabled,
 				guild_create_access: config.policy.guild_create_access,
 			},
 			services: {
@@ -890,6 +891,10 @@ class RuntimeConfig {
 
 	get friendsDisabled(): boolean {
 		return this.community.friends_disabled ?? this.community.direct_messages_disabled;
+	}
+
+	get personalNotesEnabled(): boolean {
+		return this.community.personal_notes_enabled ?? true;
 	}
 
 	get dmPickerAvailable(): boolean {

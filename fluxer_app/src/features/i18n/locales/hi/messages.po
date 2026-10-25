@@ -14091,6 +14091,11 @@ msgstr "हर कुंजी केवल एक सिस्टम-व्य�
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "हर एक के लिए उसके प्रदाता की API कुंजी चाहिए। छोड़ने के लिए फ़ील्ड खाली रखें, और बाद में एडमिन पैनल में जोड़ें।"
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "हर व्यक्ति को एक निजी चैनल मिलता है जहाँ वह खुद को मैसेज लिख सकता है।"
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18467,7 +18472,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "Shift, Ctrl या Alt दबाए रखने पर यह शॉर्टकट काम नहीं करता। अपनी सिस्टम सेटिंग्स में वैकल्पिक कुंजियाँ जोड़ें।"
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "होम"
@@ -24385,6 +24392,11 @@ msgstr "नहीं, हर यूज़रनेम अनोखा है"
 msgid "No, keep everything"
 msgstr "नहीं, सब कुछ रखें"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "कोई भी निजी नोट्स खोल या उनमें लिख नहीं सकता।"
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26649,6 +26661,8 @@ msgid "Personal dictionary"
 msgstr "व्यक्तिगत शब्दकोश"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "निजी नोट्स"
@@ -32186,6 +32200,11 @@ msgstr "अपने “मेरे बारे में” को छोट�
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "क्या डिस्क की जगह बचाने के लिए पुराने अटैचमेंट हटाए जाएं?"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "क्या लोगों के पास निजी नोट्स होने चाहिए?"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41831,6 +41850,11 @@ msgstr "आप बाद में एडमिन पैनल में एक
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "आप बाद में एडमिन पैनल में डायरेक्ट मैसेज और फ्रेंड रिक्वेस्ट वापस चालू कर सकते हैं।"
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "आप बाद में एडमिन पैनल में निजी नोट्स चालू कर सकते हैं।"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

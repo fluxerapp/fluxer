@@ -14091,6 +14091,11 @@ msgstr "Kiekvienas klavišas gali paleisti tik vieną sistemos spartųjį klavi�
 msgid "Each one needs an API key from its provider. Leave them empty to skip, and add them later in the admin panel."
 msgstr "Kiekvienai reikia API rakto iš jos tiekėjo. Palikite laukus tuščius, kad praleistumėte, ir pridėkite juos vėliau administratoriaus skydelyje."
 
+#. Description of turning on personal notes in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Each person gets a private channel where they can write messages to themselves."
+msgstr "Kiekvienas gauna privatų kanalą, kuriame gali rašyti žinutes sau."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -18468,7 +18473,9 @@ msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your s
 msgstr "Laikant nuspaustą Shift, Ctrl arba Alt, šis spartusis klavišas neveikia. Pridėkite alternatyvių klavišų sistemos nustatymuose."
 
 #. Action label in quick switcher for navigating to the Home tab.
+#. Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.
 #: src/features/app/components/layout/MobileBottomNav.tsx
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts
 msgid "Home"
 msgstr "Pagrindinis"
@@ -24386,6 +24393,11 @@ msgstr "Ne, kiekvienas naudotojo vardas unikalus"
 msgid "No, keep everything"
 msgstr "Ne, laikyti viską"
 
+#. Description of leaving personal notes off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Nobody can open or write personal notes."
+msgstr "Niekas negali atidaryti asmeninių užrašų ar juose rašyti."
+
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
@@ -26650,6 +26662,8 @@ msgid "Personal dictionary"
 msgstr "Asmeninis žodynas"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
+#. Review row label for personal notes.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Personal notes"
 msgstr "Asmeniniai užrašai"
@@ -32187,6 +32201,11 @@ msgstr "Sutrumpinkite savo aprašymą ir bandykite dar kartą."
 #: src/features/app/components/setup/SetupAttachmentsStep.tsx
 msgid "Should old attachments be deleted to save disk space?"
 msgstr "Ar trinti senus priedus, kad būtų taupoma vieta diske?"
+
+#. Setup wizard title for choosing whether people can use personal notes.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "Should people have personal notes?"
+msgstr "Ar žmonės gali turėti asmeninius užrašus?"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
@@ -41832,6 +41851,11 @@ msgstr "Vėliau administratoriaus skydelyje galėsite perjungti tarp vienos ir d
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
 msgstr "Vėliau tiesioginius pranešimus ir draugų užklausas galėsite vėl įjungti administratoriaus skydelyje."
+
+#. Note shown when personal notes are left off in the setup wizard.
+#: src/features/app/components/setup/SetupPolicySteps.tsx
+msgid "You can turn personal notes on later in the admin panel."
+msgstr "Asmeninius užrašus galėsite įjungti vėliau administratoriaus skydelyje."
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."

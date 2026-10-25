@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {Channel, type ChannelWire} from '@app/features/channel/models/Channel';
 import ChannelDisplayName from '@app/features/channel/state/ChannelDisplayName';
@@ -23,7 +24,7 @@ import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/Ch
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
-import {makeAutoObservable, observableRef, observableShallow} from 'mobx';
+import {makeAutoObservable, observableRef, observableShallow, reaction} from 'mobx';
 
 const EMPTY_CHANNELS: ReadonlyArray<Channel> = Object.freeze([]);
 const sortDMs = (a: Channel, b: Channel) => {
@@ -56,6 +57,10 @@ const insertSorted = (channels: ReadonlyArray<Channel>, channel: Channel): Array
 	return next;
 };
 
+function personalNotesEnabled(): boolean {
+	return RuntimeConfig.getSnapshotOrNull()?.community.personal_notes_enabled ?? true;
+}
+
 class Channels {
 	private readonly channelsById = new Map<string, Channel>();
 	private readonly channelsByGuildId = new Map<string, ReadonlyArray<Channel>>();
@@ -68,6 +73,7 @@ class Channels {
 			{channelsByGuildId: observableShallow, privateChannelList: observableRef},
 			{autoBind: true},
 		);
+		reaction(personalNotesEnabled, (enabled) => this.syncPersonalNotesChannel(Authentication.currentUserId, enabled));
 	}
 
 	get channels(): ReadonlyArray<Channel> {
@@ -266,10 +272,16 @@ class Channels {
 		for (const channel of channels) {
 			this.setChannel(channel);
 		}
-		if (selfUserId == null) {
+		this.syncPersonalNotesChannel(selfUserId, personalNotesEnabled());
+	}
+
+	private syncPersonalNotesChannel(selfUserId: string | null, enabled: boolean): void {
+		if (selfUserId == null) return;
+		if (!enabled) {
+			if (this.channelsById.get(selfUserId)?.type === ChannelTypes.DM_PERSONAL_NOTES) this.removeChannel(selfUserId);
 			return;
 		}
-		const personalNotesChannel: WireChannel = {
+		this.setChannel({
 			id: selfUserId,
 			type: ChannelTypes.DM_PERSONAL_NOTES,
 			name: undefined,
@@ -282,8 +294,7 @@ class Channels {
 			bitrate: null,
 			user_limit: null,
 			voice_connection_limit: null,
-		};
-		this.setChannel(personalNotesChannel);
+		});
 	}
 
 	handleGuildCreate(guild: GuildReadyData): void {

@@ -38,6 +38,7 @@ import {
 	CommunitiesStep,
 	DirectMessagesStep,
 	type FinishDraft,
+	PersonalNotesStep,
 	PushRelayStep,
 	RegistrationStep,
 	SetupPolicyDraftProvider,
@@ -221,6 +222,7 @@ function finishDraftFromConfig(config: InstanceConfigResponse, stored: unknown):
 		singleCommunityEnabled: config.policy.single_community_enabled,
 		singleCommunityName: config.app_public.branding.product_name,
 		directMessagesDisabled: config.policy.direct_messages_disabled,
+		personalNotesEnabled: config.policy.personal_notes_enabled,
 		pushRelayConsentAccepted: config.push_relay.relay_consent_accepted,
 	};
 	if (!isRecord(stored)) return draft;
@@ -239,6 +241,9 @@ function finishDraftFromConfig(config: InstanceConfigResponse, stored: unknown):
 	}
 	if (typeof stored.directMessagesDisabled === 'boolean') {
 		draft.directMessagesDisabled = stored.directMessagesDisabled;
+	}
+	if (typeof stored.personalNotesEnabled === 'boolean') {
+		draft.personalNotesEnabled = stored.personalNotesEnabled;
 	}
 	if (typeof stored.pushRelayConsentAccepted === 'boolean') {
 		draft.pushRelayConsentAccepted = stored.pushRelayConsentAccepted;
@@ -542,6 +547,9 @@ const SetupWizardController = observer(() => {
 					...(finishDraft.directMessagesDisabled === config.policy.direct_messages_disabled
 						? {}
 						: {direct_messages_disabled: finishDraft.directMessagesDisabled}),
+					...(finishDraft.personalNotesEnabled === config.policy.personal_notes_enabled
+						? {}
+						: {personal_notes_enabled: finishDraft.personalNotesEnabled}),
 				},
 				...(finishDraft.pushRelayConsentAccepted === config.push_relay.relay_consent_accepted
 					? {}
@@ -903,6 +911,10 @@ const SetupWizardController = observer(() => {
 			case 'direct_messages':
 				return (
 					<DirectMessagesStep data-flx="app.setup.self-hosted-setup-wizard-gate.render-step.direct-messages-step.set-finish-draft" />
+				);
+			case 'personal_notes':
+				return (
+					<PersonalNotesStep data-flx="app.setup.self-hosted-setup-wizard-gate.render-step.personal-notes-step.set-finish-draft" />
 				);
 			case 'registration':
 				return (
