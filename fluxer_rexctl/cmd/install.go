@@ -554,18 +554,22 @@ func (in *installer) allowLowPorts(ctx context.Context) error {
 	if in.f.BehindProxy || !host.LowPortsBlocked(in.engine.Rootless) {
 		return nil
 	}
-	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Let Podman use ports 80 and 443 under this account?")
-	if err != nil || !ok {
+	in.app.UI.Info("Rootless Podman needs this to serve Fluxer on ports 80 and 443.")
+	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Let programs that don't run as root use ports 80 and up on this machine?")
+	if err != nil {
 		return err
 	}
+	if !ok {
+		return ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", "Run rexctl install --behind-proxy to use your own reverse proxy instead.")
+	}
 	if in.f.DryRun {
-		in.plan = append(in.plan, "Let Podman use ports 80 and 443.")
+		in.plan = append(in.plan, "Let programs that don't run as root use ports 80 and up.")
 		return nil
 	}
 	if err := host.AllowLowPorts(ctx); err != nil {
-		return ui.Wrap(err, "Couldn't let Podman use ports 80 and 443.", "Run rexctl install --verbose to see why.")
+		return ui.Wrap(err, "Couldn't open ports 80 and up to programs that don't run as root.", "Run rexctl install --verbose to see why.")
 	}
-	in.app.UI.OK("Let Podman use ports 80 and 443.")
+	in.app.UI.OK("Programs that don't run as root can use ports 80 and up.")
 	return nil
 }
 
