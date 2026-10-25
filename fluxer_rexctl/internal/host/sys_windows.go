@@ -4,6 +4,7 @@ package host
 
 import (
 	"errors"
+	"strings"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -43,6 +44,18 @@ func FreeDisk(path string) (uint64, error) {
 		return 0, err
 	}
 	return free, nil
+}
+
+func DiskID(path string) (string, error) {
+	p, err := windows.UTF16PtrFromString(existingParent(path))
+	if err != nil {
+		return "", err
+	}
+	buf := make([]uint16, windows.MAX_PATH+1)
+	if err := windows.GetVolumePathName(p, &buf[0], uint32(len(buf))); err != nil {
+		return "", err
+	}
+	return strings.ToLower(windows.UTF16ToString(buf)), nil
 }
 
 func addrInUse(err error) bool {

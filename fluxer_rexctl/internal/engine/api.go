@@ -34,6 +34,7 @@ type Engine struct {
 	OSType     string
 	Rootless   bool
 	Desktop    string
+	DataRoot   string
 	TooOld     bool
 }
 

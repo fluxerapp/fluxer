@@ -54,6 +54,7 @@ type ImportReport struct {
 	DedupedEnv    bool
 	EngineProxies bool
 	RemovedEnv    bool
+	Images        map[string]string
 }
 
 func (r *ImportReport) DroppedLine() string {
@@ -156,6 +157,7 @@ func importInstaller(ctx context.Context, dir string, e *engine.Engine, dry bool
 		return nil, nil, err
 	}
 	r.PodmanCompose = live.podmanCompose
+	r.Images = live.images
 	if live.podmanCompose && e.Kind == engine.Podman && VersionBelow(e.Version, engine.MinPodman) {
 		return nil, nil, &AdoptError{
 			Msg: "rexctl can't manage this setup.",

@@ -147,7 +147,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 		for _, k := range keptCopies(inst) {
 			warnKeptCopy(app.UI, k.Name, k.Copy, true)
 		}
-		printUpgradePlan(app, f, needSelf, to)
+		printUpgradePlan(ctx, app, inst, f, needSelf, to)
 		return nil
 	}
 	if f.Prefetch {
@@ -344,11 +344,18 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	})
 }
 
-func printUpgradePlan(app *App, f *upgradeFlags, needSelf bool, to string) {
+func printUpgradePlan(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags, needSelf bool, to string) {
 	if needSelf {
 		app.UI.Info("rexctl updates itself to %s.", to)
 	}
 	app.UI.Info("Fluxer %s downloads while your instance keeps running.", to)
+	if e, err := app.Engine(ctx, inst); err != nil {
+		app.UI.Detail("%v", err)
+	} else if needSelf {
+		printSpace(ctx, app, inst, e, nil, f, to)
+	} else {
+		printSpace(ctx, app, inst, e, embeddedRefs(), f, to)
+	}
 	if f.Prefetch {
 		app.UI.Info("Dry run. Nothing changed.")
 		return
@@ -361,6 +368,50 @@ func printUpgradePlan(app *App, f *upgradeFlags, needSelf bool, to string) {
 	app.UI.Info("Fluxer stops for about 2 minutes while it moves to %s.", to)
 	app.UI.Info("If %s doesn't start, rexctl goes back to the release you have today.", to)
 	app.UI.Info("Dry run. Nothing changed.")
+}
+
+func printSpace(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, next map[string]string, f *upgradeFlags, to string) {
+	for _, sp := range upgradeSpace(ctx, app, inst, e, next, f) {
+		if sp.Short() {
+			app.UI.Warn(spaceLine(sp, to), spaceFix(e, sp))
+		} else {
+			app.UI.Info("%s", spaceLine(sp, to))
+		}
+	}
+}
+
+func embeddedRefs() map[string]string {
+	images, err := stack.EmbeddedImages()
+	if err != nil {
+		return nil
+	}
+	return images.Images
+}
+
+func upgradeSpace(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, next map[string]string, f *upgradeFlags) []checks.Space {
+	old := e.Named(inst.Project(), inst.Dir)
+	pull, err := checks.PullNeed(ctx, e, inst.State.Images.Refs, next)
+	if err != nil {
+		app.UI.Detail("%v", err)
+	}
+	var saved uint64
+	if !f.Prefetch && !f.NoBackup {
+		if saved, err = backup.Estimate(ctx, inst, old); err != nil {
+			app.UI.Detail("%v", err)
+		}
+	}
+	return checkEnv(ctx, inst, e, old).Space(pull, saved)
+}
+
+func spaceLine(sp checks.Space, to string) string {
+	return fmt.Sprintf("Fluxer %s needs about %s of free disk space in %s, and %s is free.", to, ui.Bytes(int64(sp.Need)), sp.Path, ui.Bytes(int64(sp.Free)))
+}
+
+func spaceFix(e *engine.Engine, sp checks.Space) string {
+	if sp.Images {
+		return fmt.Sprintf("Free up space there, for example with %s image prune -a, which removes the images no container uses. Then run rexctl upgrade again.", strings.ToLower(e.Kind.Name()))
+	}
+	return "Free up space there, then run rexctl upgrade again."
 }
 
 func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, f *upgradeFlags) error {
@@ -415,10 +466,10 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		return ui.Wrap(err, fmt.Sprintf("Couldn't save the settings for Fluxer %s.", toShort), "Check that the disk isn't full, then run rexctl upgrade again.")
 	}
 	old := e.Named(inst.Project(), inst.Dir)
-	if c, ok := checks.Get("disk"); ok && c.Run != nil {
-		if r := checks.RunIn(ctx, checkEnv(ctx, inst, e, old), checks.Installed, c); r.Status == checks.Fail || r.Status == checks.Warn {
+	for _, sp := range upgradeSpace(ctx, app, inst, e, next.Images.Refs, f) {
+		if sp.Short() {
 			clearUpgrade(inst)
-			return ui.Refused(r.Message, r.Fix)
+			return ui.Refused(spaceLine(sp, toShort)+" "+capitalise(fluxerName(fromShort))+" is still running.", spaceFix(e, sp))
 		}
 	}
 	if err := pullRelease(ctx, app, inst, e, set, next, toShort); err != nil {

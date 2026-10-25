@@ -179,6 +179,21 @@ func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, erro
 	return res.ID, true, nil
 }
 
+func (e *Engine) ImageSize(ctx context.Context, ref string) (uint64, bool, error) {
+	c, err := e.api()
+	if err != nil {
+		return 0, false, err
+	}
+	res, err := c.ImageInspect(ctx, ref)
+	if err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return 0, false, nil
+		}
+		return 0, false, &Error{Op: "image", Class: ClassOf(err), Err: err}
+	}
+	return uint64(max(res.Size, 0)), true, nil
+}
+
 func (e *Engine) RepoDigest(ctx context.Context, image, ref string) (string, error) {
 	named, err := reference.ParseNormalizedNamed(ref)
 	if err != nil {

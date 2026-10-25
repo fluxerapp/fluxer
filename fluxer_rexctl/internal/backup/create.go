@@ -106,13 +106,8 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 		m.Release = inst.State.Release
 	}
 	values := instanceValues(inst)
-	model := p.Model
-	if model == nil {
-		if loaded, err := deploy.Load(ctx, inst, p.Engine); err == nil {
-			model = loaded.Model
-		}
-	}
-	bundledDB := !externalPostgres(values) && (model == nil || hasService(model, postgresService))
+	model := projectModel(ctx, inst, p)
+	bundledDB := bundledDatabase(values, model)
 	if !bundledDB {
 		m.Skipped = append(m.Skipped, SkippedDatabase)
 	}
@@ -140,7 +135,7 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	if err != nil {
 		return nil, err
 	}
-	if err := checkDisk(ctx, p, image, dir, volumes); err != nil {
+	if err := checkDisk(ctx, p, image, dir, volumes, bundledDB); err != nil {
 		return nil, err
 	}
 
@@ -231,8 +226,14 @@ func externalPostgres(values map[string]string) bool {
 	return false
 }
 
-func hasService(model *types.Project, name string) bool {
-	_, ok := model.Services[name]
+func bundledDatabase(values map[string]string, model *types.Project) bool {
+	if externalPostgres(values) {
+		return false
+	}
+	if model == nil {
+		return true
+	}
+	_, ok := model.Services[postgresService]
 	return ok
 }
 
@@ -370,11 +371,63 @@ func (e *HelperError) Error() string {
 
 func (e *HelperError) Unwrap() error { return e.Err }
 
-func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volumes []volumeRef) error {
+func Estimate(ctx context.Context, inst *instance.Instance, p *engine.Project) (uint64, error) {
+	values := instanceValues(inst)
+	model := projectModel(ctx, inst, p)
+	volumes, err := volumesToCopy(ctx, inst, values, p, model, &Manifest{})
+	if err != nil {
+		return 0, err
+	}
+	var image string
+	if len(volumes) > 0 {
+		if image, err = helperImage(ctx, inst, p, model); err != nil {
+			return 0, err
+		}
+	}
+	return diskNeed(ctx, p, image, volumes, bundledDatabase(values, model))
+}
+
+func projectModel(ctx context.Context, inst *instance.Instance, p *engine.Project) *types.Project {
+	if p.Model != nil {
+		return p.Model
+	}
+	if loaded, err := deploy.Load(ctx, inst, p.Engine); err == nil {
+		return loaded.Model
+	}
+	return nil
+}
+
+func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volumes []volumeRef, bundledDB bool) error {
 	free, err := host.FreeDisk(dir)
-	if err != nil || len(volumes) == 0 {
+	if err != nil {
 		return nil
 	}
+	need, err := diskNeed(ctx, p, image, volumes, bundledDB)
+	if err != nil {
+		return err
+	}
+	if free < need {
+		return &DiskError{Dir: dir, Need: need, Available: free}
+	}
+	return nil
+}
+
+func diskNeed(ctx context.Context, p *engine.Project, image string, volumes []volumeRef, bundledDB bool) (uint64, error) {
+	var total uint64
+	if bundledDB {
+		total = databaseSize(ctx, p)
+	}
+	if len(volumes) > 0 {
+		kb, err := volumesSize(ctx, p, image, volumes)
+		if err != nil {
+			return 0, err
+		}
+		total += kb * 1024
+	}
+	return total * diskHeadroomPct / 100, nil
+}
+
+func volumesSize(ctx context.Context, p *engine.Project, image string, volumes []volumeRef) (uint64, error) {
 	var mounts []engine.Mount
 	var paths []string
 	for i, v := range volumes {
@@ -384,7 +437,7 @@ func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volume
 	}
 	var out bytes.Buffer
 	if err := helper(ctx, p, image, mounts, nil, &out, "du", append([]string{"-sk"}, paths...)...); err != nil {
-		return fmt.Errorf("backup: measuring volumes: %w", err)
+		return 0, fmt.Errorf("backup: measuring volumes: %w", err)
 	}
 	var kb uint64
 	sc := bufio.NewScanner(&out)
@@ -398,11 +451,21 @@ func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volume
 			kb += n
 		}
 	}
-	need := kb * 1024 * diskHeadroomPct / 100
-	if free < need {
-		return &DiskError{Dir: dir, Need: need, Available: free}
+	return kb, nil
+}
+
+func databaseSize(ctx context.Context, p *engine.Project) uint64 {
+	var out bytes.Buffer
+	err := p.Exec(ctx, postgresService, engine.ExecOptions{Stdout: &out, KillOnCancel: true}, "sh", "-c",
+		`exec psql -X -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'select pg_database_size(current_database())'`)
+	if err != nil {
+		return 0
 	}
-	return nil
+	n, err := strconv.ParseUint(strings.TrimSpace(out.String()), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 func instanceFiles(dir string) ([]string, error) {
