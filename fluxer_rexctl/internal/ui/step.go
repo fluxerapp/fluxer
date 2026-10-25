@@ -78,6 +78,10 @@ func (s *Step) Done(format string, args ...any) {
 	s.mu.Unlock()
 }
 
+func (s *Step) Info(format string, args ...any) {
+	s.ui.Info(format, args...)
+}
+
 func (s *Step) Log(line string) {
 	s.mu.Lock()
 	s.logs = append(s.logs, line)
