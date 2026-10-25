@@ -101,8 +101,8 @@ func allowLowPorts(ctx context.Context, app *App, inst *instance.Instance) error
 		return nil
 	}
 	name := e.Kind.Name()
-	app.UI.Warn(fmt.Sprintf("%s can't use ports 80 and 443 under this account.", name), "")
-	ok, err := app.UI.Confirm(fmt.Sprintf("Let %s use them?", name), true)
+	app.UI.Warn(fmt.Sprintf("Rootless %s can't use ports 80 and 443, because only root can use ports below 1024 on this machine.", name), "")
+	ok, err := app.UI.Confirm("Let programs that don't run as root use ports 80 and up on this machine?", true)
 	if err != nil {
 		return err
 	}
