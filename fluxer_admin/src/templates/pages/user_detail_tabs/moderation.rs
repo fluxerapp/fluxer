@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::admin_flags::{ENFORCEMENT_LIMITS, deletion_reason_label};
+use crate::admin_flags::{ENFORCEMENT_LIMITS, deletion_reason_label, user_flag_bits};
 use crate::utils::plural::{count_noun, noun_for};
 use crate::{
     acl,
@@ -119,7 +119,7 @@ pub fn moderation_tab(
                 @if acl::has_permission(admin_acls, acl::USER_TEMP_BAN) {
                     (suspend_card(base, user, csrf_token, context))
                 }
-                @if acl::has_permission(admin_acls, acl::USER_DELETE) {
+                @if acl::has_permission(admin_acls, acl::USER_DELETE) && !deletion_complete(user) {
                     (close_card(base, config.self_hosted, user, csrf_token, context))
                 }
                 @if can_limit {
@@ -147,6 +147,10 @@ pub fn moderation_tab(
     }
 }
 
+fn deletion_complete(user: &AdminUser) -> bool {
+    user.flags & user_flag_bits::DELETED != 0 && user.pending_deletion_at.is_none()
+}
+
 fn current_restriction_card(
     base: &str,
     user: &AdminUser,
@@ -164,6 +168,8 @@ fn current_restriction_card(
                     (legacy_suspension_restriction(base, user, csrf_token, admin_acls, until, context.legacy_suspension.as_ref()))
                 } @else if let Some(pending) = &user.pending_deletion_at {
                     (legacy_deletion_restriction(base, user, csrf_token, admin_acls, pending, context.deletion_scheduler))
+                } @else if deletion_complete(user) {
+                    p class="text-sm text-neutral-900" { "This account was deleted." }
                 } @else {
                     p class="text-sm text-neutral-500" { "No current restriction." }
                 }
