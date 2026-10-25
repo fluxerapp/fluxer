@@ -123,6 +123,10 @@ export class UserRepository {
 		return this.accountRepo.completeDeletion(user);
 	}
 
+	async scrubDeletedUser(user: User): Promise<boolean> {
+		return this.accountRepo.scrubDeletedUser(user);
+	}
+
 	async findUnique(userId: UserID): Promise<User | null> {
 		return this.accountRepo.findUnique(userId);
 	}
