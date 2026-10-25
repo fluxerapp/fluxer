@@ -258,23 +258,26 @@ func (v volumeRef) mount(target string, readOnly bool) engine.Mount {
 }
 
 func dataVolume(model *types.Project, project string, have []engine.Volume, short string) (volumeRef, bool) {
+	if bind := boundData(model, short); bind != "" {
+		return volumeRef{short: short, bind: bind}, true
+	}
 	if full, ok := findVolume(have, project, short); ok {
 		return volumeRef{short: short, full: full}, true
 	}
+	return volumeRef{}, false
+}
+
+func boundData(model *types.Project, short string) string {
 	dm, ok := stack.DataMounts[short]
 	if !ok || model == nil {
-		return volumeRef{}, false
+		return ""
 	}
-	svc, ok := model.Services[dm.Service]
-	if !ok {
-		return volumeRef{}, false
-	}
-	for _, v := range svc.Volumes {
+	for _, v := range model.Services[dm.Service].Volumes {
 		if v.Type == types.VolumeTypeBind && v.Target == dm.Target && v.Source != "" {
-			return volumeRef{short: short, bind: v.Source}, true
+			return v.Source
 		}
 	}
-	return volumeRef{}, false
+	return ""
 }
 
 func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, model *types.Project, m *Manifest) ([]volumeRef, error) {
