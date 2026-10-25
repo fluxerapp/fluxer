@@ -16,7 +16,9 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
+		"@types/ws": "8.18.1",
 		"typescript": "catalog:ts7",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"ws": "8.21.3"
 	}
 }

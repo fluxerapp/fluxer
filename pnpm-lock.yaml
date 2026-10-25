@@ -1877,12 +1877,18 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.1
+      '@types/ws':
+        specifier: 8.18.1
+        version: 8.18.1
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.6)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.4(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+      ws:
+        specifier: 8.21.3
+        version: 8.21.3
 
   packages/config:
     devDependencies:
@@ -15972,7 +15978,6 @@ snapshots:
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 24.13.5
-    optional: true
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -21851,8 +21856,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.21.3:
-    optional: true
+  ws@8.21.3: {}
 
   xmlbuilder@15.1.1: {}
 
