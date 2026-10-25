@@ -72,6 +72,21 @@ type Preview = (locale: string) => Promise<boolean>;
 const DATE = new Date('2026-10-09T14:30:00Z');
 const USER = 'operator@example.com';
 const REPORT_ID = '1290874512349872128';
+const REPORT_REFERENCE = {
+	target: 'message_community',
+	reportedAt: new Date('2026-10-24T18:12:00Z'),
+	username: '',
+	communityName: 'Fluxer HQ',
+	channelName: 'general',
+} as const;
+const REPORT_REFERENCE_ACCOUNT = {
+	...REPORT_REFERENCE,
+	target: 'user',
+	username: 'example',
+	communityName: '',
+	channelName: '',
+} as const;
+const REPORT_REFERENCE_COMMUNITY = {...REPORT_REFERENCE, target: 'community', channelName: ''} as const;
 const DECISION_ID = '1290874512349872640';
 const SUSPENSION_NOTICE: EmailTemplateVariables['enforcement_notice'] = {
 	kind_label: 'suspension',
@@ -299,11 +314,17 @@ const previews: Record<string, Preview> = {
 				reportId: REPORT_ID,
 				publicComment: 'We removed the reported messages and warned the account. Thanks for the detailed report.',
 				outcome: 'removed',
+				reference: REPORT_REFERENCE,
 			},
 			locale,
 		),
 	report_resolved_restricted: (locale) =>
-		service.send('report_resolved', USER, {reportId: REPORT_ID, publicComment: '', outcome: 'restricted'}, locale),
+		service.send(
+			'report_resolved',
+			USER,
+			{reportId: REPORT_ID, publicComment: '', outcome: 'restricted', reference: REPORT_REFERENCE_ACCOUNT},
+			locale,
+		),
 	report_resolved_no_violation: (locale) =>
 		service.send(
 			'report_resolved',
@@ -312,6 +333,7 @@ const previews: Record<string, Preview> = {
 				reportId: REPORT_ID,
 				publicComment: 'The messages were sarcastic but not aimed at anyone.',
 				outcome: 'no_violation',
+				reference: REPORT_REFERENCE_COMMUNITY,
 			},
 			locale,
 		),
@@ -325,6 +347,7 @@ const previews: Record<string, Preview> = {
 				reportId: REPORT_ID,
 				publicComment: 'We removed the reported message under our community guidelines.',
 				outcome: 'action_taken',
+				reference: REPORT_REFERENCE,
 			},
 			locale,
 		),
@@ -332,7 +355,7 @@ const previews: Record<string, Preview> = {
 		service.send(
 			'dsa_report_resolved',
 			USER,
-			{reportId: REPORT_ID, publicComment: '', outcome: 'no_violation'},
+			{reportId: REPORT_ID, publicComment: '', outcome: 'no_violation', reference: REPORT_REFERENCE},
 			locale,
 		),
 	gift_chargeback_notification: (locale) => service.send('gift_chargeback_notification', USER, {}, locale),

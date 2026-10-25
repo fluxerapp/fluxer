@@ -4,6 +4,7 @@ import type {
 	EmailTemplateVariables,
 	ReporterOutcome,
 	ReportReceivedTargetKind,
+	ReportReference,
 } from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 
 export interface OperatorPassWaitlistVerificationEmail {
@@ -166,8 +167,8 @@ export interface EmailSendParams {
 	inactivity_warning: {deletionDate: Date; lastActiveDate: Date};
 	enforcement_notice: EmailTemplateVariables['enforcement_notice'];
 	enforcement_ended: EmailTemplateVariables['enforcement_ended'];
-	report_resolved: {reportId: string; publicComment: string; outcome: ReporterOutcome};
-	dsa_report_resolved: {reportId: string; publicComment: string; outcome: ReporterOutcome};
+	report_resolved: {reportId: string; publicComment: string; outcome: ReporterOutcome; reference: ReportReference};
+	dsa_report_resolved: {reportId: string; publicComment: string; outcome: ReporterOutcome; reference: ReportReference};
 	report_received: {reportId: string; targetKind: ReportReceivedTargetKind};
 	dsa_report_verification: {code: string; expiresAt: Date};
 	donation_magic_link: {manageUrl: string; expiresAt: Date};

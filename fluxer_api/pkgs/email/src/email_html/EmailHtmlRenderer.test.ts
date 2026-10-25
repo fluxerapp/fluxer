@@ -42,6 +42,13 @@ const USER = 'user@example.com';
 const DOWNLOAD_URL = 'https://exports.example.com/harvest.zip?signature=a&expires=b';
 const MANAGE_URL = 'https://example.com/donate/manage#token=abc';
 const REPORT_ID = '1290874512349872128';
+const REPORT_REFERENCE = {
+	target: 'user',
+	reportedAt: new Date('2026-10-24T18:12:00Z'),
+	username: 'example',
+	communityName: '',
+	channelName: '',
+} as const;
 const DECISION_ID = '1290874512349872640';
 const RULE_URL = 'https://example.com/guidelines#6-spam-and-service-abuse';
 const ENFORCEMENT_NOTICE: EmailTemplateVariables['enforcement_notice'] = {
@@ -240,7 +247,12 @@ const EMAILS: Array<[string, string | null, Send]> = [
 		'report_resolved',
 		null,
 		(service, locale) =>
-			service.send('report_resolved', USER, {reportId: REPORT_ID, publicComment: 'Done', outcome: 'removed'}, locale),
+			service.send(
+				'report_resolved',
+				USER,
+				{reportId: REPORT_ID, publicComment: 'Done', outcome: 'removed', reference: REPORT_REFERENCE},
+				locale,
+			),
 	],
 	[
 		'report_received',
@@ -254,7 +266,7 @@ const EMAILS: Array<[string, string | null, Send]> = [
 			service.send(
 				'dsa_report_resolved',
 				USER,
-				{reportId: REPORT_ID, publicComment: 'Done', outcome: 'action_taken'},
+				{reportId: REPORT_ID, publicComment: 'Done', outcome: 'action_taken', reference: REPORT_REFERENCE},
 				locale,
 			),
 	],
