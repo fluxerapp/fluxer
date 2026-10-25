@@ -158,9 +158,9 @@ const SearchIndexTypeEnum = createNamedStringLiteralUnion(
 		['audit_logs', 'audit_logs', 'Audit log search index'],
 		['channel_messages', 'channel_messages', 'Channel message search index'],
 		['guild_members', 'guild_members', 'Guild member search index'],
-		['favorite_memes', 'favorite_memes', 'Favourite meme search index'],
 		['discovery', 'discovery', 'Discovery guild search index'],
 		['threads', 'threads', 'Thread search index'],
+		['all', 'all', 'Every search index, with messages in every channel and DM'],
 	],
 	'Type of search index to refresh',
 );
@@ -308,7 +308,6 @@ export type SearchIndexNameParam = z.infer<typeof SearchIndexNameParam>;
 
 export const RefreshSearchIndexRequest = z.object({
 	guild_id: SnowflakeType.optional().describe('Specific guild ID to reindex'),
-	user_id: SnowflakeType.optional().describe('Specific user ID to reindex'),
 });
 
 export type RefreshSearchIndexRequest = z.infer<typeof RefreshSearchIndexRequest>;
@@ -613,6 +612,7 @@ const AppPublicConfigResponse = z.object({
 		sign_in_backdrop_url: z.string().nullable(),
 		custom_css: z.string().nullable(),
 		upload_limit_message: z.string().nullable(),
+		trusted_domains: z.array(z.string()),
 	}),
 	setup: z.object({
 		configured: z.boolean(),
@@ -638,6 +638,8 @@ function isAbsoluteHttpUrl(value: string): boolean {
 
 export const UPLOAD_LIMIT_MESSAGE_MAX_LENGTH = 500;
 
+export const TRUSTED_DOMAINS_MAX = 50;
+
 const HEX_THEME_COLOR_PATTERN = /^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$/;
 
 const AppPublicConfigUpdateRequest = z.object({
@@ -658,6 +660,7 @@ const AppPublicConfigUpdateRequest = z.object({
 			sign_in_backdrop_url: z.string().trim().max(2048).nullish(),
 			custom_css: z.string().trim().max(32_768).nullish(),
 			upload_limit_message: z.string().trim().max(UPLOAD_LIMIT_MESSAGE_MAX_LENGTH).nullish(),
+			trusted_domains: z.array(z.string().max(255)).max(TRUSTED_DOMAINS_MAX).nullish(),
 		})
 		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
@@ -1253,6 +1256,7 @@ export const IndexRefreshStatusResponse = z.union([
 	z.object({
 		status: IndexRefreshStatusEnum,
 		index_type: z.string().describe('Type of index being refreshed'),
+		phase: z.string().optional().describe('The index an `all` rebuild is working on, or queued before it starts'),
 		total: z.number().optional().describe('Total number of items to index'),
 		indexed: z.number().optional().describe('Number of items indexed so far'),
 		started_at: z.string().optional().describe('ISO 8601 timestamp when the job started'),

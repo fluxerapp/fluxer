@@ -1,0 +1,69 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Run Fluxer with Docker Compose
+description: Run Fluxer from plain compose files on a platform that can't run rexctl.
+sidebar:
+  label: Docker Compose
+---
+
+Use this page if your platform runs compose stacks for you, such as Portainer, TrueNAS or Unraid, and you can't run rexctl on the machine. When you can run rexctl, [install with rexctl](/operator/) instead, because it does all of this for you.
+
+## Get the files
+
+Every release comes with a compose bundle. Download the latest one into an empty folder and unpack it.
+
+```sh
+curl -fsSL https://fluxer.dev/compose/latest -o fluxer-compose.tar.gz
+tar -xzf fluxer-compose.tar.gz
+cp .env.example .env
+```
+
+The bundle has `docker-compose.yml` with every Fluxer image pinned to the release, the `Caddyfile`, a few optional compose files and `.env.example`. The bundle for each version is also on its release on [GitHub](https://github.com/fluxerapp/fluxer/releases).
+
+## Fill in .env
+
+Set `FLUXER_DOMAIN` to your instance's domain, such as `chat.example.com`. Then run these commands in the folder to fill in the secrets.
+
+```sh
+for key in POSTGRES_PASSWORD MEILI_MASTER_KEY FLUXER_S3_SECRET_KEY FLUXER_SUDO_MODE_SECRET \
+  FLUXER_CONNECTION_INITIATION_SECRET FLUXER_PROFILE_PSEUDONYM_SECRET FLUXER_GATEWAY_RPC_AUTH_TOKEN \
+  FLUXER_ERLANG_COOKIE FLUXER_MEDIA_PROXY_SECRET_KEY FLUXER_ADMIN_SECRET_KEY_BASE \
+  FLUXER_ADMIN_OAUTH_CLIENT_SECRET LIVEKIT_API_SECRET; do
+  sed -i "s|^$key=.*|$key=$(openssl rand -hex 32)|" .env
+done
+sed -i "s|^FLUXER_SETUP_TOKEN=.*|FLUXER_SETUP_TOKEN=$(openssl rand -hex 16)|" .env
+sed -i "s|^FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=.*|FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=$(openssl rand -base64 32)|" .env
+openssl ecparam -name prime256v1 -genkey -noout -out vapid.pem
+sed -i "s|^FLUXER_VAPID_PUBLIC_KEY=.*|FLUXER_VAPID_PUBLIC_KEY=$(openssl ec -in vapid.pem -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | tr '/+' '_-' | tr -d '=\n')|" .env
+sed -i "s|^FLUXER_VAPID_PRIVATE_KEY=.*|FLUXER_VAPID_PRIVATE_KEY=$(openssl ec -in vapid.pem -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 | tr '/+' '_-' | tr -d '=\n')|" .env
+rm vapid.pem
+```
+
+Keep a copy of `.env` somewhere safe. The database, search, storage, voice and push keys can't change once Fluxer has started, because your data depends on them. If your platform asks for environment values instead of a `.env` file, paste the lines from `.env` there.
+
+## Start it
+
+Open TCP ports 80, 443 and 7881 and UDP ports 443 and 7882, the same as for a [rexctl install](/operator/). Then start Fluxer.
+
+```sh
+docker compose up -d
+```
+
+Fluxer serves your domain over HTTPS and gets its own certificate. If another web server already uses ports 80 and 443, add these two lines to `.env` before you start, and point your proxy at `127.0.0.1:8080` as described in [Put Fluxer behind your own proxy](/operator/reverse-proxy/).
+
+```sh
+COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml
+FLUXER_EDGE_BIND=127.0.0.1:8080
+```
+
+When every service is healthy, open your domain in a browser and enter the `FLUXER_SETUP_TOKEN` from `.env` to create your admin account.
+
+## Upgrade
+
+Download the new bundle into the same folder and unpack it, which replaces every file except `.env`. If the new `.env.example` has a key your `.env` doesn't have yet, add it, then run `docker compose up -d`.
+
+Back up the Docker volumes yourself before you upgrade, because `rexctl backup` isn't available without rexctl.
+
+## Switch to rexctl later
+
+If you can run rexctl on the machine later, `rexctl takeover --dir <folder>` hands this instance to rexctl with its data and secrets as they are.

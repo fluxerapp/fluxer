@@ -48,13 +48,15 @@
 		"subject": "Zarządzaj darowiznami dla {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Chodzi o Twoje zgłoszenie wiadomości na kanale #{channelName} w społeczności „{communityName}”, wysłane {reportedAt, date, long}.} message_dm {Chodzi o Twoje zgłoszenie wiadomości w rozmowie prywatnej, wysłane {reportedAt, date, long}.} message {Chodzi o Twoje zgłoszenie wiadomości, wysłane {reportedAt, date, long}.} user {Chodzi o Twoje zgłoszenie konta „{username}”, wysłane {reportedAt, date, long}.} community {Chodzi o Twoje zgłoszenie społeczności „{communityName}”, wysłane {reportedAt, date, long}.} other {Chodzi o zgłoszenie wysłane przez Ciebie {reportedAt, date, long}.}}",
 		"comment_label": "Komentarz naszego zespołu",
 		"footer_reason": "Otrzymujesz tę wiadomość w związku z Twoim zgłoszeniem w ramach aktu o usługach cyfrowych w {product_name}.",
-		"intro": "{outcome, select, removed {Usunęliśmy zgłoszone przez Ciebie treści, ponieważ naruszały nasze zasady.} restricted {Zgłoszone przez Ciebie konto naruszyło nasze zasady, więc je ograniczyliśmy. Nie informujemy, jakie kroki podjęliśmy wobec konta innej osoby.} action_taken {To, co zostało przez Ciebie zgłoszone, naruszało nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie kroki podjęliśmy wobec konta innej osoby.} no_violation {To, co zostało przez Ciebie zgłoszone, nie narusza naszych zasad, więc niczego nie zmieniliśmy.} other {Zamknęliśmy Twoje zgłoszenie.}}",
+		"intro": "{outcome, select, removed {Usunęliśmy zgłoszone przez Ciebie treści, ponieważ naruszały nasze zasady.} restricted {Zgłoszone przez Ciebie konto naruszyło nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie działania podjęliśmy.} action_taken {To, co zostało przez Ciebie zgłoszone, naruszało nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie działania podjęliśmy.} no_violation {To, co zostało przez Ciebie zgłoszone, nie narusza naszych zasad, więc niczego nie zmieniliśmy.} other {Zamknęliśmy Twoje zgłoszenie.}}",
 		"note": "{reply, select, yes {Jeśli się nie zgadzasz, odpowiedz na tę wiadomość w ciągu 60 dni.} other {{appeals_email, select, null {} other {Jeśli się nie zgadzasz, napisz na adres <mail>{appeals_email}</mail> w ciągu 60 dni i podaj ID zgłoszenia.}}}}{appeals_email, select, null {} other { W UE możesz też zwrócić się do certyfikowanego <dsa>organu pozasądowego rozstrzygania sporów</dsa> lub złożyć skargę do koordynatora ds. usług cyfrowych w swoim kraju.}}",
 		"report_label": "ID zgłoszenia",
 		"signoff": "Zespół {product_name}",
-		"subject": "Podjęliśmy decyzję w sprawie Twojego zgłoszenia w {product_name}"
+		"subject": "Podjęliśmy decyzję w sprawie Twojego zgłoszenia w {product_name}",
+		"thanks": "{outcome, select, removed {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} restricted {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} action_taken {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} other {Dziękujemy, że dałeś nam znać.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Ten kod wygaśnie za {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}.",
@@ -422,13 +424,15 @@
 		"subject": "Otrzymaliśmy Twoje zgłoszenie w {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Chodzi o Twoje zgłoszenie wiadomości na kanale #{channelName} w społeczności „{communityName}”, wysłane {reportedAt, date, long}.} message_dm {Chodzi o Twoje zgłoszenie wiadomości w rozmowie prywatnej, wysłane {reportedAt, date, long}.} message {Chodzi o Twoje zgłoszenie wiadomości, wysłane {reportedAt, date, long}.} user {Chodzi o Twoje zgłoszenie konta „{username}”, wysłane {reportedAt, date, long}.} community {Chodzi o Twoje zgłoszenie społeczności „{communityName}”, wysłane {reportedAt, date, long}.} other {Chodzi o zgłoszenie wysłane przez Ciebie {reportedAt, date, long}.}}",
 		"comment_label": "Komentarz naszego zespołu",
 		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ dotyczy ona Twojego zgłoszenia w {product_name}.",
-		"intro": "{outcome, select, removed {Usunęliśmy zgłoszone przez Ciebie treści, ponieważ naruszały nasze zasady.} restricted {Zgłoszone przez Ciebie konto naruszyło nasze zasady, więc je ograniczyliśmy. Nie informujemy, jakie kroki podjęliśmy wobec konta innej osoby.} action_taken {To, co zostało przez Ciebie zgłoszone, naruszało nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie kroki podjęliśmy wobec konta innej osoby.} no_violation {To, co zostało przez Ciebie zgłoszone, nie narusza naszych zasad, więc niczego nie zmieniliśmy.} other {Zamknęliśmy Twoje zgłoszenie.}}",
+		"intro": "{outcome, select, removed {Usunęliśmy zgłoszone przez Ciebie treści, ponieważ naruszały nasze zasady.} restricted {Zgłoszone przez Ciebie konto naruszyło nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie działania podjęliśmy.} action_taken {To, co zostało przez Ciebie zgłoszone, naruszało nasze zasady, więc podjęliśmy działania. Nie informujemy, jakie działania podjęliśmy.} no_violation {To, co zostało przez Ciebie zgłoszone, nie narusza naszych zasad, więc niczego nie zmieniliśmy.} other {Zamknęliśmy Twoje zgłoszenie.}}",
 		"note": "{reply, select, yes {Jeśli się nie zgadzasz, odpowiedz na tę wiadomość w ciągu 60 dni.} other {{appeals_email, select, null {} other {Jeśli się nie zgadzasz, napisz na adres <mail>{appeals_email}</mail> w ciągu 60 dni i podaj ID zgłoszenia.}}}}{appeals_email, select, null {} other { W UE możesz też zwrócić się do certyfikowanego <dsa>organu pozasądowego rozstrzygania sporów</dsa> lub złożyć skargę do koordynatora ds. usług cyfrowych w swoim kraju.}}",
 		"report_label": "ID zgłoszenia",
 		"signoff": "Zespół {product_name}",
-		"subject": "Twoje zgłoszenie w {product_name} zostało rozpatrzone"
+		"subject": "Twoje zgłoszenie w {product_name} zostało rozpatrzone",
+		"thanks": "{outcome, select, removed {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} restricted {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} action_taken {Dziękujemy za zgłoszenie. Takie zgłoszenia jak Twoje pomagają dbać o bezpieczeństwo wszystkich w {product_name}.} other {Dziękujemy, że dałeś nam znać.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Otrzymujesz tę wiadomość, ponieważ wpłynęła Twoja prośba o usunięcie konta {product_name}.",

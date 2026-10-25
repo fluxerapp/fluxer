@@ -44,16 +44,24 @@ const isProduction =
 	process.env.FLUXER_DESKTOP_PRODUCTION === 'true' ||
 	process.env.GITHUB_ACTIONS === 'true';
 const skipNative = process.env.FLUXER_SKIP_NATIVE === 'true';
-let embeddedBuildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || '';
-const embeddedReleaseChannel = process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || '';
+const RENAMED_BUILD_ENV = {
+	PUBLIC_BUILD_VERSION: 'BUILD_VERSION',
+	PUBLIC_RELEASE_CHANNEL: 'BUILD_CHANNEL',
+	RELEASE_CHANNEL: 'BUILD_CHANNEL',
+};
+for (const [oldName, newName] of Object.entries(RENAMED_BUILD_ENV)) {
+	if (process.env[oldName] && !process.env[newName]) {
+		throw new Error(`The desktop build no longer reads ${oldName}. Set ${newName} instead.`);
+	}
+}
+let embeddedBuildVersion = process.env.BUILD_VERSION || '';
+const embeddedBuildChannel = process.env.BUILD_CHANNEL || '';
 const modulesEnabled = process.env.FLUXER_MODULES === '1' || process.env.FLUXER_MODULES === 'true';
 const offlineBuild = process.env.FLUXER_OFFLINE === '1' || process.env.FLUXER_OFFLINE === 'true';
-function publicBuildDefines() {
+function buildInfoDefines() {
 	return {
-		'process.env.PUBLIC_BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
 		'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
-		'process.env.PUBLIC_RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-		'process.env.RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
+		'process.env.BUILD_CHANNEL': JSON.stringify(embeddedBuildChannel),
 		'process.env.FLUXER_MODULES': JSON.stringify(modulesEnabled ? '1' : ''),
 		'process.env.FLUXER_OFFLINE': JSON.stringify(offlineBuild ? '1' : ''),
 	};
@@ -691,7 +699,7 @@ async function buildMain() {
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 			[MAIN_APP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_APP_OUTPUT_FILE_NAME),
-			...publicBuildDefines(),
+			...buildInfoDefines(),
 		},
 		banner: {
 			js: `import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);`,
@@ -860,7 +868,7 @@ function preloadBuildOptions(entryFileName, outputFileName) {
 		tsconfig: DESKTOP_TSCONFIG,
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-			...publicBuildDefines(),
+			...buildInfoDefines(),
 		},
 	};
 }
@@ -1013,7 +1021,7 @@ function writeBuildInfo() {
 		`${JSON.stringify(
 			{
 				buildVersion: embeddedBuildVersion,
-				releaseChannel: embeddedReleaseChannel,
+				releaseChannel: embeddedBuildChannel,
 				buildChannel: compiledBuildChannel,
 				offlineBuild,
 				modulesEnabled,

@@ -73,6 +73,11 @@ export const InstanceBrandingSchema = z
 			.describe(
 				'Optional Markdown a self-hosted instance shows when a file is over the upload limit, in place of the default note',
 			),
+		trusted_domains: z
+			.array(z.string())
+			.describe(
+				'Extra domains a self-hosted instance trusts, so links to them open without a warning. Each entry is a hostname, or a hostname with a *. prefix that also covers its subdomains',
+			),
 	})
 	.describe('Branding values safe to expose to clients');
 export type InstanceBranding = z.infer<typeof InstanceBrandingSchema>;

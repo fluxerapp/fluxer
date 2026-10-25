@@ -7173,7 +7173,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.",
+				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and all rebuilds every index, one at a time. Queueing all while one is running returns the running refresh ID. Requires GUILD_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7189,9 +7189,9 @@
 								"audit_logs",
 								"channel_messages",
 								"guild_members",
-								"favorite_memes",
 								"discovery",
-								"threads"
+								"threads",
+								"all"
 							],
 							"x-enumDescriptions": [
 								"Guild search index",
@@ -7200,9 +7200,9 @@
 								"Audit log search index",
 								"Channel message search index",
 								"Guild member search index",
-								"Favourite meme search index",
 								"Discovery guild search index",
-								"Thread search index"
+								"Thread search index",
+								"Every search index, with messages in every channel and DM"
 							],
 							"enum": [
 								"guilds",
@@ -7211,9 +7211,9 @@
 								"audit_logs",
 								"channel_messages",
 								"guild_members",
-								"favorite_memes",
 								"discovery",
-								"threads"
+								"threads",
+								"all"
 							],
 							"type": "string"
 						},
@@ -14107,10 +14107,6 @@
 					"guild_id": {
 						"description": "Specific guild ID to reindex",
 						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
-					},
-					"user_id": {
-						"description": "Specific user ID to reindex",
-						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 					}
 				}
 			},
@@ -14143,6 +14139,10 @@
 								"type": "string"
 							},
 							"index_type": {"type": "string", "description": "Type of index being refreshed"},
+							"phase": {
+								"description": "The index an `all` rebuild is working on, or queued before it starts",
+								"type": "string"
+							},
 							"total": {"description": "Total number of items to index", "type": "number"},
 							"indexed": {"description": "Number of items indexed so far", "type": "number"},
 							"started_at": {"description": "ISO 8601 timestamp when the job started", "type": "string"},
@@ -15872,7 +15872,8 @@
 									"premium_info_url": {"nullable": true, "type": "string"},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string"},
 									"custom_css": {"nullable": true, "type": "string"},
-									"upload_limit_message": {"nullable": true, "type": "string"}
+									"upload_limit_message": {"nullable": true, "type": "string"},
+									"trusted_domains": {"type": "array", "items": {"type": "string"}}
 								},
 								"required": [
 									"product_name",
@@ -15889,7 +15890,8 @@
 									"premium_info_url",
 									"sign_in_backdrop_url",
 									"custom_css",
-									"upload_limit_message"
+									"upload_limit_message",
+									"trusted_domains"
 								],
 								"additionalProperties": false
 							},
@@ -16532,7 +16534,13 @@
 									"premium_info_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"sign_in_backdrop_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"custom_css": {"nullable": true, "type": "string", "maxLength": 32768},
-									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500}
+									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500},
+									"trusted_domains": {
+										"nullable": true,
+										"maxItems": 50,
+										"type": "array",
+										"items": {"type": "string", "maxLength": 255}
+									}
 								}
 							},
 							"setup": {"nullable": true, "type": "object", "properties": {"configured": {"type": "boolean"}}},
@@ -24294,6 +24302,8 @@
 					"GIFT_CODE_ALREADY_REDEEMED",
 					"GUILD_TEMPLATE_INVALID",
 					"GUILD_VERIFICATION_REQUIRED",
+					"HANDOFF_ATTEMPTS_EXCEEDED",
+					"HANDOFF_CODE_ALREADY_USED",
 					"HANDOFF_CODE_EXPIRED",
 					"HARVEST_EXPIRED",
 					"HARVEST_FAILED",
@@ -24654,6 +24664,8 @@
 					"Gift code is already redeemed.",
 					"The community template data is invalid or malformed.",
 					"{reason, select, membership_age {You can talk here once you've been a member for 10 minutes.} other {Claim your account to talk in this community.}}",
+					"Too many sign-in attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+					"This code was already used. Start a new sign-in from the app.",
 					"Handoff code expired.",
 					"Your data export request has expired. Please request a new export.",
 					"Your data export request failed. Please try again.",

@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Este domínio de e-mail não pode ser usado para SSO.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Não foi possível buscar as informações de usuário do SSO. Tente novamente.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Não foi possível ler a resposta do seu provedor SSO. Tente novamente.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Muitas tentativas de login da sua rede. Tente de novo em {minutes, plural, one {# minuto} other {# minutos}}.",
+	"auth_and_oauth.handoff_code_already_used": "Este código já foi usado. Comece um novo login pelo app.",
 	"auth_and_oauth.handoff_code_expired": "O código de transferência de sessão expirou.",
 	"auth_and_oauth.handoff_code_invalid": "Código de transferência de sessão inválido.",
 	"auth_and_oauth.invalid_code": "Código inválido.",

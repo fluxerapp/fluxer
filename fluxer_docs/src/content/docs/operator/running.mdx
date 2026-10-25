@@ -16,6 +16,12 @@ This upgrades rexctl and Fluxer together. It backs up your instance before Fluxe
 
 To see whether there's a new version without upgrading, run `rexctl upgrade --check`.
 
+If you installed Fluxer before rexctl existed, upgrade it with the current install script. It installs rexctl and hands your instance to it with your data and settings as they are.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- --update --dir /path/to/your/instance
+```
+
 ## Roll back
 
 ```sh
@@ -112,6 +118,8 @@ rexctl config set <key> <value>
 Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, so a resized machine needs no changes. The `memory.profile` setting pins a fixed size instead.
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service instead of a separate worker service. rexctl then removes the worker and adds half of its memory limit to the api.
+
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in a `custom.compose.yml` file in your instance folder.
 
 ## When something is wrong
 

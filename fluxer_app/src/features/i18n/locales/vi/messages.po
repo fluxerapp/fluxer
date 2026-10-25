@@ -1820,10 +1820,10 @@ msgstr "{onlineCount} đang hoạt động"
 msgid "{operatorPassName} from {senderName}"
 msgstr "{operatorPassName} từ {senderName}"
 
-#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceMonth} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceDate} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
-msgid "{operatorPassName} since {sinceMonth}"
-msgstr "{operatorPassName} từ {sinceMonth}"
+msgid "{operatorPassName} since {sinceDate}"
+msgstr "{operatorPassName} từ {sinceDate}"
 
 #. Screen-reader label for an optional slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
@@ -14384,6 +14384,10 @@ msgstr "Chỉnh sửa tin nhắn của bạn ở dưới"
 msgid "Edit your messages above or below"
 msgstr "Chỉnh sửa tin nhắn của bạn ở trên hoặc dưới"
 
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx
+msgid "Edit your profile"
+msgstr "Chỉnh sửa hồ sơ của bạn"
+
 #. Button or menu action label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Edit your profile appearance and see a live preview"
@@ -16498,6 +16502,11 @@ msgstr "Fluxer không kết nối được với {host}."
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}. The server said: \"{error}\""
 msgstr "Fluxer không kết nối được với {host}. Máy chủ trả lời: \"{error}\""
+
+#. Status shown in the desktop app when it stopped checking the browser sign-in because the instance could not be reached. instanceName is the server name, such as Fluxer. "Try again" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "Fluxer couldn't reach {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
+msgstr "Fluxer không thể kết nối với {instanceName} để kiểm tra xem trình duyệt của bạn đã phê duyệt đăng nhập này chưa. Hãy kiểm tra kết nối rồi chọn \"Thử lại\"."
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
@@ -18721,6 +18730,11 @@ msgstr "Nếu có người đang gặp nguy hiểm cấp bách, trước tiên h
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "Nếu ai đó yêu cầu bạn dán thứ gì đó vào đây, thì đó là một trò lừa đảo có thể giúp họ chiếm quyền kiểm soát tài khoản {productName} của bạn."
+
+#. Hint in the desktop app while it waits for the browser, for people with more than one Fluxer app installed. "Signing in on another device?" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
+msgstr "Nếu liên kết mở một ứng dụng Fluxer khác, hãy chọn \"Đăng nhập trên thiết bị khác?\" và nhập mã trong trình duyệt."
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -25719,7 +25733,7 @@ msgstr "Lời đề nghị chuyển Operator Pass"
 msgid "Operator Pass purchase"
 msgstr "Giao dịch mua Operator Pass"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
 msgid "Operator Pass since {since}"
 msgstr "Operator Pass từ {since}"
@@ -36180,6 +36194,11 @@ msgstr "Mã này không hợp lệ hoặc đã được sử dụng."
 msgid "This code was already redeemed."
 msgstr "Mã này đã được đổi."
 
+#. Shown on the browser sign-in page when the code the user typed or opened was already used to approve a sign-in.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "This code was already used. Start a new sign-in from the app."
+msgstr "Mã này đã được sử dụng. Hãy bắt đầu đăng nhập mới từ ứng dụng."
+
 #. Warning under the theme color picker in the setup wizard when the chosen color is very dark.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the dark theme background, so buttons may be hard to see there."
@@ -37386,6 +37405,11 @@ msgstr "Tông màu"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Ánh xạ tông màu ảnh HDR về dải tiêu chuẩn, giảm độ sáng tối đa."
+
+#. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+msgstr "Có quá nhiều lần thử từ mạng của bạn. Hãy thử lại sau {minutes, plural, other {# phút}}."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx

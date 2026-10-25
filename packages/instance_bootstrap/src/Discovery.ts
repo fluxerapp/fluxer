@@ -861,6 +861,10 @@ function parseBranding(value: unknown): Readonly<Partial<InstanceBranding>> {
 	if (Object.hasOwn(source, 'upload_limit_message')) {
 		branding.upload_limit_message = readNonEmptyString(source, 'upload_limit_message');
 	}
+	const trustedDomains = readStringArray(source, 'trusted_domains');
+	if (trustedDomains != null) {
+		branding.trusted_domains = trustedDomains;
+	}
 	return branding;
 }
 

@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -17,6 +19,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
@@ -527,17 +530,27 @@ func overlayFor(path, dir string) string {
 	return ""
 }
 
-func isShipped(name string, data []byte) bool {
+//go:embed shipped.json
+var shippedJSON []byte
+
+var shippedHashes = sync.OnceValue(func() map[string][]string {
+	var known map[string][]string
+	if err := json.Unmarshal(shippedJSON, &known); err != nil {
+		panic(err)
+	}
+	return known
+})
+
+func ShippedHash(data []byte) string {
 	sum := sha256.Sum256(normalizeLF(data))
-	h := hex.EncodeToString(sum[:])
-	if slices.Contains(shippedHashes[name], h) {
-		return true
+	return hex.EncodeToString(sum[:])
+}
+
+func isShipped(name string, data []byte) bool {
+	if name == stack.ComposeFile {
+		data = stack.UnpinImages(normalizeLF(data))
 	}
-	current, err := fs.ReadFile(stack.Embedded().Files, name)
-	if err != nil {
-		return false
-	}
-	return bytes.Equal(normalizeLF(current), normalizeLF(data))
+	return slices.Contains(shippedHashes()[name], ShippedHash(data))
 }
 
 func normalizeLF(data []byte) []byte {

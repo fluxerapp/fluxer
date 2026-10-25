@@ -48,13 +48,15 @@
 		"subject": "Beheer je {product_name}-donaties"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Dit gaat over je melding van een bericht in #{channelName} in \"{communityName}\", gestuurd op {reportedAt, date, long}.} message_dm {Dit gaat over je melding van een bericht in een direct bericht, gestuurd op {reportedAt, date, long}.} message {Dit gaat over je melding van een bericht, gestuurd op {reportedAt, date, long}.} user {Dit gaat over je melding van het account \"{username}\", gestuurd op {reportedAt, date, long}.} community {Dit gaat over je melding van de community \"{communityName}\", gestuurd op {reportedAt, date, long}.} other {Dit gaat over de melding die je op {reportedAt, date, long} hebt gestuurd.}}",
 		"comment_label": "Opmerking van ons team",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een melding op grond van de Digital Services Act hebt ingediend op {product_name}.",
-		"intro": "{outcome, select, removed {We hebben de inhoud die je hebt gemeld verwijderd, omdat die onze regels overtrad.} restricted {Het account dat je hebt gemeld overtrad onze regels, en we hebben het beperkt. We delen niet wat we met het account van iemand anders hebben gedaan.} action_taken {Wat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet wat we met het account van iemand anders hebben gedaan.} no_violation {Wat je hebt gemeld overtreedt onze regels niet, dus we hebben het gelaten zoals het is.} other {We hebben je melding afgesloten.}}",
+		"intro": "{outcome, select, removed {We hebben de inhoud die je hebt gemeld verwijderd, omdat die onze regels overtrad.} restricted {Het account dat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet welke maatregelen we hebben genomen.} action_taken {Wat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet welke maatregelen we hebben genomen.} no_violation {Wat je hebt gemeld overtreedt onze regels niet, dus we hebben het gelaten zoals het is.} other {We hebben je melding afgesloten.}}",
 		"note": "{reply, select, yes {Ben je het er niet mee eens? Beantwoord deze e-mail dan binnen 60 dagen.} other {{appeals_email, select, null {} other {Ben je het er niet mee eens? Mail dan binnen 60 dagen naar <mail>{appeals_email}</mail> en vermeld het meldings-ID.}}}}{appeals_email, select, null {} other { In de EU kun je ook naar een gecertificeerd <dsa>orgaan voor buitengerechtelijke geschillenbeslechting</dsa> gaan of een klacht indienen bij de digitaledienstencoördinator in je land.}}",
 		"report_label": "Meldings-ID",
 		"signoff": "Het team van {product_name}",
-		"subject": "We hebben een beslissing genomen over je melding op {product_name}"
+		"subject": "We hebben een beslissing genomen over je melding op {product_name}",
+		"thanks": "{outcome, select, removed {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} restricted {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} action_taken {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} other {Bedankt dat je het ons hebt laten weten.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Deze code verloopt over {minutes, plural, one {# minuut} other {# minuten}}.",
@@ -422,13 +424,15 @@
 		"subject": "We hebben je melding op {product_name} ontvangen"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Dit gaat over je melding van een bericht in #{channelName} in \"{communityName}\", gestuurd op {reportedAt, date, long}.} message_dm {Dit gaat over je melding van een bericht in een direct bericht, gestuurd op {reportedAt, date, long}.} message {Dit gaat over je melding van een bericht, gestuurd op {reportedAt, date, long}.} user {Dit gaat over je melding van het account \"{username}\", gestuurd op {reportedAt, date, long}.} community {Dit gaat over je melding van de community \"{communityName}\", gestuurd op {reportedAt, date, long}.} other {Dit gaat over de melding die je op {reportedAt, date, long} hebt gestuurd.}}",
 		"comment_label": "Opmerking van ons team",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een melding hebt ingediend op {product_name}.",
-		"intro": "{outcome, select, removed {We hebben de inhoud die je hebt gemeld verwijderd, omdat die onze regels overtrad.} restricted {Het account dat je hebt gemeld overtrad onze regels, en we hebben het beperkt. We delen niet wat we met het account van iemand anders hebben gedaan.} action_taken {Wat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet wat we met het account van iemand anders hebben gedaan.} no_violation {Wat je hebt gemeld overtreedt onze regels niet, dus we hebben het gelaten zoals het is.} other {We hebben je melding afgesloten.}}",
+		"intro": "{outcome, select, removed {We hebben de inhoud die je hebt gemeld verwijderd, omdat die onze regels overtrad.} restricted {Het account dat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet welke maatregelen we hebben genomen.} action_taken {Wat je hebt gemeld overtrad onze regels, en we hebben maatregelen genomen. We delen niet welke maatregelen we hebben genomen.} no_violation {Wat je hebt gemeld overtreedt onze regels niet, dus we hebben het gelaten zoals het is.} other {We hebben je melding afgesloten.}}",
 		"note": "{reply, select, yes {Ben je het er niet mee eens? Beantwoord deze e-mail dan binnen 60 dagen.} other {{appeals_email, select, null {} other {Ben je het er niet mee eens? Mail dan binnen 60 dagen naar <mail>{appeals_email}</mail> en vermeld het meldings-ID.}}}}{appeals_email, select, null {} other { In de EU kun je ook naar een gecertificeerd <dsa>orgaan voor buitengerechtelijke geschillenbeslechting</dsa> gaan of een klacht indienen bij de digitaledienstencoördinator in je land.}}",
 		"report_label": "Meldings-ID",
 		"signoff": "Het team van {product_name}",
-		"subject": "Je melding op {product_name} is beoordeeld"
+		"subject": "Je melding op {product_name} is beoordeeld",
+		"thanks": "{outcome, select, removed {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} restricted {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} action_taken {Bedankt voor je melding. Meldingen zoals de jouwe helpen {product_name} veilig te houden voor iedereen.} other {Bedankt dat je het ons hebt laten weten.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je hebt verzocht om je {product_name}-account te verwijderen.",

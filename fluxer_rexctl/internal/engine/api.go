@@ -34,6 +34,7 @@ type Engine struct {
 	OSType     string
 	Rootless   bool
 	Desktop    string
+	DataRoot   string
 	TooOld     bool
 }
 
@@ -110,6 +111,7 @@ type HelperOptions struct {
 
 type Mount struct {
 	Volume   string
+	Bind     string
 	Target   string
 	ReadOnly bool
 }

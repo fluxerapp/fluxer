@@ -13,6 +13,10 @@
 	gap: 0.375rem;
 }
 
+.pending {
+	visibility: hidden;
+}
+
 .containerPopout {
 	position: absolute;
 	top: 7.0625rem;

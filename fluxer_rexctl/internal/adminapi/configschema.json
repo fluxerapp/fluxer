@@ -173,6 +173,12 @@
     "nullable": true
   },
   {
+    "key": "app_public.branding.trusted_domains",
+    "type": "list",
+    "help": "Branding trusted domains",
+    "nullable": true
+  },
+  {
     "key": "app_public.branding.upload_limit_message",
     "type": "string",
     "help": "Branding upload limit message",

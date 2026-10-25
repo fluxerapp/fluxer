@@ -637,7 +637,7 @@ Merges the body into the saved configuration and returns the [instance configura
 
 <sup>1</sup> While `enabled` is true, endpoint URLs must use `https` and point at a public address unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true. Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` unless there is an `issuer`, or an authorization endpoint, a token endpoint, a client ID and `jwks_url` or `userinfo_url`
 
-<sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. URLs are up to 2048 characters and `branding.theme_color` is a hex color. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
+<sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters and `branding.theme_color` is a hex color. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
 
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out. `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`. `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`
 

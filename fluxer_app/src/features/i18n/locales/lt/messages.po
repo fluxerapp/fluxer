@@ -1820,10 +1820,10 @@ msgstr "{onlineCount} prisijungę"
 msgid "{operatorPassName} from {senderName}"
 msgstr "{senderName} siūlo {operatorPassName}"
 
-#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceMonth} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceDate} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
-msgid "{operatorPassName} since {sinceMonth}"
-msgstr "{operatorPassName} nuo {sinceMonth}"
+msgid "{operatorPassName} since {sinceDate}"
+msgstr "{operatorPassName} nuo {sinceDate}"
 
 #. Screen-reader label for an optional slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
@@ -14384,6 +14384,10 @@ msgstr "Redaguoti savo žinutę žemiau"
 msgid "Edit your messages above or below"
 msgstr "Redaguoti savo žinutes aukščiau arba žemiau"
 
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx
+msgid "Edit your profile"
+msgstr "Redaguoti savo profilį"
+
 #. Button or menu action label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Edit your profile appearance and see a live preview"
@@ -16498,6 +16502,11 @@ msgstr "Fluxer nepavyko prisijungti prie {host}."
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}. The server said: \"{error}\""
 msgstr "Fluxer nepavyko prisijungti prie {host}. Serveris atsakė: „{error}“"
+
+#. Status shown in the desktop app when it stopped checking the browser sign-in because the instance could not be reached. instanceName is the server name, such as Fluxer. "Try again" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "Fluxer couldn't reach {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
+msgstr "Fluxer nepavyko pasiekti {instanceName} ir patikrinti, ar naršyklė patvirtino šį prisijungimą. Patikrinkite ryšį ir pasirinkite „Bandyti dar kartą“."
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
@@ -18722,6 +18731,11 @@ msgstr "Jei kam nors gresia tiesioginis pavojus, pirmiausia kreipkitės į vieti
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "Jei kas nors liepė jums čia ką nors įklijuoti, tai sukčiavimas, kuriuo jie gali perimti jūsų „{productName}“ paskyrą."
+
+#. Hint in the desktop app while it waits for the browser, for people with more than one Fluxer app installed. "Signing in on another device?" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
+msgstr "Jei nuoroda atidaro kitą Fluxer programėlę, pasirinkite „Prisijungiate kitame įrenginyje?“ ir įveskite kodą naršyklėje."
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -25720,7 +25734,7 @@ msgstr "Operator Pass pasiūlymai"
 msgid "Operator Pass purchase"
 msgstr "Operator Pass pirkinys"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
 msgid "Operator Pass since {since}"
 msgstr "Operator Pass nuo {since}"
@@ -36181,6 +36195,11 @@ msgstr "Šis kodas neteisingas arba jau panaudotas."
 msgid "This code was already redeemed."
 msgstr "Šis kodas jau buvo panaudotas."
 
+#. Shown on the browser sign-in page when the code the user typed or opened was already used to approve a sign-in.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "This code was already used. Start a new sign-in from the app."
+msgstr "Šis kodas jau panaudotas. Pradėkite naują prisijungimą programėlėje."
+
 #. Warning under the theme color picker in the setup wizard when the chosen color is very dark.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the dark theme background, so buttons may be hard to see there."
@@ -37387,6 +37406,11 @@ msgstr "Tonas"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Tonuoti HDR vaizdus į standartinį diapazoną, sumažinant didžiausią ryškumą."
+
+#. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+msgstr "Iš jūsų tinklo per daug bandymų. Bandykite dar kartą po {minutes, plural, one {# minutės} few {# minučių} many {# minutės} other {# minučių}}."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx

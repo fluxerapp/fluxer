@@ -19,6 +19,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -39,6 +42,14 @@ type CreateOptions struct {
 	Reason   string
 	Progress func(stage string)
 	OnEvent  func(engine.Event)
+}
+
+type MissingDataError struct {
+	Volume string
+}
+
+func (e *MissingDataError) Error() string {
+	return fmt.Sprintf("backup: no database data found in volume %s or a bind mount", e.Volume)
 }
 
 type DiskError struct {
@@ -95,11 +106,12 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 		m.Release = inst.State.Release
 	}
 	values := instanceValues(inst)
-	bundledDB := !externalPostgres(values)
+	model := projectModel(ctx, inst, p)
+	bundledDB := bundledDatabase(values, model)
 	if !bundledDB {
 		m.Skipped = append(m.Skipped, SkippedDatabase)
 	}
-	volumes, err := volumesToCopy(ctx, inst, values, p, m)
+	volumes, err := volumesToCopy(ctx, inst, values, p, model, m)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +120,10 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := findVolume(have, p.Name, "postgres-data"); !ok {
+		if _, ok := dataVolume(model, p.Name, have, "postgres-data"); !ok {
+			if ps, err := p.PS(ctx); err == nil && len(ps) > 0 {
+				return nil, &MissingDataError{Volume: p.Name + "_postgres-data"}
+			}
 			return nil, ErrNeverStarted
 		}
 	}
@@ -116,11 +131,11 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	if err != nil {
 		return nil, err
 	}
-	image, err := helperImage(ctx, inst, p)
+	image, err := helperImage(ctx, inst, p, model)
 	if err != nil {
 		return nil, err
 	}
-	if err := checkDisk(ctx, p, image, dir, volumes); err != nil {
+	if err := checkDisk(ctx, p, image, dir, volumes, bundledDB); err != nil {
 		return nil, err
 	}
 
@@ -211,6 +226,17 @@ func externalPostgres(values map[string]string) bool {
 	return false
 }
 
+func bundledDatabase(values map[string]string, model *types.Project) bool {
+	if externalPostgres(values) {
+		return false
+	}
+	if model == nil {
+		return true
+	}
+	_, ok := model.Services[postgresService]
+	return ok
+}
+
 func externalUploads(inst *instance.Instance, values map[string]string) bool {
 	if inst.State != nil && inst.State.Settings[settings.StorageEndpoint] != "" {
 		return true
@@ -225,9 +251,37 @@ func externalUploads(inst *instance.Instance, values map[string]string) bool {
 type volumeRef struct {
 	short string
 	full  string
+	bind  string
 }
 
-func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, m *Manifest) ([]volumeRef, error) {
+func (v volumeRef) mount(target string, readOnly bool) engine.Mount {
+	return engine.Mount{Volume: v.full, Bind: v.bind, Target: target, ReadOnly: readOnly}
+}
+
+func dataVolume(model *types.Project, project string, have []engine.Volume, short string) (volumeRef, bool) {
+	if bind := boundData(model, short); bind != "" {
+		return volumeRef{short: short, bind: bind}, true
+	}
+	if full, ok := findVolume(have, project, short); ok {
+		return volumeRef{short: short, full: full}, true
+	}
+	return volumeRef{}, false
+}
+
+func boundData(model *types.Project, short string) string {
+	dm, ok := stack.DataMounts[short]
+	if !ok || model == nil {
+		return ""
+	}
+	for _, v := range model.Services[dm.Service].Volumes {
+		if v.Type == types.VolumeTypeBind && v.Target == dm.Target && v.Source != "" {
+			return v.Source
+		}
+	}
+	return ""
+}
+
+func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, model *types.Project, m *Manifest) ([]volumeRef, error) {
 	skipUploads := externalUploads(inst, values)
 	if skipUploads {
 		m.Skipped = append(m.Skipped, SkippedUploads)
@@ -241,8 +295,8 @@ func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[stri
 		if skipUploads && short == "seaweedfs-data" {
 			continue
 		}
-		if full, ok := findVolume(have, p.Name, short); ok {
-			out = append(out, volumeRef{short: short, full: full})
+		if v, ok := dataVolume(model, p.Name, have, short); ok {
+			out = append(out, v)
 		}
 	}
 	return out, nil
@@ -262,25 +316,28 @@ func findVolume(vols []engine.Volume, project, short string) (string, bool) {
 	return "", false
 }
 
-func helperImage(ctx context.Context, inst *instance.Instance, p *engine.Project) (string, error) {
-	if p.Model != nil {
-		if img := p.Image(postgresService); img != "" {
-			return img, nil
+var helperServices = []string{postgresService, "valkey", "nats"}
+
+func helperImage(ctx context.Context, inst *instance.Instance, p *engine.Project, model *types.Project) (string, error) {
+	cs, _ := p.PS(ctx)
+	for _, svc := range helperServices {
+		if model != nil {
+			if img := model.Services[svc].Image; img != "" {
+				return img, nil
+			}
 		}
-	}
-	if cs, err := p.PS(ctx); err == nil {
 		for _, c := range cs {
-			if c.Service == postgresService && c.Image != "" {
+			if c.Service == svc && c.Image != "" {
 				return c.Image, nil
 			}
 		}
-	}
-	if inst.State != nil {
-		if img := inst.State.Images.Refs[postgresService]; img != "" {
-			return img, nil
+		if inst.State != nil {
+			if img := inst.State.Images.Refs[svc]; img != "" {
+				return img, nil
+			}
 		}
 	}
-	return "", errors.New("backup: no postgres image to run the copy with")
+	return "", errors.New("backup: no image to run the copy with")
 }
 
 func helper(ctx context.Context, p *engine.Project, image string, mounts []engine.Mount, stdin io.Reader, stdout io.Writer, entrypoint string, args ...string) error {
@@ -314,21 +371,73 @@ func (e *HelperError) Error() string {
 
 func (e *HelperError) Unwrap() error { return e.Err }
 
-func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volumes []volumeRef) error {
+func Estimate(ctx context.Context, inst *instance.Instance, p *engine.Project) (uint64, error) {
+	values := instanceValues(inst)
+	model := projectModel(ctx, inst, p)
+	volumes, err := volumesToCopy(ctx, inst, values, p, model, &Manifest{})
+	if err != nil {
+		return 0, err
+	}
+	var image string
+	if len(volumes) > 0 {
+		if image, err = helperImage(ctx, inst, p, model); err != nil {
+			return 0, err
+		}
+	}
+	return diskNeed(ctx, p, image, volumes, bundledDatabase(values, model))
+}
+
+func projectModel(ctx context.Context, inst *instance.Instance, p *engine.Project) *types.Project {
+	if p.Model != nil {
+		return p.Model
+	}
+	if loaded, err := deploy.Load(ctx, inst, p.Engine); err == nil {
+		return loaded.Model
+	}
+	return nil
+}
+
+func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volumes []volumeRef, bundledDB bool) error {
 	free, err := host.FreeDisk(dir)
-	if err != nil || len(volumes) == 0 {
+	if err != nil {
 		return nil
 	}
+	need, err := diskNeed(ctx, p, image, volumes, bundledDB)
+	if err != nil {
+		return err
+	}
+	if free < need {
+		return &DiskError{Dir: dir, Need: need, Available: free}
+	}
+	return nil
+}
+
+func diskNeed(ctx context.Context, p *engine.Project, image string, volumes []volumeRef, bundledDB bool) (uint64, error) {
+	var total uint64
+	if bundledDB {
+		total = databaseSize(ctx, p)
+	}
+	if len(volumes) > 0 {
+		kb, err := volumesSize(ctx, p, image, volumes)
+		if err != nil {
+			return 0, err
+		}
+		total += kb * 1024
+	}
+	return total * diskHeadroomPct / 100, nil
+}
+
+func volumesSize(ctx context.Context, p *engine.Project, image string, volumes []volumeRef) (uint64, error) {
 	var mounts []engine.Mount
 	var paths []string
 	for i, v := range volumes {
 		mp := "/v/" + strconv.Itoa(i)
-		mounts = append(mounts, engine.Mount{Volume: v.full, Target: mp, ReadOnly: true})
+		mounts = append(mounts, v.mount(mp, true))
 		paths = append(paths, mp)
 	}
 	var out bytes.Buffer
 	if err := helper(ctx, p, image, mounts, nil, &out, "du", append([]string{"-sk"}, paths...)...); err != nil {
-		return fmt.Errorf("backup: measuring volumes: %w", err)
+		return 0, fmt.Errorf("backup: measuring volumes: %w", err)
 	}
 	var kb uint64
 	sc := bufio.NewScanner(&out)
@@ -342,11 +451,21 @@ func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volume
 			kb += n
 		}
 	}
-	need := kb * 1024 * diskHeadroomPct / 100
-	if free < need {
-		return &DiskError{Dir: dir, Need: need, Available: free}
+	return kb, nil
+}
+
+func databaseSize(ctx context.Context, p *engine.Project) uint64 {
+	var out bytes.Buffer
+	err := p.Exec(ctx, postgresService, engine.ExecOptions{Stdout: &out, KillOnCancel: true}, "sh", "-c",
+		`exec psql -X -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'select pg_database_size(current_database())'`)
+	if err != nil {
+		return 0
 	}
-	return nil
+	n, err := strconv.ParseUint(strings.TrimSpace(out.String()), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 func instanceFiles(dir string) ([]string, error) {
@@ -557,7 +676,7 @@ func copyVolume(ctx context.Context, w *archiveWriter, p *engine.Project, image 
 			Image:      image,
 			Entrypoint: []string{"sh", "-c"},
 			Command:    []string{volumeTarScript},
-			Mounts:     []engine.Mount{{Volume: v.full, Target: "/data", ReadOnly: true}},
+			Mounts:     []engine.Mount{v.mount("/data", true)},
 			Stdout:     pw,
 			Stderr:     &stderr,
 		})

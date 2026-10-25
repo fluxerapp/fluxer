@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		python3 && \
 	rm -rf /var/lib/apt/lists/*
 
+ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.app
+ENV FLUXER_DOCS_SEARCH_INDEXING=true
+
 COPY . .
 
 RUN pnpm install --frozen-lockfile
@@ -61,6 +64,8 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS="--enable-source-maps"
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV BUILD_VERSION=${BUILD_VERSION}
+ENV FLUXER_DOCS_ENDPOINT=https://docs.fluxer.app
+ENV FLUXER_DOCS_SEARCH_INDEXING=true
 
 USER 65532:65532
 

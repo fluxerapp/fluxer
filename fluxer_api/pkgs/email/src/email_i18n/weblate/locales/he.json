@@ -48,13 +48,15 @@
 		"subject": "ניהול התרומות שלכם ל-{product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {מדובר בדיווח שלכם על הודעה ב-#{channelName} בקהילה \"{communityName}\", שנשלח ב-{reportedAt, date, long}.} message_dm {מדובר בדיווח שלכם על הודעה בשיחה פרטית, שנשלח ב-{reportedAt, date, long}.} message {מדובר בדיווח שלכם על הודעה, שנשלח ב-{reportedAt, date, long}.} user {מדובר בדיווח שלכם על החשבון \"{username}\", שנשלח ב-{reportedAt, date, long}.} community {מדובר בדיווח שלכם על הקהילה \"{communityName}\", שנשלח ב-{reportedAt, date, long}.} other {מדובר בדיווח ששלחתם ב-{reportedAt, date, long}.}}",
 		"comment_label": "הערה מהצוות שלנו",
 		"footer_reason": "קיבלתם אימייל זה מכיוון שהגשתם דיווח לפי חוק השירותים הדיגיטליים ב-{product_name}.",
-		"intro": "{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {החשבון שדיווחתם עליו הפר את הכללים שלנו, והגבלנו אותו. אנחנו לא משתפים מה עשינו בחשבון של אדם אחר.} action_taken {מה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים מה עשינו בחשבון של אדם אחר.} no_violation {מה שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}",
+		"intro": "{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {החשבון שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו.} action_taken {מה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו.} no_violation {מה שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}",
 		"note": "{reply, select, yes {אם אתם לא מסכימים, השיבו לאימייל הזה תוך 60 יום.} other {{appeals_email, select, null {} other {אם אתם לא מסכימים, שלחו אימייל אל <mail>{appeals_email}</mail> תוך 60 יום וציינו את מזהה הדיווח.}}}}{appeals_email, select, null {} other { באיחוד האירופי אפשר גם לפנות ל<dsa>גוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט</dsa> או להגיש תלונה לרכז השירותים הדיגיטליים במדינה שלכם.}}",
 		"report_label": "מזהה דיווח",
 		"signoff": "צוות {product_name}",
-		"subject": "קיבלנו החלטה בנוגע לדיווח שלכם ב-{product_name}"
+		"subject": "קיבלנו החלטה בנוגע לדיווח שלכם ב-{product_name}",
+		"thanks": "{outcome, select, removed {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} restricted {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} action_taken {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} other {תודה שעדכנתם אותנו.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "הקוד הזה יפוג בעוד {minutes, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}.",
@@ -422,13 +424,15 @@
 		"subject": "קיבלנו את הדיווח שלכם ב-{product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {מדובר בדיווח שלכם על הודעה ב-#{channelName} בקהילה \"{communityName}\", שנשלח ב-{reportedAt, date, long}.} message_dm {מדובר בדיווח שלכם על הודעה בשיחה פרטית, שנשלח ב-{reportedAt, date, long}.} message {מדובר בדיווח שלכם על הודעה, שנשלח ב-{reportedAt, date, long}.} user {מדובר בדיווח שלכם על החשבון \"{username}\", שנשלח ב-{reportedAt, date, long}.} community {מדובר בדיווח שלכם על הקהילה \"{communityName}\", שנשלח ב-{reportedAt, date, long}.} other {מדובר בדיווח ששלחתם ב-{reportedAt, date, long}.}}",
 		"comment_label": "הערה מהצוות שלנו",
 		"footer_reason": "קיבלתם אימייל זה מכיוון ששלחתם דיווח ב-{product_name}.",
-		"intro": "{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {החשבון שדיווחתם עליו הפר את הכללים שלנו, והגבלנו אותו. אנחנו לא משתפים מה עשינו בחשבון של אדם אחר.} action_taken {מה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים מה עשינו בחשבון של אדם אחר.} no_violation {מה שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}",
+		"intro": "{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {החשבון שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו.} action_taken {מה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו.} no_violation {מה שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}",
 		"note": "{reply, select, yes {אם אתם לא מסכימים, השיבו לאימייל הזה תוך 60 יום.} other {{appeals_email, select, null {} other {אם אתם לא מסכימים, שלחו אימייל אל <mail>{appeals_email}</mail> תוך 60 יום וציינו את מזהה הדיווח.}}}}{appeals_email, select, null {} other { באיחוד האירופי אפשר גם לפנות ל<dsa>גוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט</dsa> או להגיש תלונה לרכז השירותים הדיגיטליים במדינה שלכם.}}",
 		"report_label": "מזהה דיווח",
 		"signoff": "צוות {product_name}",
-		"subject": "הדיווח שלכם ב-{product_name} נבדק"
+		"subject": "הדיווח שלכם ב-{product_name} נבדק",
+		"thanks": "{outcome, select, removed {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} restricted {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} action_taken {תודה על הדיווח. דיווחים כמו שלכם עוזרים לשמור על {product_name} בטוח לכולם.} other {תודה שעדכנתם אותנו.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "קיבלתם את האימייל הזה כי ביקשתם למחוק את חשבון ה-{product_name} שלכם.",

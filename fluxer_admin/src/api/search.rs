@@ -18,7 +18,6 @@ impl AdminApiClient {
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let body = generated_types::RefreshSearchIndexRequest {
             guild_id: guild_id.map(snowflake),
-            user_id: None,
         };
         let response = self
             .generated()
@@ -53,6 +52,7 @@ fn index_refresh_status(
         generated_types::IndexRefreshStatusResponse::Variant1 {
             status,
             index_type,
+            phase,
             total,
             indexed,
             started_at,
@@ -62,6 +62,7 @@ fn index_refresh_status(
         } => Ok(IndexRefreshStatusResponse::Progress {
             status: status.to_string(),
             index_type: Some(index_type),
+            phase,
             total: total
                 .map(|value| float_to_u64(value, "total"))
                 .transpose()?,

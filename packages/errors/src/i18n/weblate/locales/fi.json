@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Tätä sähköpostin verkkotunnusta ei sallita kertakirjautumisessa.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "SSO-käyttäjätietojasi ei voitu hakea. Yritä uudelleen.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "SSO-tarjoajasi vastausta ei voitu lukea. Yritä uudelleen.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Verkostasi on tullut liian monta kirjautumisyritystä. Yritä uudelleen {minutes, plural, one {# minuutin} other {# minuutin}} kuluttua.",
+	"auth_and_oauth.handoff_code_already_used": "Tätä koodia on jo käytetty. Aloita uusi kirjautuminen sovelluksesta.",
 	"auth_and_oauth.handoff_code_expired": "Siirtokoodi vanhentui.",
 	"auth_and_oauth.handoff_code_invalid": "Siirtokoodi on virheellinen.",
 	"auth_and_oauth.invalid_code": "Koodi on virheellinen.",

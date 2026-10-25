@@ -48,13 +48,15 @@
 		"subject": "Administrer dine {product_name}-donationer"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Det handler om din anmeldelse af en besked i #{channelName} i »{communityName}«, sendt {reportedAt, date, long}.} message_dm {Det handler om din anmeldelse af en besked i en direkte besked, sendt {reportedAt, date, long}.} message {Det handler om din anmeldelse af en besked, sendt {reportedAt, date, long}.} user {Det handler om din anmeldelse af kontoen »{username}«, sendt {reportedAt, date, long}.} community {Det handler om din anmeldelse af fællesskabet »{communityName}«, sendt {reportedAt, date, long}.} other {Det handler om den anmeldelse, du sendte {reportedAt, date, long}.}}",
 		"comment_label": "Besked fra vores team",
 		"footer_reason": "Du modtog denne e-mail, fordi du indsendte en anmeldelse i henhold til Digital Services Act på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har begrænset den. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, så svar på denne e-mail inden for 60 dage.} other {{appeals_email, select, null {} other {Hvis du er uenig, så skriv til <mail>{appeals_email}</mail> inden for 60 dage, og angiv anmeldelses-ID’et.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et certificeret <dsa>organ for udenretslig tvistbilæggelse</dsa> eller klage til koordinatoren for digitale tjenester i dit land.}}",
 		"report_label": "Anmeldelses-ID",
 		"signoff": "Teamet bag {product_name}",
-		"subject": "Vi har truffet en afgørelse om din anmeldelse på {product_name}"
+		"subject": "Vi har truffet en afgørelse om din anmeldelse på {product_name}",
+		"thanks": "{outcome, select, removed {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} restricted {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} action_taken {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} other {Tak, fordi du sagde det til os.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Denne kode udløber om {minutes, plural, one {# minut} other {# minutter}}.",
@@ -422,13 +424,15 @@
 		"subject": "Vi har modtaget din anmeldelse på {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Det handler om din anmeldelse af en besked i #{channelName} i »{communityName}«, sendt {reportedAt, date, long}.} message_dm {Det handler om din anmeldelse af en besked i en direkte besked, sendt {reportedAt, date, long}.} message {Det handler om din anmeldelse af en besked, sendt {reportedAt, date, long}.} user {Det handler om din anmeldelse af kontoen »{username}«, sendt {reportedAt, date, long}.} community {Det handler om din anmeldelse af fællesskabet »{communityName}«, sendt {reportedAt, date, long}.} other {Det handler om den anmeldelse, du sendte {reportedAt, date, long}.}}",
 		"comment_label": "Besked fra vores team",
 		"footer_reason": "Du har modtaget denne e-mail, fordi du har indsendt en anmeldelse på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har begrænset den. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvad vi har gjort ved en anden persons konto.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
+		"intro": "{outcome, select, removed {Vi har fjernet det indhold, du anmeldte, fordi det brød vores regler.} restricted {Den konto, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} action_taken {Det, du anmeldte, brød vores regler, og vi har grebet ind. Vi fortæller ikke, hvordan vi greb ind.} no_violation {Det, du anmeldte, bryder ikke vores regler, så vi har ladet det være.} other {Vi har lukket din anmeldelse.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, så svar på denne e-mail inden for 60 dage.} other {{appeals_email, select, null {} other {Hvis du er uenig, så skriv til <mail>{appeals_email}</mail> inden for 60 dage, og angiv anmeldelses-ID’et.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et certificeret <dsa>organ for udenretslig tvistbilæggelse</dsa> eller klage til koordinatoren for digitale tjenester i dit land.}}",
 		"report_label": "Anmeldelses-ID",
 		"signoff": "Teamet bag {product_name}",
-		"subject": "Din anmeldelse på {product_name} er blevet behandlet"
+		"subject": "Din anmeldelse på {product_name} er blevet behandlet",
+		"thanks": "{outcome, select, removed {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} restricted {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} action_taken {Tak for din anmeldelse. Anmeldelser som din er med til at holde {product_name} sikkert for alle.} other {Tak, fordi du sagde det til os.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Du modtog denne e-mail, fordi du anmodede om at slette din {product_name}-konto.",

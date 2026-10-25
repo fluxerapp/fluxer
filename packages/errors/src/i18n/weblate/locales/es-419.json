@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Este dominio de correo electrónico no está permitido para inicio de sesión único.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "No pudimos obtener tu información de usuario de SSO. Intenta de nuevo.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "No pudimos leer la respuesta de tu proveedor de SSO. Intenta de nuevo.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Demasiados intentos de inicio de sesión desde tu red. Vuelve a intentarlo en {minutes, plural, one {# minuto} other {# minutos}}.",
+	"auth_and_oauth.handoff_code_already_used": "Este código ya se usó. Inicia una nueva sesión desde la app.",
 	"auth_and_oauth.handoff_code_expired": "El código de traspaso ha caducado.",
 	"auth_and_oauth.handoff_code_invalid": "Código de traspaso no válido.",
 	"auth_and_oauth.invalid_code": "Código no válido.",

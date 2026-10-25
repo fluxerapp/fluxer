@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Acest domeniu de e-mail nu este permis pentru autentificarea unică.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nu am putut prelua informațiile utilizatorului SSO. Încearcă din nou.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nu am putut citi răspunsul de la furnizorul tău SSO. Încearcă din nou.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Prea multe încercări de conectare din rețeaua ta. Încearcă din nou peste {minutes} min.",
+	"auth_and_oauth.handoff_code_already_used": "Acest cod a fost deja folosit. Pornește o nouă conectare din aplicație.",
 	"auth_and_oauth.handoff_code_expired": "Codul de transfer a expirat.",
 	"auth_and_oauth.handoff_code_invalid": "Cod de transfer invalid.",
 	"auth_and_oauth.invalid_code": "Codul este invalid.",

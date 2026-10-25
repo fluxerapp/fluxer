@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "このメールドメインはシングルサインオンに使用できません。",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "SSOユーザー情報を取得できませんでした。もう一度お試しください。",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "SSOプロバイダーからの応答を読み取れませんでした。もう一度お試しください。",
+	"auth_and_oauth.handoff_attempts_exceeded": "お使いのネットワークからのサインイン試行が多すぎます。{minutes}分後にもう一度お試しください。",
+	"auth_and_oauth.handoff_code_already_used": "このコードはすでに使用されています。アプリから新しいサインインを開始してください。",
 	"auth_and_oauth.handoff_code_expired": "ハンドオフコードの有効期限が切れました。",
 	"auth_and_oauth.handoff_code_invalid": "ハンドオフコードが無効です。",
 	"auth_and_oauth.invalid_code": "コードが無効です。",

@@ -165,6 +165,9 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.failed_to_fetch_sso_user_info': "We couldn't fetch your SSO user info. Please try again.",
 	'auth_and_oauth.failed_to_parse_sso_user_info':
 		"We couldn't read the response from your SSO provider. Please try again.",
+	'auth_and_oauth.handoff_attempts_exceeded':
+		'Too many sign-in attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}.',
+	'auth_and_oauth.handoff_code_already_used': 'This code was already used. Start a new sign-in from the app.',
 	'auth_and_oauth.handoff_code_expired': 'Handoff code expired.',
 	'auth_and_oauth.handoff_code_invalid': 'Invalid handoff code.',
 	'auth_and_oauth.invalid_code': 'Invalid code.',

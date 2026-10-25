@@ -87,7 +87,7 @@ jobs:
         id: vars
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          FLUXER_BUILD_VERSION: ${{ inputs['build-version'] }}
+          BUILD_VERSION: ${{ inputs['build-version'] }}
         run: >-
           tools/ci/run.sh resolve-calver
           --github-output
@@ -293,6 +293,15 @@ jobs:
           '
           mkdir -p ../release
           cp rexctl_"${VERSION}"_* checksums.txt checksums.txt.sigstore.json rexctl-release.json ../release/
+
+      - name: write the compose bundle
+        working-directory: fluxer_rexctl
+        run: |
+          set -euo pipefail
+          out="${RUNNER_TEMP}/fluxer-compose"
+          go run . bundle --out "${out}"
+          tar -czf "release/fluxer-compose-${VERSION}.tar.gz" -C "${out}" .
+          tar -tzf "release/fluxer-compose-${VERSION}.tar.gz"
 
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:

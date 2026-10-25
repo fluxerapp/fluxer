@@ -140,21 +140,26 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 		return nil, &RestoreError{Part: "containers", Err: err}
 	}
 
-	if m.Database != "" {
-		progress(StageDatabase)
-		if err := startPostgres(ctx, p); err != nil {
-			return nil, err
-		}
-	}
 	vols, err := e.Volumes(ctx, p.Name)
 	if err != nil {
 		return nil, err
 	}
-	image, err := helperImage(ctx, inst, p)
+	image, err := helperImage(ctx, inst, p, p.Model)
 	if err != nil {
 		return nil, err
 	}
-	if err := restoreData(ctx, path, p, image, m, vols, progress); err != nil {
+	if m.Database != "" {
+		progress(StageDatabase)
+		if v, ok := dataVolume(p.Model, p.Name, vols, "postgres-data"); ok && v.bind != "" {
+			if err := helper(ctx, p, image, []engine.Mount{v.mount("/data", false)}, nil, io.Discard, "find", "/data", "-mindepth", "1", "-delete"); err != nil {
+				return nil, &RestoreError{Part: "database", Err: err}
+			}
+		}
+		if err := startPostgres(ctx, p); err != nil {
+			return nil, err
+		}
+	}
+	if err := restoreData(ctx, path, p, image, m, vols, "", progress); err != nil {
 		return nil, err
 	}
 
@@ -389,13 +394,48 @@ type volumeSink struct {
 	out  *bytes.Buffer
 }
 
-func restoreData(ctx context.Context, path string, p *engine.Project, image string, m *Manifest, vols []engine.Volume, progress func(string)) error {
+func RestoreVolume(ctx context.Context, path string, inst *instance.Instance, p *engine.Project, short string) error {
+	m, err := ReadManifest(path)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(m.Volumes, short) {
+		return fmt.Errorf("backup: %s isn't in the backup", short)
+	}
+	vols, err := p.Engine.Volumes(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+	image, err := helperImage(ctx, inst, p, p.Model)
+	if err != nil {
+		return err
+	}
+	return restoreData(ctx, path, p, image, m, vols, short, func(string) {})
+}
+
+func ClearVolume(ctx context.Context, inst *instance.Instance, p *engine.Project, short string) error {
+	vols, err := p.Engine.Volumes(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+	v, ok := dataVolume(p.Model, p.Name, vols, short)
+	if !ok {
+		return nil
+	}
+	image, err := helperImage(ctx, inst, p, p.Model)
+	if err != nil {
+		return err
+	}
+	return helper(ctx, p, image, []engine.Mount{v.mount("/data", false)}, nil, io.Discard, "find", "/data", "-mindepth", "1", "-delete")
+}
+
+func restoreData(ctx context.Context, path string, p *engine.Project, image string, m *Manifest, vols []engine.Volume, only string, progress func(string)) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var sink *volumeSink
 	closeSink := func(failed error) error {
 		if sink == nil {
-			return nil
+			return failed
 		}
 		s := sink
 		sink = nil
@@ -416,7 +456,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		return nil
 	}
 	openSink := func(short string) error {
-		full, ok := findVolume(vols, p.Name, short)
+		v, ok := dataVolume(p.Model, p.Name, vols, short)
 		if !ok {
 			return &RestoreError{Part: short, Err: errors.New("the volume wasn't created")}
 		}
@@ -427,7 +467,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 				Image:      image,
 				Entrypoint: []string{"sh", "-c"},
 				Command:    []string{"find /data -mindepth 1 -delete && exec tar -xf - -C /data"},
-				Mounts:     []engine.Mount{{Volume: full, Target: "/data"}},
+				Mounts:     []engine.Mount{v.mount("/data", false)},
 				Stdin:      pr,
 				Stderr:     s.out,
 			})
@@ -446,10 +486,13 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 			if err := closeSink(nil); err != nil {
 				return err
 			}
+			if only != "" {
+				return nil
+			}
 			return restoreDump(ctx, p, r)
 		}
 		short, inner, ok := volumeOf(hdr.Name)
-		if !ok {
+		if !ok || only != "" && short != only {
 			return closeSink(nil)
 		}
 		if !slices.Contains(m.Volumes, short) {

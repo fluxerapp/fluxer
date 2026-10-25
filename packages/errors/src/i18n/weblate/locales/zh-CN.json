@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "此邮箱域名不允许用于单点登录。",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "无法获取你的 SSO 用户信息。请重试。",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "无法读取来自 SSO 提供商的响应。请重试。",
+	"auth_and_oauth.handoff_attempts_exceeded": "你的网络登录尝试次数过多。请在 {minutes} 分钟后重试。",
+	"auth_and_oauth.handoff_code_already_used": "此代码已被使用。请从应用重新开始登录。",
 	"auth_and_oauth.handoff_code_expired": "移交码已过期。",
 	"auth_and_oauth.handoff_code_invalid": "无效的移交码。",
 	"auth_and_oauth.invalid_code": "验证码无效。",

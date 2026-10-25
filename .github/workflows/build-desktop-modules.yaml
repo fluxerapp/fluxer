@@ -35,7 +35,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CHANNEL: ${{ inputs.channel }}
   BUILD_CHANNEL: ${{ inputs.channel == 'canary' && 'canary' || 'stable' }}
 
 jobs:
@@ -49,7 +48,6 @@ jobs:
     outputs:
       version: ${{ steps.meta.outputs.version }}
       pub_date: ${{ steps.meta.outputs.pub_date }}
-      channel: ${{ steps.meta.outputs.channel }}
       build_channel: ${{ steps.meta.outputs.build_channel }}
       source_sha: ${{ steps.meta.outputs.source_sha }}
     steps:
@@ -76,7 +74,7 @@ jobs:
         id: meta
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          FLUXER_BUILD_VERSION: ${{ inputs.build_version }}
+          BUILD_VERSION: ${{ inputs.build_version }}
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step set_metadata
@@ -92,13 +90,7 @@ jobs:
     permissions:
       contents: read
     env:
-      CHANNEL: ${{ needs.meta.outputs.channel }}
-      BUILD_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      RELEASE_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      PUBLIC_RELEASE_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
       BUILD_VERSION: ${{ needs.meta.outputs.version }}
-      PUBLIC_BUILD_VERSION: ${{ needs.meta.outputs.version }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
     steps:
       - name: Checkout CI helpers
@@ -233,8 +225,7 @@ jobs:
       actions: read
       contents: read
     env:
-      CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
+      BUILD_VERSION: ${{ needs.meta.outputs.version }}
       PUB_DATE: ${{ needs.meta.outputs.pub_date }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
     steps:
@@ -304,8 +295,7 @@ jobs:
     permissions:
       contents: write
     env:
-      CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      VERSION: ${{ needs.meta.outputs.version }}
+      BUILD_VERSION: ${{ needs.meta.outputs.version }}
     steps:
       - name: Checkout source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -335,21 +325,19 @@ jobs:
       - name: Publish GitHub modules-only release
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          CHANNEL: ${{ needs.meta.outputs.build_channel }}
-          VERSION: ${{ needs.meta.outputs.version }}
           SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
           RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
         run: |
           set -euo pipefail
           release_args=(
             release publish
-            --component "fluxer-desktop-${CHANNEL}"
-            --build-version "${VERSION}"
+            --component "fluxer-desktop-${BUILD_CHANNEL}"
+            --build-version "${BUILD_VERSION}"
             --source-sha "${SOURCE_SHA}"
             --previous-sha "${RELEASE_BASELINE_SHA}"
             --asset-dir release_assets
           )
-          if [[ "${CHANNEL}" == "canary" ]]; then
+          if [[ "${BUILD_CHANNEL}" == "canary" ]]; then
             release_args+=(--prerelease)
           fi
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- "${release_args[@]}"

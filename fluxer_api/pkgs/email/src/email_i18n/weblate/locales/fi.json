@@ -48,13 +48,15 @@
 		"subject": "Hallitse {product_name}-lahjoituksiasi"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Tämä koskee ilmoitustasi viestistä kanavalla #{channelName} yhteisössä ”{communityName}”, lähetetty {reportedAt, date, long}.} message_dm {Tämä koskee ilmoitustasi yksityisviestissä olleesta viestistä, lähetetty {reportedAt, date, long}.} message {Tämä koskee ilmoitustasi viestistä, lähetetty {reportedAt, date, long}.} user {Tämä koskee ilmoitustasi tilistä ”{username}”, lähetetty {reportedAt, date, long}.} community {Tämä koskee ilmoitustasi yhteisöstä ”{communityName}”, lähetetty {reportedAt, date, long}.} other {Tämä koskee ilmoitusta, jonka lähetit {reportedAt, date, long}.}}",
 		"comment_label": "Tiimimme huomautus",
 		"footer_reason": "Sait tämän sähköpostin, koska lähetit digipalvelusäädöksen mukaisen ilmoituksen {product_name}-palvelussa.",
-		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja rajoitimme sitä. Emme kerro, mitä teimme toisen henkilön tilille.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mitä teimme toisen henkilön tilille.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
+		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
 		"note": "{reply, select, yes {Jos olet eri mieltä, vastaa tähän sähköpostiin 60 päivän kuluessa.} other {{appeals_email, select, null {} other {Jos olet eri mieltä, lähetä sähköpostia osoitteeseen <mail>{appeals_email}</mail> 60 päivän kuluessa ja mainitse ilmoituksen tunnus.}}}}{appeals_email, select, null {} other { EU:ssa voit myös kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen tai tehdä valituksen maasi digitaalisten palvelujen koordinaattorille.}}",
 		"report_label": "Ilmoituksen tunnus",
 		"signoff": "{product_name}-tiimi",
-		"subject": "Teimme päätöksen {product_name}-ilmoituksestasi"
+		"subject": "Teimme päätöksen {product_name}-ilmoituksestasi",
+		"thanks": "{outcome, select, removed {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} restricted {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} action_taken {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} other {Kiitos, että kerroit meille.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Tämä koodi vanhenee {minutes, plural, one {# minuutin} other {# minuutin}} kuluttua.",
@@ -422,13 +424,15 @@
 		"subject": "Vastaanotimme {product_name}-ilmoituksesi"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Tämä koskee ilmoitustasi viestistä kanavalla #{channelName} yhteisössä ”{communityName}”, lähetetty {reportedAt, date, long}.} message_dm {Tämä koskee ilmoitustasi yksityisviestissä olleesta viestistä, lähetetty {reportedAt, date, long}.} message {Tämä koskee ilmoitustasi viestistä, lähetetty {reportedAt, date, long}.} user {Tämä koskee ilmoitustasi tilistä ”{username}”, lähetetty {reportedAt, date, long}.} community {Tämä koskee ilmoitustasi yhteisöstä ”{communityName}”, lähetetty {reportedAt, date, long}.} other {Tämä koskee ilmoitusta, jonka lähetit {reportedAt, date, long}.}}",
 		"comment_label": "Tiimimme huomautus",
 		"footer_reason": "Sait tämän sähköpostin, koska teit ilmoituksen {product_name}-palvelussa.",
-		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja rajoitimme sitä. Emme kerro, mitä teimme toisen henkilön tilille.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mitä teimme toisen henkilön tilille.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
+		"intro": "{outcome, select, removed {Poistimme ilmoittamasi sisällön, koska se rikkoi sääntöjämme.} restricted {Ilmoittamasi tili rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} action_taken {Ilmoittamasi asia rikkoi sääntöjämme, ja ryhdyimme toimiin. Emme kerro, mihin toimiin ryhdyimme.} no_violation {Ilmoittamasi asia ei riko sääntöjämme, joten jätimme sen ennalleen.} other {Suljimme ilmoituksesi.}}",
 		"note": "{reply, select, yes {Jos olet eri mieltä, vastaa tähän sähköpostiin 60 päivän kuluessa.} other {{appeals_email, select, null {} other {Jos olet eri mieltä, lähetä sähköpostia osoitteeseen <mail>{appeals_email}</mail> 60 päivän kuluessa ja mainitse ilmoituksen tunnus.}}}}{appeals_email, select, null {} other { EU:ssa voit myös kääntyä sertifioidun <dsa>tuomioistuinten ulkopuolisen riitojenratkaisuelimen</dsa> puoleen tai tehdä valituksen maasi digitaalisten palvelujen koordinaattorille.}}",
 		"report_label": "Ilmoituksen tunnus",
 		"signoff": "{product_name}-tiimi",
-		"subject": "{product_name}-ilmoituksesi on käsitelty"
+		"subject": "{product_name}-ilmoituksesi on käsitelty",
+		"thanks": "{outcome, select, removed {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} restricted {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} action_taken {Kiitos ilmoituksestasi. Ilmoitukset kuten sinun auttavat pitämään {product_name}-palvelun turvallisena kaikille.} other {Kiitos, että kerroit meille.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Sait tämän sähköpostin, koska pyysit {product_name}-tilisi poistamista.",

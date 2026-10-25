@@ -26,8 +26,9 @@ import (
 )
 
 const (
-	bootLockWait  = 10 * time.Minute
-	bootRouteWait = 2 * time.Minute
+	bootLockWait   = 10 * time.Minute
+	bootRouteWait  = 2 * time.Minute
+	readyHintAfter = 3 * time.Minute
 )
 
 type logPart struct {
@@ -257,11 +258,27 @@ func waitForFluxer(ctx context.Context, inst *instance.Instance, p *engine.Proje
 }
 
 func showReadiness(s *ui.Step, prefix string) func(engine.Readiness) {
+	start, hinted := time.Now(), false
 	return func(r engine.Readiness) {
 		waiting := slices.Concat(r.NotReady, r.Failed)
 		slices.Sort(waiting)
 		showWaiting(s, prefix, len(r.Ready), len(r.Ready)+len(waiting), "ready", waiting)
+		if !hinted && len(waiting) > 0 && time.Since(start) >= readyHintAfter {
+			hinted = true
+			s.Info("%s", notReadyHint(waiting))
+		}
 	}
+}
+
+func notReadyHint(waiting []string) string {
+	if len(waiting) == 1 && slices.Contains(stack.Services, waiting[0]) {
+		return fmt.Sprintf("%s isn't ready after %d minutes. Run rexctl logs %s in another terminal to see why.", waiting[0], int(readyHintAfter.Minutes()), waiting[0])
+	}
+	verb := "aren't"
+	if len(waiting) == 1 {
+		verb = "isn't"
+	}
+	return fmt.Sprintf("%s %s ready after %d minutes. Run rexctl logs in another terminal to see why.", waitingFor(waiting), verb, int(readyHintAfter.Minutes()))
 }
 
 func showWaiting(s *ui.Step, prefix string, done, total int, state string, waiting []string) {
@@ -567,6 +584,10 @@ func runBootStart(ctx context.Context, app *App) error {
 			}
 			return readyFailure(ctx, inst, p, p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: engine.DefaultReadyTimeout}))
 		}
+		if p, err := deploy.Load(ctx, inst, e); err == nil && stackRunning(ctx, p) {
+			app.sendAdminImport(ctx, inst, p)
+			return nil
+		}
 		if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Wait: true}); err != nil {
 			return readyFailure(ctx, inst, e.Named(inst.Project(), inst.Dir), err)
 		}
@@ -584,13 +605,10 @@ func alreadyUp(ctx context.Context, app *App, inst *instance.Instance) bool {
 		return false
 	}
 	p, err := deploy.Load(ctx, inst, e)
-	if err != nil {
-		return false
-	}
-	plan, err := p.Plan(ctx)
-	if err != nil || len(plan.Create)+len(plan.Recreate)+len(plan.Remove)+len(plan.Networks)+len(plan.LabelOnly)+len(plan.Volumes) > 0 {
-		return false
-	}
+	return err == nil && stackRunning(ctx, p)
+}
+
+func stackRunning(ctx context.Context, p *engine.Project) bool {
 	containers, err := p.PS(ctx)
 	if err != nil {
 		return false

@@ -48,13 +48,15 @@
 		"subject": "Gestionează-ți donațiile către {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Este vorba despre raportul tău despre un mesaj din #{channelName} din „{communityName}”, trimis pe {reportedAt, date, long}.} message_dm {Este vorba despre raportul tău despre un mesaj dintr-o conversație privată, trimis pe {reportedAt, date, long}.} message {Este vorba despre raportul tău despre un mesaj, trimis pe {reportedAt, date, long}.} user {Este vorba despre raportul tău despre contul „{username}”, trimis pe {reportedAt, date, long}.} community {Este vorba despre raportul tău despre comunitatea „{communityName}”, trimis pe {reportedAt, date, long}.} other {Este vorba despre raportul trimis de tine pe {reportedAt, date, long}.}}",
 		"comment_label": "Notă de la echipa noastră",
 		"footer_reason": "Ai primit acest e-mail deoarece ai trimis un raport conform Regulamentului privind serviciile digitale pe {product_name}.",
-		"intro": "{outcome, select, removed {Am eliminat conținutul raportat de tine pentru că încălca regulile noastre.} restricted {Contul raportat de tine a încălcat regulile noastre și l-am restricționat. Nu spunem ce măsuri am luat față de contul altei persoane.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat față de contul altei persoane.} no_violation {Ce ai raportat nu încalcă regulile noastre, așa că l-am lăsat așa cum este.} other {Am închis raportul tău.}}",
+		"intro": "{outcome, select, removed {Am eliminat conținutul raportat de tine pentru că încălca regulile noastre.} restricted {Contul raportat de tine a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat.} no_violation {Ce ai raportat nu încalcă regulile noastre, așa că l-am lăsat așa cum este.} other {Am închis raportul tău.}}",
 		"note": "{reply, select, yes {Dacă nu ești de acord, răspunde la acest e-mail în cel mult 60 de zile.} other {{appeals_email, select, null {} other {Dacă nu ești de acord, scrie-ne la <mail>{appeals_email}</mail> în cel mult 60 de zile și include ID-ul raportului.}}}}{appeals_email, select, null {} other { În UE, te poți adresa și unui <dsa>organism certificat de soluționare extrajudiciară a litigiilor</dsa> sau poți depune o plângere la coordonatorul serviciilor digitale din țara ta.}}",
 		"report_label": "ID raport",
 		"signoff": "Echipa {product_name}",
-		"subject": "Am luat o decizie cu privire la raportul tău de pe {product_name}"
+		"subject": "Am luat o decizie cu privire la raportul tău de pe {product_name}",
+		"thanks": "{outcome, select, removed {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} restricted {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} action_taken {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} other {Îți mulțumim că ne-ai anunțat.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Acest cod expiră în {minutes, plural, one {# minut} few {# minute} other {# de minute}}.",
@@ -422,13 +424,15 @@
 		"subject": "Am primit raportul tău de pe {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Este vorba despre raportul tău despre un mesaj din #{channelName} din „{communityName}”, trimis pe {reportedAt, date, long}.} message_dm {Este vorba despre raportul tău despre un mesaj dintr-o conversație privată, trimis pe {reportedAt, date, long}.} message {Este vorba despre raportul tău despre un mesaj, trimis pe {reportedAt, date, long}.} user {Este vorba despre raportul tău despre contul „{username}”, trimis pe {reportedAt, date, long}.} community {Este vorba despre raportul tău despre comunitatea „{communityName}”, trimis pe {reportedAt, date, long}.} other {Este vorba despre raportul trimis de tine pe {reportedAt, date, long}.}}",
 		"comment_label": "Notă de la echipa noastră",
 		"footer_reason": "Ai primit acest e-mail deoarece ai trimis un raport pe {product_name}.",
-		"intro": "{outcome, select, removed {Am eliminat conținutul raportat de tine pentru că încălca regulile noastre.} restricted {Contul raportat de tine a încălcat regulile noastre și l-am restricționat. Nu spunem ce măsuri am luat față de contul altei persoane.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat față de contul altei persoane.} no_violation {Ce ai raportat nu încalcă regulile noastre, așa că l-am lăsat așa cum este.} other {Am închis raportul tău.}}",
+		"intro": "{outcome, select, removed {Am eliminat conținutul raportat de tine pentru că încălca regulile noastre.} restricted {Contul raportat de tine a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Nu spunem ce măsuri am luat.} no_violation {Ce ai raportat nu încalcă regulile noastre, așa că l-am lăsat așa cum este.} other {Am închis raportul tău.}}",
 		"note": "{reply, select, yes {Dacă nu ești de acord, răspunde la acest e-mail în cel mult 60 de zile.} other {{appeals_email, select, null {} other {Dacă nu ești de acord, scrie-ne la <mail>{appeals_email}</mail> în cel mult 60 de zile și include ID-ul raportului.}}}}{appeals_email, select, null {} other { În UE, te poți adresa și unui <dsa>organism certificat de soluționare extrajudiciară a litigiilor</dsa> sau poți depune o plângere la coordonatorul serviciilor digitale din țara ta.}}",
 		"report_label": "ID raport",
 		"signoff": "Echipa {product_name}",
-		"subject": "Raportul tău de pe {product_name} a fost analizat"
+		"subject": "Raportul tău de pe {product_name} a fost analizat",
+		"thanks": "{outcome, select, removed {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} restricted {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} action_taken {Îți mulțumim pentru raport. Rapoartele ca al tău ajută la păstrarea {product_name} în siguranță pentru toată lumea.} other {Îți mulțumim că ne-ai anunțat.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Ai primit acest e-mail deoarece ai solicitat ștergerea contului tău {product_name}.",

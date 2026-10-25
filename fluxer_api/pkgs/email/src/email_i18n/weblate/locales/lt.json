@@ -48,13 +48,15 @@
 		"subject": "Tvarkyk savo {product_name} paramą"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Tai apie tavo pranešimą dėl žinutės #{channelName} kanale bendruomenėje „{communityName}“, išsiųstą {reportedAt, date, long}.} message_dm {Tai apie tavo pranešimą dėl žinutės asmeniniame pokalbyje, išsiųstą {reportedAt, date, long}.} message {Tai apie tavo pranešimą dėl žinutės, išsiųstą {reportedAt, date, long}.} user {Tai apie tavo pranešimą dėl paskyros „{username}“, išsiųstą {reportedAt, date, long}.} community {Tai apie tavo pranešimą dėl bendruomenės „{communityName}“, išsiųstą {reportedAt, date, long}.} other {Tai apie pranešimą, kurį išsiuntei {reportedAt, date, long}.}}",
 		"comment_label": "Mūsų komandos pastaba",
 		"footer_reason": "Gavai šį el. laišką, nes pateikei pranešimą pagal Skaitmeninių paslaugų aktą {product_name} platformoje.",
-		"intro": "{outcome, select, removed {Pašalinome turinį, apie kurį pranešei, nes jis pažeidė mūsų taisykles.} restricted {Paskyra, apie kurią pranešei, pažeidė mūsų taisykles, todėl ją apribojome. Neatskleidžiame, kokių veiksmų ėmėmės dėl kito asmens paskyros.} action_taken {Tai, apie ką pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės dėl kito asmens paskyros.} no_violation {Tai, apie ką pranešei, nepažeidžia mūsų taisyklių, todėl nieko nekeitėme.} other {Uždarėme tavo pranešimą.}}",
+		"intro": "{outcome, select, removed {Pašalinome turinį, apie kurį pranešei, nes jis pažeidė mūsų taisykles.} restricted {Paskyra, apie kurią pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės.} action_taken {Tai, apie ką pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės.} no_violation {Tai, apie ką pranešei, nepažeidžia mūsų taisyklių, todėl nieko nekeitėme.} other {Uždarėme tavo pranešimą.}}",
 		"note": "{reply, select, yes {Jei nesutinki, per 60 dienų atsakyk į šį el. laišką.} other {{appeals_email, select, null {} other {Jei nesutinki, per 60 dienų parašyk adresu <mail>{appeals_email}</mail> ir nurodyk pranešimo ID.}}}}{appeals_email, select, null {} other { ES taip pat gali kreiptis į sertifikuotą <dsa>neteisminio ginčų sprendimo įstaigą</dsa> arba pateikti skundą savo šalies skaitmeninių paslaugų koordinatoriui.}}",
 		"report_label": "Pranešimo ID",
 		"signoff": "{product_name} komanda",
-		"subject": "Priėmėme sprendimą dėl tavo {product_name} pranešimo"
+		"subject": "Priėmėme sprendimą dėl tavo {product_name} pranešimo",
+		"thanks": "{outcome, select, removed {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} restricted {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} action_taken {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} other {Ačiū, kad mums pranešei.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Šis kodas galioja {minutes, plural, one {# minutę} few {# minutes} many {# minutės} other {# minučių}}.",
@@ -422,13 +424,15 @@
 		"subject": "Gavome tavo {product_name} pranešimą"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Tai apie tavo pranešimą dėl žinutės #{channelName} kanale bendruomenėje „{communityName}“, išsiųstą {reportedAt, date, long}.} message_dm {Tai apie tavo pranešimą dėl žinutės asmeniniame pokalbyje, išsiųstą {reportedAt, date, long}.} message {Tai apie tavo pranešimą dėl žinutės, išsiųstą {reportedAt, date, long}.} user {Tai apie tavo pranešimą dėl paskyros „{username}“, išsiųstą {reportedAt, date, long}.} community {Tai apie tavo pranešimą dėl bendruomenės „{communityName}“, išsiųstą {reportedAt, date, long}.} other {Tai apie pranešimą, kurį išsiuntei {reportedAt, date, long}.}}",
 		"comment_label": "Mūsų komandos pastaba",
 		"footer_reason": "Šį el. laišką gavai, nes pateikei pranešimą {product_name} platformoje.",
-		"intro": "{outcome, select, removed {Pašalinome turinį, apie kurį pranešei, nes jis pažeidė mūsų taisykles.} restricted {Paskyra, apie kurią pranešei, pažeidė mūsų taisykles, todėl ją apribojome. Neatskleidžiame, kokių veiksmų ėmėmės dėl kito asmens paskyros.} action_taken {Tai, apie ką pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės dėl kito asmens paskyros.} no_violation {Tai, apie ką pranešei, nepažeidžia mūsų taisyklių, todėl nieko nekeitėme.} other {Uždarėme tavo pranešimą.}}",
+		"intro": "{outcome, select, removed {Pašalinome turinį, apie kurį pranešei, nes jis pažeidė mūsų taisykles.} restricted {Paskyra, apie kurią pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės.} action_taken {Tai, apie ką pranešei, pažeidė mūsų taisykles, ir ėmėmės veiksmų. Neatskleidžiame, kokių veiksmų ėmėmės.} no_violation {Tai, apie ką pranešei, nepažeidžia mūsų taisyklių, todėl nieko nekeitėme.} other {Uždarėme tavo pranešimą.}}",
 		"note": "{reply, select, yes {Jei nesutinki, per 60 dienų atsakyk į šį el. laišką.} other {{appeals_email, select, null {} other {Jei nesutinki, per 60 dienų parašyk adresu <mail>{appeals_email}</mail> ir nurodyk pranešimo ID.}}}}{appeals_email, select, null {} other { ES taip pat gali kreiptis į sertifikuotą <dsa>neteisminio ginčų sprendimo įstaigą</dsa> arba pateikti skundą savo šalies skaitmeninių paslaugų koordinatoriui.}}",
 		"report_label": "Pranešimo ID",
 		"signoff": "{product_name} komanda",
-		"subject": "Tavo {product_name} pranešimas peržiūrėtas"
+		"subject": "Tavo {product_name} pranešimas peržiūrėtas",
+		"thanks": "{outcome, select, removed {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} restricted {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} action_taken {Ačiū, kad pranešei. Tokie pranešimai kaip tavo padeda išlaikyti {product_name} saugų visiems.} other {Ačiū, kad mums pranešei.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Gavai šį el. laišką, nes paprašei ištrinti savo {product_name} paskyrą.",

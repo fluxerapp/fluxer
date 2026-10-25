@@ -48,13 +48,15 @@
 		"subject": "Quản lý các khoản ủng hộ {product_name} của bạn"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Đây là về báo cáo của bạn về một tin nhắn trong #{channelName} ở \"{communityName}\", gửi ngày {reportedAt, date, long}.} message_dm {Đây là về báo cáo của bạn về một tin nhắn trong tin nhắn trực tiếp, gửi ngày {reportedAt, date, long}.} message {Đây là về báo cáo của bạn về một tin nhắn, gửi ngày {reportedAt, date, long}.} user {Đây là về báo cáo của bạn về tài khoản \"{username}\", gửi ngày {reportedAt, date, long}.} community {Đây là về báo cáo của bạn về cộng đồng \"{communityName}\", gửi ngày {reportedAt, date, long}.} other {Đây là về báo cáo bạn gửi ngày {reportedAt, date, long}.}}",
 		"comment_label": "Ghi chú từ đội ngũ của chúng tôi",
 		"footer_reason": "Bạn nhận được email này vì bạn đã gửi báo cáo theo Đạo luật Dịch vụ kỹ thuật số trên {product_name}.",
-		"intro": "{outcome, select, removed {Chúng tôi đã xóa nội dung bạn báo cáo vì nội dung đó vi phạm quy tắc của chúng tôi.} restricted {Tài khoản bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã hạn chế tài khoản đó. Chúng tôi không chia sẻ việc đã làm với tài khoản của người khác.} action_taken {Nội dung bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ việc đã làm với tài khoản của người khác.} no_violation {Nội dung bạn báo cáo không vi phạm quy tắc của chúng tôi, nên chúng tôi giữ nguyên.} other {Chúng tôi đã đóng báo cáo của bạn.}}",
+		"intro": "{outcome, select, removed {Chúng tôi đã xóa nội dung bạn báo cáo vì nội dung đó vi phạm quy tắc của chúng tôi.} restricted {Tài khoản bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ cách chúng tôi đã xử lý.} action_taken {Nội dung bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ cách chúng tôi đã xử lý.} no_violation {Nội dung bạn báo cáo không vi phạm quy tắc của chúng tôi, nên chúng tôi giữ nguyên.} other {Chúng tôi đã đóng báo cáo của bạn.}}",
 		"note": "{reply, select, yes {Nếu bạn không đồng ý, hãy trả lời email này trong vòng 60 ngày.} other {{appeals_email, select, null {} other {Nếu bạn không đồng ý, hãy gửi email đến <mail>{appeals_email}</mail> trong vòng 60 ngày và ghi kèm ID báo cáo.}}}}{appeals_email, select, null {} other { Nếu bạn ở EU, bạn cũng có thể đưa việc này đến một <dsa>cơ quan giải quyết tranh chấp ngoài tòa án</dsa> đã được chứng nhận hoặc khiếu nại với Điều phối viên Dịch vụ Kỹ thuật số tại quốc gia của bạn.}}",
 		"report_label": "ID báo cáo",
 		"signoff": "Đội ngũ {product_name}",
-		"subject": "Chúng tôi đã có quyết định về báo cáo của bạn trên {product_name}"
+		"subject": "Chúng tôi đã có quyết định về báo cáo của bạn trên {product_name}",
+		"thanks": "{outcome, select, removed {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} restricted {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} action_taken {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} other {Cảm ơn bạn đã cho chúng tôi biết.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Mã này sẽ hết hạn sau {minutes, plural, other {# phút}}.",
@@ -422,13 +424,15 @@
 		"subject": "Chúng tôi đã nhận được báo cáo của bạn trên {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Đây là về báo cáo của bạn về một tin nhắn trong #{channelName} ở \"{communityName}\", gửi ngày {reportedAt, date, long}.} message_dm {Đây là về báo cáo của bạn về một tin nhắn trong tin nhắn trực tiếp, gửi ngày {reportedAt, date, long}.} message {Đây là về báo cáo của bạn về một tin nhắn, gửi ngày {reportedAt, date, long}.} user {Đây là về báo cáo của bạn về tài khoản \"{username}\", gửi ngày {reportedAt, date, long}.} community {Đây là về báo cáo của bạn về cộng đồng \"{communityName}\", gửi ngày {reportedAt, date, long}.} other {Đây là về báo cáo bạn gửi ngày {reportedAt, date, long}.}}",
 		"comment_label": "Ghi chú từ đội ngũ của chúng tôi",
 		"footer_reason": "Bạn nhận được email này vì bạn đã gửi báo cáo trên {product_name}.",
-		"intro": "{outcome, select, removed {Chúng tôi đã xóa nội dung bạn báo cáo vì nội dung đó vi phạm quy tắc của chúng tôi.} restricted {Tài khoản bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã hạn chế tài khoản đó. Chúng tôi không chia sẻ việc đã làm với tài khoản của người khác.} action_taken {Nội dung bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ việc đã làm với tài khoản của người khác.} no_violation {Nội dung bạn báo cáo không vi phạm quy tắc của chúng tôi, nên chúng tôi giữ nguyên.} other {Chúng tôi đã đóng báo cáo của bạn.}}",
+		"intro": "{outcome, select, removed {Chúng tôi đã xóa nội dung bạn báo cáo vì nội dung đó vi phạm quy tắc của chúng tôi.} restricted {Tài khoản bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ cách chúng tôi đã xử lý.} action_taken {Nội dung bạn báo cáo đã vi phạm quy tắc của chúng tôi, và chúng tôi đã xử lý. Chúng tôi không chia sẻ cách chúng tôi đã xử lý.} no_violation {Nội dung bạn báo cáo không vi phạm quy tắc của chúng tôi, nên chúng tôi giữ nguyên.} other {Chúng tôi đã đóng báo cáo của bạn.}}",
 		"note": "{reply, select, yes {Nếu bạn không đồng ý, hãy trả lời email này trong vòng 60 ngày.} other {{appeals_email, select, null {} other {Nếu bạn không đồng ý, hãy gửi email đến <mail>{appeals_email}</mail> trong vòng 60 ngày và ghi kèm ID báo cáo.}}}}{appeals_email, select, null {} other { Nếu bạn ở EU, bạn cũng có thể đưa việc này đến một <dsa>cơ quan giải quyết tranh chấp ngoài tòa án</dsa> đã được chứng nhận hoặc khiếu nại với Điều phối viên Dịch vụ Kỹ thuật số tại quốc gia của bạn.}}",
 		"report_label": "ID báo cáo",
 		"signoff": "Đội ngũ {product_name}",
-		"subject": "Báo cáo {product_name} của bạn đã được xem xét"
+		"subject": "Báo cáo {product_name} của bạn đã được xem xét",
+		"thanks": "{outcome, select, removed {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} restricted {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} action_taken {Cảm ơn bạn đã báo cáo. Những báo cáo như của bạn giúp giữ cho {product_name} an toàn với mọi người.} other {Cảm ơn bạn đã cho chúng tôi biết.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Bạn nhận được email này vì bạn đã yêu cầu xóa tài khoản {product_name} của mình.",

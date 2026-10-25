@@ -37,17 +37,51 @@
 	flex: 1;
 }
 
+.userProfileText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	flex: 1 1 0;
+	min-width: 0;
+	margin-inline-end: 0.5rem;
+}
+
 .userProfileName {
-	font-weight: 500;
-	font-size: 0.8125rem;
-	line-height: 1.125rem;
+	font-weight: 600;
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
 	color: inherit;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	flex: 1 1 0;
 	min-width: 0;
-	margin-inline-end: 0.5rem;
+}
+
+.userProfileHint {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	min-width: 0;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 500;
+	color: var(--text-tertiary);
+}
+
+.userProfile:hover .userProfileHint,
+.userProfileSelected .userProfileHint {
+	color: var(--text-secondary);
+}
+
+.userProfileHintIcon {
+	flex-shrink: 0;
+}
+
+.userProfileHintText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
 }
 
 .mobileWrapper {

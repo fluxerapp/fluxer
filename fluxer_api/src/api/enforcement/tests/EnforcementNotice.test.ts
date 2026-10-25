@@ -19,6 +19,14 @@ import {enforcementEndedSlots, renderEmailTemplateText, reportResolvedSlots} fro
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import {afterEach, describe, expect, it} from 'vitest';
 
+const REPORT_REFERENCE = {
+	target: 'user',
+	reportedAt: new Date('2026-10-24T18:12:00Z'),
+	username: 'example',
+	communityName: '',
+	channelName: '',
+} as const;
+
 const CREATED_AT = new Date('2026-10-14T10:00:00.000Z');
 const NOW = new Date('2026-10-14T12:00:00.000Z');
 const STAFF_ID = 987654321987n;
@@ -281,10 +289,10 @@ describe('buildEnforcementNotice', () => {
 			full('account_deletion_scheduled_requested', {deletion_date: 'Dec 13, 2026'}),
 			full('account_deletion_scheduled_inactivity', {deletion_date: 'Dec 13, 2026'}),
 			...(['removed', 'restricted', 'action_taken', 'no_violation'] as const).flatMap((outcome) => [
-				full('report_resolved', {outcome, appeals_email: contacts.appealsEmail}, (template) =>
+				full('report_resolved', {...REPORT_REFERENCE, outcome, appeals_email: contacts.appealsEmail}, (template) =>
 					reportResolvedSlots(template, '1', ''),
 				),
-				full('dsa_report_resolved', {outcome, appeals_email: contacts.appealsEmail}, (template) =>
+				full('dsa_report_resolved', {...REPORT_REFERENCE, outcome, appeals_email: contacts.appealsEmail}, (template) =>
 					reportResolvedSlots(template, '1', ''),
 				),
 			]),

@@ -10,7 +10,7 @@ import {
 } from '@app/api/user/profile_badges/ProfileBadgeAssets';
 import {getVisionaryNumberTag} from '@app/api/user/profile_badges/VisionaryNumberTags';
 import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {formatSinceMonthYear} from '@fluxer/date_utils/src/SinceMonthYear';
+import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 
 export type ProfileBadgeKind =
 	| 'staff'
@@ -68,6 +68,10 @@ function premiumName(environment: ProfileBadgeEnvironment): string {
 	return `${environment.productName} ${environment.premiumName}`;
 }
 
+function formatSinceDate(date: Date, locale: string): string {
+	return getDateFormatter(locale, {dateStyle: 'long', timeZone: 'UTC'}).format(date);
+}
+
 function premiumLabel(view: ProfileBadgeView): string {
 	if (view.premium.premiumType === UserPremiumTypes.LIFETIME) {
 		return getContentMessage('profile_badge.premium_lifetime', view.locale, {
@@ -78,7 +82,7 @@ function premiumLabel(view: ProfileBadgeView): string {
 	if (since) {
 		return getContentMessage('profile_badge.premium_since', view.locale, {
 			premium_name: premiumName(view.environment),
-			since_month_year: formatSinceMonthYear(since, view.locale, 'UTC'),
+			since_date: formatSinceDate(since, view.locale),
 		});
 	}
 	return getContentMessage('profile_badge.premium', view.locale, {premium_name: premiumName(view.environment)});
@@ -113,7 +117,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 		kind: 'bug_hunter',
 		asset: PROFILE_BADGE_ASSETS.bug_hunter,
 		availability: 'hosted',
-		href: marketing('help/report-bug'),
+		href: () => 'https://www.youtube.com/watch?v=ez8m4PXksQs',
 		qualify: flagBadge(UserFlags.BUG_HUNTER, (view) =>
 			getContentMessage('profile_badge.bug_hunter', view.locale, {product_name: view.environment.productName}),
 		),
@@ -127,12 +131,12 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 			if (!view.operatorPass) return null;
 			const {since, count} = view.operatorPass;
 			const stacked = count != null && count >= 2;
-			const sinceMonthYear = since ? formatSinceMonthYear(since, view.locale, 'UTC') : null;
+			const sinceDate = since ? formatSinceDate(since, view.locale) : null;
 			const lines: Array<string> = [];
-			if (sinceMonthYear) {
+			if (sinceDate) {
 				lines.push(
 					getContentMessage('profile_badge.operator_pass_since_line', view.locale, {
-						since_month_year: sinceMonthYear,
+						since_date: sinceDate,
 					}),
 				);
 			}
@@ -140,14 +144,14 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 				lines.push(getContentMessage('profile_badge.operator_pass_count', view.locale, {count}));
 			}
 			let label: string;
-			if (sinceMonthYear && stacked) {
+			if (sinceDate && stacked) {
 				label = getContentMessage('profile_badge.operator_pass_since_count', view.locale, {
-					since_month_year: sinceMonthYear,
+					since_date: sinceDate,
 					count,
 				});
-			} else if (sinceMonthYear) {
+			} else if (sinceDate) {
 				label = getContentMessage('profile_badge.operator_pass_since', view.locale, {
-					since_month_year: sinceMonthYear,
+					since_date: sinceDate,
 				});
 			} else {
 				label = getContentMessage('profile_badge.operator_pass', view.locale);
@@ -178,7 +182,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 				label: since
 					? getContentMessage('profile_badge.visionary_since', view.locale, {
 							product_name: productName,
-							since_month_year: formatSinceMonthYear(since, view.locale, 'UTC'),
+							since_date: formatSinceDate(since, view.locale),
 						})
 					: getContentMessage('profile_badge.visionary', view.locale, {product_name: productName}),
 			};

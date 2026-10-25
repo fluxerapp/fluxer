@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Ova e-mail domena nije dopuštena za jedinstvenu prijavu.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Nismo mogli dohvatiti tvoje SSO podatke. Pokušaj ponovno.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Nismo mogli pročitati odgovor tvog davatelja SSO usluge. Pokušaj ponovno.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Previše pokušaja prijave s tvoje mreže. Pokušaj ponovno za {minutes} min.",
+	"auth_and_oauth.handoff_code_already_used": "Ovaj je kod već iskorišten. Pokreni novu prijavu iz aplikacije.",
 	"auth_and_oauth.handoff_code_expired": "Kod za prijenos je istekao.",
 	"auth_and_oauth.handoff_code_invalid": "Nevažeći kod za prijenos.",
 	"auth_and_oauth.invalid_code": "Nevažeći kod.",

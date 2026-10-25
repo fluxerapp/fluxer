@@ -6,7 +6,7 @@ import {
 	formatOperatorPassDateTime,
 	formatOperatorPassEarlyBirdEnd,
 	formatOperatorPassLongDate,
-	formatOperatorPassSinceMonth,
+	formatOperatorPassSinceDate,
 } from '@app/features/premium/utils/OperatorPassUtils';
 import type {OperatorPassStateResponse} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import type {I18n} from '@lingui/core';
@@ -59,9 +59,9 @@ const OPERATOR_TITLE_DESCRIPTOR = msg({
 		'Heading in the Operator Pass dialog when the account already has an Operator Pass. Operator is the badge and role name.',
 });
 const OPERATOR_SINCE_DESCRIPTOR = msg({
-	message: '{operatorPassName} since {sinceMonth}',
+	message: '{operatorPassName} since {sinceDate}',
 	comment:
-		'Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceMonth} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.',
+		'Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceDate} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.',
 });
 const PASS_COUNT_DESCRIPTOR = msg({
 	message: '{count, plural, one {# Operator Pass} other {# Operator Passes}}',
@@ -111,7 +111,7 @@ export function renderOperatorPassHolderCard({current, i18n}: OperatorCardOption
 	if (!current.holder) return null;
 	const since = i18n._(OPERATOR_SINCE_DESCRIPTOR, {
 		operatorPassName: OPERATOR_PASS_NAME,
-		sinceMonth: formatOperatorPassSinceMonth(current.holder.since),
+		sinceDate: formatOperatorPassSinceDate(current.holder.since),
 	});
 	const count = current.holder.count > 1 ? i18n._(PASS_COUNT_DESCRIPTOR, {count: current.holder.count}) : null;
 	return (

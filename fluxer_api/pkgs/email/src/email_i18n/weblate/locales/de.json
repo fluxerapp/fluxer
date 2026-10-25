@@ -48,13 +48,15 @@
 		"subject": "Verwalte deine {product_name}-Spenden"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Es geht um deine Meldung zu einer Nachricht in #{channelName} in „{communityName}“ vom {reportedAt, date, long}.} message_dm {Es geht um deine Meldung zu einer Nachricht in einer Direktnachricht vom {reportedAt, date, long}.} message {Es geht um deine Meldung zu einer Nachricht vom {reportedAt, date, long}.} user {Es geht um deine Meldung zum Account „{username}“ vom {reportedAt, date, long}.} community {Es geht um deine Meldung zur Community „{communityName}“ vom {reportedAt, date, long}.} other {Es geht um deine Meldung vom {reportedAt, date, long}.}}",
 		"comment_label": "Hinweis von unserem Team",
 		"footer_reason": "Du hast diese E-Mail erhalten, weil du eine Meldung nach dem Digital Services Act auf {product_name} eingereicht hast.",
-		"intro": "{outcome, select, removed {Wir haben die gemeldeten Inhalte entfernt, weil sie gegen unsere Regeln verstoßen haben.} restricted {Der gemeldete Account hat gegen unsere Regeln verstoßen, und wir haben ihn eingeschränkt. Was wir mit dem Account einer anderen Person machen, teilen wir nicht mit.} action_taken {Das Gemeldete hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Was wir mit dem Account einer anderen Person machen, teilen wir nicht mit.} no_violation {Das Gemeldete verstößt nicht gegen unsere Regeln, deshalb haben wir nichts geändert.} other {Wir haben deine Meldung abgeschlossen.}}",
+		"intro": "{outcome, select, removed {Wir haben die gemeldeten Inhalte entfernt, weil sie gegen unsere Regeln verstoßen haben.} restricted {Der gemeldete Account hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Welche Maßnahmen das sind, teilen wir nicht mit.} action_taken {Das Gemeldete hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Welche Maßnahmen das sind, teilen wir nicht mit.} no_violation {Das Gemeldete verstößt nicht gegen unsere Regeln, deshalb haben wir nichts geändert.} other {Wir haben deine Meldung abgeschlossen.}}",
 		"note": "{reply, select, yes {Wenn du nicht einverstanden bist, antworte innerhalb von 60 Tagen auf diese E-Mail.} other {{appeals_email, select, null {} other {Wenn du nicht einverstanden bist, schreib innerhalb von 60 Tagen an <mail>{appeals_email}</mail> und gib die Meldungs-ID an.}}}}{appeals_email, select, null {} other { In der EU kannst du dich auch an eine zertifizierte <dsa>außergerichtliche Streitbeilegungsstelle</dsa> wenden oder dich beim Koordinator für digitale Dienste in deinem Land beschweren.}}",
 		"report_label": "Meldungs-ID",
 		"signoff": "Dein {product_name}-Team",
-		"subject": "Wir haben über deine Meldung auf {product_name} entschieden"
+		"subject": "Wir haben über deine Meldung auf {product_name} entschieden",
+		"thanks": "{outcome, select, removed {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} restricted {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} action_taken {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} other {Danke, dass du uns Bescheid gegeben hast.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Dieser Code läuft in {minutes, plural, one {# Minute} other {# Minuten}} ab.",
@@ -422,13 +424,15 @@
 		"subject": "Wir haben deine {product_name}-Meldung erhalten"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Es geht um deine Meldung zu einer Nachricht in #{channelName} in „{communityName}“ vom {reportedAt, date, long}.} message_dm {Es geht um deine Meldung zu einer Nachricht in einer Direktnachricht vom {reportedAt, date, long}.} message {Es geht um deine Meldung zu einer Nachricht vom {reportedAt, date, long}.} user {Es geht um deine Meldung zum Account „{username}“ vom {reportedAt, date, long}.} community {Es geht um deine Meldung zur Community „{communityName}“ vom {reportedAt, date, long}.} other {Es geht um deine Meldung vom {reportedAt, date, long}.}}",
 		"comment_label": "Hinweis von unserem Team",
 		"footer_reason": "Du hast diese E-Mail erhalten, weil du eine Meldung auf {product_name} eingereicht hast.",
-		"intro": "{outcome, select, removed {Wir haben die gemeldeten Inhalte entfernt, weil sie gegen unsere Regeln verstoßen haben.} restricted {Der gemeldete Account hat gegen unsere Regeln verstoßen, und wir haben ihn eingeschränkt. Was wir mit dem Account einer anderen Person machen, teilen wir nicht mit.} action_taken {Das Gemeldete hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Was wir mit dem Account einer anderen Person machen, teilen wir nicht mit.} no_violation {Das Gemeldete verstößt nicht gegen unsere Regeln, deshalb haben wir nichts geändert.} other {Wir haben deine Meldung abgeschlossen.}}",
+		"intro": "{outcome, select, removed {Wir haben die gemeldeten Inhalte entfernt, weil sie gegen unsere Regeln verstoßen haben.} restricted {Der gemeldete Account hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Welche Maßnahmen das sind, teilen wir nicht mit.} action_taken {Das Gemeldete hat gegen unsere Regeln verstoßen, und wir haben Maßnahmen ergriffen. Welche Maßnahmen das sind, teilen wir nicht mit.} no_violation {Das Gemeldete verstößt nicht gegen unsere Regeln, deshalb haben wir nichts geändert.} other {Wir haben deine Meldung abgeschlossen.}}",
 		"note": "{reply, select, yes {Wenn du nicht einverstanden bist, antworte innerhalb von 60 Tagen auf diese E-Mail.} other {{appeals_email, select, null {} other {Wenn du nicht einverstanden bist, schreib innerhalb von 60 Tagen an <mail>{appeals_email}</mail> und gib die Meldungs-ID an.}}}}{appeals_email, select, null {} other { In der EU kannst du dich auch an eine zertifizierte <dsa>außergerichtliche Streitbeilegungsstelle</dsa> wenden oder dich beim Koordinator für digitale Dienste in deinem Land beschweren.}}",
 		"report_label": "Meldungs-ID",
 		"signoff": "Dein {product_name}-Team",
-		"subject": "Deine Meldung auf {product_name} wurde geprüft"
+		"subject": "Deine Meldung auf {product_name} wurde geprüft",
+		"thanks": "{outcome, select, removed {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} restricted {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} action_taken {Danke für deine Meldung. Meldungen wie deine helfen, {product_name} für alle sicher zu halten.} other {Danke, dass du uns Bescheid gegeben hast.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Du hast diese E-Mail erhalten, weil du die Löschung deines {product_name}-Accounts beantragt hast.",

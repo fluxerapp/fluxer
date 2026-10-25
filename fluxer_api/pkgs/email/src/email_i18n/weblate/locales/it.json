@@ -48,13 +48,15 @@
 		"subject": "Gestisci le tue donazioni a {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Riguarda la tua segnalazione di un messaggio in #{channelName} in «{communityName}», inviata il {reportedAt, date, long}.} message_dm {Riguarda la tua segnalazione di un messaggio diretto, inviata il {reportedAt, date, long}.} message {Riguarda la tua segnalazione di un messaggio, inviata il {reportedAt, date, long}.} user {Riguarda la tua segnalazione dell'account «{username}», inviata il {reportedAt, date, long}.} community {Riguarda la tua segnalazione della community «{communityName}», inviata il {reportedAt, date, long}.} other {Riguarda la segnalazione che hai inviato il {reportedAt, date, long}.}}",
 		"comment_label": "Nota del nostro team",
 		"footer_reason": "Hai ricevuto questa email perché hai presentato una segnalazione ai sensi del Digital Services Act su {product_name}.",
-		"intro": "{outcome, select, removed {Abbiamo rimosso il contenuto che hai segnalato perché violava le nostre regole.} restricted {L'account che hai segnalato violava le nostre regole e lo abbiamo limitato. Non condividiamo i provvedimenti presi sull'account di un'altra persona.} action_taken {Quello che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo i provvedimenti presi sull'account di un'altra persona.} no_violation {Quello che hai segnalato non viola le nostre regole, quindi l'abbiamo lasciato com'è.} other {Abbiamo chiuso la tua segnalazione.}}",
+		"intro": "{outcome, select, removed {Abbiamo rimosso il contenuto che hai segnalato perché violava le nostre regole.} restricted {L'account che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo quali provvedimenti abbiamo preso.} action_taken {Quello che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo quali provvedimenti abbiamo preso.} no_violation {Quello che hai segnalato non viola le nostre regole, quindi l'abbiamo lasciato com'è.} other {Abbiamo chiuso la tua segnalazione.}}",
 		"note": "{reply, select, yes {Se non sei d'accordo, rispondi a questa email entro 60 giorni.} other {{appeals_email, select, null {} other {Se non sei d'accordo, scrivi a <mail>{appeals_email}</mail> entro 60 giorni indicando l'ID della segnalazione.}}}}{appeals_email, select, null {} other { Nell'UE puoi anche rivolgerti a un <dsa>organismo di risoluzione extragiudiziale delle controversie</dsa> certificato o presentare un reclamo al coordinatore dei servizi digitali del tuo paese.}}",
 		"report_label": "ID segnalazione",
 		"signoff": "Il team di {product_name}",
-		"subject": "Abbiamo preso una decisione sulla tua segnalazione su {product_name}"
+		"subject": "Abbiamo preso una decisione sulla tua segnalazione su {product_name}",
+		"thanks": "{outcome, select, removed {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} restricted {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} action_taken {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} other {Grazie per avercelo fatto sapere.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Questo codice scade tra {minutes, plural, one {# minuto} other {# minuti}}.",
@@ -422,13 +424,15 @@
 		"subject": "Abbiamo ricevuto la tua segnalazione su {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Riguarda la tua segnalazione di un messaggio in #{channelName} in «{communityName}», inviata il {reportedAt, date, long}.} message_dm {Riguarda la tua segnalazione di un messaggio diretto, inviata il {reportedAt, date, long}.} message {Riguarda la tua segnalazione di un messaggio, inviata il {reportedAt, date, long}.} user {Riguarda la tua segnalazione dell'account «{username}», inviata il {reportedAt, date, long}.} community {Riguarda la tua segnalazione della community «{communityName}», inviata il {reportedAt, date, long}.} other {Riguarda la segnalazione che hai inviato il {reportedAt, date, long}.}}",
 		"comment_label": "Nota del nostro team",
 		"footer_reason": "Hai ricevuto questa email perché hai inviato una segnalazione su {product_name}.",
-		"intro": "{outcome, select, removed {Abbiamo rimosso il contenuto che hai segnalato perché violava le nostre regole.} restricted {L'account che hai segnalato violava le nostre regole e lo abbiamo limitato. Non condividiamo i provvedimenti presi sull'account di un'altra persona.} action_taken {Quello che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo i provvedimenti presi sull'account di un'altra persona.} no_violation {Quello che hai segnalato non viola le nostre regole, quindi l'abbiamo lasciato com'è.} other {Abbiamo chiuso la tua segnalazione.}}",
+		"intro": "{outcome, select, removed {Abbiamo rimosso il contenuto che hai segnalato perché violava le nostre regole.} restricted {L'account che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo quali provvedimenti abbiamo preso.} action_taken {Quello che hai segnalato violava le nostre regole e abbiamo preso provvedimenti. Non condividiamo quali provvedimenti abbiamo preso.} no_violation {Quello che hai segnalato non viola le nostre regole, quindi l'abbiamo lasciato com'è.} other {Abbiamo chiuso la tua segnalazione.}}",
 		"note": "{reply, select, yes {Se non sei d'accordo, rispondi a questa email entro 60 giorni.} other {{appeals_email, select, null {} other {Se non sei d'accordo, scrivi a <mail>{appeals_email}</mail> entro 60 giorni indicando l'ID della segnalazione.}}}}{appeals_email, select, null {} other { Nell'UE puoi anche rivolgerti a un <dsa>organismo di risoluzione extragiudiziale delle controversie</dsa> certificato o presentare un reclamo al coordinatore dei servizi digitali del tuo paese.}}",
 		"report_label": "ID segnalazione",
 		"signoff": "Il team di {product_name}",
-		"subject": "La tua segnalazione {product_name} è stata esaminata"
+		"subject": "La tua segnalazione {product_name} è stata esaminata",
+		"thanks": "{outcome, select, removed {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} restricted {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} action_taken {Grazie per la segnalazione. Segnalazioni come la tua aiutano a mantenere {product_name} sicuro per tutti.} other {Grazie per avercelo fatto sapere.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Hai ricevuto questa email perché hai richiesto di eliminare il tuo account {product_name}.",

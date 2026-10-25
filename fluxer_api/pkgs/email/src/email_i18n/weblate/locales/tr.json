@@ -48,13 +48,15 @@
 		"subject": "{product_name} bağışlarınızı yönetin"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Bu, \"{communityName}\" topluluğundaki #{channelName} kanalında bulunan bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} message_dm {Bu, bir doğrudan mesajdaki bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} message {Bu, bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} user {Bu, \"{username}\" hesabı hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} community {Bu, \"{communityName}\" topluluğu hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} other {Bu, {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.}}",
 		"comment_label": "Ekibimizden not",
 		"footer_reason": "Bu e-postayı, {product_name} üzerinde bir Dijital Hizmetler Yasası raporu gönderdiğiniz için aldınız.",
-		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve hesabı kısıtladık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
+		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
 		"note": "{reply, select, yes {Karara katılmıyorsanız 60 gün içinde bu e-postayı yanıtlayın.} other {{appeals_email, select, null {} other {Karara katılmıyorsanız 60 gün içinde <mail>{appeals_email}</mail> adresine yazın ve rapor kimliğini ekleyin.}}}}{appeals_email, select, null {} other { AB içindeyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> da başvurabilir veya ülkenizdeki Dijital Hizmetler Koordinatörüne şikâyette bulunabilirsiniz.}}",
 		"report_label": "Rapor Kimliği",
 		"signoff": "{product_name} ekibi",
-		"subject": "{product_name} raporunuz hakkında karar verdik"
+		"subject": "{product_name} raporunuz hakkında karar verdik",
+		"thanks": "{outcome, select, removed {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} restricted {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} action_taken {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} other {Bize haber verdiğiniz için teşekkürler.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Bu kodun süresi {minutes, plural, one {# dakika} other {# dakika}} içinde dolacak.",
@@ -422,13 +424,15 @@
 		"subject": "{product_name} raporunuzu aldık"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Bu, \"{communityName}\" topluluğundaki #{channelName} kanalında bulunan bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} message_dm {Bu, bir doğrudan mesajdaki bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} message {Bu, bir mesaj hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} user {Bu, \"{username}\" hesabı hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} community {Bu, \"{communityName}\" topluluğu hakkında {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.} other {Bu, {reportedAt, date, long} tarihinde gönderdiğiniz raporla ilgili.}}",
 		"comment_label": "Ekibimizden not",
 		"footer_reason": "Bu e-postayı, {product_name} üzerinde bir rapor gönderdiğiniz için aldınız.",
-		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve hesabı kısıtladık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Başka birinin hesabına ne yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
+		"intro": "{outcome, select, removed {Bildirdiğiniz içerik kurallarımızı ihlal ettiği için içeriği kaldırdık.} restricted {Bildirdiğiniz hesap kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} action_taken {Bildirdiğiniz şey kurallarımızı ihlal etti ve gerekli işlemi yaptık. Hangi işlemi yaptığımızı paylaşmıyoruz.} no_violation {Bildirdiğiniz şey kurallarımızı ihlal etmiyor, bu yüzden olduğu gibi bıraktık.} other {Raporunuzu kapattık.}}",
 		"note": "{reply, select, yes {Karara katılmıyorsanız 60 gün içinde bu e-postayı yanıtlayın.} other {{appeals_email, select, null {} other {Karara katılmıyorsanız 60 gün içinde <mail>{appeals_email}</mail> adresine yazın ve rapor kimliğini ekleyin.}}}}{appeals_email, select, null {} other { AB içindeyseniz sertifikalı bir <dsa>mahkeme dışı uyuşmazlık çözüm kuruluşuna</dsa> da başvurabilir veya ülkenizdeki Dijital Hizmetler Koordinatörüne şikâyette bulunabilirsiniz.}}",
 		"report_label": "Rapor Kimliği",
 		"signoff": "{product_name} ekibi",
-		"subject": "{product_name} raporunuz incelendi"
+		"subject": "{product_name} raporunuz incelendi",
+		"thanks": "{outcome, select, removed {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} restricted {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} action_taken {Bildirdiğiniz için teşekkürler. Sizinki gibi raporlar {product_name} platformunu herkes için güvenli tutmaya yardımcı oluyor.} other {Bize haber verdiğiniz için teşekkürler.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Bu e-postayı, {product_name} hesabınızın silinmesini istediğiniz için aldınız.",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {OPERATOR_PASS_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {formatOperatorPassSinceMonth} from '@app/features/premium/utils/OperatorPassUtils';
+import {formatOperatorPassSinceDate} from '@app/features/premium/utils/OperatorPassUtils';
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {OperatorPassWallSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings';
@@ -70,7 +70,7 @@ const PREMIUM_BADGE_DISPLAY_DESCRIPTION_DESCRIPTOR = msg({
 const OPERATOR_PASS_SINCE_DESCRIPTOR = msg({
 	message: 'Operator Pass since {since}',
 	comment:
-		'Line under the Operator Pass heading in profile settings. {since} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.',
+		'Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.',
 });
 const SHOW_OPERATOR_PASS_BADGE_DESCRIPTOR = msg({
 	message: 'Show badge on my profile',
@@ -212,7 +212,7 @@ export const PremiumBadgeSettings = observer(
 									className={styles.description}
 									data-flx="user.my-profile-tab.premium-badge-settings.operator-pass-description"
 								>
-									{i18n._(OPERATOR_PASS_SINCE_DESCRIPTOR, {since: formatOperatorPassSinceMonth(operatorPassSince)})}
+									{i18n._(OPERATOR_PASS_SINCE_DESCRIPTOR, {since: formatOperatorPassSinceDate(operatorPassSince)})}
 								</p>
 							)}
 						</div>

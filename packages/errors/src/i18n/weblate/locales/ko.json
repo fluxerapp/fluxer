@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "이 이메일 도메인은 싱글 사인온에 허용되지 않아요.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "SSO 사용자 정보를 가져오지 못했어요. 다시 시도해 주세요.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "SSO 제공자의 응답을 읽지 못했어요. 다시 시도해 주세요.",
+	"auth_and_oauth.handoff_attempts_exceeded": "네트워크에서 로그인 시도가 너무 많습니다. {minutes}분 후에 다시 시도하세요.",
+	"auth_and_oauth.handoff_code_already_used": "이 코드는 이미 사용되었습니다. 앱에서 새로 로그인을 시작하세요.",
 	"auth_and_oauth.handoff_code_expired": "전환 코드가 만료되었어요.",
 	"auth_and_oauth.handoff_code_invalid": "유효하지 않은 전환 코드예요.",
 	"auth_and_oauth.invalid_code": "잘못된 코드예요.",

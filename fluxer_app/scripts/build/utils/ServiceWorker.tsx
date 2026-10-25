@@ -26,7 +26,6 @@ async function collectPrecacheManifest(): Promise<Array<PrecacheEntry>> {
 
 export async function buildServiceWorker(production: boolean): Promise<void> {
 	const precacheManifest = await collectPrecacheManifest();
-	const buildVersion = process.env.PUBLIC_BUILD_SHA || process.env.BUILD_SHA || String(Date.now());
 	await esbuild.build({
 		entryPoints: [path.join(SRC_DIR, 'features', 'platform', 'service_worker', 'Worker.ts')],
 		bundle: true,
@@ -38,7 +37,7 @@ export async function buildServiceWorker(production: boolean): Promise<void> {
 		define: {
 			__WB_MANIFEST: '[]',
 			__FLUXER_PRECACHE_MANIFEST__: JSON.stringify(precacheManifest),
-			__FLUXER_SW_VERSION__: JSON.stringify(buildVersion),
+			__FLUXER_SW_VERSION__: JSON.stringify(String(Date.now())),
 		},
 	});
 }

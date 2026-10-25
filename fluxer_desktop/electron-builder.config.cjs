@@ -118,7 +118,10 @@ const legacyLinuxOptDirSweepScript = path.resolve(__dirname, 'packaging/linux/rp
 const legacyLinuxOptDirRpmFpmArgs = isCanary ? ['--rpm-posttrans', legacyLinuxOptDirSweepScript] : [];
 const macOSMinimumSystemVersion = '13.0';
 const metadataName = isLinuxBuild ? linuxPackageName : packageName;
-const shellVersion = process.env.VERSION || readBundledRendererVersion();
+if (process.env.VERSION && !process.env.BUILD_VERSION) {
+	throw new Error('The desktop packaging no longer reads VERSION. Set BUILD_VERSION instead.');
+}
+const shellVersion = process.env.BUILD_VERSION || readBundledRendererVersion();
 const supportedTargetArchs = ['x64', 'arm64'];
 const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;

@@ -48,13 +48,15 @@
 		"subject": "{product_name} 후원 내역 관리"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {{reportedAt, date, long}에 보내신 \"{communityName}\"의 #{channelName} 메시지에 대한 신고에 관한 안내예요.} message_dm {{reportedAt, date, long}에 보내신 다이렉트 메시지 속 메시지에 대한 신고에 관한 안내예요.} message {{reportedAt, date, long}에 보내신 메시지 신고에 관한 안내예요.} user {{reportedAt, date, long}에 보내신 \"{username}\" 계정에 대한 신고에 관한 안내예요.} community {{reportedAt, date, long}에 보내신 \"{communityName}\" 커뮤니티에 대한 신고에 관한 안내예요.} other {{reportedAt, date, long}에 보내신 신고에 관한 안내예요.}}",
 		"comment_label": "팀에서 남긴 메모",
 		"footer_reason": "{product_name}에 디지털 서비스법 신고를 제출하셔서 이 이메일을 받으셨어요.",
-		"intro": "{outcome, select, removed {신고하신 콘텐츠가 규칙을 위반해서 삭제했어요.} restricted {신고하신 계정이 규칙을 위반해서 제한 조치를 했어요. 다른 사람의 계정에 어떤 조치를 했는지는 알려 드리지 않아요.} action_taken {신고하신 내용이 규칙을 위반해서 조치를 취했어요. 다른 사람의 계정에 어떤 조치를 했는지는 알려 드리지 않아요.} no_violation {신고하신 내용은 규칙을 위반하지 않아서 그대로 두었어요.} other {신고를 종료했어요.}}",
+		"intro": "{outcome, select, removed {신고하신 콘텐츠가 규칙을 위반해서 삭제했어요.} restricted {신고하신 계정이 규칙을 위반해서 조치를 취했어요. 어떤 조치를 했는지는 알려 드리지 않아요.} action_taken {신고하신 내용이 규칙을 위반해서 조치를 취했어요. 어떤 조치를 했는지는 알려 드리지 않아요.} no_violation {신고하신 내용은 규칙을 위반하지 않아서 그대로 두었어요.} other {신고를 종료했어요.}}",
 		"note": "{reply, select, yes {결과에 동의하지 않으시면 60일 이내에 이 이메일에 회신해 주세요.} other {{appeals_email, select, null {} other {결과에 동의하지 않으시면 60일 이내에 신고 ID를 적어 <mail>{appeals_email}</mail>로 이메일을 보내 주세요.}}}}{appeals_email, select, null {} other { EU에서는 인증된 <dsa>법원 외 분쟁 해결 기관</dsa>을 이용하거나 거주하는 국가의 디지털 서비스 조정관에게 민원을 제기할 수도 있어요.}}",
 		"report_label": "신고 ID",
 		"signoff": "{product_name} 팀 드림",
-		"subject": "{product_name} 신고에 대한 결정이 내려졌어요"
+		"subject": "{product_name} 신고에 대한 결정이 내려졌어요",
+		"thanks": "{outcome, select, removed {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} restricted {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} action_taken {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} other {알려 주셔서 감사해요.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "이 코드는 {minutes, plural, other {#분}} 후에 만료돼요.",
@@ -422,13 +424,15 @@
 		"subject": "{product_name} 신고가 접수되었어요"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {{reportedAt, date, long}에 보내신 \"{communityName}\"의 #{channelName} 메시지에 대한 신고에 관한 안내예요.} message_dm {{reportedAt, date, long}에 보내신 다이렉트 메시지 속 메시지에 대한 신고에 관한 안내예요.} message {{reportedAt, date, long}에 보내신 메시지 신고에 관한 안내예요.} user {{reportedAt, date, long}에 보내신 \"{username}\" 계정에 대한 신고에 관한 안내예요.} community {{reportedAt, date, long}에 보내신 \"{communityName}\" 커뮤니티에 대한 신고에 관한 안내예요.} other {{reportedAt, date, long}에 보내신 신고에 관한 안내예요.}}",
 		"comment_label": "팀에서 남긴 메모",
 		"footer_reason": "{product_name}에 신고를 제출하셔서 이 이메일을 받으셨어요.",
-		"intro": "{outcome, select, removed {신고하신 콘텐츠가 규칙을 위반해서 삭제했어요.} restricted {신고하신 계정이 규칙을 위반해서 제한 조치를 했어요. 다른 사람의 계정에 어떤 조치를 했는지는 알려 드리지 않아요.} action_taken {신고하신 내용이 규칙을 위반해서 조치를 취했어요. 다른 사람의 계정에 어떤 조치를 했는지는 알려 드리지 않아요.} no_violation {신고하신 내용은 규칙을 위반하지 않아서 그대로 두었어요.} other {신고를 종료했어요.}}",
+		"intro": "{outcome, select, removed {신고하신 콘텐츠가 규칙을 위반해서 삭제했어요.} restricted {신고하신 계정이 규칙을 위반해서 조치를 취했어요. 어떤 조치를 했는지는 알려 드리지 않아요.} action_taken {신고하신 내용이 규칙을 위반해서 조치를 취했어요. 어떤 조치를 했는지는 알려 드리지 않아요.} no_violation {신고하신 내용은 규칙을 위반하지 않아서 그대로 두었어요.} other {신고를 종료했어요.}}",
 		"note": "{reply, select, yes {결과에 동의하지 않으시면 60일 이내에 이 이메일에 회신해 주세요.} other {{appeals_email, select, null {} other {결과에 동의하지 않으시면 60일 이내에 신고 ID를 적어 <mail>{appeals_email}</mail>로 이메일을 보내 주세요.}}}}{appeals_email, select, null {} other { EU에서는 인증된 <dsa>법원 외 분쟁 해결 기관</dsa>을 이용하거나 거주하는 국가의 디지털 서비스 조정관에게 민원을 제기할 수도 있어요.}}",
 		"report_label": "신고 ID",
 		"signoff": "{product_name} 팀 드림",
-		"subject": "{product_name} 신고 검토가 완료되었어요"
+		"subject": "{product_name} 신고 검토가 완료되었어요",
+		"thanks": "{outcome, select, removed {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} restricted {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} action_taken {신고해 주셔서 감사해요. 이런 신고 덕분에 {product_name}을(를) 모두에게 안전하게 지킬 수 있어요.} other {알려 주셔서 감사해요.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "{product_name} 계정 삭제를 요청하셨기 때문에 이 이메일을 받으셨어요.",

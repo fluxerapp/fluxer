@@ -237,7 +237,11 @@ export function enforcementEndedSlots(template: EmailTemplate): EmailSlots {
 }
 
 export function reportResolvedSlots(template: EmailTemplate, reportId: string, publicComment: string): EmailSlots {
-	return facts([template.report_label, reportId], [template.comment_label, publicComment]);
+	return {
+		intro: `${template.about}\n${template.intro}`,
+		...facts([template.report_label, reportId], [template.comment_label, publicComment]),
+		text_1: publicComment ? undefined : template.thanks,
+	};
 }
 
 export function renderEmailTemplateText<T extends EmailTemplateKey>(
@@ -419,21 +423,21 @@ export class EmailService implements IEmailService {
 		enforcement_ended: async (email, variables, locale) => {
 			return this.sendTemplatedEmail(email, 'enforcement_ended', locale, variables, {slots: enforcementEndedSlots});
 		},
-		report_resolved: async (email, {reportId, publicComment, outcome}, locale) => {
+		report_resolved: async (email, {reportId, publicComment, outcome, reference}, locale) => {
 			return this.sendTemplatedEmail(
 				email,
 				'report_resolved',
 				locale,
-				{outcome, appeals_email: this.config.appealsEmail},
+				{...reference, outcome, appeals_email: this.config.appealsEmail},
 				{slots: (template) => reportResolvedSlots(template, reportId, publicComment)},
 			);
 		},
-		dsa_report_resolved: async (email, {reportId, publicComment, outcome}, locale) => {
+		dsa_report_resolved: async (email, {reportId, publicComment, outcome, reference}, locale) => {
 			return this.sendTemplatedEmail(
 				email,
 				'dsa_report_resolved',
 				locale,
-				{outcome, appeals_email: this.config.appealsEmail},
+				{...reference, outcome, appeals_email: this.config.appealsEmail},
 				{slots: (template) => reportResolvedSlots(template, reportId, publicComment)},
 			);
 		},

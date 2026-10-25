@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "यह ईमेल डोमेन सिंगल साइन-ऑन के लिए अनुमत नहीं है।",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "हम आपकी SSO यूज़र जानकारी प्राप्त नहीं कर सके। फिर से कोशिश करें।",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "हम आपके SSO प्रोवाइडर से आए जवाब को पढ़ नहीं सके। फिर से कोशिश करें।",
+	"auth_and_oauth.handoff_attempts_exceeded": "आपके नेटवर्क से बहुत ज़्यादा साइन-इन प्रयास हुए हैं। {minutes} मिनट बाद फिर से कोशिश करें।",
+	"auth_and_oauth.handoff_code_already_used": "यह कोड पहले ही इस्तेमाल हो चुका है। ऐप से नया साइन-इन शुरू करें।",
 	"auth_and_oauth.handoff_code_expired": "हैंडऑफ़ कोड एक्सपायर हो गया है।",
 	"auth_and_oauth.handoff_code_invalid": "हैंडऑफ़ कोड अमान्य है।",
 	"auth_and_oauth.invalid_code": "कोड अमान्य है।",

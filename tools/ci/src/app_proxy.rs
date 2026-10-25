@@ -536,7 +536,6 @@ mod tests {
     fn resolves_calver_from_explicit_or_date_override() {
         let explicit = CalverEnv {
             build_version: Some("2026.520.1".to_string()),
-            fluxer_build_version: Some("2026.521.2".to_string()),
             fluxer_build_date: Some("2026-05-22T03:04:05Z".to_string()),
         };
         assert_eq!(

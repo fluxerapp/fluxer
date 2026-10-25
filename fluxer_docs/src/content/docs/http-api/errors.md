@@ -186,6 +186,8 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `GUILD_VISITS_DISABLED` | This community asks people to join before previewing it |
 | `GUILD_VISIT_AGE_RESTRICTED` | This community is for adults only |
 | `GUILD_VISIT_NOT_FOUND` | You're not previewing this community anymore |
+| `HANDOFF_ATTEMPTS_EXCEEDED` | Too many sign-in attempts from your network |
+| `HANDOFF_CODE_ALREADY_USED` | This code was already used |
 | `HANDOFF_CODE_EXPIRED` | Handoff code expired |
 | `HARVEST_EXPIRED` | Your data export request has expired |
 | `HARVEST_FAILED` | Your data export request failed |

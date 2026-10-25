@@ -493,7 +493,7 @@ rexctl proxy on [flags]
 
 - `--bind string`
 
-  Address your proxy connects to. The default is `127.0.0.1:8080`.
+  Address your proxy connects to, kept when left out (127.0.0.1:8080 the first time).
 
 ## rexctl registration
 
@@ -578,6 +578,22 @@ rexctl rollback [flags]
 - `--restore-database`
 
   Also restore the database from the backup taken before the upgrade.
+
+## rexctl search
+
+Manage search on your instance.
+
+### rexctl search reindex
+
+Rebuild every search index from your data, with the messages in every channel and DM. Search shows partial results until it finishes. If a rebuild is already running, rexctl follows that one, and stopping rexctl doesn't stop the rebuild.
+
+```sh
+rexctl search reindex [flags]
+```
+
+- `--no-wait`
+
+  Start the rebuild and return without waiting for it.
 
 ## rexctl setup
 

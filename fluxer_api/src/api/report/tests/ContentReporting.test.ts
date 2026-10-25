@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {reportReference} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -218,10 +219,14 @@ describe('Content Reporting', () => {
 			expect(email?.metadata['public_comment']).toBe(publicComment);
 			const systemMessages = await listSystemDmMessages(harness, reporter.token);
 			expect(systemMessages).toHaveLength(1);
+			const stored = await new ReportRepository().getReport(createReportID(BigInt(report.report_id)));
+			if (!stored) {
+				throw new Error('report not found');
+			}
 			const text = renderEmailTemplateText(
 				'report_resolved',
 				'fr',
-				{outcome: 'restricted', appeals_email: resolveContactEmails().appealsEmail},
+				{...reportReference(stored), outcome: 'restricted', appeals_email: resolveContactEmails().appealsEmail},
 				getInstanceProductName(),
 				(template) => reportResolvedSlots(template, report.report_id, publicComment),
 				{

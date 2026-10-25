@@ -4,6 +4,16 @@ export type ReportReceivedTargetKind = 'message' | 'user' | 'guild';
 
 export type ReporterOutcome = 'removed' | 'restricted' | 'action_taken' | 'no_violation';
 
+export type ReportReferenceTarget = 'message_community' | 'message_dm' | 'message' | 'user' | 'community' | 'other';
+
+export interface ReportReference {
+	target: ReportReferenceTarget;
+	reportedAt: Date;
+	username: string;
+	communityName: string;
+	channelName: string;
+}
+
 export type EnforcementNoticeKindLabel =
 	| 'warning'
 	| 'suspension'
@@ -34,7 +44,7 @@ export interface EmailTemplateVariables {
 	donation_magic_link: {
 		minutes: number;
 	};
-	dsa_report_resolved: {
+	dsa_report_resolved: ReportReference & {
 		outcome: ReporterOutcome;
 		appeals_email: string | null;
 	};
@@ -170,7 +180,7 @@ export interface EmailTemplateVariables {
 	report_received: {
 		targetKind: ReportReceivedTargetKind;
 	};
-	report_resolved: {
+	report_resolved: ReportReference & {
 		outcome: ReporterOutcome;
 		appeals_email: string | null;
 	};

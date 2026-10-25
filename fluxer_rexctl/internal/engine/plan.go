@@ -162,7 +162,7 @@ func (p *Project) planVolumes(ctx context.Context, plan *Plan) error {
 	if err != nil {
 		return err
 	}
-	res, err := c.VolumeList(ctx, client.VolumeListOptions{Filters: projectFilter(p.Name)})
+	items, err := projectVolumes(ctx, c, p.Name)
 	if err != nil {
 		return &Error{Op: "plan", Class: ClassOf(err), Err: err}
 	}
@@ -171,7 +171,7 @@ func (p *Project) planVolumes(ctx context.Context, plan *Plan) error {
 		if want.External {
 			continue
 		}
-		for _, v := range res.Items {
+		for _, v := range items {
 			if v.Labels[api.VolumeLabel] != key && v.Name != want.Name {
 				continue
 			}
@@ -193,4 +193,20 @@ func sameOptions(want map[string]string, live map[string]string) bool {
 		return true
 	}
 	return maps.Equal(want, live)
+}
+
+func (p *Project) DroppedMounts(shipped *Project) []string {
+	var out []string
+	for _, name := range slices.Sorted(maps.Keys(shipped.Model.Services)) {
+		svc, ok := p.Model.Services[name]
+		if !ok {
+			continue
+		}
+		for _, v := range shipped.Model.Services[name].Volumes {
+			if !slices.ContainsFunc(svc.Volumes, func(m types.ServiceVolumeConfig) bool { return m.Target == v.Target }) {
+				out = append(out, v.Target+" on "+name)
+			}
+		}
+	}
+	return out
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type AdminAuditLog, AdminRepository} from '@app/api/admin/AdminRepository';
+import {reportReference} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -184,8 +185,17 @@ async function systemDmMessages(harness: ApiTestHarness, account: TestAccount): 
 
 const DELETION_WORDING = /delet|\bban|suspend|terminat|remov|enforce/i;
 
-function renderRestrictedNotice(reportId: string): {subject: string; body: string} {
-	const variables = {outcome: 'restricted', appeals_email: resolveContactEmails().appealsEmail, reply: 'no'} as const;
+async function renderRestrictedNotice(reportId: string): Promise<{subject: string; body: string}> {
+	const report = await new ReportRepository().getReport(createReportID(BigInt(reportId)));
+	if (!report) {
+		throw new Error('report not found');
+	}
+	const variables = {
+		...reportReference(report),
+		outcome: 'restricted',
+		appeals_email: resolveContactEmails().appealsEmail,
+		reply: 'no',
+	} as const;
 	const rendered = getEmailTemplate('report_resolved', null, variables, getInstanceProductName());
 	const body = renderEmailTemplateText(
 		'report_resolved',
@@ -301,10 +311,12 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(sent.map((email) => email.metadata)).toEqual([
 			{report_id: reportId, public_comment: '', outcome: 'restricted'},
 		]);
-		const notice = renderRestrictedNotice(reportId);
+		const notice = await renderRestrictedNotice(reportId);
 		expect(notice.body).toContain(reportId);
 		expect(`${notice.subject}\n${notice.body}`).not.toMatch(DELETION_WORDING);
-		expect(await systemDmMessages(harness, reporter)).toEqual([systemDmBody(renderRestrictedNotice(reportId).body)]);
+		expect(await systemDmMessages(harness, reporter)).toEqual([
+			systemDmBody((await renderRestrictedNotice(reportId)).body),
+		]);
 	});
 	test('an auto-resolved report sends the reporter a DM and an email with no deletion wording', async () => {
 		const reporter = await createTestAccount(harness);
@@ -317,7 +329,7 @@ describe('bulkScheduleUserDeletion', () => {
 			{report_id: reportId, public_comment: '', outcome: 'restricted'},
 		]);
 		const dms = await systemDmMessages(harness, reporter);
-		expect(dms).toEqual([systemDmBody(renderRestrictedNotice(reportId).body)]);
+		expect(dms).toEqual([systemDmBody((await renderRestrictedNotice(reportId)).body)]);
 		expect(await listTestEmails(harness, {recipient: reporter.email})).toHaveLength(1);
 	});
 	test('an auto-resolved DSA notice sends the notifier the decision email', async () => {

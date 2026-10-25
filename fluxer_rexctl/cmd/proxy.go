@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 
@@ -28,10 +29,14 @@ func newProxyCmd(app *App) *cobra.Command {
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			mode := settings.EdgeProxy
-			return setProxy(c.Context(), app, map[string]*string{settings.EdgeMode: &mode, settings.EdgeBind: &bind})
+			changes := map[string]*string{settings.EdgeMode: &mode}
+			if c.Flags().Changed("bind") {
+				changes[settings.EdgeBind] = &bind
+			}
+			return setProxy(c.Context(), app, changes)
 		},
 	}
-	on.Flags().StringVar(&bind, "bind", "127.0.0.1:8080", "address your proxy connects to")
+	on.Flags().StringVar(&bind, "bind", "", "address your proxy connects to, kept when left out (127.0.0.1:8080 the first time)")
 	off := &cobra.Command{
 		Use:   "off",
 		Short: "Serve HTTPS directly with a certificate from Let's Encrypt",
@@ -50,6 +55,10 @@ func setProxy(ctx context.Context, app *App, changes map[string]*string) error {
 		return err
 	}
 	on := changes[settings.EdgeMode] != nil
+	if _, ok := changes[settings.EdgeBind]; on && !ok {
+		bind := cmp.Or(inst.State.Settings[settings.EdgeBind], "127.0.0.1:8080")
+		changes[settings.EdgeBind] = &bind
+	}
 	if mode := inst.State.Settings[settings.EdgeMode]; !on && mode != "" && mode != settings.EdgeBundled {
 		if err := allowLowPorts(ctx, app, inst); err != nil {
 			return err

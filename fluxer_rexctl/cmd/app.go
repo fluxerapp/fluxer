@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/user"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -53,10 +55,38 @@ func (a *App) init(c *cobra.Command) {
 		Stdout:  c.OutOrStdout(),
 		Stderr:  c.ErrOrStderr(),
 	})
+	var commands []string
+	for _, sub := range c.Root().Commands() {
+		commands = append(commands, sub.Name())
+	}
+	a.UI.CallSelf(selfCommand(), commands)
 	host.SetTerminalHold(a.UI.Hold)
 	if a.Flags.Verbose {
 		engine.SetDetail(detailWriter{a.UI})
 	}
+}
+
+func selfCommand() string {
+	if runtime.GOOS == "windows" {
+		return ""
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	if found, err := exec.LookPath("rexctl"); err == nil {
+		onPath, perr := os.Stat(found)
+		running, rerr := os.Stat(exe)
+		if perr == nil && rerr == nil && os.SameFile(onPath, running) {
+			return ""
+		}
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		if rel, ok := strings.CutPrefix(exe, home+"/"); ok {
+			return "~/" + rel
+		}
+	}
+	return exe
 }
 
 type detailWriter struct{ u *ui.UI }
@@ -231,7 +261,7 @@ func (a *App) Admin(ctx context.Context) (*adminapi.Client, *instance.Instance, 
 func (a *App) adminClient(inst *instance.Instance, p *engine.Project) *adminapi.Client {
 	c := adminapi.New(adminapi.NewExec(p), a.Version)
 	c.OnSkew = func(apiVersion string) {
-		if inst.State != nil && inst.State.Release == a.Version {
+		if inst.State != nil && (inst.State.Release == a.Version || inst.State.Upgrade != nil && inst.State.Upgrade.To == a.Version) {
 			return
 		}
 		if inst.State != nil && inst.State.FailedRelease == a.Version {

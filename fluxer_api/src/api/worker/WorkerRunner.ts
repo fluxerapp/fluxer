@@ -16,7 +16,7 @@ import {
 } from '@app/api/worker/WorkerHeartbeat';
 import type {ConsumerMessages, FetchOptions, JsMsg} from '@nats-io/jetstream';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {JobCancelledError, JobFailedError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const DLQ_RETRY_DELAY_MS = 250;
@@ -470,7 +470,7 @@ export class WorkerRunner {
 				return false;
 			}
 			const deliveryCount = msg.info.deliveryCount;
-			const isLastDelivery = deliveryCount >= this.maxDeliver;
+			const isLastDelivery = deliveryCount >= this.maxDeliver || error instanceof JobFailedError;
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			if (archiveTask || isLastDelivery) {
 				Logger.error(

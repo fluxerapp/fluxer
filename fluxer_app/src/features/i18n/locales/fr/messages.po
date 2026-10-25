@@ -1820,10 +1820,10 @@ msgstr "{onlineCount} en ligne"
 msgid "{operatorPassName} from {senderName}"
 msgstr "{operatorPassName} de {senderName}"
 
-#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceMonth} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line in the Operator Pass dialog for someone who already has an Operator Pass. {sinceDate} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
-msgid "{operatorPassName} since {sinceMonth}"
-msgstr "{operatorPassName} depuis {sinceMonth}"
+msgid "{operatorPassName} since {sinceDate}"
+msgstr "{operatorPassName} depuis le {sinceDate}"
 
 #. Screen-reader label for an optional slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
@@ -14384,6 +14384,10 @@ msgstr "Modifier votre message en dessous"
 msgid "Edit your messages above or below"
 msgstr "Modifier vos messages au-dessus ou en dessous"
 
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx
+msgid "Edit your profile"
+msgstr "Modifier votre profil"
+
 #. Button or menu action label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
 msgid "Edit your profile appearance and see a live preview"
@@ -16498,6 +16502,11 @@ msgstr "Fluxer n'a pas pu se connecter à {host}."
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}. The server said: \"{error}\""
 msgstr "Fluxer n'a pas pu se connecter à {host}. Le serveur a répondu : « {error} »"
+
+#. Status shown in the desktop app when it stopped checking the browser sign-in because the instance could not be reached. instanceName is the server name, such as Fluxer. "Try again" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "Fluxer couldn't reach {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
+msgstr "Fluxer n'a pas pu joindre {instanceName} pour vérifier si votre navigateur a approuvé cette connexion. Vérifiez votre connexion, puis sélectionnez « Réessayer »."
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
@@ -18721,6 +18730,11 @@ msgstr "Si quelqu'un est en danger immédiat, contactez d'abord les services d'u
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "Si quelqu’un vous demande de coller quelque chose ici, c’est une arnaque qui pourrait lui donner accès à votre compte {productName}."
+
+#. Hint in the desktop app while it waits for the browser, for people with more than one Fluxer app installed. "Signing in on another device?" is the label of the button below and must match its translation.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
+msgid "If the link opens a different Fluxer app, select \"Signing in on another device?\" and type the code in your browser instead."
+msgstr "Si le lien ouvre une autre application Fluxer, sélectionnez « Connexion sur un autre appareil ? » et saisissez plutôt le code dans votre navigateur."
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -25719,10 +25733,10 @@ msgstr "Propositions d’Operator Pass"
 msgid "Operator Pass purchase"
 msgstr "Achat d’Operator Pass"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a month and year such as November 2026. Operator Pass is a product name and stays untranslated.
+#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
 msgid "Operator Pass since {since}"
-msgstr "Operator Pass depuis {since}"
+msgstr "Operator Pass depuis le {since}"
 
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #. Link to the Operator Pass terms. Operator Pass is a product name.
@@ -36180,6 +36194,11 @@ msgstr "Ce code est invalide ou déjà utilisé."
 msgid "This code was already redeemed."
 msgstr "Ce code a déjà été utilisé."
 
+#. Shown on the browser sign-in page when the code the user typed or opened was already used to approve a sign-in.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "This code was already used. Start a new sign-in from the app."
+msgstr "Ce code a déjà été utilisé. Lancez une nouvelle connexion depuis l'application."
+
 #. Warning under the theme color picker in the setup wizard when the chosen color is very dark.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the dark theme background, so buttons may be hard to see there."
@@ -37386,6 +37405,11 @@ msgstr "Ton"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Convertir les images HDR en plage standard, réduisant ainsi la luminosité maximale."
+
+#. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
+#: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
+msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+msgstr "Trop de tentatives depuis votre réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx

@@ -34,8 +34,8 @@ function uniqueDomains(domains: ReadonlyArray<string>): Array<string> {
 }
 
 function configuredTrustedDomainPatterns(): Array<string> {
-	return uniqueDomains(
-		[
+	return uniqueDomains([
+		...[
 			RuntimeConfig.webAppEndpoint,
 			RuntimeConfig.marketingEndpoint,
 			RuntimeConfig.apiPublicEndpoint,
@@ -44,7 +44,8 @@ function configuredTrustedDomainPatterns(): Array<string> {
 			RuntimeConfig.mediaEndpoint,
 			RuntimeConfig.staticCdnEndpoint,
 		].flatMap(domainPatternFromUrl),
-	);
+		...RuntimeConfig.appPublic.branding.trusted_domains.filter((domain) => domain !== TRUST_EVERYTHING_PATTERN),
+	]);
 }
 
 function domainPatternFromUrl(endpoint: string): Array<string> {

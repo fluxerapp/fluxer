@@ -48,13 +48,15 @@
 		"subject": "Kelola donasimu untuk {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Ini tentang laporanmu soal sebuah pesan di #{channelName} di \"{communityName}\", yang dikirim pada {reportedAt, date, long}.} message_dm {Ini tentang laporanmu soal sebuah pesan di pesan langsung, yang dikirim pada {reportedAt, date, long}.} message {Ini tentang laporanmu soal sebuah pesan, yang dikirim pada {reportedAt, date, long}.} user {Ini tentang laporanmu soal akun \"{username}\", yang dikirim pada {reportedAt, date, long}.} community {Ini tentang laporanmu soal komunitas \"{communityName}\", yang dikirim pada {reportedAt, date, long}.} other {Ini tentang laporan yang kamu kirim pada {reportedAt, date, long}.}}",
 		"comment_label": "Catatan dari tim kami",
 		"footer_reason": "Kamu menerima email ini karena kamu mengirimkan laporan Digital Services Act di {product_name}.",
-		"intro": "{outcome, select, removed {Kami menghapus konten yang kamu laporkan karena melanggar aturan kami.} restricted {Akun yang kamu laporkan melanggar aturan kami, dan kami membatasinya. Kami tidak memberi tahu tindakan apa yang kami ambil terhadap akun orang lain.} action_taken {Hal yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil terhadap akun orang lain.} no_violation {Hal yang kamu laporkan tidak melanggar aturan kami, jadi kami membiarkannya seperti apa adanya.} other {Kami telah menutup laporanmu.}}",
+		"intro": "{outcome, select, removed {Kami menghapus konten yang kamu laporkan karena melanggar aturan kami.} restricted {Akun yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil.} action_taken {Hal yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil.} no_violation {Hal yang kamu laporkan tidak melanggar aturan kami, jadi kami membiarkannya seperti apa adanya.} other {Kami telah menutup laporanmu.}}",
 		"note": "{reply, select, yes {Jika kamu tidak setuju, balas email ini dalam 60 hari.} other {{appeals_email, select, null {} other {Jika kamu tidak setuju, kirim email ke <mail>{appeals_email}</mail> dalam 60 hari dan sertakan ID laporan.}}}}{appeals_email, select, null {} other { Jika kamu berada di UE, kamu juga bisa membawanya ke <dsa>badan penyelesaian sengketa di luar pengadilan</dsa> yang tersertifikasi atau mengadu ke Koordinator Layanan Digital di negaramu.}}",
 		"report_label": "ID laporan",
 		"signoff": "Tim {product_name}",
-		"subject": "Kami telah mengambil keputusan atas laporanmu di {product_name}"
+		"subject": "Kami telah mengambil keputusan atas laporanmu di {product_name}",
+		"thanks": "{outcome, select, removed {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} restricted {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} action_taken {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} other {Terima kasih sudah memberi tahu kami.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Kode ini kedaluwarsa dalam {minutes, plural, other {# menit}}.",
@@ -422,13 +424,15 @@
 		"subject": "Kami telah menerima laporanmu di {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Ini tentang laporanmu soal sebuah pesan di #{channelName} di \"{communityName}\", yang dikirim pada {reportedAt, date, long}.} message_dm {Ini tentang laporanmu soal sebuah pesan di pesan langsung, yang dikirim pada {reportedAt, date, long}.} message {Ini tentang laporanmu soal sebuah pesan, yang dikirim pada {reportedAt, date, long}.} user {Ini tentang laporanmu soal akun \"{username}\", yang dikirim pada {reportedAt, date, long}.} community {Ini tentang laporanmu soal komunitas \"{communityName}\", yang dikirim pada {reportedAt, date, long}.} other {Ini tentang laporan yang kamu kirim pada {reportedAt, date, long}.}}",
 		"comment_label": "Catatan dari tim kami",
 		"footer_reason": "Kamu menerima email ini karena kamu mengirimkan laporan di {product_name}.",
-		"intro": "{outcome, select, removed {Kami menghapus konten yang kamu laporkan karena melanggar aturan kami.} restricted {Akun yang kamu laporkan melanggar aturan kami, dan kami membatasinya. Kami tidak memberi tahu tindakan apa yang kami ambil terhadap akun orang lain.} action_taken {Hal yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil terhadap akun orang lain.} no_violation {Hal yang kamu laporkan tidak melanggar aturan kami, jadi kami membiarkannya seperti apa adanya.} other {Kami telah menutup laporanmu.}}",
+		"intro": "{outcome, select, removed {Kami menghapus konten yang kamu laporkan karena melanggar aturan kami.} restricted {Akun yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil.} action_taken {Hal yang kamu laporkan melanggar aturan kami, dan kami sudah mengambil tindakan. Kami tidak memberi tahu tindakan apa yang kami ambil.} no_violation {Hal yang kamu laporkan tidak melanggar aturan kami, jadi kami membiarkannya seperti apa adanya.} other {Kami telah menutup laporanmu.}}",
 		"note": "{reply, select, yes {Jika kamu tidak setuju, balas email ini dalam 60 hari.} other {{appeals_email, select, null {} other {Jika kamu tidak setuju, kirim email ke <mail>{appeals_email}</mail> dalam 60 hari dan sertakan ID laporan.}}}}{appeals_email, select, null {} other { Jika kamu berada di UE, kamu juga bisa membawanya ke <dsa>badan penyelesaian sengketa di luar pengadilan</dsa> yang tersertifikasi atau mengadu ke Koordinator Layanan Digital di negaramu.}}",
 		"report_label": "ID laporan",
 		"signoff": "Tim {product_name}",
-		"subject": "Laporanmu di {product_name} telah ditinjau"
+		"subject": "Laporanmu di {product_name} telah ditinjau",
+		"thanks": "{outcome, select, removed {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} restricted {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} action_taken {Terima kasih sudah melaporkannya. Laporan seperti milikmu membantu menjaga {product_name} tetap aman bagi semua orang.} other {Terima kasih sudah memberi tahu kami.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Kamu menerima email ini karena kamu meminta untuk menghapus akun {product_name} kamu.",

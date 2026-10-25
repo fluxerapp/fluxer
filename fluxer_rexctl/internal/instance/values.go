@@ -3,6 +3,7 @@
 package instance
 
 import (
+	"fmt"
 	"maps"
 	"slices"
 	"strconv"
@@ -18,6 +19,21 @@ import (
 const SetupTokenVar = "FLUXER_SETUP_TOKEN"
 
 var legacyImageVars = []string{"FLUXER_IMAGE_TAG", "FLUXER_REGISTRY", "FLUXER_REGISTRY_OWNER"}
+
+func BundleEnv() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s=true\n", stack.SettingsLoadedVar)
+	b.WriteString("FLUXER_DOMAIN=\n")
+	fmt.Fprintf(&b, "%s=\n", SetupTokenVar)
+	for _, s := range secrets.Required {
+		value := ""
+		if s.Kind == secrets.KindFixed {
+			value = s.Fixed
+		}
+		fmt.Fprintf(&b, "%s=%s\n", s.Key, value)
+	}
+	return b.String()
+}
 
 type valueInput struct {
 	env      map[string]string
@@ -50,7 +66,7 @@ func importValues(in valueInput) (*valueResult, error) {
 		admin:    map[string]string{},
 	}
 	for k := range env {
-		if strings.HasPrefix(k, "COMPOSE_") {
+		if strings.HasPrefix(k, "COMPOSE_") || k == stack.SettingsLoadedVar {
 			delete(env, k)
 		}
 	}
@@ -75,7 +91,7 @@ func importValues(in valueInput) (*valueResult, error) {
 			r.defaults = append(r.defaults, k)
 			continue
 		}
-		if ex, ok := in.examples[k]; ok && ex == v && !isGeneratedSecret(k) {
+		if ex, ok := in.examples[k]; ok && ex == v && !isGeneratedSecret(k) && isPlaceholderValue(v) {
 			r.placeholders = append(r.placeholders, k)
 		}
 	}
@@ -166,7 +182,7 @@ func preserve(set *stack.Set, r *valueResult, before map[string]string, read []s
 		}
 		changed := false
 		for _, v := range read {
-			if named[v] || isGeneratedSecret(v) || settings.Twins[v] != "" || isProxyVar(v) {
+			if named[v] || v == stack.SettingsLoadedVar || isGeneratedSecret(v) || settings.Twins[v] != "" || isProxyVar(v) {
 				continue
 			}
 			b, a := before[v], after[v]
@@ -232,6 +248,11 @@ func equalsDefault(defs []string, v string, env map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func isPlaceholderValue(v string) bool {
+	lower := strings.ToLower(strings.TrimSpace(v))
+	return strings.Contains(lower, "example.") || lower == "change_me" || lower == "changeme"
 }
 
 func isGeneratedSecret(name string) bool {

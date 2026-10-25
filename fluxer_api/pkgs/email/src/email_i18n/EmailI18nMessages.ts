@@ -54,7 +54,11 @@ export const EMAIL_I18N_MESSAGES = {
 	dsa_report_resolved: {
 		subject: 'We made a decision on your {product_name} report',
 		intro:
-			"{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we restricted it. We don't share what we did to another person's account.} action_taken {What you reported broke our rules, and we took action. We don't share what we did to another person's account.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+			"{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we took action on it. We don't share which action we took.} action_taken {What you reported broke our rules, and we took action. We don't share which action we took.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+		about:
+			'{target, select, message_community {This is about your report on a message in #{channelName} in "{communityName}", sent on {reportedAt, date, long}.} message_dm {This is about your report on a message in a direct message, sent on {reportedAt, date, long}.} message {This is about your report on a message, sent on {reportedAt, date, long}.} user {This is about your report on the account "{username}", sent on {reportedAt, date, long}.} community {This is about your report on the community "{communityName}", sent on {reportedAt, date, long}.} other {This is about the report you sent on {reportedAt, date, long}.}}',
+		thanks:
+			'{outcome, select, removed {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} restricted {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} action_taken {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} other {Thanks for letting us know.}}',
 		report_label: 'Report ID',
 		comment_label: 'Note from our team',
 		note: '{reply, select, yes {If you disagree, reply to this email within 60 days.} other {{appeals_email, select, null {} other {If you disagree, email <mail>{appeals_email}</mail> within 60 days and include the report ID.}}}}{appeals_email, select, null {} other { In the EU, you can also go to a certified <dsa>out-of-court dispute settlement body</dsa> or complain to the Digital Services Coordinator in your country.}}',
@@ -486,7 +490,11 @@ export const EMAIL_I18N_MESSAGES = {
 	report_resolved: {
 		subject: 'Your {product_name} report has been reviewed',
 		intro:
-			"{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we restricted it. We don't share what we did to another person's account.} action_taken {What you reported broke our rules, and we took action. We don't share what we did to another person's account.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+			"{outcome, select, removed {We removed the content you reported because it broke our rules.} restricted {The account you reported broke our rules, and we took action on it. We don't share which action we took.} action_taken {What you reported broke our rules, and we took action. We don't share which action we took.} no_violation {What you reported doesn't break our rules, so we left it as it is.} other {We closed your report.}}",
+		about:
+			'{target, select, message_community {This is about your report on a message in #{channelName} in "{communityName}", sent on {reportedAt, date, long}.} message_dm {This is about your report on a message in a direct message, sent on {reportedAt, date, long}.} message {This is about your report on a message, sent on {reportedAt, date, long}.} user {This is about your report on the account "{username}", sent on {reportedAt, date, long}.} community {This is about your report on the community "{communityName}", sent on {reportedAt, date, long}.} other {This is about the report you sent on {reportedAt, date, long}.}}',
+		thanks:
+			'{outcome, select, removed {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} restricted {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} action_taken {Thanks for reporting it. Reports like yours help keep {product_name} safe for everyone.} other {Thanks for letting us know.}}',
 		report_label: 'Report ID',
 		comment_label: 'Note from our team',
 		note: '{reply, select, yes {If you disagree, reply to this email within 60 days.} other {{appeals_email, select, null {} other {If you disagree, email <mail>{appeals_email}</mail> within 60 days and include the report ID.}}}}{appeals_email, select, null {} other { In the EU, you can also go to a certified <dsa>out-of-court dispute settlement body</dsa> or complain to the Digital Services Coordinator in your country.}}',

@@ -88,6 +88,8 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 		}
 	}
 
+	put(stack.SettingsLoadedVar, "true")
+
 	if registry := chosen[ImagesRegistry]; registry != "" {
 		for _, v := range ImageVars {
 			if ref, ok := env[v]; ok {

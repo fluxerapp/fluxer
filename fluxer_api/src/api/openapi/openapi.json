@@ -37424,6 +37424,11 @@
 					"upload_limit_message": {
 						"description": "Optional Markdown a self-hosted instance shows when a file is over the upload limit, in place of the default note",
 						"type": ["string", "null"]
+					},
+					"trusted_domains": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Extra domains a self-hosted instance trusts, so links to them open without a warning. Each entry is a hostname, or a hostname with a *. prefix that also covers its subdomains"
 					}
 				},
 				"required": [
@@ -37441,7 +37446,8 @@
 					"premium_info_url",
 					"sign_in_backdrop_url",
 					"custom_css",
-					"upload_limit_message"
+					"upload_limit_message",
+					"trusted_domains"
 				],
 				"additionalProperties": false,
 				"description": "Branding values safe to expose to clients"
@@ -44518,6 +44524,8 @@
 					"GIFT_CODE_ALREADY_REDEEMED",
 					"GUILD_TEMPLATE_INVALID",
 					"GUILD_VERIFICATION_REQUIRED",
+					"HANDOFF_ATTEMPTS_EXCEEDED",
+					"HANDOFF_CODE_ALREADY_USED",
 					"HANDOFF_CODE_EXPIRED",
 					"HARVEST_EXPIRED",
 					"HARVEST_FAILED",
@@ -44878,6 +44886,8 @@
 					"Gift code is already redeemed.",
 					"The community template data is invalid or malformed.",
 					"{reason, select, membership_age {You can talk here once you've been a member for 10 minutes.} other {Claim your account to talk in this community.}}",
+					"Too many sign-in attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+					"This code was already used. Start a new sign-in from the app.",
 					"Handoff code expired.",
 					"Your data export request has expired. Please request a new export.",
 					"Your data export request failed. Please try again.",

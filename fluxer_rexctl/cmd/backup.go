@@ -183,6 +183,7 @@ func warnBackupSkipped(app *App, m *backup.Manifest) {
 func backupCreateErr(err error) error {
 	var ee *ui.ExitError
 	var disk *backup.DiskError
+	var missing *backup.MissingDataError
 	var dump *backup.DumpError
 	var stopped *backup.InterruptedError
 	switch {
@@ -192,6 +193,11 @@ func backupCreateErr(err error) error {
 		return err
 	case errors.Is(err, backup.ErrNeverStarted):
 		return ui.Refused("Fluxer hasn't started on this machine yet, and there's nothing to back up.", "Run rexctl start, then run rexctl backup.")
+	case errors.As(err, &missing):
+		return ui.Failed(
+			fmt.Sprintf("rexctl can't find your database data. It looked for the Docker volume %s and for a bind mount on the postgres service.", missing.Volume),
+			"Run docker volume ls to see your volumes, then run rexctl backup again.",
+		)
 	case errors.As(err, &disk):
 		return ui.Failed(
 			fmt.Sprintf("There isn't enough free space for a backup. It needs about %s and %s is free.", ui.Bytes(int64(disk.Need)), ui.Bytes(int64(disk.Available))),

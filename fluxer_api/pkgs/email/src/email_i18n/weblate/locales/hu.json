@@ -48,13 +48,15 @@
 		"subject": "A {product_name} működését támogató adományaid kezelése"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Ez a(z) „{communityName}” közösség #{channelName} csatornájában lévő üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} message_dm {Ez egy közvetlen üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} message {Ez egy üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} user {Ez a(z) „{username}” fiókról szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} community {Ez a(z) „{communityName}” közösségről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} other {Ez a bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.}}",
 		"comment_label": "Megjegyzés a csapatunktól",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert digitális szolgáltatásokról szóló rendelet szerinti bejelentést tettél a {product_name} felületén.",
-		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A bejelentett fiók megsértette a szabályainkat, ezért korlátoztuk. Azt nem osztjuk meg, mit tettünk egy másik személy fiókjával.} action_taken {A bejelentett tartalom vagy viselkedés megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, mit tettünk egy másik személy fiókjával.} no_violation {A bejelentett tartalom vagy viselkedés nem sérti a szabályainkat, ezért nem változtattunk rajta.} other {Lezártuk a bejelentésedet.}}",
+		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A bejelentett fiók megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, hogyan intézkedtünk.} action_taken {A bejelentett tartalom vagy viselkedés megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, hogyan intézkedtünk.} no_violation {A bejelentett tartalom vagy viselkedés nem sérti a szabályainkat, ezért nem változtattunk rajta.} other {Lezártuk a bejelentésedet.}}",
 		"note": "{reply, select, yes {Ha nem értesz egyet, 60 napon belül válaszolj erre az e-mailre.} other {{appeals_email, select, null {} other {Ha nem értesz egyet, 60 napon belül írj a(z) <mail>{appeals_email}</mail> címre, és add meg a bejelentés azonosítóját.}}}}{appeals_email, select, null {} other { Az EU-ban egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz, vagy panaszt tehetsz az országod digitális szolgáltatási koordinátoránál.}}",
 		"report_label": "Bejelentés azonosítója",
 		"signoff": "{product_name} csapata",
-		"subject": "Döntést hoztunk a {product_name} felületén tett bejelentésedről"
+		"subject": "Döntést hoztunk a {product_name} felületén tett bejelentésedről",
+		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
@@ -422,13 +424,15 @@
 		"subject": "Megkaptuk a {product_name} felületén tett bejelentésedet"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Ez a(z) „{communityName}” közösség #{channelName} csatornájában lévő üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} message_dm {Ez egy közvetlen üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} message {Ez egy üzenetről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} user {Ez a(z) „{username}” fiókról szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} community {Ez a(z) „{communityName}” közösségről szóló bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.} other {Ez a bejelentésedre vonatkozik, amelyet {reportedAt, date, long} küldtél.}}",
 		"comment_label": "Megjegyzés a csapatunktól",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert bejelentést tettél a {product_name} felületén.",
-		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A bejelentett fiók megsértette a szabályainkat, ezért korlátoztuk. Azt nem osztjuk meg, mit tettünk egy másik személy fiókjával.} action_taken {A bejelentett tartalom vagy viselkedés megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, mit tettünk egy másik személy fiókjával.} no_violation {A bejelentett tartalom vagy viselkedés nem sérti a szabályainkat, ezért nem változtattunk rajta.} other {Lezártuk a bejelentésedet.}}",
+		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A bejelentett fiók megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, hogyan intézkedtünk.} action_taken {A bejelentett tartalom vagy viselkedés megsértette a szabályainkat, és intézkedtünk. Azt nem osztjuk meg, hogyan intézkedtünk.} no_violation {A bejelentett tartalom vagy viselkedés nem sérti a szabályainkat, ezért nem változtattunk rajta.} other {Lezártuk a bejelentésedet.}}",
 		"note": "{reply, select, yes {Ha nem értesz egyet, 60 napon belül válaszolj erre az e-mailre.} other {{appeals_email, select, null {} other {Ha nem értesz egyet, 60 napon belül írj a(z) <mail>{appeals_email}</mail> címre, és add meg a bejelentés azonosítóját.}}}}{appeals_email, select, null {} other { Az EU-ban egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz, vagy panaszt tehetsz az országod digitális szolgáltatási koordinátoránál.}}",
 		"report_label": "Bejelentés azonosítója",
 		"signoff": "{product_name} csapata",
-		"subject": "Elbíráltuk a {product_name} felületén tett bejelentésedet"
+		"subject": "Elbíráltuk a {product_name} felületén tett bejelentésedet",
+		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a {product_name}-fiókod törlését.",

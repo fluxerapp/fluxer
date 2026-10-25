@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Dit e-maildomein is niet toegestaan voor single sign-on.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "We konden je SSO-gebruikersinformatie niet ophalen. Probeer het opnieuw.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "We konden de respons van je SSO-provider niet lezen. Probeer het opnieuw.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Te veel inlogpogingen vanaf je netwerk. Probeer het over {minutes, plural, one {# minuut} other {# minuten}} opnieuw.",
+	"auth_and_oauth.handoff_code_already_used": "Deze code is al gebruikt. Start een nieuwe aanmelding vanuit de app.",
 	"auth_and_oauth.handoff_code_expired": "De overdrachtscode is verlopen.",
 	"auth_and_oauth.handoff_code_invalid": "De overdrachtscode is ongeldig.",
 	"auth_and_oauth.invalid_code": "De code is ongeldig.",

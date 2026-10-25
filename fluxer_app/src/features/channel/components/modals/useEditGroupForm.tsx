@@ -178,7 +178,9 @@ export function useEditGroupForm({
 	}, [form]);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
-			const updateData: {icon?: string | null; name: string; nsfw?: boolean} = {name: data.name};
+			const updateData: {icon?: string | null; name: string | null; nsfw?: boolean} = {
+				name: data.name.trim() === '' ? null : data.name,
+			};
 			if (isOwner && data.nsfw !== channel?.nsfw) {
 				updateData.nsfw = data.nsfw;
 			}

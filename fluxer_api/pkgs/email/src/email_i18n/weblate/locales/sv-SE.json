@@ -48,13 +48,15 @@
 		"subject": "Hantera dina donationer till {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Det här gäller din anmälan av ett meddelande i #{channelName} i ”{communityName}”, skickad {reportedAt, date, long}.} message_dm {Det här gäller din anmälan av ett meddelande i ett direktmeddelande, skickad {reportedAt, date, long}.} message {Det här gäller din anmälan av ett meddelande, skickad {reportedAt, date, long}.} user {Det här gäller din anmälan av kontot ”{username}”, skickad {reportedAt, date, long}.} community {Det här gäller din anmälan av communityn ”{communityName}”, skickad {reportedAt, date, long}.} other {Det här gäller anmälan du skickade {reportedAt, date, long}.}}",
 		"comment_label": "Kommentar från vårt team",
 		"footer_reason": "Du fick det här mejlet eftersom du skickade in en anmälan enligt förordningen om digitala tjänster på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har begränsat det. Vi berättar inte vad vi har gjort med någon annans konto.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vad vi har gjort med någon annans konto.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
+		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
 		"note": "{reply, select, yes {Om du inte håller med kan du svara på det här mejlet inom 60 dagar.} other {{appeals_email, select, null {} other {Om du inte håller med kan du mejla <mail>{appeals_email}</mail> inom 60 dagar och ange anmälnings-ID:t.}}}}{appeals_email, select, null {} other { Inom EU kan du också vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa> eller klaga hos samordnaren för digitala tjänster i ditt land.}}",
 		"report_label": "Anmälnings-ID",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har fattat ett beslut om din anmälan på {product_name}"
+		"subject": "Vi har fattat ett beslut om din anmälan på {product_name}",
+		"thanks": "{outcome, select, removed {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} restricted {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} action_taken {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} other {Tack för att du hörde av dig.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Koden går ut om {minutes, plural, one {# minut} other {# minuter}}.",
@@ -422,13 +424,15 @@
 		"subject": "Vi har tagit emot din anmälan på {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Det här gäller din anmälan av ett meddelande i #{channelName} i ”{communityName}”, skickad {reportedAt, date, long}.} message_dm {Det här gäller din anmälan av ett meddelande i ett direktmeddelande, skickad {reportedAt, date, long}.} message {Det här gäller din anmälan av ett meddelande, skickad {reportedAt, date, long}.} user {Det här gäller din anmälan av kontot ”{username}”, skickad {reportedAt, date, long}.} community {Det här gäller din anmälan av communityn ”{communityName}”, skickad {reportedAt, date, long}.} other {Det här gäller anmälan du skickade {reportedAt, date, long}.}}",
 		"comment_label": "Kommentar från vårt team",
 		"footer_reason": "Du fick det här mejlet eftersom du skickade in en anmälan på {product_name}.",
-		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har begränsat det. Vi berättar inte vad vi har gjort med någon annans konto.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vad vi har gjort med någon annans konto.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
+		"intro": "{outcome, select, removed {Vi har tagit bort innehållet du anmälde eftersom det bröt mot våra regler.} restricted {Kontot du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} action_taken {Det du anmälde bröt mot våra regler, och vi har vidtagit åtgärder. Vi berättar inte vilka åtgärder vi har vidtagit.} no_violation {Det du anmälde bryter inte mot våra regler, så vi har låtit det vara.} other {Vi har stängt din anmälan.}}",
 		"note": "{reply, select, yes {Om du inte håller med kan du svara på det här mejlet inom 60 dagar.} other {{appeals_email, select, null {} other {Om du inte håller med kan du mejla <mail>{appeals_email}</mail> inom 60 dagar och ange anmälnings-ID:t.}}}}{appeals_email, select, null {} other { Inom EU kan du också vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa> eller klaga hos samordnaren för digitala tjänster i ditt land.}}",
 		"report_label": "Anmälnings-ID",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din anmälan på {product_name} har granskats"
+		"subject": "Din anmälan på {product_name} har granskats",
+		"thanks": "{outcome, select, removed {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} restricted {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} action_taken {Tack för att du anmälde det. Anmälningar som din hjälper till att hålla {product_name} tryggt för alla.} other {Tack för att du hörde av dig.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Du fick det här mejlet eftersom du begärde att ditt {product_name}-konto skulle raderas.",

@@ -124,17 +124,10 @@ func renderFiles(set *Set, selected []Overlay, images map[string]string, project
 	if err != nil {
 		return nil, nil, err
 	}
-	compose, err := ReadFile(set, ComposeFile)
+	compose, err := RenderCompose(set, images, project)
 	if err != nil {
 		return nil, nil, err
 	}
-	if set.Release != LegacyRelease {
-		compose, err = pinImages(compose, set.Release, images)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	compose = nameProject(compose, project)
 	caddy, err := ReadFile(set, Caddyfile)
 	if err != nil {
 		return nil, nil, err
@@ -148,6 +141,19 @@ func renderFiles(set *Set, selected []Overlay, images map[string]string, project
 		out = append(out, renderedFile{OverlayFiles[o], data})
 	}
 	return out, overlays, nil
+}
+
+func RenderCompose(set *Set, images map[string]string, project string) ([]byte, error) {
+	compose, err := ReadFile(set, ComposeFile)
+	if err != nil {
+		return nil, err
+	}
+	if set.Release != LegacyRelease {
+		if compose, err = pinImages(compose, set.Release, images); err != nil {
+			return nil, err
+		}
+	}
+	return nameProject(compose, project), nil
 }
 
 func ReadFile(set *Set, name string) ([]byte, error) {

@@ -21,14 +21,14 @@ A rebuild clears the index first, and search over that index returns partial res
 | discovery | Instance | Discovery details of approved listings in the `guilds` index |
 | channel_messages<sup>1</sup> | Guild | Messages in every channel and thread of one guild |
 | guild_members | Guild | Members of one guild |
-| favorite_memes<sup>2</sup> | User | Favorited [memes](/http-api/memes/) of one user |
-| threads<sup>3</sup> | Guild | Threads used by [Search threads](/http-api/threads/#search-threads) |
+| threads<sup>2</sup> | Guild | Threads used by [Search threads](/http-api/threads/#search-threads) |
+| all<sup>3</sup> | Instance | Every index above, for every guild, and messages in every channel, thread and DM |
 
 <sup>1</sup> Progress shows `completed` once every channel is queued for indexing, and `total` and `indexed` count channels. Messages keep indexing after that.
 
-<sup>2</sup> The rebuild is queued but always fails, and its progress reads as `not_found`.
+<sup>2</sup> [Search threads](/http-api/threads/#search-threads) returns 202 for the guild until the rebuild completes.
 
-<sup>3</sup> [Search threads](/http-api/threads/#search-threads) returns 202 for the guild until the rebuild completes.
+<sup>3</sup> Rebuilds one index at a time and clears each one first, including `threads`. Only one `all` rebuild runs at a time.
 
 ## Search index refresh object
 
@@ -64,8 +64,9 @@ An unknown or expired `job_id` returns the not found structure, and every other 
 | --- | --- | --- |
 | status | string | One of `in_progress`, `completed`, or `failed` |
 | index_type | string | The [search index name](#search-index-names) being rebuilt |
-| total? | number | Equal to `indexed` until `status` is `completed`, except for `discovery`, where it is the number of approved listings |
-| indexed? | number | The number of documents written so far |
+| phase? | string | For `all`, the index it is on, `messages`, or `queued` before it starts |
+| total? | number | Equal to `indexed` until `status` is `completed`, except for `discovery`, where it is the number of approved listings, and in the `all` phases that count guilds or channels |
+| indexed? | number | The number of documents written so far, or of guilds or channels done in the `guild_members`, `threads` and `messages` phases of `all` |
 | started_at? | ISO8601 timestamp | The time the rebuild last reported progress |
 | completed_at? | ISO8601 timestamp | The time the rebuild finished, when `status` is `completed` |
 | failed_at? | ISO8601 timestamp | The time the rebuild failed, when `status` is `failed` |
@@ -75,7 +76,7 @@ An unknown or expired `job_id` returns the not found structure, and every other 
 
 <RouteHeader method="POST" path="/v1/admin/search/indexes/{index_name}/refreshes" auditReason />
 
-Queues a rebuild of the index and returns its `job_id`. You need the `guild:lookup` [ACL](/admin-api/#acl-evaluation). A failed rebuild is not retried, so queue a new one.
+Queues a rebuild of the index and returns its `job_id`. You need the `guild:lookup` [ACL](/admin-api/#acl-evaluation). A failed rebuild is not retried, so queue a new one. While an `all` rebuild runs, queueing `all` again returns its `job_id`.
 
 ### Path parameters
 
@@ -88,14 +89,14 @@ Queues a rebuild of the index and returns its `job_id`. You need the `guild:look
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id? | snowflake | The ID of the guild to rebuild, needed by `channel_messages`, `guild_members` and `threads` |
-| user_id? | snowflake | The ID of the user to rebuild, needed by `favorite_memes` |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [search index refresh](#search-index-refresh-object) object | The rebuild was queued |
-| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the index needs `guild_id` or `user_id` and it is missing |
+| 200 | [search index refresh](#search-index-refresh-object) object | The rebuild was queued or is already running |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the index needs `guild_id` and it is missing |
+| 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when `index_name` is `all` on an instance with no search backend |
 
 Fluxer records an Admin audit log entry with the action `queue_refresh_index` and the target type `search_index`.
 

@@ -239,8 +239,20 @@ printf '%s Installed rexctl %s\n' "$glyph_ok" "$version" >&2
 case ":$PATH:" in
 	*":$bin_dir:"*) ;;
 	*)
-		printf '%s rexctl is in %s, which isn'"'"'t on your PATH.\n' "$glyph_warn" "$bin_dir" >&2
-		printf '  Add it to your PATH to run rexctl from anywhere.\n' >&2
+		case $bin_dir in
+			"$HOME"/*)
+				shown="~${bin_dir#"$HOME"}"
+				path_dir="\$HOME${bin_dir#"$HOME"}"
+				;;
+			*)
+				shown=$bin_dir
+				path_dir=$bin_dir
+				;;
+		esac
+		printf '%s rexctl is in %s, which isn'"'"'t on your PATH yet.\n' "$glyph_warn" "$shown" >&2
+		printf '  Run it as %s/rexctl for now. To run rexctl by name in this terminal, run:\n' "$shown" >&2
+		printf '  export PATH="%s:%s"\n' "$path_dir" "\$PATH" >&2
+		printf '  On most Linux distributions, rexctl works by name in a new terminal.\n' >&2
 		;;
 esac
 

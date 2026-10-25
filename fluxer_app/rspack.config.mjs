@@ -355,24 +355,34 @@ function devServerHeaders() {
 	return {...devCorsHeaders, ...devNoStoreHeaders};
 }
 
-function resolveReleaseChannel() {
-	const value = envString('PUBLIC_RELEASE_CHANNEL', envString('RELEASE_CHANNEL', 'canary')).trim().toLowerCase();
+const RENAMED_BUILD_ENV = {
+	PUBLIC_BUILD_VERSION: 'BUILD_VERSION',
+	PUBLIC_RELEASE_CHANNEL: 'BUILD_CHANNEL',
+	RELEASE_CHANNEL: 'BUILD_CHANNEL',
+};
+
+function rejectRenamedBuildEnv() {
+	for (const [oldName, newName] of Object.entries(RENAMED_BUILD_ENV)) {
+		if (envString(oldName) !== undefined && envString(newName) === undefined) {
+			throw new Error(`The web build no longer reads ${oldName}. Set ${newName} instead.`);
+		}
+	}
+}
+
+function resolveBuildChannel() {
+	const value = envString('BUILD_CHANNEL', 'canary').trim().toLowerCase();
 	if (value === 'stable' || value === 'canary' || value === 'development') {
 		return value;
 	}
-	throw new Error(`PUBLIC_RELEASE_CHANNEL must be stable, canary, or development, received ${JSON.stringify(value)}`);
+	throw new Error(`BUILD_CHANNEL must be stable, canary, or development, received ${JSON.stringify(value)}`);
 }
 
-function resolvePublicValues() {
+function resolveBuildInfo() {
+	rejectRenamedBuildEnv();
 	return {
-		PUBLIC_BUILD_VERSION: envString('PUBLIC_BUILD_VERSION', envString('BUILD_VERSION', 'dev')),
-		PUBLIC_RELEASE_CHANNEL: resolveReleaseChannel(),
+		version: envString('BUILD_VERSION', 'dev'),
+		channel: resolveBuildChannel(),
 	};
-}
-
-function getPublicEnvVar(values, name) {
-	const value = values[name];
-	return value === undefined ? 'undefined' : JSON.stringify(value);
 }
 
 function getChunkRuntimeNames(runtime) {
@@ -415,7 +425,7 @@ function jsFilename(pathData) {
 
 export default () => {
 	const linguiSwcPlugin = getLinguiSwcPluginConfig();
-	const publicValues = resolvePublicValues();
+	const buildInfo = resolveBuildInfo();
 	const assetBaseUrl = isDesktopRenderer ? undefined : envString('PUBLIC_ASSET_BASE_URL');
 	const staticCdnEndpoint = isDesktopRenderer
 		? ''
@@ -698,13 +708,13 @@ export default () => {
 			new DefinePlugin({
 				define: 'undefined',
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
-				__FLUXER_SW_VERSION__: JSON.stringify(publicValues.PUBLIC_BUILD_VERSION || 'dev'),
+				__FLUXER_SW_VERSION__: JSON.stringify(buildInfo.version),
 				'process.env.NODE_ENV': JSON.stringify(mode),
 				'import.meta.env.DEV': JSON.stringify(isDevelopment),
 				'import.meta.env.PROD': JSON.stringify(isProduction),
 				'import.meta.env.MODE': JSON.stringify(mode),
-				'import.meta.env.PUBLIC_BUILD_VERSION': getPublicEnvVar(publicValues, 'PUBLIC_BUILD_VERSION'),
-				'import.meta.env.PUBLIC_RELEASE_CHANNEL': getPublicEnvVar(publicValues, 'PUBLIC_RELEASE_CHANNEL'),
+				'import.meta.env.BUILD_VERSION': JSON.stringify(buildInfo.version),
+				'import.meta.env.BUILD_CHANNEL': JSON.stringify(buildInfo.channel),
 			}),
 			{
 				apply(compiler) {
@@ -715,7 +725,7 @@ export default () => {
 							() => {
 								const {RawSource} = compiler.rspack.sources;
 								const versionData = {
-									version: publicValues.PUBLIC_BUILD_VERSION,
+									version: buildInfo.version,
 								};
 								const source = new RawSource(JSON.stringify(versionData));
 								compilation.emitAsset('version.json', source);

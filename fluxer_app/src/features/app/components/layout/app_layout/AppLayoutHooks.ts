@@ -284,7 +284,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowDomainMoved = DomainMovedNotice.shouldShow(Date.now());
 	}
 	const canShowBuildEnvironment =
-		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.PUBLIC_RELEASE_CHANNEL) &&
+		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.RELEASE_CHANNEL) &&
 		!nagbarState.buildEnvironmentDismissedThisSession;
 	let canShowConnection: boolean;
 	if (nagbarState.forceHideConnectionNotice) {

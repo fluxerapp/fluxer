@@ -48,13 +48,15 @@
 		"subject": "Gérer vos dons à {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Ceci concerne votre signalement d’un message dans #{channelName} sur « {communityName} », envoyé le {reportedAt, date, long}.} message_dm {Ceci concerne votre signalement d’un message privé, envoyé le {reportedAt, date, long}.} message {Ceci concerne votre signalement d’un message, envoyé le {reportedAt, date, long}.} user {Ceci concerne votre signalement du compte « {username} », envoyé le {reportedAt, date, long}.} community {Ceci concerne votre signalement de la communauté « {communityName} », envoyé le {reportedAt, date, long}.} other {Ceci concerne le signalement que vous avez envoyé le {reportedAt, date, long}.}}",
 		"comment_label": "Note de notre équipe",
 		"footer_reason": "Vous avez reçu cet e-mail car vous avez soumis un signalement au titre du règlement sur les services numériques sur {product_name}.",
-		"intro": "{outcome, select, removed {Nous avons supprimé le contenu que vous avez signalé, car il enfreignait nos règles.} restricted {Le compte que vous avez signalé enfreignait nos règles, et nous l’avons restreint. Nous ne communiquons pas les mesures prises sur le compte d’une autre personne.} action_taken {Ce que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises sur le compte d’une autre personne.} no_violation {Ce que vous avez signalé n’enfreint pas nos règles, nous n’avons donc rien changé.} other {Nous avons clôturé votre signalement.}}",
+		"intro": "{outcome, select, removed {Nous avons supprimé le contenu que vous avez signalé, car il enfreignait nos règles.} restricted {Le compte que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises.} action_taken {Ce que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises.} no_violation {Ce que vous avez signalé n’enfreint pas nos règles, nous n’avons donc rien changé.} other {Nous avons clôturé votre signalement.}}",
 		"note": "{reply, select, yes {Si vous n’êtes pas d’accord, répondez à cet e-mail dans les 60 jours.} other {{appeals_email, select, null {} other {Si vous n’êtes pas d’accord, écrivez à <mail>{appeals_email}</mail> dans les 60 jours en indiquant l’ID du signalement.}}}}{appeals_email, select, null {} other { Dans l’UE, vous pouvez aussi vous adresser à un <dsa>organe de règlement extrajudiciaire des litiges</dsa> certifié ou déposer une réclamation auprès du coordinateur pour les services numériques de votre pays.}}",
 		"report_label": "ID du signalement",
 		"signoff": "L’équipe {product_name}",
-		"subject": "Nous avons pris une décision concernant votre signalement sur {product_name}"
+		"subject": "Nous avons pris une décision concernant votre signalement sur {product_name}",
+		"thanks": "{outcome, select, removed {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} restricted {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} action_taken {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} other {Merci de nous avoir prévenus.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Ce code expire dans {minutes, plural, one {# minute} other {# minutes}}.",
@@ -422,13 +424,15 @@
 		"subject": "Nous avons bien reçu votre signalement sur {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Ceci concerne votre signalement d’un message dans #{channelName} sur « {communityName} », envoyé le {reportedAt, date, long}.} message_dm {Ceci concerne votre signalement d’un message privé, envoyé le {reportedAt, date, long}.} message {Ceci concerne votre signalement d’un message, envoyé le {reportedAt, date, long}.} user {Ceci concerne votre signalement du compte « {username} », envoyé le {reportedAt, date, long}.} community {Ceci concerne votre signalement de la communauté « {communityName} », envoyé le {reportedAt, date, long}.} other {Ceci concerne le signalement que vous avez envoyé le {reportedAt, date, long}.}}",
 		"comment_label": "Note de notre équipe",
 		"footer_reason": "Vous avez reçu cet e-mail parce que vous avez soumis un signalement sur {product_name}.",
-		"intro": "{outcome, select, removed {Nous avons supprimé le contenu que vous avez signalé, car il enfreignait nos règles.} restricted {Le compte que vous avez signalé enfreignait nos règles, et nous l’avons restreint. Nous ne communiquons pas les mesures prises sur le compte d’une autre personne.} action_taken {Ce que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises sur le compte d’une autre personne.} no_violation {Ce que vous avez signalé n’enfreint pas nos règles, nous n’avons donc rien changé.} other {Nous avons clôturé votre signalement.}}",
+		"intro": "{outcome, select, removed {Nous avons supprimé le contenu que vous avez signalé, car il enfreignait nos règles.} restricted {Le compte que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises.} action_taken {Ce que vous avez signalé enfreignait nos règles, et nous avons pris des mesures. Nous ne communiquons pas les mesures prises.} no_violation {Ce que vous avez signalé n’enfreint pas nos règles, nous n’avons donc rien changé.} other {Nous avons clôturé votre signalement.}}",
 		"note": "{reply, select, yes {Si vous n’êtes pas d’accord, répondez à cet e-mail dans les 60 jours.} other {{appeals_email, select, null {} other {Si vous n’êtes pas d’accord, écrivez à <mail>{appeals_email}</mail> dans les 60 jours en indiquant l’ID du signalement.}}}}{appeals_email, select, null {} other { Dans l’UE, vous pouvez aussi vous adresser à un <dsa>organe de règlement extrajudiciaire des litiges</dsa> certifié ou déposer une réclamation auprès du coordinateur pour les services numériques de votre pays.}}",
 		"report_label": "ID du signalement",
 		"signoff": "L’équipe {product_name}",
-		"subject": "Votre signalement sur {product_name} a été examiné"
+		"subject": "Votre signalement sur {product_name} a été examiné",
+		"thanks": "{outcome, select, removed {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} restricted {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} action_taken {Merci pour votre signalement. Les signalements comme le vôtre aident à garder {product_name} sûr pour tout le monde.} other {Merci de nous avoir prévenus.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Vous avez reçu cet e-mail car vous avez demandé la suppression de votre compte {product_name}.",

@@ -76,6 +76,19 @@ Complete every section of the pull request template. Clearly describe:
 - What risks it introduces.
 - How it was verified.
 
+## Build version and channel
+
+Two environment variables set the version and channel of a desktop or web build. You can leave both unset for a local build.
+
+| Variable | What it sets | Set by | When unset |
+| --- | --- | --- | --- |
+| `BUILD_VERSION` | The CalVer version (`YYYY.MDD.MICRO`) of the build. The web app shows it in its build info and `version.json`, and the desktop app uses it as its own version. | The release workflows, or `BUILD_VERSION` as a build argument when you build the app-proxy image yourself. | `dev` for the web app. A desktop package uses the version of the web app it bundles. |
+| `BUILD_CHANNEL` | `stable`, `canary` or `development`. For the desktop app it decides the app ID, data folder, link protocol and update feed. For the web app it is the channel used when the page has no channel tag. | The desktop release workflows. | `canary` for the web app and `stable` for the desktop app. |
+
+The app-proxy sets the channel of the web app when it serves the page, using its own `RELEASE_CHANNEL` setting, and the image build leaves `BUILD_CHANNEL` unset.
+
+A build stops with an error when it finds one of the old names `PUBLIC_BUILD_VERSION`, `PUBLIC_RELEASE_CHANNEL`, `RELEASE_CHANNEL` or `VERSION` without the new name.
+
 ## Reports and other contributions
 
 Report bugs and request features at [feedback.fluxer.com](https://feedback.fluxer.com).

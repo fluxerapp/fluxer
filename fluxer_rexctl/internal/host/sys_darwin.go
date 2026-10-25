@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -24,6 +25,14 @@ func FreeDisk(path string) (uint64, error) {
 		return 0, err
 	}
 	return st.Bavail * uint64(st.Bsize), nil
+}
+
+func DiskID(path string) (string, error) {
+	var st unix.Stat_t
+	if err := unix.Stat(existingParent(path), &st); err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(int64(st.Dev), 10), nil
 }
 
 func addrInUse(err error) bool { return errors.Is(err, syscall.EADDRINUSE) }

@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Domain email ini tidak diizinkan untuk SSO.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Gagal mengambil info pengguna SSO-mu. Coba lagi.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Gagal membaca respons dari penyedia SSO-mu. Coba lagi.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Terlalu banyak percobaan masuk dari jaringanmu. Coba lagi dalam {minutes} menit.",
+	"auth_and_oauth.handoff_code_already_used": "Kode ini sudah digunakan. Mulai proses masuk baru dari aplikasi.",
 	"auth_and_oauth.handoff_code_expired": "Kode serah terima kedaluwarsa.",
 	"auth_and_oauth.handoff_code_invalid": "Kode serah terima tidak valid.",
 	"auth_and_oauth.invalid_code": "Kode tidak valid.",

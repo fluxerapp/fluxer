@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Tên miền email này không được phép dùng cho đăng nhập một lần.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Không lấy được thông tin người dùng SSO của bạn. Vui lòng thử lại.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Không đọc được phản hồi từ nhà cung cấp SSO của bạn. Vui lòng thử lại.",
+	"auth_and_oauth.handoff_attempts_exceeded": "Có quá nhiều lần thử đăng nhập từ mạng của bạn. Hãy thử lại sau {minutes} phút.",
+	"auth_and_oauth.handoff_code_already_used": "Mã này đã được sử dụng. Hãy bắt đầu đăng nhập mới từ ứng dụng.",
 	"auth_and_oauth.handoff_code_expired": "Mã chuyển giao đã hết hạn.",
 	"auth_and_oauth.handoff_code_invalid": "Mã chuyển giao không hợp lệ.",
 	"auth_and_oauth.invalid_code": "Mã không hợp lệ.",

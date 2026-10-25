@@ -48,13 +48,15 @@
 		"subject": "Administra tus donaciones a {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Esto es sobre tu reporte de un mensaje en #{channelName} en “{communityName}”, enviado el {reportedAt, date, long}.} message_dm {Esto es sobre tu reporte de un mensaje directo, enviado el {reportedAt, date, long}.} message {Esto es sobre tu reporte de un mensaje, enviado el {reportedAt, date, long}.} user {Esto es sobre tu reporte de la cuenta “{username}”, enviado el {reportedAt, date, long}.} community {Esto es sobre tu reporte de la comunidad “{communityName}”, enviado el {reportedAt, date, long}.} other {Esto es sobre el reporte que enviaste el {reportedAt, date, long}.}}",
 		"comment_label": "Nota de nuestro equipo",
 		"footer_reason": "Recibiste este correo electrónico porque enviaste un reporte conforme a la Ley de Servicios Digitales en {product_name}.",
-		"intro": "{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {La cuenta que reportaste infringía nuestras reglas y la restringimos. No compartimos qué medidas tomamos sobre la cuenta de otra persona.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos sobre la cuenta de otra persona.} no_violation {Lo que reportaste no infringe nuestras reglas, así que lo dejamos como está.} other {Cerramos tu reporte.}}",
+		"intro": "{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {La cuenta que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos.} no_violation {Lo que reportaste no infringe nuestras reglas, así que lo dejamos como está.} other {Cerramos tu reporte.}}",
 		"note": "{reply, select, yes {Si no estás de acuerdo, responde a este correo en un plazo de 60 días.} other {{appeals_email, select, null {} other {Si no estás de acuerdo, escribe a <mail>{appeals_email}</mail> en un plazo de 60 días e incluye el ID del reporte.}}}}{appeals_email, select, null {} other { En la UE, también puedes acudir a un <dsa>órgano de resolución extrajudicial de litigios</dsa> certificado o presentar una reclamación ante el coordinador de servicios digitales de tu país.}}",
 		"report_label": "ID del reporte",
 		"signoff": "El equipo de {product_name}",
-		"subject": "Tomamos una decisión sobre tu reporte en {product_name}"
+		"subject": "Tomamos una decisión sobre tu reporte en {product_name}",
+		"thanks": "{outcome, select, removed {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} restricted {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} action_taken {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} other {Gracias por avisarnos.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
@@ -422,13 +424,15 @@
 		"subject": "Recibimos tu reporte en {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Esto es sobre tu reporte de un mensaje en #{channelName} en “{communityName}”, enviado el {reportedAt, date, long}.} message_dm {Esto es sobre tu reporte de un mensaje directo, enviado el {reportedAt, date, long}.} message {Esto es sobre tu reporte de un mensaje, enviado el {reportedAt, date, long}.} user {Esto es sobre tu reporte de la cuenta “{username}”, enviado el {reportedAt, date, long}.} community {Esto es sobre tu reporte de la comunidad “{communityName}”, enviado el {reportedAt, date, long}.} other {Esto es sobre el reporte que enviaste el {reportedAt, date, long}.}}",
 		"comment_label": "Nota de nuestro equipo",
 		"footer_reason": "Recibiste este correo electrónico porque enviaste un reporte en {product_name}.",
-		"intro": "{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {La cuenta que reportaste infringía nuestras reglas y la restringimos. No compartimos qué medidas tomamos sobre la cuenta de otra persona.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos sobre la cuenta de otra persona.} no_violation {Lo que reportaste no infringe nuestras reglas, así que lo dejamos como está.} other {Cerramos tu reporte.}}",
+		"intro": "{outcome, select, removed {Eliminamos el contenido que reportaste porque infringía nuestras reglas.} restricted {La cuenta que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. No compartimos qué medidas tomamos.} no_violation {Lo que reportaste no infringe nuestras reglas, así que lo dejamos como está.} other {Cerramos tu reporte.}}",
 		"note": "{reply, select, yes {Si no estás de acuerdo, responde a este correo en un plazo de 60 días.} other {{appeals_email, select, null {} other {Si no estás de acuerdo, escribe a <mail>{appeals_email}</mail> en un plazo de 60 días e incluye el ID del reporte.}}}}{appeals_email, select, null {} other { En la UE, también puedes acudir a un <dsa>órgano de resolución extrajudicial de litigios</dsa> certificado o presentar una reclamación ante el coordinador de servicios digitales de tu país.}}",
 		"report_label": "ID del reporte",
 		"signoff": "El equipo de {product_name}",
-		"subject": "Se revisó tu reporte en {product_name}"
+		"subject": "Se revisó tu reporte en {product_name}",
+		"thanks": "{outcome, select, removed {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} restricted {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} action_taken {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} other {Gracias por avisarnos.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Recibiste este correo electrónico porque solicitaste eliminar tu cuenta de {product_name}.",

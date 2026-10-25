@@ -48,13 +48,15 @@
 		"subject": "Spravujte své dary pro {product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {Jde o vaše nahlášení zprávy v kanálu #{channelName} v komunitě „{communityName}“, odeslané {reportedAt, date, long}.} message_dm {Jde o vaše nahlášení zprávy v přímé konverzaci, odeslané {reportedAt, date, long}.} message {Jde o vaše nahlášení zprávy, odeslané {reportedAt, date, long}.} user {Jde o vaše nahlášení účtu „{username}“, odeslané {reportedAt, date, long}.} community {Jde o vaše nahlášení komunity „{communityName}“, odeslané {reportedAt, date, long}.} other {Jde o nahlášení, které jste odeslali {reportedAt, date, long}.}}",
 		"comment_label": "Poznámka od našeho týmu",
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste podali nahlášení podle nařízení o digitálních službách na {product_name}.",
-		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme ho omezili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
+		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
 		"note": "{reply, select, yes {Pokud nesouhlasíte, odpovězte na tento e-mail do 60 dnů.} other {{appeals_email, select, null {} other {Pokud nesouhlasíte, napište do 60 dnů na <mail>{appeals_email}</mail> a uveďte ID nahlášení.}}}}{appeals_email, select, null {} other { V EU se také můžete obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa> nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}",
 		"report_label": "ID nahlášení",
 		"signoff": "Tým {product_name}",
-		"subject": "Rozhodli jsme o vašem nahlášení na {product_name}"
+		"subject": "Rozhodli jsme o vašem nahlášení na {product_name}",
+		"thanks": "{outcome, select, removed {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} restricted {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} action_taken {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} other {Děkujeme, že jste nám dali vědět.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Tento kód vyprší za {minutes, plural, one {# minutu} few {# minuty} many {# minuty} other {# minut}}.",
@@ -422,13 +424,15 @@
 		"subject": "Obdrželi jsme vaše nahlášení na {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {Jde o vaše nahlášení zprávy v kanálu #{channelName} v komunitě „{communityName}“, odeslané {reportedAt, date, long}.} message_dm {Jde o vaše nahlášení zprávy v přímé konverzaci, odeslané {reportedAt, date, long}.} message {Jde o vaše nahlášení zprávy, odeslané {reportedAt, date, long}.} user {Jde o vaše nahlášení účtu „{username}“, odeslané {reportedAt, date, long}.} community {Jde o vaše nahlášení komunity „{communityName}“, odeslané {reportedAt, date, long}.} other {Jde o nahlášení, které jste odeslali {reportedAt, date, long}.}}",
 		"comment_label": "Poznámka od našeho týmu",
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste odeslali nahlášení na {product_name}.",
-		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme ho omezili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Co jsme s účtem jiného člověka udělali, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
+		"intro": "{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Nahlášený účet porušil naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} action_taken {To, co jste nahlásili, porušilo naše pravidla, a proto jsme zakročili. Jak jsme zakročili, nesdělujeme.} no_violation {To, co jste nahlásili, naše pravidla neporušuje, proto jsme to ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}",
 		"note": "{reply, select, yes {Pokud nesouhlasíte, odpovězte na tento e-mail do 60 dnů.} other {{appeals_email, select, null {} other {Pokud nesouhlasíte, napište do 60 dnů na <mail>{appeals_email}</mail> a uveďte ID nahlášení.}}}}{appeals_email, select, null {} other { V EU se také můžete obrátit na certifikovaný <dsa>subjekt pro mimosoudní řešení sporů</dsa> nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}",
 		"report_label": "ID nahlášení",
 		"signoff": "Tým {product_name}",
-		"subject": "Vaše nahlášení na {product_name} bylo přezkoumáno"
+		"subject": "Vaše nahlášení na {product_name} bylo přezkoumáno",
+		"thanks": "{outcome, select, removed {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} restricted {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} action_taken {Děkujeme za nahlášení. Díky nahlášením, jako je to vaše, zůstává {product_name} bezpečný pro všechny.} other {Děkujeme, že jste nám dali vědět.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste požádali o smazání svého účtu {product_name}.",

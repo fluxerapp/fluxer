@@ -604,55 +604,65 @@ svc:
   gifs:
     router:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
     shard:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 20m, memory: 64Mi}
         limits: {memory: 256Mi}
   messages:
     router:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
     shard:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 20m, memory: 64Mi}
         limits: {memory: 256Mi}
   snowflakes:
     router:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
     shard:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 20m, memory: 64Mi}
         limits: {memory: 256Mi}
   unfurl:
     router:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
     shard:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 20m, memory: 64Mi}
         limits: {memory: 256Mi}
   users:
     router:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
     shard:
       replicas: 1
+      terminationGracePeriodSeconds: 35
       resources:
         requests: {cpu: 20m, memory: 64Mi}
         limits: {memory: 256Mi}

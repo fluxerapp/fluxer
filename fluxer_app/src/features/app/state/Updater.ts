@@ -68,7 +68,7 @@ const MIN_CHECK_INTERVAL_MS = 60 * 1000;
 const WEB_CHECK_TIMEOUT_MS = 15 * 1000;
 const NATIVE_CHECK_TIMEOUT_MS = 30 * 1000;
 const VERSION_ENDPOINT = '/version.json';
-const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
+const CURRENT_BUILD_VERSION = Config.BUILD_VERSION ?? null;
 
 function loadUpdaterModals(): Promise<typeof UpdaterModalCommands> {
 	return import('@app/features/updater/commands/UpdaterModalCommands');

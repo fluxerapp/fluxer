@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "דומיין האימייל הזה אינו מורשה לכניסה יחידה (SSO).",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "לא הצלחנו לשלוף את פרטי המשתמש שלך מספק ה-SSO. ניתן לנסות שוב.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "לא הצלחנו לקבל את התגובה מספק ה-SSO שלך. ניתן לנסות שוב.",
+	"auth_and_oauth.handoff_attempts_exceeded": "יותר מדי ניסיונות כניסה מהרשת שלך. אפשר לנסות שוב בעוד {minutes} דקות.",
+	"auth_and_oauth.handoff_code_already_used": "הקוד הזה כבר נוצל. אפשר להתחיל כניסה חדשה מהאפליקציה.",
 	"auth_and_oauth.handoff_code_expired": "פג תוקפו של קוד ההעברה.",
 	"auth_and_oauth.handoff_code_invalid": "קוד העברה שגוי.",
 	"auth_and_oauth.invalid_code": "קוד שגוי.",

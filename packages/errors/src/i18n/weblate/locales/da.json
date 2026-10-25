@@ -127,6 +127,8 @@
 	"auth_and_oauth.email_domain_not_allowed_for_sso": "Dette e-maildomæne er ikke tilladt til single sign-on.",
 	"auth_and_oauth.failed_to_fetch_sso_user_info": "Vi kunne ikke hente dine SSO-brugeroplysninger. Prøv igen.",
 	"auth_and_oauth.failed_to_parse_sso_user_info": "Vi kunne ikke læse svaret fra din SSO-udbyder. Prøv igen.",
+	"auth_and_oauth.handoff_attempts_exceeded": "For mange loginforsøg fra dit netværk. Prøv igen om {minutes, plural, one {# minut} other {# minutter}}.",
+	"auth_and_oauth.handoff_code_already_used": "Denne kode er allerede brugt. Start et nyt login fra appen.",
 	"auth_and_oauth.handoff_code_expired": "Overdragelseskoden er udløbet.",
 	"auth_and_oauth.handoff_code_invalid": "Overdragelseskoden er ugyldig.",
 	"auth_and_oauth.invalid_code": "Ugyldig kode.",

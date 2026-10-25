@@ -4,8 +4,11 @@ import {randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import type {SessionOrigin} from '@app/api/auth/AuthSession';
 import {randomBase64Url, secretMatchesHash, sha256Hex} from '@app/api/utils/SecretHash';
+import {HandoffAttemptsExceededError} from '@fluxer/errors/src/domains/auth/HandoffAttemptsExceededError';
+import {HandoffCodeAlreadyUsedError} from '@fluxer/errors/src/domains/auth/HandoffCodeAlreadyUsedError';
 import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCodeExpiredError';
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import {
 	DESKTOP_HANDOFF_CODE_ALPHABET,
 	DESKTOP_HANDOFF_CODE_LENGTH,
@@ -18,6 +21,7 @@ const HANDOFF_CODE_PREFIX = 'desktop-handoff-v2:';
 const HANDOFF_TOKEN_PREFIX = 'desktop-handoff-token:';
 const HANDOFF_ATTEMPT_PREFIX = 'desktop-handoff-attempts:';
 const HANDOFF_APPROVER_PREFIX = 'desktop-handoff-approver:';
+const HANDOFF_USED_PREFIX = 'desktop-handoff-used:';
 const MAX_FAILED_ATTEMPTS = 5;
 const ATTEMPT_TTL_SECONDS = 900;
 const MAX_INFO_LOOKUPS = 3;
@@ -45,6 +49,10 @@ export type DesktopHandoffReturnMethod = 'deep_link' | 'code';
 
 interface HandoffApproverData {
 	approvedAt: number;
+}
+
+interface HandoffUsedData {
+	approverIpHash: string;
 }
 
 function generateNormalizedHandoffCode(): string {
@@ -119,8 +127,7 @@ export class DesktopHandoffService {
 		await this.checkAttemptLimit(approverIp);
 		const storedApprover = await cache.get<HandoffApproverData>(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
 		if (!storedApprover) {
-			await this.recordFailedAttempt(approverIp);
-			throw new InvalidHandoffCodeError();
+			await this.rejectUnknownCode(normalizedCode, approverIp);
 		}
 		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		if (!handoffData || handoffData.denied) {
@@ -148,6 +155,11 @@ export class DesktopHandoffService {
 		await cache.set(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`, tokenData, remainingSeconds);
 		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		await cache.delete(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
+		await cache.set<HandoffUsedData>(
+			`${HANDOFF_USED_PREFIX}${normalizedCode}`,
+			{approverIpHash: sha256Hex(getSameIpDecisionKey(approverIp) ?? approverIp)},
+			ATTEMPT_TTL_SECONDS,
+		);
 		let returnUrl: string | null = null;
 		if (grant && handoffData.returnUri) {
 			const params = new URLSearchParams({code: formatDesktopHandoffCode(normalizedCode), grant});
@@ -170,6 +182,9 @@ export class DesktopHandoffService {
 		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
 		const handoffData = await cache.get<HandoffData>(codeKey);
 		if (!handoffData || handoffData.denied) {
+			if (!handoffData && (await this.wasUsedBy(normalizedCode, approverIp))) {
+				throw new HandoffCodeAlreadyUsedError();
+			}
 			await this.recordFailedAttempt(approverIp);
 			return {status: 'expired'};
 		}
@@ -220,9 +235,12 @@ export class DesktopHandoffService {
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
-		await this.checkAttemptLimit(pollerIp);
 		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
+		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
+		if (!secretMatchesHash(pollSecret, tokenData?.pollSecretHash ?? handoffData?.pollSecretHash)) {
+			await this.checkAttemptLimit(pollerIp);
+		}
 		if (tokenData) {
 			if (!secretMatchesHash(pollSecret, tokenData.pollSecretHash)) {
 				await this.recordFailedAttempt(pollerIp);
@@ -244,7 +262,6 @@ export class DesktopHandoffService {
 				userId: tokenData.userId,
 			};
 		}
-		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		if (handoffData) {
 			return {status: handoffData.denied ? 'denied' : 'pending'};
 		}
@@ -269,10 +286,26 @@ export class DesktopHandoffService {
 
 	private async checkAttemptLimit(clientIp: string): Promise<void> {
 		const {cache} = this.apiContext.services;
-		const count = await cache.get<number>(`${HANDOFF_ATTEMPT_PREFIX}${clientIp}`);
+		const key = `${HANDOFF_ATTEMPT_PREFIX}${clientIp}`;
+		const count = await cache.get<number>(key);
 		if (count != null && count >= MAX_FAILED_ATTEMPTS) {
-			throw new InvalidHandoffCodeError();
+			const remaining = await cache.ttl(key);
+			throw new HandoffAttemptsExceededError(remaining > 0 ? remaining : ATTEMPT_TTL_SECONDS);
 		}
+	}
+
+	private async wasUsedBy(normalizedCode: string, clientIp: string): Promise<boolean> {
+		const {cache} = this.apiContext.services;
+		const used = await cache.get<HandoffUsedData>(`${HANDOFF_USED_PREFIX}${normalizedCode}`);
+		return used != null && secretMatchesHash(getSameIpDecisionKey(clientIp) ?? clientIp, used.approverIpHash);
+	}
+
+	private async rejectUnknownCode(normalizedCode: string, clientIp: string): Promise<never> {
+		if (await this.wasUsedBy(normalizedCode, clientIp)) {
+			throw new HandoffCodeAlreadyUsedError();
+		}
+		await this.recordFailedAttempt(clientIp);
+		throw new InvalidHandoffCodeError();
 	}
 
 	private async recordFailedAttempt(clientIp: string): Promise<void> {

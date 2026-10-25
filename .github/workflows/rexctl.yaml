@@ -71,6 +71,12 @@ jobs:
           scripts/gen-adminapi.sh
           git diff --exit-code -- internal/adminapi
 
+      - name: shipped file hashes are current
+        run: |
+          set -euo pipefail
+          go run ./internal/instance/shipped
+          git diff --exit-code -- internal/instance/shipped.json
+
       - name: command reference is current
         run: |
           set -euo pipefail

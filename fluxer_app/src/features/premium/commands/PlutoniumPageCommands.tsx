@@ -6,9 +6,11 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {GiftPlutoniumModal} from '@app/features/premium/components/modals/GiftPlutoniumModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 
 export function openPlutoniumPage(): void {
 	ModalCommands.popAll();
+	PopoutCommands.closeAll();
 	RouterUtils.transitionTo(Routes.PLUTONIUM);
 }
 

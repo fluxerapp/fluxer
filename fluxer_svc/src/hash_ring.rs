@@ -25,6 +25,17 @@ impl HashRing {
         }
         best_shard
     }
+
+    pub fn ranked(&self, route_key: &str) -> Vec<u32> {
+        let mut shards: Vec<u32> = (0..self.shard_count).collect();
+        shards.sort_by_cached_key(|&shard_id| {
+            (
+                std::cmp::Reverse(rendezvous_score(route_key, shard_id)),
+                shard_id,
+            )
+        });
+        shards
+    }
 }
 
 fn rendezvous_score(key: &str, shard_id: u32) -> u64 {

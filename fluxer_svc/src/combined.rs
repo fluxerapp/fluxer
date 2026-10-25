@@ -9,7 +9,7 @@ use crate::shard::{Endpoint, ShardService, serve, shard_metrics};
 use crate::transport::{Transport, TransportMessage, reply_bytes, reply_json_error};
 use bytes::Bytes;
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tracing::warn;
 
 #[derive(Debug)]
@@ -68,6 +68,8 @@ where
             subject: format!("svc.{name}"),
             queue_group: Some(format!("{name}-router")),
             name,
+            announce: None,
+            linger: Duration::ZERO,
         },
         metrics,
         transport,
@@ -79,6 +81,7 @@ where
                 handler_metrics.clone(),
             )
         },
+        crate::shutdown::wait_for_shutdown(),
     )
     .await
 }
@@ -201,7 +204,7 @@ async fn reply(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DatabaseBackend, Mode};
+    use crate::config::Mode;
     use crate::transport::InMemoryTransport;
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
@@ -258,7 +261,13 @@ mod tests {
         let transport = InMemoryTransport::new();
         let server_transport = transport.clone();
         let server = tokio::spawn(async move {
-            run_combined(&test_config(), EchoRouter, EchoShard, server_transport).await
+            run_combined(
+                &ServiceConfig::for_test(Mode::Combined, 0, 1),
+                EchoRouter,
+                EchoShard,
+                server_transport,
+            )
+            .await
         });
         tokio::time::sleep(Duration::from_millis(25)).await;
 
@@ -275,36 +284,5 @@ mod tests {
         assert_eq!(error, br#"{"error":"shard_handler_error"}"#);
 
         server.abort();
-    }
-
-    fn test_config() -> ServiceConfig {
-        ServiceConfig {
-            service_name: "echo".to_owned(),
-            mode: Mode::Combined,
-            database_backend: DatabaseBackend::Postgres,
-            shard_id: 0,
-            shard_count: 1,
-            listen_addr: "127.0.0.1:0".parse().unwrap(),
-            nats_url: "memory".to_owned(),
-            nats_auth_token: None,
-            cache_max_entries: 100,
-            cache_ttl: Duration::from_secs(30),
-            max_concurrent_requests: 4,
-            scylla_hosts: Vec::new(),
-            scylla_keyspace: "fluxer".to_owned(),
-            scylla_username: None,
-            scylla_password: None,
-            postgres_url: None,
-            postgres_host: "127.0.0.1".to_owned(),
-            postgres_port: 5432,
-            postgres_database: "fluxer".to_owned(),
-            postgres_username: "fluxer".to_owned(),
-            postgres_password: Some("fluxer".to_owned()),
-            postgres_ssl: false,
-            postgres_ssl_ca: None,
-            postgres_max_connections: 1,
-            postgres_kv_table: "fluxer_kv".to_owned(),
-            postgres_prepared_statements: true,
-        }
     }
 }

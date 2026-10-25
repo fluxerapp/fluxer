@@ -6,11 +6,12 @@ const RELEASES_API = 'https://api.github.com/repos/fluxerapp/fluxer/releases';
 const TAG_PREFIX = 'fluxer-release@';
 const METADATA_ASSET = 'rexctl-release.json';
 const CHECKSUMS_ASSET = 'checksums.txt';
+const COMPOSE_ASSET_PREFIX = 'fluxer-compose-';
 const CACHE_MS = 5 * 60 * 1000;
 const RETRY_MS = 30 * 1000;
 const FETCH_TIMEOUT_MS = 15 * 1000;
 const PAGES = 3;
-const CALVER = /^\d{4}\.\d{4}\.\d{6}$/;
+const CALVER = /^\d{4}\.\d{3,4}\.\d{1,6}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const ENGINE_VERSION = /^\d+\.\d+\.\d+$/;
 const DEFAULT_MIN_PODMAN = '5.4.0';
@@ -41,6 +42,7 @@ export interface RexctlRelease {
 	readonly min_docker: string;
 	readonly state_schema: number;
 	readonly assets: ReadonlyArray<RexctlAsset>;
+	readonly compose_url: string;
 }
 
 interface GitHubAsset {
@@ -203,6 +205,7 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 		min_docker: minDocker,
 		state_schema: stateSchema,
 		assets,
+		compose_url: byName.get(`${COMPOSE_ASSET_PREFIX}${version}.tar.gz`)?.browser_download_url ?? '',
 	};
 }
 

@@ -48,13 +48,15 @@
 		"subject": "إدارة تبرعاتك لـ{product_name}"
 	},
 	"dsa_report_resolved": {
+		"about": "{target, select, message_community {هذا بخصوص بلاغك عن رسالة في #{channelName} في «{communityName}»، المرسل في {reportedAt, date, long}.} message_dm {هذا بخصوص بلاغك عن رسالة في محادثة خاصة، المرسل في {reportedAt, date, long}.} message {هذا بخصوص بلاغك عن رسالة، المرسل في {reportedAt, date, long}.} user {هذا بخصوص بلاغك عن الحساب «{username}»، المرسل في {reportedAt, date, long}.} community {هذا بخصوص بلاغك عن المجتمع «{communityName}»، المرسل في {reportedAt, date, long}.} other {هذا بخصوص البلاغ الذي أرسلته في {reportedAt, date, long}.}}",
 		"comment_label": "ملاحظة من فريقنا",
 		"footer_reason": "تلقيت هذه الرسالة لأنك قدمت بلاغًا بموجب قانون الخدمات الرقمية على {product_name}.",
-		"intro": "{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {خالف الحساب الذي أبلغت عنه قواعدنا، فقيّدناه. نحن لا نشارك ما فعلناه بحساب شخص آخر.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك ما فعلناه بحساب شخص آخر.} no_violation {ما أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}",
+		"intro": "{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {خالف الحساب الذي أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك نوع الإجراء الذي اتخذناه.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك نوع الإجراء الذي اتخذناه.} no_violation {ما أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}",
 		"note": "{reply, select, yes {إذا كنت لا توافق، فردّ على هذه الرسالة خلال 60 يومًا.} other {{appeals_email, select, null {} other {إذا كنت لا توافق، فراسل <mail>{appeals_email}</mail> خلال 60 يومًا واذكر معرّف البلاغ.}}}}{appeals_email, select, null {} other { وفي الاتحاد الأوروبي، يمكنك أيضًا اللجوء إلى <dsa>هيئة معتمدة لتسوية النزاعات خارج المحاكم</dsa> أو تقديم شكوى إلى منسق الخدمات الرقمية في بلدك.}}",
 		"report_label": "معرف البلاغ",
 		"signoff": "فريق {product_name}",
-		"subject": "اتخذنا قرارًا بشأن بلاغك في {product_name}"
+		"subject": "اتخذنا قرارًا بشأن بلاغك في {product_name}",
+		"thanks": "{outcome, select, removed {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} restricted {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} action_taken {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} other {شكرًا على إخبارنا.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "تنتهي صلاحية هذا الرمز بعد {minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}.",
@@ -422,13 +424,15 @@
 		"subject": "لقد استلمنا بلاغك في {product_name}"
 	},
 	"report_resolved": {
+		"about": "{target, select, message_community {هذا بخصوص بلاغك عن رسالة في #{channelName} في «{communityName}»، المرسل في {reportedAt, date, long}.} message_dm {هذا بخصوص بلاغك عن رسالة في محادثة خاصة، المرسل في {reportedAt, date, long}.} message {هذا بخصوص بلاغك عن رسالة، المرسل في {reportedAt, date, long}.} user {هذا بخصوص بلاغك عن الحساب «{username}»، المرسل في {reportedAt, date, long}.} community {هذا بخصوص بلاغك عن المجتمع «{communityName}»، المرسل في {reportedAt, date, long}.} other {هذا بخصوص البلاغ الذي أرسلته في {reportedAt, date, long}.}}",
 		"comment_label": "ملاحظة من فريقنا",
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك أرسلت بلاغًا على {product_name}.",
-		"intro": "{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {خالف الحساب الذي أبلغت عنه قواعدنا، فقيّدناه. نحن لا نشارك ما فعلناه بحساب شخص آخر.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك ما فعلناه بحساب شخص آخر.} no_violation {ما أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}",
+		"intro": "{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {خالف الحساب الذي أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك نوع الإجراء الذي اتخذناه.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. نحن لا نشارك نوع الإجراء الذي اتخذناه.} no_violation {ما أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}",
 		"note": "{reply, select, yes {إذا كنت لا توافق، فردّ على هذه الرسالة خلال 60 يومًا.} other {{appeals_email, select, null {} other {إذا كنت لا توافق، فراسل <mail>{appeals_email}</mail> خلال 60 يومًا واذكر معرّف البلاغ.}}}}{appeals_email, select, null {} other { وفي الاتحاد الأوروبي، يمكنك أيضًا اللجوء إلى <dsa>هيئة معتمدة لتسوية النزاعات خارج المحاكم</dsa> أو تقديم شكوى إلى منسق الخدمات الرقمية في بلدك.}}",
 		"report_label": "معرف البلاغ",
 		"signoff": "فريق {product_name}",
-		"subject": "تمت مراجعة بلاغك في {product_name}"
+		"subject": "تمت مراجعة بلاغك في {product_name}",
+		"thanks": "{outcome, select, removed {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} restricted {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} action_taken {شكرًا على إبلاغك. البلاغات مثل بلاغك تساعد في الحفاظ على أمان {product_name} للجميع.} other {شكرًا على إخبارنا.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك طلبت حذف حسابك في {product_name}.",
