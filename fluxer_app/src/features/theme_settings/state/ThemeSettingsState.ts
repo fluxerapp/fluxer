@@ -1,11 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {makeAutoObservable} from 'mobx';
 
 const EXPANDED_GROUPS_STORAGE_KEY = 'ThemeStudio:expandedGroups';
 
 export const QUICK_CSS_EDITOR_FILE = 'quick-css';
+
+export type QuickCssEditorPlacement = 'panel' | 'window';
+export type QuickCssEditorTab = 'css' | 'colors' | 'themes' | 'assets';
+
+function readStoredPlacement(): QuickCssEditorPlacement {
+	try {
+		return AppStorage.getItem(AppStorageKey.QUICK_CSS_EDITOR_PLACEMENT) === 'window' ? 'window' : 'panel';
+	} catch {
+		return 'panel';
+	}
+}
 
 function readStoredExpandedGroups(): Array<string> {
 	try {
@@ -23,16 +35,27 @@ class ThemeSettingsState {
 	librarySearch = '';
 	tokenSearch = '';
 	expandedGroups: ReadonlySet<string> = new Set(readStoredExpandedGroups());
-	editorOpen = false;
+	editorPlacement: QuickCssEditorPlacement | null = null;
+	preferredPlacement: QuickCssEditorPlacement = readStoredPlacement();
+	editorTab: QuickCssEditorTab = 'css';
 	editorGeneration = 0;
 	editorFile: string = QUICK_CSS_EDITOR_FILE;
 	editorDirty = false;
 	missingReferences: ReadonlyArray<string> = [];
 	editorWindow: Window | null = null;
 	editorFileRequestHandler: ((file: string) => void) | null = null;
+	quickCssWriteFlusher: (() => void) | null = null;
 
 	constructor() {
-		makeAutoObservable(this, {editorWindow: false, editorFileRequestHandler: false}, {autoBind: true});
+		makeAutoObservable(
+			this,
+			{editorWindow: false, editorFileRequestHandler: false, quickCssWriteFlusher: false},
+			{autoBind: true},
+		);
+	}
+
+	get editorOpen(): boolean {
+		return this.editorPlacement !== null;
 	}
 
 	setLibrarySearch(value: string): void {
@@ -60,15 +83,32 @@ class ThemeSettingsState {
 		} catch {}
 	}
 
-	openEditor(file: string): void {
+	openEditor(file: string, windowAllowed: boolean): void {
 		if (this.editorOpen) {
 			this.requestEditorFile(file);
 			return;
 		}
 		this.editorFile = file;
 		this.editorDirty = false;
+		this.editorTab = 'css';
 		this.editorGeneration += 1;
-		this.editorOpen = true;
+		this.editorPlacement = windowAllowed ? this.preferredPlacement : 'panel';
+	}
+
+	moveEditor(placement: QuickCssEditorPlacement, generation: number): void {
+		if (generation !== this.editorGeneration || this.editorPlacement === null) return;
+		if (this.editorPlacement === placement) return;
+		this.editorGeneration += 1;
+		this.editorPlacement = placement;
+		this.editorWindow = null;
+		this.preferredPlacement = placement;
+		try {
+			AppStorage.setItem(AppStorageKey.QUICK_CSS_EDITOR_PLACEMENT, placement);
+		} catch {}
+	}
+
+	setEditorTab(tab: QuickCssEditorTab): void {
+		this.editorTab = tab;
 	}
 
 	requestEditorFile(file: string): void {
@@ -97,9 +137,14 @@ class ThemeSettingsState {
 		this.editorWindow = editorWindow;
 	}
 
+	setQuickCssWriteFlusher(flusher: (() => void) | null): void {
+		this.quickCssWriteFlusher = flusher;
+	}
+
 	closeEditor(generation: number): void {
-		if (generation !== this.editorGeneration) return;
-		this.editorOpen = false;
+		if (generation !== this.editorGeneration || this.editorPlacement === null) return;
+		this.editorGeneration += 1;
+		this.editorPlacement = null;
 		this.editorWindow = null;
 		this.editorFile = QUICK_CSS_EDITOR_FILE;
 		this.editorDirty = false;

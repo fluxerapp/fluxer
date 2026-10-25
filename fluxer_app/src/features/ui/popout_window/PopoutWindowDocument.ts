@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import styles from '@app/features/ui/popout_window/PopoutWindow.module.css';
 import {
 	UNFOCUSED_FULLY_INTERACTIVE_CLASS,
 	WINDOW_FOCUS_ACTIVATION_GUARD_CLASS,
@@ -12,6 +13,7 @@ const logger = new Logger('PopoutWindowDocument');
 const POPOUT_STYLESHEET_COPY_MAX = 256;
 const POPOUT_THEME_ATTRIBUTE_COPY_MAX = 64;
 const POPOUT_THEME_CLASS_COPY_MAX = 128;
+const MIRROR_NODE_ATTRIBUTE = 'data-popout-mirror';
 
 const POPOUT_OWNED_ROOT_CLASSES = new Set([
 	WINDOW_FOCUSED_CLASS,
@@ -45,8 +47,10 @@ interface DocumentStylesheetMirror {
 	mirroredStyles: WeakMap<Node, HTMLStyleElement>;
 }
 
-export interface StylesheetMirrorOptions {
-	exclude?: (node: Element) => boolean;
+export type StylesheetExclude = (node: Element) => boolean;
+
+interface StylesheetMirrorOptions {
+	exclude?: StylesheetExclude;
 }
 
 const documentMirrors = new WeakMap<Document, DocumentStylesheetMirror>();
@@ -74,6 +78,7 @@ function inlineStylesheetFallback(sourceLink: HTMLLinkElement, targetDocument: D
 		return null;
 	}
 	const styleElement = targetDocument.createElement('style');
+	styleElement.setAttribute(MIRROR_NODE_ATTRIBUTE, '');
 	styleElement.textContent = cssText;
 	targetDocument.head.appendChild(styleElement);
 	return styleElement;
@@ -82,6 +87,7 @@ function inlineStylesheetFallback(sourceLink: HTMLLinkElement, targetDocument: D
 function copyLinkStylesheet(sourceLink: HTMLLinkElement, targetDocument: Document): void {
 	const stylesheetMirror = getDocumentMirror(targetDocument);
 	const linkElement = targetDocument.createElement('link');
+	linkElement.setAttribute(MIRROR_NODE_ATTRIBUTE, '');
 	linkElement.rel = 'stylesheet';
 	linkElement.href = sourceLink.href;
 	if (sourceLink.media) {
@@ -101,6 +107,7 @@ function copyLinkStylesheet(sourceLink: HTMLLinkElement, targetDocument: Documen
 
 function copyStyleElement(sourceStyle: HTMLStyleElement, targetDocument: Document): void {
 	const styleElement = targetDocument.createElement('style');
+	styleElement.setAttribute(MIRROR_NODE_ATTRIBUTE, '');
 	styleElement.textContent = sourceStyle.textContent;
 	getDocumentMirror(targetDocument).mirroredStyles.set(sourceStyle, styleElement);
 	targetDocument.head.appendChild(styleElement);
@@ -119,7 +126,7 @@ function removeMirroredStylesheet(stylesheetMirror: DocumentStylesheetMirror, no
 	}
 }
 
-export function copyStylesheetsIntoDocument(
+function copyStylesheetsIntoDocument(
 	sourceDocument: Document,
 	targetDocument: Document,
 	{exclude}: StylesheetMirrorOptions = {},
@@ -141,7 +148,7 @@ export function copyStylesheetsIntoDocument(
 	}
 }
 
-export function observeDocumentStylesheets(
+function observeDocumentStylesheets(
 	sourceDocument: Document,
 	targetDocument: Document,
 	{exclude}: StylesheetMirrorOptions = {},
@@ -187,7 +194,7 @@ export function observeDocumentStylesheets(
 	return () => observer.disconnect();
 }
 
-export function syncDocumentThemeAttributes(sourceDocument: Document, targetDocument: Document): void {
+function syncDocumentThemeAttributes(sourceDocument: Document, targetDocument: Document): void {
 	const sourceRoot = sourceDocument.documentElement;
 	const targetRoot = targetDocument.documentElement;
 	if (!sourceRoot || !targetRoot) return;
@@ -214,7 +221,7 @@ export function syncDocumentThemeAttributes(sourceDocument: Document, targetDocu
 	}
 }
 
-export function observeDocumentThemeAttributes(sourceDocument: Document, targetDocument: Document): () => void {
+function observeDocumentThemeAttributes(sourceDocument: Document, targetDocument: Document): () => void {
 	if (typeof MutationObserver === 'undefined') {
 		return () => undefined;
 	}
@@ -223,4 +230,43 @@ export function observeDocumentThemeAttributes(sourceDocument: Document, targetD
 	});
 	observer.observe(sourceDocument.documentElement, {attributes: true});
 	return () => observer.disconnect();
+}
+
+interface MirroredDocumentOptions {
+	title: string;
+	exclude?: StylesheetExclude;
+}
+
+export interface MirroredDocument {
+	container: HTMLElement;
+	dispose: () => void;
+}
+
+export function mountMirroredDocument(
+	targetWindow: Window,
+	{title, exclude}: MirroredDocumentOptions,
+): MirroredDocument {
+	const targetDocument = targetWindow.document;
+	targetDocument.body.replaceChildren();
+	for (const node of Array.from(targetDocument.head.querySelectorAll(`[${MIRROR_NODE_ATTRIBUTE}]`))) {
+		node.remove();
+	}
+	documentMirrors.delete(targetDocument);
+	targetDocument.title = title;
+	syncDocumentThemeAttributes(document, targetDocument);
+	targetDocument.documentElement.classList.add(UNFOCUSED_FULLY_INTERACTIVE_CLASS);
+	copyStylesheetsIntoDocument(document, targetDocument, {exclude});
+	targetDocument.body.style.margin = '0';
+	const container = targetDocument.createElement('div');
+	container.className = styles.root;
+	targetDocument.body.appendChild(container);
+	const disconnectThemeObserver = observeDocumentThemeAttributes(document, targetDocument);
+	const disconnectStylesheetObserver = observeDocumentStylesheets(document, targetDocument, {exclude});
+	return {
+		container,
+		dispose: () => {
+			disconnectThemeObserver();
+			disconnectStylesheetObserver();
+		},
+	};
 }

@@ -1061,7 +1061,7 @@ msgstr "{channelName} - {communityName} - {accountName} sunucusunda"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} - {accountName} üzerinde"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# karakter} other {# karakter}}"
 
@@ -1714,7 +1714,7 @@ msgstr "{length, plural, one {# kullanıcı} other {# kullanıcı}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# kişi izliyor} other {# kişi izliyor}}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# satır} other {# satır}}"
 
@@ -3775,7 +3775,7 @@ msgid "Add shortcut"
 msgstr "Kısayol ekle"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Add some CSS before sharing."
 msgstr "Paylaşmadan önce biraz CSS ekleyin."
 
@@ -5266,6 +5266,8 @@ msgid "Ask for a second step after your password when you sign in."
 msgstr "Oturum açarken parolanızdan sonra ikinci bir adım isteyin."
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
+#. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Assets"
 msgstr "Öğeler"
@@ -7013,7 +7015,7 @@ msgid "Can't connect"
 msgstr "Bağlanamıyor"
 
 #. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Can't find \"{reference}\" in your assets."
 msgstr "\"{reference}\" öğelerinize eklenmemiş."
 
@@ -7729,7 +7731,7 @@ msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "Ses bölgesini {oldRegion} yerine {newRegion} olarak değiştirdi"
 
 #. Shown at the bottom of the quick CSS editor window while it edits quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "Yaptığınız değişiklikler yazdıkça uygulamada görünür."
 
@@ -8520,7 +8522,7 @@ msgstr "Net konuşma için mikrofonunuzu temizler."
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear"
 msgstr "Temizle"
 
@@ -8600,7 +8602,7 @@ msgid "Clear permissions"
 msgstr "İzinleri temizle"
 
 #. Confirmation title in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear quick CSS?"
 msgstr "Hızlı CSS temizlensin mi?"
 
@@ -9047,6 +9049,8 @@ msgid "Colors"
 msgstr "Renkler"
 
 #. Section title in Settings > Themes for changing single colors and fonts of the base theme.
+#. Tab in the quick CSS editor that shows the base theme and the color and font controls.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Colors and fonts"
 msgstr "Renkler ve yazı tipleri"
@@ -10208,7 +10212,7 @@ msgstr "URL panoya kopyalandı"
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11658,6 +11662,8 @@ msgid "Cropping {percent}%"
 msgstr "{percent}% kırpılıyor"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Tab in the quick CSS editor that shows the code editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "CSS"
 msgstr "CSS"
@@ -13685,6 +13691,16 @@ msgstr "Doktor, ben gelecekten geliyorum. Senin icat ettiğin bir zaman makinesi
 msgid "Dock badge"
 msgstr "Dock rozeti"
 
+#. Button in the quick CSS editor header that attaches the editor to the left edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the left"
+msgstr "Sola sabitle"
+
+#. Button in the quick CSS editor header that attaches the editor to the right edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the right"
+msgstr "Sağa sabitle"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Docked DevTools and windows partially off-screen can render a gray background instead of staying transparent."
 msgstr "Yerleşik geliştirici araçları ve ekranın kısmen dışında kalan pencereler şeffaf kalmak yerine gri bir arka plan gösterebilir."
@@ -13819,7 +13835,7 @@ msgstr "Düzenlemek için kendi mesajınıza, yanıtlamak için başkasının me
 #: src/features/auth/components/modals/BackupCodesModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Download"
 msgstr "İndir"
@@ -16244,7 +16260,7 @@ msgstr "Bir URL getirin ve sohbet görüntüleyicisinin aldığı gömülü içe
 #. Label of the picker in the quick CSS editor window that chooses between quick CSS and a saved theme.
 #. Top-level native menu bar title (File menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "File"
 msgstr "Dosya"
 
@@ -16481,6 +16497,11 @@ msgstr "İlk seçenek"
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
 msgstr "Bayraklar"
+
+#. Button in the quick CSS editor header that detaches a docked editor so it floats over the app again.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Float"
+msgstr "Serbest bırak"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -19006,7 +19027,7 @@ msgstr "İçe aktarma tamamlandı. {importedCount, plural, one {# GIF eklendi} o
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Import CSS"
 msgstr "CSS içe aktar"
@@ -20820,7 +20841,7 @@ msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "Kanalı {count, plural, one {# kullanıcı} other {# kullanıcı}} ile sınırladı"
 
 #. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Line {line} has a CSS error."
 msgstr "Satır {line} CSS hatası içeriyor."
 
@@ -22835,6 +22856,11 @@ msgstr "Taşı"
 msgid "Move all devices to…"
 msgstr "Tüm cihazları şuraya taşı…"
 
+#. Button in the quick CSS editor window that moves the editor back into a panel inside the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move back into Fluxer"
+msgstr "Fluxer'a geri taşı"
+
 #. Label in the keybinds tab.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts
 msgid "Move back through page history"
@@ -22891,6 +22917,11 @@ msgstr "Üyeleri taşı"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "Sağa taşı"
+
+#. Accessible label of the drag handle in the header of the floating quick CSS editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move the editor. Use the arrow keys to move it."
+msgstr "Düzenleyiciyi taşı. Taşımak için ok tuşlarını kullanın."
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -25451,6 +25482,11 @@ msgstr "Görsel bağlantısını aç"
 msgid "Open in {productName} for desktop"
 msgstr "{productName} masaüstü uygulamasında aç"
 
+#. Button in the quick CSS editor header that moves the editor into its own window.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Open in a new window"
+msgstr "Yeni pencerede aç"
+
 #. Media viewer action that opens the current media in the system default browser.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Open in browser"
@@ -27936,22 +27972,26 @@ msgid "Quick CSS"
 msgstr "Hızlı CSS"
 
 #. Toast after copying quick CSS in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS copied to clipboard."
 msgstr "Hızlı CSS panoya kopyalandı."
 
 #. Accessible label for the code editor in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Accessible name of the floating quick CSS editor panel and its frame.
+#. Accessible name of the quick CSS editor area, in its floating panel or its own window.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Quick CSS editor"
 msgstr "Hızlı CSS düzenleyicisi"
 
 #. Toast after pressing "Undo all changes" in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS is back to how it was when you opened the editor."
 msgstr "Hızlı CSS, düzenleyiciyi açtığınız zamanki haline geri döndü."
 
 #. Toast after importing a CSS file into the quick CSS editor.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS replaced from {fileName}."
 msgstr "Hızlı CSS, {fileName} dosyasından değiştirildi."
 
@@ -29706,6 +29746,11 @@ msgstr "Sabitlenmiş mesajları sağ üstten yeniden boyutlandır"
 msgid "Resize sidebar"
 msgstr "Kenar çubuğunu yeniden boyutlandır"
 
+#. Accessible label of the handle that resizes the floating quick CSS editor panel.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+msgid "Resize the editor"
+msgstr "Düzenleyiciyi yeniden boyutlandır"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck."
 msgstr "Yeniden boyutlandırma, büyütme ve pencere yapıştırma kompozitöre bağlıdır. İstemci tarafı pencere süslemeleri olmayan Wayland tutamaç sağlamayabilir. Pencere takılı kalıyorsa --ozone-platform=x11 ile başlatın."
@@ -30274,7 +30319,7 @@ msgstr "Simgeyi kaydet"
 msgid "Save some media from messages to get started!"
 msgstr "Başlamak için mesajlardan biraz medya kaydedin!"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
 msgstr "Temayı kaydet"
 
@@ -31981,7 +32026,7 @@ msgstr "Bu kurulumun yapılandırmasında kurulum tamamlanmış olarak işaretle
 msgid "Several people are typing..."
 msgstr "Birkaç kişi yazıyor..."
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Share"
@@ -35816,7 +35861,7 @@ msgid "Theme color"
 msgstr "Tema rengi"
 
 #. Accessible label for the code editor while it shows the CSS of a saved theme.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Theme CSS"
 msgstr "Tema CSS'i"
 
@@ -35860,8 +35905,10 @@ msgid "Theme unavailable"
 msgstr "Tema kullanılamıyor"
 
 #. Short label in the Explore page sidebar. Keep it concise.
+#. Tab in the quick CSS editor that lists saved themes.
 #. User settings tab for the base theme, theme files, colors, fonts and quick CSS.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "Temalar"
@@ -36566,12 +36613,12 @@ msgid "This is the first option description"
 msgstr "Bu, ilk seçenek açıklamasıdır"
 
 #. Shown in the quick CSS editor window while it edits an account's own quick CSS. {username} is the account's username and {instanceName} is its instance.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of {username} on {instanceName}."
 msgstr "Bu, {username} kullanıcısının {instanceName} örneğindeki hızlı CSS'idir."
 
 #. Shown in the quick CSS editor window while it edits the quick CSS shared by every account in the desktop app.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of the desktop app theme."
 msgstr "Bu, masaüstü uygulama temasının hızlı CSS'sidir."
 
@@ -36796,7 +36843,7 @@ msgid "This removes \"{themeName}\" from this device."
 msgstr "Bu işlem \"{themeName}\" temasını bu cihazdan kaldırır."
 
 #. Confirmation text in the quick CSS editor window before clearing quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This removes all of your quick CSS, including color and font changes. Saved themes are not affected."
 msgstr "Bu, renk ve yazı tipi değişiklikleri de dahil olmak üzere tüm hızlı CSS'nizi kaldırır. Kaydedilen temalar etkilenmez."
 
@@ -38234,7 +38281,7 @@ msgid "Undo"
 msgstr "Geri al"
 
 #. Button in the quick CSS editor window that puts quick CSS back to how it was when the editor window opened on it.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Undo all changes"
 msgstr "Tüm değişiklikleri geri al"
 
@@ -38447,7 +38494,7 @@ msgstr "unknown-role"
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Menu item in Settings > Themes that stops a theme following its CSS file on disk and turns it back into an editable copy.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/ThemeDetailsModal.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Unlink"
@@ -38770,7 +38817,7 @@ msgstr "Okunmamış mesajlar: {count}"
 msgid "Unreads"
 msgstr "Okunmamışlar"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "Kaydedilmemiş değişiklikler"
 
@@ -38903,11 +38950,6 @@ msgstr "Geçiş anahtarını güncelle"
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
 msgid "Update service worker"
 msgstr "Service worker'ı güncelle"
-
-#. Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.
-#: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Update the desktop app to edit quick CSS."
-msgstr "Hızlı CSS'yi düzenlemek için masaüstü uygulamasını güncelleyin."
 
 #. Short label in the timeout member sheet. Keep it concise.
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
@@ -40745,7 +40787,7 @@ msgid "We couldn't copy that reference."
 msgstr "Bu referansı kopyalayamadık."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't copy that."
 msgstr "Bunu kopyalayamadık."
 
@@ -40809,7 +40851,7 @@ msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall 
 msgstr "Ek yükleme hizmetine ulaşılamadı. {PRODUCT_NAME}, toplamda {fallbackSizeFormatted} boyutuna kadar olan mesajlar için standart yükleme yoluna geri dönebilir ancak bu ekler birleşik sınırı aşıyor ve bağlantı yeniden sağlanana kadar gönderilemez. Daha sonra tekrar deneyin veya bu durum devam ederse bu kurulumun yöneticileriyle iletişime geçin."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't read that CSS file."
 msgstr "Bu CSS dosyasını okuyamadık."
 
@@ -41564,8 +41606,8 @@ msgstr "İçeriğinizi buraya yazın. Bu metin alanı siz yazdıkça genişler."
 
 #. Description of the "Quick CSS" section in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app."
-msgstr "Uygulamadaki her şeyi değiştirmek için kendi CSS'nizi yazın. Düzenleyici, CSS'nizin değiştirmediği kendi penceresinde açılır, böylece uygulamayı bozan CSS'yi her zaman düzeltebilirsiniz."
+msgid "Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app."
+msgstr "Uygulamadaki her şeyi değiştirmek için kendi CSS'inizi yazın. Düzenleyici siz uygulamayı kullanırken açık kalır ve CSS'iniz düzenleyicinin kendisine asla uygulanmaz, böylece uygulamayı bozan CSS'i her zaman düzeltebilirsiniz."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -42710,7 +42752,7 @@ msgid "Your badge is live. Your name shows on the Operators' wall once we check 
 msgstr "Rozetiniz yayında. Adınız, kontrol ettikten sonra Operators duvarında görünür."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
-#: src/features/theme_settings/components/QuickCssEditorWindowHost.tsx
+#: src/features/theme_settings/components/QuickCssEditorHost.tsx
 msgid "Your browser blocked the editor window. Allow pop-ups for this site and try again."
 msgstr "Tarayıcınız düzenleyici penceresini engelledi. Bu site için pop-up'lara izin verin ve tekrar deneyin."
 

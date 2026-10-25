@@ -1061,7 +1061,7 @@ msgstr "{channelName} în {communityName} pe {accountName}"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} pe {accountName}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# caracter} few {# caractere} other {# de caractere}}"
 
@@ -1714,7 +1714,7 @@ msgstr "{length, plural, one {# utilizator} few {# utilizatori} other {# de util
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# spectator} few {# spectatori} other {# de spectatori}}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# linie} few {# linii} other {# de linii}}"
 
@@ -3775,7 +3775,7 @@ msgid "Add shortcut"
 msgstr "Adaugă scurtătură"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Add some CSS before sharing."
 msgstr "Adaugă niște CSS înainte de a distribui."
 
@@ -5266,6 +5266,8 @@ msgid "Ask for a second step after your password when you sign in."
 msgstr "Solicită un al doilea pas după parola ta la conectare."
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
+#. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Assets"
 msgstr "Resurse"
@@ -7013,7 +7015,7 @@ msgid "Can't connect"
 msgstr "Nu se poate conecta"
 
 #. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Can't find \"{reference}\" in your assets."
 msgstr "Nu am găsit \"{reference}\" în resursele tale."
 
@@ -7729,7 +7731,7 @@ msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "A modificat regiunea vocală de la {oldRegion} la {newRegion}"
 
 #. Shown at the bottom of the quick CSS editor window while it edits quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "Modificările se afișează în aplicație pe măsură ce tastezi."
 
@@ -8520,7 +8522,7 @@ msgstr "Curăță microfonul pentru o vorbire clară."
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear"
 msgstr "Șterge"
 
@@ -8600,7 +8602,7 @@ msgid "Clear permissions"
 msgstr "Șterge permisiunile"
 
 #. Confirmation title in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear quick CSS?"
 msgstr "Ștergi CSS-ul rapid?"
 
@@ -9047,6 +9049,8 @@ msgid "Colors"
 msgstr "Culori"
 
 #. Section title in Settings > Themes for changing single colors and fonts of the base theme.
+#. Tab in the quick CSS editor that shows the base theme and the color and font controls.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Colors and fonts"
 msgstr "Culori și fonturi"
@@ -10208,7 +10212,7 @@ msgstr "URL copiat în clipboard"
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11658,6 +11662,8 @@ msgid "Cropping {percent}%"
 msgstr "Se decupează {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Tab in the quick CSS editor that shows the code editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "CSS"
 msgstr "CSS"
@@ -13685,6 +13691,16 @@ msgstr "Doc, sunt din viitor. Am venit aici într-o mașină a timpului pe care 
 msgid "Dock badge"
 msgstr "Insignă Dock"
 
+#. Button in the quick CSS editor header that attaches the editor to the left edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the left"
+msgstr "Andochează la stânga"
+
+#. Button in the quick CSS editor header that attaches the editor to the right edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the right"
+msgstr "Andochează la dreapta"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Docked DevTools and windows partially off-screen can render a gray background instead of staying transparent."
 msgstr "Instrumentele pentru dezvoltatori andocate și ferestrele parțial în afara ecranului pot afișa un fundal gri în loc să rămână transparente."
@@ -13819,7 +13835,7 @@ msgstr "Dă dublu clic pe propriul mesaj pentru a-l edita sau pe mesajul altcuiv
 #: src/features/auth/components/modals/BackupCodesModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Download"
 msgstr "Descarcă"
@@ -16244,7 +16260,7 @@ msgstr "Preia o adresă URL și inspectează datele încorporării pe care le pr
 #. Label of the picker in the quick CSS editor window that chooses between quick CSS and a saved theme.
 #. Top-level native menu bar title (File menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "File"
 msgstr "Fișier"
 
@@ -16481,6 +16497,11 @@ msgstr "Prima opțiune"
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
 msgstr "Steaguri"
+
+#. Button in the quick CSS editor header that detaches a docked editor so it floats over the app again.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Float"
+msgstr "Detașează"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -19006,7 +19027,7 @@ msgstr "Import finalizat. S-au adăugat {importedCount, plural, one {# GIF} few 
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Import CSS"
 msgstr "Importă CSS"
@@ -20820,7 +20841,7 @@ msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "A limitat canalul la {count, plural, one {# utilizator} few {# utilizatori} other {# de utilizatori}}"
 
 #. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Line {line} has a CSS error."
 msgstr "Linia {line} are o eroare CSS."
 
@@ -22835,6 +22856,11 @@ msgstr "Mută"
 msgid "Move all devices to…"
 msgstr "Mută toate dispozitivele în…"
 
+#. Button in the quick CSS editor window that moves the editor back into a panel inside the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move back into Fluxer"
+msgstr "Mută înapoi în Fluxer"
+
 #. Label in the keybinds tab.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts
 msgid "Move back through page history"
@@ -22891,6 +22917,11 @@ msgstr "Mută membri"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "Mutare la dreapta"
+
+#. Accessible label of the drag handle in the header of the floating quick CSS editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move the editor. Use the arrow keys to move it."
+msgstr "Mută editorul. Folosește tastele săgeți pentru a-l muta."
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -25451,6 +25482,11 @@ msgstr "Deschide linkul imaginii"
 msgid "Open in {productName} for desktop"
 msgstr "Deschide în {productName} pentru desktop"
 
+#. Button in the quick CSS editor header that moves the editor into its own window.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Open in a new window"
+msgstr "Deschide într-o fereastră nouă"
+
 #. Media viewer action that opens the current media in the system default browser.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Open in browser"
@@ -27936,22 +27972,26 @@ msgid "Quick CSS"
 msgstr "CSS rapid"
 
 #. Toast after copying quick CSS in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS copied to clipboard."
 msgstr "CSS rapid copiat în clipboard."
 
 #. Accessible label for the code editor in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Accessible name of the floating quick CSS editor panel and its frame.
+#. Accessible name of the quick CSS editor area, in its floating panel or its own window.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Quick CSS editor"
 msgstr "Editor CSS rapid"
 
 #. Toast after pressing "Undo all changes" in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS is back to how it was when you opened the editor."
 msgstr "CSS rapid a revenit la cum era când ai deschis editorul."
 
 #. Toast after importing a CSS file into the quick CSS editor.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS replaced from {fileName}."
 msgstr "CSS rapid înlocuit din {fileName}."
 
@@ -29706,6 +29746,11 @@ msgstr "Redimensionează mesajele fixate din dreapta sus"
 msgid "Resize sidebar"
 msgstr "Redimensionează bara laterală"
 
+#. Accessible label of the handle that resizes the floating quick CSS editor panel.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+msgid "Resize the editor"
+msgstr "Redimensionează editorul"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck."
 msgstr "Redimensionarea, maximizarea și fixarea ferestrei depind de compozitor. Wayland fără decorațiuni pe partea clientului s-ar putea să nu ofere mânere. Lansează cu --ozone-platform=x11 dacă fereastra pare blocată."
@@ -30274,7 +30319,7 @@ msgstr "Salvează pictograma"
 msgid "Save some media from messages to get started!"
 msgstr "Salvează niște fișiere media din mesaje pentru a începe!"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
 msgstr "Salvează tema"
 
@@ -31981,7 +32026,7 @@ msgstr "Configurarea a fost marcată ca încheiată în configurația acestei in
 msgid "Several people are typing..."
 msgstr "Mai multe persoane scriu..."
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Share"
@@ -35816,7 +35861,7 @@ msgid "Theme color"
 msgstr "Culoare temă"
 
 #. Accessible label for the code editor while it shows the CSS of a saved theme.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Theme CSS"
 msgstr "CSS temă"
 
@@ -35860,8 +35905,10 @@ msgid "Theme unavailable"
 msgstr "Temă indisponibilă"
 
 #. Short label in the Explore page sidebar. Keep it concise.
+#. Tab in the quick CSS editor that lists saved themes.
 #. User settings tab for the base theme, theme files, colors, fonts and quick CSS.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "Teme"
@@ -36566,12 +36613,12 @@ msgid "This is the first option description"
 msgstr "Aceasta este descrierea primei opțiuni"
 
 #. Shown in the quick CSS editor window while it edits an account's own quick CSS. {username} is the account's username and {instanceName} is its instance.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of {username} on {instanceName}."
 msgstr "Acesta este CSS-ul rapid al lui {username} pe {instanceName}."
 
 #. Shown in the quick CSS editor window while it edits the quick CSS shared by every account in the desktop app.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of the desktop app theme."
 msgstr "Acesta este CSS-ul rapid al temei aplicației desktop."
 
@@ -36796,7 +36843,7 @@ msgid "This removes \"{themeName}\" from this device."
 msgstr "Aceasta elimină „{themeName}” de pe acest dispozitiv."
 
 #. Confirmation text in the quick CSS editor window before clearing quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This removes all of your quick CSS, including color and font changes. Saved themes are not affected."
 msgstr "Aceasta va elimina tot CSS-ul rapid, inclusiv modificările de culoare și font. Temeile salvate nu vor fi afectate."
 
@@ -38234,7 +38281,7 @@ msgid "Undo"
 msgstr "Anulează"
 
 #. Button in the quick CSS editor window that puts quick CSS back to how it was when the editor window opened on it.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Undo all changes"
 msgstr "Anulează toate modificările"
 
@@ -38447,7 +38494,7 @@ msgstr "unknown-role"
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Menu item in Settings > Themes that stops a theme following its CSS file on disk and turns it back into an editable copy.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/ThemeDetailsModal.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Unlink"
@@ -38770,7 +38817,7 @@ msgstr "Mesaje necitite: {count}"
 msgid "Unreads"
 msgstr "Necitite"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "Modificări nesalvate"
 
@@ -38903,11 +38950,6 @@ msgstr "Actualizează cheia de acces"
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
 msgid "Update service worker"
 msgstr "Actualizează service worker-ul"
-
-#. Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.
-#: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Update the desktop app to edit quick CSS."
-msgstr "Actualizează aplicația desktop pentru a edita CSS rapid."
 
 #. Short label in the timeout member sheet. Keep it concise.
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
@@ -40745,7 +40787,7 @@ msgid "We couldn't copy that reference."
 msgstr "Nu am putut copia referința."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't copy that."
 msgstr "Nu am putut copia asta."
 
@@ -40809,7 +40851,7 @@ msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall 
 msgstr "Nu am putut contacta serviciul de încărcare a atașamentelor. {PRODUCT_NAME} poate reveni la calea standard de încărcare pentru mesaje de până la {fallbackSizeFormatted} în total, dar aceste atașamente depășesc limita combinată și nu pot fi trimise până la restabilirea conectivității. Încearcă din nou mai târziu sau contactează administratorii acestei instanțe dacă problema persistă."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't read that CSS file."
 msgstr "Nu am putut citi fișierul CSS."
 
@@ -41564,8 +41606,8 @@ msgstr "Scrie conținutul aici. Această zonă de text se extinde pe măsură ce
 
 #. Description of the "Quick CSS" section in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app."
-msgstr "Scrie propriul CSS pentru a schimba orice în aplicație. Editorul se deschide într-o fereastră proprie pe care CSS-ul tău nu o modifică, astfel încât poți repara oricând CSS-ul care strică aplicația."
+msgid "Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app."
+msgstr "Scrie-ți propriul CSS ca să schimbi orice în aplicație. Editorul rămâne deschis cât timp folosești aplicația, iar CSS-ul tău nu se aplică niciodată editorului, așa că poți repara oricând un CSS care strică aplicația."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -42710,7 +42752,7 @@ msgid "Your badge is live. Your name shows on the Operators' wall once we check 
 msgstr "Insigna ta este activă. Numele tău apare pe peretele Operators după ce îl verificăm."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
-#: src/features/theme_settings/components/QuickCssEditorWindowHost.tsx
+#: src/features/theme_settings/components/QuickCssEditorHost.tsx
 msgid "Your browser blocked the editor window. Allow pop-ups for this site and try again."
 msgstr "Browserul tău a blocat fereastra editorului. Permite pop-up-urile pentru acest site și încearcă din nou."
 

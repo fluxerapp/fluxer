@@ -181,3 +181,27 @@
 	font-size: 0.875rem;
 	color: var(--text-primary-muted);
 }
+
+@container quick-css-settings (max-width: 520px) {
+	.row {
+		flex-wrap: wrap;
+		gap: var(--spacing-2) var(--spacing-3);
+	}
+
+	.rowText {
+		flex-basis: 100%;
+	}
+
+	.rowControls {
+		flex-wrap: wrap;
+		margin-inline-start: auto;
+	}
+
+	.searchInput {
+		max-width: none;
+	}
+
+	.subsectionHeader {
+		flex-wrap: wrap;
+	}
+}

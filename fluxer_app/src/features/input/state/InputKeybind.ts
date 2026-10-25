@@ -131,7 +131,6 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {isApplePlatform} from '@app/features/platform/utils/PlatformHelpers';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
-import {quickCssEditorNeedsDesktopUpdate} from '@app/features/theme_settings/utils/QuickCssEditorSupport';
 import {OPEN_QUICK_CSS_EDITOR_DESCRIPTOR} from '@app/features/theme_settings/utils/ThemeSettingsMessageDescriptors';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -754,19 +753,15 @@ const getDefaultKeybinds = (
 			section: 'misc',
 			hideFromDefaults: true,
 		},
-		...(quickCssEditorNeedsDesktopUpdate()
-			? []
-			: [
-					{
-						action: 'system_open_theme_studio_popout',
-						label: i18n._(OPEN_QUICK_CSS_EDITOR_DESCRIPTOR),
-						combo: {key: 't', ctrlOrMeta: true, alt: true, shift: true},
-						ignoreWhileTyping: true,
-						editableFocusBehavior: 'allow',
-						section: 'misc',
-						assignable: true,
-					} as const,
-				]),
+		{
+			action: 'system_open_theme_studio_popout',
+			label: i18n._(OPEN_QUICK_CSS_EDITOR_DESCRIPTOR),
+			combo: {key: 't', ctrlOrMeta: true, alt: true, shift: true},
+			ignoreWhileTyping: true,
+			editableFocusBehavior: 'allow',
+			section: 'misc',
+			assignable: true,
+		},
 		{
 			action: 'system_zoom_in',
 			label: i18n._(ZOOM_IN_DESCRIPTOR),

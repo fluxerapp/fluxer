@@ -4,43 +4,125 @@ import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSe
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
-import ThemeSettingsState, {QUICK_CSS_EDITOR_FILE} from '@app/features/theme_settings/state/ThemeSettingsState';
-import {quickCssEditorNeedsDesktopUpdate} from '@app/features/theme_settings/utils/QuickCssEditorSupport';
+import ThemeSettingsState, {
+	QUICK_CSS_EDITOR_FILE,
+	type QuickCssEditorPlacement,
+} from '@app/features/theme_settings/state/ThemeSettingsState';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import ModalState from '@app/features/ui/state/Modal';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 
 export const QUICK_CSS_EDITOR_WINDOW_KEY = 'fluxer_quick_css_editor';
+
+interface QuickCssEditorFocusHandle {
+	focus: () => void;
+	hasFocus: () => boolean;
+}
+
+let editorFocusHandle: QuickCssEditorFocusHandle | null = null;
+let focusBeforeOpen: HTMLElement | null = null;
+
+export function setQuickCssEditorFocusHandle(handle: QuickCssEditorFocusHandle | null): void {
+	editorFocusHandle = handle;
+}
 
 export function setEditedCustomThemeCss(css: string | null): void {
 	ThemeProfileCommands.setCustomThemeCss(css, ThemeEditTarget.target);
 }
 
 export function canOpenQuickCssEditor(): boolean {
-	return !MobileLayout.enabled && !quickCssEditorNeedsDesktopUpdate();
+	return !MobileLayout.enabled;
+}
+
+export function canPopOutQuickCssEditor(): boolean {
+	return !isDesktop() || getElectronAPI()?.cssEditorWindow === true;
+}
+
+export function flushQuickCssWrites(): void {
+	ThemeSettingsState.quickCssWriteFlusher?.();
+}
+
+function rememberFocus(): void {
+	const active = document.activeElement;
+	focusBeforeOpen = active instanceof HTMLElement && active !== document.body ? active : null;
 }
 
 function focusQuickCssEditor(): void {
-	ThemeSettingsState.editorWindow?.focus();
-	void getElectronAPI()?.popoutFocus?.(QUICK_CSS_EDITOR_WINDOW_KEY);
+	if (ThemeSettingsState.editorPlacement === 'window') {
+		ThemeSettingsState.editorWindow?.focus();
+		void getElectronAPI()?.popoutFocus?.(QUICK_CSS_EDITOR_WINDOW_KEY);
+	}
+	editorFocusHandle?.focus();
+}
+
+function returnFocusToApp(): void {
+	window.focus();
+	const target = focusBeforeOpen;
+	if (target?.isConnected) {
+		target.focus();
+		return;
+	}
+	const active = document.activeElement;
+	if (active instanceof HTMLElement && active.tagName === 'IFRAME') active.blur();
+}
+
+function closeSettingsModal(): void {
+	if (ModalState.hasModalOfModalType('user-settings', document)) {
+		ModalState.popByModalType('user-settings', document);
+	}
+}
+
+function closeEditorWithClosedWindow(): void {
+	if (ThemeSettingsState.editorPlacement === 'window' && ThemeSettingsState.editorWindow?.closed) {
+		closeQuickCssEditor();
+	}
 }
 
 export function openQuickCssEditor(file: string = QUICK_CSS_EDITOR_FILE): void {
 	if (!canOpenQuickCssEditor()) return;
-	const wasOpen = ThemeSettingsState.editorOpen;
-	ThemeSettingsState.openEditor(file);
-	if (wasOpen) focusQuickCssEditor();
-}
-
-export function focusOrOpenQuickCssEditor(): void {
-	if (!canOpenQuickCssEditor()) return;
+	closeSettingsModal();
+	closeEditorWithClosedWindow();
 	if (ThemeSettingsState.editorOpen) {
+		ThemeSettingsState.requestEditorFile(file);
+		ThemeSettingsState.setEditorTab('css');
 		focusQuickCssEditor();
 		return;
 	}
-	ThemeSettingsState.openEditor(QUICK_CSS_EDITOR_FILE);
+	rememberFocus();
+	ThemeSettingsState.openEditor(file, canPopOutQuickCssEditor());
+}
+
+export function toggleQuickCssEditorFocus(): void {
+	if (!canOpenQuickCssEditor()) return;
+	closeEditorWithClosedWindow();
+	if (!ThemeSettingsState.editorOpen) {
+		rememberFocus();
+		ThemeSettingsState.openEditor(QUICK_CSS_EDITOR_FILE, canPopOutQuickCssEditor());
+		return;
+	}
+	if (editorFocusHandle?.hasFocus()) {
+		returnFocusToApp();
+		return;
+	}
+	rememberFocus();
+	focusQuickCssEditor();
+}
+
+export function moveQuickCssEditor(placement: QuickCssEditorPlacement): void {
+	if (placement === 'window' && !canPopOutQuickCssEditor()) return;
+	flushQuickCssWrites();
+	ThemeSettingsState.moveEditor(placement, ThemeSettingsState.editorGeneration);
+}
+
+export function closeQuickCssEditor(generation: number = ThemeSettingsState.editorGeneration): void {
+	if (generation !== ThemeSettingsState.editorGeneration || !ThemeSettingsState.editorOpen) return;
+	const hadFocus = editorFocusHandle?.hasFocus() ?? false;
+	flushQuickCssWrites();
+	ThemeSettingsState.closeEditor(generation);
+	if (hadFocus) returnFocusToApp();
+	focusBeforeOpen = null;
 }
 
 export function openThemesSettings(): void {

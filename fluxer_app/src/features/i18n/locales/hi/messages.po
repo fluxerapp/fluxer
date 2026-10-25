@@ -1061,7 +1061,7 @@ msgstr "{channelName} {communityName} में {accountName} पर"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} पर {accountName}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# वर्ण} other {# वर्ण}}"
 
@@ -1714,7 +1714,7 @@ msgstr "{length, plural, one {# यूज़र} other {# यूज़र}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# दर्शक} other {# दर्शक}}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# लाइन} other {# लाइनें}}"
 
@@ -3775,7 +3775,7 @@ msgid "Add shortcut"
 msgstr "शॉर्टकट जोड़ें"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Add some CSS before sharing."
 msgstr "शेयर करने से पहले कुछ CSS जोड़ें।"
 
@@ -5266,6 +5266,8 @@ msgid "Ask for a second step after your password when you sign in."
 msgstr "साइन इन करते समय अपने पासवर्ड के बाद दूसरा चरण माँगें।"
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
+#. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Assets"
 msgstr "एसेट"
@@ -7013,7 +7015,7 @@ msgid "Can't connect"
 msgstr "कनेक्ट नहीं हो पा रहा है"
 
 #. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Can't find \"{reference}\" in your assets."
 msgstr "आपके एसेट्स में \"{reference}\" नहीं मिल रहा है।"
 
@@ -7729,7 +7731,7 @@ msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "वॉइस क्षेत्र {oldRegion} से {newRegion} में बदल दिया गया"
 
 #. Shown at the bottom of the quick CSS editor window while it edits quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "जैसे ही आप टाइप करते हैं, ऐप में बदलाव दिखाई देते हैं।"
 
@@ -8520,7 +8522,7 @@ msgstr "स्पष्ट बातचीत के लिए आपके म�
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear"
 msgstr "साफ़ करें"
 
@@ -8600,7 +8602,7 @@ msgid "Clear permissions"
 msgstr "अनुमतियाँ साफ़ करें"
 
 #. Confirmation title in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear quick CSS?"
 msgstr "क्विक CSS साफ़ करें?"
 
@@ -9047,6 +9049,8 @@ msgid "Colors"
 msgstr "रंग"
 
 #. Section title in Settings > Themes for changing single colors and fonts of the base theme.
+#. Tab in the quick CSS editor that shows the base theme and the color and font controls.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Colors and fonts"
 msgstr "रंग और फ़ॉन्ट"
@@ -10208,7 +10212,7 @@ msgstr "यूआरएल क्लिपबोर्ड पर कॉपी �
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11658,6 +11662,8 @@ msgid "Cropping {percent}%"
 msgstr "{percent}% क्रॉप हो रहा है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Tab in the quick CSS editor that shows the code editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "CSS"
 msgstr "CSS"
@@ -13685,6 +13691,16 @@ msgstr "डॉक्टर, मैं भविष्य से आया हू
 msgid "Dock badge"
 msgstr "डॉक बैज"
 
+#. Button in the quick CSS editor header that attaches the editor to the left edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the left"
+msgstr "बाईं ओर डॉक करें"
+
+#. Button in the quick CSS editor header that attaches the editor to the right edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the right"
+msgstr "दाईं ओर डॉक करें"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Docked DevTools and windows partially off-screen can render a gray background instead of staying transparent."
 msgstr "डॉक्ड DevTools और विंडो जो स्क्रीन से आंशिक रूप से बाहर हैं, पारदर्शी रहने के बजाय ग्रे बैकग्राउंड दिखा सकते हैं।"
@@ -13819,7 +13835,7 @@ msgstr "अपने संदेश पर डबल-क्लिक करक�
 #: src/features/auth/components/modals/BackupCodesModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Download"
 msgstr "डाउनलोड करें"
@@ -16244,7 +16260,7 @@ msgstr "कोई यूआरएल फ़ेच करें और देख�
 #. Label of the picker in the quick CSS editor window that chooses between quick CSS and a saved theme.
 #. Top-level native menu bar title (File menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "File"
 msgstr "फ़ाइल"
 
@@ -16481,6 +16497,11 @@ msgstr "पहला विकल्प"
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
 msgstr "झंडे"
+
+#. Button in the quick CSS editor header that detaches a docked editor so it floats over the app again.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Float"
+msgstr "अलग करें"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -19006,7 +19027,7 @@ msgstr "इंपोर्ट पूरा हुआ। {importedCount, plural, 
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Import CSS"
 msgstr "CSS इंपोर्ट करें"
@@ -20820,7 +20841,7 @@ msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "चैनल को {count, plural, one {# यूज़र} other {# यूज़र}} तक सीमित कर दिया गया"
 
 #. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Line {line} has a CSS error."
 msgstr "लाइन {line} में CSS त्रुटि है।"
 
@@ -22835,6 +22856,11 @@ msgstr "ले जाएँ"
 msgid "Move all devices to…"
 msgstr "सभी डिवाइस को यहां ले जाएं…"
 
+#. Button in the quick CSS editor window that moves the editor back into a panel inside the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move back into Fluxer"
+msgstr "वापस Fluxer में ले जाएँ"
+
 #. Label in the keybinds tab.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts
 msgid "Move back through page history"
@@ -22891,6 +22917,11 @@ msgstr "सदस्यों को मूव करें"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "दाईं ओर ले जाएँ"
+
+#. Accessible label of the drag handle in the header of the floating quick CSS editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move the editor. Use the arrow keys to move it."
+msgstr "एडिटर को खिसकाएँ। इसे खिसकाने के लिए तीर कुंजियों का इस्तेमाल करें।"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -25451,6 +25482,11 @@ msgstr "इमेज लिंक खोलें"
 msgid "Open in {productName} for desktop"
 msgstr "डेस्कटॉप के लिए {productName} में खोलें"
 
+#. Button in the quick CSS editor header that moves the editor into its own window.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Open in a new window"
+msgstr "नई विंडो में खोलें"
+
 #. Media viewer action that opens the current media in the system default browser.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Open in browser"
@@ -27936,22 +27972,26 @@ msgid "Quick CSS"
 msgstr "क्विक CSS"
 
 #. Toast after copying quick CSS in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS copied to clipboard."
 msgstr "क्विक CSS क्लिपबोर्ड पर कॉपी हो गया है।"
 
 #. Accessible label for the code editor in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Accessible name of the floating quick CSS editor panel and its frame.
+#. Accessible name of the quick CSS editor area, in its floating panel or its own window.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Quick CSS editor"
 msgstr "क्विक CSS एडिटर"
 
 #. Toast after pressing "Undo all changes" in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS is back to how it was when you opened the editor."
 msgstr "क्विक CSS वैसा ही हो गया है जैसा एडिटर खोलने पर था।"
 
 #. Toast after importing a CSS file into the quick CSS editor.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS replaced from {fileName}."
 msgstr "क्विक CSS को {fileName} से बदल दिया गया है।"
 
@@ -29706,6 +29746,11 @@ msgstr "ऊपर दाईं ओर से पिन किए गए मै�
 msgid "Resize sidebar"
 msgstr "साइडबार का आकार बदलें"
 
+#. Accessible label of the handle that resizes the floating quick CSS editor panel.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+msgid "Resize the editor"
+msgstr "एडिटर का आकार बदलें"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck."
 msgstr "आकार बदलना, विंडो बड़ी करना और विंडो स्नैपिंग कंपोजिटर पर निर्भर करते हैं। क्लाइंट-साइड डेकोरेशन के बिना Wayland हैंडल नहीं देता। अगर विंडो अटकी हुई लगे, तो --ozone-platform=x11 के साथ लॉन्च करें।"
@@ -30274,7 +30319,7 @@ msgstr "आइकॉन सेव करें"
 msgid "Save some media from messages to get started!"
 msgstr "शुरू करने के लिए मैसेज से कुछ मीडिया सेव करें!"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
 msgstr "थीम सेव करें"
 
@@ -31981,7 +32026,7 @@ msgstr "इस इंस्टेंस के कॉन्फ़िगरेश
 msgid "Several people are typing..."
 msgstr "कई लोग टाइप कर रहे हैं..."
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Share"
@@ -35816,7 +35861,7 @@ msgid "Theme color"
 msgstr "थीम का रंग"
 
 #. Accessible label for the code editor while it shows the CSS of a saved theme.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Theme CSS"
 msgstr "थीम CSS"
 
@@ -35860,8 +35905,10 @@ msgid "Theme unavailable"
 msgstr "थीम उपलब्ध नहीं है"
 
 #. Short label in the Explore page sidebar. Keep it concise.
+#. Tab in the quick CSS editor that lists saved themes.
 #. User settings tab for the base theme, theme files, colors, fonts and quick CSS.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "थीम"
@@ -36566,12 +36613,12 @@ msgid "This is the first option description"
 msgstr "यह पहला विकल्प विवरण है"
 
 #. Shown in the quick CSS editor window while it edits an account's own quick CSS. {username} is the account's username and {instanceName} is its instance.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of {username} on {instanceName}."
 msgstr "यह {username} का क्विक CSS है, {instanceName} पर।"
 
 #. Shown in the quick CSS editor window while it edits the quick CSS shared by every account in the desktop app.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of the desktop app theme."
 msgstr "यह डेस्कटॉप ऐप थीम का क्विक CSS है।"
 
@@ -36796,7 +36843,7 @@ msgid "This removes \"{themeName}\" from this device."
 msgstr "यह \"{themeName}\" को इस डिवाइस से हटा देगा।"
 
 #. Confirmation text in the quick CSS editor window before clearing quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This removes all of your quick CSS, including color and font changes. Saved themes are not affected."
 msgstr "यह आपके सभी क्विक CSS को हटा देगा, जिसमें रंग और फ़ॉन्ट परिवर्तन शामिल हैं। सहेजे गए थीम प्रभावित नहीं होंगे।"
 
@@ -38234,7 +38281,7 @@ msgid "Undo"
 msgstr "पूर्ववत करें"
 
 #. Button in the quick CSS editor window that puts quick CSS back to how it was when the editor window opened on it.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Undo all changes"
 msgstr "सभी बदलाव वापस लें"
 
@@ -38447,7 +38494,7 @@ msgstr "unknown-role"
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Menu item in Settings > Themes that stops a theme following its CSS file on disk and turns it back into an editable copy.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/ThemeDetailsModal.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Unlink"
@@ -38770,7 +38817,7 @@ msgstr "अपठित मैसेज: {count}"
 msgid "Unreads"
 msgstr "अपठित"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "सेव नहीं किए गए बदलाव"
 
@@ -38903,11 +38950,6 @@ msgstr "पासकी अपडेट करें"
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
 msgid "Update service worker"
 msgstr "सर्विस वर्कर अपडेट करें"
-
-#. Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.
-#: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Update the desktop app to edit quick CSS."
-msgstr "क्विक CSS संपादित करने के लिए डेस्कटॉप ऐप को अपडेट करें।"
 
 #. Short label in the timeout member sheet. Keep it concise.
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
@@ -40745,7 +40787,7 @@ msgid "We couldn't copy that reference."
 msgstr "हम उस संदर्भ को कॉपी नहीं कर पाए।"
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't copy that."
 msgstr "हम उसे कॉपी नहीं कर पाए।"
 
@@ -40809,7 +40851,7 @@ msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall 
 msgstr "हम अटैचमेंट अपलोड सेवा तक नहीं पहुँच सके। {PRODUCT_NAME} कुल {fallbackSizeFormatted} तक के मैसेज के लिए स्टैंडर्ड अपलोड पाथ पर वापस जा सकता है, लेकिन ये अटैचमेंट उस संयुक्त सीमा से ज़्यादा हैं और कनेक्टिविटी बहाल होने तक भेजे नहीं जा सकते। बाद में फिर से कोशिश करें या अगर ऐसा होता रहता है, तो इस इंस्टेंस के एडमिनिस्ट्रेटर से संपर्क करें।"
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't read that CSS file."
 msgstr "हम उस CSS फ़ाइल को पढ़ नहीं पाए।"
 
@@ -41564,8 +41606,8 @@ msgstr "अपनी सामग्री यहां लिखें। ज�
 
 #. Description of the "Quick CSS" section in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app."
-msgstr "ऐप में कुछ भी बदलने के लिए अपना खुद का CSS लिखें। एडिटर अपनी विंडो में खुलता है जिसे आपका CSS नहीं बदलता है, इसलिए आप हमेशा ऐसे CSS को ठीक कर सकते हैं जो ऐप को तोड़ता है।"
+msgid "Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app."
+msgstr "ऐप में कुछ भी बदलने के लिए अपना CSS लिखें। ऐप इस्तेमाल करते समय एडिटर खुला रहता है, और आपका CSS कभी भी एडिटर पर लागू नहीं होता, इसलिए ऐप को बिगाड़ने वाले CSS को आप हमेशा ठीक कर सकते हैं।"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -42710,7 +42752,7 @@ msgid "Your badge is live. Your name shows on the Operators' wall once we check 
 msgstr "आपका बैज लाइव है। हमारी जाँच के बाद आपका नाम Operators वॉल पर दिखेगा।"
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
-#: src/features/theme_settings/components/QuickCssEditorWindowHost.tsx
+#: src/features/theme_settings/components/QuickCssEditorHost.tsx
 msgid "Your browser blocked the editor window. Allow pop-ups for this site and try again."
 msgstr "आपके ब्राउज़र ने एडिटर विंडो को ब्लॉक कर दिया है। इस साइट के लिए पॉप-अप की अनुमति दें और पुनः प्रयास करें।"
 

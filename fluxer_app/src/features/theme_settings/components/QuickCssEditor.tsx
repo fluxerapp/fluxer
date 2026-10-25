@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {type CachedEditorState, writeCachedEditorState} from '@app/features/theme_settings/editor/EditorStateCache';
 import type {ThemeBaseKind} from '@app/features/theme_settings/utils/ThemeDefaultVariables';
 import {getTokenVariableDefinition, TOKEN_GROUPS} from '@app/features/theme_settings/utils/TokenGroups';
 import type {CompletionContext, CompletionResult} from '@codemirror/autocomplete';
-import {indentWithTab} from '@codemirror/commands';
+import {historyField, indentWithTab} from '@codemirror/commands';
 import {css, cssLanguage} from '@codemirror/lang-css';
 import {HighlightStyle, syntaxHighlighting} from '@codemirror/language';
 import {Compartment, EditorState, type Extension, Prec} from '@codemirror/state';
@@ -13,7 +14,7 @@ import {tags as t} from '@lezer/highlight';
 import {basicSetup} from 'codemirror';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 
 const themeTokenCompletions = TOKEN_GROUPS.flatMap((group) =>
 	group.variables.map((variable) => ({
@@ -122,21 +123,29 @@ function buildHighlightStyle(): HighlightStyle {
 	]);
 }
 
+const IMMEDIATE_WRITE_EVENTS = ['undo', 'redo', 'input.paste'];
+
 interface QuickCssEditorProps {
 	ariaLabel: string;
 	baseTheme: ThemeBaseKind;
 	className?: string;
-	onChange: (value: string) => void;
+	onChange: (value: string, immediate: boolean) => void;
 	readOnly?: boolean;
 	value: string;
+	cacheKey: string;
+	cachedState: CachedEditorState | null;
+	readStoredCss: () => string;
 }
 
 const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
-	({ariaLabel, baseTheme, className, onChange, readOnly, value}) => {
+	({ariaLabel, baseTheme, className, onChange, readOnly, value, cacheKey, cachedState, readStoredCss}) => {
 		const containerRef = useRef<HTMLDivElement | null>(null);
 		const viewRef = useRef<EditorView | null>(null);
 		const onChangeRef = useRef(onChange);
 		onChangeRef.current = onChange;
+		const readStoredCssRef = useRef(readStoredCss);
+		readStoredCssRef.current = readStoredCss;
+		const initialCacheRef = useRef({key: cacheKey, state: cachedState});
 		const useSmoothScrolling = Accessibility.useSmoothScrolling;
 
 		const themeCompartment = useMemo(() => new Compartment(), []);
@@ -147,33 +156,37 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 		const initialAriaLabelRef = useRef(ariaLabel);
 		const initialBaseThemeRef = useRef(baseTheme);
 
-		useEffect(() => {
+		useLayoutEffect(() => {
 			const parent = containerRef.current;
 			if (!parent) return;
-			const state = EditorState.create({
-				doc: initialDocumentRef.current,
-				extensions: [
-					Prec.highest(keymap.of([indentWithTab])),
-					basicSetup,
-					css(),
-					cssLanguage.data.of({autocomplete: themeTokenCompletionSource}),
-					EditorView.lineWrapping,
-					contentAttributesCompartment.of(EditorView.contentAttributes.of({'aria-label': initialAriaLabelRef.current})),
-					readOnlyCompartment.of(EditorState.readOnly.of(initialReadOnlyRef.current)),
-					themeCompartment.of([
-						buildEditorTheme(initialBaseThemeRef.current),
-						syntaxHighlighting(buildHighlightStyle()),
-					]),
-					EditorView.updateListener.of((update) => {
-						if (update.docChanged) {
-							onChangeRef.current(update.state.doc.toString());
-						}
-					}),
-				],
-			});
+			const {key, state: cached} = initialCacheRef.current;
+			const extensions: Array<Extension> = [
+				Prec.highest(keymap.of([indentWithTab])),
+				basicSetup,
+				css(),
+				cssLanguage.data.of({autocomplete: themeTokenCompletionSource}),
+				EditorView.lineWrapping,
+				contentAttributesCompartment.of(EditorView.contentAttributes.of({'aria-label': initialAriaLabelRef.current})),
+				readOnlyCompartment.of(EditorState.readOnly.of(initialReadOnlyRef.current)),
+				themeCompartment.of([buildEditorTheme(initialBaseThemeRef.current), syntaxHighlighting(buildHighlightStyle())]),
+				EditorView.updateListener.of((update) => {
+					if (update.docChanged) {
+						const immediate = update.transactions.some((transaction) =>
+							IMMEDIATE_WRITE_EVENTS.some((event) => transaction.isUserEvent(event)),
+						);
+						onChangeRef.current(update.state.doc.toString(), immediate);
+					}
+				}),
+			];
+			const state =
+				cached && cached.doc === initialDocumentRef.current
+					? EditorState.fromJSON(cached.json, {extensions}, {history: historyField})
+					: EditorState.create({doc: initialDocumentRef.current, extensions});
 			const view = new EditorView({state, parent});
 			viewRef.current = view;
+			if (cached) view.scrollDOM.scrollTop = cached.scrollTop;
 			return () => {
+				writeCachedEditorState(key, readStoredCssRef.current(), view.state, view.scrollDOM.scrollTop);
 				view.destroy();
 				viewRef.current = null;
 			};

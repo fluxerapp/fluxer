@@ -5,18 +5,19 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Accounts from '@app/features/auth/state/Accounts';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
+import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
-import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
+import ThemeEditTarget, {type ThemeTarget} from '@app/features/theme/state/ThemeEditTarget';
 import ThemeLibrary, {getThemeLabel, type ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import {upsertThemeCssHeader} from '@app/features/theme/utils/ThemeCssUtils';
-import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import QuickCssEditor from '@app/features/theme_settings/components/QuickCssEditor';
 import {confirmDiscardThemeChanges} from '@app/features/theme_settings/components/QuickCssEditorDiscard';
-import styles from '@app/features/theme_settings/components/QuickCssEditorWindow.module.css';
+import styles from '@app/features/theme_settings/components/QuickCssWorkspace.module.css';
 import {EditTargetNote} from '@app/features/theme_settings/components/ThisAccountSection';
+import {readCachedEditorState} from '@app/features/theme_settings/editor/EditorStateCache';
 import {useCurrentAccountLabels} from '@app/features/theme_settings/hooks/useCurrentAccountLabels';
 import ThemeSettingsState, {QUICK_CSS_EDITOR_FILE} from '@app/features/theme_settings/state/ThemeSettingsState';
 import {findFirstCssSyntaxErrorLine} from '@app/features/theme_settings/utils/CssSyntaxErrors';
@@ -32,7 +33,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
-import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {copyText, readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {QUICK_CSS_SECTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/ThemesSections';
@@ -51,6 +51,8 @@ import {
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useMemo, useRef, useState} from 'react';
+
+const QUICK_CSS_WRITE_DELAY_MS = 200;
 
 const FILE_DESCRIPTOR = msg({
 	message: 'File',
@@ -190,28 +192,63 @@ interface EditorFileProps {
 	filePicker: React.ReactNode;
 }
 
+interface PendingQuickCssWrite {
+	target: ThemeTarget;
+	css: string | null;
+}
+
 const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 	const {i18n} = useLingui();
 	const {username, instanceName} = useCurrentAccountLabels();
 	const target = ThemeEditTarget.target;
 	const stored = ThemeProfile.customThemeCssFor(target);
-	const [draft, setDraft] = useState(stored ?? '');
-	const sourceKey = `${target}:${Accounts.currentAccountKey ?? ''}`;
+	const sourceKey = `quick-css:${target}:${Accounts.currentAccountKey ?? ''}`;
+	const [cached] = useState(() => ({key: sourceKey, state: readCachedEditorState(sourceKey, stored ?? '')}));
+	const [draft, setDraft] = useState(cached.state?.doc ?? stored ?? '');
 	const [opened, setOpened] = useState({key: sourceKey, value: stored ?? ''});
+	const pendingRef = useRef<PendingQuickCssWrite | null>(null);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const flushRef = useRef(() => {
+		if (timerRef.current !== null) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+		const pending = pendingRef.current;
+		pendingRef.current = null;
+		if (pending && pending.css !== ThemeProfile.customThemeCssFor(pending.target)) {
+			ThemeProfileCommands.setCustomThemeCss(pending.css, pending.target);
+		}
+	});
 	if (opened.key !== sourceKey) {
 		setOpened({key: sourceKey, value: stored ?? ''});
 	}
 	const openedValue = opened.key === sourceKey ? opened.value : (stored ?? '');
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	useEffect(() => {
+		const flush = flushRef.current;
+		ThemeSettingsState.setQuickCssWriteFlusher(flush);
+		return () => {
+			flush();
+			ThemeSettingsState.setQuickCssWriteFlusher(null);
+		};
+	}, []);
+	useEffect(() => {
+		const flush = flushRef.current;
+		return () => flush();
+	}, [sourceKey]);
+	useEffect(() => {
+		if (pendingRef.current) return;
 		setDraft((current) => (normalizeCustomThemeCss(current) === stored ? current : (stored ?? '')));
 	}, [stored]);
-	const write = (next: string) => {
+	const write = (next: string, immediate = true) => {
 		setDraft(next);
-		const normalized = normalizeCustomThemeCss(next);
-		if (normalized !== ThemeProfile.customThemeCssFor(ThemeEditTarget.target)) {
-			ThemeSettingsCommands.setEditedCustomThemeCss(normalized);
+		pendingRef.current = {target: ThemeEditTarget.target, css: normalizeCustomThemeCss(next)};
+		if (timerRef.current !== null) clearTimeout(timerRef.current);
+		if (immediate) {
+			flushRef.current();
+			return;
 		}
+		timerRef.current = setTimeout(() => flushRef.current(), QUICK_CSS_WRITE_DELAY_MS);
 	};
 	const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
@@ -389,11 +426,15 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 				<EditTargetNote data-flx="theme-settings.quick-css-editor-window.quick-css-file.edit-target-note" />
 			</div>
 			<QuickCssEditor
+				key={sourceKey}
 				ariaLabel={i18n._(QUICK_CSS_EDITOR_DESCRIPTOR)}
 				baseTheme={getThemeBaseKind(Theme.effectiveTheme)}
 				className={styles.editor}
 				value={draft}
-				onChange={write}
+				onChange={(next, immediate) => write(next, immediate)}
+				cacheKey={sourceKey}
+				cachedState={cached.key === sourceKey ? cached.state : null}
+				readStoredCss={() => ThemeProfile.customThemeCssFor(target) ?? ''}
 				data-flx="theme-settings.quick-css-editor-window.quick-css-file.editor.write"
 			/>
 			<QuickCssFooter
@@ -407,7 +448,9 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 
 const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observer(({filePicker, theme}) => {
 	const {i18n} = useLingui();
-	const [draft, setDraft] = useState(theme.css);
+	const cacheKey = `theme:${theme.id}`;
+	const [cached] = useState(() => readCachedEditorState(cacheKey, theme.css));
+	const [draft, setDraft] = useState(cached?.doc ?? theme.css);
 	const [saving, setSaving] = useState(false);
 	const readOnly = isLinkedThemeReadOnly(theme);
 	const linkedLine = getLinkedThemeFileLine(i18n, theme);
@@ -502,6 +545,9 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 				value={draft}
 				onChange={setDraft}
 				readOnly={readOnly}
+				cacheKey={cacheKey}
+				cachedState={cached}
+				readStoredCss={() => theme.css}
 				data-flx="theme-settings.quick-css-editor-window.theme-file.editor.set-draft"
 			/>
 			<QuickCssFooter
@@ -513,9 +559,8 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 	);
 });
 
-export const QuickCssEditorWindow: React.FC = observer(() => {
+export const QuickCssFiles: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const rootRef = useRef<HTMLDivElement | null>(null);
 	const portalHost = usePortalHost();
 	const file = ThemeSettingsState.editorFile;
 	const theme =
@@ -565,20 +610,14 @@ export const QuickCssEditorWindow: React.FC = observer(() => {
 			/>
 		</div>
 	);
-	return (
-		<div ref={rootRef} className={styles.root} data-flx="theme-settings.quick-css-editor-window.root">
-			<FocusRingScope containerRef={rootRef} data-flx="theme-settings.quick-css-editor-window.focus-ring-scope">
-				{theme ? (
-					<ThemeFile
-						key={theme.id}
-						theme={theme}
-						filePicker={filePicker}
-						data-flx="theme-settings.quick-css-editor-window.theme-file"
-					/>
-				) : (
-					<QuickCssFile filePicker={filePicker} data-flx="theme-settings.quick-css-editor-window.quick-css-file" />
-				)}
-			</FocusRingScope>
-		</div>
+	return theme ? (
+		<ThemeFile
+			key={theme.id}
+			theme={theme}
+			filePicker={filePicker}
+			data-flx="theme-settings.quick-css-editor-window.theme-file"
+		/>
+	) : (
+		<QuickCssFile filePicker={filePicker} data-flx="theme-settings.quick-css-editor-window.quick-css-file" />
 	);
 });

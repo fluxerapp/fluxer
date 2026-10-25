@@ -9,7 +9,6 @@ import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
-import {quickCssEditorNeedsDesktopUpdate} from '@app/features/theme_settings/utils/QuickCssEditorSupport';
 import {
 	OPEN_QUICK_CSS_EDITOR_DESCRIPTOR,
 	SYNC_CUSTOM_CSS_ACROSS_DEVICES_DESCRIPTOR,
@@ -28,7 +27,7 @@ import type React from 'react';
 
 const QUICK_CSS_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app.",
+		'Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app.',
 	comment: 'Description of the "Quick CSS" section in Settings > Themes.',
 });
 const QUICK_CSS_SIZE_DESCRIPTOR = msg({
@@ -42,11 +41,6 @@ const QUICK_CSS_EMPTY_DESCRIPTOR = msg({
 const OPEN_ON_A_COMPUTER_DESCRIPTOR = msg({
 	message: 'Open this page on a computer to edit quick CSS.',
 	comment: 'Shown in the "Quick CSS" section in Settings > Themes on phones, where the editor window is not available.',
-});
-const UPDATE_DESKTOP_APP_DESCRIPTOR = msg({
-	message: 'Update the desktop app to edit quick CSS.',
-	comment:
-		'Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.',
 });
 const SYNC_CUSTOM_CSS_ACROSS_DEVICES_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Only the CSS text is synced. Uploaded assets and local file references stay on this device.',
@@ -75,7 +69,6 @@ export const QuickCssSection: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const target = ThemeEditTarget.target;
 	const lines = countLines(ThemeProfile.customThemeCssFor(target));
-	const needsDesktopUpdate = quickCssEditorNeedsDesktopUpdate();
 	const handleSyncChange = (value: boolean) => {
 		if (!value) {
 			Accessibility.updateSettings({customThemeCssSyncAcrossDevices: false});
@@ -110,26 +103,16 @@ export const QuickCssSection: React.FC = observer(() => {
 						{i18n._(OPEN_ON_A_COMPUTER_DESCRIPTOR)}
 					</p>
 				) : (
-					<>
-						<div data-flx="theme-settings.quick-css-section.div">
-							<Button
-								fitContent
-								disabled={needsDesktopUpdate}
-								leftIcon={
-									<FileCssIcon size={remFromPx(18)} data-flx="theme-settings.quick-css-section.file-css-icon" />
-								}
-								onClick={() => ThemeSettingsCommands.openQuickCssEditor()}
-								data-flx="theme-settings.quick-css-section.button.open-quick-css-editor"
-							>
-								{i18n._(OPEN_QUICK_CSS_EDITOR_DESCRIPTOR)}
-							</Button>
-						</div>
-						{needsDesktopUpdate ? (
-							<p className={styles.note} data-flx="theme-settings.quick-css-section.update-desktop-app">
-								{i18n._(UPDATE_DESKTOP_APP_DESCRIPTOR)}
-							</p>
-						) : null}
-					</>
+					<div data-flx="theme-settings.quick-css-section.div">
+						<Button
+							fitContent
+							leftIcon={<FileCssIcon size={remFromPx(18)} data-flx="theme-settings.quick-css-section.file-css-icon" />}
+							onClick={() => ThemeSettingsCommands.openQuickCssEditor()}
+							data-flx="theme-settings.quick-css-section.button.open-quick-css-editor"
+						>
+							{i18n._(OPEN_QUICK_CSS_EDITOR_DESCRIPTOR)}
+						</Button>
+					</div>
 				)}
 			</div>
 			{target === 'account' ? (
