@@ -66,6 +66,7 @@ const HAIR_COMPONENT_NAMES: Record<string, string> = {
 	'\u{1F9B3}': 'white_hair',
 	'\u{1F9B2}': 'bald',
 };
+const REGIONAL_INDICATOR_HIGH_SURROGATE = 0xd83c;
 const REGIONAL_INDICATOR_PAIR_PATTERN = '\\uD83C[\\uDDE6-\\uDDFF]\\uD83C[\\uDDE6-\\uDDFF]';
 
 let defaultSkinTone: string = '';
@@ -178,6 +179,9 @@ interface EmojiIndex {
 	skinToneSpriteCount: number;
 	baseSpriteCount: number;
 	emojiSurrogateRegex: RegExp;
+	emojiSurrogateStickyRegex: RegExp;
+	emojiTriggerCodeUnits: Uint8Array;
+	maxEmojiTriggerOffset: number;
 	emojiShortcutRegex: RegExp;
 }
 
@@ -284,10 +288,16 @@ function buildEmojiIndex(): EmojiIndex {
 		shortcutToName[shortcut] = emoji;
 	});
 
-	const surrogateAlternation = Object.keys(surrogateToName)
-		.sort((a, b) => b.length - a.length)
-		.map(RegexUtils.escapeRegex)
-		.join('|');
+	const surrogates = Object.keys(surrogateToName).sort((a, b) => b.length - a.length);
+	const surrogatePattern = `(${REGIONAL_INDICATOR_PAIR_PATTERN}|${surrogates.map(RegexUtils.escapeRegex).join('|')})`;
+	const emojiTriggerCodeUnits = new Uint8Array(0x10000);
+	emojiTriggerCodeUnits[REGIONAL_INDICATOR_HIGH_SURROGATE] = 1;
+	let maxEmojiTriggerOffset = 0;
+	for (const surrogate of surrogates) {
+		const offset = findEmojiTriggerOffset(surrogate);
+		emojiTriggerCodeUnits[surrogate.charCodeAt(offset)] = 1;
+		maxEmojiTriggerOffset = Math.max(maxEmojiTriggerOffset, offset);
+	}
 	const shortcutAlternation = Object.keys(shortcutToName).map(RegexUtils.escapeRegex).join('|');
 
 	return {
@@ -302,7 +312,10 @@ function buildEmojiIndex(): EmojiIndex {
 		emojis,
 		skinToneSpriteCount,
 		baseSpriteCount,
-		emojiSurrogateRegex: new RegExp(`(${REGIONAL_INDICATOR_PAIR_PATTERN}|${surrogateAlternation})`, 'g'),
+		emojiSurrogateRegex: new RegExp(surrogatePattern, 'g'),
+		emojiSurrogateStickyRegex: new RegExp(surrogatePattern, 'y'),
+		emojiTriggerCodeUnits,
+		maxEmojiTriggerOffset,
 		emojiShortcutRegex: new RegExp(`^(${shortcutAlternation})`),
 	};
 }
@@ -317,7 +330,9 @@ const lookupSurrogateName = (surrogate: string): string | null =>
 
 const isRegionalIndicatorAt = (text: string, index: number): boolean => {
 	const lowSurrogate = text.charCodeAt(index + 1);
-	return text.charCodeAt(index) === 0xd83c && lowSurrogate >= 0xdde6 && lowSurrogate <= 0xddff;
+	return (
+		text.charCodeAt(index) === REGIONAL_INDICATOR_HIGH_SURROGATE && lowSurrogate >= 0xdde6 && lowSurrogate <= 0xddff
+	);
 };
 
 const isInsideRegionalIndicatorPair = (text: string, index: number): boolean => {
@@ -327,6 +342,19 @@ const isInsideRegionalIndicatorPair = (text: string, index: number): boolean => 
 	return (index - runStart) % 4 === 2;
 };
 
+function findEmojiTriggerOffset(surrogate: string): number {
+	let offset = 0;
+	while (offset < surrogate.length - 1 && surrogate.charCodeAt(offset) <= 0x7f) offset += 1;
+	return offset;
+}
+
+function findEmojiTrigger(text: string, from: number, triggers: Uint8Array): number {
+	for (let index = from; index < text.length; index += 1) {
+		if (triggers[text.charCodeAt(index)] === 1) return index;
+	}
+	return -1;
+}
+
 const toEmojiSurrogateMatch = (text: string, start: number, end: number): EmojiSurrogateMatch => ({
 	start,
 	end,
@@ -334,17 +362,24 @@ const toEmojiSurrogateMatch = (text: string, start: number, end: number): EmojiS
 });
 
 function* matchEmojiSurrogates(text: string, startIndex = 0): Generator<EmojiSurrogateMatch, void> {
-	const regex = getEmojiIndex().emojiSurrogateRegex;
+	const {emojiSurrogateStickyRegex: regex, emojiTriggerCodeUnits, maxEmojiTriggerOffset} = getEmojiIndex();
 	let index = startIndex;
 	if (isInsideRegionalIndicatorPair(text, index)) {
 		yield toEmojiSurrogateMatch(text, index, index + 2);
 		index += 2;
 	}
-	while (true) {
+	let trigger = findEmojiTrigger(text, index, emojiTriggerCodeUnits);
+	while (trigger >= 0) {
+		index = Math.max(index, trigger - maxEmojiTriggerOffset);
 		regex.lastIndex = index;
 		const match = regex.exec(text);
-		if (match == null) return;
+		if (match == null) {
+			index += 1;
+			if (index > trigger) trigger = findEmojiTrigger(text, index, emojiTriggerCodeUnits);
+			continue;
+		}
 		index = match.index + match[0].length;
+		trigger = findEmojiTrigger(text, index, emojiTriggerCodeUnits);
 		const emojiMatch = toEmojiSurrogateMatch(text, match.index, index);
 		const isUnknownRegionalIndicatorPair =
 			emojiMatch.name == null &&

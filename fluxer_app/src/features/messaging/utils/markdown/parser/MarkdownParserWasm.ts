@@ -7,6 +7,7 @@ import {MARKDOWN_PARSER_WASM_BASE64} from '@app/features/messaging/utils/markdow
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as StringUtils from '@app/features/messaging/utils/markdown/parser/StringUtils';
 import * as URLUtils from '@app/features/messaging/utils/markdown/parser/UrlUtils';
+import {LRUMap} from '@app/lib/list/ListLruMap';
 
 interface WasmExports {
 	memory: {buffer: ArrayBuffer};
@@ -42,6 +43,7 @@ type CleanableNode = Node & {
 
 const RESULT_HEADER_BYTES = 16;
 const MAX_RETAINED_WASM_MEMORY_BYTES = 64 * 1024 * 1024;
+const LINK_URL_CACHE_CAPACITY = 512;
 const textEncoder = new TextEncoder();
 const lenientTextDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: false});
 
@@ -320,6 +322,38 @@ function shouldTreatAsMaskedLink(trimmedLinkText: string, url: string): boolean 
 	}
 }
 
+const linkUrlCache = new LRUMap<string, string | null>(LINK_URL_CACHE_CAPACITY);
+
+function cleanLinkUrl(rawUrl: string, linkText: string): string | null {
+	const key = `${rawUrl.length}:${rawUrl}${linkText}`;
+	const cached = linkUrlCache.get(key);
+	if (cached !== undefined) return cached;
+	const url = resolveLinkUrl(rawUrl, linkText);
+	linkUrlCache.set(key, url);
+	return url;
+}
+
+function resolveLinkUrl(rawUrl: string, linkText: string): string | null {
+	try {
+		const normalizedUrl = URLUtils.normalizeUrl(rawUrl);
+		if (
+			!URLUtils.isValidUrl(normalizedUrl) ||
+			(rawUrl.startsWith('/') && !rawUrl.startsWith('//')) ||
+			(StringUtils.startsWithUrl(linkText.trim()) && shouldTreatAsMaskedLink(linkText, rawUrl))
+		) {
+			return null;
+		}
+		if (normalizedUrl.startsWith('tel:') || normalizedUrl.startsWith('sms:')) {
+			const protocol = normalizedUrl.substring(0, normalizedUrl.indexOf(':') + 1);
+			const phoneNumber = normalizedUrl.substring(normalizedUrl.indexOf(':') + 1);
+			return phoneNumber.startsWith('+') ? protocol + URLUtils.normalizePhoneNumber(phoneNumber) : normalizedUrl;
+		}
+		return URLUtils.convertToAsciiUrl(normalizedUrl);
+	} catch {
+		return null;
+	}
+}
+
 function makeCleanedTextNode(content: string): CleanedTextNode {
 	return {type: 'Text', content, __cleanedLinkText: true};
 }
@@ -335,34 +369,16 @@ function cleanNode(node: CleanableNode): Node {
 	if (node.type === 'Link') {
 		const rawUrl = coerceWasmString(node.rawUrl ?? node.url);
 		const source = coerceWasmString(node.source ?? rawUrl);
-		const linkText = textFromNode(node.text);
-		try {
-			const normalizedUrl = URLUtils.normalizeUrl(rawUrl);
-			if (
-				!URLUtils.isValidUrl(normalizedUrl) ||
-				(rawUrl.startsWith('/') && !rawUrl.startsWith('//')) ||
-				(StringUtils.startsWithUrl(linkText.trim()) && shouldTreatAsMaskedLink(linkText, rawUrl))
-			) {
-				return makeCleanedTextNode(source);
-			}
-			let finalUrl = normalizedUrl;
-			if (finalUrl.startsWith('tel:') || finalUrl.startsWith('sms:')) {
-				const protocol = finalUrl.substring(0, finalUrl.indexOf(':') + 1);
-				const phoneNumber = finalUrl.substring(finalUrl.indexOf(':') + 1);
-				if (phoneNumber.startsWith('+')) finalUrl = protocol + URLUtils.normalizePhoneNumber(phoneNumber);
-			} else {
-				finalUrl = URLUtils.convertToAsciiUrl(finalUrl);
-			}
-			const cleaned: Extract<Node, {type: 'Link'}> = {
-				type: 'Link',
-				url: finalUrl,
-				escaped: Boolean(node.escaped),
-			};
-			cleaned.text = node.text ? cleanNode(node.text) : undefined;
-			return cleaned;
-		} catch {
+		const url = cleanLinkUrl(rawUrl, textFromNode(node.text));
+		if (url == null) {
 			return makeCleanedTextNode(source);
 		}
+		return {
+			type: 'Link',
+			url,
+			escaped: Boolean(node.escaped),
+			text: node.text ? cleanNode(node.text) : undefined,
+		};
 	}
 	if (node.type === 'CodeBlock' && !('language' in node)) {
 		node.language = undefined;

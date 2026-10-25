@@ -7,6 +7,7 @@ import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
+import {LRUMap} from '@app/lib/list/ListLruMap';
 
 export const MarkdownHl = {
 	none: 0,
@@ -76,12 +77,49 @@ type AlignAttempt = {type: 'aligned'; spans: Array<MarkdownSpan>} | {type: 'desy
 
 const MAX_ALIGN_ATTEMPTS = 64;
 const MAX_URL_REALIGN_STEPS = 256;
+const HIGHLIGHT_CACHE_CAPACITY = 32;
+
+const highlightCache = new LRUMap<string, ReadonlyArray<MarkdownSpan>>(HIGHLIGHT_CACHE_CAPACITY);
 
 export function computeMarkdownHighlightSpans(
 	source: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
-): Array<MarkdownSpan> {
-	return computeMarkdownHighlightResult(source, parserFlags).spans;
+): ReadonlyArray<MarkdownSpan> {
+	const key = `${parserFlags}\u0000${source}`;
+	const cached = highlightCache.get(key);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const spans = computeMarkdownHighlightResult(source, parserFlags).spans;
+	highlightCache.set(key, spans);
+	return spans;
+}
+
+export function splitSpansByLine(
+	spans: ReadonlyArray<MarkdownSpan>,
+	lineSources: ReadonlyArray<string>,
+): Array<Array<MarkdownSpan>> {
+	const result: Array<Array<MarkdownSpan>> = [];
+	let first = 0;
+	let lineStart = 0;
+	for (const lineSource of lineSources) {
+		const lineEnd = lineStart + lineSource.length;
+		while (first < spans.length && spans[first]!.end <= lineStart) {
+			first += 1;
+		}
+		const lineSpans: Array<MarkdownSpan> = [];
+		for (let index = first; index < spans.length && spans[index]!.start < lineEnd; index += 1) {
+			const span = spans[index]!;
+			const start = Math.max(span.start, lineStart) - lineStart;
+			const end = Math.min(span.end, lineEnd) - lineStart;
+			if (end > start) {
+				lineSpans.push({...span, start, end});
+			}
+		}
+		result.push(lineSpans);
+		lineStart = lineEnd + 1;
+	}
+	return result;
 }
 
 function computeMarkdownHighlightResult(
@@ -126,7 +164,10 @@ function computeMarkdownHighlightResult(
 	return {spans: coalesce(spans), recovered};
 }
 
-export function markSilentMessagePrefix(spans: Array<MarkdownSpan>, source: string): Array<MarkdownSpan> {
+export function markSilentMessagePrefix(
+	spans: ReadonlyArray<MarkdownSpan>,
+	source: string,
+): ReadonlyArray<MarkdownSpan> {
 	const prefix = parseSilentMessagePrefix(source);
 	if (prefix == null) {
 		return spans;

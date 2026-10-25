@@ -5,22 +5,21 @@ use crate::ast::{
 };
 use crate::constants::MAX_LINK_URL_LENGTH;
 use crate::parser::{MarkdownParser, ParseError};
+use crate::scan::{ANGLE_SYNTAX_PREFIXES, Lookahead, Pattern, http_scheme_len};
 use crate::text::{
-    advance_one, bounded_url_end, byte_at, find_from, has_visible_content, is_alpha_numeric,
+    bounded_utf8_prefix_length, byte_at, find_from, has_visible_content, is_alpha_numeric,
     is_digit, is_digit_only, is_whitespace, starts_with, trim,
 };
 
 const APP_PROTOCOL_SCHEME: &str = "fluxer:";
-
-#[derive(Clone, Debug)]
-struct BracketResult<'a> {
-    bracket_position: usize,
-    link_text: &'a str,
-}
+const MAX_COMMAND_NAME_LENGTH: usize = 32;
+const MAX_COMMAND_SEGMENTS: usize = 3;
+const MAX_COMMAND_COLON_INDEX: usize = MAX_COMMAND_SEGMENTS * (MAX_COMMAND_NAME_LENGTH + 1);
 
 #[derive(Clone, Debug)]
 struct UrlInfo<'a> {
     url: &'a str,
+    start: usize,
     escaped: bool,
     advance_by: usize,
 }
@@ -33,11 +32,11 @@ struct ComparableUrl<'a> {
     hash: &'a str,
 }
 
-pub fn parse_custom_emoji(text: &str) -> Option<ParserResult> {
+pub(crate) fn parse_custom_emoji(text: &str) -> Option<ParserResult> {
     if !(starts_with(text, "<:") || starts_with(text, "<a:")) {
         return None;
     }
-    let end = find_from(text, 0, b'>')?;
+    let end = text.len() - 1;
     if end < 4 {
         return None;
     }
@@ -136,11 +135,11 @@ pub fn parse_emoji_shortcode(parser: &MarkdownParser, text: &str) -> Option<Pars
     })
 }
 
-pub fn parse_timestamp(text: &str) -> Option<ParserResult> {
+pub(crate) fn parse_timestamp(text: &str) -> Option<ParserResult> {
     if !starts_with(text, "<t:") {
         return None;
     }
-    let end = find_from(text, 0, b'>')?;
+    let end = text.len() - 1;
     let inner = &text[3..end];
     if inner.is_empty() {
         return None;
@@ -179,11 +178,11 @@ pub fn parse_timestamp(text: &str) -> Option<ParserResult> {
     })
 }
 
-pub fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
+pub(crate) fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
     if text.len() < 2 || byte_at(text, 0) != b'<' {
         return None;
     }
-    let end = find_from(text, 0, b'>')?;
+    let end = text.len() - 1;
     if end < 2 {
         return None;
     }
@@ -219,7 +218,10 @@ pub fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
             if !ParserFlags::has(flags, ParserFlags::ALLOW_COMMAND_MENTIONS) {
                 return None;
             }
-            let colon = find_from(inner, 0, b':')?;
+            let colon = inner
+                .bytes()
+                .take(MAX_COMMAND_COLON_INDEX + 1)
+                .position(|byte| byte == b':')?;
             let id = &inner[colon + 1..];
             if !is_digit_only(id) {
                 return None;
@@ -227,7 +229,10 @@ pub fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
             let command = &inner[1..colon];
             let mut segments = Vec::new();
             for segment in command.split(' ') {
-                if segment.is_empty() || !is_valid_command_name(segment) || segments.len() == 3 {
+                if segment.is_empty()
+                    || !is_valid_command_name(segment)
+                    || segments.len() == MAX_COMMAND_SEGMENTS
+                {
                     return None;
                 }
                 segments.push(segment);
@@ -238,7 +243,8 @@ pub fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
             return mention(
                 MentionKind::Command {
                     name: segments[0].to_owned(),
-                    subcommand_group: (segments.len() == 3).then(|| segments[1].to_owned()),
+                    subcommand_group: (segments.len() == MAX_COMMAND_SEGMENTS)
+                        .then(|| segments[1].to_owned()),
                     subcommand: (segments.len() >= 2)
                         .then(|| segments[segments.len() - 1].to_owned()),
                     id: id.to_owned(),
@@ -281,23 +287,28 @@ fn mention(kind: MentionKind, end: usize) -> Option<ParserResult> {
     })
 }
 
-pub fn parse_masked_link(
+pub(crate) fn parse_masked_link(
     parser: &mut MarkdownParser,
-    text: &str,
+    scan: &mut Lookahead<'_>,
+    position: usize,
     base_offset: usize,
 ) -> Result<Option<ParserResult>, ParseError> {
+    let text = &scan.text[position..];
     if text.is_empty() || byte_at(text, 0) != b'[' {
         return Ok(None);
     }
-    let Some(closing) = find_closing_bracket(text) else {
+    let Some(bracket_position) = scan
+        .closing_bracket(position)
+        .map(|closing| closing - position)
+        .filter(|distance| *distance <= MAX_LINK_URL_LENGTH)
+    else {
         return Ok(None);
     };
-    let link_text = closing.link_text;
-    let trimmed_link_text = trim(link_text);
-    if contains_link_syntax(link_text) {
-        if closing.bracket_position + 1 < text.len()
-            && byte_at(text, closing.bracket_position + 1) == b'('
-            && let Some(url_info) = extract_url(text, closing.bracket_position + 2)
+    let link_text = &text[1..bracket_position];
+    if scan.has_link_syntax(position + 1, position + bracket_position) {
+        if bracket_position + 1 < text.len()
+            && byte_at(text, bracket_position + 1) == b'('
+            && let Some(url_info) = extract_url(scan, position, bracket_position + 2)
         {
             return Ok(Some(ParserResult {
                 node: Node::Text {
@@ -308,34 +319,33 @@ pub fn parse_masked_link(
         }
         return Ok(Some(ParserResult {
             node: Node::Text {
-                content: text[..closing.bracket_position + 1].to_owned(),
+                content: text[..bracket_position + 1].to_owned(),
             },
-            advance: closing.bracket_position + 1,
+            advance: bracket_position + 1,
         }));
     }
-    if closing.bracket_position + 1 >= text.len()
-        || byte_at(text, closing.bracket_position + 1) != b'('
-    {
+    if bracket_position + 1 >= text.len() || byte_at(text, bracket_position + 1) != b'(' {
         return Ok(None);
     }
-    let Some(url_info) = extract_url(text, closing.bracket_position + 2) else {
-        if let Some(mention) = parse_mention(trimmed_link_text, parser.flags())
-            && mention.advance == trimmed_link_text.len()
+    let trimmed_link_text = trim(link_text);
+    let Some(url_info) = extract_url(scan, position, bracket_position + 2) else {
+        if trimmed_link_text.find('>') == Some(trimmed_link_text.len().wrapping_sub(1))
+            && parse_mention(trimmed_link_text, parser.flags()).is_some()
         {
             return Ok(None);
         }
         return Ok(Some(ParserResult {
             node: Node::Text {
-                content: text[..closing.bracket_position + 1].to_owned(),
+                content: text[..bracket_position + 1].to_owned(),
             },
-            advance: closing.bracket_position + 1,
+            advance: bracket_position + 1,
         }));
     };
     if !has_visible_content(link_text)
-        || is_slash_command_masked_link_text(trim(link_text))
-        || is_email_like(trim(link_text))
+        || is_slash_command_masked_link_text(trimmed_link_text)
+        || is_email_like(trimmed_link_text)
         || url_info.url.len() > MAX_LINK_URL_LENGTH
-        || !is_valid_masked_link_url(url_info.url)
+        || !is_valid_masked_link_url(scan, position + url_info.start, url_info.url.len())
         || (starts_with_url(trimmed_link_text)
             && should_treat_as_masked_link(trimmed_link_text, url_info.url))
     {
@@ -367,95 +377,42 @@ pub fn parse_masked_link(
     }))
 }
 
-fn find_closing_bracket(text: &str) -> Option<BracketResult<'_>> {
-    let mut position = 1;
-    let mut nested = 0usize;
-    while position < text.len() {
-        match byte_at(text, position) {
-            b'[' => {
-                nested += 1;
-                position += 1;
-            }
-            b']' if nested > 0 => {
-                nested -= 1;
-                position += 1;
-            }
-            b']' => {
-                return Some(BracketResult {
-                    bracket_position: position,
-                    link_text: &text[1..position],
-                });
-            }
-            b'\\' => position += if position + 1 < text.len() { 2 } else { 1 },
-            _ => position += advance_one(text, position),
-        }
-        if position > MAX_LINK_URL_LENGTH {
-            break;
-        }
-    }
-    None
-}
-
-fn extract_url(text: &str, start: usize) -> Option<UrlInfo<'_>> {
+fn extract_url<'a>(scan: &mut Lookahead<'a>, position: usize, start: usize) -> Option<UrlInfo<'a>> {
+    let text = &scan.text[position..];
     if start >= text.len() {
         return None;
     }
     if byte_at(text, start) == b'<' {
-        return extract_escaped_url(text, start + 1);
-    }
-    extract_unescaped_url(text, start)
-}
-
-fn extract_escaped_url(text: &str, start: usize) -> Option<UrlInfo<'_>> {
-    let mut pos = start;
-    while pos < text.len() {
-        if byte_at(text, pos) == b'>' {
-            let url = &text[start..pos];
-            pos += 1;
-            if pos >= text.len() || byte_at(text, pos) != b')' {
-                return None;
-            }
-            return Some(UrlInfo {
-                url,
-                escaped: true,
-                advance_by: pos + 1,
-            });
+        let close =
+            scan.next(Pattern::AngleClose, position + start + 1, scan.text.len())? - position;
+        if close + 1 >= text.len() || byte_at(text, close + 1) != b')' {
+            return None;
         }
-        pos += advance_one(text, pos);
+        return Some(UrlInfo {
+            url: &text[start + 1..close],
+            start: start + 1,
+            escaped: true,
+            advance_by: close + 2,
+        });
     }
-    None
+    let close = scan.closing_paren(position + start)? - position;
+    Some(UrlInfo {
+        url: &text[start..close],
+        start,
+        escaped: false,
+        advance_by: close + 1,
+    })
 }
 
-fn extract_unescaped_url(text: &str, start: usize) -> Option<UrlInfo<'_>> {
-    let mut pos = start;
-    let mut nested = 0usize;
-    while pos < text.len() {
-        match byte_at(text, pos) {
-            b'(' => {
-                nested += 1;
-                pos += 1;
-            }
-            b')' if nested > 0 => {
-                nested -= 1;
-                pos += 1;
-            }
-            b')' => {
-                return Some(UrlInfo {
-                    url: &text[start..pos],
-                    escaped: false,
-                    advance_by: pos + 1,
-                });
-            }
-            _ => pos += advance_one(text, pos),
-        }
-    }
-    None
-}
-
-pub fn parse_url_segment(text: &str, flags: u32) -> Option<ParserResult> {
+pub(crate) fn parse_url_segment(
+    scan: &mut Lookahead<'_>,
+    position: usize,
+    flags: u32,
+) -> Option<ParserResult> {
     if !ParserFlags::has(flags, ParserFlags::ALLOW_AUTOLINKS) {
         return None;
     }
+    let text = &scan.text[position..];
     let prefix_len = if starts_with(text, "https://") {
         8
     } else if starts_with(text, "http://") {
@@ -465,30 +422,12 @@ pub fn parse_url_segment(text: &str, flags: u32) -> Option<ParserResult> {
     } else {
         return None;
     };
-    let mut end = prefix_len;
-    let mut paren_depth = 0usize;
-    while end < text.len() {
-        let c = byte_at(text, end);
-        if c == b'(' {
-            paren_depth += 1;
-            end += 1;
-        } else if c == b')' {
-            if paren_depth > 0 {
-                paren_depth -= 1;
-                end += 1;
-            } else {
-                break;
-            }
-        } else if is_url_termination_char(c) {
-            break;
-        } else {
-            end += advance_one(text, end);
-        }
-        if end - prefix_len > MAX_LINK_URL_LENGTH {
-            end = bounded_url_end(text, end, prefix_len);
-            break;
-        }
-    }
+    let stop = scan.url_stop(position + prefix_len) - position;
+    let mut end = if stop - prefix_len <= MAX_LINK_URL_LENGTH {
+        stop
+    } else {
+        bounded_utf8_prefix_length(text, prefix_len + MAX_LINK_URL_LENGTH)
+    };
     while end > 0
         && is_trimmed_autolink_punctuation(byte_at(text, end - 1))
         && !has_terminal_tld(&text[..end])
@@ -498,16 +437,17 @@ pub fn parse_url_segment(text: &str, flags: u32) -> Option<ParserResult> {
     if end <= prefix_len {
         return None;
     }
-    let url = &text[..end];
-    if (starts_with_app_protocol_url(url) && !looks_like_valid_app_protocol_url(url))
-        || contains_nested_scheme_before_path(url, prefix_len)
-        || contains_formatting_marker_before_path(url, prefix_len)
-        || contains_unparenthesized_nested_http_url(url)
-        || contains_angle_bracket_syntax(url)
-        || contains_angle_email_like(url)
+    let url_end = position + end;
+    if (starts_with_app_protocol_url(&text[..end])
+        && !is_valid_app_protocol_url(scan, position, url_end))
+        || contains_nested_scheme_before_path(scan, position + prefix_len, url_end)
+        || contains_formatting_marker_before_path(scan, position + prefix_len, url_end)
+        || contains_angle_bracket_markup(scan, position, url_end)
     {
         return None;
     }
+    let text = &scan.text[position..];
+    let url = &text[..end];
     let escaped = matches!(byte_at(text, 0), b'"' | b'\'')
         || (end < text.len() && matches!(byte_at(text, end), b'"' | b'\''));
     Some(ParserResult {
@@ -522,14 +462,20 @@ pub fn parse_url_segment(text: &str, flags: u32) -> Option<ParserResult> {
     })
 }
 
-pub fn parse_autolink(text: &str, flags: u32) -> Option<ParserResult> {
+pub(crate) fn parse_autolink(
+    scan: &mut Lookahead<'_>,
+    position: usize,
+    close: usize,
+    flags: u32,
+) -> Option<ParserResult> {
+    let text = &scan.text[position..=close];
     if !ParserFlags::has(flags, ParserFlags::ALLOW_AUTOLINKS) || byte_at(text, 0) != b'<' {
         return None;
     }
     if matches!(byte_at(text, 1), b'"' | b'\'') || !starts_with_url(&text[1..]) {
         return None;
     }
-    let end = find_from(text, 1, b'>')?;
+    let end = text.len() - 1;
     let url = &text[1..end];
     if url.len() > MAX_LINK_URL_LENGTH {
         return None;
@@ -544,10 +490,10 @@ pub fn parse_autolink(text: &str, flags: u32) -> Option<ParserResult> {
         return None;
     };
     if starts_with_app_protocol_url(url) {
-        if !looks_like_valid_app_protocol_url(url) {
+        if !is_valid_app_protocol_url(scan, position + 1, close) {
             return None;
         }
-    } else if !looks_like_valid_http_url_prefix(url, prefix_len) {
+    } else if !looks_like_valid_http_url_prefix(scan, position + 1, close, prefix_len, true) {
         return None;
     }
     Some(ParserResult {
@@ -562,11 +508,11 @@ pub fn parse_autolink(text: &str, flags: u32) -> Option<ParserResult> {
     })
 }
 
-pub fn parse_email_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
+pub(crate) fn parse_email_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
     if !ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS) || byte_at(text, 0) != b'<' {
         return None;
     }
-    let end = find_from(text, 1, b'>')?;
+    let end = text.len() - 1;
     let content = &text[1..end];
     if starts_with(content, "http://")
         || starts_with(content, "https://")
@@ -593,11 +539,11 @@ pub fn parse_email_link(parser: &MarkdownParser, text: &str) -> Option<ParserRes
     })
 }
 
-pub fn parse_phone_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
+pub(crate) fn parse_phone_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
     if !ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS) || byte_at(text, 0) != b'<' {
         return None;
     }
-    let end = find_from(text, 1, b'>')?;
+    let end = text.len() - 1;
     let content = &text[1..end];
     if !is_valid_phone_number(content) {
         return None;
@@ -618,13 +564,13 @@ pub fn parse_phone_link(parser: &MarkdownParser, text: &str) -> Option<ParserRes
     })
 }
 
-pub fn parse_sms_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
+pub(crate) fn parse_sms_link(parser: &MarkdownParser, text: &str) -> Option<ParserResult> {
     if !ParserFlags::has(parser.flags(), ParserFlags::ALLOW_AUTOLINKS)
         || !starts_with(text, "<sms:")
     {
         return None;
     }
-    let end = find_from(text, 1, b'>')?;
+    let end = text.len() - 1;
     let content = &text[1..end];
     let phone = &content[4..];
     if !is_valid_phone_number(phone) {
@@ -662,30 +608,18 @@ fn starts_with_app_protocol_url(text: &str) -> bool {
     )
 }
 
-pub fn looks_like_valid_http_url_prefix(url: &str, prefix_len: usize) -> bool {
-    looks_like_valid_http_url_prefix_with_userinfo(url, prefix_len, true)
-}
-
-fn looks_like_valid_http_url_prefix_with_userinfo(
-    url: &str,
+fn looks_like_valid_http_url_prefix(
+    scan: &mut Lookahead<'_>,
+    start: usize,
+    end: usize,
     prefix_len: usize,
     allow_userinfo: bool,
 ) -> bool {
-    if url.len() <= prefix_len
-        || contains_unparenthesized_nested_http_url(url)
-        || contains_angle_bracket_syntax(url)
-        || contains_angle_email_like(url)
-    {
+    if end - start <= prefix_len || contains_angle_bracket_markup(scan, start, end) {
         return false;
     }
-    let mut authority_end = prefix_len;
-    while authority_end < url.len() {
-        let char = byte_at(url, authority_end);
-        if matches!(char, b'/' | b'?' | b'#') {
-            break;
-        }
-        authority_end += 1;
-    }
+    let url = &scan.text[start..end];
+    let authority_end = path_start(scan, start + prefix_len, end) - start;
     let colon_before_path_slash = authority_end < url.len()
         && byte_at(url, authority_end) == b'/'
         && authority_end > prefix_len
@@ -695,6 +629,10 @@ fn looks_like_valid_http_url_prefix_with_userinfo(
         allow_userinfo,
         colon_before_path_slash,
     )
+}
+
+fn path_start(scan: &mut Lookahead<'_>, from: usize, end: usize) -> usize {
+    scan.next(Pattern::PathDelimiter, from, end).unwrap_or(end)
 }
 
 fn is_valid_http_authority(
@@ -751,52 +689,78 @@ fn is_valid_http_authority(
     true
 }
 
-fn contains_angle_bracket_syntax(value: &str) -> bool {
-    ["<:", "<a:", "<id:", "<@", "<#", "</", "<t:", "<+", "<sms:"]
-        .iter()
-        .any(|needle| value.contains(needle))
+fn contains_angle_bracket_markup(scan: &mut Lookahead<'_>, start: usize, end: usize) -> bool {
+    scan.next(Pattern::AngleOpen, start, end).is_some()
+        && (contains_unparenthesized_nested_http_url(scan, start, end)
+            || contains_angle_bracket_syntax(scan, start, end)
+            || scan.has_angle_email(start, end))
 }
 
-fn contains_unparenthesized_nested_http_url(url: &str) -> bool {
-    for needle in ["<http://", "<https://"] {
-        if let Some(pos) = url.find(needle)
-            && !url[..pos].contains('(')
+fn contains_angle_bracket_syntax(scan: &mut Lookahead<'_>, start: usize, end: usize) -> bool {
+    let mut from = start;
+    while let Some(position) = scan.next(Pattern::AngleSyntax, from, end) {
+        let window = &scan.text.as_bytes()[position..end];
+        if ANGLE_SYNTAX_PREFIXES
+            .iter()
+            .any(|prefix| window.starts_with(prefix.as_bytes()))
         {
             return true;
         }
+        from = position + 1;
     }
     false
 }
 
-fn contains_nested_scheme_before_path(url: &str, prefix_len: usize) -> bool {
-    let rest = &url[prefix_len..];
-    let first_path_delimiter = rest
-        .bytes()
-        .position(|char| matches!(char, b'/' | b'?' | b'#'))
-        .unwrap_or(rest.len());
-    for needle in ["http://", "https://"] {
-        if let Some(pos) = rest.find(needle)
-            && pos < first_path_delimiter
-            && pos > 0
-            && byte_at(rest, pos - 1) == b'('
-        {
-            return true;
+fn contains_unparenthesized_nested_http_url(
+    scan: &mut Lookahead<'_>,
+    start: usize,
+    end: usize,
+) -> bool {
+    let bytes = scan.text.as_bytes();
+    let Some(position) = scan
+        .next(Pattern::NestedHttpUrl, start, end)
+        .filter(|position| {
+            http_scheme_len(&bytes[position + 1..]).is_some_and(|len| position + 1 + len <= end)
+        })
+    else {
+        return false;
+    };
+    scan.next(Pattern::OpenParen, start, position).is_none()
+}
+
+fn contains_nested_scheme_before_path(
+    scan: &mut Lookahead<'_>,
+    rest_start: usize,
+    end: usize,
+) -> bool {
+    let bytes = scan.text.as_bytes();
+    let path = path_start(scan, rest_start, end);
+    let mut checked = [false; 2];
+    let mut from = rest_start;
+    while !(checked[0] && checked[1])
+        && let Some(position) = scan.next(Pattern::HttpScheme, from, path)
+    {
+        let len = http_scheme_len(&bytes[position..]).unwrap_or_default();
+        let kind = usize::from(len == 8);
+        if !checked[kind] {
+            checked[kind] = true;
+            if position + len <= end && position > rest_start && bytes[position - 1] == b'(' {
+                return true;
+            }
         }
+        from = position + 1;
     }
     false
 }
 
-fn contains_formatting_marker_before_path(url: &str, prefix_len: usize) -> bool {
-    let rest = &url[prefix_len..];
-    let authority_end = rest
-        .bytes()
-        .position(|char| matches!(char, b'/' | b'?' | b'#'))
-        .unwrap_or(rest.len());
-    let authority = &rest[..authority_end];
-    authority.contains("__")
-        || authority.contains("**")
-        || authority.contains("~~")
-        || authority.contains("||")
+fn contains_formatting_marker_before_path(
+    scan: &mut Lookahead<'_>,
+    rest_start: usize,
+    end: usize,
+) -> bool {
+    let path = path_start(scan, rest_start, end);
+    scan.next(Pattern::DoubledMarker, rest_start, path)
+        .is_some_and(|position| position + 2 <= path)
 }
 
 fn is_valid_bracketed_ip_literal(value: &str) -> bool {
@@ -807,15 +771,16 @@ fn is_valid_bracketed_ip_literal(value: &str) -> bool {
             .all(|char| is_digit(char) || char.is_ascii_hexdigit() || matches!(char, b':' | b'.'))
 }
 
-pub fn is_valid_masked_link_url(url: &str) -> bool {
+fn is_valid_masked_link_url(scan: &mut Lookahead<'_>, start: usize, len: usize) -> bool {
+    let url = &scan.text[start..start + len];
     if url.is_empty() || url.contains('"') {
         return false;
     }
     if starts_with(url, "https://") {
-        return looks_like_valid_http_url_prefix_with_userinfo(url, 8, false);
+        return looks_like_valid_http_url_prefix(scan, start, start + len, 8, false);
     }
     if starts_with(url, "http://") {
-        return looks_like_valid_http_url_prefix_with_userinfo(url, 7, false);
+        return looks_like_valid_http_url_prefix(scan, start, start + len, 7, false);
     }
     if starts_with(url, "mailto:") {
         return is_valid_email(&url["mailto:".len()..]);
@@ -826,30 +791,7 @@ pub fn is_valid_masked_link_url(url: &str) -> bool {
     if starts_with(url, "sms:") {
         return is_valid_phone_number(&url["sms:".len()..]);
     }
-    if starts_with_app_protocol_url(url) {
-        return looks_like_valid_app_protocol_url(url);
-    }
-    false
-}
-
-fn contains_angle_email_like(value: &str) -> bool {
-    let mut offset = 0;
-    while offset < value.len() {
-        let Some(open_relative) = value[offset..].find('<') else {
-            return false;
-        };
-        let open = offset + open_relative;
-        let Some(close_relative) = value[open + 1..].find('>') else {
-            return false;
-        };
-        let close = open + 1 + close_relative;
-        let inner = &value[open + 1..close];
-        if !inner.is_empty() && byte_at(inner, 0) != b'@' && inner.contains('@') {
-            return true;
-        }
-        offset = close + 1;
-    }
-    false
+    starts_with_app_protocol_url(url) && is_valid_app_protocol_url(scan, start, start + len)
 }
 
 pub fn should_treat_as_masked_link(link_text: &str, url: &str) -> bool {
@@ -925,20 +867,13 @@ fn equivalent_url_path(left: &str, right: &str) -> bool {
     normalized_left == normalized_right
 }
 
-fn looks_like_valid_app_protocol_url(url: &str) -> bool {
-    if !starts_with_app_protocol_url(url) {
-        return false;
-    }
-    url[APP_PROTOCOL_SCHEME.len()..].bytes().all(|char| {
-        !matches!(
-            char,
-            b'"' | b'\'' | b'<' | b'>' | b'\\' | b'|' | b' ' | b'\t' | b'\r' | b'\n'
-        )
-    })
-}
-
-pub fn is_url_termination_char(char: u8) -> bool {
-    matches!(char, b' ' | b'\t' | b'\n' | b'\r' | b')' | b'"')
+fn is_valid_app_protocol_url(scan: &mut Lookahead<'_>, start: usize, end: usize) -> bool {
+    scan.next(
+        Pattern::AppProtocolInvalid,
+        start + APP_PROTOCOL_SCHEME.len(),
+        end,
+    )
+    .is_none()
 }
 
 pub fn is_word_underscore(text: &str, pos: usize) -> bool {
@@ -963,28 +898,11 @@ pub fn is_valid_emoji_name(name: &str) -> bool {
 
 fn is_valid_command_name(name: &str) -> bool {
     !name.is_empty()
-        && name.len() <= 32
+        && name.len() <= MAX_COMMAND_NAME_LENGTH
         && name.bytes().all(|char| {
             !char.is_ascii_uppercase()
                 && (char >= 0x80 || is_alpha_numeric(char) || matches!(char, b'-' | b'_' | b'\''))
         })
-}
-
-fn contains_link_syntax(text: &str) -> bool {
-    let mut search_offset = 0;
-    while let Some(bracket) = text[search_offset..].find('[') {
-        let bracket = search_offset + bracket;
-        let after = &text[bracket + 1..];
-        let Some(close) = after.find(']') else {
-            return false;
-        };
-        let close_abs = bracket + 1 + close;
-        if close_abs + 1 < text.len() && byte_at(text, close_abs + 1) == b'(' {
-            return true;
-        }
-        search_offset = close_abs + 1;
-    }
-    false
 }
 
 fn is_slash_command_masked_link_text(text: &str) -> bool {
@@ -1008,25 +926,23 @@ fn is_email_like(text: &str) -> bool {
 }
 
 pub fn is_valid_email(text: &str) -> bool {
-    if !text.contains('@') || text.contains(' ') {
-        return false;
-    }
-    let Some(at) = text.find('@') else {
+    let Some(at) = text
+        .bytes()
+        .position(|char| {
+            !(is_alpha_numeric(char) || matches!(char, b'.' | b'_' | b'%' | b'+' | b'-'))
+        })
+        .filter(|at| byte_at(text, *at) == b'@')
+    else {
         return false;
     };
     if at == 0 || at + 1 >= text.len() {
         return false;
     }
-    for char in text[..at].bytes() {
-        if !(is_alpha_numeric(char) || matches!(char, b'.' | b'_' | b'%' | b'+' | b'-')) {
-            return false;
-        }
-    }
     let domain = &text[at + 1..];
-    let Some(dot) = domain.rfind('.') else {
-        return false;
-    };
-    dot > 0 && dot + 2 <= domain.len() && all_ascii_domain(domain)
+    all_ascii_domain(domain)
+        && domain
+            .rfind('.')
+            .is_some_and(|dot| dot > 0 && dot + 2 <= domain.len())
 }
 
 fn all_ascii_domain(domain: &str) -> bool {
@@ -1391,12 +1307,4 @@ pub fn is_right_flanking_delimiter(previous: u8, next: u8) -> bool {
     !crate::text::is_punctuation(previous)
         || crate::text::is_whitespace(next)
         || crate::text::is_punctuation(next)
-}
-
-pub fn count_repeated_byte(text: &str, position: usize, byte: u8) -> usize {
-    let mut count = 0;
-    while position + count < text.len() && byte_at(text, position + count) == byte {
-        count += 1;
-    }
-    count
 }

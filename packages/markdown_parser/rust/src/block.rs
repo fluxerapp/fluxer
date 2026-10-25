@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::{AlertType, ListItem, Node, ParserFlags, TableAlignment};
-use crate::constants::{CODE_FENCE_LENGTH, MAX_AST_NODES, MAX_LINE_LENGTH};
+use crate::constants::{
+    CODE_FENCE_LENGTH, MAX_AST_NODES, MAX_CODE_BLOCK_SEARCH_LINES, MAX_LINE_LENGTH,
+};
 use crate::links::{has_open_inline_code, has_valid_code_fence_language};
 use crate::normalize::{normalize_nodes, replace_trailing_whitespace_with_newline};
 use crate::parser::{MarkdownParser, ParseError, RuntimeState};
 use crate::text::{
-    Line, bounded_line_text, byte_at, concat, concat3, has_visible_content, line_as_text,
-    lines_to_text, starts_with, trim, trim_line_window, trim_right, trim_start,
-    trim_start_newline_whitespace,
+    Line, bounded_line_text, byte_at, concat, has_visible_content, line_as_text, lines_to_text,
+    starts_with, trim, trim_line_window, trim_right, trim_start, trim_start_newline_whitespace,
 };
 
 #[derive(Clone, Debug)]
@@ -73,6 +74,12 @@ struct TableCellText {
     offset: usize,
 }
 
+#[derive(Clone, Copy, Debug)]
+struct TableLine<'a> {
+    text: &'a str,
+    offset: usize,
+}
+
 pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResult, ParseError> {
     let current = state.current_line;
     let line = state.lines[current].text.clone();
@@ -110,14 +117,20 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
 
     if let Some(list_match) = match_list_item(&line) {
         if ParserFlags::has(state.parser.flags(), ParserFlags::ALLOW_LISTS) {
-            let list = parse_list(
-                state.parser,
-                &state.lines,
+            let node_count = state.parser.node_count;
+            let list = ListContext {
+                parser: state.parser,
+                lines: &state.lines,
+                fences: &mut state.fences,
+            }
+            .parse_list(
                 current,
-                list_match.ordered,
-                list_match.indent_level,
-                1,
-                state.parser.node_count,
+                ListLevel {
+                    ordered: list_match.ordered,
+                    indent_level: list_match.indent_level,
+                    depth: 1,
+                },
+                node_count,
             )?;
             return Ok(BlockParseResult {
                 node: Some(list.node),
@@ -137,9 +150,8 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
     if starts_with(trimmed, "||") && !trimmed[2..].contains("||") {
         if ParserFlags::has(state.parser.flags(), ParserFlags::ALLOW_SPOILERS) {
             let result = parse_block_spoiler(state.parser, &state.lines, current)?;
-            if let Some(extra) = &result.extra_content {
-                state.lines[result.new_line_index].text = extra.content.clone();
-                state.lines[result.new_line_index].offset = extra.offset;
+            if let Some(extra) = result.extra_content {
+                state.replace_line(result.new_line_index, extra.content, extra.offset);
             }
             return Ok(BlockParseResult {
                 node: Some(result.node),
@@ -161,10 +173,11 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
             let starts_with_fence =
                 starts_with(trimmed, "```") && fence_pos == line.len() - trimmed.len();
             if starts_with_fence {
-                if let Some(result) = parse_code_block(&state.lines, current)? {
-                    if let Some(extra) = &result.extra_content {
-                        state.lines[result.new_line_index].text = extra.content.clone();
-                        state.lines[result.new_line_index].offset = extra.offset;
+                if let Some(result) =
+                    parse_code_block(&state.lines, current, &line, line_offset, &mut state.fences)
+                {
+                    if let Some(extra) = result.extra_content {
+                        state.replace_line(result.new_line_index, extra.content, extra.offset);
                     }
                     return Ok(BlockParseResult {
                         node: Some(result.node),
@@ -179,25 +192,37 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
             if has_open_inline_code(prefix) {
                 return Ok(no_block(current, state.parser.node_count));
             }
-            let inline_nodes = crate::inline::parse_inline(state.parser, prefix, line_offset)?;
-            let code_lines = slice_lines_from_fence(&state.lines, current, fence_pos);
-            if let Some(code_result) = parse_code_block(&code_lines, 0)? {
-                let new_line_index = current + code_result.new_line_index;
-                let mut extra_nodes = Vec::new();
-                if inline_nodes.len() > 1 {
-                    extra_nodes.extend(inline_nodes[1..].iter().cloned());
+            if let Some(code_result) = parse_code_block(
+                &state.lines,
+                current,
+                &line[fence_pos..],
+                line_offset + fence_pos,
+                &mut state.fences,
+            ) {
+                let inline_nodes = crate::inline::parse_inline(state.parser, prefix, line_offset)?;
+                let new_node_count = state.parser.node_count + inline_nodes.len() + 1;
+                let new_line_index = code_result.new_line_index;
+                if let Some(extra) = code_result.extra_content {
+                    state.replace_line(new_line_index, extra.content, extra.offset);
                 }
-                extra_nodes.push(code_result.node.clone());
-                if let Some(extra) = &code_result.extra_content {
-                    state.lines[new_line_index].text = extra.content.clone();
-                    state.lines[new_line_index].offset = extra.offset;
-                }
-                let first_node = inline_nodes.first().cloned().unwrap_or(code_result.node);
+                let mut inline_nodes = inline_nodes.into_iter();
+                let first_node = inline_nodes.next();
+                let mut extra_nodes: Vec<Node> = inline_nodes.collect();
+                let first_node = match first_node {
+                    Some(first_node) => {
+                        extra_nodes.push(code_result.node);
+                        first_node
+                    }
+                    None => {
+                        extra_nodes.push(code_result.node.clone());
+                        code_result.node
+                    }
+                };
                 return Ok(BlockParseResult {
                     node: Some(first_node),
                     extra_nodes: Some(extra_nodes),
                     new_line_index,
-                    new_node_count: state.parser.node_count + inline_nodes.len() + 1,
+                    new_node_count,
                 });
             }
         }
@@ -205,7 +230,8 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
         let mut content = line;
         let mut end_index = current + 1;
         while end_index < state.lines.len() {
-            content = concat3(&content, "\n", &state.lines[end_index].text);
+            content.push('\n');
+            content.push_str(&state.lines[end_index].text);
             if trim(&state.lines[end_index].text) == "```" {
                 end_index += 1;
                 break;
@@ -279,30 +305,37 @@ fn no_block(current: usize, node_count: usize) -> BlockParseResult {
     }
 }
 
-pub(crate) fn parse_heading_node(
-    parser: &mut MarkdownParser,
-    trimmed_line: &str,
-    offset: usize,
-) -> Result<Option<Node>, ParseError> {
+pub(crate) fn heading_content(trimmed_line: &str) -> Option<(usize, &str)> {
     let mut level = 0usize;
     while level < trimmed_line.len() && level < 4 && byte_at(trimmed_line, level) == b'#' {
         level += 1;
     }
-    if (1..=4).contains(&level)
-        && level < trimmed_line.len()
-        && byte_at(trimmed_line, level) == b' '
+    if !(1..=4).contains(&level)
+        || level >= trimmed_line.len()
+        || byte_at(trimmed_line, level) != b' '
     {
-        let content = &trimmed_line[level + 1..];
-        if !has_visible_content(content) && trim(content).is_empty() {
-            return Ok(None);
-        }
-        let children = crate::inline::parse_inline(parser, content, offset + level + 1)?;
-        return Ok(Some(Node::Heading {
-            level: level as u8,
-            children,
-        }));
+        return None;
     }
-    Ok(None)
+    let content = &trimmed_line[level + 1..];
+    if !has_visible_content(content) && trim(content).is_empty() {
+        return None;
+    }
+    Some((level, content))
+}
+
+fn parse_heading_node(
+    parser: &mut MarkdownParser,
+    trimmed_line: &str,
+    offset: usize,
+) -> Result<Option<Node>, ParseError> {
+    let Some((level, content)) = heading_content(trimmed_line) else {
+        return Ok(None);
+    };
+    let children = crate::inline::parse_inline(parser, content, offset + level + 1)?;
+    Ok(Some(Node::Heading {
+        level: level as u8,
+        children,
+    }))
 }
 
 fn parse_subtext_node(
@@ -365,7 +398,7 @@ fn parse_blockquote(
         return Ok(no_block(index, node_count));
     }
     if ParserFlags::has(parser.flags(), ParserFlags::ALLOW_ALERTS)
-        && let Some(alert) = parse_alert_lines(parser, child_lines.clone())?
+        && let Some(alert) = parse_alert_lines(parser, &child_lines)?
     {
         return Ok(BlockParseResult {
             node: Some(alert),
@@ -447,11 +480,60 @@ fn parse_multiline_blockquote(
     })
 }
 
-fn parse_code_block(lines: &[Line], current: usize) -> Result<Option<CodeBlockResult>, ParseError> {
-    if current >= lines.len() {
-        return Ok(None);
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CodeBlockMode {
+    Build,
+    Probe,
+}
+
+#[derive(Clone, Debug)]
+struct CodeBlockContent {
+    mode: CodeBlockMode,
+    text: String,
+    len: usize,
+    visible: bool,
+}
+
+impl CodeBlockContent {
+    fn push_line(&mut self, line: &str) {
+        self.len += line.len() + 1;
+        self.visible = self.visible || has_visible_content(line);
+        if self.mode == CodeBlockMode::Build {
+            self.text.push_str(line);
+            self.text.push('\n');
+        }
     }
-    let line = &lines[current].text;
+
+    fn settled(&self) -> bool {
+        self.mode == CodeBlockMode::Probe && self.visible
+    }
+}
+
+fn parse_code_block(
+    lines: &[Line],
+    current: usize,
+    line: &str,
+    line_offset: usize,
+    fences: &mut ClosingFenceLines,
+) -> Option<CodeBlockResult> {
+    scan_code_block(
+        lines,
+        current,
+        line,
+        line_offset,
+        fences,
+        CodeBlockMode::Build,
+    )
+}
+
+fn scan_code_block(
+    lines: &[Line],
+    current: usize,
+    line: &str,
+    line_offset: usize,
+    fences: &mut ClosingFenceLines,
+    mode: CodeBlockMode,
+) -> Option<CodeBlockResult> {
     let trimmed_line = trim_start(line);
     let indent_spaces = line.len() - trimmed_line.len();
     let list_indent = &line[..indent_spaces];
@@ -460,17 +542,17 @@ fn parse_code_block(lines: &[Line], current: usize) -> Result<Option<CodeBlockRe
         fence_length += 1;
     }
     if fence_length < CODE_FENCE_LENGTH {
-        return Ok(None);
+        return None;
     }
     let language_part = &trimmed_line[fence_length..];
     let closing_fence = "`".repeat(fence_length);
     if let Some(closing_index) = language_part.find(&closing_fence) {
         let inline_content = &language_part[..closing_index];
         if !has_visible_content(inline_content) {
-            return Ok(None);
+            return None;
         }
         let trailing = &language_part[closing_index + fence_length..];
-        return Ok(Some(CodeBlockResult {
+        return Some(CodeBlockResult {
             node: Node::CodeBlock {
                 language: None,
                 content: inline_content.to_owned(),
@@ -482,94 +564,142 @@ fn parse_code_block(lines: &[Line], current: usize) -> Result<Option<CodeBlockRe
             },
             extra_content: (!trailing.is_empty()).then(|| ExtraContent {
                 content: trailing.to_owned(),
-                offset: lines[current].offset + (line.len() - trailing.len()),
+                offset: line_offset + (line.len() - trailing.len()),
             }),
-        }));
+        });
     }
     let treat_opening_as_language = has_valid_code_fence_language(language_part);
     let language = treat_opening_as_language.then(|| trim(language_part).to_owned());
-    let mut temp = current + 1;
-    let mut line_count = 0usize;
-    let mut has_closing = false;
-    while temp < lines.len() {
-        if find_closing_fence(trim_start(&lines[temp].text), &closing_fence, fence_length).is_some()
-        {
-            has_closing = true;
-            break;
-        }
-        line_count += 1;
-        if line_count > 1000 {
-            break;
-        }
-        temp += 1;
+    let closing_line = fences.next(lines, current + 1, &closing_fence)?;
+    if closing_line - current - 1 > MAX_CODE_BLOCK_SEARCH_LINES {
+        return None;
     }
-    if !has_closing {
-        return Ok(None);
-    }
-    let mut content = String::new();
+    let mut content = CodeBlockContent {
+        mode,
+        text: String::new(),
+        len: 0,
+        visible: false,
+    };
     if !treat_opening_as_language && !language_part.is_empty() {
-        content.push_str(language_part);
-        content.push('\n');
+        content.push_line(language_part);
     }
     let mut index = current + 1;
-    while index < lines.len() {
+    while index < closing_line && !content.settled() {
         let current_line = &lines[index].text;
-        let trimmed = trim_start(current_line);
-        if let Some(closing) = find_closing_fence(trimmed, &closing_fence, fence_length) {
-            let absolute_fence = current_line.find(&closing_fence).unwrap_or(0);
-            let prefix = &current_line[..absolute_fence];
-            let content_line = if indent_spaces > 0 && starts_with(prefix, list_indent) {
-                &prefix[indent_spaces..]
-            } else {
-                prefix
-            };
-            if !content_line.is_empty() {
-                content.push_str(content_line);
-                content.push('\n');
-            }
-            let extra_text = if !closing.trailing_text.is_empty() {
-                closing.trailing_text
-            } else if closing.backtick_count > fence_length {
-                &trimmed[closing.fence_index + fence_length..]
-            } else {
-                ""
-            };
-            if !extra_text.is_empty() {
-                if !has_visible_content(&content) {
-                    return Ok(None);
-                }
-                return Ok(Some(CodeBlockResult {
-                    node: Node::CodeBlock { language, content },
-                    new_line_index: index,
-                    extra_content: Some(ExtraContent {
-                        content: extra_text.to_owned(),
-                        offset: lines[index].offset + (current_line.len() - extra_text.len()),
-                    }),
-                }));
-            }
-            index += 1;
-            break;
-        }
         let content_line = if indent_spaces > 0 && starts_with(current_line, list_indent) {
             &current_line[indent_spaces..]
         } else {
             current_line
         };
-        content.push_str(content_line);
-        content.push('\n');
-        if content.len() > MAX_LINE_LENGTH * 100 {
+        content.push_line(content_line);
+        if content.len > MAX_LINE_LENGTH * 100 {
             break;
         }
         index += 1;
     }
-    if !has_visible_content(&content) {
-        return Ok(None);
+    let mut extra_content = None;
+    if index == closing_line && !content.settled() {
+        let current_line = &lines[index].text;
+        let trimmed = trim_start(current_line);
+        let closing = find_closing_fence(trimmed, &closing_fence, fence_length)?;
+        let absolute_fence = current_line.find(&closing_fence).unwrap_or(0);
+        let prefix = &current_line[..absolute_fence];
+        let content_line = if indent_spaces > 0 && starts_with(prefix, list_indent) {
+            &prefix[indent_spaces..]
+        } else {
+            prefix
+        };
+        if !content_line.is_empty() {
+            content.push_line(content_line);
+        }
+        let extra_text = if !closing.trailing_text.is_empty() {
+            closing.trailing_text
+        } else if closing.backtick_count > fence_length {
+            &trimmed[closing.fence_index + fence_length..]
+        } else {
+            ""
+        };
+        if extra_text.is_empty() {
+            index += 1;
+        } else {
+            extra_content = Some(ExtraContent {
+                content: extra_text.to_owned(),
+                offset: lines[index].offset + (current_line.len() - extra_text.len()),
+            });
+        }
     }
-    Ok(Some(CodeBlockResult {
-        node: Node::CodeBlock { language, content },
+    if !content.visible {
+        return None;
+    }
+    Some(CodeBlockResult {
+        node: Node::CodeBlock {
+            language,
+            content: content.text,
+        },
         new_line_index: index,
-        extra_content: None,
-    }))
+        extra_content,
+    })
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ClosingFenceLines {
+    next_by_fence: Vec<(usize, Vec<u32>)>,
+    valid_from: usize,
+}
+
+impl ClosingFenceLines {
+    pub(crate) fn line_replaced(&mut self, index: usize) {
+        self.valid_from = self.valid_from.max(index + 1);
+    }
+
+    fn next(&mut self, lines: &[Line], from: usize, closing_fence: &str) -> Option<usize> {
+        if from >= lines.len() {
+            return None;
+        }
+        if from < self.valid_from {
+            self.next_by_fence.clear();
+            self.valid_from = 0;
+        }
+        let fence_length = closing_fence.len();
+        let index = match self
+            .next_by_fence
+            .iter()
+            .position(|(length, _)| *length == fence_length)
+        {
+            Some(index) => index,
+            None => {
+                self.next_by_fence
+                    .push((fence_length, vec![0; lines.len()]));
+                self.next_by_fence.len() - 1
+            }
+        };
+        let next = &mut self.next_by_fence[index].1;
+        let mut position = from;
+        let found = loop {
+            if position == lines.len() {
+                break position;
+            }
+            if next[position] != 0 {
+                break next[position] as usize - 1;
+            }
+            if find_closing_fence(
+                trim_start(&lines[position].text),
+                closing_fence,
+                fence_length,
+            )
+            .is_some()
+            {
+                break position;
+            }
+            position += 1;
+        };
+        let stored = found as u32 + 1;
+        next[from..position].fill(stored);
+        if found == position && found < lines.len() {
+            next[found] = stored;
+        }
+        (found < lines.len()).then_some(found)
+    }
 }
 
 fn find_closing_fence<'a>(
@@ -681,7 +811,7 @@ fn parse_block_spoiler(
 
 fn parse_alert_lines(
     parser: &mut MarkdownParser,
-    lines: Vec<Line>,
+    lines: &[Line],
 ) -> Result<Option<Node>, ParseError> {
     if lines.is_empty() || !starts_with(&lines[0].text, "[!") {
         return Ok(None);
@@ -764,220 +894,231 @@ fn post_process_alert_nodes(nodes: Vec<Node>) -> Vec<Node> {
         return nodes;
     }
     let mut out = Vec::new();
-    let mut index = 0usize;
-    while index < nodes.len() {
-        let node = nodes[index].clone();
-        if let Node::Text { content } = &node
-            && index + 1 < nodes.len()
-            && matches!(nodes[index + 1], Node::List { .. })
-        {
-            let content = replace_trailing_whitespace_with_newline(content);
-            if !content.is_empty() {
-                out.push(Node::Text { content });
-            }
-            index += 1;
-            continue;
-        }
-        if matches!(node, Node::List { .. }) && index + 1 < nodes.len() {
-            out.push(node);
-            if let Node::Text { content } = &nodes[index + 1] {
-                let content = trim(content);
+    let mut nodes = nodes.into_iter().peekable();
+    while let Some(node) = nodes.next() {
+        match node {
+            Node::Text { content } if matches!(nodes.peek(), Some(Node::List { .. })) => {
+                let content = replace_trailing_whitespace_with_newline(&content);
                 if !content.is_empty() {
-                    out.push(Node::Text {
-                        content: concat("\n", content),
-                    });
-                    index += 2;
-                    continue;
+                    out.push(Node::Text { content });
                 }
             }
-            index += 1;
-            continue;
+            node @ Node::List { .. } if nodes.peek().is_some() => {
+                out.push(node);
+                let trailing = match nodes.peek() {
+                    Some(Node::Text { content }) if !trim(content).is_empty() => {
+                        Some(concat("\n", trim(content)))
+                    }
+                    _ => None,
+                };
+                if let Some(content) = trailing {
+                    nodes.next();
+                    out.push(Node::Text { content });
+                }
+            }
+            node => out.push(node),
         }
-        out.push(node);
-        index += 1;
     }
     out
 }
 
-fn parse_list(
-    parser: &mut MarkdownParser,
-    lines: &[Line],
-    current: usize,
+#[derive(Clone, Copy, Debug)]
+struct ListLevel {
     ordered: bool,
     indent_level: usize,
     depth: usize,
-    node_count: usize,
-) -> Result<ListResult, ParseError> {
-    let mut items = Vec::new();
-    let mut index = current;
-    let mut new_count = node_count;
-    while index < lines.len() {
-        if new_count > MAX_AST_NODES {
-            break;
-        }
-        let current_line = &lines[index].text;
-        let trimmed_line = trim_start(current_line);
-        if starts_with(trimmed_line, "#") || is_blockquote_start(trimmed_line, parser.flags()) {
-            break;
-        }
-        if let Some(item) = match_list_item(current_line) {
-            let ordinal = normalise_ordinal(&items, item.ordinal, ordered);
-            if item.indent_level < indent_level {
+}
+
+struct ListContext<'a> {
+    parser: &'a mut MarkdownParser,
+    lines: &'a [Line],
+    fences: &'a mut ClosingFenceLines,
+}
+
+impl ListContext<'_> {
+    fn parse_list(
+        &mut self,
+        current: usize,
+        level: ListLevel,
+        node_count: usize,
+    ) -> Result<ListResult, ParseError> {
+        let ListLevel {
+            ordered,
+            indent_level,
+            depth,
+        } = level;
+        let lines = self.lines;
+        let mut items = Vec::new();
+        let mut index = current;
+        let mut new_count = node_count;
+        while index < lines.len() {
+            if new_count > MAX_AST_NODES {
                 break;
             }
-            if item.indent_level == indent_level {
-                if item.ordered != ordered {
+            let current_line = &lines[index].text;
+            let trimmed_line = trim_start(current_line);
+            if starts_with(trimmed_line, "#")
+                || is_blockquote_start(trimmed_line, self.parser.flags())
+            {
+                break;
+            }
+            if let Some(item) = match_list_item(current_line) {
+                let ordinal = normalise_ordinal(&items, item.ordinal, ordered);
+                if item.indent_level < indent_level {
                     break;
                 }
-                let mut children = Vec::new();
-                if let Some(inline_item) = match_list_item(item.content) {
-                    let mut nested_items = Vec::new();
-                    let inline_nodes = crate::inline::parse_inline(
-                        parser,
-                        inline_item.content,
-                        lines[index].offset + (current_line.len() - inline_item.content.len()),
-                    )?;
-                    nested_items.push(ListItem {
-                        children: inline_nodes,
-                        ordinal: None,
-                    });
-                    if let Some(nested) = try_parse_nested_list(
-                        parser,
-                        lines,
-                        index + 1,
-                        indent_level,
-                        depth,
-                        new_count,
-                    )? {
-                        if let Node::List { items, .. } = nested.node {
-                            nested_items.extend(items);
-                            index = nested.new_line_index;
-                            new_count = nested.new_node_count;
+                if item.indent_level == indent_level {
+                    if item.ordered != ordered {
+                        break;
+                    }
+                    let mut children = Vec::new();
+                    if let Some(inline_item) = match_list_item(item.content) {
+                        let mut nested_items = Vec::new();
+                        let inline_nodes = crate::inline::parse_inline(
+                            self.parser,
+                            inline_item.content,
+                            lines[index].offset + (current_line.len() - inline_item.content.len()),
+                        )?;
+                        nested_items.push(ListItem {
+                            children: inline_nodes,
+                            ordinal: None,
+                        });
+                        if let Some(nested) =
+                            self.try_parse_nested_list(index + 1, indent_level, depth, new_count)?
+                        {
+                            if let Node::List { items, .. } = nested.node {
+                                nested_items.extend(items);
+                                index = nested.new_line_index;
+                                new_count = nested.new_node_count;
+                            } else {
+                                index += 1;
+                                new_count += 1;
+                            }
                         } else {
                             index += 1;
                             new_count += 1;
                         }
+                        children.push(Node::List {
+                            ordered: inline_item.ordered,
+                            items: nested_items,
+                        });
                     } else {
-                        index += 1;
-                        new_count += 1;
+                        let content_nodes = crate::inline::parse_inline(
+                            self.parser,
+                            item.content,
+                            lines[index].offset + (current_line.len() - item.content.len()),
+                        )?;
+                        let content_node_count = content_nodes.len();
+                        children.extend(content_nodes);
+                        if let Some(nested) =
+                            self.try_parse_nested_list(index + 1, indent_level, depth, new_count)?
+                        {
+                            children.push(nested.node);
+                            index = nested.new_line_index;
+                            new_count = nested.new_node_count;
+                        } else {
+                            index += 1;
+                            new_count += content_node_count;
+                        }
                     }
-                    children.push(Node::List {
-                        ordered: inline_item.ordered,
-                        items: nested_items,
-                    });
-                } else {
-                    let content_nodes = crate::inline::parse_inline(
-                        parser,
-                        item.content,
-                        lines[index].offset + (current_line.len() - item.content.len()),
-                    )?;
-                    children.extend(content_nodes.iter().cloned());
-                    if let Some(nested) = try_parse_nested_list(
-                        parser,
-                        lines,
-                        index + 1,
-                        indent_level,
-                        depth,
+                    items.push(ListItem { children, ordinal });
+                } else if item.indent_level == indent_level + 1 && depth < 9 {
+                    let nested = self.parse_list(
+                        index,
+                        ListLevel {
+                            ordered: item.ordered,
+                            indent_level: item.indent_level,
+                            depth: depth + 1,
+                        },
                         new_count,
-                    )? {
-                        children.push(nested.node);
-                        index = nested.new_line_index;
-                        new_count = nested.new_node_count;
-                    } else {
-                        index += 1;
-                        new_count += content_nodes.len();
+                    )?;
+                    if let Some(last) = items.last_mut() {
+                        last.children.push(nested.node);
                     }
+                    index = nested.new_line_index;
+                    new_count = nested.new_node_count;
+                } else {
+                    break;
                 }
-                items.push(ListItem { children, ordinal });
-            } else if item.indent_level == indent_level + 1 && depth < 9 {
-                let nested = parse_list(
-                    parser,
-                    lines,
-                    index,
-                    item.ordered,
-                    item.indent_level,
-                    depth + 1,
-                    new_count,
-                )?;
+            } else if is_bullet_point_text(current_line) {
                 if let Some(last) = items.last_mut() {
-                    last.children.push(nested.node);
+                    last.children.push(Node::Text {
+                        content: trim(current_line).to_owned(),
+                    });
                 }
-                index = nested.new_line_index;
-                new_count = nested.new_node_count;
+                index += 1;
+                new_count += 1;
+            } else if is_list_continuation(current_line, indent_level) {
+                if let Some(last) = items.last_mut() {
+                    let trimmed = trim_start(current_line);
+                    let parsed = crate::inline::parse_inline(
+                        self.parser,
+                        trimmed,
+                        lines[index].offset + (current_line.len() - trimmed.len()),
+                    )?;
+                    new_count += parsed.len();
+                    last.children.extend(parsed);
+                }
+                index += 1;
             } else {
                 break;
             }
-        } else if is_bullet_point_text(current_line) {
-            if let Some(last) = items.last_mut() {
-                last.children.push(Node::Text {
-                    content: trim(current_line).to_owned(),
-                });
+            if items.len() > MAX_AST_NODES {
+                break;
             }
-            index += 1;
-            new_count += 1;
-        } else if is_list_continuation(current_line, indent_level) {
-            if let Some(last) = items.last_mut() {
-                let trimmed = trim_start(current_line);
-                let parsed = crate::inline::parse_inline(
-                    parser,
-                    trimmed,
-                    lines[index].offset + (current_line.len() - trimmed.len()),
-                )?;
-                last.children.extend(parsed.iter().cloned());
-                new_count += parsed.len();
-            }
-            index += 1;
-        } else {
-            break;
         }
-        if items.len() > MAX_AST_NODES {
-            break;
-        }
+        Ok(ListResult {
+            node: Node::List { ordered, items },
+            new_line_index: index,
+            new_node_count: new_count,
+        })
     }
-    Ok(ListResult {
-        node: Node::List { ordered, items },
-        new_line_index: index,
-        new_node_count: new_count,
-    })
-}
 
-fn try_parse_nested_list(
-    parser: &mut MarkdownParser,
-    lines: &[Line],
-    current: usize,
-    parent_indent: usize,
-    depth: usize,
-    node_count: usize,
-) -> Result<Option<ListResult>, ParseError> {
-    if current >= lines.len() {
-        return Ok(None);
+    fn try_parse_nested_list(
+        &mut self,
+        current: usize,
+        parent_indent: usize,
+        depth: usize,
+        node_count: usize,
+    ) -> Result<Option<ListResult>, ParseError> {
+        let lines = self.lines;
+        if current >= lines.len() {
+            return Ok(None);
+        }
+        let trimmed = trim_start(&lines[current].text);
+        if starts_with(trimmed, "```")
+            && let Some(result) = parse_code_block(
+                lines,
+                current,
+                &lines[current].text,
+                lines[current].offset,
+                self.fences,
+            )
+        {
+            return Ok(Some(ListResult {
+                node: result.node,
+                new_line_index: result.new_line_index,
+                new_node_count: node_count + 1,
+            }));
+        }
+        if let Some(item) = match_list_item(&lines[current].text)
+            && item.indent_level > parent_indent
+            && depth < 9
+        {
+            return self
+                .parse_list(
+                    current,
+                    ListLevel {
+                        ordered: item.ordered,
+                        indent_level: item.indent_level,
+                        depth: depth + 1,
+                    },
+                    node_count,
+                )
+                .map(Some);
+        }
+        Ok(None)
     }
-    let trimmed = trim_start(&lines[current].text);
-    if starts_with(trimmed, "```")
-        && let Some(result) = parse_code_block(lines, current)?
-    {
-        return Ok(Some(ListResult {
-            node: result.node,
-            new_line_index: result.new_line_index,
-            new_node_count: node_count + 1,
-        }));
-    }
-    if let Some(item) = match_list_item(&lines[current].text)
-        && item.indent_level > parent_indent
-        && depth < 9
-    {
-        return parse_list(
-            parser,
-            lines,
-            current,
-            item.ordered,
-            item.indent_level,
-            depth + 1,
-            node_count,
-        )
-        .map(Some);
-    }
-    Ok(None)
 }
 
 pub(crate) fn match_list_item(line: &str) -> Option<ListMatch<'_>> {
@@ -1028,40 +1169,21 @@ fn parse_table(
     lines: &[Line],
     current: usize,
 ) -> Result<Option<TableResult>, ParseError> {
-    if current + 2 >= lines.len() {
-        return Ok(None);
-    }
-    let header_line = trim_table_line(&lines[current]);
-    let align_line = trim_table_line(&lines[current + 1]);
-    if !header_line.text.contains('|') || !align_line.text.contains('|') {
-        return Ok(None);
-    }
-    let header_cells = split_table_cells(&header_line);
-    if header_cells.is_empty() || !cells_have_content(&header_cells) {
-        return Ok(None);
-    }
-    let align_cells = split_table_cells(&align_line);
-    let Some(alignments) = parse_alignments(&align_cells) else {
+    let Some((header_cells, alignments)) = table_header(lines, current) else {
         return Ok(None);
     };
-    if header_cells.len() != alignments.len() {
-        return Ok(None);
-    }
     let header_row = create_table_row(parser, &header_cells)?;
     let column_count = header_cells.len();
     let mut rows = Vec::new();
     let mut index = current + 2;
     while index < lines.len() {
         let line = trim_table_line(&lines[index]);
-        if !line.text.contains('|') || is_table_block_break(&line.text) {
+        if !is_table_body_line(line.text) {
             break;
         }
-        let cells = normalize_column_count(split_table_cells(&line), column_count);
+        let cells = normalize_column_count(split_table_cells(line), column_count);
         rows.push(create_table_row(parser, &cells)?);
         index += 1;
-    }
-    if rows.is_empty() {
-        return Ok(None);
     }
     Ok(Some(TableResult {
         node: Node::Table {
@@ -1073,31 +1195,52 @@ fn parse_table(
     }))
 }
 
-fn trim_table_line(line: &Line) -> TableCellText {
+fn table_header(
+    lines: &[Line],
+    current: usize,
+) -> Option<(Vec<TableCellText>, Vec<TableAlignment>)> {
+    if current + 2 >= lines.len() {
+        return None;
+    }
+    let header_line = trim_table_line(&lines[current]);
+    let align_line = trim_table_line(&lines[current + 1]);
+    if !header_line.text.contains('|')
+        || !align_line.text.contains('|')
+        || !align_line.text.bytes().all(|byte| {
+            matches!(
+                byte,
+                b' ' | b':' | b'-' | b'|' | b'\\' | b'\t' | b'\r' | b'\n'
+            )
+        })
+        || !is_table_body_line(trim_table_line(&lines[current + 2]).text)
+    {
+        return None;
+    }
+    let header_cells = split_table_cells(header_line);
+    if header_cells.is_empty() || !cells_have_content(&header_cells) {
+        return None;
+    }
+    let alignments = parse_alignments(&split_table_cells(align_line))?;
+    (header_cells.len() == alignments.len()).then_some((header_cells, alignments))
+}
+
+fn is_table_body_line(text: &str) -> bool {
+    text.contains('|') && !is_table_block_break(text)
+}
+
+fn trim_table_line(line: &Line) -> TableLine<'_> {
     let left = trim_start(&line.text);
-    let leading = line.text.len() - left.len();
-    TableCellText {
-        text: trim_right(left).to_owned(),
-        offset: line.offset + leading,
+    TableLine {
+        text: trim_right(left),
+        offset: line.offset + (line.text.len() - left.len()),
     }
 }
 
-fn trim_table_cell(cell: &TableCellText) -> TableCellText {
-    let left = trim_start(&cell.text);
-    let leading = cell.text.len() - left.len();
-    TableCellText {
-        text: trim_right(left).to_owned(),
-        offset: cell.offset + leading,
-    }
-}
-
-fn split_table_cells(source: &TableCellText) -> Vec<TableCellText> {
-    let line = &source.text;
-    let mut start = 0usize;
+fn split_table_cells(source: TableLine<'_>) -> Vec<TableCellText> {
+    let line = source.text;
+    let bytes = line.as_bytes();
+    let start = usize::from(line.starts_with('|'));
     let mut end = line.len();
-    if line.starts_with('|') {
-        start = 1;
-    }
     if end > start && line.ends_with('|') {
         end -= 1;
     }
@@ -1107,26 +1250,30 @@ fn split_table_cells(source: &TableCellText) -> Vec<TableCellText> {
     }
     let mut cell = String::new();
     let mut cell_offset = source.offset + start;
+    let mut segment_start = start;
     let mut i = start;
     while i < end {
-        if byte_at(line, i) == b'\\' && i + 1 < end && byte_at(line, i + 1) == b'|' {
+        if bytes[i] == b'\\' && i + 1 < end && bytes[i + 1] == b'|' {
+            cell.push_str(&line[segment_start..i]);
             cell.push('|');
             i += 2;
+            segment_start = i;
             continue;
         }
-        if byte_at(line, i) == b'|' {
+        if bytes[i] == b'|' {
+            cell.push_str(&line[segment_start..i]);
             cells.push(TableCellText {
                 text: std::mem::take(&mut cell),
                 offset: cell_offset,
             });
             i += 1;
+            segment_start = i;
             cell_offset = source.offset + i;
             continue;
         }
-        let ch = line[i..].chars().next().unwrap_or('\0');
-        cell.push(ch);
-        i += ch.len_utf8();
+        i += 1;
     }
+    cell.push_str(&line[segment_start..end]);
     cells.push(TableCellText {
         text: cell,
         offset: cell_offset,
@@ -1171,11 +1318,14 @@ fn create_table_row(
 ) -> Result<Node, ParseError> {
     let mut out = Vec::new();
     for cell in cells {
-        let trimmed_cell = trim_table_cell(cell);
-        let value = trimmed_cell.text;
-        let parsed = crate::inline::parse_inline(parser, &value, trimmed_cell.offset)?;
+        let left = trim_start(&cell.text);
+        let value = trim_right(left);
+        let offset = cell.offset + (cell.text.len() - left.len());
+        let parsed = crate::inline::parse_inline(parser, value, offset)?;
         let children = if parsed.is_empty() {
-            vec![Node::Text { content: value }]
+            vec![Node::Text {
+                content: value.to_owned(),
+            }]
         } else {
             parsed
         };
@@ -1192,7 +1342,12 @@ pub(crate) fn is_block_start(line: &str, flags: u32) -> bool {
         || is_blockquote_start(line, flags)
 }
 
-pub(crate) fn opens_code_block_midline(lines: &[Line], index: usize, flags: u32) -> bool {
+pub(crate) fn opens_code_block_midline(
+    lines: &[Line],
+    index: usize,
+    flags: u32,
+    fences: &mut ClosingFenceLines,
+) -> bool {
     if !ParserFlags::has(flags, ParserFlags::ALLOW_CODE_BLOCKS) || index >= lines.len() {
         return false;
     }
@@ -1208,31 +1363,19 @@ pub(crate) fn opens_code_block_midline(lines: &[Line], index: usize, flags: u32)
     if has_open_inline_code(prefix) {
         return false;
     }
-    let code_lines = slice_lines_from_fence(lines, index, fence_pos);
-    matches!(parse_code_block(&code_lines, 0), Ok(Some(_)))
+    scan_code_block(
+        lines,
+        index,
+        &line[fence_pos..],
+        lines[index].offset + fence_pos,
+        fences,
+        CodeBlockMode::Probe,
+    )
+    .is_some()
 }
 
 pub(crate) fn is_table_start(lines: &[Line], index: usize, flags: u32) -> bool {
-    if !ParserFlags::has(flags, ParserFlags::ALLOW_TABLES) || index + 2 >= lines.len() {
-        return false;
-    }
-    let header_line = trim_table_line(&lines[index]);
-    let align_line = trim_table_line(&lines[index + 1]);
-    if !header_line.text.contains('|') || !align_line.text.contains('|') {
-        return false;
-    }
-    let header_cells = split_table_cells(&header_line);
-    if header_cells.is_empty() || !cells_have_content(&header_cells) {
-        return false;
-    }
-    let Some(alignments) = parse_alignments(&split_table_cells(&align_line)) else {
-        return false;
-    };
-    if header_cells.len() != alignments.len() {
-        return false;
-    }
-    let body_line = trim_table_line(&lines[index + 2]);
-    body_line.text.contains('|') && !is_table_block_break(&body_line.text)
+    ParserFlags::has(flags, ParserFlags::ALLOW_TABLES) && table_header(lines, index).is_some()
 }
 
 pub(crate) fn is_heading_start(line: &str, flags: u32) -> bool {
@@ -1289,16 +1432,6 @@ fn is_escaped_fence(line: &str, fence_pos: usize) -> bool {
     backslashes % 2 == 1
 }
 
-fn slice_lines_from_fence(lines: &[Line], current: usize, fence_pos: usize) -> Vec<Line> {
-    let mut out = Vec::with_capacity(lines.len() - current);
-    out.push(Line {
-        text: lines[current].text[fence_pos..].to_owned(),
-        offset: lines[current].offset + fence_pos,
-    });
-    out.extend(lines[current + 1..].iter().cloned());
-    out
-}
-
 fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) -> Option<usize> {
     if !ordered {
         return None;
@@ -1334,23 +1467,20 @@ fn normalize_column_count(cells: Vec<TableCellText>, expected: usize) -> Vec<Tab
     if cells.len() == expected {
         return cells;
     }
-    let mut out = Vec::with_capacity(expected);
-    for index in 0..expected {
-        if let Some(cell) = cells.get(index) {
-            out.push(cell.clone());
-        } else {
-            out.push(TableCellText {
+    let mut cells = cells.into_iter();
+    let mut out: Vec<TableCellText> = (0..expected)
+        .map(|_| {
+            cells.next().unwrap_or(TableCellText {
                 text: String::new(),
                 offset: 0,
-            });
+            })
+        })
+        .collect();
+    if let Some(last) = out.last_mut() {
+        for extra in cells {
+            last.text.push('|');
+            last.text.push_str(&extra.text);
         }
-    }
-    if cells.len() > expected && expected > 0 {
-        let mut combined = out[expected - 1].clone();
-        for extra in &cells[expected..] {
-            combined.text = concat3(&combined.text, "|", &extra.text);
-        }
-        out[expected - 1] = combined;
     }
     out
 }

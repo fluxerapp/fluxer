@@ -6,7 +6,14 @@ use serde_json::json;
 fn parse(input: &str, flags: u32, emoji_context: &str) -> serde_json::Value {
     let mut parser = MarkdownParser::new(flags, EmojiContext::parse(emoji_context));
     let nodes = parser.parse(input).expect("parse succeeds");
-    serde_json::to_value(json!({"nodes": nodes})).expect("serialize succeeds")
+    let value = serde_json::to_value(json!({"nodes": nodes})).expect("serialize succeeds");
+    let written = fluxer_markdown_parser::parse_markdown_json(input, flags, emoji_context)
+        .expect("parse succeeds");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&written).expect("written json parses"),
+        value
+    );
+    value
 }
 
 #[test]
