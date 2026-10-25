@@ -3,6 +3,7 @@
 package instance
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -203,11 +204,15 @@ func importInstaller(ctx context.Context, dir string, e *engine.Engine, dry bool
 	if fi, err := os.Stat(filepath.Join(l.snapshotDir(), EnvFileName)); err == nil {
 		installed = fi.ModTime().UTC().Truncate(time.Second)
 	}
+	release, refs := LegacyRelease, live.images
+	if images, ok := bundledRelease(l, p, custom); ok {
+		release, refs = images.Release, images.Images
+	}
 	s := &State{
 		Schema:      StateSchema,
 		Project:     p.Project,
-		Release:     LegacyRelease,
-		Images:      Images{Release: LegacyRelease, Refs: live.images},
+		Release:     release,
+		Images:      Images{Release: release, Refs: refs},
 		Settings:    vals.settings,
 		Secrets:     vals.secrets,
 		SetupDone:   true,
@@ -217,12 +222,46 @@ func importInstaller(ctx context.Context, dir string, e *engine.Engine, dry bool
 	if len(vals.admin) > 0 {
 		s.AdminImport = &AdminImport{Values: vals.admin}
 	}
+	if release != LegacyRelease {
+		ConvertLegacy(s, stack.Embedded(), refs)
+	}
 	pin(s, e)
 	s.normalize()
 	if err := finishImport(dir, s); err != nil {
 		return nil, nil, err
 	}
 	return s, r, nil
+}
+
+func bundledRelease(l *Legacy, p *AdoptPlan, custom []byte) (stack.ImageSet, bool) {
+	images, err := stack.EmbeddedImages()
+	if err != nil || len(images.Images) == 0 || images.Release != stack.Embedded().Release {
+		return images, false
+	}
+	if slices.ContainsFunc(p.KeepAsMine, func(name string) bool { return name != ".env.example" }) || setsImage(custom, images.Images) {
+		return images, false
+	}
+	data, err := l.read(l.ComposeFiles[0])
+	if err != nil {
+		return images, false
+	}
+	want, err := stack.RenderCompose(stack.Embedded(), images.Images, p.Project)
+	return images, err == nil && bytes.Equal(normalizeLF(data), want)
+}
+
+func setsImage(custom []byte, images map[string]string) bool {
+	var doc struct {
+		Services map[string]map[string]any `yaml:"services"`
+	}
+	if err := yaml.Unmarshal(custom, &doc); err != nil {
+		return true
+	}
+	for name, svc := range doc.Services {
+		if _, ok := svc["image"]; ok && images[name] != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func finishImport(dir string, s *State) error {
