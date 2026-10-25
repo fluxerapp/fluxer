@@ -24,6 +24,11 @@
 		respond "OK" 200
 	}
 
+	handle /_edge {
+		header Cache-Control no-store
+		respond "{system.hostname}" 200
+	}
+
 	handle_path /api/* {
 		import upstream api:8080
 	}
@@ -71,5 +76,9 @@
 :8088 {
 	handle /.well-known/fluxer {
 		import upstream api:8080
+	}
+
+	handle /_edge {
+		respond "{system.hostname}" 200
 	}
 }

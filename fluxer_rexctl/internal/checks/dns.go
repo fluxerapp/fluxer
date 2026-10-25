@@ -4,7 +4,6 @@ package checks
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -87,17 +86,17 @@ func (e *Env) forwardsHere(ctx context.Context) bool {
 	if e.Instance == nil || !e.running(ctx, "edge") {
 		return false
 	}
-	local, err := e.discoveryDoc(ctx)
-	if err != nil {
+	local, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/_edge")
+	if err != nil || local == "" {
 		return false
 	}
-	return servesInstance(ctx, e.Domain, local)
+	return servesEdge(ctx, e.Domain, local)
 }
 
-func servesInstance(ctx context.Context, domain, local string) bool {
+func servesEdge(ctx context.Context, domain, local string) bool {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+domain+"/.well-known/fluxer", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+domain+"/_edge", nil)
 	if err != nil {
 		return false
 	}
@@ -106,23 +105,6 @@ func servesInstance(ctx context.Context, domain, local string) bool {
 		return false
 	}
 	defer resp.Body.Close()
-	remote, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return false
-	}
-	key := instanceKey(local)
-	return key != "" && key == instanceKey(string(remote))
-}
-
-func instanceKey(doc string) string {
-	var d struct {
-		Push struct {
-			Key string `json:"public_vapid_key"`
-		} `json:"push"`
-	}
-	start := strings.Index(doc, "{")
-	if start < 0 || json.Unmarshal([]byte(doc[start:]), &d) != nil {
-		return ""
-	}
-	return d.Push.Key
+	remote, err := io.ReadAll(io.LimitReader(resp.Body, 1<<10))
+	return err == nil && resp.StatusCode == http.StatusOK && strings.TrimSpace(string(remote)) == local
 }
