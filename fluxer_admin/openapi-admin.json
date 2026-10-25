@@ -7173,7 +7173,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.",
+				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, favorite_memes requires user_id, and all rebuilds every index, one at a time. Queueing all while one is running returns the running refresh ID. Requires GUILD_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7191,7 +7191,8 @@
 								"guild_members",
 								"favorite_memes",
 								"discovery",
-								"threads"
+								"threads",
+								"all"
 							],
 							"x-enumDescriptions": [
 								"Guild search index",
@@ -7202,7 +7203,8 @@
 								"Guild member search index",
 								"Favourite meme search index",
 								"Discovery guild search index",
-								"Thread search index"
+								"Thread search index",
+								"Every search index, with messages in every channel and DM"
 							],
 							"enum": [
 								"guilds",
@@ -7213,7 +7215,8 @@
 								"guild_members",
 								"favorite_memes",
 								"discovery",
-								"threads"
+								"threads",
+								"all"
 							],
 							"type": "string"
 						},
@@ -14143,6 +14146,10 @@
 								"type": "string"
 							},
 							"index_type": {"type": "string", "description": "Type of index being refreshed"},
+							"phase": {
+								"description": "The index an `all` rebuild is working on, or queued before it starts",
+								"type": "string"
+							},
 							"total": {"description": "Total number of items to index", "type": "number"},
 							"indexed": {"description": "Number of items indexed so far", "type": "number"},
 							"started_at": {"description": "ISO 8601 timestamp when the job started", "type": "string"},

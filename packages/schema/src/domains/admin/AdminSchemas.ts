@@ -161,6 +161,7 @@ const SearchIndexTypeEnum = createNamedStringLiteralUnion(
 		['favorite_memes', 'favorite_memes', 'Favourite meme search index'],
 		['discovery', 'discovery', 'Discovery guild search index'],
 		['threads', 'threads', 'Thread search index'],
+		['all', 'all', 'Every search index, with messages in every channel and DM'],
 	],
 	'Type of search index to refresh',
 );
@@ -1257,6 +1258,7 @@ export const IndexRefreshStatusResponse = z.union([
 	z.object({
 		status: IndexRefreshStatusEnum,
 		index_type: z.string().describe('Type of index being refreshed'),
+		phase: z.string().optional().describe('The index an `all` rebuild is working on, or queued before it starts'),
 		total: z.number().optional().describe('Total number of items to index'),
 		indexed: z.number().optional().describe('Number of items indexed so far'),
 		started_at: z.string().optional().describe('ISO 8601 timestamp when the job started'),
