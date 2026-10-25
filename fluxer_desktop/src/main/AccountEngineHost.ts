@@ -324,7 +324,7 @@ export class AccountEngineHostController {
 				this.deps.log('info', 'Account engine health', {
 					rss: message.rss,
 					heapUsed: message.heapUsed,
-					sessions: message.sessions,
+					...message.counts,
 				});
 				return;
 			case 'log':

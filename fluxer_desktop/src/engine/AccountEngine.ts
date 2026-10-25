@@ -18,6 +18,7 @@ import {
 	type EngineInitMessage,
 	type EngineLogLevel,
 	type EnginePowerEvent,
+	type EngineSessionCounts,
 	type EngineToHostMessage,
 	type HostToEngineMessage,
 	parseEngineAccountRecord,
@@ -48,6 +49,18 @@ const POWER_PROBE_STAGGER_MS = 50;
 const CLIENT_CONFIG_META_KEY = 'client_config';
 const UNREAD_BADGE_CUSTOMIZATION_META_KEY = 'unread_badge_customization';
 const SEED_BATCH_SIZE = 4;
+
+const SESSION_COUNTERS: Record<AccountEngineConnectionState, Exclude<keyof EngineSessionCounts, 'sessions'> | null> = {
+	[AccountEngineConnectionState.STARTING]: 'connecting',
+	[AccountEngineConnectionState.CONNECTING]: 'connecting',
+	[AccountEngineConnectionState.RESUMING]: 'connecting',
+	[AccountEngineConnectionState.READY]: 'ready',
+	[AccountEngineConnectionState.BACKOFF]: 'backoff',
+	[AccountEngineConnectionState.OFFLINE]: 'backoff',
+	[AccountEngineConnectionState.FOREGROUND]: 'foreground',
+	[AccountEngineConnectionState.AUTH_FAILED]: 'authFailed',
+	[AccountEngineConnectionState.STOPPED]: null,
+};
 
 interface AccountEngineDependencies {
 	readonly send: (message: EngineToHostMessage) => void;
@@ -688,11 +701,16 @@ export class AccountEngine {
 		if (this.shuttingDown) {
 			return;
 		}
+		const counts = {sessions: this.sessions.size, ready: 0, connecting: 0, backoff: 0, foreground: 0, authFailed: 0};
 		for (const session of this.sessions.values()) {
 			session.refreshUnread();
+			const counter = SESSION_COUNTERS[session.connectionState];
+			if (counter !== null) {
+				counts[counter] += 1;
+			}
 		}
 		const usage = this.deps.memoryUsage();
-		this.deps.send({type: 'health', rss: usage.rss, heapUsed: usage.heapUsed, sessions: this.sessions.size});
+		this.deps.send({type: 'health', rss: usage.rss, heapUsed: usage.heapUsed, counts});
 		this.healthTimer = this.clock.setTimeout(() => this.reportHealth(), HEALTH_INTERVAL_MS);
 	}
 

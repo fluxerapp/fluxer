@@ -62,6 +62,15 @@ export type HostToEngineMessage =
 
 export type EngineTokenPersistOutcome = 'persisted' | 'rejected' | 'renderer';
 
+export interface EngineSessionCounts {
+	readonly sessions: number;
+	readonly ready: number;
+	readonly connecting: number;
+	readonly backoff: number;
+	readonly foreground: number;
+	readonly authFailed: number;
+}
+
 export type EngineLogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export type EngineToHostMessage =
@@ -78,7 +87,12 @@ export type EngineToHostMessage =
 	| {readonly type: 'tokenRotated'; readonly accountKey: string; readonly previousToken: string; readonly token: string}
 	| {readonly type: 'summaries'; readonly summaries: ReadonlyArray<AccountEngineAccountSummary>}
 	| {readonly type: 'removed'; readonly accountKeys: ReadonlyArray<string>}
-	| {readonly type: 'health'; readonly rss: number; readonly heapUsed: number; readonly sessions: number}
+	| {
+			readonly type: 'health';
+			readonly rss: number;
+			readonly heapUsed: number;
+			readonly counts: EngineSessionCounts;
+	  }
 	| {readonly type: 'log'; readonly level: EngineLogLevel; readonly message: string; readonly detail: string | null}
 	| {readonly type: 'shutdownComplete'};
 
