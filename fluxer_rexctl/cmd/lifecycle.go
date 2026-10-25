@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
+	"os/exec"
 	"path"
 	"runtime"
 	"slices"
@@ -101,6 +103,9 @@ func engineFailureFor(kind engine.Kind, err error) error {
 	case engine.ClassUnreachable:
 		if desktop {
 			return refused("Docker Desktop isn't running.", "Open Docker Desktop and wait until its engine is running, then try again.")
+		}
+		if fix := podmanSocketFix(kind); fix != "" {
+			return refused("Podman is installed, but its API socket isn't running.", fix)
 		}
 		if kind == "" {
 			return refused("Neither Docker nor Podman answers on this machine.", "Start Docker or Podman, then try again.")
@@ -759,4 +764,17 @@ func newRestartCmd(app *App) *cobra.Command {
 			})
 		},
 	}
+}
+
+func podmanSocketFix(kind engine.Kind) string {
+	if runtime.GOOS != "linux" || (kind != "" && kind != engine.Podman) {
+		return ""
+	}
+	if _, err := exec.LookPath("podman"); err != nil {
+		return ""
+	}
+	if os.Geteuid() == 0 {
+		return "Run systemctl enable --now podman.socket, then try again."
+	}
+	return "Run systemctl --user enable --now podman.socket, then try again."
 }
