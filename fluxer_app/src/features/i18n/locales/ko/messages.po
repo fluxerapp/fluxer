@@ -29611,11 +29611,6 @@ msgstr "왼쪽 상단에서 표현 선택기 크기 조절"
 msgid "Resize expression picker from top right"
 msgstr "오른쪽 상단에서 표현 선택기 크기 조절"
 
-#. Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).
-#: src/features/ui/floating_pane/FloatingPaneResizeHandles.tsx
-msgid "Resize floating panel"
-msgstr "플로팅 패널 크기 조절"
-
 #. Accessible label for the bottom-left resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from bottom left"
@@ -29655,6 +29650,11 @@ msgstr "왼쪽 상단에서 받은편지함 크기 조절"
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from top right"
 msgstr "오른쪽 상단에서 받은편지함 크기 조절"
+
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "멤버 행 크기 조절"
 
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx

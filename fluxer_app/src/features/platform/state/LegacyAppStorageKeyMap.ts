@@ -78,6 +78,7 @@ const PLAIN_ROWS: ReadonlyArray<LegacyAppStorageKeyRow> = [
 	{kind: 'exact', key: 'pip_width', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'incoming_call_overlay_position', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'compact_voice_call_heights', scope: 'global', fanout: 'preference'},
+	{kind: 'exact', key: 'voice_focus_members_row', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'member_list_default_hidden_channel_overrides', scope: 'account', fanout: 'content'},
 	{kind: 'exact', key: 'AdvancedSettings:unreadBadgeCustomizationEnabled', scope: 'account', fanout: 'preference'},
 	{kind: 'exact', key: 'AdvancedSettings:keepAttachmentsOnEmptyMessageEdit', scope: 'account', fanout: 'preference'},

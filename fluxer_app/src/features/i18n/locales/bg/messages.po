@@ -29611,11 +29611,6 @@ msgstr "Преоразмеряване на палитрата с изрази �
 msgid "Resize expression picker from top right"
 msgstr "Преоразмеряване на палитрата с изрази от горния десен ъгъл"
 
-#. Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).
-#: src/features/ui/floating_pane/FloatingPaneResizeHandles.tsx
-msgid "Resize floating panel"
-msgstr "Преоразмеряване на плаващия панел"
-
 #. Accessible label for the bottom-left resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from bottom left"
@@ -29655,6 +29650,11 @@ msgstr "Преоразмеряване на „Входящи“ от горни
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from top right"
 msgstr "Преоразмеряване на „Входящи“ от горния десен ъгъл"
+
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "Преоразмеряване на реда с членове"
 
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx

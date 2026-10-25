@@ -29611,11 +29611,6 @@ msgstr "Zmień rozmiar panelu wyboru wyrażeń, przeciągając za lewy górny r�
 msgid "Resize expression picker from top right"
 msgstr "Zmień rozmiar panelu wyboru wyrażeń, przeciągając za prawy górny róg"
 
-#. Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).
-#: src/features/ui/floating_pane/FloatingPaneResizeHandles.tsx
-msgid "Resize floating panel"
-msgstr "Zmień rozmiar ruchomego panelu"
-
 #. Accessible label for the bottom-left resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from bottom left"
@@ -29655,6 +29650,11 @@ msgstr "Zmień rozmiar skrzynki odbiorczej, przeciągając za lewy górny róg"
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from top right"
 msgstr "Zmień rozmiar skrzynki odbiorczej, przeciągając za prawy górny róg"
+
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "Zmień rozmiar wiersza członków"
 
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx

@@ -507,7 +507,7 @@
 
 .focusLayoutMembersRowTile {
 	flex: 0 0 auto;
-	width: min(clamp(7rem, 10vw, 9.75rem), calc((var(--voice-focus-members-row-height, 7rem) - 0.75rem) * 16 / 9));
+	width: calc((var(--voice-focus-members-row-height, 7rem) - 0.75rem) * 16 / 9);
 	aspect-ratio: 16 / 9;
 }
 
@@ -747,27 +747,41 @@
 .focusLayoutContentFullscreen {
 	padding: 0;
 	--content-padding: 0px;
-	--voice-focus-control-clearance: 0px;
-	--voice-focus-members-row-height: 0px;
-	--voice-focus-members-row-bottom: 0px;
+	--voice-focus-control-clearance: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+	--voice-focus-members-row-height: clamp(
+		4rem,
+		var(--voice-focus-members-row-user-height, clamp(5.375rem, 13cqh, 7rem)),
+		40cqh
+	);
+	--voice-focus-members-row-bottom: var(--voice-focus-control-clearance);
+	--voice-focus-members-toggle-bottom: calc(var(--voice-focus-control-clearance) + 0.5rem);
+	--voice-focus-stream-reserved: 0px;
+}
+
+.focusLayoutContentFullscreenMembersVisible {
+	--voice-focus-stream-reserved: calc(
+		var(--voice-focus-members-row-bottom) +
+		var(--voice-focus-members-row-height) +
+		0.5rem
+	);
 }
 
 .focusLayoutContentFullscreen .focusLayoutMainWrapper {
 	position: absolute;
-	inset: 0;
+	inset: 0 0 var(--voice-focus-stream-reserved) 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	max-width: none;
 	width: 100%;
-	height: 100%;
+	height: auto;
 	min-height: 0;
 }
 
 .focusLayoutContentFullscreen .focusLayoutMain {
 	position: relative;
 	inset: auto;
-	width: min(100%, calc(100cqh * var(--focus-main-aspect-ratio-value)));
+	width: min(100%, calc((100cqh - var(--voice-focus-stream-reserved)) * var(--focus-main-aspect-ratio-value)));
 	height: auto;
 	max-width: none;
 	max-height: 100%;
@@ -796,28 +810,39 @@
 	flex: 1 1 auto;
 }
 
-.focusLayoutContentAppFullscreen {
-	--voice-focus-control-clearance: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-	--voice-focus-members-row-height: clamp(5.375rem, 13cqh, 7rem);
-	--voice-focus-members-row-bottom: var(--voice-focus-control-clearance);
-	--voice-focus-members-toggle-bottom: calc(var(--voice-focus-control-clearance) + 0.5rem);
-}
-
-.focusLayoutContentAppFullscreen .focusLayoutMain {
-	padding-top: 0;
-	padding-bottom: 0;
-}
-
-.focusLayoutContentFullscreenMembersVisible::after {
-	content: '';
+.focusMembersRowDivider {
 	position: absolute;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
-	bottom: 0;
-	height: calc(var(--voice-focus-members-row-bottom, 0px) + var(--voice-focus-members-row-height, 7.25rem) + 2.5rem);
-	z-index: 1;
+	bottom: calc(var(--voice-focus-members-row-bottom) + var(--voice-focus-members-row-height) - 0.25rem);
+	height: 1rem;
+	z-index: 3;
+	cursor: row-resize;
+	touch-action: none;
+	user-select: none;
+}
+
+.focusMembersRowDividerLine {
+	position: absolute;
+	inset-inline-start: clamp(0.75rem, 2vw, 1.5rem);
+	inset-inline-end: clamp(0.75rem, 2vw, 1.5rem);
+	top: 50%;
+	height: 0.125rem;
+	transform: translateY(-50%);
+	border-radius: 0.0625rem;
+	background-color: var(--voice-text-strong);
+	opacity: 0;
 	pointer-events: none;
-	background: linear-gradient(to top, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0) 100%);
+	transition: opacity 120ms ease;
+}
+
+.focusMembersRowDivider:hover .focusMembersRowDividerLine,
+.focusMembersRowDivider:focus-visible .focusMembersRowDividerLine {
+	opacity: 0.5;
+}
+
+.focusMembersRowDivider[data-dragging='true'] .focusMembersRowDividerLine {
+	opacity: 0.8;
 }
 
 @container (min-width: 620px) {

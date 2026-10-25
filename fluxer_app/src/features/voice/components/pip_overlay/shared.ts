@@ -20,7 +20,7 @@ import type {SpringOptions} from 'framer-motion';
 import type {Room} from 'livekit-client';
 
 const PIP_ASPECT_RATIO = 16 / 9;
-const PIP_MAX_WIDTH = 720;
+const PIP_MAX_VIEWPORT_FRACTION = 0.7;
 const PIP_MIN_WIDTH = 240;
 const EDGE_PADDING = 20;
 
@@ -66,7 +66,7 @@ function buildGeometry(viewportWidth: number, viewportHeight: number, titlebarHe
 		topInset: titlebarHeight,
 		aspectRatio: PIP_ASPECT_RATIO,
 		minWidth: PIP_MIN_WIDTH,
-		maxWidth: PIP_MAX_WIDTH,
+		maxWidth: Math.min(viewportWidth, viewportHeight * PIP_ASPECT_RATIO) * PIP_MAX_VIEWPORT_FRACTION,
 	};
 }
 

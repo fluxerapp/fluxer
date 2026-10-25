@@ -29611,11 +29611,6 @@ msgstr "Tilpas størrelsen på udtryksvælgeren fra øverste venstre hjørne"
 msgid "Resize expression picker from top right"
 msgstr "Tilpas størrelsen på udtryksvælgeren fra øverste højre hjørne"
 
-#. Aria label on a resize handle of a floating draggable panel (the floating call tile or PiP overlay).
-#: src/features/ui/floating_pane/FloatingPaneResizeHandles.tsx
-msgid "Resize floating panel"
-msgstr "Tilpas størrelse på flydende panel"
-
 #. Accessible label for the bottom-left resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from bottom left"
@@ -29655,6 +29650,11 @@ msgstr "Tilpas størrelsen på indbakken fra øverste venstre hjørne"
 #: src/features/messaging/components/popouts/InboxPopout.tsx
 msgid "Resize inbox from top right"
 msgstr "Tilpas størrelsen på indbakken fra øverste højre hjørne"
+
+#. Accessible label for the draggable divider between a focused stream and the row of call members below it. Dragging it changes how tall the stream is.
+#: src/features/voice/components/FocusMembersRowDivider.tsx
+msgid "Resize members row"
+msgstr "Juster størrelse på medlemsrække"
 
 #. Aria label on the PiP resize handle.
 #: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx

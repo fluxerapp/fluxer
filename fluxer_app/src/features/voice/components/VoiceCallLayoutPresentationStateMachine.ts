@@ -44,7 +44,6 @@ export interface VoiceCallLayoutPresentationModel {
 	readonly canShowParticipantsGridPanel: boolean;
 	readonly participantsGridExpanded: boolean;
 	readonly isParticipantsExpanded: boolean;
-	readonly isFullscreenFocusLayout: boolean;
 	readonly shouldRenderFocusFallbackGrid: boolean;
 	readonly shouldRenderFocusLayout: boolean;
 	readonly showMembersRow: boolean;
@@ -198,7 +197,7 @@ export function selectVoiceCallLayoutPresentationModel(
 	const canShowParticipants = canShowParticipantsGridPanel(context);
 	const isParticipantsExpanded = stateValue === 'focusParticipantsExpanded';
 	const isFocusLayout = stateValue === 'focusLayout' || stateValue === 'focusParticipantsExpanded';
-	const isFullscreenFocusLayout = !context.compact && context.isVoiceCallAppFullscreen;
+	const fillsCallArea = isFocusLayout && !context.compact;
 	return {
 		stateValue,
 		mainLayout: stateValue === 'gridLayout' ? 'grid' : 'focus',
@@ -207,11 +206,10 @@ export function selectVoiceCallLayoutPresentationModel(
 		canShowParticipantsGridPanel: canShowParticipants,
 		participantsGridExpanded: context.participantsGridExpanded,
 		isParticipantsExpanded,
-		isFullscreenFocusLayout,
 		shouldRenderFocusFallbackGrid: stateValue === 'focusFallbackGrid',
 		shouldRenderFocusLayout: isFocusLayout,
-		showMembersRow: isFocusLayout && isFullscreenFocusLayout && hasMiniGrid && context.membersRowVisible,
-		showMembersToggle: isFocusLayout && isFullscreenFocusLayout && !isParticipantsExpanded && hasMiniGrid,
+		showMembersRow: fillsCallArea && hasMiniGrid && context.membersRowVisible,
+		showMembersToggle: fillsCallArea && !isParticipantsExpanded && hasMiniGrid,
 		shouldWrapScreenShareGrid: context.hasScreenShare,
 		focusScrollerOverflow: isParticipantsExpanded ? 'auto' : 'hidden',
 	};
