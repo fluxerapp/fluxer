@@ -5,7 +5,7 @@ import {
 	type OperatorPassTermsBlock,
 } from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText';
 
-export const OPERATOR_PASS_TERMS_VERSION = '2026-10-22';
+export const OPERATOR_PASS_TERMS_VERSION = '2026-10-25';
 
 export type OperatorPassTermsLanguage = keyof typeof OPERATOR_PASS_TERMS_TEXT;
 

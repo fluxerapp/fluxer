@@ -285,7 +285,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'That includes misusing #operators, such as by harassing the team or other operators, sharing what others post there without their permission, advertising, or letting someone else into the channel. We judge a breach by the rules in force at the time.',
+			text: 'That includes misusing #operators or the Operator role, such as by harassing the team or other operators, sharing what others post there without their permission, advertising, letting someone else into the channel, or using your role or badge to talk down to others or act as if you have authority over them. We judge a breach by the rules in force at the time.',
 		},
 		{
 			kind: 'paragraph',
@@ -720,7 +720,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Det omfattar att missbruka #operators, till exempel genom att trakassera teamet eller andra Operators, sprida det andra skriver där utan deras tillstånd, göra reklam eller ge någon annan tillgång till kanalen. Vi bedömer en överträdelse efter de regler som gällde när den skedde.',
+			text: 'Det omfattar att missbruka #operators eller rollen Operator, till exempel genom att trakassera teamet eller andra Operators, sprida det andra skriver där utan deras tillstånd, göra reklam, ge någon annan tillgång till kanalen eller använda din roll eller ditt märke för att se ner på andra eller agera som om du hade makt över dem. Vi bedömer en överträdelse efter de regler som gällde när den skedde.',
 		},
 		{
 			kind: 'paragraph',
