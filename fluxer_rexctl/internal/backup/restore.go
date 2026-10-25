@@ -144,7 +144,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil {
 		return nil, err
 	}
-	image, err := helperImage(ctx, inst, p)
+	image, err := helperImage(ctx, inst, p, p.Model)
 	if err != nil {
 		return nil, err
 	}

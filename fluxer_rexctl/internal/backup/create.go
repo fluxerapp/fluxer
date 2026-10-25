@@ -112,7 +112,7 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 			model = loaded.Model
 		}
 	}
-	bundledDB := !externalPostgres(values)
+	bundledDB := !externalPostgres(values) && (model == nil || hasService(model, postgresService))
 	if !bundledDB {
 		m.Skipped = append(m.Skipped, SkippedDatabase)
 	}
@@ -136,7 +136,7 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	if err != nil {
 		return nil, err
 	}
-	image, err := helperImage(ctx, inst, p)
+	image, err := helperImage(ctx, inst, p, model)
 	if err != nil {
 		return nil, err
 	}
@@ -231,6 +231,11 @@ func externalPostgres(values map[string]string) bool {
 	return false
 }
 
+func hasService(model *types.Project, name string) bool {
+	_, ok := model.Services[name]
+	return ok
+}
+
 func externalUploads(inst *instance.Instance, values map[string]string) bool {
 	if inst.State != nil && inst.State.Settings[settings.StorageEndpoint] != "" {
 		return true
@@ -307,25 +312,28 @@ func findVolume(vols []engine.Volume, project, short string) (string, bool) {
 	return "", false
 }
 
-func helperImage(ctx context.Context, inst *instance.Instance, p *engine.Project) (string, error) {
-	if p.Model != nil {
-		if img := p.Image(postgresService); img != "" {
-			return img, nil
+var helperServices = []string{postgresService, "valkey", "nats"}
+
+func helperImage(ctx context.Context, inst *instance.Instance, p *engine.Project, model *types.Project) (string, error) {
+	cs, _ := p.PS(ctx)
+	for _, svc := range helperServices {
+		if model != nil {
+			if img := model.Services[svc].Image; img != "" {
+				return img, nil
+			}
 		}
-	}
-	if cs, err := p.PS(ctx); err == nil {
 		for _, c := range cs {
-			if c.Service == postgresService && c.Image != "" {
+			if c.Service == svc && c.Image != "" {
 				return c.Image, nil
 			}
 		}
-	}
-	if inst.State != nil {
-		if img := inst.State.Images.Refs[postgresService]; img != "" {
-			return img, nil
+		if inst.State != nil {
+			if img := inst.State.Images.Refs[svc]; img != "" {
+				return img, nil
+			}
 		}
 	}
-	return "", errors.New("backup: no postgres image to run the copy with")
+	return "", errors.New("backup: no image to run the copy with")
 }
 
 func helper(ctx context.Context, p *engine.Project, image string, mounts []engine.Mount, stdin io.Reader, stdout io.Writer, entrypoint string, args ...string) error {
