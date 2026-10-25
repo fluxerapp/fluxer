@@ -188,6 +188,7 @@ overrides:
   '@rspack/cli': 'catalog:'
   '@rspack/core': 'catalog:'
   cassandra-driver@4.9.0>adm-zip: 0.6.1
+  '@livekit/rtc-node@1.1.0>pino': 'catalog:'
   emscripten-wasm-loader@3.0.3>nanoid: 3.3.19
   hunspell-asm@4.0.2>nanoid: 3.3.19
   semver: 7.8.5

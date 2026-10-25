@@ -8,6 +8,6 @@ export default defineConfig({
 		globals: true,
 		environment: 'node',
 		include: ['**/*.{test,spec}.{ts,tsx}'],
-		exclude: ['node_modules', 'dist'],
+		exclude: ['node_modules', 'dist', '**/*.integration.test.ts'],
 	},
 });

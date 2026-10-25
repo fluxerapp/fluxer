@@ -8,15 +8,18 @@
 	},
 	"scripts": {
 		"test": "vitest run",
+		"test:integration": "vitest run --config vitest.integration.config.ts",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fluxer/music_protocol": "workspace:*"
+		"@fluxer/music_protocol": "workspace:*",
+		"@livekit/rtc-node": "1.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@types/ws": "8.18.1",
+		"livekit-server-sdk": "catalog:",
 		"typescript": "catalog:ts7",
 		"vitest": "catalog:",
 		"ws": "8.21.3"
