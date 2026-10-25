@@ -294,6 +294,15 @@ jobs:
           mkdir -p ../release
           cp rexctl_"${VERSION}"_* checksums.txt checksums.txt.sigstore.json rexctl-release.json ../release/
 
+      - name: write the compose bundle
+        working-directory: fluxer_rexctl
+        run: |
+          set -euo pipefail
+          out="${RUNNER_TEMP}/fluxer-compose"
+          go run . bundle --out "${out}"
+          tar -czf "release/fluxer-compose-${VERSION}.tar.gz" -C "${out}" .
+          tar -tzf "release/fluxer-compose-${VERSION}.tar.gz"
+
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:
           subject-checksums: fluxer_rexctl/dist/checksums.txt

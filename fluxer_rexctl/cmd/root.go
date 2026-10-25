@@ -126,6 +126,7 @@ func newRoot(app *App) *cobra.Command {
 		newConfigCmd(app),
 		newVersionCmd(app),
 		newDocsCmd(app),
+		newBundleCmd(app),
 	)
 	groupCommands(root)
 	refuseUnknownSubcommands(root)

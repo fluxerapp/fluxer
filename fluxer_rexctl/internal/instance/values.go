@@ -50,7 +50,7 @@ func importValues(in valueInput) (*valueResult, error) {
 		admin:    map[string]string{},
 	}
 	for k := range env {
-		if strings.HasPrefix(k, "COMPOSE_") {
+		if strings.HasPrefix(k, "COMPOSE_") || k == stack.SettingsLoadedVar {
 			delete(env, k)
 		}
 	}
@@ -166,7 +166,7 @@ func preserve(set *stack.Set, r *valueResult, before map[string]string, read []s
 		}
 		changed := false
 		for _, v := range read {
-			if named[v] || isGeneratedSecret(v) || settings.Twins[v] != "" || isProxyVar(v) {
+			if named[v] || v == stack.SettingsLoadedVar || isGeneratedSecret(v) || settings.Twins[v] != "" || isProxyVar(v) {
 				continue
 			}
 			b, a := before[v], after[v]
