@@ -153,7 +153,7 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 		err = app.UI.Step(ctx, "Going back to "+prevShort, func(ctx context.Context, s *ui.Step) error {
 			s.Done("Went back to %s. Your instance is running.", prevShort)
 			var err error
-			put, err = restoreRelease(ctx, inst, e, prev)
+			put, err = restoreRelease(ctx, app, inst, e, prev)
 			return err
 		})
 		if err != nil {
@@ -178,7 +178,7 @@ func rollbackFailed(ctx context.Context, app *App, inst *instance.Instance, e *e
 	if ctx.Err() == nil {
 		cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), recoveryTimeout)
 		defer cancel()
-		_, err := restoreRelease(cctx, inst, e, cur)
+		_, err := restoreRelease(cctx, app, inst, e, cur)
 		inst.State.Release, inst.State.PreviousRelease = cur, prev
 		_ = inst.Save()
 		if err == nil {

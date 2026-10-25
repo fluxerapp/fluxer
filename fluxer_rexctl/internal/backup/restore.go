@@ -159,7 +159,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 			return nil, err
 		}
 	}
-	if err := restoreData(ctx, path, p, image, m, vols, progress); err != nil {
+	if err := restoreData(ctx, path, p, image, m, vols, "", progress); err != nil {
 		return nil, err
 	}
 
@@ -394,7 +394,42 @@ type volumeSink struct {
 	out  *bytes.Buffer
 }
 
-func restoreData(ctx context.Context, path string, p *engine.Project, image string, m *Manifest, vols []engine.Volume, progress func(string)) error {
+func RestoreVolume(ctx context.Context, path string, inst *instance.Instance, p *engine.Project, short string) error {
+	m, err := ReadManifest(path)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(m.Volumes, short) {
+		return fmt.Errorf("backup: %s isn't in the backup", short)
+	}
+	vols, err := p.Engine.Volumes(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+	image, err := helperImage(ctx, inst, p, p.Model)
+	if err != nil {
+		return err
+	}
+	return restoreData(ctx, path, p, image, m, vols, short, func(string) {})
+}
+
+func ClearVolume(ctx context.Context, inst *instance.Instance, p *engine.Project, short string) error {
+	vols, err := p.Engine.Volumes(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+	v, ok := dataVolume(p.Model, p.Name, vols, short)
+	if !ok {
+		return nil
+	}
+	image, err := helperImage(ctx, inst, p, p.Model)
+	if err != nil {
+		return err
+	}
+	return helper(ctx, p, image, []engine.Mount{v.mount("/data", false)}, nil, io.Discard, "find", "/data", "-mindepth", "1", "-delete")
+}
+
+func restoreData(ctx context.Context, path string, p *engine.Project, image string, m *Manifest, vols []engine.Volume, only string, progress func(string)) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var sink *volumeSink
@@ -451,10 +486,13 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 			if err := closeSink(nil); err != nil {
 				return err
 			}
+			if only != "" {
+				return nil
+			}
 			return restoreDump(ctx, p, r)
 		}
 		short, inner, ok := volumeOf(hdr.Name)
-		if !ok {
+		if !ok || only != "" && short != only {
 			return closeSink(nil)
 		}
 		if !slices.Contains(m.Volumes, short) {

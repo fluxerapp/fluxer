@@ -843,7 +843,7 @@ func failedStart(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	app.UI.Fail(msg, "")
 	app.UI.Detail("%v", cause)
 	logPath := writeFailureLog(ctx, inst, p, "upgrade-"+release.DirName(pend.To)+".log", cause, waiting)
-	if err := goBack(ctx, inst, e, pend.From); err != nil {
+	if err := goBack(ctx, app, inst, e, pend.From); err != nil {
 		return err
 	}
 	inst.State.FailedRelease = pend.To
@@ -913,7 +913,7 @@ func notRunning(ctx context.Context, p *engine.Project) []string {
 func abortUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, cause, report error) error {
 	pend := inst.State.Upgrade
 	app.UI.Detail("%v", cause)
-	if err := goBack(ctx, inst, e, pend.From); err != nil {
+	if err := goBack(ctx, app, inst, e, pend.From); err != nil {
 		var ee *ui.ExitError
 		if errors.As(report, &ee) && ee.Msg != "" {
 			msg, _, _ := strings.Cut(ee.Msg, ". ")
@@ -929,11 +929,11 @@ func abortUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	return report
 }
 
-func goBack(ctx context.Context, inst *instance.Instance, e *engine.Engine, version string) error {
+func goBack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, version string) error {
 	pend := inst.State.Upgrade
 	cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), recoveryTimeout)
 	defer cancel()
-	if _, err := restoreRelease(cctx, inst, e, version); err != nil {
+	if _, err := restoreRelease(cctx, app, inst, e, version); err != nil {
 		logPath := writeFailureLog(cctx, inst, e.Named(inst.Project(), inst.Dir), "go-back-"+release.DirName(version)+".log", err, nil)
 		fix := "Run rexctl doctor to see what's wrong."
 		if logPath != "" {
@@ -964,8 +964,9 @@ func goBack(ctx context.Context, inst *instance.Instance, e *engine.Engine, vers
 	return nil
 }
 
-func restoreRelease(ctx context.Context, inst *instance.Instance, e *engine.Engine, version string) ([]string, error) {
+func restoreRelease(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, version string) ([]string, error) {
 	var put []string
+	search := runningImage(ctx, e.Named(inst.Project(), inst.Dir), searchService)
 	if version != inst.State.Release {
 		restored, err := release.Restore(inst, version)
 		if err != nil {
@@ -993,6 +994,9 @@ func restoreRelease(ctx context.Context, inst *instance.Instance, e *engine.Engi
 	p, lerr := deploy.Load(ctx, inst, e)
 	if lerr != nil {
 		return put, lerr
+	}
+	if serr := keepSearchReadable(ctx, app, inst, p, search, version); serr != nil {
+		return put, serr
 	}
 	if err != nil {
 		if err := startEach(ctx, p, false); err != nil {
@@ -1081,7 +1085,7 @@ func recoverUpgrade(ctx context.Context, app *App, inst *instance.Instance, forw
 		app.UI.Warn(fmt.Sprintf("The upgrade to Fluxer %s didn't finish.", toShort), "")
 		err = app.UI.Step(ctx, "Going back to "+fluxerName(fromShort), func(ctx context.Context, s *ui.Step) error {
 			s.Done("Went back to %s. Your instance is running.", fluxerName(fromShort))
-			return goBack(ctx, inst, e, pend.From)
+			return goBack(ctx, app, inst, e, pend.From)
 		})
 		if err == nil || !forward || !forwardable(inst) || ctx.Err() != nil {
 			return err
