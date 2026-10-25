@@ -51,6 +51,14 @@ func (e *Env) healthURLs() []string {
 	}
 }
 
+func (e *Env) edgePublished() bool {
+	if e.Project == nil || e.Project.Model == nil {
+		return true
+	}
+	svc, ok := e.Project.Model.Services["edge"]
+	return !ok || len(svc.Ports) > 0
+}
+
 func (e *Env) localClient() *http.Client {
 	return &http.Client{
 		Timeout: 10 * time.Second,
@@ -69,6 +77,12 @@ func runHealth(ctx context.Context, e *Env) Result {
 	states, err := e.serviceStates(ctx)
 	if err != nil || !slices.ContainsFunc(states, func(s ServiceState) bool { return s.Name == "edge" && s.Running() }) {
 		return skip("")
+	}
+	if e.mode() == modeProxy && !e.edgePublished() {
+		if _, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/_health"); err != nil {
+			return fail("Fluxer doesn't answer inside the edge container.", "Run rexctl logs edge to see why.")
+		}
+		return pass("Fluxer answers inside the edge container.")
 	}
 	client := e.localClient()
 	answered := false
