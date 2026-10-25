@@ -136,26 +136,26 @@ func UnpinImages(compose []byte) []byte {
 	if err != nil {
 		return compose
 	}
-	found, err := imageLines(compose)
-	if err != nil {
-		return compose
-	}
-	byService := make(map[string]string, len(templates))
+	var prefix, suffix string
 	for _, t := range templates {
-		if strings.HasPrefix(t.value, "${FLUXER_REGISTRY") {
-			byService[t.service] = t.value
+		head, tag, ok := strings.Cut(t.value, ":${")
+		if slash := strings.LastIndex(head, "/"); ok && slash >= 0 && strings.HasPrefix(t.value, "${FLUXER_REGISTRY") {
+			prefix, suffix = head[:slash+1], ":${"+tag
+			break
 		}
+	}
+	found, err := imageLines(compose)
+	if err != nil || prefix == "" {
+		return compose
 	}
 	lines := strings.Split(string(compose), "\n")
 	for _, img := range found {
-		template, ok := byService[img.service]
 		repo, digest, pinned := strings.Cut(img.value, "@sha256:")
-		component, _, _ := strings.Cut(template, ":${")
 		i := img.line - 1
-		if !ok || !pinned || len(digest) != 64 || path.Base(repo) != path.Base(component) || i < 0 || i >= len(lines) || img.column-1 > len(lines[i]) {
+		if !pinned || len(digest) != 64 || i < 0 || i >= len(lines) || img.column-1 > len(lines[i]) {
 			continue
 		}
-		lines[i] = lines[i][:img.column-1] + template
+		lines[i] = lines[i][:img.column-1] + prefix + path.Base(repo) + suffix
 	}
 	return []byte(strings.Join(lines, "\n"))
 }
