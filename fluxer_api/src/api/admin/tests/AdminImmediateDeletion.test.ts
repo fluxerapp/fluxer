@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, listTestEmails, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createTestAccount,
+	createUniqueEmail,
+	listTestEmails,
+	setUserACLs,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
@@ -113,15 +119,23 @@ describe('immediate account deletion from the admin panel', () => {
 		const users = createApiContext().services.users;
 		const targetId = createUserID(BigInt(target.userId));
 		const deleted = await users.findUniqueAssert(targetId);
+		const leftoverEmail = createUniqueEmail('leftover');
 		const leftover = await users.patchUpsert(
 			targetId,
-			{last_active_ip: '203.0.113.45', last_active_at: new Date(), locale: 'sv-SE', terms_agreed_at: new Date()},
+			{
+				email: leftoverEmail,
+				last_active_ip: '203.0.113.45',
+				last_active_at: new Date(),
+				locale: 'sv-SE',
+				terms_agreed_at: new Date(),
+			},
 			deleted.toRow(),
 		);
 		await getUserSearchService()!.indexDocument(convertToSearchableUser(leftover));
 		expect((await listedUsers()).map((user) => user.id)).toContain(target.userId);
 		expect(await backfillDeletedUsers(users, 2)).toMatchObject({scrubbed: 1});
 		expect((await users.findUniqueAssert(targetId)).toRow()).toMatchObject({
+			email: null,
 			last_active_ip: null,
 			last_active_at: null,
 			locale: null,
@@ -134,6 +148,7 @@ describe('immediate account deletion from the admin panel', () => {
 			.execute();
 		expect(byIp.users).toEqual([]);
 		expect(await backfillDeletedUsers(users)).toMatchObject({scrubbed: 0});
+		await createTestAccount(harness, {email: leftoverEmail});
 	});
 
 	it('keeps the waiting period on the hosted instance', async () => {

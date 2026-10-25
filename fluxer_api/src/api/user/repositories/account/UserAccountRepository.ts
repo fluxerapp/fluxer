@@ -175,6 +175,9 @@ export class UserAccountRepository {
 			Object.fromEntries(cleared.map((field) => [field, Db.clear()])),
 			user.toRow(),
 		);
+		if (user.email) {
+			await this.emailOwnershipRepo.releaseEmail(user.email, user.id);
+		}
 		return true;
 	}
 
