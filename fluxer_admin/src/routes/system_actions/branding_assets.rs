@@ -56,6 +56,7 @@ pub(super) async fn post(
     ) {
         return render_fragment_with_toast(
             templates::pages::instance_branding::branding_asset_field(
+                config,
                 kind,
                 kind.url(&instance_config.app_public.branding),
             ),

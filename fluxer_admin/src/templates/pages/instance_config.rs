@@ -388,7 +388,7 @@ fn app_public_config_section(
         "The name, color and images people see on the sign-in page, in the apps and in the browser. The preview shows each place they are used.",
         html! {
             div class="space-y-8" {
-                (branding_section(base, config_form, app_public, &host))
+                (branding_section(config, config_form, app_public, &host))
                 div class="space-y-4 border-t border-neutral-200 pt-6" {
                     h3 class="text-sm font-semibold text-neutral-900" { "Legal Documents" }
                     form method="post" action={(base) "/instance-config?action=update_app_legal"} {
