@@ -117,7 +117,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 		kind: 'bug_hunter',
 		asset: PROFILE_BADGE_ASSETS.bug_hunter,
 		availability: 'hosted',
-		href: marketing('help/report-bug'),
+		href: () => 'https://www.youtube.com/watch?v=ez8m4PXksQs',
 		qualify: flagBadge(UserFlags.BUG_HUNTER, (view) =>
 			getContentMessage('profile_badge.bug_hunter', view.locale, {product_name: view.environment.productName}),
 		),
