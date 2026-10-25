@@ -567,6 +567,10 @@ func runBootStart(ctx context.Context, app *App) error {
 			}
 			return readyFailure(ctx, inst, p, p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: engine.DefaultReadyTimeout}))
 		}
+		if p, err := deploy.Load(ctx, inst, e); err == nil && stackRunning(ctx, p) {
+			app.sendAdminImport(ctx, inst, p)
+			return nil
+		}
 		if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Wait: true}); err != nil {
 			return readyFailure(ctx, inst, e.Named(inst.Project(), inst.Dir), err)
 		}
@@ -584,13 +588,10 @@ func alreadyUp(ctx context.Context, app *App, inst *instance.Instance) bool {
 		return false
 	}
 	p, err := deploy.Load(ctx, inst, e)
-	if err != nil {
-		return false
-	}
-	plan, err := p.Plan(ctx)
-	if err != nil || len(plan.Create)+len(plan.Recreate)+len(plan.Remove)+len(plan.Networks)+len(plan.LabelOnly)+len(plan.Volumes) > 0 {
-		return false
-	}
+	return err == nil && stackRunning(ctx, p)
+}
+
+func stackRunning(ctx context.Context, p *engine.Project) bool {
 	containers, err := p.PS(ctx)
 	if err != nil {
 		return false
