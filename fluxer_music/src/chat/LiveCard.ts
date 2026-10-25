@@ -118,8 +118,7 @@ export class LiveCard {
 	}
 
 	async start(state: MusicState): Promise<void> {
-		await this.post(state);
-		this.track(state);
+		if (await this.post(state)) this.track(state);
 	}
 
 	update(state: MusicState): void {
@@ -130,17 +129,19 @@ export class LiveCard {
 
 	async repost(state: MusicState): Promise<void> {
 		const old = this.id;
+		this.id = null;
+		this.clearRefreshTimer();
 		if (old !== null) {
 			await this.rest
 				.deleteMessage(this.channelId, old)
 				.catch((err) => console.error(`card delete failed: ${describeError(err)}`));
 		}
 		this.clearEditTimer();
-		await this.post(state);
-		this.track(state);
+		if (await this.post(state)) this.track(state);
 	}
 
 	async notice(text: string): Promise<void> {
+		if (this.id === null) return;
 		await this.rest.sendMessage(this.channelId, {content: text});
 	}
 
@@ -152,8 +153,15 @@ export class LiveCard {
 		await this.rest.editMessage(this.channelId, this.id, {content: STOPPED_TEXT, embeds: []});
 	}
 
-	private async post(state: MusicState): Promise<void> {
-		const {id} = await this.rest.sendMessage(this.channelId, {embeds: [renderCard(state, this.now())]});
+	/** Sends the card; on failure logs and stays card-less. Returns whether a card exists. */
+	private async post(state: MusicState): Promise<boolean> {
+		let id: string;
+		try {
+			({id} = await this.rest.sendMessage(this.channelId, {embeds: [renderCard(state, this.now())]}));
+		} catch (err) {
+			console.error(`card post failed: ${describeError(err)}`);
+			return false;
+		}
 		this.id = id;
 		this.lastEditAt = this.now();
 		for (const emoji of CARD_REACTIONS) {
@@ -163,6 +171,7 @@ export class LiveCard {
 				console.error(`card reaction failed: ${describeError(err)}`);
 			}
 		}
+		return true;
 	}
 
 	private track(state: MusicState): void {

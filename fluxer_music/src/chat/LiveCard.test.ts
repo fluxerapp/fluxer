@@ -165,8 +165,39 @@ describe('LiveCard', () => {
 
 	it('notice sends a plain message', async () => {
 		const card = make();
+		await card.start(state());
 		await card.notice('hello');
 		expect(rest.sendMessage).toHaveBeenCalledWith('c1', {content: 'hello'});
+	});
+
+	it('start without a card is a no-op afterwards', async () => {
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+		rest.sendMessage.mockRejectedValueOnce(new Error('403'));
+		const card = make();
+		await card.start(state());
+		expect(card.messageId).toBeNull();
+		rest.sendMessage.mockClear();
+		card.update(state());
+		await card.notice('hi');
+		await advance(60_000);
+		await card.finish();
+		expect(rest.sendMessage).not.toHaveBeenCalled();
+		expect(rest.editMessage).not.toHaveBeenCalled();
+		log.mockRestore();
+	});
+
+	it('repost whose send fails leaves no card', async () => {
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const card = make();
+		await card.start(state());
+		rest.sendMessage.mockRejectedValueOnce(new Error('403'));
+		await card.repost(state());
+		expect(card.messageId).toBeNull();
+		card.update(state());
+		await advance(60_000);
+		await card.finish();
+		expect(rest.editMessage).not.toHaveBeenCalled();
+		log.mockRestore();
 	});
 
 	it('finish edits to Music stopped and stops timers', async () => {
