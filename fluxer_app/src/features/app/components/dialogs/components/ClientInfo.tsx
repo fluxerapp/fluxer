@@ -75,8 +75,8 @@ export const ClientInfo = observer(() => {
 		return `${parts.join(' ')}${archSuffix}`.trim();
 	};
 	const osDescription = buildOsDescription();
-	const releaseChannel = formatReleaseChannelLabel(Config.PUBLIC_RELEASE_CHANNEL);
-	const buildVersion = Config.PUBLIC_BUILD_VERSION || 'dev';
+	const releaseChannel = formatReleaseChannelLabel(Config.RELEASE_CHANNEL);
+	const buildVersion = Config.BUILD_VERSION || 'dev';
 	const desktopReleaseChannel = desktopChannel ? formatReleaseChannelLabel(desktopChannel) : null;
 	const primaryDesktopReleaseChannel = desktopReleaseChannel ?? releaseChannel;
 	const desktopVersionLabel = desktopVersion;

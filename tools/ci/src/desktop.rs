@@ -211,7 +211,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
                 .channel
                 .clone()
                 .filter(|value| !value.is_empty())
-                .or_else(|| env_string("CHANNEL"))
+                .or_else(|| env_string("BUILD_CHANNEL"))
                 .unwrap_or_else(|| "stable".to_string());
             set_metadata_step(&channel)
         }
@@ -233,7 +233,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         }
         DesktopStep::UpdateVersion => run_command(pnpm_command()?.args([
             "version",
-            &require_env("VERSION")?,
+            &require_env("BUILD_VERSION")?,
             "--no-git-tag-version",
             "--allow-same-version",
         ])),
@@ -302,7 +302,6 @@ fn set_metadata_step(channel: &str) -> Result<()> {
     append_github_output(&[
         ("version", version.as_str()),
         ("pub_date", pub_date.as_str()),
-        ("channel", channel),
         ("build_channel", build_channel),
         ("source_sha", source_sha.as_str()),
     ])
@@ -2981,7 +2980,7 @@ fn windows_package_config(build_channel: &str, arch: &str) -> Result<WindowsPack
 fn package_app_windows_velopack_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
-    let version = require_env("VERSION")?;
+    let version = require_env("BUILD_VERSION")?;
     let config = windows_package_config(&build_channel, &arch)?;
     remove_dir_if_exists(&config.output_dir)?;
 
@@ -3377,7 +3376,7 @@ fn velopack_path_lengths(nupkg: &Path, prefix: &Path) -> Result<Vec<ArchivePathL
 fn create_portable_zip_windows_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
-    let version = require_env("VERSION")?;
+    let version = require_env("BUILD_VERSION")?;
     let config = windows_package_config(&build_channel, &arch)?;
     let Some(pack_dir) = find_windows_unpacked_app(&arch, &config.main_exe) else {
         println!("No unpacked Windows app found; skipping portable ZIP.");
@@ -4314,7 +4313,7 @@ fn extract_zip_safely(archive_path: &Path, destination: &Path) -> Result<()> {
 fn verify_windows_signed_artifacts_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
-    let version = require_env("VERSION")?;
+    let version = require_env("BUILD_VERSION")?;
     let config = windows_package_config(&build_channel, &arch)?;
 
     let nupkg = first_file_matching(&config.output_dir, |name| name.ends_with("-full.nupkg"))
@@ -4584,8 +4583,8 @@ fn build_payload_step() -> Result<()> {
     remove_dir_if_exists(&payload_root)?;
     fs::create_dir_all(&payload_root)?;
 
-    let channel = require_env("CHANNEL")?;
-    let version = require_env("VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
     let pub_date = require_env("PUB_DATE")?;
     let artifacts = Path::new("artifacts");
     let artifact_dirs = payload_artifact_dirs(artifacts, &channel)?;
@@ -4633,8 +4632,8 @@ fn build_payload_step() -> Result<()> {
 }
 
 fn prepare_release_assets_step() -> Result<()> {
-    let channel = require_env("CHANNEL")?;
-    let version = require_env("VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
     let source_sha = require_env("SOURCE_SHA")?;
     let product = desktop_release_product(&channel)?;
     let payload_root = Path::new("payload_tree")
@@ -5513,8 +5512,8 @@ fn build_module_manifest_step() -> Result<()> {
         "Missing {}, run the build_payload step first",
         payload_root.display()
     );
-    let channel = require_env("CHANNEL")?;
-    let build_version = require_env("VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
+    let build_version = require_env("BUILD_VERSION")?;
     let pub_date = require_env("PUB_DATE")?;
     let packed = read_packed_desktop_modules(&desktop_modules_dir(), &channel, &build_version)?;
     let targets = desktop_module_manifest_targets(&payload_root, &channel)?;
@@ -6518,9 +6517,9 @@ fn channel_baseline_sha(
 }
 
 async fn check_shell_contract_step() -> Result<()> {
-    let channel = require_env("CHANNEL")?;
+    let channel = require_env("BUILD_CHANNEL")?;
     let source_sha = validate_full_sha("SOURCE_SHA", &require_env("SOURCE_SHA")?)?;
-    let version = require_env("VERSION")?;
+    let version = require_env("BUILD_VERSION")?;
     crate::common::parse_version_instant(&version)?;
     let choice =
         DesktopShellContractChoice::parse_input(&require_env(DESKTOP_SHELL_CONTRACT_ENV)?)?;
@@ -6686,8 +6685,8 @@ fn modules_only_channel_manifest(
 }
 
 fn build_modules_only_manifest_step() -> Result<()> {
-    let channel = require_env("CHANNEL")?;
-    let build_version = require_env("VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
+    let build_version = require_env("BUILD_VERSION")?;
     let pub_date = require_env("PUB_DATE")?;
     let modules_dir = desktop_modules_dir();
     let contract = read_shell_contract(&channel)?.with_context(|| {
@@ -6747,8 +6746,8 @@ fn build_modules_only_manifest_step() -> Result<()> {
 }
 
 fn prepare_modules_release_assets_step() -> Result<()> {
-    let channel = require_env("CHANNEL")?;
-    let version = require_env("VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
     let source_sha = require_env("SOURCE_SHA")?;
     let product = desktop_release_product(&channel)?;
     let payload_root = Path::new("payload_tree")
@@ -6787,9 +6786,8 @@ fn prepare_modules_release_assets_step() -> Result<()> {
 
 fn build_summary_step() -> Result<()> {
     let summary = require_env("GITHUB_STEP_SUMMARY")?;
-    let display_channel = env::var("DISPLAY_CHANNEL").unwrap_or_default();
-    let version = require_env("VERSION")?;
-    let channel = require_env("CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
+    let channel = require_env("BUILD_CHANNEL")?;
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
@@ -6798,7 +6796,7 @@ fn build_summary_step() -> Result<()> {
     writeln!(
         file,
         "## Desktop {} Release Assets Ready",
-        title_case(&display_channel)
+        title_case(&channel)
     )?;
     writeln!(
         file,

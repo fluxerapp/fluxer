@@ -30,7 +30,7 @@ function getWorkerAssetBuildVersion(explicitBuildVersion?: string | number | nul
 	if (explicitBuildVersion !== undefined) {
 		return normalizeBuildVersion(explicitBuildVersion);
 	}
-	return normalizeBuildVersion(import.meta.env.PUBLIC_BUILD_VERSION);
+	return normalizeBuildVersion(import.meta.env.BUILD_VERSION);
 }
 
 function withWorkerAssetVersion(assetUrl: URL, buildVersion: string | null): string {
