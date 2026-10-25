@@ -24,6 +24,8 @@ import {
 
 initializeFluxerErrorMap();
 
+const MAX_REPORTED_VALIDATION_ISSUES = 100;
+
 function isEmptyObject(obj: object): boolean {
 	return Object.keys(obj).length === 0;
 }
@@ -115,7 +117,7 @@ export function inputValidationErrorFromZodIssues(issues: Array<core.$ZodIssue>)
 	const errors: Array<ValidationError> = [];
 	const localizedErrors: Array<LocalizedValidationError> = [];
 	const seen = new Set<string>();
-	for (const issue of issues) {
+	for (const issue of issues.slice(0, MAX_REPORTED_VALIDATION_ISSUES)) {
 		const path = issue.path.length > 0 ? issue.path.map(String).join('.') : 'root';
 		const code = getValidationErrorCode(issue.message);
 		const key = `${path}|${code}`;
