@@ -1350,6 +1350,12 @@ importers:
       '@codemirror/language':
         specifier: ^6.12.4
         version: 6.12.4
+      '@codemirror/lint':
+        specifier: ^6.9.7
+        version: 6.9.7
+      '@codemirror/search':
+        specifier: ^6.7.2
+        version: 6.7.2
       '@codemirror/state':
         specifier: ^6.7.5
         version: 6.7.5
@@ -1449,9 +1455,6 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
-      codemirror:
-        specifier: ^6.0.2
-        version: 6.0.2
       combokeys:
         specifier: 'catalog:'
         version: 3.0.1
@@ -1515,6 +1518,9 @@ importers:
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
+      prettier:
+        specifier: ^3.9.10
+        version: 3.9.10
       qrcode:
         specifier: 'catalog:'
         version: 1.5.4
@@ -7345,9 +7351,6 @@ packages:
 
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
-
-  codemirror@6.0.2:
-    resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
 
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
@@ -16814,16 +16817,6 @@ snapshots:
   cluster-key-slot@1.1.1: {}
 
   code-block-writer@13.0.3: {}
-
-  codemirror@6.0.2:
-    dependencies:
-      '@codemirror/autocomplete': 6.20.3
-      '@codemirror/commands': 6.11.1
-      '@codemirror/language': 6.12.4
-      '@codemirror/lint': 6.9.7
-      '@codemirror/search': 6.7.2
-      '@codemirror/state': 6.7.5
-      '@codemirror/view': 6.43.12
 
   collapse-white-space@2.1.0: {}
 

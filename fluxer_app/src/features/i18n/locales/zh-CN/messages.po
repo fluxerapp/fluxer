@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
+msgstr "--{name} 不是 Fluxer 变量，也没有在你的 CSS 中设置。"
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -1061,10 +1066,6 @@ msgstr "{channelName} 在 {communityName} ({accountName})"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} 在 {accountName} 上"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{characterCount, plural, one {# character} other {# characters}}"
-msgstr "{characterCount, plural, other {# 个字符}}"
-
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} 想连接到你的账号"
@@ -1093,6 +1094,11 @@ msgstr "{context} · {accountName}"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ 无限制} other {# 位参与者}}"
+
+#. Shown when hovering a CSS selector in the quick CSS editor.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
+msgstr "{count, plural, =0 {现在应用中没有匹配项} one {现在应用中匹配 # 个元素} other {现在应用中匹配 # 个元素}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1170,6 +1176,11 @@ msgstr "{count, plural, one {# 处已更改} other {# 处已更改}}"
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# 个频道关注此频道} other {# 个频道关注此频道}}。将其转换为文本频道将移除这些关注。"
 
+#. Shown in the status bar of the quick CSS editor while text is selected.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# character selected} other {# characters selected}}"
+msgstr "{count, plural, one {已选中 # 个字符} other {已选中 # 个字符}}"
+
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
@@ -1188,6 +1199,11 @@ msgstr "{count, plural, other {# 个社区因时空穿梭器故障暂时不可�
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, other {# 个连接}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# error} other {# errors}}"
+msgstr "{count, plural, one {# 个错误} other {# 个错误}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1275,6 +1291,11 @@ msgstr "{count, plural, other {# 位回应者}}"
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, other {# 秒}}"
 
+#. Option of the "Tab size" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{count, plural, one {# space} other {# spaces}}"
+msgstr "{count, plural, one {# 个空格} other {# 个空格}}"
+
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
@@ -1284,6 +1305,11 @@ msgstr "{count, plural, other {有 # 条建议}}"
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# 个视频} other {# 个视频}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# warning} other {# warnings}}"
+msgstr "{count, plural, one {# 个警告} other {# 个警告}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1714,9 +1740,10 @@ msgstr "{length, plural, other {# 位用户}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, other {# 人正在观看}}"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{lineCount, plural, one {# line} other {# lines}}"
-msgstr "{lineCount, plural, other {# 行}}"
+#. Tooltip of the line and column button in the status bar of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
+msgstr "{lines, plural, one {# 行} other {# 行}}，{characters, plural, one {# 个字符} other {# 个字符}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -2227,6 +2254,11 @@ msgstr "{sender} 送了你一份礼物"
 #: src/features/premium/events/OperatorPassUpdate.tsx
 msgid "{senderName} is passing you an {operatorPassName}. Select to accept or decline."
 msgstr "{senderName} 正在把一张 {operatorPassName} 转交给你。选择即可接受或拒绝。"
+
+#. Option of the "Font size" setting in the quick CSS editor. {size} is a number of pixels.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{size} px"
+msgstr "{size} 像素"
 
 #. Summary row value when both a start and end date are set. Both values are localized dates.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -3274,6 +3306,11 @@ msgstr "添加评论（可选）"
 msgid "Add a community"
 msgstr "添加社区"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Add a cursor"
+msgstr "添加光标"
+
 #. Placeholder of the message composer in the new media post composer.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Add a description (optional)"
@@ -3589,6 +3626,11 @@ msgstr "添加邮箱后即可在此社区发言。"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Add an email to your account to buy the {operatorPassName}."
 msgstr "为你的账号添加邮箱后即可购买 {operatorPassName}。"
+
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Adds a rule that changes it.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Add an override"
+msgstr "添加覆盖"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx
@@ -4083,6 +4125,12 @@ msgstr "对齐方式控制仅在宽屏设备上可用"
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx
+msgid "All"
+msgstr "全部"
+
+#. Text in the code editor of the quick CSS editor. Button that selects every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "All"
 msgstr "全部"
 
@@ -5086,6 +5134,21 @@ msgstr "之后加入的社群将应用此设置。你也可以为每个社群单
 msgid "Apply"
 msgstr "应用"
 
+#. Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Apply changes"
+msgstr "应用更改"
+
+#. Completion in the quick CSS editor that inserts an @media rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules at some window sizes"
+msgstr "在部分窗口尺寸下应用规则"
+
+#. Completion in the quick CSS editor that inserts an @supports rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules when the browser supports a feature"
+msgstr "浏览器支持某功能时应用规则"
+
 #. Button or menu action label in the theme login and register pages. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "Apply theme"
@@ -5264,6 +5327,11 @@ msgstr "登录时在输入密码后还需验证通行密钥"
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Ask for a second step after your password when you sign in."
 msgstr "登录时要求输入密码外的第二步验证。"
+
+#. Detail next to an uploaded theme asset in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Asset"
+msgstr "素材"
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
 #. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
@@ -7014,11 +7082,6 @@ msgstr "你的实例能发送邮件吗？"
 msgid "Can't connect"
 msgstr "无法连接"
 
-#. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Can't find \"{reference}\" in your assets."
-msgstr "找不到您的资源中的“{reference}”。"
-
 #. Shown for a linked theme in Settings > Themes when its CSS file was moved or deleted. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
 msgid "Can't find {path}. Using the last loaded version."
@@ -7359,6 +7422,11 @@ msgstr "更改邮箱"
 msgid "Change emoji"
 msgstr "更改表情"
 
+#. Completion in the quick CSS editor that inserts a :root rule, where theme variables are set.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Change Fluxer variables"
+msgstr "更改 Fluxer 变量"
+
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change friend nickname"
@@ -7471,6 +7539,21 @@ msgstr "更改直播源"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Change the name shown on your global profile"
 msgstr "更改全局个人资料中显示的名称"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 0.1"
+msgstr "光标下数字加减 0.1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 1"
+msgstr "光标下数字加减 1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 10"
+msgstr "光标下数字加减 10"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -7734,6 +7817,16 @@ msgstr "将语音区域从 {oldRegion} 更改为 {newRegion}"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "键入时，更改会实时显示在应用中。"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app as you type. Select \"Save theme\" to keep them."
+msgstr "更改会实时显示在应用中。选择“保存主题”可保存。"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app when you select \"Apply changes\"."
+msgstr "选择“应用更改”后更改会显示在应用中。"
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
@@ -9410,6 +9503,12 @@ msgstr "对其他用户完全隐藏你的 {premiumProductName} 徽章"
 msgid "Completing sign-in…"
 msgstr "正在完成登录…"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Name of the list of suggestions.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Completions"
+msgstr "补全建议"
+
 #. Windows jump-list task description (tooltip text) for the New direct message action.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Compose a new direct message"
@@ -10179,6 +10278,11 @@ msgstr "将收到的内容转为语音，无论是否来自 /tts。"
 msgid "Copied"
 msgstr "已复制"
 
+#. Toast after copying a CSS variable name in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Copied {text}."
+msgstr "已复制 {text}。"
+
 #. Toast shown after copying stats for nerds JSON to clipboard.
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts
 msgid "Copied stats JSON to clipboard"
@@ -10203,6 +10307,7 @@ msgstr "已将网址复制到剪贴板"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Copies its name.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -10213,6 +10318,7 @@ msgstr "已将网址复制到剪贴板"
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssReference.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11722,6 +11828,12 @@ msgstr "当前设备"
 msgid "Current DM"
 msgstr "当前私信"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Current match"
+msgstr "当前匹配项"
+
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
@@ -11734,6 +11846,11 @@ msgstr "当前会话"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Current uses:"
 msgstr "当前使用次数："
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is the value the app uses right now.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Current value {value}"
+msgstr "当前值 {value}"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
 #: src/features/devtools/components/NagbarControls.ts
@@ -12337,6 +12454,16 @@ msgstr "默认表情"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Default hide after inactivity"
 msgstr "默认隐藏不活跃内容"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in dark themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in dark themes {value}"
+msgstr "暗色主题默认值 {value}"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in light themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in light themes {value}"
+msgstr "亮色主题默认值 {value}"
 
 #. Label of the forum setting that picks the default post layout.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -14442,6 +14569,11 @@ msgstr "编辑次数已达上限"
 msgid "Editing message"
 msgstr "正在编辑消息"
 
+#. Button in the quick CSS editor that opens settings such as font size and line wrapping.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Editor settings"
+msgstr "编辑器设置"
+
 #. Category dropdown option in the "Explore" tab in community settings.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Education"
@@ -16278,6 +16410,11 @@ msgstr "文件过大，无法内联预览（限制为 {previewLimitKb} KB）。"
 msgid "File is too large. Maximum size is {maxSize}."
 msgstr "文件过大。最大文件大小为 {maxSize}。"
 
+#. Detail next to a linked local file in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "File on this computer"
+msgstr "本地文件"
+
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx
 msgid "File options"
@@ -16408,6 +16545,11 @@ msgstr "过滤无身份组成员"
 msgid "Filter mentions"
 msgstr "筛选提及"
 
+#. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Filter rules"
+msgstr "筛选规则"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Filtering"
@@ -16421,6 +16563,17 @@ msgstr "按 {language} 筛选"
 #: src/features/voice/components/modals/CameraPreviewModal.tsx
 msgid "Finalizing camera..."
 msgstr "正在准备摄像头…"
+
+#. Text in the code editor of the quick CSS editor. Placeholder of the search field.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Find"
+msgstr "查找"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Find and replace"
+msgstr "查找并替换"
 
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx
@@ -16493,6 +16646,11 @@ msgstr "名字和姓氏"
 msgid "First option"
 msgstr "第一个选项"
 
+#. Toast in the quick CSS editor when "Format" is used on CSS that cannot be parsed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Fix the errors in your CSS before formatting it."
+msgstr "请先修复 CSS 中的错误再进行格式化。"
+
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
@@ -16513,6 +16671,21 @@ msgstr "佛罗里达州"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer 会在每个用户名后加上一个随机编号，例如 alex#4821，这样很多人可以使用同一个名字。"
+
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "Fluxer 阻止加载 {url}。请作为素材上传。"
+
+#. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the asset \"{name}\"."
+msgstr "Fluxer 找不到素材“{name}”。"
+
+#. Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the file \"{path}\"."
+msgstr "Fluxer 找不到文件“{path}”。"
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -16573,6 +16746,29 @@ msgstr "将窗口置于前台"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Focused voice"
 msgstr "人声优化"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that hides a block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Fold line"
+msgstr "折叠此行"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Fold the block"
+msgstr "折叠代码块"
+
+#. Text in the code editor of the quick CSS editor. Label of a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded code"
+msgstr "已折叠代码"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded lines"
+msgstr "已折叠行"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
@@ -16653,6 +16849,11 @@ msgstr "遵循你的 Windows 音频设置"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Font"
 msgstr "字体"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Font size"
+msgstr "字体大小"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -16852,6 +17053,16 @@ msgstr "忘记密码"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Forgot your password?"
 msgstr "忘记密码？"
+
+#. Button in the quick CSS editor that tidies the indentation and spacing of the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Format"
+msgstr "格式化"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Format the CSS"
+msgstr "格式化 CSS"
 
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for form input tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
@@ -17685,6 +17896,12 @@ msgstr "全局个人资料"
 msgid "Global shortcut"
 msgstr "全局快捷键"
 
+#. Text in the code editor of the quick CSS editor. Button that moves to the line number typed in "Go to line".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go"
+msgstr "跳转"
+
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Go back"
@@ -17725,6 +17942,11 @@ msgstr "前往 {premiumProductName}"
 msgid "Go to {recoverUrl} or scan the QR code."
 msgstr "前往 {recoverUrl} 或扫描二维码。"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Go to a line"
+msgstr "跳转到某行"
+
 #. Button label on a community invite embed when the current user is already a member.
 #. Button on the community card that opens from a published message copy, shown when the viewer is already a member of the source community.
 #. Short label in the invite accept modal. Keep it concise.
@@ -17762,6 +17984,12 @@ msgstr "前往第四个社区"
 #: src/features/app/components/pages/NotFoundPage.tsx
 msgid "Go to home"
 msgstr "前往首页"
+
+#. Text in the code editor of the quick CSS editor. Label of the field that moves to a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go to line"
+msgstr "跳转到行"
 
 #. Short label in the quick switcher state. Keep it concise.
 #: src/features/search/state/QuickSwitcher.tsx
@@ -18258,6 +18486,11 @@ msgstr "隐藏其他账号的动态"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Hide after inactivity"
 msgstr "隐藏不活动后"
+
+#. Completion in the quick CSS editor that inserts a CSS rule hiding an element.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Hide an element"
+msgstr "隐藏元素"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -19304,6 +19537,11 @@ msgstr "PIN 码错误。安全密钥锁定前还剩 {retriesRemaining, plural, o
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. Try again."
 msgstr "PIN 码错误。请重试。"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Indent with tabs"
+msgstr "使用 Tab 缩进"
 
 #. Header status shown while the channel is being indexed for the first time before search is available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -20391,9 +20629,13 @@ msgstr "键盘模式"
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "工具提示中的键盘快捷键提示"
 
+#. Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Keyboard shortcuts"
 msgstr "键盘快捷键"
@@ -20840,10 +21082,15 @@ msgstr "将此身份组的提及限制为有权提及任何身份组的成员"
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "将频道限制为 {count, plural, one {# 位用户} other {# 位用户}}"
 
-#. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Line {line} has a CSS error."
-msgstr "第 {line} 行存在 CSS 错误。"
+#. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "Line {line}, column {column}"
+msgstr "第 {line} 行，第 {column} 列"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Line numbers"
+msgstr "显示行号"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -21056,10 +21303,20 @@ msgctxt "operators-wall-status"
 msgid "Live"
 msgstr "已公开"
 
+#. Setting in "Editor settings" of the quick CSS editor. When on, the app changes as you type.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Live preview"
+msgstr "实时预览"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Live region"
 msgstr "实时区域"
+
+#. Completion in the quick CSS editor that inserts an @font-face rule. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Load a font from your assets"
+msgstr "从你的素材加载字体"
 
 #. Button that loads the next page of archived threads.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21667,6 +21924,12 @@ msgstr "马萨诸塞州"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Master volume"
 msgstr "主音量"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Match case"
+msgstr "区分大小写"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -22792,6 +23055,11 @@ msgstr "更多媒体操作"
 msgid "More options"
 msgstr "更多选项"
 
+#. Accessible label of the menu button on a CSS variable in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "More options for {name}"
+msgstr "{name} 的更多选项"
+
 #. Hint under the number of Operator Passes to buy. The wall is the Operators' wall, the list of Operators on the homepage. A neutral fact, never translate it as an encouragement to buy more.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "More passes show larger and earlier on the wall."
@@ -22806,6 +23074,11 @@ msgstr "更多快捷键选项"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "More sticker actions"
 msgstr "更多贴纸操作"
+
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "More than 1,000 elements match"
+msgstr "匹配元素超过 1,000 个"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -22871,6 +23144,11 @@ msgstr "在页面历史中后退"
 msgid "Move back through viewed channel history"
 msgstr "在浏览过的频道历史中后退"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move between the editor and the app"
+msgstr "在编辑器和应用间切换"
+
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx
@@ -22922,6 +23200,11 @@ msgstr "向右移动"
 #: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Move the editor. Use the arrow keys to move it."
 msgstr "移动编辑器。可以用方向键移动它。"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move the line up or down when the cursor isn't on a number"
+msgstr "光标不在数字上时上下移动整行"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -23742,6 +24025,12 @@ msgstr "最新优先"
 msgid "Next"
 msgstr "下一步"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the next search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Next"
+msgstr "下一个"
+
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Next attachment"
@@ -24201,6 +24490,12 @@ msgstr "无偏好"
 msgid "No preview yet"
 msgstr "暂无预览"
 
+#. Text in the code editor of the quick CSS editor. Shown when the CSS has no problems.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "No problems."
+msgstr "没有问题。"
+
 #. Empty-state text in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "No push subscriptions registered yet."
@@ -24257,6 +24552,16 @@ msgstr "没有可用的身份组"
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
 msgstr "暂无身份组。在{rolesSettingsPath}中添加身份组"
+
+#. Shown in the outline of the quick CSS editor when no rule matches the filter.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules match \"{filter}\"."
+msgstr "没有规则匹配“{filter}”。"
+
+#. Shown in the outline of the quick CSS editor when the CSS has no rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules yet."
+msgstr "还没有规则。"
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
@@ -24386,6 +24691,11 @@ msgstr "没有可用用户"
 #: src/features/search/components/search/UserFilterSheet.tsx
 msgid "No users found"
 msgstr "未找到用户"
+
+#. Shown in the "Reference" tab of the quick CSS editor when the search finds nothing.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "No variables match \"{query}\"."
+msgstr "没有变量匹配“{query}”。"
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
@@ -24519,6 +24829,11 @@ msgstr "不是整数"
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx
 msgid "Not allowed"
 msgstr "不允许"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Not applied yet"
+msgstr "尚未应用"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -24922,10 +25237,21 @@ msgstr "在 <0>{listPriceEffectiveDate}</0>，你的订阅将从 {listPriceCurre
 msgid "On click"
 msgstr "点击时"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Followed by a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "on line"
+msgstr "在第"
+
 #. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
 msgid "On sale from {saleOpensAt}."
 msgstr "{saleOpensAt} 起开售。"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "On screen now"
+msgstr "当前屏幕"
 
 #. Label in front of the name and avatar the Operators' wall shows for this account right now.
 #: src/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings.tsx
@@ -25835,11 +26161,13 @@ msgstr "{displayName} 的选项"
 msgid "Options for {themeName}"
 msgstr "{themeName} 的选项"
 
+#. Between two keyboard shortcuts that do the same thing, in the shortcuts dialog of the quick CSS editor.
 #. Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "or"
 msgstr "或"
 
@@ -25983,6 +26311,11 @@ msgstr "发出的好友请求"
 #: src/features/relationship/components/modals/AddFriendSheet.tsx
 msgid "Outgoing friend requests ({requestCount})"
 msgstr "发出的好友请求（{requestCount}）"
+
+#. Button in the quick CSS editor that shows a list of the rules in the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Outline"
+msgstr "大纲"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -26719,6 +27052,11 @@ msgstr "手机通知"
 msgid "Photo"
 msgstr "照片"
 
+#. Accessible label of the color swatch next to a color in the quick CSS editor. {value} is the CSS color.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Pick a color for {value}"
+msgstr "为 {value} 选择颜色"
+
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
 msgid "Pick a friend to pass it on to. They can accept or decline, and you can take it back until it moves."
@@ -27390,6 +27728,12 @@ msgstr "预览"
 msgid "Previous"
 msgstr "上一页"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the previous search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Previous"
+msgstr "上一个"
+
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts
 msgid "Previous 12 hours"
@@ -27536,6 +27880,12 @@ msgstr "私有话题"
 #: src/features/app/components/dialogs/ConfirmModal.tsx
 msgid "Pro tip:"
 msgstr "小提示："
+
+#. Text in the code editor of the quick CSS editor. Title of the list of problems in the CSS.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Problems"
+msgstr "问题"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -28411,9 +28761,11 @@ msgid "Redirect URIs"
 msgstr "重定向 URI"
 
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Redo"
 msgstr "重做"
 
@@ -28431,6 +28783,11 @@ msgstr "减少动态效果"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing."
 msgstr "已开启减少动态效果，因此内容动画默认暂停。你仍可以重新开启任意动画来继续播放。"
+
+#. Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Reference"
+msgstr "参考"
 
 #. Toast after copying the CSS reference of a theme asset.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -28528,6 +28885,12 @@ msgstr "常规按钮"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button clicked."
 msgstr "点击了常规按钮。"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Regular expression"
+msgstr "正则表达式"
 
 #. Button label for rejecting an incoming direct call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -29127,6 +29490,18 @@ msgstr "续订日期：<0>{renewalDate}</0>。"
 msgid "Replace"
 msgstr "替换"
 
+#. Text in the code editor of the quick CSS editor. Placeholder of the replace field and its button.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace"
+msgstr "替换"
+
+#. Text in the code editor of the quick CSS editor. Button that replaces every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace all"
+msgstr "全部替换"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background"
@@ -29146,6 +29521,18 @@ msgstr "替换{key}"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace with a GIF"
 msgstr "更换为 GIF"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced $ matches"
+msgstr "已替换 $ 个匹配项"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced the match on line $"
+msgstr "已替换第 $ 行的匹配项"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -30177,6 +30564,11 @@ msgstr "规则：{title}"
 msgid "Rule: <0>{title}</0>"
 msgstr "规则：<0>{title}</0>"
 
+#. Accessible name of the outline list in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Rules in this CSS"
+msgstr "此 CSS 中的规则"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -30318,6 +30710,11 @@ msgstr "保存图标"
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx
 msgid "Save some media from messages to get started!"
 msgstr "从消息中保存一些媒体，即可开始使用！"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Save the theme or apply changes"
+msgstr "保存主题或应用更改"
 
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
@@ -30932,6 +31329,11 @@ msgstr "搜索时区"
 msgid "Search users"
 msgstr "搜索用户"
 
+#. Placeholder of the search field in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Search variables"
+msgstr "搜索变量"
+
 #. Header status shown while a search request is in flight in the channel search results panel.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "Searching"
@@ -31118,6 +31520,11 @@ msgstr "选择频道"
 msgid "Select a channel or category"
 msgstr "选择频道或类别"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select a column of text by dragging"
+msgstr "拖动选择一列文本"
+
 #. Form field label or placeholder for selecting a community.
 #. Placeholder of the community picker in the follow announcement channel dialog.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
@@ -31155,6 +31562,11 @@ msgstr "选择重定向 URI"
 msgid "Select a scenario to apply..."
 msgstr "选择要应用的场景…"
 
+#. Shown above the list of CSS variables in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select a variable to add it to your CSS."
+msgstr "选择变量添加到你的 CSS。"
+
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -31190,6 +31602,11 @@ msgstr "选择 GIF {title}"
 msgid "Select interface language"
 msgstr "选择界面语言"
 
+#. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select one to add a rule for it to your CSS."
+msgstr "选择一个为其添加规则到你的 CSS。"
+
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 msgid "Select scopes (and redirect URI if required)"
@@ -31203,6 +31620,11 @@ msgstr "选择文本"
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx
 msgid "Select the account you want to sign in with on your new device."
 msgstr "选择你想在新设备上登录的账号。"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select the next match of the selection"
+msgstr "选择下一个匹配项"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
@@ -31239,6 +31661,12 @@ msgstr "可选文本"
 msgid "selected"
 msgstr "已选"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Selection deleted"
+msgstr "已删除选中内容"
+
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx
 msgid "Selection end"
@@ -31273,6 +31701,11 @@ msgstr "已选：{0}（最长 {1}）"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Selections"
 msgstr "选择控件"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS selectors.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Selectors"
+msgstr "选择器"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -31793,6 +32226,111 @@ msgstr "设置静音快捷键"
 msgid "Set new password"
 msgstr "设置新密码"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions is showing."
+msgstr "消息操作栏显示时设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions stays open, such as while a menu is open."
+msgstr "消息操作栏保持打开时设置，比如菜单打开时。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar when that person is online on a phone."
+msgstr "此人手机在线时头像设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar while that person is typing."
+msgstr "此人正在输入时头像设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on avatars that open a profile when clicked."
+msgstr "点击头像可打开个人资料时设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on edited messages."
+msgstr "已编辑消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages about a call."
+msgstr "通话相关消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from bots."
+msgstr "机器人消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from people you blocked."
+msgstr "你屏蔽的人发的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages sent by a webhook."
+msgstr "Webhook 发送的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages shown under the previous message from the same person."
+msgstr "同一人上一条消息下方显示的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that can show the bar of message actions."
+msgstr "可显示消息操作栏的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that Fluxer sends, such as when someone joins."
+msgstr "Fluxer 发送的消息设置，比如有人加入时。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that mention you."
+msgstr "提到你的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that reply to another message."
+msgstr "回复其他消息的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages while the compact message layout is on."
+msgstr "紧凑消息布局开启时消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages you sent."
+msgstr "你发送的消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on pinned messages."
+msgstr "置顶消息设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the avatars of bots."
+msgstr "机器人头像设置。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the root element during holidays. It lists the holidays."
+msgstr "节日时根元素设置。会列出节日。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on your own avatar."
+msgstr "你自己的头像设置。"
+
 #. Button that opens the dialog for setting a password on the account.
 #. Button that saves the password in the dialog for an account that has an email but no password.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
@@ -32243,6 +32781,11 @@ msgstr "显示"
 msgid "Show {appName}"
 msgstr "显示 {appName}"
 
+#. Accessible label of the color swatch next to a CSS variable in the quick CSS editor. {name} is the variable name.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Show {name} in \"Colors and fonts\""
+msgstr "在“颜色和字体”中显示 {name}"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32320,6 +32863,16 @@ msgstr "显示聊天"
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "显示聊天（{count, plural, other {# 条未读消息}}）"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show completions"
+msgstr "显示补全建议"
+
+#. Setting in "Editor settings" of the quick CSS editor. Completions are suggestions of CSS code.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Show completions as you type"
+msgstr "输入时显示补全建议"
 
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -32612,6 +33165,11 @@ msgstr "显示密码"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "在语音菜单中显示每个设备的参与者音量滑块"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show problems"
+msgstr "显示问题"
+
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
@@ -32680,6 +33238,11 @@ msgstr "在任务栏显示全彩 {productName} 图标，而非单色图标。"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Show the ID of each voice connection next to people in calls and in voice channels. With it off, each device is named by its type instead."
 msgstr "在通话和语音频道中，在用户旁边显示每个语音连接的 ID。关闭此选项后，每个设备将以其类型命名。"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show the outline"
+msgstr "显示大纲"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -33699,6 +34262,11 @@ msgstr "扬声器"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx
 msgid "Special features"
 msgstr "特色功能"
+
+#. Shown when hovering a CSS selector in the quick CSS editor. {a}, {b} and {c} are the three numbers of CSS specificity.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "Specificity {a}, {b}, {c}"
+msgstr "优先级 {a}，{b}，{c}"
 
 #. Title of the screen-share spectators popout listing users watching the stream.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx
@@ -35073,6 +35641,16 @@ msgstr "系统：浅色主题（随系统深色/浅色偏好设置自动同步�
 msgid "Tab"
 msgstr "Tab"
 
+#. Shown at the top of the keyboard shortcuts dialog of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Tab indents the line. To leave the editor with the keyboard, press Escape and then Tab."
+msgstr "Tab 用于缩进行。要用键盘离开编辑器，请先按 Escape，再按 Tab。"
+
+#. Setting in "Editor settings" of the quick CSS editor. How many spaces wide one level of indentation is.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Tab size"
+msgstr "Tab 大小"
+
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for table tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
 msgid "Tables"
@@ -35590,6 +36168,21 @@ msgstr "Fluxer 的 iOS 和 Android 应用通过 Fluxer 运营的推送中继接�
 msgid "The following people can't be added to this group DM:"
 msgstr "以下用户无法添加到群聊："
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of a message."
+msgstr "消息的 ID。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the channel a message is in."
+msgstr "消息所在频道的 ID。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the community a message or avatar belongs to."
+msgstr "消息或头像所属社区的 ID。"
+
 #. Activity log detail under a deleted invite link, used when someone other than the member who deleted it had created it and the creation time was not recorded. {user} is the member who created the invite, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "The invite was created by {user}"
@@ -35665,6 +36258,16 @@ msgstr "要操作的成员。"
 #: src/features/devtools/hooks/useCommands.ts
 msgid "The message to send."
 msgstr "要发送的消息。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for an avatar."
+msgstr "头像显示的名称。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for the person who sent a message."
+msgstr "消息发送者显示的名称。"
 
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
@@ -35769,10 +36372,20 @@ msgstr "登录请求已过期，您的浏览器尚未批准。"
 msgid "The sign-in was cancelled in your browser."
 msgstr "浏览器中已取消登录。"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The size of an avatar in pixels."
+msgstr "头像的像素大小。"
+
 #. Where the favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "The small image in the browser tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
 msgstr "显示在浏览器标签页中的小图。请使用方形 PNG，至少 64 × 64 像素，最大 {size}。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The status shown on an avatar, such as online or idle."
+msgstr "头像显示的状态，比如在线或离开。"
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -35789,6 +36402,11 @@ msgstr "系统已将身份组 {role} 授予 {target}"
 msgid "The system removed the role {role} from {target}"
 msgstr "系统已移除 {target} 的身份组 {role}"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor. DEFAULT and REPLY are attribute values and stay in English.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The type of a message, such as DEFAULT or REPLY."
+msgstr "消息类型，比如 DEFAULT 或 REPLY。"
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -35804,9 +36422,29 @@ msgstr "更新仍在下载中。请稍后再试。"
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "上传服务拒绝了此贴纸，因为它大于 {maxSize}。请尝试使用较小的文件、更简单的图片或较短的动画。"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of an avatar."
+msgstr "头像的用户 ID。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of the person who sent a message."
+msgstr "消息发送者的用户 ID。"
+
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "用户名 <0>{fluxerTag}</0> 已被占用。继续操作将自动重新生成你的标签。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of an avatar."
+msgstr "头像的用户名。"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of the person who sent a message."
+msgstr "消息发送者的用户名。"
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -35982,6 +36620,11 @@ msgstr "加载此频道 Webhook 时出错。请重试。"
 msgid "There was an error loading the webhooks. Try again."
 msgstr "加载 Webhook 时出错。请重试。"
 
+#. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "These attributes don't change between Fluxer updates."
+msgstr "这些属性在 Fluxer 更新时不会变。"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "They"
@@ -36113,6 +36756,11 @@ msgstr "此浏览器无法裁剪动态 {avifFormatLabel} 文件。请改用 GIF 
 msgid "This browser console is a developer tool."
 msgstr "此浏览器控制台是开发者工具。"
 
+#. Problem shown in the quick CSS editor on a CSS property name the browser does not support.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This browser doesn't know the property {property}."
+msgstr "此浏览器不识别属性 {property}。"
+
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
@@ -36220,6 +36868,11 @@ msgstr "此频道已不存在。它可能已被删除。"
 #: src/features/auth/altcha/CaptchaInterceptor.ts
 msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
 msgstr "此检查仅在通过 HTTPS 或 localhost 打开应用时运行。请要求实例所有者通过 HTTPS 提供服务，或从 localhost 打开。"
+
+#. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
+msgstr "此类名每次 Fluxer 更新都会变化。请用 [data-flx] 选择器。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
@@ -36338,6 +36991,11 @@ msgstr "此处包含敏感内容。"
 #: src/features/channel/components/channel_view/DMChannelView.tsx
 msgid "This conversation is no longer available."
 msgstr "此对话已不可用。"
+
+#. Problem shown in the quick CSS editor on a line with a CSS syntax error.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This CSS can't be parsed."
+msgstr "此 CSS 无法解析。"
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -37831,6 +38489,11 @@ msgstr "自行调整处理方式。"
 msgid "Turkish"
 msgstr "土耳其语"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Turn a comment on or off"
+msgstr "切换注释开关"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -37925,6 +38588,11 @@ msgstr "开启直播隐私模式"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Turn text smileys into emoji"
 msgstr "将颜文字转换为表情"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Turn this theme on to see your changes in the app."
+msgstr "开启此主题后可在应用中看到你的更改。"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -38274,9 +38942,11 @@ msgid "Underline website links"
 msgstr "为网站链接添加下划线"
 
 #. Native Edit menu item that undoes the last edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Undo"
 msgstr "撤销"
 
@@ -38325,6 +38995,29 @@ msgstr "取消聚焦"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Unfocused"
 msgstr "未聚焦"
+
+#. Text in the code editor of the quick CSS editor. Label of the button that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold"
+msgstr "展开"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold line"
+msgstr "展开此行"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Unfold the block"
+msgstr "展开代码块"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfolded lines"
+msgstr "已展开行"
 
 #. Danger button label that stops copying messages from a followed announcement channel into this channel.
 #: src/features/webhook/components/FollowedChannelListItem.tsx
@@ -39902,6 +40595,11 @@ msgstr "自定义邀请链接将无法使用"
 msgid "Vanity URLs must be between 2 and 32 characters long and can only contain alphanumeric characters and internal hyphens."
 msgstr "自定义邀请链接长度必须在 2 到 32 个字符之间，且只能包含字母、数字和中间的连字符。"
 
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS variables.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Variables"
+msgstr "变量"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
 msgid "Verification"
@@ -41321,6 +42019,11 @@ msgstr "当开启直播隐私模式时"
 msgid "When they come online, they'll appear right here."
 msgstr "他们上线后，会在这里显示。"
 
+#. Description of the "Live preview" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "When this is off, changes show in the app when you select \"Apply changes\"."
+msgstr "关闭后，选择“应用更改”才会在应用中显示更改。"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
@@ -41416,6 +42119,12 @@ msgstr "邮件应该以谁的名义发出？"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "内容太多啦"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Whole word"
+msgstr "全字匹配"
 
 #. Heading on the account restriction screen above the rule that was broken and the findings.
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
@@ -41586,6 +42295,11 @@ msgstr "文字标志"
 #: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx
 msgid "Works while {productName} is focused"
 msgstr "在 {productName} 处于焦点时可用"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Wrap long lines"
+msgstr "自动换行"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.

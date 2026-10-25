@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
+msgstr "--{name} nėra Fluxer kintamasis ir nėra nustatytas tavo CSS."
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -1061,10 +1066,6 @@ msgstr "{channelName} bendrijoje {communityName} paskyroje {accountName}"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} su {accountName}"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{characterCount, plural, one {# character} other {# characters}}"
-msgstr "{characterCount, plural, one {# simbolis} few {# simboliai} other {# simbolių}}"
-
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} nori prisijungti"
@@ -1093,6 +1094,11 @@ msgstr "{context} · {accountName}"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ Neribota} one {# dalyvis} few {# dalyviai} other {# dalyvių}}"
+
+#. Shown when hovering a CSS selector in the quick CSS editor.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
+msgstr "{count, plural, =0 {Šiuo metu nieko programėlėje neatitinka} one {Šiuo metu programėlėje atitinka # elementą} other {Šiuo metu programėlėje atitinka # elementus}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1170,6 +1176,11 @@ msgstr "{count, plural, one {# pakeistas} other {# pakeisti}}"
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# kanalas jį seka} other {# kanalai jį seka}} šį kanalą. Konvertavus jį į tekstinį kanalą, tie sekimai bus pašalinti."
 
+#. Shown in the status bar of the quick CSS editor while text is selected.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# character selected} other {# characters selected}}"
+msgstr "{count, plural, one {Pažymėtas # simbolis} other {Pažymėti # simboliai}}"
+
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
@@ -1188,6 +1199,11 @@ msgstr "{count, plural, one {# bendruomenė laikinai nepasiekiama dėl srauto ko
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# ryšys} few {# ryšiai} other {# ryšių}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# error} other {# errors}}"
+msgstr "{count, plural, one {# klaida} other {# klaidos}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1275,6 +1291,11 @@ msgstr "{count, plural, one {# reakcija} few {# reakcijos} other {# reakcijų}}"
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# sekundė} few {# sekundės} other {# sekundžių}}"
 
+#. Option of the "Tab size" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{count, plural, one {# space} other {# spaces}}"
+msgstr "{count, plural, one {# tarpas} other {# tarpai}}"
+
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
@@ -1284,6 +1305,11 @@ msgstr "{count, plural, one {Galimas # pasiūlymas} few {Galimi # pasiūlymai} m
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# vaizdo įrašas} few {# vaizdo įrašai} many {# vaizdo įrašo} other {# vaizdo įrašų}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# warning} other {# warnings}}"
+msgstr "{count, plural, one {# įspėjimas} other {# įspėjimai}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1714,9 +1740,10 @@ msgstr "{length, plural, one {# naudotojas} few {# naudotojai} many {# naudotojo
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# žiūrovas} few {# žiūrovai} many {# žiūrovo} other {# žiūrovų}}"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{lineCount, plural, one {# line} other {# lines}}"
-msgstr "{lineCount, plural, one {# eilutė} few {# eilutės} many {# eilutės} other {# eilučių}}"
+#. Tooltip of the line and column button in the status bar of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
+msgstr "{lines, plural, one {# eilutė} other {# eilutės}} ir {characters, plural, one {# simbolis} other {# simboliai}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -2227,6 +2254,11 @@ msgstr "{sender} atsiuntė jums dovaną"
 #: src/features/premium/events/OperatorPassUpdate.tsx
 msgid "{senderName} is passing you an {operatorPassName}. Select to accept or decline."
 msgstr "{senderName} perduoda jums {operatorPassName}. Pasirinkite, kad priimtumėte arba atmestumėte."
+
+#. Option of the "Font size" setting in the quick CSS editor. {size} is a number of pixels.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{size} px"
+msgstr "{size} px"
 
 #. Summary row value when both a start and end date are set. Both values are localized dates.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -3274,6 +3306,11 @@ msgstr "Pridėti komentarą (pasirinktinai)"
 msgid "Add a community"
 msgstr "Pridėti bendruomenę"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Add a cursor"
+msgstr "Pridėti žymeklį"
+
 #. Placeholder of the message composer in the new media post composer.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Add a description (optional)"
@@ -3589,6 +3626,11 @@ msgstr "Pridėkite el. pašto adresą, kad galėtumėte bendrauti šioje bendruo
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Add an email to your account to buy the {operatorPassName}."
 msgstr "Pridėkite el. paštą prie paskyros, kad galėtumėte įsigyti {operatorPassName}."
+
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Adds a rule that changes it.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Add an override"
+msgstr "Pridėti pakeitimą"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx
@@ -4083,6 +4125,12 @@ msgstr "Lygiavimo valdikliai pasiekiami tik platesniuose ekranuose"
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx
+msgid "All"
+msgstr "Visi"
+
+#. Text in the code editor of the quick CSS editor. Button that selects every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "All"
 msgstr "Visi"
 
@@ -5086,6 +5134,21 @@ msgstr "Taikoma bendruomenėms, prie kurių prisijungsite nuo šiol. Taip pat ga
 msgid "Apply"
 msgstr "Taikyti"
 
+#. Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Apply changes"
+msgstr "Pritaikyti pakeitimus"
+
+#. Completion in the quick CSS editor that inserts an @media rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules at some window sizes"
+msgstr "Pritaikyti taisykles tam tikruose lango dydžiuose"
+
+#. Completion in the quick CSS editor that inserts an @supports rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules when the browser supports a feature"
+msgstr "Pritaikyti taisykles kai naršyklė palaiko funkciją"
+
 #. Button or menu action label in the theme login and register pages. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "Apply theme"
@@ -5264,6 +5327,11 @@ msgstr "Prisijungiant po slaptažodžio prašyti ir prieigos rakto"
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Ask for a second step after your password when you sign in."
 msgstr "Paprašykite antro veiksmo po slaptažodžio, kai prisijungiate."
+
+#. Detail next to an uploaded theme asset in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Asset"
+msgstr "Išteklius"
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
 #. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
@@ -7014,11 +7082,6 @@ msgstr "Ar jūsų instancija gali siųsti el. laiškus?"
 msgid "Can't connect"
 msgstr "Nepavyksta prisijungti"
 
-#. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Can't find \"{reference}\" in your assets."
-msgstr "Nepavyksta rasti \"{reference}\" jūsų turtuose."
-
 #. Shown for a linked theme in Settings > Themes when its CSS file was moved or deleted. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
 msgid "Can't find {path}. Using the last loaded version."
@@ -7359,6 +7422,11 @@ msgstr "Keisti el. paštą"
 msgid "Change emoji"
 msgstr "Keisti jaustuką"
 
+#. Completion in the quick CSS editor that inserts a :root rule, where theme variables are set.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Change Fluxer variables"
+msgstr "Keisti Fluxer kintamuosius"
+
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change friend nickname"
@@ -7471,6 +7539,21 @@ msgstr "Keisti srauto šaltinį"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Change the name shown on your global profile"
 msgstr "Pakeisti vardą, rodomą jūsų visuotiniame profilyje"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 0.1"
+msgstr "Pakeisti po žymekliu esantį skaičių 0,1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 1"
+msgstr "Pakeisti po žymekliu esantį skaičių 1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 10"
+msgstr "Pakeisti po žymekliu esantį skaičių 10"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -7734,6 +7817,16 @@ msgstr "Pakeistas balso regionas iš {oldRegion} į {newRegion}"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "Pakeitimai programėlėje matomi rašant."
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app as you type. Select \"Save theme\" to keep them."
+msgstr "Pakeitimai matomi programėlėje rašant. Pasirink \"Išsaugoti temą\", kad juos išsaugotum."
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app when you select \"Apply changes\"."
+msgstr "Pakeitimai matomi programėlėje, kai paspaudi \"Pritaikyti pakeitimus\"."
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
@@ -9410,6 +9503,12 @@ msgstr "Visiškai paslėpti savo {premiumProductName} ženklelį nuo kitų naudo
 msgid "Completing sign-in…"
 msgstr "Prisijungiama…"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Name of the list of suggestions.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Completions"
+msgstr "Pasiūlymai"
+
 #. Windows jump-list task description (tooltip text) for the New direct message action.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Compose a new direct message"
@@ -10179,6 +10278,11 @@ msgstr "Konvertuoja gaunamą turinį į kalbą, nepriklausomai nuo to, ar jis ga
 msgid "Copied"
 msgstr "Nukopijuota"
 
+#. Toast after copying a CSS variable name in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Copied {text}."
+msgstr "Nukopijuota {text}."
+
 #. Toast shown after copying stats for nerds JSON to clipboard.
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts
 msgid "Copied stats JSON to clipboard"
@@ -10203,6 +10307,7 @@ msgstr "URL nukopijuotas į iškarpinę"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Copies its name.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -10213,6 +10318,7 @@ msgstr "URL nukopijuotas į iškarpinę"
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssReference.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11722,6 +11828,12 @@ msgstr "Šis įrenginys"
 msgid "Current DM"
 msgstr "Šis DM pokalbis"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Current match"
+msgstr "Dabartinis atitikmuo"
+
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
@@ -11734,6 +11846,11 @@ msgstr "Dabartinis seansas"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Current uses:"
 msgstr "Panaudojimų:"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is the value the app uses right now.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Current value {value}"
+msgstr "Dabartinė reikšmė {value}"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
 #: src/features/devtools/components/NagbarControls.ts
@@ -12337,6 +12454,16 @@ msgstr "Numatytasis jaustukas"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Default hide after inactivity"
 msgstr "Numatytasis slėpti po neaktyvumo"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in dark themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in dark themes {value}"
+msgstr "Numatytoji tamsiose temose {value}"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in light themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in light themes {value}"
+msgstr "Numatytoji šviesiose temose {value}"
 
 #. Label of the forum setting that picks the default post layout.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -14442,6 +14569,11 @@ msgstr "Pasiektas redagavimo apribojimas"
 msgid "Editing message"
 msgstr "Redaguojama žinutė"
 
+#. Button in the quick CSS editor that opens settings such as font size and line wrapping.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Editor settings"
+msgstr "Redaktoriaus nustatymai"
+
 #. Category dropdown option in the "Explore" tab in community settings.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Education"
@@ -16278,6 +16410,11 @@ msgstr "Failas per didelis, kad būtų rodoma peržiūra (limitas {previewLimitK
 msgid "File is too large. Maximum size is {maxSize}."
 msgstr "Failas per didelis. Didžiausias dydis yra {maxSize}."
 
+#. Detail next to a linked local file in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "File on this computer"
+msgstr "Failas šiame kompiuteryje"
+
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx
 msgid "File options"
@@ -16408,6 +16545,11 @@ msgstr "Filtruoti narius be vaidmenų"
 msgid "Filter mentions"
 msgstr "Filtruoti paminėjimus"
 
+#. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Filter rules"
+msgstr "Filtruoti taisykles"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Filtering"
@@ -16421,6 +16563,17 @@ msgstr "Filtruojama pagal {language}"
 #: src/features/voice/components/modals/CameraPreviewModal.tsx
 msgid "Finalizing camera..."
 msgstr "Kamera ruošiama..."
+
+#. Text in the code editor of the quick CSS editor. Placeholder of the search field.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Find"
+msgstr "Ieškoti"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Find and replace"
+msgstr "Ieškoti ir pakeisti"
 
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx
@@ -16493,6 +16646,11 @@ msgstr "Vardas ir pavardė"
 msgid "First option"
 msgstr "Pirmas pasirinkimas"
 
+#. Toast in the quick CSS editor when "Format" is used on CSS that cannot be parsed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Fix the errors in your CSS before formatting it."
+msgstr "Pataisyk CSS klaidas prieš formatuodamas."
+
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
@@ -16513,6 +16671,21 @@ msgstr "Florida"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer prie kiekvieno naudotojo vardo prideda atsitiktinį numerį, pvz., alex#4821, kad tą patį vardą galėtų naudoti daug žmonių."
+
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "Fluxer užblokavo {url} įkėlimą. Įkelk kaip išteklį."
+
+#. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the asset \"{name}\"."
+msgstr "Fluxer neranda ištekliaus „{name}“."
+
+#. Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the file \"{path}\"."
+msgstr "Fluxer neranda failo „{path}“."
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -16573,6 +16746,29 @@ msgstr "Perkelti langą į priekį"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Focused voice"
 msgstr "Fokusuotas balsas"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that hides a block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Fold line"
+msgstr "Sutraukti eilutę"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Fold the block"
+msgstr "Sutraukti bloką"
+
+#. Text in the code editor of the quick CSS editor. Label of a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded code"
+msgstr "Sutrauktas kodas"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded lines"
+msgstr "Sutrauktos eilutės"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
@@ -16653,6 +16849,11 @@ msgstr "Pagal jūsų „Windows“ garso nuostatas"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Font"
 msgstr "Šriftas"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Font size"
+msgstr "Šrifto dydis"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -16852,6 +17053,16 @@ msgstr "Pamiršote slaptažodį"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Forgot your password?"
 msgstr "Pamiršote slaptažodį?"
+
+#. Button in the quick CSS editor that tidies the indentation and spacing of the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Format"
+msgstr "Formatuoti"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Format the CSS"
+msgstr "Suformatuoti CSS"
 
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for form input tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
@@ -17685,6 +17896,12 @@ msgstr "Visuotinis profilis"
 msgid "Global shortcut"
 msgstr "Visuotinis spartusis klavišas"
 
+#. Text in the code editor of the quick CSS editor. Button that moves to the line number typed in "Go to line".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go"
+msgstr "Eiti"
+
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Go back"
@@ -17725,6 +17942,11 @@ msgstr "Eiti į {premiumProductName}"
 msgid "Go to {recoverUrl} or scan the QR code."
 msgstr "Eikite į {recoverUrl} arba nuskaitykite QR kodą."
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Go to a line"
+msgstr "Eiti į eilutę"
+
 #. Button label on a community invite embed when the current user is already a member.
 #. Button on the community card that opens from a published message copy, shown when the viewer is already a member of the source community.
 #. Short label in the invite accept modal. Keep it concise.
@@ -17762,6 +17984,12 @@ msgstr "Eiti į ketvirtą bendruomenę"
 #: src/features/app/components/pages/NotFoundPage.tsx
 msgid "Go to home"
 msgstr "Eiti į pradžią"
+
+#. Text in the code editor of the quick CSS editor. Label of the field that moves to a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go to line"
+msgstr "Eiti į eilutę"
 
 #. Short label in the quick switcher state. Keep it concise.
 #: src/features/search/state/QuickSwitcher.tsx
@@ -18259,6 +18487,11 @@ msgstr "Slėpti veiklą kitose paskyrose"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Hide after inactivity"
 msgstr "Slėpti po neaktyvumo"
+
+#. Completion in the quick CSS editor that inserts a CSS rule hiding an element.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Hide an element"
+msgstr "Paslėpti elementą"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -19305,6 +19538,11 @@ msgstr "Neteisingas PIN kodas. Liko {retriesRemaining, plural, one {# bandymas} 
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. Try again."
 msgstr "Neteisingas PIN kodas. Bandykite dar kartą."
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Indent with tabs"
+msgstr "Įtraukti su tabuliacija"
 
 #. Header status shown while the channel is being indexed for the first time before search is available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -20392,9 +20630,13 @@ msgstr "Klaviatūros režimas"
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Sparčiųjų klavišų užuominos patarimuose"
 
+#. Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Keyboard shortcuts"
 msgstr "Spartieji klavišai"
@@ -20841,10 +21083,15 @@ msgstr "Paminėti šį vaidmenį leista tik nariams, turintiems leidimą paminė
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "Kanalas apribotas iki {count, plural, one {# naudotojo} few {# naudotojų} other {# naudotojų}}"
 
-#. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Line {line} has a CSS error."
-msgstr "Eilutėje {line} yra CSS klaida."
+#. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "Line {line}, column {column}"
+msgstr "Eilutė {line}, stulpelis {column}"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Line numbers"
+msgstr "Eilučių numeriai"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -21057,10 +21304,20 @@ msgctxt "operators-wall-status"
 msgid "Live"
 msgstr "Paskelbta"
 
+#. Setting in "Editor settings" of the quick CSS editor. When on, the app changes as you type.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Live preview"
+msgstr "Tiesioginė peržiūra"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Live region"
 msgstr "Tiesioginė sritis"
+
+#. Completion in the quick CSS editor that inserts an @font-face rule. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Load a font from your assets"
+msgstr "Įkelti šriftą iš savo išteklių"
 
 #. Button that loads the next page of archived threads.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21668,6 +21925,12 @@ msgstr "Masačusetsas"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Master volume"
 msgstr "Pagrindinis garsumas"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Match case"
+msgstr "Skirti didžiąsias ir mažąsias"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -22793,6 +23056,11 @@ msgstr "Daugiau medijos veiksmų"
 msgid "More options"
 msgstr "Daugiau parinkčių"
 
+#. Accessible label of the menu button on a CSS variable in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "More options for {name}"
+msgstr "Daugiau parinkčių {name}"
+
 #. Hint under the number of Operator Passes to buy. The wall is the Operators' wall, the list of Operators on the homepage. A neutral fact, never translate it as an encouragement to buy more.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "More passes show larger and earlier on the wall."
@@ -22807,6 +23075,11 @@ msgstr "Daugiau sparčiųjų klavišų parinkčių"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "More sticker actions"
 msgstr "Daugiau lipdukų veiksmų"
+
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "More than 1,000 elements match"
+msgstr "Daugiau nei 1 000 elementų atitinka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -22872,6 +23145,11 @@ msgstr "Grįžti atgal puslapių istorijoje"
 msgid "Move back through viewed channel history"
 msgstr "Grįžti atgal peržiūrėtų kanalų istorijoje"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move between the editor and the app"
+msgstr "Judėti tarp redaktoriaus ir programėlės"
+
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx
@@ -22923,6 +23201,11 @@ msgstr "Perkelti į dešinę"
 #: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Move the editor. Use the arrow keys to move it."
 msgstr "Perkelti redaktorių. Jį galite perkelti rodyklių klavišais."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move the line up or down when the cursor isn't on a number"
+msgstr "Perkelti eilutę aukštyn arba žemyn, kai žymeklis nėra ant skaičiaus"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -23743,6 +24026,12 @@ msgstr "Pirmiausia naujausi"
 msgid "Next"
 msgstr "Kitas"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the next search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Next"
+msgstr "Kitas"
+
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Next attachment"
@@ -24202,6 +24491,12 @@ msgstr "Nesvarbu"
 msgid "No preview yet"
 msgstr "Peržiūros dar nėra"
 
+#. Text in the code editor of the quick CSS editor. Shown when the CSS has no problems.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "No problems."
+msgstr "Problemų nėra."
+
 #. Empty-state text in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "No push subscriptions registered yet."
@@ -24258,6 +24553,16 @@ msgstr "Nėra vaidmenų"
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
 msgstr "Dar nėra vaidmenų. Pridėkite vaidmenų čia: {rolesSettingsPath}"
+
+#. Shown in the outline of the quick CSS editor when no rule matches the filter.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules match \"{filter}\"."
+msgstr "Nėra taisyklių, atitinkančių „{filter}“."
+
+#. Shown in the outline of the quick CSS editor when the CSS has no rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules yet."
+msgstr "Taisyklių dar nėra."
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
@@ -24387,6 +24692,11 @@ msgstr "Nėra naudotojų"
 #: src/features/search/components/search/UserFilterSheet.tsx
 msgid "No users found"
 msgstr "Naudotojų nerasta"
+
+#. Shown in the "Reference" tab of the quick CSS editor when the search finds nothing.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "No variables match \"{query}\"."
+msgstr "Nėra kintamųjų, atitinkančių „{query}“."
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
@@ -24520,6 +24830,11 @@ msgstr "Ne sveikasis skaičius"
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx
 msgid "Not allowed"
 msgstr "Neleidžiama"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Not applied yet"
+msgstr "Dar nepritaikyta"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -24923,10 +25238,21 @@ msgstr "Nuo <0>{listPriceEffectiveDate}</0> jūsų prenumeratos kaina pasikeis i
 msgid "On click"
 msgstr "Spustelėjus"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Followed by a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "on line"
+msgstr "eilutėje"
+
 #. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
 msgid "On sale from {saleOpensAt}."
 msgstr "Parduodama nuo {saleOpensAt}."
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "On screen now"
+msgstr "Dabar ekrane"
 
 #. Label in front of the name and avatar the Operators' wall shows for this account right now.
 #: src/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings.tsx
@@ -25836,11 +26162,13 @@ msgstr "Parinktys, skirtos {displayName}"
 msgid "Options for {themeName}"
 msgstr "Parinktys {themeName}"
 
+#. Between two keyboard shortcuts that do the same thing, in the shortcuts dialog of the quick CSS editor.
 #. Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "or"
 msgstr "arba"
 
@@ -25984,6 +26312,11 @@ msgstr "Išsiųstos draugystės užklausos"
 #: src/features/relationship/components/modals/AddFriendSheet.tsx
 msgid "Outgoing friend requests ({requestCount})"
 msgstr "Išsiųstos draugystės užklausos ({requestCount})"
+
+#. Button in the quick CSS editor that shows a list of the rules in the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Outline"
+msgstr "Struktūra"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -26720,6 +27053,11 @@ msgstr "Pranešimai į telefoną"
 msgid "Photo"
 msgstr "Nuotrauka"
 
+#. Accessible label of the color swatch next to a color in the quick CSS editor. {value} is the CSS color.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Pick a color for {value}"
+msgstr "Pasirink spalvą {value}"
+
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
 msgid "Pick a friend to pass it on to. They can accept or decline, and you can take it back until it moves."
@@ -27391,6 +27729,12 @@ msgstr "Peržiūros"
 msgid "Previous"
 msgstr "Ankstesnis"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the previous search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Previous"
+msgstr "Ankstesnis"
+
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts
 msgid "Previous 12 hours"
@@ -27537,6 +27881,12 @@ msgstr "Privati tema"
 #: src/features/app/components/dialogs/ConfirmModal.tsx
 msgid "Pro tip:"
 msgstr "Patarimas:"
+
+#. Text in the code editor of the quick CSS editor. Title of the list of problems in the CSS.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Problems"
+msgstr "Problemų sąrašas"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -28412,9 +28762,11 @@ msgid "Redirect URIs"
 msgstr "Nukreipimo URI"
 
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Redo"
 msgstr "Perdaryti"
 
@@ -28432,6 +28784,11 @@ msgstr "Sumažintas judesys"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing."
 msgstr "Sumažintas judesys įjungtas, todėl turinio animacijos pagal numatytuosius nustatymus yra pristabdytos. Vis tiek galite jas vėl įjungti, kad jos būtų rodomos."
+
+#. Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Reference"
+msgstr "Nuoroda"
 
 #. Toast after copying the CSS reference of a theme asset.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -28529,6 +28886,12 @@ msgstr "Įprastas mygtukas"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button clicked."
 msgstr "Paspaustas įprastas mygtukas."
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Regular expression"
+msgstr "Reguliarioji išraiška"
 
 #. Button label for rejecting an incoming direct call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -29128,6 +29491,18 @@ msgstr "Atnaujinama <0>{renewalDate}.</0>"
 msgid "Replace"
 msgstr "Pakeisti"
 
+#. Text in the code editor of the quick CSS editor. Placeholder of the replace field and its button.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace"
+msgstr "Pakeisti"
+
+#. Text in the code editor of the quick CSS editor. Button that replaces every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace all"
+msgstr "Pakeisti visus"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background"
@@ -29147,6 +29522,18 @@ msgstr "Pakeisti: {key}"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace with a GIF"
 msgstr "Pakeisti GIF failu"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced $ matches"
+msgstr "Pakeista $ atitikmenų"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced the match on line $"
+msgstr "Pakeistas atitikmuo eilutėje $"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -30178,6 +30565,11 @@ msgstr "Taisyklė: {title}"
 msgid "Rule: <0>{title}</0>"
 msgstr "Taisyklė: <0>{title}</0>"
 
+#. Accessible name of the outline list in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Rules in this CSS"
+msgstr "Taisyklės šiame CSS"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -30319,6 +30711,11 @@ msgstr "Išsaugoti piktogramą"
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx
 msgid "Save some media from messages to get started!"
 msgstr "Norėdami pradėti, išsaugokite kelis medijos failus iš žinučių!"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Save the theme or apply changes"
+msgstr "Išsaugoti temą arba pritaikyti pakeitimus"
 
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
@@ -30933,6 +31330,11 @@ msgstr "Ieškoti laiko juostų"
 msgid "Search users"
 msgstr "Ieškoti naudotojų"
 
+#. Placeholder of the search field in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Search variables"
+msgstr "Ieškoti kintamųjų"
+
 #. Header status shown while a search request is in flight in the channel search results panel.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "Searching"
@@ -31119,6 +31521,11 @@ msgstr "Pasirinkite kanalą"
 msgid "Select a channel or category"
 msgstr "Pasirinkite kanalą arba kategoriją"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select a column of text by dragging"
+msgstr "Pažymėti stulpelį tempiant"
+
 #. Form field label or placeholder for selecting a community.
 #. Placeholder of the community picker in the follow announcement channel dialog.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
@@ -31156,6 +31563,11 @@ msgstr "Pasirinkite nukreipimo URI"
 msgid "Select a scenario to apply..."
 msgstr "Pasirinkite scenarijų, kurį norite taikyti..."
 
+#. Shown above the list of CSS variables in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select a variable to add it to your CSS."
+msgstr "Pasirink kintamąjį, kad pridėtum jį į savo CSS."
+
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -31191,6 +31603,11 @@ msgstr "Pasirinkite GIF {title}"
 msgid "Select interface language"
 msgstr "Pasirinkite sąsajos kalbą"
 
+#. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select one to add a rule for it to your CSS."
+msgstr "Pasirink vieną, kad pridėtum taisyklę savo CSS."
+
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 msgid "Select scopes (and redirect URI if required)"
@@ -31204,6 +31621,11 @@ msgstr "Pažymėti tekstą"
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Pasirinkite paskyrą, su kuria norite prisijungti naujame įrenginyje."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select the next match of the selection"
+msgstr "Pasirinkti kitą pažymėto teksto atitikmenį"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
@@ -31240,6 +31662,12 @@ msgstr "Pažymimas tekstas"
 msgid "selected"
 msgstr "pasirinkta"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Selection deleted"
+msgstr "Pažymėjimas ištrintas"
+
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx
 msgid "Selection end"
@@ -31274,6 +31702,11 @@ msgstr "Pasirinkta: {0} (daugiausia {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Selections"
 msgstr "Pasirinkimai"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS selectors.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Selectors"
+msgstr "Selektoriai"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -31794,6 +32227,111 @@ msgstr "Nustatyti nutildymo spartųjį klavišą"
 msgid "Set new password"
 msgstr "Nustatyti naują slaptažodį"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions is showing."
+msgstr "Nustatoma žinutei, kai rodoma jos veiksmų juosta."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions stays open, such as while a menu is open."
+msgstr "Nustatoma žinutei, kai jos veiksmų juosta lieka atidaryta, pvz., kai atidarytas meniu."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar when that person is online on a phone."
+msgstr "Nustatoma avatarui, kai tas žmogus prisijungęs telefone."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar while that person is typing."
+msgstr "Nustatoma avatarui, kai tas žmogus rašo."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on avatars that open a profile when clicked."
+msgstr "Nustatoma avatarams, kurie atidaro profilį paspaudus."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on edited messages."
+msgstr "Nustatoma redaguotoms žinutėms."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages about a call."
+msgstr "Nustatoma žinutėms apie skambutį."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from bots."
+msgstr "Nustatoma žinutėms iš botų."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from people you blocked."
+msgstr "Nustatoma žinutėms iš žmonių, kuriuos užblokavai."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages sent by a webhook."
+msgstr "Nustatoma žinutėms, kurias siuntė webhook."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages shown under the previous message from the same person."
+msgstr "Nustatoma žinutėms, rodomoms po ankstesnės žinutės nuo to paties žmogaus."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that can show the bar of message actions."
+msgstr "Nustatoma žinutėms, kurios gali rodyti veiksmų juostą."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that Fluxer sends, such as when someone joins."
+msgstr "Nustatoma žinutėms, kurias siunčia Fluxer, pvz., kai kas nors prisijungia."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that mention you."
+msgstr "Nustatoma žinutėms, kuriose esi paminėtas."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that reply to another message."
+msgstr "Nustatoma žinutėms, kurios atsako į kitą žinutę."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages while the compact message layout is on."
+msgstr "Nustatoma žinutėms, kai įjungtas kompaktiškas žinučių išdėstymas."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages you sent."
+msgstr "Nustatoma tavo siųstoms žinutėms."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on pinned messages."
+msgstr "Nustatoma prisegtoms žinutėms."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the avatars of bots."
+msgstr "Nustatoma botų avatarams."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the root element during holidays. It lists the holidays."
+msgstr "Nustatoma šakniniam elementui per šventes. Čia išvardytos šventės."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on your own avatar."
+msgstr "Nustatoma tavo avatarui."
+
 #. Button that opens the dialog for setting a password on the account.
 #. Button that saves the password in the dialog for an account that has an email but no password.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
@@ -32244,6 +32782,11 @@ msgstr "Rodyti"
 msgid "Show {appName}"
 msgstr "Rodyti „{appName}“"
 
+#. Accessible label of the color swatch next to a CSS variable in the quick CSS editor. {name} is the variable name.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Show {name} in \"Colors and fonts\""
+msgstr "Rodyti {name} „Spalvos ir šriftai“"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32321,6 +32864,16 @@ msgstr "Rodyti pokalbį"
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "Rodyti pokalbį (yra {count, plural, one {# neperskaityta žinutė} few {# neperskaitytos žinutės} other {# neperskaitytų žinučių}})"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show completions"
+msgstr "Rodyti pasiūlymus"
+
+#. Setting in "Editor settings" of the quick CSS editor. Completions are suggestions of CSS code.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Show completions as you type"
+msgstr "Rodyti pasiūlymus rašant"
 
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -32613,6 +33166,11 @@ msgstr "Rodyti slaptažodį"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Rodyti atskirų įrenginių dalyvių garsumo slankiklius balso meniu"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show problems"
+msgstr "Rodyti problemas"
+
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
@@ -32681,6 +33239,11 @@ msgstr "Rodyti visos spalvos „{productName}“ piktogramą, o ne vienspalvę, 
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Show the ID of each voice connection next to people in calls and in voice channels. With it off, each device is named by its type instead."
 msgstr "Rodyti kiekvieno balso ryšio ID šalia žmonių skambučiuose ir balso kanaluose. Kai išjungta, kiekvienas įrenginys pavadinamas pagal jo tipą."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show the outline"
+msgstr "Rodyti struktūrą"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -33700,6 +34263,11 @@ msgstr "Garsiakalbis"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx
 msgid "Special features"
 msgstr "Specialiosios funkcijos"
+
+#. Shown when hovering a CSS selector in the quick CSS editor. {a}, {b} and {c} are the three numbers of CSS specificity.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "Specificity {a}, {b}, {c}"
+msgstr "Specifiškumas {a}, {b}, {c}"
 
 #. Title of the screen-share spectators popout listing users watching the stream.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx
@@ -35074,6 +35642,16 @@ msgstr "Sistema: šviesioji tema (automatiškai sinchronizuojama su jūsų siste
 msgid "Tab"
 msgstr "Tab"
 
+#. Shown at the top of the keyboard shortcuts dialog of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Tab indents the line. To leave the editor with the keyboard, press Escape and then Tab."
+msgstr "Tab įtraukia eilutę. Norėdamas išeiti iš redaktoriaus klaviatūra, spausk Escape, tada Tab."
+
+#. Setting in "Editor settings" of the quick CSS editor. How many spaces wide one level of indentation is.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Tab size"
+msgstr "Tab dydis"
+
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for table tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
 msgid "Tables"
@@ -35591,6 +36169,21 @@ msgstr "Fluxer programėlės iOS ir Android gauna pranešimus per Fluxer valdom�
 msgid "The following people can't be added to this group DM:"
 msgstr "Šių žmonių negalima pridėti prie šios grupės DM:"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of a message."
+msgstr "Žinutės ID."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the channel a message is in."
+msgstr "Kanalas, kuriame yra žinutė."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the community a message or avatar belongs to."
+msgstr "Bendruomenės ID, kuriai priklauso žinutė arba avataras."
+
 #. Activity log detail under a deleted invite link, used when someone other than the member who deleted it had created it and the creation time was not recorded. {user} is the member who created the invite, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "The invite was created by {user}"
@@ -35666,6 +36259,16 @@ msgstr "Narys, į kurį bus nukreipta."
 #: src/features/devtools/hooks/useCommands.ts
 msgid "The message to send."
 msgstr "Žinutė, kurią reikia išsiųsti."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for an avatar."
+msgstr "Avataro rodomas vardas."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for the person who sent a message."
+msgstr "Vardas, rodomas prie žinutės siuntėjo."
 
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
@@ -35770,10 +36373,20 @@ msgstr "Prašymas prisijungti baigėsi, kol jūsų naršyklė jo nepatvirtino."
 msgid "The sign-in was cancelled in your browser."
 msgstr "Prisijungimas jūsų naršyklėje buvo atšauktas."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The size of an avatar in pixels."
+msgstr "Avataro dydis pikseliais."
+
 #. Where the favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "The small image in the browser tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
 msgstr "Mažas paveikslėlis naršyklės skirtuke. Naudokite kvadratinį PNG, ne mažesnį nei 64 × 64 pikselių ir iki {size}."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The status shown on an avatar, such as online or idle."
+msgstr "Avataro būsena, pvz., prisijungęs ar neaktyvus."
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -35790,6 +36403,11 @@ msgstr "Sistema suteikė {target} vaidmenį {role}"
 msgid "The system removed the role {role} from {target}"
 msgstr "Sistema pašalino vaidmenį {role} iš {target}"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor. DEFAULT and REPLY are attribute values and stay in English.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The type of a message, such as DEFAULT or REPLY."
+msgstr "Žinutės tipas, pvz., DEFAULT arba REPLY."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -35805,9 +36423,29 @@ msgstr "Naujinimas vis dar siunčiamas. Pabandykite dar kartą po kelių minuči
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "Įkėlimo paslauga atmetė šį lipduką, nes jis didesnis nei {maxSize}. Pabandykite įkelti mažesnį failą, paprastesnį paveikslėlį arba trumpesnę animaciją."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of an avatar."
+msgstr "Avataro naudotojo ID."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of the person who sent a message."
+msgstr "Žinutės siuntėjo naudotojo ID."
+
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "Naudotojo vardas <0>{fluxerTag}</0> jau užimtas. Tęsiant jūsų žyma bus automatiškai pakeista."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of an avatar."
+msgstr "Avataro naudotojo vardas."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of the person who sent a message."
+msgstr "Žinutės siuntėjo naudotojo vardas."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -35983,6 +36621,11 @@ msgstr "Įkeliant šio kanalo webhookus įvyko klaida. Bandykite dar kartą."
 msgid "There was an error loading the webhooks. Try again."
 msgstr "Įkeliant webhookus įvyko klaida. Bandykite dar kartą."
 
+#. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "These attributes don't change between Fluxer updates."
+msgstr "Šie atributai nesikeičia tarp Fluxer atnaujinimų."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "They"
@@ -36114,6 +36757,11 @@ msgstr "Ši naršyklė negali apkarpyti animuotų {avifFormatLabel} failų. Įke
 msgid "This browser console is a developer tool."
 msgstr "Ši naršyklės konsolė yra kūrėjo įrankis."
 
+#. Problem shown in the quick CSS editor on a CSS property name the browser does not support.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This browser doesn't know the property {property}."
+msgstr "Ši naršyklė nežino savybės {property}."
+
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
@@ -36221,6 +36869,11 @@ msgstr "Šis kanalas nebeegzistuoja. Gali būti, kad jis jau buvo ištrintas."
 #: src/features/auth/altcha/CaptchaInterceptor.ts
 msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
 msgstr "Šis patikrinimas atliekamas tik tada, kai programa atidaroma naudojant HTTPS arba vietiniame kompiuteryje. Paprašykite instancijos savininko, kad jis pateiktų ją per HTTPS, arba atidarykite ją iš vietinio kompiuterio."
+
+#. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
+msgstr "Šios klasės pavadinimas keičiasi su kiekvienu Fluxer atnaujinimu. Naudok [data-flx] selektorių."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
@@ -36339,6 +36992,11 @@ msgstr "Čia yra jautraus turinio."
 #: src/features/channel/components/channel_view/DMChannelView.tsx
 msgid "This conversation is no longer available."
 msgstr "Šis pokalbis nebepasiekiamas."
+
+#. Problem shown in the quick CSS editor on a line with a CSS syntax error.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This CSS can't be parsed."
+msgstr "Šio CSS nepavyksta perskaityti."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -37832,6 +38490,11 @@ msgstr "Sureguliuokite apdorojimą patys."
 msgid "Turkish"
 msgstr "turkų"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Turn a comment on or off"
+msgstr "Įjungti arba išjungti komentarą"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -37926,6 +38589,11 @@ msgstr "Įjungti srautinio perdavimo privatumą"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Turn text smileys into emoji"
 msgstr "Keisti tekstines šypsenėles jaustukais"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Turn this theme on to see your changes in the app."
+msgstr "Įjunk šią temą, kad matytum pakeitimus programėlėje."
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -38275,9 +38943,11 @@ msgid "Underline website links"
 msgstr "Pabraukti svetainių nuorodas"
 
 #. Native Edit menu item that undoes the last edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Undo"
 msgstr "Anuliuoti"
 
@@ -38326,6 +38996,29 @@ msgstr "Nebefokusuoti"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Unfocused"
 msgstr "Neaktyvus"
+
+#. Text in the code editor of the quick CSS editor. Label of the button that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold"
+msgstr "Išskleisti"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold line"
+msgstr "Išskleisti eilutę"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Unfold the block"
+msgstr "Išskleisti bloką"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfolded lines"
+msgstr "Išskleistos eilutės"
 
 #. Danger button label that stops copying messages from a followed announcement channel into this channel.
 #: src/features/webhook/components/FollowedChannelListItem.tsx
@@ -39903,6 +40596,11 @@ msgstr "Pasirinktinis URL neveiks"
 msgid "Vanity URLs must be between 2 and 32 characters long and can only contain alphanumeric characters and internal hyphens."
 msgstr "Pasirinktiniai URL turi būti nuo 2 iki 32 simbolių ilgio, juose gali būti tik raidės, skaičiai ir vidiniai brūkšneliai."
 
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS variables.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Variables"
+msgstr "Kintamieji"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
 msgid "Verification"
@@ -41322,6 +42020,11 @@ msgstr "Kai įjungtas srautinio perdavimo privatumas"
 msgid "When they come online, they'll appear right here."
 msgstr "Kai jie prisijungs, jie atsiras čia."
 
+#. Description of the "Live preview" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "When this is off, changes show in the app when you select \"Apply changes\"."
+msgstr "Kai tai išjungta, pakeitimai matomi programėlėje tik pasirinkus „Pritaikyti pakeitimus“."
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
@@ -41417,6 +42120,12 @@ msgstr "Nuo ko turėtų ateiti el. laiškai?"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "Oho, čia tai kiekis"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Whole word"
+msgstr "Visas žodis"
 
 #. Heading on the account restriction screen above the rule that was broken and the findings.
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
@@ -41587,6 +42296,11 @@ msgstr "Žodinis logotipas"
 #: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx
 msgid "Works while {productName} is focused"
 msgstr "Veikia, kai {productName} yra aktyvus"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Wrap long lines"
+msgstr "Laužyti ilgas eilutes"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.

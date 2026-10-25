@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "X-Generator: Weblate 2026.7.dev0\n"
 
+#. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
+msgstr "--{name} फ्लक्सर वेरिएबल नहीं है और आपके CSS में कहीं सेट नहीं है।"
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -1061,10 +1066,6 @@ msgstr "{channelName} {communityName} में {accountName} पर"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} पर {accountName}"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{characterCount, plural, one {# character} other {# characters}}"
-msgstr "{characterCount, plural, one {# वर्ण} other {# वर्ण}}"
-
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} कनेक्ट करना चाहता है"
@@ -1093,6 +1094,11 @@ msgstr "{context} · {accountName}"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ कोई सीमा नहीं} one {# प्रतिभागी} other {# प्रतिभागी}}"
+
+#. Shown when hovering a CSS selector in the quick CSS editor.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
+msgstr "{count, plural, =0 {अभी ऐप में कुछ भी मेल नहीं खाता} one {अभी ऐप में # एलिमेंट मेल खाता है} other {अभी ऐप में # एलिमेंट्स मेल खाते हैं}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1170,6 +1176,11 @@ msgstr "{count, plural, one {# बदला गया} other {# बदले ग
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# चैनल इसे फ़ॉलो करता है} other {# चैनल इसे फ़ॉलो करते हैं}}। इसे टेक्स्ट चैनल में बदलने पर वे फ़ॉलो हटा दिए जाएँगे।"
 
+#. Shown in the status bar of the quick CSS editor while text is selected.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# character selected} other {# characters selected}}"
+msgstr "{count, plural, one {# अक्षर चुना गया} other {# अक्षर चुने गए}}"
+
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
@@ -1188,6 +1199,11 @@ msgstr "{count, plural, one {# कम्युनिटी फ्लक्स �
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# कनेक्शन} other {# कनेक्शन}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# error} other {# errors}}"
+msgstr "{count, plural, one {# त्रुटि} other {# त्रुटियाँ}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1275,6 +1291,11 @@ msgstr "{count, plural, one {# रिएक्शन देने वाला} 
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# सेकंड} other {# सेकंड}}"
 
+#. Option of the "Tab size" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{count, plural, one {# space} other {# spaces}}"
+msgstr "{count, plural, one {# स्पेस} other {# स्पेसेस}}"
+
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
@@ -1284,6 +1305,11 @@ msgstr "{count, plural, =0 {# सुझाव उपलब्ध हैं} one 
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# वीडियो} other {# वीडियो}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# warning} other {# warnings}}"
+msgstr "{count, plural, one {# चेतावनी} other {# चेतावनियाँ}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1714,9 +1740,10 @@ msgstr "{length, plural, one {# यूज़र} other {# यूज़र}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# दर्शक} other {# दर्शक}}"
 
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "{lineCount, plural, one {# line} other {# lines}}"
-msgstr "{lineCount, plural, one {# लाइन} other {# लाइनें}}"
+#. Tooltip of the line and column button in the status bar of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
+msgstr "{lines, plural, one {# लाइन} other {# लाइन्स}} और {characters, plural, one {# अक्षर} other {# अक्षर}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -2227,6 +2254,11 @@ msgstr "{sender} ने आपको एक उपहार भेजा है"
 #: src/features/premium/events/OperatorPassUpdate.tsx
 msgid "{senderName} is passing you an {operatorPassName}. Select to accept or decline."
 msgstr "{senderName} आपको एक {operatorPassName} सौंप रहे हैं। स्वीकार या अस्वीकार करने के लिए चुनें।"
+
+#. Option of the "Font size" setting in the quick CSS editor. {size} is a number of pixels.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{size} px"
+msgstr "{size} px"
 
 #. Summary row value when both a start and end date are set. Both values are localized dates.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -3274,6 +3306,11 @@ msgstr "कोई टिप्पणी जोड़ें (वैकल्प�
 msgid "Add a community"
 msgstr "कम्युनिटी जोड़ें"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Add a cursor"
+msgstr "एक कर्सर जोड़ें"
+
 #. Placeholder of the message composer in the new media post composer.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Add a description (optional)"
@@ -3589,6 +3626,11 @@ msgstr "इस कम्युनिटी में बात करने क�
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Add an email to your account to buy the {operatorPassName}."
 msgstr "{operatorPassName} खरीदने के लिए अपने अकाउंट में एक ईमेल जोड़ें।"
+
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Adds a rule that changes it.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Add an override"
+msgstr "ओवरराइड जोड़ें"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx
@@ -4083,6 +4125,12 @@ msgstr "अलाइनमेंट कंट्रोल केवल चौड
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx
+msgid "All"
+msgstr "सभी"
+
+#. Text in the code editor of the quick CSS editor. Button that selects every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "All"
 msgstr "सभी"
 
@@ -5086,6 +5134,21 @@ msgstr "अब से आपके द्वारा शामिल किए 
 msgid "Apply"
 msgstr "लागू करें"
 
+#. Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Apply changes"
+msgstr "बदलाव लागू करें"
+
+#. Completion in the quick CSS editor that inserts an @media rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules at some window sizes"
+msgstr "कुछ विंडो साइज पर नियम लागू करें"
+
+#. Completion in the quick CSS editor that inserts an @supports rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules when the browser supports a feature"
+msgstr "जब ब्राउज़र कोई फीचर सपोर्ट करता है तब नियम लागू करें"
+
 #. Button or menu action label in the theme login and register pages. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "Apply theme"
@@ -5264,6 +5327,11 @@ msgstr "साइन इन करते समय आपके पासवर�
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Ask for a second step after your password when you sign in."
 msgstr "साइन इन करते समय अपने पासवर्ड के बाद दूसरा चरण माँगें।"
+
+#. Detail next to an uploaded theme asset in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Asset"
+msgstr "एसेट"
 
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
 #. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
@@ -7014,11 +7082,6 @@ msgstr "क्या आपका इंस्टेंस ईमेल भे�
 msgid "Can't connect"
 msgstr "कनेक्ट नहीं हो पा रहा है"
 
-#. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Can't find \"{reference}\" in your assets."
-msgstr "आपके एसेट्स में \"{reference}\" नहीं मिल रहा है।"
-
 #. Shown for a linked theme in Settings > Themes when its CSS file was moved or deleted. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
 msgid "Can't find {path}. Using the last loaded version."
@@ -7359,6 +7422,11 @@ msgstr "ईमेल बदलें"
 msgid "Change emoji"
 msgstr "इमोजी बदलें"
 
+#. Completion in the quick CSS editor that inserts a :root rule, where theme variables are set.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Change Fluxer variables"
+msgstr "फ्लक्सर वेरिएबल बदलें"
+
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change friend nickname"
@@ -7471,6 +7539,21 @@ msgstr "स्ट्रीम स्रोत बदलें"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Change the name shown on your global profile"
 msgstr "अपनी ग्लोबल प्रोफ़ाइल पर दिखने वाला नाम बदलें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 0.1"
+msgstr "कर्सर के नीचे की संख्या को 0.1 से बदलें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 1"
+msgstr "कर्सर के नीचे की संख्या को 1 से बदलें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 10"
+msgstr "कर्सर के नीचे की संख्या को 10 से बदलें"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -7734,6 +7817,16 @@ msgstr "वॉइस क्षेत्र {oldRegion} से {newRegion} मे
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "जैसे ही आप टाइप करते हैं, ऐप में बदलाव दिखाई देते हैं।"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app as you type. Select \"Save theme\" to keep them."
+msgstr "जैसे ही आप टाइप करते हैं, बदलाव ऐप में दिखते हैं। इन्हें रखने के लिए \"थीम सेव करें\" चुनें।"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app when you select \"Apply changes\"."
+msgstr "जब आप \"बदलाव लागू करें\" चुनते हैं, तब बदलाव ऐप में दिखेंगे।"
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
@@ -9410,6 +9503,12 @@ msgstr "अपने {premiumProductName} बैज को दूसरे य�
 msgid "Completing sign-in…"
 msgstr "साइन-इन पूरा हो रहा है…"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Name of the list of suggestions.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Completions"
+msgstr "सुझाव"
+
 #. Windows jump-list task description (tooltip text) for the New direct message action.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Compose a new direct message"
@@ -10179,6 +10278,11 @@ msgstr "आने वाले कॉन्टेंट को स्पीच �
 msgid "Copied"
 msgstr "कॉपी किया गया"
 
+#. Toast after copying a CSS variable name in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Copied {text}."
+msgstr "{text} कॉपी किया गया।"
+
 #. Toast shown after copying stats for nerds JSON to clipboard.
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts
 msgid "Copied stats JSON to clipboard"
@@ -10203,6 +10307,7 @@ msgstr "यूआरएल क्लिपबोर्ड पर कॉपी �
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Copies its name.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -10213,6 +10318,7 @@ msgstr "यूआरएल क्लिपबोर्ड पर कॉपी �
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssReference.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11722,6 +11828,12 @@ msgstr "मौजूदा डिवाइस"
 msgid "Current DM"
 msgstr "मौजूदा DM"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Current match"
+msgstr "मौजूदा मेल"
+
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
@@ -11734,6 +11846,11 @@ msgstr "मौजूदा सेशन"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Current uses:"
 msgstr "मौजूदा उपयोग:"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is the value the app uses right now.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Current value {value}"
+msgstr "मौजूदा मान {value}"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
 #: src/features/devtools/components/NagbarControls.ts
@@ -12337,6 +12454,16 @@ msgstr "डिफ़ॉल्ट इमोजी"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Default hide after inactivity"
 msgstr "निष्क्रियता के बाद डिफ़ॉल्ट रूप से छिपाएँ"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in dark themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in dark themes {value}"
+msgstr "डार्क थीम में डिफ़ॉल्ट {value}"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in light themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in light themes {value}"
+msgstr "लाइट थीम में डिफ़ॉल्ट {value}"
 
 #. Label of the forum setting that picks the default post layout.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -14442,6 +14569,11 @@ msgstr "संपादन सीमा पार हो गई"
 msgid "Editing message"
 msgstr "मैसेज एडिट कर रहे हैं"
 
+#. Button in the quick CSS editor that opens settings such as font size and line wrapping.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Editor settings"
+msgstr "एडिटर सेटिंग्स"
+
 #. Category dropdown option in the "Explore" tab in community settings.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Education"
@@ -16278,6 +16410,11 @@ msgstr "फ़ाइल इनलाइन प्रीव्यू के ल�
 msgid "File is too large. Maximum size is {maxSize}."
 msgstr "फ़ाइल बहुत बड़ी है। ज़्यादा से ज़्यादा साइज़ {maxSize} है।"
 
+#. Detail next to a linked local file in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "File on this computer"
+msgstr "इस कंप्यूटर की फाइल"
+
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx
 msgid "File options"
@@ -16408,6 +16545,11 @@ msgstr "बिना रोल वाले सदस्यों को फ़�
 msgid "Filter mentions"
 msgstr "मेंशन फ़िल्टर करें"
 
+#. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Filter rules"
+msgstr "नियम छाँटें"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Filtering"
@@ -16421,6 +16563,17 @@ msgstr "{language} के अनुसार फ़िल्टर किया 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx
 msgid "Finalizing camera..."
 msgstr "कैमरा तैयार किया जा रहा है..."
+
+#. Text in the code editor of the quick CSS editor. Placeholder of the search field.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Find"
+msgstr "खोजें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Find and replace"
+msgstr "खोजें और बदलें"
 
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx
@@ -16493,6 +16646,11 @@ msgstr "पहला और अंतिम नाम"
 msgid "First option"
 msgstr "पहला विकल्प"
 
+#. Toast in the quick CSS editor when "Format" is used on CSS that cannot be parsed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Fix the errors in your CSS before formatting it."
+msgstr "CSS को फॉर्मेट करने से पहले अपनी त्रुटियाँ ठीक करें।"
+
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
@@ -16513,6 +16671,21 @@ msgstr "फ़्लोरिडा"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer हर यूज़रनेम में एक रैंडम नंबर जोड़ता है, जैसे alex#4821, ताकि कई लोग एक ही नाम इस्तेमाल कर सकें।"
+
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "फ्लक्सर ने {url} लोड होने से रोका। इसे एसेट के रूप में अपलोड करें।"
+
+#. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the asset \"{name}\"."
+msgstr "फ्लक्सर को एसेट \"{name}\" नहीं मिला।"
+
+#. Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the file \"{path}\"."
+msgstr "फ्लक्सर को फाइल \"{path}\" नहीं मिली।"
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -16573,6 +16746,29 @@ msgstr "विंडो को फ़ोकस करें"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Focused voice"
 msgstr "फ़ोकस्ड वॉइस"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that hides a block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Fold line"
+msgstr "लाइन फोल्ड करें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Fold the block"
+msgstr "ब्लॉक फोल्ड करें"
+
+#. Text in the code editor of the quick CSS editor. Label of a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded code"
+msgstr "फोल्ड किया गया कोड"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded lines"
+msgstr "फोल्ड की गई लाइन्स"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
@@ -16653,6 +16849,11 @@ msgstr "आपके विंडोज ध्वनि सेटिंग्स
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Font"
 msgstr "फ़ॉन्ट"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Font size"
+msgstr "फॉन्ट साइज"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -16852,6 +17053,16 @@ msgstr "पासवर्ड भूल गए"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Forgot your password?"
 msgstr "पासवर्ड भूल गए?"
+
+#. Button in the quick CSS editor that tidies the indentation and spacing of the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Format"
+msgstr "फॉर्मेट"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Format the CSS"
+msgstr "CSS फॉर्मेट करें"
 
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for form input tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
@@ -17685,6 +17896,12 @@ msgstr "ग्लोबल प्रोफ़ाइल"
 msgid "Global shortcut"
 msgstr "ग्लोबल शॉर्टकट"
 
+#. Text in the code editor of the quick CSS editor. Button that moves to the line number typed in "Go to line".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go"
+msgstr "जाएँ"
+
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Go back"
@@ -17725,6 +17942,11 @@ msgstr "{premiumProductName} पर जाएं"
 msgid "Go to {recoverUrl} or scan the QR code."
 msgstr "{recoverUrl} पर जाएं या QR कोड स्कैन करें।"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Go to a line"
+msgstr "किसी लाइन पर जाएँ"
+
 #. Button label on a community invite embed when the current user is already a member.
 #. Button on the community card that opens from a published message copy, shown when the viewer is already a member of the source community.
 #. Short label in the invite accept modal. Keep it concise.
@@ -17762,6 +17984,12 @@ msgstr "चौथी कम्युनिटी पर जाएं"
 #: src/features/app/components/pages/NotFoundPage.tsx
 msgid "Go to home"
 msgstr "होम पर जाएं"
+
+#. Text in the code editor of the quick CSS editor. Label of the field that moves to a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go to line"
+msgstr "लाइन पर जाएँ"
 
 #. Short label in the quick switcher state. Keep it concise.
 #: src/features/search/state/QuickSwitcher.tsx
@@ -18258,6 +18486,11 @@ msgstr "अन्य खातों पर गतिविधि छिपा�
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Hide after inactivity"
 msgstr "निष्क्रियता के बाद छिपाएँ"
+
+#. Completion in the quick CSS editor that inserts a CSS rule hiding an element.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Hide an element"
+msgstr "एलिमेंट छुपाएँ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -19304,6 +19537,11 @@ msgstr "गलत पिन। सुरक्षा कुंजी लॉक �
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. Try again."
 msgstr "गलत पिन। फिर से प्रयास करें।"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Indent with tabs"
+msgstr "टैब से इंडेंट करें"
 
 #. Header status shown while the channel is being indexed for the first time before search is available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -20391,9 +20629,13 @@ msgstr "कीबोर्ड मोड"
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "टूलटिप में कीबोर्ड शॉर्टकट हिंट"
 
+#. Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Keyboard shortcuts"
 msgstr "कीबोर्ड शॉर्टकट"
@@ -20840,10 +21082,15 @@ msgstr "इस रोल के मेंशन को केवल उन स�
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "चैनल को {count, plural, one {# यूज़र} other {# यूज़र}} तक सीमित कर दिया गया"
 
-#. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssFiles.tsx
-msgid "Line {line} has a CSS error."
-msgstr "लाइन {line} में CSS त्रुटि है।"
+#. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "Line {line}, column {column}"
+msgstr "लाइन {line}, कॉलम {column}"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Line numbers"
+msgstr "लाइन नंबर"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -21056,10 +21303,20 @@ msgctxt "operators-wall-status"
 msgid "Live"
 msgstr "प्रकाशित"
 
+#. Setting in "Editor settings" of the quick CSS editor. When on, the app changes as you type.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Live preview"
+msgstr "लाइव प्रीव्यू"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Live region"
 msgstr "लाइव क्षेत्र"
+
+#. Completion in the quick CSS editor that inserts an @font-face rule. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Load a font from your assets"
+msgstr "अपने एसेट से फॉन्ट लोड करें"
 
 #. Button that loads the next page of archived threads.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21667,6 +21924,12 @@ msgstr "मैसाचुसेट्स"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Master volume"
 msgstr "मास्टर वॉल्यूम"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Match case"
+msgstr "केस मिलाएँ"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -22792,6 +23055,11 @@ msgstr "ज़्यादा मीडिया ऐक्शन"
 msgid "More options"
 msgstr "ज़्यादा विकल्प"
 
+#. Accessible label of the menu button on a CSS variable in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "More options for {name}"
+msgstr "{name} के लिए और विकल्प"
+
 #. Hint under the number of Operator Passes to buy. The wall is the Operators' wall, the list of Operators on the homepage. A neutral fact, never translate it as an encouragement to buy more.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "More passes show larger and earlier on the wall."
@@ -22806,6 +23074,11 @@ msgstr "ज़्यादा शॉर्टकट विकल्प"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "More sticker actions"
 msgstr "ज़्यादा स्टिकर ऐक्शन"
+
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "More than 1,000 elements match"
+msgstr "1,000 से अधिक एलिमेंट्स मेल खाते हैं"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -22871,6 +23144,11 @@ msgstr "पेज हिस्ट्री में पीछे जाएं"
 msgid "Move back through viewed channel history"
 msgstr "देखे गए चैनल की हिस्ट्री में पीछे जाएं"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move between the editor and the app"
+msgstr "एडिटर और ऐप के बीच जाएँ"
+
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx
@@ -22922,6 +23200,11 @@ msgstr "दाईं ओर ले जाएँ"
 #: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Move the editor. Use the arrow keys to move it."
 msgstr "एडिटर को खिसकाएँ। इसे खिसकाने के लिए तीर कुंजियों का इस्तेमाल करें।"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move the line up or down when the cursor isn't on a number"
+msgstr "जब कर्सर नंबर पर नहीं हो तो लाइन ऊपर या नीचे ले जाएँ"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -23742,6 +24025,12 @@ msgstr "सबसे नया पहले"
 msgid "Next"
 msgstr "आगे"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the next search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Next"
+msgstr "अगला"
+
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Next attachment"
@@ -24201,6 +24490,12 @@ msgstr "कोई प्राथमिकता नहीं"
 msgid "No preview yet"
 msgstr "अभी कोई प्रीव्यू नहीं है"
 
+#. Text in the code editor of the quick CSS editor. Shown when the CSS has no problems.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "No problems."
+msgstr "कोई समस्या नहीं।"
+
 #. Empty-state text in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "No push subscriptions registered yet."
@@ -24257,6 +24552,16 @@ msgstr "कोई रोल उपलब्ध नहीं है"
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
 msgstr "अभी कोई रोल नहीं है। {rolesSettingsPath} में रोल जोड़ें"
+
+#. Shown in the outline of the quick CSS editor when no rule matches the filter.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules match \"{filter}\"."
+msgstr "\"{filter}\" से कोई नियम मेल नहीं खाता।"
+
+#. Shown in the outline of the quick CSS editor when the CSS has no rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules yet."
+msgstr "अभी कोई नियम नहीं।"
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
@@ -24386,6 +24691,11 @@ msgstr "कोई यूज़र उपलब्ध नहीं है"
 #: src/features/search/components/search/UserFilterSheet.tsx
 msgid "No users found"
 msgstr "कोई यूज़र नहीं मिला"
+
+#. Shown in the "Reference" tab of the quick CSS editor when the search finds nothing.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "No variables match \"{query}\"."
+msgstr "\"{query}\" से कोई वेरिएबल मेल नहीं खाती।"
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
@@ -24519,6 +24829,11 @@ msgstr "पूर्ण संख्या नहीं है"
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx
 msgid "Not allowed"
 msgstr "अनुमति नहीं है"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Not applied yet"
+msgstr "अभी लागू नहीं हुआ"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -24922,10 +25237,21 @@ msgstr "<0>{listPriceEffectiveDate}</0> को आपकी सदस्यत�
 msgid "On click"
 msgstr "क्लिक करने पर"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Followed by a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "on line"
+msgstr "लाइन पर"
+
 #. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
 msgid "On sale from {saleOpensAt}."
 msgstr "{saleOpensAt} से बिक्री पर।"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "On screen now"
+msgstr "अभी स्क्रीन पर"
 
 #. Label in front of the name and avatar the Operators' wall shows for this account right now.
 #: src/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings.tsx
@@ -25835,11 +26161,13 @@ msgstr "{displayName} के लिए विकल्प"
 msgid "Options for {themeName}"
 msgstr "{themeName} के विकल्प"
 
+#. Between two keyboard shortcuts that do the same thing, in the shortcuts dialog of the quick CSS editor.
 #. Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "or"
 msgstr "या"
 
@@ -25983,6 +26311,11 @@ msgstr "भेजी गई फ्रेंड रिक्वेस्ट"
 #: src/features/relationship/components/modals/AddFriendSheet.tsx
 msgid "Outgoing friend requests ({requestCount})"
 msgstr "भेजी गई फ्रेंड रिक्वेस्ट ({requestCount})"
+
+#. Button in the quick CSS editor that shows a list of the rules in the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Outline"
+msgstr "आउटलाइन"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -26719,6 +27052,11 @@ msgstr "फ़ोन सूचनाएं"
 msgid "Photo"
 msgstr "फ़ोटो"
 
+#. Accessible label of the color swatch next to a color in the quick CSS editor. {value} is the CSS color.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Pick a color for {value}"
+msgstr "{value} के लिए रंग चुनें"
+
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
 msgid "Pick a friend to pass it on to. They can accept or decline, and you can take it back until it moves."
@@ -27390,6 +27728,12 @@ msgstr "प्रीव्यू"
 msgid "Previous"
 msgstr "पिछला"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the previous search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Previous"
+msgstr "पिछला"
+
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts
 msgid "Previous 12 hours"
@@ -27536,6 +27880,12 @@ msgstr "निजी थ्रेड"
 #: src/features/app/components/dialogs/ConfirmModal.tsx
 msgid "Pro tip:"
 msgstr "प्रो टिप:"
+
+#. Text in the code editor of the quick CSS editor. Title of the list of problems in the CSS.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Problems"
+msgstr "समस्याएँ"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -28411,9 +28761,11 @@ msgid "Redirect URIs"
 msgstr "रीडायरेक्ट यूआरआई"
 
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Redo"
 msgstr "फिर से करें"
 
@@ -28431,6 +28783,11 @@ msgstr "कम मोशन"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing."
 msgstr "कम मोशन चालू है, इसलिए सामग्री एनिमेशन डिफ़ॉल्ट रूप से रुके रहते हैं। इन्हें चलाते रखने के लिए आप इनमें से किसी को भी वापस चालू कर सकते हैं।"
+
+#. Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Reference"
+msgstr "संदर्भ"
 
 #. Toast after copying the CSS reference of a theme asset.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -28528,6 +28885,12 @@ msgstr "सामान्य बटन"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button clicked."
 msgstr "सामान्य बटन पर क्लिक किया गया।"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Regular expression"
+msgstr "रेगुलर एक्सप्रेशन"
 
 #. Button label for rejecting an incoming direct call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -29127,6 +29490,18 @@ msgstr "<0>{renewalDate}</0> को रिन्यू होगा।"
 msgid "Replace"
 msgstr "बदलें"
 
+#. Text in the code editor of the quick CSS editor. Placeholder of the replace field and its button.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace"
+msgstr "बदलें"
+
+#. Text in the code editor of the quick CSS editor. Button that replaces every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace all"
+msgstr "सभी बदलें"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background"
@@ -29146,6 +29521,18 @@ msgstr "{key} बदलें"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace with a GIF"
 msgstr "GIF से बदलें"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced $ matches"
+msgstr "$ मेल बदले गए"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced the match on line $"
+msgstr "लाइन $ पर मेल बदला गया"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -30177,6 +30564,11 @@ msgstr "नियम: {title}"
 msgid "Rule: <0>{title}</0>"
 msgstr "नियम: <0>{title}</0>"
 
+#. Accessible name of the outline list in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Rules in this CSS"
+msgstr "इस CSS में नियम"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -30318,6 +30710,11 @@ msgstr "आइकॉन सेव करें"
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx
 msgid "Save some media from messages to get started!"
 msgstr "शुरू करने के लिए मैसेज से कुछ मीडिया सेव करें!"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Save the theme or apply changes"
+msgstr "थीम सेव करें या बदलाव लागू करें"
 
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
@@ -30932,6 +31329,11 @@ msgstr "समय क्षेत्र खोजें"
 msgid "Search users"
 msgstr "यूज़र खोजें"
 
+#. Placeholder of the search field in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Search variables"
+msgstr "वेरिएबल खोजें"
+
 #. Header status shown while a search request is in flight in the channel search results panel.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "Searching"
@@ -31118,6 +31520,11 @@ msgstr "चैनल चुनें"
 msgid "Select a channel or category"
 msgstr "कोई चैनल या श्रेणी चुनें"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select a column of text by dragging"
+msgstr "ड्रैग करके टेक्स्ट का कॉलम चुनें"
+
 #. Form field label or placeholder for selecting a community.
 #. Placeholder of the community picker in the follow announcement channel dialog.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
@@ -31155,6 +31562,11 @@ msgstr "रीडायरेक्ट यूआरआई चुनें"
 msgid "Select a scenario to apply..."
 msgstr "लागू करने के लिए एक परिदृश्य चुनें..."
 
+#. Shown above the list of CSS variables in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select a variable to add it to your CSS."
+msgstr "अपनी CSS में जोड़ने के लिए कोई वेरिएबल चुनें।"
+
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -31190,6 +31602,11 @@ msgstr "GIF {title} चुनें"
 msgid "Select interface language"
 msgstr "इंटरफ़ेस भाषा चुनें"
 
+#. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select one to add a rule for it to your CSS."
+msgstr "इसके लिए नियम जोड़ने के लिए एक चुनें।"
+
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 msgid "Select scopes (and redirect URI if required)"
@@ -31203,6 +31620,11 @@ msgstr "टेक्स्ट चुनें"
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx
 msgid "Select the account you want to sign in with on your new device."
 msgstr "वह खाता चुनें जिससे आप अपने नए डिवाइस पर साइन इन करना चाहते हैं।"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select the next match of the selection"
+msgstr "चयन के अगले मेल को चुनें"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
@@ -31239,6 +31661,12 @@ msgstr "सिलेक्टेबल टेक्स्ट"
 msgid "selected"
 msgstr "चुना गया"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Selection deleted"
+msgstr "चयन हटाया गया"
+
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx
 msgid "Selection end"
@@ -31273,6 +31701,11 @@ msgstr "चयन: {0} (अधिकतम {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Selections"
 msgstr "चयन"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS selectors.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Selectors"
+msgstr "सेलेक्टर्स"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -31793,6 +32226,111 @@ msgstr "म्यूट शॉर्टकट सेट करें"
 msgid "Set new password"
 msgstr "नया पासवर्ड सेट करें"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions is showing."
+msgstr "जब मैसेज की एक्शन बार दिख रही हो, तब सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions stays open, such as while a menu is open."
+msgstr "जब मैसेज की एक्शन बार खुली रहती है, जैसे कोई मेन्यू खुला हो, तब सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar when that person is online on a phone."
+msgstr "जब कोई व्यक्ति फोन पर ऑनलाइन हो, तब उसके अवतार पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar while that person is typing."
+msgstr "जब कोई व्यक्ति टाइप कर रहा हो, तब उसके अवतार पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on avatars that open a profile when clicked."
+msgstr "ऐसे अवतारों पर सेट होता है, जिन पर क्लिक करने से प्रोफाइल खुलती है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on edited messages."
+msgstr "एडिट किए गए मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages about a call."
+msgstr "कॉल से जुड़े मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from bots."
+msgstr "बॉट्स के मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from people you blocked."
+msgstr "आपके ब्लॉक किए लोगों के मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages sent by a webhook."
+msgstr "वेबहुक से भेजे गए मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages shown under the previous message from the same person."
+msgstr "एक ही व्यक्ति के पिछले मैसेज के नीचे दिखाए गए मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that can show the bar of message actions."
+msgstr "ऐसे मैसेज पर सेट होता है, जिनमें एक्शन बार दिख सकती है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that Fluxer sends, such as when someone joins."
+msgstr "ऐसे मैसेज पर सेट होता है, जो फ्लक्सर भेजता है, जैसे कोई जॉइन करता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that mention you."
+msgstr "ऐसे मैसेज पर सेट होता है, जिनमें आपको मेंशन किया गया है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that reply to another message."
+msgstr "ऐसे मैसेज पर सेट होता है, जो किसी और मैसेज का जवाब हैं।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages while the compact message layout is on."
+msgstr "जब कॉम्पैक्ट मैसेज लेआउट चालू हो, तब मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages you sent."
+msgstr "आपके भेजे गए मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on pinned messages."
+msgstr "पिन किए गए मैसेज पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the avatars of bots."
+msgstr "बॉट्स के अवतार पर सेट होता है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the root element during holidays. It lists the holidays."
+msgstr "हॉलिडे के दौरान रूट एलिमेंट पर सेट होता है। इसमें हॉलिडे की लिस्ट होती है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on your own avatar."
+msgstr "अपने अवतार पर सेट होता है।"
+
 #. Button that opens the dialog for setting a password on the account.
 #. Button that saves the password in the dialog for an account that has an email but no password.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
@@ -32243,6 +32781,11 @@ msgstr "दिखाएँ"
 msgid "Show {appName}"
 msgstr "{appName} दिखाएं"
 
+#. Accessible label of the color swatch next to a CSS variable in the quick CSS editor. {name} is the variable name.
+#: src/features/theme_settings/editor/CssColorSwatches.ts
+msgid "Show {name} in \"Colors and fonts\""
+msgstr "\"रंग और फ़ॉन्ट\" में {name} दिखाएँ"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32320,6 +32863,16 @@ msgstr "चैट दिखाएं"
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "{count, plural, one {# अपठित मैसेज के साथ चैट दिखाएं} other {# अपठित मैसेज के साथ चैट दिखाएं}}"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show completions"
+msgstr "सुझाव दिखाएँ"
+
+#. Setting in "Editor settings" of the quick CSS editor. Completions are suggestions of CSS code.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Show completions as you type"
+msgstr "टाइप करते समय सुझाव दिखाएँ"
 
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -32612,6 +33165,11 @@ msgstr "पासवर्ड दिखाएं"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "वॉइस मेन्यू में प्रति-डिवाइस प्रतिभागी वॉल्यूम स्लाइडर दिखाएं"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show problems"
+msgstr "समस्याएँ दिखाएँ"
+
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
@@ -32680,6 +33238,11 @@ msgstr "टास्कबार से मेल खाने वाले म�
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Show the ID of each voice connection next to people in calls and in voice channels. With it off, each device is named by its type instead."
 msgstr "कॉल और वॉयस चैनलों में लोगों के बगल में हर वॉयस कनेक्शन की आईडी दिखाएं। इसे बंद करने पर, हर डिवाइस का नाम उसके प्रकार से दिखाया जाएगा।"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show the outline"
+msgstr "आउटलाइन दिखाएँ"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -33699,6 +34262,11 @@ msgstr "स्पीकर"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx
 msgid "Special features"
 msgstr "खास सुविधाएं"
+
+#. Shown when hovering a CSS selector in the quick CSS editor. {a}, {b} and {c} are the three numbers of CSS specificity.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "Specificity {a}, {b}, {c}"
+msgstr "स्पेसिफिसिटी {a}, {b}, {c}"
 
 #. Title of the screen-share spectators popout listing users watching the stream.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx
@@ -35073,6 +35641,16 @@ msgstr "सिस्टम: लाइट थीम (आपके सिस्ट
 msgid "Tab"
 msgstr "टैब"
 
+#. Shown at the top of the keyboard shortcuts dialog of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Tab indents the line. To leave the editor with the keyboard, press Escape and then Tab."
+msgstr "टैब लाइन को इंडेंट करता है। कीबोर्ड से एडिटर छोड़ने के लिए Escape दबाएँ, फिर Tab दबाएँ।"
+
+#. Setting in "Editor settings" of the quick CSS editor. How many spaces wide one level of indentation is.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Tab size"
+msgstr "टैब साइज"
+
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for table tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
 msgid "Tables"
@@ -35590,6 +36168,21 @@ msgstr "iOS और Android के लिए Fluxer ऐप को सूचना
 msgid "The following people can't be added to this group DM:"
 msgstr "इन लोगों को इस ग्रुप DM में नहीं जोड़ा जा सकता:"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of a message."
+msgstr "मैसेज की आईडी।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the channel a message is in."
+msgstr "जिस चैनल में मैसेज है, उसकी आईडी।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the community a message or avatar belongs to."
+msgstr "जिस कम्युनिटी से मैसेज या अवतार है, उसकी आईडी।"
+
 #. Activity log detail under a deleted invite link, used when someone other than the member who deleted it had created it and the creation time was not recorded. {user} is the member who created the invite, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "The invite was created by {user}"
@@ -35665,6 +36258,16 @@ msgstr "जिस सदस्य पर कार्रवाई करनी �
 #: src/features/devtools/hooks/useCommands.ts
 msgid "The message to send."
 msgstr "जो मैसेज भेजना है।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for an avatar."
+msgstr "अवतार के लिए दिखाया गया नाम।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for the person who sent a message."
+msgstr "जिस व्यक्ति ने मैसेज भेजा, उसका दिखाया गया नाम।"
 
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
@@ -35769,10 +36372,20 @@ msgstr "आपके ब्राउज़र द्वारा अप्रू
 msgid "The sign-in was cancelled in your browser."
 msgstr "आपके ब्राउज़र में साइन-इन रद्द कर दिया गया था।"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The size of an avatar in pixels."
+msgstr "अवतार का साइज (पिक्सल में)।"
+
 #. Where the favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "The small image in the browser tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
 msgstr "ब्राउज़र टैब में दिखने वाली छोटी इमेज। चौकोर PNG इस्तेमाल करें, कम से कम 64 × 64 पिक्सल और ज़्यादा से ज़्यादा {size}।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The status shown on an avatar, such as online or idle."
+msgstr "अवतार पर दिखाया गया स्टेटस, जैसे ऑनलाइन या आइडल।"
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -35789,6 +36402,11 @@ msgstr "सिस्टम ने {target} को {role} रोल दिया"
 msgid "The system removed the role {role} from {target}"
 msgstr "सिस्टम ने {role} रोल {target} से हटा दिया"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor. DEFAULT and REPLY are attribute values and stay in English.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The type of a message, such as DEFAULT or REPLY."
+msgstr "मैसेज का प्रकार, जैसे DEFAULT या REPLY।"
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -35804,9 +36422,29 @@ msgstr "अपडेट अभी भी डाउनलोड हो रहा 
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "अपलोड सेवा ने इस स्टिकर को {maxSize} से बड़ा होने के कारण अस्वीकार कर दिया है। कोई छोटी फ़ाइल, कोई सरल इमेज या कोई छोटा एनिमेशन आज़माएँ।"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of an avatar."
+msgstr "अवतार की यूज़र आईडी।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of the person who sent a message."
+msgstr "जिस व्यक्ति ने मैसेज भेजा, उसकी यूज़र आईडी।"
+
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "यूज़रनेम <0>{fluxerTag}</0> पहले से मौजूद है। जारी रखने पर आपका टैग अपने आप रीरोल हो जाएगा।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of an avatar."
+msgstr "अवतार का यूज़रनेम।"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of the person who sent a message."
+msgstr "जिस व्यक्ति ने मैसेज भेजा, उसका यूज़रनेम।"
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -35982,6 +36620,11 @@ msgstr "इस चैनल के लिए वेबहुक लोड कर
 msgid "There was an error loading the webhooks. Try again."
 msgstr "वेबहुक लोड करने में समस्या हुई। फिर से कोशिश करें।"
 
+#. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "These attributes don't change between Fluxer updates."
+msgstr "ये एट्रिब्यूट्स फ्लक्सर अपडेट्स के बीच नहीं बदलते।"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "They"
@@ -36113,6 +36756,11 @@ msgstr "यह ब्राउज़र एनिमेटेड {avifFormatLabe
 msgid "This browser console is a developer tool."
 msgstr "यह ब्राउज़र कंसोल एक डेवलपर टूल है।"
 
+#. Problem shown in the quick CSS editor on a CSS property name the browser does not support.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This browser doesn't know the property {property}."
+msgstr "यह ब्राउज़र {property} प्रॉपर्टी नहीं जानता।"
+
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
@@ -36220,6 +36868,11 @@ msgstr "यह चैनल अब मौजूद नहीं है। हो
 #: src/features/auth/altcha/CaptchaInterceptor.ts
 msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
 msgstr "यह जांच केवल तभी चलती है जब ऐप HTTPS या localhost पर खोला जाता है। इंस्टेंस मालिक से इसे HTTPS पर सर्व करने के लिए कहें, या इसे localhost से खोलें।"
+
+#. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
+msgstr "यह क्लास नाम हर फ्लक्सर अपडेट में बदलता है। [data-flx] सेलेक्टर का उपयोग करें।"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
@@ -36338,6 +36991,11 @@ msgstr "इसमें संवेदनशील सामग्री है
 #: src/features/channel/components/channel_view/DMChannelView.tsx
 msgid "This conversation is no longer available."
 msgstr "यह बातचीत अब उपलब्ध नहीं है।"
+
+#. Problem shown in the quick CSS editor on a line with a CSS syntax error.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This CSS can't be parsed."
+msgstr "यह CSS पार्स नहीं हो सकता।"
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -37831,6 +38489,11 @@ msgstr "प्रोसेसिंग को खुद ट्यून कर�
 msgid "Turkish"
 msgstr "तुर्की"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Turn a comment on or off"
+msgstr "कमेंट ऑन या ऑफ करें"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -37925,6 +38588,11 @@ msgstr "स्ट्रीमिंग गोपनीयता चालू क
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Turn text smileys into emoji"
 msgstr "टेक्स्ट स्माइली को इमोजी में बदलें"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Turn this theme on to see your changes in the app."
+msgstr "ऐप में अपने बदलाव देखने के लिए इस थीम को चालू करें।"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -38274,9 +38942,11 @@ msgid "Underline website links"
 msgstr "वेबसाइट लिंक को रेखांकित करें"
 
 #. Native Edit menu item that undoes the last edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Undo"
 msgstr "पूर्ववत करें"
 
@@ -38325,6 +38995,29 @@ msgstr "अनफोकस करें"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Unfocused"
 msgstr "अनफोकस्ड"
+
+#. Text in the code editor of the quick CSS editor. Label of the button that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold"
+msgstr "अनफोल्ड करें"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold line"
+msgstr "लाइन अनफोल्ड करें"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Unfold the block"
+msgstr "ब्लॉक अनफोल्ड करें"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfolded lines"
+msgstr "अनफोल्ड की गई लाइन्स"
 
 #. Danger button label that stops copying messages from a followed announcement channel into this channel.
 #: src/features/webhook/components/FollowedChannelListItem.tsx
@@ -39902,6 +40595,11 @@ msgstr "वैनिटी यूआरएल काम नहीं करे�
 msgid "Vanity URLs must be between 2 and 32 characters long and can only contain alphanumeric characters and internal hyphens."
 msgstr "वैनिटी यूआरएल 2 से 32 वर्णों के बीच होने चाहिए और उनमें केवल अल्फ़ान्यूमेरिक वर्ण और आंतरिक हाइफ़न हो सकते हैं।"
 
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS variables.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Variables"
+msgstr "वेरिएबल्स"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
 msgid "Verification"
@@ -41321,6 +42019,11 @@ msgstr "जब स्ट्रीमिंग गोपनीयता चाल
 msgid "When they come online, they'll appear right here."
 msgstr "जब वे ऑनलाइन आएंगे, तो यहीं दिखेंगे।"
 
+#. Description of the "Live preview" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "When this is off, changes show in the app when you select \"Apply changes\"."
+msgstr "जब यह बंद हो, तो बदलाव ऐप में \"बदलाव लागू करें\" चुनने पर दिखेंगे।"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
@@ -41416,6 +42119,12 @@ msgstr "ईमेल किसकी ओर से आने चाहिए?"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "अरे, यह तो बहुत ज़्यादा है"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Whole word"
+msgstr "पूरा शब्द"
 
 #. Heading on the account restriction screen above the rule that was broken and the findings.
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
@@ -41586,6 +42295,11 @@ msgstr "वर्डमार्क"
 #: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx
 msgid "Works while {productName} is focused"
 msgstr "{productName} फ़ोकस में होने पर काम करता है"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Wrap long lines"
+msgstr "लंबी लाइन्स रैप करें"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.

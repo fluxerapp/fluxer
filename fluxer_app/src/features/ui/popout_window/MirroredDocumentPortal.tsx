@@ -5,6 +5,7 @@ import {ContextMenu} from '@app/features/ui/action_menu/ContextMenu';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
 import {getActivePortalHost, PortalHostContext, setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {Popouts} from '@app/features/ui/popover/PopoverPopouts';
+import LayerManager from '@app/features/ui/state/LayerManager';
 import {Toasts} from '@app/features/ui/toast/Toasts';
 import {createWindowFocusInteractionGuard} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import type React from 'react';
@@ -35,6 +36,7 @@ function useMirroredDocumentPortalHost({childWindow, container}: MirroredDocumen
 			focusGuard.setFocused(false);
 		};
 		if (childDocument.hasFocus()) activatePortalHost();
+		const stopObservingLayers = LayerManager.observeDocument(childDocument);
 		childWindow.addEventListener('focus', handleFocus);
 		childWindow.addEventListener('blur', handleBlur);
 		childDocument.addEventListener('pointerdown', activatePortalHost, true);
@@ -46,6 +48,7 @@ function useMirroredDocumentPortalHost({childWindow, container}: MirroredDocumen
 			childDocument.removeEventListener('pointerdown', activatePortalHost, true);
 			childDocument.removeEventListener('focusin', activatePortalHost, true);
 			childDocument.removeEventListener('keydown', activatePortalHost, true);
+			stopObservingLayers();
 			focusGuard.destroy();
 			if (getActivePortalHost() === container) {
 				setActivePortalHost(null);

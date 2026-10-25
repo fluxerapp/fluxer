@@ -52,11 +52,17 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	align-self: flex-end;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+	display: none;
 }
 
 .tabList {
 	border-bottom: none;
-	--tabs-scale: 0.95;
+	--tabs-scale: 0.9;
 }
 
 .headerActions {
@@ -114,15 +120,6 @@
 	padding: var(--spacing-4);
 }
 
-.toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--spacing-2) var(--spacing-3);
-	padding: var(--spacing-3) var(--spacing-4);
-	border-bottom: 0.0625rem solid var(--background-modifier-accent);
-}
-
 .filePicker {
 	display: flex;
 	align-items: center;
@@ -164,35 +161,4 @@
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
 	overflow-wrap: anywhere;
-}
-
-.editor {
-	flex: 1 1 auto;
-	min-height: 0;
-	margin: var(--spacing-3) var(--spacing-4);
-	overflow: hidden;
-	border: 0.0625rem solid var(--background-modifier-accent);
-	border-radius: 0.5rem;
-}
-
-.footer {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--spacing-1) var(--spacing-4);
-	padding: 0 var(--spacing-4) var(--spacing-3);
-	font-size: 0.8125rem;
-	color: var(--text-tertiary);
-}
-
-.footerNote {
-	margin-inline-start: auto;
-}
-
-.problem {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--spacing-1);
-	margin-inline-start: auto;
-	color: var(--status-warning);
 }

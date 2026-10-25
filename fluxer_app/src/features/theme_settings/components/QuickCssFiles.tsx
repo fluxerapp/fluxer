@@ -8,7 +8,6 @@ import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import Theme from '@app/features/theme/state/Theme';
 import ThemeEditTarget, {type ThemeTarget} from '@app/features/theme/state/ThemeEditTarget';
 import ThemeLibrary, {getThemeLabel, type ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
@@ -17,12 +16,11 @@ import QuickCssEditor from '@app/features/theme_settings/components/QuickCssEdit
 import {confirmDiscardThemeChanges} from '@app/features/theme_settings/components/QuickCssEditorDiscard';
 import styles from '@app/features/theme_settings/components/QuickCssWorkspace.module.css';
 import {EditTargetNote} from '@app/features/theme_settings/components/ThisAccountSection';
+import EditorPreferences from '@app/features/theme_settings/editor/EditorPreferences';
 import {readCachedEditorState} from '@app/features/theme_settings/editor/EditorStateCache';
 import {useCurrentAccountLabels} from '@app/features/theme_settings/hooks/useCurrentAccountLabels';
 import ThemeSettingsState, {QUICK_CSS_EDITOR_FILE} from '@app/features/theme_settings/state/ThemeSettingsState';
-import {findFirstCssSyntaxErrorLine} from '@app/features/theme_settings/utils/CssSyntaxErrors';
 import {getLinkedThemeFileLine, isLinkedThemeReadOnly} from '@app/features/theme_settings/utils/LinkedThemeFile';
-import {getThemeBaseKind} from '@app/features/theme_settings/utils/ThemeDefaultVariables';
 import {
 	showThemeSettingsErrorModal,
 	WE_COULDN_T_SAVE_THAT_THEME_DESCRIPTOR,
@@ -37,16 +35,16 @@ import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {copyText, readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {QUICK_CSS_SECTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/ThemesSections';
 import {msg} from '@lingui/core/macro';
-import {Plural, Trans, useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {
 	ArrowCounterClockwiseIcon,
 	CopyIcon,
 	DownloadSimpleIcon,
 	EraserIcon,
 	FloppyDiskIcon,
+	PlayIcon,
 	ShareNetworkIcon,
 	UploadSimpleIcon,
-	WarningCircleIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -80,14 +78,26 @@ const CHANGES_SHOW_AS_YOU_TYPE_DESCRIPTOR = msg({
 	message: 'Changes show in the app as you type.',
 	comment: 'Shown at the bottom of the quick CSS editor window while it edits quick CSS.',
 });
-const SYNTAX_ERROR_DESCRIPTOR = msg({
-	message: 'Line {line} has a CSS error.',
-	comment: 'Shown at the bottom of the quick CSS editor window. {line} is a line number.',
-});
-const MISSING_REFERENCE_DESCRIPTOR = msg({
-	message: 'Can\'t find "{reference}" in your assets.',
+const NOT_APPLIED_YET_DESCRIPTOR = msg({
+	message: 'Not applied yet',
 	comment:
-		'Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.',
+		'Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.',
+});
+const APPLY_TO_SEE_CHANGES_DESCRIPTOR = msg({
+	message: 'Changes show in the app when you select "Apply changes".',
+	comment: 'Shown in the status bar of the quick CSS editor while "Live preview" is off.',
+});
+const APPLY_CHANGES_DESCRIPTOR = msg({
+	message: 'Apply changes',
+	comment: 'Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.',
+});
+const THEME_PREVIEW_DESCRIPTOR = msg({
+	message: 'Changes show in the app as you type. Select "Save theme" to keep them.',
+	comment: 'Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.',
+});
+const THEME_OFF_DESCRIPTOR = msg({
+	message: 'Turn this theme on to see your changes in the app.',
+	comment: 'Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.',
 });
 const QUICK_CSS_REPLACED_FROM_DESCRIPTOR = msg({
 	message: 'Quick CSS replaced from {fileName}.',
@@ -129,63 +139,6 @@ const CLEAR_QUICK_CSS_DESCRIPTION_DESCRIPTOR = msg({
 const CLEAR_DESCRIPTOR = msg({
 	message: 'Clear',
 	comment: 'Button in the quick CSS editor window that deletes all quick CSS.',
-});
-
-const QuickCssFooter: React.FC<{text: string; showsInApp: boolean}> = observer(({text, showsInApp}) => {
-	const {i18n} = useLingui();
-	const lineCount = text.length === 0 ? 0 : text.split('\n').length;
-	const characterCount = text.length;
-	const errorLine = useMemo(() => findFirstCssSyntaxErrorLine(text), [text]);
-	const missingReference = ThemeSettingsState.missingReferences.find((reference) => text.includes(reference));
-	let problem: string | null = null;
-	if (errorLine !== null) {
-		problem = i18n._(SYNTAX_ERROR_DESCRIPTOR, {line: errorLine});
-	} else if (missingReference) {
-		problem = i18n._(MISSING_REFERENCE_DESCRIPTOR, {reference: missingReference});
-	}
-	let status: React.ReactNode = null;
-	if (problem) {
-		status = (
-			<>
-				<WarningCircleIcon
-					size={remFromPx(14)}
-					weight="bold"
-					aria-hidden
-					data-flx="theme-settings.quick-css-editor-window.quick-css-footer.warning-circle-icon"
-				/>
-				{problem}
-			</>
-		);
-	} else if (showsInApp) {
-		status = i18n._(CHANGES_SHOW_AS_YOU_TYPE_DESCRIPTOR);
-	}
-	return (
-		<div className={styles.footer} data-flx="theme-settings.quick-css-editor-window.quick-css-footer.footer">
-			<span data-flx="theme-settings.quick-css-editor-window.quick-css-footer.span">
-				<Plural
-					value={lineCount}
-					one="# line"
-					other="# lines"
-					data-flx="theme-settings.quick-css-editor-window.quick-css-footer.plural"
-				/>
-			</span>
-			<span data-flx="theme-settings.quick-css-editor-window.quick-css-footer.span--2">
-				<Plural
-					value={characterCount}
-					one="# character"
-					other="# characters"
-					data-flx="theme-settings.quick-css-editor-window.quick-css-footer.plural--2"
-				/>
-			</span>
-			<span
-				className={problem ? styles.problem : styles.footerNote}
-				role="status"
-				data-flx="theme-settings.quick-css-editor-window.quick-css-footer.status"
-			>
-				{status}
-			</span>
-		</div>
-	);
 });
 
 interface EditorFileProps {
@@ -236,10 +189,19 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 		const flush = flushRef.current;
 		return () => flush();
 	}, [sourceKey]);
+	const lastStoredRef = useRef({key: sourceKey, value: stored});
 	useEffect(() => {
+		const previous = lastStoredRef.current;
+		lastStoredRef.current = {key: sourceKey, value: stored};
 		if (pendingRef.current) return;
-		setDraft((current) => (normalizeCustomThemeCss(current) === stored ? current : (stored ?? '')));
-	}, [stored]);
+		setDraft((current) => {
+			const normalized = normalizeCustomThemeCss(current);
+			if (normalized === stored) return current;
+			if (previous.key !== sourceKey || normalized === previous.value) return stored ?? '';
+			return current;
+		});
+	}, [stored, sourceKey]);
+	const livePreview = EditorPreferences.livePreview;
 	const write = (next: string, immediate = true) => {
 		setDraft(next);
 		pendingRef.current = {target: ThemeEditTarget.target, css: normalizeCustomThemeCss(next)};
@@ -250,6 +212,17 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 		}
 		timerRef.current = setTimeout(() => flushRef.current(), QUICK_CSS_WRITE_DELAY_MS);
 	};
+	const edit = (next: string, immediate: boolean) => {
+		if (EditorPreferences.livePreview) {
+			write(next, immediate);
+			return;
+		}
+		setDraft(next);
+	};
+	const unapplied = normalizeCustomThemeCss(draft) !== stored;
+	useEffect(() => {
+		if (livePreview && unapplied) write(draft);
+	}, [livePreview]);
 	const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		event.target.value = '';
@@ -316,133 +289,145 @@ const QuickCssFile: React.FC<EditorFileProps> = observer(({filePicker}) => {
 			)),
 		);
 	};
-	return (
-		<>
-			<div className={styles.toolbar} data-flx="theme-settings.quick-css-editor-window.quick-css-file.toolbar">
-				{filePicker}
-				<div className={styles.actions} data-flx="theme-settings.quick-css-editor-window.quick-css-file.actions">
-					<Button
-						variant="secondary"
-						small
-						leftIcon={
-							<UploadSimpleIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.upload-simple-icon"
-							/>
-						}
-						onClick={() => fileInputRef.current?.click()}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.click"
-					>
-						<Trans>Import CSS</Trans>
-					</Button>
-					<Button
-						variant="secondary"
-						small
-						leftIcon={
-							<DownloadSimpleIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.download-simple-icon"
-							/>
-						}
-						onClick={() => downloadTextFile(draft, 'quick.css', 'text/css;charset=utf-8')}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.download-text-file"
-					>
-						<Trans>Download</Trans>
-					</Button>
-					<Button
-						variant="secondary"
-						small
-						leftIcon={
-							<CopyIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.copy-icon"
-							/>
-						}
-						onClick={handleCopy}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.copy"
-					>
-						<Trans>Copy</Trans>
-					</Button>
-					<Button
-						variant="secondary"
-						small
-						leftIcon={
-							<ShareNetworkIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.share-network-icon"
-							/>
-						}
-						onClick={handleShare}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.share"
-					>
-						<Trans>Share</Trans>
-					</Button>
-					<Button
-						variant="secondary"
-						small
-						leftIcon={
-							<ArrowCounterClockwiseIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.arrow-counter-clockwise-icon"
-							/>
-						}
-						disabled={draft === openedValue}
-						onClick={handleUndoAll}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.undo-all"
-					>
-						{i18n._(UNDO_ALL_CHANGES_DESCRIPTOR)}
-					</Button>
-					<Button
-						variant="danger"
-						small
-						leftIcon={
-							<EraserIcon
-								size={remFromPx(16)}
-								data-flx="theme-settings.quick-css-editor-window.quick-css-file.eraser-icon"
-							/>
-						}
-						onClick={handleClear}
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.clear"
-					>
-						{i18n._(CLEAR_DESCRIPTOR)}
-					</Button>
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept=".css,text/css,text/plain"
-						hidden
-						onChange={handleImport}
-						aria-hidden
-						data-flx="theme-settings.quick-css-editor-window.quick-css-file.input.import.file"
+	let previewStatus: React.ReactNode = null;
+	if (!livePreview) {
+		previewStatus = unapplied ? i18n._(NOT_APPLIED_YET_DESCRIPTOR) : i18n._(APPLY_TO_SEE_CHANGES_DESCRIPTOR);
+	} else if (target === ThemeProfile.activeTarget) {
+		previewStatus = i18n._(CHANGES_SHOW_AS_YOU_TYPE_DESCRIPTOR);
+	}
+	const actions = (
+		<div className={styles.actions} data-flx="theme-settings.quick-css-files.quick-css-file.actions">
+			{livePreview ? null : (
+				<Button
+					small
+					leftIcon={
+						<PlayIcon size={remFromPx(16)} data-flx="theme-settings.quick-css-files.quick-css-file.play-icon" />
+					}
+					disabled={!unapplied}
+					onClick={() => write(draft)}
+					data-flx="theme-settings.quick-css-files.quick-css-file.button.apply"
+				>
+					{i18n._(APPLY_CHANGES_DESCRIPTOR)}
+				</Button>
+			)}
+			<Button
+				variant="secondary"
+				small
+				leftIcon={
+					<UploadSimpleIcon
+						size={remFromPx(16)}
+						data-flx="theme-settings.quick-css-editor-window.quick-css-file.upload-simple-icon"
 					/>
+				}
+				onClick={() => fileInputRef.current?.click()}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.click"
+			>
+				<Trans>Import CSS</Trans>
+			</Button>
+			<Button
+				variant="secondary"
+				small
+				leftIcon={
+					<DownloadSimpleIcon
+						size={remFromPx(16)}
+						data-flx="theme-settings.quick-css-editor-window.quick-css-file.download-simple-icon"
+					/>
+				}
+				onClick={() => downloadTextFile(draft, 'quick.css', 'text/css;charset=utf-8')}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.download-text-file"
+			>
+				<Trans>Download</Trans>
+			</Button>
+			<Button
+				variant="secondary"
+				small
+				leftIcon={
+					<CopyIcon size={remFromPx(16)} data-flx="theme-settings.quick-css-editor-window.quick-css-file.copy-icon" />
+				}
+				onClick={handleCopy}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.copy"
+			>
+				<Trans>Copy</Trans>
+			</Button>
+			<Button
+				variant="secondary"
+				small
+				leftIcon={
+					<ShareNetworkIcon
+						size={remFromPx(16)}
+						data-flx="theme-settings.quick-css-editor-window.quick-css-file.share-network-icon"
+					/>
+				}
+				onClick={handleShare}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.share"
+			>
+				<Trans>Share</Trans>
+			</Button>
+			<Button
+				variant="secondary"
+				small
+				leftIcon={
+					<ArrowCounterClockwiseIcon
+						size={remFromPx(16)}
+						data-flx="theme-settings.quick-css-editor-window.quick-css-file.arrow-counter-clockwise-icon"
+					/>
+				}
+				disabled={draft === openedValue}
+				onClick={handleUndoAll}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.undo-all"
+			>
+				{i18n._(UNDO_ALL_CHANGES_DESCRIPTOR)}
+			</Button>
+			<Button
+				variant="danger"
+				small
+				leftIcon={
+					<EraserIcon
+						size={remFromPx(16)}
+						data-flx="theme-settings.quick-css-editor-window.quick-css-file.eraser-icon"
+					/>
+				}
+				onClick={handleClear}
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.button.clear"
+			>
+				{i18n._(CLEAR_DESCRIPTOR)}
+			</Button>
+			<input
+				ref={fileInputRef}
+				type="file"
+				accept=".css,text/css,text/plain"
+				hidden
+				onChange={handleImport}
+				aria-hidden
+				data-flx="theme-settings.quick-css-editor-window.quick-css-file.input.import.file"
+			/>
+		</div>
+	);
+	return (
+		<QuickCssEditor
+			key={sourceKey}
+			ariaLabel={i18n._(QUICK_CSS_EDITOR_DESCRIPTOR)}
+			value={draft}
+			onChange={edit}
+			onSave={() => write(draft)}
+			cacheKey={sourceKey}
+			cachedState={cached.key === sourceKey ? cached.state : null}
+			readStoredCss={() => ThemeProfile.customThemeCssFor(target) ?? ''}
+			filePicker={filePicker}
+			actions={actions}
+			notes={
+				<div className={styles.lines} data-flx="theme-settings.quick-css-files.quick-css-file.lines">
+					<p className={styles.line} data-flx="theme-settings.quick-css-files.quick-css-file.line">
+						{target === 'desktop'
+							? i18n._(DESKTOP_QUICK_CSS_LINE_DESCRIPTOR)
+							: i18n._(ACCOUNT_QUICK_CSS_LINE_DESCRIPTOR, {username, instanceName})}
+					</p>
+					<EditTargetNote data-flx="theme-settings.quick-css-files.quick-css-file.edit-target-note" />
 				</div>
-			</div>
-			<div className={styles.lines} data-flx="theme-settings.quick-css-editor-window.quick-css-file.lines">
-				<p className={styles.line} data-flx="theme-settings.quick-css-editor-window.quick-css-file.line">
-					{target === 'desktop'
-						? i18n._(DESKTOP_QUICK_CSS_LINE_DESCRIPTOR)
-						: i18n._(ACCOUNT_QUICK_CSS_LINE_DESCRIPTOR, {username, instanceName})}
-				</p>
-				<EditTargetNote data-flx="theme-settings.quick-css-editor-window.quick-css-file.edit-target-note" />
-			</div>
-			<QuickCssEditor
-				key={sourceKey}
-				ariaLabel={i18n._(QUICK_CSS_EDITOR_DESCRIPTOR)}
-				baseTheme={getThemeBaseKind(Theme.effectiveTheme)}
-				className={styles.editor}
-				value={draft}
-				onChange={(next, immediate) => write(next, immediate)}
-				cacheKey={sourceKey}
-				cachedState={cached.key === sourceKey ? cached.state : null}
-				readStoredCss={() => ThemeProfile.customThemeCssFor(target) ?? ''}
-				data-flx="theme-settings.quick-css-editor-window.quick-css-file.editor.write"
-			/>
-			<QuickCssFooter
-				text={draft}
-				showsInApp={ThemeEditTarget.target === ThemeProfile.activeTarget}
-				data-flx="theme-settings.quick-css-editor-window.quick-css-file.quick-css-footer"
-			/>
-		</>
+			}
+			previewStatus={previewStatus}
+			data-flx="theme-settings.quick-css-files.quick-css-file.editor"
+		/>
 	);
 });
 
@@ -471,9 +456,24 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 		return () => {
 			ThemeLibrary.setFocusedThemeId(null);
 			ThemeSettingsState.setEditorDirty(false);
+			ThemeSettingsState.setThemePreview(null);
 		};
 	}, [theme.id]);
+	const enabled = ThemeProfile.enabledThemeIds.includes(theme.id);
+	const previewing = enabled && dirty && EditorPreferences.livePreview;
+	useEffect(() => {
+		if (!previewing) {
+			ThemeSettingsState.setThemePreview(null);
+			return;
+		}
+		const timer = setTimeout(
+			() => ThemeSettingsState.setThemePreview({id: theme.id, css: draft}),
+			QUICK_CSS_WRITE_DELAY_MS,
+		);
+		return () => clearTimeout(timer);
+	}, [previewing, draft, theme.id]);
 	const handleSave = () => {
+		if (!dirty || saving) return;
 		setSaving(true);
 		void ThemeLibrary.updateThemeDetails(theme.id, {css: draft})
 			.then(() => ToastCommands.success(i18n._(THEME_SAVED_DESCRIPTOR)))
@@ -513,49 +513,45 @@ const ThemeFile: React.FC<EditorFileProps & {theme: ThemeLibraryTheme}> = observ
 			</div>
 		);
 	}
+	let previewStatus: React.ReactNode = null;
+	if (!readOnly && !enabled) previewStatus = i18n._(THEME_OFF_DESCRIPTOR);
+	else if (!readOnly && EditorPreferences.livePreview) previewStatus = i18n._(THEME_PREVIEW_DESCRIPTOR);
 	return (
-		<>
-			<div className={styles.toolbar} data-flx="theme-settings.quick-css-editor-window.theme-file.toolbar">
-				{filePicker}
-				{actions}
-			</div>
-			{linkedLine ? (
-				<div className={styles.lines} data-flx="theme-settings.quick-css-editor-window.theme-file.lines">
-					<p className={styles.line} data-flx="theme-settings.quick-css-editor-window.theme-file.line">
-						{linkedLine}
-					</p>
-					<div data-flx="theme-settings.quick-css-editor-window.theme-file.div">
-						<Button
-							variant="secondary"
-							small
-							onClick={() => void ThemeLibrary.unlinkTheme(theme.id)}
-							data-flx="theme-settings.quick-css-editor-window.theme-file.button"
-						>
-							<Trans comment="Button that stops a theme following its CSS file on disk and turns it back into an editable copy.">
-								Unlink
-							</Trans>
-						</Button>
+		<QuickCssEditor
+			ariaLabel={i18n._(THEME_CSS_DESCRIPTOR)}
+			value={draft}
+			onChange={setDraft}
+			onSave={handleSave}
+			readOnly={readOnly}
+			cacheKey={cacheKey}
+			cachedState={cached}
+			readStoredCss={() => theme.css}
+			filePicker={filePicker}
+			actions={actions}
+			notes={
+				linkedLine ? (
+					<div className={styles.lines} data-flx="theme-settings.quick-css-editor-window.theme-file.lines">
+						<p className={styles.line} data-flx="theme-settings.quick-css-editor-window.theme-file.line">
+							{linkedLine}
+						</p>
+						<div data-flx="theme-settings.quick-css-editor-window.theme-file.div">
+							<Button
+								variant="secondary"
+								small
+								onClick={() => void ThemeLibrary.unlinkTheme(theme.id)}
+								data-flx="theme-settings.quick-css-editor-window.theme-file.button"
+							>
+								<Trans comment="Button that stops a theme following its CSS file on disk and turns it back into an editable copy.">
+									Unlink
+								</Trans>
+							</Button>
+						</div>
 					</div>
-				</div>
-			) : null}
-			<QuickCssEditor
-				ariaLabel={i18n._(THEME_CSS_DESCRIPTOR)}
-				baseTheme={getThemeBaseKind(Theme.effectiveTheme)}
-				className={styles.editor}
-				value={draft}
-				onChange={setDraft}
-				readOnly={readOnly}
-				cacheKey={cacheKey}
-				cachedState={cached}
-				readStoredCss={() => theme.css}
-				data-flx="theme-settings.quick-css-editor-window.theme-file.editor.set-draft"
-			/>
-			<QuickCssFooter
-				text={draft}
-				showsInApp={false}
-				data-flx="theme-settings.quick-css-editor-window.theme-file.quick-css-footer"
-			/>
-		</>
+				) : null
+			}
+			previewStatus={previewStatus}
+			data-flx="theme-settings.quick-css-files.theme-file.editor"
+		/>
 	);
 });
 

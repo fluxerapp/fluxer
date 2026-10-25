@@ -13,6 +13,7 @@ import {ColorsAndFontsSection} from '@app/features/theme_settings/components/Col
 import {requestQuickCssEditorClose} from '@app/features/theme_settings/components/QuickCssEditorDiscard';
 import {useQuickCssPanelControls} from '@app/features/theme_settings/components/QuickCssEditorPanel';
 import {QuickCssFiles} from '@app/features/theme_settings/components/QuickCssFiles';
+import {QuickCssReference} from '@app/features/theme_settings/components/QuickCssReference';
 import styles from '@app/features/theme_settings/components/QuickCssWorkspace.module.css';
 import {ThisAccountSection} from '@app/features/theme_settings/components/ThisAccountSection';
 import {YourThemesSection} from '@app/features/theme_settings/components/YourThemesSection';
@@ -56,6 +57,10 @@ const THEMES_TAB_DESCRIPTOR = msg({
 const ASSETS_TAB_DESCRIPTOR = msg({
 	message: 'Assets',
 	comment: 'Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.',
+});
+const REFERENCE_TAB_DESCRIPTOR = msg({
+	message: 'Reference',
+	comment: 'Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.',
 });
 const MOVE_EDITOR_DESCRIPTOR = msg({
 	message: 'Move the editor. Use the arrow keys to move it.',
@@ -119,6 +124,7 @@ const WorkspaceHeader: React.FC = observer(() => {
 		{key: 'colors', label: i18n._(COLORS_AND_FONTS_TAB_DESCRIPTOR)},
 		{key: 'themes', label: i18n._(THEMES_TAB_DESCRIPTOR)},
 		{key: 'assets', label: i18n._(ASSETS_TAB_DESCRIPTOR)},
+		{key: 'reference', label: i18n._(REFERENCE_TAB_DESCRIPTOR)},
 	];
 	const floating = panel?.mode === 'floating';
 	const handleHeaderPointerDown = (event: React.PointerEvent<HTMLElement>) => {
@@ -300,6 +306,11 @@ export const QuickCssWorkspace: React.FC = observer(() => {
 							<ThisAccountSection data-flx="theme-settings.quick-css-workspace.this-account-section" />
 						) : null}
 						<YourThemesSection data-flx="theme-settings.quick-css-workspace.your-themes-section" />
+					</SettingsTabBody>
+				) : null}
+				{tab === 'reference' ? (
+					<SettingsTabBody data-flx="theme-settings.quick-css-workspace.reference">
+						<QuickCssReference data-flx="theme-settings.quick-css-workspace.quick-css-reference" />
 					</SettingsTabBody>
 				) : null}
 				{tab === 'assets' ? (

@@ -25,6 +25,7 @@ interface CustomThemeStyleOptions {
 	themeLibraryLocalFiles: ReadonlyArray<ThemeLibraryLocalFileReference>;
 	themeLibraryRevision: number;
 	onMissingReferences: (references: ReadonlyArray<string>) => void;
+	onBlockedUrl: (url: string) => void;
 }
 
 export function useInstanceCustomCss(instanceCss: string | null): void {
@@ -122,8 +123,18 @@ export function useCustomThemeStyle({
 	themeLibraryLocalFiles,
 	themeLibraryRevision,
 	onMissingReferences,
+	onBlockedUrl,
 }: CustomThemeStyleOptions): void {
 	const applierRef = useRef<ThemeCssApplier>({pending: null, running: false, disposed: false, objectUrls: []});
+	const requestedCssRef = useRef('');
+	useEffect(() => {
+		const handleViolation = (event: SecurityPolicyViolationEvent): void => {
+			const url = event.blockedURI;
+			if (url && requestedCssRef.current.includes(url)) onBlockedUrl(url);
+		};
+		document.addEventListener('securitypolicyviolation', handleViolation);
+		return () => document.removeEventListener('securitypolicyviolation', handleViolation);
+	}, [onBlockedUrl]);
 	useEffect(() => {
 		const applier = applierRef.current;
 		applier.disposed = false;
@@ -136,11 +147,13 @@ export function useCustomThemeStyle({
 	}, []);
 	useEffect(() => {
 		const applier = applierRef.current;
+		const css = [enabledThemeCss, customThemeCss]
+			.map((value) => value?.trim() ?? '')
+			.filter(Boolean)
+			.join('\n\n');
+		requestedCssRef.current = css;
 		applier.pending = {
-			css: [enabledThemeCss, customThemeCss]
-				.map((value) => value?.trim() ?? '')
-				.filter(Boolean)
-				.join('\n\n'),
+			css,
 			assets: themeLibraryAssets,
 			localFiles: themeLibraryLocalFiles,
 			onMissingReferences,

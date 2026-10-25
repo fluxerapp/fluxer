@@ -11,6 +11,7 @@ import AccountThemeMode from '@app/features/theme/state/AccountThemeMode';
 import InstallationTheme from '@app/features/theme/state/InstallationTheme';
 import ThemeEditTarget, {type ThemeTarget} from '@app/features/theme/state/ThemeEditTarget';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -52,7 +53,7 @@ class ThemeProfile {
 	}
 
 	get activeThemeCss(): string {
-		return ThemeLibrary.themeCssFor(this.enabledThemeIds);
+		return ThemeLibrary.themeCssFor(this.enabledThemeIds, ThemeSettingsState.themePreview);
 	}
 
 	themePreferenceFor(target: ThemeTarget): ThemeType {

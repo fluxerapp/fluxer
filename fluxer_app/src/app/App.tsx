@@ -216,6 +216,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		themeLibraryLocalFiles: ThemeLibrary.localFiles,
 		themeLibraryRevision: ThemeLibrary.revision,
 		onMissingReferences: ThemeSettingsState.setMissingReferences,
+		onBlockedUrl: ThemeSettingsState.recordBlockedUrl,
 	});
 	return (
 		<LayoutVariantProvider value={layoutVariantContextValue} data-flx="app.app.app-wrapper.layout-variant-provider">

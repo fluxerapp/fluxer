@@ -166,10 +166,10 @@ class ThemeLibrary {
 		return this.themes.some((theme) => theme.id === id);
 	}
 
-	themeCssFor(themeIds: ReadonlyArray<string>): string {
+	themeCssFor(themeIds: ReadonlyArray<string>, preview: {id: string; css: string} | null = null): string {
 		const byId = new Map(this.themes.map((theme) => [theme.id, theme]));
 		return themeIds
-			.map((id) => byId.get(id)?.css.trim() ?? '')
+			.map((id) => (id === preview?.id ? preview.css : (byId.get(id)?.css ?? '')).trim())
 			.filter(Boolean)
 			.join('\n\n');
 	}

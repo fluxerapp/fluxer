@@ -4,6 +4,7 @@ import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSe
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
+import {flushEditorHistory} from '@app/features/theme_settings/editor/EditorStateCache';
 import ThemeSettingsState, {
 	QUICK_CSS_EDITOR_FILE,
 	type QuickCssEditorPlacement,
@@ -13,6 +14,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import ModalState from '@app/features/ui/state/Modal';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import type {EditorView} from '@codemirror/view';
 
 export const QUICK_CSS_EDITOR_WINDOW_KEY = 'fluxer_quick_css_editor';
 
@@ -22,10 +24,28 @@ interface QuickCssEditorFocusHandle {
 }
 
 let editorFocusHandle: QuickCssEditorFocusHandle | null = null;
+let activeEditorView: EditorView | null = null;
 let focusBeforeOpen: HTMLElement | null = null;
 
 export function setQuickCssEditorFocusHandle(handle: QuickCssEditorFocusHandle | null): void {
 	editorFocusHandle = handle;
+}
+
+export function registerQuickCssEditorView(view: EditorView): () => void {
+	activeEditorView = view;
+	return () => {
+		if (activeEditorView === view) activeEditorView = null;
+	};
+}
+
+export function insertIntoQuickCssEditor(text: string): void {
+	const view = activeEditorView;
+	ThemeSettingsState.setEditorTab('css');
+	if (!view) return;
+	if (!view.state.readOnly) {
+		view.dispatch(view.state.replaceSelection(text), {scrollIntoView: true, userEvent: 'input'});
+	}
+	view.focus();
 }
 
 export function setEditedCustomThemeCss(css: string | null): void {
@@ -42,6 +62,7 @@ export function canPopOutQuickCssEditor(): boolean {
 
 export function flushQuickCssWrites(): void {
 	ThemeSettingsState.quickCssWriteFlusher?.();
+	flushEditorHistory();
 }
 
 function rememberFocus(): void {

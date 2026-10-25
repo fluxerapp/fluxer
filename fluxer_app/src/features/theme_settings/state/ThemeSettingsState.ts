@@ -9,7 +9,14 @@ const EXPANDED_GROUPS_STORAGE_KEY = 'ThemeStudio:expandedGroups';
 export const QUICK_CSS_EDITOR_FILE = 'quick-css';
 
 export type QuickCssEditorPlacement = 'panel' | 'window';
-export type QuickCssEditorTab = 'css' | 'colors' | 'themes' | 'assets';
+export type QuickCssEditorTab = 'css' | 'colors' | 'themes' | 'assets' | 'reference';
+
+export interface ThemePreview {
+	id: string;
+	css: string;
+}
+
+const BLOCKED_URL_LIMIT = 50;
 
 function readStoredPlacement(): QuickCssEditorPlacement {
 	try {
@@ -42,6 +49,8 @@ class ThemeSettingsState {
 	editorFile: string = QUICK_CSS_EDITOR_FILE;
 	editorDirty = false;
 	missingReferences: ReadonlyArray<string> = [];
+	blockedUrls: ReadonlyArray<string> = [];
+	themePreview: ThemePreview | null = null;
 	editorWindow: Window | null = null;
 	editorFileRequestHandler: ((file: string) => void) | null = null;
 	quickCssWriteFlusher: (() => void) | null = null;
@@ -152,6 +161,16 @@ class ThemeSettingsState {
 
 	setMissingReferences(references: ReadonlyArray<string>): void {
 		this.missingReferences = references;
+	}
+
+	recordBlockedUrl(url: string): void {
+		if (this.blockedUrls.includes(url)) return;
+		this.blockedUrls = [...this.blockedUrls, url].slice(-BLOCKED_URL_LIMIT);
+	}
+
+	setThemePreview(preview: ThemePreview | null): void {
+		if (preview === null && this.themePreview === null) return;
+		this.themePreview = preview;
 	}
 }
 
