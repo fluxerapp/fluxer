@@ -14,6 +14,8 @@ import {
 	REMOVED_FROM_FAVORITES_TOAST_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Favorites from '@app/features/messaging/state/Favorites';
+import {MusicButton} from '@app/features/music/components/MusicButton';
+import {MusicPanel} from '@app/features/music/components/MusicPanel';
 import {goBackOr} from '@app/features/platform/components/router/NavigationAdapter';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -655,6 +657,12 @@ const VoiceCallViewInner = observer(
 						fullscreenLabel={fullscreenButtonLabel}
 						fullscreenIcon={FullscreenButtonIcon}
 						onToggleFullscreen={handleToggleVoiceCallAppFullscreen}
+						extraControls={
+							<MusicButton
+								className={styles.voiceHeaderIconButton}
+								data-flx="voice.voice-call-view.voice-call-view-inner.music-button"
+							/>
+						}
 						volumeControl={
 							<FocusedStreamVolumeControl
 								track={isFocusedOnScreenShare ? effectiveFocusMainTrack : null}
@@ -718,6 +726,7 @@ const VoiceCallViewInner = observer(
 							data-flx="voice.voice-call-view.voice-call-view-inner.popped-out-overlay"
 						/>
 					)}
+					<MusicPanel data-flx="voice.voice-call-view.voice-call-view-inner.music-panel" />
 				</div>
 			</PortalHostContext.Provider>
 		);

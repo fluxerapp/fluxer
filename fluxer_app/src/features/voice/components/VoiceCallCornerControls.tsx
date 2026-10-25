@@ -24,6 +24,7 @@ interface VoiceCallCornerControlsProps {
 	fullscreenIcon: Icon;
 	onToggleFullscreen: () => void;
 	volumeControl?: React.ReactNode;
+	extraControls?: React.ReactNode;
 }
 
 export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = ({
@@ -37,6 +38,7 @@ export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = (
 	fullscreenIcon,
 	onToggleFullscreen,
 	volumeControl,
+	extraControls,
 }) => {
 	const {i18n} = useLingui();
 	const PopOutIcon = useMemo(() => {
@@ -53,6 +55,7 @@ export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = (
 	}, []);
 	return (
 		<div className={wrapClassName} data-voice-call-corner data-flx="voice.voice-call-corner-controls.wrap">
+			{extraControls}
 			{volumeControl}
 			{showPopout && onPopOut && (
 				<ChannelHeaderIcon

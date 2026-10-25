@@ -40,6 +40,7 @@ COPY packages/desktop_ipc/package.json ./packages/desktop_ipc/
 COPY packages/geo_utils/package.json ./packages/geo_utils/
 COPY packages/instance_bootstrap/package.json ./packages/instance_bootstrap/
 COPY packages/limits/package.json ./packages/limits/
+COPY packages/music_protocol/package.json ./packages/music_protocol/
 COPY packages/number_utils/package.json ./packages/number_utils/
 COPY packages/record_utils/package.json ./packages/record_utils/
 COPY packages/schema/package.json ./packages/schema/
@@ -56,6 +57,7 @@ COPY packages/desktop_ipc/ ./packages/desktop_ipc/
 COPY packages/geo_utils/ ./packages/geo_utils/
 COPY packages/instance_bootstrap/ ./packages/instance_bootstrap/
 COPY packages/limits/ ./packages/limits/
+COPY packages/music_protocol/ ./packages/music_protocol/
 COPY packages/number_utils/ ./packages/number_utils/
 COPY packages/record_utils/ ./packages/record_utils/
 COPY packages/schema/ ./packages/schema/

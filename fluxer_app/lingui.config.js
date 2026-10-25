@@ -40,6 +40,7 @@ export default {
 		'zh-TW',
 	],
 	sourceLocale: 'en-US',
+	fallbackLocales: {default: 'en-US'},
 	catalogs: [
 		{
 			path: 'src/features/i18n/locales/{locale}/messages',

@@ -2426,6 +2426,11 @@ msgstr "メンション"
 msgid "/tts"
 msgstr "/tts"
 
+#. Music activity line. {name} is a user, {title} a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "↕ {name} moved {title}"
+msgstr ""
+
 #. Badge on the forward modal preview thumbnail. count is the number of other attachments that the thumbnail does not show.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "+{count}"
@@ -2497,6 +2502,71 @@ msgstr "<0>転送元</0>{sourceInfo}"
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>、<1>Amara</1>、<2>Mateo</2>が入力中..."
+
+#. Music activity line. {name} is a user, {title} a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⏩ {name} jumped within {title}"
+msgstr ""
+
+#. Music activity line. {name} is a user, {title} a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⏭ {name} skipped {title}"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⏸ {name} paused the music"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⏹ {name} stopped the music"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "▶ {name} resumed the music"
+msgstr ""
+
+#. Music activity line. {title} is a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⚠ Couldn't play {title}"
+msgstr ""
+
+#. Music activity line. {title} is a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⚠ No YouTube match for {title}"
+msgstr ""
+
+#. Music activity line shown when YouTube refuses requests.
+#: src/features/music/components/MusicPanel.tsx
+msgid "⚠ YouTube may be blocking the bot"
+msgstr ""
+
+#. Music activity line. {name} is a user, {title} a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "✕ {name} removed {title}"
+msgstr ""
+
+#. Music activity line. {name} is a user, {title} a song.
+#: src/features/music/components/MusicPanel.tsx
+msgid "➕ {name} added {title}"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "🔀 {name} shuffled the queue"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "🔁 {name} changed the loop mode"
+msgstr ""
+
+#. Music activity line. {name} is a user.
+#: src/features/music/components/MusicPanel.tsx
+msgid "🗑 {name} cleared the queue"
+msgstr ""
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -2870,6 +2940,11 @@ msgstr "コミュニティごとのプロフィール"
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "A small mark next to your instance's name in the account switcher and the instance list. Use a square PNG or SVG with a transparent background that is still clear at 16 pixels, up to {size}."
 msgstr "アカウントスイッチャーとインスタンス一覧で、インスタンス名の横に表示される小さなマークです。16ピクセルでも見分けやすい、背景が透明な正方形のPNGまたはSVG（{size}まで）を使用してください。"
+
+#. Fallback in the music activity line when the song title is unknown.
+#: src/features/music/components/MusicPanel.tsx
+msgid "a song"
+msgstr ""
 
 #. What an Operator Pass gives, shown at checkout and when someone offers you a pass. The Operators' wall is the list of Operators on the homepage. Whenever you want it means the buyer can choose not to be listed and join the wall later. Operator is the badge name. For life means for as long as the official service and website run, and the part after it says so. {productName} is the product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
@@ -3245,9 +3320,11 @@ msgstr "実際のサイズ"
 #. Action label for adding the current selection.
 #. Button label in the sticker or favorite media editor that adds the typed tag to the tag list.
 #. Button or menu action label in the add custom search engine modal. Keep it concise.
+#. Button that adds a search result to the music queue.
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx
 #: src/features/expressions/components/modals/TagListField.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+#: src/features/music/components/MusicSearch.tsx
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
@@ -3905,6 +3982,16 @@ msgstr "アバターを追加しました"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "Added an invite background"
 msgstr "招待背景を追加しました"
+
+#. Under a queued song. {name} is the user who added it.
+#: src/features/music/components/MusicQueue.tsx
+msgid "added by {name}"
+msgstr ""
+
+#. Under the current song in the music panel. {name} is the user who added the song.
+#: src/features/music/components/NowPlaying.tsx
+msgid "Added by {name}"
+msgstr ""
 
 #. Row in the list of Operator Passes for a pass our staff added to the account. {date} is a date without a time.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -8515,11 +8602,13 @@ msgstr "マイクの音声をクリアにします。"
 
 #. Button in a forum channel tag filter that removes every selected tag.
 #. Button in the quick CSS editor window that deletes all quick CSS.
+#. Button that clears the music queue.
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/channel/components/message_search_bar/HistorySection.tsx
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
+#: src/features/music/components/MusicQueue.tsx
 #: src/features/theme_settings/components/QuickCssEditorWindow.tsx
 msgid "Clear"
 msgstr "クリア"
@@ -8620,6 +8709,11 @@ msgstr "検索入力をクリア"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Clear selection"
 msgstr "選択を解除"
+
+#. Title of the confirmation dialog for clearing the music queue.
+#: src/features/music/components/MusicQueue.tsx
+msgid "Clear the queue?"
+msgstr ""
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
@@ -8816,6 +8910,11 @@ msgstr "メディアビューアを閉じる"
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Close modal"
 msgstr "モーダルを閉じる"
+
+#. Aria label of the button that closes the music panel.
+#: src/features/music/components/MusicPanel.tsx
+msgid "Close music panel"
+msgstr ""
 
 #. Body of the close confirmation alert for a group DM. Reassures that the DM can be reopened.
 #: src/features/channel/components/direct_message/useDMListItemHandlers.tsx
@@ -10905,6 +11004,10 @@ msgstr "投稿を読み込めませんでした。後でもう一度お試しく
 #: src/features/app/components/dialogs/LoadableSettingsModals.tsx
 msgid "Couldn't load settings"
 msgstr "設定を読み込めませんでした"
+
+#: src/features/music/MusicErrors.ts
+msgid "Couldn't load that. Try again in a moment."
+msgstr ""
 
 #. Notice when the incoming Operator Pass offer could not be loaded.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
@@ -21040,7 +21143,13 @@ msgstr "公開中"
 msgid "Live region"
 msgstr "ライブリージョン"
 
+#: src/features/music/MusicErrors.ts
+msgid "Live streams can't be played."
+msgstr ""
+
+#. Button that loads more songs of the music queue.
 #. Button that loads the next page of archived threads.
+#: src/features/music/components/MusicQueue.tsx
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Load more"
 msgstr "さらに読み込む"
@@ -21208,6 +21317,21 @@ msgstr "見た目"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "{0}をお使いのようです。その上に{PRODUCT_NAME}の処理を重ねると、ポンピングや歪みが発生する可能性があります。ダイレクト入力では、オーディオはそのまま通過します。"
+
+#. Music loop button label when looping is off.
+#: src/features/music/components/MusicControls.tsx
+msgid "Loop: off"
+msgstr ""
+
+#. Music loop button label when the whole queue repeats.
+#: src/features/music/components/MusicControls.tsx
+msgid "Loop: queue"
+msgstr ""
+
+#. Music loop button label when the current song repeats.
+#: src/features/music/components/MusicControls.tsx
+msgid "Loop: song"
+msgstr ""
 
 #: src/features/auth/flow/IpAuthorizationScreen.tsx
 msgid "Lost connection while waiting for authorization. Try again."
@@ -22980,7 +23104,11 @@ msgid "Multiple people are typing..."
 msgstr "複数のユーザーが入力中です…"
 
 #. Category dropdown option in the "Explore" tab in community settings.
+#. Heading of the music panel in the voice call view.
+#. Tooltip / aria label on the voice call button that opens the music panel.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+#: src/features/music/components/MusicButton.tsx
+#: src/features/music/components/MusicPanel.tsx
 msgid "Music"
 msgstr "音楽"
 
@@ -24213,6 +24341,10 @@ msgstr "結果なし"
 msgid "No results found"
 msgstr "結果が見つかりませんでした"
 
+#: src/features/music/MusicErrors.ts
+msgid "No results."
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "No ring"
@@ -24610,6 +24742,11 @@ msgstr "チームからのコメント: {statement}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Nothing"
 msgstr "なし"
+
+#. Shown in the music panel when the queue is empty.
+#: src/features/music/components/NowPlaying.tsx
+msgid "Nothing is playing"
+msgstr ""
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
 msgid "Nothing matches"
@@ -26269,6 +26406,11 @@ msgstr "貼り付け"
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "構造を新しいコミュニティにインポートするには、{theOtherPlatform}のテンプレートURLを貼り付けてください。"
 
+#. Placeholder of the search box in the music panel.
+#: src/features/music/components/MusicSearch.tsx
+msgid "Paste a link or search for a song"
+msgstr ""
+
 #. Native macOS Edit menu item that pastes the clipboard contents using the formatting of the surrounding text. Imperative verb.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Paste and match style"
@@ -26295,7 +26437,9 @@ msgid "Paste the message link."
 msgstr "メッセージのリンクを貼り付けてください。"
 
 #. Generic media-player control: pause playback.
+#. Music control button label.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
+#: src/features/music/components/MusicControls.tsx
 msgid "Pause"
 msgstr "一時停止"
 
@@ -26914,8 +27058,10 @@ msgid "Platform admin"
 msgstr "プラットフォーム管理者"
 
 #. Generic media-player control: start playback.
+#. Music control button label.
 #. Play-preview button label in the voice message composer modal.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
+#: src/features/music/components/MusicControls.tsx
 #: src/features/voice/components/VoiceMessageComposerModal.tsx
 msgid "Play"
 msgstr "再生"
@@ -26924,6 +27070,11 @@ msgstr "再生"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Play animated emojis"
 msgstr "アニメーション絵文字を再生"
+
+#. Button that adds a search result to the front of the music queue.
+#: src/features/music/components/MusicSearch.tsx
+msgid "Play next"
+msgstr ""
 
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
@@ -28707,6 +28858,11 @@ msgstr "お気に入りから削除"
 #: src/features/ui/action_menu/UserContextMenu.tsx
 msgid "Remove from group"
 msgstr "グループから削除"
+
+#. Aria label of the button that removes a song from the queue.
+#: src/features/music/components/MusicQueue.tsx
+msgid "Remove from queue"
+msgstr ""
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
@@ -30924,8 +31080,10 @@ msgstr "テキストチャンネルを検索中"
 msgid "Searching voice channels"
 msgstr "ボイスチャンネルを検索中"
 
+#. Shown while music search results load.
 #. Status under the forum search box while results load.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
+#: src/features/music/components/MusicSearch.tsx
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -31038,6 +31196,11 @@ msgstr "このチャンネルのメンバーリストを表示できます。"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "このチャンネルを表示できます。{everyoneMention} に対してこれを拒否すると、チャンネルはプライベートになります。"
+
+#. Aria label of the song progress bar in the music panel.
+#: src/features/music/components/NowPlaying.tsx
+msgid "Seek"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
@@ -32716,6 +32879,11 @@ msgstr "YouTubeのリンクが投稿されたときに、タイトルとサム�
 msgid "Shows when someone adds the web app to their home screen and next to the join date on profiles. It also fills in for the logo, symbol and favicon when those are empty. Use a square PNG, at least 512 by 512 pixels and up to {size}."
 msgstr "Webアプリをホーム画面に追加したときと、プロフィールの登録日の横に表示されます。ロゴ、シンボル、ファビコンが空欄のときは、その代わりにも使われます。正方形のPNG（512×512ピクセル以上、{size}まで）を使用してください。"
 
+#. Music control button label that shuffles the queue.
+#: src/features/music/components/MusicControls.tsx
+msgid "Shuffle"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Sidebar"
@@ -33036,8 +33204,10 @@ msgid "Skin tone"
 msgstr "肌の色"
 
 #. Creates the private channel without adding anyone in the channel create modal.
+#. Music control button label that skips the current song.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx
+#: src/features/music/components/MusicControls.tsx
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Skip"
 msgstr "スキップ"
@@ -33324,6 +33494,15 @@ msgstr "アップロードしようとしているファイルの一部は、1�
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx
 msgid "Some users can't be added"
 msgstr "追加できないユーザーがいます"
+
+#. Fallback name in the music activity line when the user who did something is unknown.
+#. Fallback name when the user who added a song is unknown.
+#. Fallback name when the user who added a song is unknown.
+#: src/features/music/components/MusicPanel.tsx
+#: src/features/music/components/MusicQueue.tsx
+#: src/features/music/components/NowPlaying.tsx
+msgid "someone"
+msgstr ""
 
 #. Plutonium page hero subtitle for gifted members. date is a formatted calendar date.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -34253,6 +34432,11 @@ msgstr "確認中です…"
 #: src/features/voice/components/VoiceMessageComposerModal.tsx
 msgid "Stop"
 msgstr "停止"
+
+#. Music control button label that stops the music and makes the bot leave.
+#: src/features/music/components/MusicControls.tsx
+msgid "Stop and disconnect"
+msgstr ""
 
 #. Title of the confirmation shown when a member turns off the Announcement channel switch in channel settings, which converts the channel back into a normal text channel.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
@@ -35357,6 +35541,10 @@ msgstr "お知らせいただきありがとうございます。この内容だ
 msgid "That code is not valid on {instanceHost}. Check the code in the {productName} app and try again."
 msgstr "そのコードは {instanceHost} では無効です。{productName} アプリでコードを確認してから、もう一度お試しください。"
 
+#: src/features/music/MusicErrors.ts
+msgid "That didn't work."
+msgstr ""
+
 #. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx
 msgid "That didn't work. Try again or cancel."
@@ -35405,12 +35593,20 @@ msgstr "そのメッセージは削除されたか、会話へのアクセス権
 msgid "That setup token doesn't match. Check that you copied all of it."
 msgstr "このセットアップトークンは一致しません。全部コピーできているか確認してください。"
 
+#: src/features/music/MusicErrors.ts
+msgid "That song isn't in the queue anymore."
+msgstr ""
+
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx
 msgid "That's all of them."
 msgstr "ブックマークは以上です。"
+
+#: src/features/music/MusicErrors.ts
+msgid "That's longer than 3 hours."
+msgstr ""
 
 #. Notice in the Operator Pass checkout dialog when the pass cannot be bought in the country of the buyer. Operator Pass is a product name.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
@@ -35621,6 +35817,10 @@ msgstr "対象のメンバー"
 msgid "The message to send."
 msgstr "送信するメッセージ"
 
+#: src/features/music/MusicErrors.ts
+msgid "The music bot didn't answer."
+msgstr ""
+
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
 msgid "The name was reverted to what it was before. Please try again in a moment."
@@ -35682,6 +35882,15 @@ msgstr "指定されたredirect_uriは、このアプリケーションに登録
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "指定されたredirect_uriはHTTPまたはHTTPSを使用する必要があります。"
+
+#. Shown in the music panel when no songs are queued.
+#: src/features/music/components/MusicQueue.tsx
+msgid "The queue is empty"
+msgstr ""
+
+#: src/features/music/MusicErrors.ts
+msgid "The queue is full (500 songs)."
+msgstr ""
 
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
@@ -36819,6 +37028,11 @@ msgstr "すべての色、フォント、サイズの設定が削除されます
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "すべてのカスタムショートカットを削除し、組み込みのショートカットをすべて有効にします。この操作は元に戻せません。"
+
+#. Body of the confirmation dialog for clearing the music queue.
+#: src/features/music/components/MusicQueue.tsx
+msgid "This removes every upcoming song. The current song keeps playing."
+msgstr ""
 
 #. Shown in the modal that applies a shared theme to the current account's own theme. {username} is the account's username and {instanceName} is its instance.
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
@@ -37993,6 +38207,11 @@ msgstr "2段階認証のバックアップコード"
 msgid "Type a color (hex, rgb(), hsl(), or name) or use the picker."
 msgstr "色（16進数、rgb()、hsl()、または名前）を入力するか、ピッカーを使用してください。"
 
+#. Placeholder of the search box in the music panel when no music bot is in the call yet.
+#: src/features/music/components/MusicSearch.tsx
+msgid "Type a song name or paste a link to start the music bot"
+msgstr ""
+
 #. Label in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "Type your message here…"
@@ -38203,6 +38422,11 @@ msgstr "スピーカーミュートを解除"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Undeafen all devices"
 msgstr "すべてのデバイスのスピーカーミュートを解除"
+
+#. Shown in the music panel while the user is deafened, since music cannot be heard or controlled.
+#: src/features/music/components/MusicPanel.tsx
+msgid "Undeafen to use music"
+msgstr ""
 
 #. Voice control label. Restores what the current user hears in voice chat. Distinct from microphone unmute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -38823,6 +39047,11 @@ msgstr "自分でオンにするまで"
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts
 msgid "Unverified email"
 msgstr "未確認のメールアドレス"
+
+#. Heading of the music queue list.
+#: src/features/music/components/MusicQueue.tsx
+msgid "Up next"
+msgstr ""
 
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up when people search in Explore."
