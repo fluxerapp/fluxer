@@ -158,7 +158,6 @@ const SearchIndexTypeEnum = createNamedStringLiteralUnion(
 		['audit_logs', 'audit_logs', 'Audit log search index'],
 		['channel_messages', 'channel_messages', 'Channel message search index'],
 		['guild_members', 'guild_members', 'Guild member search index'],
-		['favorite_memes', 'favorite_memes', 'Favourite meme search index'],
 		['discovery', 'discovery', 'Discovery guild search index'],
 		['threads', 'threads', 'Thread search index'],
 		['all', 'all', 'Every search index, with messages in every channel and DM'],
@@ -309,7 +308,6 @@ export type SearchIndexNameParam = z.infer<typeof SearchIndexNameParam>;
 
 export const RefreshSearchIndexRequest = z.object({
 	guild_id: SnowflakeType.optional().describe('Specific guild ID to reindex'),
-	user_id: SnowflakeType.optional().describe('Specific user ID to reindex'),
 });
 
 export type RefreshSearchIndexRequest = z.infer<typeof RefreshSearchIndexRequest>;

@@ -27,7 +27,6 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 		| 'reports'
 		| 'audit_logs'
 		| 'channel_messages'
-		| 'favorite_memes'
 		| 'guild_members'
 		| 'discovery'
 		| 'threads'
@@ -36,7 +35,6 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 	audit_log_reason: string | null;
 	job_id: string;
 	guild_id?: string;
-	user_id?: string;
 }
 
 interface AdminSearchServiceDeps {
@@ -178,12 +176,10 @@ export class AdminSearchService {
 				| 'audit_logs'
 				| 'channel_messages'
 				| 'guild_members'
-				| 'favorite_memes'
 				| 'discovery'
 				| 'threads'
 				| 'all';
 			guild_id?: bigint;
-			user_id?: bigint;
 		},
 		adminUserId: UserID,
 		auditLogReason: string | null,
@@ -215,12 +211,6 @@ export class AdminSearchService {
 			}
 			payload.guild_id = data.guild_id.toString();
 		}
-		if (data.index_type === 'favorite_memes') {
-			if (!data.user_id) {
-				throw InputValidationError.create('user_id', 'user_id is required for the favorite_memes index type');
-			}
-			payload.user_id = data.user_id.toString();
-		}
 		let queuedJobId = jobId;
 		if (data.index_type === 'all') {
 			queuedJobId = await this.queueReindexAll(payload);
@@ -237,9 +227,6 @@ export class AdminSearchService {
 		}
 		if (data.guild_id) {
 			metadata.set('guild_id', data.guild_id.toString());
-		}
-		if (data.user_id) {
-			metadata.set('user_id', data.user_id.toString());
 		}
 		await auditService.createAuditLog({
 			adminUserId,

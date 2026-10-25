@@ -7173,7 +7173,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, favorite_memes requires user_id, and all rebuilds every index, one at a time. Queueing all while one is running returns the running refresh ID. Requires GUILD_LOOKUP permission.",
+				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and all rebuilds every index, one at a time. Queueing all while one is running returns the running refresh ID. Requires GUILD_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7189,7 +7189,6 @@
 								"audit_logs",
 								"channel_messages",
 								"guild_members",
-								"favorite_memes",
 								"discovery",
 								"threads",
 								"all"
@@ -7201,7 +7200,6 @@
 								"Audit log search index",
 								"Channel message search index",
 								"Guild member search index",
-								"Favourite meme search index",
 								"Discovery guild search index",
 								"Thread search index",
 								"Every search index, with messages in every channel and DM"
@@ -7213,7 +7211,6 @@
 								"audit_logs",
 								"channel_messages",
 								"guild_members",
-								"favorite_memes",
 								"discovery",
 								"threads",
 								"all"
@@ -14109,10 +14106,6 @@
 				"properties": {
 					"guild_id": {
 						"description": "Specific guild ID to reindex",
-						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
-					},
-					"user_id": {
-						"description": "Specific user ID to reindex",
 						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 					}
 				}

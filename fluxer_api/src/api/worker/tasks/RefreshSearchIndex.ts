@@ -54,7 +54,6 @@ const PayloadSchema = z
 		job_id: z.string(),
 		admin_user_id: z.string(),
 		guild_id: z.string().optional(),
-		user_id: z.string().optional(),
 	})
 	.refine(
 		(data) => {

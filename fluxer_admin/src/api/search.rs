@@ -18,7 +18,6 @@ impl AdminApiClient {
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let body = generated_types::RefreshSearchIndexRequest {
             guild_id: guild_id.map(snowflake),
-            user_id: None,
         };
         let response = self
             .generated()
