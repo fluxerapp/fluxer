@@ -121,6 +121,33 @@ describe('Player', () => {
 		expect(Math.abs(player.positionMs - 1500)).toBeLessThanOrEqual(30);
 	});
 
+	test('seek while paused stays paused', async () => {
+		const {sink, player} = make();
+		const paused = new Promise<void>((resolve) => {
+			sink.onFrame = (n) => {
+				if (n === 50) {
+					player.pause();
+					resolve();
+				}
+			};
+		});
+		player.play(tone);
+		await paused;
+		await sleep(50);
+		player.seek(1000);
+		const count = sink.frames;
+		expect(player.state).toBe('paused');
+		expect(Math.abs(player.positionMs - 1000)).toBeLessThanOrEqual(10);
+		expect(player.processAlive).toBe(false);
+		await sleep(200);
+		expect(sink.frames).toBe(count);
+		expect(player.state).toBe('paused');
+		const ended = once(player, 'ended');
+		player.resume();
+		await ended;
+		expect(Math.abs(sink.frames - count - 50)).toBeLessThanOrEqual(3);
+	});
+
 	test('stop() suppresses ended', async () => {
 		const {sink, player} = make();
 		let ended = false;

@@ -142,6 +142,13 @@ export class Player extends EventEmitter {
 
 	seek(ms: number): void {
 		if (this.input === null) return;
+		if (this.currentState === 'paused') {
+			this.killProcess();
+			this.startMs = ms;
+			this.framesSent = 0;
+			this.buffer = Buffer.alloc(0);
+			return;
+		}
 		this.play(this.input, ms);
 	}
 
