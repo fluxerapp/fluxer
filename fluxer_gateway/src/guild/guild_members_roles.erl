@@ -51,7 +51,7 @@ can_manage_roles(
     OwnerId = guild_members_common:owner_id(State),
     Reply =
         check_can_manage(UserId, RoleId, OwnerId, State) andalso
-            (UserId =:= TargetUserId orelse
+            (UserId =:= TargetUserId orelse TargetUserId =:= OwnerId orelse
                 check_can_manage_target(UserId, TargetUserId, OwnerId, State)),
     {reply, #{can_manage => Reply}, State}.
 
