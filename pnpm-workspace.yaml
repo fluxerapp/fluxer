@@ -172,7 +172,7 @@ catalog:
   vite: 8.3.4
   vitest: 5.0.1
   yaml: 2.9.1
-  zod: 4.6.5
+  zod: 4.6.7
 
 catalogs:
   ts7:
@@ -191,6 +191,7 @@ overrides:
   hunspell-asm@4.0.2>nanoid: 3.3.19
   semver: 7.8.5
   typed-css-modules@0.9.1>glob: 13.0.6
+  zod@^4: 'catalog:'
 
 patchedDependencies:
   '@phosphor-icons/react@2.1.10': patches/@phosphor-icons__react@2.1.10.patch
