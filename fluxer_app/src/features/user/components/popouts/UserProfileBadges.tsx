@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/user/components/popouts/UserProfileBadges.module.css';
+import {profileBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
 import type {ProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useEffect, useState} from 'react';
 
 interface UserProfileBadgesProps {
 	badges: ReadonlyArray<ProfileBadgeResponse>;
@@ -18,8 +20,32 @@ interface UserProfileBadgesProps {
 	'data-flx'?: string;
 }
 
-function badgeImageUrl(asset: string): string {
-	return `${RuntimeConfig.staticCdnEndpoint}/badges/${asset}.webp`;
+const BADGE_REVEAL_TIMEOUT_MS = 1000;
+
+function isSettledImage(url: string): boolean {
+	return ImageCacheUtils.hasImage(url) || ImageCacheUtils.hasFailedImage(url);
+}
+
+function useBadgeImagesReady(badges: ReadonlyArray<ProfileBadgeResponse>): boolean {
+	const key = badges.flatMap((badge) => (badge.asset === null ? [] : [profileBadgeImageUrl(badge.asset)])).join('\n');
+	const settled = key === '' || key.split('\n').every(isSettledImage);
+	const [readyKey, setReadyKey] = useState<string | null>(null);
+	useEffect(() => {
+		if (settled) return;
+		const urls = key.split('\n');
+		let pending = urls.length;
+		const settle = () => {
+			pending -= 1;
+			if (pending === 0) setReadyKey(key);
+		};
+		const cancels = urls.map((url) => ImageCacheUtils.loadImage(url, settle, settle));
+		const timer = window.setTimeout(() => setReadyKey(key), BADGE_REVEAL_TIMEOUT_MS);
+		return () => {
+			window.clearTimeout(timer);
+			for (const cancel of cancels) cancel();
+		};
+	}, [key, settled]);
+	return settled || readyKey === key;
 }
 
 function ProfileBadgeDetailsTooltip({
@@ -35,7 +61,7 @@ function ProfileBadgeDetailsTooltip({
 		<div className={styles.details} data-flx={dataFlx}>
 			{badge.asset !== null && (
 				<img
-					src={badgeImageUrl(badge.asset)}
+					src={profileBadgeImageUrl(badge.asset)}
 					alt=""
 					className={styles.detailsArt}
 					style={badge.aspect_ratio ? {width: 'auto', aspectRatio: badge.aspect_ratio} : undefined}
@@ -61,6 +87,7 @@ function opensPremiumModal(badge: ProfileBadgeResponse): boolean {
 
 export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 	({badges, isModal = false, isMobile = false, 'data-flx': dataFlx = 'user.user-profile-badges'}) => {
+		const ready = useBadgeImagesReady(badges);
 		if (badges.length === 0) {
 			return null;
 		}
@@ -103,12 +130,12 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			);
 		};
 		return (
-			<div className={containerClassName} data-flx={dataFlx}>
+			<div className={clsx(containerClassName, !ready && styles.pending)} data-flx={dataFlx}>
 				{badges.map((badge) => {
 					const content =
 						badge.asset !== null ? (
 							<img
-								src={badgeImageUrl(badge.asset)}
+								src={profileBadgeImageUrl(badge.asset)}
 								alt={badge.accessible_label ?? badge.caption ?? badge.label}
 								className={touch ? styles.badgeMobile : styles.badgeDesktop}
 								style={badge.aspect_ratio ? {width: 'auto', aspectRatio: badge.aspect_ratio} : undefined}

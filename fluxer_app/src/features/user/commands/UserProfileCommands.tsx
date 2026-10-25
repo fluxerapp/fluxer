@@ -16,6 +16,7 @@ import {Profile, type ProfileWire} from '@app/features/user/models/Profile';
 import UserProfile from '@app/features/user/state/UserProfile';
 import UserProfileMobile from '@app/features/user/state/UserProfileMobile';
 import Users from '@app/features/user/state/Users';
+import {warmProfileBadgeImages} from '@app/features/user/utils/ProfileUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {
 	ProfileBadgePreviewRequest,
@@ -66,6 +67,7 @@ async function requestProfile(userId: string, guildId?: string): Promise<Profile
 function storeProfile(profile: ProfileWire, guildId?: string): Profile {
 	Users.handleUserUpdate(profile.user);
 	const profileRecord = new Profile(profile, guildId);
+	warmProfileBadgeImages(profileRecord.profileBadges);
 	UserProfile.handleProfileCreate(profileRecord);
 	return profileRecord;
 }
