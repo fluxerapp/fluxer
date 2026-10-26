@@ -296,6 +296,10 @@
 	pointer-events: none;
 }
 
+.spinnerWrapper.hidden .spinnerItem {
+	animation: none;
+}
+
 .grid {
 	display: grid;
 	width: 100%;
