@@ -71,8 +71,19 @@ describe('personal notes instance policy', () => {
 		await sendChannelMessage(harness, alice.token, alice.userId, 'a note to self');
 	});
 
-	it('is off by default on a self-hosted instance and does not create the channel', async () => {
+	it('is on by default on a self-hosted instance with direct messages enabled', async () => {
 		Config.instance.selfHosted = true;
+		const alice = await createTestAccount(harness);
+		expect(await discoveredPersonalNotesEnabled()).toBe(true);
+		await sendChannelMessage(harness, alice.token, alice.userId, 'a note to self');
+	});
+
+	it('is off by default when direct messages are disabled and does not create the channel', async () => {
+		Config.instance.selfHosted = true;
+		await createBuilder<InstanceConfigResponse>(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({policy: {direct_messages_disabled: true}})
+			.execute();
 		const alice = await createTestAccount(harness);
 		await ensureSessionStarted(harness, alice.token);
 		const config = await createBuilder<InstanceConfigResponse>(harness, admin.token)
