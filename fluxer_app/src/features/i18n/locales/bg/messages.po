@@ -8264,6 +8264,7 @@ msgid "Choose a destination"
 msgstr "Избери дестинация"
 
 #. Button on a short link error screen that returns to the instance chooser.
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/auth/flow/AuthRuntimeTargetResetAction.tsx
 msgid "Choose a different instance"
 msgstr "Избери друг сървър"
@@ -10706,6 +10707,7 @@ msgid "Could not load the instance configuration. Try reloading the page."
 msgstr "Не успяхме да заредим конфигурацията на инстанцията. Опитай да презаредиш страницата."
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Could not load this page"
 msgstr "Страницата не можа да бъде заредена"
 
@@ -38495,6 +38497,7 @@ msgstr "Опитай с друго търсене."
 #. Generic action label for retrying a failed or interrupted operation.
 #: src/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.tsx
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Try again"
@@ -38521,6 +38524,7 @@ msgid "Try again or go back to the applications list."
 msgstr "Опитай отново или се върни към списъка с приложения."
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Try again, or refresh {productName} if the problem continues."
 msgstr "Опитай отново или обнови {productName}, ако проблемът продължава."
 

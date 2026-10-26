@@ -8264,6 +8264,7 @@ msgid "Choose a destination"
 msgstr "कोई गंतव्य चुनें"
 
 #. Button on a short link error screen that returns to the instance chooser.
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/auth/flow/AuthRuntimeTargetResetAction.tsx
 msgid "Choose a different instance"
 msgstr "कोई दूसरा इंस्टेंस चुनें"
@@ -10706,6 +10707,7 @@ msgid "Could not load the instance configuration. Try reloading the page."
 msgstr "इंस्टेंस कॉन्फ़िगरेशन लोड नहीं हो सका। पेज को रीलोड करने का प्रयास करें।"
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Could not load this page"
 msgstr "यह पेज लोड नहीं हो सका"
 
@@ -38495,6 +38497,7 @@ msgstr "कोई और खोज आज़माएँ।"
 #. Generic action label for retrying a failed or interrupted operation.
 #: src/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.tsx
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Try again"
@@ -38521,6 +38524,7 @@ msgid "Try again or go back to the applications list."
 msgstr "फिर से कोशिश करें या ऐप्लिकेशन सूची पर वापस जाएँ।"
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Try again, or refresh {productName} if the problem continues."
 msgstr "फिर से कोशिश करें, या समस्या बनी रहे तो {productName} को रीफ़्रेश करें।"
 

@@ -8264,6 +8264,7 @@ msgid "Choose a destination"
 msgstr "选择目标"
 
 #. Button on a short link error screen that returns to the instance chooser.
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/auth/flow/AuthRuntimeTargetResetAction.tsx
 msgid "Choose a different instance"
 msgstr "选择其他服务器"
@@ -10706,6 +10707,7 @@ msgid "Could not load the instance configuration. Try reloading the page."
 msgstr "无法加载实例配置。请尝试重新加载页面。"
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Could not load this page"
 msgstr "无法加载此页面"
 
@@ -38495,6 +38497,7 @@ msgstr "换个搜索词试试。"
 #. Generic action label for retrying a failed or interrupted operation.
 #: src/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.tsx
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Try again"
@@ -38521,6 +38524,7 @@ msgid "Try again or go back to the applications list."
 msgstr "请重试或返回应用列表。"
 
 #: src/features/auth/flow/AuthRouteLoadError.tsx
+#: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Try again, or refresh {productName} if the problem continues."
 msgstr "请重试，如果问题仍然存在，请刷新 {productName}。"
 
