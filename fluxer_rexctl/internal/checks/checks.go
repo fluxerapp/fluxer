@@ -69,6 +69,9 @@ type Env struct {
 	ps            []engine.Container
 	psErr         error
 	psDone        bool
+	pub           map[host.Port]string
+	pubErr        error
+	pubDone       bool
 }
 
 type Check struct {

@@ -187,8 +187,13 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		}
 	}
 	added, _ := portDiff(oldEnv, newEnv)
-	if err := checkPortsFree(added); err != nil {
+	if err := checkPortsFree(ctx, e, inst.Project(), added); err != nil {
 		return nil, err
+	}
+	if portKeyChanged(changed) {
+		if err := checkPortsDistinct(effectivePorts(newEnv, next[settings.EdgeMode])); err != nil {
+			return nil, err
+		}
 	}
 	if o.Confirm != nil && !o.Confirm(preview) {
 		return nil, ErrDeclined

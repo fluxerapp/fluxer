@@ -148,6 +148,53 @@ func projectVolumes(ctx context.Context, c client.APIClient, project string) ([]
 	return items, nil
 }
 
+type PortOwner struct {
+	Number  int
+	Proto   string
+	Project string
+}
+
+func (e *Engine) PublishedHostPorts(ctx context.Context) ([]PortOwner, error) {
+	c, err := e.api()
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.ContainerList(ctx, client.ContainerListOptions{})
+	if err != nil {
+		return nil, &Error{Op: "ports", Class: ClassOf(err), Err: err}
+	}
+	seen := map[PortOwner]bool{}
+	out := make([]PortOwner, 0, len(res.Items))
+	for _, s := range res.Items {
+		project := s.Labels[api.ProjectLabel]
+		for _, p := range s.Ports {
+			if p.PublicPort == 0 {
+				continue
+			}
+			proto := strings.ToLower(p.Type)
+			if proto != "tcp" && proto != "udp" {
+				continue
+			}
+			po := PortOwner{Number: int(p.PublicPort), Proto: proto, Project: project}
+			if seen[po] {
+				continue
+			}
+			seen[po] = true
+			out = append(out, po)
+		}
+	}
+	slices.SortFunc(out, func(a, b PortOwner) int {
+		if a.Number != b.Number {
+			return a.Number - b.Number
+		}
+		if c := strings.Compare(a.Proto, b.Proto); c != 0 {
+			return c
+		}
+		return strings.Compare(a.Project, b.Project)
+	})
+	return out, nil
+}
+
 func (e *Engine) Projects(ctx context.Context) ([]ProjectInfo, error) {
 	c, err := e.conn()
 	if err != nil {

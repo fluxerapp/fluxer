@@ -104,11 +104,9 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl.BoolVar(&f.TakeOver, "take-over", false, "take over Fluxer data found on this machine")
 	fl.BoolVar(&f.DeleteOld, "delete-old-data", false, "delete Fluxer data found on this machine and start fresh")
 	fl.StringVar(&f.Project, "project", defaultProject, "name for this instance's containers and volumes")
-	fl.IntVar(&f.VoiceTCPPort, "voice-tcp-port", 0, "the TCP port for voice and video")
-	fl.IntVar(&f.VoiceUDPPort, "voice-udp-port", 0, "the UDP port for voice and video")
-	for _, name := range []string{"project", "voice-tcp-port", "voice-udp-port"} {
-		_ = fl.MarkHidden(name)
-	}
+	fl.IntVar(&f.VoiceTCPPort, "voice-tcp-port", 0, "TCP port for voice and video, for running more than one instance on a host")
+	fl.IntVar(&f.VoiceUDPPort, "voice-udp-port", 0, "UDP port for voice and video, for running more than one instance on a host")
+	_ = fl.MarkHidden("project")
 	confirmFlag(c, &f.Confirm)
 	f.Setup.bind(c)
 	f.Storage.bind(c)
@@ -189,6 +187,7 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 		return err
 	}
 	f.Domain = normaliseDomain(f.Domain)
+	in.resolveVoicePorts(ctx)
 	if in.runChecks(ctx, checks.Preinstall) {
 		return notReady()
 	}
@@ -745,6 +744,84 @@ func (in *installer) settings() map[string]string {
 	}
 	if in.f.VoiceUDPPort > 0 {
 		out[stack.VoiceUDPPortKey] = strconv.Itoa(in.f.VoiceUDPPort)
+	}
+	return out
+}
+
+func (in *installer) resolveVoicePorts(ctx context.Context) {
+	tcpSet := in.f.VoiceTCPPort > 0
+	udpSet := in.f.VoiceUDPPort > 0
+	if tcpSet && udpSet {
+		return
+	}
+	pub := in.publishedPorts(ctx)
+	free := func(number int, proto string) bool {
+		if number < 1 || number > 65535 {
+			return false
+		}
+		used, _, err := host.PortInUse(proto, number)
+		if err != nil || used {
+			return false
+		}
+		return !pub[host.Port{Number: number, Proto: proto}]
+	}
+	switch {
+	case !tcpSet && !udpSet:
+		tcp, udp := pickVoicePair(free)
+		if tcp == 0 || tcp == 7881 {
+			return
+		}
+		in.f.VoiceTCPPort, in.f.VoiceUDPPort = tcp, udp
+		in.announceVoicePorts(tcp, udp)
+	case !tcpSet:
+		for tcp := 7881; tcp <= 65535; tcp += 2 {
+			if tcp != in.f.VoiceUDPPort && free(tcp, "tcp") {
+				in.f.VoiceTCPPort = tcp
+				return
+			}
+		}
+	case !udpSet:
+		for udp := 7882; udp <= 65535; udp += 2 {
+			if udp != in.f.VoiceTCPPort && free(udp, "udp") {
+				in.f.VoiceUDPPort = udp
+				return
+			}
+		}
+	}
+}
+
+func pickVoicePair(free func(number int, proto string) bool) (int, int) {
+	for tcp, udp := 7881, 7882; tcp <= 65533 && udp <= 65534; tcp, udp = tcp+2, udp+2 {
+		if free(tcp, "tcp") && free(udp, "udp") {
+			return tcp, udp
+		}
+	}
+	return 0, 0
+}
+
+func (in *installer) announceVoicePorts(tcp, udp int) {
+	msg := fmt.Sprintf("Ports 7881 and 7882 are already in use, so this instance will use %d and %d for voice and video.", tcp, udp)
+	in.plan = append(in.plan, msg)
+	if !in.f.DryRun {
+		in.app.UI.Info("%s", msg)
+	}
+}
+
+func (in *installer) publishedPorts(ctx context.Context) map[host.Port]bool {
+	out := map[host.Port]bool{}
+	e := in.engine
+	if e == nil {
+		e = in.found
+	}
+	if e == nil {
+		return out
+	}
+	owners, err := e.PublishedHostPorts(ctx)
+	if err != nil {
+		return out
+	}
+	for _, o := range owners {
+		out[host.Port{Number: o.Number, Proto: o.Proto}] = true
 	}
 	return out
 }

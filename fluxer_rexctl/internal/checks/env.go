@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,6 +84,42 @@ func (e *Env) SetEngine(en *engine.Engine, err error) {
 
 func (e *Env) reset() {
 	e.ps, e.psErr, e.psDone = nil, nil, false
+	e.pub, e.pubErr, e.pubDone = nil, nil, false
+}
+
+func (e *Env) published(ctx context.Context) (map[host.Port]string, bool) {
+	if e.pubDone {
+		return e.pub, e.pubErr == nil
+	}
+	e.pubDone = true
+	if e.Engine == nil {
+		e.pubErr = errNoProject
+		return nil, false
+	}
+	owners, err := e.Engine.PublishedHostPorts(ctx)
+	if err != nil {
+		e.pubErr = err
+		return nil, false
+	}
+	e.pub = map[host.Port]string{}
+	for _, o := range owners {
+		key := host.Port{Number: o.Number, Proto: o.Proto}
+		if _, ok := e.pub[key]; !ok {
+			e.pub[key] = o.Project
+		}
+	}
+	return e.pub, true
+}
+
+func (e *Env) voicePorts() (tcp, udp int) {
+	tcp, udp = 7881, 7882
+	if n, err := strconv.Atoi(e.value(stack.VoiceTCPPortKey)); err == nil && n > 0 && n <= 65535 {
+		tcp = n
+	}
+	if n, err := strconv.Atoi(e.value(stack.VoiceUDPPortKey)); err == nil && n > 0 && n <= 65535 {
+		udp = n
+	}
+	return tcp, udp
 }
 
 func (e *Env) state() *instance.State {

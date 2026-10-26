@@ -56,6 +56,16 @@ curl -fsSL https://fluxer.dev/install.sh | sh -s -- restore fluxer-chat.example.
 
 Then change your domain's `A` record to the new machine's address.
 
+## Run more than one instance on a host
+
+You can run more than one instance on the same machine. Each one needs three things of its own: a project name with `--project`, an instance directory with `--dir`, and an edge binding that doesn't clash with the others. Run the extra instances behind your own reverse proxy with `--behind-proxy` and a distinct `--bind`.
+
+```sh
+rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bind 127.0.0.1:8081
+```
+
+rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports.
+
 ## Manage people
 
 Create an invite link that 10 people can use within a week.
