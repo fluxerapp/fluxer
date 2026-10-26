@@ -4,6 +4,8 @@ package secrets
 
 import (
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -19,6 +21,7 @@ const (
 	KindBase64_32
 	KindVAPID
 	KindFixed
+	KindRSA
 )
 
 const Unset = "CHANGE_ME"
@@ -46,6 +49,7 @@ var Required = []Spec{
 	{Key: "FLUXER_ADMIN_OAUTH_CLIENT_SECRET", Kind: KindHex32},
 	{Key: "LIVEKIT_API_SECRET", Kind: KindHex32, Stateful: true},
 	{Key: "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64", Kind: KindBase64_32},
+	{Key: "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64", Kind: KindRSA},
 	{Key: VAPIDPublicKey, Kind: KindVAPID, Stateful: true},
 	{Key: VAPIDPrivateKey, Kind: KindVAPID, Stateful: true},
 }
@@ -100,6 +104,18 @@ func Base64(nBytes int) (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
+func RSAKey() (string, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return "", err
+	}
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(der), nil
+}
+
 func IsUnset(value string) bool {
 	v := strings.TrimSpace(value)
 	return v == "" || v == Unset
@@ -113,6 +129,8 @@ func Generate(s Spec) (string, error) {
 		return Alnum(64)
 	case KindBase64_32:
 		return Base64(32)
+	case KindRSA:
+		return RSAKey()
 	case KindFixed:
 		return s.Fixed, nil
 	}

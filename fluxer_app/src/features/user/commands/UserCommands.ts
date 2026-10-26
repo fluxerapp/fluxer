@@ -63,10 +63,9 @@ type UserUpdatePayload = Partial<UserPrivate> & {
 	avatar?: string | null;
 	password?: string;
 	new_password?: string;
-	premium_badge_hidden?: boolean;
+	hidden_profile_badges?: ReadonlyArray<string>;
 	premium_badge_masked?: boolean;
 	premium_badge_timestamp_hidden?: boolean;
-	premium_badge_sequence_hidden?: boolean;
 	accent_color?: number | null;
 	has_dismissed_premium_onboarding?: boolean;
 	has_unread_gift_inventory?: boolean;

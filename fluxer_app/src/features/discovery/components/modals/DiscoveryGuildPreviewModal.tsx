@@ -106,6 +106,7 @@ export const DiscoveryGuildPreviewModal = observer(function DiscoveryGuildPrevie
 							guildName={guild.name}
 							guildIcon={guild.icon}
 							features={badgeFeatures}
+							badgeIds={guild.badge_ids}
 							presenceCount={guild.online_count}
 							memberCount={guild.member_count}
 							eyebrowText={i18n._(PUBLIC_COMMUNITY_DESCRIPTOR)}

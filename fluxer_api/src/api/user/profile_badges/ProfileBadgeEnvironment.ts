@@ -5,16 +5,17 @@ import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {ProfileBadgeEnvironment} from '@app/api/user/profile_badges/ProfileBadgeRegistry';
+import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 
 export async function loadProfileBadgeEnvironment(): Promise<ProfileBadgeEnvironment> {
 	const selfHosted = Config.instance.selfHosted;
-	const [branding, premiumInfoUrl] = await Promise.all([
+	const instanceConfigRepository = getInstanceConfigRepository();
+	const [branding, premiumInfoUrl, customBadges] = await Promise.all([
 		getBillingBranding(),
 		selfHosted
-			? getInstanceConfigRepository()
-					.getAppPublicConfig()
-					.then((config) => config.branding.premium_info_url)
+			? instanceConfigRepository.getAppPublicConfig().then((config) => config.branding.premium_info_url)
 			: Promise.resolve(null),
+		instanceConfigRepository.getCustomBadges(),
 	]);
 	return {
 		selfHosted,
@@ -23,5 +24,7 @@ export async function loadProfileBadgeEnvironment(): Promise<ProfileBadgeEnviron
 		premiumName: branding.premiumName,
 		premiumInfoUrl,
 		marketingUrl: Config.endpoints.marketing,
+		mediaUrl: Config.endpoints.media,
+		customBadges: customBadges.filter((badge) => badge.type === CustomBadgeTypes.USER),
 	};
 }

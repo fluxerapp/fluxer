@@ -21,7 +21,6 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import type {
 	ProfileBadgePreviewRequest,
 	ProfileBadgePreviewResponse,
-	ProfileBadgeResponse,
 } from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 
 const logger = new Logger('UserProfiles');
@@ -98,13 +97,11 @@ export async function fetch(userId: string, guildId?: string): Promise<Profile> 
 	}
 }
 
-export async function previewBadges(
-	settings: ProfileBadgePreviewRequest,
-): Promise<ReadonlyArray<ProfileBadgeResponse>> {
+export async function previewBadges(settings: ProfileBadgePreviewRequest): Promise<ProfileBadgePreviewResponse> {
 	const response = await http.post<ProfileBadgePreviewResponse>(Endpoints.USER_PROFILE_BADGES_PREVIEW, {
 		body: settings,
 	});
-	return response.body.profile_badges;
+	return response.body;
 }
 
 export function invalidate(userId: string, guildId?: string): void {

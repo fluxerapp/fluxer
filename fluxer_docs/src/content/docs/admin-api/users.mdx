@@ -53,6 +53,7 @@ The full admin view of one account, with the flags, lifecycle, contact and netwo
 | enforcement_decision_id | ?snowflake | The [enforcement decision](/admin-api/enforcement/) that owns the account's state |
 | acls | array[string] | The [Admin ACLs](/admin-api/#acl-registry) set on the account |
 | traits | array[string] | The operator labels on the account, sorted (at most 100) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) given to the account (at most 10) |
 | has_totp | boolean | Whether a TOTP authenticator is registered |
 | has_password | boolean | Whether the account has a password |
 | claimed | boolean | Whether the account can sign in from another device |
@@ -94,6 +95,7 @@ The full admin view of one account, with the flags, lifecycle, contact and netwo
   "deletion_reason_code": null,
   "acls": [],
   "traits": ["early-signup"],
+  "badge_ids": [],
   "has_totp": true,
   "has_password": true,
   "claimed": true,
@@ -115,9 +117,11 @@ A [profile badge](/http-api/users/#profile-badge-object) with a `suppressed` fie
 
 | Field | Type | Description |
 | --- | --- | --- |
-| kind | string | The badge key |
+| key | string | The badge's identity, `custom:{id}` for a custom badge |
+| kind | string | The badge type |
 | label | string | The badge description in the caller's locale |
-| asset | ?string | The badge image hash, or null for a text badge |
+| asset | ?string | The badge image hash, or null for a text badge or a custom badge |
+| asset_url | ?string | The image URL of a custom badge |
 | aspect_ratio | ?number | The image width divided by its height |
 | caption | ?string | The short badge text, such as `#42` |
 | href | ?string | The URL a click opens |
@@ -151,7 +155,6 @@ The `flags` field is a 64-bit bitfield sent as a decimal string. It has every st
 | 1 &lt;&lt; 50 | ACCOUNT_LIMITED | Account is [limited](/http-api/users/#account-limitation) |
 | 1 &lt;&lt; 51 | HAS_DISMISSED_PREMIUM_ONBOARDING | Account dismissed premium onboarding |
 | 1 &lt;&lt; 53 | APP_STORE_REVIEWER | Account belongs to an app store reviewer |
-| 1 &lt;&lt; 57 | STAFF_HIDDEN | Staff status is hidden from public flags |
 | 1 &lt;&lt; 60 | AGE_VERIFIED_ADULT | Account verified its age as an adult |
 | 1 &lt;&lt; 62 | LIMIT_EXEMPT | Account is never limited |
 
@@ -160,10 +163,8 @@ The `flags` field is a 64-bit bitfield sent as a decimal string. It has every st
 | Value | Name | Description |
 | --- | --- | --- |
 | 1 &lt;&lt; 0 | DISCRIMINATOR | Account has a premium discriminator |
-| 1 &lt;&lt; 1 | BADGE_HIDDEN | Premium badge is hidden |
 | 1 &lt;&lt; 2 | BADGE_MASKED | Premium badge is masked |
 | 1 &lt;&lt; 3 | BADGE_TIMESTAMP_HIDDEN | Premium badge timestamp is hidden |
-| 1 &lt;&lt; 4 | BADGE_SEQUENCE_HIDDEN | Premium badge sequence is hidden |
 | 1 &lt;&lt; 5 | PERKS_SANITIZED | Premium perks are sanitized |
 | 1 &lt;&lt; 6 | PURCHASE_DISABLED | Premium purchase is blocked |
 | 1 &lt;&lt; 7 | ENABLED_OVERRIDE | Premium is turned on by override |
@@ -830,6 +831,35 @@ Replaces the account's traits and returns the account. You need `user:update:tra
 | 200 | response body | The traits were replaced |
 
 Fluxer sends [User Update](/gateway/events/#user-update).
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Update user badges
+
+<RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/badges" auditReason />
+
+Replaces the [custom badges](/admin-api/badges/) given to the account and returns the account. You need `user:update:badges`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge_ids | array[snowflake] | The user badges to give, replacing the current ones (at most 10) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The updated account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badges were replaced |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when an ID isn't a user badge, or `UNKNOWN_USER` |
+
+The profile shows the change the next time someone loads it, and Fluxer sends no Gateway event.
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 

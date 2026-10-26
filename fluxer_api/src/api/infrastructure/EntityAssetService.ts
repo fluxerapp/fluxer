@@ -19,7 +19,15 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {ms} from 'itty-time';
 import sharp from 'sharp';
 
-type AssetType = 'avatar' | 'banner' | 'icon' | 'splash' | 'embed_splash' | 'branding' | 'branding_backdrop';
+type AssetType =
+	| 'avatar'
+	| 'banner'
+	| 'icon'
+	| 'splash'
+	| 'embed_splash'
+	| 'branding'
+	| 'branding_backdrop'
+	| 'custom_badge';
 type EntityType = 'user' | 'guild' | 'guild_member' | 'instance';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
@@ -30,6 +38,7 @@ const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	embed_splash: 'embed-splashes',
 	branding: 'branding',
 	branding_backdrop: 'branding-backdrops',
+	custom_badge: 'custom-badges',
 };
 
 function normalizeContentType(contentType: string | null | undefined): string {
@@ -85,6 +94,8 @@ export class EntityAssetService {
 			case 'avatar':
 				return 'avatar';
 			case 'icon':
+			case 'branding':
+			case 'custom_badge':
 				return 'guild_icon';
 			case 'banner':
 				return 'banner';
@@ -92,8 +103,6 @@ export class EntityAssetService {
 				return 'splash';
 			case 'embed_splash':
 				return 'embed_splash';
-			case 'branding':
-				return 'guild_icon';
 			case 'branding_backdrop':
 				return 'sign_in_backdrop';
 		}

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::activity_pub::signature::{self, RequestSigner};
 use crate::cache_policy::{
     UnfurlEntryExpiry, default_empty_entry_lifetime, provider_capability, unfurl_cache_key,
 };
@@ -10,6 +11,7 @@ use crate::types::{NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
 use fluxer_svc::config::optional_env;
 use fluxer_svc::shard::ShardService;
 use moka::future::Cache;
+use ring::signature::RsaKeyPair;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
@@ -25,6 +27,7 @@ pub struct UnfurlShard {
     self_hosted: bool,
     youtube_api_key: Option<String>,
     klipy_api_key: Option<String>,
+    activity_pub_key: Option<Arc<RsaKeyPair>>,
 }
 
 impl UnfurlShard {
@@ -71,6 +74,14 @@ impl UnfurlShard {
             media_proxy_public_endpoint.as_deref(),
             media_proxy_http_client,
         );
+        let activity_pub_key =
+            optional_env("FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64").map(|encoded| {
+                let key = signature::parse_signing_key(&encoded).unwrap_or_else(|err| {
+                    panic!("invalid FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: {err}")
+                });
+                tracing::info!("ActivityPub request signing enabled");
+                Arc::new(key)
+            });
 
         Self {
             cache: build_l2_cache(lifetime, default_empty_entry_lifetime()),
@@ -83,6 +94,7 @@ impl UnfurlShard {
                 .or_else(|| optional_env("YOUTUBE_API_KEY")),
             klipy_api_key: optional_env("FLUXER_KLIPY_API_KEY")
                 .or_else(|| optional_env("KLIPY_API_KEY")),
+            activity_pub_key,
         }
     }
 
@@ -92,6 +104,7 @@ impl UnfurlShard {
         nsfw_mode: NsfwMode,
         youtube_api_key: Option<&str>,
         klipy_api_key: Option<&str>,
+        activity_pub_key_id: Option<&str>,
     ) -> anyhow::Result<UnfurlResult> {
         let parsed = Url::parse(url_str)?;
 
@@ -114,6 +127,11 @@ impl UnfurlShard {
             klipy_api_key: klipy_api_key
                 .map(str::to_owned)
                 .or_else(|| self.klipy_api_key.clone()),
+            activity_pub_signer: self
+                .activity_pub_key
+                .clone()
+                .zip(activity_pub_key_id)
+                .map(|(key, key_id)| RequestSigner::new(key, key_id.to_owned())),
         };
 
         if let Some(idx) = matched_resolver_idx {
@@ -249,6 +267,7 @@ impl ShardService for UnfurlShard {
                 cache_only,
                 ref youtube_api_key,
                 ref klipy_api_key,
+                ref activity_pub_key_id,
             } => {
                 let nsfw = nsfw_mode.unwrap_or_default();
                 let cache_key = unfurl_cache_key(
@@ -273,6 +292,7 @@ impl ShardService for UnfurlShard {
                         nsfw,
                         youtube_api_key.as_deref(),
                         klipy_api_key.as_deref(),
+                        activity_pub_key_id.as_deref(),
                     )
                     .await
                 {
@@ -324,6 +344,11 @@ impl ShardService for UnfurlShard {
                     .unwrap_or_default();
                 Ok(UnfurlResponse::Txt(records))
             }
+            UnfurlRequest::ActivityPubKey => Ok(UnfurlResponse::ActivityPubKey(
+                self.activity_pub_key
+                    .as_deref()
+                    .map(signature::public_key_base64),
+            )),
         }
     }
 }

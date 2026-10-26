@@ -1,13 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isProfileBadgeKey, MAX_HIDDEN_PROFILE_BADGES} from '@fluxer/constants/src/BadgeConstants';
 import {HexString16Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
+export const HiddenProfileBadgesType = z
+	.array(
+		z
+			.string()
+			.refine(isProfileBadgeKey, 'Unknown badge key')
+			.describe('A badge key: a built-in badge kind, or custom:{id} for a custom badge'),
+	)
+	.max(MAX_HIDDEN_PROFILE_BADGES)
+	.describe(
+		'The full list of badge keys to hide from other people. It replaces the stored list, takes precedence over the deprecated hide fields, and keys of custom badges that no longer exist are dropped',
+	);
+
 export const ProfileBadgeResponse = z.object({
+	key: z
+		.string()
+		.describe(
+			'Stable identity of the badge. It equals kind for built-in badges and is custom:{id} for custom badges, so use it as the list key',
+		),
 	kind: z
 		.string()
 		.describe(
-			'Stable badge key. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, and premium on self-hosted instances. Clients must render unknown values from the other fields.',
+			'Badge type. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, custom, and premium on self-hosted instances. Clients must render unknown values from the other fields.',
 		),
 	label: z
 		.string()
@@ -15,8 +33,14 @@ export const ProfileBadgeResponse = z.object({
 			'Full badge description, localized for the viewer. Use it as the tooltip, and as alt text when there is no caption',
 		),
 	asset: HexString16Type.nullable().describe(
-		'Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges',
+		'Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges and for badges with asset_url',
 	),
+	asset_url: z
+		.string()
+		.nullable()
+		.describe(
+			'Absolute image URL for a badge whose image is not a static badge hash, such as a custom badge. Null otherwise',
+		),
 	small_asset: HexString16Type.optional().describe(
 		'Image hash drawn for 20 pixels and smaller, served like asset. Use it instead of asset at those sizes. Absent when asset reads well small',
 	),
@@ -60,15 +84,18 @@ export const ProfileBadgeListResponse = z
 	.array(ProfileBadgeResponse)
 	.describe('Profile badges in display order. Empty when there is nothing to show');
 
+export const OwnProfileBadgeResponse = ProfileBadgeResponse.extend({
+	hidden: z
+		.boolean()
+		.describe('True when the badge key is in your hidden_profile_badges, so other people do not see it'),
+});
+
+export type OwnProfileBadgeResponse = z.infer<typeof OwnProfileBadgeResponse>;
+
 export const ProfileBadgePreviewRequest = z.object({
-	premium_badge_hidden: z.boolean().optional().describe('Preview with the premium badge hidden'),
+	hidden_profile_badges: HiddenProfileBadgesType.optional(),
 	premium_badge_masked: z.boolean().optional().describe('Preview with the premium badge masked'),
 	premium_badge_timestamp_hidden: z.boolean().optional().describe('Preview with the premium badge date hidden'),
-	premium_badge_sequence_hidden: z.boolean().optional().describe('Preview with the Visionary ID hidden'),
-	operator_pass_badge_hidden: z
-		.boolean()
-		.optional()
-		.describe('Preview with the Operator Pass badge hidden, or shown when false'),
 	operator_pass_badge_timestamp_hidden: z
 		.boolean()
 		.optional()
@@ -77,12 +104,18 @@ export const ProfileBadgePreviewRequest = z.object({
 		.boolean()
 		.optional()
 		.describe('Preview with the number of Operator Passes held hidden'),
+	premium_badge_hidden: z.boolean().optional().describe('Deprecated, use hidden_profile_badges'),
+	premium_badge_sequence_hidden: z.boolean().optional().describe('Deprecated, use hidden_profile_badges'),
+	operator_pass_badge_hidden: z.boolean().optional().describe('Deprecated, use hidden_profile_badges'),
 });
 
 export type ProfileBadgePreviewRequest = z.infer<typeof ProfileBadgePreviewRequest>;
 
 export const ProfileBadgePreviewResponse = z.object({
-	profile_badges: ProfileBadgeListResponse,
+	profile_badges: ProfileBadgeListResponse.describe('The badges other people would see with these settings'),
+	own_badges: z
+		.array(OwnProfileBadgeResponse)
+		.describe('Every badge you hold, in display order, with whether these settings hide it'),
 });
 
 export type ProfileBadgePreviewResponse = z.infer<typeof ProfileBadgePreviewResponse>;

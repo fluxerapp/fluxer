@@ -31,7 +31,7 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {ProfilePreviewOverrides} from '@app/features/user/utils/ProfileDisplayUtils';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {YOU_CAN_T_MESSAGE_YOURSELF_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
-import type {ProfileBadgePreviewRequest} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
+import type {ProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import type {UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -60,7 +60,7 @@ interface ProfilePreviewProps {
 	guildId?: string | null;
 	guildMember?: GuildMember | null;
 	guildMemberProfile?: UserProfile | null;
-	previewBadgeSettings?: ProfileBadgePreviewRequest;
+	previewProfileBadges?: ReadonlyArray<ProfileBadgeResponse>;
 	ignoreGuildAvatarInPreview?: boolean;
 	ignoreGuildBannerInPreview?: boolean;
 	showMembershipInfo?: boolean;
@@ -86,7 +86,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		guildId,
 		guildMember,
 		guildMemberProfile,
-		previewBadgeSettings,
+		previewProfileBadges,
 		ignoreGuildAvatarInPreview,
 		ignoreGuildBannerInPreview,
 		showMembershipInfo = true,
@@ -115,7 +115,8 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			],
 		);
 		const isCommunityProfile = Boolean(guildId && guildMemberProfile);
-		const profileBadges = useOwnProfileBadges(user.id, previewBadgeSettings);
+		const cachedProfileBadges = useOwnProfileBadges(user.id);
+		const profileBadges = previewProfileBadges ?? cachedProfileBadges;
 		const previewUser = useMemo(() => {
 			const globalName = previewGlobalName !== undefined ? previewGlobalName : user.globalName;
 			if (isCommunityProfile) {

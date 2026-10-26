@@ -233,6 +233,38 @@ export class UserDataRepository {
 		return null;
 	}
 
+	async findRow(userId: UserID): Promise<UserRow | null> {
+		return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
+	}
+
+	async compareAndSetBadgeHideState(
+		previousData: UserRow,
+		next: Pick<UserRow, 'flags' | 'premium_flags' | 'hidden_profile_badges'>,
+	): Promise<UserRow | null> {
+		assertWritableUserId(previousData.user_id);
+		const version = nextVersion(previousData.version);
+		const applied = await executeConditional(
+			Users.conditionalPatchByPk(
+				{user_id: previousData.user_id},
+				{
+					flags: Db.set(next.flags ?? 0n),
+					premium_flags: Db.set(next.premium_flags ?? 0),
+					hidden_profile_badges: next.hidden_profile_badges ? Db.set(next.hidden_profile_badges) : Db.clear(),
+					version: Db.set(version),
+				},
+				{
+					flags: previousData.flags ?? null,
+					premium_flags: previousData.premium_flags ?? null,
+					version: previousData.version ?? null,
+				},
+			),
+		);
+		if (!applied) return null;
+		const updatedData = {...previousData, ...next, version};
+		await emitAccountChangedIfRelevant(previousData, updatedData);
+		return updatedData;
+	}
+
 	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
 		assertWritableUserId(userId);
 		const scheduledAt = pendingDeletionAt.getTime();

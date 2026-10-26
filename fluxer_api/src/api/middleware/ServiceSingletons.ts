@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {activityPubKeyId} from '@app/api/activity_pub/ActivityPub';
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepository';
 import {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
@@ -349,6 +350,7 @@ const getDefaultUnfurlerService = singleton(() => {
 		manager,
 		async () => instanceConfigRepository.getEffectiveYoutubeApiKey(),
 		async () => (await instanceConfigRepository.getEffectiveGifConfig()).klipy_api_key,
+		activityPubKeyId(Config.endpoints.apiPublic),
 	);
 });
 

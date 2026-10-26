@@ -39,6 +39,29 @@ pub async fn render(
         .await
         .log_error("load guild tab guild")?;
     match tab {
+        "badges" => {
+            if !acl::has_permission(admin_acls, acl::BADGE_LIST) {
+                return None;
+            }
+            let (detail, badges) = tokio::join!(
+                async {
+                    client
+                        .lookup_guild(guild_id)
+                        .await
+                        .log_error("load guild badges")
+                        .flatten()
+                },
+                async {
+                    client
+                        .list_badges()
+                        .await
+                        .log_error("load badges for guild")
+                }
+            );
+            Some(tabs::badges::badges_tab(
+                config, &detail?, &badges?, csrf_token, admin_acls,
+            ))
+        }
         "members" => {
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;

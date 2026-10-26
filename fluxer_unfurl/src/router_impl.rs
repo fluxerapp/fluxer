@@ -46,6 +46,7 @@ impl RouterService for UnfurlRouter {
             UnfurlRequest::VerifyDomain { domain, .. } => domain.clone(),
             UnfurlRequest::Fetch { url, .. } => url.clone(),
             UnfurlRequest::ResolveTxt { name } => name.clone(),
+            UnfurlRequest::ActivityPubKey => "activity_pub_key".to_owned(),
         }
     }
 
@@ -58,6 +59,7 @@ impl RouterService for UnfurlRouter {
                 cache_only,
                 youtube_api_key,
                 klipy_api_key,
+                ..
             } => {
                 if *bypass_cache {
                     return None;
@@ -74,7 +76,8 @@ impl RouterService for UnfurlRouter {
             }
             UnfurlRequest::VerifyDomain { .. }
             | UnfurlRequest::Fetch { .. }
-            | UnfurlRequest::ResolveTxt { .. } => None,
+            | UnfurlRequest::ResolveTxt { .. }
+            | UnfurlRequest::ActivityPubKey => None,
         }
     }
 
@@ -101,7 +104,8 @@ impl RouterService for UnfurlRouter {
             }
             UnfurlRequest::VerifyDomain { .. }
             | UnfurlRequest::Fetch { .. }
-            | UnfurlRequest::ResolveTxt { .. } => None,
+            | UnfurlRequest::ResolveTxt { .. }
+            | UnfurlRequest::ActivityPubKey => None,
         }
     }
 
@@ -130,7 +134,8 @@ impl RouterService for UnfurlRouter {
             }
             UnfurlRequest::VerifyDomain { .. }
             | UnfurlRequest::Fetch { .. }
-            | UnfurlRequest::ResolveTxt { .. } => {}
+            | UnfurlRequest::ResolveTxt { .. }
+            | UnfurlRequest::ActivityPubKey => {}
         }
     }
 }

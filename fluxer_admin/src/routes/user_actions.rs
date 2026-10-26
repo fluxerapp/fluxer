@@ -64,6 +64,16 @@ pub async fn dispatch(
 ) -> DispatchOutcome {
     let get = |k: &str| form.clean(k);
     match action {
+        "update_badges" => DispatchOutcome::from_result(
+            client
+                .update_user_badges(
+                    user_id,
+                    &form.list_values_any(&["badge_ids[]", "badge_ids"]),
+                )
+                .await,
+            "User badges updated",
+            "Failed to update user badges",
+        ),
         "update_flags" => {
             if has_legacy_flag_delta_fields(form) {
                 let add = form.list_values_any(&["add_flags[]", "add_flags"]);

@@ -651,16 +651,16 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/users/${target.userId}/premium-flags`,
-					body: {add_flags: [PremiumFlags.BADGE_HIDDEN], remove_flags: [PremiumFlags.PURCHASE_DISABLED]},
+					body: {add_flags: [PremiumFlags.BADGE_MASKED], remove_flags: [PremiumFlags.PURCHASE_DISABLED]},
 				},
 				expected: {
 					action: 'update_premium_flags',
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {
-						add_flags: PremiumFlags.BADGE_HIDDEN.toString(),
+						add_flags: PremiumFlags.BADGE_MASKED.toString(),
 						remove_flags: PremiumFlags.PURCHASE_DISABLED.toString(),
-						new_flags: ((premiumFlags | PremiumFlags.BADGE_HIDDEN) & ~PremiumFlags.PURCHASE_DISABLED).toString(),
+						new_flags: ((premiumFlags | PremiumFlags.BADGE_MASKED) & ~PremiumFlags.PURCHASE_DISABLED).toString(),
 					},
 				},
 			};

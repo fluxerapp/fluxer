@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -91,11 +92,12 @@ export class UserAccountLookupService {
 				}
 			}
 		}
-		const {premiumType, premiumSince, premiumLifetimeSequence} = applyPremiumBadgeMasking(
-			user,
-			user.premiumFlags,
-			restrictProfile,
-		);
+		const {premiumType, premiumSince, premiumLifetimeSequence} = applyPremiumBadgeMasking(user, {
+			premiumFlags: user.premiumFlags,
+			hidden: user.hiddenProfileBadges,
+			selfHosted: Config.instance.selfHosted,
+			restricted: restrictProfile,
+		});
 		const profileFieldPrivacyContext = restrictProfile
 			? null
 			: await this.getProfileFieldPrivacyContext(userId, targetId);

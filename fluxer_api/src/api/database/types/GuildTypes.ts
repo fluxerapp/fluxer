@@ -31,6 +31,7 @@ export interface GuildRow {
 	embed_splash_width: number | null;
 	embed_splash_height: number | null;
 	features: Set<string> | null;
+	badge_ids?: Set<bigint> | null;
 	verification_level: number;
 	mfa_level: number;
 	nsfw_level: number;
@@ -70,6 +71,7 @@ export const GUILD_COLUMNS = [
 	'embed_splash_width',
 	'embed_splash_height',
 	'features',
+	'badge_ids',
 	'verification_level',
 	'mfa_level',
 	'nsfw_level',

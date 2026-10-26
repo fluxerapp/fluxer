@@ -18,6 +18,9 @@
 {{- end }}
 {{- if eq $name "unfurl" }}
 {{- $shardEnv = append $shardEnv (dict "name" "FLUXER_MEDIA_PROXY_ENDPOINT" "value" "http://media-proxy:8080") }}
+{{- if and (not $.Values.secrets.existingSecret) (get (include "fluxer.secretData" $ | fromJson) "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64") }}
+{{- $shardEnv = append $shardEnv (dict "name" "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64" "valueFrom" (dict "secretKeyRef" (dict "name" "fluxer-unfurl-env" "key" "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64"))) }}
+{{- end }}
 {{- end }}
 {{- include "fluxer.app" (dict "root" $ "name" $name "component" "svc" "w" $router "image" (printf "fluxer-%s" $name) "port" 8090 "containerName" "router"
   "env" (append $common (dict "name" "FLUXER_SVC_MODE" "value" "router"))

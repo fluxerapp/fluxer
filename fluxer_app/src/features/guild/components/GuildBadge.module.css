@@ -5,6 +5,28 @@
 	align-items: center;
 }
 
+.badgeRow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.customBadge {
+	flex-shrink: 0;
+	object-fit: contain;
+}
+
+.customBadgeTooltip {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	max-width: 16rem;
+}
+
+.customBadgeTooltipName {
+	font-weight: 600;
+}
+
 .badge {
 	flex-shrink: 0;
 	--guild-badge-seal: var(--brand-primary-fill);

@@ -18,6 +18,8 @@ pub enum UnfurlRequest {
         youtube_api_key: Option<String>,
         #[serde(default)]
         klipy_api_key: Option<String>,
+        #[serde(default)]
+        activity_pub_key_id: Option<String>,
     },
     VerifyDomain {
         domain: String,
@@ -34,6 +36,7 @@ pub enum UnfurlRequest {
     ResolveTxt {
         name: String,
     },
+    ActivityPubKey,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -51,6 +54,7 @@ pub enum UnfurlResponse {
     Verified(bool),
     Fetched(FetchedResponse),
     Txt(Vec<String>),
+    ActivityPubKey(Option<String>),
     Failed { message: String },
 }
 
@@ -215,6 +219,7 @@ mod tests {
                 cache_only,
                 youtube_api_key,
                 klipy_api_key,
+                activity_pub_key_id,
             } => {
                 assert_eq!(url, "https://fxtwitter.com/example/status/1");
                 assert_eq!(nsfw_mode, Some(NsfwMode::Block));
@@ -222,6 +227,7 @@ mod tests {
                 assert!(!cache_only);
                 assert!(youtube_api_key.is_none());
                 assert!(klipy_api_key.is_none());
+                assert!(activity_pub_key_id.is_none());
             }
             _ => panic!("expected an unfurl request"),
         }

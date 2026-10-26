@@ -167,11 +167,9 @@ export class User {
 	private readonly _premiumLifetimeSequence: number | null | undefined;
 	private readonly _premiumGraceEndsAt: Date | null | undefined;
 	private readonly _premiumDiscriminator: boolean | undefined;
-	readonly premiumBadgeHidden: boolean | undefined;
+	readonly hiddenProfileBadges: ReadonlyArray<string> | undefined;
 	readonly premiumBadgeMasked: boolean | undefined;
 	readonly premiumBadgeTimestampHidden: boolean | undefined;
-	readonly premiumBadgeSequenceHidden: boolean | undefined;
-	readonly operatorPassBadgeHidden: boolean | undefined;
 	readonly operatorPassBadgeTimestampHidden: boolean | undefined;
 	readonly operatorPassBadgeCountHidden: boolean | undefined;
 	readonly operatorPassSince: Date | null | undefined;
@@ -238,16 +236,12 @@ export class User {
 			? (user.premium_lifetime_sequence ?? null)
 			: undefined;
 		this._premiumDiscriminator = hasKey(user, 'premium_discriminator') ? user.premium_discriminator : undefined;
-		this.premiumBadgeHidden = hasKey(user, 'premium_badge_hidden') ? user.premium_badge_hidden : undefined;
+		this.hiddenProfileBadges = hasKey(user, 'hidden_profile_badges')
+			? Object.freeze([...(user.hidden_profile_badges ?? [])])
+			: undefined;
 		this.premiumBadgeMasked = hasKey(user, 'premium_badge_masked') ? user.premium_badge_masked : undefined;
 		this.premiumBadgeTimestampHidden = hasKey(user, 'premium_badge_timestamp_hidden')
 			? user.premium_badge_timestamp_hidden
-			: undefined;
-		this.premiumBadgeSequenceHidden = hasKey(user, 'premium_badge_sequence_hidden')
-			? user.premium_badge_sequence_hidden
-			: undefined;
-		this.operatorPassBadgeHidden = hasKey(user, 'operator_pass_badge_hidden')
-			? user.operator_pass_badge_hidden
 			: undefined;
 		this.operatorPassBadgeTimestampHidden = hasKey(user, 'operator_pass_badge_timestamp_hidden')
 			? user.operator_pass_badge_timestamp_hidden
@@ -468,8 +462,8 @@ export class User {
 		if (premiumGraceEndsAt !== undefined) result.premium_grace_ends_at = dateToIsoOrNull(premiumGraceEndsAt);
 		const premiumDiscriminator = pickField(this._premiumDiscriminator, u, 'premium_discriminator', opts);
 		if (premiumDiscriminator !== undefined) result.premium_discriminator = premiumDiscriminator;
-		const premiumBadgeHidden = pickField(this.premiumBadgeHidden, u, 'premium_badge_hidden', opts);
-		if (premiumBadgeHidden !== undefined) result.premium_badge_hidden = premiumBadgeHidden;
+		const hiddenProfileBadges = pickField(this.hiddenProfileBadges, u, 'hidden_profile_badges', opts);
+		if (hiddenProfileBadges !== undefined) result.hidden_profile_badges = hiddenProfileBadges;
 		const premiumBadgeMasked = pickField(this.premiumBadgeMasked, u, 'premium_badge_masked', opts);
 		if (premiumBadgeMasked !== undefined) result.premium_badge_masked = premiumBadgeMasked;
 		const premiumBadgeTimestampHidden = pickField(
@@ -479,15 +473,6 @@ export class User {
 			opts,
 		);
 		if (premiumBadgeTimestampHidden !== undefined) result.premium_badge_timestamp_hidden = premiumBadgeTimestampHidden;
-		const premiumBadgeSequenceHidden = pickField(
-			this.premiumBadgeSequenceHidden,
-			u,
-			'premium_badge_sequence_hidden',
-			opts,
-		);
-		if (premiumBadgeSequenceHidden !== undefined) result.premium_badge_sequence_hidden = premiumBadgeSequenceHidden;
-		const operatorPassBadgeHidden = pickField(this.operatorPassBadgeHidden, u, 'operator_pass_badge_hidden', opts);
-		if (operatorPassBadgeHidden !== undefined) result.operator_pass_badge_hidden = operatorPassBadgeHidden;
 		const operatorPassBadgeTimestampHidden = pickField(
 			this.operatorPassBadgeTimestampHidden,
 			u,
@@ -731,11 +716,9 @@ export class User {
 			this._premiumBillingCycle === other._premiumBillingCycle &&
 			this._premiumLifetimeSequence === other._premiumLifetimeSequence &&
 			this._premiumDiscriminator === other._premiumDiscriminator &&
-			this.premiumBadgeHidden === other.premiumBadgeHidden &&
+			arraysShallowEqual(this.hiddenProfileBadges, other.hiddenProfileBadges) &&
 			this.premiumBadgeMasked === other.premiumBadgeMasked &&
 			this.premiumBadgeTimestampHidden === other.premiumBadgeTimestampHidden &&
-			this.premiumBadgeSequenceHidden === other.premiumBadgeSequenceHidden &&
-			this.operatorPassBadgeHidden === other.operatorPassBadgeHidden &&
 			this.operatorPassBadgeTimestampHidden === other.operatorPassBadgeTimestampHidden &&
 			this.operatorPassBadgeCountHidden === other.operatorPassBadgeCountHidden &&
 			datesEqual(this.operatorPassSince, other.operatorPassSince) &&
@@ -804,11 +787,9 @@ export class User {
 			this._premiumGraceEndsAt === undefined ? undefined : dateToIsoOrNull(this._premiumGraceEndsAt),
 		);
 		setOptional('premium_discriminator', this._premiumDiscriminator);
-		setOptional('premium_badge_hidden', this.premiumBadgeHidden);
+		setOptional('hidden_profile_badges', this.hiddenProfileBadges);
 		setOptional('premium_badge_masked', this.premiumBadgeMasked);
 		setOptional('premium_badge_timestamp_hidden', this.premiumBadgeTimestampHidden);
-		setOptional('premium_badge_sequence_hidden', this.premiumBadgeSequenceHidden);
-		setOptional('operator_pass_badge_hidden', this.operatorPassBadgeHidden);
 		setOptional('operator_pass_badge_timestamp_hidden', this.operatorPassBadgeTimestampHidden);
 		setOptional('operator_pass_badge_count_hidden', this.operatorPassBadgeCountHidden);
 		setOptional(

@@ -33,6 +33,7 @@ import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {openProfileBadgeSettings} from '@app/features/user/commands/UserSettingsModalCommands';
 import {CustomStatusModal} from '@app/features/user/components/modals/CustomStatusModal';
 import {UserProfileModal} from '@app/features/user/components/modals/UserProfileModal';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
@@ -52,7 +53,7 @@ import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
-import {canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -324,6 +325,10 @@ export const UserAreaPopout = observer(() => {
 		);
 		PopoutCommands.close();
 	}, []);
+	const openBadgeSettings = useCallback(() => {
+		openProfileBadgeSettings();
+		PopoutCommands.close();
+	}, []);
 	const openUserProfile = useCallback(() => {
 		if (!currentUserId) {
 			return;
@@ -435,6 +440,7 @@ export const UserAreaPopout = observer(() => {
 					/>
 					<UserProfileBadges
 						badges={profile?.profileBadges ?? []}
+						onEditBadges={canEditOwnProfileBadges(currentUser.id, profile) ? openBadgeSettings : undefined}
 						data-flx="app.floating.user-area-popout.user-profile-badges"
 					/>
 					<ProfileCardContent isWebhook={false} data-flx="app.floating.user-area-popout.profile-card-content">

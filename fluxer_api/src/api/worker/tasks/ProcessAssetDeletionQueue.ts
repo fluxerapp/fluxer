@@ -32,7 +32,10 @@ interface ProcessItemResult {
 interface AssetReferenceRepositories {
 	userRepository: Pick<UserRepository, 'findUnique'>;
 	guildRepository: Pick<GuildRepository, 'findUnique' | 'getMember'>;
-	instanceConfigRepository: Pick<InstanceConfigRepository, 'readStoredBrandingAssetKeys'>;
+	instanceConfigRepository: Pick<
+		InstanceConfigRepository,
+		'readStoredBrandingAssetKeys' | 'readStoredCustomBadgeAssetKeys'
+	>;
 }
 
 interface AssetDeletionDependencies extends AssetReferenceRepositories {
@@ -180,6 +183,9 @@ async function isQueuedAssetStillCurrent(
 ): Promise<boolean> {
 	if (/^branding(?:-backdrops)?\//.test(item.s3Key)) {
 		return (await deps.instanceConfigRepository.readStoredBrandingAssetKeys()).has(item.s3Key);
+	}
+	if (item.s3Key.startsWith('custom-badges/')) {
+		return (await deps.instanceConfigRepository.readStoredCustomBadgeAssetKeys()).has(item.s3Key);
 	}
 	const references = inferAssetReferencesFromS3Key(item.s3Key);
 	const {staleReference} = item;

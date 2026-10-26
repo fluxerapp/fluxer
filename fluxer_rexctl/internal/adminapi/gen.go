@@ -113,6 +113,10 @@ const (
 	AssetPurge                    AdminAclType = "asset:purge"
 	Asterisk                      AdminAclType = "*"
 	AuditLogView                  AdminAclType = "audit_log:view"
+	BadgeCreate                   AdminAclType = "badge:create"
+	BadgeDelete                   AdminAclType = "badge:delete"
+	BadgeList                     AdminAclType = "badge:list"
+	BadgeUpdate                   AdminAclType = "badge:update"
 	BanAvatarHashAdd              AdminAclType = "ban:avatar_hash:add"
 	BanAvatarHashCheck            AdminAclType = "ban:avatar_hash:check"
 	BanAvatarHashRemove           AdminAclType = "ban:avatar_hash:remove"
@@ -159,6 +163,7 @@ const (
 	GuildReload                   AdminAclType = "guild:reload"
 	GuildShutdown                 AdminAclType = "guild:shutdown"
 	GuildTransferOwnership        AdminAclType = "guild:transfer_ownership"
+	GuildUpdateBadges             AdminAclType = "guild:update:badges"
 	GuildUpdateFeatures           AdminAclType = "guild:update:features"
 	GuildUpdateName               AdminAclType = "guild:update:name"
 	GuildUpdateSettings           AdminAclType = "guild:update:settings"
@@ -191,6 +196,7 @@ const (
 	UserLookup                    AdminAclType = "user:lookup"
 	UserRemoveRelationship        AdminAclType = "user:remove:relationship"
 	UserTempBan                   AdminAclType = "user:temp_ban"
+	UserUpdateBadges              AdminAclType = "user:update:badges"
 	UserUpdateBotStatus           AdminAclType = "user:update:bot_status"
 	UserUpdateDob                 AdminAclType = "user:update:dob"
 	UserUpdateEmail               AdminAclType = "user:update:email"
@@ -239,6 +245,14 @@ func (e AdminAclType) Valid() bool {
 	case Asterisk:
 		return true
 	case AuditLogView:
+		return true
+	case BadgeCreate:
+		return true
+	case BadgeDelete:
+		return true
+	case BadgeList:
+		return true
+	case BadgeUpdate:
 		return true
 	case BanAvatarHashAdd:
 		return true
@@ -332,6 +346,8 @@ func (e AdminAclType) Valid() bool {
 		return true
 	case GuildTransferOwnership:
 		return true
+	case GuildUpdateBadges:
+		return true
 	case GuildUpdateFeatures:
 		return true
 	case GuildUpdateName:
@@ -395,6 +411,8 @@ func (e AdminAclType) Valid() bool {
 	case UserRemoveRelationship:
 		return true
 	case UserTempBan:
+		return true
+	case UserUpdateBadges:
 		return true
 	case UserUpdateBotStatus:
 		return true
@@ -1501,8 +1519,11 @@ type AdminProfileBadgeResponse struct {
 	// AspectRatio Image width divided by its height. Render the image at the badge height and this many times as wide. Null for square badges
 	AspectRatio *float32 `json:"aspect_ratio"`
 
-	// Asset Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges
+	// Asset Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges and for badges with asset_url
 	Asset *HexString16Type `json:"asset"`
+
+	// AssetUrl Absolute image URL for a badge whose image is not a static badge hash, such as a custom badge. Null otherwise
+	AssetUrl *string `json:"asset_url"`
 
 	// Caption Short text for the badge, such as #42. A badge with an image uses it as alt text, and a badge without one shows it as text. Null when the label covers it
 	Caption *string `json:"caption"`
@@ -1522,7 +1543,10 @@ type AdminProfileBadgeResponse struct {
 	// Href Absolute URL to open when the badge is clicked, or null
 	Href *string `json:"href"`
 
-	// Kind Stable badge key. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, and premium on self-hosted instances. Clients must render unknown values from the other fields.
+	// Key Stable identity of the badge. It equals kind for built-in badges and is custom:{id} for custom badges, so use it as the list key
+	Key string `json:"key"`
+
+	// Kind Badge type. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, custom, and premium on self-hosted instances. Clients must render unknown values from the other fields.
 	Kind string `json:"kind"`
 
 	// Label Full badge description, localized for the viewer. Use it as the tooltip, and as alt text when there is no caption
@@ -1720,6 +1744,9 @@ type CreateRegistrationUrlResponse struct {
 	} `json:"registration_url"`
 	Url string `json:"url"`
 }
+
+// CustomBadgeIdListResponse IDs of the custom badges assigned to it
+type CustomBadgeIdListResponse = []SnowflakeStringType
 
 // DateOfBirthPolicySchema Whether the instance asks for a date of birth, and who must enter one
 type DateOfBirthPolicySchema string
@@ -2687,14 +2714,15 @@ type ThrottledError struct {
 
 // UserAdminResponseSchema defines model for UserAdminResponseSchema.
 type UserAdminResponseSchema struct {
-	AccentColor        *Int32Type        `json:"accent_color"`
-	AccountTier        AccountTierSchema `json:"account_tier"`
-	Acls               []string          `json:"acls"`
-	AuthenticatorTypes []Int32Type       `json:"authenticator_types"`
-	Avatar             *string           `json:"avatar"`
-	Banner             *string           `json:"banner"`
-	Bio                *string           `json:"bio"`
-	Bot                bool              `json:"bot"`
+	AccentColor        *Int32Type                `json:"accent_color"`
+	AccountTier        AccountTierSchema         `json:"account_tier"`
+	Acls               []string                  `json:"acls"`
+	AuthenticatorTypes []Int32Type               `json:"authenticator_types"`
+	Avatar             *string                   `json:"avatar"`
+	BadgeIds           CustomBadgeIdListResponse `json:"badge_ids"`
+	Banner             *string                   `json:"banner"`
+	Bio                *string                   `json:"bio"`
+	Bot                bool                      `json:"bot"`
 
 	// Claimed Whether the account can be signed in to from another device
 	Claimed     bool    `json:"claimed"`

@@ -31,6 +31,7 @@ export class Guild {
 	readonly embedSplashWidth: number | null;
 	readonly embedSplashHeight: number | null;
 	readonly features: Set<string>;
+	readonly badgeIds: ReadonlySet<bigint>;
 	readonly verificationLevel: GuildVerificationLevelValue;
 	readonly mfaLevel: GuildMFALevelValue;
 	readonly nsfwLevel: GuildNSFWLevelValue;
@@ -69,6 +70,7 @@ export class Guild {
 		this.embedSplashWidth = row.embed_splash_width ?? null;
 		this.embedSplashHeight = row.embed_splash_height ?? null;
 		this.features = row.features ?? new Set();
+		this.badgeIds = row.badge_ids ?? new Set();
 		this.verificationLevel = Math.min(
 			row.verification_level ?? 0,
 			GuildVerificationLevel.HIGH,
@@ -112,6 +114,7 @@ export class Guild {
 			embed_splash_width: this.embedSplashWidth,
 			embed_splash_height: this.embedSplashHeight,
 			features: this.features.size > 0 ? this.features : null,
+			badge_ids: this.badgeIds.size > 0 ? new Set(this.badgeIds) : null,
 			verification_level: this.verificationLevel,
 			mfa_level: this.mfaLevel,
 			nsfw_level: this.nsfwLevel,

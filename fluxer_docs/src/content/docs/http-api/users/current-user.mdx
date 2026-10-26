@@ -88,10 +88,11 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 | accent_color? | ?integer | Packed 24-bit RGB color (0-16777215), or null to clear |
 | timezone?<sup>8</sup> | ?string | IANA timezone identifier (1-128 characters), or null to clear |
 | timezone_privacy_flags? | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) for the timezone |
-| premium_badge_hidden? | boolean | Whether to hide the premium badge from the public profile |
+| hidden_profile_badges?<sup>12</sup> | array[string] | The full list of [badge keys](/http-api/users/#hiding-badges) to hide from other people, at most 18 |
+| premium_badge_hidden?<sup>13</sup> | boolean | Deprecated. Use the hidden badge list |
 | premium_badge_masked? | boolean | Whether to show a lifetime badge as an ordinary subscription badge |
 | premium_badge_timestamp_hidden? | boolean | Whether to hide the premium activation time |
-| premium_badge_sequence_hidden? | boolean | Whether to hide the lifetime premium sequence |
+| premium_badge_sequence_hidden?<sup>13</sup> | boolean | Deprecated. Use the hidden badge list |
 | premium_enabled_override?<sup>9</sup> | boolean | Whether a staff override grants premium entitlements |
 | has_dismissed_premium_onboarding?<sup>10</sup> | boolean | Whether the premium onboarding flow was dismissed |
 | has_unread_gift_inventory?<sup>11</sup> | boolean | Whether the gift inventory has unread items |
@@ -125,6 +126,10 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 <sup>10</sup> Only `true` has an effect
 
 <sup>11</sup> Only `false` has an effect
+
+<sup>12</sup> Replaces the saved list. A key that is neither a built-in badge kind nor `custom:{id}` returns `INVALID_FORM_BODY`, and keys of custom badges that no longer exist are dropped
+
+<sup>13</sup> `true` adds keys to `hidden_profile_badges` and `false` removes them: `plutonium`, `visionary` and `premium` for `premium_badge_hidden`, and `visionary_number` for `premium_badge_sequence_hidden`. `operator_pass_badge_hidden` does the same for `operator_pass`. All three are ignored when the request also sends `hidden_profile_badges`
 
 While `interaction_tier` is `legacy` ([account tiers](/http-api/users/#account-tiers)), an unverified account gets 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/) when it changes the username, discriminator, display name, avatar, banner, biography, pronouns, accent color, timezone, timezone privacy or a premium badge field. In that mode an [unclaimed](/http-api/users/#account-tiers) account can only send `new_password`, `has_dismissed_premium_onboarding`, `has_unread_gift_inventory`, `email_token` and the sudo fields, and any other field returns [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/). On an instance where people sign in with a username, `new_password` can come with `username` to claim the account in one request.
 
@@ -363,24 +368,46 @@ The rate limit is 20 requests per minute, on the `user:update` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/profile-badges/preview" />
 
-Returns the account's [profile badges](/http-api/users/#profile-badge-object) as others would see them with the given settings. Nothing is saved.
+Returns the account's [profile badges](/http-api/users/#profile-badge-object) as others would see them with the given settings, and every badge the account holds with whether those settings hide it. Nothing is saved.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| premium_badge_hidden? | boolean | Preview with the premium badge hidden |
+| hidden_profile_badges? | array[string] | Preview with these [badge keys](/http-api/users/#hiding-badges) hidden |
 | premium_badge_masked? | boolean | Preview with the premium badge masked |
 | premium_badge_timestamp_hidden? | boolean | Preview with the premium badge date hidden |
-| premium_badge_sequence_hidden? | boolean | Preview with the lifetime sequence hidden |
+| operator_pass_badge_timestamp_hidden? | boolean | Preview with the date the Operator Pass was first held hidden |
+| operator_pass_badge_count_hidden? | boolean | Preview with the number of Operator Passes hidden |
 
-A field you leave out keeps the saved value.
+A field you leave out keeps the saved value. The deprecated `premium_badge_hidden`, `premium_badge_sequence_hidden` and `operator_pass_badge_hidden` fields work as in [Modify current user](#modify-current-user).
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| profile_badges | array[[profile badge](/http-api/users/#profile-badge-object) object] | The badges in display order |
+| profile_badges | array[[profile badge](/http-api/users/#profile-badge-object) object] | The badges other people would see, in display order |
+| own_badges | array[[own profile badge](#own-profile-badge-object) object] | Every badge the account holds, in display order |
+
+### Own profile badge object
+
+A [profile badge](/http-api/users/#profile-badge-object) with a `hidden` field. A masked Visionary badge is listed as `visionary` here, because that is the key you hide.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key | string | The badge's identity, and the value to put in `hidden_profile_badges` |
+| kind | string | The badge type |
+| label | string | The badge description in your locale |
+| asset | ?string | The badge image hash, or null for a text badge or a custom badge |
+| asset_url | ?string | The image URL of a custom badge |
+| aspect_ratio | ?number | The image width divided by its height |
+| caption | ?string | The short badge text, such as `#42` |
+| href | ?string | The URL a click opens |
+| small_asset? | string | The image hash for 20 pixels and smaller |
+| count? | ?integer | The number of Operator Passes the badge stands for |
+| accessible_label? | ?string | The label for screen readers |
+| details? | ?[badge details](/http-api/users/#badge-details-object) object | The tooltip content |
+| hidden | boolean | Whether the badge key is in the previewed `hidden_profile_badges` |
 
 ### Response
 

@@ -35,6 +35,7 @@ A guild is a community with its own channels, roles, members and settings. Membe
 | afk_channel_id | ?snowflake | Voice channel that inactive members are moved to |
 | afk_timeout | integer | AFK timeout in seconds (60-3600) |
 | features | array[string] | [Guild features](#guild-features), in no fixed order |
+| badge_ids | array[string] | [Badge](/http-api/instance/#guild-badge-object) IDs |
 | verification_level | integer | [Verification level](#verification-levels) |
 | mfa_level | integer | [MFA level](#mfa-levels) |
 | nsfw_level | integer | [NSFW level](#nsfw-levels) |
@@ -118,6 +119,7 @@ Invites return this smaller guild object, and its asset fields follow the same f
 | embed_splash_width | ?integer | Embedded invite splash width in pixels |
 | embed_splash_height | ?integer | Embedded invite splash height in pixels |
 | features | array[string] | [Guild features](#guild-features) |
+| badge_ids | array[string] | [Badge](/http-api/instance/#guild-badge-object) IDs |
 | visits_enabled?<sup>1</sup> | boolean | Whether you can [visit](#visiting-guilds) the guild from this invite |
 
 <sup>1</sup> Only [Get invite](/http-api/invites/#get-invite) returns this field, and only with the `guild_visits` assignment

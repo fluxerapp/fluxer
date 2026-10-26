@@ -45,6 +45,7 @@ import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartu
 import {CronScheduler} from '@app/api/worker/CronScheduler';
 import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
 import {queueDeletedUsersBackfill} from '@app/api/worker/tasks/BackfillDeletedUsers';
+import {queueHiddenProfileBadgesBackfill} from '@app/api/worker/tasks/BackfillHiddenProfileBadges';
 import {queuePasskeyTraitBackfill} from '@app/api/worker/tasks/BackfillPasskeyTrait';
 import {queueUserAclIndexBackfill} from '@app/api/worker/tasks/BackfillUserAclIndex';
 import {singleCommunityJoinPending} from '@app/api/worker/tasks/JoinSingleCommunityMembers';
@@ -232,6 +233,7 @@ export async function startWorkerRuntime(options: WorkerRuntimeOptions): Promise
 		await queuePasskeyTraitBackfill(dependencies.kvClient, workerService);
 		await queueUserAclIndexBackfill(dependencies.kvClient, workerService);
 		await queueDeletedUsersBackfill(dependencies.kvClient, workerService);
+		await queueHiddenProfileBadgesBackfill(dependencies.kvClient, workerService);
 		try {
 			const normalized = await getInstanceConfigRepository().normalizeStoredBrandingAssets(dependencies.storageService);
 			if (normalized > 0) {

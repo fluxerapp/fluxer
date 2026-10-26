@@ -1904,6 +1904,7 @@ version = "0.1.0"
 dependencies = [
  "ammonia",
  "anyhow",
+ "base64 0.23.1",
  "chrono",
  "encoding_rs",
  "entities",
@@ -1914,6 +1915,7 @@ dependencies = [
  "moka",
  "regex",
  "reqwest",
+ "ring",
  "scraper",
  "serde",
  "serde_json",

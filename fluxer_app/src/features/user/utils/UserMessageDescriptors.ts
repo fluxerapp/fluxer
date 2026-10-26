@@ -237,6 +237,11 @@ export const PROFILE_CUSTOMIZATION_DESCRIPTOR = msg({
 	comment: 'Settings section label for editing profile appearance and identity.',
 });
 
+export const PROFILE_BADGES_DESCRIPTOR = msg({
+	message: 'Badges',
+	comment: 'Title of the profile settings section that lists the badges you hold and lets you hide each one.',
+});
+
 export const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
 	message: 'Community nickname',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',

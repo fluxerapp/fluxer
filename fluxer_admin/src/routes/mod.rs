@@ -3,6 +3,7 @@
 pub mod admin;
 pub mod applications;
 pub mod auth;
+pub mod badges;
 pub mod bans;
 mod bans_actions;
 mod billing_actions;
@@ -76,6 +77,7 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(messages::router())
         .merge(system::router())
         .merge(voice::router())
+        .merge(badges::router())
         .merge(admin::router())
         .route("/", get(dashboard))
         .route("/dashboard", get(dashboard))

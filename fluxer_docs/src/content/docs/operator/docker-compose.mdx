@@ -33,6 +33,7 @@ for key in POSTGRES_PASSWORD MEILI_MASTER_KEY FLUXER_S3_SECRET_KEY FLUXER_SUDO_M
 done
 sed -i "s|^FLUXER_SETUP_TOKEN=.*|FLUXER_SETUP_TOKEN=$(openssl rand -hex 16)|" .env
 sed -i "s|^FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=.*|FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=$(openssl rand -base64 32)|" .env
+sed -i "s|^FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64=.*|FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64=$(openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform DER | base64 | tr -d '\n')|" .env
 openssl ecparam -name prime256v1 -genkey -noout -out vapid.pem
 sed -i "s|^FLUXER_VAPID_PUBLIC_KEY=.*|FLUXER_VAPID_PUBLIC_KEY=$(openssl ec -in vapid.pem -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | tr '/+' '_-' | tr -d '=\n')|" .env
 sed -i "s|^FLUXER_VAPID_PRIVATE_KEY=.*|FLUXER_VAPID_PRIVATE_KEY=$(openssl ec -in vapid.pem -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 | tr '/+' '_-' | tr -d '=\n')|" .env

@@ -15,6 +15,7 @@ import {
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {
 	INTERFACE_LANGUAGE_DESCRIPTOR,
+	PROFILE_BADGES_DESCRIPTOR,
 	PROFILE_CUSTOMIZATION_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
@@ -44,6 +45,13 @@ export const generalSettingsSections = [
 		id: 'profile-customization',
 		tabType: 'my_profile',
 		label: PROFILE_CUSTOMIZATION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{
+		id: 'profile-badges',
+		tabType: 'my_profile',
+		label: PROFILE_BADGES_DESCRIPTOR,
 		keywords: [],
 		isAdvanced: false,
 	},

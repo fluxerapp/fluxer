@@ -22,6 +22,7 @@ export type ProfileWire = Readonly<{
 	timezone_offset: number | null;
 	guild_member?: GuildMemberData;
 	profile_badges?: ReadonlyArray<ProfileBadgeResponse>;
+	hidden_profile_badge_count?: number;
 	mutual_friends?: Array<UserPartial>;
 	mutual_guilds?: Array<ProfileMutualGuild>;
 	connected_accounts?: Array<ConnectionResponse>;
@@ -35,6 +36,7 @@ export class Profile {
 	readonly guildMemberProfile: Readonly<UserProfile> | null;
 	readonly timezoneOffset: number | null;
 	readonly profileBadges: ReadonlyArray<ProfileBadgeResponse>;
+	readonly hiddenProfileBadgeCount: number;
 	readonly mutualFriends: ReadonlyArray<UserPartial> | null;
 	readonly mutualGuilds: ReadonlyArray<ProfileMutualGuild> | null;
 	readonly connectedAccounts: ReadonlyArray<ConnectionResponse> | null;
@@ -48,6 +50,7 @@ export class Profile {
 		this.guildMemberProfile = profile.guild_member_profile ? Object.freeze({...profile.guild_member_profile}) : null;
 		this.timezoneOffset = profile.timezone_offset;
 		this.profileBadges = Object.freeze([...(profile.profile_badges ?? [])]);
+		this.hiddenProfileBadgeCount = profile.hidden_profile_badge_count ?? 0;
 		this.mutualFriends = profile.mutual_friends ? Object.freeze([...profile.mutual_friends]) : null;
 		this.mutualGuilds = profile.mutual_guilds ? Object.freeze([...profile.mutual_guilds]) : null;
 		this.connectedAccounts = profile.connected_accounts ? Object.freeze([...profile.connected_accounts]) : null;
@@ -69,6 +72,7 @@ export class Profile {
 				guild_member:
 					updates.guild_member !== undefined ? updates.guild_member : (this.embeddedGuildMember?.toJSON() ?? undefined),
 				profile_badges: updates.profile_badges ?? this.profileBadges,
+				hidden_profile_badge_count: updates.hidden_profile_badge_count ?? this.hiddenProfileBadgeCount,
 				mutual_friends: updates.mutual_friends ?? (this.mutualFriends ? [...this.mutualFriends] : undefined),
 				mutual_guilds: updates.mutual_guilds ?? (this.mutualGuilds ? [...this.mutualGuilds] : undefined),
 				connected_accounts:
@@ -123,6 +127,7 @@ export class Profile {
 			guild_member: this.embeddedGuildMember?.toJSON(),
 			timezone_offset: this.timezoneOffset,
 			profile_badges: [...this.profileBadges],
+			hidden_profile_badge_count: this.hiddenProfileBadgeCount,
 			mutual_friends: this.mutualFriends ? [...this.mutualFriends] : undefined,
 			mutual_guilds: this.mutualGuilds ? [...this.mutualGuilds] : undefined,
 			connected_accounts: this.connectedAccounts ? [...this.connectedAccounts] : undefined,

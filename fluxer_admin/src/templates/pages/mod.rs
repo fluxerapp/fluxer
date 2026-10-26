@@ -6,6 +6,7 @@ pub mod applications_list;
 pub mod archives;
 pub mod audit_logs;
 pub mod audit_logs_table;
+pub mod badges;
 pub mod bans;
 pub(crate) mod blocklist_helpers;
 pub mod bulk_actions;

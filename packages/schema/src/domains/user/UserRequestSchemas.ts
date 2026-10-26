@@ -18,6 +18,7 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {HiddenProfileBadgesType} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {
 	isValidSyncedPreferencesEncoding,
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
@@ -79,13 +80,20 @@ export const UserUpdateRequest = z
 			'Bitfield controlling who can see the profile timezone',
 			'ProfileFieldPrivacyFlags',
 		).describe('Bitfield controlling who can see the profile timezone'),
-		premium_badge_hidden: z.boolean().describe('Whether to hide the premium badge'),
+		hidden_profile_badges: HiddenProfileBadgesType,
+		premium_badge_hidden: z
+			.boolean()
+			.describe(
+				'Deprecated, use hidden_profile_badges. true adds plutonium, visionary and premium to the list, and false removes them',
+			),
 		premium_badge_masked: z.boolean().describe('Whether to mask the premium badge'),
 		premium_badge_timestamp_hidden: z.boolean().describe('Whether to hide premium badge timestamp'),
-		premium_badge_sequence_hidden: z.boolean().describe('Whether to hide premium badge sequence'),
+		premium_badge_sequence_hidden: z
+			.boolean()
+			.describe('Deprecated, use hidden_profile_badges. true adds visionary_number to the list, and false removes it'),
 		operator_pass_badge_hidden: z
 			.boolean()
-			.describe('Whether to hide the Operator Pass badge from other people. Either value replaces the default'),
+			.describe('Deprecated, use hidden_profile_badges. true adds operator_pass to the list, and false removes it'),
 		operator_pass_badge_timestamp_hidden: z
 			.boolean()
 			.describe('Whether to hide from other people the month and year the Operator Pass was first held'),

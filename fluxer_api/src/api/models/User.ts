@@ -4,8 +4,10 @@ import type {UserID} from '@app/api/BrandedTypes';
 import {LocalDate} from '@app/api/database/LocalDate';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {checkIsPremium, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {isProfileBadgeKey, type ProfileBadgeKey} from '@fluxer/constants/src/BadgeConstants';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
+	legacyHiddenProfileBadges,
 	type MentionReplyPreference,
 	ProfileFieldPrivacyFlags,
 	type UserAuthenticatorType,
@@ -69,6 +71,8 @@ export class User {
 	readonly contentHiddenSince: Date | null;
 	readonly acls: Set<string>;
 	private readonly _traits: Set<string>;
+	readonly badgeIds: ReadonlySet<bigint>;
+	readonly hiddenProfileBadges: ReadonlySet<ProfileBadgeKey>;
 	readonly lastRefundAt: Date | null;
 	readonly giftInventoryServerSeq: number | null;
 	readonly giftInventoryClientSeq: number | null;
@@ -135,6 +139,11 @@ export class User {
 		this.contentHiddenSince = row.content_hidden_since ?? null;
 		this.acls = row.acls ?? new Set();
 		this._traits = row.traits ?? new Set();
+		this.badgeIds = row.badge_ids ?? new Set();
+		this.hiddenProfileBadges = new Set([
+			...[...(row.hidden_profile_badges ?? [])].filter(isProfileBadgeKey),
+			...legacyHiddenProfileBadges(rawFlags, this.premiumFlags),
+		]);
 		this.lastRefundAt = row.first_refund_at ?? null;
 		this.giftInventoryServerSeq = row.gift_inventory_server_seq ?? null;
 		this.giftInventoryClientSeq = row.gift_inventory_client_seq ?? null;
@@ -214,6 +223,8 @@ export class User {
 			content_hidden_since: this.contentHiddenSince,
 			acls: this.acls.size > 0 ? this.acls : null,
 			traits: this._traits.size > 0 ? this._traits : null,
+			badge_ids: this.badgeIds.size > 0 ? new Set(this.badgeIds) : null,
+			hidden_profile_badges: this.hiddenProfileBadges.size > 0 ? new Set(this.hiddenProfileBadges) : null,
 			first_refund_at: this.lastRefundAt,
 			gift_inventory_server_seq: this.giftInventoryServerSeq,
 			gift_inventory_client_seq: this.giftInventoryClientSeq,

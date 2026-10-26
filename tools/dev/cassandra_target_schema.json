@@ -6161,6 +6161,10 @@
 					"type": "set<text>"
 				},
 				{
+					"name": "badge_ids",
+					"type": "set<bigint>"
+				},
+				{
 					"name": "verification_level",
 					"type": "int"
 				},
@@ -9956,6 +9960,14 @@
 				},
 				{
 					"name": "traits",
+					"type": "set<text>"
+				},
+				{
+					"name": "badge_ids",
+					"type": "set<bigint>"
+				},
+				{
+					"name": "hidden_profile_badges",
 					"type": "set<text>"
 				},
 				{

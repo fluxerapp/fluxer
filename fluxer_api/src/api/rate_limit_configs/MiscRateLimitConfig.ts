@@ -8,6 +8,10 @@ export const MiscRateLimitConfigs = {
 		bucket: 'instance:info',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	ACTIVITY_PUB_DOCUMENT: {
+		bucket: 'activity_pub:document',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	INSTANCE_SETUP_ACCOUNT_IDENTITY: {
 		bucket: 'instance:setup:account_identity',
 		config: {limit: 10, windowMs: ms('1 minute')},

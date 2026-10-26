@@ -268,6 +268,11 @@ func secretHelp(g *secretGroup) (string, []string) {
 		commands = []string{"openssl rand -hex 32"}
 	case secrets.KindBase64_32:
 		commands = []string{"openssl rand -base64 32"}
+	case secrets.KindRSA:
+		commands = []string{
+			"openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform DER |",
+			"  base64 | tr -d '\\n'",
+		}
 	case secrets.KindAlnum64:
 		commands = []string{"openssl rand -base64 96 | tr -dc A-Za-z0-9 | head -c 64"}
 	case secrets.KindVAPID:

@@ -31,8 +31,9 @@ import {
 	tierDenialError,
 } from '@app/api/user/AccountTier';
 import {isProfileHidden} from '@app/api/user/ProfileVisibility';
+import {resolveHiddenProfileBadges} from '@app/api/user/profile_badges/HiddenProfileBadges';
 import {applyProfileBadgeSettings} from '@app/api/user/profile_badges/PremiumBadgeMasking';
-import {buildProfileBadges} from '@app/api/user/profile_badges/ProfileBadgeBuilder';
+import {buildOwnProfileBadges, buildProfileBadges} from '@app/api/user/profile_badges/ProfileBadgeBuilder';
 import {loadProfileBadgeEnvironment} from '@app/api/user/profile_badges/ProfileBadgeEnvironment';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {EmailChangeService} from '@app/api/user/services/EmailChangeService';
@@ -84,6 +85,7 @@ const PROFILE_CUSTOMIZATION_FIELDS: ReadonlyArray<keyof UserUpdatePayload> = [
 	'accent_color',
 	'timezone',
 	'timezone_privacy_flags',
+	'hidden_profile_badges',
 	'premium_badge_hidden',
 	'premium_badge_masked',
 	'premium_badge_timestamp_hidden',
@@ -285,7 +287,7 @@ export class UserAccountRequestService {
 			}
 		}
 		if (
-			(userUpdateData.operator_pass_badge_hidden !== undefined ||
+			(user.hiddenProfileBadges.has('operator_pass') !== updatedUser.hiddenProfileBadges.has('operator_pass') ||
 				userUpdateData.operator_pass_badge_timestamp_hidden !== undefined ||
 				userUpdateData.operator_pass_badge_count_hidden !== undefined) &&
 			this.operatorPassEntitlementService
@@ -405,15 +407,20 @@ export class UserAccountRequestService {
 					restrictProfile,
 				})
 			: null;
-		const profileBadges = buildProfileBadges({
+		const viewerIsSelf = params.currentUserId === profileUser.id;
+		const badgeInput = {
 			user: profileUser,
 			operatorPass: profileUser.isBot || !operatorPassState ? null : resolveOperatorPassHolder(operatorPassState),
 			locale: params.requestLocale,
 			environment: badgeEnvironment,
 			restricted: restrictProfile,
-			hidden,
-			viewerIsSelf: params.currentUserId === profileUser.id,
-		});
+			profileHidden: hidden,
+			viewerIsSelf,
+		};
+		const profileBadges = buildProfileBadges(badgeInput);
+		const hiddenProfileBadgeCount = viewerIsSelf
+			? buildOwnProfileBadges(badgeInput).filter((badge) => badge.hidden).length
+			: undefined;
 		return {
 			user:
 				params.requestCache.userPartials.get(profileUser.id) ??
@@ -426,6 +433,7 @@ export class UserAccountRequestService {
 			premium_lifetime_sequence: premiumLifetimeSequence,
 			profile_badges: profileBadges,
 			operator_pass_since: operatorPassSince?.toISOString() ?? null,
+			hidden_profile_badge_count: hiddenProfileBadgeCount,
 			mutual_friends: mutualFriends,
 			mutual_guilds: profile.mutualGuilds,
 			connected_accounts: connectedAccounts,
@@ -439,28 +447,28 @@ export class UserAccountRequestService {
 		settings: ProfileBadgePreviewRequest;
 		requestLocale: string;
 	}): Promise<ProfileBadgePreviewResponse> {
-		const {user} = params;
+		const {user, settings} = params;
 		const [operatorPassState, environment] = await Promise.all([
 			user.isBot ? null : (this.operatorPassEntitlementService?.loadState(user.id) ?? null),
 			loadProfileBadgeEnvironment(),
 		]);
 		const expired = shouldStripExpiredPremium(user);
-		return {
-			profile_badges: buildProfileBadges({
-				user: {
-					flags: user.flags,
-					premiumFlags: user.premiumFlags,
-					premiumType: expired ? null : user.premiumType,
-					premiumSince: expired ? null : user.premiumSince,
-					premiumLifetimeSequence: expired ? null : user.premiumLifetimeSequence,
-				},
-				operatorPass: operatorPassState ? resolveOperatorPassHolder(operatorPassState) : null,
-				locale: params.requestLocale,
-				environment,
-				hidden: isProfileHidden(user),
-				previewPremiumFlags: applyProfileBadgeSettings(user.premiumFlags, params.settings),
-			}),
+		const input = {
+			user: {
+				flags: user.flags,
+				premiumFlags: applyProfileBadgeSettings(user.premiumFlags, settings),
+				premiumType: expired ? null : user.premiumType,
+				premiumSince: expired ? null : user.premiumSince,
+				premiumLifetimeSequence: expired ? null : user.premiumLifetimeSequence,
+				badgeIds: user.badgeIds,
+				hiddenProfileBadges: resolveHiddenProfileBadges(user.hiddenProfileBadges, settings) ?? user.hiddenProfileBadges,
+			},
+			operatorPass: operatorPassState ? resolveOperatorPassHolder(operatorPassState) : null,
+			locale: params.requestLocale,
+			environment,
+			profileHidden: isProfileHidden(user),
 		};
+		return {profile_badges: buildProfileBadges(input), own_badges: buildOwnProfileBadges(input)};
 	}
 
 	checkTagAvailability(params: {currentUser: User; username: string; discriminator: number}): boolean {
@@ -505,6 +513,7 @@ export class UserAccountRequestService {
 		response.premium_will_cancel = false;
 		response.premium_billing_cycle = null;
 		response.premium_lifetime_sequence = null;
+		response.hidden_profile_badges = [];
 		response.premium_badge_hidden = false;
 		response.premium_badge_masked = false;
 		response.premium_badge_timestamp_hidden = false;

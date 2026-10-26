@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createGuildID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {stripAvatarForUser, stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {resolveEffectiveUserTraits} from '@app/api/limits/EffectiveUserTraits';
@@ -21,6 +22,7 @@ import {
 } from '@app/api/user/AccountTier';
 import {isDateOfBirthMissing} from '@app/api/user/DateOfBirth';
 import {hiddenUserPartial, isProfileHidden} from '@app/api/user/ProfileVisibility';
+import {deprecatedBadgeHideFields} from '@app/api/user/profile_badges/HiddenProfileBadges';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {AccountTiers} from '@fluxer/constants/src/AccountTierConstants';
 import type {ChannelMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
@@ -32,6 +34,7 @@ import {
 	type GuildFolderIcon,
 	PremiumFlags,
 	PUBLIC_USER_FLAGS,
+	stripHiddenProfileBadgeFlags,
 	UNCATEGORIZED_FOLDER_ID,
 	type UserAuthenticatorType,
 	UserAuthenticatorTypes,
@@ -48,15 +51,8 @@ import type {
 	UserSettingsResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
-const PUBLIC_USER_FLAGS_WITHOUT_STAFF = PUBLIC_USER_FLAGS & ~UserFlags.STAFF;
-
-function getVisiblePublicUserFlags(userFlags: bigint): bigint {
-	return (userFlags & UserFlags.STAFF_HIDDEN) !== 0n ? PUBLIC_USER_FLAGS_WITHOUT_STAFF : PUBLIC_USER_FLAGS;
-}
-
 function mapUserFlagsToPublicBitfield(user: User): number {
-	const flags = user.flags ?? 0n;
-	return Number(flags & getVisiblePublicUserFlags(flags));
+	return Number(stripHiddenProfileBadgeFlags(user.flags ?? 0n, user.hiddenProfileBadges) & PUBLIC_USER_FLAGS);
 }
 
 export function getActiveAuthenticatorTypes(user: User): Array<UserAuthenticatorType> {
@@ -148,6 +144,7 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 	const traits = Array.from(resolveEffectiveUserTraits(user.traits, isActuallyPremium)).sort();
 	const authenticatorTypes = getActiveAuthenticatorTypes(user);
 	const accountTier = getAccountTier(user);
+	const deprecatedHideFields = deprecatedBadgeHideFields(user, Config.instance.selfHosted);
 	return {
 		...partialResponse,
 		flags: mapUserFlagsToPublicBitfield(user),
@@ -175,10 +172,11 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 		premium_lifetime_sequence: user.premiumLifetimeSequence ?? null,
 		premium_grace_ends_at: user.premiumGraceEndsAt?.toISOString() ?? null,
 		premium_discriminator: !!(user.premiumFlags & PremiumFlags.DISCRIMINATOR),
-		premium_badge_hidden: !!(user.premiumFlags & PremiumFlags.BADGE_HIDDEN),
+		hidden_profile_badges: [...user.hiddenProfileBadges].sort(),
+		premium_badge_hidden: deprecatedHideFields.premium_badge_hidden,
 		premium_badge_masked: !!(user.premiumFlags & PremiumFlags.BADGE_MASKED),
 		premium_badge_timestamp_hidden: !!(user.premiumFlags & PremiumFlags.BADGE_TIMESTAMP_HIDDEN),
-		premium_badge_sequence_hidden: !!(user.premiumFlags & PremiumFlags.BADGE_SEQUENCE_HIDDEN),
+		premium_badge_sequence_hidden: deprecatedHideFields.premium_badge_sequence_hidden,
 		premium_purchase_disabled: !!(user.premiumFlags & PremiumFlags.PURCHASE_DISABLED),
 		premium_enabled_override: !!(user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE),
 		premium_perks_disabled: !!(user.premiumFlags & PremiumFlags.PERKS_DISABLED),

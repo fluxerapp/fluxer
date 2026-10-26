@@ -45,6 +45,7 @@ export class Guild {
 	readonly embedSplashWidth: number | null;
 	readonly embedSplashHeight: number | null;
 	readonly features: ReadonlySet<string>;
+	readonly badgeIds: ReadonlyArray<string>;
 	readonly vanityURLCode: string | null;
 	readonly ownerId: string;
 	readonly systemChannelId: string | null;
@@ -85,6 +86,7 @@ export class Guild {
 		this.embedSplashWidth = this.normalizeEmbedSplashWidth(guild);
 		this.embedSplashHeight = this.normalizeEmbedSplashHeight(guild);
 		this.features = new Set(guild.features);
+		this.badgeIds = this.normalizeFieldWithDefault(guild, 'badge_ids', 'badgeIds', []);
 		this.vanityURLCode = this.normalizeVanityUrlCode(guild);
 		this.ownerId = this.normalizeOwnerId(guild);
 		this.systemChannelId = this.normalizeSystemChannelId(guild);
@@ -310,6 +312,7 @@ export class Guild {
 			embed_splash_width: this.embedSplashWidth,
 			embed_splash_height: this.embedSplashHeight,
 			features: [...this.features],
+			badge_ids: this.badgeIds,
 			vanity_url_code: this.vanityURLCode,
 			owner_id: this.ownerId,
 			system_channel_id: this.systemChannelId,

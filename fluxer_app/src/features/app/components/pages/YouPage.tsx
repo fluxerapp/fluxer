@@ -11,7 +11,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
-import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
+import {openProfileBadgeSettings, openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import {NoteEditSheet} from '@app/features/user/components/modals/NoteEditSheet';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
 import {UserProfileBio, UserProfileMembershipInfo} from '@app/features/user/components/popouts/UserProfileShared';
@@ -23,7 +23,7 @@ import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -147,6 +147,7 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 												badges={profile?.profileBadges ?? []}
 												isModal={true}
 												isMobile={true}
+												onEditBadges={canEditOwnProfileBadges(user.id, profile) ? openProfileBadgeSettings : undefined}
 												data-flx="app.you-page.user-profile-badges"
 											/>
 										</div>

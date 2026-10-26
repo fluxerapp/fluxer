@@ -8,6 +8,7 @@ import {
 	type ProfileBadgeSubject,
 } from '@app/api/user/profile_badges/ProfileBadgeBuilder';
 import type {ProfileBadgeEnvironment} from '@app/api/user/profile_badges/ProfileBadgeRegistry';
+import type {ProfileBadgeKey} from '@fluxer/constants/src/BadgeConstants';
 import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, test} from 'vitest';
 
@@ -18,6 +19,8 @@ const HOSTED: ProfileBadgeEnvironment = {
 	premiumName: 'Plutonium',
 	premiumInfoUrl: null,
 	marketingUrl: 'https://fluxer.example',
+	mediaUrl: 'https://media.fluxer.example',
+	customBadges: [],
 };
 
 const OCTOBER = new Date('2026-10-15T12:00:00Z');
@@ -29,6 +32,8 @@ function subject(overrides: Partial<ProfileBadgeSubject> = {}): ProfileBadgeSubj
 		premiumType: null,
 		premiumSince: null,
 		premiumLifetimeSequence: null,
+		badgeIds: new Set(),
+		hiddenProfileBadges: new Set(),
 		...overrides,
 	};
 }
@@ -60,8 +65,17 @@ const everything = subject({
 });
 
 describe('buildProfileBadges', () => {
-	test('a hidden staff flag drops the staff badge', () => {
-		expect(kinds({user: subject({flags: UserFlags.STAFF | UserFlags.STAFF_HIDDEN})})).toEqual([]);
+	test('a hidden key drops the badge it names, and hiding a held Visionary also drops its mask', () => {
+		const hide = (...keys: Array<ProfileBadgeKey>) => new Set(keys);
+		expect(kinds({user: {...everything, hiddenProfileBadges: hide('staff', 'bug_hunter')}})).toEqual([
+			'partner',
+			'plutonium',
+		]);
+		expect(kinds({user: {...visionary(), hiddenProfileBadges: hide('visionary_number')}})).toEqual(['visionary']);
+		const masked = visionary(PremiumFlags.BADGE_MASKED);
+		expect(kinds({user: masked})).toEqual(['plutonium']);
+		expect(kinds({user: {...masked, hiddenProfileBadges: hide('visionary')}})).toEqual([]);
+		expect(kinds({user: {...masked, hiddenProfileBadges: hide('plutonium')}})).toEqual(['plutonium']);
 	});
 
 	test('restricted profiles keep only the flag badges', () => {
@@ -70,7 +84,7 @@ describe('buildProfileBadges', () => {
 	});
 
 	test('hidden accounts show nothing', () => {
-		expect(build({user: everything, hidden: true})).toEqual([]);
+		expect(build({user: everything, profileHidden: true})).toEqual([]);
 	});
 
 	describe('localization', () => {

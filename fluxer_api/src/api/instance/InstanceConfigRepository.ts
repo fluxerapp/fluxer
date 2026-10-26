@@ -22,18 +22,6 @@ import {
 	setCachedAccountsConfig,
 	setCachedEmailDeliveryState,
 } from '@app/api/instance/AccountsConfigCache';
-import {
-	BRANDING_ASSET_FIELDS,
-	type BrandingAssetField,
-	brandingAssetReferenceFromAnyUrl,
-	brandingAssetStorageKey,
-	brandingAssetStorageKeys,
-	isBrandingAssetReference,
-	mapBrandingAssets,
-	releasedBrandingAssetReferences,
-	resolveBrandingAsset,
-	toStoredBrandingAsset,
-} from '@app/api/instance/BrandingAssetReferences';
 import {getLegacyDateOfBirthCollectionDefault} from '@app/api/instance/DateOfBirthCollectionCache';
 import {
 	describeIncompleteSmtpConfig,
@@ -46,6 +34,19 @@ import {
 	type StoredEmailSmtpConfig,
 	storedSmtpTlsMode,
 } from '@app/api/instance/EmailDelivery';
+import {
+	assetStorageKey,
+	BRANDING_ASSET_FIELDS,
+	type BrandingAssetField,
+	brandingAssetReferenceFromAnyUrl,
+	brandingAssetStorageKeys,
+	isBrandingAssetReference,
+	isCustomBadgeAssetReference,
+	mapBrandingAssets,
+	releasedBrandingAssetReferences,
+	resolveBrandingAsset,
+	toStoredBrandingAsset,
+} from '@app/api/instance/InstanceAssetReferences';
 import {InstanceConfigCache} from '@app/api/instance/InstanceConfigCache';
 import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {getDefaultProductName, setCachedProductName} from '@app/api/instance/ProductName';
@@ -94,6 +95,7 @@ import {
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {resolveIdentifierFirst, resolveInstantAccountAvailability} from '@fluxer/constants/src/AccountTierRules';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {resolveSmtpTlsMode, type SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -164,7 +166,7 @@ import {
 	type InstanceServices,
 	type InstanceSetup,
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
-import {normalizeString, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {normalizeString, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {z} from 'zod';
 
@@ -192,6 +194,7 @@ const INSTANCE_MEDIA_CONFIG_KEY = 'instance_media_config';
 const INSTANCE_BILLING_CONFIG_KEY = 'instance_billing_config';
 const ACCOUNT_IDENTITY_CONFIG_KEY = 'account_identity_config';
 const INSTANCE_NOTICE_KEY = 'instance_notice';
+const CUSTOM_BADGES_CONFIG_KEY = 'custom_badges';
 export const INSTANCE_CONFIG_REFRESH_CHANNEL = 'instance-config-refresh';
 export const REGISTRATION_PENDING_APPROVAL_TRAIT = 'registration_pending_approval';
 export const REGISTRATION_REJECTED_TRAIT = 'registration_rejected';
@@ -553,7 +556,8 @@ type StoredConfigSection =
 	| 'SSO flags'
 	| 'SSO allowed domains'
 	| 'account identity'
-	| 'instance notice';
+	| 'instance notice'
+	| 'custom badges';
 
 function parseStoredConfigValue(raw: string | null, section: StoredConfigSection): unknown {
 	if (raw === null) return {};
@@ -902,6 +906,25 @@ function parseStoredChannelThreadsConfig(raw: string | null): ChannelThreadsConf
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
 	return parseStoredConfigOrDefault(ExperimentDeliveryConfigSchema, raw, 'experiment delivery');
+}
+
+const StoredCustomBadgeSchema = z.object({
+	id: SnowflakeStringType,
+	type: z.enum([CustomBadgeTypes.USER, CustomBadgeTypes.GUILD]),
+	name: z.string().min(1),
+	description: z.string().min(1).nullable(),
+	asset: z.string().refine(isCustomBadgeAssetReference),
+	href: z.string().nullable(),
+});
+
+const StoredCustomBadgesSchema = z.object({
+	badges: z.array(StoredCustomBadgeSchema).default([]),
+});
+
+export type CustomBadgeDefinition = z.infer<typeof StoredCustomBadgeSchema>;
+
+function parseStoredCustomBadges(raw: string | null): Array<CustomBadgeDefinition> {
+	return parseStoredConfigOrDefault(StoredCustomBadgesSchema, raw, 'custom badges').badges;
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1588,6 +1611,7 @@ export class InstanceConfigRepository {
 	private configCache: InstanceConfigCache;
 	private effectiveBlueskyConfig: BlueskyOAuthConfig | null = null;
 	private effectiveBlueskyConfigSource: string | null = null;
+	private parsedCustomBadges: {raw: string | null; badges: ReadonlyArray<CustomBadgeDefinition>} | null = null;
 
 	constructor(kvClient: IKVProvider | null = null) {
 		this.kvClient = kvClient;
@@ -1750,6 +1774,7 @@ export class InstanceConfigRepository {
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		parseStoredInstanceNotice(snapshot.get(INSTANCE_NOTICE_KEY) ?? null);
+		parseStoredCustomBadges(snapshot.get(CUSTOM_BADGES_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
 		);
@@ -2119,6 +2144,36 @@ export class InstanceConfigRepository {
 		);
 	}
 
+	async getCustomBadges(): Promise<ReadonlyArray<CustomBadgeDefinition>> {
+		const raw = await this.getConfig(CUSTOM_BADGES_CONFIG_KEY);
+		if (this.parsedCustomBadges?.raw !== raw) {
+			this.parsedCustomBadges = {raw, badges: parseStoredCustomBadges(raw)};
+		}
+		return this.parsedCustomBadges.badges;
+	}
+
+	async updateCustomBadges(
+		update: (current: ReadonlyArray<CustomBadgeDefinition>) => Array<CustomBadgeDefinition>,
+	): Promise<ReadonlyArray<CustomBadgeDefinition>> {
+		const config = await this.updateStoredConfig(CUSTOM_BADGES_CONFIG_KEY, (raw) =>
+			validateStoredConfig(
+				StoredCustomBadgesSchema,
+				{badges: update(parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges').badges)},
+				'custom badges',
+			),
+		);
+		return config.badges;
+	}
+
+	async readStoredCustomBadgeAssetKeys(): Promise<Set<string>> {
+		const cache = this.configCache;
+		cache.assertActive();
+		const raw = await this.fetchConfigFromDatabase(CUSTOM_BADGES_CONFIG_KEY);
+		cache.assertActive();
+		const {badges} = parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges');
+		return new Set(badges.map((badge) => assetStorageKey(badge.asset)));
+	}
+
 	async getCaptchaConfig(): Promise<CaptchaConfig> {
 		const raw = await this.getConfig(CAPTCHA_CONFIG_KEY);
 		return parseStoredCaptchaConfig(raw);
@@ -2483,10 +2538,7 @@ export class InstanceConfigRepository {
 			}
 			const candidate = brandingAssetReferenceFromAnyUrl(value);
 			if (candidate === null) continue;
-			const metadata = await storageService.getObjectMetadata(
-				Config.s3.buckets.cdn,
-				brandingAssetStorageKey(candidate),
-			);
+			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, assetStorageKey(candidate));
 			if (metadata !== null) {
 				rewrites.set(value, candidate);
 			}

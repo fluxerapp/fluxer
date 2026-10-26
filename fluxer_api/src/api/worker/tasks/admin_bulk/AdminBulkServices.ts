@@ -16,6 +16,7 @@ import {
 	getEnforcementDecisionRepository,
 	getEntityAssetService,
 	getGuildDiscoveryRepository,
+	getInstanceConfigRepository,
 	getInviteRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {queuePaymentDisputeClosures} from '@app/api/payment_disputes/PaymentDisputeEnforcement';
@@ -135,6 +136,7 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		auditService,
 		discoveryRepository: getGuildDiscoveryRepository(),
 		enforcement: enforcementService,
+		instanceConfigRepository: getInstanceConfigRepository(),
 	});
 	return {auditService, banManagementService, userService, guildService};
 }

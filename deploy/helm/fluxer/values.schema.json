@@ -296,6 +296,9 @@
 						"FLUXER_SETUP_TOKEN": {
 							"type": ["string", "null"]
 						},
+						"FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64": {
+							"type": ["string", "null"]
+						},
 						"FLUXER_LIVEKIT_API_KEY": {
 							"type": ["string", "null"]
 						},
