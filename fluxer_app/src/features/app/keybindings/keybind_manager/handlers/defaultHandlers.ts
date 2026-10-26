@@ -195,7 +195,11 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('system_open_theme_studio_popout', ({type}) => {
 		if (type !== 'press') return;
-		ThemeSettingsCommands.focusOrOpenQuickCssEditor();
+		ThemeSettingsCommands.toggleQuickCssEditorFocus();
+	});
+	host.register('system_toggle_custom_css', ({type}) => {
+		if (type !== 'press') return;
+		ThemeSettingsCommands.toggleCustomCss();
 	});
 	host.register('voice_push_to_talk', ({type, sourceId}) => {
 		if (type === 'release') {

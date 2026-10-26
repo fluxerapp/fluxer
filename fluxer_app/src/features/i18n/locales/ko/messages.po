@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
+msgstr "--{name}은(는) Fluxer 변수도 아니고, CSS 어디에도 설정되어 있지 않아요."
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -1066,10 +1071,6 @@ msgstr "{channelName}님, {communityName} 커뮤니티의 {accountName} 계정"
 msgid "{channelName} on {accountName}"
 msgstr "{channelName}님과의 대화, {accountName}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "{characterCount, plural, one {# character} other {# characters}}"
-msgstr "{characterCount, plural, one {#자} other {#자}}"
-
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} 연결 요청"
@@ -1098,6 +1099,11 @@ msgstr "{context} · {accountName}"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ 무제한} one {참여자 #명} other {참여자 #명}}"
+
+#. Shown when hovering a CSS selector in the quick CSS editor.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
+msgstr "{count, plural, =0 {지금 앱에서 아무것도 일치하지 않아요} one {지금 앱에서 #개 요소와 일치해요} other {지금 앱에서 #개 요소와 일치해요}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1175,6 +1181,11 @@ msgstr "{count, plural, one {#개 변경됨} other {#개 변경됨}}"
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {#개의 채널이 이 채널을 구독 중입니다} other {#개의 채널이 이 채널을 구독 중입니다}} 이 채널을 텍스트 채널로 전환하면 해당 구독이 제거됩니다."
 
+#. Shown in the status bar of the quick CSS editor while text is selected.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# character selected} other {# characters selected}}"
+msgstr "{count, plural, one {#자 선택됨} other {#자 선택됨}}"
+
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
@@ -1193,6 +1204,11 @@ msgstr "{count, plural, one {#개 커뮤니티가 플럭스 캐패시터 오작�
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {연결 #개} other {연결 #개}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# error} other {# errors}}"
+msgstr "{count, plural, one {#개 오류} other {#개 오류}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1280,6 +1296,11 @@ msgstr "{count, plural, one {#명} other {#명}}"
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {#초} other {#초}}"
 
+#. Option of the "Tab size" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{count, plural, one {# space} other {# spaces}}"
+msgstr "{count, plural, one {#칸 띄우기} other {#칸 띄우기}}"
+
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
@@ -1289,6 +1310,11 @@ msgstr "{count, plural, other {추천 검색어 #개 사용 가능}}"
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {#개의 동영상} other {#개의 동영상}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# warning} other {# warnings}}"
+msgstr "{count, plural, one {#개 경고} other {#개 경고}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1719,9 +1745,10 @@ msgstr "{length, plural, other {사용자 #명}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, other {#명 시청 중}}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "{lineCount, plural, one {# line} other {# lines}}"
-msgstr "{lineCount, plural, one {#줄} other {#줄}}"
+#. Tooltip of the line and column button in the status bar of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
+msgstr "{lines, plural, one {#줄} other {#줄}} 및 {characters, plural, one {#자} other {#자}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -2227,6 +2254,11 @@ msgstr "{sender}님이 선물을 보냈습니다"
 #: src/features/premium/events/OperatorPassUpdate.tsx
 msgid "{senderName} is passing you an {operatorPassName}. Select to accept or decline."
 msgstr "{senderName}님이 회원님에게 {operatorPassName}를 넘겨주려고 합니다. 선택해서 수락하거나 거절하세요."
+
+#. Option of the "Font size" setting in the quick CSS editor. {size} is a number of pixels.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{size} px"
+msgstr "{size} px"
 
 #. Summary row value when both a start and end date are set. Both values are localized dates.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -3254,6 +3286,16 @@ msgstr "실제 크기"
 msgid "Add"
 msgstr "추가"
 
+#. Problem shown in the quick CSS editor on a CSS declaration that is missing the semicolon after it.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \";\" at the end of this line."
+msgstr "이 줄 끝에 \";\"를 추가하세요."
+
+#. Problem shown in the quick CSS editor on a CSS declaration like "color red;" that is missing its colon.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \":\" between the property and its value."
+msgstr "속성과 값 사이에 \":\"를 추가하세요."
+
 #. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
 msgid "Add {blueskyProviderName} connection"
@@ -3273,6 +3315,11 @@ msgstr "코멘트 추가 (선택 사항)"
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "Add a community"
 msgstr "커뮤니티 추가"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Add a cursor"
+msgstr "커서 추가"
 
 #. Placeholder of the message composer in the new media post composer.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -3590,6 +3637,11 @@ msgstr "이 커뮤니티에서 대화하려면 이메일을 추가하세요."
 msgid "Add an email to your account to buy the {operatorPassName}."
 msgstr "{operatorPassName}를 구매하려면 계정에 이메일을 추가하세요."
 
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Adds a rule that changes it.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Add an override"
+msgstr "오버라이드 추가"
+
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx
 msgid "Add another custom shortcut"
@@ -3775,7 +3827,7 @@ msgid "Add shortcut"
 msgstr "단축키 추가"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Add some CSS before sharing."
 msgstr "공유하기 전에 CSS를 추가하세요."
 
@@ -4083,6 +4135,12 @@ msgstr "정렬 컨트롤은 더 넓은 화면에서만 사용할 수 있습니�
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx
+msgid "All"
+msgstr "전체"
+
+#. Text in the code editor of the quick CSS editor. Button that selects every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "All"
 msgstr "전체"
 
@@ -5086,6 +5144,21 @@ msgstr "앞으로 가입하는 커뮤니티에 적용됩니다. 각 커뮤니티
 msgid "Apply"
 msgstr "적용"
 
+#. Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Apply changes"
+msgstr "변경사항 적용"
+
+#. Completion in the quick CSS editor that inserts an @media rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules at some window sizes"
+msgstr "일부 창 크기에서 규칙 적용"
+
+#. Completion in the quick CSS editor that inserts an @supports rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules when the browser supports a feature"
+msgstr "브라우저가 기능을 지원할 때 규칙 적용"
+
 #. Button or menu action label in the theme login and register pages. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "Apply theme"
@@ -5265,7 +5338,14 @@ msgstr "로그인 시 비밀번호 입력 후 패스키를 요청합니다"
 msgid "Ask for a second step after your password when you sign in."
 msgstr "로그인 시 비밀번호 입력 후 두 번째 단계를 요청합니다."
 
+#. Detail next to an uploaded theme asset in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Asset"
+msgstr "에셋"
+
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
+#. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Assets"
 msgstr "에셋"
@@ -7012,11 +7092,6 @@ msgstr "인스턴스에서 이메일을 보낼 수 있나요?"
 msgid "Can't connect"
 msgstr "연결할 수 없음"
 
-#. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "Can't find \"{reference}\" in your assets."
-msgstr "\"{reference}\" 애셋에서 찾을 수 없습니다."
-
 #. Shown for a linked theme in Settings > Themes when its CSS file was moved or deleted. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
 msgid "Can't find {path}. Using the last loaded version."
@@ -7357,6 +7432,11 @@ msgstr "이메일 변경"
 msgid "Change emoji"
 msgstr "이모티콘 변경"
 
+#. Completion in the quick CSS editor that inserts a :root rule, where theme variables are set.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Change Fluxer variables"
+msgstr "Fluxer 변수 변경"
+
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change friend nickname"
@@ -7469,6 +7549,21 @@ msgstr "스트림 소스 변경"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Change the name shown on your global profile"
 msgstr "글로벌 프로필에 표시되는 이름을 변경합니다"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 0.1"
+msgstr "커서 아래 숫자를 0.1씩 변경"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 1"
+msgstr "커서 아래 숫자를 1씩 변경"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 10"
+msgstr "커서 아래 숫자를 10씩 변경"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -7729,9 +7824,19 @@ msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "음성 지역을 {oldRegion}에서 {newRegion}(으)로 변경했습니다"
 
 #. Shown at the bottom of the quick CSS editor window while it edits quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "변경 사항이 입력하는 대로 앱에 표시됩니다."
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app as you type. Select \"Save theme\" to keep them."
+msgstr "입력하는 즉시 앱에 변경사항이 보여요. \"테마 저장\"을 선택하면 저장돼요."
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app when you select \"Apply changes\"."
+msgstr "\"변경사항 적용\"을 선택하면 앱에 변경사항이 보여요."
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
@@ -8520,7 +8625,7 @@ msgstr "마이크 소리를 다듬어 음성을 선명하게 만듭니다."
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear"
 msgstr "지우기"
 
@@ -8600,7 +8705,7 @@ msgid "Clear permissions"
 msgstr "권한 지우기"
 
 #. Confirmation title in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear quick CSS?"
 msgstr "빠른 CSS를 지울까요?"
 
@@ -8645,6 +8750,11 @@ msgstr "더 선명한 텍스트"
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Clearing trusted domains..."
 msgstr "신뢰하는 도메인 지우는 중..."
+
+#. Shown at the bottom of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "요소를 클릭해서 셀렉터를 추가하세요. {parentKey}를 누르면 부모를 선택하고 Escape로 선택을 멈출 수 있어요."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
@@ -9031,6 +9141,8 @@ msgid "Color scheme"
 msgstr "색상 테마"
 
 #. Accessible label for the current color input value.
+#. Label of the text field in the color picker of the quick CSS editor, where a CSS color can be typed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 #: src/features/ui/components/form/ColorPickerField.tsx
 msgid "Color value"
 msgstr "색상 값"
@@ -9047,6 +9159,8 @@ msgid "Colors"
 msgstr "색상"
 
 #. Section title in Settings > Themes for changing single colors and fonts of the base theme.
+#. Tab in the quick CSS editor that shows the base theme and the color and font controls.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Colors and fonts"
 msgstr "색상 및 글꼴"
@@ -9405,6 +9519,12 @@ msgstr "다른 사용자에게 {premiumProductName} 배지를 완전히 숨깁�
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Completing sign-in…"
 msgstr "로그인 완료 중…"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Name of the list of suggestions.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Completions"
+msgstr "자동완성"
 
 #. Windows jump-list task description (tooltip text) for the New direct message action.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -10085,6 +10205,12 @@ msgstr "이메일 없이 계속하기"
 msgid "Contrast"
 msgstr "대비"
 
+#. Text in the code editor of the quick CSS editor. Tooltip on an invisible control character shown as a placeholder.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Control character"
+msgstr "제어 문자"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Control Chromium middle-click autoscrolling in the desktop app"
@@ -10175,6 +10301,11 @@ msgstr "/tts 명령어로 보냈는지 여부와 관계없이 수신된 콘텐�
 msgid "Copied"
 msgstr "복사됨"
 
+#. Toast after copying a CSS variable name in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Copied {text}."
+msgstr "{text} 복사됨."
+
 #. Toast shown after copying stats for nerds JSON to clipboard.
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts
 msgid "Copied stats JSON to clipboard"
@@ -10199,6 +10330,7 @@ msgstr "URL이 클립보드에 복사되었습니다"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Copies its name.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -10208,7 +10340,8 @@ msgstr "URL이 클립보드에 복사되었습니다"
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssReference.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11658,6 +11791,8 @@ msgid "Cropping {percent}%"
 msgstr "{percent}% 잘라내는 중"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Tab in the quick CSS editor that shows the code editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "CSS"
 msgstr "CSS"
@@ -11716,6 +11851,12 @@ msgstr "현재 기기"
 msgid "Current DM"
 msgstr "현재 DM"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Current match"
+msgstr "현재 일치 항목"
+
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
@@ -11728,6 +11869,11 @@ msgstr "현재 세션"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Current uses:"
 msgstr "현재 사용 횟수:"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is the value the app uses right now.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Current value {value}"
+msgstr "현재 값 {value}"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
 #: src/features/devtools/components/NagbarControls.ts
@@ -11774,6 +11920,11 @@ msgstr "차단 기간 직접 지정(초)"
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "사용자 지정 CSS"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "커스텀 CSS가 꺼져 있어요."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -12331,6 +12482,16 @@ msgstr "기본 이모티콘"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Default hide after inactivity"
 msgstr "비활성 시 기본 숨김"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in dark themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in dark themes {value}"
+msgstr "다크 테마 기본값 {value}"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in light themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in light themes {value}"
+msgstr "라이트 테마 기본값 {value}"
 
 #. Label of the forum setting that picks the default post layout.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -13685,6 +13846,16 @@ msgstr "박사님, 저는 미래에서 왔어요. 박사님이 발명한 타임�
 msgid "Dock badge"
 msgstr "독 배지"
 
+#. Button in the quick CSS editor header that attaches the editor to the left edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the left"
+msgstr "왼쪽에 고정"
+
+#. Button in the quick CSS editor header that attaches the editor to the right edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the right"
+msgstr "오른쪽에 고정"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Docked DevTools and windows partially off-screen can render a gray background instead of staying transparent."
 msgstr "도킹된 개발자 도구 및 화면에서 부분적으로 벗어난 창은 투명하게 유지되지 않고 회색 배경으로 렌더링될 수 있습니다."
@@ -13819,7 +13990,7 @@ msgstr "자신의 메시지를 더블 클릭하여 수정하거나, 다른 사�
 #: src/features/auth/components/modals/BackupCodesModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Download"
 msgstr "다운로드"
@@ -14278,6 +14449,11 @@ msgstr "미디어 편집"
 msgid "Edit message"
 msgstr "메시지 수정"
 
+#. Button in Settings > Themes that closes settings and opens the same controls in the quick CSS editor panel, which floats over the app so changes can be seen while editing.
+#: src/features/theme_settings/components/EditNextToAppButton.tsx
+msgid "Edit next to the app"
+msgstr "앱 옆에서 편집"
+
 #. Button or menu action label in the user settings profile card actions. Keep it concise.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Edit note"
@@ -14364,6 +14540,11 @@ msgstr "태그 수정"
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "봇 아바타, 태그, 소개, 배너, 친구 요청 동작 편집"
 
+#. Row in the quick CSS editor shortcuts dialog. Opens the color picker for the CSS color under the cursor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Edit the color at the cursor"
+msgstr "커서 위치의 색상 편집"
+
 #. Action that opens the thread settings.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Edit thread"
@@ -14430,6 +14611,11 @@ msgstr "편집 제한에 도달했습니다"
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Editing message"
 msgstr "메시지 수정 중"
+
+#. Button in the quick CSS editor that opens settings such as font size and line wrapping.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Editor settings"
+msgstr "에디터 설정"
 
 #. Category dropdown option in the "Explore" tab in community settings.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -16249,7 +16435,7 @@ msgstr "URL을 가져와서 채팅 렌더러가 수신하는 임베드 페이로
 #. Label of the picker in the quick CSS editor window that chooses between quick CSS and a saved theme.
 #. Top-level native menu bar title (File menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "File"
 msgstr "파일"
 
@@ -16266,6 +16452,11 @@ msgstr "파일이 너무 커서 미리 볼 수 없습니다(제한 {previewLimit
 #: src/features/user/components/modals/tabs/notifications_tab/useSoundSettings.ts
 msgid "File is too large. Maximum size is {maxSize}."
 msgstr "파일 크기가 너무 큽니다. 최대 {maxSize}까지 허용됩니다."
+
+#. Detail next to a linked local file in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "File on this computer"
+msgstr "이 컴퓨터의 파일"
 
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx
@@ -16397,6 +16588,11 @@ msgstr "역할 없는 멤버 필터링"
 msgid "Filter mentions"
 msgstr "멘션 필터링"
 
+#. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Filter rules"
+msgstr "규칙 필터"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Filtering"
@@ -16410,6 +16606,19 @@ msgstr "{language}(으)로 필터링"
 #: src/features/voice/components/modals/CameraPreviewModal.tsx
 msgid "Finalizing camera..."
 msgstr "카메라 준비 중..."
+
+#. Text in the code editor of the quick CSS editor. Placeholder of the search field.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Find"
+msgstr "찾기"
+
+#. Button in the quick CSS editor that opens the search and replace bar.
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Find and replace"
+msgstr "찾아 바꾸기"
 
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx
@@ -16482,10 +16691,20 @@ msgstr "성과 이름"
 msgid "First option"
 msgstr "첫 번째 옵션"
 
+#. Toast in the quick CSS editor when "Format" is used on CSS that cannot be parsed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Fix the errors in your CSS before formatting it."
+msgstr "CSS의 오류를 먼저 고쳐야 포맷할 수 있어요."
+
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
 msgstr "국기"
+
+#. Button in the quick CSS editor header that detaches a docked editor so it floats over the app again.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Float"
+msgstr "분리"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -16497,6 +16716,36 @@ msgstr "플로리다"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer가 alex#4821처럼 사용자 이름마다 임의의 번호를 붙이므로 여러 사람이 같은 이름을 사용할 수 있습니다."
+
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "Fluxer가 {url} 불러오기를 차단했어요. 에셋으로 업로드하세요."
+
+#. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the asset \"{name}\"."
+msgstr "Fluxer가 에셋 \"{name}\"을(를) 찾을 수 없어요."
+
+#. Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the file \"{path}\"."
+msgstr "Fluxer가 파일 \"{path}\"을(를) 찾을 수 없어요."
+
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Fluxer에서 이 폴더를 찾을 수 없어요. 폴더가 돌아오면 테마를 다시 불러올 거예요."
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Fluxer에서 이 폴더를 열 수 없습니다. 계속 감시하려면 다시 가져오세요."
+
+#. Error toast in "Your themes" when the chosen theme folder cannot be opened.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't read this folder."
+msgstr "Fluxer가 이 폴더를 읽을 수 없습니다."
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -16557,6 +16806,29 @@ msgstr "창 앞으로 가져오기"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Focused voice"
 msgstr "음성 포커스"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that hides a block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Fold line"
+msgstr "줄 접기"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Fold the block"
+msgstr "블록 접기"
+
+#. Text in the code editor of the quick CSS editor. Label of a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded code"
+msgstr "접힌 코드"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded lines"
+msgstr "접힌 줄"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
@@ -16637,6 +16909,11 @@ msgstr "Windows 소리 설정에 따릅니다"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Font"
 msgstr "폰트"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Font size"
+msgstr "글꼴 크기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -16836,6 +17113,16 @@ msgstr "비밀번호 찾기"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Forgot your password?"
 msgstr "비밀번호를 잊으셨나요?"
+
+#. Button in the quick CSS editor that tidies the indentation and spacing of the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Format"
+msgstr "포맷"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Format the CSS"
+msgstr "CSS 포맷하기"
 
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for form input tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
@@ -17087,6 +17374,11 @@ msgstr "보낸 사람"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "{creatorTag}님으로부터"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "{folder}에서 가져옴"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -17664,6 +17956,12 @@ msgstr "글로벌 프로필"
 msgid "Global shortcut"
 msgstr "전역 단축키"
 
+#. Text in the code editor of the quick CSS editor. Button that moves to the line number typed in "Go to line".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go"
+msgstr "이동"
+
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Go back"
@@ -17704,6 +18002,11 @@ msgstr "{premiumProductName}으로 이동"
 msgid "Go to {recoverUrl} or scan the QR code."
 msgstr "{recoverUrl}로 이동하거나 QR 코드를 스캔하세요."
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Go to a line"
+msgstr "줄로 이동"
+
 #. Button label on a community invite embed when the current user is already a member.
 #. Button on the community card that opens from a published message copy, shown when the viewer is already a member of the source community.
 #. Short label in the invite accept modal. Keep it concise.
@@ -17741,6 +18044,12 @@ msgstr "네 번째 커뮤니티로 이동"
 #: src/features/app/components/pages/NotFoundPage.tsx
 msgid "Go to home"
 msgstr "홈으로 이동"
+
+#. Text in the code editor of the quick CSS editor. Label of the field that moves to a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go to line"
+msgstr "줄 이동"
 
 #. Short label in the quick switcher state. Keep it concise.
 #: src/features/search/state/QuickSwitcher.tsx
@@ -18237,6 +18546,11 @@ msgstr "다른 계정 활동 숨기기"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Hide after inactivity"
 msgstr "비활성 시 숨기기"
+
+#. Completion in the quick CSS editor that inserts a CSS rule hiding an element.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Hide an element"
+msgstr "요소 숨기기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -18843,6 +19157,11 @@ msgstr "데이터를 내보내거나 메시지를 먼저 삭제하려면 계속�
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "이 멤버들이 특정 날짜 이후에 전송된 지난 메시지를 볼 수 있도록 하려면 이 기능을 켜고 아래에서 기준일을 선택하세요."
 
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "CSS 때문에 앱이 깨지면 {shortcut}를 눌러서 꺼보세요."
+
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts
@@ -19008,7 +19327,7 @@ msgstr "가져오기 완료. GIF {importedCount, plural, one {#개} other {#개}
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Import CSS"
 msgstr "CSS 가져오기"
@@ -19285,6 +19604,11 @@ msgstr "잘못된 PIN입니다. 보안 키가 잠기기 전까지 시도 기회�
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. Try again."
 msgstr "잘못된 PIN입니다. 다시 시도하세요."
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Indent with tabs"
+msgstr "탭으로 들여쓰기"
 
 #. Header status shown while the channel is being indexed for the first time before search is available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -20372,9 +20696,13 @@ msgstr "키보드 모드"
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "툴팁에 키보드 단축키 힌트 표시"
 
+#. Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Keyboard shortcuts"
 msgstr "키보드 단축키"
@@ -20821,10 +21149,15 @@ msgstr "모든 역할을 멘션할 수 있는 권한이 있는 멤버만 이 역
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "채널에 참여할 수 있는 사용자 수를 {count, plural, one {#명} other {#명}}으로 제한했습니다"
 
-#. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "Line {line} has a CSS error."
-msgstr "{line}번째 줄에 CSS 오류가 있습니다."
+#. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "Line {line}, column {column}"
+msgstr "{line}줄, {column}칸"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Line numbers"
+msgstr "줄 번호"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -21037,10 +21370,20 @@ msgctxt "operators-wall-status"
 msgid "Live"
 msgstr "공개됨"
 
+#. Setting in "Editor settings" of the quick CSS editor. When on, the app changes as you type.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Live preview"
+msgstr "라이브 미리보기"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Live region"
 msgstr "라이브 영역"
+
+#. Completion in the quick CSS editor that inserts an @font-face rule. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Load a font from your assets"
+msgstr "에셋에서 글꼴 불러오기"
 
 #. Button that loads the next page of archived threads.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21648,6 +21991,12 @@ msgstr "매사추세츠"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Master volume"
 msgstr "마스터 볼륨"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Match case"
+msgstr "대소문자 구분"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -22733,8 +23082,10 @@ msgstr "월간 기부(선택)"
 msgid "Monthly gift"
 msgstr "월별 선물"
 
+#. Button in the quick CSS editor that opens a menu with more actions, such as importing and downloading CSS.
 #. Generic label for a button that reveals additional actions.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 msgid "More"
 msgstr "더 보기"
 
@@ -22773,6 +23124,11 @@ msgstr "기타 미디어 작업"
 msgid "More options"
 msgstr "더 보기"
 
+#. Accessible label of the menu button on a CSS variable in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "More options for {name}"
+msgstr "{name}의 더 많은 옵션"
+
 #. Hint under the number of Operator Passes to buy. The wall is the Operators' wall, the list of Operators on the homepage. A neutral fact, never translate it as an encouragement to buy more.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "More passes show larger and earlier on the wall."
@@ -22787,6 +23143,11 @@ msgstr "추가 단축키 옵션"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "More sticker actions"
 msgstr "기타 스티커 작업"
+
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements. {limit} is a number such as 1,000.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "More than {limit} elements match"
+msgstr "{limit}개를 초과하는 요소가 일치함"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -22837,6 +23198,11 @@ msgstr "이동"
 msgid "Move all devices to…"
 msgstr "모든 기기 이동 위치 선택…"
 
+#. Button in the quick CSS editor window that moves the editor back into a panel inside the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move back into Fluxer"
+msgstr "Fluxer로 다시 옮기기"
+
 #. Label in the keybinds tab.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts
 msgid "Move back through page history"
@@ -22846,6 +23212,11 @@ msgstr "페이지 기록에서 뒤로 가기"
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Move back through viewed channel history"
 msgstr "채널 방문 기록에서 뒤로 가기"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move between the editor and the app"
+msgstr "에디터와 앱 사이 이동"
 
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
@@ -22893,6 +23264,16 @@ msgstr "멤버 이동"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "오른쪽으로 이동"
+
+#. Accessible label of the drag handle in the header of the floating quick CSS editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move the editor. Use the arrow keys to move it."
+msgstr "편집기를 옮깁니다. 화살표 키로 옮길 수 있습니다."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move the line up or down when the cursor isn't on a number"
+msgstr "커서가 숫자에 없을 때 줄을 위아래로 이동"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -23713,6 +24094,12 @@ msgstr "최신순"
 msgid "Next"
 msgstr "다음"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the next search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Next"
+msgstr "다음"
+
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Next attachment"
@@ -24172,6 +24559,12 @@ msgstr "설정 안 함"
 msgid "No preview yet"
 msgstr "미리보기 없음"
 
+#. Text in the code editor of the quick CSS editor. Shown when the CSS has no problems.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "No problems."
+msgstr "문제 없음."
+
 #. Empty-state text in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "No push subscriptions registered yet."
@@ -24228,6 +24621,16 @@ msgstr "역할 없음"
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
 msgstr "아직 역할이 없습니다. {rolesSettingsPath}에서 역할을 추가하세요"
+
+#. Shown in the outline of the quick CSS editor when no rule matches the filter.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules match \"{filter}\"."
+msgstr "\"{filter}\"에 일치하는 규칙이 없어요."
+
+#. Shown in the outline of the quick CSS editor when the CSS has no rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules yet."
+msgstr "아직 규칙이 없어요."
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
@@ -24357,6 +24760,11 @@ msgstr "사용 가능한 사용자 없음"
 #: src/features/search/components/search/UserFilterSheet.tsx
 msgid "No users found"
 msgstr "사용자를 찾을 수 없습니다"
+
+#. Shown in the "Reference" tab of the quick CSS editor when the search finds nothing.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "No variables match \"{query}\"."
+msgstr "\"{query}\"에 일치하는 변수가 없어요."
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
@@ -24495,6 +24903,11 @@ msgstr "정수가 아닙니다"
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx
 msgid "Not allowed"
 msgstr "허용되지 않음"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Not applied yet"
+msgstr "아직 적용되지 않음"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -24898,10 +25311,21 @@ msgstr "<0>{listPriceEffectiveDate}</0>에 구독이 {listPriceCurrentLabel}에�
 msgid "On click"
 msgstr "클릭 시"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Followed by a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "on line"
+msgstr "줄"
+
 #. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
 msgid "On sale from {saleOpensAt}."
 msgstr "{saleOpensAt}부터 판매합니다."
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "On screen now"
+msgstr "지금 화면에 표시됨"
 
 #. Label in front of the name and avatar the Operators' wall shows for this account right now.
 #: src/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings.tsx
@@ -25099,6 +25523,11 @@ msgstr "CSS 텍스트만 기기 간에 동기화됩니다. 업로드된 에셋, 
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "CSS 텍스트만 동기화됩니다. 업로드된 에셋과 로컬 파일 참조는 이 기기에 유지됩니다."
+
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "이 폴더의 CSS 파일 중 처음 200개만 불러와요."
 
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
@@ -25458,6 +25887,11 @@ msgstr "이미지 링크 열기"
 msgid "Open in {productName} for desktop"
 msgstr "데스크톱용 {productName}에서 열기"
 
+#. Button in the quick CSS editor header that moves the editor into its own window.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Open in a new window"
+msgstr "새 창에서 열기"
+
 #. Media viewer action that opens the current media in the system default browser.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Open in browser"
@@ -25806,11 +26240,13 @@ msgstr "{displayName}에 대한 옵션"
 msgid "Options for {themeName}"
 msgstr "{themeName}에 대한 옵션"
 
+#. Between two keyboard shortcuts that do the same thing, in the shortcuts dialog of the quick CSS editor.
 #. Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "or"
 msgstr "또는"
 
@@ -25954,6 +26390,11 @@ msgstr "보낸 친구 요청"
 #: src/features/relationship/components/modals/AddFriendSheet.tsx
 msgid "Outgoing friend requests ({requestCount})"
 msgstr "보낸 친구 요청 ({requestCount})"
+
+#. Button in the quick CSS editor that shows a list of the rules in the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Outline"
+msgstr "개요"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -26692,6 +27133,11 @@ msgstr "휴대폰 알림"
 msgid "Photo"
 msgstr "사진"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick a child element while picking"
+msgstr "선택 중에 자식 요소 선택"
+
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
 msgid "Pick a friend to pass it on to. They can accept or decline, and you can take it back until it moves."
@@ -26717,6 +27163,16 @@ msgstr "번역 공급자 선택"
 msgid "Pick a web search provider"
 msgstr "웹 검색 공급자 선택"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "요소 선택"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "앱에서 요소 선택"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -26741,6 +27197,16 @@ msgstr "사전 하나 이상을 선택하세요. 선택된 사전의 단어는 �
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "사용자 이름 뒤에 오는 4자리 숫자 선택"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the next or previous element while picking"
+msgstr "선택 중에 다음 또는 이전 요소 선택"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "선택 중에 부모 요소 선택"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -27228,6 +27694,11 @@ msgstr "준비 중"
 msgid "Presence"
 msgstr "활동 상태"
 
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+T.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "Press {shortcut} anywhere in the app to open the editor."
+msgstr "앱 어디서나 {shortcut}를 눌러 편집기를 열 수 있습니다."
+
 #. Tooltip hint for a quick reaction in the message context menu. Preserve {shortcut}; it is a keyboard key such as 1.
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 msgid "Press {shortcut} to react"
@@ -27360,6 +27831,12 @@ msgid "Previews"
 msgstr "미리보기"
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
+msgid "Previous"
+msgstr "이전"
+
+#. Text in the code editor of the quick CSS editor. Button that goes to the previous search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "Previous"
 msgstr "이전"
 
@@ -27509,6 +27986,12 @@ msgstr "비공개 스레드"
 #: src/features/app/components/dialogs/ConfirmModal.tsx
 msgid "Pro tip:"
 msgstr "꿀팁:"
+
+#. Text in the code editor of the quick CSS editor. Title of the list of problems in the CSS.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Problems"
+msgstr "문제"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -27945,22 +28428,26 @@ msgid "Quick CSS"
 msgstr "빠른 CSS"
 
 #. Toast after copying quick CSS in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS copied to clipboard."
 msgstr "빠른 CSS가 클립보드에 복사되었습니다."
 
 #. Accessible label for the code editor in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Accessible name of the floating quick CSS editor panel and its frame.
+#. Accessible name of the quick CSS editor area, in its floating panel or its own window.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Quick CSS editor"
 msgstr "빠른 CSS 편집기"
 
 #. Toast after pressing "Undo all changes" in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS is back to how it was when you opened the editor."
 msgstr "빠른 CSS가 편집기를 열었을 때와 동일한 상태로 복구되었습니다."
 
 #. Toast after importing a CSS file into the quick CSS editor.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS replaced from {fileName}."
 msgstr "{fileName}에서 빠른 CSS를 교체했습니다."
 
@@ -28380,9 +28867,11 @@ msgid "Redirect URIs"
 msgstr "리디렉션 URI"
 
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Redo"
 msgstr "다시 실행"
 
@@ -28400,6 +28889,11 @@ msgstr "동작 줄이기"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing."
 msgstr "동작 줄이기가 켜져 있어 콘텐츠 애니메이션이 기본적으로 일시 중지됩니다. 계속 재생하려면 언제든지 다시 켤 수 있습니다."
+
+#. Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Reference"
+msgstr "참조"
 
 #. Toast after copying the CSS reference of a theme asset.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -28497,6 +28991,12 @@ msgstr "일반 버튼"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button clicked."
 msgstr "일반 버튼을 클릭했습니다."
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Regular expression"
+msgstr "정규식"
 
 #. Button label for rejecting an incoming direct call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -29096,6 +29596,18 @@ msgstr "<0>{renewalDate}</0>에 갱신됩니다."
 msgid "Replace"
 msgstr "바꾸기"
 
+#. Text in the code editor of the quick CSS editor. Placeholder of the replace field and its button.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace"
+msgstr "바꾸기"
+
+#. Text in the code editor of the quick CSS editor. Button that replaces every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace all"
+msgstr "모두 바꾸기"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background"
@@ -29115,6 +29627,18 @@ msgstr "{key} 바꾸기"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace with a GIF"
 msgstr "GIF로 바꾸기"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced $ matches"
+msgstr "$개 일치 항목 바꿈"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced the match on line $"
+msgstr "$줄의 일치 항목 바꿈"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -29715,6 +30239,11 @@ msgstr "오른쪽 상단에서 고정된 메시지 크기 조절"
 msgid "Resize sidebar"
 msgstr "사이드바 크기 조절"
 
+#. Accessible label of the handle that resizes the floating quick CSS editor panel.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+msgid "Resize the editor"
+msgstr "편집기 크기 조절"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck."
 msgstr "창 크기 조절, 최대화, 창 스냅은 컴포지터에 따라 달라집니다. 클라이언트 측 장식이 없는 Wayland는 핸들을 제공하지 않을 수 있습니다. 창이 제대로 움직이지 않으면 --ozone-platform=x11로 실행하세요."
@@ -30141,6 +30670,11 @@ msgstr "규칙: {title}"
 msgid "Rule: <0>{title}</0>"
 msgstr "규칙: <0>{title}</0>"
 
+#. Accessible name of the outline list in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Rules in this CSS"
+msgstr "이 CSS의 규칙"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -30283,7 +30817,12 @@ msgstr "아이콘 저장"
 msgid "Save some media from messages to get started!"
 msgstr "메시지에서 미디어를 저장해 보세요!"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Save the theme or apply changes"
+msgstr "테마 저장 또는 변경사항 적용"
+
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
 msgstr "테마 저장"
 
@@ -30896,6 +31435,11 @@ msgstr "시간대 검색"
 msgid "Search users"
 msgstr "사용자 검색"
 
+#. Placeholder of the search field in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Search variables"
+msgstr "변수 검색"
+
 #. Header status shown while a search request is in flight in the channel search results panel.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "Searching"
@@ -31082,6 +31626,11 @@ msgstr "채널 선택"
 msgid "Select a channel or category"
 msgstr "채널 또는 카테고리 선택"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select a column of text by dragging"
+msgstr "드래그해서 열 단위로 텍스트 선택"
+
 #. Form field label or placeholder for selecting a community.
 #. Placeholder of the community picker in the follow announcement channel dialog.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
@@ -31119,6 +31668,11 @@ msgstr "리디렉션 URI 선택"
 msgid "Select a scenario to apply..."
 msgstr "적용할 시나리오를 선택하세요..."
 
+#. Shown above the list of CSS variables in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select a variable to add it to your CSS."
+msgstr "CSS에 추가할 변수를 선택하세요."
+
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -31154,6 +31708,11 @@ msgstr "{title} GIF 선택"
 msgid "Select interface language"
 msgstr "인터페이스 언어 선택"
 
+#. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select one to add a rule for it to your CSS."
+msgstr "CSS에 규칙을 추가할 항목을 선택하세요."
+
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 msgid "Select scopes (and redirect URI if required)"
@@ -31167,6 +31726,11 @@ msgstr "텍스트 선택"
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx
 msgid "Select the account you want to sign in with on your new device."
 msgstr "새 기기에서 로그인할 계정을 선택하세요."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select the next match of the selection"
+msgstr "선택 영역의 다음 일치 항목 선택"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
@@ -31203,6 +31767,12 @@ msgstr "텍스트 선택 가능"
 msgid "selected"
 msgstr "선택됨"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Selection deleted"
+msgstr "선택 영역 삭제됨"
+
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx
 msgid "Selection end"
@@ -31237,6 +31807,11 @@ msgstr "선택: {0} (최대 {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Selections"
 msgstr "선택 항목"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS selectors.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Selectors"
+msgstr "셀렉터"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -31757,6 +32332,111 @@ msgstr "음소거 단축키 설정"
 msgid "Set new password"
 msgstr "새 비밀번호 설정"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions is showing."
+msgstr "메시지의 액션 바가 보일 때 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions stays open, such as while a menu is open."
+msgstr "메시지의 액션 바가 열린 상태(예: 메뉴가 열려 있을 때)에서 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar when that person is online on a phone."
+msgstr "해당 사용자가 휴대폰에서 온라인일 때 아바타에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar while that person is typing."
+msgstr "해당 사용자가 입력 중일 때 아바타에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on avatars that open a profile when clicked."
+msgstr "클릭 시 프로필이 열리는 아바타에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on edited messages."
+msgstr "수정된 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages about a call."
+msgstr "통화 관련 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from bots."
+msgstr "봇이 보낸 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from people you blocked."
+msgstr "차단한 사람이 보낸 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages sent by a webhook."
+msgstr "웹훅으로 보낸 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages shown under the previous message from the same person."
+msgstr "같은 사람이 바로 전에 보낸 메시지 아래에 표시되는 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that can show the bar of message actions."
+msgstr "메시지 액션 바를 표시할 수 있는 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that Fluxer sends, such as when someone joins."
+msgstr "누군가가 참여할 때 등 Fluxer가 보내는 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that mention you."
+msgstr "나를 멘션한 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that reply to another message."
+msgstr "다른 메시지에 답장한 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages while the compact message layout is on."
+msgstr "간결한 메시지 레이아웃이 켜져 있을 때 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages you sent."
+msgstr "내가 보낸 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on pinned messages."
+msgstr "고정된 메시지에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the avatars of bots."
+msgstr "봇의 아바타에 설정됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the root element during holidays. It lists the holidays."
+msgstr "공휴일 기간에는 루트 요소에 설정됨. 공휴일 목록이 포함됨."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on your own avatar."
+msgstr "내 아바타에 설정됨."
+
 #. Button that opens the dialog for setting a password on the account.
 #. Button that saves the password in the dialog for an account that has an email but no password.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
@@ -31990,7 +32670,7 @@ msgstr "이 인스턴스의 구성에서 설정이 완료된 것으로 표시되
 msgid "Several people are typing..."
 msgstr "여러 명이 입력 중..."
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Share"
@@ -32290,6 +32970,16 @@ msgstr "채팅 표시"
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "채팅 표시({count, plural, one {#개의 읽지 않은 메시지} other {#개의 읽지 않은 메시지}})"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show completions"
+msgstr "자동완성 표시"
+
+#. Setting in "Editor settings" of the quick CSS editor. Completions are suggestions of CSS code.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Show completions as you type"
+msgstr "입력 시 자동완성 표시"
+
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
 msgid "Show connection ID"
@@ -32332,6 +33022,11 @@ msgstr "표현 자동 완성에 기본 이모티콘 표시"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show delete button"
 msgstr "삭제 버튼 표시"
+
+#. Row in the quick CSS editor shortcuts dialog. Shows the same details as hovering, such as how many elements a selector matches.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show details for the code at the cursor"
+msgstr "커서 위치 코드의 상세 정보 보기"
 
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -32581,6 +33276,11 @@ msgstr "비밀번호 표시"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "음성 메뉴에서 기기별 참여자 볼륨 슬라이더 표시"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show problems"
+msgstr "문제 표시"
+
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
@@ -32649,6 +33349,11 @@ msgstr "작업 표시줄 색상과 일치하는 단색 아이콘 대신 전체 �
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Show the ID of each voice connection next to people in calls and in voice channels. With it off, each device is named by its type instead."
 msgstr "음성 연결 ID를 통화 중인 사람 옆과 음성 채널에 표시합니다. 이 기능을 끄면 각 기기는 기기 유형으로 이름이 지정됩니다."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show the outline"
+msgstr "개요 표시"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -33669,6 +34374,11 @@ msgstr "스피커"
 msgid "Special features"
 msgstr "특별 기능"
 
+#. Shown when hovering a CSS selector in the quick CSS editor. {a}, {b} and {c} are the three numbers of CSS specificity.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "Specificity {a}, {b}, {c}"
+msgstr "특이성 {a}, {b}, {c}"
+
 #. Title of the screen-share spectators popout listing users watching the stream.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx
 msgid "Spectators"
@@ -34336,10 +35046,21 @@ msgstr "2단계 인증에 패스키 사용을 중단하시겠어요?"
 msgid "Stop watching"
 msgstr "시청 중지"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "감시 중지"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "스트림 시청 중지"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "이 폴더 감시를 중지할까요?"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -35042,6 +35763,16 @@ msgstr "시스템: 라이트 테마 (시스템 다크/라이트 모드 설정에
 msgid "Tab"
 msgstr "탭"
 
+#. Shown at the top of the keyboard shortcuts dialog of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Tab indents the line. To leave the editor with the keyboard, press Escape and then Tab."
+msgstr "Tab 키로 줄을 들여써요. 키보드로 에디터를 나가려면 Escape를 누르고 Tab을 누르세요."
+
+#. Setting in "Editor settings" of the quick CSS editor. How many spaces wide one level of indentation is.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Tab size"
+msgstr "탭 크기"
+
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for table tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
 msgid "Tables"
@@ -35554,6 +36285,21 @@ msgstr "iOS 및 Android용 Fluxer 앱은 Fluxer가 운영하는 푸시 릴레이
 msgid "The following people can't be added to this group DM:"
 msgstr "다음 사용자는 그룹 DM에 추가할 수 없습니다:"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of a message."
+msgstr "메시지의 ID."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the channel a message is in."
+msgstr "메시지가 속한 채널의 ID."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the community a message or avatar belongs to."
+msgstr "메시지나 아바타가 속한 커뮤니티의 ID."
+
 #. Activity log detail under a deleted invite link, used when someone other than the member who deleted it had created it and the creation time was not recorded. {user} is the member who created the invite, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "The invite was created by {user}"
@@ -35629,6 +36375,16 @@ msgstr "대상 멤버"
 #: src/features/devtools/hooks/useCommands.ts
 msgid "The message to send."
 msgstr "보낼 메시지"
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for an avatar."
+msgstr "아바타에 표시되는 이름."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for the person who sent a message."
+msgstr "메시지를 보낸 사람의 표시 이름."
 
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
@@ -35733,10 +36489,20 @@ msgstr "로그인 요청이 브라우저에서 승인되기 전에 만료되었�
 msgid "The sign-in was cancelled in your browser."
 msgstr "브라우저에서 로그인 절차를 취소했습니다."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The size of an avatar in pixels."
+msgstr "아바타의 크기(픽셀 단위)."
+
 #. Where the favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "The small image in the browser tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
 msgstr "브라우저 탭에 표시되는 작은 이미지입니다. 64×64픽셀 이상의 정사각형 PNG를 사용하세요. 최대 {size}까지 가능합니다."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The status shown on an avatar, such as online or idle."
+msgstr "아바타에 표시되는 상태(예: 온라인, 자리 비움 등)."
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -35753,6 +36519,11 @@ msgstr "시스템에서 {target}님에게 {role} 역할을 부여했습니다"
 msgid "The system removed the role {role} from {target}"
 msgstr "시스템에서 {role} 역할을 {target}님에게서 제거했습니다"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor. DEFAULT and REPLY are attribute values and stay in English.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The type of a message, such as DEFAULT or REPLY."
+msgstr "메시지의 유형(예: DEFAULT, REPLY)."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -35768,9 +36539,29 @@ msgstr "업데이트를 계속 다운로드 중입니다. 몇 분 후에 다시 
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "업로드 서비스에서 스티커가 {maxSize}보다 크다고 거부했습니다. 더 작은 파일, 더 간단한 이미지 또는 더 짧은 애니메이션을 사용해 보세요."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of an avatar."
+msgstr "아바타의 사용자 ID."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of the person who sent a message."
+msgstr "메시지를 보낸 사람의 사용자 ID."
+
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "사용자 이름 <0>{fluxerTag}</0>은(는) 이미 사용 중입니다. 계속하면 태그가 자동으로 다시 생성됩니다."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of an avatar."
+msgstr "아바타의 사용자명."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of the person who sent a message."
+msgstr "메시지를 보낸 사람의 사용자명."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -35825,7 +36616,7 @@ msgid "Theme color"
 msgstr "테마 색상"
 
 #. Accessible label for the code editor while it shows the CSS of a saved theme.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Theme CSS"
 msgstr "테마 CSS"
 
@@ -35869,11 +36660,18 @@ msgid "Theme unavailable"
 msgstr "테마를 사용할 수 없습니다"
 
 #. Short label in the Explore page sidebar. Keep it concise.
+#. Tab in the quick CSS editor that lists saved themes.
 #. User settings tab for the base theme, theme files, colors, fonts and quick CSS.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "테마"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "이 폴더의 테마가 \"내 테마\"에서 사라져요."
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -35943,6 +36741,11 @@ msgstr "이 채널의 웹훅을 불러오는 중 오류가 발생했습니다. �
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "There was an error loading the webhooks. Try again."
 msgstr "웹훅을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요."
+
+#. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "These attributes don't change between Fluxer updates."
+msgstr "이 속성들은 Fluxer 업데이트에도 변하지 않아요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -36054,6 +36857,11 @@ msgstr "이 애플리케이션"
 msgid "This attachment has expired"
 msgstr "만료된 첨부파일입니다"
 
+#. Problem shown in the quick CSS editor on an opening curly brace of a CSS block that has no closing curly brace.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This block is never closed. Add a closing brace after its last rule."
+msgstr "이 블록은 닫히지 않았습니다. 마지막 규칙 뒤에 닫는 브레이스를 추가하세요."
+
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts
 msgid "This bot is not public and cannot be added by other users."
@@ -36074,6 +36882,11 @@ msgstr "이 브라우저에서는 애니메이션 {avifFormatLabel} 파일을 �
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "This browser console is a developer tool."
 msgstr "이 브라우저 콘솔은 개발자 도구입니다."
+
+#. Problem shown in the quick CSS editor on a CSS property name the browser does not support.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This browser doesn't know the property {property}."
+msgstr "이 브라우저는 {property} 속성을 알지 못해요."
 
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
@@ -36183,10 +36996,20 @@ msgstr "이 채널은 더 이상 존재하지 않습니다. 이미 삭제되었�
 msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
 msgstr "이 확인은 앱이 HTTPS 또는 localhost를 통해 열릴 때만 실행됩니다. 인스턴스 소유자에게 HTTPS를 통해 제공하도록 요청하거나 localhost에서 열어주세요."
 
+#. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
+msgstr "이 클래스 이름은 Fluxer 업데이트마다 바뀌어요. [data-flx] 셀렉터를 사용하세요."
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "프리미엄 유형, 결제 메타데이터, 재정의 플래그를 포함하여 백엔드 프리미엄 상태를 완전히 지웁니다."
+
+#. Problem shown in the quick CSS editor on a closing curly brace that closes nothing.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This closing brace has no opening brace."
+msgstr "이 닫는 브레이스는 여는 브레이스가 없습니다."
 
 #. Gift redemption error modal body for a code that does not exist.
 #: src/features/gift/commands/GiftCommands.tsx
@@ -36217,6 +37040,11 @@ msgstr "이 색상은 다크 테마 배경과 비슷해서 다크 테마에서�
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the light theme background, so buttons may be hard to see there."
 msgstr "이 색상은 라이트 테마 배경과 비슷해서 라이트 테마에서는 버튼이 잘 보이지 않을 수 있습니다."
+
+#. Problem shown in the quick CSS editor on a CSS comment that has no closing */.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This comment is never closed. Add \"*/\" at its end."
+msgstr "이 주석은 닫히지 않았습니다. 끝에 \"*/\"를 추가하세요."
 
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
@@ -36300,6 +37128,11 @@ msgstr "민감한 콘텐츠가 포함되어 있습니다."
 #: src/features/channel/components/channel_view/DMChannelView.tsx
 msgid "This conversation is no longer available."
 msgstr "이 대화는 더 이상 이용할 수 없습니다."
+
+#. Problem shown in the quick CSS editor on a line with a CSS syntax error.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This CSS can't be parsed."
+msgstr "이 CSS는 해석할 수 없어요."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -36580,12 +37413,12 @@ msgid "This is the first option description"
 msgstr "첫 번째 옵션에 대한 설명입니다"
 
 #. Shown in the quick CSS editor window while it edits an account's own quick CSS. {username} is the account's username and {instanceName} is its instance.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of {username} on {instanceName}."
 msgstr "이것은 {username}님의 {instanceName} 인스턴스에 대한 빠른 CSS입니다."
 
 #. Shown in the quick CSS editor window while it edits the quick CSS shared by every account in the desktop app.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of the desktop app theme."
 msgstr "이것은 데스크톱 앱 테마의 빠른 CSS입니다."
 
@@ -36810,7 +37643,7 @@ msgid "This removes \"{themeName}\" from this device."
 msgstr "이 기기에서 \"{themeName}\" 테마를 삭제합니다."
 
 #. Confirmation text in the quick CSS editor window before clearing quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This removes all of your quick CSS, including color and font changes. Saved themes are not affected."
 msgstr "이것은 색상 및 글꼴 변경을 포함한 모든 빠른 CSS를 제거합니다. 저장된 테마는 영향을 받지 않습니다."
 
@@ -36895,6 +37728,11 @@ msgstr "이 스위치는 선택된 상태에서 비활성화되어 있습니다"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "This text area auto-expands between 4 and 12 rows as you type."
 msgstr "이 텍스트 영역은 입력하는 동안 4행에서 12행까지 자동으로 확장됩니다."
+
+#. Problem shown in the quick CSS editor on a quoted CSS string with no closing quote. {quote} is the quote character, " or '.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This text is never closed. Add a {quote} at its end."
+msgstr "이 텍스트는 닫히지 않았습니다. 끝에 {quote}를 추가하세요."
 
 #. Description text in the channel and chat theme embed.
 #: src/features/channel/components/ThemeEmbed.tsx
@@ -37247,6 +38085,12 @@ msgstr "제목 표시줄 플랫폼"
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "TLS, usually port 465"
 msgstr "TLS, 보통 포트 465"
+
+#. Announced by screen readers in the code editor of the quick CSS editor, between two line numbers, as in "Folded lines 3 to 7".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "to"
+msgstr "부터"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -37798,6 +38642,16 @@ msgstr "직접 처리 방식을 설정하세요."
 msgid "Turkish"
 msgstr "튀르키예어"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Turn a comment on or off"
+msgstr "주석 켜기/끄기"
+
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "커스텀 CSS 켜기/끄기"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -37829,6 +38683,11 @@ msgstr "인증 앱 사용 중지"
 msgid "Turn off camera"
 msgstr "카메라 끄기"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "커스텀 CSS 끄기"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -37849,7 +38708,9 @@ msgstr "스트림 끄기"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "로그인 또는 계정 보안 세부 정보를 보려면 스트리밍 개인 정보 보호를 끄세요."
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "켜기"
@@ -37883,6 +38744,11 @@ msgstr "OBS 또는 XSplit 감지 시 자동으로 켜기"
 msgid "Turn on camera"
 msgstr "카메라 켜기"
 
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "커스텀 CSS 켜기"
+
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
 msgid "Turn on streaming privacy"
@@ -37892,6 +38758,11 @@ msgstr "스트리밍 개인 정보 보호 켜기"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Turn text smileys into emoji"
 msgstr "텍스트 스마일리를 이모티콘으로 바꾸기"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Turn this theme on to see your changes in the app."
+msgstr "이 테마를 켜야 앱에서 변경사항을 볼 수 있어요."
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -38241,14 +39112,16 @@ msgid "Underline website links"
 msgstr "웹사이트 링크에 밑줄을 표시합니다"
 
 #. Native Edit menu item that undoes the last edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Undo"
 msgstr "실행 취소"
 
 #. Button in the quick CSS editor window that puts quick CSS back to how it was when the editor window opened on it.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Undo all changes"
 msgstr "모든 변경사항 실행 취소"
 
@@ -38292,6 +39165,29 @@ msgstr "포커스 해제"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Unfocused"
 msgstr "포커스 해제됨"
+
+#. Text in the code editor of the quick CSS editor. Label of the button that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold"
+msgstr "펼치기"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold line"
+msgstr "줄 펼치기"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Unfold the block"
+msgstr "블록 펼치기"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfolded lines"
+msgstr "펼친 줄"
 
 #. Danger button label that stops copying messages from a followed announcement channel into this channel.
 #: src/features/webhook/components/FollowedChannelListItem.tsx
@@ -38461,7 +39357,7 @@ msgstr "unknown-role"
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Menu item in Settings > Themes that stops a theme following its CSS file on disk and turns it back into an editable copy.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/ThemeDetailsModal.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Unlink"
@@ -38784,7 +39680,8 @@ msgstr "읽지 않은 메시지: {count}개"
 msgid "Unreads"
 msgstr "안 읽음"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Shown in the status bar of the quick CSS editor while a saved theme has changes that are not saved yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "저장되지 않은 변경사항"
 
@@ -38917,11 +39814,6 @@ msgstr "패스키 업데이트"
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
 msgid "Update service worker"
 msgstr "서비스 워커 업데이트"
-
-#. Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.
-#: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Update the desktop app to edit quick CSS."
-msgstr "데스크톱 앱을 업데이트하여 빠른 CSS를 편집하세요."
 
 #. Short label in the timeout member sheet. Keep it concise.
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
@@ -39531,6 +40423,11 @@ msgstr "이 기기의 시스템 동작 줄이기 설정 사용"
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "이 기기의 시스템 동작 줄이기 설정을 사용하거나 아래에서 직접 조정하세요."
 
+#. Menu item in the quick CSS editor while it shows a saved theme. When checked, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "이 테마 사용하기"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -39873,6 +40770,11 @@ msgstr "맞춤 URL이 작동하지 않습니다"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Vanity URLs must be between 2 and 32 characters long and can only contain alphanumeric characters and internal hyphens."
 msgstr "맞춤 URL은 2~32자여야 하며, 영숫자와 내부 하이픈만 포함할 수 있습니다."
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS variables.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Variables"
+msgstr "변수"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -40713,6 +41615,11 @@ msgstr "스트림 시청"
 msgid "Watching"
 msgstr "시청 중"
 
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "{path} 감시 중"
+
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts
 msgid "Watching failed :("
@@ -40759,7 +41666,7 @@ msgid "We couldn't copy that reference."
 msgstr "참조를 복사할 수 없습니다."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't copy that."
 msgstr "복사할 수 없습니다."
 
@@ -40823,7 +41730,7 @@ msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall 
 msgstr "첨부 파일 업로드 서비스에 연결할 수 없습니다. {PRODUCT_NAME}은(는) 총 {fallbackSizeFormatted} 이하의 메시지는 표준 업로드 경로로 보낼 수 있지만, 이 첨부 파일은 합산 한도를 초과해 연결이 복구될 때까지 보낼 수 없습니다. 나중에 다시 시도하고, 문제가 계속되면 이 인스턴스의 관리자에게 문의해 주세요."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't read that CSS file."
 msgstr "CSS 파일을 읽을 수 없습니다."
 
@@ -41293,6 +42200,11 @@ msgstr "스트리밍 개인 정보 보호 기능이 켜져 있을 때"
 msgid "When they come online, they'll appear right here."
 msgstr "온라인 상태가 되면 여기에 표시됩니다."
 
+#. Description of the "Live preview" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "When this is off, changes show in the app when you select \"Apply changes\"."
+msgstr "이 기능이 꺼져 있으면 \"변경사항 적용\"을 선택할 때 앱에 변경사항이 보여요."
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
@@ -41388,6 +42300,12 @@ msgstr "이메일을 누구 이름으로 보낼까요?"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "우와, 너무 많은데요"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Whole word"
+msgstr "단어 전체"
 
 #. Heading on the account restriction screen above the rule that was broken and the findings.
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
@@ -41559,6 +42477,11 @@ msgstr "워드마크"
 msgid "Works while {productName} is focused"
 msgstr "{productName}에 포커스가 있을 때 작동"
 
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Wrap long lines"
+msgstr "긴 줄 줄바꿈"
+
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx
@@ -41571,6 +42494,16 @@ msgstr "텍스트 줄 바꿈"
 msgid "Write a short bio (max 280 characters)"
 msgstr "짧은 자기소개 작성 (최대 280자)"
 
+#. Placeholder in the empty quick CSS editor. {completeKey} and {pickKey} are keyboard shortcuts such as Ctrl + Space.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Write CSS here. Press {completeKey} for suggestions, or {pickKey} to pick a part of the app."
+msgstr "여기에 CSS를 작성하세요. {completeKey}로 제안 보기, {pickKey}로 앱의 일부 선택."
+
+#. Button in the empty state of "Your themes" that opens the quick CSS editor on its CSS tab.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Write quick CSS"
+msgstr "빠른 CSS 작성"
+
 #. Description text in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "Write your content here. This text area expands as you type."
@@ -41578,8 +42511,8 @@ msgstr "여기에 내용을 입력하세요. 입력하는 대로 텍스트 상�
 
 #. Description of the "Quick CSS" section in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app."
-msgstr "앱의 모든 것을 변경하려면 직접 CSS를 작성하세요. 편집기는 자체 창에서 열리므로 CSS가 앱을 변경하지 않으며, 앱을 망가뜨리는 CSS를 언제든지 수정할 수 있습니다."
+msgid "Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app."
+msgstr "직접 CSS를 작성해 앱의 모든 부분을 바꿀 수 있습니다. 편집기는 앱을 사용하는 동안 계속 열려 있고, 작성한 CSS는 편집기 자체에는 절대 적용되지 않으므로 앱을 망가뜨리는 CSS도 언제든 고칠 수 있습니다."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -41854,6 +42787,11 @@ msgstr "나중에 관리자 패널에서 개인 노트를 켤 수 있습니다."
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."
 msgstr "링크, 이모티콘, 마크다운을 사용할 수 있습니다."
+
+#. Error toast in "Your themes" when importing a folder while the most folders are already watched.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "You can watch up to {limit} folders. Stop watching one to add another."
+msgstr "폴더는 최대 {limit}개까지 감시할 수 있습니다. 다른 폴더를 추가하려면 하나를 감시 중지하세요."
 
 #. Title of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx
@@ -42729,7 +43667,7 @@ msgid "Your badge is live. Your name shows on the Operators' wall once we check 
 msgstr "배지가 표시되었습니다. 이름은 저희가 확인한 후 Operators 벽에 표시됩니다."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
-#: src/features/theme_settings/components/QuickCssEditorWindowHost.tsx
+#: src/features/theme_settings/components/QuickCssEditorHost.tsx
 msgid "Your browser blocked the editor window. Allow pop-ups for this site and try again."
 msgstr "브라우저에서 편집기 창을 여는 것을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요."
 

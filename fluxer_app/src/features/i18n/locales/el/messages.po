@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
+msgstr "--{name} δεν είναι μεταβλητή του Fluxer και δεν έχει οριστεί πουθενά στο CSS σου."
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -1066,10 +1071,6 @@ msgstr "{channelName} στο {communityName} στον λογαριασμό {acco
 msgid "{channelName} on {accountName}"
 msgstr "{channelName} στο {accountName}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "{characterCount, plural, one {# character} other {# characters}}"
-msgstr "{characterCount, plural, one {# χαρακτήρας} other {# χαρακτήρες}}"
-
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx
 msgid "{clientLabel} wants to connect"
 msgstr "Το {clientLabel} θέλει να συνδεθεί"
@@ -1098,6 +1099,11 @@ msgstr "{context} · {accountName}"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ Κανένα όριο} one {# συμμετέχων} other {# συμμετέχοντες}}"
+
+#. Shown when hovering a CSS selector in the quick CSS editor.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
+msgstr "{count, plural, =0 {Δεν ταιριάζει με τίποτα στην εφαρμογή αυτή τη στιγμή} one {Ταιριάζει με # στοιχείο στην εφαρμογή αυτή τη στιγμή} other {Ταιριάζει με # στοιχεία στην εφαρμογή αυτή τη στιγμή}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1175,6 +1181,11 @@ msgstr "{count, plural, one {# άλλαξε} other {# άλλαξαν}}"
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# κανάλι ακολουθεί} other {# κανάλια ακολουθούν}} αυτό το κανάλι. Η μετατροπή του σε κανάλι κειμένου θα αφαιρέσει αυτές τις ακολουθήσεις."
 
+#. Shown in the status bar of the quick CSS editor while text is selected.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# character selected} other {# characters selected}}"
+msgstr "{count, plural, one {# χαρακτήρας επιλεγμένος} other {# χαρακτήρες επιλεγμένοι}}"
+
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
@@ -1193,6 +1204,11 @@ msgstr "{count, plural, one {# κοινότητα είναι προσωρινά 
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# σύνδεση} other {# συνδέσεις}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# error} other {# errors}}"
+msgstr "{count, plural, one {# σφάλμα} other {# σφάλματα}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1280,6 +1296,11 @@ msgstr "{count, plural, one {# άτομο που αντέδρασε} other {# ά
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# δευτερόλεπτο} other {# δευτερόλεπτα}}"
 
+#. Option of the "Tab size" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{count, plural, one {# space} other {# spaces}}"
+msgstr "{count, plural, one {# κενό} other {# κενά}}"
+
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
@@ -1289,6 +1310,11 @@ msgstr "{count, plural, one {# διαθέσιμη πρόταση} other {# δι�
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# βίντεο} other {# βίντεο}}"
+
+#. Button in the status bar of the quick CSS editor that opens the list of problems.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{count, plural, one {# warning} other {# warnings}}"
+msgstr "{count, plural, one {# προειδοποίηση} other {# προειδοποιήσεις}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1719,9 +1745,10 @@ msgstr "{length, plural, one {# χρήστης} other {# χρήστες}}"
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# θεατής} other {# θεατές}}"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "{lineCount, plural, one {# line} other {# lines}}"
-msgstr "{lineCount, plural, one {# γραμμή} other {# γραμμές}}"
+#. Tooltip of the line and column button in the status bar of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
+msgstr "{lines, plural, one {# γραμμή} other {# γραμμές}} και {characters, plural, one {# χαρακτήρας} other {# χαρακτήρες}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
@@ -2227,6 +2254,11 @@ msgstr "Ο/Η {sender} σας έστειλε ένα δώρο"
 #: src/features/premium/events/OperatorPassUpdate.tsx
 msgid "{senderName} is passing you an {operatorPassName}. Select to accept or decline."
 msgstr "Ο χρήστης {senderName} σας μεταβιβάζει ένα {operatorPassName}. Επιλέξτε για να αποδεχτείτε ή να απορρίψετε."
+
+#. Option of the "Font size" setting in the quick CSS editor. {size} is a number of pixels.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "{size} px"
+msgstr "{size} px"
 
 #. Summary row value when both a start and end date are set. Both values are localized dates.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -3254,6 +3286,16 @@ msgstr "Πραγματικό μέγεθος"
 msgid "Add"
 msgstr "Προσθήκη"
 
+#. Problem shown in the quick CSS editor on a CSS declaration that is missing the semicolon after it.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \";\" at the end of this line."
+msgstr "Προσθέστε \";\" στο τέλος αυτής της γραμμής."
+
+#. Problem shown in the quick CSS editor on a CSS declaration like "color red;" that is missing its colon.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \":\" between the property and its value."
+msgstr "Προσθέστε \":\" ανάμεσα στην ιδιότητα και την τιμή της."
+
 #. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
 msgid "Add {blueskyProviderName} connection"
@@ -3273,6 +3315,11 @@ msgstr "Προσθήκη σχολίου (προαιρετικό)"
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "Add a community"
 msgstr "Προσθήκη κοινότητας"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Add a cursor"
+msgstr "Προσθήκη δρομέα"
 
 #. Placeholder of the message composer in the new media post composer.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -3590,6 +3637,11 @@ msgstr "Προσθέστε ένα email για να μιλάτε σε αυτήν
 msgid "Add an email to your account to buy the {operatorPassName}."
 msgstr "Προσθέστε ένα email στον λογαριασμό σας για να αγοράσετε το {operatorPassName}."
 
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Adds a rule that changes it.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Add an override"
+msgstr "Προσθήκη αντικατάστασης"
+
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx
 msgid "Add another custom shortcut"
@@ -3775,7 +3827,7 @@ msgid "Add shortcut"
 msgstr "Προσθήκη συντόμευσης"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Add some CSS before sharing."
 msgstr "Προσθέστε λίγο CSS πριν την κοινή χρήση."
 
@@ -4083,6 +4135,12 @@ msgstr "Οι ρυθμίσεις στοίχισης είναι διαθέσιμε
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx
+msgid "All"
+msgstr "Όλα"
+
+#. Text in the code editor of the quick CSS editor. Button that selects every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "All"
 msgstr "Όλα"
 
@@ -5086,6 +5144,21 @@ msgstr "Ισχύει για κοινότητες που θα συμμετάσχ�
 msgid "Apply"
 msgstr "Εφαρμογή"
 
+#. Button in the quick CSS editor that shows the edited quick CSS in the app while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Apply changes"
+msgstr "Εφαρμογή αλλαγών"
+
+#. Completion in the quick CSS editor that inserts an @media rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules at some window sizes"
+msgstr "Εφαρμογή κανόνων σε ορισμένα μεγέθη παραθύρου"
+
+#. Completion in the quick CSS editor that inserts an @supports rule.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Apply rules when the browser supports a feature"
+msgstr "Εφαρμογή κανόνων όταν ο browser υποστηρίζει μια δυνατότητα"
+
 #. Button or menu action label in the theme login and register pages. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "Apply theme"
@@ -5265,7 +5338,14 @@ msgstr "Να ζητείται κλειδί πρόσβασης μετά τον κ
 msgid "Ask for a second step after your password when you sign in."
 msgstr "Ζητήστε ένα δεύτερο βήμα μετά τον κωδικό πρόσβασής σας κατά τη σύνδεση."
 
+#. Detail next to an uploaded theme asset in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Asset"
+msgstr "Στοιχείο"
+
 #. Section title in Settings > Themes for images and fonts the user uploads to use in custom CSS.
+#. Tab in the quick CSS editor that lists uploaded theme assets such as images and fonts.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Assets"
 msgstr "Στοιχεία"
@@ -7012,11 +7092,6 @@ msgstr "Μπορεί η παρουσία σας να στέλνει email;"
 msgid "Can't connect"
 msgstr "Δεν είναι δυνατή η σύνδεση"
 
-#. Shown at the bottom of the quick CSS editor window when the CSS uses an uploaded asset or local file that does not exist. {reference} is the file name.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "Can't find \"{reference}\" in your assets."
-msgstr "Δεν βρέθηκε το \"{reference}\" στα στοιχεία σας."
-
 #. Shown for a linked theme in Settings > Themes when its CSS file was moved or deleted. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
 msgid "Can't find {path}. Using the last loaded version."
@@ -7357,6 +7432,11 @@ msgstr "Αλλαγή email"
 msgid "Change emoji"
 msgstr "Αλλαγή emoji"
 
+#. Completion in the quick CSS editor that inserts a :root rule, where theme variables are set.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Change Fluxer variables"
+msgstr "Αλλαγή μεταβλητών Fluxer"
+
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change friend nickname"
@@ -7469,6 +7549,21 @@ msgstr "Αλλαγή πηγής ροής"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Change the name shown on your global profile"
 msgstr "Αλλάξτε το όνομα που εμφανίζεται στο καθολικό σας προφίλ"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 0.1"
+msgstr "Αλλαγή του αριθμού κάτω από τον δρομέα κατά 0.1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 1"
+msgstr "Αλλαγή του αριθμού κάτω από τον δρομέα κατά 1"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Change the number under the cursor by 10"
+msgstr "Αλλαγή του αριθμού κάτω από τον δρομέα κατά 10"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -7729,9 +7824,19 @@ msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "Άλλαξε η περιοχή φωνής από {oldRegion} σε {newRegion}"
 
 #. Shown at the bottom of the quick CSS editor window while it edits quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Changes show in the app as you type."
 msgstr "Οι αλλαγές εμφανίζονται στην εφαρμογή καθώς πληκτρολογείτε."
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned on.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app as you type. Select \"Save theme\" to keep them."
+msgstr "Οι αλλαγές εμφανίζονται στην εφαρμογή καθώς πληκτρολογείς. Επίλεξε \"Αποθήκευση θέματος\" για να τις κρατήσεις."
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Changes show in the app when you select \"Apply changes\"."
+msgstr "Οι αλλαγές εμφανίζονται στην εφαρμογή όταν επιλέξεις \"Εφαρμογή αλλαγών\"."
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
@@ -8520,7 +8625,7 @@ msgstr "Καθαρίζει το μικρόφωνό σας για καθαρή ο
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 #: src/features/input/components/KeybindRecorder.tsx
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear"
 msgstr "Εκκαθάριση"
 
@@ -8600,7 +8705,7 @@ msgid "Clear permissions"
 msgstr "Εκκαθάριση δικαιωμάτων"
 
 #. Confirmation title in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Clear quick CSS?"
 msgstr "Εκκαθάριση γρήγορου CSS;"
 
@@ -8645,6 +8750,11 @@ msgstr "Καθαρότερο κείμενο"
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Clearing trusted domains..."
 msgstr "Εκκαθάριση αξιόπιστων τομέων..."
+
+#. Shown at the bottom of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
+msgstr "Κάντε κλικ σε ένα στοιχείο για να προσθέσετε τον επιλογέα του. Το {parentKey} επιλέγει τον γονέα και το Escape σταματά την επιλογή."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Click any button to see toast notifications with feedback."
@@ -9031,6 +9141,8 @@ msgid "Color scheme"
 msgstr "Συνδυασμός χρωμάτων"
 
 #. Accessible label for the current color input value.
+#. Label of the text field in the color picker of the quick CSS editor, where a CSS color can be typed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 #: src/features/ui/components/form/ColorPickerField.tsx
 msgid "Color value"
 msgstr "Τιμή χρώματος"
@@ -9047,6 +9159,8 @@ msgid "Colors"
 msgstr "Χρώματα"
 
 #. Section title in Settings > Themes for changing single colors and fonts of the base theme.
+#. Tab in the quick CSS editor that shows the base theme and the color and font controls.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "Colors and fonts"
 msgstr "Χρώματα και γραμματοσειρές"
@@ -9405,6 +9519,12 @@ msgstr "Πλήρης απόκρυψη του σήματος {premiumProductName}
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Completing sign-in…"
 msgstr "Ολοκλήρωση σύνδεσης…"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Name of the list of suggestions.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Completions"
+msgstr "Προτάσεις"
 
 #. Windows jump-list task description (tooltip text) for the New direct message action.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -10085,6 +10205,12 @@ msgstr "Συνέχεια χωρίς email"
 msgid "Contrast"
 msgstr "Αντίθεση"
 
+#. Text in the code editor of the quick CSS editor. Tooltip on an invisible control character shown as a placeholder.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Control character"
+msgstr "Χαρακτήρας ελέγχου"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Control Chromium middle-click autoscrolling in the desktop app"
@@ -10175,6 +10301,11 @@ msgstr "Μετατρέπει το εισερχόμενο περιεχόμενο 
 msgid "Copied"
 msgstr "Αντιγράφηκε"
 
+#. Toast after copying a CSS variable name in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Copied {text}."
+msgstr "Αντιγράφηκε το {text}."
+
 #. Toast shown after copying stats for nerds JSON to clipboard.
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts
 msgid "Copied stats JSON to clipboard"
@@ -10199,6 +10330,7 @@ msgstr "Αντιγράφηκε η διεύθυνση URL στο πρόχειρο
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
+#. Menu item on a CSS variable in the "Reference" tab of the quick CSS editor. Copies its name.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -10208,7 +10340,8 @@ msgstr "Αντιγράφηκε η διεύθυνση URL στο πρόχειρο
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssReference.tsx
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -11658,6 +11791,8 @@ msgid "Cropping {percent}%"
 msgstr "Κοπή {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Tab in the quick CSS editor that shows the code editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
 msgid "CSS"
 msgstr "CSS"
@@ -11716,6 +11851,12 @@ msgstr "Τρέχουσα συσκευή"
 msgid "Current DM"
 msgstr "Τρέχον DM"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Current match"
+msgstr "Τρέχον ταίριασμα"
+
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
@@ -11728,6 +11869,11 @@ msgstr "Τρέχουσα συνεδρία"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Current uses:"
 msgstr "Τρέχουσες χρήσεις:"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is the value the app uses right now.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Current value {value}"
+msgstr "Τρέχουσα τιμή {value}"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
 #: src/features/devtools/components/NagbarControls.ts
@@ -11774,6 +11920,11 @@ msgstr "Προσαρμοσμένη διάρκεια αποκλεισμού (δε
 #: src/features/user/components/settings_utils/search_index/ThemesIndex.ts
 msgid "Custom CSS"
 msgstr "Προσαρμοσμένο CSS"
+
+#. Shown in a notice bar and in the quick CSS editor while quick CSS and saved themes are turned off in this tab, for example after CSS broke the app.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Custom CSS is off."
+msgstr "Το προσαρμοσμένο CSS είναι απενεργοποιημένο."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
@@ -12331,6 +12482,16 @@ msgstr "Προεπιλεγμένο emoji"
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Default hide after inactivity"
 msgstr "Απόκρυψη μετά από αδράνεια"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in dark themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in dark themes {value}"
+msgstr "Προεπιλογή σε σκοτεινά θέματα {value}"
+
+#. Shown for a CSS variable in the quick CSS editor. {value} is its default value in light themes.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Default in light themes {value}"
+msgstr "Προεπιλογή σε φωτεινά θέματα {value}"
 
 #. Label of the forum setting that picks the default post layout.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -13685,6 +13846,16 @@ msgstr "Γιατρέ, έρχομαι από το μέλλον. Ήρθα εδώ �
 msgid "Dock badge"
 msgstr "Σήμα στο Dock"
 
+#. Button in the quick CSS editor header that attaches the editor to the left edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the left"
+msgstr "Πρόσδεση αριστερά"
+
+#. Button in the quick CSS editor header that attaches the editor to the right edge of the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Dock to the right"
+msgstr "Πρόσδεση δεξιά"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Docked DevTools and windows partially off-screen can render a gray background instead of staying transparent."
 msgstr "Τα συνδεδεμένα DevTools και τα παράθυρα που βρίσκονται εν μέρει εκτός οθόνης ενδέχεται να εμφανίζουν ένα γκρι φόντο αντί να παραμένουν διαφανή."
@@ -13819,7 +13990,7 @@ msgstr "Διπλό κλικ στο δικό σας μήνυμα για επεξ�
 #: src/features/auth/components/modals/BackupCodesModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Download"
 msgstr "Λήψη"
@@ -14278,6 +14449,11 @@ msgstr "Επεξεργασία πολυμέσων"
 msgid "Edit message"
 msgstr "Επεξεργασία μηνύματος"
 
+#. Button in Settings > Themes that closes settings and opens the same controls in the quick CSS editor panel, which floats over the app so changes can be seen while editing.
+#: src/features/theme_settings/components/EditNextToAppButton.tsx
+msgid "Edit next to the app"
+msgstr "Επεξεργασία δίπλα στην εφαρμογή"
+
 #. Button or menu action label in the user settings profile card actions. Keep it concise.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Edit note"
@@ -14364,6 +14540,11 @@ msgstr "Επεξεργασία ετικετών"
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "Επεξεργασία του avatar, της ετικέτας, του βιογραφικού, του banner και της συμπεριφοράς αιτήματος φιλίας του bot"
 
+#. Row in the quick CSS editor shortcuts dialog. Opens the color picker for the CSS color under the cursor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Edit the color at the cursor"
+msgstr "Επεξεργασία του χρώματος στο δρομέα"
+
 #. Action that opens the thread settings.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Edit thread"
@@ -14430,6 +14611,11 @@ msgstr "Όριο επεξεργασίας έφτασε"
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Editing message"
 msgstr "Επεξεργασία μηνύματος"
+
+#. Button in the quick CSS editor that opens settings such as font size and line wrapping.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Editor settings"
+msgstr "Ρυθμίσεις επεξεργαστή"
 
 #. Category dropdown option in the "Explore" tab in community settings.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -16249,7 +16435,7 @@ msgstr "Ανακτήστε μια διεύθυνση URL και επιθεωρή
 #. Label of the picker in the quick CSS editor window that chooses between quick CSS and a saved theme.
 #. Top-level native menu bar title (File menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "File"
 msgstr "Αρχείο"
 
@@ -16266,6 +16452,11 @@ msgstr "Το αρχείο είναι πολύ μεγάλο για ενσωματ
 #: src/features/user/components/modals/tabs/notifications_tab/useSoundSettings.ts
 msgid "File is too large. Maximum size is {maxSize}."
 msgstr "Το αρχείο είναι πολύ μεγάλο. Το μέγιστο μέγεθος είναι {maxSize}."
+
+#. Detail next to a linked local file in the completion list of the quick CSS editor.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "File on this computer"
+msgstr "Αρχείο σε αυτόν τον υπολογιστή"
 
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx
@@ -16397,6 +16588,11 @@ msgstr "Φιλτράρισμα μελών χωρίς ρόλους"
 msgid "Filter mentions"
 msgstr "Φιλτράρισμα αναφορών"
 
+#. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Filter rules"
+msgstr "Φιλτράρισμα κανόνων"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Filtering"
@@ -16410,6 +16606,19 @@ msgstr "Φιλτράρισμα κατά {language}"
 #: src/features/voice/components/modals/CameraPreviewModal.tsx
 msgid "Finalizing camera..."
 msgstr "Οριστικοποίηση κάμερας..."
+
+#. Text in the code editor of the quick CSS editor. Placeholder of the search field.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Find"
+msgstr "Εύρεση"
+
+#. Button in the quick CSS editor that opens the search and replace bar.
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Find and replace"
+msgstr "Εύρεση και αντικατάσταση"
 
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx
@@ -16482,10 +16691,20 @@ msgstr "Όνομα και επίθετο"
 msgid "First option"
 msgstr "Πρώτη επιλογή"
 
+#. Toast in the quick CSS editor when "Format" is used on CSS that cannot be parsed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Fix the errors in your CSS before formatting it."
+msgstr "Διόρθωσε τα σφάλματα στο CSS σου πριν το μορφοποιήσεις."
+
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts
 msgid "Flags"
 msgstr "Σημαίες"
+
+#. Button in the quick CSS editor header that detaches a docked editor so it floats over the app again.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Float"
+msgstr "Αποδέσμευση"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -16497,6 +16716,36 @@ msgstr "Φλόριντα"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Το Fluxer προσθέτει έναν τυχαίο αριθμό σε κάθε όνομα χρήστη, όπως alex#4821, ώστε πολλοί να μπορούν να χρησιμοποιούν το ίδιο όνομα."
+
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "Το Fluxer μπλόκαρε τη φόρτωση του {url}. Ανέβασέ το ως στοιχείο."
+
+#. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the asset \"{name}\"."
+msgstr "Το Fluxer δεν βρίσκει το στοιχείο \"{name}\"."
+
+#. Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer can't find the file \"{path}\"."
+msgstr "Το Fluxer δεν βρίσκει το αρχείο \"{path}\"."
+
+#. Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't find this folder. It will load the themes again when the folder is back."
+msgstr "Το Fluxer δεν βρίσκει αυτόν τον φάκελο. Θα φορτώσει ξανά τα θέματα όταν ο φάκελος επιστρέψει."
+
+#. Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't open this folder. Import it again to keep watching it."
+msgstr "Το Fluxer δεν μπορεί να ανοίξει αυτόν τον φάκελο. Εισάγετέ τον ξανά για να συνεχίσετε την παρακολούθηση."
+
+#. Error toast in "Your themes" when the chosen theme folder cannot be opened.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't read this folder."
+msgstr "Το Fluxer δεν μπορεί να διαβάσει αυτόν τον φάκελο."
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -16557,6 +16806,29 @@ msgstr "Εστίαση στο παράθυρο"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Focused voice"
 msgstr "Εστιασμένη φωνή"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that hides a block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Fold line"
+msgstr "Σύμπτυξη γραμμής"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Fold the block"
+msgstr "Σύμπτυξη μπλοκ"
+
+#. Text in the code editor of the quick CSS editor. Label of a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded code"
+msgstr "Συμπτυγμένος κώδικας"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Folded lines"
+msgstr "Συμπτυγμένες γραμμές"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
@@ -16637,6 +16909,11 @@ msgstr "Ακολουθεί τις ρυθμίσεις ήχου των Windows"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Font"
 msgstr "Γραμματοσειρά"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Font size"
+msgstr "Μέγεθος γραμματοσειράς"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -16836,6 +17113,16 @@ msgstr "Ξεχάσατε τον κωδικό πρόσβασης"
 #: src/features/auth/AuthMessageDescriptors.ts
 msgid "Forgot your password?"
 msgstr "Ξεχάσατε τον κωδικό σας;"
+
+#. Button in the quick CSS editor that tidies the indentation and spacing of the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Format"
+msgstr "Μορφοποίηση"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Format the CSS"
+msgstr "Μορφοποίηση του CSS"
 
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for form input tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
@@ -17087,6 +17374,11 @@ msgstr "Από"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
 msgid "From {creatorTag}"
 msgstr "Από {creatorTag}"
+
+#. Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "From {folder}"
+msgstr "Από {folder}"
 
 #. Row for an Operator Pass another account wants to pass on to this one. {name} is a display name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -17664,6 +17956,12 @@ msgstr "Γενικό προφίλ"
 msgid "Global shortcut"
 msgstr "Καθολική συντόμευση"
 
+#. Text in the code editor of the quick CSS editor. Button that moves to the line number typed in "Go to line".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go"
+msgstr "Μετάβαση"
+
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Go back"
@@ -17704,6 +18002,11 @@ msgstr "Μετάβαση στο {premiumProductName}"
 msgid "Go to {recoverUrl} or scan the QR code."
 msgstr "Μεταβείτε στο {recoverUrl} ή σαρώστε τον κωδικό QR."
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Go to a line"
+msgstr "Μετάβαση σε γραμμή"
+
 #. Button label on a community invite embed when the current user is already a member.
 #. Button on the community card that opens from a published message copy, shown when the viewer is already a member of the source community.
 #. Short label in the invite accept modal. Keep it concise.
@@ -17741,6 +18044,12 @@ msgstr "Μετάβαση στην τέταρτη κοινότητα"
 #: src/features/app/components/pages/NotFoundPage.tsx
 msgid "Go to home"
 msgstr "Μετάβαση στην αρχική"
+
+#. Text in the code editor of the quick CSS editor. Label of the field that moves to a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Go to line"
+msgstr "Μετάβαση σε γραμμή"
 
 #. Short label in the quick switcher state. Keep it concise.
 #: src/features/search/state/QuickSwitcher.tsx
@@ -18237,6 +18546,11 @@ msgstr "Απόκρυψη δραστηριότητας σε άλλους λογα
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Hide after inactivity"
 msgstr "Απόκρυψη μετά από αδράνεια"
+
+#. Completion in the quick CSS editor that inserts a CSS rule hiding an element.
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Hide an element"
+msgstr "Απόκρυψη στοιχείου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -18843,6 +19157,11 @@ msgstr "Αν θέλετε να εξαγάγετε τα δεδομένα σας �
 msgid "If you'd like these members to access historical messages sent after a specific date, enable this feature and choose a threshold below."
 msgstr "Αν θέλετε αυτά τα μέλη να έχουν πρόσβαση σε παλαιότερα μηνύματα που στάλθηκαν μετά από μια συγκεκριμένη ημερομηνία, ενεργοποιήστε αυτήν τη λειτουργία και επιλέξτε ένα όριο παρακάτω."
 
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "If your CSS breaks the app, press {shortcut} to turn it off."
+msgstr "Αν το CSS σας χαλάσει την εφαρμογή, πατήστε {shortcut} για να το απενεργοποιήσετε."
+
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts
@@ -19008,7 +19327,7 @@ msgstr "Η εισαγωγή ολοκληρώθηκε. Προστέθηκαν {im
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Import CSS"
 msgstr "Εισαγωγή CSS"
@@ -19285,6 +19604,11 @@ msgstr "Λάθος κωδικός PIN. {retriesRemaining, plural, one {Απομ�
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. Try again."
 msgstr "Λάθος κωδικός PIN. Δοκιμάστε ξανά."
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Indent with tabs"
+msgstr "Εσοχή με tabs"
 
 #. Header status shown while the channel is being indexed for the first time before search is available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -20372,9 +20696,13 @@ msgstr "Λειτουργία πληκτρολογίου"
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Υποδείξεις συντομεύσεων πληκτρολογίου στις επεξηγήσεις"
 
+#. Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Keyboard shortcuts"
 msgstr "Συντομεύσεις πληκτρολογίου"
@@ -20821,10 +21149,15 @@ msgstr "Περιορίστηκαν οι αναφορές αυτού του ρό�
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
 msgstr "Περιορίστηκε το κανάλι σε {count, plural, one {# χρήστη} other {# χρήστες}}"
 
-#. Shown at the bottom of the quick CSS editor window. {line} is a line number.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
-msgid "Line {line} has a CSS error."
-msgstr "Γραμμή {line} έχει σφάλμα CSS."
+#. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
+#: src/features/theme_settings/components/QuickCssStatusBar.tsx
+msgid "Line {line}, column {column}"
+msgstr "Γραμμή {line}, στήλη {column}"
+
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Line numbers"
+msgstr "Αριθμοί γραμμών"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -21037,10 +21370,20 @@ msgctxt "operators-wall-status"
 msgid "Live"
 msgstr "Δημοσιευμένο"
 
+#. Setting in "Editor settings" of the quick CSS editor. When on, the app changes as you type.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Live preview"
+msgstr "Ζωντανή προεπισκόπηση"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Live region"
 msgstr "Ζωντανή περιοχή"
+
+#. Completion in the quick CSS editor that inserts an @font-face rule. Assets are files uploaded under "Assets".
+#: src/features/theme_settings/editor/CssCompletions.ts
+msgid "Load a font from your assets"
+msgstr "Φόρτωσε γραμματοσειρά από τα στοιχεία σου"
 
 #. Button that loads the next page of archived threads.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -21648,6 +21991,12 @@ msgstr "Μασαχουσέτη"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Master volume"
 msgstr "Κύρια ένταση"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Match case"
+msgstr "Ταίριασμα πεζών-κεφαλαίων"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -22733,8 +23082,10 @@ msgstr "Μηνιαία δωρεά (προαιρετική)"
 msgid "Monthly gift"
 msgstr "Μηνιαίο δώρο"
 
+#. Button in the quick CSS editor that opens a menu with more actions, such as importing and downloading CSS.
 #. Generic label for a button that reveals additional actions.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 msgid "More"
 msgstr "Περισσότερα"
 
@@ -22773,6 +23124,11 @@ msgstr "Περισσότερες ενέργειες πολυμέσων"
 msgid "More options"
 msgstr "Περισσότερες επιλογές"
 
+#. Accessible label of the menu button on a CSS variable in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "More options for {name}"
+msgstr "Περισσότερες επιλογές για {name}"
+
 #. Hint under the number of Operator Passes to buy. The wall is the Operators' wall, the list of Operators on the homepage. A neutral fact, never translate it as an encouragement to buy more.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "More passes show larger and earlier on the wall."
@@ -22787,6 +23143,11 @@ msgstr "Περισσότερες επιλογές συντομεύσεων"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "More sticker actions"
 msgstr "Περισσότερες ενέργειες αυτοκόλλητου"
+
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements. {limit} is a number such as 1,000.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "More than {limit} elements match"
+msgstr "Περισσότερα από {limit} στοιχεία ταιριάζουν"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -22837,6 +23198,11 @@ msgstr "Μετακίνηση"
 msgid "Move all devices to…"
 msgstr "Μετακίνηση όλων των συσκευών σε…"
 
+#. Button in the quick CSS editor window that moves the editor back into a panel inside the app.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move back into Fluxer"
+msgstr "Επιστροφή στο Fluxer"
+
 #. Label in the keybinds tab.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts
 msgid "Move back through page history"
@@ -22846,6 +23212,11 @@ msgstr "Μετακίνηση προς τα πίσω στο ιστορικό σε
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Move back through viewed channel history"
 msgstr "Μετακίνηση προς τα πίσω στο ιστορικό καναλιών που προβλήθηκαν"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move between the editor and the app"
+msgstr "Μετακίνηση μεταξύ επεξεργαστή και εφαρμογής"
 
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
@@ -22893,6 +23264,16 @@ msgstr "Μετακίνηση μελών"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "Μετακίνηση δεξιά"
+
+#. Accessible label of the drag handle in the header of the floating quick CSS editor.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Move the editor. Use the arrow keys to move it."
+msgstr "Μετακίνηση του επεξεργαστή. Χρησιμοποίησε τα βελάκια για να τον μετακινήσεις."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Move the line up or down when the cursor isn't on a number"
+msgstr "Μετακίνηση της γραμμής πάνω ή κάτω όταν ο δρομέας δεν είναι σε αριθμό"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
 #: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx
@@ -23713,6 +24094,12 @@ msgstr "Πιο πρόσφατα πρώτα"
 msgid "Next"
 msgstr "Επόμενο"
 
+#. Text in the code editor of the quick CSS editor. Button that goes to the next search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Next"
+msgstr "Επόμενο"
+
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Next attachment"
@@ -24172,6 +24559,12 @@ msgstr "Καμία προτίμηση"
 msgid "No preview yet"
 msgstr "Δεν υπάρχει προεπισκόπηση ακόμα"
 
+#. Text in the code editor of the quick CSS editor. Shown when the CSS has no problems.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "No problems."
+msgstr "Δεν υπάρχουν προβλήματα."
+
 #. Empty-state text in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "No push subscriptions registered yet."
@@ -24228,6 +24621,16 @@ msgstr "Δεν υπάρχουν διαθέσιμοι ρόλοι"
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
 msgstr "Δεν υπάρχουν ρόλοι ακόμα. Προσθέστε ρόλους στο {rolesSettingsPath}"
+
+#. Shown in the outline of the quick CSS editor when no rule matches the filter.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules match \"{filter}\"."
+msgstr "Κανένας κανόνας δεν ταιριάζει με το \"{filter}\"."
+
+#. Shown in the outline of the quick CSS editor when the CSS has no rules.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "No rules yet."
+msgstr "Δεν υπάρχουν κανόνες ακόμα."
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
@@ -24357,6 +24760,11 @@ msgstr "Δεν υπάρχουν διαθέσιμοι χρήστες"
 #: src/features/search/components/search/UserFilterSheet.tsx
 msgid "No users found"
 msgstr "Δεν βρέθηκαν χρήστες"
+
+#. Shown in the "Reference" tab of the quick CSS editor when the search finds nothing.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "No variables match \"{query}\"."
+msgstr "Καμία μεταβλητή δεν ταιριάζει με το \"{query}\"."
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
@@ -24495,6 +24903,11 @@ msgstr "Δεν είναι ακέραιος αριθμός"
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx
 msgid "Not allowed"
 msgstr "Δεν επιτρέπεται"
+
+#. Shown in the status bar of the quick CSS editor while "Live preview" is off and there are changes the app does not show yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Not applied yet"
+msgstr "Δεν έχουν εφαρμοστεί ακόμα"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -24898,10 +25311,21 @@ msgstr "Στις <0>{listPriceEffectiveDate}</0> η συνδρομή σας αλ
 msgid "On click"
 msgstr "Με κλικ"
 
+#. Announced by screen readers in the code editor of the quick CSS editor. Followed by a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "on line"
+msgstr "στη γραμμή"
+
 #. Note in the Operator Pass dialog before the pass can be bought. {saleOpensAt} is a date without a time, such as November 1, 2026.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx
 msgid "On sale from {saleOpensAt}."
 msgstr "Διαθέσιμο από {saleOpensAt}."
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the [data-flx] values of what the app shows right now.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "On screen now"
+msgstr "Τώρα στην οθόνη"
 
 #. Label in front of the name and avatar the Operators' wall shows for this account right now.
 #: src/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings.tsx
@@ -25099,6 +25523,11 @@ msgstr "Μόνο το κείμενο CSS συγχρονίζεται σε όλε�
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "Only the CSS text is synced. Uploaded assets and local file references stay on this device."
 msgstr "Μόνο το κείμενο CSS συγχρονίζεται. Τα στοιχεία που ανεβάσατε και οι αναφορές τοπικών αρχείων παραμένουν σε αυτήν τη συσκευή."
+
+#. Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Only the first 200 CSS files in this folder are loaded."
+msgstr "Μόνο τα πρώτα 200 αρχεία CSS σε αυτόν τον φάκελο φορτώνονται."
 
 #: src/features/channel/components/modals/GroupInvitesModal.tsx
 msgid "Only the group owner can manage invites."
@@ -25458,6 +25887,11 @@ msgstr "Άνοιγμα συνδέσμου εικόνας"
 msgid "Open in {productName} for desktop"
 msgstr "Άνοιγμα στην εφαρμογή {productName} για υπολογιστές"
 
+#. Button in the quick CSS editor header that moves the editor into its own window.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Open in a new window"
+msgstr "Άνοιγμα σε νέο παράθυρο"
+
 #. Media viewer action that opens the current media in the system default browser.
 #: src/features/messaging/components/modals/media_modal/shared.ts
 msgid "Open in browser"
@@ -25806,11 +26240,13 @@ msgstr "Επιλογές για το {displayName}"
 msgid "Options for {themeName}"
 msgstr "Επιλογές για {themeName}"
 
+#. Between two keyboard shortcuts that do the same thing, in the shortcuts dialog of the quick CSS editor.
 #. Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "or"
 msgstr "ή"
 
@@ -25954,6 +26390,11 @@ msgstr "Εξερχόμενα αιτήματα φιλίας"
 #: src/features/relationship/components/modals/AddFriendSheet.tsx
 msgid "Outgoing friend requests ({requestCount})"
 msgstr "Εξερχόμενα αιτήματα φιλίας ({requestCount})"
+
+#. Button in the quick CSS editor that shows a list of the rules in the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Outline"
+msgstr "Περίγραμμα"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
@@ -26692,6 +27133,11 @@ msgstr "Ειδοποιήσεις στο κινητό"
 msgid "Photo"
 msgstr "Φωτογραφία"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick a child element while picking"
+msgstr "Επιλογή παιδικού στοιχείου κατά την επιλογή"
+
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
 msgid "Pick a friend to pass it on to. They can accept or decline, and you can take it back until it moves."
@@ -26717,6 +27163,16 @@ msgstr "Επιλέξτε πάροχο μετάφρασης"
 msgid "Pick a web search provider"
 msgstr "Επιλέξτε πάροχο αναζήτησης ιστού"
 
+#. Button in the quick CSS editor. After pressing it, clicking a part of the app adds a CSS selector for that part to the CSS.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Pick an element"
+msgstr "Επιλογή στοιχείου"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick an element in the app"
+msgstr "Επιλέξτε ένα στοιχείο στην εφαρμογή"
+
 #. Button that opens the emoji picker in forum settings.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Pick an emoji"
@@ -26741,6 +27197,16 @@ msgstr "Επιλέξτε ένα ή περισσότερα λεξικά. Γίνο
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "Διάλεξε τον 4ψήφιο αριθμό μετά το όνομά σου"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the next or previous element while picking"
+msgstr "Επιλογή επόμενου ή προηγούμενου στοιχείου κατά την επιλογή"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the parent element while picking"
+msgstr "Επιλογή γονικού στοιχείου κατά την επιλογή"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -27228,6 +27694,11 @@ msgstr "Ετοιμασία"
 msgid "Presence"
 msgstr "Παρουσία"
 
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+T.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "Press {shortcut} anywhere in the app to open the editor."
+msgstr "Πατήστε {shortcut} οπουδήποτε στην εφαρμογή για να ανοίξετε τον επεξεργαστή."
+
 #. Tooltip hint for a quick reaction in the message context menu. Preserve {shortcut}; it is a keyboard key such as 1.
 #: src/features/ui/action_menu/MessageContextMenu.tsx
 msgid "Press {shortcut} to react"
@@ -27360,6 +27831,12 @@ msgid "Previews"
 msgstr "Προεπισκοπήσεις"
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
+msgid "Previous"
+msgstr "Προηγούμενο"
+
+#. Text in the code editor of the quick CSS editor. Button that goes to the previous search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
 msgid "Previous"
 msgstr "Προηγούμενο"
 
@@ -27509,6 +27986,12 @@ msgstr "Ιδιωτικό νήμα"
 #: src/features/app/components/dialogs/ConfirmModal.tsx
 msgid "Pro tip:"
 msgstr "Συμβουλή:"
+
+#. Text in the code editor of the quick CSS editor. Title of the list of problems in the CSS.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Problems"
+msgstr "Προβλήματα"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -27945,22 +28428,26 @@ msgid "Quick CSS"
 msgstr "Γρήγορο CSS"
 
 #. Toast after copying quick CSS in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS copied to clipboard."
 msgstr "Το γρήγορο CSS αντιγράφηκε στο πρόχειρο."
 
 #. Accessible label for the code editor in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Accessible name of the floating quick CSS editor panel and its frame.
+#. Accessible name of the quick CSS editor area, in its floating panel or its own window.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 msgid "Quick CSS editor"
 msgstr "Επεξεργαστής γρήγορου CSS"
 
 #. Toast after pressing "Undo all changes" in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS is back to how it was when you opened the editor."
 msgstr "Το γρήγορο CSS επανήλθε στην αρχική του μορφή κατά το άνοιγμα του επεξεργαστή."
 
 #. Toast after importing a CSS file into the quick CSS editor.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Quick CSS replaced from {fileName}."
 msgstr "Το γρήγορο CSS αντικαταστάθηκε από το {fileName}."
 
@@ -28380,9 +28867,11 @@ msgid "Redirect URIs"
 msgstr "URI ανακατεύθυνσης"
 
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Redo"
 msgstr "Επανάληψη"
 
@@ -28400,6 +28889,11 @@ msgstr "Μειωμένη κίνηση"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing."
 msgstr "Η μειωμένη κίνηση είναι ενεργή, επομένως οι κινήσεις του περιεχομένου είναι σε παύση από προεπιλογή. Μπορείτε να ενεργοποιήσετε ξανά όποιες θέλετε για να συνεχίσουν να αναπαράγονται."
+
+#. Tab in the quick CSS editor that lists the CSS variables and selectors theme authors can use.
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
+msgid "Reference"
+msgstr "Αναφορά"
 
 #. Toast after copying the CSS reference of a theme asset.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -28497,6 +28991,12 @@ msgstr "Κανονικό κουμπί"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button clicked."
 msgstr "Πατήθηκε το κανονικό κουμπί."
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Regular expression"
+msgstr "Κανονική έκφραση"
 
 #. Button label for rejecting an incoming direct call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -29096,6 +29596,18 @@ msgstr "Ανανεώνεται στις <0>{renewalDate}.</0>"
 msgid "Replace"
 msgstr "Αντικατάσταση"
 
+#. Text in the code editor of the quick CSS editor. Placeholder of the replace field and its button.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace"
+msgstr "Αντικατάσταση"
+
+#. Text in the code editor of the quick CSS editor. Button that replaces every search match.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replace all"
+msgstr "Αντικατάσταση όλων"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background"
@@ -29115,6 +29627,18 @@ msgstr "Αντικατάσταση: {key}"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace with a GIF"
 msgstr "Αντικατάσταση με ένα GIF"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced $ matches"
+msgstr "Αντικαταστάθηκαν $ ταιριάσματα"
+
+#. Announced by screen readers in the code editor of the quick CSS editor. Keep the $ sign, it is replaced with a line number.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Replaced the match on line $"
+msgstr "Αντικαταστάθηκε το ταίριασμα στη γραμμή $"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -29715,6 +30239,11 @@ msgstr "Αλλαγή μεγέθους καρφιτσωμένων μηνυμάτ�
 msgid "Resize sidebar"
 msgstr "Αλλαγή μεγέθους πλαϊνής στήλης"
 
+#. Accessible label of the handle that resizes the floating quick CSS editor panel.
+#: src/features/theme_settings/components/QuickCssEditorPanel.tsx
+msgid "Resize the editor"
+msgstr "Αλλαγή μεγέθους του επεξεργαστή"
+
 #: src/features/theme_settings/components/DesktopWindowSection.tsx
 msgid "Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck."
 msgstr "Η αλλαγή μεγέθους, η μεγιστοποίηση και η προσκόλληση παραθύρου εξαρτώνται από τον συνθέτη. Το Wayland χωρίς διακοσμήσεις από την πλευρά του πελάτη ενδέχεται να μην παρέχει λαβές. Εκκινήστε με --ozone-platform=x11 εάν το παράθυρο φαίνεται κολλημένο."
@@ -30141,6 +30670,11 @@ msgstr "Κανόνας: {title}"
 msgid "Rule: <0>{title}</0>"
 msgstr "Κανόνας: <0>{title}</0>"
 
+#. Accessible name of the outline list in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssOutline.tsx
+msgid "Rules in this CSS"
+msgstr "Κανόνες σε αυτό το CSS"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -30283,7 +30817,12 @@ msgstr "Αποθήκευση εικονιδίου"
 msgid "Save some media from messages to get started!"
 msgstr "Αποθηκεύστε μερικά πολυμέσα από μηνύματα για να ξεκινήσετε!"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Save the theme or apply changes"
+msgstr "Αποθήκευση θέματος ή εφαρμογή αλλαγών"
+
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Save theme"
 msgstr "Αποθήκευση θέματος"
 
@@ -30896,6 +31435,11 @@ msgstr "Αναζήτηση ζωνών ώρας"
 msgid "Search users"
 msgstr "Αναζήτηση χρηστών"
 
+#. Placeholder of the search field in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Search variables"
+msgstr "Αναζήτηση μεταβλητών"
+
 #. Header status shown while a search request is in flight in the channel search results panel.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "Searching"
@@ -31082,6 +31626,11 @@ msgstr "Επιλέξτε κανάλι"
 msgid "Select a channel or category"
 msgstr "Επιλέξτε ένα κανάλι ή κατηγορία"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select a column of text by dragging"
+msgstr "Επιλογή στήλης κειμένου με σύρσιμο"
+
 #. Form field label or placeholder for selecting a community.
 #. Placeholder of the community picker in the follow announcement channel dialog.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
@@ -31119,6 +31668,11 @@ msgstr "Επιλέξτε ένα URI ανακατεύθυνσης"
 msgid "Select a scenario to apply..."
 msgstr "Επιλέξτε ένα σενάριο για εφαρμογή..."
 
+#. Shown above the list of CSS variables in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select a variable to add it to your CSS."
+msgstr "Επίλεξε μια μεταβλητή για να την προσθέσεις στο CSS σου."
+
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -31154,6 +31708,11 @@ msgstr "Επιλογή GIF {title}"
 msgid "Select interface language"
 msgstr "Επιλέξτε γλώσσα διεπαφής"
 
+#. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Select one to add a rule for it to your CSS."
+msgstr "Επίλεξε ένα για να προσθέσεις κανόνα στο CSS σου."
+
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
 msgid "Select scopes (and redirect URI if required)"
@@ -31167,6 +31726,11 @@ msgstr "Επιλογή κειμένου"
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Επιλέξτε τον λογαριασμό με τον οποίο θέλετε να συνδεθείτε στη νέα σας συσκευή."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Select the next match of the selection"
+msgstr "Επιλογή του επόμενου ταιριάσματος της επιλογής"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
@@ -31203,6 +31767,12 @@ msgstr "Επιλέξιμο κείμενο"
 msgid "selected"
 msgstr "επιλεγμένο"
 
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Selection deleted"
+msgstr "Η επιλογή διαγράφηκε"
+
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx
 msgid "Selection end"
@@ -31237,6 +31807,11 @@ msgstr "Επιλογή: {0} (μέγ. {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Selections"
 msgstr "Επιλογές"
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS selectors.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Selectors"
+msgstr "Επιλογείς"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -31757,6 +32332,111 @@ msgstr "Ορισμός συντόμευσης σίγασης"
 msgid "Set new password"
 msgstr "Ορισμός νέου κωδικού πρόσβασης"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions is showing."
+msgstr "Ορίζεται σε μήνυμα όσο εμφανίζεται η μπάρα ενεργειών του."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on a message while its bar of message actions stays open, such as while a menu is open."
+msgstr "Ορίζεται σε μήνυμα όσο η μπάρα ενεργειών μένει ανοιχτή, π.χ. όταν είναι ανοιχτό κάποιο μενού."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar when that person is online on a phone."
+msgstr "Ορίζεται σε avatar όταν το άτομο είναι online σε κινητό."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on an avatar while that person is typing."
+msgstr "Ορίζεται σε avatar όσο το άτομο πληκτρολογεί."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on avatars that open a profile when clicked."
+msgstr "Ορίζεται σε avatars που ανοίγουν προφίλ με κλικ."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on edited messages."
+msgstr "Ορίζεται σε επεξεργασμένα μηνύματα."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages about a call."
+msgstr "Ορίζεται σε μηνύματα σχετικά με κλήση."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from bots."
+msgstr "Ορίζεται σε μηνύματα από bots."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages from people you blocked."
+msgstr "Ορίζεται σε μηνύματα από άτομα που έχεις μπλοκάρει."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages sent by a webhook."
+msgstr "Ορίζεται σε μηνύματα που στέλνονται από webhook."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages shown under the previous message from the same person."
+msgstr "Ορίζεται σε μηνύματα που εμφανίζονται κάτω από το προηγούμενο μήνυμα του ίδιου ατόμου."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that can show the bar of message actions."
+msgstr "Ορίζεται σε μηνύματα που μπορούν να εμφανίσουν τη μπάρα ενεργειών."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that Fluxer sends, such as when someone joins."
+msgstr "Ορίζεται σε μηνύματα που στέλνει το Fluxer, π.χ. όταν κάποιος μπαίνει."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that mention you."
+msgstr "Ορίζεται σε μηνύματα που σε αναφέρουν."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages that reply to another message."
+msgstr "Ορίζεται σε μηνύματα που απαντούν σε άλλο μήνυμα."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages while the compact message layout is on."
+msgstr "Ορίζεται σε μηνύματα όταν είναι ενεργή η συμπαγής διάταξη μηνυμάτων."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on messages you sent."
+msgstr "Ορίζεται σε μηνύματα που έστειλες εσύ."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on pinned messages."
+msgstr "Ορίζεται σε καρφιτσωμένα μηνύματα."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the avatars of bots."
+msgstr "Ορίζεται στα avatars των bots."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on the root element during holidays. It lists the holidays."
+msgstr "Ορίζεται στο root στοιχείο κατά τη διάρκεια γιορτών. Περιέχει τις γιορτές."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "Set on your own avatar."
+msgstr "Ορίζεται στο δικό σου avatar."
+
 #. Button that opens the dialog for setting a password on the account.
 #. Button that saves the password in the dialog for an account that has an email but no password.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
@@ -31990,7 +32670,7 @@ msgstr "Στη διαμόρφωση αυτής της παρουσίας η ρύ
 msgid "Several people are typing..."
 msgstr "Αρκετά άτομα πληκτρολογούν..."
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Share"
@@ -32290,6 +32970,16 @@ msgstr "Εμφάνιση συνομιλίας"
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "Εμφάνιση συνομιλίας με {count, plural, one {# μη αναγνωσμένο μήνυμα} other {# μη αναγνωσμένα μηνύματα}}"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show completions"
+msgstr "Εμφάνιση προτάσεων"
+
+#. Setting in "Editor settings" of the quick CSS editor. Completions are suggestions of CSS code.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Show completions as you type"
+msgstr "Εμφάνιση προτάσεων καθώς πληκτρολογείς"
+
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
 msgid "Show connection ID"
@@ -32332,6 +33022,11 @@ msgstr "Εμφάνιση προεπιλεγμένων emoji στην αυτόμ�
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show delete button"
 msgstr "Εμφάνιση κουμπιού διαγραφής"
+
+#. Row in the quick CSS editor shortcuts dialog. Shows the same details as hovering, such as how many elements a selector matches.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show details for the code at the cursor"
+msgstr "Εμφάνιση λεπτομερειών για τον κώδικα στο δρομέα"
 
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -32581,6 +33276,11 @@ msgstr "Εμφάνιση κωδικού"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Εμφάνιση ρυθμιστικών έντασης ήχου συμμετεχόντων ανά συσκευή στα μενού φωνής"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show problems"
+msgstr "Εμφάνιση προβλημάτων"
+
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
@@ -32649,6 +33349,11 @@ msgstr "Εμφάνιση του εικονιδίου {productName} με πλήρ
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx
 msgid "Show the ID of each voice connection next to people in calls and in voice channels. With it off, each device is named by its type instead."
 msgstr "Εμφάνισε το αναγνωριστικό κάθε φωνητικής σύνδεσης δίπλα στα άτομα στις κλήσεις και στα φωνητικά κανάλια. Όταν είναι απενεργοποιημένο, κάθε συσκευή ονομάζεται με βάση τον τύπο της."
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show the outline"
+msgstr "Εμφάνιση περιγράμματος"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -33669,6 +34374,11 @@ msgstr "Ηχείο"
 msgid "Special features"
 msgstr "Ειδικές λειτουργίες"
 
+#. Shown when hovering a CSS selector in the quick CSS editor. {a}, {b} and {c} are the three numbers of CSS specificity.
+#: src/features/theme_settings/editor/CssHover.ts
+msgid "Specificity {a}, {b}, {c}"
+msgstr "Ειδικότητα {a}, {b}, {c}"
+
 #. Title of the screen-share spectators popout listing users watching the stream.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx
 msgid "Spectators"
@@ -34336,10 +35046,21 @@ msgstr "Θέλετε να σταματήσετε τη χρήση κλειδιώ�
 msgid "Stop watching"
 msgstr "Διακοπή παρακολούθησης"
 
+#. Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgctxt "theme-folder"
+msgid "Stop watching"
+msgstr "Διακοπή παρακολούθησης"
+
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
 #: src/features/voice/components/VoiceControlBar.tsx
 msgid "Stop watching stream"
 msgstr "Διακοπή παρακολούθησης ροής"
+
+#. Confirmation title in Settings > Themes before it stops watching a theme folder.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Stop watching this folder?"
+msgstr "Διακοπή παρακολούθησης αυτού του φακέλου;"
 
 #. Large console warning headline shown when DevTools opens. Keep it direct and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts
@@ -35042,6 +35763,16 @@ msgstr "Σύστημα: ανοιχτό θέμα (αυτόματος συγχρο
 msgid "Tab"
 msgstr "Tab"
 
+#. Shown at the top of the keyboard shortcuts dialog of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Tab indents the line. To leave the editor with the keyboard, press Escape and then Tab."
+msgstr "Το Tab κάνει εσοχή στη γραμμή. Για να βγεις από τον επεξεργαστή με το πληκτρολόγιο, πάτησε Escape και μετά Tab."
+
+#. Setting in "Editor settings" of the quick CSS editor. How many spaces wide one level of indentation is.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Tab size"
+msgstr "Μέγεθος Tab"
+
 #. Collapsible group heading in the "Colors and fonts" list in Settings > Themes, for table tokens.
 #: src/features/theme_settings/utils/TokenGroups.ts
 msgid "Tables"
@@ -35554,6 +36285,21 @@ msgstr "Οι εφαρμογές Fluxer για iOS και Android λαμβάνο�
 msgid "The following people can't be added to this group DM:"
 msgstr "Τα παρακάτω άτομα δεν μπορούν να προστεθούν σε αυτήν την ομαδική συνομιλία:"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of a message."
+msgstr "Το ID ενός μηνύματος."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the channel a message is in."
+msgstr "Το ID του καναλιού όπου βρίσκεται το μήνυμα."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The ID of the community a message or avatar belongs to."
+msgstr "Το ID της κοινότητας στην οποία ανήκει το μήνυμα ή το avatar."
+
 #. Activity log detail under a deleted invite link, used when someone other than the member who deleted it had created it and the creation time was not recorded. {user} is the member who created the invite, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "The invite was created by {user}"
@@ -35629,6 +36375,16 @@ msgstr "Το μέλος στο οποίο θα εφαρμοστεί η ενέρ�
 #: src/features/devtools/hooks/useCommands.ts
 msgid "The message to send."
 msgstr "Το μήνυμα που θα σταλεί."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for an avatar."
+msgstr "Το όνομα που εμφανίζεται σε ένα avatar."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The name shown for the person who sent a message."
+msgstr "Το όνομα που εμφανίζεται για το άτομο που έστειλε το μήνυμα."
 
 #. Body of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
@@ -35733,10 +36489,20 @@ msgstr "Το αίτημα σύνδεσης έληξε πριν το εγκρίν
 msgid "The sign-in was cancelled in your browser."
 msgstr "Η σύνδεση ακυρώθηκε στο πρόγραμμα περιήγησής σας."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The size of an avatar in pixels."
+msgstr "Το μέγεθος ενός avatar σε pixels."
+
 #. Where the favicon appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "The small image in the browser tab. Use a square PNG, at least 64 by 64 pixels and up to {size}."
 msgstr "Η μικρή εικόνα στην καρτέλα του προγράμματος περιήγησης. Χρησιμοποιήστε ένα τετράγωνο PNG, τουλάχιστον 64 επί 64 pixel και έως {size}."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The status shown on an avatar, such as online or idle."
+msgstr "Η κατάσταση που εμφανίζεται σε ένα avatar, π.χ. online ή αδρανής."
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -35753,6 +36519,11 @@ msgstr "Το σύστημα έδωσε στον/στην {target} τον ρόλ�
 msgid "The system removed the role {role} from {target}"
 msgstr "Το σύστημα αφαίρεσε τον ρόλο {role} από τον/την {target}"
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor. DEFAULT and REPLY are attribute values and stay in English.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The type of a message, such as DEFAULT or REPLY."
+msgstr "Ο τύπος του μηνύματος, π.χ. DEFAULT ή REPLY."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -35768,9 +36539,29 @@ msgstr "Η ενημέρωση κατεβαίνει ακόμα. Δοκιμάστ�
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "Η υπηρεσία μεταφόρτωσης απέρριψε αυτό το αυτοκόλλητο επειδή είναι μεγαλύτερο από {maxSize}. Δοκιμάστε ένα μικρότερο αρχείο, μια πιο απλή εικόνα ή μια πιο σύντομη κινούμενη εικόνα."
 
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of an avatar."
+msgstr "Το user ID ενός avatar."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The user ID of the person who sent a message."
+msgstr "Το user ID του ατόμου που έστειλε το μήνυμα."
+
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "Το όνομα χρήστη <0>{fluxerTag}</0> χρησιμοποιείται ήδη. Αν συνεχίσετε, η ετικέτα σας θα αλλάξει αυτόματα."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of an avatar."
+msgstr "Το username ενός avatar."
+
+#. Describes a CSS attribute in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/editor/AppSelectors.ts
+msgid "The username of the person who sent a message."
+msgstr "Το username του ατόμου που έστειλε το μήνυμα."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -35825,7 +36616,7 @@ msgid "Theme color"
 msgstr "Χρώμα θέματος"
 
 #. Accessible label for the code editor while it shows the CSS of a saved theme.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Theme CSS"
 msgstr "CSS θέματος"
 
@@ -35869,11 +36660,18 @@ msgid "Theme unavailable"
 msgstr "Το θέμα δεν είναι διαθέσιμο"
 
 #. Short label in the Explore page sidebar. Keep it concise.
+#. Tab in the quick CSS editor that lists saved themes.
 #. User settings tab for the base theme, theme files, colors, fonts and quick CSS.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx
+#: src/features/theme_settings/components/QuickCssWorkspace.tsx
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Themes"
 msgstr "Θέματα"
+
+#. Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Themes from this folder will be removed from \"Your themes\"."
+msgstr "Τα θέματα από αυτόν τον φάκελο θα αφαιρεθούν από τα \"Θέματά σας\"."
 
 #. Description of the "Your themes" section in Settings > Themes.
 #: src/features/theme_settings/components/YourThemesSection.tsx
@@ -35943,6 +36741,11 @@ msgstr "Παρουσιάστηκε σφάλμα κατά τη φόρτωση τ�
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "There was an error loading the webhooks. Try again."
 msgstr "Παρουσιάστηκε σφάλμα κατά τη φόρτωση των webhooks. Δοκιμάστε ξανά."
+
+#. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "These attributes don't change between Fluxer updates."
+msgstr "Αυτά τα attributes δεν αλλάζουν μεταξύ ενημερώσεων του Fluxer."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -36054,6 +36857,11 @@ msgstr "Αυτή η εφαρμογή"
 msgid "This attachment has expired"
 msgstr "Αυτό το συνημμένο έχει λήξει"
 
+#. Problem shown in the quick CSS editor on an opening curly brace of a CSS block that has no closing curly brace.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This block is never closed. Add a closing brace after its last rule."
+msgstr "Αυτό το block δεν κλείνει ποτέ. Προσθέστε μια κλειστή αγκύλη μετά τον τελευταίο κανόνα."
+
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts
 msgid "This bot is not public and cannot be added by other users."
@@ -36074,6 +36882,11 @@ msgstr "Αυτό το πρόγραμμα περιήγησης δεν μπορε�
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "This browser console is a developer tool."
 msgstr "Αυτή η κονσόλα του προγράμματος περιήγησης είναι ένα εργαλείο προγραμματιστών."
+
+#. Problem shown in the quick CSS editor on a CSS property name the browser does not support.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This browser doesn't know the property {property}."
+msgstr "Αυτός ο browser δεν γνωρίζει την ιδιότητα {property}."
 
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
@@ -36183,10 +36996,20 @@ msgstr "Αυτό το κανάλι δεν υπάρχει πλέον. Ενδέχ�
 msgid "This check only runs when the app is opened over HTTPS or on localhost. Ask the instance owner to serve it over HTTPS, or open it from localhost."
 msgstr "Αυτός ο έλεγχος εκτελείται μόνο όταν η εφαρμογή ανοίγει μέσω HTTPS ή στο localhost. Ζητήστε από τον διαχειριστή της παρουσίας να τη σερβίρει μέσω HTTPS ή ανοίξτε την από το localhost."
 
+#. Problem shown in the quick CSS editor on a generated class name. [data-flx] is CSS code and stays in English.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This class name changes with every Fluxer update. Use a [data-flx] selector."
+msgstr "Αυτό το όνομα κλάσης αλλάζει σε κάθε ενημέρωση του Fluxer. Χρησιμοποίησε έναν selector [data-flx]."
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "Αυτό διαγράφει εντελώς την κατάσταση premium στο backend σας, μαζί με τον τύπο premium, τα μεταδεδομένα χρέωσης και τα flags παράκαμψης."
+
+#. Problem shown in the quick CSS editor on a closing curly brace that closes nothing.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This closing brace has no opening brace."
+msgstr "Αυτή η κλειστή αγκύλη δεν έχει ανοιχτή αγκύλη."
 
 #. Gift redemption error modal body for a code that does not exist.
 #: src/features/gift/commands/GiftCommands.tsx
@@ -36217,6 +37040,11 @@ msgstr "Αυτό το χρώμα είναι κοντά στο φόντο του 
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the light theme background, so buttons may be hard to see there."
 msgstr "Αυτό το χρώμα είναι κοντά στο φόντο του ανοιχτού θέματος, οπότε τα κουμπιά μπορεί να φαίνονται δύσκολα εκεί."
+
+#. Problem shown in the quick CSS editor on a CSS comment that has no closing */.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This comment is never closed. Add \"*/\" at its end."
+msgstr "Αυτό το σχόλιο δεν κλείνει ποτέ. Προσθέστε \"*/\" στο τέλος του."
 
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
@@ -36300,6 +37128,11 @@ msgstr "Περιέχει ευαίσθητο περιεχόμενο."
 #: src/features/channel/components/channel_view/DMChannelView.tsx
 msgid "This conversation is no longer available."
 msgstr "Αυτή η συνομιλία δεν είναι πλέον διαθέσιμη."
+
+#. Problem shown in the quick CSS editor on a line with a CSS syntax error.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This CSS can't be parsed."
+msgstr "Αυτό το CSS δεν μπορεί να αναλυθεί."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -36580,12 +37413,12 @@ msgid "This is the first option description"
 msgstr "Αυτή είναι η περιγραφή της πρώτης επιλογής"
 
 #. Shown in the quick CSS editor window while it edits an account's own quick CSS. {username} is the account's username and {instanceName} is its instance.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of {username} on {instanceName}."
 msgstr "Αυτό είναι το CSS του {username} στο {instanceName}."
 
 #. Shown in the quick CSS editor window while it edits the quick CSS shared by every account in the desktop app.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This is the quick CSS of the desktop app theme."
 msgstr "Αυτό είναι το γρήγορο CSS του θέματος της εφαρμογής desktop."
 
@@ -36810,7 +37643,7 @@ msgid "This removes \"{themeName}\" from this device."
 msgstr "Αυτό καταργεί το \"{themeName}\" από αυτήν τη συσκευή."
 
 #. Confirmation text in the quick CSS editor window before clearing quick CSS.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "This removes all of your quick CSS, including color and font changes. Saved themes are not affected."
 msgstr "Αυτό θα αφαιρέσει όλο το γρήγορο CSS σας, συμπεριλαμβανομένων των αλλαγών στα χρώματα και τις γραμματοσειρές. Τα αποθηκευμένα θέματα δεν επηρεάζονται."
 
@@ -36895,6 +37728,11 @@ msgstr "Αυτός ο διακόπτης είναι απενεργοποιημέ
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "This text area auto-expands between 4 and 12 rows as you type."
 msgstr "Αυτό το πεδίο κειμένου επεκτείνεται αυτόματα από 4 έως 12 γραμμές καθώς πληκτρολογείτε."
+
+#. Problem shown in the quick CSS editor on a quoted CSS string with no closing quote. {quote} is the quote character, " or '.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This text is never closed. Add a {quote} at its end."
+msgstr "Αυτό το κείμενο δεν κλείνει ποτέ. Προσθέστε ένα {quote} στο τέλος του."
 
 #. Description text in the channel and chat theme embed.
 #: src/features/channel/components/ThemeEmbed.tsx
@@ -37247,6 +38085,12 @@ msgstr "Πλατφόρμα γραμμής τίτλου"
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "TLS, usually port 465"
 msgstr "TLS, συνήθως θύρα 465"
+
+#. Announced by screen readers in the code editor of the quick CSS editor, between two line numbers, as in "Folded lines 3 to 7".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "to"
+msgstr "έως"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -37798,6 +38642,16 @@ msgstr "Ρυθμίζετε εσείς την επεξεργασία."
 msgid "Turkish"
 msgstr "Τουρκικά"
 
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Turn a comment on or off"
+msgstr "Ενεργοποίηση ή απενεργοποίηση σχολίου"
+
+#. Keyboard shortcut action that stops applying quick CSS and saved themes in this tab, for example when CSS breaks the app. Also used in the quick CSS editor.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Turn custom CSS on or off"
+msgstr "Ενεργοποίηση ή απενεργοποίηση προσαρμοσμένου CSS"
+
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx
@@ -37829,6 +38683,11 @@ msgstr "Απενεργοποίηση εφαρμογής ελέγχου ταυτ�
 msgid "Turn off camera"
 msgstr "Απενεργοποίηση κάμερας"
 
+#. Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn off custom CSS"
+msgstr "Απενεργοποίηση προσαρμοσμένου CSS"
+
 #. Voice menu action that turns off the camera on a single device of the current user.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off device camera"
@@ -37849,7 +38708,9 @@ msgstr "Απενεργοποίηση ροής"
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Απενεργοποιήστε το απόρρητο ροής πριν δείτε τα στοιχεία σύνδεσης ή ασφάλειας λογαριασμού."
 
+#. Nagbar button that applies quick CSS and saved themes again.
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn on"
 msgstr "Ενεργοποίηση"
@@ -37883,6 +38744,11 @@ msgstr "Αυτόματη ενεργοποίηση όταν εντοπιστεί 
 msgid "Turn on camera"
 msgstr "Ενεργοποίηση κάμερας"
 
+#. Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Turn on custom CSS"
+msgstr "Ενεργοποίηση προσαρμοσμένου CSS"
+
 #. Label for the main streaming privacy settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx
 msgid "Turn on streaming privacy"
@@ -37892,6 +38758,11 @@ msgstr "Ενεργοποίηση απορρήτου ροής"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Turn text smileys into emoji"
 msgstr "Μετατροπή φατσούλων κειμένου σε emoji"
+
+#. Shown in the status bar of the quick CSS editor while it edits a saved theme that is turned off.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Turn this theme on to see your changes in the app."
+msgstr "Ενεργοποίησε αυτό το θέμα για να δεις τις αλλαγές σου στην εφαρμογή."
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -38241,14 +39112,16 @@ msgid "Underline website links"
 msgstr "Υπογράμμιση συνδέσμων ιστοσελίδων"
 
 #. Native Edit menu item that undoes the last edit. Imperative verb.
+#. Row in the quick CSS editor shortcuts dialog.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Undo"
 msgstr "Αναίρεση"
 
 #. Button in the quick CSS editor window that puts quick CSS back to how it was when the editor window opened on it.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Undo all changes"
 msgstr "Αναιρέστε όλες τις αλλαγές"
 
@@ -38292,6 +39165,29 @@ msgstr "Κατάργηση εστίασης"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Unfocused"
 msgstr "Χωρίς εστίαση"
+
+#. Text in the code editor of the quick CSS editor. Label of the button that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold"
+msgstr "Ανάπτυξη"
+
+#. Text in the code editor of the quick CSS editor. Tooltip of the arrow that shows a hidden block of code.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfold line"
+msgstr "Ανάπτυξη γραμμής"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Unfold the block"
+msgstr "Ανάπτυξη μπλοκ"
+
+#. Announced by screen readers in the code editor of the quick CSS editor.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Unfolded lines"
+msgstr "Αναπτυγμένες γραμμές"
 
 #. Danger button label that stops copying messages from a followed announcement channel into this channel.
 #: src/features/webhook/components/FollowedChannelListItem.tsx
@@ -38461,7 +39357,7 @@ msgstr "unknown-role"
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Button that stops a theme following its CSS file on disk and turns it back into an editable copy.
 #. Menu item in Settings > Themes that stops a theme following its CSS file on disk and turns it back into an editable copy.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 #: src/features/theme_settings/components/ThemeDetailsModal.tsx
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Unlink"
@@ -38784,7 +39680,8 @@ msgstr "Μη αναγνωσμένα μηνύματα: {count}"
 msgid "Unreads"
 msgstr "Μη αναγνωσμένα"
 
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#. Shown in the status bar of the quick CSS editor while a saved theme has changes that are not saved yet.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "Μη αποθηκευμένες αλλαγές"
 
@@ -38917,11 +39814,6 @@ msgstr "Ενημέρωση κλειδιού πρόσβασης"
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
 msgid "Update service worker"
 msgstr "Ενημέρωση service worker"
-
-#. Shown under the disabled "Open quick CSS editor" button in Settings > Themes when the desktop app is too old to open the editor window.
-#: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Update the desktop app to edit quick CSS."
-msgstr "Ενημέρωσε την εφαρμογή desktop για να επεξεργαστείς γρήγορο CSS."
 
 #. Short label in the timeout member sheet. Keep it concise.
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
@@ -39531,6 +40423,11 @@ msgstr "Χρήση της προτίμησης μειωμένης κίνησης
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "Χρησιμοποιήστε την προτίμηση μειωμένης κίνησης του συστήματος αυτής της συσκευής ή προσαρμόστε την παρακάτω."
 
+#. Menu item in the quick CSS editor while it shows a saved theme. When checked, the theme applies to the app, the same as its switch in Settings > Themes.
+#: src/features/theme_settings/components/QuickCssFiles.tsx
+msgid "Use this theme"
+msgstr "Χρήση αυτού του θέματος"
+
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use voice activity"
@@ -39873,6 +40770,11 @@ msgstr "Το προσαρμοσμένο URL δεν θα λειτουργεί"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Vanity URLs must be between 2 and 32 characters long and can only contain alphanumeric characters and internal hyphens."
 msgstr "Τα προσαρμοσμένα URL πρέπει να έχουν μήκος μεταξύ 2 και 32 χαρακτήρων και να περιέχουν μόνο αλφαριθμητικούς χαρακτήρες και εσωτερικές παύλες."
+
+#. Heading in the "Reference" tab of the quick CSS editor, above the list of CSS variables.
+#: src/features/theme_settings/components/QuickCssReference.tsx
+msgid "Variables"
+msgstr "Μεταβλητές"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -40713,6 +41615,11 @@ msgstr "Παρακολούθηση ροής"
 msgid "Watching"
 msgstr "Παρακολουθείτε"
 
+#. Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Watching {path}"
+msgstr "Παρακολούθηση {path}"
+
 #. Title on a remote screen-share tile when loading the watched stream failed.
 #: src/features/voice/components/voice_participant_tile/shared.ts
 msgid "Watching failed :("
@@ -40759,7 +41666,7 @@ msgid "We couldn't copy that reference."
 msgstr "Δεν μπορέσαμε να αντιγράψουμε αυτήν την αναφορά."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't copy that."
 msgstr "Δεν μπορέσαμε να το αντιγράψουμε."
 
@@ -40823,7 +41730,7 @@ msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall 
 msgstr "Δεν ήταν δυνατή η επικοινωνία με την υπηρεσία μεταφόρτωσης συνημμένων. Το {PRODUCT_NAME} μπορεί να χρησιμοποιήσει την τυπική διαδρομή μεταφόρτωσης για μηνύματα έως {fallbackSizeFormatted} συνολικά, αλλά αυτά τα συνημμένα υπερβαίνουν αυτό το συνδυασμένο όριο και δεν μπορούν να σταλούν έως ότου αποκατασταθεί η συνδεσιμότητα. Δοκιμάστε ξανά αργότερα ή επικοινωνήστε με τους διαχειριστές αυτής της παρουσίας αν αυτό συνεχίσει να συμβαίνει."
 
 #. Error message in the quick CSS editor window.
-#: src/features/theme_settings/components/QuickCssEditorWindow.tsx
+#: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "We couldn't read that CSS file."
 msgstr "Δεν ήταν δυνατή η ανάγνωση του αρχείου CSS."
 
@@ -41293,6 +42200,11 @@ msgstr "Όταν το απόρρητο ροής είναι ενεργό"
 msgid "When they come online, they'll appear right here."
 msgstr "Όταν συνδεθούν, θα εμφανιστούν εδώ."
 
+#. Description of the "Live preview" setting in the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "When this is off, changes show in the app when you select \"Apply changes\"."
+msgstr "Όταν είναι απενεργοποιημένο, οι αλλαγές εμφανίζονται στην εφαρμογή όταν επιλέξεις \"Εφαρμογή αλλαγών\"."
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
@@ -41388,6 +42300,12 @@ msgstr "Από ποιον να έρχονται τα email;"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "Πω πω, βαρύ πράγμα"
+
+#. Text in the code editor of the quick CSS editor. Search option.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Whole word"
+msgstr "Ολόκληρη λέξη"
 
 #. Heading on the account restriction screen above the rule that was broken and the findings.
 #: src/features/auth/flow/AccountRestrictionScreen.tsx
@@ -41559,6 +42477,11 @@ msgstr "Λεκτικό λογότυπο"
 msgid "Works while {productName} is focused"
 msgstr "Λειτουργεί όταν το {productName} έχει την εστίαση"
 
+#. Setting in "Editor settings" of the quick CSS editor.
+#: src/features/theme_settings/components/QuickCssEditorSettings.tsx
+msgid "Wrap long lines"
+msgstr "Αναδίπλωση μεγάλων γραμμών"
+
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx
@@ -41571,6 +42494,16 @@ msgstr "Αναδίπλωση κειμένου"
 msgid "Write a short bio (max 280 characters)"
 msgstr "Γράψε ένα σύντομο βιογραφικό (έως 280 χαρακτήρες)"
 
+#. Placeholder in the empty quick CSS editor. {completeKey} and {pickKey} are keyboard shortcuts such as Ctrl + Space.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Write CSS here. Press {completeKey} for suggestions, or {pickKey} to pick a part of the app."
+msgstr "Γράψτε CSS εδώ. Πατήστε {completeKey} για προτάσεις ή {pickKey} για να επιλέξετε μέρος της εφαρμογής."
+
+#. Button in the empty state of "Your themes" that opens the quick CSS editor on its CSS tab.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Write quick CSS"
+msgstr "Γράψτε γρήγορο CSS"
+
 #. Description text in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "Write your content here. This text area expands as you type."
@@ -41578,8 +42511,8 @@ msgstr "Γράψε το περιεχόμενό σου εδώ. Αυτό το πε
 
 #. Description of the "Quick CSS" section in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssSection.tsx
-msgid "Write your own CSS to change anything in the app. The editor opens in its own window that your CSS doesn't change, so you can always fix CSS that breaks the app."
-msgstr "Γράψτε το δικό σας CSS για να αλλάξετε οτιδήποτε στην εφαρμογή. Ο επεξεργαστής ανοίγει σε δικό του παράθυρο που δεν επηρεάζεται από το CSS σας, ώστε να μπορείτε πάντα να διορθώσετε CSS που προκαλεί προβλήματα στην εφαρμογή."
+msgid "Write your own CSS to change anything in the app. The editor stays open while you use the app, and your CSS never applies to the editor itself, so you can always fix CSS that breaks the app."
+msgstr "Γράψε το δικό σου CSS για να αλλάξεις οτιδήποτε στην εφαρμογή. Ο επεξεργαστής μένει ανοιχτός όσο χρησιμοποιείς την εφαρμογή και το CSS σου δεν εφαρμόζεται ποτέ στον ίδιο τον επεξεργαστή, οπότε μπορείς πάντα να διορθώσεις CSS που χαλάει την εφαρμογή."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -41854,6 +42787,11 @@ msgstr "Μπορείς να ενεργοποιήσεις τις προσωπικ
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."
 msgstr "Μπορείτε να χρησιμοποιήσετε συνδέσμους, emoji και μορφοποίηση κειμένου (markdown)."
+
+#. Error toast in "Your themes" when importing a folder while the most folders are already watched.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "You can watch up to {limit} folders. Stop watching one to add another."
+msgstr "Μπορείτε να παρακολουθείτε έως {limit} φακέλους. Σταματήστε να παρακολουθείτε έναν για να προσθέσετε άλλον."
 
 #. Title of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx
@@ -42729,7 +43667,7 @@ msgid "Your badge is live. Your name shows on the Operators' wall once we check 
 msgstr "Το σήμα σας είναι ενεργό. Το όνομά σας εμφανίζεται στον τοίχο Operators μόλις το ελέγξουμε."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
-#: src/features/theme_settings/components/QuickCssEditorWindowHost.tsx
+#: src/features/theme_settings/components/QuickCssEditorHost.tsx
 msgid "Your browser blocked the editor window. Allow pop-ups for this site and try again."
 msgstr "Το πρόγραμμα περιήγησής σας μπλόκαρε το παράθυρο επεξεργασίας. Επιτρέψτε αναδυόμενα παράθυρα για αυτόν τον ιστότοπο και δοκιμάστε ξανά."
 

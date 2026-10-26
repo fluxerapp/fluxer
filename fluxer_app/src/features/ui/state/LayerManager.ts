@@ -2,6 +2,7 @@
 
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
+import {getActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import type {PopoutKey} from '@app/features/ui/popover';
 
 export const LayerType = Object.freeze({
@@ -16,6 +17,7 @@ interface Layer {
 	type: LayerType;
 	key: string | PopoutKey;
 	onClose?: () => void;
+	ownerDocument: Document;
 }
 
 class LayerManager {
@@ -28,9 +30,15 @@ class LayerManager {
 		document.addEventListener('keydown', this.handleGlobalEscape, {capture: true});
 	}
 
+	observeDocument(childDocument: Document): () => void {
+		childDocument.addEventListener('keydown', this.handleGlobalEscape, {capture: true});
+		return () => childDocument.removeEventListener('keydown', this.handleGlobalEscape, {capture: true});
+	}
+
 	private handleGlobalEscape = (event: KeyboardEvent) => {
 		if (event.key !== 'Escape') return;
-		const topLayer = this.getTopLayer();
+		const eventDocument = event.currentTarget as Document;
+		const topLayer = this.layers.findLast((layer) => layer.ownerDocument === eventDocument);
 		if (!topLayer) return;
 		if (topLayer.type !== 'popout' && !topLayer.onClose) return;
 		event.preventDefault();
@@ -44,12 +52,18 @@ class LayerManager {
 		topLayer.onClose?.();
 	};
 
-	addLayer(type: LayerType, key: string | PopoutKey, onClose?: () => void) {
+	addLayer(
+		type: LayerType,
+		key: string | PopoutKey,
+		onClose?: () => void,
+		ownerDocument: Document = getActivePortalHost()?.ownerDocument ?? document,
+	) {
 		this.removeLayer(type, key);
 		this.layers.push({
 			type,
 			key,
 			onClose,
+			ownerDocument,
 		});
 	}
 

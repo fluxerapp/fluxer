@@ -82,6 +82,7 @@ const trayState: TrayRuntimeStatePayload = {
 	presenceStatus: null,
 	buildInfo: null,
 	hidePersonalInformation: false,
+	customCssOff: null,
 };
 
 const privacyListeners = new Set<() => void>();
@@ -485,6 +486,12 @@ function buildTrayMenu(): Menu {
 		});
 	}
 	menuTemplate.push({type: 'separator'});
+	if (trayState.customCssOff !== null) {
+		menuTemplate.push({
+			label: t(trayState.customCssOff ? 'desktop.tray.turnOnCustomCss' : 'desktop.tray.turnOffCustomCss'),
+			click: () => runTrayMenuAction(() => dispatchTrayAction({action: 'toggle-custom-css'})),
+		});
+	}
 	if (getDesktopUpdateState().available) {
 		menuTemplate.push({
 			label: t('desktop.tray.updateNow', {appName: APP_NAME}),

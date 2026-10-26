@@ -43,6 +43,8 @@ import type {
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	ThemeDirectoryCssFile,
+	ThemeFolderChange,
+	ThemeFolderImportResult,
 	ThemeLinkedFileChange,
 	ThemeLocalFileReadResult,
 	ThemeLocalFileReference,
@@ -123,7 +125,8 @@ export type TrayActionPayload =
 	| {action: 'disconnect-voice'}
 	| {action: 'check-for-updates'}
 	| {action: 'switch-account'; accountKey: string}
-	| {action: 'open-account-switcher'};
+	| {action: 'open-account-switcher'}
+	| {action: 'toggle-custom-css'};
 
 export interface TextareaContextMenuParams {
 	x: number;
@@ -269,6 +272,11 @@ export interface ElectronAPI {
 	pickThemeLinkedFiles?(options?: {multiple?: boolean}): Promise<Array<ThemeDirectoryCssFile>>;
 	watchThemeLinkedFiles?(paths: Array<string>): Promise<void>;
 	onThemeLinkedFileChange?(callback: (change: ThemeLinkedFileChange) => void): () => void;
+	importThemeFolder?(): Promise<ThemeFolderImportResult | null>;
+	watchThemeFolders?(paths: Array<string>): Promise<void>;
+	removeThemeFolder?(path: string): Promise<void>;
+	onThemeFolderChange?(callback: (change: ThemeFolderChange) => void): () => void;
+	themeFolderWatch?: true;
 	cacheVoiceBackgroundMedia?(options: VoiceBackgroundMediaCacheRequest): Promise<VoiceBackgroundMediaCacheResult>;
 	readVoiceBackgroundMedia?(id: string): Promise<VoiceBackgroundMediaReadResult | null>;
 	deleteVoiceBackgroundMedia?(id: string): Promise<void>;
@@ -320,7 +328,7 @@ export interface ElectronAPI {
 	checkInputMonitoringAccess(): Promise<boolean>;
 	getInputMonitoringPermissionStatus?(): Promise<InputMonitoringPermissionStatus>;
 	requestInputMonitoringPermission?(): Promise<InputMonitoringPermissionStatus>;
-	getScreenRecordingPermissionStatus?(): Promise<InputMonitoringPermissionStatus>;
+	getScreenRecordingPermissionStatus?(liveProbe?: boolean): Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?(): Promise<InputMonitoringPermissionStatus>;
 	checkMediaAccess(type: MediaAccessType): Promise<Exclude<MediaAccessStatus, 'unknown'>>;
 	requestMediaAccess(type: MediaAccessType): Promise<boolean>;

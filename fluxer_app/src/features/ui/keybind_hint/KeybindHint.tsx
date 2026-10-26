@@ -124,6 +124,12 @@ const formatKeyParts = (i18n: I18n, combo: KeyCombo): Array<KeyPart> => {
 	return parts;
 };
 
+export function formatKeyHintText(i18n: I18n, combo: KeyCombo): string {
+	return formatKeyParts(i18n, combo)
+		.map((part) => part.label)
+		.join(' ');
+}
+
 export interface KeybindHintProps {
 	action?: KeybindCommand;
 	combo?: KeyCombo;

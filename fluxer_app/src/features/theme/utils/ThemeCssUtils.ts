@@ -197,6 +197,42 @@ function getLocalFileReferenceMap(localFiles: ReadonlyArray<ThemeLibraryLocalFil
 	return map;
 }
 
+export interface ThemeCssReferenceProblem {
+	kind: 'asset' | 'localFile';
+	reference: string;
+	from: number;
+	to: number;
+}
+
+export function findMissingThemeCssReferences(
+	css: string,
+	assets: ReadonlyArray<ThemeLibraryAsset>,
+	localFiles: ReadonlyArray<ThemeLibraryLocalFileReference>,
+	unreadableReferences: ReadonlySet<string>,
+): Array<ThemeCssReferenceProblem> {
+	const assetMap = getAssetReferenceMap(assets);
+	const localFileMap = getLocalFileReferenceMap(localFiles);
+	const problems: Array<ThemeCssReferenceProblem> = [];
+	const scan = (pattern: RegExp, kind: ThemeCssReferenceProblem['kind']) => {
+		for (const match of css.matchAll(pattern)) {
+			const reference = decodeReferenceValue(match[2]);
+			let missing: boolean;
+			if (kind === 'asset') {
+				missing = !(assetMap.get(reference) ?? assetMap.get(reference.toLowerCase()))?.data;
+			} else {
+				const path = localFileMap.get(reference) ?? localFileMap.get(reference.toLowerCase());
+				missing = !path || unreadableReferences.has(path);
+			}
+			if (missing) problems.push({kind, reference, from: match.index, to: match.index + match[0].length});
+		}
+	};
+	scan(ASSET_FUNCTION_PATTERN, 'asset');
+	scan(ASSET_URL_PATTERN, 'asset');
+	scan(LOCAL_FILE_FUNCTION_PATTERN, 'localFile');
+	scan(LOCAL_FILE_URL_PATTERN, 'localFile');
+	return problems;
+}
+
 async function resolveAssetUrls(
 	css: string,
 	assets: ReadonlyArray<ThemeLibraryAsset>,

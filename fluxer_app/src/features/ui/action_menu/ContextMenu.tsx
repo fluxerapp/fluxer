@@ -165,11 +165,16 @@ const RootContextMenuInner: React.FC<RootContextMenuProps> = observer(({contextM
 		if (!isOpen) {
 			return;
 		}
-		LayerManager.addLayer('contextmenu', contextMenu.id, close);
+		LayerManager.addLayer(
+			'contextmenu',
+			contextMenu.id,
+			close,
+			resolveContextMenuPortalHost(contextMenu, portalHost).ownerDocument,
+		);
 		return () => {
 			LayerManager.removeLayer('contextmenu', contextMenu.id);
 		};
-	}, [close, contextMenu.id, isOpen]);
+	}, [close, contextMenu, portalHost, isOpen]);
 
 	const handleBackdropMouseDown = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>) => {

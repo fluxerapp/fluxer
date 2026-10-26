@@ -2,12 +2,13 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR, CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {EditNextToAppButton} from '@app/features/theme_settings/components/EditNextToAppButton';
 import {TokenRow} from '@app/features/theme_settings/components/TokenRow';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
@@ -72,9 +73,13 @@ const NOTHING_MATCHES_DESCRIPTOR = msg({
 
 function matchesSearch(variableName: string, query: string): boolean {
 	const definition = getTokenVariableDefinition(variableName);
-	return [variableName, humanizeVariableName(variableName), definition?.groupLabel, definition?.kind].some(
-		(value) => value?.toLowerCase().includes(query) ?? false,
-	);
+	return [
+		variableName,
+		humanizeVariableName(variableName),
+		definition?.groupLabel,
+		definition?.kind,
+		definition?.source,
+	].some((value) => value?.toLowerCase().includes(query) ?? false);
 }
 
 export const ColorsAndFontsSection: React.FC = observer(() => {
@@ -139,21 +144,24 @@ export const ColorsAndFontsSection: React.FC = observer(() => {
 			title={i18n._(COLORS_AND_FONTS_SECTION_DESCRIPTOR)}
 			description={i18n._(COLORS_AND_FONTS_DESCRIPTION_DESCRIPTOR)}
 			actions={
-				overrideCount > 0 ? (
-					<>
-						<span className={styles.changedCount} data-flx="theme-settings.colors-and-fonts-section.changed-count">
-							{i18n._(CHANGED_COUNT_DESCRIPTOR, {count: overrideCount})}
-						</span>
-						<Button
-							variant="secondary"
-							small
-							onClick={handleClearAll}
-							data-flx="theme-settings.colors-and-fonts-section.button.clear-all"
-						>
-							{i18n._(CLEAR_ALL_CHANGES_DESCRIPTOR)}
-						</Button>
-					</>
-				) : null
+				<>
+					{overrideCount > 0 ? (
+						<>
+							<span className={styles.changedCount} data-flx="theme-settings.colors-and-fonts-section.changed-count">
+								{i18n._(CHANGED_COUNT_DESCRIPTOR, {count: overrideCount})}
+							</span>
+							<Button
+								variant="secondary"
+								small
+								onClick={handleClearAll}
+								data-flx="theme-settings.colors-and-fonts-section.button.clear-all"
+							>
+								{i18n._(CLEAR_ALL_CHANGES_DESCRIPTOR)}
+							</Button>
+						</>
+					) : null}
+					<EditNextToAppButton tab="colors" data-flx="theme-settings.colors-and-fonts-section.edit-next-to-app" />
+				</>
 			}
 			data-flx="theme-settings.colors-and-fonts-section.colors-and-fonts"
 		>
@@ -180,6 +188,16 @@ export const ColorsAndFontsSection: React.FC = observer(() => {
 					<p className={styles.note} data-flx="theme-settings.colors-and-fonts-section.note">
 						{i18n._(TRY_A_DIFFERENT_NAME_OR_CLEAR_THE_SEARCH_DESCRIPTOR)}
 					</p>
+					<div data-flx="theme-settings.colors-and-fonts-section.clear-search">
+						<Button
+							variant="secondary"
+							small
+							onClick={() => ThemeSettingsState.setTokenSearch('')}
+							data-flx="theme-settings.colors-and-fonts-section.button.clear-search"
+						>
+							{i18n._(CLEAR_SEARCH_DESCRIPTOR)}
+						</Button>
+					</div>
 				</div>
 			) : (
 				<div className={styles.list} data-flx="theme-settings.colors-and-fonts-section.list">

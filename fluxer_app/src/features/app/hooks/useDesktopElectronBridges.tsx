@@ -25,6 +25,7 @@ export function useDesktopElectronBridges(): void {
 		const electronApi = getElectronAPI();
 		if (!electronApi) return;
 		const disposeLinkedFileSync = ThemeLibrary.startLinkedFileSync();
+		const disposeFolderSync = ThemeLibrary.startFolderSync();
 		const adjustZoom = (direction: 1 | -1) => {
 			void Accessibility.adjustZoom(direction).catch((error: unknown) => {
 				logger.error('Failed to adjust the zoom level', error);
@@ -58,6 +59,7 @@ export function useDesktopElectronBridges(): void {
 			unsubOpenSettings?.();
 			disposeTrayBridge?.();
 			disposeLinkedFileSync();
+			disposeFolderSync();
 		};
 	}, []);
 }
