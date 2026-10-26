@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Ai primit acest e-mail pentru că ai dat mai departe un Operator Pass pe {product_name}.",
 		"intro": "{recipientName} a acceptat Operator Pass-ul pe care l-ai dat mai departe, iar acesta este acum în contul său.",
-		"note": "{remainingCount, plural, =0 {Nu mai ai niciun Operator Pass, așa că insigna și înscrierea de pe perete au dispărut.} =1 {Mai ai # Operator Pass.} few {Mai ai # Operator Pass-uri.} other {Mai ai # de Operator Pass-uri.}}",
+		"note": "{remainingCount, plural, =0 {Nu mai ai niciun Operator Pass, așa că insigna și înscrierea de pe perete au dispărut.} =1 {Mai ai # Operator Pass.} few {Mai ai # Operator Pass-uri.} other {Mai ai # de Operator Pass-uri.}} Include permisele valabile pe care le deții și cele pe care le-ai cumpărat și transmis mai departe. Păstrează cel puțin un permis activ pentru a-ți păstra insigna și locul pe perete. Permisele suspendate sau încetate nu se numără.",
 		"signoff": "Echipa {product_name}",
 		"subject": "{recipientName} a acceptat Operator Pass-ul tău {product_name}"
 	},

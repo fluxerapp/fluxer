@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Du hast diese E-Mail erhalten, weil du auf {product_name} einen Operator Pass weitergegeben hast.",
 		"intro": "{recipientName} hat den Operator Pass angenommen, den du weitergegeben hast. Der Pass ist jetzt auf dem Account dieser Person.",
-		"note": "{remainingCount, plural, =0 {Du hast keine Operator Passes mehr, deshalb sind dein Abzeichen und dein Eintrag auf der Wand weg.} =1 {Du hast noch # Operator Pass.} other {Du hast noch # Operator Passes.}}",
+		"note": "{remainingCount, plural, =0 {Du hast keine Operator Passes mehr, deshalb sind dein Abzeichen und dein Eintrag auf der Wand weg.} =1 {Du hast noch # Operator Pass.} other {Du hast noch # Operator Passes.}} Enthält gültige Pässe, die du besitzt, und Pässe, die du gekauft und weitergegeben hast. Behalte mindestens einen aktiven Pass, um dein Abzeichen und deinen Eintrag auf der Wand zu behalten. Pausierte oder beendete Pässe zählen nicht.",
 		"signoff": "Das {product_name}-Team",
 		"subject": "{recipientName} hat deinen {product_name} Operator Pass angenommen"
 	},

@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Gavai šį el. laišką, nes perdavei Operator Pass {product_name} platformoje.",
 		"intro": "{recipientName} priėmė tavo perduotą Operator Pass, ir jis jau yra to naudotojo paskyroje.",
-		"note": "{remainingCount, plural, =0 {Nebeturi Operator Pass leidimų, todėl tavo ženklelio ir įrašo sienoje nebeliko.} =1 {Tau liko # Operator Pass leidimas.} one {Tau liko # Operator Pass leidimas.} few {Tau liko # Operator Pass leidimai.} many {Tau liko # Operator Pass leidimo.} other {Tau liko # Operator Pass leidimų.}}",
+		"note": "{remainingCount, plural, =0 {Nebeturi Operator Pass leidimų, todėl tavo ženklelio ir įrašo sienoje nebeliko.} =1 {Tau liko # Operator Pass leidimas.} one {Tau liko # Operator Pass leidimas.} few {Tau liko # Operator Pass leidimai.} many {Tau liko # Operator Pass leidimo.} other {Tau liko # Operator Pass leidimų.}} Apima galiojančius leidimus, kuriuos turi, ir leidimus, kuriuos nusipirkai ir perdavei kitiems. Pasilik bent vieną aktyvų leidimą, kad išsaugotum ženklelį ir vietą sienoje. Pristabdyti ar pasibaigę leidimai neskaičiuojami.",
 		"signoff": "{product_name} komanda",
 		"subject": "{recipientName} priėmė tavo {product_name} Operator Pass"
 	},

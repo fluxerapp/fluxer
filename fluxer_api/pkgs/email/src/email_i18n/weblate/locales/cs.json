@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Tento e-mail jste obdrželi, protože jste předali Operator Pass na {product_name}.",
 		"intro": "{recipientName} přijal(a) Operator Pass, který jste předali, a už ho má na svém účtu.",
-		"note": "{remainingCount, plural, =0 {Nezbývá vám žádný Operator Pass, takže váš odznak i záznam na zdi zmizely.} =1 {Zbývá vám # Operator Pass.} one {Zbývá vám # Operator Pass.} few {Zbývají vám # Operator Passy.} many {Zbývá vám # Operator Passu.} other {Zbývá vám # Operator Passů.}}",
+		"note": "{remainingCount, plural, =0 {Nezbývá vám žádný Operator Pass, takže váš odznak i záznam na zdi zmizely.} =1 {Zbývá vám # Operator Pass.} one {Zbývá vám # Operator Pass.} few {Zbývají vám # Operator Passy.} many {Zbývá vám # Operator Passu.} other {Zbývá vám # Operator Passů.}} Zahrnuje platné passy, které vlastníš, a passy, které jsi koupil/a a předal/a dál. Ponech si alespoň jeden aktivní pass, aby ti zůstal odznak a místo na zdi. Pozastavené nebo ukončené passy se nepočítají.",
 		"signoff": "Tým {product_name}",
 		"subject": "{recipientName} přijal(a) váš {product_name} Operator Pass"
 	},

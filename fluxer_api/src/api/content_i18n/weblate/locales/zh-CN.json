@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator，{count, plural, other {# 张 Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {# 张 Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "包括你持有的有效通行证，以及你购买后转交给他人的通行证。",
 	"profile_badge.operator_pass_since": "自 {since_date} 起拥有 Operator Pass",
 	"profile_badge.operator_pass_since_count": "自 {since_date} 起拥有 Operator Pass，{count, plural, other {# 张通行证}}",
 	"profile_badge.operator_pass_since_line": "自 {since_date} 起拥有 Operator Pass",

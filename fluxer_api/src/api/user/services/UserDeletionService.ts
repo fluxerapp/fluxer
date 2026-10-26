@@ -53,7 +53,7 @@ const CHUNK_SIZE = 100;
 const ssoIdentityRepository = new SsoIdentityRepository();
 
 interface UserDeletionDependencies {
-	operatorPassServices: Pick<OperatorPassServices, 'repository' | 'wallService'>;
+	operatorPassServices: Pick<OperatorPassServices, 'repository' | 'wallService' | 'holdingService'>;
 	userRepository: UserRepository;
 	guildRepository: GuildRepository;
 	channelRepository: ChannelRepository;
@@ -476,9 +476,12 @@ export async function processUserDeletion(
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
-		endOperatorPassesForDeletion(operatorPassRepository, userId).then(() =>
-			operatorPassRepository.deleteOperatorPass(userId),
-		),
+		endOperatorPassesForDeletion(operatorPassRepository, userId).then(async (buyers) => {
+			await operatorPassRepository.deleteOperatorPass(userId);
+			for (const buyer of buyers) {
+				await deps.operatorPassServices.holdingService.syncHolding(buyer);
+			}
+		}),
 		deps.operatorPassServices.wallService.forgetForDeletion(userId),
 	]);
 	await userRepository.deleteUserSecondaryIndices(userId);

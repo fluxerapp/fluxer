@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Du modtog denne e-mail, fordi du gav et Operator Pass videre på {product_name}.",
 		"intro": "{recipientName} har taget imod det Operator Pass, du gav videre, og det er nu på vedkommendes konto.",
-		"note": "{remainingCount, plural, =0 {Du har ikke flere Operator Pass, så dit badge og din plads på væggen er væk.} =1 {Du har # Operator Pass tilbage.} other {Du har # Operator Pass tilbage.}}",
+		"note": "{remainingCount, plural, =0 {Du har ikke flere Operator Pass, så dit badge og din plads på væggen er væk.} =1 {Du har # Operator Pass tilbage.} other {Du har # Operator Pass tilbage.}} Omfatter gyldige pas, du har, og pas, du har købt og givet videre. Behold mindst ét aktivt pas for at beholde dit badge og din plads på væggen. Pausede eller ophørte pas tæller ikke.",
 		"signoff": "Teamet bag {product_name}",
 		"subject": "{recipientName} har taget imod dit {product_name} Operator Pass"
 	},

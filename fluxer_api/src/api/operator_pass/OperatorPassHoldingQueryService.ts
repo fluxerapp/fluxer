@@ -12,6 +12,7 @@ import type {User} from '@app/api/models/User';
 import {
 	isOperatorPassRemovalActive,
 	loadOperatorPassEntitlementState,
+	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {
 	getOperatorPassWithdrawalDeadline,
@@ -145,6 +146,7 @@ export class OperatorPassHoldingQueryService {
 		});
 		return {
 			count: isOperatorPassRemovalActive(state.removal, now) ? 0 : units.length,
+			recognition_count: resolveOperatorPassHolder(state, now)?.count ?? 0,
 			passes,
 			incoming_offers: open
 				.filter((offer) => offer.recipient_id === user.id && offer.sender_id !== user.id)

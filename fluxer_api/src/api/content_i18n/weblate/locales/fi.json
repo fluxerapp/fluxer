@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Passia}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Passia}}",
+	"profile_badge.operator_pass_recognition": "Sisältää hallussasi olevat voimassa olevat passit sekä ostamasi ja eteenpäin antamasi passit.",
 	"profile_badge.operator_pass_since": "Operator Pass: {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass: {since_date}, {count, plural, one {# passi} other {# passia}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass: {since_date}",

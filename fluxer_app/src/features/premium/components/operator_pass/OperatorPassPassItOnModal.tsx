@@ -11,6 +11,7 @@ import selectorStyles from '@app/features/app/components/dialogs/shared/Selector
 import {SEARCH_FRIENDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as OperatorPassCommands from '@app/features/premium/commands/OperatorPassCommands';
 import styles from '@app/features/premium/components/operator_pass/OperatorPassPassItOnModal.module.css';
+import {OPERATOR_PASS_RECOGNITION_DESCRIPTOR} from '@app/features/premium/utils/OperatorPassRecognitionMessages';
 import {getOperatorPassErrorCode, getOperatorPassOfferUserName} from '@app/features/premium/utils/OperatorPassUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -133,7 +134,7 @@ const OperatorPassPassItOnModal = observer(function OperatorPassPassItOnModalCom
 			modal(() => (
 				<ConfirmModal
 					title={lastPass ? i18n._(CONFIRM_LAST_TITLE_DESCRIPTOR) : i18n._(CONFIRM_TITLE_DESCRIPTOR, {name})}
-					description={i18n._(lastPass ? CONFIRM_LAST_BODY_DESCRIPTOR : CONFIRM_BODY_DESCRIPTOR, {name})}
+					description={`${i18n._(lastPass ? CONFIRM_LAST_BODY_DESCRIPTOR : CONFIRM_BODY_DESCRIPTOR, {name})} ${i18n._(OPERATOR_PASS_RECOGNITION_DESCRIPTOR)}`}
 					primaryText={i18n._(lastPass ? CONFIRM_LAST_PRIMARY_DESCRIPTOR : SEND_OFFER_DESCRIPTOR)}
 					primaryVariant={lastPass ? 'danger' : 'primary'}
 					onPrimary={async () => {

@@ -150,6 +150,12 @@ export const OperatorPassHolderResponse = z.object({
 	since: z.iso.datetime().describe('When the account got its first pass'),
 	source: OperatorPassHolderSourceSchema,
 	count: z.number().int().describe('How many passes the account holds now'),
+	recognition_count: z
+		.number()
+		.int()
+		.min(0)
+		.optional()
+		.describe('The public count of valid held passes and purchases passed on. It is zero without active benefits.'),
 	wall_chosen: z
 		.boolean()
 		.describe(
@@ -564,6 +570,12 @@ export type OperatorPassUnitResponse = z.infer<typeof OperatorPassUnitResponse>;
 
 export const OperatorPassPassesResponse = z.object({
 	count: z.number().int().describe('How many passes the account holds now'),
+	recognition_count: z
+		.number()
+		.int()
+		.min(0)
+		.optional()
+		.describe('The public count of valid held passes and purchases passed on. It is zero without active benefits.'),
 	passes: z.array(OperatorPassUnitResponse).describe('Passes the account holds, oldest first'),
 	incoming_offers: z.array(OperatorPassOfferResponse).describe('Open offers to the account'),
 	outgoing_offers: z.array(OperatorPassOfferResponse).describe('Open offers the account made'),
@@ -673,7 +685,12 @@ export const OperatorPassListingResponse = z.object({
 			'The year of the latest published The Operators of list the name is in, null when none or after an erasure',
 		),
 	has_wall: z.boolean().describe("Whether the account holds the pass, so it shows on the Operators' wall"),
-	pass_count: z.number().int().describe('How many passes the account holds now, shown to the holder in every case'),
+	pass_count: z
+		.number()
+		.int()
+		.describe(
+			'Public count of valid held passes and purchases passed on, shown to the holder even when hidden publicly',
+		),
 });
 
 export type OperatorPassListingResponse = z.infer<typeof OperatorPassListingResponse>;

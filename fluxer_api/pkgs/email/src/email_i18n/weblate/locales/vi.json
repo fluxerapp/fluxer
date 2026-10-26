@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Bạn nhận được email này vì bạn đã chuyển một Operator Pass cho người khác trên {product_name}.",
 		"intro": "{recipientName} đã chấp nhận Operator Pass bạn chuyển cho họ, và pass đó giờ đã ở trên tài khoản của họ.",
-		"note": "{remainingCount, plural, =0 {Bạn không còn Operator Pass nào, nên huy hiệu và mục trên bức tường của bạn đã bị gỡ.} =1 {Bạn còn # Operator Pass.} other {Bạn còn # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Bạn không còn Operator Pass nào, nên huy hiệu và mục trên bức tường của bạn đã bị gỡ.} =1 {Bạn còn # Operator Pass.} other {Bạn còn # Operator Pass.}} Bao gồm các pass còn hiệu lực bạn đang giữ và các pass bạn đã mua rồi chuyển cho người khác. Giữ ít nhất một pass đang hoạt động để giữ huy hiệu và vị trí trên tường. Pass bị tạm dừng hoặc đã kết thúc không được tính.",
 		"signoff": "Đội ngũ {product_name}",
 		"subject": "{recipientName} đã nhận Operator Pass {product_name} của bạn"
 	},

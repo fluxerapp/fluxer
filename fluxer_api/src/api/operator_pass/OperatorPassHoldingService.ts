@@ -129,8 +129,12 @@ function isTransferUnderway(
 	);
 }
 
-export async function endOperatorPassesForDeletion(repository: OperatorPassRepository, userId: UserID): Promise<void> {
+export async function endOperatorPassesForDeletion(
+	repository: OperatorPassRepository,
+	userId: UserID,
+): Promise<Array<UserID>> {
 	const now = operatorPassNow();
+	const buyers = new Set<UserID>();
 	for (const offer of await repository.listOffersByUser(userId)) {
 		if (!isOperatorPassOfferOpen(offer)) {
 			continue;
@@ -139,6 +143,7 @@ export async function endOperatorPassesForDeletion(repository: OperatorPassRepos
 		if (isTransferUnderway(offer, unit)) {
 			if (offer.recipient_id === userId && (await revokeForDeletion(repository, unit, userId, now))) {
 				await repository.removeUnitFromHolder(unit.pass_id, offer.sender_id);
+				if (unit.buyer_id != null && unit.buyer_id !== userId) buyers.add(unit.buyer_id);
 			}
 			continue;
 		}
@@ -156,8 +161,11 @@ export async function endOperatorPassesForDeletion(repository: OperatorPassRepos
 		if (unit.status !== 'held') {
 			continue;
 		}
-		await revokeForDeletion(repository, unit, userId, now);
+		if (await revokeForDeletion(repository, unit, userId, now)) {
+			if (unit.buyer_id != null && unit.buyer_id !== userId) buyers.add(unit.buyer_id);
+		}
 	}
+	return [...buyers];
 }
 
 async function revokeForDeletion(
@@ -271,7 +279,7 @@ export class OperatorPassHoldingService {
 		if (first === undefined) {
 			if (current) {
 				await this.deps.repository.deleteOperatorPass(userId);
-				await this.deps.wallService.recordCountChange(userId, 0, at);
+				await this.deps.wallService.recordCountChange(userId, at);
 				invalidateOperatorPassPublicWall();
 			}
 			await this.syncRoleAndPresence(userId);
@@ -313,9 +321,7 @@ export class OperatorPassHoldingService {
 			version: (current?.version ?? 0) + 1,
 		};
 		await this.deps.repository.saveOperatorPass(row);
-		if ((current?.pass_count ?? 0) !== row.pass_count) {
-			await this.deps.wallService.recordCountChange(userId, held.length, at);
-		}
+		await this.deps.wallService.recordCountChange(userId, at);
 		invalidateOperatorPassPublicWall();
 		await this.syncRoleAndPresence(userId);
 		return row;
@@ -346,7 +352,10 @@ export class OperatorPassHoldingService {
 				await this.deps.wallService.recordShownAgain(holder);
 			}
 		}
-		return [...holders];
+		if (!holders.has(purchase.purchaser_id)) {
+			await this.syncHolding(purchase.purchaser_id, at);
+		}
+		return [...new Set([...holders, purchase.purchaser_id])];
 	}
 
 	async endPurchaseUnits(
@@ -371,12 +380,18 @@ export class OperatorPassHoldingService {
 				await this.notifyRevoked(holder, cause);
 			}
 		}
-		return [...holders];
+		if (!holders.has(purchase.purchaser_id)) {
+			await this.syncHolding(purchase.purchaser_id);
+		}
+		return [...new Set([...holders, purchase.purchaser_id])];
 	}
 
 	async withdrawUnit(unit: OperatorPassUnitRow, purchase: OperatorPassPurchaseRow): Promise<void> {
 		await this.endUnit(unit, 'withdrawn', 'withdrawal', purchase.payment_intent_id ?? null);
 		await this.afterHolderLostUnits(unit.holder_id, 'withdrawal', purchase.checkout_session_id);
+		if (unit.buyer_id != null && unit.buyer_id !== unit.holder_id) {
+			await this.syncHolding(unit.buyer_id);
+		}
 	}
 
 	async createOffer(params: OperatorPassOfferParams): Promise<OperatorPassOfferRow> {

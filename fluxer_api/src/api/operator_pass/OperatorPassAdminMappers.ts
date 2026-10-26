@@ -217,6 +217,7 @@ export function mapWallEvent(event: OperatorPassWallEventRow): AdminOperatorPass
 		release_tag: event.release_tag ?? null,
 		actor_id: event.actor_id?.toString() ?? null,
 		pass_count: event.pass_count ?? null,
+		first_pass_at: event.first_pass_at?.toISOString() ?? null,
 	};
 }
 

@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Você recebeu este e-mail porque repassou um Operator Pass no {product_name}.",
 		"intro": "{recipientName} aceitou o Operator Pass que você repassou, e ele já está na conta dessa pessoa.",
-		"note": "{remainingCount, plural, =0 {Você não tem mais nenhum Operator Pass, então seu selo e sua presença no mural foram removidos.} =1 {Você ainda tem # Operator Pass.} other {Você ainda tem # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Você não tem mais nenhum Operator Pass, então seu selo e sua presença no mural foram removidos.} =1 {Você ainda tem # Operator Pass.} other {Você ainda tem # Operator Pass.}} Inclui os passes válidos que você tem e os que comprou e passou adiante. Mantenha pelo menos um passe ativo para conservar seu selo e seu lugar no mural. Passes pausados ou encerrados não contam.",
 		"signoff": "Equipe do {product_name}",
 		"subject": "{recipientName} aceitou seu Operator Pass do {product_name}"
 	},

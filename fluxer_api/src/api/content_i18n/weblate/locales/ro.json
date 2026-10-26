@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} few {# Operator Pass-uri} other {# de Operator Pass-uri}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} few {# Operator Pass-uri} other {# de Operator Pass-uri}}",
+	"profile_badge.operator_pass_recognition": "Include permisele valabile pe care le deții și cele pe care le-ai cumpărat și transmis mai departe.",
 	"profile_badge.operator_pass_since": "Operator Pass din {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass din {since_date}, {count, plural, one {# pass} few {# pass-uri} other {# de pass-uri}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass din {since_date}",

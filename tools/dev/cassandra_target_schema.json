@@ -8032,6 +8032,10 @@
 				{
 					"name": "pass_count",
 					"type": "int"
+				},
+				{
+					"name": "first_pass_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id), occurred_at, event_id)",

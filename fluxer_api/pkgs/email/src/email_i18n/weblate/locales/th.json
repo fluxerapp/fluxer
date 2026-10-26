@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "คุณได้รับอีเมลนี้เพราะคุณส่งต่อ Operator Pass บน {product_name}",
 		"intro": "{recipientName} รับ Operator Pass ที่คุณส่งต่อแล้ว และตอนนี้พาสนั้นอยู่ในบัญชีของเขา",
-		"note": "{remainingCount, plural, =0 {คุณไม่มี Operator Pass เหลืออยู่แล้ว ป้ายและรายการบนกำแพงของคุณจึงหายไป} =1 {คุณมี Operator Pass เหลืออยู่ # ใบ} other {คุณมี Operator Pass เหลืออยู่ # ใบ}}",
+		"note": "{remainingCount, plural, =0 {คุณไม่มี Operator Pass เหลืออยู่แล้ว ป้ายและรายการบนกำแพงของคุณจึงหายไป} =1 {คุณมี Operator Pass เหลืออยู่ # ใบ} other {คุณมี Operator Pass เหลืออยู่ # ใบ}} รวมพาสที่ยังมีผลซึ่งคุณถืออยู่ และพาสที่คุณซื้อแล้วส่งต่อให้ผู้อื่น เก็บพาสที่ใช้งานได้ไว้อย่างน้อยหนึ่งใบเพื่อรักษาป้ายและที่ของคุณบนกำแพง พาสที่ถูกพักหรือสิ้นสุดแล้วจะไม่นับ",
 		"signoff": "ทีม {product_name}",
 		"subject": "{recipientName} รับ {product_name} Operator Pass ของคุณแล้ว"
 	},

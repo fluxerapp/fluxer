@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Έλαβες αυτό το email επειδή μεταβίβασες ένα Operator Pass στο {product_name}.",
 		"intro": "Ο χρήστης {recipientName} αποδέχτηκε το Operator Pass που του μεταβίβασες, και πλέον βρίσκεται στον λογαριασμό του.",
-		"note": "{remainingCount, plural, =0 {Δεν σου έμεινε κανένα Operator Pass, οπότε το σήμα και η καταχώρισή σου στον τοίχο αφαιρέθηκαν.} =1 {Σου έμεινε # Operator Pass.} other {Σου έμειναν # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Δεν σου έμεινε κανένα Operator Pass, οπότε το σήμα και η καταχώρισή σου στον τοίχο αφαιρέθηκαν.} =1 {Σου έμεινε # Operator Pass.} other {Σου έμειναν # Operator Pass.}} Περιλαμβάνει τα έγκυρα πάσα που κατέχεις και όσα αγόρασες και μεταβίβασες. Κράτησε τουλάχιστον ένα ενεργό πάσο για να διατηρήσεις το σήμα και τη θέση σου στον τοίχο. Πάσα σε παύση ή που έχουν τερματιστεί δεν μετρούν.",
 		"signoff": "Η ομάδα του {product_name}",
 		"subject": "Ο χρήστης {recipientName} αποδέχτηκε το Operator Pass σου στο {product_name}"
 	},

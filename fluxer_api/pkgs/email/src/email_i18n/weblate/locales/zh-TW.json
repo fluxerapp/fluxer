@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "您收到這封電子郵件，是因為您在 {product_name} 上轉交了一張 Operator Pass。",
 		"intro": "{recipientName} 已接受您轉交的 Operator Pass，它現在在對方的帳號上。",
-		"note": "{remainingCount, plural, =0 {您已沒有剩餘的 Operator Pass，因此您的徽章和牆上展示已移除。} =1 {您還剩 # 張 Operator Pass。} other {您還剩 # 張 Operator Pass。}}",
+		"note": "{remainingCount, plural, =0 {您已沒有剩餘的 Operator Pass，因此您的徽章和牆上展示已移除。} =1 {您還剩 # 張 Operator Pass。} other {您還剩 # 張 Operator Pass。}} 包括你持有的有效通行證，以及你購買後轉交給他人的通行證。 至少保留一張有效通行證，才能保留徽章和牆上的展示。暫停或已終止的通行證不計入數量。",
 		"signoff": "{product_name} 團隊",
 		"subject": "{recipientName} 接受了您轉交的 {product_name} Operator Pass"
 	},

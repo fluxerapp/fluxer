@@ -12,6 +12,10 @@ import type {
 import {getOperatorPassWallInfrastructure} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {validateOperatorPassBusinessLogo} from '@app/api/operator_pass/OperatorPassBusinessListing';
+import {
+	loadOperatorPassEntitlementState,
+	resolveOperatorPassHolder,
+} from '@app/api/operator_pass/OperatorPassEntitlementService';
 import {OperatorPassReleaseService} from '@app/api/operator_pass/OperatorPassReleaseService';
 import type {OperatorPassRepository, OperatorPassWallEntryPatch} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
@@ -369,8 +373,14 @@ export class OperatorPassWallService {
 		}
 	}
 
-	async recordCountChange(userId: UserID, passCount: number, at: Date = operatorPassNow()): Promise<void> {
-		await this.entries.appendEvent(userId, at, {kind: 'count_changed', passCount}, null);
+	async recordCountChange(userId: UserID, at: Date = operatorPassNow()): Promise<void> {
+		const holder = resolveOperatorPassHolder(await loadOperatorPassEntitlementState(this.repository, userId), at);
+		const passCount = holder?.count ?? 0;
+		const firstPassAt = holder?.since ?? null;
+		const previous = (await this.repository.listWallEvents(userId)).findLast((event) => event.kind === 'count_changed');
+		if (previous?.pass_count !== passCount || previous?.first_pass_at?.getTime() !== firstPassAt?.getTime()) {
+			await this.entries.appendEvent(userId, at, {kind: 'count_changed', passCount, firstPassAt}, null);
+		}
 		await this.publication.publishChanges([userId]);
 		const entry = passCount > 0 ? await this.repository.findWallEntry(userId) : null;
 		if (entry) {

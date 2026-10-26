@@ -28,6 +28,7 @@ export interface WallEventDraft {
 	releaseYear?: number | null;
 	releaseTag?: string | null;
 	passCount?: number | null;
+	firstPassAt?: Date | null;
 }
 
 interface WallMutation {
@@ -197,6 +198,7 @@ export class OperatorPassWallEntryStore {
 			release_tag: event.releaseTag ?? null,
 			actor_id: actorId,
 			pass_count: event.passCount ?? null,
+			first_pass_at: event.firstPassAt ?? null,
 		});
 	}
 

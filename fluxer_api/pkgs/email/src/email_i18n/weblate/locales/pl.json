@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Otrzymujesz tę wiadomość w związku z przekazaniem przez Ciebie Operator Pass w {product_name}.",
 		"intro": "Osoba {recipientName} przyjęła przekazany przez Ciebie Operator Pass i ma go już na swoim koncie.",
-		"note": "{remainingCount, plural, =0 {Nie masz już żadnych przepustek Operator Pass, więc Twoja odznaka i wpis na ścianie zniknęły.} =1 {Został Ci # Operator Pass.} few {Zostały Ci # przepustki Operator Pass.} many {Zostało Ci # przepustek Operator Pass.} other {Zostało Ci # przepustki Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Nie masz już żadnych przepustek Operator Pass, więc Twoja odznaka i wpis na ścianie zniknęły.} =1 {Został Ci # Operator Pass.} few {Zostały Ci # przepustki Operator Pass.} many {Zostało Ci # przepustek Operator Pass.} other {Zostało Ci # przepustki Operator Pass.}} Obejmuje ważne przepustki, które masz, oraz te, które kupiono na twoim koncie i przekazano innym. Zachowaj co najmniej jedną aktywną przepustkę, aby zachować odznakę i miejsce na ścianie. Wstrzymane lub zakończone przepustki nie są liczone.",
 		"signoff": "Zespół {product_name}",
 		"subject": "Osoba {recipientName} przyjęła Twój Operator Pass w {product_name}"
 	},

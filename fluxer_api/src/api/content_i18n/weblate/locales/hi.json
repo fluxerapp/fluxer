@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "इसमें आपके पास मौजूद मान्य पास और वे पास शामिल हैं जिन्हें आपने खरीदकर किसी और को दे दिया है।",
 	"profile_badge.operator_pass_since": "{since_date} से Operator Pass",
 	"profile_badge.operator_pass_since_count": "{since_date} से Operator Pass, {count, plural, one {# पास} other {# पास}}",
 	"profile_badge.operator_pass_since_line": "{since_date} से Operator Pass",

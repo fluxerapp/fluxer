@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "このメールは、{product_name}でOperator Passを譲ったため送信されました。",
 		"intro": "あなたが譲ったOperator Passを{recipientName}さんが受け取り、パスは相手のアカウントに追加されました。",
-		"note": "{remainingCount, plural, =0 {Operator Passが残っていないため、バッジとウォールへの掲載はなくなりました。} =1 {残りのOperator Passは#枚です。} other {残りのOperator Passは#枚です。}}",
+		"note": "{remainingCount, plural, =0 {Operator Passが残っていないため、バッジとウォールへの掲載はなくなりました。} =1 {残りのOperator Passは#枚です。} other {残りのOperator Passは#枚です。}} 現在持っている有効なパスと、購入して他の人に譲ったパスを含みます。 バッジとウォールの掲載を維持するには、有効なパスを少なくとも1枚持ち続けてください。一時停止中または終了したパスは数えません。",
 		"signoff": "{product_name}チーム",
 		"subject": "{recipientName}さんがあなたの{product_name} Operator Passを受け取りました"
 	},

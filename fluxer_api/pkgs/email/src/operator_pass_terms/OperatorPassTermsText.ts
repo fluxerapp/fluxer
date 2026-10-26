@@ -31,7 +31,19 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'If you have more than one pass, your badge and your listing also show how many passes you have in total, and you can always see that count in your own settings, even when your badge is hidden or you are not listed on the wall. Having more passes changes only the count and the size and place of your listing on the wall. It gives you no extra access, support, or priority, and no more of the bonus in section 3.',
+			text: 'Your badge and wall count includes valid passes you have plus valid passes you bought and passed on. Each pass counts once per account, for both buyer and recipient.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Paused passes do not count. Ended passes stop counting for both accounts. Keep at least one active pass for your badge, wall listing and other benefits.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'You can hide the count. Settings show it separately from passes you have.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'A larger count changes only your badge number and your wall size and position. It gives no extra access, support or priority, and no more of the bonus in section 3.',
 		},
 		{
 			kind: 'paragraph',
@@ -80,11 +92,15 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Today Operators with more passes appear larger and first. The four sizes are for 1 pass, 2 to 4, 5 to 9 and 10 or more passes, and within each size we order Operators by first pass date, earliest first. Listings of every size show their name and avatar, and business listings show a company name and logo, as section 2.2 describes.',
+			text: 'Today Operators with a higher count appear larger and first. The four sizes are for counts of 1, 2 to 4, 5 to 9 and 10 or more. Within each size we order Operators by the earliest delivery date of a pass that still counts for them, earliest first.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Your avatar size and position are not guaranteed. They change as others buy passes or pass them on, and right away when you pass one on. Keeping you on the wall for life means keeping your listing there, not its size or place in the order.',
+			text: 'For purchases, we use the original delivery to you, even if you later passed the pass on. For passes from someone else, we use the delivery to your account. The badge date follows the same rule. Every wall size shows a name and avatar, and business listings show a company name and logo, as section 2.2 describes.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Your avatar size and position are not guaranteed. They change as the counts and dates of Operators change. Passing on a pass does not itself reduce your count or change its date, provided you keep at least one active pass. Keeping you on the wall for life means keeping your listing there, not its size or place in the order.',
 		},
 		{kind: 'subheading', text: '2.2 Listing your business'},
 		{
@@ -101,7 +117,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: "A business listing shows how many passes the account it belongs to holds, the same way other listings show their count. Passes you pass on to staff under section 11 count toward their own listings instead. A business listing replaces that account's own listing, does not follow changes to the account's profile, and has no link.",
+			text: 'A business listing uses the same count as a personal listing. Passes bought by its account and passed on to staff count for both the business account and the recipients, as long as each account still holds at least one active pass.',
+		},
+		{
+			kind: 'paragraph',
+			text: "All business listings stay the same size. Their order follows the delivery-date rule in section 2.1. A business listing replaces the personal listing of the account that bought the passes, does not follow changes to that account's profile, and has no link.",
 		},
 		{
 			kind: 'paragraph',
@@ -338,7 +358,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'If it ends with the money returned to you, every pass that payment paid for ends, and we take it off the count. For a pass that was passed on, this happens to the person who has it, as section 11 describes. Passes paid for by other payments are not affected. When the last pass on an account ends, we take its badge and listing down.',
+			text: 'If the money goes back to you, every pass paid for by that payment ends and stops counting. This also applies to passes you passed on, as section 11 describes.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Other payments are not affected. When an account’s last pass ends, we take its badge and listing down. If a pass was passed on, the buyer loses the credit for it too.',
 		},
 		{
 			kind: 'paragraph',
@@ -394,7 +418,15 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Until the other person accepts, the pass stays yours and still counts for you, and you can take the offer back. To accept, they agree to these terms and choose their name for the wall, or choose not to be listed. The pass then moves to their account and we deliver it. Their badge turns on and their listing goes up, or their count goes up if they already have a pass. From then on, these terms apply to them for that pass.',
+			text: 'Until the other person accepts, the pass stays yours and you can take the offer back. They accept these terms and choose a wall name or choose not to be listed. We then deliver the pass to their account, subject to the waiting period below.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Their badge turns on and their listing goes up, or their count goes up if they already have a pass. From then on, these terms apply to them for that pass.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'After delivery, the pass still counts for you as its buyer if you keep at least one active pass. It also counts for the recipient, from the date we deliver it to them. This does not give you any ownership of, or control over, the pass you passed on.',
 		},
 		{
 			kind: 'paragraph',
@@ -402,7 +434,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'If you pass on your only remaining pass, your Operator badge and your listing on the wall go away, and we ask you to confirm before that happens.',
+			text: 'If you pass on your only remaining pass, your Operator badge and your listing on the wall go away, and we ask you to confirm before that happens. Credit for passes you bought does not keep these benefits active on its own.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Once you have an active pass again, valid purchases passed on count too.',
 		},
 		{
 			kind: 'paragraph',
@@ -467,7 +503,19 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om du har fler än ett pass visar märket och din plats på väggen också hur många pass du har totalt, och du kan alltid se antalet i dina egna inställningar, även när märket är dolt eller du inte står med på väggen. Fler pass ändrar bara antalet och storleken och placeringen på din plats på väggen. De ger dig ingen extra tillgång, support eller förtur och inte mer av bonusen i avsnitt 3.',
+			text: 'Antalet på ditt märke och din plats på väggen omfattar giltiga pass som du har kvar plus giltiga pass som du har köpt och lämnat vidare. Varje pass räknas bara en gång för dig. Ett pass som du lämnar vidare räknas också för mottagaren.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Pausade pass räknas inte förrän de återupptas, och pass som upphör räknas inte längre för något av kontona. Du måste fortfarande ha kvar minst ett aktivt pass för att behålla ditt märke, din plats på väggen och övriga förmåner.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Du kan dölja det offentliga antalet. Dina inställningar visar det offentliga antalet separat från hur många pass du har kvar.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Ett högre antal ändrar bara siffran på märket och storleken och placeringen på din plats på väggen. Det ger dig ingen extra tillgång, support eller förtur och inte mer av bonusen i avsnitt 3.',
 		},
 		{
 			kind: 'paragraph',
@@ -516,11 +564,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'I dag visas Operators med fler pass större och först. De fyra storlekarna är för 1 pass, 2 till 4, 5 till 9 och 10 eller fler pass, och inom varje storlek ordnar vi Operators efter datumet för deras första pass, tidigast först. Platser av alla storlekar visar sitt namn och sin avatar, och företagsplatser visar ett företagsnamn och en logotyp, som avsnitt 2.2 beskriver.',
+			text: 'I dag visas Operators med ett högre antal större och först. De fyra storlekarna gäller antal på 1, 2 till 4, 5 till 9 och 10 eller fler. Inom varje storlek ordnar vi Operators efter det tidigaste leveransdatumet för ett pass som fortfarande räknas för dem, tidigast först. För ett pass som du har köpt är det när vi först levererade det till dig, även om du senare lämnade det vidare. För ett pass som du har fått av någon annan är det när vi levererade det till ditt konto. Datumet på ditt märke följer samma regel. Platser av alla storlekar visar sitt namn och sin avatar, och företagsplatser visar ett företagsnamn och en logotyp, som avsnitt 2.2 beskriver.',
 		},
 		{
 			kind: 'paragraph',
-			text: 'Storleken på din avatar och din placering är inte garanterade. De ändras när andra köper pass eller lämnar vidare dem, och direkt när du lämnar vidare ett pass. Att du står kvar på väggen för livet betyder att du står kvar på den, inte att du behåller samma storlek eller placering i ordningen.',
+			text: 'Storleken på din avatar och din placering är inte garanterade. De ändras när antalen och datumen för Operators ändras. Att lämna vidare ett pass minskar inte i sig ditt antal eller ändrar dess datum, förutsatt att du har kvar minst ett aktivt pass. Att du står kvar på väggen för livet betyder att du står kvar på den, inte att du behåller samma storlek eller placering i ordningen.',
 		},
 		{kind: 'subheading', text: '2.2 Visa ditt företag'},
 		{
@@ -537,7 +585,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'En företagsplats visar hur många pass det konto som den hör till har, på samma sätt som andra platser visar sitt antal. Pass som du lämnar vidare till anställda enligt avsnitt 11 räknas i stället för deras egna platser. En företagsplats ersätter kontots egen plats, följer inte ändringar av kontots profil och har ingen länk.',
+			text: 'En företagsplats använder samma antal som en personlig plats. Pass som företagets konto har köpt och lämnat vidare till anställda räknas för både företagskontot och mottagarna, så länge varje konto har kvar minst ett aktivt pass.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Alla företagsplatser har fortfarande samma storlek. Ordningen följer regeln om leveransdatum i avsnitt 2.1. En företagsplats ersätter kontots egen plats, följer inte ändringar av kontots profil och har ingen länk.',
 		},
 		{
 			kind: 'paragraph',
@@ -777,7 +829,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om det slutar med att pengarna går tillbaka till dig upphör varje pass som betalningen avsåg, och vi räknar bort det. För ett pass som har lämnats vidare gäller det den som har passet, som avsnitt 11 beskriver. Pass som andra betalningar avsåg påverkas inte. När det sista passet på ett konto upphör tar vi bort kontots märke och plats på väggen.',
+			text: 'Om det slutar med att pengarna går tillbaka till dig upphör varje pass som betalningen avsåg, och vi räknar bort det. För ett pass som har lämnats vidare gäller det den som har passet, som avsnitt 11 beskriver.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Pass som andra betalningar avsåg påverkas inte. När det sista passet på ett konto upphör tar vi bort kontots märke och plats på väggen. För ett pass som har lämnats vidare förlorar även köparen tillgodoräknandet för det.',
 		},
 		{
 			kind: 'paragraph',
@@ -833,7 +889,15 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Tills mottagaren godkänner är passet fortfarande ditt och räknas fortfarande för dig, och du kan ta tillbaka erbjudandet. För att godkänna det godkänner mottagaren de här villkoren och väljer sitt namn för väggen, eller väljer att inte stå med. Därefter flyttas passet till mottagarens konto och vi levererar det. Mottagarens märke slås på och mottagarens plats kommer upp på väggen, eller så ökar antalet om mottagaren redan har ett pass. Från och med då gäller de här villkoren för mottagaren för det passet.',
+			text: 'Tills mottagaren godkänner är passet fortfarande ditt och räknas fortfarande för dig, och du kan ta tillbaka erbjudandet. För att godkänna det godkänner mottagaren de här villkoren och väljer sitt namn för väggen, eller väljer att inte stå med. Därefter flyttas passet till mottagarens konto och vi levererar det.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Mottagarens märke slås på och mottagarens plats kommer upp på väggen, eller så ökar antalet om mottagaren redan har ett pass. Från och med då gäller de här villkoren för mottagaren för det passet.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Efter leveransen räknas passet fortfarande för dig som köpare om du har kvar minst ett aktivt pass. Det räknas också för mottagaren, från det datum då vi levererar det till mottagaren. Det ger dig ingen äganderätt till eller kontroll över passet som du har lämnat vidare.',
 		},
 		{
 			kind: 'paragraph',
@@ -841,7 +905,11 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Om du lämnar vidare ditt enda kvarvarande pass försvinner ditt Operator-märke och din plats på väggen, och vi ber dig bekräfta innan det sker.',
+			text: 'Om du lämnar vidare ditt enda kvarvarande pass försvinner ditt Operator-märke och din plats på väggen, och vi ber dig bekräfta innan det sker. Tillgodoräknade pass som du har köpt håller inte dessa förmåner aktiva på egen hand.',
+		},
+		{
+			kind: 'paragraph',
+			text: 'Om du senare har ett aktivt pass igen omfattar ditt antal även pass som du har köpt och lämnat vidare och som fortfarande är giltiga.',
 		},
 		{
 			kind: 'paragraph',

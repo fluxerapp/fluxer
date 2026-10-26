@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een Operator Pass hebt doorgegeven op {product_name}.",
 		"intro": "{recipientName} heeft de Operator Pass geaccepteerd die je hebt doorgegeven. De pass staat nu op diens account.",
-		"note": "{remainingCount, plural, =0 {Je hebt geen Operator Passes meer, dus je badge en je vermelding op de muur zijn weg.} =1 {Je hebt nog # Operator Pass.} other {Je hebt nog # Operator Passes.}}",
+		"note": "{remainingCount, plural, =0 {Je hebt geen Operator Passes meer, dus je badge en je vermelding op de muur zijn weg.} =1 {Je hebt nog # Operator Pass.} other {Je hebt nog # Operator Passes.}} Inclusief geldige passen die je bezit en passen die je hebt gekocht en doorgegeven. Houd minstens één actieve pas om je badge en plek op de muur te behouden. Gepauzeerde of beëindigde passen tellen niet mee.",
 		"signoff": "Het team van {product_name}",
 		"subject": "{recipientName} heeft je {product_name} Operator Pass geaccepteerd"
 	},

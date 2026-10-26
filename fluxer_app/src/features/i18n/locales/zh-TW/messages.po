@@ -6097,6 +6097,11 @@ msgstr "備用碼"
 msgid "Backup codes regenerated"
 msgstr "備用碼已重新產生"
 
+#. Public Operator Pass count in private settings, separate from current holdings. {count} is a number, including valid purchases passed on.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Badge and wall count: {count}"
+msgstr "徽章和牆上的數量：{count}"
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
@@ -19504,6 +19509,11 @@ msgstr "在 PDF 和列印文件中包含我的雙重驗證備份代碼"
 #: src/features/moderation/components/pages/ReportPage.tsx
 msgid "Include the community ID."
 msgstr "請提供社群 ID。"
+
+#. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. Holding an active pass is still required for benefits.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count."
+msgstr "包括你持有的有效通行證，以及你購買後轉交給他人的通行證。 至少保留一張有效通行證，才能保留徽章和牆上的展示。暫停或已終止的通行證不計入數量。"
 
 #. Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx

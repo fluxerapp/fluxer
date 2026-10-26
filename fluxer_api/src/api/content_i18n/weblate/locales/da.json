@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "Omfatter gyldige pas, du har, og pas, du har købt og givet videre.",
 	"profile_badge.operator_pass_since": "Operator Pass siden {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass siden {since_date}, {count, plural, one {# pas} other {# pas}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass siden {since_date}",

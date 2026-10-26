@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Hai ricevuto questa email perché hai ceduto un Operator Pass su {product_name}.",
 		"intro": "{recipientName} ha accettato l'Operator Pass che hai ceduto, e ora è sul suo account.",
-		"note": "{remainingCount, plural, =0 {Non ti restano Operator Pass, quindi il tuo badge e la tua voce nella bacheca non ci sono più.} =1 {Ti resta # Operator Pass.} one {Ti resta # Operator Pass.} other {Ti restano # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Non ti restano Operator Pass, quindi il tuo badge e la tua voce nella bacheca non ci sono più.} =1 {Ti resta # Operator Pass.} one {Ti resta # Operator Pass.} other {Ti restano # Operator Pass.}} Include i pass validi che possiedi e quelli che hai acquistato e passato ad altri. Conserva almeno un pass attivo per mantenere il badge e il posto sul muro. I pass sospesi o terminati non contano.",
 		"signoff": "Il team di {product_name}",
 		"subject": "{recipientName} ha accettato il tuo Operator Pass di {product_name}"
 	},

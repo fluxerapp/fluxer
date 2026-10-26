@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Ovu si e-poruku primio jer si prenio Operator Pass na {product_name}u.",
 		"intro": "Korisnik {recipientName} prihvatio je Operator Pass koji si mu prenio dalje i sada ga ima na svom računu.",
-		"note": "{remainingCount, plural, =0 {Nemaš više nijedan Operator Pass, pa više nemaš značku ni unos na zidu.} =1 {Ostao ti je # Operator Pass.} one {Ostao ti je # Operator Pass.} few {Ostala su ti # Operator Passa.} other {Ostalo ti je # Operator Passova.}}",
+		"note": "{remainingCount, plural, =0 {Nemaš više nijedan Operator Pass, pa više nemaš značku ni unos na zidu.} =1 {Ostao ti je # Operator Pass.} one {Ostao ti je # Operator Pass.} few {Ostala su ti # Operator Passa.} other {Ostalo ti je # Operator Passova.}} Uključuje važeće propusnice koje imaš i one koje si kupio/la i proslijedio/la. Zadrži barem jednu aktivnu propusnicu kako bi zadržao/la značku i mjesto na zidu. Pauzirane ili okončane propusnice ne broje se.",
 		"signoff": "Tim {product_name}a",
 		"subject": "Korisnik {recipientName} prihvatio je tvoj {product_name} Operator Pass"
 	},

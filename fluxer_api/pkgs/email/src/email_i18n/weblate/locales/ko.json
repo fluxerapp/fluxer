@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "{product_name}에서 Operator Pass를 넘겨주셔서 이 이메일을 받으셨어요.",
 		"intro": "회원님이 넘겨준 Operator Pass를 {recipientName}님이 수락해서 이제 그분의 계정에 있어요.",
-		"note": "{remainingCount, plural, =0 {남은 Operator Pass가 없어서 배지와 벽 표시가 사라졌어요.} =1 {Operator Pass가 #개 남았어요.} other {Operator Pass가 #개 남았어요.}}",
+		"note": "{remainingCount, plural, =0 {남은 Operator Pass가 없어서 배지와 벽 표시가 사라졌어요.} =1 {Operator Pass가 #개 남았어요.} other {Operator Pass가 #개 남았어요.}} 현재 보유한 유효한 패스와 구매 후 다른 사람에게 양도한 패스를 포함해요. 배지와 벽의 자리를 유지하려면 활성 패스를 최소 하나 보유해야 해요. 일시 중지되거나 종료된 패스는 세지 않아요.",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{recipientName}님이 회원님의 {product_name} Operator Pass를 수락했어요"
 	},

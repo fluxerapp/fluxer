@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert továbbadtál egy Operator Passt a(z) {product_name} szolgáltatásban.",
 		"intro": "{recipientName} elfogadta a továbbadott Operator Passodat, és az már a fiókjában van.",
-		"note": "{remainingCount, plural, =0 {Nem maradt több Operator Passod, ezért a jelvényed és a fali megjelenésed megszűnt.} =1 {Még # Operator Passod maradt.} other {Még # Operator Passod maradt.}}",
+		"note": "{remainingCount, plural, =0 {Nem maradt több Operator Passod, ezért a jelvényed és a fali megjelenésed megszűnt.} =1 {Még # Operator Passod maradt.} other {Még # Operator Passod maradt.}} Tartalmazza a nálad lévő érvényes passokat és az általad vásárolt, majd továbbadott passokat. Tarts meg legalább egy aktív passt, hogy megmaradjon a jelvényed és a helyed a falon. A szüneteltetett vagy megszűnt passok nem számítanak.",
 		"signoff": "{product_name} csapata",
 		"subject": "{recipientName} elfogadta a(z) {product_name} Operator Passodat"
 	},

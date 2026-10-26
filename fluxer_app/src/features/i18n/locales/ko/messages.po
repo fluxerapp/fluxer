@@ -6097,6 +6097,11 @@ msgstr "백업 코드"
 msgid "Backup codes regenerated"
 msgstr "백업 코드 재생성 완료"
 
+#. Public Operator Pass count in private settings, separate from current holdings. {count} is a number, including valid purchases passed on.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Badge and wall count: {count}"
+msgstr "배지와 벽에 표시되는 수: {count}"
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
@@ -19504,6 +19509,11 @@ msgstr "2단계 인증 백업 코드를 PDF 및 인쇄물에 포함"
 #: src/features/moderation/components/pages/ReportPage.tsx
 msgid "Include the community ID."
 msgstr "커뮤니티 ID를 포함하세요."
+
+#. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. Holding an active pass is still required for benefits.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count."
+msgstr "현재 보유한 유효한 패스와 구매 후 다른 사람에게 양도한 패스를 포함해요. 배지와 벽의 자리를 유지하려면 활성 패스를 최소 하나 보유해야 해요. 일시 중지되거나 종료된 패스는 세지 않아요."
 
 #. Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx

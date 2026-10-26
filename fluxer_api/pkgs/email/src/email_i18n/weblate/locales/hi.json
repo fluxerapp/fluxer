@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "आपको यह ईमेल इसलिए मिला है, क्योंकि आपने {product_name} पर एक Operator Pass किसी और को सौंपा है।",
 		"intro": "{recipientName} ने आपका सौंपा हुआ Operator Pass स्वीकार कर लिया है, और अब यह उनके अकाउंट में है।",
-		"note": "{remainingCount, plural, =0 {आपके पास कोई Operator Pass नहीं बचा, इसलिए आपका बैज और वॉल लिस्टिंग हट गए हैं।} =1 {आपके पास # Operator Pass बचा है।} other {आपके पास # Operator Pass बचे हैं।}}",
+		"note": "{remainingCount, plural, =0 {आपके पास कोई Operator Pass नहीं बचा, इसलिए आपका बैज और वॉल लिस्टिंग हट गए हैं।} =1 {आपके पास # Operator Pass बचा है।} other {आपके पास # Operator Pass बचे हैं।}} इसमें आपके पास मौजूद मान्य पास और वे पास शामिल हैं जिन्हें आपने खरीदकर किसी और को दे दिया है। अपना बैज और दीवार पर जगह बनाए रखने के लिए कम से कम एक सक्रिय पास रखें। रोके गए या समाप्त पास नहीं गिने जाते।",
 		"signoff": "{product_name} टीम",
 		"subject": "{recipientName} ने आपका {product_name} Operator Pass स्वीकार कर लिया"
 	},

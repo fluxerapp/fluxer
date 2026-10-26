@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك نقلت Operator Pass إلى شخص آخر على {product_name}.",
 		"intro": "قبِل {recipientName} الـ Operator Pass الذي نقلته إليه، وأصبح الآن في حسابه.",
-		"note": "{remainingCount, plural, =0 {لم يتبقَّ لديك أي Operator Pass، لذا أُزيلت شارتك وظهورك على الجدار.} =1 {تبقّى لديك Operator Pass واحد.} two {تبقّى لديك اثنان من Operator Pass.} few {تبقّى لديك # من Operator Pass.} many {تبقّى لديك # من Operator Pass.} other {تبقّى لديك # من Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {لم يتبقَّ لديك أي Operator Pass، لذا أُزيلت شارتك وظهورك على الجدار.} =1 {تبقّى لديك Operator Pass واحد.} two {تبقّى لديك اثنان من Operator Pass.} few {تبقّى لديك # من Operator Pass.} many {تبقّى لديك # من Operator Pass.} other {تبقّى لديك # من Operator Pass.}} يشمل التصاريح السارية التي تملكها والتصاريح التي اشتريتها ونقلتها إلى غيرك. احتفظ بتصريح نشط واحد على الأقل للاحتفاظ بشارتك وموضعك على الجدار. لا تُحتسب التصاريح الموقوفة مؤقتًا أو المنتهية.",
 		"signoff": "فريق {product_name}",
 		"subject": "قبِل {recipientName} الـ Operator Pass الذي نقلته إليه على {product_name}"
 	},

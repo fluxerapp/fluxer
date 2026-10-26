@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass leidimas} few {# Operator Pass leidimai} many {# Operator Pass leidimo} other {# Operator Pass leidimų}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass leidimas} few {# Operator Pass leidimai} many {# Operator Pass leidimo} other {# Operator Pass leidimų}}",
+	"profile_badge.operator_pass_recognition": "Apima galiojančius leidimus, kuriuos turi, ir leidimus, kuriuos nusipirkai ir perdavei kitiems.",
 	"profile_badge.operator_pass_since": "Operator Pass nuo {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass nuo {since_date}, {count, plural, one {# leidimas} few {# leidimai} many {# leidimo} other {# leidimų}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass nuo {since_date}",

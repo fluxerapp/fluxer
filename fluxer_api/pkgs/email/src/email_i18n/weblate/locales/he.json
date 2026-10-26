@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "קיבלתם את האימייל הזה כי העברתם Operator Pass ב-{product_name}.",
 		"intro": "{recipientName} קיבל/ה את ה-Operator Pass שהעברתם, והוא נמצא עכשיו בחשבון שלו/ה.",
-		"note": "{remainingCount, plural, =0 {לא נשאר לכם אף Operator Pass, ולכן התג והרישום בקיר הוסרו.} =1 {נשאר לכם Operator Pass אחד.} other {נשארו לכם # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {לא נשאר לכם אף Operator Pass, ולכן התג והרישום בקיר הוסרו.} =1 {נשאר לכם Operator Pass אחד.} other {נשארו לכם # Operator Pass.}} כולל אישורים תקפים שבידיך ואישורים שקנית והעברת הלאה. יש לשמור לפחות אישור פעיל אחד כדי לשמור על התג והמקום בקיר. אישורים מושהים או שהסתיימו אינם נספרים.",
 		"signoff": "צוות {product_name}",
 		"subject": "{recipientName} קיבל/ה את ה-Operator Pass שלכם ב-{product_name}"
 	},

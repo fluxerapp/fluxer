@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Passes}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Passes}}",
+	"profile_badge.operator_pass_recognition": "Inclusief geldige passen die je bezit en passen die je hebt gekocht en doorgegeven.",
 	"profile_badge.operator_pass_since": "Operator Pass sinds {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass sinds {since_date}, {count, plural, one {# pass} other {# passes}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass sinds {since_date}",

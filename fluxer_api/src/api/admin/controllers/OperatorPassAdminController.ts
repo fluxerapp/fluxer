@@ -30,6 +30,7 @@ import {requireOperatorPassBusinessPurchase} from '@app/api/operator_pass/Operat
 import {resolveOperatorPassHolder} from '@app/api/operator_pass/OperatorPassEntitlementService';
 import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {mapOperatorPassPurchaseToResponse} from '@app/api/operator_pass/OperatorPassPurchaseRules';
+import {calculateOperatorPassRecognition} from '@app/api/operator_pass/OperatorPassRecognition';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import type {OperatorPassWallDecisionResult} from '@app/api/operator_pass/OperatorPassWallModerationService';
 import {hasOperatorPassWallChoice} from '@app/api/operator_pass/OperatorPassWallPresentation';
@@ -215,6 +216,7 @@ export function OperatorPassAdminController(app: HonoApp) {
 							since: holder.since.toISOString(),
 							source: holder.source,
 							count: holder.count,
+							recognition_count: calculateOperatorPassRecognition(userId, sortedUnits)?.count ?? holder.count,
 							wall_chosen: hasOperatorPassWallChoice(await repository.findWallEntry(userId)),
 						}
 					: null,

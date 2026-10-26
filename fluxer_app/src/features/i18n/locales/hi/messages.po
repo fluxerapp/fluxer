@@ -6097,6 +6097,11 @@ msgstr "बैकअप कोड"
 msgid "Backup codes regenerated"
 msgstr "बैकअप कोड फिर से जनरेट किए गए"
 
+#. Public Operator Pass count in private settings, separate from current holdings. {count} is a number, including valid purchases passed on.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Badge and wall count: {count}"
+msgstr "बैज और दीवार के लिए गिनती: {count}"
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
@@ -19504,6 +19509,11 @@ msgstr "पीडीएफ और प्रिंटआउट में मे�
 #: src/features/moderation/components/pages/ReportPage.tsx
 msgid "Include the community ID."
 msgstr "कम्युनिटी आईडी शामिल करें।"
+
+#. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. Holding an active pass is still required for benefits.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count."
+msgstr "इसमें आपके पास मौजूद मान्य पास और वे पास शामिल हैं जिन्हें आपने खरीदकर किसी और को दे दिया है। अपना बैज और दीवार पर जगह बनाए रखने के लिए कम से कम एक सक्रिय पास रखें। रोके गए या समाप्त पास नहीं गिने जाते।"
 
 #. Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx

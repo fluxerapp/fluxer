@@ -93,6 +93,7 @@ export function reconstructOperatorPassWallEntry(params: {
 	for (const event of events.filter((event) => event.kind === 'count_changed')) {
 		const next = event.pass_count ?? 0;
 		if (count === 0 && next > 0) firstPassAt = event.occurred_at;
+		if (event.first_pass_at != null) firstPassAt = event.first_pass_at;
 		if (next === 0) firstPassAt = null;
 		count = next;
 	}

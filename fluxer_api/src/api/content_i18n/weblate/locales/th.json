@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator {count, plural, other {Operator Pass # ใบ}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {Operator Pass # ใบ}}",
+	"profile_badge.operator_pass_recognition": "รวมพาสที่ยังมีผลซึ่งคุณถืออยู่ และพาสที่คุณซื้อแล้วส่งต่อให้ผู้อื่น",
 	"profile_badge.operator_pass_since": "Operator Pass ตั้งแต่ {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass ตั้งแต่ {since_date} {count, plural, other {พาส # ใบ}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass ตั้งแต่ {since_date}",

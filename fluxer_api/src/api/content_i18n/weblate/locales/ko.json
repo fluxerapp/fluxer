@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, other {Operator Pass #개}}",
 	"profile_badge.operator_pass_count": "{count, plural, other {Operator Pass #개}}",
+	"profile_badge.operator_pass_recognition": "현재 보유한 유효한 패스와 구매 후 다른 사람에게 양도한 패스를 포함해요.",
 	"profile_badge.operator_pass_since": "{since_date}부터 Operator Pass",
 	"profile_badge.operator_pass_since_count": "{since_date}부터 Operator Pass, {count, plural, other {패스 #개}}",
 	"profile_badge.operator_pass_since_line": "{since_date}부터 Operator Pass",

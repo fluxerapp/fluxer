@@ -169,6 +169,7 @@ export const CONTENT_I18N_MESSAGES = {
 	'profile_badge.operator_pass': 'Operator',
 	'profile_badge.operator_pass_accessible_count':
 		'Operator, {count, plural, one {# Operator Pass} other {# Operator Passes}}',
+	'profile_badge.operator_pass_recognition': 'Includes valid passes you have and passes you bought and passed on.',
 	'profile_badge.operator_pass_count': '{count, plural, one {# Operator Pass} other {# Operator Passes}}',
 	'profile_badge.operator_pass_since': 'Operator Pass since {since_date}',
 	'profile_badge.operator_pass_since_count':

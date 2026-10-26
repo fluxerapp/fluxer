@@ -203,7 +203,7 @@ export const EMAIL_I18N_MESSAGES = {
 	operator_pass_offer_accepted: {
 		subject: '{recipientName} accepted your {product_name} Operator Pass',
 		intro: "{recipientName} accepted the Operator Pass you passed on, and it's on their account.",
-		note: '{remainingCount, plural, =0 {You have no Operator Passes left, so your badge and wall listing are gone.} =1 {You have # Operator Pass left.} other {You have # Operator Passes left.}}',
+		note: '{remainingCount, plural, =0 {You have no Operator Passes left, so your badge and wall listing are gone.} =1 {You have # Operator Pass left.} other {You have # Operator Passes left.}} Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count.',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because you passed on an Operator Pass on {product_name}.',
 	},

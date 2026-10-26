@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Bu e-postayı, {product_name} üzerinde bir Operator Pass devrettiğiniz için aldınız.",
 		"intro": "{recipientName}, devrettiğiniz Operator Pass'i kabul etti ve artık onun hesabında.",
-		"note": "{remainingCount, plural, =0 {Hiç Operator Pass'iniz kalmadı, bu yüzden rozetiniz ve duvar kaydınız kaldırıldı.} =1 {# Operator Pass'iniz kaldı.} other {# Operator Pass'iniz kaldı.}}",
+		"note": "{remainingCount, plural, =0 {Hiç Operator Pass'iniz kalmadı, bu yüzden rozetiniz ve duvar kaydınız kaldırıldı.} =1 {# Operator Pass'iniz kaldı.} other {# Operator Pass'iniz kaldı.}} Elinde tuttuğun geçerli pass'leri ve satın alıp başkasına devrettiğin pass'leri içerir. Rozetini ve duvardaki yerini korumak için en az bir aktif pass tut. Duraklatılan veya sona eren pass'ler sayılmaz.",
 		"signoff": "{product_name} ekibi",
 		"subject": "{recipientName}, {product_name} Operator Pass'inizi kabul etti"
 	},

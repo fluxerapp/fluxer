@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Has recibido este correo porque has cedido un Operator Pass en {product_name}.",
 		"intro": "{recipientName} ha aceptado el Operator Pass que has cedido y ya está en su cuenta.",
-		"note": "{remainingCount, plural, =0 {No te quedan Operator Pass, así que tu insignia y tu entrada en el muro ya no están.} =1 {Te queda # Operator Pass.} one {Te queda # Operator Pass.} other {Te quedan # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {No te quedan Operator Pass, así que tu insignia y tu entrada en el muro ya no están.} =1 {Te queda # Operator Pass.} one {Te queda # Operator Pass.} other {Te quedan # Operator Pass.}} Incluye los pases válidos que tienes y los que compraste y cediste. Conserva al menos un pase activo para mantener tu insignia y tu lugar en el muro. Los pases pausados o terminados no cuentan.",
 		"signoff": "El equipo de {product_name}",
 		"subject": "{recipientName} ha aceptado tu Operator Pass de {product_name}"
 	},

@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Kamu menerima email ini karena kamu meneruskan Operator Pass di {product_name}.",
 		"intro": "{recipientName} menerima Operator Pass yang kamu teruskan, dan pass itu sekarang ada di akunnya.",
-		"note": "{remainingCount, plural, =0 {Operator Pass-mu sudah habis, jadi lencana dan pencantumanmu di dinding sudah tidak ada.} =1 {Kamu masih punya # Operator Pass.} other {Kamu masih punya # Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Operator Pass-mu sudah habis, jadi lencana dan pencantumanmu di dinding sudah tidak ada.} =1 {Kamu masih punya # Operator Pass.} other {Kamu masih punya # Operator Pass.}} Mencakup pass valid yang kamu miliki dan pass yang kamu beli lalu teruskan kepada orang lain. Simpan setidaknya satu pass aktif untuk mempertahankan lencana dan tempatmu di dinding. Pass yang dijeda atau berakhir tidak dihitung.",
 		"signoff": "Tim {product_name}",
 		"subject": "{recipientName} menerima Operator Pass {product_name} kamu"
 	},

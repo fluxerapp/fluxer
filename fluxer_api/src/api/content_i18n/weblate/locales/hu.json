@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "Tartalmazza a nálad lévő érvényes passokat és az általad vásárolt, majd továbbadott passokat.",
 	"profile_badge.operator_pass_since": "Operator Pass {since_date} óta",
 	"profile_badge.operator_pass_since_count": "Operator Pass {since_date} óta, {count, plural, one {# pass} other {# pass}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass {since_date} óta",

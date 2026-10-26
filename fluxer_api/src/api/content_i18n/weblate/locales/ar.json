@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator، {count, plural, zero {# من Operator Pass} one {# Operator Pass} two {# من Operator Pass} few {# من Operator Pass} many {# من Operator Pass} other {# من Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, zero {# من Operator Pass} one {# Operator Pass} two {# من Operator Pass} few {# من Operator Pass} many {# من Operator Pass} other {# من Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "يشمل التصاريح السارية التي تملكها والتصاريح التي اشتريتها ونقلتها إلى غيرك.",
 	"profile_badge.operator_pass_since": "Operator Pass منذ {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass منذ {since_date}، {count, plural, zero {# من Operator Pass} one {# Operator Pass} two {# من Operator Pass} few {# من Operator Pass} many {# من Operator Pass} other {# من Operator Pass}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass منذ {since_date}",

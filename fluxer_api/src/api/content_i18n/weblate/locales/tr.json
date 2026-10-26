@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# Operator Pass} other {# Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# Operator Pass} other {# Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "Elinde tuttuğun geçerli pass'leri ve satın alıp başkasına devrettiğin pass'leri içerir.",
 	"profile_badge.operator_pass_since": "{since_date} tarihinden beri Operator Pass",
 	"profile_badge.operator_pass_since_count": "{since_date} tarihinden beri Operator Pass, {count, plural, one {# Operator Pass} other {# Operator Pass}}",
 	"profile_badge.operator_pass_since_line": "{since_date} tarihinden beri Operator Pass",

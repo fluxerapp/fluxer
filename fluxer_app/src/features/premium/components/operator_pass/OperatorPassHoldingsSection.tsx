@@ -27,6 +27,10 @@ import {
 	type OperatorPassPassRow,
 } from '@app/features/premium/utils/OperatorPassPassRows';
 import {
+	OPERATOR_PASS_RECOGNITION_COUNT_DESCRIPTOR,
+	OPERATOR_PASS_RECOGNITION_DESCRIPTOR,
+} from '@app/features/premium/utils/OperatorPassRecognitionMessages';
+import {
 	formatOperatorPassCalendarDay,
 	formatOperatorPassDate,
 	formatOperatorPassLongDate,
@@ -429,6 +433,14 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 					<h3 className={styles.title} data-flx="premium.operator-pass-holdings-section.title">
 						{passCount > 0 ? i18n._(PASS_COUNT_DESCRIPTOR, {count: passCount}) : OPERATOR_PASS_NAME}
 					</h3>
+					{holdings.recognition_count != null && (
+						<p className={styles.meta} data-flx="premium.operator-pass-holdings-section.recognition-count">
+							{i18n._(OPERATOR_PASS_RECOGNITION_COUNT_DESCRIPTOR, {count: holdings.recognition_count})}
+						</p>
+					)}
+					<p className={styles.meta} data-flx="premium.operator-pass-holdings-section.recognition-description">
+						{i18n._(OPERATOR_PASS_RECOGNITION_DESCRIPTOR)}
+					</p>
 					{removed && (
 						<p className={styles.meta} data-flx="premium.operator-pass-holdings-section.removed">
 							{i18n._(REMOVED_DESCRIPTOR)}{' '}

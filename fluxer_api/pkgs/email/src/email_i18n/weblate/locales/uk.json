@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Ти отримав цей лист, бо передав Operator Pass у {product_name}.",
 		"intro": "Користувач {recipientName} прийняв Operator Pass, який ти передав, і пропуск уже в його акаунті.",
-		"note": "{remainingCount, plural, =0 {У тебе не залишилося пропусків Operator Pass, тому твого значка і запису на стіні теж більше немає.} =1 {У тебе залишився # пропуск Operator Pass.} one {У тебе залишився # пропуск Operator Pass.} few {У тебе залишилося # пропуски Operator Pass.} many {У тебе залишилося # пропусків Operator Pass.} other {У тебе залишилося # пропуску Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {У тебе не залишилося пропусків Operator Pass, тому твого значка і запису на стіні теж більше немає.} =1 {У тебе залишився # пропуск Operator Pass.} one {У тебе залишився # пропуск Operator Pass.} few {У тебе залишилося # пропуски Operator Pass.} many {У тебе залишилося # пропусків Operator Pass.} other {У тебе залишилося # пропуску Operator Pass.}} Включає чинні перепустки, які ви маєте, і ті, які ви купили та передали іншим. Залиште принаймні одну активну перепустку, щоб зберегти значок і місце на стіні. Призупинені перепустки або ті, дія яких припинилася, не враховуються.",
 		"signoff": "Команда {product_name}",
 		"subject": "Користувач {recipientName} прийняв твій Operator Pass у {product_name}"
 	},

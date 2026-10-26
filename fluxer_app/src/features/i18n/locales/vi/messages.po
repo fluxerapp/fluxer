@@ -6097,6 +6097,11 @@ msgstr "Mã dự phòng"
 msgid "Backup codes regenerated"
 msgstr "Đã tạo lại mã dự phòng"
 
+#. Public Operator Pass count in private settings, separate from current holdings. {count} is a number, including valid purchases passed on.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Badge and wall count: {count}"
+msgstr "Số lượng cho huy hiệu và tường: {count}"
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
@@ -19504,6 +19509,11 @@ msgstr "Bao gồm mã dự phòng hai yếu tố của tôi trong tệp PDF và 
 #: src/features/moderation/components/pages/ReportPage.tsx
 msgid "Include the community ID."
 msgstr "Nhập ID cộng đồng."
+
+#. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. Holding an active pass is still required for benefits.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count."
+msgstr "Bao gồm các pass còn hiệu lực bạn đang giữ và các pass bạn đã mua rồi chuyển cho người khác. Giữ ít nhất một pass đang hoạt động để giữ huy hiệu và vị trí trên tường. Pass bị tạm dừng hoặc đã kết thúc không được tính."
 
 #. Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx

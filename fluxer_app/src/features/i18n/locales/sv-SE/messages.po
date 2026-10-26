@@ -6097,6 +6097,11 @@ msgstr "Reservkoder"
 msgid "Backup codes regenerated"
 msgstr "Reservkoder har återskapats"
 
+#. Public Operator Pass count in private settings, separate from current holdings. {count} is a number, including valid purchases passed on.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Badge and wall count: {count}"
+msgstr "Antal på märket och väggen: {count}"
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
@@ -19504,6 +19509,11 @@ msgstr "Inkludera mina tvåfaktorsbackupkoder i PDF-filen och utskriften"
 #: src/features/moderation/components/pages/ReportPage.tsx
 msgid "Include the community ID."
 msgstr "Ange community-ID:t."
+
+#. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. Holding an active pass is still required for benefits.
+#: src/features/premium/utils/OperatorPassRecognitionMessages.ts
+msgid "Includes valid passes you have and passes you bought and passed on. Keep at least one active pass to retain your badge and wall listing. Paused or ended passes do not count."
+msgstr "Omfattar giltiga pass som du har kvar och pass som du har köpt och lämnat vidare. Ha kvar minst ett aktivt pass för att behålla ditt märke och din plats på väggen. Pausade pass och pass som har upphört räknas inte."
 
 #. Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.
 #: src/features/premium/components/modals/OperatorPassCheckoutPresentation.tsx

@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Du mottok denne e-posten fordi du ga et Operator Pass videre på {product_name}.",
 		"intro": "{recipientName} har tatt imot passet du ga videre, og det ligger nå på kontoen deres.",
-		"note": "{remainingCount, plural, =0 {Du har ingen Operator Pass igjen, så merket ditt og oppføringen din på veggen er borte.} =1 {Du har # Operator Pass igjen.} other {Du har # Operator Pass igjen.}}",
+		"note": "{remainingCount, plural, =0 {Du har ingen Operator Pass igjen, så merket ditt og oppføringen din på veggen er borte.} =1 {Du har # Operator Pass igjen.} other {Du har # Operator Pass igjen.}} Omfatter gyldige pass du har, og pass du har kjøpt og gitt videre. Behold minst ett aktivt pass for å beholde merket og plassen din på veggen. Pass som er satt på pause eller avsluttet, teller ikke.",
 		"signoff": "{product_name}-teamet",
 		"subject": "{recipientName} har tatt imot ditt {product_name} Operator Pass"
 	},

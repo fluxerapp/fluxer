@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Получи този имейл, защото предаде Operator Pass във {product_name}.",
 		"intro": "{recipientName} прие Operator Pass, който предаде, и пропускът вече е в акаунта на този потребител.",
-		"note": "{remainingCount, plural, =0 {Нямаш повече пропуски Operator Pass, затова значката и записът ти на стената вече ги няма.} =1 {Остава ти # пропуск Operator Pass.} one {Остава ти # пропуск Operator Pass.} other {Остават ти # пропуска Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {Нямаш повече пропуски Operator Pass, затова значката и записът ти на стената вече ги няма.} =1 {Остава ти # пропуск Operator Pass.} one {Остава ти # пропуск Operator Pass.} other {Остават ти # пропуска Operator Pass.}} Включва валидните пропуски, които притежаваш, и тези, които си купил и предал на друг. Запази поне един активен пропуск, за да запазиш значката и мястото си на стената. Спрени или прекратени пропуски не се броят.",
 		"signoff": "Екипът на {product_name}",
 		"subject": "{recipientName} прие твоя Operator Pass във {product_name}"
 	},

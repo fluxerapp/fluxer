@@ -250,6 +250,7 @@ export interface OperatorPassWallEventRow {
 	release_tag: Nullish<string>;
 	actor_id: Nullish<UserID>;
 	pass_count: Nullish<number>;
+	first_pass_at?: Date | null;
 }
 
 export interface OperatorPassWallRevisionRow {
@@ -574,6 +575,7 @@ export const OPERATOR_PASS_WALL_EVENT_COLUMNS = [
 	'release_tag',
 	'actor_id',
 	'pass_count',
+	'first_pass_at',
 ] as const satisfies ReadonlyArray<keyof OperatorPassWallEventRow>;
 
 export const OPERATOR_PASS_WALL_REVISION_COLUMNS = [

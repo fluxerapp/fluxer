@@ -121,6 +121,7 @@
 	"profile_badge.operator_pass": "Operator",
 	"profile_badge.operator_pass_accessible_count": "Operator, {count, plural, one {# пропуск Operator Pass} few {# пропуски Operator Pass} many {# пропусків Operator Pass} other {# пропуску Operator Pass}}",
 	"profile_badge.operator_pass_count": "{count, plural, one {# пропуск Operator Pass} few {# пропуски Operator Pass} many {# пропусків Operator Pass} other {# пропуску Operator Pass}}",
+	"profile_badge.operator_pass_recognition": "Включає чинні перепустки, які ви маєте, і ті, які ви купили та передали іншим.",
 	"profile_badge.operator_pass_since": "Operator Pass з {since_date}",
 	"profile_badge.operator_pass_since_count": "Operator Pass з {since_date}, {count, plural, one {# пропуск} few {# пропуски} many {# пропусків} other {# пропуску}}",
 	"profile_badge.operator_pass_since_line": "Operator Pass з {since_date}",

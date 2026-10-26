@@ -185,7 +185,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Sait tämän sähköpostin, koska luovutit Operator Passin palvelussa {product_name}.",
 		"intro": "{recipientName} hyväksyi Operator Passin, jonka luovutit eteenpäin, ja se on nyt hänen tilillään.",
-		"note": "{remainingCount, plural, =0 {Sinulla ei ole enää Operator Passeja, joten merkkisi ja listauksesi seinällä on poistettu.} =1 {Sinulla on jäljellä # Operator Pass.} other {Sinulla on jäljellä # Operator Passia.}}",
+		"note": "{remainingCount, plural, =0 {Sinulla ei ole enää Operator Passeja, joten merkkisi ja listauksesi seinällä on poistettu.} =1 {Sinulla on jäljellä # Operator Pass.} other {Sinulla on jäljellä # Operator Passia.}} Sisältää hallussasi olevat voimassa olevat passit sekä ostamasi ja eteenpäin antamasi passit. Pidä vähintään yksi aktiivinen passi säilyttääksesi merkkisi ja paikkasi seinällä. Keskeytettyjä tai päättyneitä passeja ei lasketa.",
 		"signoff": "{product_name}-tiimi",
 		"subject": "{recipientName} hyväksyi {product_name} Operator Passisi"
 	},

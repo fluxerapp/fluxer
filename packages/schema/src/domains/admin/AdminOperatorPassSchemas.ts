@@ -103,11 +103,7 @@ export const AdminOperatorPassWallEventKindSchema = createNamedStringLiteralUnio
 		['display_adjusted', 'DISPLAY_ADJUSTED', 'Staff made a technical adjustment to how the name is shown'],
 		['release_published', 'RELEASE_PUBLISHED', 'The name was published in a The Operators of list'],
 		['erased', 'ERASED', 'Staff erased the name from a published list'],
-		[
-			'count_changed',
-			'COUNT_CHANGED',
-			'The number of passes held changed, which moves the place on the wall, see pass_count',
-		],
+		['count_changed', 'COUNT_CHANGED', 'The displayed wall count changed, see pass_count'],
 	],
 	'What happened to the name or the pass',
 );
@@ -127,7 +123,16 @@ export const AdminOperatorPassWallEventResponse = z.object({
 	release_year: z.number().int().nullable().describe('The list year involved'),
 	release_tag: z.string().nullable().describe('The release tag involved'),
 	actor_id: SnowflakeStringType.nullable().describe('Who did it, the holder or a staff member, null for the system'),
-	pass_count: z.number().int().nullable().describe('Passes held after a count change'),
+	pass_count: z
+		.number()
+		.int()
+		.nullable()
+		.describe('The displayed count after a change. Older events recorded held passes.'),
+	first_pass_at: z.iso
+		.datetime()
+		.nullable()
+		.optional()
+		.describe('The earliest qualifying delivery for this count. Older events do not include this date.'),
 });
 
 export type AdminOperatorPassWallEventResponse = z.infer<typeof AdminOperatorPassWallEventResponse>;
