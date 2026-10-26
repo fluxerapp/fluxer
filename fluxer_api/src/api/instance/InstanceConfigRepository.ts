@@ -1024,7 +1024,7 @@ const StoredInstancePolicySchema = z
 	.transform(({friends_disabled, personal_notes_enabled, ...policy}) => ({
 		...policy,
 		friends_disabled: friends_disabled ?? policy.direct_messages_disabled,
-		personal_notes_enabled: personal_notes_enabled ?? !Config.instance.selfHosted,
+		personal_notes_enabled: personal_notes_enabled ?? !policy.direct_messages_disabled,
 	})) satisfies z.ZodType<InstancePolicyConfig>;
 
 const StoredInstanceNoticeSchema = InstanceNoticeSchema.nullable().default(null);
