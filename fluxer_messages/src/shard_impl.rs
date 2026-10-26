@@ -259,6 +259,8 @@ struct UserPartialServiceResponse {
     mention_flags: Option<i32>,
     #[serde(default)]
     content_hidden_since: Option<i64>,
+    #[serde(default)]
+    hidden_profile_badges: Vec<String>,
 }
 
 #[derive(Debug, Default)]
@@ -2897,6 +2899,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartial {
         bot: partial.bot,
         system: partial.system,
         flags: partial.flags,
+        hidden_profile_badges: partial.hidden_profile_badges,
         mention_flags: partial.mention_flags,
     })
 }

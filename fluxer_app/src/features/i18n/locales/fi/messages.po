@@ -1872,11 +1872,6 @@ msgstr "{optionName}, pakollinen {optionType}-parametri"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} hoitaa maksut turvallisesti."
 
-#. Profile settings section title for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "{premiumProductName} badge privacy"
-msgstr "{premiumProductName}-merkin yksityisyysasetukset"
-
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -6102,10 +6097,10 @@ msgstr "Varakoodit"
 msgid "Backup codes regenerated"
 msgstr "Varakoodit luotu uudelleen"
 
-#. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Badge"
-msgstr "Merkki"
+#. Title of the profile settings section that lists the badges you hold and lets you hide each one.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Badges"
+msgstr "Merkit"
 
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
@@ -8492,6 +8487,11 @@ msgstr "Valitse, mihin julkaistut viestit lähetetään. Voit lopettaa seuraamis
 msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
 msgstr "Valitse, voivatko yhteisösi jäsenet lähettää sinulle yksityisviestejä ilman ystävyyspyyntöä."
 
+#. Description under the "Badges" title in profile settings. Each badge in the list has a switch that shows or hides it for other people.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Choose which badges other people see on your profile."
+msgstr "Valitse, mitkä merkit muut näkevät profiilissasi."
+
 #. Description for the Custom export option.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Choose which conversation kinds, communities, and time window to include in the archive."
@@ -9510,11 +9510,6 @@ msgstr "Vertailu"
 msgid "Complete payment"
 msgstr "Suorita maksu"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Completely hide your {premiumProductName} badge from other users"
-msgstr "Piilota {premiumProductName}-merkki kokonaan muilta käyttäjiltä"
-
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Completing sign-in…"
@@ -9616,11 +9611,6 @@ msgstr "Määritä kamera, näytön jakamisen laatu, esikatselut ja kuvataajuus.
 msgid "Configure your microphone, speakers, input mode, processing, and voice sounds."
 msgstr "Määritä mikrofoni, kaiuttimet, syöttötila, käsittely ja äänimerkit."
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Configure your profile badge"
-msgstr "Määritä profiilimerkkisi"
-
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx
@@ -9713,8 +9703,8 @@ msgstr "Vahvista sähköpostiosoitteesi ennen kuin vaihdat yhteisön lempinimeä
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
-msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
-msgstr "Vahvista sähköpostiosoitteesi ennen kuin vaihdat käyttäjänimeäsi, näyttönimeäsi, avataria, banneria, kuvaustasi, pronomineja, aikavyöhykettä tai {premiumProductName}-merkin yksityisyyttä."
+msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or badges."
+msgstr "Vahvista sähköpostiosoitteesi ennen kuin vaihdat käyttäjänimeäsi, näyttönimeäsi, avataria, banneria, kuvaustasi, pronomineja, aikavyöhykettä tai merkkejä."
 
 #. Description text in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -10230,11 +10220,6 @@ msgstr "Hallitse, miten HDR-kuvat näkyvät HDR-yhteensopivilla näytöillä."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Control how mature or sensitive media is filtered in different contexts."
 msgstr "Hallitse, miten aikuisille tarkoitettu tai arkaluonteinen media suodatetaan eri yhteyksissä."
-
-#. Profile settings section description for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Control how your {premiumProductName} badge is displayed to others"
-msgstr "Hallitse, miten {premiumProductName}-merkkisi näkyy muille"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
@@ -14366,6 +14351,11 @@ msgstr "Muokkaa sovelluksen perustietoja ja uudelleenohjaus-URI-osoitteita"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx
 msgid "Edit attachment"
 msgstr "Muokkaa liitettä"
+
+#. Tooltip and screen reader label for the pencil button next to your own profile badges. It opens the profile settings where you choose which badges other people see.
+#: src/features/user/components/popouts/UserProfileBadges.tsx
+msgid "Edit badges"
+msgstr "Muokkaa merkkejä"
 
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
@@ -18522,20 +18512,10 @@ msgstr "Piilota"
 msgid "Hide {appName}"
 msgstr "Piilota {appName}"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} badge entirely"
-msgstr "Piilota {premiumProductName}-merkki kokonaan"
-
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide {premiumProductName} purchase date"
 msgstr "Piilota {premiumProductName}-ostopäivämäärä"
-
-#. Description text in the premium badge settings. Preserve {premiumProductName}, {dateUtilsGetFormattedShortDatePremiumSince}; they are inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDatePremiumSince})"
-msgstr "Piilota {premiumProductName}-ostopäivämäärä ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Accessible label for the button that collapses the other accounts section in the inbox.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
@@ -18595,8 +18575,8 @@ msgstr "Piilota ohjeet"
 msgid "Hide help center button"
 msgstr "Piilota ohjekeskuksen painike"
 
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide how many Operator Passes you have"
 msgstr "Piilota Operator Passiesi määrä"
 
@@ -18678,18 +18658,8 @@ msgstr "Piilota ikkuna minimoinnin yhteydessä ja avaa uudelleen ilmaisinalueelt
 msgid "Hide user avatars"
 msgstr "Piilota käyttäjien avatarit"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge"
-msgstr "Piilota Visionary ID -merkki"
-
-#. Label in the premium badge settings. Preserve {premiumLifetimeSequenceLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
-msgstr "Piilota Visionary ID -merkki ({premiumLifetimeSequenceLabel})"
-
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide when you got your {operatorPassName}"
 msgstr "Piilota, milloin sait {operatorPassName}"
 
@@ -21976,8 +21946,8 @@ msgstr "Piilota yksityiset tilitiedot, kuten sähköpostiosoite, linkitetyt tili
 msgid "Mask private details before sharing your screen or stream."
 msgstr "Piilota yksityiset tiedot ennen näytön tai striimin jakamista."
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Mask Visionary as subscription"
 msgstr "Näytä Visionary tavallisena tilauksena"
 
@@ -26174,11 +26144,6 @@ msgstr "Operator Pass -tarjoukset"
 msgid "Operator Pass purchase"
 msgstr "Operator Pass -osto"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Operator Pass since {since}"
-msgstr "Operator Pass: {since}"
-
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -27638,11 +27603,6 @@ msgstr "Suosii vähennettyä liikettä"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Premium"
 msgstr "Premium"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Premium badge"
-msgstr "Premium-merkki"
 
 #. Developer control label for the premium-expired banner.
 #: src/features/devtools/components/NagbarControls.ts
@@ -29331,15 +29291,10 @@ msgstr "Poista jäähy"
 msgid "Remove translator"
 msgstr "Poista kääntäjä"
 
-#. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "Poista merkistäsi tieto siitä, milloin ostit {premiumProductName}-tilauksen"
-
-#. Button or menu action label in the premium badge settings. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Remove your Visionary ID badge"
-msgstr "Poista Visionary ID -merkki"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -32892,6 +32847,11 @@ msgstr "Näytä"
 msgid "Show {appName}"
 msgstr "Näytä {appName}"
 
+#. Screen reader label for the switch next to one badge in the "Badges" profile settings. {badgeLabel} is the badge name, such as "Fluxer Staff" or "Operator Pass since November 14, 2026".
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Show {badgeLabel} on your profile"
+msgstr "Näytä {badgeLabel} profiilissasi"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32939,11 +32899,6 @@ msgstr "Näytä toiminta muilla tileillä"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show attachment expiration indicator"
 msgstr "Näytä liitteen vanhenemisilmaisin"
-
-#. Switch in the Operator Pass profile settings that shows the Operator badge on the profile.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Show badge on my profile"
-msgstr "Näytä merkki profiilissani"
 
 #. Developer voice status menu option for displaying participant avatars.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -33390,8 +33345,8 @@ msgstr "Näytä globaali profiilikuvasi tässä yhteisössä"
 msgid "Show your global profile banner in this community"
 msgstr "Näytä globaali profiilibannerisi tässä yhteisössä"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the masking switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Show your Visionary as a regular subscription instead"
 msgstr "Näytä Visionary sen sijaan tavallisena tilauksena"
 
@@ -33419,6 +33374,11 @@ msgstr "Näkyy kutsujen upotuksissa chatissa."
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Shown on every post so people can react with one click."
 msgstr "Näytetään jokaisessa viestissä, jotta ihmiset voivat reagoida yhdellä napsautuksella."
+
+#. Note under the Visionary ID row in the "Badges" profile settings, shown while its switch is disabled because the Visionary badge is hidden or shown as a regular subscription. Visionary is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Shown only when your Visionary badge is visible and not masked."
+msgstr "Näkyy vain, kun Visionary-merkkisi on näkyvissä eikä näy tavallisena tilauksena."
 
 #. Description text in the branding section. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx
@@ -43007,6 +42967,11 @@ msgstr "Sinulla ei ole vielä palautussarjaa"
 msgid "You don't have access to any channels in this community."
 msgstr "Sinulla ei ole pääsyä mihinkään tämän yhteisön kanavista."
 
+#. Shown in the "Badges" profile settings section when you hold no badges.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "You don't have any badges yet."
+msgstr "Sinulla ei ole vielä merkkejä."
+
 #. Body of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx
 msgid "You don't have permission to add expressions in {targetName}."
@@ -43665,6 +43630,11 @@ msgstr "Merkkisi on nyt näkyvissä. Tarkista listauksesi seinällä asetuksista
 #: src/features/premium/components/operator_pass/OperatorPassCheckoutSuccess.tsx
 msgid "Your badge is live. Your name shows on the Operators' wall once we check it."
 msgstr "Merkkisi on nyt näkyvissä. Nimesi näkyy Operators-seinällä, kun olemme tarkistaneet sen."
+
+#. Shown in the "Badges" profile settings section when the list of badges fails to load, next to a "Try again" button.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Your badges couldn't be loaded."
+msgstr "Merkkejäsi ei voitu ladata."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
 #: src/features/theme_settings/components/QuickCssEditorHost.tsx

@@ -34,6 +34,7 @@ export function convertToSearchableGuild(guild: Guild, discovery?: GuildDiscover
 		bannerHash: guild.bannerHash,
 		splashHash: guild.splashHash,
 		features: Array.from(guild.features),
+		badgeIds: Array.from(guild.badgeIds, String),
 		verificationLevel: getEffectiveGuildVerificationLevel(guild.verificationLevel, isDiscoverable),
 		mfaLevel: guild.mfaLevel,
 		nsfwLevel: guild.nsfwLevel,

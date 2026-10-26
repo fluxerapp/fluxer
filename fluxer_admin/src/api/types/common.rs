@@ -96,6 +96,8 @@ pub struct AdminUser {
     pub acls: Vec<String>,
     #[serde(default)]
     pub traits: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_string_or_u64")]
     pub flags: u64,
     #[serde(default)]
@@ -156,6 +158,8 @@ pub struct AdminProfileBadge {
     pub label: String,
     pub asset: Option<String>,
     #[serde(default)]
+    pub asset_url: Option<String>,
+    #[serde(default)]
     pub small_asset: Option<String>,
     #[serde(default)]
     pub aspect_ratio: Option<f64>,
@@ -201,6 +205,8 @@ pub struct GuildDetailInfo {
     pub embed_splash: Option<String>,
     #[serde(default)]
     pub features: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     pub verification_level: Option<i32>,
     pub mfa_level: Option<i32>,
     pub nsfw_level: Option<i32>,

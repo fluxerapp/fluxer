@@ -26,6 +26,7 @@ import {
 } from '@fluxer/schema/src/domains/admin/AccountsConfigSchemas';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
 import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
+import {CustomBadgeIdListResponse} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {ReportNoteResponse} from '@fluxer/schema/src/domains/admin/AdminReportNoteSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
@@ -1539,6 +1540,7 @@ const AdminLookupGuildSchema = z.object({
 	splash: createStringType(1, 256).nullable(),
 	embed_splash: createStringType(1, 256).nullable(),
 	features: z.array(createStringType(1, 256)).max(100),
+	badge_ids: CustomBadgeIdListResponse,
 	verification_level: GuildVerificationLevelSchema,
 	mfa_level: GuildMFALevelSchema,
 	nsfw_level: NSFWLevelSchema,

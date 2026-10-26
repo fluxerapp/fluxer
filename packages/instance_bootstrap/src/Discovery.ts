@@ -28,6 +28,7 @@ import {
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGif,
+	type InstanceGuildBadge,
 	type InstanceLegal,
 	type InstanceNotice,
 	type InstancePush,
@@ -143,6 +144,7 @@ export interface InstanceDiscoveryDocument {
 	readonly agePolicy: InstanceAgePolicy | null;
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
+	readonly guildBadges?: ReadonlyArray<InstanceGuildBadge>;
 }
 
 interface InstanceDiscoveryAttempt {
@@ -305,6 +307,7 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		agePolicy: parseAgePolicy(source.age_policy),
 		domainMigration: parseInstanceDomainMigration(source.domain_migration),
 		notice: parseNotice(source.notice),
+		guildBadges: parseGuildBadges(source.guild_badges),
 	};
 }
 
@@ -691,6 +694,33 @@ function parseNotice(value: unknown): InstanceNotice | null {
 		starts_at: readDateString(source, 'starts_at'),
 		ends_at: readDateString(source, 'ends_at'),
 	};
+}
+
+function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return value.flatMap((entry) => {
+		const source = asRecord(entry);
+		if (source == null) {
+			return [];
+		}
+		const id = readNonEmptyString(source, 'id');
+		const name = readNonEmptyString(source, 'name');
+		const assetUrl = readNonEmptyString(source, 'asset_url');
+		if (id == null || name == null || assetUrl == null) {
+			return [];
+		}
+		return [
+			{
+				id,
+				name,
+				description: readNonEmptyString(source, 'description'),
+				asset_url: assetUrl,
+				href: readAbsoluteHTTPURL(source, 'href'),
+			},
+		];
+	});
 }
 
 function parseServices(value: unknown): InstanceServices | null {

@@ -31,6 +31,21 @@ The public description of one instance.
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, setup state and legal links |
 | age_policy? | [age policy](#age-policy-object) object | Regional age policy |
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
+| guild_badges? | array[[guild badge](#guild-badge-object) object] | The custom badges that guilds can show next to their name, in display order (at most 10) |
+
+## Guild badge object
+
+A custom badge that instance admins give to guilds. A guild lists the badges it has in `badge_ids`, and clients skip any ID that isn't in `guild_badges`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the badge |
+| name | string | The name of the badge |
+| description | ?string | The tooltip text under the name, or null |
+| asset_url | string | The badge image as WebP from the media proxy. Add a `size` query parameter to get it at the size you draw it |
+| href | ?string | The `https` URL a click opens, or null |
 
 ## Instance notice object
 

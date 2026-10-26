@@ -54,6 +54,7 @@ export class AdminGuildLookupService {
 				splash: guild.splashHash,
 				embed_splash: guild.embedSplashHash,
 				features: mapGuildFeatures(guild.features),
+				badge_ids: Array.from(guild.badgeIds, String),
 				verification_level: guild.verificationLevel,
 				mfa_level: guild.mfaLevel,
 				nsfw_level: guild.nsfwLevel,

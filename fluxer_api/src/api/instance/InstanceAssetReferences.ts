@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {trimTrailingSlash} from '@app/api/utils/UrlUtils';
+
 export const BRANDING_ASSET_FIELDS = [
 	'icon_url',
 	'symbol_url',
@@ -14,17 +16,14 @@ export type BrandingAssetField = (typeof BRANDING_ASSET_FIELDS)[number];
 
 const BRANDING_ASSET_REFERENCE = /^branding(?:-backdrops)?\/\d{1,20}\/(?:a_)?[0-9a-f]{8}\.[a-z0-9]{2,5}$/;
 const BRANDING_ASSET_PATH = /\/(branding(?:-backdrops)?\/\d{1,20}\/(?:a_)?[0-9a-f]{8}\.[a-z0-9]{2,5})$/;
-
-function trimTrailingSlashes(value: string): string {
-	return value.replace(/\/+$/u, '');
-}
+const CUSTOM_BADGE_ASSET_REFERENCE = /^custom-badges\/\d{1,20}\/(?:a_)?[0-9a-f]{8}\.[a-z0-9]{2,5}$/;
 
 export function isBrandingAssetReference(value: string): boolean {
 	return BRANDING_ASSET_REFERENCE.test(value);
 }
 
 function brandingAssetReferenceFromOwnUrl(value: string, mediaEndpoint: string): string | null {
-	const prefix = `${trimTrailingSlashes(mediaEndpoint)}/`;
+	const prefix = `${trimTrailingSlash(mediaEndpoint)}/`;
 	if (!value.startsWith(prefix)) return null;
 	const remainder = value.slice(prefix.length);
 	return isBrandingAssetReference(remainder) ? remainder : null;
@@ -41,11 +40,35 @@ export function brandingAssetReferenceFromAnyUrl(value: string): string | null {
 	return BRANDING_ASSET_PATH.exec(url.pathname)?.[1] ?? null;
 }
 
-export function brandingAssetStorageKey(reference: string): string {
-	const slash = reference.lastIndexOf('/');
-	const file = reference.slice(slash + 1);
-	const hash = file.slice(0, file.indexOf('.')).replace(/^a_/u, '');
-	return `${reference.slice(0, slash)}/${hash}`;
+export function assetReferenceHash(reference: string): string {
+	const file = reference.slice(reference.lastIndexOf('/') + 1);
+	return file.slice(0, file.indexOf('.'));
+}
+
+export function assetStorageKey(reference: string): string {
+	const hash = assetReferenceHash(reference).replace(/^a_/u, '');
+	return `${reference.slice(0, reference.lastIndexOf('/'))}/${hash}`;
+}
+
+export function assetReferenceUrl(reference: string, mediaEndpoint: string): string {
+	return `${trimTrailingSlash(mediaEndpoint)}/${reference}`;
+}
+
+export function isCustomBadgeAssetReference(value: string): boolean {
+	return CUSTOM_BADGE_ASSET_REFERENCE.test(value);
+}
+
+export function customBadgeAssetReferenceFromOwnUrl(value: string, mediaEndpoint: string): string {
+	const prefix = `${trimTrailingSlash(mediaEndpoint)}/`;
+	const reference = value.startsWith(prefix) ? value.slice(prefix.length) : value;
+	if (!isCustomBadgeAssetReference(reference)) {
+		throw new Error('Uploaded custom badge image has an unexpected URL');
+	}
+	return reference;
+}
+
+export function customBadgeImageUrl(reference: string, mediaEndpoint: string): string {
+	return `${trimTrailingSlash(mediaEndpoint)}/${reference.slice(0, reference.lastIndexOf('.'))}.webp`;
 }
 
 export function toStoredBrandingAsset(
@@ -58,7 +81,7 @@ export function toStoredBrandingAsset(
 
 export function resolveBrandingAsset(value: string | null, mediaEndpoint: string): string | null {
 	if (value === null || !isBrandingAssetReference(value)) return value;
-	return `${trimTrailingSlashes(mediaEndpoint)}/${value}`;
+	return assetReferenceUrl(value, mediaEndpoint);
 }
 
 export function mapBrandingAssets<T extends Partial<Record<BrandingAssetField, string | null | undefined>>>(
@@ -80,7 +103,7 @@ export function brandingAssetStorageKeys(
 	const keys = new Set<string>();
 	for (const field of BRANDING_ASSET_FIELDS) {
 		const value = branding[field];
-		if (typeof value === 'string' && isBrandingAssetReference(value)) keys.add(brandingAssetStorageKey(value));
+		if (typeof value === 'string' && isBrandingAssetReference(value)) keys.add(assetStorageKey(value));
 	}
 	return keys;
 }
@@ -94,7 +117,7 @@ export function releasedBrandingAssetReferences(
 	for (const field of BRANDING_ASSET_FIELDS) {
 		const value = before[field];
 		if (typeof value !== 'string' || !isBrandingAssetReference(value)) continue;
-		const key = brandingAssetStorageKey(value);
+		const key = assetStorageKey(value);
 		if (!kept.has(key) && !released.has(key)) released.set(key, value);
 	}
 	return [...released.values()];

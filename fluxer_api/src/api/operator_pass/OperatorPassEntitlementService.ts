@@ -8,7 +8,6 @@ import type {User} from '@app/api/models/User';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
 import {
-	isOperatorPassBadgeHidden,
 	isOperatorPassCountHidden,
 	isOperatorPassTimestampHidden,
 } from '@app/api/user/profile_badges/PremiumBadgeMasking';
@@ -111,7 +110,7 @@ export function operatorPassPrivateFields(
 > {
 	return {
 		operator_pass_since: holder?.since.toISOString() ?? null,
-		operator_pass_badge_hidden: isOperatorPassBadgeHidden(user.premiumFlags),
+		operator_pass_badge_hidden: user.hiddenProfileBadges.has('operator_pass'),
 		operator_pass_badge_timestamp_hidden: isOperatorPassTimestampHidden(user.premiumFlags),
 		operator_pass_badge_count_hidden: isOperatorPassCountHidden(user.premiumFlags),
 	};
@@ -131,7 +130,7 @@ export function profileOperatorPassSince(params: {
 	const holder = resolveOperatorPassHolder(state);
 	if (
 		!holder ||
-		(!isOwner && (isOperatorPassBadgeHidden(user.premiumFlags) || isOperatorPassTimestampHidden(user.premiumFlags)))
+		(!isOwner && (user.hiddenProfileBadges.has('operator_pass') || isOperatorPassTimestampHidden(user.premiumFlags)))
 	) {
 		return null;
 	}

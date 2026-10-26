@@ -5,6 +5,7 @@ import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import {AdminApplicationService} from '@app/api/admin/services/AdminApplicationService';
 import {AdminAssetPurgeService} from '@app/api/admin/services/AdminAssetPurgeService';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminBadgeService} from '@app/api/admin/services/AdminBadgeService';
 import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {AdminCodeGenerationService} from '@app/api/admin/services/AdminCodeGenerationService';
 import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
@@ -37,6 +38,7 @@ import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {
 	getEnforcementDecisionRepository,
 	getGuildDiscoveryRepository,
+	getInstanceConfigRepository,
 	getKVAccountDeletionQueue,
 	getOAuth2TokenRepository,
 	getPaymentDisputeRepository,
@@ -68,6 +70,7 @@ export class AdminService {
 	readonly enforcementService: EnforcementDecisionService;
 	readonly banService: AdminUserBanService;
 	readonly voiceService: AdminVoiceService;
+	readonly badgeService: AdminBadgeService;
 	readonly searchService: AdminSearchService;
 	readonly codeGenerationService: AdminCodeGenerationService;
 	readonly assetPurgeService: AdminAssetPurgeService;
@@ -174,6 +177,7 @@ export class AdminService {
 			auditService: this.auditService,
 			discoveryRepository: getGuildDiscoveryRepository(),
 			enforcement: this.enforcementService,
+			instanceConfigRepository: getInstanceConfigRepository(),
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
@@ -229,6 +233,14 @@ export class AdminService {
 			apiContext: this.apiContext,
 			voiceRepository: this.voiceRepository,
 			auditService: this.auditService,
+		});
+		this.badgeService = new AdminBadgeService({
+			instanceConfigRepository: getInstanceConfigRepository(),
+			entityAssetService: this.entityAssetService,
+			assetDeletionQueue: this.assetDeletionQueue,
+			snowflakeService: snowflake,
+			userRepository: users,
+			cacheService: this.apiContext.services.cache,
 		});
 		this.searchService = new AdminSearchService({
 			apiContext: this.apiContext,

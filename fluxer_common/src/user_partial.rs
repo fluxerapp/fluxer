@@ -38,6 +38,7 @@ pub struct UserPartialFields {
     pub bot: Option<bool>,
     pub system: Option<bool>,
     pub flags: Option<i64>,
+    pub hidden_profile_badges: Vec<String>,
     pub mention_flags: Option<i32>,
 }
 
@@ -55,7 +56,10 @@ impl From<UserPartialFields> for ApiUserPartial {
             avatar_color: partial.avatar_color,
             bot: partial.bot.filter(|bot| *bot),
             system: partial.system.filter(|system| *system),
-            flags: visible_user_flags(partial.flags.unwrap_or_default()),
+            flags: visible_user_flags(
+                partial.flags.unwrap_or_default(),
+                &partial.hidden_profile_badges,
+            ),
             mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
         }
     }

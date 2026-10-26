@@ -35,6 +35,7 @@ import {Spinner} from '@app/features/ui/components/Spinner';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import * as Sheet from '@app/features/ui/sheet/Sheet';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
+import {openProfileBadgeSettings} from '@app/features/user/commands/UserSettingsModalCommands';
 import {MutualItemsSheet} from '@app/features/user/components/modals/MutualItemsSheet';
 import {NoteEditSheet} from '@app/features/user/components/modals/NoteEditSheet';
 import {UserProfileActionsSheet} from '@app/features/user/components/modals/UserProfileActionsSheet';
@@ -64,7 +65,7 @@ import {canPerform} from '@app/features/user/utils/AccountGates';
 import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
-import {canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {
 	getProfileMembershipDisplayName,
 	resolveProfileGuildMembership,
@@ -611,6 +612,9 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 															badges={profile.profileBadges}
 															isModal={true}
 															isMobile={true}
+															onEditBadges={
+																canEditOwnProfileBadges(user.id, profile) ? openProfileBadgeSettings : undefined
+															}
 															data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-badges"
 														/>
 													</div>

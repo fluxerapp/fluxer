@@ -1872,11 +1872,6 @@ msgstr "{optionName}，必填的 {optionType} 參數"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} 安全處理付款。"
 
-#. Profile settings section title for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "{premiumProductName} badge privacy"
-msgstr "{premiumProductName} 徽章隱私設定"
-
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -6102,9 +6097,9 @@ msgstr "備用碼"
 msgid "Backup codes regenerated"
 msgstr "備用碼已重新產生"
 
-#. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Badge"
+#. Title of the profile settings section that lists the badges you hold and lets you hide each one.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Badges"
 msgstr "徽章"
 
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
@@ -8492,6 +8487,11 @@ msgstr "選擇要發布訊息的目的地。你隨時可以在「社群設定」
 msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
 msgstr "選擇是否允許與您同一個社群的使用者，在未成為好友前就傳送私人訊息給您。"
 
+#. Description under the "Badges" title in profile settings. Each badge in the list has a switch that shows or hides it for other people.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Choose which badges other people see on your profile."
+msgstr "選擇其他人在您的個人檔案中能看到哪些徽章。"
+
 #. Description for the Custom export option.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Choose which conversation kinds, communities, and time window to include in the archive."
@@ -9510,11 +9510,6 @@ msgstr "比較"
 msgid "Complete payment"
 msgstr "完成付款"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Completely hide your {premiumProductName} badge from other users"
-msgstr "完全對其他使用者隱藏您的 {premiumProductName} 徽章"
-
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Completing sign-in…"
@@ -9616,11 +9611,6 @@ msgstr "設定您的相機、螢幕分享畫質、預覽和影格速率。"
 msgid "Configure your microphone, speakers, input mode, processing, and voice sounds."
 msgstr "設定您的麥克風、揚聲器、輸入模式、處理和語音音效。"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Configure your profile badge"
-msgstr "設定您的個人檔案徽章"
-
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx
@@ -9713,8 +9703,8 @@ msgstr "請先確認您的電子郵件，才能更改社群暱稱、大頭貼、
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
-msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
-msgstr "請先確認您的電子郵件，然後再變更您的使用者名稱、顯示名稱、大頭貼、橫幅、個人簡介、代名詞、時區或 {premiumProductName} 徽章隱私設定。"
+msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or badges."
+msgstr "請先確認您的電子郵件，然後再變更您的使用者名稱、顯示名稱、大頭貼、橫幅、個人簡介、代名詞、時區或徽章。"
 
 #. Description text in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -10230,11 +10220,6 @@ msgstr "控制 HDR 影像在支援 HDR 的螢幕上如何顯示。"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Control how mature or sensitive media is filtered in different contexts."
 msgstr "控制不同情境下，成人或敏感內容的篩選方式。"
-
-#. Profile settings section description for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Control how your {premiumProductName} badge is displayed to others"
-msgstr "控制您的 {premiumProductName} 徽章如何向其他人顯示"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
@@ -14366,6 +14351,11 @@ msgstr "編輯應用程式基本資訊和重新導向 URI"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx
 msgid "Edit attachment"
 msgstr "編輯附件"
+
+#. Tooltip and screen reader label for the pencil button next to your own profile badges. It opens the profile settings where you choose which badges other people see.
+#: src/features/user/components/popouts/UserProfileBadges.tsx
+msgid "Edit badges"
+msgstr "編輯徽章"
 
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
@@ -18522,20 +18512,10 @@ msgstr "隱藏"
 msgid "Hide {appName}"
 msgstr "隱藏 {appName}"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} badge entirely"
-msgstr "完全隱藏 {premiumProductName} 徽章"
-
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide {premiumProductName} purchase date"
 msgstr "隱藏 {premiumProductName} 購買日期"
-
-#. Description text in the premium badge settings. Preserve {premiumProductName}, {dateUtilsGetFormattedShortDatePremiumSince}; they are inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDatePremiumSince})"
-msgstr "隱藏 {premiumProductName} 購買日期 ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Accessible label for the button that collapses the other accounts section in the inbox.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
@@ -18595,8 +18575,8 @@ msgstr "隱藏指南"
 msgid "Hide help center button"
 msgstr "隱藏說明中心按鈕"
 
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide how many Operator Passes you have"
 msgstr "隱藏您擁有的 Operator Pass 數量"
 
@@ -18678,18 +18658,8 @@ msgstr "視窗最小化時隱藏，並可從系統匣重新開啟"
 msgid "Hide user avatars"
 msgstr "隱藏使用者大頭貼"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge"
-msgstr "隱藏 Visionary ID 徽章"
-
-#. Label in the premium badge settings. Preserve {premiumLifetimeSequenceLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
-msgstr "隱藏 Visionary ID 徽章 ({premiumLifetimeSequenceLabel})"
-
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide when you got your {operatorPassName}"
 msgstr "隱藏您獲得 {operatorPassName} 的時間"
 
@@ -21976,8 +21946,8 @@ msgstr "遮蓋電子郵件、連結帳號和記事等私人帳號詳細資訊"
 msgid "Mask private details before sharing your screen or stream."
 msgstr "分享螢幕或直播前，遮蓋私人詳細資訊。"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Mask Visionary as subscription"
 msgstr "將 Visionary 顯示為訂閱"
 
@@ -26174,11 +26144,6 @@ msgstr "Operator Pass 轉交請求"
 msgid "Operator Pass purchase"
 msgstr "Operator Pass 購買項目"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Operator Pass since {since}"
-msgstr "自 {since} 起擁有 Operator Pass"
-
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -27638,11 +27603,6 @@ msgstr "偏好減少動態效果"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Premium"
 msgstr "進階方案"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Premium badge"
-msgstr "進階方案徽章"
 
 #. Developer control label for the premium-expired banner.
 #: src/features/devtools/components/NagbarControls.ts
@@ -29331,15 +29291,10 @@ msgstr "解除禁言"
 msgid "Remove translator"
 msgstr "移除翻譯工具"
 
-#. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "從徽章中移除您首次購買 {premiumProductName} 的時間"
-
-#. Button or menu action label in the premium badge settings. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Remove your Visionary ID badge"
-msgstr "移除您的 Visionary ID 徽章"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -32892,6 +32847,11 @@ msgstr "顯示"
 msgid "Show {appName}"
 msgstr "顯示 {appName}"
 
+#. Screen reader label for the switch next to one badge in the "Badges" profile settings. {badgeLabel} is the badge name, such as "Fluxer Staff" or "Operator Pass since November 14, 2026".
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Show {badgeLabel} on your profile"
+msgstr "在您的個人檔案中顯示 {badgeLabel}"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32939,11 +32899,6 @@ msgstr "顯示其他帳號的活動"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show attachment expiration indicator"
 msgstr "顯示附件到期指示器"
-
-#. Switch in the Operator Pass profile settings that shows the Operator badge on the profile.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Show badge on my profile"
-msgstr "在我的個人檔案中顯示徽章"
 
 #. Developer voice status menu option for displaying participant avatars.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -33390,8 +33345,8 @@ msgstr "在此社群中顯示您的全域個人檔案大頭貼"
 msgid "Show your global profile banner in this community"
 msgstr "在此社群顯示您的全域個人檔案橫幅"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the masking switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Show your Visionary as a regular subscription instead"
 msgstr "改將您的 Visionary 顯示為一般訂閱"
 
@@ -33419,6 +33374,11 @@ msgstr "會顯示在聊天的邀請嵌入內容中。"
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Shown on every post so people can react with one click."
 msgstr "顯示在每則貼文中，方便使用者一鍵回應。"
+
+#. Note under the Visionary ID row in the "Badges" profile settings, shown while its switch is disabled because the Visionary badge is hidden or shown as a regular subscription. Visionary is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Shown only when your Visionary badge is visible and not masked."
+msgstr "僅在您的 Visionary 徽章可見且未顯示為訂閱時顯示。"
 
 #. Description text in the branding section. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx
@@ -43007,6 +42967,11 @@ msgstr "你還沒有復原套件"
 msgid "You don't have access to any channels in this community."
 msgstr "您沒有此社群中任何頻道的存取權限。"
 
+#. Shown in the "Badges" profile settings section when you hold no badges.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "You don't have any badges yet."
+msgstr "您還沒有任何徽章。"
+
 #. Body of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx
 msgid "You don't have permission to add expressions in {targetName}."
@@ -43665,6 +43630,11 @@ msgstr "您的徽章已上線。請在設定中查看您的牆上展示。"
 #: src/features/premium/components/operator_pass/OperatorPassCheckoutSuccess.tsx
 msgid "Your badge is live. Your name shows on the Operators' wall once we check it."
 msgstr "您的徽章已上線。您的名字會在我們審核後顯示在 Operators 牆上。"
+
+#. Shown in the "Badges" profile settings section when the list of badges fails to load, next to a "Try again" button.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Your badges couldn't be loaded."
+msgstr "無法載入您的徽章。"
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
 #: src/features/theme_settings/components/QuickCssEditorHost.tsx

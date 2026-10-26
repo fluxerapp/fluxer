@@ -47,6 +47,7 @@ export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 		embed_splash_height: embedSplashHash ? guild.embedSplashHeight : null,
 		splash_card_alignment: guild.splashCardAlignment,
 		features: mapGuildFeatures(guild.features),
+		badge_ids: Array.from(guild.badgeIds, String),
 	};
 }
 

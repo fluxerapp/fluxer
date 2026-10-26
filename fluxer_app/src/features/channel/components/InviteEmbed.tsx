@@ -339,6 +339,8 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 							</h3>
 							<GuildBadge
 								features={features}
+								badgeIds={invite.guild.badge_ids}
+								linkable
 								variant="large"
 								onLightSurface
 								data-flx="channel.invite-embed.guild-badge"
@@ -608,6 +610,7 @@ export const GuildInviteEmbedPreview = observer(function GuildInviteEmbedPreview
 						</h3>
 						<GuildBadge
 							features={guild.features}
+							badgeIds={guild.badgeIds}
 							variant="large"
 							onLightSurface
 							data-flx="channel.invite-embed.guild-invite-embed-preview.guild-badge"

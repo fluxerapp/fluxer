@@ -1,0 +1,128 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin badges
+description: Admin API routes for making custom badges and giving them to users and guilds.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A custom badge is an image that instance admins make and give out. A user badge shows on the [profile](/http-api/users/#profile-badge-object) of each account it's given to, after the built-in badges. A guild badge shows next to the guild name, after its verified, partnered or discoverable badge, and [instance discovery](/http-api/instance/#guild-badge-object) lists every guild badge for clients.
+
+You can make up to 10 badges of each type, and an account or guild can have up to 10. Give badges with [Update user badges](/admin-api/users/#update-user-badges) and the `badge_ids` field of [Update guild](/admin-api/guilds/#update-guild). Deleting a badge takes it off everyone who had it.
+
+## Admin custom badge object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the badge |
+| type | string | `user` or `guild` |
+| name | string | The name of the badge (1-64 characters) |
+| description | ?string | The tooltip text under the name (1-256 characters), or null |
+| asset_url | string | The badge image as WebP from the media proxy |
+| href | ?string | The `https` URL a click opens, or null |
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "type": "user",
+  "name": "Translator",
+  "description": "Helps translate Fluxer",
+  "asset_url": "https://media.example.com/custom-badges/1489002177550843904/3f2a9c1d.webp",
+  "href": null
+}
+```
+
+## List badges
+
+<RouteHeader method="GET" path="/v1/admin/badges" auditReason />
+
+Returns every custom badge in display order, which is the order they were made in. You need `badge:list`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The badges of both types |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badges were returned |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Create badge
+
+<RouteHeader method="POST" path="/v1/admin/badges" auditReason />
+
+Uploads the image to the media proxy, makes the badge and returns it. You need `badge:create`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | `user` or `guild` |
+| name | string | The name of the badge (1-64 characters) |
+| description? | ?string | The tooltip text (1-256 characters) |
+| href? | ?string | The `https` URL a click opens |
+| image<sup>1</sup> | string | The image as a base64 data URI (up to 16000000 characters) |
+
+<sup>1</sup> Up to the `avatar_max_size` limit, 10 MiB by default, as PNG, JPEG, WebP, GIF, APNG, still AVIF, HEIC, HEIF, JXL or SVG, and at least 128 by 128 pixels. Clients always get a WebP version
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin custom badge](#admin-custom-badge-object) object | The badge was made |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the type already has 10 badges, or `INVALID_FORM_BODY` for a bad field |
+| 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Update badge
+
+<RouteHeader method="PATCH" path="/v1/admin/badges/{badge_id}" auditReason />
+
+Replaces the name, description and link of a badge, and its image when you send one, and returns the badge. The type can't change. You need `badge:update`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the badge (1-64 characters) |
+| description | ?string | The tooltip text under the name (1-256 characters), or null |
+| href | ?string | The `https` URL a click opens, or null |
+| image?<sup>1</sup> | string | A new image as a base64 data URI. Leave it out to keep the current one |
+
+<sup>1</sup> The same formats and limits as [Create badge](#create-badge)
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin custom badge](#admin-custom-badge-object) object | The badge was updated |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` for a bad field |
+| 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when the badge doesn't exist |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Delete badge
+
+<RouteHeader method="DELETE" path="/v1/admin/badges/{badge_id}" auditReason />
+
+Deletes a badge and its image and returns 204. Accounts and guilds that had it stop showing it. You need `badge:delete`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | none | The badge was deleted |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when the badge doesn't exist |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

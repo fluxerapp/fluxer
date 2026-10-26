@@ -12,6 +12,7 @@ import type {
 	InstanceDomainMigration,
 	InstanceFeatures,
 	InstanceGif,
+	InstanceGuildBadge,
 	InstanceNotice,
 	InstancePush,
 	InstanceRegistration,
@@ -54,6 +55,7 @@ export interface ClientRuntimeDiscovery {
 	readonly agePolicy: InstanceAgePolicy | null;
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
+	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
 }
 
 export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocument): ClientRuntimeDiscovery {
@@ -73,6 +75,7 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		agePolicy: document.agePolicy,
 		domainMigration: document.domainMigration,
 		notice: document.notice ?? null,
+		guildBadges: document.guildBadges ?? [],
 	};
 }
 

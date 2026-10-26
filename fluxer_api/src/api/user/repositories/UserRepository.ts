@@ -103,6 +103,10 @@ export class UserRepository {
 		return this.accountRepo.compareAndSetFlags(user, flags);
 	}
 
+	async moveLegacyBadgeHideBits(userId: UserID, options: {mergeIntoHiddenList: boolean}): Promise<User | null> {
+		return this.accountRepo.moveLegacyBadgeHideBits(userId, options);
+	}
+
 	async updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null> {
 		return this.accountRepo.updateFlags(userId, mutate);
 	}

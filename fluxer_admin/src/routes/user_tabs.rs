@@ -54,17 +54,34 @@ pub async fn render(
             } else {
                 None
             };
-            let limit_config = client
-                .get_limit_config()
-                .await
-                .log_error("load limit config for user overview");
-            Some(tabs::overview::overview_tab_with_limit_config(
+            let (limit_config, custom_badges) = tokio::join!(
+                async {
+                    client
+                        .get_limit_config()
+                        .await
+                        .log_error("load limit config for user overview")
+                },
+                async {
+                    if acl::has_permission(admin_acls, acl::BADGE_LIST) {
+                        client
+                            .list_badges()
+                            .await
+                            .log_error("load badges for user overview")
+                    } else {
+                        None
+                    }
+                }
+            );
+            Some(tabs::overview::overview_tab_with_sources(
                 config,
                 &u,
                 admin_acls,
                 csrf_token,
-                change_log.as_ref(),
-                limit_config.as_ref(),
+                &tabs::overview::OverviewSources {
+                    change_log: change_log.as_ref(),
+                    limit_config: limit_config.as_ref(),
+                    custom_badges: custom_badges.as_ref(),
+                },
                 account_identity.mode.is_username(),
             ))
         }

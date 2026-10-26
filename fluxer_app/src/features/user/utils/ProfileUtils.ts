@@ -53,12 +53,19 @@ export function createMockProfile(
 	});
 }
 
-export function profileBadgeImageUrl(asset: string): string {
-	return `${RuntimeConfig.staticCdnEndpoint}/badges/${asset}.webp`;
+export function customBadgeImageUrl(assetUrl: string): string {
+	return `${assetUrl}?size=96`;
+}
+
+export function profileBadgeImageUrl(badge: Pick<ProfileBadgeResponse, 'asset' | 'asset_url'>): string | null {
+	if (badge.asset !== null) return `${RuntimeConfig.staticCdnEndpoint}/badges/${badge.asset}.webp`;
+	if (badge.asset_url) return customBadgeImageUrl(badge.asset_url);
+	return null;
 }
 
 export function warmProfileBadgeImages(badges: ReadonlyArray<ProfileBadgeResponse>): void {
 	for (const badge of badges) {
-		if (badge.asset !== null) ImageCacheUtils.warmImage(profileBadgeImageUrl(badge.asset));
+		const url = profileBadgeImageUrl(badge);
+		if (url) ImageCacheUtils.warmImage(url);
 	}
 }

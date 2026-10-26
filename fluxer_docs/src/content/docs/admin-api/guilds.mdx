@@ -80,6 +80,7 @@ The owner fields are null when the owner account doesn't exist.
 | splash | ?string | The invite splash hash |
 | embed_splash | ?string | The embedded invite splash hash |
 | features | array[string] | The [guild features](/http-api/guilds/#guild-features) (at most 100) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) of the guild (at most 10) |
 | verification_level | integer | The [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) moderators need |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
@@ -268,6 +269,7 @@ Changes a guild, including its owner, and returns the [Admin guild update](#admi
 | `guild:update:name` | Renaming the guild (`name`) |
 | `guild:update:settings` | Clearing images and changing settings (`fields` and every field from `verification_level` to `disabled_operations`) |
 | `guild:update:features` | Adding and removing features (`add_features`, `remove_features`) |
+| `guild:update:badges` | Replacing the [custom badges](/admin-api/badges/) (`badge_ids`) |
 | `guild:update:vanity` | Changing the custom invite code (`vanity_url_code`) |
 | `guild:transfer_ownership` | Transferring ownership (`new_owner_id`) |
 
@@ -282,6 +284,7 @@ To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify gu
 | new_owner_id?<sup>2</sup> | snowflake | The new owner |
 | add_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (at most 100) |
 | remove_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (at most 100) |
+| badge_ids? | array[snowflake] | The guild badges to give, replacing the current ones (at most 10) |
 | fields? | array[string] | Images to clear, each `icon`, `banner`, `splash` or `embed_splash` (at most 10) |
 | verification_level? | integer | The new [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level? | integer | The new [MFA level](/http-api/guilds/#mfa-levels) |
@@ -312,9 +315,9 @@ To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify gu
 | 200 | response body | The changes were applied |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the custom invite code is invalid or `THIS_VANITY_URL_IS_ALREADY_TAKEN` |
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` when you lack an ACL a field needs |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist, or `UNKNOWN_BADGE` when an ID in `badge_ids` isn't a guild badge |
 
-Fluxer saves image clears, settings, features, name, custom invite code and owner one at a time in that order, and each sends a [Guild Update](/gateway/events/#guild-update) event. If one fails, the ones before it stay saved.
+Fluxer saves image clears, settings, features, badges, name, custom invite code and owner one at a time in that order, and each sends a [Guild Update](/gateway/events/#guild-update) event. If one fails, the ones before it stay saved.
 
 The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 

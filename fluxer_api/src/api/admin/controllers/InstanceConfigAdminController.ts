@@ -10,8 +10,8 @@ import {createGuildID, createInviteCode, createUserID} from '@app/api/BrandedTyp
 import {loadSigningKey} from '@app/api/bluesky/BlueskyOAuthService';
 import {Config} from '@app/api/Config';
 import {enqueueEndUnassignedGuildVisits} from '@app/api/guild/visits/GuildVisitLifecycle';
-import {brandingAssetStorageKey, resolveBrandingAsset} from '@app/api/instance/BrandingAssetReferences';
 import {resolveEffectiveSmtpConfig, type StoredEmailSmtpConfig} from '@app/api/instance/EmailDelivery';
+import {assetStorageKey, resolveBrandingAsset} from '@app/api/instance/InstanceAssetReferences';
 import {
 	type InstanceAttachmentDecayEffectiveConfig,
 	type InstanceConfigRepository,
@@ -102,7 +102,7 @@ async function queueReleasedBrandingAssets(references: ReadonlyArray<string>): P
 	const queue = getAssetDeletionQueue();
 	for (const reference of references) {
 		await queue.queueDeletion({
-			s3Key: brandingAssetStorageKey(reference),
+			s3Key: assetStorageKey(reference),
 			cdnUrl: resolveBrandingAsset(reference, Config.endpoints.media),
 			reason: 'branding_asset_released',
 		});

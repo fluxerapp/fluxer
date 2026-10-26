@@ -1872,11 +1872,6 @@ msgstr "{optionName}، خيار مطلوب من نوع {optionType}"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "يتولى {PAYMENT_PROVIDER_NAME} الدفع بأمان."
 
-#. Profile settings section title for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "{premiumProductName} badge privacy"
-msgstr "خصوصية شارة {premiumProductName}"
-
 #. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
 #: src/features/premium/config/PriceAnnouncementCampaign.ts
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -6102,10 +6097,10 @@ msgstr "الرموز الاحتياطية"
 msgid "Backup codes regenerated"
 msgstr "تم تجديد الرموز الاحتياطية"
 
-#. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Badge"
-msgstr "شارة"
+#. Title of the profile settings section that lists the badges you hold and lets you hide each one.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Badges"
+msgstr "الشارات"
 
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
@@ -8492,6 +8487,11 @@ msgstr "اختر المكان الذي سيتم نشر رسائله فيه. يم
 msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
 msgstr "اختر ما إذا كان بإمكان الأشخاص الذين يشاركونك مجتمعًا إرسال رسائل مباشرة إليك دون أن يكونوا أصدقاء أولاً."
 
+#. Description under the "Badges" title in profile settings. Each badge in the list has a switch that shows or hides it for other people.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Choose which badges other people see on your profile."
+msgstr "اختر الشارات التي يراها الآخرون في ملفك الشخصي."
+
 #. Description for the Custom export option.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Choose which conversation kinds, communities, and time window to include in the archive."
@@ -9510,11 +9510,6 @@ msgstr "مقارنة"
 msgid "Complete payment"
 msgstr "إتمام الدفع"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Completely hide your {premiumProductName} badge from other users"
-msgstr "إخفاء شارة {premiumProductName} الخاصة بك بالكامل عن المستخدمين الآخرين"
-
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Completing sign-in…"
@@ -9616,11 +9611,6 @@ msgstr "اضبط الكاميرا وجودة مشاركة الشاشة والم�
 msgid "Configure your microphone, speakers, input mode, processing, and voice sounds."
 msgstr "اضبط الميكروفون ومكبرات الصوت ووضع الإدخال والمعالجة وأصوات الدردشة الصوتية."
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Configure your profile badge"
-msgstr "إعداد شارة ملفك الشخصي"
-
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx
@@ -9713,8 +9703,8 @@ msgstr "أكّد بريدك الإلكتروني قبل تغيير اسمك ال
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
-msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
-msgstr "أكّد بريدك الإلكتروني قبل تغيير اسم المستخدم أو اسم العرض أو الصورة الرمزية أو اللافتة أو النبذة الشخصية أو الضمائر أو المنطقة الزمنية أو خصوصية شارة {premiumProductName}."
+msgid "Confirm your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or badges."
+msgstr "أكّد بريدك الإلكتروني قبل تغيير اسم المستخدم أو اسم العرض أو الصورة الرمزية أو اللافتة أو النبذة الشخصية أو الضمائر أو المنطقة الزمنية أو الشارات."
 
 #. Description text in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -10230,11 +10220,6 @@ msgstr "تحكّم في كيفية عرض صور HDR على الشاشات ال�
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Control how mature or sensitive media is filtered in different contexts."
 msgstr "تحكّم في كيفية فلترة الوسائط الحساسة أو التي تحتوي على محتوى للبالغين في سياقات مختلفة."
-
-#. Profile settings section description for premium badge privacy controls.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Control how your {premiumProductName} badge is displayed to others"
-msgstr "تحكّم في كيفية عرض شارة {premiumProductName} للآخرين"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
@@ -14366,6 +14351,11 @@ msgstr "تعديل أساسيات التطبيق وعناوين URI لإعادة
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx
 msgid "Edit attachment"
 msgstr "تعديل المرفق"
+
+#. Tooltip and screen reader label for the pencil button next to your own profile badges. It opens the profile settings where you choose which badges other people see.
+#: src/features/user/components/popouts/UserProfileBadges.tsx
+msgid "Edit badges"
+msgstr "تعديل الشارات"
 
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
@@ -18522,20 +18512,10 @@ msgstr "إخفاء"
 msgid "Hide {appName}"
 msgstr "إخفاء {appName}"
 
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} badge entirely"
-msgstr "إخفاء شارة {premiumProductName} بالكامل"
-
-#. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide {premiumProductName} purchase date"
 msgstr "إخفاء تاريخ شراء {premiumProductName}"
-
-#. Description text in the premium badge settings. Preserve {premiumProductName}, {dateUtilsGetFormattedShortDatePremiumSince}; they are inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDatePremiumSince})"
-msgstr "إخفاء تاريخ شراء {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Accessible label for the button that collapses the other accounts section in the inbox.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
@@ -18595,8 +18575,8 @@ msgstr "إخفاء الإرشادات"
 msgid "Hide help center button"
 msgstr "إخفاء زر مركز المساعدة"
 
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the number of passes on the badge or on the Operators' wall. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide how many Operator Passes you have"
 msgstr "إخفاء عدد Operator Pass لديك"
 
@@ -18678,18 +18658,8 @@ msgstr "إخفاء النافذة عند التصغير وإعادة الفتح 
 msgid "Hide user avatars"
 msgstr "إخفاء صور المستخدمين الرمزية"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge"
-msgstr "إخفاء شارة Visionary ID"
-
-#. Label in the premium badge settings. Preserve {premiumLifetimeSequenceLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
-msgstr "إخفاء شارة Visionary ID ({premiumLifetimeSequenceLabel})"
-
-#. Switch label in the Operator Pass badge privacy settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Operator Pass badge row in the "Badges" profile settings, with no description under it. When on, other people no longer see the month and year the pass was first bought or received on the badge. Operator Pass is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Hide when you got your {operatorPassName}"
 msgstr "إخفاء موعد حصولك على {operatorPassName}"
 
@@ -21976,8 +21946,8 @@ msgstr "إخفاء تفاصيل الحساب الخاصة مثل البريد ا
 msgid "Mask private details before sharing your screen or stream."
 msgstr "إخفاء التفاصيل الخاصة قبل مشاركة شاشتك أو بثك."
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Mask Visionary as subscription"
 msgstr "إظهار Visionary كاشتراك"
 
@@ -26174,11 +26144,6 @@ msgstr "عروض Operator Pass"
 msgid "Operator Pass purchase"
 msgstr "شراء Operator Pass"
 
-#. Line under the Operator Pass heading in profile settings. {since} is a date such as November 14, 2026. Operator Pass is a product name and stays untranslated.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Operator Pass since {since}"
-msgstr "Operator Pass منذ {since}"
-
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #. Link to the Operator Pass terms. Operator Pass is a product name.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -27638,11 +27603,6 @@ msgstr "يفضل تقليل الحركة"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Premium"
 msgstr "مميز"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
-msgid "Premium badge"
-msgstr "شارة Premium"
 
 #. Developer control label for the premium-expired banner.
 #: src/features/devtools/components/NagbarControls.ts
@@ -29331,15 +29291,10 @@ msgstr "إزالة المهلة"
 msgid "Remove translator"
 msgstr "إزالة المترجم"
 
-#. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "إزالة تاريخ أول شراء لـ {premiumProductName} من شارتك"
-
-#. Button or menu action label in the premium badge settings. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Remove your Visionary ID badge"
-msgstr "إزالة شارة Visionary ID الخاصة بك"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -32892,6 +32847,11 @@ msgstr "إظهار"
 msgid "Show {appName}"
 msgstr "إظهار {appName}"
 
+#. Screen reader label for the switch next to one badge in the "Badges" profile settings. {badgeLabel} is the badge name, such as "Fluxer Staff" or "Operator Pass since November 14, 2026".
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Show {badgeLabel} on your profile"
+msgstr "إظهار {badgeLabel} في ملفك الشخصي"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32939,11 +32899,6 @@ msgstr "عرض النشاط على الحسابات الأخرى"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show attachment expiration indicator"
 msgstr "إظهار مؤشر انتهاء صلاحية المرفق"
-
-#. Switch in the Operator Pass profile settings that shows the Operator badge on the profile.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
-msgid "Show badge on my profile"
-msgstr "إظهار الشارة على ملفي الشخصي"
 
 #. Developer voice status menu option for displaying participant avatars.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx
@@ -33390,8 +33345,8 @@ msgstr "إظهار الصورة الرمزية لملفك الشخصي العا�
 msgid "Show your global profile banner in this community"
 msgstr "إظهار لافتة ملفك الشخصي العام في هذا المجتمع"
 
-#. Label in the premium badge settings. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx
+#. Description of the masking switch under the Visionary badge row in the "Badges" profile settings. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Show your Visionary as a regular subscription instead"
 msgstr "إظهار اشتراكك في Visionary كاشتراك عادي بدلاً من ذلك"
 
@@ -33419,6 +33374,11 @@ msgstr "يظهر في بطاقات الدعوة المضمّنة في الدرد
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Shown on every post so people can react with one click."
 msgstr "يُعرض على كل منشور ليتمكن الأشخاص من التفاعل بنقرة واحدة."
+
+#. Note under the Visionary ID row in the "Badges" profile settings, shown while its switch is disabled because the Visionary badge is hidden or shown as a regular subscription. Visionary is a product name and stays untranslated.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Shown only when your Visionary badge is visible and not masked."
+msgstr "يظهر فقط عندما تكون شارة Visionary ظاهرة وغير معروضة كاشتراك."
 
 #. Description text in the branding section. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx
@@ -43007,6 +42967,11 @@ msgstr "ليس لديك مجموعة استرداد بعد"
 msgid "You don't have access to any channels in this community."
 msgstr "ليس لديك صلاحية الوصول إلى أي قنوات في هذا المجتمع."
 
+#. Shown in the "Badges" profile settings section when you hold no badges.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "You don't have any badges yet."
+msgstr "ليست لديك أي شارات بعد."
+
 #. Body of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx
 msgid "You don't have permission to add expressions in {targetName}."
@@ -43665,6 +43630,11 @@ msgstr "شارتك فعّالة. تحقّق من ظهورك على الجدار 
 #: src/features/premium/components/operator_pass/OperatorPassCheckoutSuccess.tsx
 msgid "Your badge is live. Your name shows on the Operators' wall once we check it."
 msgstr "شارتك فعّالة. يظهر اسمك على جدار Operators بعد أن نراجعه."
+
+#. Shown in the "Badges" profile settings section when the list of badges fails to load, next to a "Try again" button.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Your badges couldn't be loaded."
+msgstr "تعذّر تحميل شاراتك."
 
 #. Toast on the web app when the browser blocks the quick CSS editor window from opening.
 #: src/features/theme_settings/components/QuickCssEditorHost.tsx

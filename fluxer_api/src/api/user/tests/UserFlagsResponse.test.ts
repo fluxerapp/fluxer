@@ -4,7 +4,7 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {fetchUser, fetchUserMe, updateUserProfile} from '@app/api/user/tests/UserTestUtils';
+import {fetchUserMe, updateUserProfile} from '@app/api/user/tests/UserTestUtils';
 import {PublicUserFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -26,29 +26,6 @@ describe('User flags in responses', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
-	});
-	test('GET /users/@me hides staff flag when STAFF_HIDDEN is set', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.STAFF_HIDDEN);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
-		expect(json.is_staff).toBe(true);
-	});
-	test('PATCH /users/@me preserves staff flag with STAFF_HIDDEN after profile update', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.STAFF_HIDDEN);
-		const {json} = await updateUserProfile(harness, account.token, {
-			bio: 'updated bio',
-		});
-		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
-		expect(json.is_staff).toBe(true);
-	});
-	test('GET /users/:id hides staff flag when STAFF_HIDDEN is set', async () => {
-		const account = await createTestAccount(harness);
-		const viewer = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.STAFF_HIDDEN);
-		const {json} = await fetchUser(harness, account.userId, viewer.token);
-		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
 	});
 	test('PATCH /users/@me does not leak internal flags', async () => {
 		const account = await createTestAccount(harness);

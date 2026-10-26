@@ -7,6 +7,7 @@ pub mod applications;
 pub mod archives;
 pub mod assets;
 pub mod audit;
+pub mod badges;
 pub mod bans;
 pub mod bulk;
 pub mod client;

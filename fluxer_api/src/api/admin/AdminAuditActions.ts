@@ -35,6 +35,7 @@ export const AdminAuditReadActions = {
 	LIST_APP_SESSIONS: 'list_app_sessions',
 	LIST_ARCHIVES: 'list_archives',
 	LIST_AUDIT_LOGS: 'list_audit_logs',
+	LIST_BADGES: 'list_badges',
 	LIST_BLOCKLIST_ENTRIES: 'list_blocklist_entries',
 	LIST_BLOCKLISTS: 'list_blocklists',
 	LIST_CHANNEL_MESSAGES: 'list_channel_messages',

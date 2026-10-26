@@ -76,6 +76,7 @@ interface DiscoveryGuildResult {
 	member_count: number;
 	online_count: number;
 	features: Array<string>;
+	badge_ids: Array<string>;
 	verification_level: number;
 }
 
@@ -440,6 +441,7 @@ export class GuildDiscoveryService {
 			member_count: hit.memberCount,
 			online_count: 0,
 			features: hit.features,
+			badge_ids: hit.badgeIds ?? [],
 			verification_level: getEffectiveGuildVerificationLevel(hit.verificationLevel, hit.isDiscoverable),
 		}));
 		const total = results.total;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestCustomBadge} from '@app/api/admin/tests/AdminTestUtils';
 import type {AdminAuditCoverageCase} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuild} from '@app/api/message/tests/MessageTestUtils';
@@ -111,6 +112,24 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'guild',
 					targetId: guild.id,
 					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/guilds/:guild_id',
+		name: 'badge_ids',
+		async prepare({harness, admin}) {
+			const badge = await createTestCustomBadge(harness, admin.token, 'guild');
+			const guild = await createGuild(harness, admin.token, 'Audit Badge Guild');
+			return {
+				request: {path: `/admin/guilds/${guild.id}`, body: {badge_ids: [badge.id]}},
+				expected: {
+					action: 'update_guild_badges',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {badge_ids: badge.id},
 				},
 			};
 		},

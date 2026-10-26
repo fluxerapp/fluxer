@@ -26,6 +26,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
+import {openProfileBadgeSettings} from '@app/features/user/commands/UserSettingsModalCommands';
 import {LimitedProfileNotice} from '@app/features/user/components/popouts/LimitedProfileNotice';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
 import {UserProfileDataWarning} from '@app/features/user/components/popouts/UserProfileDataWarning';
@@ -52,7 +53,7 @@ import {useUserProfileSurfaceState} from '@app/features/user/hooks/useUserProfil
 import type {User} from '@app/features/user/models/User';
 import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {resolveProfileGuildMembership} from '@app/features/user/utils/ProfileGuildMembership';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -272,9 +273,15 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 				data-flx="user.user-profile-popout.profile-card-banner"
 			/>
 		);
+		const visibleProfileBadges = profile?.profileBadges ?? [];
+		const handleEditBadges = () => {
+			openProfileBadgeSettings();
+			requestClose();
+		};
 		const profileBadges = !isWebhook && (
 			<UserProfileBadges
-				badges={profile?.profileBadges ?? []}
+				badges={visibleProfileBadges}
+				onEditBadges={canEditOwnProfileBadges(user.id, profile) ? handleEditBadges : undefined}
 				data-flx="user.user-profile-popout.user-profile-badges"
 			/>
 		);

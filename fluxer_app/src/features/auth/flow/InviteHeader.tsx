@@ -31,6 +31,7 @@ interface PreviewGuildInviteHeaderProps {
 	guildName: string;
 	guildIcon: string | null;
 	features: ReadonlyArray<string>;
+	badgeIds: ReadonlyArray<string>;
 	presenceCount: number;
 	memberCount: number;
 	previewIconUrl?: string | null;
@@ -75,7 +76,12 @@ export const GuildInviteHeader = observer(function GuildInviteHeader({invite}: G
 					<h2 className={styles.entityTitle} data-flx="auth.flow.invite-header.guild-invite-header.entity-title">
 						{guild.name}
 					</h2>
-					<GuildBadge features={features} data-flx="auth.flow.invite-header.guild-invite-header.guild-badge" />
+					<GuildBadge
+						features={features}
+						badgeIds={guild.badge_ids}
+						linkable
+						data-flx="auth.flow.invite-header.guild-invite-header.guild-badge"
+					/>
 				</div>
 				<div className={styles.entityStats} data-flx="auth.flow.invite-header.guild-invite-header.entity-stats">
 					<div className={styles.entityStat} data-flx="auth.flow.invite-header.guild-invite-header.entity-stat">
@@ -163,6 +169,7 @@ export const PreviewGuildInviteHeader = observer(function PreviewGuildInviteHead
 	guildName,
 	guildIcon,
 	features,
+	badgeIds,
 	presenceCount,
 	memberCount,
 	previewIconUrl,
@@ -222,7 +229,11 @@ export const PreviewGuildInviteHeader = observer(function PreviewGuildInviteHead
 					>
 						{displayName}
 					</h2>
-					<GuildBadge features={features} data-flx="auth.flow.invite-header.preview-guild-invite-header.guild-badge" />
+					<GuildBadge
+						features={features}
+						badgeIds={badgeIds}
+						data-flx="auth.flow.invite-header.preview-guild-invite-header.guild-badge"
+					/>
 				</div>
 				<div className={styles.entityStats} data-flx="auth.flow.invite-header.preview-guild-invite-header.entity-stats">
 					<div className={styles.entityStat} data-flx="auth.flow.invite-header.preview-guild-invite-header.entity-stat">

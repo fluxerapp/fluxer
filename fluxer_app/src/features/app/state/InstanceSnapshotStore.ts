@@ -120,6 +120,7 @@ export function runtimeSnapshotFromDiscovery(document: InstanceDiscoveryDocument
 		agePolicy: discovery.agePolicy,
 		domainMigration: discovery.domainMigration,
 		notice: discovery.notice ?? null,
+		guildBadges: discovery.guildBadges,
 	});
 }
 

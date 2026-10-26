@@ -58,6 +58,7 @@ const FIELDS_CLEARED_ON_DELETION = [
 	'date_of_birth',
 	'locale',
 	'premium_flags',
+	'hidden_profile_badges',
 	'premium_type',
 	'premium_since',
 	'premium_until',

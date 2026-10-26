@@ -8,7 +8,12 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
+import {
+	dropUndefinedCustomBadgeKeys,
+	resolveHiddenProfileBadges,
+} from '@app/api/user/profile_badges/HiddenProfileBadges';
 import {applyProfileBadgeSettings} from '@app/api/user/profile_badges/PremiumBadgeMasking';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
@@ -90,6 +95,7 @@ export class UserAccountProfileService {
 		}
 		if (!user.isBot) {
 			this.processPremiumBadgeFlags({user, data, updates});
+			await this.processHiddenProfileBadges({user, data, updates});
 		}
 		if (data.avatar !== undefined) {
 			preparedAvatarUpload = await this.processAvatarUpdate({user, avatar: data.avatar, updates});
@@ -375,6 +381,21 @@ export class UserAccountProfileService {
 		if (flags !== current) {
 			updates.premium_flags = flags;
 		}
+	}
+
+	private async processHiddenProfileBadges(params: {
+		user: User;
+		data: UserUpdateRequest;
+		updates: UserFieldUpdates;
+	}): Promise<void> {
+		const {user, data, updates} = params;
+		const requested = resolveHiddenProfileBadges(user.hiddenProfileBadges, data);
+		if (!requested) return;
+		const next = dropUndefinedCustomBadgeKeys(requested, await getInstanceConfigRepository().getCustomBadges());
+		if (next.size === user.hiddenProfileBadges.size && [...next].every((key) => user.hiddenProfileBadges.has(key))) {
+			return;
+		}
+		updates.hidden_profile_badges = next.size > 0 ? next : null;
 	}
 
 	private processPremiumOnboardingDismissal(params: {data: UserUpdateRequest; updates: UserFieldUpdates}): void {

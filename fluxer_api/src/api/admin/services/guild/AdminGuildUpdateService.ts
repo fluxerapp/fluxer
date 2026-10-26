@@ -2,6 +2,7 @@
 
 import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {assertCustomBadgeIdsOfType} from '@app/api/admin/services/AdminBadgeService';
 import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
 import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -14,6 +15,7 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import {onGuildVisitSettingsChanged} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -32,6 +34,7 @@ interface AdminGuildUpdateServiceDeps {
 	auditService: AdminAuditService;
 	updatePropagator: AdminGuildUpdatePropagator;
 	guildService: Pick<GuildService, 'withUpdateLock'>;
+	instanceConfigRepository: Pick<InstanceConfigRepository, 'getCustomBadges'>;
 }
 
 export class AdminGuildUpdateService {
@@ -108,6 +111,38 @@ export class AdminGuildUpdateService {
 		return {
 			guild: mapGuildToAdminResponse(updatedGuild),
 		};
+	}
+
+	async updateGuildBadges({
+		guildId,
+		badgeIds,
+		adminUserId,
+		auditLogReason,
+	}: {
+		guildId: GuildID;
+		badgeIds: ReadonlyArray<bigint>;
+		adminUserId: UserID;
+		auditLogReason: string | null;
+	}) {
+		const {guildRepository, auditService, updatePropagator, guildService, instanceConfigRepository} = this.deps;
+		await assertCustomBadgeIdsOfType(instanceConfigRepository, 'guild', badgeIds);
+		const assigned = new Set(badgeIds);
+		const updatedGuild = await guildService.withUpdateLock(guildId, async () => {
+			const guild = await guildRepository.findUnique(guildId);
+			if (!guild) {
+				throw new UnknownGuildError();
+			}
+			return guildRepository.upsertPartial(guildId, {badge_ids: assigned.size > 0 ? assigned : null}, guild.toRow());
+		});
+		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'guild',
+			targetId: BigInt(guildId),
+			action: 'update_guild_badges',
+			auditLogReason,
+			metadata: new Map([['badge_ids', Array.from(assigned).join(',')]]),
+		});
 	}
 
 	async clearGuildFields(data: ClearGuildFieldsRequest, adminUserId: UserID, auditLogReason: string | null) {

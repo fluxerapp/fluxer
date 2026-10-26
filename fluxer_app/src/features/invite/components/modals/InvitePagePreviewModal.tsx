@@ -145,6 +145,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 											guildName={guild.name}
 											guildIcon={guild.icon}
 											features={guildFeatures}
+											badgeIds={guild.badgeIds}
 											presenceCount={presenceCount}
 											memberCount={memberCount}
 											previewIconUrl={previewIconUrl}

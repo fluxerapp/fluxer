@@ -36,7 +36,7 @@ const PARTIAL_USER_COLUMNS: &str = "\
     avatar_hash, bot, system, flags, \
     banner_hash, banner_color, accent_color, avatar_color, \
     mention_flags, temp_banned_until, pending_deletion_at, deletion_reason_code, \
-    content_hidden_since";
+    content_hidden_since, hidden_profile_badges";
 const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
 const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
@@ -101,6 +101,8 @@ struct PartialUserDbRow {
     deletion_reason_code: Option<i32>,
     #[serde(default)]
     content_hidden_since: Option<i64>,
+    #[serde(default)]
+    hidden_profile_badges: Option<Vec<String>>,
 }
 
 #[cfg(feature = "scylla")]
@@ -123,6 +125,7 @@ struct PartialUserScyllaRow {
     pending_deletion_at: OptionalTimestamp,
     deletion_reason_code: Option<i32>,
     content_hidden_since: OptionalTimestamp,
+    hidden_profile_badges: Option<Vec<String>>,
 }
 
 #[cfg(feature = "scylla")]
@@ -146,6 +149,7 @@ impl From<PartialUserScyllaRow> for PartialUserDbRow {
             pending_deletion_at: optional_timestamp_millis(row.pending_deletion_at),
             deletion_reason_code: row.deletion_reason_code,
             content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
+            hidden_profile_badges: row.hidden_profile_badges,
         }
     }
 }
@@ -468,6 +472,7 @@ fn system_user_partial(instance_name: &str) -> UserPartial {
         avatar_color: None,
         mention_flags: None,
         content_hidden_since: None,
+        hidden_profile_badges: Vec::new(),
     }
 }
 
@@ -559,6 +564,7 @@ impl From<PartialUserDbRow> for UserPartial {
             avatar_color: row.avatar_color,
             mention_flags: row.mention_flags,
             content_hidden_since: row.content_hidden_since,
+            hidden_profile_badges: row.hidden_profile_badges.unwrap_or_default(),
         }
         .visible_to_others(&standing, unix_millis())
     }
@@ -587,6 +593,7 @@ mod tests {
             pending_deletion_at: None,
             deletion_reason_code: None,
             content_hidden_since: None,
+            hidden_profile_badges: None,
         }
     }
 

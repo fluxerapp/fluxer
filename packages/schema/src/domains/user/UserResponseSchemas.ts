@@ -125,10 +125,17 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe(
 			'Whether the user selected a premium-only discriminator that will be rerolled when non-lifetime premium access ends',
 		),
-	premium_badge_hidden: z.boolean().describe('Whether the premium badge is hidden on the profile'),
+	hidden_profile_badges: z
+		.array(z.string())
+		.describe('Keys of the badges hidden from other people, as in the key field of a profile badge'),
+	premium_badge_hidden: z
+		.boolean()
+		.describe('Deprecated, use hidden_profile_badges. Whether the premium badge held is in that list'),
 	premium_badge_masked: z.boolean().describe('Whether the premium badge shows a masked appearance'),
 	premium_badge_timestamp_hidden: z.boolean().describe('Whether the premium start timestamp is hidden'),
-	premium_badge_sequence_hidden: z.boolean().describe('Whether the lifetime sequence number is hidden'),
+	premium_badge_sequence_hidden: z
+		.boolean()
+		.describe('Deprecated, use hidden_profile_badges. Whether visionary_number is in that list'),
 	premium_purchase_disabled: z.boolean().describe('Whether premium purchases are disabled for this account'),
 	premium_enabled_override: z.boolean().describe('Whether premium features are enabled via override'),
 	premium_perks_disabled: z.boolean().describe('Whether premium perks are temporarily disabled for this account'),
@@ -136,7 +143,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.boolean()
 		.optional()
 		.describe(
-			'Whether the Operator Pass badge is hidden from other people. Only present on the current user response. Older servers omit it',
+			'Deprecated, use hidden_profile_badges. Whether operator_pass is in that list. Only present on the current user response. Older servers omit it',
 		),
 	operator_pass_badge_timestamp_hidden: z
 		.boolean()
@@ -544,6 +551,7 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly premium_lifetime_sequence: number | null;
 	readonly premium_grace_ends_at: string | null;
 	readonly premium_discriminator: boolean;
+	readonly hidden_profile_badges?: ReadonlyArray<string>;
 	readonly premium_badge_hidden: boolean;
 	readonly premium_badge_masked: boolean;
 	readonly premium_badge_timestamp_hidden: boolean;
@@ -673,6 +681,11 @@ export const UserProfileFullResponse = z.object({
 		.describe(
 			'ISO8601 timestamp of when the user got the Operator Pass, or null when absent or hidden. Older servers omit it',
 		),
+	hidden_profile_badge_count: z
+		.number()
+		.int()
+		.optional()
+		.describe('How many of the badges you hold are hidden from other people. Only present on your own profile'),
 	mutual_friends: z.array(UserPartialResponse).optional().describe('Array of mutual friends'),
 	mutual_guilds: z.array(MutualGuildResponse).optional().describe('Array of mutual guilds'),
 	connected_accounts: z.array(ConnectionResponse).optional().describe('Array of verified external connections'),

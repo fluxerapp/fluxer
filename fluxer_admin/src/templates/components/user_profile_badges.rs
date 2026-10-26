@@ -61,6 +61,9 @@ pub fn user_profile_badges(
                         alt=(badge.caption.as_deref().unwrap_or(&title)) title=(title)
                         class={(size.image_class(badge.aspect_ratio)) (opacity)}
                         style=[badge.aspect_ratio.map(|ratio| format!("aspect-ratio: {ratio}"))];
+                } @else if let Some(asset_url) = &badge.asset_url {
+                    img src={(asset_url) "?size=96"} alt=(title) title=(title)
+                        class={(size.image_class(None)) " object-contain" (opacity)};
                 } @else if let Some(caption) = &badge.caption {
                     span title=(title)
                         class={(size.caption_class()) " font-bold tabular-nums text-indigo-600" (opacity)} {

@@ -3,9 +3,9 @@
 use crate::pseudonym::pseudonym;
 use fluxer_common::user_flags::AccountStanding;
 #[cfg(test)]
-use fluxer_common::user_flags::USER_FLAG_STAFF;
+use fluxer_common::user_flags::USER_FLAG_PARTNER;
 #[cfg(test)]
-use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
+use fluxer_common::user_flags::USER_FLAG_STAFF;
 pub use fluxer_common::user_partial::ApiUserPartial;
 use fluxer_common::user_partial::{
     FLUXER_SYSTEM_USER_ID, UserPartialFields, default_instance_name,
@@ -56,6 +56,8 @@ pub struct UserPartial {
     pub mention_flags: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content_hidden_since: Option<i64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hidden_profile_badges: Vec<String>,
 }
 
 impl UserPartial {
@@ -88,6 +90,7 @@ impl UserPartial {
             bot: self.bot,
             system: self.system,
             flags: self.flags,
+            hidden_profile_badges: self.hidden_profile_badges.clone(),
             mention_flags: self.mention_flags,
         })
     }
@@ -131,6 +134,7 @@ mod tests {
             avatar_color: Some(0x336699),
             mention_flags: Some(0),
             content_hidden_since: None,
+            hidden_profile_badges: Vec::new(),
         }
     }
 
@@ -200,11 +204,9 @@ mod tests {
     }
 
     #[test]
-    fn api_partial_hides_staff_flag_when_staff_hidden_is_set() {
-        let partial = partial_with_flags(
-            123,
-            USER_FLAG_STAFF | USER_FLAG_STAFF_HIDDEN | USER_FLAG_PARTNER,
-        );
+    fn api_partial_drops_the_flags_of_hidden_badges() {
+        let mut partial = partial_with_flags(123, USER_FLAG_STAFF | USER_FLAG_PARTNER);
+        partial.hidden_profile_badges = vec!["staff".to_owned()];
 
         let api_partial = partial.to_api_partial();
 

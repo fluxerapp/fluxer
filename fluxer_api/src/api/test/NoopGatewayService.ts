@@ -67,6 +67,7 @@ function createDummyGuildResponse(params: {guildId: GuildID; userId: UserID}): G
 		afk_channel_id: null,
 		afk_timeout: 60,
 		features: [],
+		badge_ids: [],
 		verification_level: 0,
 		mfa_level: 0,
 		nsfw_level: 0,

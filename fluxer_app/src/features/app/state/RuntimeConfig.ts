@@ -55,6 +55,7 @@ import type {
 	InstanceAppPublic,
 	InstanceCommunity,
 	InstanceFeatures,
+	InstanceGuildBadge,
 	InstanceNotice,
 	InstanceServices,
 	InstanceSso as InstanceSsoConfig,
@@ -682,6 +683,7 @@ class RuntimeConfig {
 			features: resolution.snapshot.features,
 			appPublic: resolution.snapshot.appPublic,
 			notice: resolution.snapshot.notice,
+			guildBadges: resolution.snapshot.guildBadges,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
 		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
@@ -903,6 +905,10 @@ class RuntimeConfig {
 
 	get instanceNotice(): InstanceNotice | null {
 		return this.activeRuntime?.snapshot.notice ?? null;
+	}
+
+	get guildBadges(): ReadonlyArray<InstanceGuildBadge> {
+		return this.activeRuntime?.snapshot.guildBadges ?? [];
 	}
 
 	get gifEnabled(): boolean {

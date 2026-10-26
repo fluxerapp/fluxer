@@ -8,7 +8,8 @@ export type QueuedAssetType =
 	| 'splash'
 	| 'embed_splash'
 	| 'branding'
-	| 'branding_backdrop';
+	| 'branding_backdrop'
+	| 'custom_badge';
 
 export interface QueuedAssetReference {
 	entityType: QueuedAssetEntityType;

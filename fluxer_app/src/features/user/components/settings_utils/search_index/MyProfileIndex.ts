@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	BACKGROUND_DESCRIPTOR,
 	BIO_DESCRIPTOR,
 	COLOR_DESCRIPTOR,
-	PREMIUM_PRODUCT_NAME_KEYWORD,
 	PRONOUNS_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
-import Users from '@app/features/user/state/Users';
 import {
 	ABOUT_ME_DESCRIPTOR,
 	ACCENT_COLOR_DESCRIPTOR,
@@ -168,25 +165,6 @@ const SET_YOUR_PRONOUNS_DESCRIPTOR = msg({
 	message: 'Set your pronouns',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const BADGE_DESCRIPTOR = msg({
-	message: 'Badge',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const PREMIUM_BADGE_DESCRIPTOR = msg({
-	message: 'Premium badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CONFIGURE_YOUR_PROFILE_BADGE_DESCRIPTOR = msg({
-	message: 'Configure your profile badge',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
-
-function shouldShowPremiumBadgeSettings(): boolean {
-	return (
-		shouldShowClaimedAccountSettings() && shouldShowPremiumFeatures() && (Users.getCurrentUser()?.isPremium() ?? false)
-	);
-}
-
 export const myProfileIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'profile-avatar',
@@ -276,13 +254,5 @@ export const myProfileIndex: Array<SearchableSettingDescriptor> = [
 		keywords: [PRONOUNS_DESCRIPTOR, IDENTITY_DESCRIPTOR, HE_DESCRIPTOR, SHE_DESCRIPTOR, THEY_DESCRIPTOR],
 		description: SET_YOUR_PRONOUNS_DESCRIPTOR,
 		isVisible: shouldShowClaimedAccountSettings,
-	},
-	{
-		id: 'profile-badge',
-		tabType: 'my_profile',
-		label: BADGE_DESCRIPTOR,
-		keywords: [BADGE_DESCRIPTOR, PREMIUM_BADGE_DESCRIPTOR, PREMIUM_PRODUCT_NAME_KEYWORD],
-		description: CONFIGURE_YOUR_PROFILE_BADGE_DESCRIPTOR,
-		isVisible: shouldShowPremiumBadgeSettings,
 	},
 ];

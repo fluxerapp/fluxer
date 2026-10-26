@@ -6,6 +6,7 @@ import {
 	AccountIdentityModes,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {MAX_CUSTOM_BADGES_PER_TYPE} from '@fluxer/constants/src/BadgeConstants';
 import {
 	CaptchaProviderSchema,
 	EffectiveVerificationBasisSchema,
@@ -16,7 +17,11 @@ import {
 } from '@fluxer/schema/src/domains/account/AccountTierSchemas';
 import {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {createNamedStringLiteralUnion, createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	createNamedStringLiteralUnion,
+	createStringType,
+	SnowflakeStringType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const LimitFilterResponse = z.object({
@@ -379,6 +384,16 @@ export const InstanceNoticeSchema = z
 	.describe('Notice from the instance administrator shown to everyone, such as planned maintenance');
 export type InstanceNotice = z.infer<typeof InstanceNoticeSchema>;
 
+export const InstanceGuildBadgeSchema = z.object({
+	id: SnowflakeStringType.describe('The ID of the badge, as listed in badge_ids of a community'),
+	name: z.string().describe('The name of the badge'),
+	description: z.string().nullable().describe('Text shown under the name when hovering over the badge, or null'),
+	asset_url: z.string().describe('URL of the badge image, served as WebP by the media proxy'),
+	href: z.string().nullable().describe('URL opened when the badge is clicked, or null'),
+});
+
+export type InstanceGuildBadge = z.infer<typeof InstanceGuildBadgeSchema>;
+
 export const WellKnownFluxerResponse = z.object({
 	codename: z.string().optional().describe('Protocol generation spoken by this instance'),
 	api_code_version: z.number().int().describe('Version of the API server code'),
@@ -400,6 +415,11 @@ export const WellKnownFluxerResponse = z.object({
 	domain_migration: DomainMigrationDiscoveryResponse.optional().describe(
 		'Web domain migration switch and anonymous rollout, only acted on by official instance clients',
 	),
+	guild_badges: z
+		.array(InstanceGuildBadgeSchema)
+		.max(MAX_CUSTOM_BADGES_PER_TYPE)
+		.optional()
+		.describe('Custom badges that communities on this instance can show next to their name, in display order'),
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;

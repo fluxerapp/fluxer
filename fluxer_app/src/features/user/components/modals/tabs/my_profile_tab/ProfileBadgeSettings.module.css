@@ -1,0 +1,86 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+}
+
+.artSlot {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 1.5rem;
+}
+
+.art {
+	width: 1.5rem;
+	height: 1.5rem;
+	object-fit: contain;
+}
+
+.caption {
+	color: var(--brand-primary-light);
+	font-weight: 700;
+	font-size: 1rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+:global(.theme-light) .caption {
+	color: var(--brand-primary-foreground);
+}
+
+.label {
+	flex: 1;
+	min-width: 0;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+	overflow-wrap: anywhere;
+}
+
+.variants {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-inline-start: 3.25rem;
+}
+
+.note {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.item > .note {
+	padding-inline-start: 3.25rem;
+}
+
+.status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}

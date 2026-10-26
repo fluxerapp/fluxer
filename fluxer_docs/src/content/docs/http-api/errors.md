@@ -235,6 +235,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `IP_BAN_LINKED_TO_DECISION` | This network block belongs to an enforcement decision |
 | `MAX_ACTIVE_THREADS` | This community has reached its active thread limit of {count} |
 | `MAX_APPLICATIONS` | You've reached the maximum of {limit} applications |
+| `MAX_BADGES` | You've reached the maximum of {count} badges for this type |
 | `MAX_BOOKMARKS` | You've reached the maximum of {count} bookmarks |
 | `MAX_CATEGORY_CHANNELS` | You've reached the maximum of {count} category channels |
 | `MAX_EMOJIS` | You've reached the maximum of {count} emojis |
@@ -353,6 +354,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS` | Claim your account to submit reports |
 | `UNKNOWN_ACCOUNT_HANDOFF` | This sign-up link has expired or was already used |
 | `UNKNOWN_APPLICATION` | Unknown application |
+| `UNKNOWN_BADGE` | Badge wasn't found |
 | `UNKNOWN_CHANNEL` | Channel wasn't found |
 | `UNKNOWN_EMOJI` | Unknown emoji |
 | `UNKNOWN_ENFORCEMENT_DECISION` | Unknown enforcement decision |

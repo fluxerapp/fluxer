@@ -8,6 +8,8 @@ import {
 	isDiscoveryNotModified,
 	nextDiscoveryValidators,
 } from '@app/api/instance/DiscoveryValidators';
+import {customBadgeImageUrl} from '@app/api/instance/InstanceAssetReferences';
+import type {CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
 import {assertSetupToken} from '@app/api/instance/SetupToken';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -40,6 +42,7 @@ import {toDomainMigrationDiscovery} from '@fluxer/schema/src/domains/admin/Domai
 import {
 	InstanceAccountIdentityResponse,
 	InstanceAccountIdentityUpdateRequest,
+	type InstanceGuildBadge,
 	InstanceSetupTokenCheckRequest,
 	WellKnownFluxerResponse,
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
@@ -135,6 +138,18 @@ function buildDiscoveryStaticInput(
 	};
 }
 
+function mapGuildBadgesForDiscovery(badges: ReadonlyArray<CustomBadgeDefinition>): Array<InstanceGuildBadge> {
+	return badges
+		.filter((badge) => badge.type === 'guild')
+		.map((badge) => ({
+			id: badge.id,
+			name: badge.name,
+			description: badge.description,
+			asset_url: customBadgeImageUrl(badge.asset, Config.endpoints.media),
+			href: badge.href,
+		}));
+}
+
 export function InstanceController(app: Hono<HonoEnv>) {
 	app.get(
 		'/.well-known/fluxer',
@@ -168,6 +183,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				accounts,
 				instantAccountAvailability,
 				notice,
+				customBadges,
 			] = await Promise.all([
 				instanceConfigRepository.getRegistrationPublicConfig(),
 				instanceConfigRepository.getInstanceCommunityPublicConfig(),
@@ -181,6 +197,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getAccountsConfig(),
 				instanceConfigRepository.getInstantAccountAvailability(),
 				instanceConfigRepository.getActiveInstanceNotice(),
+				instanceConfigRepository.getCustomBadges(),
 			]);
 			const lockReason =
 				Config.instance.selfHosted && !appPublicConfig.setup.configured
@@ -222,7 +239,12 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					limits,
 				},
 			);
-			const response = {...discovery, notice, domain_migration: toDomainMigrationDiscovery(domainMigration)};
+			const response = {
+				...discovery,
+				notice,
+				domain_migration: toDomainMigrationDiscovery(domainMigration),
+				guild_badges: mapGuildBadgesForDiscovery(customBadges),
+			};
 			discoveryValidators = nextDiscoveryValidators(response, discoveryValidators);
 			ctx.header('ETag', discoveryValidators.etag);
 			ctx.header('Last-Modified', discoveryValidators.lastModified.toUTCString());

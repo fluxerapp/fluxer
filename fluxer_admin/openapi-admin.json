@@ -1146,6 +1146,237 @@
 				]
 			}
 		},
+		"/admin/badges": {
+			"get": {
+				"operationId": "list_admin_badges",
+				"summary": "List custom badges",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminCustomBadgeListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the user and guild badges defined on this instance, in display order. Requires BADGE_LIST permission.",
+				"security": [{"adminApiKey": []}]
+			},
+			"post": {
+				"operationId": "create_admin_badge",
+				"summary": "Create custom badge",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminCustomBadgeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a user or guild badge and uploads its image to the media proxy. Each type has at most 10 badges. Creates audit log entry. Requires BADGE_CREATE permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateCustomBadgeRequest"}}}
+				}
+			}
+		},
+		"/admin/badges/{badge_id}": {
+			"patch": {
+				"operationId": "update_admin_badge",
+				"summary": "Update custom badge",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminCustomBadgeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Replaces the name, description and link of a badge, and its image when one is sent. The type cannot change. Creates audit log entry. Requires BADGE_UPDATE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "badge_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the badge", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the badge"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateCustomBadgeRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "delete_admin_badge",
+				"summary": "Delete custom badge",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes a badge and its image. Users and guilds it was assigned to stop showing it. Creates audit log entry. Requires BADGE_DELETE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "badge_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the badge", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the badge"
+					}
+				]
+			}
+		},
 		"/admin/blocklists": {
 			"get": {
 				"operationId": "list_admin_blocklist_types",
@@ -3412,7 +3643,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.",
+				"description": "Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, badge_ids requires GUILD_UPDATE_BADGES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -8071,6 +8302,72 @@
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BanUserAvatarRequest"}}}
+				}
+			}
+		},
+		"/admin/users/{user_id}/badges": {
+			"patch": {
+				"operationId": "update_admin_user_badges",
+				"summary": "Update user custom badges",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Replaces the custom badges assigned to a user. Every ID must be a user badge, and a user can have at most 10. Creates audit log entry. Requires USER_UPDATE_BADGES permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateUserCustomBadgesRequest"}}}
 				}
 			}
 		},
@@ -13890,6 +14187,11 @@
 				},
 				"required": ["duration_hours", "decision"]
 			},
+			"UpdateUserCustomBadgesRequest": {
+				"type": "object",
+				"properties": {"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdsType"}]}},
+				"required": ["badge_ids"]
+			},
 			"BanUserAvatarRequest": {
 				"type": "object",
 				"properties": {"reason": {"type": "string"}, "notes": {"type": "string"}}
@@ -13958,7 +14260,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -14029,6 +14331,10 @@
 					"admin:authenticate",
 					"jobs:view",
 					"jobs:cancel",
+					"badge:create",
+					"badge:delete",
+					"badge:list",
+					"badge:update",
 					"ban:email:add",
 					"ban:email:check",
 					"ban:email:remove",
@@ -14075,6 +14381,7 @@
 					"guild:reload",
 					"guild:shutdown",
 					"guild:transfer_ownership",
+					"guild:update:badges",
 					"guild:update:features",
 					"guild:update:name",
 					"guild:update:settings",
@@ -14109,6 +14416,7 @@
 					"user:view:email",
 					"user:view:ip",
 					"user:temp_ban",
+					"user:update:badges",
 					"user:update:bot_status",
 					"user:update:dob",
 					"user:update:email",
@@ -17184,6 +17492,7 @@
 						"type": "array",
 						"items": {"allOf": [{"$ref": "#/components/schemas/GuildFeatureSchema"}]}
 					},
+					"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdsType"}]},
 					"fields": {
 						"maxItems": 10,
 						"type": "array",
@@ -17252,6 +17561,7 @@
 								"type": "array",
 								"items": {"type": "string", "minLength": 1, "maxLength": 256}
 							},
+							"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdListResponse"}]},
 							"verification_level": {"allOf": [{"$ref": "#/components/schemas/GuildVerificationLevel"}]},
 							"mfa_level": {"allOf": [{"$ref": "#/components/schemas/GuildMFALevel"}]},
 							"nsfw_level": {"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]},
@@ -17323,6 +17633,7 @@
 							"splash",
 							"embed_splash",
 							"features",
+							"badge_ids",
 							"verification_level",
 							"mfa_level",
 							"nsfw_level",
@@ -18510,6 +18821,76 @@
 				"required": ["items"],
 				"additionalProperties": false
 			},
+			"UpdateCustomBadgeRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the badge", "type": "string"},
+					"description": {
+						"nullable": true,
+						"description": "Text shown under the name when hovering over the badge, or null",
+						"type": "string"
+					},
+					"href": {
+						"nullable": true,
+						"description": "Absolute https URL opened when the badge is clicked",
+						"type": "string"
+					},
+					"image": {
+						"description": "A new image as a base64 data URL. Leave it out to keep the current one",
+						"type": "string",
+						"maxLength": 16000000
+					}
+				},
+				"required": ["name", "description", "href"]
+			},
+			"AdminCustomBadgeResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the badge", "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+					"type": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeTypeSchema"}]},
+					"name": {"type": "string", "description": "The name of the badge"},
+					"description": {
+						"nullable": true,
+						"description": "Text shown under the name when hovering over the badge, or null",
+						"type": "string"
+					},
+					"asset_url": {"type": "string", "description": "URL of the badge image, served as WebP by the media proxy"},
+					"href": {"nullable": true, "description": "URL opened when the badge is clicked, or null", "type": "string"}
+				},
+				"required": ["id", "type", "name", "description", "asset_url", "href"],
+				"additionalProperties": false
+			},
+			"CreateCustomBadgeRequest": {
+				"type": "object",
+				"properties": {
+					"type": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeTypeSchema"}]},
+					"name": {"description": "The name of the badge", "type": "string"},
+					"description": {"description": "Text shown when hovering over the badge", "nullable": true, "type": "string"},
+					"href": {
+						"nullable": true,
+						"description": "Absolute https URL opened when the badge is clicked",
+						"type": "string"
+					},
+					"image": {
+						"type": "string",
+						"maxLength": 16000000,
+						"description": "The badge image as a base64 data URL. PNG, JPEG, GIF, WebP and SVG images are accepted"
+					}
+				},
+				"required": ["type", "name", "image"]
+			},
+			"AdminCustomBadgeListResponse": {
+				"type": "object",
+				"properties": {
+					"badges": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/AdminCustomBadgeResponse"},
+						"description": "Badges defined on this instance, in display order"
+					}
+				},
+				"required": ["badges"],
+				"additionalProperties": false
+			},
 			"AdminAuditLogResponseSchema": {
 				"type": "object",
 				"properties": {
@@ -18777,7 +19158,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -18795,7 +19176,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -18825,7 +19206,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -18846,7 +19227,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -18859,7 +19240,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 110,
+						"maxItems": 116,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -19017,6 +19398,16 @@
 					"A link channel for external resources",
 					"Personal notes DM channel"
 				]
+			},
+			"CustomBadgeTypeSchema": {
+				"description": "Where the badge is shown",
+				"x-enumNames": ["User", "Guild"],
+				"x-enumDescriptions": [
+					"Shown on the profiles of the users it is assigned to",
+					"Shown next to the names of the communities it is assigned to"
+				],
+				"enum": ["user", "guild"],
+				"type": "string"
 			},
 			"BanProfileSubstringRequest": {
 				"type": "object",
@@ -19357,11 +19748,6 @@
 						"description": "User has dismissed premium onboarding"
 					},
 					{"name": "APP_STORE_REVIEWER", "value": "9007199254740992", "description": "User is an app store reviewer"},
-					{
-						"name": "STAFF_HIDDEN",
-						"value": "144115188075855872",
-						"description": "User staff status is hidden from public flags"
-					},
 					{
 						"name": "AGE_VERIFIED_ADULT",
 						"value": "1152921504606846976",
@@ -21299,6 +21685,18 @@
 					"Member of the server for more than 10 minutes"
 				]
 			},
+			"CustomBadgeIdListResponse": {
+				"maxItems": 10,
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
+				"description": "IDs of the custom badges assigned to it"
+			},
+			"CustomBadgeIdsType": {
+				"maxItems": 10,
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/SnowflakeType"},
+				"description": "IDs of the badges to assign, replacing the current ones"
+			},
 			"GuildOperations": {
 				"type": "integer",
 				"minimum": 0,
@@ -23176,8 +23574,9 @@
 						"description": "The enforcement decision behind the current suspension or closure, null when none owns it",
 						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 					},
-					"acls": {"maxItems": 110, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 116, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
+					"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdListResponse"}]},
 					"has_totp": {"type": "boolean"},
 					"has_password": {"type": "boolean", "description": "Whether the account has a password"},
 					"claimed": {"type": "boolean", "description": "Whether the account can be signed in to from another device"},
@@ -23228,6 +23627,7 @@
 					"enforcement_decision_id",
 					"acls",
 					"traits",
+					"badge_ids",
 					"has_totp",
 					"has_password",
 					"claimed",
@@ -23300,9 +23700,13 @@
 			"AdminProfileBadgeResponse": {
 				"type": "object",
 				"properties": {
+					"key": {
+						"type": "string",
+						"description": "Stable identity of the badge. It equals kind for built-in badges and is custom:{id} for custom badges, so use it as the list key"
+					},
 					"kind": {
 						"type": "string",
-						"description": "Stable badge key. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, and premium on self-hosted instances. Clients must render unknown values from the other fields."
+						"description": "Badge type. Known values: staff, partner, bug_hunter, operator_pass, visionary, visionary_number, plutonium, custom, and premium on self-hosted instances. Clients must render unknown values from the other fields."
 					},
 					"label": {
 						"type": "string",
@@ -23310,8 +23714,13 @@
 					},
 					"asset": {
 						"nullable": true,
-						"description": "Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges",
+						"description": "Badge image hash. The image is served at {static_cdn}/badges/{asset}.webp. Null for text badges and for badges with asset_url",
 						"allOf": [{"$ref": "#/components/schemas/HexString16Type"}]
+					},
+					"asset_url": {
+						"nullable": true,
+						"description": "Absolute image URL for a badge whose image is not a static badge hash, such as a custom badge. Null otherwise",
+						"type": "string"
 					},
 					"small_asset": {
 						"description": "Image hash drawn for 20 pixels and smaller, served like asset. Use it instead of asset at those sizes. Absent when asset reads well small",
@@ -23362,7 +23771,7 @@
 						"description": "True when the public profile does not show this badge, because of a privacy setting or account state"
 					}
 				},
-				"required": ["kind", "label", "asset", "aspect_ratio", "caption", "href", "suppressed"],
+				"required": ["key", "kind", "label", "asset", "asset_url", "aspect_ratio", "caption", "href", "suppressed"],
 				"additionalProperties": false
 			},
 			"PremiumFlags": {
@@ -23373,27 +23782,16 @@
 				"format": "int32",
 				"x-bitflagValues": [
 					{"name": "DISCRIMINATOR", "value": "1", "description": "User has a premium discriminator"},
-					{"name": "BADGE_HIDDEN", "value": "2", "description": "User has hidden their premium badge"},
 					{"name": "BADGE_MASKED", "value": "4", "description": "User has masked their premium badge"},
 					{
 						"name": "BADGE_TIMESTAMP_HIDDEN",
 						"value": "8",
 						"description": "User has hidden their premium badge timestamp"
 					},
-					{
-						"name": "BADGE_SEQUENCE_HIDDEN",
-						"value": "16",
-						"description": "User has hidden their premium badge sequence"
-					},
 					{"name": "PERKS_SANITIZED", "value": "32", "description": "User premium perks are sanitized"},
 					{"name": "PURCHASE_DISABLED", "value": "64", "description": "Premium purchase is disabled for this user"},
 					{"name": "ENABLED_OVERRIDE", "value": "128", "description": "Premium status is enabled via override"},
 					{"name": "PERKS_DISABLED", "value": "256", "description": "User has temporarily disabled premium perks"},
-					{
-						"name": "OPERATOR_PASS_BADGE_HIDDEN",
-						"value": "512",
-						"description": "User has chosen to hide their Operator Pass badge"
-					},
 					{
 						"name": "OPERATOR_PASS_BADGE_TIMESTAMP_HIDDEN",
 						"value": "2048",
@@ -24530,6 +24928,7 @@
 					"IP_BAN_DECLINED",
 					"IP_BAN_LINKED_TO_DECISION",
 					"MAX_APPLICATIONS",
+					"MAX_BADGES",
 					"MAX_BOOKMARKS",
 					"MAX_ACTIVE_THREADS",
 					"MAX_CATEGORY_CHANNELS",
@@ -24677,6 +25076,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS",
 					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
+					"UNKNOWN_BADGE",
 					"UNKNOWN_CHANNEL",
 					"UNKNOWN_EMOJI",
 					"UNKNOWN_ENFORCEMENT_DECISION",
@@ -24892,6 +25292,7 @@
 					"This IP address cannot be added to the blocklist.",
 					"This network block belongs to an enforcement decision. End the decision to remove it.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+					"You've reached the maximum of {count, plural, one {# badge} other {# badges}} for this type.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 					"This community has reached its active thread limit of {count}.",
 					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
@@ -25039,6 +25440,7 @@
 					"Claim your account to send friend requests.",
 					"Claim your account to send messages.",
 					"Claim your account to submit reports.",
+					"Badge wasn't found.",
 					"Channel wasn't found.",
 					"Unknown emoji.",
 					"Unknown enforcement decision.",
