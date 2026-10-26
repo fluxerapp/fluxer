@@ -20,6 +20,7 @@ type rollbackFlags struct {
 	DryRun    bool
 	RestoreDB bool
 	Confirm   string
+	Resume    string
 }
 
 func newRollbackCmd(app *App) *cobra.Command {
@@ -34,6 +35,8 @@ func newRollbackCmd(app *App) *cobra.Command {
 	}
 	c.Flags().BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
 	c.Flags().BoolVar(&f.RestoreDB, "restore-database", false, "also restore the database from the backup taken before the upgrade")
+	c.Flags().StringVar(&f.Resume, release.ResumeFlag, "", "")
+	_ = c.Flags().MarkHidden(release.ResumeFlag)
 	confirmFlag(c, &f.Confirm)
 	return c
 }
@@ -42,6 +45,14 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
+	}
+	if inst.State.Upgrade != nil && !f.DryRun {
+		if err := managed(inst); err != nil {
+			return err
+		}
+		if handedOver, err := updateBeforeRecovery(ctx, app, f.Resume, "", "rexctl rollback"); err != nil || handedOver {
+			return err
+		}
 	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
