@@ -24,6 +24,7 @@ function createHarness(path = 'http://localhost/v1/messages'): Harness {
 	});
 	app.get('/_health', (ctx) => ctx.text('OK'));
 	app.get('/internal/rpc', (ctx) => ctx.text('OK'));
+	app.get('/.well-known/fluxer', (ctx) => ctx.text('OK'));
 	app.onError(AppErrorHandler);
 	return {
 		request: async (headers, peerAddress) =>
@@ -99,6 +100,12 @@ describe('RequireClientIpMiddleware', () => {
 
 	it('leaves internal service to service calls alone', async () => {
 		const harness = createHarness('http://localhost/internal/rpc');
+		const response = await harness.request({});
+		expect(response.status).toBe(200);
+	});
+
+	it('leaves the discovery document reachable without a client ip', async () => {
+		const harness = createHarness('http://localhost/.well-known/fluxer');
 		const response = await harness.request({});
 		expect(response.status).toBe(200);
 	});
