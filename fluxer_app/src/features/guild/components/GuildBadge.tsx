@@ -98,7 +98,9 @@ function CustomGuildBadge({
 			target="_blank"
 			rel="noopener noreferrer"
 			className={styles.badgeWrapper}
-			onClick={(event) => handleExternalLinkClick(event, href)}
+			onClick={(event) => handleExternalLinkClick(event, href, {stopPropagation: true})}
+			onPointerDown={(event) => event.stopPropagation()}
+			onKeyDown={(event) => event.stopPropagation()}
 			data-flx="guild.guild-badge.custom-badge-link"
 		>
 			{image}

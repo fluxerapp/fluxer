@@ -28,7 +28,7 @@ interface PinnedSection {
 }
 
 const SCROLL_EPSILON = 2;
-const SCROLL_OFFSET = 68;
+const SCROLL_OFFSET = 24;
 
 function getSectionElement(container: HTMLElement, id: string): HTMLElement | null {
 	const element = document.getElementById(id);

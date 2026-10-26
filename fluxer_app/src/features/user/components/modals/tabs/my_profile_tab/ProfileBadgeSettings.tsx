@@ -17,7 +17,7 @@ import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
+import {type ReactNode, useId} from 'react';
 
 const BADGES_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Choose which badges other people see on your profile.',
@@ -149,24 +149,30 @@ function BadgeList({
 }: Omit<ProfileBadgeSettingsProps, 'preview'> & {ownBadges: ReadonlyArray<OwnProfileBadgeResponse>}) {
 	const {i18n} = useLingui();
 	const hidden = new Set(hiddenProfileBadges);
+	const switchIdPrefix = useId();
 	const premiumProductName = getPremiumProductName();
 	return (
 		<ul className={styles.list} data-flx="user.profile-badge-settings.list">
 			{ownBadges.map((badge) => {
 				const shown = !hidden.has(badge.key);
+				const switchId = `${switchIdPrefix}-${badge.key}`;
+				const badgeProductName = badge.key === 'visionary' ? 'Visionary' : premiumProductName;
 				const numberHasNoEffect =
 					badge.key === 'visionary_number' && (hidden.has('visionary') || variants.premium_badge_masked);
 				const badgeVariants = shown ? (BADGE_VARIANTS[badge.key] ?? []) : [];
 				return (
 					<li key={badge.key} className={styles.item} data-flx="user.profile-badge-settings.item">
 						<div className={styles.row} data-flx="user.profile-badge-settings.row">
-							<span className={styles.artSlot} data-flx="user.profile-badge-settings.art-slot">
-								<BadgeArt badge={badge} data-flx="user.profile-badge-settings.badge-art" />
-							</span>
-							<span className={styles.label} dir="auto" data-flx="user.profile-badge-settings.label">
-								{badge.label}
-							</span>
+							<label htmlFor={switchId} className={styles.rowLabel} data-flx="user.profile-badge-settings.row-label">
+								<span className={styles.artSlot} data-flx="user.profile-badge-settings.art-slot">
+									<BadgeArt badge={badge} data-flx="user.profile-badge-settings.badge-art" />
+								</span>
+								<span className={styles.label} dir="auto" data-flx="user.profile-badge-settings.label">
+									{badge.label}
+								</span>
+							</label>
 							<Switch
+								id={switchId}
 								value={shown}
 								onChange={(value) => onToggleHidden(badge.key, !value)}
 								disabled={disabled || numberHasNoEffect}
@@ -185,8 +191,15 @@ function BadgeList({
 								{badgeVariants.map((variant) => (
 									<Switch
 										key={variant.field}
-										label={i18n._(variant.label, {premiumProductName, operatorPassName: OPERATOR_PASS_NAME})}
-										description={variant.description ? i18n._(variant.description, {premiumProductName}) : undefined}
+										label={i18n._(variant.label, {
+											premiumProductName: badgeProductName,
+											operatorPassName: OPERATOR_PASS_NAME,
+										})}
+										description={
+											variant.description
+												? i18n._(variant.description, {premiumProductName: badgeProductName})
+												: undefined
+										}
 										value={variants[variant.field]}
 										onChange={(value) => onToggleVariant(variant.field, value)}
 										disabled={disabled}
@@ -206,7 +219,7 @@ function BadgeList({
 export const ProfileBadgeSettings = observer(({preview, ...listProps}: ProfileBadgeSettingsProps) => {
 	const {i18n} = useLingui();
 	const ownBadges = preview.value?.own_badges;
-	let body: React.ReactNode;
+	let body: ReactNode;
 	if (ownBadges === undefined && preview.status === 'failed') {
 		body = (
 			<div className={styles.status} data-flx="user.profile-badge-settings.failed">
