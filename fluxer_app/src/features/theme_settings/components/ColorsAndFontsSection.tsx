@@ -8,6 +8,7 @@ import Theme from '@app/features/theme/state/Theme';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {EditNextToAppButton} from '@app/features/theme_settings/components/EditNextToAppButton';
 import {TokenRow} from '@app/features/theme_settings/components/TokenRow';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
@@ -143,21 +144,24 @@ export const ColorsAndFontsSection: React.FC = observer(() => {
 			title={i18n._(COLORS_AND_FONTS_SECTION_DESCRIPTOR)}
 			description={i18n._(COLORS_AND_FONTS_DESCRIPTION_DESCRIPTOR)}
 			actions={
-				overrideCount > 0 ? (
-					<>
-						<span className={styles.changedCount} data-flx="theme-settings.colors-and-fonts-section.changed-count">
-							{i18n._(CHANGED_COUNT_DESCRIPTOR, {count: overrideCount})}
-						</span>
-						<Button
-							variant="secondary"
-							small
-							onClick={handleClearAll}
-							data-flx="theme-settings.colors-and-fonts-section.button.clear-all"
-						>
-							{i18n._(CLEAR_ALL_CHANGES_DESCRIPTOR)}
-						</Button>
-					</>
-				) : null
+				<>
+					{overrideCount > 0 ? (
+						<>
+							<span className={styles.changedCount} data-flx="theme-settings.colors-and-fonts-section.changed-count">
+								{i18n._(CHANGED_COUNT_DESCRIPTOR, {count: overrideCount})}
+							</span>
+							<Button
+								variant="secondary"
+								small
+								onClick={handleClearAll}
+								data-flx="theme-settings.colors-and-fonts-section.button.clear-all"
+							>
+								{i18n._(CLEAR_ALL_CHANGES_DESCRIPTOR)}
+							</Button>
+						</>
+					) : null}
+					<EditNextToAppButton tab="colors" data-flx="theme-settings.colors-and-fonts-section.edit-next-to-app" />
+				</>
 			}
 			data-flx="theme-settings.colors-and-fonts-section.colors-and-fonts"
 		>

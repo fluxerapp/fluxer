@@ -9,10 +9,12 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import ThemeLibrary, {
 	getThemeLabel,
+	ThemeFolderImportFailedError,
 	type ThemeLibraryFolder,
 	type ThemeLibraryTheme,
 } from '@app/features/theme/state/ThemeLibrary';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {EditNextToAppButton} from '@app/features/theme_settings/components/EditNextToAppButton';
 import {ThemeDetailsModal} from '@app/features/theme_settings/components/ThemeDetailsModal';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
@@ -72,6 +74,18 @@ const NO_THEMES_SAVED_YET_DESCRIPTOR = msg({
 const IMPORT_A_CSS_FILE_TO_GET_STARTED_DESCRIPTOR = msg({
 	message: 'Import a .css file to get started, or write your own CSS in quick CSS.',
 	comment: 'Empty state in the "Your themes" section in Settings > Themes. Quick CSS is custom CSS the user writes.',
+});
+const WRITE_QUICK_CSS_DESCRIPTOR = msg({
+	message: 'Write quick CSS',
+	comment: 'Button in the empty state of "Your themes" that opens the quick CSS editor on its CSS tab.',
+});
+const FOLDER_LIMIT_DESCRIPTOR = msg({
+	message: 'You can watch up to {limit} folders. Stop watching one to add another.',
+	comment: 'Error toast in "Your themes" when importing a folder while the most folders are already watched.',
+});
+const FOLDER_UNREADABLE_DESCRIPTOR = msg({
+	message: "Fluxer can't read this folder.",
+	comment: 'Error toast in "Your themes" when the chosen theme folder cannot be opened.',
 });
 const NO_THEMES_MATCH_YOUR_SEARCH_DESCRIPTOR = msg({
 	message: 'No themes match your search.',
@@ -558,13 +572,23 @@ export const YourThemesSection: React.FC = observer(() => {
 		});
 	};
 	const handleImportFolder = () => {
-		void ThemeLibrary.importDesktopThemeDirectory().then((imported) => {
-			if (imported.length === 0) return;
-			const descriptor = imported.some((theme) => theme.linkedPath)
-				? LINKED_THEME_FILES_DESCRIPTOR
-				: IMPORTED_THEME_FILES_DESCRIPTOR;
-			ToastCommands.success(i18n._(descriptor, {length: imported.length}));
-		});
+		void ThemeLibrary.importDesktopThemeDirectory()
+			.then((imported) => {
+				if (imported.length === 0) return;
+				const descriptor = imported.some((theme) => theme.linkedPath)
+					? LINKED_THEME_FILES_DESCRIPTOR
+					: IMPORTED_THEME_FILES_DESCRIPTOR;
+				ToastCommands.success(i18n._(descriptor, {length: imported.length}));
+			})
+			.catch((error: unknown) => {
+				if (!(error instanceof ThemeFolderImportFailedError)) throw error;
+				const {reason} = error;
+				ToastCommands.error(
+					reason.error === 'folder_limit'
+						? i18n._(FOLDER_LIMIT_DESCRIPTOR, {limit: reason.limit})
+						: i18n._(FOLDER_UNREADABLE_DESCRIPTOR),
+				);
+			});
 	};
 	return (
 		<SettingsSection
@@ -595,6 +619,7 @@ export const YourThemesSection: React.FC = observer(() => {
 							<Trans>Import folder</Trans>
 						</Button>
 					) : null}
+					<EditNextToAppButton tab="themes" data-flx="theme-settings.your-themes-section.edit-next-to-app" />
 					<input
 						ref={cssImportRef}
 						type="file"
@@ -644,6 +669,18 @@ export const YourThemesSection: React.FC = observer(() => {
 								: IMPORT_A_CSS_FILE_TO_GET_STARTED_DESCRIPTOR,
 						)}
 					</p>
+					{searching || !ThemeSettingsCommands.canOpenQuickCssEditor() ? null : (
+						<div data-flx="theme-settings.your-themes-section.empty-actions">
+							<Button
+								variant="secondary"
+								small
+								onClick={() => ThemeSettingsCommands.openQuickCssEditor()}
+								data-flx="theme-settings.your-themes-section.button.write-quick-css"
+							>
+								{i18n._(WRITE_QUICK_CSS_DESCRIPTOR)}
+							</Button>
+						</div>
+					)}
 				</div>
 			) : (
 				<div className={styles.list} data-flx="theme-settings.your-themes-section.list">

@@ -9,10 +9,11 @@
 
 .toolbar {
 	display: flex;
+	flex: 0 0 auto;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--spacing-2) var(--spacing-3);
-	padding: var(--spacing-3) var(--spacing-4);
+	gap: var(--spacing-2);
+	padding: var(--spacing-2) var(--spacing-3);
 	border-bottom: 0.0625rem solid var(--background-modifier-accent);
 }
 
@@ -21,10 +22,6 @@
 	align-items: center;
 	gap: 0.125rem;
 	margin-inline-start: auto;
-}
-
-.tools ~ * {
-	flex-basis: 100%;
 }
 
 .toolButton {
@@ -57,17 +54,29 @@
 	background: var(--background-modifier-selected);
 }
 
+.notes {
+	padding: var(--spacing-2) var(--spacing-3) 0;
+}
+
+.notes:empty {
+	display: none;
+}
+
 .body {
 	display: flex;
 	flex: 1 1 auto;
-	flex-direction: column;
 	gap: var(--spacing-2);
-	min-height: 0;
-	margin: var(--spacing-3) var(--spacing-4);
+	min-height: 10rem;
+	margin: var(--spacing-2) var(--spacing-3);
 }
 
 .bodyBeside {
 	flex-direction: row;
+}
+
+.bodyStacked {
+	position: relative;
+	flex-direction: column;
 }
 
 .editor {
@@ -95,7 +104,13 @@
 }
 
 .outlineAbove {
-	max-height: 11rem;
+	position: absolute;
+	z-index: 2;
+	top: var(--spacing-2);
+	inset-inline-end: var(--spacing-2);
+	width: min(18rem, calc(100% - 1rem));
+	max-height: min(18rem, calc(100% - 1rem));
+	box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.28);
 }
 
 .outlineHeader {
@@ -129,6 +144,8 @@
 
 .outlineEntry {
 	display: block;
+	direction: ltr;
+	unicode-bidi: isolate;
 	width: 100%;
 	padding-block: 0.25rem;
 	padding-inline-end: 0.5rem;
@@ -145,7 +162,8 @@
 	cursor: pointer;
 }
 
-.outlineEntry:hover {
+.outlineEntry:hover,
+.outlineEntry[aria-selected='true'] {
 	color: var(--text-primary);
 	background: var(--background-modifier-hover);
 }
@@ -158,12 +176,14 @@
 
 .statusBar {
 	display: flex;
-	flex-wrap: wrap;
+	flex: 0 0 auto;
 	align-items: center;
-	gap: var(--spacing-1) var(--spacing-3);
-	padding: 0 var(--spacing-4) var(--spacing-3);
+	gap: var(--spacing-3);
+	min-width: 0;
+	padding: 0 1.5rem var(--spacing-2);
 	font-size: 0.8125rem;
-	color: var(--text-tertiary);
+	white-space: nowrap;
+	color: var(--text-primary-muted);
 }
 
 .statusButton {
@@ -190,14 +210,33 @@
 	color: var(--status-warning);
 }
 
+:global(.theme-light) .statusButton[data-severity='warning'] {
+	color: color-mix(in oklab, var(--status-warning) 45%, var(--text-primary));
+}
+
+.statusIconButton {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	padding: 0.125rem;
+}
+
 .statusText {
-	white-space: nowrap;
+	flex: 0 0 auto;
 }
 
 .statusPreview {
-	flex: 1 1 12rem;
+	flex: 1 1 auto;
 	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	text-align: end;
+}
+
+.colorValueInput {
+	margin-top: var(--spacing-3);
+	font-family: var(--font-mono, ui-monospace, monospace);
 }
 
 .popoutSurface {

@@ -3286,6 +3286,16 @@ msgstr "实际大小"
 msgid "Add"
 msgstr "添加"
 
+#. Problem shown in the quick CSS editor on a CSS declaration that is missing the semicolon after it.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \";\" at the end of this line."
+msgstr "在这一行末尾加上 \";\"。"
+
+#. Problem shown in the quick CSS editor on a CSS declaration like "color red;" that is missing its colon.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Add \":\" between the property and its value."
+msgstr "在属性和数值之间加上\":\"。"
+
 #. Button or menu action label in the linked accounts tab. Keep it concise. Preserve {blueskyProviderName}; it is inserted by code.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx
 msgid "Add {blueskyProviderName} connection"
@@ -8741,7 +8751,7 @@ msgstr "更清晰的文字"
 msgid "Clearing trusted domains..."
 msgstr "正在清除受信任的域名…"
 
-#. Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
+#. Shown at the bottom of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.
 #: src/features/theme_settings/components/QuickCssEditor.tsx
 msgid "Click an element to add its selector. {parentKey} picks its parent and Escape stops picking."
 msgstr "点击一个元素以添加其选择器。{parentKey} 选择父元素，Escape 停止选择。"
@@ -9131,6 +9141,8 @@ msgid "Color scheme"
 msgstr "配色方案"
 
 #. Accessible label for the current color input value.
+#. Label of the text field in the color picker of the quick CSS editor, where a CSS color can be typed.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 #: src/features/ui/components/form/ColorPickerField.tsx
 msgid "Color value"
 msgstr "颜色值"
@@ -10192,6 +10204,12 @@ msgstr "不使用邮箱继续"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
 msgid "Contrast"
 msgstr "对比度"
+
+#. Text in the code editor of the quick CSS editor. Tooltip on an invisible control character shown as a placeholder.
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "Control character"
+msgstr "控制字符"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
@@ -14426,6 +14444,11 @@ msgstr "编辑媒体"
 msgid "Edit message"
 msgstr "编辑消息"
 
+#. Button in Settings > Themes that closes settings and opens the same controls in the quick CSS editor panel, which floats over the app so changes can be seen while editing.
+#: src/features/theme_settings/components/EditNextToAppButton.tsx
+msgid "Edit next to the app"
+msgstr "在应用旁边编辑"
+
 #. Button or menu action label in the user settings profile card actions. Keep it concise.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Edit note"
@@ -14511,6 +14534,11 @@ msgstr "编辑标签"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "编辑机器人头像、标签、简介、横幅和好友请求行为"
+
+#. Row in the quick CSS editor shortcuts dialog. Opens the color picker for the CSS color under the cursor.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Edit the color at the cursor"
+msgstr "编辑光标处的颜色"
 
 #. Action that opens the thread settings.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -16580,7 +16608,9 @@ msgctxt "code-editor"
 msgid "Find"
 msgstr "查找"
 
+#. Button in the quick CSS editor that opens the search and replace bar.
 #. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Find and replace"
 msgstr "查找并替换"
@@ -16706,6 +16736,11 @@ msgstr "Fluxer 找不到此文件夹。文件夹恢复后会重新加载主题�
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Fluxer can't open this folder. Import it again to keep watching it."
 msgstr "Fluxer 无法打开此文件夹。请重新导入以继续监视。"
+
+#. Error toast in "Your themes" when the chosen theme folder cannot be opened.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Fluxer can't read this folder."
+msgstr "Fluxer 无法读取此文件夹。"
 
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -23045,8 +23080,10 @@ msgstr "每月捐赠（可选）"
 msgid "Monthly gift"
 msgstr "每月礼物"
 
+#. Button in the quick CSS editor that opens a menu with more actions, such as importing and downloading CSS.
 #. Generic label for a button that reveals additional actions.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
+#: src/features/theme_settings/components/QuickCssEditor.tsx
 msgid "More"
 msgstr "更多"
 
@@ -23105,10 +23142,10 @@ msgstr "更多快捷键选项"
 msgid "More sticker actions"
 msgstr "更多贴纸操作"
 
-#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements.
+#. Shown when hovering a CSS selector in the quick CSS editor that matches very many elements. {limit} is a number such as 1,000.
 #: src/features/theme_settings/editor/CssHover.ts
-msgid "More than 1,000 elements match"
-msgstr "匹配元素超过 1,000 个"
+msgid "More than {limit} elements match"
+msgstr "匹配的元素超过 {limit} 个"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
@@ -27087,10 +27124,10 @@ msgstr "手机通知"
 msgid "Photo"
 msgstr "照片"
 
-#. Accessible label of the color swatch next to a color in the quick CSS editor. {value} is the CSS color.
-#: src/features/theme_settings/editor/CssColorSwatches.ts
-msgid "Pick a color for {value}"
-msgstr "为 {value} 选择颜色"
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick a child element while picking"
+msgstr "选择子元素时继续选择"
 
 #. Text in the dialog where you pick who gets one of your Operator Passes. Only friends can get a pass. They means the friend you pick. Take it back means canceling your offer. It moves means the pass moves to their account. Never word it as a present.
 #: src/features/premium/components/operator_pass/OperatorPassPassItOnModal.tsx
@@ -27151,6 +27188,11 @@ msgstr "选择一个或多个词典。任一所选词典中的词语都会被视
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Pick the 4-digit number after your username"
 msgstr "选择你用户名后的四位数字"
+
+#. Row in the quick CSS editor shortcuts dialog.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Pick the next or previous element while picking"
+msgstr "选择时切换下一个或上一个元素"
 
 #. Row in the quick CSS editor shortcuts dialog.
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
@@ -27642,6 +27684,11 @@ msgstr "准备中"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Presence"
 msgstr "在线状态"
+
+#. Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+T.
+#: src/features/theme_settings/components/QuickCssSection.tsx
+msgid "Press {shortcut} anywhere in the app to open the editor."
+msgstr "在应用内任意位置按 {shortcut} 打开编辑器。"
 
 #. Tooltip hint for a quick reaction in the message context menu. Preserve {shortcut}; it is a keyboard key such as 1.
 #: src/features/ui/action_menu/MessageContextMenu.tsx
@@ -32831,11 +32878,6 @@ msgstr "显示"
 msgid "Show {appName}"
 msgstr "显示 {appName}"
 
-#. Accessible label of the color swatch next to a CSS variable in the quick CSS editor. {name} is the variable name.
-#: src/features/theme_settings/editor/CssColorSwatches.ts
-msgid "Show {name} in \"Colors and fonts\""
-msgstr "在“颜色和字体”中显示 {name}"
-
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show a {productName} icon in the system tray or menu bar"
@@ -32966,6 +33008,11 @@ msgstr "在表情自动补全中显示默认表情"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show delete button"
 msgstr "显示删除按钮"
+
+#. Row in the quick CSS editor shortcuts dialog. Shows the same details as hovering, such as how many elements a selector matches.
+#: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
+msgid "Show details for the code at the cursor"
+msgstr "显示光标处代码的详细信息"
 
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -36801,6 +36848,11 @@ msgstr "此应用"
 msgid "This attachment has expired"
 msgstr "此附件已过期"
 
+#. Problem shown in the quick CSS editor on an opening curly brace of a CSS block that has no closing curly brace.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This block is never closed. Add a closing brace after its last rule."
+msgstr "此代码块未关闭。请在最后一条规则后加上一个右大括号。"
+
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts
 msgid "This bot is not public and cannot be added by other users."
@@ -36945,6 +36997,11 @@ msgstr "此类名每次 Fluxer 更新都会变化。请用 [data-flx] 选择器�
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "这将完全清除你在后端的会员状态，包括会员类型、账单元数据和覆盖标记。"
 
+#. Problem shown in the quick CSS editor on a closing curly brace that closes nothing.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This closing brace has no opening brace."
+msgstr "此右大括号没有对应的左大括号。"
+
 #. Gift redemption error modal body for a code that does not exist.
 #: src/features/gift/commands/GiftCommands.tsx
 msgid "This code doesn't exist."
@@ -36974,6 +37031,11 @@ msgstr "此颜色与深色主题的背景相近，按钮在深色主题中可能
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "This color is close to the light theme background, so buttons may be hard to see there."
 msgstr "此颜色与浅色主题的背景相近，按钮在浅色主题中可能不易看清。"
+
+#. Problem shown in the quick CSS editor on a CSS comment that has no closing */.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This comment is never closed. Add \"*/\" at its end."
+msgstr "此注释未关闭。请在末尾加上 \"*/\"。"
 
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
@@ -37653,6 +37715,11 @@ msgstr "此开关在选中状态下已禁用"
 msgid "This text area auto-expands between 4 and 12 rows as you type."
 msgstr "此文本框会随输入内容在 4 至 12 行之间自动扩展。"
 
+#. Problem shown in the quick CSS editor on a quoted CSS string with no closing quote. {quote} is the quote character, " or '.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "This text is never closed. Add a {quote} at its end."
+msgstr "此文本未关闭。请在末尾加上 {quote}。"
+
 #. Description text in the channel and chat theme embed.
 #: src/features/channel/components/ThemeEmbed.tsx
 msgid "This theme is no longer available."
@@ -38004,6 +38071,12 @@ msgstr "标题栏平台"
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "TLS, usually port 465"
 msgstr "TLS，通常为端口 465"
+
+#. Announced by screen readers in the code editor of the quick CSS editor, between two line numbers, as in "Folded lines 3 to 7".
+#: src/features/theme_settings/editor/EditorPhrases.ts
+msgctxt "code-editor"
+msgid "to"
+msgstr "到"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
@@ -39593,6 +39666,7 @@ msgstr "未读消息：{count}"
 msgid "Unreads"
 msgstr "未读消息"
 
+#. Shown in the status bar of the quick CSS editor while a saved theme has changes that are not saved yet.
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Unsaved changes"
 msgstr "未保存的更改"
@@ -40335,7 +40409,7 @@ msgstr "使用此设备的系统减弱动态效果偏好设置"
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "使用此设备的系统减弱动态效果偏好设置，或在下方自定义。"
 
-#. Switch in the quick CSS editor while it shows a saved theme. When on, the theme applies to the app, the same as its switch in Settings > Themes.
+#. Menu item in the quick CSS editor while it shows a saved theme. When checked, the theme applies to the app, the same as its switch in Settings > Themes.
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Use this theme"
 msgstr "使用此主题"
@@ -42406,6 +42480,16 @@ msgstr "自动换行"
 msgid "Write a short bio (max 280 characters)"
 msgstr "写一段简介（最多 280 个字符）"
 
+#. Placeholder in the empty quick CSS editor. {completeKey} and {pickKey} are keyboard shortcuts such as Ctrl + Space.
+#: src/features/theme_settings/components/QuickCssEditor.tsx
+msgid "Write CSS here. Press {completeKey} for suggestions, or {pickKey} to pick a part of the app."
+msgstr "在这里编写 CSS。按 {completeKey} 获取建议，或按 {pickKey} 选择应用部分。"
+
+#. Button in the empty state of "Your themes" that opens the quick CSS editor on its CSS tab.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "Write quick CSS"
+msgstr "编写快速 CSS"
+
 #. Description text in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "Write your content here. This text area expands as you type."
@@ -42684,6 +42768,11 @@ msgstr "稍后可以在管理面板中重新开启私信和好友请求。"
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx
 msgid "You can use links, emoji, and Markdown."
 msgstr "你可以使用链接、表情和 Markdown。"
+
+#. Error toast in "Your themes" when importing a folder while the most folders are already watched.
+#: src/features/theme_settings/components/YourThemesSection.tsx
+msgid "You can watch up to {limit} folders. Stop watching one to add another."
+msgstr "最多可监视 {limit} 个文件夹。请先停止监视一个再添加。"
 
 #. Title of the error modal shown when cloning an emoji or sticker is blocked by missing permissions.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx

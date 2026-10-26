@@ -69,6 +69,39 @@ const ROWS: ReadonlyArray<ShortcutRow> = [
 		combos: [{key: 'ArrowUp', alt: true}],
 	},
 	{
+		description: msg({
+			message: 'Pick a child element while picking',
+			comment: 'Row in the quick CSS editor shortcuts dialog.',
+		}),
+		combos: [{key: 'ArrowDown', alt: true}],
+	},
+	{
+		description: msg({
+			message: 'Pick the next or previous element while picking',
+			comment: 'Row in the quick CSS editor shortcuts dialog.',
+		}),
+		combos: [
+			{key: 'ArrowRight', alt: true},
+			{key: 'ArrowLeft', alt: true},
+		],
+	},
+	{
+		description: msg({
+			message: 'Show details for the code at the cursor',
+			comment:
+				'Row in the quick CSS editor shortcuts dialog. Shows the same details as hovering, such as how many elements a selector matches.',
+		}),
+		combos: [mod('i')],
+	},
+	{
+		description: msg({
+			message: 'Edit the color at the cursor',
+			comment:
+				'Row in the quick CSS editor shortcuts dialog. Opens the color picker for the CSS color under the cursor.',
+		}),
+		combos: [{key: 'Enter', alt: true}],
+	},
+	{
 		description: msg({message: 'Show completions', comment: 'Row in the quick CSS editor shortcuts dialog.'}),
 		combos: [{key: ' ', ctrl: true}],
 	},

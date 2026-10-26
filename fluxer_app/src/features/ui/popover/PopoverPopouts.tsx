@@ -476,7 +476,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 		const prevKeys = prevPopoutKeysRef.current;
 		currentKeys.forEach((key) => {
 			if (!prevKeys.has(key)) {
-				LayerManager.addLayer('popout', key);
+				LayerManager.addLayer('popout', key, undefined, scopeDocument);
 			}
 		});
 		prevKeys.forEach((key) => {
@@ -485,7 +485,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 			}
 		});
 		prevPopoutKeysRef.current = currentKeys;
-	}, [popouts]);
+	}, [popouts, scopeDocument]);
 	useEffect(() => {
 		return () => {
 			prevPopoutKeysRef.current.forEach((key) => {

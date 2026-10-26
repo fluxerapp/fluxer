@@ -6,10 +6,12 @@ import path from 'node:path';
 import {
 	addAllowedThemeLocalFiles,
 	addThemeFolder,
+	canAddThemeFolder,
 	clearAllowedThemeLocalFiles,
 	getAllowedThemeLocalFiles,
 	getThemeFolders,
 	removeThemeFolder,
+	THEME_FOLDERS_MAX,
 } from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {
@@ -24,8 +26,8 @@ import {t} from '@electron/main/MainI18n';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {
 	createThemeFolderWatch,
-	isPathInThemeFolder,
 	listThemeFolderCssFiles,
+	resolveThemeFolderFile,
 	type ThemeFolderWatch,
 } from '@electron/main/ThemeFolderWatch';
 import {createThemeLinkedFileWatchSet, readThemeCssFile} from '@electron/main/ThemeLinkedFileWatch';
@@ -119,8 +121,13 @@ function stopWatchingThemeFolder(folder: string): void {
 	}
 }
 
-async function isThemeFileAllowed(filePath: string, allowedFiles: ReadonlySet<string>): Promise<boolean> {
-	return allowedFiles.has(path.resolve(filePath)) || (await isPathInThemeFolder(filePath, getThemeFolders()));
+const THEME_FOLDER_FILE_FALLBACK_MIME_TYPE = 'application/octet-stream';
+
+async function resolveReadableThemeFile(filePath: string, allowedFiles: ReadonlySet<string>): Promise<string | null> {
+	if (allowedFiles.has(path.resolve(filePath))) return filePath;
+	const folderFile = await resolveThemeFolderFile(filePath, getThemeFolders());
+	if (!folderFile || getMimeType(folderFile) === THEME_FOLDER_FILE_FALLBACK_MIME_TYPE) return null;
+	return folderFile;
 }
 
 function getMimeType(filePath: string): string {
@@ -157,7 +164,7 @@ function getMimeType(filePath: string): string {
 		case '.ogg':
 			return 'audio/ogg';
 		default:
-			return 'application/octet-stream';
+			return THEME_FOLDER_FILE_FALLBACK_MIME_TYPE;
 	}
 }
 
@@ -206,7 +213,8 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 	});
 	ipcMain.handle(
 		'theme-local-files-read',
-		async (_event, payload: unknown): Promise<Array<ThemeLocalFileReadResult>> => {
+		async (event, payload: unknown): Promise<Array<ThemeLocalFileReadResult>> => {
+			requirePrivilegedRendererDocumentSender(event, 'theme-local-files-read');
 			if (!Array.isArray(payload)) {
 				return [];
 			}
@@ -214,12 +222,13 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 			const paths = payload.filter((item): item is string => typeof item === 'string');
 			const results: Array<ThemeLocalFileReadResult> = [];
 			for (const filePath of paths) {
-				if (!(await isThemeFileAllowed(filePath, allowed))) {
+				const readablePath = await resolveReadableThemeFile(filePath, allowed);
+				if (readablePath === null) {
 					results.push({path: filePath, error: 'not_allowed'});
 					continue;
 				}
 				try {
-					const stats = await fs.promises.stat(filePath);
+					const stats = await fs.promises.stat(readablePath);
 					if (!stats.isFile()) {
 						results.push({path: filePath, error: 'not_file'});
 						continue;
@@ -228,10 +237,10 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 						results.push({path: filePath, error: 'too_large'});
 						continue;
 					}
-					const data = await fs.promises.readFile(filePath);
+					const data = await fs.promises.readFile(readablePath);
 					results.push({
 						path: filePath,
-						dataUrl: `data:${getMimeType(filePath)};base64,${data.toString('base64')}`,
+						dataUrl: `data:${getMimeType(readablePath)};base64,${data.toString('base64')}`,
 					});
 				} catch (error) {
 					logger.warn('Failed to read theme local file', {filePath, error});
@@ -324,17 +333,24 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 			logger.warn('Failed to resolve selected theme folder', {folder: result.filePaths[0], error});
 			return null;
 		}
-		if (!addThemeFolder(folder)) {
+		if (!canAddThemeFolder(folder)) {
 			logger.warn('Refused to watch another theme folder because the limit is reached', {folder});
-			return null;
+			return {error: 'folder_limit', limit: THEME_FOLDERS_MAX};
 		}
-		const listing = await listThemeFolderCssFiles(folder);
+		let listing: Awaited<ReturnType<typeof listThemeFolderCssFiles>>;
+		try {
+			listing = await listThemeFolderCssFiles(folder);
+		} catch (error) {
+			logger.warn('Failed to list the selected theme folder', {folder, error});
+			return {error: 'unreadable'};
+		}
 		const files: Array<ThemeDirectoryCssFile> = [];
 		for (const filePath of listing.files) {
 			const read = await readThemeCssFile(filePath);
 			if (read.css === undefined) continue;
 			files.push({fileName: path.relative(folder, filePath) || path.basename(filePath), path: filePath, css: read.css});
 		}
+		addThemeFolder(folder);
 		return {folder, files, truncated: listing.truncated};
 	});
 	ipcMain.handle('theme-folders-watch', (event, payload: unknown): void => {

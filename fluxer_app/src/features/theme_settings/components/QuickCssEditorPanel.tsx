@@ -206,6 +206,10 @@ export const QuickCssEditorPanel: React.FC<{children: React.ReactNode}> = observ
 			return {x: event.clientX, y: event.clientY};
 		};
 		const handleMove = (event: PointerEvent): void => {
+			if ((event.buttons & 1) === 0) {
+				handleEnd();
+				return;
+			}
 			const point = toMainPoint(event);
 			const dx = point.x - interaction.pointerStartX;
 			const dy = point.y - interaction.pointerStartY;

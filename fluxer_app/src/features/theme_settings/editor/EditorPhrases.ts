@@ -118,6 +118,18 @@ const PHRASES: Readonly<Record<string, MessageDescriptor>> = {
 		message: 'Unfolded lines',
 		comment: 'Announced by screen readers in the code editor of the quick CSS editor.',
 	}),
+	to: msg({
+		context: 'code-editor',
+		message: 'to',
+		comment:
+			'Announced by screen readers in the code editor of the quick CSS editor, between two line numbers, as in "Folded lines 3 to 7".',
+	}),
+	'Control character': msg({
+		context: 'code-editor',
+		message: 'Control character',
+		comment:
+			'Text in the code editor of the quick CSS editor. Tooltip on an invisible control character shown as a placeholder.',
+	}),
 	Diagnostics: msg({
 		context: 'code-editor',
 		message: 'Problems',

@@ -15,7 +15,9 @@ import {
 } from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useEffect} from 'react';
+import {createContext, useContext, useEffect} from 'react';
+
+export const SettingsPageContext = createContext(true);
 
 export interface SettingsSectionProps {
 	id: string;
@@ -43,6 +45,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 	className,
 }) => {
 	const contextTabType = useSettingsCurrentTab();
+	const linksShown = useContext(SettingsPageContext);
 	const resolvedTabType = tabType ?? contextTabType ?? undefined;
 	useEffect(() => {
 		if (import.meta.env.DEV && linkable && !isSectionIdValid(id, resolvedTabType)) {
@@ -51,7 +54,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 			);
 		}
 	}, [id, linkable, resolvedTabType]);
-	const linkTarget = linkable ? getUserSettingsSectionDeepLinkTarget(id, resolvedTabType) : null;
+	const linkTarget = linkable && linksShown ? getUserSettingsSectionDeepLinkTarget(id, resolvedTabType) : null;
 	const linkHref =
 		linkTarget && tabHasMultipleLinkableSections(linkTarget.tab)
 			? buildUserSettingsDeepLink(linkTarget.tab, linkTarget.section)

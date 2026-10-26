@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APP_HIGHLIGHT_ATTRIBUTE} from '@app/features/theme_settings/editor/AppHighlights';
-import {SEMANTIC_ATTRIBUTES} from '@app/features/theme_settings/editor/AppSelectors';
+import {APP_HIGHLIGHT_ATTRIBUTE, excludeEditorPanel} from '@app/features/theme_settings/editor/AppHighlights';
+import {findSelectorMatches, SEMANTIC_ATTRIBUTES} from '@app/features/theme_settings/editor/AppSelectors';
+import {describeSelectorMatches} from '@app/features/theme_settings/editor/CssHover';
 import {indentUnit, syntaxTree} from '@codemirror/language';
 import type {EditorState} from '@codemirror/state';
 import type {EditorView} from '@codemirror/view';
@@ -20,6 +21,7 @@ const BLOCKED_EVENTS = [
 	'contextmenu',
 ];
 const IGNORED_SELECTOR = `[data-quick-css-panel], [${APP_HIGHLIGHT_ATTRIBUTE}]`;
+const ARROW_KEYS: ReadonlySet<string> = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 
 const HOST_STYLE = [
 	'position: fixed !important',
@@ -46,6 +48,13 @@ const BOX_STYLE = [
 	'display: none',
 ].join(';');
 
+const MATCH_BOX_STYLE = [
+	'position: absolute',
+	'box-sizing: border-box',
+	'border: 1px dashed var(--brand-primary, #4641d9)',
+	'border-radius: 2px',
+].join(';');
+
 const LABEL_STYLE = [
 	'position: absolute',
 	'max-width: min(560px, calc(100vw - 16px))',
@@ -53,19 +62,35 @@ const LABEL_STYLE = [
 	'border-radius: 4px',
 	'background: var(--brand-primary, #4641d9)',
 	'color: var(--brand-primary-fill, #ffffff)',
-	'font: 500 12px/1.4 var(--font-mono, ui-monospace, monospace)',
-	'white-space: nowrap',
-	'overflow: hidden',
-	'text-overflow: ellipsis',
+	'font: 500 12px/1.4 var(--font-sans, system-ui, sans-serif)',
 	'display: none',
 ].join(';');
+
+const LABEL_LINE_STYLE = ['white-space: nowrap', 'overflow: hidden', 'text-overflow: ellipsis'].join(';');
+
+const LABEL_SELECTOR_STYLE = [
+	LABEL_LINE_STYLE,
+	'direction: ltr',
+	'unicode-bidi: isolate',
+	'font-family: var(--font-mono, ui-monospace, monospace)',
+].join(';');
+
+const LIVE_REGION_STYLE = [
+	'position: absolute',
+	'width: 1px',
+	'height: 1px',
+	'overflow: hidden',
+	'clip-path: inset(50%)',
+	'white-space: nowrap',
+].join(';');
+
+const MATCH_BOX_LIMIT = 200;
+const HINT_EDGE = 16;
 
 const HINT_STYLE = [
 	'position: absolute',
 	'bottom: 24px',
-	'left: calc(50% + (var(--quick-css-dock-left, 0px) - var(--quick-css-dock-right, 0px)) / 2)',
 	'transform: translateX(-50%)',
-	'max-width: calc(100vw - 32px - var(--quick-css-dock-left, 0px) - var(--quick-css-dock-right, 0px))',
 	'padding: 8px 12px',
 	'border-radius: 8px',
 	'background: var(--background-floating, #111214)',
@@ -79,7 +104,12 @@ interface PickerSession {
 	view: EditorView;
 	host: HTMLDivElement;
 	box: HTMLDivElement;
+	matchLayer: HTMLDivElement;
 	label: HTMLDivElement;
+	labelSelector: HTMLDivElement;
+	labelMatches: HTMLDivElement;
+	hint: HTMLDivElement;
+	liveRegion: HTMLDivElement;
 	target: Element | null;
 	children: Array<Element>;
 	frame: number | null;
@@ -163,13 +193,63 @@ function parentFlxElement(element: Element): Element | null {
 	return element.parentElement?.closest('[data-flx]') ?? null;
 }
 
+function flxChildren(parent: Element | null): Array<Element> {
+	const scope = parent ?? document.documentElement;
+	return [...scope.querySelectorAll('[data-flx]')].filter(
+		(element) => parentFlxElement(element) === parent && !element.closest(IGNORED_SELECTOR),
+	);
+}
+
+function siblingFlxElement(element: Element, step: 1 | -1): Element | null {
+	const siblings = flxChildren(parentFlxElement(element)).filter((sibling) => {
+		const rect = sibling.getBoundingClientRect();
+		return rect.width > 0 || rect.height > 0;
+	});
+	const index = siblings.indexOf(element);
+	if (index === -1 || siblings.length < 2) return null;
+	return siblings[(index + step + siblings.length) % siblings.length] ?? null;
+}
+
+function placeHint(current: PickerSession): void {
+	const panel = document.querySelector('[data-quick-css-panel]')?.getBoundingClientRect();
+	let start = 0;
+	let end = innerWidth;
+	if (panel && panel.width > 0 && panel.bottom > innerHeight - 96) {
+		const leftSpace = panel.left;
+		const rightSpace = innerWidth - panel.right;
+		if (leftSpace >= rightSpace) end = panel.left;
+		else start = panel.right;
+	}
+	current.hint.style.left = `${(start + end) / 2}px`;
+	current.hint.style.maxWidth = `${Math.max(160, end - start - HINT_EDGE * 2)}px`;
+}
+
+function renderMatches(current: PickerSession, target: Element): string {
+	const selector = elementSelector(target, false);
+	const matches = findSelectorMatches(selector);
+	current.matchLayer.replaceChildren();
+	if (!matches) return '';
+	for (const element of matches.elements.slice(0, MATCH_BOX_LIMIT)) {
+		if (element === target) continue;
+		const rect = element.getBoundingClientRect();
+		if (rect.width === 0 && rect.height === 0) continue;
+		const box = document.createElement('div');
+		box.style.cssText = `${MATCH_BOX_STYLE};left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px`;
+		current.matchLayer.appendChild(box);
+	}
+	return describeSelectorMatches(matches);
+}
+
 function render(current: PickerSession): void {
 	current.frame = null;
+	excludeEditorPanel(current.host);
+	placeHint(current);
 	const target = current.target;
 	const rect = target?.isConnected ? target.getBoundingClientRect() : null;
 	if (!target || !rect || (rect.width === 0 && rect.height === 0)) {
 		current.box.style.display = 'none';
 		current.label.style.display = 'none';
+		current.matchLayer.replaceChildren();
 		return;
 	}
 	Object.assign(current.box.style, {
@@ -179,7 +259,12 @@ function render(current: PickerSession): void {
 		width: `${rect.width}px`,
 		height: `${rect.height}px`,
 	});
-	current.label.textContent = elementSelector(target, false);
+	const selector = elementSelector(target, false);
+	const matchText = renderMatches(current, target);
+	current.labelSelector.textContent = selector;
+	current.labelMatches.textContent = matchText;
+	const announcement = matchText ? `${selector} ${matchText}` : selector;
+	if (current.liveRegion.textContent !== announcement) current.liveRegion.textContent = announcement;
 	current.label.style.display = 'block';
 	const labelHeight = current.label.offsetHeight;
 	const top =
@@ -213,25 +298,37 @@ export function stopElementPickerFor(view: EditorView): void {
 
 interface ElementPickerOptions {
 	hint: string;
+	startAt: Element | null;
 	onDone: () => void;
 }
 
-export function startElementPicker(view: EditorView, {hint, onDone}: ElementPickerOptions): void {
+export function startElementPicker(view: EditorView, {hint, startAt, onDone}: ElementPickerOptions): void {
 	stopElementPicker();
 	const host = document.createElement('div');
 	host.setAttribute(APP_HIGHLIGHT_ATTRIBUTE, '');
 	host.setAttribute('popover', 'manual');
 	host.style.cssText = HOST_STYLE;
+	const matchLayer = document.createElement('div');
+	matchLayer.setAttribute('aria-hidden', 'true');
 	const box = document.createElement('div');
 	box.style.cssText = BOX_STYLE;
+	box.setAttribute('aria-hidden', 'true');
 	const label = document.createElement('div');
 	label.style.cssText = LABEL_STYLE;
 	label.setAttribute('aria-hidden', 'true');
+	const labelSelector = document.createElement('div');
+	labelSelector.style.cssText = LABEL_SELECTOR_STYLE;
+	const labelMatches = document.createElement('div');
+	labelMatches.style.cssText = LABEL_LINE_STYLE;
+	label.append(labelSelector, labelMatches);
 	const hintElement = document.createElement('div');
 	hintElement.style.cssText = HINT_STYLE;
 	hintElement.setAttribute('role', 'status');
 	hintElement.textContent = hint;
-	host.append(box, label, hintElement);
+	const liveRegion = document.createElement('div');
+	liveRegion.style.cssText = LIVE_REGION_STYLE;
+	liveRegion.setAttribute('aria-live', 'polite');
+	host.append(matchLayer, box, label, hintElement, liveRegion);
 	document.documentElement.appendChild(host);
 	host.showPopover();
 	const editorWindow = view.dom.ownerDocument.defaultView;
@@ -266,7 +363,7 @@ export function startElementPicker(view: EditorView, {hint, onDone}: ElementPick
 			finish();
 			return;
 		}
-		if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+		if (event.altKey && ARROW_KEYS.has(event.key)) {
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			const target = current.target;
@@ -276,9 +373,20 @@ export function startElementPicker(view: EditorView, {hint, onDone}: ElementPick
 				if (parent) setTarget(current, parent, [...current.children, target]);
 				return;
 			}
-			const children = [...current.children];
-			const child = children.pop();
-			if (child?.isConnected) setTarget(current, child, children);
+			if (event.key === 'ArrowDown') {
+				const children = [...current.children];
+				const child = children.pop();
+				if (child?.isConnected) {
+					setTarget(current, child, children);
+					return;
+				}
+				const firstChild = flxChildren(target)[0];
+				if (firstChild) setTarget(current, firstChild);
+				return;
+			}
+			const forward = (event.key === 'ArrowRight') !== (getComputedStyle(document.documentElement).direction === 'rtl');
+			const sibling = siblingFlxElement(target, forward ? 1 : -1);
+			if (sibling) setTarget(current, sibling);
 			return;
 		}
 		if (event.key === 'Enter' && current.target) {
@@ -298,7 +406,12 @@ export function startElementPicker(view: EditorView, {hint, onDone}: ElementPick
 		view,
 		host,
 		box,
+		matchLayer,
 		label,
+		labelSelector,
+		labelMatches,
+		hint: hintElement,
+		liveRegion,
 		target: null,
 		children: [],
 		frame: null,
@@ -316,5 +429,7 @@ export function startElementPicker(view: EditorView, {hint, onDone}: ElementPick
 	runInAction(() => active.set(true));
 	const x = lastPointer.x >= 0 ? lastPointer.x : innerWidth / 2;
 	const y = lastPointer.y >= 0 ? lastPointer.y : innerHeight / 2;
-	setTarget(current, nearestFlxElement(document.elementFromPoint(x, y)));
+	const start = startAt?.isConnected ? nearestFlxElement(startAt) : null;
+	setTarget(current, start ?? nearestFlxElement(document.elementFromPoint(x, y)));
+	scheduleRender(current);
 }

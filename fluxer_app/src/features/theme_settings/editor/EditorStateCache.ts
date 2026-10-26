@@ -28,6 +28,7 @@ const STORED_HISTORY_LIMIT = 8;
 const STORED_HISTORY_MAX_CHARS = 512 * 1024;
 
 const entries = new Map<string, CacheEntry>();
+const openedCss = new Map<string, string>();
 let liveEditorCapture: (() => void) | null = null;
 
 function sameCss(left: string, right: string): boolean {
@@ -89,6 +90,17 @@ export function writeCachedEditorState(key: string, storedCss: string, state: Ed
 	};
 	entries.set(key, entry);
 	storeHistory(key, entry);
+}
+
+export function readOpenedCss(key: string, current: string): string {
+	const opened = openedCss.get(key);
+	if (opened !== undefined) return opened;
+	openedCss.set(key, current);
+	return current;
+}
+
+export function forgetOpenedCss(): void {
+	openedCss.clear();
 }
 
 export function registerLiveEditorCapture(capture: () => void): () => void {

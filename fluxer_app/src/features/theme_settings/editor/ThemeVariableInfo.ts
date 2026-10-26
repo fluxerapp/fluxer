@@ -3,6 +3,7 @@
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import type {ThemeVariableDefinition} from '@app/features/theme/variables/ThemeVariableManifest';
+import {toHexColor} from '@app/features/theme_settings/editor/CssColorFormat';
 import {getThemeDefaultVariables} from '@app/features/theme_settings/utils/ThemeDefaultVariables';
 import {getTokenGroupLabelDescriptor, getTokenVariableDefinition} from '@app/features/theme_settings/utils/TokenGroups';
 import {i18n} from '@lingui/core';
@@ -44,10 +45,24 @@ export function readCurrentVariableValue(name: string): string {
 	return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+export function readDisplayVariableValue(name: string): string {
+	const value = readCurrentVariableValue(name);
+	if (!value || !isColorVariable(name)) return value;
+	return toHexColor(`var(${name})`) ?? value;
+}
+
+const THEME_INDEPENDENT_VARIABLE = /var\(--saturation-factor\)/g;
+
+function displayDefaultValue(name: string, value: string | undefined): string | null {
+	if (value === undefined) return null;
+	if (!isColorVariable(name) || value.replace(THEME_INDEPENDENT_VARIABLE, '').includes('var(')) return value;
+	return toHexColor(value) ?? value;
+}
+
 export function readDefaultVariableValues(name: string): {dark: string | null; light: string | null} {
 	return {
-		dark: getThemeDefaultVariables('dark')[name] ?? null,
-		light: getThemeDefaultVariables('light')[name] ?? null,
+		dark: displayDefaultValue(name, getThemeDefaultVariables('dark')[name]),
+		light: displayDefaultValue(name, getThemeDefaultVariables('light')[name]),
 	};
 }
 

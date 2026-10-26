@@ -245,7 +245,7 @@ export const SEMANTIC_ATTRIBUTES: ReadonlyArray<SemanticAttribute> = [
 ];
 
 const FLX_SCAN_CACHE_MS = 5000;
-const SELECTOR_MATCH_LIMIT = 1000;
+export const SELECTOR_MATCH_LIMIT = 1000;
 
 let flxScan: {at: number; values: ReadonlyArray<string>} | null = null;
 

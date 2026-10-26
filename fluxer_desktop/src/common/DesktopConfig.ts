@@ -18,7 +18,7 @@ import log from 'electron-log';
 export type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 
 const CONFIG_FILE_NAME = 'settings.json';
-const THEME_FOLDERS_MAX = 20;
+export const THEME_FOLDERS_MAX = 20;
 const MINIMIZE_TO_TRAY_STORAGE_KEY_V2 = 'minimizeToTrayV2';
 const CLOSE_TO_TRAY_STORAGE_KEY_V2 = 'closeToTrayV2';
 
@@ -593,13 +593,16 @@ export function getThemeFolders(): Array<string> {
 	return Array.isArray(config.theme_folders) ? [...config.theme_folders] : [];
 }
 
-export function addThemeFolder(folder: string): boolean {
+export function canAddThemeFolder(folder: string): boolean {
 	const current = getThemeFolders();
-	if (current.includes(folder)) return true;
-	if (current.length >= THEME_FOLDERS_MAX) return false;
+	return current.includes(folder) || current.length < THEME_FOLDERS_MAX;
+}
+
+export function addThemeFolder(folder: string): void {
+	const current = getThemeFolders();
+	if (current.includes(folder) || current.length >= THEME_FOLDERS_MAX) return;
 	config.theme_folders = [...current, folder];
 	saveDesktopConfig();
-	return true;
 }
 
 export function removeThemeFolder(folder: string): void {

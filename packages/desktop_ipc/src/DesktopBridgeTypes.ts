@@ -119,11 +119,11 @@ export interface ThemeFolderChange {
 	renamed: Array<ThemeFolderRename>;
 }
 
-export interface ThemeFolderImportResult {
-	folder: string;
-	files: Array<ThemeDirectoryCssFile>;
-	truncated: boolean;
-}
+export type ThemeFolderImportError = {error: 'folder_limit'; limit: number} | {error: 'unreadable'};
+
+export type ThemeFolderImportResult =
+	| {folder: string; files: Array<ThemeDirectoryCssFile>; truncated: boolean}
+	| ThemeFolderImportError;
 
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
 

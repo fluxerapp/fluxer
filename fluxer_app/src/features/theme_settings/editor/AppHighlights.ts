@@ -28,12 +28,30 @@ const BOX_STYLE = [
 	'border-radius: 2px',
 ].join(';');
 
+export function excludeEditorPanel(host: HTMLElement): void {
+	const panel = document.querySelector('[data-quick-css-panel]');
+	const rect = panel?.getBoundingClientRect();
+	if (!rect || rect.width === 0 || rect.height === 0) {
+		host.style.setProperty('clip-path', 'none', 'important');
+		return;
+	}
+	const width = innerWidth;
+	const height = innerHeight;
+	const {left, top, right, bottom} = rect;
+	host.style.setProperty(
+		'clip-path',
+		`polygon(evenodd, 0 0, ${width}px 0, ${width}px ${height}px, 0 ${height}px, 0 0, ${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px, ${left}px ${top}px)`,
+		'important',
+	);
+}
+
 export function showAppHighlights(elements: ReadonlyArray<Element>): () => void {
 	const host = document.createElement('div');
 	host.setAttribute(APP_HIGHLIGHT_ATTRIBUTE, '');
 	host.setAttribute('popover', 'manual');
 	host.setAttribute('aria-hidden', 'true');
 	host.style.cssText = HOST_STYLE;
+	excludeEditorPanel(host);
 	for (const element of elements.slice(0, HIGHLIGHT_BOX_LIMIT)) {
 		const rect = element.getBoundingClientRect();
 		if (rect.width === 0 && rect.height === 0) continue;

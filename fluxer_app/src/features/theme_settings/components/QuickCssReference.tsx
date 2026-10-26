@@ -5,7 +5,7 @@ import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/Th
 import styles from '@app/features/theme_settings/components/QuickCssReference.module.css';
 import {readOnScreenFlxValues, SEMANTIC_ATTRIBUTES} from '@app/features/theme_settings/editor/AppSelectors';
 import EditorPreferences from '@app/features/theme_settings/editor/EditorPreferences';
-import {isColorVariable, readCurrentVariableValue} from '@app/features/theme_settings/editor/ThemeVariableInfo';
+import {isColorVariable, readDisplayVariableValue} from '@app/features/theme_settings/editor/ThemeVariableInfo';
 import {getTokenGroupLabelDescriptor, TOKEN_GROUPS} from '@app/features/theme_settings/utils/TokenGroups';
 import {MoreOptionsVerticalIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -77,7 +77,7 @@ function indent(): string {
 
 const VariableRow: React.FC<{name: string}> = ({name}) => {
 	const {i18n} = useLingui();
-	const value = readCurrentVariableValue(name);
+	const value = readDisplayVariableValue(name);
 	const openMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
 		ContextMenuCommands.openFromElementBottomRight(event, ({onClose}) => {
 			const select = (action: () => void) => () => {

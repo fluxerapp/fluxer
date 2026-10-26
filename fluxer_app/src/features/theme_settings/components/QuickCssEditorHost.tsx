@@ -28,6 +28,9 @@ const POPUP_BLOCKED_DESCRIPTOR = msg({
 
 const EDITOR_WINDOW_WIDTH = 1100;
 const EDITOR_WINDOW_HEIGHT = 760;
+const EDITOR_WINDOW_NAME = isDesktop()
+	? QUICK_CSS_EDITOR_WINDOW_KEY
+	: `${QUICK_CSS_EDITOR_WINDOW_KEY}_${Math.random().toString(36).slice(2, 10)}`;
 
 const QuickCssWorkspace = createNamedLoadableComponent<Record<string, never>>({
 	displayName: 'QuickCssWorkspace',
@@ -76,7 +79,7 @@ const QuickCssEditorWindow: React.FC<{generation: number}> = observer(({generati
 	}, [isAlwaysOnTop]);
 	return (
 		<PopoutWindow
-			windowKey={QUICK_CSS_EDITOR_WINDOW_KEY}
+			windowKey={EDITOR_WINDOW_NAME}
 			windowGeneration={generation}
 			title={title}
 			width={EDITOR_WINDOW_WIDTH}

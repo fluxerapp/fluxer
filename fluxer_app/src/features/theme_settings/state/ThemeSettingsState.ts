@@ -11,6 +11,7 @@ export const QUICK_CSS_EDITOR_FILE = 'quick-css';
 
 export type QuickCssEditorPlacement = 'panel' | 'window';
 export type QuickCssEditorTab = 'css' | 'colors' | 'themes' | 'assets' | 'reference';
+export type QuickCssEditorFocusTarget = 'editor' | 'tab' | 'float' | 'dock-left' | 'dock-right';
 
 export interface ThemePreview {
 	id: string;
@@ -46,6 +47,7 @@ class ThemeSettingsState {
 	editorPlacement: QuickCssEditorPlacement | null = null;
 	preferredPlacement: QuickCssEditorPlacement = readStoredPlacement();
 	editorTab: QuickCssEditorTab = 'css';
+	pendingFocus: QuickCssEditorFocusTarget | null = null;
 	editorGeneration = 0;
 	editorFile: string = QUICK_CSS_EDITOR_FILE;
 	editorDirty = false;
@@ -104,6 +106,7 @@ class ThemeSettingsState {
 		this.editorTab = 'css';
 		this.editorGeneration += 1;
 		this.editorPlacement = windowAllowed ? this.preferredPlacement : 'panel';
+		this.pendingFocus = 'editor';
 	}
 
 	moveEditor(placement: QuickCssEditorPlacement, generation: number): void {
@@ -113,6 +116,7 @@ class ThemeSettingsState {
 		this.editorPlacement = placement;
 		this.editorWindow = null;
 		this.preferredPlacement = placement;
+		this.pendingFocus = 'editor';
 		try {
 			AppStorage.setItem(AppStorageKey.QUICK_CSS_EDITOR_PLACEMENT, placement);
 		} catch {}
@@ -120,6 +124,10 @@ class ThemeSettingsState {
 
 	setEditorTab(tab: QuickCssEditorTab): void {
 		this.editorTab = tab;
+	}
+
+	requestFocus(target: QuickCssEditorFocusTarget | null): void {
+		this.pendingFocus = target;
 	}
 
 	requestEditorFile(file: string): void {
@@ -159,6 +167,7 @@ class ThemeSettingsState {
 		this.editorWindow = null;
 		this.editorFile = QUICK_CSS_EDITOR_FILE;
 		this.editorDirty = false;
+		this.pendingFocus = null;
 	}
 
 	setMissingReferences(references: ReadonlyArray<string>): void {

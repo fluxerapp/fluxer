@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme_settings/components/QuickCssEditor.module.css';
 import {QuickCssShortcutsModal} from '@app/features/theme_settings/components/QuickCssShortcutsModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -10,6 +11,8 @@ import {gotoLine} from '@codemirror/search';
 import type {EditorView} from '@codemirror/view';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {KeyboardIcon} from '@phosphor-icons/react';
+import {clsx} from 'clsx';
 import type React from 'react';
 import {useSyncExternalStore} from 'react';
 
@@ -91,7 +94,7 @@ export function createEditorStatusStore(): EditorStatusStore {
 interface QuickCssStatusBarProps {
 	view: EditorView | null;
 	status: EditorStatusStore;
-	previewStatus: React.ReactNode;
+	previewStatus: string | null;
 }
 
 export const QuickCssStatusBar: React.FC<QuickCssStatusBarProps> = ({view, status, previewStatus}) => {
@@ -141,23 +144,35 @@ export const QuickCssStatusBar: React.FC<QuickCssStatusBarProps> = ({view, statu
 			>
 				{i18n._(WARNINGS_DESCRIPTOR, {count: current.warnings})}
 			</button>
-			<span className={styles.statusPreview} role="status" data-flx="theme-settings.quick-css-status-bar.preview">
+			<span
+				className={styles.statusPreview}
+				role="status"
+				title={previewStatus ?? undefined}
+				data-flx="theme-settings.quick-css-status-bar.preview"
+			>
 				{previewStatus}
 			</span>
-			<button
-				type="button"
-				className={styles.statusButton}
-				onClick={() =>
-					ModalCommands.push(
-						modal(() => (
-							<QuickCssShortcutsModal data-flx="theme-settings.quick-css-status-bar.quick-css-shortcuts-modal" />
-						)),
-					)
-				}
-				data-flx="theme-settings.quick-css-status-bar.shortcuts"
+			<Tooltip
+				text={i18n._(KEYBOARD_SHORTCUTS_DESCRIPTOR)}
+				position="top"
+				data-flx="theme-settings.quick-css-status-bar.shortcuts-tooltip"
 			>
-				{i18n._(KEYBOARD_SHORTCUTS_DESCRIPTOR)}
-			</button>
+				<button
+					type="button"
+					className={clsx(styles.statusButton, styles.statusIconButton)}
+					aria-label={i18n._(KEYBOARD_SHORTCUTS_DESCRIPTOR)}
+					onClick={() =>
+						ModalCommands.push(
+							modal(() => (
+								<QuickCssShortcutsModal data-flx="theme-settings.quick-css-status-bar.quick-css-shortcuts-modal" />
+							)),
+						)
+					}
+					data-flx="theme-settings.quick-css-status-bar.shortcuts"
+				>
+					<KeyboardIcon size={remFromPx(18)} data-flx="theme-settings.quick-css-status-bar.keyboard-icon" />
+				</button>
+			</Tooltip>
 		</div>
 	);
 };

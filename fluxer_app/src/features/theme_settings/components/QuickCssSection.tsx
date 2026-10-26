@@ -49,6 +49,11 @@ const TURN_OFF_HINT_DESCRIPTOR = msg({
 	comment:
 		'Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+K that stops applying quick CSS and saved themes in this tab.',
 });
+const OPEN_HINT_DESCRIPTOR = msg({
+	message: 'Press {shortcut} anywhere in the app to open the editor.',
+	comment:
+		'Shown in the "Quick CSS" section in Settings > Themes. {shortcut} is a keyboard shortcut such as Ctrl+Alt+Shift+T.',
+});
 const SYNC_CUSTOM_CSS_ACROSS_DEVICES_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Only the CSS text is synced. Uploaded assets and local file references stay on this device.',
 	comment: 'Description of the "Sync custom CSS across devices" switch in Settings > Themes.',
@@ -77,6 +82,7 @@ export const QuickCssSection: React.FC = observer(() => {
 	const target = ThemeEditTarget.target;
 	const lines = countLines(ThemeProfile.customThemeCssFor(target));
 	const [turnOffCombo] = Keybind.getActiveCombosForAction('system_toggle_custom_css');
+	const [openCombo] = Keybind.getActiveCombosForAction('system_open_theme_studio_popout');
 	const handleSyncChange = (value: boolean) => {
 		if (!value) {
 			Accessibility.updateSettings({customThemeCssSyncAcrossDevices: false});
@@ -106,6 +112,11 @@ export const QuickCssSection: React.FC = observer(() => {
 				<p className={styles.note} data-flx="theme-settings.quick-css-section.note">
 					{lines > 0 ? i18n._(QUICK_CSS_SIZE_DESCRIPTOR, {lines}) : i18n._(QUICK_CSS_EMPTY_DESCRIPTOR)}
 				</p>
+				{openCombo && !MobileLayout.enabled ? (
+					<p className={styles.note} data-flx="theme-settings.quick-css-section.open-hint">
+						{i18n._(OPEN_HINT_DESCRIPTOR, {shortcut: formatKeyCombo(i18n, openCombo)})}
+					</p>
+				) : null}
 				{turnOffCombo && !MobileLayout.enabled ? (
 					<p className={styles.note} data-flx="theme-settings.quick-css-section.turn-off-hint">
 						{i18n._(TURN_OFF_HINT_DESCRIPTOR, {shortcut: formatKeyCombo(i18n, turnOffCombo)})}

@@ -38,6 +38,7 @@ import {readFileText} from '@app/features/user/components/modals/tabs/appearance
 import type {
 	ThemeDirectoryCssFile,
 	ThemeFolderChange,
+	ThemeFolderImportError,
 	ThemeFolderStatus,
 	ThemeLinkedFileError,
 } from '@app/types/electron.d';
@@ -47,6 +48,13 @@ import {msg} from '@lingui/core/macro';
 import {compareShallow, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('ThemeLibrary');
+
+export class ThemeFolderImportFailedError extends Error {
+	constructor(readonly reason: ThemeFolderImportError) {
+		super(`Theme folder import failed: ${reason.error}`);
+		this.name = 'ThemeFolderImportFailedError';
+	}
+}
 const DUPLICATE_THEME_NAME_DESCRIPTOR = msg({
 	message: '{themeName} Copy',
 	comment:
@@ -386,6 +394,7 @@ class ThemeLibrary {
 		if (this.canWatchFolders && importThemeFolder) {
 			const result = await importThemeFolder();
 			if (!result) return [];
+			if ('error' in result) throw new ThemeFolderImportFailedError(result);
 			runInAction(() => {
 				if (!this.folderPaths.includes(result.folder)) this.folderPaths = [...this.folderPaths, result.folder];
 				this.folderStatus.set(result.folder, {status: 'live', truncated: result.truncated});
@@ -553,10 +562,11 @@ class ThemeLibrary {
 
 	private async applyFolderFiles(folder: string, changes: ThemeFolderFileChanges): Promise<Array<ThemeLibraryTheme>> {
 		const byPath = new Map<string, ThemeLibraryTheme>();
+		const linkedOutsideFolder = new Set<string>();
 		for (const theme of this.themes) {
-			if (theme.linkedPath && (theme.folderPath === folder || theme.folderPath === undefined)) {
-				byPath.set(theme.linkedPath, theme);
-			}
+			if (!theme.linkedPath) continue;
+			if (theme.folderPath === folder) byPath.set(theme.linkedPath, theme);
+			else linkedOutsideFolder.add(theme.linkedPath);
 		}
 		const upserts: Array<ThemeLibraryTheme> = [];
 		const removed = new Set<string>();
@@ -573,7 +583,7 @@ class ThemeLibrary {
 		for (const file of changes.upserts) {
 			const existing = byPath.get(file.path);
 			if (!existing) {
-				newFiles.push(file);
+				if (!linkedOutsideFolder.has(file.path)) newFiles.push(file);
 				continue;
 			}
 			matched.add(existing.id);

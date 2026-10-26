@@ -107,18 +107,24 @@ function isFlatpakDocumentPortalPath(folder: string): boolean {
 	return /^\/run\/user\/\d+\/doc\//.test(folder);
 }
 
-export async function isPathInThemeFolder(filePath: string, folders: ReadonlyArray<string>): Promise<boolean> {
-	if (folders.length === 0) return false;
-	let directory: string;
+export async function resolveThemeFolderFile(filePath: string, folders: ReadonlyArray<string>): Promise<string | null> {
+	if (folders.length === 0) return null;
+	let realPath: string;
 	try {
-		directory = await fs.promises.realpath(path.dirname(path.resolve(filePath)));
+		realPath = await fs.promises.realpath(path.resolve(filePath));
 	} catch {
-		return false;
+		return null;
 	}
-	return folders.some((folder) => {
-		const relative = path.relative(folder, directory);
-		return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
-	});
+	for (const folder of folders) {
+		const relative = path.relative(folder, realPath);
+		if (relative === '' || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+			continue;
+		}
+		const directories = relative.split(path.sep).slice(0, -1);
+		if (directories.some((name) => name.startsWith('.') || SKIPPED_DIRECTORY_NAMES.has(name))) continue;
+		return realPath;
+	}
+	return null;
 }
 
 function hashCss(css: string): string {

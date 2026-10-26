@@ -2,7 +2,12 @@
 
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {THEME_VARIABLES} from '@app/features/theme/variables/ThemeVariableManifest';
-import {readOnScreenFlxValues, SEMANTIC_ATTRIBUTES} from '@app/features/theme_settings/editor/AppSelectors';
+import {showAppHighlights} from '@app/features/theme_settings/editor/AppHighlights';
+import {
+	findSelectorMatches,
+	readOnScreenFlxValues,
+	SEMANTIC_ATTRIBUTES,
+} from '@app/features/theme_settings/editor/AppSelectors';
 import editorStyles from '@app/features/theme_settings/editor/QuickCssEditorChrome.module.css';
 import {
 	createSwatchElement,
@@ -12,6 +17,7 @@ import {
 	isColorVariable,
 	readCurrentVariableValue,
 	readDefaultVariableValues,
+	readDisplayVariableValue,
 	readsAsColor,
 } from '@app/features/theme_settings/editor/ThemeVariableInfo';
 import {
@@ -19,11 +25,14 @@ import {
 	type Completion,
 	type CompletionContext,
 	type CompletionSource,
+	completionStatus,
+	selectedCompletion,
 	snippetCompletion,
 } from '@codemirror/autocomplete';
 import {cssLanguage} from '@codemirror/lang-css';
 import {syntaxTree} from '@codemirror/language';
 import type {Extension} from '@codemirror/state';
+import {ViewPlugin, type ViewUpdate} from '@codemirror/view';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -72,7 +81,7 @@ const LOCAL_FILE_DESCRIPTOR = msg({
 export function buildVariableInfo(ownerDocument: Document, name: string): HTMLElement {
 	const root = ownerDocument.createElement('div');
 	root.className = editorStyles.info;
-	const current = readCurrentVariableValue(name);
+	const current = readDisplayVariableValue(name);
 	const defaults = readDefaultVariableValues(name);
 	const rows: Array<[string, string | null]> = [
 		[i18n._(CURRENT_VALUE_DESCRIPTOR, {value: current || '—'}), current],
@@ -143,13 +152,43 @@ const variableSource: CompletionSource = (context) => {
 	};
 };
 
+const FLX_COMPLETION_TYPE = 'constant data-flx';
+
+function selectedFlxValue(update: ViewUpdate): string | null {
+	if (completionStatus(update.state) !== 'active') return null;
+	const selected = selectedCompletion(update.state);
+	return selected?.type === FLX_COMPLETION_TYPE ? selected.label : null;
+}
+
+const flxOptionHighlight = ViewPlugin.fromClass(
+	class {
+		value: string | null = null;
+		clear: (() => void) | null = null;
+
+		update(update: ViewUpdate): void {
+			const value = selectedFlxValue(update);
+			if (value === this.value) return;
+			this.value = value;
+			this.clear?.();
+			this.clear = null;
+			if (value === null) return;
+			const matches = findSelectorMatches(`[data-flx="${value.replace(/["\\]/g, '\\$&')}"]`);
+			if (matches && matches.elements.length > 0) this.clear = showAppHighlights(matches.elements);
+		}
+
+		destroy(): void {
+			this.clear?.();
+		}
+	},
+);
+
 const flxValueSource: CompletionSource = (context) => {
 	const match = context.matchBefore(/\[data-flx\s*[~|^$*]?=\s*["']?[^"'\]\s]*$/);
 	if (!match) return null;
 	const token = /[^"'=\s]*$/.exec(match.text)?.[0] ?? '';
 	return {
 		from: context.pos - token.length,
-		options: readOnScreenFlxValues().map((value) => ({label: value, type: 'constant'})),
+		options: readOnScreenFlxValues().map((value) => ({label: value, type: FLX_COMPLETION_TYPE})),
 		validFor: /^[^"'\]\s]*$/,
 	};
 };
@@ -243,9 +282,12 @@ const snippetSource: CompletionSource = (context) => {
 };
 
 export function cssCompletionSources(): Extension {
-	return [variableSource, flxValueSource, attributeSource, referenceSource, snippetSource].map((source) =>
-		cssLanguage.data.of({autocomplete: source}),
-	);
+	return [
+		...[variableSource, flxValueSource, attributeSource, referenceSource, snippetSource].map((source) =>
+			cssLanguage.data.of({autocomplete: source}),
+		),
+		flxOptionHighlight,
+	];
 }
 
 export function cssCompletionConfig(activateOnTyping: boolean): Extension {

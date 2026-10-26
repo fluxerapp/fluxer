@@ -29,11 +29,6 @@
 	border-color: var(--text-primary);
 }
 
-.inlineSwatch:focus-visible {
-	outline: 0.125rem solid var(--brand-primary);
-	outline-offset: 0.0625rem;
-}
-
 .info {
 	display: flex;
 	flex-direction: column;
@@ -63,11 +58,14 @@
 }
 
 .hoverTitle {
+	direction: ltr;
+	unicode-bidi: isolate;
+	text-align: start;
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-weight: 600;
 	overflow-wrap: anywhere;
 }
 
 .hoverMuted {
-	color: var(--text-tertiary);
+	color: var(--text-primary-muted);
 }

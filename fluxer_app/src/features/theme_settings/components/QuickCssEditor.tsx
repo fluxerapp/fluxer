@@ -2,7 +2,6 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
@@ -15,10 +14,15 @@ import {
 	type EditorStatus,
 	QuickCssStatusBar,
 } from '@app/features/theme_settings/components/QuickCssStatusBar';
-import {type ColorSwatchTarget, cssColorSwatches} from '@app/features/theme_settings/editor/CssColorSwatches';
+import {formatCssColor, parseCssColor, type RgbaColor} from '@app/features/theme_settings/editor/CssColorFormat';
+import {
+	type ColorSwatchTarget,
+	cssColorSwatches,
+	openColorAtCursor,
+} from '@app/features/theme_settings/editor/CssColorSwatches';
 import {cssCompletionConfig, cssCompletionSources} from '@app/features/theme_settings/editor/CssCompletions';
 import {formatCssDocument} from '@app/features/theme_settings/editor/CssFormat';
-import {cssHover} from '@app/features/theme_settings/editor/CssHover';
+import {cssHover, showInfoAtCursor} from '@app/features/theme_settings/editor/CssHover';
 import {cssLint, relintCss} from '@app/features/theme_settings/editor/CssLint';
 import {cssNumberStep} from '@app/features/theme_settings/editor/CssNumberStep';
 import {cssRegionFolding} from '@app/features/theme_settings/editor/CssOutline';
@@ -38,8 +42,11 @@ import {
 } from '@app/features/theme_settings/editor/ElementPicker';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getThemeBaseKind, type ThemeBaseKind} from '@app/features/theme_settings/utils/ThemeDefaultVariables';
+import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {Input} from '@app/features/ui/components/form/FormInput';
+import {formatKeyHintText} from '@app/features/ui/keybind_hint/KeybindHint';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {closeBrackets, closeBracketsKeymap, completionKeymap} from '@codemirror/autocomplete';
 import {defaultKeymap, history, historyField, historyKeymap, indentWithTab} from '@codemirror/commands';
@@ -54,8 +61,8 @@ import {
 	syntaxHighlighting,
 } from '@codemirror/language';
 import {forEachDiagnostic, lintKeymap, setDiagnosticsEffect} from '@codemirror/lint';
-import {highlightSelectionMatches, searchKeymap} from '@codemirror/search';
-import {Compartment, EditorState, type Extension, Prec} from '@codemirror/state';
+import {highlightSelectionMatches, openSearchPanel, searchKeymap} from '@codemirror/search';
+import {Compartment, EditorState, type Extension, Prec, Transaction} from '@codemirror/state';
 import {
 	crosshairCursor,
 	drawSelection,
@@ -66,13 +73,23 @@ import {
 	highlightSpecialChars,
 	keymap,
 	lineNumbers,
+	placeholder,
 	rectangularSelection,
 	type ViewUpdate,
 } from '@codemirror/view';
 import {tags as t} from '@lezer/highlight';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {CursorClickIcon, GearSixIcon, type Icon, ListBulletsIcon, MagicWandIcon} from '@phosphor-icons/react';
+import {
+	CursorClickIcon,
+	DotsThreeIcon,
+	GearSixIcon,
+	type Icon,
+	ListBulletsIcon,
+	MagicWandIcon,
+	MagnifyingGlassIcon,
+} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
@@ -99,7 +116,24 @@ const PICK_AN_ELEMENT_DESCRIPTOR = msg({
 const PICKER_HINT_DESCRIPTOR = msg({
 	message: 'Click an element to add its selector. {parentKey} picks its parent and Escape stops picking.',
 	comment:
-		'Shown at the top of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.',
+		'Shown at the bottom of the app while picking an element for the quick CSS editor. {parentKey} is a keyboard shortcut such as Alt + Up.',
+});
+const FIND_DESCRIPTOR = msg({
+	message: 'Find and replace',
+	comment: 'Button in the quick CSS editor that opens the search and replace bar.',
+});
+const MORE_DESCRIPTOR = msg({
+	message: 'More',
+	comment: 'Button in the quick CSS editor that opens a menu with more actions, such as importing and downloading CSS.',
+});
+const EMPTY_EDITOR_DESCRIPTOR = msg({
+	message: 'Write CSS here. Press {completeKey} for suggestions, or {pickKey} to pick a part of the app.',
+	comment:
+		'Placeholder in the empty quick CSS editor. {completeKey} and {pickKey} are keyboard shortcuts such as Ctrl + Space.',
+});
+const COLOR_VALUE_DESCRIPTOR = msg({
+	message: 'Color value',
+	comment: 'Label of the text field in the color picker of the quick CSS editor, where a CSS color can be typed.',
 });
 const FIX_ERRORS_BEFORE_FORMATTING_DESCRIPTOR = msg({
 	message: 'Fix the errors in your CSS before formatting it.',
@@ -111,11 +145,49 @@ const HISTORY_SAVE_DELAY_MS = 2000;
 const OUTLINE_BESIDE_MIN_WIDTH = 720;
 const COLOR_PICKER_POPOUT_KEY = 'quick-css-editor-color-picker';
 
+const TOKEN_COLORS = {
+	comment: 'var(--text-tertiary)',
+	property: 'var(--text-link)',
+	keyword: 'var(--accent-purple)',
+	tag: 'var(--accent-success)',
+	selector: 'var(--accent-warning)',
+	number: 'var(--accent-success)',
+	string: 'var(--accent-danger)',
+	punctuation: 'var(--text-secondary)',
+};
+
+const LIGHT_TOKEN_SHARE: Readonly<Record<keyof typeof TOKEN_COLORS, number>> = {
+	comment: 65,
+	property: 55,
+	keyword: 65,
+	tag: 45,
+	selector: 30,
+	number: 45,
+	string: 65,
+	punctuation: 75,
+};
+
+function tokenVariables(baseTheme: ThemeBaseKind): Record<string, string> {
+	return Object.fromEntries(
+		(Object.keys(TOKEN_COLORS) as Array<keyof typeof TOKEN_COLORS>).map((token) => [
+			`--qcss-${token}`,
+			baseTheme === 'dark'
+				? TOKEN_COLORS[token]
+				: `color-mix(in oklab, ${TOKEN_COLORS[token]} ${LIGHT_TOKEN_SHARE[token]}%, var(--text-primary))`,
+		]),
+	);
+}
+
+function tint(color: string, percent: number): string {
+	return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
+}
+
 function buildEditorTheme(baseTheme: ThemeBaseKind, fontSize: number): Extension {
 	const dark = baseTheme === 'dark';
 	return EditorView.theme(
 		{
 			'&': {
+				...tokenVariables(baseTheme),
 				height: '100%',
 				color: 'var(--text-primary)',
 				backgroundColor: 'var(--background-secondary)',
@@ -127,25 +199,26 @@ function buildEditorTheme(baseTheme: ThemeBaseKind, fontSize: number): Extension
 				padding: '4px 0',
 			},
 			'.cm-content': {caretColor: 'var(--text-primary)', padding: '8px 0'},
-			'.cm-gutters': {backgroundColor: 'var(--background-secondary)', color: 'var(--text-tertiary)', border: 'none'},
+			'.cm-gutters': {backgroundColor: 'var(--background-secondary)', color: 'var(--qcss-comment)', border: 'none'},
 			'.cm-activeLineGutter': {backgroundColor: 'transparent', color: 'var(--text-primary)'},
-			'.cm-activeLine': {backgroundColor: dark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)'},
+			'.cm-activeLine': {backgroundColor: tint('var(--text-primary)', 4)},
 			'.cm-lineNumbers .cm-gutterElement': {padding: '0 8px 0 16px'},
 			'&.cm-focused': {outline: 'none'},
 			'.cm-cursor, .cm-dropCursor': {borderLeftColor: 'var(--text-primary)'},
+			'.cm-placeholder': {color: 'var(--qcss-comment)'},
 			'&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
-				backgroundColor: dark ? 'rgba(120, 160, 220, 0.28)' : 'rgba(80, 130, 210, 0.22)',
+				backgroundColor: tint('var(--brand-primary)', 30),
 			},
-			'.cm-selectionMatch': {backgroundColor: dark ? 'rgba(120, 160, 220, 0.18)' : 'rgba(80, 130, 210, 0.14)'},
+			'.cm-selectionMatch': {backgroundColor: tint('var(--brand-primary)', 18)},
 			'.cm-searchMatch': {
-				backgroundColor: dark ? 'rgba(250, 200, 80, 0.22)' : 'rgba(230, 170, 30, 0.26)',
+				backgroundColor: tint('var(--status-warning)', 25),
 				outline: '1px solid var(--status-warning)',
 			},
 			'.cm-searchMatch.cm-searchMatch-selected': {
-				backgroundColor: dark ? 'rgba(250, 200, 80, 0.4)' : 'rgba(230, 170, 30, 0.45)',
+				backgroundColor: tint('var(--status-warning)', 45),
 			},
 			'.cm-matchingBracket, &.cm-focused .cm-matchingBracket': {
-				backgroundColor: dark ? 'rgba(120, 160, 220, 0.25)' : 'rgba(80, 130, 210, 0.2)',
+				backgroundColor: tint('var(--brand-primary)', 25),
 				outline: 'none',
 			},
 			'.cm-tooltip': {
@@ -170,24 +243,91 @@ function buildEditorTheme(baseTheme: ThemeBaseKind, fontSize: number): Extension
 			'.cm-panels': {backgroundColor: 'var(--background-secondary)', color: 'var(--text-primary)'},
 			'.cm-panels.cm-panels-bottom': {borderTop: '1px solid var(--background-modifier-accent)'},
 			'.cm-panels.cm-panels-top': {borderBottom: '1px solid var(--background-modifier-accent)'},
-			'.cm-panel input, .cm-panel button, .cm-panel label': {fontFamily: 'var(--font-sans)', fontSize: '13px'},
+			'.cm-panel input, .cm-panel button, .cm-panel label': {fontFamily: 'var(--font-sans)', fontSize: '0.8125rem'},
+			'.cm-panel.cm-search': {
+				display: 'flex',
+				flexWrap: 'wrap',
+				alignItems: 'center',
+				gap: '6px 8px',
+				padding: '8px 40px 8px 10px',
+			},
+			'.cm-panel.cm-search br': {display: 'none'},
+			'.cm-panel.cm-search [name=close]': {
+				top: '8px',
+				insetInlineEnd: '8px',
+				width: '24px',
+				height: '24px',
+				borderRadius: '4px',
+				color: 'var(--text-primary-muted)',
+				fontSize: '18px',
+				lineHeight: '22px',
+			},
+			'.cm-panel.cm-search [name=close]:hover': {
+				color: 'var(--text-primary)',
+				backgroundColor: 'var(--background-modifier-hover)',
+			},
+			'.cm-panel.cm-search label': {
+				display: 'inline-flex',
+				alignItems: 'center',
+				gap: '4px',
+				margin: '0',
+				color: 'var(--text-primary-muted)',
+				whiteSpace: 'nowrap',
+				cursor: 'pointer',
+			},
+			'.cm-panel.cm-search input[type=checkbox]': {
+				width: '14px',
+				height: '14px',
+				margin: '0',
+				accentColor: 'var(--brand-primary)',
+			},
 			'.cm-textfield': {
+				flex: '1 1 10rem',
+				minWidth: '0',
+				height: '28px',
+				margin: '0',
+				padding: '0 8px',
 				backgroundColor: 'var(--background-primary)',
 				color: 'var(--text-primary)',
 				border: '1px solid var(--background-modifier-accent)',
-				borderRadius: '4px',
+				borderRadius: '6px',
+				outline: 'none',
 			},
+			'.cm-textfield:focus': {borderColor: 'var(--brand-primary)'},
 			'.cm-button': {
+				height: '28px',
+				margin: '0',
+				padding: '0 10px',
 				backgroundImage: 'none',
 				backgroundColor: 'var(--background-modifier-hover)',
 				color: 'var(--text-primary)',
-				border: '1px solid var(--background-modifier-accent)',
-				borderRadius: '4px',
+				border: 'none',
+				borderRadius: '6px',
+				cursor: 'pointer',
 			},
+			'.cm-button:hover': {backgroundColor: 'var(--background-modifier-selected)'},
+			'.cm-panel.cm-panel-lint': {padding: '0 0 4px'},
 			'.cm-panel.cm-panel-lint ul': {maxHeight: '160px'},
+			'.cm-panel.cm-panel-lint ul::before': {
+				content: 'attr(aria-label)',
+				display: 'block',
+				position: 'sticky',
+				top: '0',
+				padding: '8px 12px 4px',
+				backgroundColor: 'var(--background-secondary)',
+				fontFamily: 'var(--font-sans)',
+				fontSize: '0.8125rem',
+				fontWeight: '600',
+				color: 'var(--text-primary)',
+			},
 			'.cm-panel.cm-panel-lint ul [aria-selected]': {
 				backgroundColor: 'var(--background-modifier-selected)',
 				color: 'var(--text-primary)',
+			},
+			'.cm-panel.cm-panel-lint [name=close]': {
+				top: '6px',
+				insetInlineEnd: '8px',
+				color: 'var(--text-primary-muted)',
 			},
 			'.cm-diagnostic': {fontFamily: 'var(--font-sans)'},
 			'.cm-diagnostic-error': {borderLeftColor: 'var(--status-danger)'},
@@ -215,19 +355,26 @@ function buildEditorTheme(baseTheme: ThemeBaseKind, fontSize: number): Extension
 }
 
 const highlightStyle = HighlightStyle.define([
-	{tag: t.comment, color: 'var(--text-tertiary)', fontStyle: 'italic'},
-	{tag: [t.propertyName], color: 'var(--text-link)'},
-	{tag: [t.keyword, t.modifier], color: 'var(--accent-purple)'},
-	{tag: [t.tagName, t.typeName], color: 'var(--accent-success)'},
-	{tag: [t.className, t.labelName], color: 'var(--accent-warning)'},
-	{tag: [t.atom, t.bool, t.unit], color: 'var(--accent-success)'},
-	{tag: [t.number], color: 'var(--accent-success)'},
-	{tag: [t.string, t.special(t.string)], color: 'var(--accent-danger)'},
-	{tag: [t.variableName, t.definition(t.variableName)], color: 'var(--text-link)'},
-	{tag: [t.function(t.variableName), t.macroName], color: 'var(--accent-warning)'},
-	{tag: [t.operator, t.punctuation, t.separator], color: 'var(--text-secondary)'},
-	{tag: [t.color], color: 'var(--accent-danger)'},
+	{tag: t.comment, color: 'var(--qcss-comment)', fontStyle: 'italic'},
+	{tag: [t.propertyName], color: 'var(--qcss-property)'},
+	{tag: [t.keyword, t.modifier], color: 'var(--qcss-keyword)'},
+	{tag: [t.tagName, t.typeName], color: 'var(--qcss-tag)'},
+	{tag: [t.className, t.labelName], color: 'var(--qcss-selector)'},
+	{tag: [t.atom, t.bool, t.unit], color: 'var(--qcss-number)'},
+	{tag: [t.number], color: 'var(--qcss-number)'},
+	{tag: [t.string, t.special(t.string)], color: 'var(--qcss-string)'},
+	{tag: [t.variableName, t.definition(t.variableName)], color: 'var(--qcss-property)'},
+	{tag: [t.function(t.variableName), t.macroName], color: 'var(--qcss-selector)'},
+	{tag: [t.operator, t.punctuation, t.separator], color: 'var(--qcss-punctuation)'},
+	{tag: [t.color], color: 'var(--qcss-string)'},
 ]);
+
+function emptyEditorText(i18n: I18n): string {
+	return i18n._(EMPTY_EDITOR_DESCRIPTOR, {
+		completeKey: formatKeyHintText(i18n, {key: ' ', ctrl: true}),
+		pickKey: formatKeyHintText(i18n, {key: 'c', ctrlOrMeta: true, shift: true}),
+	});
+}
 
 function indentExtension(tabSize: number, indentWithTabs: boolean): Extension {
 	return [EditorState.tabSize.of(tabSize), indentUnit.of(indentWithTabs ? '\t' : ' '.repeat(tabSize))];
@@ -260,10 +407,8 @@ function readStatus(state: EditorState, revision: number): EditorStatus {
 	};
 }
 
-interface ColorPickerSession {
-	from: number;
-	to: number;
-	original: string;
+function toHexAlpha({r, g, b, a}: RgbaColor): string {
+	return `#${[r, g, b, a * 255].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`;
 }
 
 const ColorSwatchPicker: React.FC<{view: EditorView; target: ColorSwatchTarget; onClose: () => void}> = ({
@@ -271,26 +416,58 @@ const ColorSwatchPicker: React.FC<{view: EditorView; target: ColorSwatchTarget; 
 	target,
 	onClose,
 }) => {
-	const sessionRef = useRef<ColorPickerSession>({from: target.from, to: target.to, original: target.value});
-	const [color, setColor] = useState(target.value);
+	const {i18n} = useLingui();
+	const sessionRef = useRef({from: target.from, to: target.to, original: target.value});
+	const [color, setColor] = useState(() => parseCssColor(target.value));
+	const [text, setText] = useState(target.value);
 	const write = (next: string) => {
 		const session = sessionRef.current;
 		if (session.to > view.state.doc.length) return;
 		view.dispatch({changes: {from: session.from, to: session.to, insert: next}, userEvent: 'input.color'});
 		session.to = session.from + next.length;
-		setColor(next);
+		setText(next);
+	};
+	const commitText = () => {
+		const value = text.trim();
+		if (value === view.state.sliceDoc(sessionRef.current.from, sessionRef.current.to) || !CSS.supports('color', value))
+			return;
+		const parsed = parseCssColor(value);
+		if (parsed) setColor(parsed);
+		write(value);
 	};
 	return (
 		<div className={styles.popoutSurface} data-flx="theme-settings.quick-css-editor.color-swatch-picker.surface">
 			<ColorPickerPopover
-				color={color}
-				onChange={(hex) => write(hex.toLowerCase())}
+				color={color ? toHexAlpha(color) : '#000000ff'}
+				showAlpha
+				onChange={(hexAlpha) => {
+					const parsed = parseCssColor(hexAlpha);
+					if (!parsed) return;
+					setColor(parsed);
+					write(formatCssColor(parsed, sessionRef.current.original));
+				}}
 				onReset={() => {
 					write(sessionRef.current.original);
 					onClose();
 				}}
 				data-flx="theme-settings.quick-css-editor.color-swatch-picker.color-picker-popover"
-			/>
+			>
+				<Input
+					className={styles.colorValueInput}
+					value={text}
+					dir="ltr"
+					spellCheck={false}
+					aria-label={i18n._(COLOR_VALUE_DESCRIPTOR)}
+					onChange={(event) => setText(event.target.value)}
+					onBlur={commitText}
+					onKeyDown={(event) => {
+						if (event.key !== 'Enter') return;
+						event.preventDefault();
+						commitText();
+					}}
+					data-flx="theme-settings.quick-css-editor.color-swatch-picker.value"
+				/>
+			</ColorPickerPopover>
 		</div>
 	);
 };
@@ -328,10 +505,12 @@ interface QuickCssEditorProps {
 	cacheKey: string;
 	cachedState: CachedEditorState | null;
 	readStoredCss: () => string;
+	viewRef?: React.MutableRefObject<EditorView | null>;
 	filePicker: React.ReactNode;
-	actions: React.ReactNode;
+	primaryAction: React.ReactNode;
+	renderMenu: (onClose: () => void) => React.ReactNode;
 	notes?: React.ReactNode;
-	previewStatus: React.ReactNode;
+	previewStatus: string | null;
 }
 
 const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
@@ -344,8 +523,10 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 		cacheKey,
 		cachedState,
 		readStoredCss,
+		viewRef,
 		filePicker,
-		actions,
+		primaryAction,
+		renderMenu,
 		notes,
 		previewStatus,
 	}) => {
@@ -359,7 +540,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 		onSaveRef.current = onSave;
 		const readStoredCssRef = useRef(readStoredCss);
 		readStoredCssRef.current = readStoredCss;
-		const initialRef = useRef({cacheKey, cachedState, value, readOnly: Boolean(readOnly), ariaLabel});
+		const initialRef = useRef({cacheKey, cachedState, value, readOnly: Boolean(readOnly), ariaLabel, viewRef});
 		const status = useMemo(() => createEditorStatusStore(), []);
 		const [outlineOpen, setOutlineOpen] = useState(false);
 		const [outlineFocusRequest, setOutlineFocusRequest] = useState(0);
@@ -378,6 +559,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			() => ({
 				theme: new Compartment(),
 				contentAttributes: new Compartment(),
+				placeholder: new Compartment(),
 				readOnly: new Compartment(),
 				phrases: new Compartment(),
 				indent: new Compartment(),
@@ -408,14 +590,15 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 		}, []);
 
 		const togglePicker = useCallback(
-			(target: EditorView) => {
+			(target: EditorView, fromKeyboard: boolean) => {
 				if (isElementPickerActive()) {
 					stopElementPicker();
 					return true;
 				}
 				if (target.state.readOnly) return false;
 				startElementPicker(target, {
-					hint: i18n._(PICKER_HINT_DESCRIPTOR, {parentKey: formatKeyCombo(i18n, {key: 'ArrowUp', alt: true})}),
+					hint: i18n._(PICKER_HINT_DESCRIPTOR, {parentKey: formatKeyHintText(i18n, {key: 'ArrowUp', alt: true})}),
+					startAt: fromKeyboard ? ThemeSettingsCommands.getAppFocusBeforeEditor() : null,
 					onDone: ThemeSettingsCommands.focusQuickCssEditor,
 				});
 				return true;
@@ -481,7 +664,9 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 						},
 						{key: 'Mod-Shift-f', run: (target) => runFormatRef.current(target)},
 						{key: 'Mod-Shift-o', run: () => openOutlineRef.current()},
-						{key: 'Mod-Shift-c', run: (target) => togglePickerRef.current(target)},
+						{key: 'Mod-Shift-c', run: (target) => togglePickerRef.current(target, true)},
+						{key: 'Alt-Enter', run: openColorAtCursor},
+						{key: 'Mod-i', run: showInfoAtCursor},
 					]),
 				),
 				cssNumberStep(),
@@ -538,6 +723,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 					openVariable: (name) => {
 						ThemeSettingsState.setTokenSearch(name);
 						ThemeSettingsState.setEditorTab('colors');
+						ThemeSettingsState.requestFocus('tab');
 					},
 				}),
 				cssRegionFolding(),
@@ -545,6 +731,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 				compartments.indent.of(indentExtension(preferences.tabSize, preferences.indentWithTabs)),
 				compartments.wrap.of(preferences.wrapLines ? EditorView.lineWrapping : []),
 				compartments.contentAttributes.of(EditorView.contentAttributes.of({'aria-label': initial.ariaLabel})),
+				compartments.placeholder.of(placeholder(emptyEditorText(i18n))),
 				compartments.readOnly.of(EditorState.readOnly.of(initial.readOnly)),
 				compartments.theme.of(buildEditorTheme(getThemeBaseKind(Theme.effectiveTheme), preferences.fontSize)),
 				EditorView.updateListener.of(handleUpdate),
@@ -556,6 +743,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 					: EditorState.create({doc: initial.value, extensions});
 			const created = new EditorView({state, parent});
 			currentView = created;
+			if (initial.viewRef) initial.viewRef.current = created;
 			if (cached) created.scrollDOM.scrollTop = cached.scrollTop;
 			status.set(readStatus(created.state, revision));
 			setView(created);
@@ -570,6 +758,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 				capture();
 				PopoutCommands.close(COLOR_PICKER_POPOUT_KEY);
 				currentView = null;
+				if (initial.viewRef?.current === created) initial.viewRef.current = null;
 				created.destroy();
 				setView(null);
 			};
@@ -596,7 +785,12 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 		}, [view, completeWhileTyping, compartments]);
 
 		useEffect(() => {
-			view?.dispatch({effects: compartments.phrases.reconfigure(editorPhrases(i18n))});
+			view?.dispatch({
+				effects: [
+					compartments.phrases.reconfigure(editorPhrases(i18n)),
+					compartments.placeholder.reconfigure(placeholder(emptyEditorText(i18n))),
+				],
+			});
 		}, [view, i18n, i18n.locale, compartments]);
 
 		useEffect(() => {
@@ -613,8 +807,24 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			if (!view) return;
 			const current = view.state.doc.toString();
 			if (current === value) return;
-			view.dispatch({changes: {from: 0, to: current.length, insert: value}});
+			view.dispatch({
+				changes: {from: 0, to: current.length, insert: value},
+				annotations: Transaction.addToHistory.of(false),
+			});
 		}, [view, value]);
+
+		useEffect(() => {
+			if (!view) return;
+			return reaction(
+				() => ThemeSettingsState.pendingFocus,
+				(target) => {
+					if (target !== 'editor' || !view.dom.isConnected || view.dom.closest('[hidden]')) return;
+					ThemeSettingsState.requestFocus(null);
+					view.focus();
+				},
+				{fireImmediately: true, scheduler: (run) => requestAnimationFrame(run)},
+			);
+		}, [view]);
 
 		useEffect(() => {
 			if (!view) return;
@@ -661,10 +871,20 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			<div ref={rootRef} className={styles.root} data-flx="theme-settings.quick-css-editor.root">
 				<div className={styles.toolbar} data-flx="theme-settings.quick-css-editor.toolbar">
 					{filePicker}
+					{primaryAction}
 					<div className={styles.tools} data-flx="theme-settings.quick-css-editor.tools">
+						<ToolButton
+							label={i18n._(FIND_DESCRIPTOR)}
+							icon={MagnifyingGlassIcon}
+							onClick={() => {
+								if (view) openSearchPanel(view);
+							}}
+							data-flx="theme-settings.quick-css-editor.tool-button.find"
+						/>
 						<ToolButton
 							label={i18n._(FORMAT_DESCRIPTOR)}
 							icon={MagicWandIcon}
+							disabled={readOnly}
 							onClick={() => {
 								if (view && !readOnly) runFormat(view);
 							}}
@@ -676,7 +896,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 							pressed={isElementPickerActive()}
 							disabled={readOnly}
 							onClick={() => {
-								if (view) togglePicker(view);
+								if (view) togglePicker(view, false);
 							}}
 							data-flx="theme-settings.quick-css-editor.tool-button.pick"
 						/>
@@ -705,16 +925,30 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 							}
 							data-flx="theme-settings.quick-css-editor.tool-button.settings"
 						/>
+						<ToolButton
+							label={i18n._(MORE_DESCRIPTOR)}
+							icon={DotsThreeIcon}
+							onClick={(event) =>
+								ContextMenuCommands.openFromElementBottomRight(event, ({onClose}) => renderMenu(onClose))
+							}
+							data-flx="theme-settings.quick-css-editor.tool-button.more"
+						/>
 					</div>
-					{actions}
 				</div>
-				{notes}
+				<div className={styles.notes} data-flx="theme-settings.quick-css-editor.notes">
+					{notes}
+				</div>
 				<div
-					className={clsx(styles.body, outlineBeside && styles.bodyBeside)}
+					className={clsx(styles.body, outlineBeside ? styles.bodyBeside : styles.bodyStacked)}
 					data-flx="theme-settings.quick-css-editor.body"
 				>
 					{outline}
-					<div ref={containerRef} className={styles.editor} data-flx="theme-settings.quick-css-editor.editor" />
+					<div
+						ref={containerRef}
+						className={styles.editor}
+						dir="ltr"
+						data-flx="theme-settings.quick-css-editor.editor"
+					/>
 				</div>
 				<QuickCssStatusBar
 					view={view}

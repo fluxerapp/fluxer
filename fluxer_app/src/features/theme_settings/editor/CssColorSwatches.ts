@@ -12,20 +12,68 @@ import {
 	type ViewUpdate,
 	WidgetType,
 } from '@codemirror/view';
-import {i18n} from '@lingui/core';
-import {msg} from '@lingui/core/macro';
 
-const PICK_COLOR_DESCRIPTOR = msg({
-	message: 'Pick a color for {value}',
-	comment: 'Accessible label of the color swatch next to a color in the quick CSS editor. {value} is the CSS color.',
-});
-const OPEN_VARIABLE_DESCRIPTOR = msg({
-	message: 'Show {name} in "Colors and fonts"',
-	comment:
-		'Accessible label of the color swatch next to a CSS variable in the quick CSS editor. {name} is the variable name.',
-});
+type SyntaxNode = ReturnType<typeof syntaxTree>['topNode'];
 
 const COLOR_FUNCTIONS = new Set(['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch']);
+const NOT_NAMED_COLORS = new Set(['inherit', 'initial', 'unset', 'revert', 'revert-layer', 'currentcolor']);
+const SWATCH_FROM_ATTRIBUTE = 'data-swatch-from';
+const namedColorSupport = new Map<string, boolean>();
+
+interface ColorRange {
+	from: number;
+	to: number;
+	color: string;
+	variable: string | null;
+}
+
+function isNamedColor(value: string): boolean {
+	const key = value.toLowerCase();
+	if (NOT_NAMED_COLORS.has(key)) return false;
+	let supported = namedColorSupport.get(key);
+	if (supported === undefined) {
+		supported = CSS.supports('color', key);
+		namedColorSupport.set(key, supported);
+	}
+	return supported;
+}
+
+function isInsideDeclaration(node: SyntaxNode): boolean {
+	for (let parent = node.parent; parent; parent = parent.parent) {
+		if (parent.name === 'Declaration') return true;
+		if (parent.name === 'Block') return false;
+	}
+	return false;
+}
+
+function colorRangeFor(view: EditorView, node: SyntaxNode): ColorRange | null | false {
+	if (node.name === 'Comment' || node.name === 'StringLiteral') return false;
+	if (node.name === 'ColorLiteral') {
+		const value = view.state.sliceDoc(node.from, node.to);
+		return CSS.supports('color', value) ? {from: node.from, to: node.to, color: value, variable: null} : false;
+	}
+	if (node.name === 'ValueName') {
+		const value = view.state.sliceDoc(node.from, node.to);
+		return isNamedColor(value) && isInsideDeclaration(node)
+			? {from: node.from, to: node.to, color: value, variable: null}
+			: false;
+	}
+	if (node.name !== 'CallExpression') return null;
+	const callee = node.getChild('Callee');
+	if (!callee) return null;
+	const name = view.state.sliceDoc(callee.from, callee.to).toLowerCase();
+	if (COLOR_FUNCTIONS.has(name)) {
+		const value = view.state.sliceDoc(node.from, node.to);
+		return CSS.supports('color', value) ? {from: node.from, to: node.to, color: value, variable: null} : false;
+	}
+	if (name !== 'var') return null;
+	const variable = node.getChild('ArgList')?.getChild('VariableName');
+	if (!variable) return null;
+	const variableName = view.state.sliceDoc(variable.from, variable.to);
+	if (!isColorVariable(variableName)) return null;
+	const value = readCurrentVariableValue(variableName);
+	return value ? {from: node.from, to: node.to, color: value, variable: variableName} : false;
+}
 
 export interface ColorSwatchTarget {
 	from: number;
@@ -62,29 +110,15 @@ class SwatchWidget extends WidgetType {
 	toDOM(view: EditorView): HTMLElement {
 		const button = view.dom.ownerDocument.createElement('button');
 		button.type = 'button';
+		button.tabIndex = -1;
 		button.className = editorStyles.inlineSwatch;
 		button.style.setProperty('--swatch-color', this.color);
-		button.setAttribute(
-			'aria-label',
-			this.variable
-				? i18n._(OPEN_VARIABLE_DESCRIPTOR, {name: this.variable})
-				: i18n._(PICK_COLOR_DESCRIPTOR, {value: view.state.sliceDoc(this.from, this.to)}),
-		);
+		button.setAttribute('aria-hidden', 'true');
+		button.setAttribute(SWATCH_FROM_ATTRIBUTE, String(this.from));
 		button.addEventListener('mousedown', (event) => event.preventDefault());
 		button.addEventListener('click', (event) => {
 			event.preventDefault();
-			const handlers = view.state.facet(colorSwatchHandlers);
-			if (!handlers) return;
-			if (this.variable) {
-				handlers.openVariable(this.variable);
-				return;
-			}
-			handlers.pickColor(view, {
-				from: this.from,
-				to: this.to,
-				value: view.state.sliceDoc(this.from, this.to),
-				anchor: button,
-			});
+			openSwatch(view, {from: this.from, to: this.to, color: this.color, variable: this.variable}, button);
 		});
 		return button;
 	}
@@ -92,6 +126,16 @@ class SwatchWidget extends WidgetType {
 	override ignoreEvent(): boolean {
 		return true;
 	}
+}
+
+function openSwatch(view: EditorView, range: ColorRange, anchor: HTMLElement): void {
+	const handlers = view.state.facet(colorSwatchHandlers);
+	if (!handlers) return;
+	if (range.variable) {
+		handlers.openVariable(range.variable);
+		return;
+	}
+	handlers.pickColor(view, {from: range.from, to: range.to, value: view.state.sliceDoc(range.from, range.to), anchor});
 }
 
 function buildSwatches(view: EditorView): DecorationSet {
@@ -102,53 +146,38 @@ function buildSwatches(view: EditorView): DecorationSet {
 			from,
 			to,
 			enter: (node) => {
-				if (node.name === 'Comment' || node.name === 'StringLiteral') return false;
-				if (node.name === 'ColorLiteral') {
-					const value = view.state.sliceDoc(node.from, node.to);
-					if (CSS.supports('color', value)) {
-						builder.add(
-							node.from,
-							node.from,
-							Decoration.widget({widget: new SwatchWidget(value, node.from, node.to, null), side: -1}),
-						);
-					}
-					return false;
-				}
-				if (node.name !== 'CallExpression') return undefined;
-				const callee = node.node.getChild('Callee');
-				if (!callee) return undefined;
-				const name = view.state.sliceDoc(callee.from, callee.to).toLowerCase();
-				if (COLOR_FUNCTIONS.has(name)) {
-					const value = view.state.sliceDoc(node.from, node.to);
-					if (CSS.supports('color', value)) {
-						builder.add(
-							node.from,
-							node.from,
-							Decoration.widget({widget: new SwatchWidget(value, node.from, node.to, null), side: -1}),
-						);
-					}
-					return false;
-				}
-				if (name === 'var') {
-					const variable = node.node.getChild('ArgList')?.getChild('VariableName');
-					if (!variable) return undefined;
-					const variableName = view.state.sliceDoc(variable.from, variable.to);
-					if (!isColorVariable(variableName)) return undefined;
-					const value = readCurrentVariableValue(variableName);
-					if (value) {
-						builder.add(
-							node.from,
-							node.from,
-							Decoration.widget({widget: new SwatchWidget(value, node.from, node.to, variableName), side: -1}),
-						);
-					}
-					return false;
-				}
-				return undefined;
+				const range = colorRangeFor(view, node.node);
+				if (range === null) return undefined;
+				if (range === false) return false;
+				builder.add(
+					range.from,
+					range.from,
+					Decoration.widget({
+						widget: new SwatchWidget(range.color, range.from, range.to, range.variable),
+						side: -1,
+					}),
+				);
+				return false;
 			},
 		});
 	}
 	return builder.finish();
+}
+
+export function openColorAtCursor(view: EditorView): boolean {
+	const head = view.state.selection.main.head;
+	for (const side of [1, -1] as const) {
+		for (let node: SyntaxNode | null = syntaxTree(view.state).resolveInner(head, side); node; node = node.parent) {
+			const range = colorRangeFor(view, node);
+			if (range === false) break;
+			if (range === null) continue;
+			const anchor = view.contentDOM.querySelector<HTMLElement>(`[${SWATCH_FROM_ATTRIBUTE}="${range.from}"]`);
+			if (!anchor) return false;
+			openSwatch(view, range, anchor);
+			return true;
+		}
+	}
+	return false;
 }
 
 const swatchPlugin = ViewPlugin.fromClass(

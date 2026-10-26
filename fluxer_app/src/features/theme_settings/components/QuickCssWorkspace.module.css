@@ -8,11 +8,29 @@
 	height: 100%;
 	background: var(--background-primary);
 	color: var(--text-primary);
+	container: quick-css-workspace / inline-size;
+}
+
+.root
+	:is(
+		button,
+		a,
+		select,
+		summary,
+		[role='tab'],
+		[role='button'],
+		[role='switch'],
+		[role='checkbox'],
+		[role='radio']
+	):not(.root :global(.cm-editor) *):focus-visible {
+	outline: 0.125rem solid var(--focus-primary);
+	outline-offset: -0.125rem;
 }
 
 .header {
 	display: flex;
 	flex: 0 0 auto;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--spacing-1);
 	min-height: 2.75rem;
@@ -70,6 +88,19 @@
 	flex: 0 0 auto;
 	align-items: center;
 	gap: 0.125rem;
+	margin-inline-start: auto;
+}
+
+@container quick-css-workspace (width < 600px) {
+	.tabs {
+		order: 2;
+		flex-basis: 100%;
+		align-self: stretch;
+	}
+
+	.tabList [role='tab'] {
+		padding-inline: 0.5rem;
+	}
 }
 
 .headerButton {
@@ -123,42 +154,18 @@
 .filePicker {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-2);
+	flex: 1 1 10rem;
+	min-width: 0;
+	max-width: 18rem;
 }
 
-.fileLabel {
-	font-weight: 500;
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
+.fileTooltipTarget {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .fileCombobox {
-	width: 16rem;
-}
-
-.actions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--spacing-2);
-}
-
-.themeSwitch {
-	flex: 0 0 auto;
-	width: auto;
-	gap: var(--spacing-2);
-}
-
-.unsaved {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-}
-
-.lines {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-	padding: var(--spacing-3) var(--spacing-4) 0;
+	width: 100%;
 }
 
 .line {

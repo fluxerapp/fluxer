@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {SettingsPageContext} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {keyboardEventMatchesCombo} from '@app/features/app/keybindings/KeybindEventUtils';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
@@ -17,9 +18,13 @@ import {QuickCssReference} from '@app/features/theme_settings/components/QuickCs
 import styles from '@app/features/theme_settings/components/QuickCssWorkspace.module.css';
 import {ThisAccountSection} from '@app/features/theme_settings/components/ThisAccountSection';
 import {YourThemesSection} from '@app/features/theme_settings/components/YourThemesSection';
-import ThemeSettingsState, {type QuickCssEditorTab} from '@app/features/theme_settings/state/ThemeSettingsState';
+import type {QuickCssPanelMode} from '@app/features/theme_settings/state/QuickCssPanelLayout';
+import ThemeSettingsState, {
+	type QuickCssEditorFocusTarget,
+	type QuickCssEditorTab,
+} from '@app/features/theme_settings/state/ThemeSettingsState';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
-import {type TabItem, Tabs} from '@app/features/ui/tabs/Tabs';
+import {type TabItem, Tabs, tabElementId, tabPanelElementId} from '@app/features/ui/tabs/Tabs';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
@@ -34,9 +39,10 @@ import {
 	XIcon,
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
+import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useRef} from 'react';
+import {createContext, useContext, useEffect, useId, useRef} from 'react';
 
 const QUICK_CSS_EDITOR_DESCRIPTOR = msg({
 	message: 'Quick CSS editor',
@@ -90,20 +96,24 @@ const MOVE_BACK_INTO_FLUXER_DESCRIPTOR = msg({
 const KEYBOARD_STEP = 16;
 const KEYBOARD_LARGE_STEP = 64;
 
+const TabIdContext = createContext('quick-css');
+
 interface HeaderButtonProps {
 	label: string;
 	icon: Icon;
 	onClick: () => void;
 	mirrored?: boolean;
+	focusKey?: QuickCssEditorFocusTarget;
 }
 
-const HeaderButton: React.FC<HeaderButtonProps> = ({label, icon: IconComponent, onClick, mirrored}) => (
+const HeaderButton: React.FC<HeaderButtonProps> = ({label, icon: IconComponent, onClick, mirrored, focusKey}) => (
 	<Tooltip text={label} position="bottom" data-flx="theme-settings.quick-css-workspace.header-button.tooltip">
 		<button
 			type="button"
 			className={styles.headerButton}
 			aria-label={label}
 			onClick={onClick}
+			data-focus-key={focusKey}
 			data-flx="theme-settings.quick-css-workspace.header-button.button"
 		>
 			<IconComponent
@@ -116,9 +126,21 @@ const HeaderButton: React.FC<HeaderButtonProps> = ({label, icon: IconComponent, 
 	</Tooltip>
 );
 
+const FOCUS_AFTER_MODE: Readonly<Record<QuickCssPanelMode, QuickCssEditorFocusTarget>> = {
+	floating: 'dock-right',
+	'dock-left': 'float',
+	'dock-right': 'float',
+};
+
 const WorkspaceHeader: React.FC = observer(() => {
 	const {i18n} = useLingui();
+	const idPrefix = useContext(TabIdContext);
 	const panel = useQuickCssPanelControls();
+	const setMode = (mode: QuickCssPanelMode) => {
+		if (!panel) return;
+		panel.setMode(mode);
+		ThemeSettingsState.requestFocus(FOCUS_AFTER_MODE[mode]);
+	};
 	const tabs: Array<TabItem<QuickCssEditorTab>> = [
 		{key: 'css', label: i18n._(CSS_TAB_DESCRIPTOR)},
 		{key: 'colors', label: i18n._(COLORS_AND_FONTS_TAB_DESCRIPTOR)},
@@ -176,6 +198,7 @@ const WorkspaceHeader: React.FC = observer(() => {
 					tabs={tabs}
 					activeTab={ThemeSettingsState.editorTab}
 					onTabChange={ThemeSettingsState.setEditorTab}
+					idPrefix={idPrefix}
 					className={styles.tabList}
 					data-flx="theme-settings.quick-css-workspace.tabs.set-editor-tab"
 				/>
@@ -187,7 +210,8 @@ const WorkspaceHeader: React.FC = observer(() => {
 							<HeaderButton
 								label={i18n._(DOCK_LEFT_DESCRIPTOR)}
 								icon={SidebarSimpleIcon}
-								onClick={() => panel.setMode('dock-left')}
+								focusKey="dock-left"
+								onClick={() => setMode('dock-left')}
 								data-flx="theme-settings.quick-css-workspace.header-button.dock-left"
 							/>
 						) : null}
@@ -196,7 +220,8 @@ const WorkspaceHeader: React.FC = observer(() => {
 								label={i18n._(DOCK_RIGHT_DESCRIPTOR)}
 								icon={SidebarSimpleIcon}
 								mirrored
-								onClick={() => panel.setMode('dock-right')}
+								focusKey="dock-right"
+								onClick={() => setMode('dock-right')}
 								data-flx="theme-settings.quick-css-workspace.header-button.dock-right"
 							/>
 						) : null}
@@ -204,7 +229,8 @@ const WorkspaceHeader: React.FC = observer(() => {
 							<HeaderButton
 								label={i18n._(FLOAT_DESCRIPTOR)}
 								icon={PictureInPictureIcon}
-								onClick={() => panel.setMode('floating')}
+								focusKey="float"
+								onClick={() => setMode('floating')}
 								data-flx="theme-settings.quick-css-workspace.header-button.float"
 							/>
 						) : null}
@@ -236,21 +262,55 @@ const WorkspaceHeader: React.FC = observer(() => {
 	);
 });
 
-const SettingsTabBody: React.FC<{children: React.ReactNode}> = ({children}) => (
-	<div role="tabpanel" className={styles.settingsBody} data-flx="theme-settings.quick-css-workspace.settings-body">
-		<div className={styles.settingsContent} data-flx="theme-settings.quick-css-workspace.settings-content">
-			{children}
+const SettingsTabBody: React.FC<{tab: QuickCssEditorTab; children: React.ReactNode}> = ({tab, children}) => {
+	const idPrefix = useContext(TabIdContext);
+	return (
+		<div
+			role="tabpanel"
+			id={tabPanelElementId(idPrefix, tab)}
+			aria-labelledby={tabElementId(idPrefix, tab)}
+			className={styles.settingsBody}
+			data-flx="theme-settings.quick-css-workspace.settings-body"
+		>
+			<SettingsPageContext.Provider value={false}>
+				<div className={styles.settingsContent} data-flx="theme-settings.quick-css-workspace.settings-content">
+					{children}
+				</div>
+			</SettingsPageContext.Provider>
 		</div>
-	</div>
-);
+	);
+};
+
+function focusRequestedTarget(root: HTMLElement, target: QuickCssEditorFocusTarget): boolean {
+	if (target === 'editor') return false;
+	const selectedTab = root.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+	const element =
+		target === 'tab' ? selectedTab : (root.querySelector<HTMLElement>(`[data-focus-key="${target}"]`) ?? selectedTab);
+	element?.focus();
+	return true;
+}
 
 export const QuickCssWorkspace: React.FC = observer(() => {
 	const {i18n} = useLingui();
+	const idPrefix = useId();
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const tab = ThemeSettingsState.editorTab;
 	useEffect(() => {
 		void ThemeLibrary.init();
 	}, []);
+	useEffect(
+		() =>
+			reaction(
+				() => ThemeSettingsState.pendingFocus,
+				(target) => {
+					const root = rootRef.current;
+					if (!root || !target || !focusRequestedTarget(root, target)) return;
+					ThemeSettingsState.requestFocus(null);
+				},
+				{fireImmediately: true, scheduler: (run) => requestAnimationFrame(run)},
+			),
+		[],
+	);
 	useEffect(() => {
 		const root = rootRef.current;
 		if (!root) return;
@@ -294,41 +354,45 @@ export const QuickCssWorkspace: React.FC = observer(() => {
 			className={styles.root}
 			data-flx="theme-settings.quick-css-workspace.root"
 		>
-			<FocusRingScope containerRef={rootRef} data-flx="theme-settings.quick-css-workspace.focus-ring-scope">
-				<WorkspaceHeader data-flx="theme-settings.quick-css-workspace.workspace-header" />
-				<div
-					role="tabpanel"
-					hidden={tab !== 'css'}
-					className={styles.cssPanel}
-					data-flx="theme-settings.quick-css-workspace.css-panel"
-				>
-					<QuickCssFiles data-flx="theme-settings.quick-css-workspace.quick-css-files" />
-				</div>
-				{tab === 'colors' ? (
-					<SettingsTabBody data-flx="theme-settings.quick-css-workspace.colors">
-						<BaseThemeSection data-flx="theme-settings.quick-css-workspace.base-theme-section" />
-						<ColorsAndFontsSection data-flx="theme-settings.quick-css-workspace.colors-and-fonts-section" />
-					</SettingsTabBody>
-				) : null}
-				{tab === 'themes' ? (
-					<SettingsTabBody data-flx="theme-settings.quick-css-workspace.themes">
-						{AccountThemeMode.canUseDesktopTheme ? (
-							<ThisAccountSection data-flx="theme-settings.quick-css-workspace.this-account-section" />
-						) : null}
-						<YourThemesSection data-flx="theme-settings.quick-css-workspace.your-themes-section" />
-					</SettingsTabBody>
-				) : null}
-				{tab === 'reference' ? (
-					<SettingsTabBody data-flx="theme-settings.quick-css-workspace.reference">
-						<QuickCssReference data-flx="theme-settings.quick-css-workspace.quick-css-reference" />
-					</SettingsTabBody>
-				) : null}
-				{tab === 'assets' ? (
-					<SettingsTabBody data-flx="theme-settings.quick-css-workspace.assets">
-						<AssetsSection data-flx="theme-settings.quick-css-workspace.assets-section" />
-					</SettingsTabBody>
-				) : null}
-			</FocusRingScope>
+			<TabIdContext.Provider value={idPrefix}>
+				<FocusRingScope containerRef={rootRef} data-flx="theme-settings.quick-css-workspace.focus-ring-scope">
+					<WorkspaceHeader data-flx="theme-settings.quick-css-workspace.workspace-header" />
+					<div
+						role="tabpanel"
+						id={tabPanelElementId(idPrefix, 'css')}
+						aria-labelledby={tabElementId(idPrefix, 'css')}
+						hidden={tab !== 'css'}
+						className={styles.cssPanel}
+						data-flx="theme-settings.quick-css-workspace.css-panel"
+					>
+						<QuickCssFiles data-flx="theme-settings.quick-css-workspace.quick-css-files" />
+					</div>
+					{tab === 'colors' ? (
+						<SettingsTabBody tab="colors" data-flx="theme-settings.quick-css-workspace.colors">
+							<BaseThemeSection data-flx="theme-settings.quick-css-workspace.base-theme-section" />
+							<ColorsAndFontsSection data-flx="theme-settings.quick-css-workspace.colors-and-fonts-section" />
+						</SettingsTabBody>
+					) : null}
+					{tab === 'themes' ? (
+						<SettingsTabBody tab="themes" data-flx="theme-settings.quick-css-workspace.themes">
+							{AccountThemeMode.canUseDesktopTheme ? (
+								<ThisAccountSection data-flx="theme-settings.quick-css-workspace.this-account-section" />
+							) : null}
+							<YourThemesSection data-flx="theme-settings.quick-css-workspace.your-themes-section" />
+						</SettingsTabBody>
+					) : null}
+					{tab === 'reference' ? (
+						<SettingsTabBody tab="reference" data-flx="theme-settings.quick-css-workspace.reference">
+							<QuickCssReference data-flx="theme-settings.quick-css-workspace.quick-css-reference" />
+						</SettingsTabBody>
+					) : null}
+					{tab === 'assets' ? (
+						<SettingsTabBody tab="assets" data-flx="theme-settings.quick-css-workspace.assets">
+							<AssetsSection data-flx="theme-settings.quick-css-workspace.assets-section" />
+						</SettingsTabBody>
+					) : null}
+				</FocusRingScope>
+			</TabIdContext.Provider>
 		</div>
 	);
 });

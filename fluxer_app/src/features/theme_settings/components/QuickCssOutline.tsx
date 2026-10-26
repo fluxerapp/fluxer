@@ -12,7 +12,7 @@ import {useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
+import {useEffect, useId, useMemo, useRef, useState, useSyncExternalStore} from 'react';
 
 const FILTER_RULES_DESCRIPTOR = msg({
 	message: 'Filter rules',
@@ -47,6 +47,9 @@ export const QuickCssOutline: React.FC<QuickCssOutlineProps> = ({view, status, b
 	const revision = useSyncExternalStore(status.subscribe, () => status.get().revision);
 	const [entries, setEntries] = useState<ReadonlyArray<OutlineEntry>>(() => buildCssOutline(view.state));
 	const [filter, setFilter] = useState('');
+	const [active, setActive] = useState(0);
+	const listId = useId();
+	const listRef = useRef<HTMLDivElement | null>(null);
 	useEffect(() => {
 		const timer = setTimeout(() => setEntries(buildCssOutline(view.state)), OUTLINE_REFRESH_DELAY_MS);
 		return () => clearTimeout(timer);
@@ -59,9 +62,39 @@ export const QuickCssOutline: React.FC<QuickCssOutlineProps> = ({view, status, b
 		() => (query ? entries.filter((entry) => entry.label.toLowerCase().includes(query)) : entries),
 		[entries, query],
 	);
+	const activeIndex = Math.min(active, Math.max(0, visible.length - 1));
 	const goTo = (entry: OutlineEntry) => {
 		view.dispatch({selection: {anchor: entry.from}, scrollIntoView: true});
 		view.focus();
+	};
+	const moveActive = (next: number) => {
+		const index = Math.max(0, Math.min(visible.length - 1, next));
+		setActive(index);
+		listRef.current?.querySelector(`#${CSS.escape(`${listId}-${index}`)}`)?.scrollIntoView({block: 'nearest'});
+	};
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			onClose();
+			return;
+		}
+		if (visible.length === 0) return;
+		const moves: Record<string, number> = {
+			ArrowDown: activeIndex + 1,
+			ArrowUp: activeIndex - 1,
+			PageDown: activeIndex + 10,
+			PageUp: activeIndex - 10,
+		};
+		const next = moves[event.key];
+		if (next !== undefined) {
+			event.preventDefault();
+			moveActive(next);
+			return;
+		}
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			goTo(visible[activeIndex]);
+		}
 	};
 	let empty: string | null = null;
 	if (entries.length === 0) empty = i18n._(NO_RULES_YET_DESCRIPTOR);
@@ -76,17 +109,16 @@ export const QuickCssOutline: React.FC<QuickCssOutlineProps> = ({view, status, b
 					ref={inputRef}
 					className={styles.outlineFilter}
 					value={filter}
-					onChange={(event) => setFilter(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === 'Escape') {
-							event.preventDefault();
-							onClose();
-						}
-						if (event.key === 'Enter' && visible.length > 0) {
-							event.preventDefault();
-							goTo(visible[0]);
-						}
+					onChange={(event) => {
+						setFilter(event.target.value);
+						setActive(0);
 					}}
+					onKeyDown={handleKeyDown}
+					role="combobox"
+					aria-expanded={visible.length > 0}
+					aria-controls={listId}
+					aria-autocomplete="list"
+					aria-activedescendant={visible.length > 0 ? `${listId}-${activeIndex}` : undefined}
 					placeholder={i18n._(FILTER_RULES_DESCRIPTOR)}
 					aria-label={i18n._(FILTER_RULES_DESCRIPTOR)}
 					leftIcon={
@@ -113,25 +145,32 @@ export const QuickCssOutline: React.FC<QuickCssOutlineProps> = ({view, status, b
 					{empty}
 				</p>
 			) : (
-				<ul
+				<div
+					ref={listRef}
+					id={listId}
+					role="listbox"
 					className={styles.outlineList}
 					aria-label={i18n._(OUTLINE_LIST_DESCRIPTOR)}
 					data-flx="theme-settings.quick-css-outline.list"
 				>
-					{visible.map((entry) => (
-						<li key={`${entry.from}:${entry.label}`} data-flx="theme-settings.quick-css-outline.item">
-							<button
-								type="button"
-								className={clsx(styles.outlineEntry, entry.kind === 'region' && styles.outlineRegion)}
-								style={{paddingInlineStart: `${0.5 + Math.min(entry.depth, 6) * 0.75}rem`}}
-								onClick={() => goTo(entry)}
-								data-flx="theme-settings.quick-css-outline.entry"
-							>
-								{entry.label}
-							</button>
-						</li>
+					{visible.map((entry, index) => (
+						<button
+							key={`${entry.from}:${entry.label}`}
+							id={`${listId}-${index}`}
+							type="button"
+							role="option"
+							tabIndex={-1}
+							aria-selected={index === activeIndex}
+							className={clsx(styles.outlineEntry, entry.kind === 'region' && styles.outlineRegion)}
+							style={{paddingInlineStart: `${0.5 + Math.min(entry.depth, 6) * 0.75}rem`}}
+							onMouseDown={(event) => event.preventDefault()}
+							onClick={() => goTo(entry)}
+							data-flx="theme-settings.quick-css-outline.entry"
+						>
+							{entry.label}
+						</button>
 					))}
-				</ul>
+				</div>
 			)}
 		</div>
 	);

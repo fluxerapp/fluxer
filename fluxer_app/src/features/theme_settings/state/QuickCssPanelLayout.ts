@@ -21,11 +21,11 @@ export interface PanelViewport {
 
 export const PANEL_EDGE_PADDING = 16;
 export const PANEL_MIN_SIZE = {width: 420, height: 360};
-const PANEL_DEFAULT_SIZE = {width: 560, height: 640};
+const PANEL_DEFAULT_SIZE = {width: 600, height: 640};
 const DOCK_DEFAULT_WIDTH = 480;
 const DOCK_MIN_WIDTH = 360;
 const DOCK_MAX_VIEWPORT_RATIO = 0.6;
-const DOCK_MIN_VIEWPORT_WIDTH = 900;
+const APP_MIN_WIDTH_BESIDE_DOCK = 940;
 
 function clamp(value: number, min: number, max: number): number {
 	if (!Number.isFinite(value)) return min;
@@ -59,12 +59,15 @@ function defaultFloatingRect(viewport: PanelViewport): PanelRect {
 }
 
 export function clampDockWidth(width: number, viewport: PanelViewport): number {
-	const max = Math.max(DOCK_MIN_WIDTH, Math.floor(viewport.width * DOCK_MAX_VIEWPORT_RATIO));
-	return Math.round(clamp(width, DOCK_MIN_WIDTH, max));
+	const max = Math.min(
+		Math.floor(viewport.width * DOCK_MAX_VIEWPORT_RATIO),
+		viewport.width - APP_MIN_WIDTH_BESIDE_DOCK,
+	);
+	return Math.round(clamp(width, DOCK_MIN_WIDTH, Math.max(DOCK_MIN_WIDTH, max)));
 }
 
 export function canDockPanel(viewport: PanelViewport): boolean {
-	return viewport.width >= DOCK_MIN_VIEWPORT_WIDTH;
+	return viewport.width - APP_MIN_WIDTH_BESIDE_DOCK >= DOCK_MIN_WIDTH;
 }
 
 interface StoredLayout {
