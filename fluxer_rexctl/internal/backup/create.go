@@ -172,7 +172,8 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	}
 
 	if len(volumes) > 0 {
-		if err := copyVolumes(ctx, w, p, image, volumes, running, progress, opts.OnEvent); err != nil {
+		spool := final + ".vol" + PartialSuffix
+		if err := copyVolumes(ctx, w, p, image, volumes, running, spool, progress, opts.OnEvent); err != nil {
 			return nil, err
 		}
 		for _, v := range volumes {
@@ -413,18 +414,23 @@ func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volume
 }
 
 func diskNeed(ctx context.Context, p *engine.Project, image string, volumes []volumeRef, bundledDB bool) (uint64, error) {
-	var total uint64
+	var db uint64
 	if bundledDB {
-		total = databaseSize(ctx, p)
+		db = databaseSize(ctx, p)
 	}
+	var vol uint64
 	if len(volumes) > 0 {
 		kb, err := volumesSize(ctx, p, image, volumes)
 		if err != nil {
 			return 0, err
 		}
-		total += kb * 1024
+		vol = kb * 1024
 	}
-	return total * diskHeadroomPct / 100, nil
+	return backupDiskNeed(db, vol), nil
+}
+
+func backupDiskNeed(db, vol uint64) uint64 {
+	return (db + vol*2) * diskHeadroomPct / 100
 }
 
 func volumesSize(ctx context.Context, p *engine.Project, image string, volumes []volumeRef) (uint64, error) {
@@ -629,8 +635,32 @@ func restartServices(ctx context.Context, p *engine.Project, running []string, o
 	return nil
 }
 
-func copyVolumes(ctx context.Context, w *archiveWriter, p *engine.Project, image string, volumes []volumeRef, running []string, progress func(string), onEvent func(engine.Event)) (err error) {
+type CompressError struct {
+	Err error
+}
+
+func (e *CompressError) Error() string { return "backup: compressing the backup: " + e.Err.Error() }
+
+func (e *CompressError) Unwrap() error { return e.Err }
+
+func copyVolumes(ctx context.Context, w *archiveWriter, p *engine.Project, image string, volumes []volumeRef, running []string, spool string, progress func(string), onEvent func(engine.Event)) error {
+	if err := spoolVolumes(ctx, spool, p, image, volumes, running, progress, onEvent); err != nil {
+		return err
+	}
+	defer os.Remove(spool)
+	if err := ctx.Err(); err != nil {
+		return &InterruptedError{Restarted: true, Err: err}
+	}
+	progress(StageCompressing)
+	return compressSpool(ctx, w, spool)
+}
+
+func spoolVolumes(ctx context.Context, spoolPath string, p *engine.Project, image string, volumes []volumeRef, running []string, progress func(string), onEvent func(engine.Event)) (err error) {
 	progress(StageStopping)
+	spool, serr := createSpool(spoolPath)
+	if serr != nil {
+		return serr
+	}
 	defer func() {
 		if len(running) == 0 {
 			return
@@ -647,25 +677,56 @@ func copyVolumes(ctx context.Context, w *archiveWriter, p *engine.Project, image
 		}
 	}()
 	if err := p.Stop(context.WithoutCancel(ctx)); err != nil {
+		spool.abort()
 		return err
 	}
 	if err := ctx.Err(); err != nil {
+		spool.abort()
 		return err
 	}
 	progress(StageVolumes)
 	for _, v := range volumes {
-		if err := copyVolume(ctx, w, p, image, v); err != nil {
+		if err := copyVolume(ctx, spool, p, image, v); err != nil {
+			spool.abort()
 			return err
 		}
 	}
+	if err := spool.finish(); err != nil {
+		spool.abort()
+		return err
+	}
 	return nil
+}
+
+func compressSpool(ctx context.Context, w *archiveWriter, spoolPath string) error {
+	f, err := os.Open(spoolPath)
+	if err != nil {
+		return &CompressError{Err: err}
+	}
+	defer f.Close()
+	tr := tar.NewReader(bufio.NewReaderSize(f, 1<<20))
+	for {
+		if err := ctx.Err(); err != nil {
+			return &InterruptedError{Restarted: true, Err: err}
+		}
+		hdr, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return &CompressError{Err: err}
+		}
+		if err := w.add(hdr, tr); err != nil {
+			return &CompressError{Err: err}
+		}
+	}
 }
 
 const volumeTarScript = `b=$(find /data -type f -exec stat -c '%i %s' {} + | awk '!seen[$1]++ { t += $2 } END { print t + 0 }') || exit 1
 tar -cf - -C /data . || exit 1
 echo "rexctl-bytes $b" >&2`
 
-func copyVolume(ctx context.Context, w *archiveWriter, p *engine.Project, image string, v volumeRef) error {
+func copyVolume(ctx context.Context, spool *volumeSpool, p *engine.Project, image string, v volumeRef) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	pr, pw := io.Pipe()
@@ -683,7 +744,7 @@ func copyVolume(ctx context.Context, w *archiveWriter, p *engine.Project, image 
 		pw.CloseWithError(err)
 		done <- err
 	}()
-	copied, werr := relayVolume(w, v.short, tar.NewReader(pr))
+	copied, werr := relayVolume(spool, v.short, tar.NewReader(pr))
 	if werr != nil {
 		cancel()
 		pr.CloseWithError(werr)
@@ -723,7 +784,7 @@ func measuredBytes(stderr string) (int64, bool) {
 	return 0, false
 }
 
-func relayVolume(w *archiveWriter, short string, tr *tar.Reader) (int64, error) {
+func relayVolume(spool *volumeSpool, short string, tr *tar.Reader) (int64, error) {
 	var copied int64
 	for {
 		hdr, err := tr.Next()
@@ -766,7 +827,7 @@ func relayVolume(w *archiveWriter, short string, tr *tar.Reader) (int64, error) 
 		default:
 			continue
 		}
-		if err := w.add(out, tr); err != nil {
+		if err := spool.add(out, tr); err != nil {
 			return copied, err
 		}
 	}

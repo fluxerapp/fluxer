@@ -115,6 +115,59 @@ func (w *archiveWriter) finish(m *Manifest) error {
 	return w.f.Close()
 }
 
+type volumeSpool struct {
+	f  *os.File
+	tw *tar.Writer
+}
+
+func createSpool(path string) (*volumeSpool, error) {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	return &volumeSpool{f: f, tw: tar.NewWriter(f)}, nil
+}
+
+func (s *volumeSpool) add(hdr *tar.Header, r io.Reader) error {
+	if err := checkName(hdr.Name); err != nil {
+		return err
+	}
+	hdr.Format = tar.FormatPAX
+	if hdr.ModTime.IsZero() {
+		hdr.ModTime = time.Now()
+	}
+	if err := s.tw.WriteHeader(hdr); err != nil {
+		return err
+	}
+	if hdr.Typeflag != tar.TypeReg {
+		return nil
+	}
+	n, err := io.Copy(s.tw, r)
+	if err != nil {
+		return err
+	}
+	if n != hdr.Size {
+		return fmt.Errorf("backup: %s changed size while it was copied", hdr.Name)
+	}
+	return nil
+}
+
+func (s *volumeSpool) finish() error {
+	if err := s.tw.Close(); err != nil {
+		return err
+	}
+	if err := s.f.Sync(); err != nil {
+		return err
+	}
+	return s.f.Close()
+}
+
+func (s *volumeSpool) abort() {
+	s.tw.Close()
+	s.f.Close()
+	os.Remove(s.f.Name())
+}
+
 func sums(entries []Entry) []byte {
 	var b bytes.Buffer
 	for _, e := range entries {

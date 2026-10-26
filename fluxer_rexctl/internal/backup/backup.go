@@ -25,14 +25,15 @@ const (
 )
 
 const (
-	StageFiles     = "files"
-	StageDatabase  = "database"
-	StageStopping  = "stopping"
-	StageVolumes   = "volumes"
-	StageStarting  = "starting"
-	StageVerifying = "verifying"
-	StageClearing  = "clearing"
-	StagePulling   = "pulling"
+	StageFiles       = "files"
+	StageDatabase    = "database"
+	StageStopping    = "stopping"
+	StageVolumes     = "volumes"
+	StageStarting    = "starting"
+	StageCompressing = "compressing"
+	StageVerifying   = "verifying"
+	StageClearing    = "clearing"
+	StagePulling     = "pulling"
 )
 
 const (

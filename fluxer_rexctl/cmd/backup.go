@@ -167,6 +167,8 @@ func backupStageTitle(stage string) string {
 		return "Copying uploads and search data while Fluxer is paused"
 	case backup.StageStarting:
 		return "Starting Fluxer again"
+	case backup.StageCompressing:
+		return "Compressing the backup while Fluxer runs"
 	}
 	return ""
 }
@@ -186,9 +188,12 @@ func backupCreateErr(err error) error {
 	var missing *backup.MissingDataError
 	var dump *backup.DumpError
 	var stopped *backup.InterruptedError
+	var compress *backup.CompressError
 	switch {
 	case errors.As(err, &stopped) && stopped.Restarted:
 		return &ui.ExitError{Code: ui.ExitInterrupted, Msg: "Cancelled the backup. Fluxer is running again.", Err: err}
+	case errors.As(err, &compress):
+		return ui.Wrap(err, "Couldn't finish the backup while compressing it. Fluxer is running again.", "Free up some space or check the backup folder, then run rexctl backup again.")
 	case errors.As(err, &ee), errors.Is(err, context.Canceled):
 		return err
 	case errors.Is(err, backup.ErrNeverStarted):
