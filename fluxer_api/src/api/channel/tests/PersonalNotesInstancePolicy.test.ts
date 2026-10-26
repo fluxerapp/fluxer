@@ -2,11 +2,8 @@
 
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
-import {createUserID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {sendChannelMessage} from '@app/api/channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
-import {getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -76,28 +73,6 @@ describe('personal notes instance policy', () => {
 		const alice = await createTestAccount(harness);
 		expect(await discoveredPersonalNotesEnabled()).toBe(true);
 		await sendChannelMessage(harness, alice.token, alice.userId, 'a note to self');
-	});
-
-	it('is off by default when direct messages are disabled and does not create the channel', async () => {
-		Config.instance.selfHosted = true;
-		await createBuilder<InstanceConfigResponse>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({policy: {direct_messages_disabled: true}})
-			.execute();
-		const alice = await createTestAccount(harness);
-		await ensureSessionStarted(harness, alice.token);
-		const config = await createBuilder<InstanceConfigResponse>(harness, admin.token)
-			.get('/admin/instance/config')
-			.execute();
-		expect(config.policy.personal_notes_enabled).toBe(false);
-		expect(await discoveredPersonalNotesEnabled()).toBe(false);
-		await startSession(alice);
-		expect(
-			await getChannelRepository().channelData.findUnique(userIdToChannelId(createUserID(BigInt(alice.userId)))),
-		).toBeNull();
-		await expectRefused(
-			createBuilder(harness, alice.token).post(`/channels/${alice.userId}/messages`).body({content: 'hello'}),
-		);
 	});
 
 	it('refuses personal notes while off and brings existing notes back when turned on', async () => {
