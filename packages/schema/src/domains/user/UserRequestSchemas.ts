@@ -283,6 +283,7 @@ export type CreatePrivateChannelRequest = z.infer<typeof CreatePrivateChannelReq
 
 const UserSettingsGuildIds = z
 	.array(SnowflakeType)
+	.max(10000)
 	.transform((ids) => [...new Set(ids)])
 	.refine((ids) => ids.length <= MAX_GUILDS_PREMIUM, `Maximum ${MAX_GUILDS_PREMIUM} guilds allowed`);
 
@@ -393,9 +394,14 @@ export const UserSettingsUpdateRequest = z
 			.describe('Suppress direct mentions and reply mentions from unprivileged users'),
 		suppress_unprivileged_self_mentions_bypass_user_ids: z
 			.array(SnowflakeType)
+			.max(1000)
 			.nullish()
 			.describe('User IDs that bypass self-mention suppression'),
-		staff_dm_access_user_ids: z.array(SnowflakeType).nullish().describe('User IDs with Staff DM Access enabled'),
+		staff_dm_access_user_ids: z
+			.array(SnowflakeType)
+			.max(1000)
+			.nullish()
+			.describe('User IDs with Staff DM Access enabled'),
 		profile_privacy: withFieldDescription(
 			ProfilePrivacyLevelSchema,
 			'Controls who sees the full profile: all guild members, only small-guild members, or only friends',

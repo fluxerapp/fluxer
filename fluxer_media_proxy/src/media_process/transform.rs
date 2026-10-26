@@ -16,7 +16,7 @@ use super::loaded_image::{
     static_output_pixels, validate_dimensions_u32, validate_jxl_decode_pixels,
     validate_static_output_pixels, validate_vips_image,
 };
-use super::native_cost::fit_jxl_output;
+use super::native_cost::fit_static_output_to_budget;
 use super::native_runtime::{clear_vips_error, ensure_vips_init, last_vips_error};
 use super::transform_plan::{
     AutoQualitySource, output_is_sdr, resolve_auto_quality, should_transform_animated_webp_direct,
@@ -92,7 +92,8 @@ fn admitted_transform_options(
         return Ok(*options);
     }
     let dims = probe_image_dims(media_limits, input)?;
-    let options = &fit_jxl_output(input.len(), sniffed_mime, options, dims, media_limits);
+    let options =
+        &fit_static_output_to_budget(input.len(), sniffed_mime, options, dims, media_limits);
     let source_pixels = dims.width as usize * dims.height as usize;
     if source_pixels >= constants::LARGE_SOURCE_LOG_PIXELS {
         tracing::info!(

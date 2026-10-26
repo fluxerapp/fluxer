@@ -28,6 +28,7 @@ import {
 	type PartialUserChangePropagationDeps,
 	propagatePartialUserChange,
 } from '@app/api/user/services/PartialUserChangePropagation';
+import {isDeletionComplete} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
@@ -142,10 +143,6 @@ export function outcomeOf(
 
 function isIneligible(user: User): boolean {
 	return user.isBot || (user.flags & UserFlags.DELETED) !== 0n;
-}
-
-function isDeletionComplete(user: User): boolean {
-	return (user.flags & UserFlags.DELETED) !== 0n && user.pendingDeletionAt === null;
 }
 
 export async function applySetAccountLimit(

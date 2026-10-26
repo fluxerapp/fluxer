@@ -322,7 +322,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 		[discoveryRequestOwner, onChange, updateDiscoveryStatus],
 	);
 	const handleSelectOfficial = useCallback(() => {
-		const origin = officialMarketingOrigin(Config.PUBLIC_RELEASE_CHANNEL);
+		const origin = officialMarketingOrigin(Config.RELEASE_CHANNEL);
 		onChange(origin);
 		startDiscovery(origin, false);
 	}, [onChange, startDiscovery]);

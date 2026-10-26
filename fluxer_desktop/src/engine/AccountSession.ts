@@ -12,7 +12,7 @@ import {
 	type GatewayResumeState,
 } from '@electron/engine/GatewayClient';
 import type {GatewayTransportFactory} from '@electron/engine/GatewayTransport';
-import type {EngineAccountRecord, EngineLogLevel} from '@electron/engine/HostProtocol';
+import type {AdmittedGateway, EngineAccountRecord, EngineLogLevel} from '@electron/engine/HostProtocol';
 import {SCHEDULER_LIMITS, type SchedulerClient, type SessionScheduler} from '@electron/engine/SessionScheduler';
 import {
 	ACCOUNT_ENGINE_LIMITS,
@@ -45,11 +45,6 @@ const INVALID_SESSION_MIN_DELAY_MS = 1_000;
 const INVALID_SESSION_MAX_DELAY_MS = 5_000;
 const DECODE_RETRY_DELAY_MS = 1_000;
 const SUBSCRIPTION_RELEASE_SETTLE_MS = 250;
-
-export interface AdmittedGateway {
-	readonly url: string;
-	readonly address: string | null;
-}
 
 export interface AccountSessionDependencies {
 	readonly clock: EngineClock;
@@ -134,6 +129,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 	private supersededToken: string | null = null;
 	private failedTokenTag: string | null = null;
 	private handshakeSucceeded = false;
+	private handshakeStartedAt = 0;
 	private invalidations = 0;
 	private notificationTokens = NOTIFICATION_BURST;
 	private notificationsRefilledAt: number;
@@ -196,6 +192,14 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 
 	get origin(): string {
 		return this.record.instanceKey;
+	}
+
+	private get gatewayHost(): string {
+		try {
+			return new URL(this.record.gatewayEndpoint).host;
+		} catch {
+			return this.record.gatewayEndpoint;
+		}
 	}
 
 	get priority(): number {
@@ -448,6 +452,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		this.dropQueue();
 		this.deps.pump.forget(this);
 		this.disconnect(code, reason);
+		this.logGateway('Account engine gateway stopped', {reason});
 		this.resume = null;
 		this.setState(AccountEngineConnectionState.STOPPED);
 		if (options.dispose) {
@@ -533,12 +538,14 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 				}
 				this.cacheUpdatedAt = this.deps.clock.now();
 				this.setState(AccountEngineConnectionState.READY);
+				this.logReady(false);
 				return;
 			}
 			if (item.type === 'RESUMED') {
 				this.attempt = 0;
 				this.handshakeSucceeded = true;
 				this.setState(AccountEngineConnectionState.READY);
+				this.logReady(true);
 			} else {
 				this.core.applyDispatch(item.type, item.data);
 			}
@@ -621,6 +628,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 			return;
 		}
 		this.client = client;
+		this.handshakeStartedAt = this.deps.clock.now();
 		client.start();
 	}
 
@@ -632,6 +640,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		const client: GatewayClient = new GatewayClient({
 			gatewayUrl: admitted.url,
 			address: admitted.address,
+			proxy: admitted.proxy,
 			token: this.token,
 			config,
 			resume,
@@ -681,6 +690,7 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		if (this.stopped || this.held) {
 			return;
 		}
+		this.logGateway('Account engine gateway disconnected', exit);
 		switch (exit.kind) {
 			case 'auth_failed':
 				this.resume = null;
@@ -759,7 +769,21 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		this.client = null;
 		this.dropQueue();
 		this.deps.scheduler.releaseSlot(this.accountKey);
+		if (client !== null && !this.stopped) {
+			this.logGateway('Account engine gateway closed', {code, reason});
+		}
 		client?.close(code, reason);
+	}
+
+	private logReady(resumed: boolean): void {
+		this.logGateway('Account engine gateway ready', {
+			resumed,
+			readyMs: this.deps.clock.now() - this.handshakeStartedAt,
+		});
+	}
+
+	private logGateway(message: string, detail: object): void {
+		this.deps.log('info', message, {accountKey: this.accountKey, host: this.gatewayHost, ...detail});
 	}
 
 	private dropQueue(): void {
@@ -806,6 +830,9 @@ export class AccountSession implements SchedulerClient, DispatchConsumer {
 		}
 		this.state = state;
 		this.stateChangedAt = this.deps.clock.now();
+		if (state === AccountEngineConnectionState.FOREGROUND) {
+			this.logGateway('Account engine session moved to the foreground', {});
+		}
 		if (state !== AccountEngineConnectionState.BACKOFF && state !== AccountEngineConnectionState.OFFLINE) {
 			this.nextRetryAt = null;
 		}

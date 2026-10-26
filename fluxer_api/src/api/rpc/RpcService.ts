@@ -17,7 +17,10 @@ import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
-import {ensurePersonalNotesChannelExists} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {
+	ensurePersonalNotesChannelExists,
+	personalNotesEnabled,
+} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
 import {
 	listThreadMembersPage,
@@ -1018,7 +1021,13 @@ export class RpcService {
 			this.queueStripePremiumStateReconciliation(user),
 		);
 		timings.timeSync('queue_payment_reconciliation', () => this.queuePaymentReconciliation(user));
-		await timings.time('ensure_personal_notes_channel', async () => this.ensurePersonalNotesChannel(user));
+		if (await personalNotesEnabled()) {
+			await timings.time('ensure_personal_notes_channel', async () => this.ensurePersonalNotesChannel(user));
+		} else {
+			userData.privateChannels = userData.privateChannels.filter(
+				(channel) => channel.type !== ChannelTypes.DM_PERSONAL_NOTES,
+			);
+		}
 		const privateChannelLimitSteps: RpcTimingSteps = {};
 		const privateChannelLimitStartedAtNs = startRpcTiming();
 		userData.privateChannels = await this.ensurePrivateChannelsWithinLimit({

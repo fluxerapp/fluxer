@@ -141,19 +141,15 @@ export const SubscriptionActions = observer(
 							</PlutoniumPageButton>,
 							{key: 'start-subscription', disabled: purchaseDisabled},
 						)}
-					{wrapIfDisabled(
-						<PlutoniumPageButton
-							variant={canSubscribe && !billingUnavailable ? 'secondary' : 'primary'}
-							onClick={navigateToRedeemGift}
-							small
-							className={styles.actionButton}
-							disabled={purchaseDisabled}
-							data-flx="app.plutonium.subscription-card.action-button.navigate-to-redeem-gift"
-						>
-							<Trans comment="Billing button for entering a premium gift code.">Redeem gift code</Trans>
-						</PlutoniumPageButton>,
-						{key: 'redeem-gift', disabled: purchaseDisabled},
-					)}
+					<PlutoniumPageButton
+						variant={canSubscribe && !billingUnavailable ? 'secondary' : 'primary'}
+						onClick={navigateToRedeemGift}
+						small
+						className={styles.actionButton}
+						data-flx="app.plutonium.subscription-card.action-button.navigate-to-redeem-gift"
+					>
+						<Trans comment="Billing button for entering a premium gift code.">Redeem gift code</Trans>
+					</PlutoniumPageButton>
 				</>
 			);
 		}

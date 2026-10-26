@@ -347,6 +347,7 @@ export const SUMMARY_DESCRIPTORS = {
 	look: msg({message: 'Look', comment: 'Review row label for the theme color and images.'}),
 	communities: msg({message: 'Communities', comment: 'Review row label for one community or many.'}),
 	directMessages: msg({message: 'Direct messages', comment: 'Review row label for direct messages.'}),
+	personalNotes: msg({message: 'Personal notes', comment: 'Review row label for personal notes.'}),
 	registration: msg({message: 'Who can create an account', comment: 'Review row label for the registration mode.'}),
 	push: msg({message: 'Phone notifications', comment: 'Review row label for the push relay.'}),
 	gif: msg({message: 'GIF search', comment: 'Review row label for GIF search.'}),

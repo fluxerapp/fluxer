@@ -118,7 +118,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (authSession) {
 			const user = await apiContext.services.users.findUnique(authSession.userId);
 			if (user && !isSignInRefused(user)) {
-				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
+				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash, ctx.req.raw);
 				ctx.set('authSession', authSession);
 				ctx.set('authTokenType', 'session');
 				setUserInContext(ctx, user, true);

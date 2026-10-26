@@ -80,6 +80,7 @@ interface GatewayClientHandlers {
 export interface GatewayClientOptions {
 	readonly gatewayUrl: string;
 	readonly address: string | null;
+	readonly proxy: string | null;
 	readonly token: string;
 	readonly config: AccountEngineClientConfig;
 	readonly resume: GatewayResumeState | null;
@@ -163,6 +164,7 @@ export class GatewayClient {
 			this.connection = this.options.transport({
 				url,
 				address: this.options.address,
+				proxy: this.options.proxy,
 				onEvent: (event) => this.handleTransportEvent(event),
 			});
 		} catch (error) {

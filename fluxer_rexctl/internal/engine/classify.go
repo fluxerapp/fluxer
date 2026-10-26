@@ -50,7 +50,7 @@ var rules = []rule{
 	{ClassPortInUse, nil, []string{"port is already allocated", "address already in use", "listen failed"}},
 	{ClassAddressPools, nil, []string{"address pools have been fully subnetted"}},
 	{ClassSubIDs, nil, []string{"insufficient uids or gids"}},
-	{ClassDependencyFailed, nil, []string{"dependency failed to start"}},
+	{ClassDependencyFailed, nil, []string{"dependency failed to start", "timeout waiting for dependencies"}},
 }
 
 func ClassOf(err error) Class {

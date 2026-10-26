@@ -20,7 +20,7 @@ const GitHubCheckSuite = z.object({
 	conclusion: createStringType(0, 152133).nullish(),
 	head_branch: createStringType(0, 152133).nullish(),
 	head_sha: createStringType(0, 152133),
-	pull_requests: z.array(GitHubCheckPullRequest).nullish(),
+	pull_requests: z.array(GitHubCheckPullRequest).max(1000).nullish(),
 	app: GitHubCheckApp,
 });
 const GitHubCheckRunOutput = z.object({
@@ -38,7 +38,7 @@ const GitHubCheckRun = z.object({
 	check_suite: GitHubCheckSuite,
 	details_url: URLType.nullish(),
 	output: GitHubCheckRunOutput.nullish(),
-	pull_requests: z.array(GitHubCheckPullRequest).nullish(),
+	pull_requests: z.array(GitHubCheckPullRequest).max(1000).nullish(),
 });
 const GitHubComment = z.object({
 	id: Int64Type,
@@ -93,7 +93,7 @@ export const GitHubWebhook = z.object({
 	check_run: GitHubCheckRun.nullish(),
 	check_suite: GitHubCheckSuite.nullish(),
 	comment: GitHubComment.nullish(),
-	commits: z.array(GitHubCommit).nullish(),
+	commits: z.array(GitHubCommit).max(2048).nullish(),
 	compare: URLType.nullish(),
 	discussion: GitHubDiscussion.nullish(),
 	forced: z.boolean().nullish(),

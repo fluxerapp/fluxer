@@ -32,6 +32,7 @@ export const AdminAuditReadActions = {
 	LIST_OPERATOR_PASS_WAITLIST_FOLLOWUP_TEXTS: 'list_operator_pass_waitlist_followup_texts',
 	LIST_OPERATOR_PASS_WALL_REVIEW_QUEUE: 'list_operator_pass_wall_review_queue',
 	LIST_ADMIN_API_KEYS: 'list_admin_api_keys',
+	LIST_APP_SESSIONS: 'list_app_sessions',
 	LIST_ARCHIVES: 'list_archives',
 	LIST_AUDIT_LOGS: 'list_audit_logs',
 	LIST_BLOCKLIST_ENTRIES: 'list_blocklist_entries',

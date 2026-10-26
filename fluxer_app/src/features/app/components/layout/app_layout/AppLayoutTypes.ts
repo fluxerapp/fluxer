@@ -27,6 +27,7 @@ export const NagbarType = {
 	STREAMER_MODE: 'streamer-mode',
 	DOMAIN_MOVED: 'domain-moved',
 	WINDOWS_FONT: 'windows-font',
+	CUSTOM_CSS_OFF: 'custom-css-off',
 } as const;
 
 export type NagbarType = ValueOf<typeof NagbarType>;
@@ -67,4 +68,5 @@ export interface NagbarConditions {
 	canShowStreamerMode: boolean;
 	canShowDomainMoved: boolean;
 	canShowWindowsFont: boolean;
+	canShowCustomCssOff: boolean;
 }

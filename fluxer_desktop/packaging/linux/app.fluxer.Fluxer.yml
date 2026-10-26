@@ -35,6 +35,8 @@ modules:
     buildsystem: simple
     build-commands:
       - install -Dm755 app.fluxer.Fluxer.sh ${FLATPAK_DEST}/bin/${FLATPAK_ID}
+      - install -d ${FLATPAK_DEST}/share/fluxer
+      - printf '%s\n' https://pkgs.fluxer.com/flatpak/ > ${FLATPAK_DEST}/share/fluxer/flatpak-repository
       - mkdir -p ${FLATPAK_DEST}/fluxer
       - cp -a app/. ${FLATPAK_DEST}/fluxer/
       - patch-electron-desktop-filename ${FLATPAK_DEST}/fluxer/resources/app.asar

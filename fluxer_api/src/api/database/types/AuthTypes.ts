@@ -18,7 +18,19 @@ export interface AuthSessionRow {
 	client_user_agent: string | null;
 	client_os: string | null;
 	client_country: string | null;
+	app_platform: string | null;
+	app_version: string | null;
+	app_release_channel: string | null;
+	app_build_number: number | null;
+	app_beta_number: number | null;
 	version: number;
+}
+
+export interface AuthSessionByAppChannelRow {
+	app_platform: string;
+	app_release_channel: string;
+	session_id_hash: Buffer;
+	user_id: UserID;
 }
 
 export interface AuthSessionTombstoneRow {
@@ -137,8 +149,19 @@ export const AUTH_SESSION_COLUMNS = [
 	'client_user_agent',
 	'client_os',
 	'client_country',
+	'app_platform',
+	'app_version',
+	'app_release_channel',
+	'app_build_number',
+	'app_beta_number',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionRow>;
+export const AUTH_SESSION_BY_APP_CHANNEL_COLUMNS = [
+	'app_platform',
+	'app_release_channel',
+	'session_id_hash',
+	'user_id',
+] as const satisfies ReadonlyArray<keyof AuthSessionByAppChannelRow>;
 export const AUTH_SESSION_TOMBSTONE_COLUMNS = [
 	'user_id',
 	'session_id_hash',

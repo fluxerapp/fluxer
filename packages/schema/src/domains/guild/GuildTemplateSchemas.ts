@@ -3,6 +3,8 @@
 import {
 	CHANNEL_RATE_LIMIT_PER_USER_MAX,
 	CHANNEL_RATE_LIMIT_PER_USER_MIN,
+	MAX_GUILD_CHANNELS,
+	MAX_GUILD_ROLES,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MIN,
 	VOICE_CHANNEL_USER_LIMIT_MIN,
@@ -98,6 +100,7 @@ export const TemplateChannel = z.object({
 		.describe('Slowmode rate limit in seconds'),
 	permission_overwrites: z
 		.array(TemplatePermissionOverwrite)
+		.max(MAX_GUILD_ROLES)
 		.nullish()
 		.describe('Permission overwrites for this channel'),
 	available_tags: z
@@ -151,8 +154,8 @@ export const TemplateSerializedGuild = z.object({
 	system_channel_id: TemplateEntityId.nullish().describe('The template-local system channel ID'),
 	afk_timeout: z.number().optional().describe('The AFK timeout in seconds'),
 	system_channel_flags: z.number().optional().describe('The system channel flags'),
-	roles: z.array(TemplateRole).describe('The roles in the template'),
-	channels: z.array(TemplateChannel).describe('The channels in the template'),
+	roles: z.array(TemplateRole).max(MAX_GUILD_ROLES).describe('The roles in the template'),
+	channels: z.array(TemplateChannel).max(MAX_GUILD_CHANNELS).describe('The channels in the template'),
 });
 
 export type TemplateSerializedGuild = z.infer<typeof TemplateSerializedGuild>;

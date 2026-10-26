@@ -33,7 +33,6 @@ pub(crate) const CALVER_SCHEME: &str = "YYYY.MDD.MICRO";
 #[derive(Default)]
 pub(crate) struct CalverEnv {
     pub(crate) build_version: Option<String>,
-    pub(crate) fluxer_build_version: Option<String>,
     pub(crate) fluxer_build_date: Option<String>,
 }
 
@@ -41,7 +40,6 @@ impl CalverEnv {
     pub(crate) fn from_process() -> Self {
         Self {
             build_version: trim_option(env::var("BUILD_VERSION").ok()),
-            fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
             fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
         }
     }
@@ -335,11 +333,7 @@ fn quote_arg(arg: &OsStr) -> String {
 }
 
 pub(crate) fn resolve_calver(calver_env: &CalverEnv, now: DateTime<Utc>) -> Result<String> {
-    if let Some(version) = calver_env
-        .build_version
-        .as_deref()
-        .or(calver_env.fluxer_build_version.as_deref())
-    {
+    if let Some(version) = calver_env.build_version.as_deref() {
         parse_version_instant(version)?;
         return Ok(version.to_string());
     }

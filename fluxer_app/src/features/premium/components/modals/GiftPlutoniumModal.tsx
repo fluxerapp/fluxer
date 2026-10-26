@@ -60,15 +60,9 @@ const VERIFY_TO_GIFT_DESCRIPTOR = msg({
 	message: 'Confirm your email to buy gifts.',
 	comment: 'Note in the gift purchase dialog for accounts without a verified email.',
 });
-const NO_RECEIPT_EMAIL_TO_GIFT_DESCRIPTOR = msg({
-	message: "Gifts need an email for receipts, and accounts on this instance don't have one.",
-	comment:
-		'Note in the gift purchase dialog on an instance where people sign in with a username and accounts have no email.',
-});
 const BLOCKED_NOTES: Readonly<Record<PurchaseBlockedReason, MessageDescriptor>> = {
 	[PurchaseBlockedReasons.UNCLAIMED]: CLAIM_TO_GIFT_DESCRIPTOR,
 	[PurchaseBlockedReasons.EMAIL_UNVERIFIED]: VERIFY_TO_GIFT_DESCRIPTOR,
-	[PurchaseBlockedReasons.NO_RECEIPT_EMAIL]: NO_RECEIPT_EMAIL_TO_GIFT_DESCRIPTOR,
 };
 
 const PRICE_PLACEHOLDER = '...';

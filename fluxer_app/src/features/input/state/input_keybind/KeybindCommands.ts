@@ -89,6 +89,7 @@ const KEYBIND_COMMAND_VALUES = [
 	'system_toggle_settings',
 	'system_toggle_shortcuts_overlay',
 	'system_open_theme_studio_popout',
+	'system_toggle_custom_css',
 	'system_zoom_in',
 	'system_zoom_out',
 	'system_zoom_reset',

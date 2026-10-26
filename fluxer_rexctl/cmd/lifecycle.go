@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
+	"os/exec"
 	"path"
 	"runtime"
 	"slices"
@@ -26,8 +28,9 @@ import (
 )
 
 const (
-	bootLockWait  = 10 * time.Minute
-	bootRouteWait = 2 * time.Minute
+	bootLockWait   = 10 * time.Minute
+	bootRouteWait  = 2 * time.Minute
+	readyHintAfter = 3 * time.Minute
 )
 
 type logPart struct {
@@ -100,6 +103,9 @@ func engineFailureFor(kind engine.Kind, err error) error {
 	case engine.ClassUnreachable:
 		if desktop {
 			return refused("Docker Desktop isn't running.", "Open Docker Desktop and wait until its engine is running, then try again.")
+		}
+		if fix := podmanSocketFix(kind); fix != "" {
+			return refused("Podman is installed, but its API socket isn't running.", fix)
 		}
 		if kind == "" {
 			return refused("Neither Docker nor Podman answers on this machine.", "Start Docker or Podman, then try again.")
@@ -257,11 +263,27 @@ func waitForFluxer(ctx context.Context, inst *instance.Instance, p *engine.Proje
 }
 
 func showReadiness(s *ui.Step, prefix string) func(engine.Readiness) {
+	start, hinted := time.Now(), false
 	return func(r engine.Readiness) {
 		waiting := slices.Concat(r.NotReady, r.Failed)
 		slices.Sort(waiting)
 		showWaiting(s, prefix, len(r.Ready), len(r.Ready)+len(waiting), "ready", waiting)
+		if !hinted && len(waiting) > 0 && time.Since(start) >= readyHintAfter {
+			hinted = true
+			s.Info("%s", notReadyHint(waiting))
+		}
 	}
+}
+
+func notReadyHint(waiting []string) string {
+	if len(waiting) == 1 && slices.Contains(stack.Services, waiting[0]) {
+		return fmt.Sprintf("%s isn't ready after %d minutes. Run rexctl logs %s in another terminal to see why.", waiting[0], int(readyHintAfter.Minutes()), waiting[0])
+	}
+	verb := "aren't"
+	if len(waiting) == 1 {
+		verb = "isn't"
+	}
+	return fmt.Sprintf("%s %s ready after %d minutes. Run rexctl logs in another terminal to see why.", waitingFor(waiting), verb, int(readyHintAfter.Minutes()))
 }
 
 func showWaiting(s *ui.Step, prefix string, done, total int, state string, waiting []string) {
@@ -742,4 +764,17 @@ func newRestartCmd(app *App) *cobra.Command {
 			})
 		},
 	}
+}
+
+func podmanSocketFix(kind engine.Kind) string {
+	if runtime.GOOS != "linux" || (kind != "" && kind != engine.Podman) {
+		return ""
+	}
+	if _, err := exec.LookPath("podman"); err != nil {
+		return ""
+	}
+	if os.Geteuid() == 0 {
+		return "Run systemctl enable --now podman.socket, then try again."
+	}
+	return "Run systemctl --user enable --now podman.socket, then try again."
 }

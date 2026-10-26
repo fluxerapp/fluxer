@@ -2128,10 +2128,13 @@ type InstanceConfigResponse struct {
 		DirectMessagesLocked   bool `json:"direct_messages_locked"`
 
 		// FriendsDisabled Whether friend requests are disabled instance-wide
-		FriendsDisabled   bool                                    `json:"friends_disabled"`
-		GuildCreateAccess bool                                    `json:"guild_create_access"`
-		PremiumMode       InstanceConfigResponsePolicyPremiumMode `json:"premium_mode"`
-		Services          struct {
+		FriendsDisabled   bool `json:"friends_disabled"`
+		GuildCreateAccess bool `json:"guild_create_access"`
+
+		// PersonalNotesEnabled Whether people can use personal notes
+		PersonalNotesEnabled bool                                    `json:"personal_notes_enabled"`
+		PremiumMode          InstanceConfigResponsePolicyPremiumMode `json:"premium_mode"`
+		Services             struct {
 			BlueskyEnabled *bool `json:"bluesky_enabled"`
 			GifEnabled     *bool `json:"gif_enabled"`
 			YoutubeEnabled *bool `json:"youtube_enabled"`
@@ -2341,10 +2344,13 @@ type InstanceConfigUpdateRequest struct {
 		DirectMessagesLocked   *InstanceConfigUpdateRequestPolicyDirectMessagesLocked `json:"direct_messages_locked,omitempty"`
 
 		// FriendsDisabled Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value
-		FriendsDisabled   *bool                                         `json:"friends_disabled,omitempty"`
-		GuildCreateAccess *bool                                         `json:"guild_create_access,omitempty"`
-		PremiumMode       *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
-		Services          *struct {
+		FriendsDisabled   *bool `json:"friends_disabled,omitempty"`
+		GuildCreateAccess *bool `json:"guild_create_access,omitempty"`
+
+		// PersonalNotesEnabled Whether people can use personal notes. Off by default on self-hosted instances
+		PersonalNotesEnabled *bool                                         `json:"personal_notes_enabled,omitempty"`
+		PremiumMode          *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
+		Services             *struct {
 			BlueskyEnabled *bool `json:"bluesky_enabled,omitempty"`
 			GifEnabled     *bool `json:"gif_enabled,omitempty"`
 			YoutubeEnabled *bool `json:"youtube_enabled,omitempty"`
@@ -2476,6 +2482,21 @@ type LastSessionCleanupModeSchema string
 // ListUserSessionsResponse defines model for ListUserSessionsResponse.
 type ListUserSessionsResponse struct {
 	Sessions []struct {
+		// AppBetaNumber Beta number the native app last reported, for beta builds only
+		AppBetaNumber *Int32Type `json:"app_beta_number"`
+
+		// AppBuildNumber Platform build number the native app last reported for this session
+		AppBuildNumber *Int32Type `json:"app_build_number"`
+
+		// AppPlatform Platform the native app last reported for this session
+		AppPlatform *string `json:"app_platform"`
+
+		// AppReleaseChannel Release channel the native app last reported for this session
+		AppReleaseChannel *string `json:"app_release_channel"`
+
+		// AppVersion App version the native app last reported for this session
+		AppVersion *string `json:"app_version"`
+
 		// ApproxLastUsedAt ISO timestamp of the session last usage (approximate)
 		ApproxLastUsedAt string `json:"approx_last_used_at"`
 

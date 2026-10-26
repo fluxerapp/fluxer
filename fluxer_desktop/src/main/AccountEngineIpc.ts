@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import path from 'node:path';
-import type {EngineTokenPersistOutcome} from '@electron/engine/HostProtocol';
+import type {AdmittedGateway, EngineTokenPersistOutcome} from '@electron/engine/HostProtocol';
 import {
 	type AccountEngineAccountEntry,
 	parseAccountEngineEntries,
@@ -24,7 +24,6 @@ import {
 	readBoundedMessage,
 	readMessageContentLength,
 } from '@electron/main/DesktopOutboundHTTP';
-import {isDirectProxyRoute} from '@electron/main/DesktopSessionHTTP';
 import {resolveDesktopGatewayTrustedCertificates} from '@electron/main/DesktopSystemTrustVerifier';
 import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {prefersAccountEngineWebSocketTransport} from '@electron/main/LaunchOptions';
@@ -103,23 +102,33 @@ async function readEngineAccounts(): Promise<ReadonlyArray<AccountEngineAccountE
 	return parseAccountEngineEntries(await storage.getAllAccounts());
 }
 
-async function admitEngineGateway(
-	entry: AccountEngineAccountEntry,
-	url: string,
-): Promise<{url: string; address: string | null}> {
-	await getGatewayOriginRegistry().admitAnchored({url, anchor: entry.record.apiEndpoint});
-	const route = await session.defaultSession.resolveProxy(url.replace(/^ws/u, 'http'));
-	if (!isDirectProxyRoute(route)) {
-		throw new Error('The gateway resolves through a proxy');
+function engineGatewayProxy(route: string): string | null {
+	for (const entry of route.split(';')) {
+		const [scheme = '', hostPort = ''] = entry.trim().split(/\s+/u);
+		switch (scheme.toUpperCase()) {
+			case 'DIRECT':
+				return null;
+			case 'PROXY':
+				return `http://${hostPort}`;
+			case 'HTTPS':
+				return `https://${hostPort}`;
+		}
 	}
+	throw new Error(`The gateway resolves through a proxy the account engine cannot use: ${route}`);
+}
+
+async function admitEngineGateway(entry: AccountEngineAccountEntry, url: string): Promise<AdmittedGateway> {
+	await getGatewayOriginRegistry().admitAnchored({url, anchor: entry.record.apiEndpoint});
+	const proxy = engineGatewayProxy(await session.defaultSession.resolveProxy(url.replace(/^ws/u, 'http')));
 	if (new URL(url).protocol !== 'ws:') {
-		return {url, address: null};
+		return {url, address: null, proxy};
 	}
 	const httpOrigin = websocketHTTPOrigin(url);
 	if (httpOrigin == null) {
 		throw new Error('The gateway has no HTTP origin');
 	}
-	return {url, address: await getDesktopOutboundHTTP().requireCleartextTransportAddress(httpOrigin)};
+	const address = await getDesktopOutboundHTTP().requireCleartextTransportAddress(httpOrigin);
+	return {url, address: proxy === null ? address : null, proxy};
 }
 
 async function engineHttp(

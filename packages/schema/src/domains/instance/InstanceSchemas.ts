@@ -306,6 +306,10 @@ export const InstanceCommunitySchema = z
 			.boolean()
 			.optional()
 			.describe('Whether friend requests are disabled instance-wide. Missing means direct_messages_disabled decides'),
+		personal_notes_enabled: z
+			.boolean()
+			.optional()
+			.describe('Whether people can use personal notes. Missing means they can'),
 		guild_create_access: z
 			.boolean()
 			.describe(

@@ -406,10 +406,11 @@ export class MessageReactionService {
 			if (!emoji) {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.CUSTOM_EMOJI_NOT_FOUND);
 			}
-			if (hasGlobalExpressions === 0 && emoji.guildId.toString() !== guildId) {
+			const isExternalEmoji = emoji.guildId.toString() !== guildId;
+			if (hasGlobalExpressions === 0 && isExternalEmoji) {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE);
 			}
-			if (hasPermission) {
+			if (hasPermission && isExternalEmoji) {
 				const canUseExternalEmojis = await hasPermission(Permissions.USE_EXTERNAL_EMOJIS);
 				if (!canUseExternalEmojis) {
 					throw new MissingPermissionsError();

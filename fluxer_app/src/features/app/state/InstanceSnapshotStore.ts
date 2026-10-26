@@ -136,7 +136,7 @@ function endpointHostname(endpoint: string): string | null {
 }
 
 function bootstrapReleaseChannel(): OfficialReleaseChannel {
-	return Config.PUBLIC_RELEASE_CHANNEL === 'stable' ? 'stable' : 'canary';
+	return Config.RELEASE_CHANNEL === 'stable' ? 'stable' : 'canary';
 }
 
 const SAME_ORIGIN_API_META_SELECTOR = 'meta[name="fluxer-api-origin"][content="self"]';

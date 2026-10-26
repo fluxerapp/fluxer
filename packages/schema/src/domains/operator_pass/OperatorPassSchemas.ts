@@ -78,7 +78,6 @@ export const OperatorPassPurchaseBlockedReasonSchema = createNamedStringLiteralU
 		],
 		[PurchaseBlockedReasons.EMAIL_UNVERIFIED, 'EMAIL_UNVERIFIED', 'The account email is not verified'],
 		[PurchaseBlockedReasons.UNCLAIMED, 'UNCLAIMED', 'The account is not claimed'],
-		[PurchaseBlockedReasons.NO_RECEIPT_EMAIL, 'NO_RECEIPT_EMAIL', 'The account has no email to send receipts to'],
 		[
 			OperatorPassPurchaseBlockedReasons.PURCHASE_DISABLED,
 			'PURCHASE_DISABLED',

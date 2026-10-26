@@ -32,6 +32,10 @@ func Explain(err error) error {
 	switch {
 	case errors.Is(err, ErrSchemaMismatch):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: "This rexctl and the Fluxer running here don't match.", Fix: "Run rexctl upgrade.", Err: err}
+	case errors.Is(err, ErrNoFullReindex):
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: "The Fluxer release running here can't rebuild search in one go.", Fix: `Run rexctl upgrade, or use the "Reindex" buttons on the admin panel's search index page and "Refresh Channel Messages" on each community's page there.`, Err: err}
+	case errors.Is(err, ErrSearchOff):
+		return &ui.ExitError{Code: ui.ExitFailed, Msg: "Search is turned off on this instance.", Fix: "Run rexctl doctor to see what's wrong.", Err: err}
 	case errors.Is(err, ErrNoRelay):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: "The Fluxer release running here can't take commands from rexctl.", Fix: "Run rexctl upgrade.", Err: err}
 	case errors.As(err, &relay):

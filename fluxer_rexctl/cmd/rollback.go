@@ -20,6 +20,7 @@ type rollbackFlags struct {
 	DryRun    bool
 	RestoreDB bool
 	Confirm   string
+	Resume    string
 }
 
 func newRollbackCmd(app *App) *cobra.Command {
@@ -34,6 +35,8 @@ func newRollbackCmd(app *App) *cobra.Command {
 	}
 	c.Flags().BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
 	c.Flags().BoolVar(&f.RestoreDB, "restore-database", false, "also restore the database from the backup taken before the upgrade")
+	c.Flags().StringVar(&f.Resume, release.ResumeFlag, "", "")
+	_ = c.Flags().MarkHidden(release.ResumeFlag)
 	confirmFlag(c, &f.Confirm)
 	return c
 }
@@ -42,6 +45,14 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
+	}
+	if inst.State.Upgrade != nil && !f.DryRun {
+		if err := managed(inst); err != nil {
+			return err
+		}
+		if handedOver, err := updateBeforeRecovery(ctx, app, f.Resume, "", "rexctl rollback"); err != nil || handedOver {
+			return err
+		}
 	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
@@ -153,7 +164,7 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 		err = app.UI.Step(ctx, "Going back to "+prevShort, func(ctx context.Context, s *ui.Step) error {
 			s.Done("Went back to %s. Your instance is running.", prevShort)
 			var err error
-			put, err = restoreRelease(ctx, inst, e, prev)
+			put, err = restoreRelease(ctx, app, inst, e, prev)
 			return err
 		})
 		if err != nil {
@@ -178,7 +189,7 @@ func rollbackFailed(ctx context.Context, app *App, inst *instance.Instance, e *e
 	if ctx.Err() == nil {
 		cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), recoveryTimeout)
 		defer cancel()
-		_, err := restoreRelease(cctx, inst, e, cur)
+		_, err := restoreRelease(cctx, app, inst, e, cur)
 		inst.State.Release, inst.State.PreviousRelease = cur, prev
 		_ = inst.Save()
 		if err == nil {

@@ -218,11 +218,11 @@ export function useModalLogic({
 		[onClose, popOwningModal],
 	);
 	useEffect(() => {
-		LayerManager.addLayer('modal', modalKey, handleClose);
+		LayerManager.addLayer('modal', modalKey, handleClose, ownerDocument);
 		return () => {
 			LayerManager.removeLayer('modal', modalKey);
 		};
-	}, [handleClose, modalKey]);
+	}, [handleClose, modalKey, ownerDocument]);
 	const handleBackdropClick = useCallback(
 		(customOnClose?: () => void) => {
 			if (isBackdropActivationLeftOver(ownerDocument)) {

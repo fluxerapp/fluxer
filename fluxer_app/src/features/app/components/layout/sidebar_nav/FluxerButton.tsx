@@ -47,6 +47,11 @@ const FRIENDS_DESCRIPTOR = msg({
 	message: 'Friends',
 	comment: 'Sidebar home button tooltip when the instance turns direct messages off but keeps friends.',
 });
+const HOME_DESCRIPTOR = msg({
+	message: 'Home',
+	comment:
+		'Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.',
+});
 export const FluxerButton = observer(() => {
 	const {i18n} = useLingui();
 	const [hoverRef, isHovering] = useHover();
@@ -84,8 +89,12 @@ export const FluxerButton = observer(() => {
 	const displayedUnreadDmCount = inlineDmsCollapsed && showCollapsedUnreadDmsBadge ? unreadDmCount : 0;
 	const displayedIncomingFriendRequestCount = showIncomingFriendRequestBadge ? incomingFriendRequestCount : 0;
 	let homeDescriptor = DIRECT_MESSAGES_DESCRIPTOR;
-	if (RuntimeConfig.directMessagesDisabled) {
-		homeDescriptor = RuntimeConfig.friendsDisabled ? PERSONAL_NOTES_DESCRIPTOR : FRIENDS_DESCRIPTOR;
+	if (RuntimeConfig.directMessagesDisabled && !RuntimeConfig.friendsDisabled) {
+		homeDescriptor = FRIENDS_DESCRIPTOR;
+	} else if (RuntimeConfig.directMessagesDisabled && RuntimeConfig.personalNotesEnabled) {
+		homeDescriptor = PERSONAL_NOTES_DESCRIPTOR;
+	} else if (RuntimeConfig.directMessagesDisabled) {
+		homeDescriptor = HOME_DESCRIPTOR;
 	}
 	const directMessagesLabel = useMemo(() => {
 		const parts = [i18n._(homeDescriptor)];

@@ -121,7 +121,7 @@ Each route needs one or more ACLs, and the caller needs at least one of them. Th
 | user:list:dm_channels | Reads a user's direct message and group direct message channels |
 | user:list:guilds | Reads a user's guild memberships |
 | user:list:relationships | Reads a user's relationships |
-| user:list:sessions | Reads a user's login sessions |
+| user:list:sessions | Reads a user's login sessions and lists app sessions by platform |
 | user:lookup | Reads and searches the base Admin [user](/admin-api/users/) resource |
 | user:remove:relationship | Removes one relationship or every relationship in one category |
 | user:view:contact_log | Reads a user's identity and contact change log |
@@ -319,6 +319,7 @@ These entries have `access` set to `read`.
 | get_voice_state_counts | Gateway voice state counts were read |
 | list_admin_acls | The Admin ACL registry was read |
 | list_admin_api_keys | The acting Admin's API keys were listed |
+| list_app_sessions | Active app sessions were listed for one platform and release channel |
 | list_archives | Archives were listed |
 | list_audit_logs | A page of the Admin audit log was read |
 | list_blocklist_entries | A page of blocklist entries was read |

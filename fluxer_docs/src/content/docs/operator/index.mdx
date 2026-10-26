@@ -31,6 +31,14 @@ On Windows, run this in PowerShell:
 irm https://fluxer.dev/install.ps1 | iex
 ```
 
+On Linux or macOS, start the install with this command to put your own reverse proxy, such as Caddy or nginx, in front of Fluxer.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- install --behind-proxy --bind 127.0.0.1:8080
+```
+
+Fluxer then listens on `127.0.0.1:8080` for your proxy. The plain install command also asks whether you want this when another program already uses port 80 or 443 on the machine.
+
 The script downloads rexctl and starts it. Answer its questions, and when it's done, rexctl prints your instance's address.
 
 rexctl asks where you want to create your admin account. "Here in the terminal" creates it during the install. "In my browser" prints a setup token at the end, and your instance asks for that token the first time you open it. If you lose the token, run `rexctl setup token` to show it again.

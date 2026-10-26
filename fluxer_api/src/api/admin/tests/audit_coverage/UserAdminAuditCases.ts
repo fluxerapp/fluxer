@@ -382,6 +382,21 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	},
 	{
 		method: 'GET',
+		route: '/admin/app-sessions',
+		async prepare() {
+			return {
+				request: {path: '/admin/app-sessions?platform=ios&release_channel=beta'},
+				expected: {
+					action: 'list_app_sessions',
+					targetType: 'user',
+					targetId: '0',
+					metadata: {platform: 'ios', release_channel: 'beta', has_cursor: 'false', result_count: '0'},
+				},
+			};
+		},
+	},
+	{
+		method: 'GET',
 		route: '/admin/users/:user_id/webauthn-credentials',
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);

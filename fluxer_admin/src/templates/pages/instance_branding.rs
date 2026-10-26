@@ -6,6 +6,7 @@ use crate::{
         AppPublicConfigResponse, BRANDING_ASSET_ACCEPT, BRANDING_ASSET_MAX_IMAGE_CHARS,
         BrandingAssetKind, CUSTOM_CSS_MAX_CHARS,
     },
+    config::AdminConfig,
     templates::components::form::{
         Checkbox, FORM_LABEL_CLASS, FORM_TEXTAREA_CLASS, form_actions, submit_button, text_input,
         textarea_input,
@@ -70,17 +71,18 @@ fn asset_guidance(kind: BrandingAssetKind) -> AssetGuidance {
 }
 
 pub(super) fn branding_section(
-    base: &str,
+    config: &AdminConfig,
     config_form: ConfigForm<'_>,
     app_public: &AppPublicConfigResponse,
     host: &str,
 ) -> Markup {
+    let base = &config.base_path;
     html! {
         form method="post" action={(base) "/instance-config?action=update_app_public"} data-branding-form {
             (config_form.fields())
             div class="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,27rem)_minmax(0,1fr)] xl:items-start" {
                 div class="min-w-0 xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1" {
-                    (branding_preview(host))
+                    (branding_preview(host, &config.image_origins()))
                 }
                 div class="min-w-0 space-y-6 xl:col-start-1 xl:row-start-1" {
                     div class="flex flex-col gap-2" {
@@ -108,7 +110,7 @@ pub(super) fn branding_section(
                     div class="space-y-4 border-t border-neutral-200 pt-6" {
                         h3 class="text-sm font-semibold text-neutral-900" { "Images" }
                         @for kind in ASSET_ORDER {
-                            (branding_asset_field(kind, kind.url(&app_public.branding)))
+                            (branding_asset_field(config, kind, kind.url(&app_public.branding)))
                         }
                     }
                     div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {
@@ -220,7 +222,11 @@ pub fn branding_asset_field_id(kind: BrandingAssetKind) -> String {
     format!("branding-asset-{}", kind.as_str())
 }
 
-pub fn branding_asset_field(kind: BrandingAssetKind, url: Option<&str>) -> Markup {
+pub fn branding_asset_field(
+    config: &AdminConfig,
+    kind: BrandingAssetKind,
+    url: Option<&str>,
+) -> Markup {
     let name = format!("app_{}_url", kind.as_str());
     let placeholder = match kind {
         BrandingAssetKind::Favicon => "https://example.com/favicon.ico".to_owned(),
@@ -228,6 +234,10 @@ pub fn branding_asset_field(kind: BrandingAssetKind, url: Option<&str>) -> Marku
         _ => format!("https://example.com/{}.png", kind.as_str()),
     };
     let guidance = asset_guidance(kind);
+    let failed_note = match url {
+        Some(url) if config.shows_image(url) => UNLOADABLE_IMAGE_NOTE,
+        _ => UNPREVIEWABLE_IMAGE_NOTE,
+    };
     let thumbnail_class = if kind == BrandingAssetKind::SignInBackdrop {
         "h-16 w-28"
     } else {
@@ -274,7 +284,7 @@ pub fn branding_asset_field(kind: BrandingAssetKind, url: Option<&str>) -> Marku
                 p class="text-xs leading-5 text-neutral-500" { (guidance.empty) }
             } @else {
                 p class="text-xs leading-5 text-neutral-500" data-branding-asset-unpreviewable hidden {
-                    (UNPREVIEWABLE_IMAGE_NOTE)
+                    (failed_note)
                 }
             }
             (text_input(&name, &format!("{} URL", kind.label()), url.unwrap_or(""), &placeholder))
@@ -282,9 +292,10 @@ pub fn branding_asset_field(kind: BrandingAssetKind, url: Option<&str>) -> Marku
     }
 }
 
-fn branding_preview(host: &str) -> Markup {
+fn branding_preview(host: &str, image_origins: &[String]) -> Markup {
+    let image_origins = serde_json::to_string(image_origins).unwrap_or_else(|_| "[]".to_owned());
     html! {
-        div class="bp-root" data-branding-preview {
+        div class="bp-root" data-branding-preview data-bp-image-origins=(image_origins) {
             div class="bp-tabs" role="tablist" aria-label="Preview" {
                 button type="button" role="tab" class="bp-tab" aria-selected="true" data-bp-tab="sign_in" { "Sign-in page" }
                 button type="button" role="tab" class="bp-tab" aria-selected="false" tabindex="-1" data-bp-tab="phone" { "Phone" }
@@ -292,6 +303,7 @@ fn branding_preview(host: &str) -> Markup {
                 button type="button" role="tab" class="bp-tab" aria-selected="false" tabindex="-1" data-bp-tab="instances" { "Instance list" }
             }
             p class="bp-note" data-bp="unpreviewable-note" hidden { (UNPREVIEWABLE_PREVIEW_NOTE) }
+            p class="bp-note" data-bp="unloadable-note" hidden { (UNLOADABLE_PREVIEW_NOTE) }
             div class="bp-stage" {
                 div role="tabpanel" data-bp-panel="sign_in" {
                     div class="bp-computer" aria-hidden="true" {
@@ -434,6 +446,12 @@ fn titlebar_group(title: &str, macos: bool) -> Markup {
 }
 
 const UNPREVIEWABLE_IMAGE_NOTE: &str = "This image can't be previewed here. The admin panel only shows images stored on this instance.";
+
+const UNLOADABLE_IMAGE_NOTE: &str =
+    "This image could not be loaded from this instance. Try uploading it again.";
+
+const UNLOADABLE_PREVIEW_NOTE: &str =
+    "Some images could not be loaded from this instance, so a gray square stands in for them.";
 
 const UNPREVIEWABLE_PREVIEW_NOTE: &str = "Some images can't be previewed here. The admin panel only shows images stored on this instance, so a gray square stands in for them.";
 
@@ -591,12 +609,14 @@ const BRANDING_PREVIEW_SCRIPT: &str = r#"
 				if (img.getAttribute('data-bp-src') !== url) {
 					img.setAttribute('data-bp-src', url);
 					img.removeAttribute('data-bp-unpreviewable');
+					img.removeAttribute('data-bp-unloadable');
 					img.setAttribute('src', url);
 				}
 				img.hidden = false;
 			} else {
 				img.removeAttribute('data-bp-src');
 				img.removeAttribute('data-bp-unpreviewable');
+				img.removeAttribute('data-bp-unloadable');
 				img.removeAttribute('src');
 				img.hidden = true;
 			}
@@ -605,12 +625,29 @@ const BRANDING_PREVIEW_SCRIPT: &str = r#"
 	function showUnpreviewableNote() {
 		var root = document.querySelector('[data-branding-preview]');
 		show('[data-bp="unpreviewable-note"]', Boolean(root && root.querySelector('img[data-bp-unpreviewable]:not([hidden])')));
+		show('[data-bp="unloadable-note"]', Boolean(root && root.querySelector('img[data-bp-unloadable]:not([hidden])')));
+	}
+	function isInstanceImage(url) {
+		var root = document.querySelector('[data-branding-preview]');
+		var origins = [];
+		try {
+			origins = JSON.parse((root && root.getAttribute('data-bp-image-origins')) || '[]');
+		} catch (error) {
+			origins = [];
+		}
+		try {
+			var parsed = new URL(url, window.location.href);
+			if (parsed.protocol === 'data:' || parsed.protocol === 'blob:') return true;
+			return parsed.origin === window.location.origin || origins.indexOf(parsed.origin) !== -1;
+		} catch (error) {
+			return false;
+		}
 	}
 	function markUnpreviewable(event) {
 		var img = event.target;
 		if (!(img instanceof HTMLImageElement) || !img.hasAttribute('data-bp-src') || !img.closest('[data-branding-preview]')) return;
-		if (img.hasAttribute('data-bp-unpreviewable')) return;
-		img.setAttribute('data-bp-unpreviewable', '');
+		if (img.hasAttribute('data-bp-unpreviewable') || img.hasAttribute('data-bp-unloadable')) return;
+		img.setAttribute(isInstanceImage(img.getAttribute('data-bp-src')) ? 'data-bp-unloadable' : 'data-bp-unpreviewable', '');
 		img.setAttribute('src', PLACEHOLDER);
 		showUnpreviewableNote();
 	}

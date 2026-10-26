@@ -13,8 +13,6 @@ export const ERROR_I18N_MESSAGES = {
 	'account.unclaimed_cannot_join_calls': 'Claim your account to start or join calls.',
 	'account.unclaimed_cannot_join_group_dms': 'Claim your account to join group chats.',
 	'account.unclaimed_cannot_join_voice': 'Claim your account to join voice channels.',
-	'account.purchase_receipt_email_required':
-		"Purchases need an email address to send receipts to, and this account doesn't have one.",
 	'account.unclaimed_cannot_make_purchases': 'Claim your account to make purchases.',
 	'account.unclaimed_cannot_send_direct_messages': 'Claim your account to send direct messages.',
 	'account.unclaimed_cannot_send_friend_requests': 'Claim your account to send friend requests.',
@@ -445,6 +443,7 @@ export const ERROR_I18N_MESSAGES = {
 	'friends_and_dms.already_friends': "You're already friends with this user.",
 	'friends_and_dms.direct_messages_disabled': 'Direct messages are disabled on this instance.',
 	'friends_and_dms.friends_disabled': 'Friend requests are disabled on this instance.',
+	'friends_and_dms.personal_notes_disabled': 'Personal notes are turned off on this instance.',
 	'friends_and_dms.new_conversations_limited': "You can't start new conversations right now. Please try again later.",
 	'friends_and_dms.bots_cannot_send_friend_requests': "Bots can't send friend requests.",
 	'friends_and_dms.cannot_add_yourself_to_group_dm': "You can't add yourself to a group DM.",

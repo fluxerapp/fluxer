@@ -406,7 +406,7 @@ services:
     environment:
       GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
       WEED_MASTER_VOLUME_GROWTH_COPY_1: ${FLUXER_SEAWEEDFS_VOLUME_GROWTH:-1}
-    command: ["server", "-s3", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}", "-master.volumeSizeLimitMB=${FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB:-1024}", "-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}", "-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}"]
+    command: ["server", "-s3", "-s3.iam=false", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}", "-master.volumeSizeLimitMB=${FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB:-1024}", "-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}", "-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}"]
     volumes:
       - seaweedfs-data:/data
     healthcheck:
@@ -619,7 +619,7 @@ services:
       FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS: ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-}
       FLUXER_ERLANG_DIRTY_IO_SCHEDULERS: ${FLUXER_ERLANG_DIRTY_IO_SCHEDULERS:-}
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/_health/ready"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health/ready HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck
     depends_on:
       nats: {condition: service_healthy}

@@ -22,6 +22,7 @@ import {
 } from '@app/api/user/services/PartialUserChangePropagation';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import type {UserDeletionEligibilityService} from '@app/api/user/services/UserDeletionEligibilityService';
+import {isDeletionComplete} from '@app/api/user/UserHelpers';
 import {DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -148,6 +149,7 @@ async function processUser(
 		activityTracker,
 		deletionEligibilityService,
 	} = deps;
+	if (isDeletionComplete(listedUser)) return;
 	const user = await clearSuspensionIfExpired(listedUser, deps, result);
 	const userId = user.id;
 	if (user.pendingDeletionAt) {

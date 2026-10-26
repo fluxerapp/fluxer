@@ -52,6 +52,7 @@ import type {
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	TextareaContextMenuParams,
+	ThemeFolderChange,
 	ThemeLinkedFileChange,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
@@ -446,6 +447,15 @@ const api: ElectronAPI = {
 		ipcRenderer.on('theme-linked-file-changed', handler);
 		return () => ipcRenderer.removeListener('theme-linked-file-changed', handler);
 	},
+	importThemeFolder: () => ipcRenderer.invoke('theme-folder-import'),
+	watchThemeFolders: (paths: Array<string>) => ipcRenderer.invoke('theme-folders-watch', paths),
+	removeThemeFolder: (path: string) => ipcRenderer.invoke('theme-folder-remove', path),
+	onThemeFolderChange: (callback: (change: ThemeFolderChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeFolderChange) => callback(change);
+		ipcRenderer.on('theme-folder-changed', handler);
+		return () => ipcRenderer.removeListener('theme-folder-changed', handler);
+	},
+	themeFolderWatch: true,
 	cacheVoiceBackgroundMedia: (options) => ipcRenderer.invoke('voice-background-media-cache:write', options),
 	readVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:read', id),
 	deleteVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:delete', id),
@@ -537,8 +547,8 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'input-monitoring'),
 	requestInputMonitoringPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'input-monitoring'),
-	getScreenRecordingPermissionStatus: (): Promise<InputMonitoringPermissionStatus> =>
-		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
+	getScreenRecordingPermissionStatus: (liveProbe?: boolean): Promise<InputMonitoringPermissionStatus> =>
+		ipcRenderer.invoke('mac-tcc:status', 'screen-recording', liveProbe === true),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
 	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>

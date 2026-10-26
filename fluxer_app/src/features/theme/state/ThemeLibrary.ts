@@ -11,6 +11,7 @@ import {
 	type ThemeExportPayload,
 } from '@app/features/theme/utils/ThemeCssUtils';
 import {
+	applyThemeLibraryThemeChanges,
 	clearThemeLibraryAssets,
 	clearThemeLibraryLocalFiles,
 	clearThemeLibraryMeta,
@@ -20,6 +21,7 @@ import {
 	deleteThemeLibraryTheme,
 	getAccountEnabledThemeIds,
 	getEnabledThemeIds,
+	getThemeLibraryFolders,
 	listThemeLibraryAssets,
 	listThemeLibraryLocalFiles,
 	listThemeLibraryThemes,
@@ -28,17 +30,31 @@ import {
 	saveThemeLibraryTheme,
 	setAccountEnabledThemeIds,
 	setEnabledThemeIds,
+	setThemeLibraryFolders,
 	updateThemeLibraryThemes,
 } from '@app/features/theme/utils/ThemeLibraryDb';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
-import type {ThemeLinkedFileError} from '@app/types/electron.d';
+import type {
+	ThemeDirectoryCssFile,
+	ThemeFolderChange,
+	ThemeFolderImportError,
+	ThemeFolderStatus,
+	ThemeLinkedFileError,
+} from '@app/types/electron.d';
 import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {compareShallow, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('ThemeLibrary');
+
+export class ThemeFolderImportFailedError extends Error {
+	constructor(readonly reason: ThemeFolderImportError) {
+		super(`Theme folder import failed: ${reason.error}`);
+		this.name = 'ThemeFolderImportFailedError';
+	}
+}
 const DUPLICATE_THEME_NAME_DESCRIPTOR = msg({
 	message: '{themeName} Copy',
 	comment:
@@ -60,6 +76,7 @@ export interface ThemeLibraryTheme {
 	fileName: string;
 	source: ThemeLibraryThemeSource;
 	linkedPath?: string;
+	folderPath?: string;
 	createdAt: number;
 	updatedAt: number;
 }
@@ -85,10 +102,17 @@ export interface ThemeLibraryLocalFileReference {
 	updatedAt: number;
 }
 
-interface ThemeDirectoryCssFile {
-	fileName: string;
+export interface ThemeLibraryFolder {
 	path: string;
-	css: string;
+	status: ThemeFolderStatus;
+	truncated: boolean;
+}
+
+interface ThemeFolderFileChanges {
+	upserts: ReadonlyArray<ThemeDirectoryCssFile>;
+	renamed: ReadonlyArray<{from: string; to: string; fileName: string}>;
+	removedPaths: ReadonlyArray<string>;
+	snapshot: boolean;
 }
 
 function createThemeLibraryId(prefix: string): string {
@@ -122,6 +146,7 @@ const THEME_LIBRARY_STORAGE_KEYS: ReadonlySet<string> = new Set([
 	AppStorageKey.THEME_LIBRARY_THEMES,
 	AppStorageKey.THEME_LIBRARY_LOCAL_FILES,
 	AppStorageKey.THEME_LIBRARY_ENABLED_IDS,
+	AppStorageKey.THEME_LIBRARY_FOLDERS,
 ]);
 
 export function getThemeLabel(theme: ThemeLibraryTheme): string {
@@ -143,18 +168,37 @@ class ThemeLibrary {
 	isBusy = false;
 	revision = 0;
 	linkedFileStatus = new Map<string, ThemeLinkedFileStatus>();
+	folderPaths: Array<string> = getThemeLibraryFolders();
+	folderStatus = new Map<string, {status: ThemeFolderStatus; truncated: boolean}>();
 	focusedThemeId: string | null = null;
 	private initPromise: Promise<void> | null = null;
 	private loadGeneration = 0;
 	private storageSyncStarted = false;
 	private linkedFileCss = new Map<string, string>();
+	private folderQueue: Promise<void> = Promise.resolve();
 
 	constructor() {
-		makeAutoObservable<this, 'linkedFileCss' | 'loadGeneration' | 'storageSyncStarted'>(
+		makeAutoObservable<this, 'linkedFileCss' | 'loadGeneration' | 'storageSyncStarted' | 'folderQueue'>(
 			this,
-			{linkedFileCss: false, loadGeneration: false, storageSyncStarted: false},
+			{linkedFileCss: false, loadGeneration: false, storageSyncStarted: false, folderQueue: false},
 			{autoBind: true},
 		);
+	}
+
+	get folders(): Array<ThemeLibraryFolder> {
+		return this.folderPaths.map((path) => ({
+			path,
+			status: this.folderStatus.get(path)?.status ?? 'live',
+			truncated: this.folderStatus.get(path)?.truncated ?? false,
+		}));
+	}
+
+	get canWatchFolders(): boolean {
+		return getElectronAPI()?.themeFolderWatch === true;
+	}
+
+	isWatchedFolderTheme(theme: ThemeLibraryTheme): boolean {
+		return theme.folderPath !== undefined && this.canWatchFolders && this.folderPaths.includes(theme.folderPath);
 	}
 
 	enabledIdsFor(target: ThemeTarget): Array<string> {
@@ -166,10 +210,10 @@ class ThemeLibrary {
 		return this.themes.some((theme) => theme.id === id);
 	}
 
-	themeCssFor(themeIds: ReadonlyArray<string>): string {
+	themeCssFor(themeIds: ReadonlyArray<string>, preview: {id: string; css: string} | null = null): string {
 		const byId = new Map(this.themes.map((theme) => [theme.id, theme]));
 		return themeIds
-			.map((id) => byId.get(id)?.css.trim() ?? '')
+			.map((id) => (id === preview?.id ? preview.css : (byId.get(id)?.css ?? '')).trim())
 			.filter(Boolean)
 			.join('\n\n');
 	}
@@ -178,12 +222,14 @@ class ThemeLibrary {
 		const paths = new Set<string>();
 		const enabledIds = new Set([...this.installationEnabledIds, ...this.accountEnabledIds]);
 		for (const theme of this.themes) {
-			if (theme.linkedPath && enabledIds.has(theme.id)) paths.add(theme.linkedPath);
+			if (theme.linkedPath && enabledIds.has(theme.id) && !this.isWatchedFolderTheme(theme)) {
+				paths.add(theme.linkedPath);
+			}
 		}
 		const focusedTheme = this.focusedThemeId
 			? this.themes.find((theme) => theme.id === this.focusedThemeId)
 			: undefined;
-		if (focusedTheme?.linkedPath) paths.add(focusedTheme.linkedPath);
+		if (focusedTheme?.linkedPath && !this.isWatchedFolderTheme(focusedTheme)) paths.add(focusedTheme.linkedPath);
 		return [...paths].sort();
 	}
 
@@ -241,6 +287,7 @@ class ThemeLibrary {
 				this.assets = assets.sort((a, b) => a.name.localeCompare(b.name));
 				this.localFiles = localFiles.sort((a, b) => a.name.localeCompare(b.name));
 				this.installationEnabledIds = enabledThemeIds;
+				this.folderPaths = getThemeLibraryFolders();
 				this.isHydrated = true;
 				this.loadFailed = false;
 				this.revision += 1;
@@ -343,6 +390,20 @@ class ThemeLibrary {
 
 	async importDesktopThemeDirectory(): Promise<Array<ThemeLibraryTheme>> {
 		const electronApi = getElectronAPI();
+		const importThemeFolder = electronApi?.importThemeFolder;
+		if (this.canWatchFolders && importThemeFolder) {
+			const result = await importThemeFolder();
+			if (!result) return [];
+			if ('error' in result) throw new ThemeFolderImportFailedError(result);
+			runInAction(() => {
+				if (!this.folderPaths.includes(result.folder)) this.folderPaths = [...this.folderPaths, result.folder];
+				this.folderStatus.set(result.folder, {status: 'live', truncated: result.truncated});
+			});
+			setThemeLibraryFolders(this.folderPaths);
+			return await this.enqueueFolderWork(() =>
+				this.applyFolderFiles(result.folder, {upserts: result.files, renamed: [], removedPaths: [], snapshot: true}),
+			);
+		}
 		const importThemeDirectory = electronApi?.importThemeDirectory;
 		if (!importThemeDirectory) {
 			return [];
@@ -413,9 +474,156 @@ class ThemeLibrary {
 		await this.mutate(async () => {
 			const result = await updateThemeLibraryThemes(
 				(theme) => theme.id === id && theme.linkedPath !== undefined,
-				(theme) => ({...theme, linkedPath: undefined, updatedAt: now()}),
+				(theme) => ({...theme, linkedPath: undefined, folderPath: undefined, updatedAt: now()}),
 			);
 			this.replaceStoredThemes(result.themes);
+		});
+	}
+
+	async stopWatchingFolder(folder: string): Promise<void> {
+		await getElectronAPI()?.removeThemeFolder?.(folder);
+		runInAction(() => {
+			this.folderPaths = this.folderPaths.filter((path) => path !== folder);
+			this.folderStatus.delete(folder);
+		});
+		setThemeLibraryFolders(this.folderPaths);
+		await this.enqueueFolderWork(async () => {
+			const removed = new Set(this.themes.filter((theme) => theme.folderPath === folder).map((theme) => theme.id));
+			await this.commitThemeChanges([], removed);
+		});
+	}
+
+	startFolderSync(): () => void {
+		const electronApi = getElectronAPI();
+		const watchThemeFolders = electronApi?.watchThemeFolders;
+		const onThemeFolderChange = electronApi?.onThemeFolderChange;
+		if (!this.canWatchFolders || !watchThemeFolders || !onThemeFolderChange) {
+			return () => {};
+		}
+		const unsubscribe = onThemeFolderChange((change) => {
+			if (!this.folderPaths.includes(change.folder)) return;
+			void this.enqueueFolderWork(() => this.applyFolderChange(change));
+		});
+		const disposeReaction = reaction(
+			() => [...this.folderPaths],
+			(paths) => {
+				void watchThemeFolders(paths).catch((error) => logger.warn('Failed to update theme folder watch', error));
+			},
+			{equals: compareShallow, fireImmediately: true},
+		);
+		return () => {
+			disposeReaction();
+			unsubscribe();
+			void watchThemeFolders([]).catch(() => {});
+		};
+	}
+
+	private enqueueFolderWork<T>(work: () => Promise<T>): Promise<T> {
+		const run = this.folderQueue.then(async () => {
+			await this.init();
+			return await work();
+		});
+		this.folderQueue = run.then(
+			() => {},
+			(error) => logger.warn('Failed to apply theme folder changes', error),
+		);
+		return run;
+	}
+
+	private async applyFolderChange(change: ThemeFolderChange): Promise<void> {
+		runInAction(() => {
+			this.folderStatus.set(change.folder, {status: change.status, truncated: change.truncated});
+		});
+		if (change.status !== 'live') return;
+		await this.applyFolderFiles(change.folder, {
+			upserts: [...change.added, ...change.changed],
+			renamed: change.renamed,
+			removedPaths: change.removed,
+			snapshot: change.snapshot,
+		});
+	}
+
+	private folderTheme(
+		folder: string,
+		file: ThemeDirectoryCssFile,
+		existing: ThemeLibraryTheme | undefined,
+	): ThemeLibraryTheme {
+		return {
+			...this.createThemeFromCss(
+				file.css,
+				file.fileName,
+				'desktop_directory',
+				existing ? {id: existing.id, createdAt: existing.createdAt} : undefined,
+			),
+			linkedPath: file.path,
+			folderPath: folder,
+		};
+	}
+
+	private async applyFolderFiles(folder: string, changes: ThemeFolderFileChanges): Promise<Array<ThemeLibraryTheme>> {
+		const byPath = new Map<string, ThemeLibraryTheme>();
+		const linkedOutsideFolder = new Set<string>();
+		for (const theme of this.themes) {
+			if (!theme.linkedPath) continue;
+			if (theme.folderPath === folder) byPath.set(theme.linkedPath, theme);
+			else linkedOutsideFolder.add(theme.linkedPath);
+		}
+		const upserts: Array<ThemeLibraryTheme> = [];
+		const removed = new Set<string>();
+		for (const {from, to, fileName} of changes.renamed) {
+			const existing = byPath.get(from);
+			if (!existing) continue;
+			const renamed = {...existing, linkedPath: to, fileName, folderPath: folder, updatedAt: now()};
+			byPath.delete(from);
+			byPath.set(to, renamed);
+			upserts.push(renamed);
+		}
+		const matched = new Set<string>();
+		const newFiles: Array<ThemeDirectoryCssFile> = [];
+		for (const file of changes.upserts) {
+			const existing = byPath.get(file.path);
+			if (!existing) {
+				if (!linkedOutsideFolder.has(file.path)) newFiles.push(file);
+				continue;
+			}
+			matched.add(existing.id);
+			if (existing.css === file.css && existing.folderPath === folder) continue;
+			upserts.push(this.folderTheme(folder, file, existing));
+		}
+		for (const path of changes.removedPaths) {
+			const existing = byPath.get(path);
+			if (existing?.folderPath === folder) removed.add(existing.id);
+		}
+		const leftovers = changes.snapshot
+			? this.themes.filter(
+					(theme) =>
+						theme.folderPath === folder && !matched.has(theme.id) && !upserts.some((upsert) => upsert.id === theme.id),
+				)
+			: [];
+		for (const file of newFiles) {
+			const renamedFrom = leftovers.find((theme) => theme.css === file.css);
+			if (renamedFrom) leftovers.splice(leftovers.indexOf(renamedFrom), 1);
+			upserts.push(this.folderTheme(folder, file, renamedFrom));
+		}
+		for (const theme of leftovers) removed.add(theme.id);
+		await this.commitThemeChanges(upserts, removed);
+		return upserts;
+	}
+
+	private async commitThemeChanges(
+		upserts: ReadonlyArray<ThemeLibraryTheme>,
+		removed: ReadonlySet<string>,
+	): Promise<void> {
+		if (upserts.length === 0 && removed.size === 0) return;
+		await this.mutate(async () => {
+			await applyThemeLibraryThemeChanges(upserts, removed);
+			runInAction(() => {
+				const upsertIds = new Set(upserts.map((theme) => theme.id));
+				this.themes = [
+					...this.themes.filter((theme) => !upsertIds.has(theme.id) && !removed.has(theme.id)),
+					...upserts,
+				].sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
+			});
 		});
 	}
 
@@ -553,6 +761,7 @@ class ThemeLibrary {
 			fileName: sanitizeFileName(existing.fileName.replace(/\.css$/i, '-copy.css')),
 			source: 'import',
 			linkedPath: undefined,
+			folderPath: undefined,
 			createdAt: now(),
 			updatedAt: now(),
 		};
@@ -706,11 +915,14 @@ class ThemeLibrary {
 				clearThemeLibraryLocalFiles(),
 				clearThemeLibraryMeta(),
 			]);
+			setThemeLibraryFolders([]);
 			runInAction(() => {
 				this.themes = [];
 				this.assets = [];
 				this.localFiles = [];
 				this.installationEnabledIds = [];
+				this.folderPaths = [];
+				this.folderStatus.clear();
 			});
 		});
 	}

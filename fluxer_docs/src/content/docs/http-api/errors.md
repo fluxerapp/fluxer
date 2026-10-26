@@ -280,13 +280,13 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `PASSKEY_AUTHENTICATION_FAILED` | Passkey authentication failed |
 | `PASSWORD_REQUIRED_TO_CLAIM` | Set a password to keep this account |
 | `PASSWORD_SIGN_IN_REQUIRED` | Sign in to this account with its password |
+| `PERSONAL_NOTES_DISABLED` | Personal notes are turned off on this instance |
 | `PREMIUM_PURCHASE_BLOCKED` | No active subscription |
 | `PREVIEW_MUST_BE_JPEG` | Preview must be JPEG |
 | `PROCESSING_FAILED` | We couldn't process the request |
 | `PROFILE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` | This published message has reached its editing limit |
 | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
-| `PURCHASE_RECEIPT_EMAIL_REQUIRED` | Purchases need an email address to send receipts to, and this account doesn't have one |
 | `RATE_LIMITED` | You're being rate limited |
 | `REACTION_EMAIL_VERIFICATION_REQUIRED` | Email verification is required for this action |
 | `REGISTRATION_CLOSED` | Registration is closed on this instance |

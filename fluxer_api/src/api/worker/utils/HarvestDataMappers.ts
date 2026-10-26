@@ -303,6 +303,11 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 				client_os: clientInfo.os,
 				client_user_agent: session.clientUserAgent,
 				client_platform: clientInfo.platform,
+				app_platform: session.appPlatform,
+				app_version: session.appVersion,
+				app_release_channel: session.appReleaseChannel,
+				app_build_number: session.appBuildNumber,
+				app_beta_number: session.appBetaNumber,
 			};
 		}),
 		relationships: relationships.map((rel) => ({

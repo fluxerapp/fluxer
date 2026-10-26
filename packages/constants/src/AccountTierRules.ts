@@ -344,16 +344,13 @@ export function requiresLocalCredential(params: {
 	return !params.emailProven;
 }
 
-export function resolvePurchaseBlockedReason(params: {
-	tier: AccountTier;
-	hasEmail: boolean;
-}): PurchaseBlockedReason | null {
+export function resolvePurchaseBlockedReason(params: {tier: AccountTier}): PurchaseBlockedReason | null {
 	switch (params.tier) {
 		case AccountTiers.UNCLAIMED:
 			return PurchaseBlockedReasons.UNCLAIMED;
 		case AccountTiers.UNVERIFIED:
 			return PurchaseBlockedReasons.EMAIL_UNVERIFIED;
 		case AccountTiers.VERIFIED:
-			return params.hasEmail ? null : PurchaseBlockedReasons.NO_RECEIPT_EMAIL;
+			return null;
 	}
 }

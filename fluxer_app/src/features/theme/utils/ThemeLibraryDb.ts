@@ -43,6 +43,7 @@ function isThemeLibraryTheme(value: unknown): value is ThemeLibraryTheme {
 		typeof value.source === 'string' &&
 		THEME_SOURCES.has(value.source) &&
 		(value.linkedPath === undefined || typeof value.linkedPath === 'string') &&
+		(value.folderPath === undefined || typeof value.folderPath === 'string') &&
 		typeof value.createdAt === 'number' &&
 		typeof value.updatedAt === 'number'
 	);
@@ -245,6 +246,32 @@ export async function updateThemeLibraryThemes(
 	});
 	if (result.written) writeDurableList(DURABLE_THEMES_KEY, next);
 	return result;
+}
+
+export async function applyThemeLibraryThemeChanges(
+	upserts: ReadonlyArray<ThemeLibraryTheme>,
+	removedIds: ReadonlySet<string>,
+): Promise<void> {
+	await ensureThemeLibraryMigrated();
+	const upsertIds = new Set(upserts.map((theme) => theme.id));
+	const themes = readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
+	writeDurableList(DURABLE_THEMES_KEY, [
+		...themes.filter((existing) => !upsertIds.has(existing.id) && !removedIds.has(existing.id)),
+		...upserts,
+	]);
+}
+
+export function getThemeLibraryFolders(): Array<string> {
+	const raw = AppStorage.getItem(AppStorageKey.THEME_LIBRARY_FOLDERS);
+	return raw == null ? [] : readDurableStringArray(raw);
+}
+
+export function setThemeLibraryFolders(folders: ReadonlyArray<string>): void {
+	if (folders.length === 0) {
+		AppStorage.removeItem(AppStorageKey.THEME_LIBRARY_FOLDERS);
+		return;
+	}
+	AppStorage.setItem(AppStorageKey.THEME_LIBRARY_FOLDERS, JSON.stringify([...folders]));
 }
 
 export async function deleteThemeLibraryTheme(id: string): Promise<void> {

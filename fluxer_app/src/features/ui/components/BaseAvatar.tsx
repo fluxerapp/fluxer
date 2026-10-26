@@ -13,7 +13,6 @@ import {
 	type DynamicAvatarMaskKind,
 } from '@app/features/ui/components/DynamicAvatarMask';
 import {TYPING_DOT_GAP_RATIO, TYPING_DOT_SIZE_RATIO} from '@app/features/ui/constants/TypingConstants';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -261,11 +260,8 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 			isTyping || disableStatusTooltip ? styles.statusTooltipDisabled : ''
 		} ${reducedMotion ? styles.reducedMotion : ''}`.trim();
 		const ariaLabel = statusLabel && userTag ? `${userTag}, ${statusLabel}` : userTag || i18n._(AVATAR_DESCRIPTOR);
-		const interactiveProps = useMemo(
-			() =>
-				isClickable
-					? ({role: 'button', 'aria-label': ariaLabel, tabIndex: 0} as const)
-					: ({'aria-hidden': true} as const),
+		const accessibilityProps = useMemo(
+			() => (isClickable ? ({role: 'img', 'aria-label': ariaLabel} as const) : ({'aria-hidden': true} as const)),
 			[ariaLabel, isClickable],
 		);
 		let effectiveStatusLabel: string;
@@ -349,13 +345,13 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 				</div>
 			);
 		}
-		const avatarElement = (
+		return (
 			<div
 				ref={ref}
 				className={`${styles.container} ${isClickable ? styles.clickable : ''} ${className || ''}`.trim()}
 				style={containerStyle}
 				data-flx="ui.base-avatar.div"
-				{...interactiveProps}
+				{...accessibilityProps}
 				{...props}
 			>
 				<svg
@@ -431,16 +427,6 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 						</Tooltip>
 					))}
 			</div>
-		);
-
-		if (!isClickable) {
-			return avatarElement;
-		}
-
-		return (
-			<FocusRing offset={-2} enabled data-flx="ui.base-avatar.focus-ring">
-				{avatarElement}
-			</FocusRing>
 		);
 	},
 );

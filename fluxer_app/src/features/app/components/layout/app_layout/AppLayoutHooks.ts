@@ -33,6 +33,7 @@ import {
 } from '@app/features/premium/utils/PremiumUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import WindowsFont, {WINDOWS_FONT_CHANGED_AT_MS} from '@app/features/theme/state/WindowsFont';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import {isUnclaimedNagbarSnoozed} from '@app/features/ui/state/UnclaimedNagbarSnooze';
 import {hasUnavailableElectronNativeContext, isDesktop, isNativeWindows} from '@app/features/ui/utils/NativeUtils';
@@ -284,7 +285,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowDomainMoved = DomainMovedNotice.shouldShow(Date.now());
 	}
 	const canShowBuildEnvironment =
-		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.PUBLIC_RELEASE_CHANNEL) &&
+		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.RELEASE_CHANNEL) &&
 		!nagbarState.buildEnvironmentDismissedThisSession;
 	let canShowConnection: boolean;
 	if (nagbarState.forceHideConnectionNotice) {
@@ -379,6 +380,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowStreamerMode,
 		canShowDomainMoved,
 		canShowWindowsFont,
+		canShowCustomCssOff: ThemeSettingsState.customCssOff,
 	};
 };
 export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarState> => {
@@ -527,6 +529,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				priority: 4.5,
 				visible: conditions.canShowWindowsFont,
 				dismissible: true,
+			},
+			{
+				type: NagbarType.CUSTOM_CSS_OFF,
+				priority: -2.75,
+				visible: conditions.canShowCustomCssOff,
+				dismissible: false,
 			},
 		];
 		return selectVisibleNagbars(nagbars);

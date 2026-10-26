@@ -9,6 +9,8 @@ const BUILT_IN_TRUST_PATTERNS = [
 	'*.fluxer.app',
 	'fluxer.com',
 	'*.fluxer.com',
+	'fluxer.dev',
+	'*.fluxer.dev',
 	'fluxerstatus.com',
 	'*.fluxerstatus.com',
 	'fluxer.gg',

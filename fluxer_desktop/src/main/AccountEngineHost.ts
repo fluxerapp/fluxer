@@ -4,6 +4,7 @@ import {errorMessage} from '@electron/common/ErrorMessage';
 
 import {
 	ACCOUNT_ENGINE_HOST_PROTOCOL_VERSION,
+	type AdmittedGateway,
 	type EngineAccountRecord,
 	type EnginePowerEvent,
 	type EngineToHostMessage,
@@ -45,7 +46,7 @@ export interface AccountEngineHttpResult {
 export interface AccountEngineHostDependencies {
 	readonly fork: () => AccountEngineProcess;
 	readonly readAccounts: () => Promise<ReadonlyArray<AccountEngineAccountEntry>>;
-	readonly admit: (entry: AccountEngineAccountEntry, url: string) => Promise<{url: string; address: string | null}>;
+	readonly admit: (entry: AccountEngineAccountEntry, url: string) => Promise<AdmittedGateway>;
 	readonly http: (
 		entry: AccountEngineAccountEntry,
 		method: 'POST',
@@ -324,7 +325,7 @@ export class AccountEngineHostController {
 				this.deps.log('info', 'Account engine health', {
 					rss: message.rss,
 					heapUsed: message.heapUsed,
-					sessions: message.sessions,
+					...message.counts,
 				});
 				return;
 			case 'log':
@@ -376,6 +377,7 @@ export class AccountEngineHostController {
 				ok: true,
 				url: admitted.url,
 				address: admitted.address,
+				proxy: admitted.proxy,
 				error: null,
 			});
 		} catch (error) {
@@ -385,6 +387,7 @@ export class AccountEngineHostController {
 				ok: false,
 				url: null,
 				address: null,
+				proxy: null,
 				error: errorMessage(error),
 			});
 		}

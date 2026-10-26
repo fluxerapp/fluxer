@@ -15,6 +15,7 @@ import {
 } from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
 import {UserIndexRepository} from '@app/api/user/repositories/account/crud/UserIndexRepository';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
+import {personalFieldsToClear} from '@app/api/user/UserHelpers';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	LEGACY_DEAD_USER_FLAGS_MASK,
@@ -161,7 +162,23 @@ export class UserAccountRepository {
 	}
 
 	async completeDeletion(user: User): Promise<void> {
-		await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		const {updatedData} = await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+		await this.searchRepo.updateUser(new User(updatedData));
+	}
+
+	async scrubDeletedUser(user: User): Promise<boolean> {
+		const cleared = Object.keys(personalFieldsToClear(user.toRow()));
+		if (cleared.length === 0) return false;
+		await this.deleteUserSecondaryIndices(user.id);
+		await this.dataRepo.patchUser(
+			user.id,
+			Object.fromEntries(cleared.map((field) => [field, Db.clear()])),
+			user.toRow(),
+		);
+		if (user.email) {
+			await this.emailOwnershipRepo.releaseEmail(user.email, user.id);
+		}
+		return true;
 	}
 
 	private async patchAccount(

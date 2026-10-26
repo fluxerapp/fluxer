@@ -272,11 +272,11 @@ fn ensure_renderer(rebuild: bool) -> Result<(PathBuf, String)> {
             env: vec![
                 ("NODE_ENV".to_owned(), Some("production".to_owned())),
                 (
-                    "PUBLIC_BUILD_VERSION".to_owned(),
+                    "BUILD_VERSION".to_owned(),
                     Some(RENDERER_BUILD_VERSION.to_owned()),
                 ),
                 (
-                    "PUBLIC_RELEASE_CHANNEL".to_owned(),
+                    "BUILD_CHANNEL".to_owned(),
                     Some(DEVELOPMENT_CHANNEL.to_owned()),
                 ),
             ],
@@ -374,12 +374,8 @@ pub fn build_desktop_shell() -> Result<()> {
             Some(env::var("BUILD_CHANNEL").unwrap_or_else(|_| "canary".to_owned())),
         ),
         (
-            "PUBLIC_BUILD_VERSION".to_owned(),
-            Some(env::var("PUBLIC_BUILD_VERSION").unwrap_or_else(|_| "dev".to_owned())),
-        ),
-        (
-            "PUBLIC_RELEASE_CHANNEL".to_owned(),
-            Some(env::var("PUBLIC_RELEASE_CHANNEL").unwrap_or_else(|_| "canary".to_owned())),
+            "BUILD_VERSION".to_owned(),
+            Some(env::var("BUILD_VERSION").unwrap_or_else(|_| "dev".to_owned())),
         ),
     ];
     run_command(
@@ -459,16 +455,7 @@ pub fn build_desktop(
                         "FLUXER_DESKTOP_PRODUCTION".to_owned(),
                         Some("true".to_owned()),
                     ),
-                    ("PUBLIC_BUILD_VERSION".to_owned(), Some(version.clone())),
                     ("BUILD_VERSION".to_owned(), Some(version.clone())),
-                    (
-                        "PUBLIC_RELEASE_CHANNEL".to_owned(),
-                        Some(DEVELOPMENT_CHANNEL.to_owned()),
-                    ),
-                    (
-                        "RELEASE_CHANNEL".to_owned(),
-                        Some(DEVELOPMENT_CHANNEL.to_owned()),
-                    ),
                     ("ELECTRON_ARCH".to_owned(), Some(arch)),
                     ("WORKDIR".to_owned(), Some(ROOT.display().to_string())),
                 ],
@@ -585,7 +572,7 @@ pub fn package_desktop(
             "BUILD_CHANNEL".to_owned(),
             Some(DEVELOPMENT_CHANNEL.to_owned()),
         ),
-        ("VERSION".to_owned(), Some(version.clone())),
+        ("BUILD_VERSION".to_owned(), Some(version.clone())),
         ("ELECTRON_ARCH".to_owned(), Some(arch.clone())),
         ("NODE_ENV".to_owned(), Some("production".to_owned())),
     ];

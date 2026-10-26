@@ -48,7 +48,8 @@ pub fn image_transform_cost(
     let sniffed_mime = mime::sniff(input).mime;
     let dims = probe_image_dims(media_limits, input)?;
     let source_pixels = dims.width as usize * dims.height as usize;
-    let options = fit_jxl_output(input.len(), sniffed_mime, options, dims, media_limits);
+    let options =
+        fit_static_output_to_budget(input.len(), sniffed_mime, options, dims, media_limits);
     let output_pixels = static_output_pixels(&options, dims);
     let encode = encode_bytes_per_pixel(options.format, options.quality);
     let pixel_cost = if options.is_animated() && dims.pages > 1 {
@@ -60,7 +61,7 @@ pub fn image_transform_cost(
     Ok(NativeCost::Bytes(input.len().saturating_add(pixel_cost)))
 }
 
-pub(super) fn fit_jxl_output(
+pub(super) fn fit_static_output_to_budget(
     input_len: usize,
     sniffed_mime: &str,
     options: &ImageOptions,
@@ -68,7 +69,7 @@ pub(super) fn fit_jxl_output(
     media_limits: &MediaLimits,
 ) -> ImageOptions {
     let mut fitted = *options;
-    if sniffed_mime != "image/jxl" || options.is_animated() {
+    if options.is_animated() {
         return fitted;
     }
     let source_pixels = dims.width as usize * dims.height as usize;

@@ -251,9 +251,28 @@ fn session_entry(base: &str, s: &UserSession) -> Markup {
                 @if let Some(ref l) = s.client_location {
                     (meta_cell("Location", html! { (l) }))
                 }
+                @if let Some(app) = session_app_label(s) {
+                    (meta_cell("App", html! { (app) }))
+                }
             }
         }
     }
+}
+
+fn session_app_label(s: &UserSession) -> Option<String> {
+    let mut parts = Vec::new();
+    if let Some(ref version) = s.app_version {
+        parts.push(version.clone());
+    }
+    if let Some(build) = s.app_build_number {
+        parts.push(format!("build {build}"));
+    }
+    match (s.app_release_channel.as_deref(), s.app_beta_number) {
+        (Some(channel), Some(beta)) => parts.push(format!("{channel} {beta}")),
+        (Some(channel), None) => parts.push(channel.to_owned()),
+        (None, _) => {}
+    }
+    (!parts.is_empty()).then(|| parts.join(", "))
 }
 
 struct QuickActions {

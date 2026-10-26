@@ -39,7 +39,6 @@ import {StripeInvalidProductConfigurationError} from '@fluxer/errors/src/domains
 import {StripeInvalidProductError} from '@fluxer/errors/src/domains/payment/StripeInvalidProductError';
 import {StripeNoPurchaseHistoryError} from '@fluxer/errors/src/domains/payment/StripeNoPurchaseHistoryError';
 import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
-import {PurchaseReceiptEmailRequiredError} from '@fluxer/errors/src/domains/user/PurchaseReceiptEmailRequiredError';
 import {UnclaimedAccountCannotMakePurchasesError} from '@fluxer/errors/src/domains/user/UnclaimedAccountCannotMakePurchasesError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
@@ -107,15 +106,11 @@ interface EuWithdrawalWaiverContext {
 const PURCHASE_BLOCKED_ERRORS: Record<PurchaseBlockedReason, () => FluxerError> = {
 	[PurchaseBlockedReasons.UNCLAIMED]: () => new UnclaimedAccountCannotMakePurchasesError(),
 	[PurchaseBlockedReasons.EMAIL_UNVERIFIED]: () => new PurchaseEmailVerificationRequiredError(),
-	[PurchaseBlockedReasons.NO_RECEIPT_EMAIL]: () => new PurchaseReceiptEmailRequiredError(),
 };
 
-export function assertUserCanPurchase(
-	user: User,
-	{needsReceiptEmail = true}: {needsReceiptEmail?: boolean} = {},
-): void {
+export function assertUserCanPurchase(user: User): void {
 	const eligibility = resolvePurchaseEligibility(user);
-	if (!eligibility.allowed && (needsReceiptEmail || eligibility.blocked !== PurchaseBlockedReasons.NO_RECEIPT_EMAIL)) {
+	if (!eligibility.allowed) {
 		throw PURCHASE_BLOCKED_ERRORS[eligibility.blocked]();
 	}
 	if (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) {

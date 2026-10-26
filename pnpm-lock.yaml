@@ -433,8 +433,8 @@ catalogs:
       specifier: 2.9.1
       version: 2.9.1
     zod:
-      specifier: 4.6.5
-      version: 4.6.5
+      specifier: 4.6.7
+      version: 4.6.7
   ts7:
     typescript:
       specifier: 7.0.2
@@ -451,6 +451,7 @@ overrides:
   hunspell-asm@4.0.2>nanoid: 3.3.19
   semver: 7.8.5
   typed-css-modules@0.9.1>glob: 13.0.6
+  zod@^4: 4.6.7
 
 patchedDependencies:
   '@phosphor-icons/react@2.1.10': 9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea
@@ -715,7 +716,7 @@ importers:
         version: 13.15.35
       zod:
         specifier: 'catalog:'
-        version: 4.6.5
+        version: 4.6.7
     devDependencies:
       '@types/archiver':
         specifier: 'catalog:'
@@ -765,7 +766,7 @@ importers:
         version: 2.0.2
       zod:
         specifier: 'catalog:'
-        version: 4.6.5
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1349,6 +1350,12 @@ importers:
       '@codemirror/language':
         specifier: ^6.12.4
         version: 6.12.4
+      '@codemirror/lint':
+        specifier: ^6.9.7
+        version: 6.9.7
+      '@codemirror/search':
+        specifier: ^6.7.2
+        version: 6.7.2
       '@codemirror/state':
         specifier: ^6.7.5
         version: 6.7.5
@@ -1448,9 +1455,6 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
-      codemirror:
-        specifier: ^6.0.2
-        version: 6.0.2
       combokeys:
         specifier: 'catalog:'
         version: 3.0.1
@@ -1514,6 +1518,9 @@ importers:
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
+      prettier:
+        specifier: ^3.9.10
+        version: 3.9.10
       qrcode:
         specifier: 'catalog:'
         version: 1.5.4
@@ -2116,7 +2123,7 @@ importers:
         version: 28.0.0
       zod:
         specifier: 'catalog:'
-        version: 4.6.5
+        version: 4.6.7
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'
@@ -2162,7 +2169,7 @@ importers:
         version: 13.15.35
       zod:
         specifier: 'catalog:'
-        version: 4.6.5
+        version: 4.6.7
     devDependencies:
       '@bufbuild/buf':
         specifier: ^1.73.0
@@ -7345,9 +7352,6 @@ packages:
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
-  codemirror@6.0.2:
-    resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
-
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
 
@@ -11591,8 +11595,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.6.5:
-    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -11984,7 +11988,7 @@ snapshots:
   '@astrojs/sitemap@3.7.4':
     dependencies:
       sitemap: 9.0.1
-      zod: 4.6.5
+      zod: 4.6.7
 
   '@astrojs/starlight@0.42.1(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(astro@7.3.3(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(@types/node@26.6.1)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))(supports-color@7.2.0)(typescript@6.0.3)':
     dependencies:
@@ -16446,7 +16450,7 @@ snapshots:
       vitefu: 1.1.3(vite@8.3.4(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
-      zod: 4.6.5
+      zod: 4.6.7
     optionalDependencies:
       '@astrojs/markdown-remark': 7.3.1(supports-color@7.2.0)
       sharp: 0.35.5(@types/node@26.6.1)
@@ -16813,16 +16817,6 @@ snapshots:
   cluster-key-slot@1.1.1: {}
 
   code-block-writer@13.0.3: {}
-
-  codemirror@6.0.2:
-    dependencies:
-      '@codemirror/autocomplete': 6.20.3
-      '@codemirror/commands': 6.11.1
-      '@codemirror/language': 6.12.4
-      '@codemirror/lint': 6.9.7
-      '@codemirror/search': 6.7.2
-      '@codemirror/state': 6.7.5
-      '@codemirror/view': 6.43.12
 
   collapse-white-space@2.1.0: {}
 
@@ -18319,7 +18313,7 @@ snapshots:
       tinyglobby: 0.2.17
       unbash: 4.0.11
       yaml: 2.9.1
-      zod: 4.6.5
+      zod: 4.6.7
 
   lazy-val@1.0.5: {}
 
@@ -21928,6 +21922,6 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.6.5: {}
+  zod@4.6.7: {}
 
   zwitch@2.0.4: {}

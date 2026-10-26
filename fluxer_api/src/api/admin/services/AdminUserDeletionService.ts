@@ -38,7 +38,7 @@ import {
 	propagateUserUpdate,
 } from '@app/api/user/services/PartialUserChangePropagation';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import {isHeldByDecision} from '@app/api/user/UserHelpers';
+import {isDeletionComplete, isHeldByDecision} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {
@@ -154,6 +154,12 @@ export class AdminUserDeletionService {
 	): Promise<{user: User; skippedNetworks: Array<SkippedNetwork>}> {
 		const {basis} = request;
 		const user = await this.deps.apiContext.services.users.findUniqueAssert(userId);
+		if (isDeletionComplete(user)) {
+			throw new ConflictError({
+				code: APIErrorCodes.CONFLICT,
+				message: 'This account has already been deleted',
+			});
+		}
 		if (
 			user.pendingDeletionAt &&
 			(!request.replace_pending_deletion_at ||

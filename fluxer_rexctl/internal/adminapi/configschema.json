@@ -648,6 +648,11 @@
     "help": "Policy guild create access"
   },
   {
+    "key": "policy.personal_notes_enabled",
+    "type": "boolean",
+    "help": "Whether people can use personal notes. Off by default on self-hosted instances"
+  },
+  {
     "key": "policy.premium_mode",
     "type": "string",
     "help": "Policy premium mode",

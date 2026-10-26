@@ -356,6 +356,7 @@ Community, direct message, premium and gating policy.
 | direct_messages_disabled | boolean | Whether direct messages are off |
 | direct_messages_locked | boolean | Whether the direct message setting is locked |
 | friends_disabled<sup>1</sup> | boolean | Whether friend requests are off |
+| personal_notes_enabled<sup>2</sup> | boolean | Whether people can use personal notes. Off by default on self-hosted instances |
 | guild_create_access | boolean | Whether every account can create communities. If not, only admins and accounts with the `feature_guild_create` limit can |
 | premium_mode | string | [Premium mode](#premium-modes) |
 | services | object | Nullable `gif_enabled`, `youtube_enabled` and `bluesky_enabled` overrides |
@@ -363,6 +364,8 @@ Community, direct message, premium and gating policy.
 | services_available | object | Whether `gif`, `youtube` and `bluesky` are set up, before overrides |
 
 <sup>1</sup> Sending and accepting friend requests fail with 400 `FRIENDS_DISABLED` while it is true
+
+<sup>2</sup> Every request to the personal notes channel fails with 400 `PERSONAL_NOTES_DISABLED` while it is false, and existing notes are kept
 
 ## Premium modes
 
@@ -665,6 +668,7 @@ Fluxer checks the merged settings before it writes anything, and refuses these c
 | direct_messages_disabled?<sup>3</sup> | boolean | Whether direct messages are off |
 | direct_messages_locked? | boolean | Only false, to unlock the direct message setting |
 | friends_disabled?<sup>4</sup> | boolean | Whether friend requests are off |
+| personal_notes_enabled? | boolean | Whether people can use personal notes |
 | guild_create_access? | boolean | Whether every account can create communities |
 | premium_mode? | string | [Premium mode](#premium-modes) |
 | services? | object | Nullable `gif_enabled`, `youtube_enabled` and `bluesky_enabled` overrides |

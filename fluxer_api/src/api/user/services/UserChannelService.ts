@@ -11,6 +11,7 @@ import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {personalNotesEnabled} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -123,7 +124,9 @@ export class UserChannelService {
 	}
 
 	async getPrivateChannels(userId: UserID): Promise<Array<Channel>> {
-		return await this.userRepository.listPrivateChannels(userId);
+		const channels = await this.userRepository.listPrivateChannels(userId);
+		if (await personalNotesEnabled()) return channels;
+		return channels.filter((channel) => channel.type !== ChannelTypes.DM_PERSONAL_NOTES);
 	}
 
 	async createOrOpenDMChannel({

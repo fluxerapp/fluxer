@@ -3,7 +3,6 @@
 package instance
 
 import (
-	"fmt"
 	"maps"
 	"slices"
 	"strconv"
@@ -19,21 +18,6 @@ import (
 const SetupTokenVar = "FLUXER_SETUP_TOKEN"
 
 var legacyImageVars = []string{"FLUXER_IMAGE_TAG", "FLUXER_REGISTRY", "FLUXER_REGISTRY_OWNER"}
-
-func BundleEnv() string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "%s=true\n", stack.SettingsLoadedVar)
-	b.WriteString("FLUXER_DOMAIN=\n")
-	fmt.Fprintf(&b, "%s=\n", SetupTokenVar)
-	for _, s := range secrets.Required {
-		value := ""
-		if s.Kind == secrets.KindFixed {
-			value = s.Fixed
-		}
-		fmt.Fprintf(&b, "%s=%s\n", s.Key, value)
-	}
-	return b.String()
-}
 
 type valueInput struct {
 	env      map[string]string

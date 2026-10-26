@@ -23,12 +23,14 @@ import {installImageRetention} from '@app/features/messaging/utils/ImageRetentio
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {installUnhandledRejectionReporter} from '@app/features/platform/utils/UnhandledRejectionReporter';
+import {captureCustomCssOffFromLocation} from '@app/features/theme_settings/state/CustomCssOff';
 import {PASSKEY_BRIDGE_PATH} from '@fluxer/constants/src/PasskeyConstants';
 import {configure} from 'mobx';
 
 const logger = new Logger('index');
 
 captureAccountHandoffFromLocation();
+captureCustomCssOffFromLocation();
 installBrowserStorageAccessProtection();
 installUnhandledRejectionReporter();
 

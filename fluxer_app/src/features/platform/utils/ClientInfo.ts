@@ -252,8 +252,8 @@ function formatTranslationDomGuardFires(): string {
 }
 
 export function formatClientBuildInfo(info: ClientInfo, options: {unknownLabel?: string} = {}): string {
-	const releaseChannel = formatReleaseChannelLabel(Config.PUBLIC_RELEASE_CHANNEL);
-	const buildVersion = Config.PUBLIC_BUILD_VERSION || 'dev';
+	const releaseChannel = formatReleaseChannelLabel(Config.RELEASE_CHANNEL);
+	const buildVersion = Config.BUILD_VERSION || 'dev';
 	const browserName = info.browserName || options.unknownLabel || '';
 	const browserVersion = info.browserVersion || '';
 	const browserInfo = `${browserName} ${browserVersion}`.trim();
@@ -329,7 +329,7 @@ export async function getGatewayClientProperties(geo?: {latitude?: string | null
 		system_locale: navigator.language,
 		locale: navigator.language,
 		user_agent: navigator.userAgent,
-		build_version: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+		build_version: Config.BUILD_VERSION ?? 'dev',
 		desktop_app_version: info.desktopVersion ?? null,
 		desktop_app_channel: info.desktopChannel ?? null,
 		desktop_arch: info.desktopArch ?? info.arch ?? null,

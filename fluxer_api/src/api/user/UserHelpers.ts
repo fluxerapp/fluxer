@@ -6,9 +6,13 @@ import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeC
 import type {User} from '@app/api/models/User';
 import {isEnforcementReasonCode} from '@fluxer/constants/src/EnforcementReasons';
 import {
+	DELETED_USER_DISCRIMINATOR,
+	DELETED_USER_GLOBAL_NAME,
+	DELETED_USER_USERNAME,
 	PREMIUM_GRACE_PERIOD_DAYS,
 	PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS,
 	PremiumFlags,
+	ProfileFieldPrivacyFlags,
 	UserFlags,
 	type UserPremiumType,
 	UserPremiumTypes,
@@ -30,6 +34,74 @@ export function isEnforcementDeletion(user: Pick<User, 'enforcementDecisionId' |
 
 export function isAccountClosed(user: Pick<User, 'flags' | 'deletionStartedAt'>): boolean {
 	return (user.flags & UserFlags.DELETED) !== 0n || user.deletionStartedAt != null;
+}
+
+export function isDeletionComplete(user: Pick<User, 'flags' | 'pendingDeletionAt'>): boolean {
+	return (user.flags & UserFlags.DELETED) !== 0n && user.pendingDeletionAt === null;
+}
+
+const FIELDS_CLEARED_ON_DELETION = [
+	'email',
+	'email_bounced',
+	'password_hash',
+	'password_last_changed_at',
+	'totp_secret',
+	'authenticator_types',
+	'avatar_hash',
+	'avatar_color',
+	'banner_hash',
+	'banner_color',
+	'bio',
+	'pronouns',
+	'accent_color',
+	'timezone',
+	'date_of_birth',
+	'locale',
+	'premium_flags',
+	'premium_type',
+	'premium_since',
+	'premium_until',
+	'premium_gift_extension_ends_at',
+	'premium_will_cancel',
+	'premium_billing_cycle',
+	'premium_lifetime_sequence',
+	'premium_grace_ends_at',
+	'stripe_subscription_id',
+	'stripe_customer_id',
+	'has_ever_purchased',
+	'terms_agreed_at',
+	'privacy_agreed_at',
+	'last_active_at',
+	'last_active_ip',
+	'acls',
+	'traits',
+	'first_refund_at',
+	'gift_inventory_server_seq',
+	'gift_inventory_client_seq',
+	'premium_onboarding_dismissed_at',
+	'mention_flags',
+	'last_voice_activity_sharing_change_at',
+] as const satisfies ReadonlyArray<keyof UserRow>;
+
+export function deletedUserIdentity() {
+	return {
+		username: DELETED_USER_USERNAME,
+		discriminator: DELETED_USER_DISCRIMINATOR,
+		global_name: DELETED_USER_GLOBAL_NAME,
+		email_verified: false,
+		timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
+		flags: UserFlags.DELETED,
+	} satisfies Partial<UserRow>;
+}
+
+export function personalFieldsToClear(row: UserRow): Partial<UserRow> {
+	const patch: Partial<UserRow> = {};
+	for (const field of FIELDS_CLEARED_ON_DELETION) {
+		const value = row[field];
+		if (!value || (value instanceof Set && value.size === 0)) continue;
+		patch[field] = null;
+	}
+	return patch;
 }
 
 export function isTemporarilyBanned(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {

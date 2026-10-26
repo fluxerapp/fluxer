@@ -285,7 +285,11 @@ export class NoopGatewayService implements IGatewayService {
 		if (!userHighest || !this.roleOutranks(userHighest, targetRole)) {
 			return false;
 		}
-		return userId === targetUserId || this.checkTargetMember({guildId, userId, targetUserId});
+		return (
+			userId === targetUserId ||
+			guild.ownerId === targetUserId ||
+			this.checkTargetMember({guildId, userId, targetUserId})
+		);
 	}
 
 	async canManageRole(params: {guildId: GuildID; userId: UserID; roleId: RoleID}): Promise<boolean> {

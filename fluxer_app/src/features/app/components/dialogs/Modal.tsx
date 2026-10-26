@@ -272,6 +272,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 								modalDocument
 									.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
 									.forEach((el) => inside.push(el));
+								modalDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
 								const nativeTitlebar = modalDocument.querySelector('[data-native-titlebar]');
 								if (nativeTitlebar) inside.push(nativeTitlebar);
 								return inside;

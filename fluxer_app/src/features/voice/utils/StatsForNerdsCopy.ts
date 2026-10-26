@@ -554,7 +554,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
-			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+			appVersion: Config.BUILD_VERSION ?? 'dev',
 			electronVersion: null,
 			chromiumVersion: null,
 			hardwareAccelerationEnabled: null,

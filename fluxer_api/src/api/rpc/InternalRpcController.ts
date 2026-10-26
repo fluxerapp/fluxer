@@ -15,15 +15,21 @@ function isValidInternalRpcToken(providedToken: string): boolean {
 }
 
 export function InternalRpcController(app: HonoApp): void {
-	app.post('/internal/rpc', Validator('json', RpcRequest), async (ctx) => {
-		const providedToken = ctx.req.header(INTERNAL_RPC_AUTH_HEADER) ?? '';
-		if (!isValidInternalRpcToken(providedToken)) {
-			throw new UnauthorizedError();
-		}
-		const request = ctx.req.valid('json');
-		const rpcService = ctx.get('rpcService');
-		const requestCache = ctx.get('requestCache');
-		const response = await rpcService.handleRpcRequest({request, requestCache});
-		return ctx.json(response);
-	});
+	app.post(
+		'/internal/rpc',
+		async (ctx, next) => {
+			if (!isValidInternalRpcToken(ctx.req.header(INTERNAL_RPC_AUTH_HEADER) ?? '')) {
+				throw new UnauthorizedError();
+			}
+			await next();
+		},
+		Validator('json', RpcRequest),
+		async (ctx) => {
+			const request = ctx.req.valid('json');
+			const rpcService = ctx.get('rpcService');
+			const requestCache = ctx.get('requestCache');
+			const response = await rpcService.handleRpcRequest({request, requestCache});
+			return ctx.json(response);
+		},
+	);
 }

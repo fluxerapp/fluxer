@@ -84,6 +84,22 @@ const DMS_NOTE_DESCRIPTOR = msg({
 	message: 'You can turn direct messages and friend requests back on later in the admin panel.',
 	comment: 'Warning shown when direct messages are turned off in the setup wizard.',
 });
+const PERSONAL_NOTES_TITLE_DESCRIPTOR = msg({
+	message: 'Should people have personal notes?',
+	comment: 'Setup wizard title for choosing whether people can use personal notes.',
+});
+const PERSONAL_NOTES_YES_DESC_DESCRIPTOR = msg({
+	message: 'Each person gets a private channel where they can write messages to themselves.',
+	comment: 'Description of turning on personal notes in the setup wizard.',
+});
+const PERSONAL_NOTES_NO_DESC_DESCRIPTOR = msg({
+	message: 'Nobody can open or write personal notes.',
+	comment: 'Description of leaving personal notes off in the setup wizard.',
+});
+const PERSONAL_NOTES_NOTE_DESCRIPTOR = msg({
+	message: 'You can turn personal notes on later in the admin panel.',
+	comment: 'Note shown when personal notes are left off in the setup wizard.',
+});
 const YES_DESCRIPTOR = msg({
 	message: 'Yes',
 	comment: 'Answer to a yes or no question in the setup wizard.',
@@ -138,6 +154,7 @@ export interface FinishDraft {
 	singleCommunityEnabled: boolean;
 	singleCommunityName: string;
 	directMessagesDisabled: boolean;
+	personalNotesEnabled: boolean;
 	pushRelayConsentAccepted: boolean;
 }
 
@@ -155,6 +172,7 @@ export function SetupPolicyDraftProvider({children}: {children: ReactNode}) {
 		singleCommunityEnabled: false,
 		singleCommunityName: '',
 		directMessagesDisabled: false,
+		personalNotesEnabled: false,
 		pushRelayConsentAccepted: false,
 	});
 	const updateDraft = useCallback((patch: Partial<FinishDraft>) => {
@@ -281,6 +299,38 @@ export const DirectMessagesStep = observer(() => {
 			/>
 			{disabled && (
 				<Note data-flx="app.setup.setup-wizard-steps.direct-messages-step.note">{i18n._(DMS_NOTE_DESCRIPTOR)}</Note>
+			)}
+		</section>
+	);
+});
+
+export const PersonalNotesStep = observer(() => {
+	const {i18n} = useLingui();
+	const {
+		draft: {personalNotesEnabled: enabled},
+		updateDraft,
+	} = useSetupPolicyDraft();
+	const options: ReadonlyArray<RadioOption<'yes' | 'no'>> = [
+		{value: 'yes', name: i18n._(YES_DESCRIPTOR), desc: i18n._(PERSONAL_NOTES_YES_DESC_DESCRIPTOR)},
+		{value: 'no', name: i18n._(NO_DESCRIPTOR), desc: i18n._(PERSONAL_NOTES_NO_DESC_DESCRIPTOR)},
+	];
+	return (
+		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.personal-notes-step">
+			<StepHeader
+				title={i18n._(PERSONAL_NOTES_TITLE_DESCRIPTOR)}
+				data-flx="app.setup.setup-wizard-steps.personal-notes-step.step-header"
+			/>
+			<RadioGroup
+				options={options}
+				value={enabled ? 'yes' : 'no'}
+				onChange={(value) => updateDraft({personalNotesEnabled: value === 'yes'})}
+				aria-label={i18n._(PERSONAL_NOTES_TITLE_DESCRIPTOR)}
+				data-flx="app.self-hosted-setup-wizard-gate.personal-notes-radio-group"
+			/>
+			{!enabled && (
+				<Note data-flx="app.setup.setup-wizard-steps.personal-notes-step.note">
+					{i18n._(PERSONAL_NOTES_NOTE_DESCRIPTOR)}
+				</Note>
 			)}
 		</section>
 	);

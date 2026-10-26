@@ -27,7 +27,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
-const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 300;
+const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 1800;
 const OAUTH_STATE_NONCE_BYTES: usize = 16;
 const OAUTH_STATE_VERIFIER_HASH_BYTES: usize = 32;
 const OAUTH_STATE_PAYLOAD_BYTES: usize =
@@ -482,4 +482,21 @@ fn now_seconds() -> u64 {
         .duration_since(UNIX_EPOCH)
         .expect("system clock before Unix epoch")
         .as_secs()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn oauth_state_survives_ten_minutes_on_the_consent_page() {
+        let verifier = "verifier";
+        let issued = |age: u64| sign_oauth_state("secret", now_seconds() - age, [7; 16], verifier);
+        assert!(verify_oauth_state("secret", &issued(10 * 60), verifier));
+        assert!(!verify_oauth_state(
+            "secret",
+            &issued(OAUTH_STATE_MAX_AGE_SECONDS + 60),
+            verifier
+        ));
+    }
 }

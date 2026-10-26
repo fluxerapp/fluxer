@@ -121,9 +121,10 @@ fn direct_messages_form(
     policy: &InstancePolicyResponse,
 ) -> Markup {
     let enabled_options: &[(&str, &str)] = &[("false", "Enabled"), ("true", "Disabled")];
+    let personal_notes_options: &[(&str, &str)] = &[("true", "Enabled"), ("false", "Disabled")];
     html! {
         div class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Direct messages and friends" }
+            h3 class="text-sm font-semibold text-neutral-900" { "Direct messages, friends and personal notes" }
             form method="post" action={(base) "/instance-config?action=update_policy"} {
                 (config_form.fields())
                 @if policy.direct_messages_locked && !policy.direct_messages_disabled {
@@ -143,11 +144,22 @@ fn direct_messages_form(
                             enabled_options,
                             if policy.friends_disabled { "true" } else { "false" },
                         ))
+                        (select_input(
+                            "policy_personal_notes_enabled",
+                            "Personal notes",
+                            personal_notes_options,
+                            if policy.personal_notes_enabled { "true" } else { "false" },
+                        ))
                     }
                     p class="text-xs text-neutral-500" {
                         "With direct messages off, people can still be friends and talk in communities. \
                          With friend requests off, nobody can send or accept new requests, and \
                          existing friends stay listed."
+                    }
+                    p class="text-xs text-neutral-500" {
+                        "Personal notes are a private channel where each person can write messages to \
+                         themselves. With personal notes off, nobody can open or write in them. Existing \
+                         notes are kept and come back when you turn personal notes on again."
                     }
                     @if policy.direct_messages_locked {
                         p class="text-xs text-neutral-500" {
@@ -156,7 +168,7 @@ fn direct_messages_form(
                         }
                     }
                     (form_actions(html! {
-                        (submit_button("Save direct message and friend settings"))
+                        (submit_button("Save direct message, friend and personal notes settings"))
                     }))
                 }
             }

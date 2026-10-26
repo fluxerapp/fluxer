@@ -579,6 +579,22 @@ rexctl rollback [flags]
 
   Also restore the database from the backup taken before the upgrade.
 
+## rexctl search
+
+Manage search on your instance.
+
+### rexctl search reindex
+
+Rebuild every search index from your data, with the messages in every channel and DM. Search shows partial results until it finishes. If a rebuild is already running, rexctl follows that one, and stopping rexctl doesn't stop the rebuild.
+
+```sh
+rexctl search reindex [flags]
+```
+
+- `--no-wait`
+
+  Start the rebuild and return without waiting for it.
+
 ## rexctl setup
 
 Create the admin account and finish setup in the terminal.

@@ -162,6 +162,12 @@ function reviewRows(
 			onChange: () => onChange('direct_messages'),
 		},
 		{
+			key: 'personal_notes',
+			label: t(SUMMARY_DESCRIPTORS.personalNotes),
+			value: t(finishDraft.personalNotesEnabled ? SUMMARY_DESCRIPTORS.on : SUMMARY_DESCRIPTORS.off),
+			onChange: () => onChange('personal_notes'),
+		},
+		{
 			key: 'registration',
 			label: t(SUMMARY_DESCRIPTORS.registration),
 			value: t(registrationSummary),

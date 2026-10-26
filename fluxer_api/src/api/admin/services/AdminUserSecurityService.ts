@@ -20,6 +20,7 @@ import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEve
 import {Logger} from '@app/api/Logger';
 import {requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {getEnforcementDecisionRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {AuthSession} from '@app/api/models/AuthSession';
 import {User} from '@app/api/models/User';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {PASSWORD_RESET_TOKEN_TTL_SECONDS} from '@app/api/user/repositories/auth/TokenRepository';
@@ -46,6 +47,8 @@ import type {
 	AdminPasswordResetLinkResponse,
 	DeleteWebAuthnCredentialRequest,
 	DisableMfaRequest,
+	ListAppSessionsQuery,
+	ListAppSessionsResponse,
 	ListWebAuthnCredentialsRequest,
 	ResendVerificationEmailRequest,
 	SendPasswordResetRequest,
@@ -117,6 +120,32 @@ async function assertPremiumFlagUpdateAllowed(
 			(limit) => (removing & FEATURE_LIMIT_PREMIUM_FLAGS[limit]!) !== 0,
 		),
 	);
+}
+
+interface AdminSessionApp {
+	app_platform: string | null;
+	app_version: string | null;
+	app_release_channel: string | null;
+	app_build_number: number | null;
+	app_beta_number: number | null;
+}
+
+const EMPTY_SESSION_APP: AdminSessionApp = {
+	app_platform: null,
+	app_version: null,
+	app_release_channel: null,
+	app_build_number: null,
+	app_beta_number: null,
+};
+
+function sessionApp(session: AuthSession): AdminSessionApp {
+	return {
+		app_platform: session.appPlatform,
+		app_version: session.appVersion,
+		app_release_channel: session.appReleaseChannel,
+		app_build_number: session.appBuildNumber,
+		app_beta_number: session.appBetaNumber,
+	};
 }
 
 interface AdminUserSecurityServiceDeps {
@@ -567,6 +596,7 @@ export class AdminUserSecurityService {
 			clientIp: string;
 			clientUserAgent: string | null;
 			clientOs: string | null;
+			app: AdminSessionApp;
 			deletedAt: Date | null;
 		}> = [
 			...activeSessions.map((s) => ({
@@ -576,6 +606,7 @@ export class AdminUserSecurityService {
 				clientIp: s.clientIp,
 				clientUserAgent: s.clientUserAgent,
 				clientOs: s.clientOs ?? null,
+				app: sessionApp(s),
 				deletedAt: null as Date | null,
 			})),
 			...tombstones.map((t) => ({
@@ -585,6 +616,7 @@ export class AdminUserSecurityService {
 				clientIp: t.clientIp,
 				clientUserAgent: t.clientUserAgent,
 				clientOs: t.clientOs ?? null,
+				app: EMPTY_SESSION_APP,
 				deletedAt: t.deletedAt,
 			})),
 		];
@@ -621,6 +653,7 @@ export class AdminUserSecurityService {
 						client_os: clientInfo.os,
 						client_platform: clientInfo.platform,
 						client_location: null,
+						...entry.app,
 						deleted_at: entry.deletedAt?.toISOString() ?? null,
 					};
 				}),
@@ -670,9 +703,30 @@ export class AdminUserSecurityService {
 					client_os: clientInfo.os,
 					client_platform: clientInfo.platform,
 					client_location: clientLocation,
+					...entry.app,
 					deleted_at: entry.deletedAt?.toISOString() ?? null,
 				};
 			}),
+		};
+	}
+
+	async listAppSessions(query: ListAppSessionsQuery): Promise<ListAppSessionsResponse> {
+		const {sessions, nextCursor} = await this.deps.apiContext.services.users.listAuthSessionsByAppChannel({
+			platform: query.platform,
+			releaseChannel: query.release_channel,
+			after: query.after === undefined ? null : Buffer.from(query.after, 'base64url'),
+		});
+		return {
+			sessions: sessions.map((session) => ({
+				user_id: session.userId.toString(),
+				session_id_hash: session.sessionIdHash.toString('base64url'),
+				created_at: session.createdAt.toISOString(),
+				approx_last_used_at: session.approximateLastUsedAt.toISOString(),
+				app_version: session.appVersion,
+				app_build_number: session.appBuildNumber,
+				app_beta_number: session.appBetaNumber,
+			})),
+			next_cursor: nextCursor?.toString('base64url') ?? null,
 		};
 	}
 }

@@ -90,7 +90,6 @@ If the account already has an `active` or `trialing` subscription and `price_id`
 | 400 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES` for an unclaimed account |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_ERROR` when Stripe rejects the request |
 | 403 | [error response](/http-api/#error-response) | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` for an unverified email address |
-| 403 | [error response](/http-api/#error-response) | `PURCHASE_RECEIPT_EMAIL_REQUIRED` for an account with no email address |
 | 403 | [error response](/http-api/#error-response) | `PREMIUM_PURCHASE_BLOCKED` with a `reason` in the table below |
 
 A `PREMIUM_PURCHASE_BLOCKED` error has a top-level `reason` field. For `existing_subscription`, it also has `subscription_status` with the status of that subscription.
@@ -134,7 +133,6 @@ Creates a one-time premium gift checkout session and returns a [redirect URL](#r
 | 400 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES` for an unclaimed account |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_ERROR` when Stripe rejects the request |
 | 403 | [error response](/http-api/#error-response) | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` for an unverified email address |
-| 403 | [error response](/http-api/#error-response) | `PURCHASE_RECEIPT_EMAIL_REQUIRED` for an account with no email address |
 | 403 | [error response](/http-api/#error-response) | `PREMIUM_PURCHASE_BLOCKED` with `reason` set to `purchase_disabled` |
 
 The [gift](/http-api/gifts/#gift-object) shows up in [List current user gifts](/http-api/users/gifts/#list-current-user-gifts) after Stripe confirms the payment.
