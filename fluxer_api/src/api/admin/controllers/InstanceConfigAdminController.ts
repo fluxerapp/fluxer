@@ -1285,7 +1285,10 @@ function planInstancePolicyPatch(
 	const friendsDisabled = policy.friends_disabled ?? patch.direct_messages_disabled;
 	updateChangedPolicyField(patch, current, 'friends_disabled', friendsDisabled);
 	updateChangedPolicyField(patch, current, 'guild_create_access', policy.guild_create_access);
-	updateChangedPolicyField(patch, current, 'personal_notes_enabled', policy.personal_notes_enabled);
+	const personalNotesEnabled =
+		policy.personal_notes_enabled ??
+		(patch.direct_messages_disabled === undefined ? undefined : !patch.direct_messages_disabled);
+	updateChangedPolicyField(patch, current, 'personal_notes_enabled', personalNotesEnabled);
 
 	for (const field of ['gif_enabled', 'youtube_enabled', 'bluesky_enabled'] as const) {
 		const value = policy.services?.[field];
