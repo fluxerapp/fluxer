@@ -31,7 +31,12 @@ const LINKED_FILE_UNREADABLE_DESCRIPTOR = msg({
 
 type LinkedThemeFileState = 'checking' | 'live' | 'missing' | 'unreadable';
 
-function getLinkedThemeFileState(path: string): LinkedThemeFileState {
+function getLinkedThemeFileState(theme: ThemeLibraryTheme, path: string): LinkedThemeFileState {
+	if (ThemeLibrary.isWatchedFolderTheme(theme)) {
+		const folderStatus = ThemeLibrary.folders.find((folder) => folder.path === theme.folderPath)?.status;
+		if (folderStatus === 'live') return 'live';
+		return folderStatus === 'missing' ? 'missing' : 'unreadable';
+	}
 	const status = ThemeLibrary.linkedFileStatus.get(path);
 	if (status === undefined) return 'checking';
 	if (status === 'live') return 'live';
@@ -45,7 +50,7 @@ export function isLinkedThemeReadOnly(theme: ThemeLibraryTheme): boolean {
 export function getLinkedThemeFileProblem(i18n: I18n, theme: ThemeLibraryTheme): string | null {
 	const path = theme.linkedPath;
 	if (!path) return null;
-	switch (getLinkedThemeFileState(path)) {
+	switch (getLinkedThemeFileState(theme, path)) {
 		case 'missing':
 			return i18n._(LINKED_FILE_MISSING_DESCRIPTOR, {path});
 		case 'unreadable':
@@ -60,6 +65,6 @@ export function getLinkedThemeFileLine(i18n: I18n, theme: ThemeLibraryTheme): st
 	if (!path) return null;
 	const problem = getLinkedThemeFileProblem(i18n, theme);
 	if (problem) return problem;
-	const live = ThemeLibrary.canWatchLinkedFiles && getLinkedThemeFileState(path) === 'live';
+	const live = ThemeLibrary.canWatchLinkedFiles && getLinkedThemeFileState(theme, path) === 'live';
 	return i18n._(live ? LINKED_FILE_LIVE_DESCRIPTOR : LINKED_FILE_PATH_DESCRIPTOR, {path});
 }

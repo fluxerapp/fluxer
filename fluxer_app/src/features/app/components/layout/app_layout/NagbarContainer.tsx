@@ -6,6 +6,7 @@ import {AccountLimitedNagbar} from '@app/features/app/components/layout/app_layo
 import {BuildEnvironmentNagbar} from '@app/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar';
 import {ConnectionNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar';
 import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
+import {CustomCssOffNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CustomCssOffNagbar';
 import {DesktopDownloadNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar';
 import {DesktopNotificationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar';
 import {DomainMovedNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar';
@@ -87,6 +88,7 @@ const NAGBARS: Record<NagbarType, NagbarEntry> = {
 	[NagbarType.STREAMER_MODE]: {Component: StreamerModeNagbar},
 	[NagbarType.DOMAIN_MOVED]: {Component: DomainMovedNagbar},
 	[NagbarType.WINDOWS_FONT]: {Component: WindowsFontNagbar},
+	[NagbarType.CUSTOM_CSS_OFF]: {Component: CustomCssOffNagbar},
 };
 
 export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbars}) => {

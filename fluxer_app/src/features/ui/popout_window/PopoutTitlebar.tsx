@@ -2,7 +2,7 @@
 
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import styles from '@app/features/ui/popout_window/PopoutTitlebar.module.css';
-import {getNativePlatformSync} from '@app/features/ui/utils/NativeUtils';
+import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {POP_BACK_IN_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import {msg} from '@lingui/core/macro';
@@ -47,14 +47,15 @@ export const PopoutTitlebar: React.FC<PopoutTitlebarProps> = ({
 }) => {
 	const {i18n} = useLingui();
 	const platform = useMemo(() => getNativePlatformSync(), []);
+	const desktop = isDesktop();
 	const usesSystemChrome =
-		platform === 'macos' || document.documentElement.classList.contains(NATIVE_SYSTEM_TITLEBAR_CLASS);
+		!desktop || platform === 'macos' || document.documentElement.classList.contains(NATIVE_SYSTEM_TITLEBAR_CLASS);
 	const pinLabel = isAlwaysOnTop ? i18n._(REMOVE_FROM_TOP_DESCRIPTOR) : i18n._(STAY_ON_TOP_DESCRIPTOR);
 	const PinIcon = isAlwaysOnTop ? PushPinSlashIcon : PushPinIcon;
 	return (
 		<div
 			role="group"
-			className={clsx(styles.titlebar, platform === 'macos' && styles.titlebarMac)}
+			className={clsx(styles.titlebar, desktop && platform === 'macos' && styles.titlebarMac)}
 			data-platform={platform}
 			data-flx="voice.popout-titlebar.titlebar"
 		>

@@ -7,8 +7,14 @@ import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
-import ThemeLibrary, {getThemeLabel, type ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
+import ThemeLibrary, {
+	getThemeLabel,
+	ThemeFolderImportFailedError,
+	type ThemeLibraryFolder,
+	type ThemeLibraryTheme,
+} from '@app/features/theme/state/ThemeLibrary';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {EditNextToAppButton} from '@app/features/theme_settings/components/EditNextToAppButton';
 import {ThemeDetailsModal} from '@app/features/theme_settings/components/ThemeDetailsModal';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
@@ -68,6 +74,18 @@ const NO_THEMES_SAVED_YET_DESCRIPTOR = msg({
 const IMPORT_A_CSS_FILE_TO_GET_STARTED_DESCRIPTOR = msg({
 	message: 'Import a .css file to get started, or write your own CSS in quick CSS.',
 	comment: 'Empty state in the "Your themes" section in Settings > Themes. Quick CSS is custom CSS the user writes.',
+});
+const WRITE_QUICK_CSS_DESCRIPTOR = msg({
+	message: 'Write quick CSS',
+	comment: 'Button in the empty state of "Your themes" that opens the quick CSS editor on its CSS tab.',
+});
+const FOLDER_LIMIT_DESCRIPTOR = msg({
+	message: 'You can watch up to {limit} folders. Stop watching one to add another.',
+	comment: 'Error toast in "Your themes" when importing a folder while the most folders are already watched.',
+});
+const FOLDER_UNREADABLE_DESCRIPTOR = msg({
+	message: "Fluxer can't read this folder.",
+	comment: 'Error toast in "Your themes" when the chosen theme folder cannot be opened.',
 });
 const NO_THEMES_MATCH_YOUR_SEARCH_DESCRIPTOR = msg({
 	message: 'No themes match your search.',
@@ -145,7 +163,120 @@ const LINKED_THEME_FILES_DESCRIPTOR = msg({
 		'Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.',
 });
 
+const WATCHING_FOLDER_DESCRIPTOR = msg({
+	message: 'Watching {path}',
+	comment:
+		'Shown for a watched theme folder in Settings > Themes on the desktop app. {path} is the full path of the folder. New, changed, renamed and deleted CSS files in it update the themes.',
+});
+const FOLDER_MISSING_DESCRIPTOR = msg({
+	message: "Fluxer can't find this folder. It will load the themes again when the folder is back.",
+	comment: 'Shown for a watched theme folder in Settings > Themes when the folder was moved, deleted or disconnected.',
+});
+const FOLDER_NOT_ALLOWED_DESCRIPTOR = msg({
+	message: "Fluxer can't open this folder. Import it again to keep watching it.",
+	comment:
+		'Shown for a watched theme folder in Settings > Themes when the desktop app no longer has permission to read it.',
+});
+const FOLDER_TRUNCATED_DESCRIPTOR = msg({
+	message: 'Only the first 200 CSS files in this folder are loaded.',
+	comment: 'Shown for a watched theme folder in Settings > Themes when it has more than 200 CSS files.',
+});
+const STOP_WATCHING_DESCRIPTOR = msg({
+	message: 'Stop watching',
+	context: 'theme-folder',
+	comment: 'Button on a watched theme folder in Settings > Themes, and the confirm button in its confirmation.',
+});
+const STOP_WATCHING_CONFIRM_TITLE_DESCRIPTOR = msg({
+	message: 'Stop watching this folder?',
+	comment: 'Confirmation title in Settings > Themes before it stops watching a theme folder.',
+});
+const STOP_WATCHING_CONFIRM_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Themes from this folder will be removed from "Your themes".',
+	comment:
+		'Confirmation text in Settings > Themes before it stops watching a theme folder. The CSS files on disk are not deleted.',
+});
+const FROM_FOLDER_DESCRIPTOR = msg({
+	message: 'From {folder}',
+	comment:
+		'Shown under a theme in Settings > Themes that comes from a watched folder. {folder} is the name of the folder.',
+});
+
 const SEARCH_THRESHOLD = 5;
+
+function folderName(path: string): string {
+	return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
+}
+
+const FolderRow: React.FC<{folder: ThemeLibraryFolder}> = observer(({folder}) => {
+	const {i18n} = useLingui();
+	const handleStopWatching = () => {
+		ModalCommands.push(
+			modal(() => (
+				<ConfirmModal
+					title={i18n._(STOP_WATCHING_CONFIRM_TITLE_DESCRIPTOR)}
+					description={i18n._(STOP_WATCHING_CONFIRM_DESCRIPTION_DESCRIPTOR)}
+					primaryText={i18n._(STOP_WATCHING_DESCRIPTOR)}
+					primaryVariant="danger"
+					secondaryText={i18n._(CANCEL_DESCRIPTOR)}
+					onPrimary={() => {
+						void ThemeLibrary.stopWatchingFolder(folder.path);
+					}}
+					data-flx="theme-settings.your-themes-section.folder-row.confirm-modal"
+				/>
+			)),
+		);
+	};
+	let status: React.ReactNode = (
+		<span className={styles.rowDescription} data-flx="theme-settings.your-themes-section.folder-row.watching">
+			{i18n._(WATCHING_FOLDER_DESCRIPTOR, {path: folder.path})}
+		</span>
+	);
+	if (folder.status !== 'live') {
+		status = (
+			<span className={styles.rowWarning} data-flx="theme-settings.your-themes-section.folder-row.warning">
+				<WarningCircleIcon
+					size={remFromPx(14)}
+					weight="bold"
+					className={styles.rowWarningIcon}
+					aria-hidden
+					data-flx="theme-settings.your-themes-section.folder-row.warning-icon"
+				/>
+				{i18n._(folder.status === 'missing' ? FOLDER_MISSING_DESCRIPTOR : FOLDER_NOT_ALLOWED_DESCRIPTOR)}
+			</span>
+		);
+	}
+	return (
+		<div className={styles.row} data-flx="theme-settings.your-themes-section.folder-row.row">
+			<FolderOpenIcon
+				size={remFromPx(18)}
+				className={styles.rowIcon}
+				aria-hidden
+				data-flx="theme-settings.your-themes-section.folder-row.icon"
+			/>
+			<div className={styles.rowText} data-flx="theme-settings.your-themes-section.folder-row.text">
+				<span className={styles.rowLabel} data-flx="theme-settings.your-themes-section.folder-row.label">
+					{folderName(folder.path)}
+				</span>
+				{status}
+				{folder.truncated ? (
+					<span className={styles.rowDescription} data-flx="theme-settings.your-themes-section.folder-row.truncated">
+						{i18n._(FOLDER_TRUNCATED_DESCRIPTOR)}
+					</span>
+				) : null}
+			</div>
+			<div className={styles.rowControls} data-flx="theme-settings.your-themes-section.folder-row.controls">
+				<Button
+					variant="secondary"
+					small
+					onClick={handleStopWatching}
+					data-flx="theme-settings.your-themes-section.folder-row.button.stop-watching"
+				>
+					{i18n._(STOP_WATCHING_DESCRIPTOR)}
+				</Button>
+			</div>
+		</div>
+	);
+});
 
 function matchesSearch(theme: ThemeLibraryTheme, query: string): boolean {
 	return (
@@ -164,6 +295,7 @@ const ThemeRow: React.FC<{theme: ThemeLibraryTheme}> = observer(({theme}) => {
 	const enabled = enabledIndex >= 0;
 	const label = getThemeLabel(theme);
 	const problem = getLinkedThemeFileProblem(i18n, theme);
+	const fromFolder = ThemeLibrary.isWatchedFolderTheme(theme);
 	const canLinkFiles = isDesktop() && Boolean(getElectronAPI()?.pickThemeLinkedFiles);
 	const handleDelete = () => {
 		ModalCommands.push(
@@ -274,7 +406,7 @@ const ThemeRow: React.FC<{theme: ThemeLibraryTheme}> = observer(({theme}) => {
 								{i18n._(LINK_FILE_DESCRIPTOR)}
 							</MenuItem>
 						) : null}
-						{theme.linkedPath ? (
+						{theme.linkedPath && !fromFolder ? (
 							<MenuItem
 								icon={
 									<LinkBreakIcon
@@ -314,18 +446,20 @@ const ThemeRow: React.FC<{theme: ThemeLibraryTheme}> = observer(({theme}) => {
 							{i18n._(DUPLICATE_DESCRIPTOR)}
 						</MenuItem>
 					</MenuGroup>
-					<MenuGroup data-flx="theme-settings.your-themes-section.open-menu.menu-group--2">
-						<MenuItem
-							icon={
-								<TrashIcon size={remFromPx(16)} data-flx="theme-settings.your-themes-section.open-menu.trash-icon" />
-							}
-							danger
-							onClick={select(handleDelete)}
-							data-flx="theme-settings.your-themes-section.open-menu.menu-item.select--6"
-						>
-							{i18n._(DELETE_THEME_DESCRIPTOR)}
-						</MenuItem>
-					</MenuGroup>
+					{fromFolder ? null : (
+						<MenuGroup data-flx="theme-settings.your-themes-section.open-menu.menu-group--2">
+							<MenuItem
+								icon={
+									<TrashIcon size={remFromPx(16)} data-flx="theme-settings.your-themes-section.open-menu.trash-icon" />
+								}
+								danger
+								onClick={select(handleDelete)}
+								data-flx="theme-settings.your-themes-section.open-menu.menu-item.select--6"
+							>
+								{i18n._(DELETE_THEME_DESCRIPTOR)}
+							</MenuItem>
+						</MenuGroup>
+					)}
 				</>
 			);
 		});
@@ -354,6 +488,12 @@ const ThemeRow: React.FC<{theme: ThemeLibraryTheme}> = observer(({theme}) => {
 					data-flx="theme-settings.your-themes-section.theme-row.row-warning-icon"
 				/>
 				{problem}
+			</span>
+		);
+	} else if (fromFolder && theme.folderPath) {
+		description = (
+			<span className={styles.rowDescription} data-flx="theme-settings.your-themes-section.theme-row.from-folder">
+				{i18n._(FROM_FOLDER_DESCRIPTOR, {folder: folderName(theme.folderPath)})}
 			</span>
 		);
 	} else if (theme.linkedPath) {
@@ -432,13 +572,23 @@ export const YourThemesSection: React.FC = observer(() => {
 		});
 	};
 	const handleImportFolder = () => {
-		void ThemeLibrary.importDesktopThemeDirectory().then((imported) => {
-			if (imported.length === 0) return;
-			const descriptor = imported.some((theme) => theme.linkedPath)
-				? LINKED_THEME_FILES_DESCRIPTOR
-				: IMPORTED_THEME_FILES_DESCRIPTOR;
-			ToastCommands.success(i18n._(descriptor, {length: imported.length}));
-		});
+		void ThemeLibrary.importDesktopThemeDirectory()
+			.then((imported) => {
+				if (imported.length === 0) return;
+				const descriptor = imported.some((theme) => theme.linkedPath)
+					? LINKED_THEME_FILES_DESCRIPTOR
+					: IMPORTED_THEME_FILES_DESCRIPTOR;
+				ToastCommands.success(i18n._(descriptor, {length: imported.length}));
+			})
+			.catch((error: unknown) => {
+				if (!(error instanceof ThemeFolderImportFailedError)) throw error;
+				const {reason} = error;
+				ToastCommands.error(
+					reason.error === 'folder_limit'
+						? i18n._(FOLDER_LIMIT_DESCRIPTOR, {limit: reason.limit})
+						: i18n._(FOLDER_UNREADABLE_DESCRIPTOR),
+				);
+			});
 	};
 	return (
 		<SettingsSection
@@ -469,6 +619,7 @@ export const YourThemesSection: React.FC = observer(() => {
 							<Trans>Import folder</Trans>
 						</Button>
 					) : null}
+					<EditNextToAppButton tab="themes" data-flx="theme-settings.your-themes-section.edit-next-to-app" />
 					<input
 						ref={cssImportRef}
 						type="file"
@@ -499,6 +650,13 @@ export const YourThemesSection: React.FC = observer(() => {
 					data-flx="theme-settings.your-themes-section.search-input.set-library-search"
 				/>
 			) : null}
+			{ThemeLibrary.canWatchFolders && ThemeLibrary.folders.length > 0 ? (
+				<div className={styles.list} data-flx="theme-settings.your-themes-section.folders">
+					{ThemeLibrary.folders.map((folder) => (
+						<FolderRow key={folder.path} folder={folder} data-flx="theme-settings.your-themes-section.folder-row" />
+					))}
+				</div>
+			) : null}
 			{visibleThemes.length === 0 ? (
 				<div className={styles.empty} data-flx="theme-settings.your-themes-section.empty">
 					<p className={styles.emptyTitle} data-flx="theme-settings.your-themes-section.empty-title">
@@ -511,6 +669,18 @@ export const YourThemesSection: React.FC = observer(() => {
 								: IMPORT_A_CSS_FILE_TO_GET_STARTED_DESCRIPTOR,
 						)}
 					</p>
+					{searching || !ThemeSettingsCommands.canOpenQuickCssEditor() ? null : (
+						<div data-flx="theme-settings.your-themes-section.empty-actions">
+							<Button
+								variant="secondary"
+								small
+								onClick={() => ThemeSettingsCommands.openQuickCssEditor()}
+								data-flx="theme-settings.your-themes-section.button.write-quick-css"
+							>
+								{i18n._(WRITE_QUICK_CSS_DESCRIPTOR)}
+							</Button>
+						</div>
+					)}
 				</div>
 			) : (
 				<div className={styles.list} data-flx="theme-settings.your-themes-section.list">

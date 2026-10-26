@@ -222,6 +222,15 @@ const DISCONNECT_FROM_VOICE_DESCRIPTOR = msg({
 	message: 'Disconnect from voice',
 	comment: 'Tray menu item. Leaves the current voice call when the channel name is unavailable.',
 });
+const TURN_OFF_CUSTOM_CSS_DESCRIPTOR = msg({
+	message: 'Turn off custom CSS',
+	comment:
+		'Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.',
+});
+const TURN_ON_CUSTOM_CSS_DESCRIPTOR = msg({
+	message: 'Turn on custom CSS',
+	comment: 'Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.',
+});
 const CHECK_FOR_UPDATES_DESCRIPTOR = msg({
 	message: 'Check for updates',
 	comment: 'Tray menu item. Triggers the auto-updater to look for a new desktop build.',
@@ -569,6 +578,8 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.update.failedDetail': UPDATE_FAILED_DETAIL_DESCRIPTOR,
 	'desktop.update.stillDownloadingDetail': UPDATE_STILL_DOWNLOADING_DETAIL_DESCRIPTOR,
 	'desktop.tray.copyBuildInfo': COPY_BUILD_INFO_DESCRIPTOR,
+	'desktop.tray.turnOffCustomCss': TURN_OFF_CUSTOM_CSS_DESCRIPTOR,
+	'desktop.tray.turnOnCustomCss': TURN_ON_CUSTOM_CSS_DESCRIPTOR,
 	'desktop.tray.restart': RESTART_DESCRIPTOR,
 	'desktop.tray.quit': QUIT_DESCRIPTOR,
 	'desktop.autostart.portalReason': AUTOSTART_PORTAL_REASON_DESCRIPTOR,

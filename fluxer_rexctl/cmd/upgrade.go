@@ -39,6 +39,11 @@ const (
 
 var fatalChecks = map[string]bool{"services": true, "health": true}
 
+var (
+	selfUpdate = release.SelfUpdate
+	reexec     = release.Reexec
+)
+
 type upgradeFlags struct {
 	Check    bool
 	To       string
@@ -92,7 +97,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if f.Prefetch && f.NoBackup {
 		return ui.Usage("Use --no-backup when you upgrade, not with --prefetch.")
 	}
-	if f.Resume != "" {
+	if f.Resume != "" && f.Resume != release.ResumeRecovery {
 		return resumeUpgrade(ctx, app, f)
 	}
 	inst, tookOver, err := upgradeInstance(ctx, app, f.DryRun)
@@ -101,6 +106,11 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	}
 	if err := managed(inst); err != nil {
 		return err
+	}
+	if !f.DryRun && inst.State.Upgrade != nil {
+		if handedOver, err := updateBeforeRecovery(ctx, app, f.Resume, f.To, "rexctl upgrade"); err != nil || handedOver {
+			return err
+		}
 	}
 	var e *engine.Engine
 	if !f.DryRun {
@@ -195,7 +205,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 			} else {
 				s.Done("Updated rexctl to %s.", to)
 			}
-			return release.SelfUpdate(ctx, asset)
+			return selfUpdate(ctx, asset)
 		})
 		if err != nil {
 			clearUpgrade(inst)
@@ -206,9 +216,47 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err != nil {
 		return err
 	}
-	if err := release.Reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated)); err != nil {
+	if err := reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated)); err != nil {
 		return ui.Wrap(err, "Updated rexctl but couldn't start it again.", "Run rexctl upgrade again.")
 	}
+	return nil
+}
+
+func updateBeforeRecovery(ctx context.Context, app *App, resume, to, command string) (bool, error) {
+	if resume == release.ResumeRecovery || !release.Valid(app.Version) {
+		return false, nil
+	}
+	rel, err := release.Resolve(ctx, to)
+	if err != nil {
+		return false, keepRexctl(ctx, app, "Couldn't check for a newer rexctl.", err)
+	}
+	if release.Compare(rel.Version, app.Version) <= 0 {
+		return false, nil
+	}
+	_, next := versionPair(app.Version, rel.Version)
+	asset, err := rel.AssetFor(runtime.GOOS, runtime.GOARCH)
+	if err != nil {
+		return false, keepRexctl(ctx, app, fmt.Sprintf("There's no rexctl %s for this machine.", next), err)
+	}
+	err = app.UI.Step(ctx, "Updating rexctl", func(ctx context.Context, s *ui.Step) error {
+		s.Done("Updated rexctl to %s.", next)
+		return selfUpdate(ctx, asset)
+	})
+	if err != nil {
+		return false, keepRexctl(ctx, app, fmt.Sprintf("Couldn't update rexctl to %s.", next), err)
+	}
+	if err := reexec(resumeArgs(os.Args[1:], release.ResumeRecovery)); err != nil {
+		return true, ui.Wrap(err, "Updated rexctl but couldn't start it again.", fmt.Sprintf("Run %s again.", command))
+	}
+	return true, nil
+}
+
+func keepRexctl(ctx context.Context, app *App, msg string, err error) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	app.UI.Info("%s Continuing with rexctl %s.", msg, app.Version)
+	app.UI.Detail("%v", err)
 	return nil
 }
 

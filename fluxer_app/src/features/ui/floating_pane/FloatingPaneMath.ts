@@ -205,3 +205,77 @@ export function computeResize(
 	const offset = clampPoint({x: paneStartX + offsetXDelta, y: paneStartY + offsetYDelta}, bounds);
 	return {width: nextWidth, offset};
 }
+
+interface FreeResizeRect {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+interface FreeResizeBounds {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
+}
+
+interface FreeResizeStart {
+	edge: ResizeEdge;
+	pointerStartX: number;
+	pointerStartY: number;
+	rect: FreeResizeRect;
+}
+
+function resizeAxis(
+	start: number,
+	size: number,
+	delta: number,
+	growsAtStart: boolean,
+	boundsMin: number,
+	boundsMax: number,
+	minSize: number,
+): {start: number; size: number} {
+	const end = start + size;
+	if (growsAtStart) {
+		const nextStart = clamp(start + delta, boundsMin, Math.max(boundsMin, end - minSize));
+		return {start: nextStart, size: end - nextStart};
+	}
+	const nextEnd = clamp(end + delta, Math.min(boundsMax, start + minSize), boundsMax);
+	return {start, size: nextEnd - start};
+}
+
+export function computeFreeResize(
+	start: FreeResizeStart,
+	pointerX: number,
+	pointerY: number,
+	bounds: FreeResizeBounds,
+	minSize: Size,
+): FreeResizeRect {
+	const {edge, rect} = start;
+	let horizontal = {start: rect.x, size: rect.width};
+	if (edge.includes('left') || edge.includes('right')) {
+		horizontal = resizeAxis(
+			rect.x,
+			rect.width,
+			pointerX - start.pointerStartX,
+			edge.includes('left'),
+			bounds.left,
+			bounds.right,
+			minSize.width,
+		);
+	}
+	let vertical = {start: rect.y, size: rect.height};
+	if (edge.includes('top') || edge.includes('bottom')) {
+		vertical = resizeAxis(
+			rect.y,
+			rect.height,
+			pointerY - start.pointerStartY,
+			edge.includes('top'),
+			bounds.top,
+			bounds.bottom,
+			minSize.height,
+		);
+	}
+	return {x: horizontal.start, y: vertical.start, width: horizontal.size, height: vertical.size};
+}

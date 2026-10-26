@@ -40,8 +40,12 @@ export function getColorWithHue(color: Color, unitValue: number): Color {
 	return color.withChannelValue('hue', clampUnit(unitValue) * 360);
 }
 
+export function getColorWithAlpha(color: Color, unitValue: number): Color {
+	return color.withChannelValue('alpha', clampUnit(unitValue));
+}
+
 function getColorHex(color: Color): string {
-	return color.toString('hex').toUpperCase();
+	return color.toString('hexa').toUpperCase();
 }
 
 export function shouldSyncPickerColorFromProp(propColor: Color, pickerColor: Color): boolean {

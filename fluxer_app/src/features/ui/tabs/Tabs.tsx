@@ -20,9 +20,28 @@ export interface TabsProps<T extends string> {
 	activeTab: T;
 	onTabChange: (tab: T) => void;
 	className?: string;
+	idPrefix?: string;
 }
 
-export function Tabs<T extends string>({tabs, activeTab, onTabChange, className}: TabsProps<T>) {
+export function tabElementId(idPrefix: string, key: string): string {
+	return `${idPrefix}-tab-${key}`;
+}
+
+export function tabPanelElementId(idPrefix: string, key: string): string {
+	return `${idPrefix}-panel-${key}`;
+}
+
+function readingDirection(
+	direction: TabNavigationDirection | null,
+	element: HTMLElement,
+): TabNavigationDirection | null {
+	if (direction !== 'previous' && direction !== 'next') return direction;
+	const rtl = element.ownerDocument.defaultView?.getComputedStyle(element).direction === 'rtl';
+	if (!rtl) return direction;
+	return direction === 'next' ? 'previous' : 'next';
+}
+
+export function Tabs<T extends string>({tabs, activeTab, onTabChange, className, idPrefix}: TabsProps<T>) {
 	const tabRefs = useRef<Map<T, HTMLButtonElement>>(new Map());
 	const focusTab = (key: T) => {
 		tabRefs.current.get(key)?.focus();
@@ -33,8 +52,11 @@ export function Tabs<T extends string>({tabs, activeTab, onTabChange, className}
 		const nextIndex = getNextTabIndex(currentIndex, tabs.length, direction);
 		return nextIndex == null ? null : (tabs[nextIndex]?.key ?? null);
 	};
-	const handleKeyDown = (event: React.KeyboardEvent, tabKey: T) => {
-		const nextKey = getNextKey(tabKey, getTabNavigationDirection(event.key, 'horizontal'));
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>, tabKey: T) => {
+		const nextKey = getNextKey(
+			tabKey,
+			readingDirection(getTabNavigationDirection(event.key, 'horizontal'), event.currentTarget),
+		);
 		if (!nextKey) return;
 		event.preventDefault();
 		event.stopPropagation();
@@ -63,6 +85,8 @@ export function Tabs<T extends string>({tabs, activeTab, onTabChange, className}
 							}}
 							type="button"
 							role="tab"
+							id={idPrefix ? tabElementId(idPrefix, key) : undefined}
+							aria-controls={idPrefix ? tabPanelElementId(idPrefix, key) : undefined}
 							aria-selected={isSelected}
 							tabIndex={isSelected ? 0 : -1}
 							className={clsx(styles.tab, isSelected && styles.selected)}
