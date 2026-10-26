@@ -320,7 +320,7 @@ export interface ElectronAPI {
 	checkInputMonitoringAccess(): Promise<boolean>;
 	getInputMonitoringPermissionStatus?(): Promise<InputMonitoringPermissionStatus>;
 	requestInputMonitoringPermission?(): Promise<InputMonitoringPermissionStatus>;
-	getScreenRecordingPermissionStatus?(): Promise<InputMonitoringPermissionStatus>;
+	getScreenRecordingPermissionStatus?(liveProbe?: boolean): Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?(): Promise<InputMonitoringPermissionStatus>;
 	checkMediaAccess(type: MediaAccessType): Promise<Exclude<MediaAccessStatus, 'unknown'>>;
 	requestMediaAccess(type: MediaAccessType): Promise<boolean>;

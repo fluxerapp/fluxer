@@ -537,8 +537,8 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'input-monitoring'),
 	requestInputMonitoringPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'input-monitoring'),
-	getScreenRecordingPermissionStatus: (): Promise<InputMonitoringPermissionStatus> =>
-		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
+	getScreenRecordingPermissionStatus: (liveProbe?: boolean): Promise<InputMonitoringPermissionStatus> =>
+		ipcRenderer.invoke('mac-tcc:status', 'screen-recording', liveProbe === true),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
 	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>

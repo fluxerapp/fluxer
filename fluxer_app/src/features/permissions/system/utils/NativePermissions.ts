@@ -30,7 +30,10 @@ const normalizeNativePermissionResult = (value: unknown): NativePermissionResult
 	}
 };
 
-export async function checkNativePermission(kind: PermissionKind): Promise<NativePermissionResult> {
+export async function checkNativePermission(
+	kind: PermissionKind,
+	options: {liveProbe?: boolean} = {},
+): Promise<NativePermissionResult> {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
 		return 'unsupported';
@@ -46,7 +49,9 @@ export async function checkNativePermission(kind: PermissionKind): Promise<Nativ
 		return hasAccess ? 'granted' : 'denied';
 	}
 	if (kind === 'screen' && typeof electronApi.getScreenRecordingPermissionStatus === 'function') {
-		return normalizeNativePermissionResult(await electronApi.getScreenRecordingPermissionStatus());
+		return normalizeNativePermissionResult(
+			await electronApi.getScreenRecordingPermissionStatus(options.liveProbe === true),
+		);
 	}
 	const status = await electronApi.checkMediaAccess(kind);
 	switch (status) {
@@ -86,7 +91,7 @@ export async function requestNativePermission(kind: PermissionKind): Promise<Nat
 }
 
 export async function ensureNativePermission(kind: PermissionKind): Promise<NativePermissionResult> {
-	const current = await checkNativePermission(kind);
+	const current = await checkNativePermission(kind, {liveProbe: kind === 'screen'});
 	if (current === 'granted' || current === 'unsupported') {
 		return current;
 	}
