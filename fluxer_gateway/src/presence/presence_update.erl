@@ -46,7 +46,7 @@ maybe_handle_custom_status(Request, State) ->
 -spec handle_user_settings_update(map(), state()) -> state().
 handle_user_settings_update(Data, State) ->
     State1 = maybe_update_custom_status(Data, State),
-    maybe_force_invisible_status(Data, State1).
+    update_settings_invisible(Data, State1).
 
 -spec maybe_update_custom_status(map(), state()) -> state().
 maybe_update_custom_status(Data, State) ->
@@ -58,15 +58,11 @@ maybe_update_custom_status(Data, State) ->
             State#{custom_status := Normalized}
     end.
 
--spec maybe_force_invisible_status(map(), state()) -> state().
-maybe_force_invisible_status(Data, State) ->
+-spec update_settings_invisible(map(), state()) -> state().
+update_settings_invisible(Data, State) ->
     case user_settings_presence_status(Data) of
-        invisible ->
-            update_all_session_statuses(invisible, State);
-        Status when Status =:= online; Status =:= idle; Status =:= dnd ->
-            maybe_clear_forced_invisible_status(Status, State);
-        undefined ->
-            State
+        undefined -> State;
+        Status -> State#{settings_invisible => Status =:= invisible}
     end.
 
 -spec user_settings_presence_status(map()) -> online | idle | dnd | invisible | undefined.
@@ -88,34 +84,6 @@ normalize_user_settings_status(dnd) -> dnd;
 normalize_user_settings_status(invisible) -> invisible;
 normalize_user_settings_status(offline) -> invisible;
 normalize_user_settings_status(_) -> undefined.
-
--spec maybe_clear_forced_invisible_status(online | idle | dnd, state()) -> state().
-maybe_clear_forced_invisible_status(Status, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    case has_invisible_session(Sessions) of
-        true -> update_all_session_statuses(Status, State);
-        false -> State
-    end.
-
--spec has_invisible_session(map()) -> boolean().
-has_invisible_session(Sessions) ->
-    lists:any(
-        fun(Session) ->
-            maps:get(status, Session, offline) =:= invisible
-        end,
-        maps:values(Sessions)
-    ).
-
--spec update_all_session_statuses(online | idle | dnd | invisible, state()) -> state().
-update_all_session_statuses(Status, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    UpdatedSessions = maps:map(
-        fun(_SessionId, Session) ->
-            Session#{status => Status}
-        end,
-        Sessions
-    ),
-    State#{sessions => UpdatedSessions}.
 
 -spec handle_user_update_event(map(), state()) -> state().
 handle_user_update_event(Data, State) ->

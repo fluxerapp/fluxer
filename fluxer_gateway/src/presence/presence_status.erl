@@ -7,7 +7,8 @@
     get_current_status/1,
     get_flattened_mobile/1,
     get_flattened_afk/1,
-    collect_sessions_for_replace/1
+    collect_sessions_for_replace/1,
+    effective_sessions/1
 ]).
 
 -export_type([status/0, sessions/0]).
@@ -16,6 +17,19 @@
 -type status() :: online | offline | idle | dnd | invisible.
 -type session_entry() :: #{status := status(), afk := boolean(), mobile := boolean(), _ => _}.
 -type sessions() :: #{session_id() => session_entry()}.
+
+-spec effective_sessions(#{sessions := sessions(), _ => _}) -> sessions().
+effective_sessions(#{sessions := Sessions} = State) ->
+    case maps:get(settings_invisible, State, false) of
+        true -> maps:map(fun(_SessionId, Session) -> force_invisible(Session) end, Sessions);
+        false -> Sessions
+    end.
+
+-spec force_invisible(session_entry()) -> session_entry().
+force_invisible(#{status := offline} = Session) ->
+    Session;
+force_invisible(Session) ->
+    Session#{status => invisible}.
 
 -spec get_current_status(sessions()) -> status().
 get_current_status(Sessions) ->

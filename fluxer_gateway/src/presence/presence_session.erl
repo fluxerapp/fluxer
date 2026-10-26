@@ -56,7 +56,9 @@ handle_session_connect(Request, Pid, State) ->
             },
             NewSessions = Sessions#{SessionId => SessionEntry},
             NewState = State#{sessions => NewSessions},
-            SessionsData = presence_status:collect_sessions_for_replace(NewSessions),
+            SessionsData = presence_status:collect_sessions_for_replace(
+                presence_status:effective_sessions(NewState)
+            ),
             {reply, {ok, SessionsData}, NewState};
         Existing ->
             {UpdatedSession, NewState0} = refresh_existing_session(
@@ -64,7 +66,9 @@ handle_session_connect(Request, Pid, State) ->
             ),
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = NewState0#{sessions => NewSessions},
-            SessionsData = presence_status:collect_sessions_for_replace(NewSessions),
+            SessionsData = presence_status:collect_sessions_for_replace(
+                presence_status:effective_sessions(NewState)
+            ),
             {reply, {ok, SessionsData}, NewState}
     end.
 
@@ -144,7 +148,9 @@ session_presence_changed(Session, Status, Afk, Mobile) ->
 -spec dispatch_sessions_replace(state()) -> ok.
 dispatch_sessions_replace(State) ->
     Sessions = maps:get(sessions, State),
-    SessionsData = presence_status:collect_sessions_for_replace(Sessions),
+    SessionsData = presence_status:collect_sessions_for_replace(
+        presence_status:effective_sessions(State)
+    ),
     SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
     gateway_dispatch_relay:dispatch_many(
         [Pid || Pid <- SessionPids, is_pid(Pid)], sessions_replace, SessionsData, 0

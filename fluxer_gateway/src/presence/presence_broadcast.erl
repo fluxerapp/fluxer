@@ -175,7 +175,7 @@ presence_changed(Last, Current) -> Last =/= Current.
 
 -spec build_presence_payload(state()) -> map().
 build_presence_payload(State) ->
-    Sessions = maps:get(sessions, State),
+    Sessions = presence_status:effective_sessions(State),
     Status = presence_status:get_current_status(Sessions),
     Mobile = presence_status:get_flattened_mobile(Sessions),
     Afk = presence_status:get_flattened_afk(Sessions),
