@@ -106,6 +106,7 @@ secrets:
     # existingSecret, or with generate false and no value here, the API makes
     # one on its first start and writes it to its log once.
     FLUXER_SETUP_TOKEN: ""
+    FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: ""
     # LiveKit API key.
     FLUXER_LIVEKIT_API_KEY: fluxer
     # LiveKit API secret, at least 32 characters.

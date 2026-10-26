@@ -138,6 +138,7 @@ jobs:
           expect_failure "letters and digits only" --set $d --set-string 'secrets.values.FLUXER_VALKEY_PASSWORD=0123456789abcdef0123456789abcd:@'
           expect_failure "worker.replicas must be 1" --set $d --set worker.replicas=2
           expect_failure "at least 32 bytes" --set $d --set secrets.values.FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=c2hvcnQ=
+          expect_failure "DER RSA private key" --set $d --set secrets.values.FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64=c2hvcnQ=
           expect_failure "set postgres.external.host" --set $d --set postgres.enabled=false
           expect_failure "set together" --set $d --set secrets.values.FLUXER_VAPID_PUBLIC_KEY=abc
           expect_failure "is a secret and would be stored in plain text" --set $d --set env.FLUXER_EMAIL_SMTP_PASSWORD=not-a-real-password

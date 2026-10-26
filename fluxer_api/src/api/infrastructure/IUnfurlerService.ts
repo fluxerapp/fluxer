@@ -47,4 +47,6 @@ export abstract class IUnfurlerService {
 	abstract fetchExternal(request: ExternalFetchRequest): Promise<ExternalFetchResponse>;
 
 	abstract resolveTxt(name: string): Promise<Array<string>>;
+
+	abstract activityPubPublicKey(): Promise<string | null>;
 }

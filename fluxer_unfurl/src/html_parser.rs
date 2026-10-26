@@ -216,6 +216,30 @@ pub fn find_activity_pub_link(html: &str) -> Option<String> {
     None
 }
 
+pub fn has_fediverse_profile_username(html: &str) -> bool {
+    let doc = Html::parse_document(html);
+    let meta = MetaTags::parse(&doc);
+    meta.all("og:profile:username")
+        .chain(meta.all("profile:username"))
+        .any(is_acct_shaped)
+}
+
+fn is_acct_shaped(value: &str) -> bool {
+    let value = value.trim();
+    let value = value.strip_prefix('@').unwrap_or(value);
+    let Some((local, host)) = value.split_once('@') else {
+        return false;
+    };
+    !local.is_empty()
+        && local
+            .chars()
+            .all(|c| c.is_alphanumeric() || matches!(c, '_' | '.' | '-'))
+        && host.contains('.')
+        && host.split('.').all(|label| {
+            !label.is_empty() && label.chars().all(|c| c.is_alphanumeric() || c == '-')
+        })
+}
+
 pub fn find_canonical_url(html: &str, base_url: &url::Url) -> Option<String> {
     let doc = Html::parse_document(html);
     let sel = Selector::parse("link[rel=\"canonical\"]").ok()?;

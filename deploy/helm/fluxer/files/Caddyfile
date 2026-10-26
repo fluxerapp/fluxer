@@ -68,6 +68,10 @@
 		import upstream api:8080
 	}
 
+	handle /.well-known/webfinger {
+		import upstream api:8080
+	}
+
 	handle {
 		import upstream app-proxy:8080
 	}

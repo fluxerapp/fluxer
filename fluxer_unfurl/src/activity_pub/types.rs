@@ -25,6 +25,8 @@ pub struct ActivityPubPost {
     pub content: Option<String>,
     pub summary: Option<String>,
     pub attachment: Option<Vec<ActivityPubAttachment>>,
+    pub to: Option<serde_json::Value>,
+    pub cc: Option<serde_json::Value>,
     pub in_reply_to: Option<String>,
     pub likes: Option<ActivityPubCollectionCount>,
     pub shares: Option<ActivityPubCollectionCount>,
@@ -66,6 +68,8 @@ pub struct ActivityPubActor {
     pub preferred_username: Option<String>,
     pub url: Option<String>,
     pub icon: Option<ActivityPubIcon>,
+    pub hides_to_public_from_unauthed_web: Option<bool>,
+    pub hides_cc_public_from_unauthed_web: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

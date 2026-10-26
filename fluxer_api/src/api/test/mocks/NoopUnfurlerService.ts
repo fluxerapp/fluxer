@@ -29,4 +29,8 @@ export class NoopUnfurlerService extends IUnfurlerService {
 	override async resolveTxt(_name: string): Promise<Array<string>> {
 		return [];
 	}
+
+	override async activityPubPublicKey(): Promise<string | null> {
+		return null;
+	}
 }

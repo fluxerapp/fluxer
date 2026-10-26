@@ -851,6 +851,7 @@ services:
       FLUXER_SVC_NAME: unfurl
       FLUXER_SVC_MODE: combined
       FLUXER_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
+      FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: ${FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64:-}
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}

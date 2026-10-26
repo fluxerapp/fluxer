@@ -102,19 +102,19 @@ helm upgrade fluxer ./fluxer/deploy/helm/fluxer -n fluxer -f fluxer-values.yaml 
 
 ## Back up and restore
 
-Back up the Secret and the database.
+Back up the Secrets and the database.
 
 ```sh
-kubectl -n fluxer get secret fluxer-env -o yaml \
-  | grep -v -E '^  (resourceVersion|uid|creationTimestamp):' > fluxer-env.yaml
+kubectl -n fluxer get secret fluxer-env fluxer-unfurl-env -o yaml \
+  | grep -v -E '^    (resourceVersion|uid|creationTimestamp):' > fluxer-env.yaml
 kubectl -n fluxer exec postgres-0 -- sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > fluxer.dump
 ```
 
-A restored database only works with the same Secret. Keep `fluxer-env.yaml` as safe as the dump.
+A restored database only works with the same Secrets. Keep `fluxer-env.yaml` as safe as the dump.
 
 Uploads are on the volume `data-seaweedfs-0`. Back it up with a snapshot from your storage provider.
 
-To restore, put the Secret back before you install, and the new release uses the same secrets.
+To restore, put the Secrets back before you install, and the new release uses the same secrets.
 
 ```sh
 kubectl create namespace fluxer
@@ -142,10 +142,10 @@ helm upgrade fluxer ./fluxer/deploy/helm/fluxer -n fluxer -f fluxer-values.yaml 
 helm uninstall fluxer -n fluxer
 ```
 
-The Secret and the volumes stay, and a new install with the same release name and namespace uses them again. To delete everything, delete them too.
+The Secrets and the volumes stay, and a new install with the same release name and namespace uses them again. To delete everything, delete them too.
 
 ```sh
-kubectl -n fluxer delete secret fluxer-env
+kubectl -n fluxer delete secret fluxer-env fluxer-unfurl-env
 kubectl -n fluxer delete pvc -l app.kubernetes.io/instance=fluxer
 kubectl delete namespace fluxer
 ```

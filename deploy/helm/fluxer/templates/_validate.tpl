@@ -149,6 +149,11 @@
 {{- fail "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must be standard base64 of at least 32 bytes, for example the output of openssl rand -base64 32" }}
 {{- end }}
 {{- end }}
+{{- with get $data "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64" }}
+{{- if or (not (regexMatch "^[A-Za-z0-9+/]+={0,2}$" .)) (lt (len (b64dec .)) 256) }}
+{{- fail "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64 must be the standard base64 of a DER RSA private key, for example the output of openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform DER | base64 | tr -d '\\n'" }}
+{{- end }}
+{{- end }}
 {{- $long := list "FLUXER_SUDO_MODE_SECRET" "FLUXER_CONNECTION_INITIATION_SECRET" "FLUXER_PROFILE_PSEUDONYM_SECRET" "FLUXER_GATEWAY_RPC_AUTH_TOKEN" "FLUXER_ERLANG_COOKIE" "FLUXER_MEDIA_PROXY_SECRET_KEY" "FLUXER_ADMIN_SECRET_KEY_BASE" "FLUXER_ADMIN_OAUTH_CLIENT_SECRET" "FLUXER_SETUP_TOKEN" }}
 {{- if ne (include "fluxer.livekitMode" .) "off" }}
 {{- $long = append $long "FLUXER_LIVEKIT_API_SECRET" }}

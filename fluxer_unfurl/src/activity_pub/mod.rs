@@ -3,23 +3,42 @@
 pub mod fetcher;
 pub mod formatter;
 pub mod limits;
+pub mod signature;
 pub mod types;
 pub mod utils;
+pub mod visibility;
 
 use crate::html_parser;
 use crate::media_proxy::MediaProxyClient;
 use crate::types::MessageEmbed;
 use crate::types::NsfwMode;
+use fetcher::ActivityPubClient;
 use url::Url;
 
 pub async fn try_resolve(
-    client: &reqwest::Client,
+    client: ActivityPubClient<'_>,
     media_proxy: &MediaProxyClient,
     nsfw_mode: NsfwMode,
     url: &Url,
     html: &str,
 ) -> Option<Vec<MessageEmbed>> {
-    let ap_link = html_parser::find_activity_pub_link(html)?;
+    let Some(ap_link) = html_parser::find_activity_pub_link(html) else {
+        if client.signer.is_some()
+            && utils::extract_post_id(url).is_some()
+            && html_parser::has_fediverse_profile_username(html)
+        {
+            return resolve_activity_pub_post(
+                client,
+                media_proxy,
+                nsfw_mode,
+                url,
+                html,
+                url.as_str(),
+            )
+            .await;
+        }
+        return None;
+    };
 
     let ap_url = utils::resolve_relative_url(url, &ap_link)?;
 
@@ -27,38 +46,17 @@ pub async fn try_resolve(
         return None;
     }
 
-    let ap_post = fetcher::fetch_activity_pub(client, &ap_url).await;
-    if let Some(post) = ap_post {
-        let mut context = build_context(client, url, Some(html)).await;
-        if let Some(parent_url) = post.in_reply_to.as_deref() {
-            context.in_reply_to = fetch_activity_pub_reply_context(client, parent_url).await;
-        }
-        let author_actor = fetch_post_author_actor(client, &post).await;
-        let quote_child =
-            fetch_activity_pub_quote_child(client, media_proxy, nsfw_mode, &post).await;
-        let embeds = formatter::format_activity_pub_post(
-            &post,
-            url,
-            &context,
-            media_proxy,
-            nsfw_mode,
-            formatter::ActivityPubFormatOptions {
-                author_actor: author_actor.as_ref(),
-                quote_child,
-                is_nested: false,
-            },
-        )
-        .await;
-        if !embeds.is_empty() {
-            return Some(embeds);
-        }
+    if let Some(embeds) =
+        resolve_activity_pub_post(client, media_proxy, nsfw_mode, url, html, &ap_url).await
+    {
+        return Some(embeds);
     }
 
     let post_id = utils::extract_post_id(url)?;
-    let mastodon_post = fetcher::fetch_mastodon_status(client, url, &post_id).await?;
+    let mastodon_post = fetcher::fetch_mastodon_status(client.http, url, &post_id).await?;
     let mut context = build_context(client, url, Some(html)).await;
     if mastodon_post.in_reply_to_id.is_some() && mastodon_post.in_reply_to_account_id.is_some() {
-        context.in_reply_to = fetch_mastodon_reply_context(client, url, &mastodon_post).await;
+        context.in_reply_to = fetch_mastodon_reply_context(client.http, url, &mastodon_post).await;
     }
     let embeds =
         formatter::format_mastodon_post(&mastodon_post, url, &context, media_proxy, nsfw_mode)
@@ -71,12 +69,50 @@ pub async fn try_resolve(
     }
 }
 
-async fn build_context(
-    client: &reqwest::Client,
+async fn resolve_activity_pub_post(
+    client: ActivityPubClient<'_>,
+    media_proxy: &MediaProxyClient,
+    nsfw_mode: NsfwMode,
+    url: &Url,
+    html: &str,
+    ap_url: &str,
+) -> Option<Vec<MessageEmbed>> {
+    let post = fetcher::fetch_activity_pub(client, ap_url).await?;
+    let author_actor = fetch_post_author_actor(client, &post).await;
+    if visibility::is_hidden_from_unauthed_web(&post, author_actor.as_ref()) {
+        return None;
+    }
+    let mut context = build_context(client, url, Some(html)).await;
+    if let Some(parent_url) = post.in_reply_to.as_deref() {
+        context.in_reply_to = fetch_activity_pub_reply_context(client, parent_url).await;
+    }
+    let quote_child = fetch_activity_pub_quote_child(client, media_proxy, nsfw_mode, &post).await;
+    let embeds = formatter::format_activity_pub_post(
+        &post,
+        url,
+        &context,
+        media_proxy,
+        nsfw_mode,
+        formatter::ActivityPubFormatOptions {
+            author_actor: author_actor.as_ref(),
+            quote_child,
+            is_nested: false,
+        },
+    )
+    .await;
+    if embeds.is_empty() {
+        None
+    } else {
+        Some(embeds)
+    }
+}
+
+pub(crate) async fn build_context(
+    client: ActivityPubClient<'_>,
     url: &Url,
     html: Option<&str>,
 ) -> types::ActivityPubContext {
-    let instance = fetcher::fetch_instance_info(client, url).await;
+    let instance = fetcher::fetch_instance_info(client.http, url).await;
     let apple_touch_icon = html.and_then(|html| html_parser::find_apple_touch_icon(html, url));
     let clean_host = url
         .host_str()
@@ -100,8 +136,8 @@ async fn build_context(
     }
 }
 
-async fn fetch_post_author_actor(
-    client: &reqwest::Client,
+pub(crate) async fn fetch_post_author_actor(
+    client: ActivityPubClient<'_>,
     post: &types::ActivityPubPost,
 ) -> Option<types::ActivityPubActor> {
     let actor_url = post.attributed_to.as_ref()?.as_str()?;
@@ -109,11 +145,14 @@ async fn fetch_post_author_actor(
 }
 
 async fn fetch_activity_pub_reply_context(
-    client: &reqwest::Client,
+    client: ActivityPubClient<'_>,
     parent_url: &str,
 ) -> Option<types::ActivityPubReplyContext> {
     let parent = fetcher::fetch_activity_pub(client, parent_url).await?;
     let author_actor = fetch_post_author_actor(client, &parent).await;
+    if visibility::is_hidden_from_unauthed_web(&parent, author_actor.as_ref()) {
+        return None;
+    }
     let author = match author_actor.as_ref() {
         Some(actor) => activity_pub_handle_from_actor(actor, parent_url),
         None => parent
@@ -148,7 +187,7 @@ async fn fetch_mastodon_reply_context(
 }
 
 async fn fetch_activity_pub_quote_child(
-    client: &reqwest::Client,
+    client: ActivityPubClient<'_>,
     media_proxy: &MediaProxyClient,
     nsfw_mode: NsfwMode,
     post: &types::ActivityPubPost,
@@ -159,6 +198,10 @@ async fn fetch_activity_pub_quote_child(
         .or(post.quote_uri.as_deref())
         .or(post.misskey_quote.as_deref())?;
     let quote = fetcher::fetch_activity_pub(client, quote_url).await?;
+    let author_actor = fetch_post_author_actor(client, &quote).await;
+    if visibility::is_hidden_from_unauthed_web(&quote, author_actor.as_ref()) {
+        return None;
+    }
     let fallback = Url::parse(quote_url).ok()?;
     let quote_url = quote
         .url
@@ -169,7 +212,6 @@ async fn fetch_activity_pub_quote_child(
     if let Some(parent_url) = quote.in_reply_to.as_deref() {
         quote_context.in_reply_to = fetch_activity_pub_reply_context(client, parent_url).await;
     }
-    let author_actor = fetch_post_author_actor(client, &quote).await;
     let embeds = formatter::format_activity_pub_post(
         &quote,
         &quote_url,

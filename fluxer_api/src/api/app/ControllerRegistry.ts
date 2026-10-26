@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ActivityPubController} from '@app/api/activity_pub/ActivityPubController';
 import {AdminDownloadController} from '@app/api/admin/AdminDownloadController';
 import {registerAdminControllers} from '@app/api/admin/controllers/index';
 import {AttachmentController} from '@app/api/attachment/AttachmentController';
@@ -58,6 +59,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	ConnectionController(routes);
 	BlueskyOAuthController(routes);
 	InstanceController(routes);
+	ActivityPubController(routes);
 	OpenAPIController(routes);
 	DownloadController(routes);
 	ExperimentController(routes);

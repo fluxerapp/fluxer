@@ -4,6 +4,7 @@ use crate::network_policy;
 use reqwest::header::{HeaderMap, LOCATION};
 use std::time::Duration;
 use tokio::time::timeout;
+use url::Url;
 
 pub const DEFAULT_MAX_BYTES: usize = 8 * 1024 * 1024;
 
@@ -38,16 +39,26 @@ pub async fn fetch_url(
     max_bytes: usize,
     request_timeout: Duration,
 ) -> anyhow::Result<FetchResult> {
-    fetch_url_with_headers(client, url, HeaderMap::new(), max_bytes, request_timeout).await
+    fetch_url_with_headers(
+        client,
+        url,
+        |_| Ok(HeaderMap::new()),
+        max_bytes,
+        request_timeout,
+    )
+    .await
 }
 
-pub async fn fetch_url_with_headers(
+pub async fn fetch_url_with_headers<H>(
     client: &reqwest::Client,
     url: &str,
-    request_headers: HeaderMap,
+    request_headers: H,
     max_bytes: usize,
     request_timeout: Duration,
-) -> anyhow::Result<FetchResult> {
+) -> anyhow::Result<FetchResult>
+where
+    H: Fn(&Url) -> anyhow::Result<HeaderMap>,
+{
     let result = fetch_url_with_headers_maybe_body(
         client,
         url,
@@ -78,7 +89,7 @@ where
     fetch_url_with_headers_maybe_body(
         client,
         url,
-        HeaderMap::new(),
+        |_| Ok(HeaderMap::new()),
         max_bytes,
         request_timeout,
         should_read_body,
@@ -86,15 +97,16 @@ where
     .await
 }
 
-pub async fn fetch_url_with_headers_maybe_body<F>(
+pub async fn fetch_url_with_headers_maybe_body<H, F>(
     client: &reqwest::Client,
     url: &str,
-    request_headers: HeaderMap,
+    request_headers: H,
     max_bytes: usize,
     request_timeout: Duration,
     should_read_body: F,
 ) -> anyhow::Result<FetchMaybeBodyResult>
 where
+    H: Fn(&Url) -> anyhow::Result<HeaderMap>,
     F: Fn(&FetchHead) -> bool,
 {
     let mut current_url = network_policy::parse_url(url)?;
@@ -106,12 +118,10 @@ where
         }
         visited.push(current_str);
         network_policy::validate_url(&current_url).await?;
+        let hop_headers = request_headers(&current_url)?;
         let resp = timeout(
             request_timeout,
-            client
-                .get(current_url.clone())
-                .headers(request_headers.clone())
-                .send(),
+            client.get(current_url.clone()).headers(hop_headers).send(),
         )
         .await
         .map_err(|_| anyhow::anyhow!("request timed out"))??;

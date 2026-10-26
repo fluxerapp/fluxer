@@ -50,7 +50,7 @@ Voice media does not pass through the edge. Open these ports to the internet:
 {{- end }}
 {{- end }}
 
-Back up the Secret {{ include "fluxer.secretName" . }}{{ if $v.postgres.enabled }}, the database in postgres-0{{ end }}{{ if $v.seaweedfs.enabled }} and the uploads on the volume data-seaweedfs-0{{ end }}.
+Back up the {{ if $v.secrets.existingSecret }}Secret {{ $v.secrets.existingSecret }}{{ else }}Secrets fluxer-env and fluxer-unfurl-env{{ end }}{{ if $v.postgres.enabled }}, the database in postgres-0{{ end }}{{ if $v.seaweedfs.enabled }} and the uploads on the volume data-seaweedfs-0{{ end }}.
 {{- if $v.secrets.existingSecret }}
 After editing the Secret {{ $v.secrets.existingSecret }}, restart the release:
 
