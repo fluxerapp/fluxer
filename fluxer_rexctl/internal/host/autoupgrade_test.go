@@ -4,6 +4,7 @@ package host
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -112,7 +113,7 @@ func TestAutoUpgradeRefusesBadInput(t *testing.T) {
 }
 
 func TestAutoUpgradeCronStart(t *testing.T) {
-	a := AutoUpgrade{Scheduler: Cron, Project: "fluxer", Dir: "/srv/fluxer", Binary: "/usr/local/bin/rexctl", At: "04:00", Log: "/srv/fluxer/.rexctl/auto-upgrade.log"}
+	a := AutoUpgrade{Scheduler: Cron, Project: "fluxer", Domain: "chat.example.com", Dir: "/srv/fluxer", Binary: "/usr/local/bin/rexctl", At: "04:00", Log: "/srv/fluxer/.rexctl/auto-upgrade.log"}
 	start, err := a.Start()
 	if err != nil {
 		t.Fatal(err)
@@ -127,15 +128,21 @@ func TestAutoUpgradeCronStart(t *testing.T) {
 	if err != nil || cronAt(files[0]) != start {
 		t.Errorf("cron file runs at %q, want %q (%v)", cronAt(files[0]), start, err)
 	}
-	starts := map[string]bool{}
-	for _, dir := range []string{"/srv/a", "/srv/b", "/srv/c", "/srv/d", "/srv/e", "/srv/f"} {
-		b := a
-		b.Dir = dir
-		s, _ := b.Start()
-		starts[s] = true
+	spread := func(vary func(*AutoUpgrade, int)) int {
+		starts := map[string]bool{}
+		for i := range 8 {
+			b := a
+			vary(&b, i)
+			s, _ := b.Start()
+			starts[s] = true
+		}
+		return len(starts)
 	}
-	if len(starts) < 2 {
-		t.Errorf("six instances all start at %v, want them spread out", starts)
+	if n := spread(func(b *AutoUpgrade, i int) { b.Domain = fmt.Sprintf("chat%d.example.com", i) }); n < 2 {
+		t.Errorf("eight servers with the default project and folder start at %d time, want them spread out", n)
+	}
+	if n := spread(func(b *AutoUpgrade, i int) { b.Dir = fmt.Sprintf("/srv/fluxer%d", i) }); n < 2 {
+		t.Errorf("eight instances on one host start at %d time, want them spread out", n)
 	}
 	late := a
 	late.At = "23:59"

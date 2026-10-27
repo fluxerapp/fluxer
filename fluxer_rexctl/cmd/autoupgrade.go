@@ -99,6 +99,7 @@ func autoUpgradeFor(inst *instance.Instance, e *engine.Engine) (host.AutoUpgrade
 	a := host.AutoUpgrade{
 		Scheduler: host.UpgradeScheduler(),
 		Project:   inst.Project(),
+		Domain:    inst.Domain(),
 		Dir:       dir,
 		Binary:    bin,
 		Rootless:  runtime.GOOS == "linux" && os.Geteuid() != 0,

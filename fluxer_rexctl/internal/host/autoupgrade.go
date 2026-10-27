@@ -50,6 +50,7 @@ func UpgradeScheduler() Scheduler {
 type AutoUpgrade struct {
 	Scheduler Scheduler
 	Project   string
+	Domain    string
 	Dir       string
 	Binary    string
 	Podman    bool
@@ -112,7 +113,7 @@ func (a AutoUpgrade) start() (int, int, error) {
 		return hour, minute, err
 	}
 	h := fnv.New32a()
-	h.Write([]byte(a.Project + "\x00" + a.Dir))
+	h.Write([]byte(a.Domain + "\x00" + a.Project + "\x00" + a.Dir))
 	m := (hour*60 + minute + int(h.Sum32()%uint32(UpgradeWindow.Minutes()))) % (24 * 60)
 	return m / 60, m % 60, nil
 }
