@@ -39,6 +39,7 @@ type App struct {
 	Flags   GlobalFlags
 	UI      *ui.UI
 	exit    int
+	outcome string
 	held    *instance.Instance
 	engine  *engine.Engine
 	warned  bool

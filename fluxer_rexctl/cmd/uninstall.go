@@ -70,6 +70,9 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 			if err := removeBootUnit(ctx, inst, p.Engine); err != nil {
 				app.UI.Detail("%v", err)
 			}
+			if _, err := removeAutoUpgrade(ctx, inst, p.Engine); err != nil {
+				app.UI.Detail("removing automatic upgrades: %v", err)
+			}
 			s.Done("Removed Fluxer.")
 			return nil
 		})

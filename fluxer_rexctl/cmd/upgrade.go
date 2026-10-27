@@ -69,7 +69,11 @@ func newUpgradeCmd(app *App) *cobra.Command {
 		Short: "Upgrade rexctl and Fluxer to the latest release",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runUpgrade(c.Context(), app, &f)
+			err := runUpgrade(c.Context(), app, &f)
+			if !f.Check && !f.DryRun {
+				notifyUpgrade(c.Context(), app, err)
+			}
+			return err
 		},
 	}
 	fl := c.Flags()
@@ -896,6 +900,7 @@ func failedStart(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	}
 	inst.State.FailedRelease = pend.To
 	_ = inst.Save()
+	app.outcome = fmt.Sprintf("%s Went back to %s.", msg, fluxerName(fromShort))
 	app.UI.OK("Went back to %s. Your instance is running.", fluxerName(fromShort))
 	if logPath != "" {
 		fixLine(app, fmt.Sprintf("Read %s to see why.", logPath))
@@ -1099,6 +1104,7 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 		app.UI.Detail("%v", err)
 	}
 	_, toShort := versionPair(pend.From, pend.To)
+	app.outcome = fmt.Sprintf("Upgraded to Fluxer %s.", toShort)
 	app.UI.OK("Your instance is on Fluxer %s.", toShort)
 	return nil
 }

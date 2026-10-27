@@ -63,6 +63,9 @@ func runEject(ctx context.Context, app *App) error {
 			},
 			RemoveBootUnit: func() error {
 				removed = true
+				if _, err := removeAutoUpgrade(ctx, inst, e); err != nil {
+					return fmt.Errorf("removing automatic upgrades: %w", err)
+				}
 				return removeBootUnit(ctx, inst, e)
 			},
 		})
