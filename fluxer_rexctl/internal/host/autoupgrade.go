@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"os/exec"
 	"os/user"
@@ -26,11 +27,12 @@ const (
 
 const (
 	cronDir           = "/etc/cron.d"
-	upgradeDelay      = "30min"
 	cronPath          = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 	cronExitPrefix    = "rexctl exited with "
 	systemdTimeLayout = "Mon 2006-01-02 15:04:05 MST"
 )
+
+const UpgradeWindow = 30 * time.Minute
 
 func UpgradeScheduler() Scheduler {
 	if BootUnitSupported() {
@@ -104,6 +106,25 @@ func (a AutoUpgrade) clock() (int, int, error) {
 	return t.Hour(), t.Minute(), nil
 }
 
+func (a AutoUpgrade) start() (int, int, error) {
+	hour, minute, err := a.clock()
+	if err != nil || a.Scheduler != Cron {
+		return hour, minute, err
+	}
+	h := fnv.New32a()
+	h.Write([]byte(a.Project + "\x00" + a.Dir))
+	m := (hour*60 + minute + int(h.Sum32()%uint32(UpgradeWindow.Minutes()))) % (24 * 60)
+	return m / 60, m % 60, nil
+}
+
+func (a AutoUpgrade) Start() (string, error) {
+	hour, minute, err := a.start()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%02d:%02d", hour, minute), nil
+}
+
 func (a AutoUpgrade) service(runAs string) string {
 	after := []string{a.Project + ".service"}
 	var b strings.Builder
@@ -132,7 +153,7 @@ func (a AutoUpgrade) timer(hour, minute int) string {
 	fmt.Fprintf(&b, "Description=Upgrade Fluxer in %s every day\n", strings.ReplaceAll(a.Dir, "%", "%%"))
 	b.WriteString("\n[Timer]\n")
 	fmt.Fprintf(&b, "OnCalendar=*-*-* %02d:%02d:00\n", hour, minute)
-	fmt.Fprintf(&b, "RandomizedDelaySec=%s\n", upgradeDelay)
+	fmt.Fprintf(&b, "RandomizedDelaySec=%dmin\n", int(UpgradeWindow.Minutes()))
 	b.WriteString("Persistent=true\n")
 	b.WriteString("\n[Install]\n")
 	b.WriteString("WantedBy=timers.target\n")
@@ -160,7 +181,7 @@ func (a AutoUpgrade) files() ([][]byte, error) {
 	if !filepath.IsAbs(a.Binary) || !filepath.IsAbs(a.Dir) {
 		return nil, fmt.Errorf("host: automatic upgrades need absolute paths, got %q and %q", a.Binary, a.Dir)
 	}
-	hour, minute, err := a.clock()
+	hour, minute, err := a.start()
 	if err != nil {
 		return nil, err
 	}

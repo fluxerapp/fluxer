@@ -111,6 +111,44 @@ func TestAutoUpgradeRefusesBadInput(t *testing.T) {
 	}
 }
 
+func TestAutoUpgradeCronStart(t *testing.T) {
+	a := AutoUpgrade{Scheduler: Cron, Project: "fluxer", Dir: "/srv/fluxer", Binary: "/usr/local/bin/rexctl", At: "04:00", Log: "/srv/fluxer/.rexctl/auto-upgrade.log"}
+	start, err := a.Start()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again, _ := a.Start(); again != start {
+		t.Errorf("Start() = %q then %q, want the same time every time", start, again)
+	}
+	if start < "04:00" || start >= "04:30" {
+		t.Errorf("Start() = %q, want a time from 04:00 to 04:29", start)
+	}
+	files, err := a.files()
+	if err != nil || cronAt(files[0]) != start {
+		t.Errorf("cron file runs at %q, want %q (%v)", cronAt(files[0]), start, err)
+	}
+	starts := map[string]bool{}
+	for _, dir := range []string{"/srv/a", "/srv/b", "/srv/c", "/srv/d", "/srv/e", "/srv/f"} {
+		b := a
+		b.Dir = dir
+		s, _ := b.Start()
+		starts[s] = true
+	}
+	if len(starts) < 2 {
+		t.Errorf("six instances all start at %v, want them spread out", starts)
+	}
+	late := a
+	late.At = "23:59"
+	if s, _ := late.Start(); s >= "00:29" && s < "23:59" {
+		t.Errorf("Start() for 23:59 = %q, want it to wrap past midnight", s)
+	}
+	sd := a
+	sd.Scheduler = Systemd
+	if s, _ := sd.Start(); s != "04:00" {
+		t.Errorf("systemd Start() = %q, want 04:00 because the timer adds its own delay", s)
+	}
+}
+
 func TestCronExit(t *testing.T) {
 	log := filepath.Join(t.TempDir(), "auto-upgrade.log")
 	if ran, _ := cronExit(log); ran {

@@ -28,7 +28,6 @@ import (
 const (
 	autoUpgradeLog     = "auto-upgrade.log"
 	autoUpgradeDefault = "04:00"
-	autoUpgradeWindow  = 30 * time.Minute
 	notifyTimeout      = 15 * time.Second
 )
 
@@ -155,7 +154,11 @@ func runAutoUpgradeOn(ctx context.Context, app *App, at, notify string) error {
 				return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
 			}
 		}
-		app.UI.OK("rexctl upgrades Fluxer every day %s.", autoUpgradeWhen(a.Scheduler, at))
+		start, err := a.Start()
+		if err != nil {
+			return ui.Usage("Pass --at as a time of day like 04:00.")
+		}
+		app.UI.OK("rexctl upgrades Fluxer every day %s.", autoUpgradeWhen(a.Scheduler, start))
 		if notify != "" {
 			app.UI.Info("rexctl tells %s when an upgrade installs a new release or fails.", maskURL(notify))
 		}
@@ -271,7 +274,7 @@ func autoUpgradeWhen(s host.Scheduler, at string) string {
 	if err != nil || s != host.Systemd {
 		return "at " + at
 	}
-	return fmt.Sprintf("between %s and %s", at, t.Add(autoUpgradeWindow).Format("15:04"))
+	return fmt.Sprintf("between %s and %s", at, t.Add(host.UpgradeWindow).Format("15:04"))
 }
 
 func autoUpgradeLogs(a host.AutoUpgrade) string {
