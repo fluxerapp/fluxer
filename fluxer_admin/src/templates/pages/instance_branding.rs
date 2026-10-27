@@ -476,7 +476,7 @@ const BRANDING_PREVIEW_STYLE: &str = r#"
 .bp-tab:hover{color:#18181b}
 .bp-tab[aria-selected="true"]{background:#fff;color:#18181b;box-shadow:0 1px 2px rgb(0 0 0/.08)}
 .bp-tab:focus-visible{outline:2px solid #4641d9;outline-offset:1px}
-@media (prefers-color-scheme:dark){.bp-tabs{background:#27272a;border-color:#3f3f46}.bp-tab{color:#a1a1aa}.bp-tab:hover{color:#fafafa}.bp-tab[aria-selected="true"]{background:#3f3f46;color:#fafafa;box-shadow:none}.bp-tab:focus-visible{outline-color:#8b87ff}.bp-note,.bp-caption{color:#a1a1aa}.bp-computer{border-color:#3f3f46}}
+[data-theme="dark"] .bp-tabs{background:#27272a;border-color:#3f3f46}[data-theme="dark"] .bp-tab{color:#a1a1aa}[data-theme="dark"] .bp-tab:hover{color:#fafafa}[data-theme="dark"] .bp-tab[aria-selected="true"]{background:#3f3f46;color:#fafafa;box-shadow:none}[data-theme="dark"] .bp-tab:focus-visible{outline-color:#8b87ff}[data-theme="dark"] .bp-note,[data-theme="dark"] .bp-caption{color:#a1a1aa}[data-theme="dark"] .bp-computer{border-color:#3f3f46}
 .bp-stage{min-width:0}
 .bp-note{margin:0;font-size:12px;line-height:1.5;color:#71717a}
 .bp-caption{margin:10px 0 0;font-size:12px;line-height:1.5;color:#71717a}

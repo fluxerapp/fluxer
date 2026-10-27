@@ -257,6 +257,7 @@ async fn not_found(State(state): State<AppState>) -> impl IntoResponse {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { "404 - Not Found" }
+                script { (maud::PreEscaped(crate::templates::layout_scripts::THEME_INIT_SCRIPT)) }
                 link rel="stylesheet" href={(base) "/static/fonts/" (crate::fonts::STYLESHEET_FILE_NAME)};
                 link rel="stylesheet" href={(base) "/static/app.css"};
             }
