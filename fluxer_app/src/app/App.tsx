@@ -55,7 +55,10 @@ import {getActivePortalHost, setActivePortalHost} from '@app/features/ui/overlay
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
-import {getDesktopWindowBehaviorSettings} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
+import {
+	attachMiddleClickAutoscrollPasteGuard,
+	getDesktopWindowBehaviorSettings,
+} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {UNFOCUSED_FULLY_INTERACTIVE_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -266,6 +269,7 @@ export const App = observer((): React.ReactElement => {
 		if (!isDesktop()) return;
 		void ensureAutostartDefaultEnabled();
 		void getDesktopWindowBehaviorSettings();
+		return attachMiddleClickAutoscrollPasteGuard(window);
 	}, []);
 	useEffect(() => {
 		void startDeepLinkHandling();
