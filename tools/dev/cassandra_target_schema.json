@@ -10414,6 +10414,10 @@
 				{
 					"name": "soft_connection_limit",
 					"type": "int"
+				},
+				{
+					"name": "notes",
+					"type": "text"
 				}
 			],
 			"primary_key": "((region_id), server_id)",

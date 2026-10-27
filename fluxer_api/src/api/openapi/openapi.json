@@ -32340,6 +32340,12 @@
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
 					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
 					"passes": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/OperatorPassUnitResponse"},
@@ -32575,7 +32581,7 @@
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "How many passes the account holds now, shown to the holder in every case"
+						"description": "Public count of valid held passes and purchases passed on, shown to the holder even when hidden publicly"
 					}
 				},
 				"required": [
@@ -42299,6 +42305,12 @@
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
+					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
 					},
 					"wall_chosen": {
 						"type": "boolean",

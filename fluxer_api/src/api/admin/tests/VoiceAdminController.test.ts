@@ -133,4 +133,39 @@ describe('VoiceAdminController', () => {
 		expect(persisted?.apiKey).toBe(fixture.initialApiKey);
 		expect(persisted?.apiSecret).toBe(fixture.initialApiSecret);
 	});
+	test('stores, keeps and clears free-form server notes', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const fixture = await createVoiceFixture(harness, admin, {
+			regionId: 'voice-region-notes',
+			serverId: 'voice-server-notes',
+			endpoint: 'https://voice-notes.example.com/socket',
+			apiKey: 'notes-api-key',
+			apiSecret: 'notes-api-secret',
+		});
+		expect((await voiceRepository.getServer(fixture.regionId, fixture.serverId))?.notes).toBeNull();
+		const updated = await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
+			.body({notes: '  Hetzner box, renew in March  '})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(updated.server.notes).toBe('Hetzner box, renew in March');
+		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
+			.body({is_active: false})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect((await voiceRepository.getServer(fixture.regionId, fixture.serverId))?.notes).toBe(
+			'Hetzner box, renew in March',
+		);
+		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
+			.body({notes: '   '})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect((await voiceRepository.getServer(fixture.regionId, fixture.serverId))?.notes).toBeNull();
+	});
 });

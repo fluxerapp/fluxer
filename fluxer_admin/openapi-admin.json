@@ -12718,6 +12718,12 @@
 						"minimum": 1,
 						"maximum": 2147483647
 					},
+					"notes": {
+						"description": "Free-form admin notes about this server, or null to clear them",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 2000
+					},
 					"vip_only": {"description": "Whether this server is restricted to VIP users", "type": "boolean"},
 					"required_guild_features": {
 						"description": "Guild features required to use this server",
@@ -12791,6 +12797,12 @@
 						"type": "integer",
 						"minimum": 1,
 						"maximum": 2147483647
+					},
+					"notes": {
+						"description": "Free-form admin notes about this server",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 2000
 					},
 					"vip_only": {
 						"default": false,
@@ -23899,10 +23911,17 @@
 					},
 					"pass_count": {
 						"nullable": true,
-						"description": "Passes held after a count change",
+						"description": "The displayed count after a change. Older events recorded held passes.",
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991
+					},
+					"first_pass_at": {
+						"description": "The earliest qualifying delivery for this count. Older events do not include this date.",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					}
 				},
 				"required": [
@@ -24209,6 +24228,12 @@
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
 					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
 					"wall_chosen": {
 						"type": "boolean",
 						"description": "Whether the account already chose to be listed or not listed on the Operators' wall. When false, checkout and accepting an offer ask for the choice"
@@ -24331,7 +24356,7 @@
 					"Staff made a technical adjustment to how the name is shown",
 					"The name was published in a The Operators of list",
 					"Staff erased the name from a published list",
-					"The number of passes held changed, which moves the place on the wall, see pass_count"
+					"The displayed wall count changed, see pass_count"
 				],
 				"enum": [
 					"delivered",
@@ -24671,6 +24696,11 @@
 						"minimum": 1,
 						"maximum": 2147483647
 					},
+					"notes": {
+						"nullable": true,
+						"description": "Free-form admin notes about this server, or null when there are none",
+						"type": "string"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 					"required_guild_features": {
 						"maxItems": 100,
@@ -24709,6 +24739,7 @@
 					"longitude",
 					"is_active",
 					"soft_connection_limit",
+					"notes",
 					"vip_only",
 					"required_guild_features",
 					"allowed_guild_ids",
