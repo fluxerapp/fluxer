@@ -5567,6 +5567,7 @@ const DESKTOP_SHELL_CONTRACT_ENV: &str = "SHELL_CONTRACT";
 const DESKTOP_SHELL_CONTRACT_INPUT: &str = "shell_contract";
 const DESKTOP_MODULES_ONLY_RELEASE_ENV: &str = "DESKTOP_MODULES_ONLY_RELEASE";
 const DESKTOP_SHELL_CONTRACT_FILE: &str = "shell-contract.json";
+#[cfg(feature = "http")]
 const DESKTOP_LIVE_MANIFEST_TIMEOUT: Duration = Duration::from_secs(30);
 const DESKTOP_FIRST_MODULE_SHELL_COMMIT: &str = "7c5fa2180a60e4d39bb06c3c384557fd9a3eabc4";
 const DESKTOP_CONTRACT_ROOTS: &[&str] = &[
@@ -5650,6 +5651,7 @@ struct DesktopShellContract {
 #[derive(Debug, Clone, PartialEq)]
 enum DesktopLiveFeed {
     Missing,
+    #[cfg_attr(not(feature = "http"), allow(dead_code))]
     Served(Value),
 }
 
@@ -5665,33 +5667,41 @@ fn desktop_live_manifest_url(channel: &str, platform: &str, arch: &str) -> Strin
 }
 
 async fn fetch_live_channel_feeds(channel: &str) -> Result<BTreeMap<String, DesktopLiveFeed>> {
-    let client = reqwest::Client::builder()
-        .timeout(DESKTOP_LIVE_MANIFEST_TIMEOUT)
-        .build()
-        .context("Failed to build the HTTP client")?;
-    let mut feeds = BTreeMap::new();
-    for (platform, arch) in desktop_release_coordinates() {
-        let url = desktop_live_manifest_url(channel, platform, arch);
-        let response = client
-            .get(&url)
-            .send()
-            .await
-            .with_context(|| format!("Failed to fetch {url}"))?;
-        let feed = if response.status() == reqwest::StatusCode::NOT_FOUND {
-            DesktopLiveFeed::Missing
-        } else {
-            DesktopLiveFeed::Served(
-                response
-                    .error_for_status()
-                    .with_context(|| format!("{url} did not serve a module manifest"))?
-                    .json()
-                    .await
-                    .with_context(|| format!("{url} is not JSON"))?,
-            )
-        };
-        feeds.insert(desktop_coordinate_key(platform, arch), feed);
+    #[cfg(not(feature = "http"))]
+    {
+        _ = channel;
+        panic!("i want to fetch the live channel feeds, but the http feature is not enabled")
     }
-    Ok(feeds)
+    #[cfg(feature = "http")]
+    {
+        let client = reqwest::Client::builder()
+            .timeout(DESKTOP_LIVE_MANIFEST_TIMEOUT)
+            .build()
+            .context("Failed to build the HTTP client")?;
+        let mut feeds = BTreeMap::new();
+        for (platform, arch) in desktop_release_coordinates() {
+            let url = desktop_live_manifest_url(channel, platform, arch);
+            let response = client
+                .get(&url)
+                .send()
+                .await
+                .with_context(|| format!("Failed to fetch {url}"))?;
+            let feed = if response.status() == reqwest::StatusCode::NOT_FOUND {
+                DesktopLiveFeed::Missing
+            } else {
+                DesktopLiveFeed::Served(
+                    response
+                        .error_for_status()
+                        .with_context(|| format!("{url} did not serve a module manifest"))?
+                        .json()
+                        .await
+                        .with_context(|| format!("{url} is not JSON"))?,
+                )
+            };
+            feeds.insert(desktop_coordinate_key(platform, arch), feed);
+        }
+        Ok(feeds)
+    }
 }
 
 fn newest_release_with_manifest<'a>(

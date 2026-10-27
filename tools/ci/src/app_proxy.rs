@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CALVER_SCHEME, CalverEnv, CommandSpec, S3UploadPlanItem, append_github_env,
-    append_github_output, collect_files, env_string, output_text, path_to_s3_key,
-    remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
-    trim_option, upload_s3_plan_append_only,
+    CALVER_SCHEME, CalverEnv, CommandSpec, append_github_env, append_github_output, collect_files,
+    env_string, output_text, path_to_s3_key, remove_dir_if_exists, require_env, resolve_calver,
+    run_command, runner_temp, trim_option,
 };
 use crate::functions::sha256_file;
+#[cfg(feature = "s3")]
+use crate::s3::{S3UploadPlanItem, s3_client, upload_s3_plan_append_only};
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -20,8 +21,11 @@ use std::path::{Path, PathBuf};
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
 const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
+#[cfg(feature = "s3")]
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
+#[cfg(feature = "s3")]
 const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
+#[cfg(feature = "s3")]
 const IMMUTABLE_ASSET_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
 const RUNTIME_STATIC_DIR: &str = "/srv/app/static";
 const CANONICAL_ASSETS_DIR: &str = "/assets";
@@ -270,6 +274,12 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
     Ok(entries)
 }
 
+#[cfg(not(feature = "s3"))]
+async fn upload_assets_step() -> Result<()> {
+    panic!("needs s3 feature")
+}
+
+#[cfg(feature = "s3")]
 async fn upload_assets_step() -> Result<()> {
     let client = s3_client(Some(DEFAULT_S3_ENDPOINT)).await?;
     let bucket = env::var("STATIC_BUCKET").unwrap_or_else(|_| DEFAULT_STATIC_BUCKET.to_string());
@@ -289,6 +299,7 @@ async fn upload_assets_step() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "s3")]
 fn asset_upload_plan(dist: &Path, assets: &[String]) -> Result<Vec<S3UploadPlanItem>> {
     assets
         .iter()
