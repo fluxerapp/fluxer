@@ -38,9 +38,12 @@ func (e *Engine) Load(ctx context.Context, s Spec) (*Project, error) {
 			return nil, err
 		}
 	}
-	env := make([]string, 0, len(s.Env))
+	env := make([]string, 0, len(s.Env)+1)
 	for k, v := range s.Env {
 		env = append(env, k+"="+v)
+	}
+	if _, ok := s.Env["PWD"]; !ok {
+		env = append(env, "PWD="+s.Dir)
 	}
 	sort.Strings(env)
 	opts, err := cli.NewProjectOptions(files,
