@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Несъответствие на SSO самоличността между id_token и userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO е конфигуриран неправилно. Свържи се с администратора си.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Твоят SSO доставчик не върна имейл адрес.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Тази инстанция изисква SSO вход, затова твоят SSO доставчик управлява имейла и паролата ти.} no_account {Тази инстанция позволява SSO вход само на съществуващи акаунти, а ти все още нямаш акаунт. Поискай достъп от администратор на тази инстанция.} other {Тази инстанция изисква SSO вход. Влез с бутона за SSO на страницата за вход.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Тази инстанция изисква SSO вход, затова твоят SSO доставчик управлява имейла и паролата ти.} no_account {Тази инстанция позволява SSO вход само на съществуващи акаунти, а ти все още нямаш акаунт. Поискай достъп от администратор на тази инстанция.} managed_username {Тази инстанция изисква SSO вход, затова потребителското ти име идва от твоя SSO доставчик.} other {Тази инстанция изисква SSO вход. Влез с бутона за SSO на страницата за вход.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Тестовият SSO код няма имейл в данните.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Не успяхме да присвоим дискриминатор за твоя SSO акаунт. Опитай отново.",
 	"auth_and_oauth.sudo_mode_required": "Изисква се sudo режим.",

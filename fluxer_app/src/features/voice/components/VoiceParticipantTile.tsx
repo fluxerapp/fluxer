@@ -666,13 +666,15 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		presentation,
 	});
 	const showTileSpectatorPill = !isFocusPresentationTile && isScreenShare && viewerUsers.length > 0;
-	const showTileControlPill = shouldShowTileControlPill({
-		isFocusedPlaceholderTile,
-		showStreamAudioControls,
-		showSpectatorPill: showTileSpectatorPill,
-		showGroupHiddenPill: isGridTile && groupHiddenCount > 0,
-		showDeviceCollapseControl,
-	});
+	const showTileControlPill =
+		showParticipantMetadata &&
+		shouldShowTileControlPill({
+			isFocusedPlaceholderTile,
+			showStreamAudioControls,
+			showSpectatorPill: showTileSpectatorPill,
+			showGroupHiddenPill: isGridTile && groupHiddenCount > 0,
+			showDeviceCollapseControl,
+		});
 	const viewerStreamCount = graphViewerStreamKeys.length;
 	const addStreamTooltipText = plural(
 		{count: viewerStreamCount},

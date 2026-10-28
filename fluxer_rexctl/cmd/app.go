@@ -18,11 +18,18 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
+)
+
+const (
+	docsURL                = "https://docs.fluxer.app/operator/"
+	changeHowFluxerRunsURL = docsURL + "running/#change-how-fluxer-runs"
 )
 
 type GlobalFlags struct {
@@ -39,9 +46,14 @@ type App struct {
 	Flags   GlobalFlags
 	UI      *ui.UI
 	exit    int
+	outcome string
+	putBack []string
 	held    *instance.Instance
 	engine  *engine.Engine
 	warned  bool
+	located *instance.Located
+
+	keepLayout bool
 }
 
 func (a *App) init(c *cobra.Command) {
@@ -101,25 +113,115 @@ func (w detailWriter) Write(p []byte) (int, error) {
 func (a *App) SetExit(code int) { a.exit = code }
 
 func (a *App) Dir() (string, error) {
-	if a.Flags.Dir != "" {
-		return a.Flags.Dir, nil
+	l, err := a.Locate()
+	return l.Dir, err
+}
+
+func (a *App) Locate() (instance.Located, error) {
+	first := a.located == nil
+	l, err := a.locate()
+	if err == nil && first && l.Stale != "" {
+		a.warnStale(l)
 	}
-	return instance.Locate()
+	return l, err
+}
+
+func (a *App) warnStale(l instance.Located) {
+	a.UI.Warn(fmt.Sprintf("rexctl remembers Fluxer in %s as the default, but there's no instance there now. Using %s.", l.Stale, l.Dir), "Run rexctl use <folder> to pick another default.")
+}
+
+func (a *App) locate() (instance.Located, error) {
+	if a.located != nil {
+		return *a.located, nil
+	}
+	l, err := instance.Resolve(a.Flags.Dir)
+	var several *instance.SeveralError
+	switch {
+	case errors.As(err, &several):
+		if several.Stale != "" {
+			a.UI.Warn(fmt.Sprintf("rexctl remembers Fluxer in %s as the default, but there's no instance there now.", several.Stale), "")
+		}
+		if !a.UI.Interactive() {
+			return l, &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("This machine has Fluxer instances in %s.", ui.JoinAnd(several.Dirs)), Fix: "Pass --dir with the one you mean, or run rexctl use <folder> to make one the default.", Err: err}
+		}
+		opts := make([]ui.Option, len(several.Dirs))
+		for i, d := range several.Dirs {
+			opts[i] = ui.Option{Label: d, Value: d}
+		}
+		var dir string
+		if err := a.UI.Ask(nil, ui.Field{Title: "Which Fluxer instance?", Value: &dir, Options: opts}); err != nil {
+			return l, err
+		}
+		a.UI.Info("Run rexctl use %s to make it the default.", dir)
+		l = instance.Located{Dir: dir, From: instance.FromPicked}
+	case err != nil:
+		return l, untrustedRefusal(err)
+	}
+	a.located = &l
+	return l, nil
+}
+
+func untrustedRefusal(err error) error {
+	var untrusted *instance.UntrustedError
+	switch {
+	case !errors.As(err, &untrusted):
+		return err
+	case untrusted.Folder:
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl remembers Fluxer in %s, but accounts other than root can change that folder, so root doesn't use it.", untrusted.Path), Fix: "Pass --dir if you mean that folder, or run rexctl use <folder> as root with another folder.", Err: err}
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("Accounts other than root can change %s, so root doesn't use it.", untrusted.Path), Fix: "Make root its owner and the only account that can write to it, or pass --dir.", Err: err}
+}
+
+func (a *App) pickedDir() string {
+	if a.located == nil || a.located.From == instance.FromFlag || a.located.From == instance.FromWorkdir {
+		return ""
+	}
+	return a.located.Dir
+}
+
+func (a *App) remember(dir string) {
+	if err := instance.Remember(instance.OwnScope(), dir, false); err != nil {
+		a.UI.Detail("recording the instance in %s: %v", instance.RecordPath(instance.OwnScope()), err)
+	}
+}
+
+func (a *App) rememberFirst(inst *instance.Instance) {
+	if inst.State == nil || inst.State.Ejected != nil {
+		return
+	}
+	if err := instance.RememberFirst(instance.OwnScope(), inst.Dir); err != nil {
+		a.UI.Detail("recording the instance in %s: %v", instance.RecordPath(instance.OwnScope()), err)
+	}
+}
+
+func (a *App) forget(dir string) {
+	s := instance.OwnScope()
+	if err := instance.Forget(s, dir); err != nil {
+		a.UI.Detail("%v", err)
+		a.UI.Warn(fmt.Sprintf("rexctl still lists %s in %s.", dir, instance.RecordPath(s)), "Remove it from that file.")
+	}
 }
 
 func (a *App) takeOverCommand() string {
 	if a.Flags.Dir != "" {
 		return "rexctl takeover --dir " + a.Flags.Dir
 	}
+	if dir := a.pickedDir(); dir != "" {
+		return "rexctl takeover --dir " + dir
+	}
 	return "rexctl takeover"
 }
 
 func (a *App) Instance() (*instance.Instance, error) {
+	return a.InstanceRepairing(nil)
+}
+
+func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 	dir, err := a.Dir()
 	if err != nil {
 		return nil, err
 	}
-	inst, err := instance.Find(dir)
+	inst, err := instance.FindRepairing(dir, keys)
 	var se *instance.SettingError
 	switch {
 	case err == nil:
@@ -127,6 +229,7 @@ func (a *App) Instance() (*instance.Instance, error) {
 			return nil, err
 		}
 		a.warnUnknown(inst)
+		a.rememberFirst(inst)
 		return inst, nil
 	case errors.Is(err, instance.ErrNotFound):
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
@@ -148,8 +251,10 @@ func (a *App) warnUnknown(inst *instance.Instance) {
 	a.UI.Warn("This instance has settings this rexctl doesn't know: "+ui.JoinAnd(inst.State.Unknown)+".", "rexctl keeps them. Run rexctl upgrade if a newer rexctl wrote them.")
 }
 
+var euid = os.Geteuid
+
 func rootlessGuard(inst *instance.Instance) error {
-	if inst == nil || inst.State == nil || os.Geteuid() != 0 {
+	if inst == nil || inst.State == nil || euid() != 0 {
 		return nil
 	}
 	uid, ok := inst.OwnerUID()
@@ -285,19 +390,40 @@ func (a *App) Locked(ctx context.Context, inst *instance.Instance, fn func() err
 	if err != nil {
 		return err
 	}
-	return a.holding(inst, l, fn)
+	return a.holding(ctx, inst, l, fn)
 }
 
-func (a *App) holding(inst *instance.Instance, l *instance.Lock, fn func() error) error {
+func (a *App) holding(ctx context.Context, inst *instance.Instance, l *instance.Lock, fn func() error) error {
 	defer l.Release()
+	if err := rootlessGuard(inst); err != nil {
+		return err
+	}
 	a.held = inst
 	defer func() { a.held = nil }()
+	a.migrate(ctx, inst)
 	if a.engine != nil {
 		if err := a.pin(inst, a.engine); err != nil {
 			return err
 		}
 	}
 	return fn()
+}
+
+var refreshUnitBinaries = func(ctx context.Context, inst *instance.Instance) error {
+	bin, err := checks.RunningBinary()
+	if err != nil {
+		return err
+	}
+	return host.RefreshUnitBinaries(ctx, inst.Project(), bin)
+}
+
+func (a *App) migrate(ctx context.Context, inst *instance.Instance) {
+	if a.keepLayout || !inst.OldLayout() {
+		return
+	}
+	if err := inst.Migrate(func() error { return refreshUnitBinaries(ctx, inst) }); err != nil {
+		a.UI.Detail("rexctl keeps Fluxer's files in %s for now: %v", inst.Dir, err)
+	}
 }
 
 func (a *App) Change(ctx context.Context, inst *instance.Instance, fn func(e *engine.Engine) error) error {
@@ -352,9 +478,26 @@ func managed(inst *instance.Instance) error {
 }
 
 func (a *App) drift(inst *instance.Instance, clean, withEnv bool) error {
+	if clean {
+		edits, err := instance.KeepEdits(inst)
+		if err != nil {
+			return ui.Wrap(err, "rexctl can't keep a copy of the files you changed.", "Check that you can write to "+inst.Dir+", then try again.")
+		}
+		for _, ed := range edits {
+			a.showEdit(ed)
+		}
+		if len(edits) > 0 && a.UI.Interactive() {
+			instance.SeenEdits(inst)
+		}
+	}
 	r, err := instance.Drift(inst)
 	if err != nil {
 		return ui.Wrap(err, "rexctl can't check Fluxer's files.", "Check that you can read "+inst.Dir+", then try again.")
+	}
+	if !clean {
+		for _, name := range r.Changed {
+			a.UI.Warn(name+" was changed by hand. rexctl puts its own version back and keeps a copy of yours.", editFix(name))
+		}
 	}
 	if r.Env != nil && !r.Env.Same && !withEnv {
 		r.Env = nil
@@ -379,6 +522,21 @@ func (a *App) drift(inst *instance.Instance, clean, withEnv bool) error {
 		return err
 	}
 	return nil
+}
+
+func (a *App) showEdit(ed instance.Edit) {
+	a.UI.Warn(fmt.Sprintf("%s was changed by hand. rexctl puts its own version back and keeps your copy in %s.", ed.Name, ed.Copy), editFix(ed.Name))
+	for _, line := range ed.Diff {
+		a.UI.Info("    %s", line)
+	}
+	a.putBack = append(a.putBack, fmt.Sprintf("rexctl put back its own %s. Your copy is in %s.", ed.Name, ed.Copy))
+}
+
+func editFix(name string) string {
+	if name == stack.Caddyfile {
+		return "Put extra Caddy directives in a .caddy file in " + instance.CaddyDropInDir + ", which rexctl keeps."
+	}
+	return "Put Compose changes in " + instance.CustomCompose + " with rexctl config edit, and change settings with rexctl config set."
 }
 
 func (a *App) replacePodmanCompose(ctx context.Context, inst *instance.Instance, e *engine.Engine) error {

@@ -46,6 +46,7 @@ function createServer(overrides: Partial<VoiceServerRecord> = {}): VoiceServerRe
 		longitude: null,
 		isActive: true,
 		softConnectionLimit: null,
+		notes: null,
 		restrictions: {
 			vipOnly: false,
 			requiredGuildFeatures: new Set(),

@@ -27,6 +27,7 @@
 			.x-muted { color: #a9a8bd !important; }
 			.x-link { color: #b8b5ff !important; }
 			.x-rule { border-color: #34334a !important; }
+			.x-box { background-color: #1f1e33 !important; border-color: #4a47a8 !important; }
 			.x-light { display: none !important; }
 			.x-dark { display: block !important; max-height: none !important; overflow: visible !important; }
 		}
@@ -34,6 +35,7 @@
 		[data-ogsc] .x-ink { color: #ececf3 !important; }
 		[data-ogsc] .x-muted { color: #a9a8bd !important; }
 		[data-ogsc] .x-link { color: #b8b5ff !important; }
+		[data-ogsb] .x-box { background-color: #1f1e33 !important; border-color: #4a47a8 !important; }
 		[data-ogsc] .x-light { display: none !important; }
 		[data-ogsc] .x-dark { display: block !important; max-height: none !important; overflow: visible !important; }
 	</mj-style>

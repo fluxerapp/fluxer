@@ -628,6 +628,7 @@ function parseSso(value: unknown): InstanceSso | null {
 	const sso: InstanceSso = {
 		enabled,
 		enforced,
+		username_from_provider: readBoolean(source, 'username_from_provider') ?? false,
 		display_name: readNonEmptyString(source, 'display_name'),
 		button_label: readNonEmptyString(source, 'button_label'),
 		redirect_uri: redirectUri,

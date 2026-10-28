@@ -171,25 +171,25 @@ export function getEffectivePremiumUntil(
 	return new Date(effectiveMs);
 }
 
+export function getPaidPremiumAccessEndsAt(
+	user: Pick<PremiumCheckable, 'premiumUntil' | 'premiumGiftExtensionEndsAt' | 'premiumGraceEndsAt'>,
+): Date | null {
+	const effective = getEffectivePremiumUntil(user);
+	if (effective == null) {
+		return null;
+	}
+	const graceEndsMs = user.premiumGraceEndsAt?.getTime() ?? effective.getTime() + PREMIUM_GRACE_PERIOD_MS;
+	return new Date(Math.max(effective.getTime(), graceEndsMs));
+}
+
 export function checkHasActivePaidPremium(
 	user: Pick<PremiumCheckable, 'premiumType' | 'premiumUntil' | 'premiumGiftExtensionEndsAt' | 'premiumGraceEndsAt'>,
 ): boolean {
 	if (user.premiumType == null || user.premiumType <= 0) {
 		return false;
 	}
-	const effective = getEffectivePremiumUntil(user);
-	if (effective == null) {
-		return true;
-	}
-	const nowMs = Date.now();
-	const untilMs = effective.getTime();
-	if (nowMs <= untilMs) {
-		return true;
-	}
-	if (user.premiumGraceEndsAt != null) {
-		return nowMs <= user.premiumGraceEndsAt.getTime();
-	}
-	return nowMs <= untilMs + PREMIUM_GRACE_PERIOD_MS;
+	const endsAt = getPaidPremiumAccessEndsAt(user);
+	return endsAt == null || Date.now() <= endsAt.getTime();
 }
 
 export function checkIsPremium(user: PremiumCheckable): boolean {

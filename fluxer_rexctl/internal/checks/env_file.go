@@ -11,6 +11,7 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
@@ -81,30 +82,33 @@ func runStackEdits(ctx context.Context, e *Env) Result {
 	if err == nil && len(r.Changed) == 0 && len(e.keptEdits) > 0 {
 		return keptEditsResult(e.keptEdits)
 	}
+	if err == nil && len(r.Changed) == 0 {
+		if copies := instance.UnseenEdits(e.Instance); len(copies) > 0 {
+			res := warn("rexctl put back its own version of files you changed. Your copies are in "+filepath.Dir(copies[0])+".", "Put Compose changes in "+instance.CustomCompose+" with rexctl config edit, and Caddy directives in "+instance.CaddyDropInDir+".")
+			res.Details = copies
+			return res
+		}
+	}
 	if err != nil || len(r.Changed) == 0 {
 		return skip("")
 	}
-	var de *instance.DriftError
-	if !errors.As(r.Err(), &de) {
-		return skip("")
+	msg := fmt.Sprintf("%s was changed by hand. rexctl writes this file and puts its own version back on the next change.", r.Changed[0])
+	if len(r.Changed) > 1 {
+		msg = fmt.Sprintf("%s were changed by hand. rexctl writes these files and puts its own versions back on the next change.", ui.JoinAnd(r.Changed))
 	}
-	res := fixable(fail(de.Msg, "Run rexctl doctor --fix to put rexctl's version back and keep yours next to it, or rexctl eject to manage the files yourself."))
+	res := fixable(warn(msg, "Run rexctl doctor --fix to put rexctl's version back now and keep a copy of yours. Put Compose changes in "+instance.CustomCompose+" with rexctl config edit, and Caddy directives in "+instance.CaddyDropInDir+"."))
 	res.Details = r.Changed
 	return res
 }
 
 func fixStackEdits(ctx context.Context, e *Env) error {
-	r, err := e.drift()
+	edits, err := instance.KeepEdits(e.Instance)
 	if err != nil {
 		return err
 	}
-	for _, name := range r.Changed {
-		kept, err := instance.KeepEdited(e.Instance, name)
-		if err != nil {
-			return err
-		}
-		e.keptEdits = append(e.keptEdits, [2]string{name, kept})
-		if err := os.Remove(filepath.Join(e.Instance.Dir, filepath.FromSlash(name))); err != nil && !errors.Is(err, os.ErrNotExist) {
+	for _, ed := range edits {
+		e.keptEdits = append(e.keptEdits, [2]string{ed.Name, ed.Copy})
+		if err := os.Remove(e.Instance.Generated(ed.Name)); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}
@@ -124,7 +128,7 @@ func keptEditsResult(kept [][2]string) Result {
 	if len(kept) == 1 {
 		return pass(fmt.Sprintf("Put rexctl's %s back. Your edited copy is in %s.", kept[0][0], kept[0][1]))
 	}
-	r := pass("Put rexctl's versions of your edited files back. Your copies are next to them.")
+	r := pass("Put rexctl's versions of your edited files back. Your copies are in " + filepath.Dir(kept[0][1]) + ".")
 	for _, k := range kept {
 		r.Details = append(r.Details, k[0]+" is in "+k[1])
 	}

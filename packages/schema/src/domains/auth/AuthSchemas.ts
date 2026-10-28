@@ -177,6 +177,9 @@ export const SudoVerificationSchema = z.object({
 export const SsoStatusResponse = z.object({
 	enabled: z.boolean().describe('Whether SSO is enabled for this instance'),
 	enforced: z.boolean().describe('Whether SSO is required for all users'),
+	username_from_provider: z
+		.boolean()
+		.describe('Whether each SSO sign-in sets the username from the provider, so SSO accounts cannot change it'),
 	display_name: z.string().nullable().describe('Display name of the SSO provider'),
 	button_label: z
 		.string()

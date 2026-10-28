@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
+	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
@@ -44,7 +46,7 @@ func Drift(inst *Instance) (*DriftReport, error) {
 		return r, nil
 	}
 	for _, name := range slices.Sorted(maps.Keys(inst.State.Rendered)) {
-		data, err := os.ReadFile(inst.Path(name))
+		data, err := os.ReadFile(inst.Generated(name))
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
 			r.Missing = append(r.Missing, name)
@@ -91,29 +93,18 @@ func envDrift(inst *Instance) (*EnvDrift, error) {
 }
 
 func (r *DriftReport) Err() error {
-	if r == nil {
+	if r == nil || r.Env == nil || r.Env.Same {
 		return nil
 	}
-	if len(r.Changed) > 0 {
-		name := r.Changed[0]
-		msg := fmt.Sprintf("%s was changed by hand. rexctl writes this file and would undo your change.", name)
-		if len(r.Changed) > 1 {
-			msg = fmt.Sprintf("%s were changed by hand. rexctl writes these files and would undo your changes.", ui.JoinAnd(r.Changed))
-		}
-		return &DriftError{Msg: msg, Fix: "Run rexctl doctor --fix to put rexctl's version back, or rexctl eject to manage the files yourself."}
+	lines := make([]string, 0, len(r.Env.Changes))
+	for _, c := range r.Env.Changes {
+		lines = append(lines, c.Command())
 	}
-	if r.Env != nil && !r.Env.Same {
-		lines := make([]string, 0, len(r.Env.Changes))
-		for _, c := range r.Env.Changes {
-			lines = append(lines, c.Command())
-		}
-		return &DriftError{
-			Msg:   "Your instance has a .env file, and rexctl doesn't read it.",
-			Fix:   r.Env.Fix(),
-			Lines: lines,
-		}
+	return &DriftError{
+		Msg:   "Your instance has a .env file, and rexctl doesn't read it.",
+		Fix:   r.Env.Fix(),
+		Lines: lines,
 	}
-	return nil
 }
 
 func (r *EnvDrift) Fix() string {
@@ -199,4 +190,142 @@ func copyPrivate(src, dst string) error {
 		return err
 	}
 	return envfile.WriteFileAtomic(dst, data, true)
+}
+
+const (
+	EditedDir    = "edited"
+	diffLines    = 12
+	editedFormat = "20060102-150405"
+)
+
+type Edit struct {
+	Name string
+	Copy string
+	Diff []string
+}
+
+func KeepEdits(inst *Instance) ([]Edit, error) {
+	r, err := Drift(inst)
+	if err != nil || len(r.Changed) == 0 {
+		return nil, err
+	}
+	set, err := inst.Set()
+	if err != nil {
+		return nil, err
+	}
+	want, err := stack.Files(set, inst.Overlays(), inst.State.Images.Refs, inst.Project())
+	if err != nil {
+		return nil, err
+	}
+	var out []Edit
+	for _, name := range r.Changed {
+		data, err := os.ReadFile(inst.Generated(name))
+		if err != nil {
+			return nil, err
+		}
+		kept, err := keepEdit(inst, name, data)
+		if err != nil {
+			return nil, err
+		}
+		w := want[name]
+		if inst.OldLayout() {
+			w = stack.Plain(name, w)
+		}
+		out = append(out, Edit{Name: name, Copy: kept, Diff: ShortDiff(w, data)})
+	}
+	return out, nil
+}
+
+func keepEdit(inst *Instance, name string, data []byte) (string, error) {
+	dir := inst.Path(StateDirName, EditedDir)
+	if entries, err := os.ReadDir(dir); err == nil {
+		for _, e := range entries {
+			if !strings.HasPrefix(e.Name(), name+".") {
+				continue
+			}
+			if old, err := os.ReadFile(filepath.Join(dir, e.Name())); err == nil && bytes.Equal(old, data) {
+				return filepath.Join(dir, e.Name()), nil
+			}
+		}
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, name+"."+time.Now().UTC().Format(editedFormat))
+	return path, envfile.WriteFileAtomic(path, data, false)
+}
+
+func ShortDiff(from, to []byte) []string {
+	a, b := splitLines(from), splitLines(to)
+	lcs := make([][]int, len(a)+1)
+	for i := range lcs {
+		lcs[i] = make([]int, len(b)+1)
+	}
+	for i := len(a) - 1; i >= 0; i-- {
+		for j := len(b) - 1; j >= 0; j-- {
+			if a[i] == b[j] {
+				lcs[i][j] = lcs[i+1][j+1] + 1
+			} else {
+				lcs[i][j] = max(lcs[i+1][j], lcs[i][j+1])
+			}
+		}
+	}
+	var out []string
+	i, j := 0, 0
+	for i < len(a) || j < len(b) {
+		switch {
+		case i < len(a) && j < len(b) && a[i] == b[j]:
+			i, j = i+1, j+1
+		case i < len(a) && (j == len(b) || lcs[i+1][j] >= lcs[i][j+1]):
+			out = append(out, "- "+a[i])
+			i++
+		default:
+			out = append(out, "+ "+b[j])
+			j++
+		}
+	}
+	if len(out) > diffLines {
+		out = append(out[:diffLines], fmt.Sprintf("and %d more changed lines", len(out)-diffLines))
+	}
+	return out
+}
+
+func splitLines(data []byte) []string {
+	text := strings.TrimSuffix(string(data), "\n")
+	if text == "" {
+		return nil
+	}
+	return strings.Split(text, "\n")
+}
+
+const seenMarker = ".seen"
+
+func UnseenEdits(inst *Instance) []string {
+	dir := inst.Path(StateDirName, EditedDir)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var seen time.Time
+	if info, err := os.Stat(filepath.Join(dir, seenMarker)); err == nil {
+		seen = info.ModTime()
+	}
+	var out []string
+	for _, e := range entries {
+		if e.Name() == seenMarker || e.IsDir() {
+			continue
+		}
+		if info, err := e.Info(); err == nil && info.ModTime().After(seen) {
+			out = append(out, filepath.Join(dir, e.Name()))
+		}
+	}
+	return out
+}
+
+func SeenEdits(inst *Instance) {
+	path := inst.Path(StateDirName, EditedDir, seenMarker)
+	now := time.Now()
+	if os.Chtimes(path, now, now) != nil {
+		_ = os.WriteFile(path, nil, 0o600)
+	}
 }

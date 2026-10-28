@@ -31,6 +31,10 @@ class VoiceCallLayout {
 	}
 
 	setLayoutMode(mode: LayoutMode): void {
+		if (mode === 'grid') {
+			this.setPinnedParticipant(null);
+			return;
+		}
 		this.layoutMode = mode;
 	}
 

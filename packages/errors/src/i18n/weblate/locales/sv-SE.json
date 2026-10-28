@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO-identiteten i id_token stämmer inte överens med den i userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO är felkonfigurerat. Kontakta din administratör.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Din SSO-leverantör returnerade ingen e-postadress.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Den här instansen kräver enkel inloggning (SSO), så din SSO-leverantör hanterar din e-postadress och ditt lösenord.} no_account {Den här instansen låter bara befintliga konton logga in med SSO, och det finns inget konto för dig än. Be en administratör för den här instansen om åtkomst.} other {Den här instansen kräver enkel inloggning (SSO). Logga in med SSO-knappen på inloggningssidan.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Den här instansen kräver enkel inloggning (SSO), så din SSO-leverantör hanterar din e-postadress och ditt lösenord.} no_account {Den här instansen låter bara befintliga konton logga in med SSO, och det finns inget konto för dig än. Be en administratör för den här instansen om åtkomst.} managed_username {Den här instansen kräver enkel inloggning (SSO), så ditt användarnamn kommer från din SSO-leverantör.} other {Den här instansen kräver enkel inloggning (SSO). Logga in med SSO-knappen på inloggningssidan.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "E-postinformationen saknas i SSO-testkoden.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Vi kunde inte tilldela en diskriminator för ditt SSO-konto. Försök igen.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-läge krävs.",

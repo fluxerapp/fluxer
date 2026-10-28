@@ -1169,6 +1169,10 @@
 	z-index: 1;
 }
 
+.rootFocused:has(.focusLayoutContentFullscreenMembersVisible) .mainContent {
+	grid-row: 2 / -1;
+}
+
 .rootFocused .voiceHeader {
 	grid-area: header;
 	grid-column: 1 / -1;

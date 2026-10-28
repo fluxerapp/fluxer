@@ -20,6 +20,7 @@ import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestB
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {
 	assertCredentialsNotSsoManaged,
+	assertUsernameNotSsoManaged,
 	SsoManagedCredentialsMiddleware,
 } from '@app/api/middleware/SsoManagedCredentialsMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
@@ -155,6 +156,7 @@ export function UserAccountController(app: HonoApp) {
 			if (rawBody.new_password !== undefined || rawBody.email_token !== undefined) {
 				await assertCredentialsNotSsoManaged(ctx.get('ssoService'), user);
 			}
+			await assertUsernameNotSsoManaged(ctx.get('ssoService'), user, rawBody);
 			return ctx.json(
 				await userAccountRequestService.updateCurrentUser({
 					ctx,

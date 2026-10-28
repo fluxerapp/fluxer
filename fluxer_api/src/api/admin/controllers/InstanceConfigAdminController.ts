@@ -36,10 +36,13 @@ import {
 	getAssetDeletionQueue,
 	getGuildRepository,
 	getInstanceConfigRepository,
+	getKVAccountDeletionQueue,
 	getNatsConfigPublisher,
 } from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {scheduleSystemDeletion} from '@app/api/user/AccountCleanup';
 import {noticeEmailAddress} from '@app/api/user/services/SystemDmMessage';
 import {Validator} from '@app/api/Validator';
 import {startSingleCommunityJoin} from '@app/api/worker/tasks/JoinSingleCommunityMembers';
@@ -53,6 +56,7 @@ import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstan
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {CaptchaProviders} from '@fluxer/constants/src/CaptchaConstants';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {resolveSmtpTlsMode, type SmtpTlsMode, smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -251,6 +255,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			scope: ssoConfig.scope,
 			allowed_domains: ssoConfig.allowedEmailDomains,
 			auto_provision: ssoConfig.autoProvision,
+			username_from_provider: ssoConfig.usernameFromProvider,
 			redirect_uri: deriveSsoRedirectUri(Config.endpoints.webApp),
 			groups_claim: ssoConfig.groupsClaim,
 			group_role_mappings: ssoConfig.groupRoleMappings.map(({group, roleId}) => ({group, role_id: roleId})),
@@ -486,6 +491,12 @@ async function assertConsistentInstanceConfig(
 			ValidationErrorCodes.IDENTIFIER_FIRST_REQUIRES_EMAIL_IDENTITY,
 		);
 	}
+	if (!usernameMode && data.sso?.username_from_provider === true) {
+		throw InputValidationError.create(
+			'sso.username_from_provider',
+			'Usernames can only come from your sign-in provider when people sign in with a username',
+		);
+	}
 	const deliveryField = emailDeliveryPatchField(integrationsPatch?.email);
 	if (usernameMode && deliveryField !== null) {
 		throw InputValidationError.fromCode(deliveryField, ValidationErrorCodes.EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY);
@@ -704,6 +715,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 				scope: supplied('scope', next.scope),
 				allowedEmailDomains: supplied('allowed_domains', validated.allowedEmailDomains),
 				autoProvision: supplied('auto_provision', next.autoProvision),
+				usernameFromProvider: readOptionalField(sso, 'username_from_provider'),
 				groupsClaim: readOptionalField(sso, 'groups_claim'),
 				groupRoleMappings: await validateSsoGroupRoleMappings(readOptionalField(sso, 'group_role_mappings')),
 			});
@@ -823,6 +835,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 					automatic_tax: readOptionalField(billing, 'automatic_tax'),
 					tax_id_collection: readOptionalField(billing, 'tax_id_collection'),
 					terms_consent_required: readOptionalField(billing, 'terms_consent_required'),
+					billing_emails: readOptionalField(billing, 'billing_emails'),
 				}),
 			);
 		},
@@ -1160,7 +1173,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			operationId: 'update_admin_pending_registration',
 			summary: 'Approve or reject a pending registration',
 			description:
-				'Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.',
+				'Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community. Rejecting stops the account from signing in and queues it for deletion right away without sending a notice, unless a deletion is already scheduled. Once the account is deleted, its email address can register again. Requires REGISTRATION_REVIEW permission.',
 			responseSchema: PendingRegistrationListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -1334,7 +1347,9 @@ async function updatePendingRegistrationUser(
 	} else {
 		traits.delete(REGISTRATION_REJECTED_TRAIT);
 	}
-	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
+	const updated = await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
+	const pendingDeletionAt =
+		decision === 'reject' && !user.pendingDeletionAt ? await deleteRejectedRegistration(ctx, updated) : null;
 	if (decision === 'approve' && wasPendingApproval) {
 		await maybeAutoJoinInvite(ctx.get('inviteService'), {
 			userId: user.id,
@@ -1351,5 +1366,21 @@ async function updatePendingRegistrationUser(
 		targetType: 'user',
 		targetId: user.id,
 		action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
+		metadata: {pending_deletion_at: pendingDeletionAt},
 	});
+}
+
+async function deleteRejectedRegistration(ctx: Context<HonoEnv>, user: User): Promise<string> {
+	const scheduled = await scheduleSystemDeletion(
+		{users: ctx.get('userRepository'), gateway: ctx.get('gatewayService'), deletionQueue: getKVAccountDeletionQueue()},
+		user,
+		{reasonCode: DeletionReasons.OTHER, delayMs: 0, cancelledBySignIn: false, endSessions: true},
+	);
+	const pendingDeletionAt = scheduled.pendingDeletionAt!.toISOString();
+	await ctx.get('workerService').addJob('userProcessPendingDeletion', {
+		userId: user.id.toString(),
+		deletionReasonCode: DeletionReasons.OTHER,
+		pendingDeletionAt,
+	});
+	return pendingDeletionAt;
 }

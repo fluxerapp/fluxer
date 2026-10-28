@@ -82,6 +82,7 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 			automatic_tax: null,
 			tax_id_collection: null,
 			terms_consent_required: null,
+			billing_emails: null,
 			default_currency: 'CHF',
 			prices: {GBP: GBP_PRICES},
 			country_currencies: {LI: 'CHF'},
@@ -123,6 +124,7 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 			automatic_tax: false,
 			tax_id_collection: false,
 			terms_consent_required: false,
+			billing_emails: false,
 		});
 		const effective = getEffectiveBillingConfig();
 		expect(effective.catalogMode).toBe('env');
@@ -133,5 +135,6 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 		expect(admin.effective_automatic_tax).toBe(true);
 		expect(admin.effective_tax_id_collection).toBe(true);
 		expect(admin.effective_terms_consent_required).toBe(true);
+		expect(admin.effective_billing_emails).toBe(true);
 	});
 });

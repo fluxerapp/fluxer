@@ -94,6 +94,7 @@ export class DonationCheckoutService {
 			const donationMetadata = {
 				is_donation: 'true',
 				donation_email: params.email,
+				...(locale ? {donation_locale: locale} : {}),
 			};
 			const reusableCustomerId = isRecurring ? (existingDonor?.stripeCustomerId ?? null) : null;
 			const sessionParams: CheckoutSessionCreateParams = {
@@ -105,7 +106,6 @@ export class DonationCheckoutService {
 					...donationMetadata,
 					donation_type: isRecurring ? 'recurring' : 'one_time',
 					is_business: isBusiness ? 'true' : 'false',
-					...(locale ? {donation_locale: locale} : {}),
 				},
 				success_url: `${Config.endpoints.marketing}/donate/success`,
 				cancel_url: `${Config.endpoints.marketing}/donate?type=${isBusiness ? 'business' : 'individual'}&currency=${params.currency}`,
@@ -121,7 +121,7 @@ export class DonationCheckoutService {
 			if (mode === 'payment') {
 				sessionParams.customer_creation = 'always';
 				if (isBusiness) {
-					sessionParams.invoice_creation = {enabled: true};
+					sessionParams.invoice_creation = {enabled: true, invoice_data: {metadata: donationMetadata}};
 				}
 				sessionParams.payment_intent_data = {metadata: donationMetadata};
 			} else {

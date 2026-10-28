@@ -38,6 +38,13 @@ function usernameTakenError(): InputValidationError {
 	return InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_ALREADY_TAKEN);
 }
 
+export function isUsernameTakenError(error: unknown): boolean {
+	return (
+		error instanceof InputValidationError &&
+		(error.getLocalizedErrors()?.some(({code}) => code === ValidationErrorCodes.USERNAME_ALREADY_TAKEN) ?? false)
+	);
+}
+
 export function assertNoDiscriminatorChange(requested: number | undefined, current: number): void {
 	if (requested === undefined || requested === current || requested === USERNAME_MODE_DISCRIMINATOR) return;
 	throw InputValidationError.fromCode('discriminator', ValidationErrorCodes.DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE);

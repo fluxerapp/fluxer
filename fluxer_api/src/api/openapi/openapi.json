@@ -32340,6 +32340,12 @@
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
 					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
 					"passes": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/OperatorPassUnitResponse"},
@@ -32575,7 +32581,7 @@
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "How many passes the account holds now, shown to the holder in every case"
+						"description": "Public count of valid held passes and purchases passed on, shown to the holder even when hidden publicly"
 					}
 				},
 				"required": [
@@ -36206,6 +36212,10 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+					"username_from_provider": {
+						"type": "boolean",
+						"description": "Whether each SSO sign-in sets the username from the provider, so SSO accounts cannot change it"
+					},
 					"display_name": {"description": "Display name of the SSO provider", "type": ["string", "null"]},
 					"button_label": {
 						"description": "Text for the SSO sign-in button, or null when the client shows its default label",
@@ -36213,7 +36223,7 @@
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 				},
-				"required": ["enabled", "enforced", "display_name", "button_label", "redirect_uri"],
+				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
 				"additionalProperties": false
 			},
 			"SsoStartRequest": {
@@ -37667,6 +37677,10 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+					"username_from_provider": {
+						"type": "boolean",
+						"description": "Whether each SSO sign-in sets the username from the provider, so SSO accounts cannot change it"
+					},
 					"display_name": {"description": "Display name of the SSO provider", "type": ["string", "null"]},
 					"button_label": {
 						"description": "Text for the SSO sign-in button, or null when the client shows its default label",
@@ -37675,7 +37689,7 @@
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
 					"available": {"description": "Whether an SSO provider is configured for this instance", "type": "boolean"}
 				},
-				"required": ["enabled", "enforced", "display_name", "button_label", "redirect_uri"],
+				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
 				"additionalProperties": false,
 				"description": "Single sign-on configuration"
 			},
@@ -42300,6 +42314,12 @@
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
 					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
 					"wall_chosen": {
 						"type": "boolean",
 						"description": "Whether the account already chose to be listed or not listed on the Operators' wall. When false, checkout and accepting an offer ask for the choice"
@@ -45236,7 +45256,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
-					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
+					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
 					"This purchase could not be verified.",

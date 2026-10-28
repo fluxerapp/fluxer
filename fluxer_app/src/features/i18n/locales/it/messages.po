@@ -44110,6 +44110,11 @@ msgstr "Il CSS del tuo tema è troppo grande per essere condiviso. Riduci le dim
 msgid "Your themes"
 msgstr "I tuoi temi"
 
+#. Tooltip on the disabled Change username button when the sign-in provider sets usernames. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
+msgid "Your username comes from your sign-in provider."
+msgstr "Il tuo nome utente arriva dal tuo provider di accesso."
+
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Your vanity URL has been removed."

@@ -44111,6 +44111,11 @@ msgstr "Jūsų temos CSS per didelis, kad būtų galima bendrinti. Apkarpykite j
 msgid "Your themes"
 msgstr "Jūsų temos"
 
+#. Tooltip on the disabled Change username button when the sign-in provider sets usernames. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
+msgid "Your username comes from your sign-in provider."
+msgstr "Tavo naudotojo vardą nustato tavo prisijungimo teikėjas."
+
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Your vanity URL has been removed."

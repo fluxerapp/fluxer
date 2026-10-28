@@ -7,6 +7,7 @@ import {getActivePortalHost, PortalHostContext, setActivePortalHost} from '@app/
 import {Popouts} from '@app/features/ui/popover/PopoverPopouts';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import {Toasts} from '@app/features/ui/toast/Toasts';
+import {attachMiddleClickAutoscrollPasteGuard} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {createWindowFocusInteractionGuard} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import type React from 'react';
 import {useEffect} from 'react';
@@ -37,6 +38,7 @@ function useMirroredDocumentPortalHost({childWindow, container}: MirroredDocumen
 		};
 		if (childDocument.hasFocus()) activatePortalHost();
 		const stopObservingLayers = LayerManager.observeDocument(childDocument);
+		const detachPasteGuard = attachMiddleClickAutoscrollPasteGuard(childWindow);
 		childWindow.addEventListener('focus', handleFocus);
 		childWindow.addEventListener('blur', handleBlur);
 		childDocument.addEventListener('pointerdown', activatePortalHost, true);
@@ -49,6 +51,7 @@ function useMirroredDocumentPortalHost({childWindow, container}: MirroredDocumen
 			childDocument.removeEventListener('focusin', activatePortalHost, true);
 			childDocument.removeEventListener('keydown', activatePortalHost, true);
 			stopObservingLayers();
+			detachPasteGuard();
 			focusGuard.destroy();
 			if (getActivePortalHost() === container) {
 				setActivePortalHost(null);

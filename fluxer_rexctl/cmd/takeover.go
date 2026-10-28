@@ -125,6 +125,7 @@ func takeoverDir(ctx context.Context, app *App, dir string, opts takeoverOptions
 		return nil, nil, err
 	}
 	installTakeoverBootUnit(ctx, app, inst, e)
+	app.remember(inst.Dir)
 	if e != nil {
 		sendAdminImport(ctx, app, inst, e)
 	}

@@ -4959,7 +4959,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.",
+				"description": "Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community. Rejecting stops the account from signing in and queues it for deletion right away without sending a notice, unless a deletion is already scheduled. Once the account is deleted, its email address can register again. Requires REGISTRATION_REVIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -12718,6 +12718,12 @@
 						"minimum": 1,
 						"maximum": 2147483647
 					},
+					"notes": {
+						"description": "Free-form admin notes about this server, or null to clear them",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 2000
+					},
 					"vip_only": {"description": "Whether this server is restricted to VIP users", "type": "boolean"},
 					"required_guild_features": {
 						"description": "Guild features required to use this server",
@@ -12791,6 +12797,12 @@
 						"type": "integer",
 						"minimum": 1,
 						"maximum": 2147483647
+					},
+					"notes": {
+						"description": "Free-form admin notes about this server",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 2000
 					},
 					"vip_only": {
 						"default": false,
@@ -16093,6 +16105,10 @@
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 							"auto_provision": {"type": "boolean"},
+							"username_from_provider": {
+								"type": "boolean",
+								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+							},
 							"redirect_uri": {"nullable": true, "type": "string"},
 							"groups_claim": {
 								"nullable": true,
@@ -16138,6 +16154,7 @@
 							"scope",
 							"allowed_domains",
 							"auto_provision",
+							"username_from_provider",
 							"redirect_uri",
 							"groups_claim",
 							"group_role_mappings"
@@ -16906,6 +16923,10 @@
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 							"auto_provision": {"type": "boolean"},
+							"username_from_provider": {
+								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+								"type": "boolean"
+							},
 							"groups_claim": {
 								"nullable": true,
 								"type": "string",
@@ -22134,6 +22155,7 @@
 					"automatic_tax": {"nullable": true, "type": "boolean"},
 					"tax_id_collection": {"nullable": true, "type": "boolean"},
 					"terms_consent_required": {"nullable": true, "type": "boolean"},
+					"billing_emails": {"nullable": true, "type": "boolean"},
 					"default_currency": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]},
 					"prices": {
 						"nullable": true,
@@ -22560,9 +22582,11 @@
 					"automatic_tax": {"nullable": true, "type": "boolean"},
 					"tax_id_collection": {"nullable": true, "type": "boolean"},
 					"terms_consent_required": {"nullable": true, "type": "boolean"},
+					"billing_emails": {"nullable": true, "type": "boolean"},
 					"effective_automatic_tax": {"type": "boolean"},
 					"effective_tax_id_collection": {"type": "boolean"},
 					"effective_terms_consent_required": {"type": "boolean"},
+					"effective_billing_emails": {"type": "boolean"},
 					"default_currency": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]},
 					"prices": {
 						"nullable": true,
@@ -22590,9 +22614,11 @@
 					"automatic_tax",
 					"tax_id_collection",
 					"terms_consent_required",
+					"billing_emails",
 					"effective_automatic_tax",
 					"effective_tax_id_collection",
 					"effective_terms_consent_required",
+					"effective_billing_emails",
 					"default_currency",
 					"prices",
 					"country_currencies",
@@ -23899,10 +23925,17 @@
 					},
 					"pass_count": {
 						"nullable": true,
-						"description": "Passes held after a count change",
+						"description": "The displayed count after a change. Older events recorded held passes.",
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991
+					},
+					"first_pass_at": {
+						"description": "The earliest qualifying delivery for this count. Older events do not include this date.",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					}
 				},
 				"required": [
@@ -24209,6 +24242,12 @@
 						"maximum": 9007199254740991,
 						"description": "How many passes the account holds now"
 					},
+					"recognition_count": {
+						"description": "The public count of valid held passes and purchases passed on. It is zero without active benefits.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
 					"wall_chosen": {
 						"type": "boolean",
 						"description": "Whether the account already chose to be listed or not listed on the Operators' wall. When false, checkout and accepting an offer ask for the choice"
@@ -24331,7 +24370,7 @@
 					"Staff made a technical adjustment to how the name is shown",
 					"The name was published in a The Operators of list",
 					"Staff erased the name from a published list",
-					"The number of passes held changed, which moves the place on the wall, see pass_count"
+					"The displayed wall count changed, see pass_count"
 				],
 				"enum": [
 					"delivered",
@@ -24671,6 +24710,11 @@
 						"minimum": 1,
 						"maximum": 2147483647
 					},
+					"notes": {
+						"nullable": true,
+						"description": "Free-form admin notes about this server, or null when there are none",
+						"type": "string"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 					"required_guild_features": {
 						"maxItems": 100,
@@ -24709,6 +24753,7 @@
 					"longitude",
 					"is_active",
 					"soft_connection_limit",
+					"notes",
 					"vip_only",
 					"required_guild_features",
 					"allowed_guild_ids",
@@ -25352,7 +25397,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
-					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
+					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
 					"This purchase could not be verified.",

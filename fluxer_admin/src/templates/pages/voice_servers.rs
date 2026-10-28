@@ -195,6 +195,12 @@ fn server_card(
             (data_field_text("Soft connection limit", &soft_limit_str))
             (data_field_text("Live connections", &connections_str))
         }
+        @if let Some(notes) = server.notes.as_deref() {
+            div class="mb-4" {
+                p class="mb-1 font-medium text-neutral-500 text-xs uppercase tracking-wide" { "Notes" }
+                p class="whitespace-pre-wrap break-words text-neutral-900 text-sm" { (notes) }
+            }
+        }
         (voice_features_list(&server.required_guild_features))
         (voice_guild_ids_list(&server.allowed_guild_ids))
         div class="flex flex-wrap gap-2 mt-4" {

@@ -42,6 +42,7 @@ export interface VoiceServerRow {
 	longitude: number | null;
 	is_active: boolean | null;
 	soft_connection_limit: number | null;
+	notes: string | null;
 	vip_only: boolean | null;
 	required_guild_features: Set<string> | null;
 	allowed_guild_ids: Set<bigint> | null;
@@ -60,6 +61,7 @@ export const VOICE_SERVER_COLUMNS = [
 	'longitude',
 	'is_active',
 	'soft_connection_limit',
+	'notes',
 	'vip_only',
 	'required_guild_features',
 	'allowed_guild_ids',

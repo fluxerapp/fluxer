@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Идентификаторы SSO в id_token и userinfo не совпадают.",
 	"auth_and_oauth.sso_misconfigured": "SSO настроен некорректно. Обратись к администратору.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Твой провайдер SSO не вернул email.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Этот экземпляр требует входа через SSO, поэтому твоим email и паролем управляет твой провайдер SSO.} no_account {На этом экземпляре войти через SSO могут только существующие учётные записи, а у тебя её пока нет. Попроси доступ у администратора этого экземпляра.} other {Этот экземпляр требует входа через SSO. Войди с помощью кнопки SSO на странице входа.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Этот экземпляр требует входа через SSO, поэтому твоим email и паролем управляет твой провайдер SSO.} no_account {На этом экземпляре войти через SSO могут только существующие учётные записи, а у тебя её пока нет. Попроси доступ у администратора этого экземпляра.} managed_username {Этот экземпляр требует входа через SSO, поэтому твоё имя пользователя задаёт твой провайдер SSO.} other {Этот экземпляр требует входа через SSO. Войди с помощью кнопки SSO на странице входа.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "В тестовом коде SSO отсутствуют данные email.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Не удалось назначить дискриминатор для твоего аккаунта SSO. Попробуй ещё раз.",
 	"auth_and_oauth.sudo_mode_required": "Требуется режим sudo.",

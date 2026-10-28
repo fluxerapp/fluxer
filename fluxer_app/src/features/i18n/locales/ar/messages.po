@@ -44110,6 +44110,11 @@ msgstr "ملف CSS الخاص بالمظهر كبير جدًا بحيث لا ي�
 msgid "Your themes"
 msgstr "السمات الخاصة بك"
 
+#. Tooltip on the disabled Change username button when the sign-in provider sets usernames. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
+msgid "Your username comes from your sign-in provider."
+msgstr "يأتي اسم المستخدم الخاص بك من مزوّد تسجيل الدخول."
+
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Your vanity URL has been removed."

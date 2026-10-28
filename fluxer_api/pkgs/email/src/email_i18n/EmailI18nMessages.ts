@@ -22,6 +22,17 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because the deletion of your {product_name} account was requested.',
 	},
+	billing_credit_note: {
+		subject: 'You have {amountFormatted} in credit with {product_name}',
+		heading: 'Credit added to your account',
+		preheader: '{amountFormatted} in credit added to your account',
+		intro:
+			"{numbered, select, yes {We've added {amountFormatted} in credit to your account for invoice {invoiceNumber}.} other {We've added {amountFormatted} in credit to your account.}} {upcoming, select, yes {It will be taken off your next {product_name} invoice, such as a subscription renewal.} other {{reply, select, yes {You don't have an upcoming invoice that it can be used on. If you'd like it refunded, reply to this email.} other {You don't have an upcoming invoice that it can be used on. If you'd like it refunded, contact the admins of this instance.}}}}",
+		credit_note_link: 'View credit note',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because credit was added to your {product_name} account.',
+	},
 	bulk_message_deletion_completed: {
 		subject: 'We finished deleting your {product_name} messages',
 		intro:
@@ -30,6 +41,34 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because a message deletion was requested for your {product_name} account.',
 	},
+	donation_cancellation_confirmation: {
+		subject: "We've received your {product_name} donation cancellation",
+		heading: 'Cancellation received',
+		preheader: 'Your recurring donation ends on {endsAt, date, long}',
+		intro: 'We received your request to cancel your recurring donation to {product_name} on {receivedFormatted}.',
+		ends_line: 'Your recurring donation ends on {endsAt, date, long}.',
+		charge_line:
+			"{unpaid, select, yes {One invoice for {unpaidFormatted} is still unpaid. Canceling doesn't remove it, and we'll keep trying to collect it.} other {We won't charge you again.}}",
+		cta: 'Manage your donation',
+		reference_line: 'Reference: {reference}',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you canceled your recurring donation to {product_name}.',
+	},
+	donation_card_expiring: {
+		subject: 'Your card expires before your next {product_name} donation payment',
+		heading: 'Update your card',
+		preheader:
+			'{branded, select, yes {Your {brand} ending in {last4}} other {Your card ending in {last4}}} expires soon',
+		intro:
+			'{branded, select, yes {Your {brand} ending in {last4}} other {Your card ending in {last4}}} expires at the end of {expiryFormatted}. Your next payment of {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} is due on {chargeAt, date, long}.',
+		lead: 'Update your card before then so your donation keeps going.',
+		cta: 'Update your payment method',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason:
+			'You received this email because a card you use for your donation to {product_name} is about to expire.',
+	},
 	donation_confirmation: {
 		subject: 'Thank you for your {product_name} donation',
 		intro:
@@ -37,7 +76,11 @@ export const EMAIL_I18N_MESSAGES = {
 		amount_label: 'Amount',
 		currency_label: 'Currency',
 		amount_value: '{interval, select, month {{amount} a month} year {{amount} a year} other {{amount}}}',
-		lead: 'Stripe emails you a separate receipt with your invoice.',
+		date_label: 'Payment date',
+		date_value: '{paidAt, date, long}',
+		reference_label: 'Reference',
+		lead: '{interval, select, month {We email you a receipt for each payment.} year {We email you a receipt for each payment.} other {This email is your receipt.}}',
+		receipt_link: 'View the payment receipt',
 		cta: '{interval, select, month {Manage or cancel} year {Manage or cancel} other {Manage donations}}',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because you donated to {product_name} with this email address.',
@@ -50,6 +93,81 @@ export const EMAIL_I18N_MESSAGES = {
 		note: "If you didn't ask for this link, you can ignore this email.",
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because a donor portal link was requested for this email address.',
+	},
+	donation_payment_failed: {
+		subject:
+			"{reason, select, action_required {Confirm your {product_name} donation payment} other {Your {product_name} donation payment didn't go through}}",
+		heading:
+			"{reason, select, action_required {Your bank needs you to confirm a payment} other {Your donation payment didn't go through}}",
+		preheader:
+			"{reason, select, action_required {Confirm {amountFormatted} for your donation} other {We couldn't charge {amountFormatted} for your donation}}",
+		intro:
+			"{reason, select, action_required {Your bank wants you to confirm the next payment of your recurring donation to {product_name}.} other {We couldn't charge the next payment of your recurring donation to {product_name}.}}",
+		invoice_label: 'Invoice number',
+		date_label: 'Payment attempted',
+		date_value: '{attemptedAt, date, long}',
+		amount_label: 'Amount',
+		lead: '{reason, select, action_required {Open the invoice page and confirm the payment there.} other {You can pay the invoice now. To change your payment method or stop the donation, go to your donations.}}',
+		cta: '{reason, select, action_required {Confirm the payment} other {Pay the invoice}}',
+		manage_link: 'Manage your donations',
+		note: '{reply, select, yes {If you need help, reply to this email.} other {If you need help, contact the admins of this instance.}}',
+		signoff: 'The {product_name} team',
+		footer_reason:
+			'You received this email because a payment for your recurring donation to {product_name} needs your attention.',
+		reminder_subject: 'Reminder to confirm your donation payment',
+	},
+	donation_receipt: {
+		subject: 'Your {product_name} donation receipt',
+		heading: 'Receipt for your donation',
+		preheader: '{amountFormatted} donated to {product_name}',
+		intro:
+			'{interval, select, year {Thank you for your yearly donation. This email is your receipt.} other {Thank you for your monthly donation. This email is your receipt.}}',
+		invoice_label: 'Invoice number',
+		date_label: 'Payment date',
+		date_value: '{paidAt, date, long}',
+		period_label: 'Period',
+		period_value: '{periodStart, date, long} to\n{periodEnd, date, long}',
+		total_label: 'Total',
+		lead: '{pdf, select, yes {The invoice is attached to this email as a PDF.} other {You can download the invoice as a PDF on the invoice page.}}',
+		cta: 'View invoice',
+		link_expiry:
+			'{reply, select, yes {The invoice link works until {invoiceLinkUntil, date, long}. After that, reply to this email for a copy.} other {The invoice link works until {invoiceLinkUntil, date, long}. After that, ask the admins of this instance for a copy.}}',
+		manage_link: 'Manage your donations',
+		signoff: 'The {product_name} team',
+		footer_reason:
+			'{interval, select, year {You received this email because you donate to {product_name} every year.} other {You received this email because you donate to {product_name} every month.}}',
+	},
+	donation_refund_receipt: {
+		subject: 'Your {product_name} donation refund',
+		heading: 'Refund of {amountFormatted}',
+		preheader: '{amountFormatted} of your donation refunded',
+		intro:
+			'We refunded {amountFormatted} of your donation to the card or account you paid with. It usually takes 5 to 10 business days to show up, depending on your bank.',
+		reference_label: 'Reference',
+		date_label: 'Refund date',
+		date_value: '{refundedAt, date, long}',
+		refund_label: 'Refunded',
+		cta: 'View refund details',
+		note: '{reply, select, yes {Questions about this refund? Reply to this email.} other {If you have questions about this refund, contact the admins of this instance.}}',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because a donation to {product_name} was refunded.',
+	},
+	donation_renewal_notice: {
+		subject: 'Your yearly donation to {product_name} renews on {chargeAt, date, long}',
+		heading: 'Your donation renews soon',
+		preheader: 'Your yearly donation renews on {chargeAt, date, long}',
+		intro:
+			'Your yearly donation to {product_name} renews automatically on {chargeAt, date, long} unless you cancel before then.',
+		charge_line:
+			"{method, select, card {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your {brand} ending in {last4}.} plain_card {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your card ending in {last4}.} named {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} using {methodName}.} other {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your saved payment method.}}",
+		after_line:
+			'{differs, select, yes {After that, the price is {tax, select, yes {{regularFormatted}} other {{regularFormatted}, plus any tax that applies,}} every year.} other {After that, you pay {tax, select, yes {{regularFormatted}} other {{regularFormatted}, plus any tax that applies,}} every year until you cancel.}}',
+		box: 'To stop the renewal, cancel before {cancelByFormatted}.',
+		cta: 'Manage your donation',
+		keep_line: "If you cancel, we won't charge you again.",
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because your yearly donation to {product_name} renews automatically.',
 	},
 	dsa_report_resolved: {
 		subject: 'We made a decision on your {product_name} report',
@@ -155,6 +273,9 @@ export const EMAIL_I18N_MESSAGES = {
 		note: '{reply, select, yes {If you think this is a mistake, reply to this email and tell us what you know about the gift code.} other {If you think this is a mistake, contact the admins of this instance and tell them what you know about the gift code.}}',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because perks were removed from your {product_name} account.',
+		billing_resumed:
+			'Because the gift was removed, your {plan, select, yearly {yearly} other {monthly}} {premiumName} subscription is billed again from today. You\'ll get a separate receipt for the charge. You can cancel any time under "Manage subscription".',
+		manage_cta: 'Manage your subscription',
 	},
 	harvest_completed: {
 		subject: 'Your {product_name} data export is ready',
@@ -199,6 +320,26 @@ export const EMAIL_I18N_MESSAGES = {
 		signoff: 'The {product_name} team',
 		footer_reason:
 			'You received this email because someone asked to view the backup codes on your {product_name} account.',
+	},
+	operator_pass_invoice: {
+		subject: 'Your {product_name} Operator Pass invoice',
+		heading: 'Invoice for your Operator Pass',
+		preheader: '{amountFormatted} paid for the Operator Pass',
+		intro:
+			'Here is the invoice for your Operator Pass purchase. Your purchase confirmation has the details of what you bought.',
+		invoice_label: 'Invoice number',
+		date_label: 'Payment date',
+		date_value: '{paidAt, date, long}',
+		total_label: 'Total',
+		tax_included: 'Includes {taxFormatted} tax',
+		tax_added: '{taxFormatted} tax added to the price',
+		reverse_charge: 'No VAT was charged because reverse charge applies. The invoice has the details.',
+		lead: '{pdf, select, yes {The invoice is attached to this email as a PDF.} other {You can download the invoice as a PDF on the invoice page.}}',
+		cta: 'View invoice',
+		link_expiry:
+			'{reply, select, yes {The invoice link works until {invoiceLinkUntil, date, long}. After that, reply to this email for a copy.} other {The invoice link works until {invoiceLinkUntil, date, long}. After that, ask the admins of this instance for a copy.}}',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you bought an Operator Pass on {product_name}.',
 	},
 	operator_pass_offer_accepted: {
 		subject: '{recipientName} accepted your {product_name} Operator Pass',
@@ -279,6 +420,23 @@ export const EMAIL_I18N_MESSAGES = {
 			"{wallOptOut, select, yes {You chose not to be listed. You can add your name to the wall anytime in your <settings>settings</settings>.} other {You're listed as {wallName}. You can change it or leave the wall in your <settings>settings</settings>.}}",
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because you bought an Operator Pass on {product_name}.',
+	},
+	operator_pass_refund_receipt: {
+		subject: 'Your {product_name} Operator Pass refund',
+		heading: 'Refund of {amountFormatted}',
+		preheader: '{amountFormatted} refunded for your Operator Pass',
+		intro:
+			'We refunded {amountFormatted} for your Operator Pass purchase to the card or account you paid with. It usually takes 5 to 10 business days to show up, depending on your bank.',
+		order_number_label: 'Order number',
+		order_date_label: 'Order date',
+		order_date_value: '{orderDate, date, long}',
+		date_label: 'Refund date',
+		date_value: '{refundedAt, date, long}',
+		refund_label: 'Refunded',
+		lead: '{full, select, yes {The passes from this purchase have ended, and so have the badge, wall listing and bonus that came with them.} other {The passes this refund covers have ended. Any other passes from the purchase stay.}}',
+		note: '{reply, select, yes {Questions about this refund? Reply to this email.} other {If you have questions about this refund, contact the admins of this instance.}}',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because an Operator Pass payment on {product_name} was refunded.',
 	},
 	operator_pass_removal_notice: {
 		subject: 'We intend to remove your {product_name} Operator Pass',
@@ -454,6 +612,180 @@ export const EMAIL_I18N_MESSAGES = {
 			'{reply, select, yes {Reply to this email and tell us why.} other {{appeals_email, select, null {Contact the admins of this instance and tell them why.} other {Write to <mail>{appeals_email}</mail> and tell us why.}}}} A person who did not make this decision looks at it again, and if the dispute was justified, we take no action against your account.',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because of a payment dispute about your {product_name} account.',
+	},
+	plutonium_cancellation_confirmation: {
+		subject: "We've received your {product_name} {premiumName} cancellation",
+		heading: 'Cancellation received',
+		preheader: 'You keep {premiumName} until {endsAt, date, long}',
+		intro:
+			'We received your request to cancel your {plan, select, yearly {yearly} other {monthly}} {premiumName} subscription on {receivedFormatted}.',
+		ends_line: "You keep {premiumName} until {endsAt, date, long}. Your subscription then ends and won't renew.",
+		charge_line:
+			"{unpaid, select, yes {One invoice for {unpaidFormatted} is still unpaid. Canceling doesn't remove it, and we'll keep trying to collect it.} other {We won't charge you again.}}",
+		lead: 'Changed your mind? You can resume your subscription under "Manage subscription" before {endsAt, date, long}.',
+		cta: 'Manage your subscription',
+		reference_line: 'Reference: {reference}',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you canceled your {premiumName} subscription.',
+	},
+	plutonium_card_expiring: {
+		subject: 'Your card expires before your next {product_name} {premiumName} payment',
+		heading: 'Update your card',
+		preheader:
+			'{branded, select, yes {Your {brand} ending in {last4}} other {Your card ending in {last4}}} expires soon',
+		intro:
+			'{branded, select, yes {Your {brand} ending in {last4}} other {Your card ending in {last4}}} expires at the end of {expiryFormatted}. Your next payment of {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} is due on {chargeAt, date, long}.',
+		lead: 'Update your card before then so your subscription keeps working.',
+		cta: 'Update your payment method',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because a card you use for {premiumName} is about to expire.',
+	},
+	plutonium_ended_unpaid: {
+		subject: 'Your {product_name} {premiumName} subscription has ended',
+		heading: 'Your subscription has ended',
+		preheader: "We couldn't collect the payment for your {premiumName} subscription",
+		intro:
+			"{numbered, select, yes {Your {premiumName} subscription has ended because we couldn't collect the payment for invoice {invoiceNumber}.} other {Your {premiumName} subscription has ended because we couldn't collect the renewal payment.}}",
+		owed_line:
+			"{owed, select, none {You don't owe anything for this invoice.} stopped {We've stopped trying to collect this invoice.} open {The invoice for {amountFormatted} is still unpaid. You can pay it on the invoice page.} other {}}",
+		invoice_link: 'View the invoice',
+		lead: 'You can subscribe again any time.',
+		cta: 'Get {premiumName}',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because your {premiumName} subscription ended.',
+	},
+	plutonium_gift_applied: {
+		subject: 'Your gift has been added to your {product_name} {premiumName} subscription',
+		heading: 'Gift added',
+		preheader: "You won't be charged until {trialEnd, date, long}",
+		intro:
+			"Your gifted time has been added. You won't be charged for your {plan, select, yearly {yearly} other {monthly}} {premiumName} subscription until {trialEnd, date, long}.",
+		charge_line:
+			"{method, select, card {On {trialEnd, date, long} we'll charge {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} to your {brand} ending in {last4}, and your subscription renews every {plan, select, yearly {year} other {month}} until you cancel.} plain_card {On {trialEnd, date, long} we'll charge {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} to your card ending in {last4}, and your subscription renews every {plan, select, yearly {year} other {month}} until you cancel.} named {On {trialEnd, date, long} we'll charge {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} using {methodName}, and your subscription renews every {plan, select, yearly {year} other {month}} until you cancel.} other {On {trialEnd, date, long} we'll charge {tax, select, yes {{amountFormatted}} other {{amountFormatted}, plus any tax that applies,}} to your saved payment method, and your subscription renews every {plan, select, yearly {year} other {month}} until you cancel.}}",
+		lead: 'You can cancel any time before then under "Manage subscription".',
+		cta: 'Manage your subscription',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you redeemed a {premiumName} gift.',
+	},
+	plutonium_payment_failed: {
+		subject:
+			"{reason, select, action_required {Confirm your {product_name} {premiumName} payment} other {Your {product_name} {premiumName} payment didn't go through}}",
+		heading:
+			"{reason, select, action_required {Your bank needs you to confirm a payment} other {Your {premiumName} payment didn't go through}}",
+		preheader:
+			"{reason, select, action_required {Confirm {amountFormatted} for {premiumName}} other {We couldn't charge {amountFormatted} for {premiumName}}}",
+		intro:
+			"{reason, select, action_required {Your bank wants you to confirm the renewal payment for your {premiumName} subscription.} other {We couldn't charge the renewal payment for your {premiumName} subscription.}} {access, select, yes {You keep {premiumName} until {accessEndsAt, date, long}.} other {}}",
+		invoice_label: 'Invoice number',
+		date_label: 'Payment attempted',
+		date_value: '{attemptedAt, date, long}',
+		amount_label: 'Amount',
+		lead: '{reason, select, action_required {Open the invoice page and confirm the payment there.} other {{access, select, yes {To keep it after that, pay the invoice or update your payment method.} other {To get {premiumName} back, pay the invoice or update your payment method.}}}}',
+		cta: '{reason, select, action_required {Confirm the payment} other {Pay the invoice}}',
+		manage_link: 'Update your payment method under "Manage subscription"',
+		note: '{reply, select, yes {If you need help, reply to this email.} other {If you need help, contact the admins of this instance.}}',
+		signoff: 'The {product_name} team',
+		footer_reason:
+			'You received this email because a payment for your {premiumName} subscription on {product_name} needs your attention.',
+		reminder_subject: 'Reminder to confirm your payment for {premiumName}',
+		intro_change:
+			"{reason, select, action_required {Your bank wants you to confirm the payment for the change to your {premiumName} subscription.} other {We couldn't charge the payment for the change to your {premiumName} subscription.}} {access, select, yes {You keep {premiumName} until {accessEndsAt, date, long}.} other {}}",
+	},
+	plutonium_payment_receipt: {
+		subject:
+			'{gift, select, yes {Your {product_name} {premiumName} gift receipt} other {Your {product_name} {premiumName} receipt}}',
+		heading: '{gift, select, yes {Receipt for your {premiumName} gift} other {Receipt for {premiumName}}}',
+		preheader: '{amountFormatted} paid for {premiumName}',
+		intro:
+			'{gift, select, yes {Thank you for buying a {premiumName} gift. This email is your receipt.} other {Thank you for your payment. This email is your receipt.}}',
+		invoice_label: 'Invoice number',
+		date_label: 'Payment date',
+		date_value: '{paidAt, date, long}',
+		product_label: 'Product',
+		product_value:
+			'{plan, select, monthly {{premiumName}, monthly} yearly {{premiumName}, yearly} gift_1_month {{premiumName} gift, 1 month} gift_1_year {{premiumName} gift, 1 year} other {{premiumName}}}',
+		period_label: 'Period',
+		period_value: '{periodStart, date, long} to\n{periodEnd, date, long}',
+		total_label: 'Total',
+		tax_included: 'Includes {taxFormatted} tax',
+		tax_added: '{taxFormatted} tax added to the price',
+		reverse_charge: 'No VAT was charged because reverse charge applies. The invoice has the details.',
+		credit_label: 'Credit applied',
+		paid_label: 'Amount paid',
+		gift_note:
+			'Your gift link is in your settings under "Gifts". Copy it there and send it to the person you want to give {premiumName} to. Anyone with the link can redeem it.',
+		lead: '{pdf, select, yes {The invoice is attached to this email as a PDF.} other {On the invoice page you can see the tax details and download the invoice as a PDF.}}',
+		cta: 'View invoice',
+		link_expiry:
+			'{reply, select, yes {The invoice link works until {invoiceLinkUntil, date, long}. After that, reply to this email for a copy.} other {The invoice link works until {invoiceLinkUntil, date, long}. After that, ask the admins of this instance for a copy.}}',
+		plan_title: '{gift, select, yes {Your gift} other {Your subscription}}',
+		plan_body:
+			'{renewal, select, month {{premiumName} renews every month at {renewalFormatted}{renewalTax, select, included { including tax} added { plus tax} other {}} until you cancel. You can cancel at any time under "Manage subscription" on the {premiumName} page, and you keep {premiumName} until the end of the period you paid for.} year {{premiumName} renews every year at {renewalFormatted}{renewalTax, select, included { including tax} added { plus tax} other {}} until you cancel. You can cancel at any time under "Manage subscription" on the {premiumName} page, and you keep {premiumName} until the end of the period you paid for.} other {This gift is a one-time purchase. It doesn\'t renew, and nothing more is charged.}}',
+		consent_title: 'Starting right away',
+		consent_body:
+			'On {consentAt, date, long} you asked for {premiumName} to start right away. You also confirmed that you can still withdraw for a full refund until your withdrawal period ends.',
+		withdrawal_title: 'Right of withdrawal',
+		withdrawal_body:
+			"You can withdraw from this purchase until {withdrawalEndsAt, date, long} and get a full refund. To withdraw, reply to this email or write to <mail>{sellerEmail}</mail> and tell us that you withdraw. You can use the form below, but you don't have to.",
+		withdrawal_note:
+			"The refund button in the app works for 3 days after a payment. It's an extra on top of your right of withdrawal and doesn't replace it.",
+		form_title: 'Withdrawal form',
+		form_body:
+			'To Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nI withdraw from my contract for {premiumName}, bought on {paidAt, date, long}.\nInvoice number: {invoiceNumber}\nName:\nAddress:\nDate:\nSignature (only on paper):',
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		manage_link: 'Manage your subscription',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because you paid for {premiumName} on {product_name}.',
+	},
+	plutonium_refund_receipt: {
+		subject: 'Your {product_name} {premiumName} refund',
+		heading: 'Refund of {amountFormatted}',
+		preheader: '{amountFormatted} refunded for {premiumName}',
+		intro:
+			'{partial, select, yes {We refunded {amountFormatted}, part of your payment, to the card or account you paid with.} other {We refunded {amountFormatted} to the card or account you paid with.}} It usually takes 5 to 10 business days to show up, depending on your bank.',
+		invoice_label: 'Invoice number',
+		date_label: 'Refund date',
+		date_value: '{refundedAt, date, long}',
+		product_label: 'Product',
+		product_value:
+			'{plan, select, monthly {{premiumName}, monthly} yearly {{premiumName}, yearly} gift_1_month {{premiumName} gift, 1 month} gift_1_year {{premiumName} gift, 1 year} other {{premiumName}}}',
+		original_label: 'Original payment',
+		original_value: '{paidFormatted} on {paidAt, date, long}',
+		refund_label: 'Refunded',
+		cta: 'View refund details',
+		note: '{reply, select, yes {Questions about this refund? Reply to this email.} other {If you have questions about this refund, contact the admins of this instance.}}',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because a {premiumName} payment on {product_name} was refunded.',
+		ended_line:
+			"We received your refund request on {requestedFormatted}. The refund also canceled your {premiumName} subscription. It has ended and won't renew. Reference: {reference}.",
+	},
+	plutonium_renewal_notice: {
+		subject:
+			'{gift, select, yes {Your gifted {product_name} {premiumName} time ends on {giftEndsAt, date, long}} other {{annual, select, yes {Your yearly reminder about your {product_name} {premiumName} subscription} other {Your {product_name} {premiumName} subscription renews on {chargeAt, date, long}}}}}',
+		heading:
+			'{gift, select, yes {Your gifted time ends soon} other {{annual, select, yes {Your yearly renewal reminder} other {Your subscription renews soon}}}}',
+		preheader: 'Your {premiumName} subscription renews on {chargeAt, date, long}',
+		annual_line:
+			'This is your yearly reminder that your monthly {premiumName} subscription renews automatically every month until you cancel.',
+		gift_line:
+			'Your gifted time ends on {giftEndsAt, date, long}. After that, your {plan, select, yearly {yearly} other {monthly}} {premiumName} subscription renews automatically unless you cancel before then.',
+		intro:
+			'Your {plan, select, yearly {yearly} other {monthly}} {premiumName} subscription renews automatically on {chargeAt, date, long} unless you cancel before then.',
+		charge_line:
+			"{method, select, card {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your {brand} ending in {last4}.} plain_card {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your card ending in {last4}.} named {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} using {methodName}.} other {On {chargeAt, date, long} we'll charge {tax, select, yes {{nextFormatted}} other {{nextFormatted}, plus any tax that applies,}} to your saved payment method.}}",
+		year_line: 'The charge on {yearStartsAt, date, long} starts your next year of {premiumName}.',
+		after_line:
+			'{differs, select, yes {After that, the price is {tax, select, yes {{regularFormatted}} other {{regularFormatted}, plus any tax that applies,}} every {plan, select, yearly {year} other {month}}.} other {After that, you pay {tax, select, yes {{regularFormatted}} other {{regularFormatted}, plus any tax that applies,}} every {plan, select, yearly {year} other {month}} until you cancel.}}',
+		box: 'To stop the renewal, cancel before {cancelByFormatted}.',
+		cta: 'Manage your subscription',
+		keep_line: "If you cancel, you keep {premiumName} until {chargeAt, date, long} and we won't charge you again.",
+		seller: 'Seller: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>',
+		signoff: 'The {product_name} team',
+		footer_reason: 'You received this email because your {premiumName} subscription renews automatically.',
 	},
 	reauth_code: {
 		subject: 'Your {product_name} confirmation code',

@@ -8,6 +8,7 @@ export const SsoRequiredReasons = {
 	SIGN_IN: 'sign_in',
 	MANAGED_CREDENTIALS: 'managed_credentials',
 	NO_ACCOUNT: 'no_account',
+	MANAGED_USERNAME: 'managed_username',
 } as const;
 
 export type SsoRequiredReason = ValueOf<typeof SsoRequiredReasons>;

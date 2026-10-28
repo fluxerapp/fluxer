@@ -1,5 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub const THEME_INIT_SCRIPT: &str = r#"
+(function () {
+	var root = document.documentElement;
+	var media = window.matchMedia('(prefers-color-scheme: dark)');
+	function stored() {
+		try {
+			var value = localStorage.getItem('fluxer-admin-theme');
+			return value === 'light' || value === 'dark' ? value : null;
+		} catch (e) {
+			return null;
+		}
+	}
+	function apply() { root.dataset.theme = stored() || (media.matches ? 'dark' : 'light'); }
+	apply();
+	media.addEventListener('change', apply);
+})();
+"#;
+
+pub const THEME_TOGGLE_SCRIPT: &str = r#"
+(function () {
+	if (window.__fluxerAdminThemeToggle) return;
+	window.__fluxerAdminThemeToggle = true;
+	document.addEventListener('click', function (event) {
+		var button = event.target.closest && event.target.closest('[data-theme-toggle]');
+		if (!button) return;
+		var root = document.documentElement;
+		var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		root.dataset.theme = next;
+		try { localStorage.setItem('fluxer-admin-theme', next); } catch (e) {}
+	});
+})();
+"#;
+
 pub const SIDEBAR_ACTIVE_SCROLL_SCRIPT: &str = r#"
 (function () {
 	var sidebar = document.querySelector('[data-sidebar]');

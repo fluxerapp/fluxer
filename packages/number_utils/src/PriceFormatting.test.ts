@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {formatMinorUnitPrice} from '@fluxer/number_utils/src/PriceFormatting';
+import {formatMinorUnitPrice, formatMinorUnitPriceWithFraction} from '@fluxer/number_utils/src/PriceFormatting';
 import {describe, expect, test} from 'vitest';
 
 describe('formatMinorUnitPrice', () => {
@@ -30,10 +30,19 @@ describe('formatMinorUnitPrice', () => {
 
 	test.each([
 		[999, 'ISK', 'de', '10 kr'],
-		[999, 'HUF', 'en-US', 'HUF 10'],
 		[999, 'UGX', 'en-US', 'UGX 10'],
 	] as const)('rounds Stripe whole-unit prices for %i %s', (amount, currency, locale, expected) => {
 		expect(formatMinorUnitPrice(amount, currency, locale)).toBe(expected);
+	});
+
+	test('shows fillér only when a forint amount has them', () => {
+		expect(formatMinorUnitPrice(42307, 'HUF', 'en-US')).toBe('HUF 423.07');
+		expect(formatMinorUnitPrice(100000, 'HUF', 'en-US')).toBe('HUF 1,000');
+	});
+
+	test('keeps the fraction on request so a total and its tax line up', () => {
+		expect(formatMinorUnitPriceWithFraction(4900, 'SEK', 'sv-SE')).toBe('49,00 kr');
+		expect(formatMinorUnitPriceWithFraction(59000, 'ISK', 'de')).toBe('590 kr');
 	});
 
 	test('shows the plain symbol for the currency of the reader country', () => {

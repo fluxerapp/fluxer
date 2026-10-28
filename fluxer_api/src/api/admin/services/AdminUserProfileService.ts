@@ -10,11 +10,9 @@ import type {EnforcementDecisionRow} from '@app/api/database/types/EnforcementTy
 import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
-import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import {getEmailDeliveryState} from '@app/api/instance/AccountsConfigCache';
-import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository, getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
@@ -23,8 +21,8 @@ import {
 	propagateUserUpdate,
 } from '@app/api/user/services/PartialUserChangePropagation';
 import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import {assertNoDiscriminatorChange, reserveUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
-import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
+import {assertNoDiscriminatorChange} from '@app/api/user/UniqueUsernames';
+import {renameUser} from '@app/api/user/UserRename';
 import {BELOW_MINIMUM_AGE_TRAIT, DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
 import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -33,7 +31,6 @@ import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {TagAlreadyTakenError} from '@fluxer/errors/src/domains/user/TagAlreadyTakenError';
 import type {
 	AdminUserClearFieldsRequest,
 	ChangeDobRequest,
@@ -76,11 +73,7 @@ function isPlausibleAdminDateOfBirth(value: string): boolean {
 }
 
 export class AdminUserProfileService {
-	private readonly searchIndexService: GuildMemberSearchIndexService;
-
-	constructor(private readonly deps: AdminUserProfileServiceDeps) {
-		this.searchIndexService = new GuildMemberSearchIndexService();
-	}
+	constructor(private readonly deps: AdminUserProfileServiceDeps) {}
 
 	async clearUserFields(userId: UserID, {fields, basis}: AdminUserClearFieldsRequest, actor: EnforcementActor) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
@@ -243,53 +236,19 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {
-			users: userRepository,
-			cache: cacheService,
-			contactChangeLog: contactChangeLogService,
-		} = this.deps.apiContext.services;
-		const {discriminatorService, auditService, userUpdateDeps} = this.deps;
+		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUniqueAssert(userId);
-		const uniqueUsernames = !user.isBot && (await getInstanceConfigRepository().usesUniqueUsernames());
-		if (uniqueUsernames) {
+		if (!user.isBot && (await getInstanceConfigRepository().usesUniqueUsernames())) {
 			assertNoDiscriminatorChange(data.discriminator, user.discriminator);
 		}
-		const reservation: UsernameReservation | null = uniqueUsernames
-			? await reserveUsername({users: userRepository, cache: cacheService}, data.username, userId)
-			: null;
-		let updatedUser: User;
-		let discriminatorResult: {discriminator: number; available: boolean};
-		try {
-			discriminatorResult = uniqueUsernames
-				? {discriminator: USERNAME_MODE_DISCRIMINATOR, available: true}
-				: await discriminatorService.generateDiscriminator({
-						username: data.username,
-						requestedDiscriminator: data.discriminator,
-						user,
-					});
-			if (!discriminatorResult.available || discriminatorResult.discriminator === -1) {
-				throw new TagAlreadyTakenError();
-			}
-			updatedUser = await userRepository.patchUpsert(
-				userId,
-				{
-					username: data.username,
-					discriminator: discriminatorResult.discriminator,
-				},
-				user.toRow(),
-			);
-		} finally {
-			await reservation?.release();
-		}
-		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
-		await contactChangeLogService.recordDiff({
-			oldUser: user,
-			newUser: updatedUser,
-			reason: 'admin_action',
-			actorUserId: adminUserId,
-		});
-		await auditService.createAuditLog({
+		const updatedUser = await renameUser(
+			this.deps,
+			user,
+			{username: data.username, discriminator: data.discriminator},
+			{reason: 'admin_action', actorUserId: adminUserId},
+		);
+		await this.deps.auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
@@ -298,10 +257,9 @@ export class AdminUserProfileService {
 			metadata: new Map([
 				['old_username', user.username],
 				['new_username', data.username],
-				['discriminator', discriminatorResult.discriminator.toString()],
+				['discriminator', updatedUser.discriminator.toString()],
 			]),
 		});
-		void this.reindexGuildMembersForUser(updatedUser);
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -352,20 +310,6 @@ export class AdminUserProfileService {
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
-	}
-
-	private async reindexGuildMembersForUser(updatedUser: User): Promise<void> {
-		try {
-			const {users: userRepository} = this.deps.apiContext.services;
-			const {guildRepository} = this.deps;
-			const guildIds = await userRepository.getUserGuildIds(updatedUser.id);
-			await this.searchIndexService.updateUserMembers(updatedUser, guildIds, guildRepository);
-		} catch (error) {
-			Logger.error(
-				{userId: updatedUser.id.toString(), error},
-				'Failed to reindex guild members after admin user update',
-			);
-		}
 	}
 
 	async changeDob(

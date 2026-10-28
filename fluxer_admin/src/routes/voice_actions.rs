@@ -93,6 +93,17 @@ pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
             body.insert("soft_connection_limit".into(), limit.into());
         }
     }
+    if let Some(raw) = form.first("notes") {
+        let trimmed = raw.trim();
+        body.insert(
+            "notes".into(),
+            if trimmed.is_empty() {
+                serde_json::Value::Null
+            } else {
+                trimmed.into()
+            },
+        );
+    }
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
     insert_submitted_list(&mut body, form, "required_guild_features");
     insert_submitted_list(&mut body, form, "allowed_guild_ids");

@@ -199,7 +199,7 @@ func renderRestored(inst *instance.Instance) (map[string]string, error) {
 	st := inst.State
 	if st.Release != stack.LegacyRelease {
 		if set, err := release.LoadSet(inst, st.Release); err == nil {
-			r, err := stack.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs, inst.Project(), inst.Dir)
+			r, err := inst.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs)
 			if err != nil {
 				return nil, err
 			}
@@ -208,7 +208,7 @@ func renderRestored(inst *instance.Instance) (map[string]string, error) {
 	}
 	out := map[string]string{}
 	for name := range st.Rendered {
-		data, err := os.ReadFile(filepath.Join(inst.Dir, filepath.FromSlash(name)))
+		data, err := os.ReadFile(inst.Generated(name))
 		if err != nil {
 			continue
 		}
@@ -263,7 +263,7 @@ func checkProjectFree(ctx context.Context, e *engine.Engine, project, dir string
 			continue
 		}
 		first, _, _ := strings.Cut(pr.ConfigFiles, ",")
-		other := filepath.Dir(strings.TrimSpace(first))
+		other := stack.ProjectDir(strings.TrimSpace(first))
 		if !samePath(other, dir) {
 			return &ProjectInUseError{Project: project, Dir: other}
 		}
@@ -293,6 +293,7 @@ func clearInstanceFiles(dir string) error {
 	for _, p := range []string{
 		filepath.Join(dir, instance.CertsDir),
 		filepath.Join(dir, instance.CaddyDropInDir),
+		stack.GeneratedPath(dir),
 		filepath.Join(dir, instance.StateDirName, instance.ReleasesDir),
 		filepath.Join(dir, instance.StateDirName, instance.StateFileName),
 	} {

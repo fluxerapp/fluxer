@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 )
 
 var (
@@ -42,12 +41,12 @@ func (e *OlderSchemaError) Error() string {
 
 func (e *OlderSchemaError) Is(target error) bool { return target == ErrOlderSchema }
 
-func CheckTarget(e *engine.Engine, to *Release) error {
+func CheckTarget(e *engine.Engine, to *Release, have int) error {
 	if to == nil {
 		return nil
 	}
-	if to.StateSchema > 0 && to.StateSchema < instance.StateSchema {
-		return &OlderSchemaError{Have: instance.StateSchema, Reads: to.StateSchema, Release: to.Version}
+	if to.StateSchema > 0 && to.StateSchema < have {
+		return &OlderSchemaError{Have: have, Reads: to.StateSchema, Release: to.Version}
 	}
 	if e == nil {
 		return nil

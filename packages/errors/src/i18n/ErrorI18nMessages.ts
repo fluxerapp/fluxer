@@ -198,7 +198,7 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.sso_misconfigured': 'SSO is misconfigured. Please contact your administrator.',
 	'auth_and_oauth.sso_provider_did_not_return_email': "Your SSO provider didn't return an email address.",
 	'auth_and_oauth.sso_required':
-		"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
+		"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 	'auth_and_oauth.sso_test_code_missing_email': 'SSO test code is missing the email payload.',
 	'auth_and_oauth.sso_unable_to_allocate_discriminator':
 		"We couldn't allocate a discriminator for your SSO account. Please try again.",

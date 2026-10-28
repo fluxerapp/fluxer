@@ -29,6 +29,7 @@ pub struct VoiceServer {
     pub longitude: Option<f64>,
     pub is_active: Option<bool>,
     pub soft_connection_limit: Option<i64>,
+    pub notes: Option<String>,
     pub vip_only: Option<bool>,
     #[serde(default)]
     pub required_guild_features: Vec<String>,

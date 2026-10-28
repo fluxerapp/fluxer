@@ -331,6 +331,8 @@ function readSso(value: unknown): InstanceSso | null {
 	const sso: InstanceSso = {
 		enabled: readBoolean(source, 'enabled', 'sso.enabled'),
 		enforced: readBoolean(source, 'enforced', 'sso.enforced'),
+		username_from_provider:
+			readOptionalBoolean(source, 'username_from_provider', 'sso.username_from_provider') ?? false,
 		display_name: readNullableNonEmptyString(source, 'display_name', 'sso.display_name'),
 		button_label: readOptionalText(source, 'button_label'),
 		redirect_uri: readEndpoint(source, 'redirect_uri', 'sso.redirect_uri', InstanceEndpointKind.SERVICE),

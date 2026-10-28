@@ -12,6 +12,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,8 +58,16 @@ func BootUnitSupported() bool {
 func (u BootUnit) Name() string { return u.Project + ".service" }
 
 func (u BootUnit) Path() (string, error) {
-	if !u.Rootless {
-		return filepath.Join("/etc/systemd/system", u.Name()), nil
+	dir, err := unitDir(u.Rootless)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, u.Name()), nil
+}
+
+func unitDir(rootless bool) (string, error) {
+	if !rootless {
+		return "/etc/systemd/system", nil
 	}
 	dir := os.Getenv("XDG_CONFIG_HOME")
 	if dir == "" {
@@ -67,7 +77,7 @@ func (u BootUnit) Path() (string, error) {
 		}
 		dir = filepath.Join(home, ".config")
 	}
-	return filepath.Join(dir, "systemd", "user", u.Name()), nil
+	return filepath.Join(dir, "systemd", "user"), nil
 }
 
 func (u BootUnit) execPath() string {
@@ -255,14 +265,23 @@ func RemoveBootUnit(ctx context.Context, u BootUnit) error {
 			return err
 		}
 	}
-	if u.Rootless {
-		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-			return err
-		}
-	} else if _, err := output(ctx, false, "rm", "-f", path); err != nil {
+	if err := removeHostFiles(ctx, u.Rootless, path); err != nil {
 		return err
 	}
 	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+}
+
+func removeHostFiles(ctx context.Context, user bool, paths ...string) error {
+	if !user {
+		_, err := output(ctx, false, "rm", append([]string{"-f"}, paths...)...)
+		return err
+	}
+	for _, p := range paths {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
 }
 
 func writeBootUnit(ctx context.Context, u BootUnit) error {
@@ -273,43 +292,178 @@ func writeBootUnit(ctx context.Context, u BootUnit) error {
 	if err != nil {
 		return err
 	}
-	if !u.Rootless && !sameFile(u.Binary, LibexecBinary) {
-		if _, err := output(ctx, false, "install", "-D", "-m", "0755", u.Binary, LibexecBinary); err != nil {
+	if !u.Rootless {
+		if err := installBinary(ctx, true, u.Binary, LibexecBinary); err != nil {
 			return err
 		}
-		if has("restorecon") {
-			_, _ = output(ctx, false, "restorecon", LibexecBinary)
-		}
 	}
-	data := []byte(u.content(ctx))
-	if old, err := os.ReadFile(path); err == nil && bytes.Equal(old, data) {
+	changed, err := writeHostFile(ctx, u.Rootless, path, []byte(u.content(ctx)))
+	if err != nil || !changed {
+		return err
+	}
+	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+}
+
+func installBinary(ctx context.Context, system bool, src, dst string) error {
+	if sameFile(src, dst) {
 		return nil
 	}
-	if u.Rootless {
-		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-			return err
+	if !system {
+		if out, err := exec.CommandContext(ctx, "install", "-D", "-m", "0755", src, dst).CombinedOutput(); err != nil {
+			return &CommandError{Command: "install " + dst, Output: string(out), Err: err}
 		}
-		if err := envfile.WriteFileAtomic(path, data, false); err != nil {
-			return err
+		return nil
+	}
+	if _, err := output(ctx, false, "install", installArgs(src, dst)...); err != nil {
+		return err
+	}
+	if has("restorecon") {
+		_, _ = output(ctx, false, "restorecon", dst)
+	}
+	return nil
+}
+
+func installArgs(src, dst string) []string {
+	args := []string{"-D", "-m", "0755"}
+	if uid, gid, ok := fileOwner(dst); ok {
+		args = append(args, "-o", strconv.Itoa(uid), "-g", strconv.Itoa(gid))
+	}
+	return append(args, src, dst)
+}
+
+var asRoot = isRoot
+
+func unitFiles(project string) (map[string]bool, error) {
+	boot, upgrade := BootUnit{Project: project}.Name(), AutoUpgrade{Project: project}.ServiceName()
+	units := map[string]bool{
+		filepath.Join("/etc/systemd/system", boot):    true,
+		filepath.Join("/etc/systemd/system", upgrade): true,
+		filepath.Join(cronDir, project+"-upgrade"):    true,
+	}
+	if asRoot() {
+		return units, nil
+	}
+	userDir, err := unitDir(true)
+	if err != nil {
+		return nil, err
+	}
+	units[filepath.Join(userDir, boot)] = false
+	units[filepath.Join(userDir, upgrade)] = false
+	return units, nil
+}
+
+func RefreshUnitBinaries(ctx context.Context, project, bin string) error {
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+	units, err := unitFiles(project)
+	if err != nil {
+		return err
+	}
+	for path, system := range units {
+		data, err := os.ReadFile(path)
+		if os.IsNotExist(err) {
+			continue
 		}
-	} else {
-		tmp, err := os.CreateTemp("", "rexctl-unit-")
 		if err != nil {
 			return err
 		}
-		defer os.Remove(tmp.Name())
-		_, werr := tmp.Write(data)
-		if cerr := tmp.Close(); werr == nil {
-			werr = cerr
-		}
-		if werr != nil {
-			return werr
-		}
-		if _, err := output(ctx, false, "install", "-D", "-m", "0644", tmp.Name(), path); err != nil {
-			return err
+		for _, b := range unitBinaries(data) {
+			if err := installBinary(ctx, system, bin, b); err != nil {
+				return err
+			}
 		}
 	}
-	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+	return nil
+}
+
+func unitBinaries(data []byte) []string {
+	var out []string
+	for _, line := range strings.Split(string(data), "\n") {
+		var bin string
+		if v, ok := strings.CutPrefix(line, "ExecStart="); ok {
+			bin = systemdWord(v)
+		} else {
+			bin = cronBinary(line)
+		}
+		if filepath.IsAbs(bin) && !slices.Contains(out, bin) {
+			out = append(out, bin)
+		}
+	}
+	return out
+}
+
+func systemdWord(v string) string {
+	var word string
+	if rest, ok := strings.CutPrefix(v, `"`); ok {
+		var b strings.Builder
+		for i := 0; i < len(rest) && rest[i] != '"'; i++ {
+			if rest[i] == '\\' && i+1 < len(rest) {
+				i++
+			}
+			b.WriteByte(rest[i])
+		}
+		word = b.String()
+	} else {
+		word, _, _ = strings.Cut(v, " ")
+	}
+	return strings.NewReplacer("%%", "%", "$$", "$").Replace(word)
+}
+
+func cronBinary(line string) string {
+	f := strings.Fields(line)
+	if len(f) < 7 || strings.Contains(f[0], "=") || strings.HasPrefix(f[0], "#") {
+		return ""
+	}
+	i := strings.Index(line, " '")
+	if i < 0 {
+		return ""
+	}
+	var b strings.Builder
+	rest := line[i+2:]
+	for {
+		end := strings.IndexByte(rest, '\'')
+		if end < 0 {
+			return ""
+		}
+		b.WriteString(rest[:end])
+		rest = rest[end+1:]
+		next, ok := strings.CutPrefix(rest, `\''`)
+		if !ok {
+			break
+		}
+		b.WriteByte('\'')
+		rest = next
+	}
+	return strings.ReplaceAll(b.String(), `\%`, "%")
+}
+
+func writeHostFile(ctx context.Context, user bool, path string, data []byte) (bool, error) {
+	if old, err := os.ReadFile(path); err == nil && bytes.Equal(old, data) {
+		return false, nil
+	}
+	if user {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return false, err
+		}
+		return true, envfile.WriteFileAtomic(path, data, false)
+	}
+	tmp, err := os.CreateTemp("", "rexctl-unit-")
+	if err != nil {
+		return false, err
+	}
+	defer os.Remove(tmp.Name())
+	_, werr := tmp.Write(data)
+	if cerr := tmp.Close(); werr == nil {
+		werr = cerr
+	}
+	if werr != nil {
+		return false, werr
+	}
+	if _, err := output(ctx, false, "install", "-D", "-m", "0644", tmp.Name(), path); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func systemctlRun(ctx context.Context, rootless bool, args ...string) error {

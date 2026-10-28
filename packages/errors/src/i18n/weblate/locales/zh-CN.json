@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_token 与 userinfo 之间的 SSO 身份不匹配。",
 	"auth_and_oauth.sso_misconfigured": "SSO 配置错误。请联系你的管理员。",
 	"auth_and_oauth.sso_provider_did_not_return_email": "你的 SSO 提供商未返回邮箱地址。",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {此实例要求使用单点登录，因此你的邮箱和密码由你的 SSO 提供商管理。} no_account {此实例只允许已有帐户通过 SSO 登录，而你还没有帐户。请向此实例的管理员申请访问权限。} other {此实例要求使用单点登录。请使用登录页面上的 SSO 按钮登录。}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {此实例要求使用单点登录，因此你的邮箱和密码由你的 SSO 提供商管理。} no_account {此实例只允许已有帐户通过 SSO 登录，而你还没有帐户。请向此实例的管理员申请访问权限。} managed_username {此实例要求使用单点登录，因此你的用户名来自你的 SSO 提供商。} other {此实例要求使用单点登录。请使用登录页面上的 SSO 按钮登录。}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO 测试码缺少邮箱负载。",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "无法为你的 SSO 账号分配识别码。请重试。",
 	"auth_and_oauth.sudo_mode_required": "需要 Sudo 模式。",

@@ -235,6 +235,12 @@
     "nullable": true
   },
   {
+    "key": "billing.billing_emails",
+    "type": "boolean",
+    "help": "Billing billing emails",
+    "nullable": true
+  },
+  {
     "key": "billing.country_currencies",
     "type": "json",
     "help": "Billing country currencies",
@@ -815,6 +821,11 @@
     "type": "string",
     "help": "SSO userinfo URL",
     "nullable": true
+  },
+  {
+    "key": "sso.username_from_provider",
+    "type": "boolean",
+    "help": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
   },
   {
     "key": "voice_p2p.enabled",

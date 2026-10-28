@@ -86,6 +86,7 @@ function operatorBilling(overrides: Partial<StoredBillingConfig> = {}): StoredBi
 		automatic_tax: null,
 		tax_id_collection: null,
 		terms_consent_required: null,
+		billing_emails: null,
 		default_currency: 'GBP',
 		prices: OPERATOR_PRICES,
 		country_currencies: {SE: 'SEK', CH: 'CHF'},

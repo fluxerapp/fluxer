@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "`id_token`- ja `userinfo`-tietojen SSO-identiteetit eivät täsmää.",
 	"auth_and_oauth.sso_misconfigured": "SSO on määritetty väärin. Ota yhteyttä ylläpitäjään.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "SSO-tarjoajasi ei palauttanut sähköpostiosoitetta.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Tämä instanssi vaatii kertakirjautumisen, joten SSO-tarjoajasi hallinnoi sähköpostiosoitettasi ja salasanaasi.} no_account {Tämä instanssi sallii SSO-kirjautumisen vain olemassa oleville tileille, eikä sinulla ole vielä tiliä. Pyydä pääsyä tämän instanssin ylläpitäjältä.} other {Tämä instanssi vaatii kertakirjautumisen. Kirjaudu sisään kirjautumissivun SSO-painikkeella.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Tämä instanssi vaatii kertakirjautumisen, joten SSO-tarjoajasi hallinnoi sähköpostiosoitettasi ja salasanaasi.} no_account {Tämä instanssi sallii SSO-kirjautumisen vain olemassa oleville tileille, eikä sinulla ole vielä tiliä. Pyydä pääsyä tämän instanssin ylläpitäjältä.} managed_username {Tämä instanssi vaatii kertakirjautumisen, joten käyttäjänimesi tulee SSO-tarjoajaltasi.} other {Tämä instanssi vaatii kertakirjautumisen. Kirjaudu sisään kirjautumissivun SSO-painikkeella.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO-testikoodista puuttuu sähköpostisisältö.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "SSO-tilillesi ei voitu varata nelinumeroista tunnistetta. Yritä uudelleen.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-tila vaaditaan.",

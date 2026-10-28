@@ -24,6 +24,12 @@ With "Automatically provision users on first SSO login" on, the first sign-in fr
 
 "Require SSO" turns off password and passkey sign-in and local registration for everyone. Before you turn it on, make sure at least one admin can sign in through your provider.
 
+On a username instance you can turn on "Usernames come from your sign-in provider" (`sso.username_from_provider` in rexctl). It's off by default and doesn't depend on Require SSO. While it's on, each SSO sign-in sets the person's username from the `preferred_username` claim, and people who sign in with SSO can't change it in Fluxer.
+
+Usernames can only use letters, numbers and underscores, up to 32 characters. Fluxer keeps the part before any `@`, turns accented letters into plain ones, turns dots, dashes and spaces into underscores, drops other characters, removes the word `fluxer` and keeps the first 32 characters. For example, `john.doe@corp.com` becomes `john_doe`. This means different people can end up with the same username. `alice@corp.com` and `alice@partner.com` both become `alice`, and whoever signs in first keeps it. If your provider sends an email address or UPN as `preferred_username`, such as Entra ID with more than one domain, map that claim to a value that is unique across your tenant.
+
+If the claim is missing, isn't usable or belongs to someone else, the person keeps their current username. A rename in the admin panel lasts until the person's next SSO sign-in. Turn off username editing at your provider, or anyone who can edit their own `preferred_username` can take any free name here.
+
 ## Lost passwords
 
 On a username instance, or an email instance that doesn't send email, you can create a reset link for someone who has lost their password. The "Create Password Reset Link" button on the account's page in the admin panel does the same.

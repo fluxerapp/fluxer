@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO-identiteten stemmer ikke overens mellem id_token og userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO er forkert konfigureret. Kontakt din administrator.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Din SSO-udbyder returnerede ikke en e-mailadresse.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Denne instans kræver single sign-on, så din SSO-udbyder styrer din e-mail og adgangskode.} no_account {Denne instans lader kun eksisterende konti logge ind med SSO, og der er endnu ingen konto til dig. Bed en administrator af denne instans om adgang.} other {Denne instans kræver single sign-on. Log ind med SSO-knappen på login-siden.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Denne instans kræver single sign-on, så din SSO-udbyder styrer din e-mail og adgangskode.} no_account {Denne instans lader kun eksisterende konti logge ind med SSO, og der er endnu ingen konto til dig. Bed en administrator af denne instans om adgang.} managed_username {Denne instans kræver single sign-on, så dit brugernavn kommer fra din SSO-udbyder.} other {Denne instans kræver single sign-on. Log ind med SSO-knappen på login-siden.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO-testkoden mangler e-mail-payloadet.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Vi kunne ikke tildele et tag til din SSO-konto. Prøv igen.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-tilstand er påkrævet.",

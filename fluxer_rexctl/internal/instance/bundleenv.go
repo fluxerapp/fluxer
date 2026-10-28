@@ -31,6 +31,7 @@ var envSections = []envSection{
 		"Leave these unset to use the bundled object store. To use your own S3-compatible store, set them and add " +
 			stack.OverlayFiles[stack.OverlayExternalObjectStore] + " to COMPOSE_FILE."},
 	{"network.", "OUTGOING PROXY", ""},
+	{"sso.", "SINGLE SIGN-ON", ""},
 	{settings.ImagesPrefix, "IMAGES",
 		"Set one to use your own mirror or another version. Fluxer's own images are pinned to the release in " +
 			stack.ComposeFile + "."},

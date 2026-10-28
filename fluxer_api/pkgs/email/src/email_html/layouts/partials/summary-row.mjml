@@ -1,0 +1,4 @@
+%%?sum_[[n]]_label%%<tr>
+	<td dir="[[dir]]" class="x-muted" style="padding:6px 0;padding-[[end]]:16px;font-family:[[font]];font-size:15px;line-height:22px;color:#5b5a70;text-align:[[start]];direction:[[dir]];vertical-align:top">%%sum_[[n]]_label%%</td>
+	<td dir="auto" class="x-ink" style="padding:6px 0;font-family:[[font]];font-size:15px;line-height:22px;color:#1b1a2e;text-align:[[end]];vertical-align:top;overflow-wrap:anywhere;word-break:break-word">%%sum_[[n]]_value%%</td>
+</tr>%%/sum_[[n]]_label%%

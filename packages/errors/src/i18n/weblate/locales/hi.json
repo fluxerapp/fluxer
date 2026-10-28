@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_token और userinfo के बीच SSO आइडेंटिटी मेल नहीं खाती।",
 	"auth_and_oauth.sso_misconfigured": "SSO गलत तरीके से कॉन्फ़िगर किया गया है। कृपया अपने एडमिन से संपर्क करें।",
 	"auth_and_oauth.sso_provider_did_not_return_email": "आपके SSO प्रोवाइडर ने ईमेल पता नहीं लौटाया।",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {इस इंस्टेंस में सिंगल साइन-ऑन ज़रूरी है, इसलिए आपका SSO प्रोवाइडर आपका ईमेल और पासवर्ड मैनेज करता है।} no_account {यह इंस्टेंस केवल मौजूदा खातों को SSO से साइन इन करने देता है, और अभी आपका कोई खाता नहीं है। इस इंस्टेंस के किसी एडमिन से एक्सेस मांगें।} other {इस इंस्टेंस में सिंगल साइन-ऑन ज़रूरी है। साइन-इन पेज पर SSO बटन से साइन इन करें।}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {इस इंस्टेंस में सिंगल साइन-ऑन ज़रूरी है, इसलिए आपका SSO प्रोवाइडर आपका ईमेल और पासवर्ड मैनेज करता है।} no_account {यह इंस्टेंस केवल मौजूदा खातों को SSO से साइन इन करने देता है, और अभी आपका कोई खाता नहीं है। इस इंस्टेंस के किसी एडमिन से एक्सेस मांगें।} managed_username {इस इंस्टेंस में सिंगल साइन-ऑन ज़रूरी है, इसलिए आपका यूज़रनेम आपके SSO प्रोवाइडर से आता है।} other {इस इंस्टेंस में सिंगल साइन-ऑन ज़रूरी है। साइन-इन पेज पर SSO बटन से साइन इन करें।}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO टेस्ट कोड में ईमेल पेलोड गायब है।",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "हम आपके SSO अकाउंट के लिए डिस्क्रिमिनेटर अलॉट नहीं कर सके। फिर से कोशिश करें।",
 	"auth_and_oauth.sudo_mode_required": "सुडो मोड ज़रूरी है।",

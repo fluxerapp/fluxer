@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Ketidakcocokan identitas SSO antara id_token dan userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO tidak dikonfigurasi dengan benar. Silakan hubungi admin.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Penyedia SSO kamu tidak mengembalikan alamat email.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Instans ini mewajibkan SSO, jadi email dan kata sandi kamu dikelola oleh penyedia SSO kamu.} no_account {Instans ini hanya mengizinkan akun yang sudah ada untuk masuk dengan SSO, dan kamu belum punya akun. Minta akses ke admin instans ini.} other {Instans ini mewajibkan SSO. Masuk dengan tombol SSO di halaman masuk.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Instans ini mewajibkan SSO, jadi email dan kata sandi kamu dikelola oleh penyedia SSO kamu.} no_account {Instans ini hanya mengizinkan akun yang sudah ada untuk masuk dengan SSO, dan kamu belum punya akun. Minta akses ke admin instans ini.} managed_username {Instans ini mewajibkan SSO, jadi nama pengguna kamu berasal dari penyedia SSO kamu.} other {Instans ini mewajibkan SSO. Masuk dengan tombol SSO di halaman masuk.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Kode uji SSO tidak menyertakan payload email.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Tidak bisa mengalokasikan diskriminator untuk akun SSO kamu. Silakan coba lagi.",
 	"auth_and_oauth.sudo_mode_required": "Mode sudo diperlukan.",

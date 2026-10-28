@@ -390,7 +390,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').subscriptions.cancelSubscriptionAtPeriodEnd(userId);
+			await ctx.get('stripeService').subscriptions.cancelSubscriptionAtPeriodEnd(userId, 'customer_request');
 			return ctx.body(null, 204);
 		},
 	);

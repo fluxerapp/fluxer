@@ -19,6 +19,7 @@ import {userHasMfa} from '@app/api/auth/services/SudoMethods';
 import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
 import {createRoleID, type UserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildMemberService} from '@app/api/guild/services/GuildMemberService';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
@@ -43,9 +44,16 @@ import {createRequestCache, type RequestCache} from '@app/api/middleware/Request
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
-import {deriveAvailableUsername, reserveUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
-import {isEnforcementDeletion} from '@app/api/user/UserHelpers';
+import type {PartialUserChangePropagationDeps} from '@app/api/user/services/PartialUserChangePropagation';
+import {
+	deriveAvailableUsername,
+	isUsernameTakenError,
+	reserveUsername,
+	type UsernameReservation,
+} from '@app/api/user/UniqueUsernames';
+import {isEnforcementDeletion, isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {renameUser} from '@app/api/user/UserRename';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {DOB_DEFERRED_TRAIT} from '@app/api/user/UserTraits';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
@@ -105,6 +113,7 @@ type SsoCompletion = SsoSignIn | (LoginMfaResult & {redirect_to: string});
 interface PublicSsoStatus {
 	enabled: boolean;
 	enforced: boolean;
+	username_from_provider: boolean;
 	display_name: string | null;
 	button_label: string | null;
 	redirect_uri: string;
@@ -275,9 +284,15 @@ function parseTestProviderClaims(rawPayload: string, groupsClaim: string): Resol
 	};
 }
 
-function deriveSsoUsernameBase(claims: ResolvedSsoClaims): string | null {
+function usernameFromPreferredUsername(claims: ResolvedSsoClaims): string | null {
 	const preferredUsername = claims.preferredUsername?.split('@')[0];
-	for (const candidate of [preferredUsername, claims.name, claims.email?.split('@')[0]]) {
+	return preferredUsername ? deriveUsernameFromDisplayName(preferredUsername) : null;
+}
+
+function deriveSsoUsernameBase(claims: ResolvedSsoClaims): string | null {
+	const preferredUsername = usernameFromPreferredUsername(claims);
+	if (preferredUsername) return preferredUsername;
+	for (const candidate of [claims.name, claims.email?.split('@')[0]]) {
 		const username = candidate ? deriveUsernameFromDisplayName(candidate) : null;
 		if (username) return username;
 	}
@@ -358,6 +373,8 @@ export class SsoService {
 		private readonly singleCommunityService: SingleCommunityService,
 		private readonly inviteService: InviteService,
 		private readonly guildMemberService: GuildMemberService,
+		private readonly userUpdateDeps: PartialUserChangePropagationDeps,
+		private readonly guildRepository: GuildRepository,
 	) {}
 
 	async getPublicStatus(): Promise<PublicSsoStatus> {
@@ -366,6 +383,7 @@ export class SsoService {
 		return {
 			enabled,
 			enforced: enabled && config.enforced,
+			username_from_provider: enabled && config.usernameFromProvider,
 			display_name: config.displayName ?? null,
 			button_label: config.buttonLabel,
 			redirect_uri: config.redirectUri,
@@ -375,6 +393,19 @@ export class SsoService {
 	async isEnforced(): Promise<boolean> {
 		const config = await this.getResolvedConfig();
 		return config.enabled && config.ready && config.enforced;
+	}
+
+	async managesUsernames(): Promise<boolean> {
+		return this.takesUsernameFromProvider(await this.getResolvedConfig());
+	}
+
+	private async takesUsernameFromProvider(config: ResolvedSsoConfig): Promise<boolean> {
+		return (
+			config.enabled &&
+			config.ready &&
+			config.usernameFromProvider &&
+			(await this.instanceConfigRepository.getAccountIdentityMode()) === AccountIdentityModes.USERNAME
+		);
 	}
 
 	async startLogin({redirectTo, redirectUri}: {redirectTo?: string; redirectUri?: string} = {}): Promise<{
@@ -464,6 +495,9 @@ export class SsoService {
 		});
 		if (config.enforced && claims.email && claims.emailVerified) {
 			await this.syncEnforcedEmail(user, claims.email);
+		}
+		if (!user.isBot && (await this.takesUsernameFromProvider(config))) {
+			await this.syncProviderUsername(user, claims);
 		}
 		return {token, user_id: user.id.toString(), redirect_to: redirectTo};
 	}
@@ -662,6 +696,46 @@ export class SsoService {
 		);
 		await enqueueStripeCustomerEmailSync(worker, user, updatedUser);
 		await dispatchUserUpdate(gateway, updatedUser);
+	}
+
+	private async syncProviderUsername(user: User, claims: ResolvedSsoClaims): Promise<void> {
+		const userId = user.id.toString();
+		const username = usernameFromPreferredUsername(claims);
+		if (!username) {
+			getLogger().info({user_id: userId}, 'SSO provider sent no usable username; keeping the current username');
+			return;
+		}
+		if (username === user.username) {
+			return;
+		}
+		if (
+			!isProfileSubstringExempt(user) &&
+			profileSubstringBlocklistCache.containsBannedSubstring('username', username)
+		) {
+			getLogger().warn({user_id: userId}, 'SSO provider username is blocked; keeping the current username');
+			return;
+		}
+		try {
+			await renameUser(
+				{
+					apiContext: this.apiContext,
+					discriminatorService: this.discriminatorService,
+					userUpdateDeps: this.userUpdateDeps,
+					guildRepository: this.guildRepository,
+				},
+				user,
+				{username, discriminator: USERNAME_MODE_DISCRIMINATOR},
+				{reason: 'sso_sync', actorUserId: null},
+			);
+		} catch (error) {
+			if (isUsernameTakenError(error)) {
+				getLogger().warn({user_id: userId}, 'SSO provider username is unavailable; keeping the current username');
+			} else {
+				getLogger().error({error, user_id: userId}, 'Failed to sync username from SSO provider');
+			}
+			return;
+		}
+		getLogger().info({user_id: userId, old: user.username, new: username}, 'Synced username from SSO provider');
 	}
 
 	private async claimSsoIdentity(userId: UserID, sub: string, config: ResolvedSsoConfig): Promise<void> {

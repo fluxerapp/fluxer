@@ -35,6 +35,7 @@ const LANE_CONFIG = {
 		consumerName: 'workers_lifecycle',
 		tasks: [
 			'processStripeWebhook',
+			'sendBillingEmail',
 			'closePaymentDisputeAccounts',
 			'sendSystemDm',
 			'notifyRegistrationApprovers',
@@ -114,6 +115,7 @@ const LANE_CONFIG = {
 			'operatorPassRemovalExpiry',
 			'operatorPassOfferCompletion',
 			'operatorPassWallRetention',
+			'scanBillingNotices',
 		] as const,
 		retiredTasks: [],
 		concurrency: 12,

@@ -406,7 +406,7 @@ export class StripeGiftService {
 		}
 		if (extension.kind === 'past_trial_limit') {
 			if (!user.premiumWillCancel) {
-				await this.subscriptionService.cancelSubscriptionAtPeriodEnd(user.id);
+				await this.subscriptionService.cancelSubscriptionAtPeriodEnd(user.id, 'gift_past_trial_limit');
 			}
 			Logger.info(
 				{userId: user.id, giftCode: code, stripeSubscriptionId: user.stripeSubscriptionId},

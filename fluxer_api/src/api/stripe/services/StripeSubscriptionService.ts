@@ -5,6 +5,7 @@ import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
+import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {getPaymentDisputeRepository} from '@app/api/middleware/ServiceSingletons';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
@@ -26,6 +27,8 @@ import {
 	loadSubscriptionSchedule,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {type BillingCancelSource, enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
+import {CLEARED_CANCEL_METADATA, subscriptionCancelling} from '@app/api/stripe/services/BillingSubscriptionDetails';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import type {Currency} from '@app/api/utils/CurrencyUtils';
@@ -134,7 +137,7 @@ export class StripeSubscriptionService {
 		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
-	async cancelSubscriptionAtPeriodEnd(userId: UserID): Promise<void> {
+	async cancelSubscriptionAtPeriodEnd(userId: UserID, source: BillingCancelSource): Promise<void> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
@@ -148,17 +151,27 @@ export class StripeSubscriptionService {
 		if (user.premiumWillCancel) {
 			throw new StripeSubscriptionAlreadyCancelingError();
 		}
+		const requestedAt = Math.floor(Date.now() / 1000);
+		const metadata = {fluxer_cancel_source: source, fluxer_cancel_requested_at: String(requestedAt)};
 		try {
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
 				expand: ['items.data.price', 'schedule'],
 			});
 			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (schedule) {
-				await this.cancelScheduledSubscriptionAtPeriodEnd(user, subscription, schedule);
+				await this.stripe.subscriptions.update(user.stripeSubscriptionId, {metadata});
+				try {
+					await this.cancelScheduledSubscriptionAtPeriodEnd(user, subscription, schedule);
+				} catch (error) {
+					await this.clearCancelSource(subscription.id);
+					throw error;
+				}
+				await this.confirmCancellation(subscription.id, source, requestedAt);
 				return;
 			}
 			const updatedSubscription = await this.stripe.subscriptions.update(user.stripeSubscriptionId, {
 				cancel_at_period_end: true,
+				metadata,
 			});
 			await mirrorSubscription(
 				updatedSubscription,
@@ -173,6 +186,7 @@ export class StripeSubscriptionService {
 				user.toRow(),
 			);
 			await dispatchUserUpdate(this.gatewayService, updatedUser);
+			await this.confirmCancellation(updatedSubscription.id, source, requestedAt);
 			Logger.debug({userId, subscriptionId: user.stripeSubscriptionId}, 'Subscription set to cancel at period end');
 		} catch (error: unknown) {
 			Logger.error(
@@ -181,6 +195,25 @@ export class StripeSubscriptionService {
 			);
 			const message = error instanceof Error ? error.message : 'Failed to cancel subscription';
 			throw new StripeError(message);
+		}
+	}
+
+	private async confirmCancellation(
+		subscriptionId: string,
+		source: BillingCancelSource,
+		requestedAt: number,
+	): Promise<void> {
+		if (source !== 'customer_request') {
+			return;
+		}
+		try {
+			await enqueueBillingEmail(getWorkerService(), {
+				kind: 'subscription_cancel_scheduled',
+				id: subscriptionId,
+				requestedAt,
+			});
+		} catch (error) {
+			Logger.error({error, subscriptionId}, 'Cancelled a subscription but could not queue the confirmation email');
 		}
 	}
 
@@ -260,6 +293,28 @@ export class StripeSubscriptionService {
 		await this.storeEntitlementService?.reapplyAfterStripeChange(userId);
 	}
 
+	private async clearCancelSource(subscriptionId: string): Promise<void> {
+		try {
+			await this.stripe?.subscriptions.update(subscriptionId, {metadata: CLEARED_CANCEL_METADATA});
+		} catch (error) {
+			Logger.error({error, subscriptionId}, 'Could not clear the cancellation source after a failed cancellation');
+		}
+	}
+
+	private async confirmGiftApplied(subscription: Stripe.Subscription, trialEnd: number): Promise<void> {
+		if (subscriptionCancelling(subscription, null)) {
+			return;
+		}
+		try {
+			await enqueueBillingEmail(getWorkerService(), {kind: 'gift_applied', id: subscription.id, trialEnd});
+		} catch (error) {
+			Logger.error(
+				{error, subscriptionId: subscription.id},
+				'Applied a gift but could not queue the confirmation email',
+			);
+		}
+	}
+
 	private pullGiftExtensionBackToNow(giftEnd: Date | null, paidUntil: Date | null, now: Date): Date | null {
 		if (!giftEnd || !paidUntil || paidUntil.getTime() <= now.getTime() || giftEnd.getTime() < paidUntil.getTime()) {
 			return giftEnd;
@@ -296,9 +351,16 @@ export class StripeSubscriptionService {
 				});
 			}
 			const clearCancellationParams = this.getClearCancellationUpdateParams(subscription);
-			const reactivatedSubscription = clearCancellationParams
-				? await this.stripe.subscriptions.update(user.stripeSubscriptionId, clearCancellationParams)
-				: subscription;
+			const hasCancelSource = Boolean(
+				subscription.metadata?.fluxer_cancel_source || subscription.metadata?.fluxer_cancel_requested_at,
+			);
+			const reactivatedSubscription =
+				clearCancellationParams || hasCancelSource
+					? await this.stripe.subscriptions.update(user.stripeSubscriptionId, {
+							...clearCancellationParams,
+							metadata: CLEARED_CANCEL_METADATA,
+						})
+					: subscription;
 			await mirrorSubscription(
 				reactivatedSubscription,
 				user.id,
@@ -883,12 +945,14 @@ export class StripeSubscriptionService {
 			return {
 				cancel_at_period_end: false,
 				proration_behavior: 'none',
+				metadata: CLEARED_CANCEL_METADATA,
 			};
 		}
 		if (subscription.cancel_at != null) {
 			return {
 				cancel_at: null,
 				proration_behavior: 'none',
+				metadata: CLEARED_CANCEL_METADATA,
 			};
 		}
 		return null;
@@ -1308,6 +1372,7 @@ export class StripeSubscriptionService {
 			);
 			await this.cacheService.set(appliedKey, true, seconds('365 days'));
 			Logger.debug({userId: user.id, idempotencyKey, appliedKey}, 'Gift trial applied sentinel set');
+			await this.confirmGiftApplied(trialExtendedSubscription, newTrialEndUnix);
 			Logger.debug(
 				{
 					userId: user.id,

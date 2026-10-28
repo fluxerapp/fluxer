@@ -15,6 +15,8 @@ import styles from '@app/features/user/components/modals/tabs/my_profile_tab/MyP
 import type {User} from '@app/features/user/models/User';
 import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
 import type {AccountGateResult} from '@app/features/user/utils/AccountGates';
+import {hasUserTrait, UserTraits} from '@fluxer/constants/src/UserTraitConstants';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {AtomIcon} from '@phosphor-icons/react';
@@ -30,6 +32,28 @@ const GET_TO_CUSTOMIZE_YOUR_TAG_DESCRIPTOR = msg({
 	comment:
 		'Label in the username section. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.',
 });
+const USERNAME_FROM_SIGN_IN_PROVIDER_DESCRIPTOR = msg({
+	message: 'Your username comes from your sign-in provider.',
+	comment:
+		'Tooltip on the disabled Change username button when the sign-in provider sets usernames. Keep the tone plain and specific.',
+});
+
+function signInProviderSetsUsername(user: User): boolean {
+	const sso = RuntimeConfig.getSnapshot().sso;
+	return (
+		RuntimeConfig.usesUsernameSignIn &&
+		sso?.enabled === true &&
+		sso.username_from_provider &&
+		!user.bot &&
+		hasUserTrait(user.traits, UserTraits.SSO)
+	);
+}
+
+function usernameChangeBlockedReason(i18n: I18n, user: User, profileGate: AccountGateResult): string | null {
+	if (signInProviderSetsUsername(user)) return i18n._(USERNAME_FROM_SIGN_IN_PROVIDER_DESCRIPTOR);
+	if (!profileGate.allowed) return accountGateReason(i18n, profileGate);
+	return null;
+}
 
 interface UsernameSectionProps {
 	profileGate: AccountGateResult;
@@ -43,14 +67,15 @@ export const UsernameSection = observer(({profileGate, user}: UsernameSectionPro
 		'feature_custom_discriminator',
 	);
 	const discriminatorLabel = `#${user.discriminator}`;
+	const disabledReason = usernameChangeBlockedReason(i18n, user, profileGate);
 	return (
 		<div data-flx="user.my-profile-tab.username-section.div">
 			<div className={styles.label} data-flx="user.my-profile-tab.username-section.label">
 				<Trans>Username</Trans>
 			</div>
 			<div className={styles.actions} data-flx="user.my-profile-tab.username-section.actions">
-				{!profileGate.allowed ? (
-					<Tooltip text={accountGateReason(i18n, profileGate)} data-flx="user.my-profile-tab.username-section.tooltip">
+				{disabledReason !== null ? (
+					<Tooltip text={disabledReason} data-flx="user.my-profile-tab.username-section.tooltip">
 						<div data-flx="user.my-profile-tab.username-section.div--2">
 							<Button variant="primary" small disabled data-flx="user.my-profile-tab.username-section.button">
 								<Trans>Change username</Trans>

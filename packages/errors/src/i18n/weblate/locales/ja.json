@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_tokenとuserinfo間でSSO情報が一致しません。",
 	"auth_and_oauth.sso_misconfigured": "SSOの設定に誤りがあります。管理者にお問い合わせください。",
 	"auth_and_oauth.sso_provider_did_not_return_email": "SSOプロバイダーからメールアドレスが返されませんでした。",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {このインスタンスではシングルサインオンが必要なため、メールアドレスとパスワードはSSOプロバイダーで管理されています。} no_account {このインスタンスでは既存のアカウントのみSSOでサインインできますが、あなたのアカウントはまだありません。このインスタンスの管理者にアクセスを依頼してください。} other {このインスタンスではシングルサインオンが必要です。サインインページのSSOボタンからサインインしてください。}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {このインスタンスではシングルサインオンが必要なため、メールアドレスとパスワードはSSOプロバイダーで管理されています。} no_account {このインスタンスでは既存のアカウントのみSSOでサインインできますが、あなたのアカウントはまだありません。このインスタンスの管理者にアクセスを依頼してください。} managed_username {このインスタンスではシングルサインオンが必要なため、ユーザー名はSSOプロバイダーから設定されます。} other {このインスタンスではシングルサインオンが必要です。サインインページのSSOボタンからサインインしてください。}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSOテストコードにメールのペイロードがありません。",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "SSOアカウントの識別子を割り当てられませんでした。もう一度お試しください。",
 	"auth_and_oauth.sudo_mode_required": "Sudoモードが必要です。",

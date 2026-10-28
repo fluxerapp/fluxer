@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_token ile userinfo arasında SSO kimlik uyuşmazlığı.",
 	"auth_and_oauth.sso_misconfigured": "SSO yanlış yapılandırılmış. Lütfen yöneticinle iletişime geç.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "SSO sağlayıcın bir e-posta adresi döndürmedi.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Bu örnek tek oturum açma gerektiriyor, bu yüzden e-posta adresini ve parolanı SSO sağlayıcın yönetiyor.} no_account {Bu örnek yalnızca mevcut hesapların SSO ile giriş yapmasına izin veriyor ve henüz bir hesabın yok. Bu örneğin bir yöneticisinden erişim iste.} other {Bu örnek tek oturum açma gerektiriyor. Giriş sayfasındaki SSO düğmesiyle giriş yap.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Bu örnek tek oturum açma gerektiriyor, bu yüzden e-posta adresini ve parolanı SSO sağlayıcın yönetiyor.} no_account {Bu örnek yalnızca mevcut hesapların SSO ile giriş yapmasına izin veriyor ve henüz bir hesabın yok. Bu örneğin bir yöneticisinden erişim iste.} managed_username {Bu örnek tek oturum açma gerektiriyor, bu yüzden kullanıcı adın SSO sağlayıcından geliyor.} other {Bu örnek tek oturum açma gerektiriyor. Giriş sayfasındaki SSO düğmesiyle giriş yap.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO test kodunda e-posta verisi eksik.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "SSO hesabın için bir etiket atayamadık. Lütfen tekrar dene.",
 	"auth_and_oauth.sudo_mode_required": "Sudo modu gerekli.",

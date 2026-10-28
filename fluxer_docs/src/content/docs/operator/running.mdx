@@ -66,6 +66,8 @@ rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bi
 
 rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports.
 
+rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default.
+
 ## Manage people
 
 Create an invite link that 10 people can use within a week.
@@ -125,11 +127,23 @@ This lists every setting with its value and a line of help, and says which setti
 rexctl config set <key> <value>
 ```
 
+The list includes the `FLUXER_*` environment variables Fluxer reads, and you set them the same way. If a variable has a shorter name, such as `sso.allow_private_addresses` for `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`, rexctl tells you to use that one. rexctl writes the change and restarts whatever needs it, so you never edit `.env` yourself.
+
 Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, so a resized machine needs no changes. The `memory.profile` setting pins a fixed size instead.
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service instead of a separate worker service. rexctl then removes the worker and adds half of its memory limit to the api.
 
-To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in a `custom.compose.yml` file in your instance folder.
+## Change how Fluxer runs
+
+rexctl writes Fluxer's Compose files and Caddyfile to `.rexctl/generated` in your instance folder and writes them again each time it changes the instance. If you edit one of them, rexctl keeps a copy of your version in `.rexctl/edited` and puts its own version back.
+
+To change the Compose setup, such as labels, images, ports or volumes, run `rexctl config edit`. It opens `custom.compose.yml` in your instance folder, checks it, tells you which services restart and applies it. rexctl adds this file after its own Compose files, and upgrades keep it.
+
+```sh
+rexctl config edit
+```
+
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
 
 ## When something is wrong
 
@@ -143,6 +157,6 @@ This checks your instance and the machine, and tells you how to fix each problem
 
 ## Manage it without rexctl
 
-To run your instance yourself with docker compose, run `rexctl eject`. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
+To run your instance yourself with docker compose, run `rexctl eject`. rexctl moves the Compose files and Caddyfile back into your instance folder and stops managing them. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
 
 To upgrade Fluxer while you manage it yourself, run `rexctl takeover`, `rexctl upgrade` and `rexctl eject` one after the other. You can also [upgrade with the compose bundle](/operator/docker-compose/#upgrade) of the new version, the same way as an instance that never used rexctl.

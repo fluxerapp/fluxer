@@ -3,6 +3,7 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {createTestStoreEntitlementService} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
 import {
 	sendStripeWebhook,
@@ -11,16 +12,20 @@ import {
 } from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
+	createPaymentIntentInvoicePayments,
 	createStripeApiHandlers,
 	createSubscriptionDeletedEvent,
 	createSubscriptionUpdatedEvent,
 	type StripeApiHandlers,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getPremiumPaymentRecoveryGraceMs, PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
+import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
+import {getWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -552,6 +557,60 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.stripeSubscriptionId).toBeNull();
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
+		});
+		test('keeps premium cut off after reconciliation when the cancelled subscription was refunded and disputed', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_refunded_yearly';
+			const invoiceId = 'in_test_refunded_yearly';
+			const day = 24 * 60 * 60;
+			const endedAt = Math.floor(Date.now() / 1000) - 60;
+			const paidPeriodEnd = endedAt + 222 * day;
+			const paymentIntentId = `pi_${invoiceId}`;
+			const stripeApi = createStripeApiHandlers({
+				subscriptions: {
+					[subscriptionId]: {
+						status: 'canceled',
+						interval: 'year',
+						ended_at: endedAt,
+						current_period_start: paidPeriodEnd - 365 * day,
+						current_period_end: paidPeriodEnd,
+					},
+				},
+				invoices: {
+					[invoiceId]: {
+						subscriptionId,
+						lines: {data: [{period: {start: paidPeriodEnd - 365 * day, end: paidPeriodEnd}}]},
+						payments: createPaymentIntentInvoicePayments(invoiceId, paymentIntentId, endedAt),
+					},
+				},
+				charges: {
+					[`ch_${paymentIntentId}`]: {refunded: true, amount_refunded: 2500, disputed: true},
+				},
+			});
+			server.use(...stripeApi.handlers);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: new Date(paidPeriodEnd * 1000),
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const result = await sendStripeWebhook(harness, createSubscriptionDeletedEvent({subscriptionId, endedAt}));
+			expect(result.received).toBe(true);
+			setWorkerDependenciesForTest({
+				...getWorkerDependencies(),
+				storeEntitlementService: createTestStoreEntitlementService(),
+			});
+			await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumType).toBeNull();
+			expect(afterUser?.premiumUntil).toBeNull();
+			expect(stripeApi.spies.retrievedPaymentIntents).toContain(paymentIntentId);
 		});
 		test('ends premium without grace when the subscription is cancelled at the end of its paid period', async () => {
 			const account = await createTestAccount(harness);

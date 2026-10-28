@@ -70,6 +70,9 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 			if err := removeBootUnit(ctx, inst, p.Engine); err != nil {
 				app.UI.Detail("%v", err)
 			}
+			if _, err := removeAutoUpgrade(ctx, inst, p.Engine); err != nil {
+				app.UI.Detail("removing automatic upgrades: %v", err)
+			}
 			s.Done("Removed Fluxer.")
 			return nil
 		})
@@ -81,6 +84,7 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 	if err != nil {
 		return err
 	}
+	app.forget(inst.Dir)
 	if keepData {
 		app.UI.Info("Your data and backups are still in %s.", inst.Dir)
 		return nil

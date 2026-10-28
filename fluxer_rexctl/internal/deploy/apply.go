@@ -57,6 +57,9 @@ func Apply(ctx context.Context, inst *instance.Instance, e *engine.Engine, o App
 	if err := up(ctx, p, o.Wait, o.OnEvent); err != nil {
 		return nil, err
 	}
+	if err := inst.DropRootCopies(ctx, true); err != nil {
+		return nil, err
+	}
 	change := &Change{Restarted: restarted(plan), Removed: slices.Clone(plan.Remove), Applied: true}
 	if restartEdge && slices.Contains(p.Services(), edgeService) && !slices.Contains(change.Restarted, edgeService) {
 		if err := p.Restart(context.WithoutCancel(ctx), edgeService); err != nil {

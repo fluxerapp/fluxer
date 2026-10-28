@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -94,5 +95,18 @@ func explainAPI(e *APIError) error {
 	if msg == "" {
 		msg = "Fluxer didn't accept that."
 	}
-	return &ui.ExitError{Code: ui.ExitFailed, Msg: msg, Err: e}
+	return &ui.ExitError{Code: ui.ExitFailed, Msg: msg, Fix: fieldFix(e.Fields), Err: e}
+}
+
+const SSOPrivateFix = "If the provider is on your own network, run rexctl config set sso.allow_private_addresses true, then try again."
+
+var ssoURLFields = []string{"issuer", "authorization_url", "token_url", "user_info_url", "jwks_url"}
+
+func fieldFix(fields []FieldError) string {
+	for _, f := range fields {
+		if f.Code == "URL_NOT_PUBLICLY_ROUTABLE" && slices.Contains(ssoURLFields, f.Path) {
+			return SSOPrivateFix
+		}
+	}
+	return ""
 }

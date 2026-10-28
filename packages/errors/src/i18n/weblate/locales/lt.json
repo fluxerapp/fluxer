@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO tapatybė tarp id_token ir userinfo nesutampa.",
 	"auth_and_oauth.sso_misconfigured": "SSO neteisingai sukonfigūruotas. Susisiek su administratoriumi.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Tavo SSO teikėjas negrąžino el. pašto adreso.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Šiai instancijai reikia prisijungimo per SSO, todėl tavo el. paštą ir slaptažodį tvarko tavo SSO teikėjas.} no_account {Ši instancija leidžia prisijungti per SSO tik esamoms paskyroms, o tu dar neturi paskyros. Paprašyk šios instancijos administratoriaus prieigos.} other {Šiai instancijai reikia prisijungimo per SSO. Prisijunk prisijungimo puslapyje esančiu SSO mygtuku.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Šiai instancijai reikia prisijungimo per SSO, todėl tavo el. paštą ir slaptažodį tvarko tavo SSO teikėjas.} no_account {Ši instancija leidžia prisijungti per SSO tik esamoms paskyroms, o tu dar neturi paskyros. Paprašyk šios instancijos administratoriaus prieigos.} managed_username {Šiai instancijai reikia prisijungimo per SSO, todėl tavo naudotojo vardą nustato tavo SSO teikėjas.} other {Šiai instancijai reikia prisijungimo per SSO. Prisijunk prisijungimo puslapyje esančiu SSO mygtuku.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO bandomajame kode trūksta el. pašto duomenų.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nepavyko priskirti diskriminatoriaus tavo SSO paskyrai. Pabandyk dar kartą.",
 	"auth_and_oauth.sudo_mode_required": "Reikalingas sudo režimas.",

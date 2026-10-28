@@ -58,8 +58,8 @@ const FONT_TOKENS: Record<string, string> = {
 };
 
 const DIRECTION_TOKENS: Record<Direction, Record<string, string>> = {
-	ltr: {dir: 'ltr', start: 'left'},
-	rtl: {dir: 'rtl', start: 'right'},
+	ltr: {dir: 'ltr', start: 'left', end: 'right'},
+	rtl: {dir: 'rtl', start: 'right', end: 'left'},
 };
 
 function resolveIncludes(source: string, depth = 0): string {

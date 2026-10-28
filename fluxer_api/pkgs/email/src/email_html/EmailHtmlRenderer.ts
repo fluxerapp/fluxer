@@ -223,7 +223,7 @@ function encodeSlot(
 	if (name.endsWith('_url')) {
 		return escapeHtml(validateEmailUrl(value, ownHttpOrigins));
 	}
-	if (name === 'subject' || name === 'preheader' || name === 'code' || name.endsWith('_label')) {
+	if (name === 'subject' || name === 'preheader' || name === 'heading' || name === 'code' || name.endsWith('_label')) {
 		const literal = restoreEmailLiterals(value);
 		return escapeHtml(direction === 'rtl' ? isolateChannelMentions(literal) : literal);
 	}
@@ -232,12 +232,11 @@ function encodeSlot(
 			.map((item) => `<li style="margin:0 0 6px">${inlineHtml(item, slots, direction, ownHttpOrigins, linkHosts)}</li>`)
 			.join('');
 	}
-	if (/^fact_\d+_value$/.test(name)) {
-		return paragraphs(value)
-			.map((line) =>
-				inlineHtml(direction === 'rtl' ? isolateEmailValue(line) : line, slots, direction, ownHttpOrigins, linkHosts),
-			)
-			.join('<br>');
+	if (/^(fact_\d+|sum_\d+|sum_total)_value$/.test(name)) {
+		const lines = paragraphs(value).map((line) =>
+			inlineHtml(direction === 'rtl' ? isolateEmailValue(line) : line, slots, direction, ownHttpOrigins, linkHosts),
+		);
+		return lines.length === 1 ? lines[0] : lines.map((line) => `<div>${line}</div>`).join('');
 	}
 	const blocks = paragraphs(value);
 	if (blocks.length <= 1) {
@@ -280,6 +279,8 @@ export function stripInlineMarkup(text: string): string {
 }
 
 const FACT_COUNT = 7;
+const SUMMARY_COUNT = 7;
+const SUMMARY_TOTAL_AFTER = 5;
 const SECTION_COUNT = 4;
 
 function textInline(text: string, slots: Slots, links: EmailTextLinks): {line: string; urls: Array<string>} {
@@ -353,6 +354,21 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 		const {line, urls} = textInline(paragraphs(value).join('\n'), slots, links);
 		facts.push([`${label}: ${line}`, ...urls].join('\n'));
 	}
+	const summary: Array<string> = [];
+	const summaryLine = (label: string | null | undefined, value: string | null | undefined) => {
+		if (label && value) {
+			summary.push(`${label}: ${paragraphs(value).join(' ')}`);
+		}
+	};
+	for (let n = 1; n <= SUMMARY_COUNT; n++) {
+		summaryLine(slots[`sum_${n}_label`], slots[`sum_${n}_value`]);
+		if (n === SUMMARY_TOTAL_AFTER) {
+			summaryLine(slots.sum_total_label, slots.sum_total_value);
+			if (slots.sum_total_label && slots.sum_tax) {
+				summary.push(slots.sum_tax);
+			}
+		}
+	}
 	const sections: Array<string> = [];
 	for (let n = 1; n <= SECTION_COUNT; n++) {
 		const title = slots[`section_${n}_title`];
@@ -367,19 +383,20 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 		].filter(Boolean);
 		sections.push(`${title}\n${blocks.join('\n\n')}`);
 	}
-	const footer = slots.unsubscribe
-		? textBlock(
-				textParagraphs(slots.footer_reason, slots, links),
-				textLink(slots.unsubscribe, slots.unsubscribe_url, links),
-				slots.legal_address,
-			)
-		: null;
+	const footer = textBlock(
+		textParagraphs(slots.footer_reason, slots, links),
+		textLink(slots.unsubscribe, slots.unsubscribe_url, links),
+		slots.legal_address,
+	);
 	const text = [
+		slots.heading,
 		textParagraphs(slots.intro, slots, links),
 		slots.code,
 		facts.join('\n'),
+		summary.join('\n'),
 		textList(slots.points_list, slots, links),
 		textParagraphs(slots.lead, slots, links),
+		textParagraphs(slots.box, slots, links),
 		textLink(slots.cta, slots.cta_url, links),
 		textParagraphs(slots.expiry, slots, links),
 		textParagraphs(slots.text_1, slots, links),

@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO-identiteit komt niet overeen tussen id_token en userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO is foutief geconfigureerd. Neem contact op met je beheerder.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Je SSO-provider heeft geen e-mailadres geretourneerd.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Deze instantie vereist single sign-on, dus je SSO-provider beheert je e-mailadres en wachtwoord.} no_account {Op deze instantie kunnen alleen bestaande accounts inloggen met SSO, en er is nog geen account voor je. Vraag een beheerder van deze instantie om toegang.} other {Deze instantie vereist single sign-on. Log in met de SSO-knop op de inlogpagina.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Deze instantie vereist single sign-on, dus je SSO-provider beheert je e-mailadres en wachtwoord.} no_account {Op deze instantie kunnen alleen bestaande accounts inloggen met SSO, en er is nog geen account voor je. Vraag een beheerder van deze instantie om toegang.} managed_username {Deze instantie vereist single sign-on, dus je gebruikersnaam komt van je SSO-provider.} other {Deze instantie vereist single sign-on. Log in met de SSO-knop op de inlogpagina.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "De SSO-testcode mist de e-mailpayload.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "We konden geen discriminator toewijzen aan je SSO-account. Probeer het nog eens.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-modus is vereist.",

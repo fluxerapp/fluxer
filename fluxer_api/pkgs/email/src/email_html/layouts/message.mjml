@@ -19,6 +19,9 @@
 					<tr>
 						<td style="padding:0">
 							<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="[[dir]]" style="width:100%;border-collapse:collapse;direction:[[dir]];text-align:[[start]]">
+								%%?heading%%<tr>
+									<td dir="[[dir]]" class="x-ink" style="padding:0 0 12px;font-family:[[font]];text-align:[[start]];direction:[[dir]]"><h1 class="x-ink" style="margin:0;font-family:[[font]];font-size:22px;line-height:28px;font-weight:700;color:#1b1a2e;overflow-wrap:anywhere;word-break:break-word">%%heading%%</h1></td>
+								</tr>%%/heading%%
 								<tr>
 									<td dir="[[dir]]" class="x-ink" style="padding:0;font-family:[[font]];font-size:16px;line-height:24px;color:#1b1a2e;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word">%%intro%%</td>
 								</tr>
@@ -32,12 +35,14 @@
 								<mj-include path="./partials/fact-row.mjml" n="5" top="4px" />
 								<mj-include path="./partials/fact-row.mjml" n="6" top="4px" />
 								<mj-include path="./partials/fact-row.mjml" n="7" top="4px" />
+								<mj-include path="./partials/summary.mjml" />
 								%%?points_list%%<tr>
 									<td dir="[[dir]]" class="x-ink" style="padding:16px 0 0;font-family:[[font]];font-size:16px;line-height:24px;color:#1b1a2e;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word">
 										<ul dir="auto" style="margin:0;padding-[[start]]:20px;text-align:start">%%points_list%%</ul>
 									</td>
 								</tr>%%/points_list%%
 								<mj-include path="./partials/text-row.mjml" slot="lead" />
+								<mj-include path="./partials/notice-box.mjml" />
 								%%?cta%%<tr>
 									<td align="[[start]]" style="padding:24px 0 0">
 										<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="[[start]]" style="border-collapse:separate">

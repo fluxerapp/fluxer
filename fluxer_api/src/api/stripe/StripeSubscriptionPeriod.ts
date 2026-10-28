@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {extractId} from '@app/api/stripe/StripeUtils';
 import type Stripe from 'stripe';
 
 type StripePaymentIntentWithExpandedLatestCharge = Stripe.PaymentIntent & {
@@ -7,7 +8,12 @@ type StripePaymentIntentWithExpandedLatestCharge = Stripe.PaymentIntent & {
 };
 type StripeInvoicePaymentEntry = {
 	payment?: {
+		charge?: string | Stripe.Charge | null;
 		payment_intent?: string | StripePaymentIntentWithExpandedLatestCharge | null;
+	} | null;
+	status?: string | null;
+	status_transitions?: {
+		paid_at?: number | null;
 	} | null;
 };
 type StripeInvoiceWithPayments = Stripe.Invoice & {
@@ -138,6 +144,32 @@ export function getFirstInvoicePaymentIntentId(invoice: Stripe.Invoice | null): 
 		return paymentIntent;
 	}
 	return paymentIntent.id ?? null;
+}
+
+export function getInvoicePaymentRef(invoice: Stripe.Invoice): {
+	chargeId: string | null;
+	paymentIntentId: string | null;
+	paidAt: Date | null;
+} | null {
+	const candidates = (invoice as StripeInvoiceWithPayments).payments?.data ?? [];
+	const preferred =
+		candidates.find((c) => c.status === 'paid' && (c.payment?.payment_intent || c.payment?.charge)) ??
+		candidates.find((c) => c.payment?.payment_intent || c.payment?.charge) ??
+		null;
+	if (!preferred) {
+		return null;
+	}
+	const paymentIntentId = extractId(preferred.payment?.payment_intent);
+	let chargeId = extractId(preferred.payment?.charge);
+	if (!chargeId && preferred.payment?.payment_intent && typeof preferred.payment.payment_intent !== 'string') {
+		chargeId = extractId(preferred.payment.payment_intent.latest_charge);
+	}
+	const paidAtSec = preferred.status_transitions?.paid_at ?? null;
+	return {
+		chargeId,
+		paymentIntentId,
+		paidAt: paidAtSec ? new Date(paidAtSec * 1000) : null,
+	};
 }
 
 export function getSubscriptionBillingCycle(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {

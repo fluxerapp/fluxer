@@ -11,6 +11,7 @@ import {
 } from '@app/api/store_billing/GooglePlayRefundTarget';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import {getInvoicePaymentRef} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import {
 	buildRefundEligibility,
@@ -59,50 +60,8 @@ type GooglePlayLatestTarget = RefundEligibilityTarget & {
 
 type LatestRefundTarget = RefundTarget | GooglePlayLatestTarget;
 
-type StripeInvoiceWithPayments = Stripe.Invoice & {
-	customer?: string | Stripe.Customer | null;
-	payments?: {
-		data?: Array<{
-			payment?: {
-				charge?: string | Stripe.Charge | null;
-				payment_intent?: string | Stripe.PaymentIntent | null;
-			} | null;
-			status?: string | null;
-			status_transitions?: {
-				paid_at?: number | null;
-			} | null;
-		}>;
-	} | null;
-};
-
 function resolveInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
 	return extractId(invoice.parent?.subscription_details?.subscription ?? null);
-}
-
-function getInvoicePaymentRef(invoice: Stripe.Invoice): {
-	chargeId: string | null;
-	paymentIntentId: string | null;
-	paidAt: Date | null;
-} | null {
-	const candidates = (invoice as StripeInvoiceWithPayments).payments?.data ?? [];
-	const preferred =
-		candidates.find((c) => c.status === 'paid' && (c.payment?.payment_intent || c.payment?.charge)) ??
-		candidates.find((c) => c.payment?.payment_intent || c.payment?.charge) ??
-		null;
-	if (!preferred) {
-		return null;
-	}
-	const paymentIntentId = extractId(preferred.payment?.payment_intent);
-	let chargeId = extractId(preferred.payment?.charge);
-	if (!chargeId && preferred.payment?.payment_intent && typeof preferred.payment.payment_intent !== 'string') {
-		chargeId = extractId(preferred.payment.payment_intent.latest_charge);
-	}
-	const paidAtSec = preferred.status_transitions?.paid_at ?? null;
-	return {
-		chargeId,
-		paymentIntentId,
-		paidAt: paidAtSec ? new Date(paidAtSec * 1000) : null,
-	};
 }
 
 export class StripeRefundService {

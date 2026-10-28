@@ -111,6 +111,7 @@ pub(super) fn build_billing_update(
             automatic_tax: parse_tri_state(form, "billing_automatic_tax")?,
             tax_id_collection: parse_tri_state(form, "billing_tax_id_collection")?,
             terms_consent_required: parse_tri_state(form, "billing_terms_consent_required")?,
+            billing_emails: parse_tri_state(form, "billing_billing_emails")?,
         }),
         ..Default::default()
     })

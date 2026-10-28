@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_token 與 userinfo 之間的 SSO 身分不一致。",
 	"auth_and_oauth.sso_misconfigured": "SSO 設定錯誤。請聯絡你的管理員。",
 	"auth_and_oauth.sso_provider_did_not_return_email": "你的 SSO 提供者未傳回電子郵件地址。",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {此執行個體要求使用單一登入，因此你的電子郵件和密碼由你的 SSO 提供者管理。} no_account {此執行個體只允許現有帳號透過 SSO 登入，而你還沒有帳號。請向此執行個體的管理員申請存取權限。} other {此執行個體要求使用單一登入。請使用登入頁面上的 SSO 按鈕登入。}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {此執行個體要求使用單一登入，因此你的電子郵件和密碼由你的 SSO 提供者管理。} no_account {此執行個體只允許現有帳號透過 SSO 登入，而你還沒有帳號。請向此執行個體的管理員申請存取權限。} managed_username {此執行個體要求使用單一登入，因此你的使用者名稱來自你的 SSO 提供者。} other {此執行個體要求使用單一登入。請使用登入頁面上的 SSO 按鈕登入。}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO 測試碼缺少電子郵件酬載。",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "無法為你的 SSO 帳號分配識別碼。請再試一次。",
 	"auth_and_oauth.sudo_mode_required": "需要 Sudo 模式。",
