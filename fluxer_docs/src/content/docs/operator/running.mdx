@@ -125,6 +125,8 @@ This lists every setting with its value and a line of help, and says which setti
 rexctl config set <key> <value>
 ```
 
+The list includes the `FLUXER_*` environment variables Fluxer reads, and you set them the same way. If a variable has a shorter name, such as `sso.allow_private_addresses` for `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`, rexctl tells you to use that one. rexctl writes the change and restarts whatever needs it, so you never edit `.env` yourself.
+
 Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, so a resized machine needs no changes. The `memory.profile` setting pins a fixed size instead.
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service instead of a separate worker service. rexctl then removes the worker and adds half of its memory limit to the api.
