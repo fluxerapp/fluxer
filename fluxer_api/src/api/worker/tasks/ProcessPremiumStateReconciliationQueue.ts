@@ -10,6 +10,7 @@ import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
 import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getInvoiceLatestLinePeriodEnd,
+	getInvoicePaymentRef,
 	getSubscriptionBillingCycle,
 	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
@@ -162,6 +163,7 @@ async function getPaidThroughFromSubscriptionInvoices(
 			subscription: subscription.id,
 			status: 'paid',
 			limit: PAID_INVOICE_LOOKUP_LIMIT,
+			expand: ['data.payments'],
 		});
 	} catch (error) {
 		Logger.warn(
@@ -173,11 +175,45 @@ async function getPaidThroughFromSubscriptionInvoices(
 	let paidThrough: Date | null = null;
 	for (const invoice of invoices.data) {
 		const periodEnd = getInvoiceLatestLinePeriodEnd(invoice);
-		if (periodEnd && (paidThrough === null || periodEnd.getTime() > paidThrough.getTime())) {
+		if (
+			periodEnd &&
+			(paidThrough === null || periodEnd.getTime() > paidThrough.getTime()) &&
+			!(await wasInvoicePaymentReturned(stripe, invoice))
+		) {
 			paidThrough = periodEnd;
 		}
 	}
 	return paidThrough;
+}
+
+async function wasInvoicePaymentReturned(stripe: Stripe, invoice: Stripe.Invoice): Promise<boolean> {
+	if (invoice.post_payment_credit_notes_amount > 0) {
+		return true;
+	}
+	const charge = await retrieveInvoiceCharge(stripe, invoice);
+	if (!charge) {
+		return false;
+	}
+	if (charge.refunded || charge.amount_refunded > 0) {
+		return true;
+	}
+	if (!charge.disputed) {
+		return false;
+	}
+	const disputes = await stripe.disputes.list({charge: charge.id});
+	return disputes.data.some((dispute) => dispute.status === 'lost');
+}
+
+async function retrieveInvoiceCharge(stripe: Stripe, invoice: Stripe.Invoice): Promise<Stripe.Charge | null> {
+	const paymentRef = getInvoicePaymentRef(invoice);
+	if (paymentRef?.chargeId) {
+		return stripe.charges.retrieve(paymentRef.chargeId);
+	}
+	if (!paymentRef?.paymentIntentId) {
+		return null;
+	}
+	const paymentIntent = await stripe.paymentIntents.retrieve(paymentRef.paymentIntentId, {expand: ['latest_charge']});
+	return typeof paymentIntent.latest_charge === 'object' ? paymentIntent.latest_charge : null;
 }
 
 async function getEffectiveActiveStripeSubscription(

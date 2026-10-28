@@ -289,6 +289,9 @@ interface MockStripeInvoice {
 	hosted_invoice_url: string | null;
 	invoice_pdf: string | null;
 	number: string | null;
+	lines: {
+		data: Array<{period: {start: number; end: number}}>;
+	};
 	payments: {
 		object: 'list';
 		data: Array<MockStripeInvoicePayment>;
@@ -322,6 +325,7 @@ interface MockStripeSubscriptionState {
 	current_period_end: number;
 	cancel_at: number | null;
 	cancel_at_period_end: boolean;
+	ended_at: number | null;
 	default_payment_method: string | null;
 	latest_invoice: string | null;
 	status: 'active' | 'canceled' | 'incomplete' | 'past_due' | 'trialing';
@@ -725,6 +729,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			hosted_invoice_url: `https://invoice.stripe.com/i/${id}`,
 			invoice_pdf: `https://pay.stripe.com/invoice/${id}/pdf`,
 			number: null,
+			lines: {data: []},
 			payments: {
 				object: 'list',
 				data: [createDefaultInvoicePayment(`inpay_${id}`, id, paymentIntentId, chargeId)],
@@ -795,6 +800,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			current_period_end: currentPeriodStart + 30 * 24 * 60 * 60,
 			cancel_at: null,
 			cancel_at_period_end: false,
+			ended_at: null,
 			default_payment_method: 'pm_test_1',
 			latest_invoice: null,
 			status: 'active',
@@ -858,6 +864,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			cancel_at: subState.cancel_at,
 			cancel_at_period_end: subState.cancel_at_period_end,
 			canceled_at: subState.status === 'canceled' ? Math.floor(Date.now() / 1000) : null,
+			ended_at: subState.ended_at,
 			collection_method: 'charge_automatically',
 			created: Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60,
 			default_payment_method: subState.default_payment_method
@@ -1502,11 +1509,9 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			const subState = getOrCreateSubscriptionState(subscriptionId);
 			subState.status = 'canceled';
 			subState.cancel_at_period_end = false;
+			subState.ended_at = Math.floor(Date.now() / 1000);
 			subscriptionStore.set(subscriptionId, subState);
-			return HttpResponse.json({
-				...mapSubscriptionStateToStripeSubscription(subscriptionId, subState),
-				ended_at: Math.floor(Date.now() / 1000),
-			});
+			return HttpResponse.json(mapSubscriptionStateToStripeSubscription(subscriptionId, subState));
 		}),
 		http.get(`${STRIPE_API_BASE}/v1/subscriptions`, ({request}) => {
 			if (config.subscriptionsListEmpty) {
@@ -1843,6 +1848,34 @@ export interface StripeWebhookEventData {
 }
 
 let mockWebhookEventCounter = 0;
+
+export function createPaymentIntentInvoicePayments(
+	invoiceId: string,
+	paymentIntentId: string,
+	paidAt: number,
+): MockStripeInvoice['payments'] {
+	return {
+		object: 'list',
+		data: [
+			{
+				id: `inpay_${invoiceId}`,
+				object: 'invoice_payment',
+				amount_paid: 2500,
+				amount_requested: 2500,
+				created: paidAt,
+				currency: 'usd',
+				invoice: invoiceId,
+				is_default: true,
+				livemode: false,
+				payment: {charge: null, payment_intent: paymentIntentId, type: 'payment_intent'},
+				status: 'paid',
+				status_transitions: {canceled_at: null, paid_at: paidAt},
+			},
+		],
+		has_more: false,
+		url: `/v1/invoices/${invoiceId}/payments`,
+	};
+}
 
 export function createMockWebhookPayload(eventData: StripeWebhookEventData): {
 	payload: string;
