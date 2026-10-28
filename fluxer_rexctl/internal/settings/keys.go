@@ -56,6 +56,7 @@ const (
 	HTTPSProxy      = "network.https_proxy"
 	NoProxy         = "network.no_proxy"
 	IPv6            = "network.ipv6"
+	SSOPrivate      = "sso.allow_private_addresses"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
 	EngineHost      = "engine.host"
@@ -125,6 +126,8 @@ func buildNamed() []Key {
 			Help: "Hosts Fluxer connects to without the proxy"},
 		{Name: IPv6, Type: "bool", Validate: validBool, Confirm: "Every Fluxer service restarts.",
 			Help: "Whether Fluxer's network uses IPv6"},
+		{Name: SSOPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
+			Help: "Whether single sign-on can use a provider on a private or local network address"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
 			Help: "A registry mirror for the database, cache, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),

@@ -245,7 +245,7 @@ func (v *configView) row(k settings.Key, reveal bool) configRow {
 	return r
 }
 
-func (v *configView) deploymentKeys(all bool) []settings.Key {
+func (v *configView) deploymentKeys() []settings.Key {
 	var out []settings.Key
 	for _, k := range settings.Named() {
 		if _, err := settings.Lookup(v.set, v.vars, k.Name, nil); err == nil {
@@ -257,11 +257,9 @@ func (v *configView) deploymentKeys(all bool) []settings.Key {
 	for name := range st.Settings {
 		raw = append(raw, name)
 	}
-	if all {
-		raw = append(raw, v.vars...)
-		for name := range st.Secrets {
-			raw = append(raw, name)
-		}
+	raw = append(raw, v.vars...)
+	for name := range st.Secrets {
+		raw = append(raw, name)
 	}
 	slices.Sort(raw)
 	for _, name := range slices.Compact(raw) {
@@ -280,10 +278,8 @@ func newConfigCmd(app *App) *cobra.Command {
 }
 
 func newConfigListCmd(app *App) *cobra.Command {
-	var all bool
 	list := &cobra.Command{Use: "list", Short: "List every setting with its value and help", Args: noArgs}
 	app.jsonFlag(list)
-	list.Flags().BoolVar(&all, "all", false, "also list every raw setting and the secrets rexctl generated")
 	list.RunE = func(c *cobra.Command, _ []string) error {
 		ctx := c.Context()
 		v, err := loadConfigView(app)
@@ -292,7 +288,7 @@ func newConfigListCmd(app *App) *cobra.Command {
 		}
 		var rows []configRow
 		var table [][]string
-		for _, k := range v.deploymentKeys(all) {
+		for _, k := range v.deploymentKeys() {
 			r := v.row(k, false)
 			if _, generated := v.inst.State.Secrets[k.Name]; generated && k.Kind == settings.Raw {
 				if _, chosen := v.inst.State.Settings[k.Name]; !chosen {
