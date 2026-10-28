@@ -351,7 +351,6 @@ fn invalid_version_date(version: &str) -> anyhow::Error {
     anyhow!("Invalid build version date/time: {version}")
 }
 
-// this is used as zip entry names? i don't believe you, function name, i don't think this has anything to do with s3.
 pub(crate) fn path_to_s3_key(path: &Path) -> String {
     path.components()
         .filter_map(|component| match component {
@@ -366,7 +365,7 @@ pub(crate) async fn download_file(url: &str, path: &Path) -> Result<()> {
     #[cfg(not(feature = "http"))]
     {
         _ = path;
-        panic!("i want to download {url}, but the http feature is not enabled");
+        bail!("Downloading {url} needs the http feature");
     }
 
     #[cfg(feature = "http")]

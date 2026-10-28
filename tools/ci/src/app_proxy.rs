@@ -276,7 +276,7 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
 
 #[cfg(not(feature = "s3"))]
 async fn upload_assets_step() -> Result<()> {
-    panic!("needs s3 feature")
+    anyhow::bail!("Uploading assets needs the s3 feature")
 }
 
 #[cfg(feature = "s3")]

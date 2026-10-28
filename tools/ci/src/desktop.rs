@@ -5669,8 +5669,7 @@ fn desktop_live_manifest_url(channel: &str, platform: &str, arch: &str) -> Strin
 async fn fetch_live_channel_feeds(channel: &str) -> Result<BTreeMap<String, DesktopLiveFeed>> {
     #[cfg(not(feature = "http"))]
     {
-        _ = channel;
-        panic!("i want to fetch the live channel feeds, but the http feature is not enabled")
+        bail!("Fetching the live {channel} feeds needs the http feature")
     }
     #[cfg(feature = "http")]
     {
