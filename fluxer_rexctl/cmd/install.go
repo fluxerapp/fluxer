@@ -126,9 +126,18 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 	if names := f.Setup.passedNames(c); f.SetupWhere == "browser" && len(names) > 0 {
 		return &ui.ExitError{Code: ui.ExitUsage, Msg: fmt.Sprintf("--setup browser doesn't take %s.", ui.JoinAnd(names)), Fix: "Pass --setup terminal instead, or leave out the setup options and enter them in the browser."}
 	}
-	dir, err := app.Dir()
+	l, err := app.locate()
 	if err != nil {
 		return err
+	}
+	dir := l.Dir
+	switch {
+	case l.Stale != "" && l.Chosen:
+		dir = l.Stale
+		app.located = &instance.Located{Dir: dir, From: instance.FromRecord, Scope: l.Scope}
+		app.UI.Info("Installing Fluxer in %s, the folder you picked with rexctl use.", dir)
+	case l.Stale != "":
+		app.warnStale(l)
 	}
 	dir, err = filepath.Abs(dir)
 	if err != nil {
@@ -1169,6 +1178,7 @@ func (in *installer) resume(ctx context.Context, inst *instance.Instance) error 
 
 func (in *installer) start(ctx context.Context, inst *instance.Instance) error {
 	u := in.app.UI
+	in.app.remember(inst.Dir)
 	origin := inst.Origin()
 	token := setup.Token(inst.State.Secrets)
 	if token == "" && !inst.State.SetupDone {

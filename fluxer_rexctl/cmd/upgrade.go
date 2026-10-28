@@ -220,7 +220,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err != nil {
 		return err
 	}
-	if err := reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated)); err != nil {
+	if err := reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated, app.pickedDir())); err != nil {
 		return ui.Wrap(err, "Updated rexctl but couldn't start it again.", "Run rexctl upgrade again.")
 	}
 	return nil
@@ -249,7 +249,7 @@ func updateBeforeRecovery(ctx context.Context, app *App, resume, to, command str
 	if err != nil {
 		return false, keepRexctl(ctx, app, fmt.Sprintf("Couldn't update rexctl to %s.", next), err)
 	}
-	if err := reexec(resumeArgs(os.Args[1:], release.ResumeRecovery)); err != nil {
+	if err := reexec(resumeArgs(os.Args[1:], release.ResumeRecovery, app.pickedDir())); err != nil {
 		return true, ui.Wrap(err, "Updated rexctl but couldn't start it again.", fmt.Sprintf("Run %s again.", command))
 	}
 	return true, nil
@@ -1244,8 +1244,8 @@ func phaseIndex(phase string) int {
 	return -1
 }
 
-func resumeArgs(args []string, phase string) []string {
-	out := make([]string, 0, len(args)+2)
+func resumeArgs(args []string, phase, dir string) []string {
+	out := make([]string, 0, len(args)+4)
 	flag := "--" + release.ResumeFlag
 	for i := 0; i < len(args); i++ {
 		a := args[i]
@@ -1257,6 +1257,9 @@ func resumeArgs(args []string, phase string) []string {
 			continue
 		}
 		out = append(out, a)
+	}
+	if dir != "" {
+		out = append(out, "--dir", dir)
 	}
 	return append(out, flag, phase)
 }

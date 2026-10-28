@@ -70,6 +70,7 @@ func runEject(ctx context.Context, app *App) error {
 			}
 			return ui.Wrap(err, "Couldn't hand the instance over.", "Check that you can write to "+inst.Dir+", then try again.")
 		}
+		app.forget(inst.Dir)
 		if removed && host.BootUnitSupported() && engineErr == nil && e.Kind == engine.Podman && olderPodman(e.Version) {
 			u.Info("Your containers come back after a restart of this machine only once Podman's own podman-restart.service starts them.")
 		}

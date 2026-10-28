@@ -51,6 +51,7 @@ type App struct {
 	held    *instance.Instance
 	engine  *engine.Engine
 	warned  bool
+	located *instance.Located
 
 	keepLayout bool
 }
@@ -112,15 +113,101 @@ func (w detailWriter) Write(p []byte) (int, error) {
 func (a *App) SetExit(code int) { a.exit = code }
 
 func (a *App) Dir() (string, error) {
-	if a.Flags.Dir != "" {
-		return a.Flags.Dir, nil
+	l, err := a.Locate()
+	return l.Dir, err
+}
+
+func (a *App) Locate() (instance.Located, error) {
+	first := a.located == nil
+	l, err := a.locate()
+	if err == nil && first && l.Stale != "" {
+		a.warnStale(l)
 	}
-	return instance.Locate()
+	return l, err
+}
+
+func (a *App) warnStale(l instance.Located) {
+	a.UI.Warn(fmt.Sprintf("rexctl remembers Fluxer in %s as the default, but there's no instance there now. Using %s.", l.Stale, l.Dir), "Run rexctl use <folder> to pick another default.")
+}
+
+func (a *App) locate() (instance.Located, error) {
+	if a.located != nil {
+		return *a.located, nil
+	}
+	l, err := instance.Resolve(a.Flags.Dir)
+	var several *instance.SeveralError
+	switch {
+	case errors.As(err, &several):
+		if several.Stale != "" {
+			a.UI.Warn(fmt.Sprintf("rexctl remembers Fluxer in %s as the default, but there's no instance there now.", several.Stale), "")
+		}
+		if !a.UI.Interactive() {
+			return l, &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("This machine has Fluxer instances in %s.", ui.JoinAnd(several.Dirs)), Fix: "Pass --dir with the one you mean, or run rexctl use <folder> to make one the default.", Err: err}
+		}
+		opts := make([]ui.Option, len(several.Dirs))
+		for i, d := range several.Dirs {
+			opts[i] = ui.Option{Label: d, Value: d}
+		}
+		var dir string
+		if err := a.UI.Ask(nil, ui.Field{Title: "Which Fluxer instance?", Value: &dir, Options: opts}); err != nil {
+			return l, err
+		}
+		a.UI.Info("Run rexctl use %s to make it the default.", dir)
+		l = instance.Located{Dir: dir, From: instance.FromPicked}
+	case err != nil:
+		return l, untrustedRefusal(err)
+	}
+	a.located = &l
+	return l, nil
+}
+
+func untrustedRefusal(err error) error {
+	var untrusted *instance.UntrustedError
+	switch {
+	case !errors.As(err, &untrusted):
+		return err
+	case untrusted.Folder:
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("rexctl remembers Fluxer in %s, but accounts other than root can change that folder, so root doesn't use it.", untrusted.Path), Fix: "Pass --dir if you mean that folder, or run rexctl use <folder> as root with another folder.", Err: err}
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("Accounts other than root can change %s, so root doesn't use it.", untrusted.Path), Fix: "Make root its owner and the only account that can write to it, or pass --dir.", Err: err}
+}
+
+func (a *App) pickedDir() string {
+	if a.located == nil || a.located.From == instance.FromFlag || a.located.From == instance.FromWorkdir {
+		return ""
+	}
+	return a.located.Dir
+}
+
+func (a *App) remember(dir string) {
+	if err := instance.Remember(instance.OwnScope(), dir, false); err != nil {
+		a.UI.Detail("recording the instance in %s: %v", instance.RecordPath(instance.OwnScope()), err)
+	}
+}
+
+func (a *App) rememberFirst(inst *instance.Instance) {
+	if inst.State == nil || inst.State.Ejected != nil {
+		return
+	}
+	if err := instance.RememberFirst(instance.OwnScope(), inst.Dir); err != nil {
+		a.UI.Detail("recording the instance in %s: %v", instance.RecordPath(instance.OwnScope()), err)
+	}
+}
+
+func (a *App) forget(dir string) {
+	s := instance.OwnScope()
+	if err := instance.Forget(s, dir); err != nil {
+		a.UI.Detail("%v", err)
+		a.UI.Warn(fmt.Sprintf("rexctl still lists %s in %s.", dir, instance.RecordPath(s)), "Remove it from that file.")
+	}
 }
 
 func (a *App) takeOverCommand() string {
 	if a.Flags.Dir != "" {
 		return "rexctl takeover --dir " + a.Flags.Dir
+	}
+	if dir := a.pickedDir(); dir != "" {
+		return "rexctl takeover --dir " + dir
 	}
 	return "rexctl takeover"
 }
@@ -142,6 +229,7 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 			return nil, err
 		}
 		a.warnUnknown(inst)
+		a.rememberFirst(inst)
 		return inst, nil
 	case errors.Is(err, instance.ErrNotFound):
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")

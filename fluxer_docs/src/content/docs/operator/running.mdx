@@ -66,6 +66,8 @@ rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bi
 
 rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports.
 
+rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default.
+
 ## Manage people
 
 Create an invite link that 10 people can use within a week.

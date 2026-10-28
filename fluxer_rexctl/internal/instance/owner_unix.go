@@ -14,6 +14,10 @@ func (i *Instance) OwnerUID() (int, bool) {
 	if err != nil {
 		return 0, false
 	}
+	return ownerOf(info)
+}
+
+func ownerOf(info os.FileInfo) (int, bool) {
 	st, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		return 0, false

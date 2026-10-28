@@ -8,9 +8,9 @@ import (
 	"io/fs"
 	"net"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -55,8 +55,16 @@ type Instance struct {
 	State *State
 }
 
+var rootHome = func() (string, error) {
+	u, err := user.LookupId("0")
+	if err != nil {
+		return "", err
+	}
+	return u.HomeDir, nil
+}
+
 func DefaultDir() (string, error) {
-	if runtime.GOOS != "windows" && os.Geteuid() == 0 {
+	if asRoot() {
 		return "/opt/fluxer", nil
 	}
 	home, err := os.UserHomeDir()
@@ -66,15 +74,12 @@ func DefaultDir() (string, error) {
 	return filepath.Join(home, "fluxer"), nil
 }
 
-func Locate() (string, error) {
-	if wd, err := os.Getwd(); err == nil && present(wd) {
-		return wd, nil
-	}
+func Fallback() (string, error) {
 	dir, err := DefaultDir()
-	if err != nil || present(dir) || runtime.GOOS == "windows" || os.Geteuid() != 0 {
+	if err != nil || present(dir) || !asRoot() {
 		return dir, err
 	}
-	if home, err := os.UserHomeDir(); err == nil && present(filepath.Join(home, "fluxer")) {
+	if home, err := rootHome(); err == nil && filepath.IsAbs(home) && present(filepath.Join(home, "fluxer")) {
 		return filepath.Join(home, "fluxer"), nil
 	}
 	return dir, nil

@@ -163,6 +163,7 @@ func restoreInto(ctx context.Context, app *App, e *engine.Engine, path, dir stri
 		return engineFailure(err)
 	}
 	restoreBootUnit(ctx, app, inst, e, p, existing, old)
+	app.remember(inst.Dir)
 	err = app.UI.Step(ctx, "Starting Fluxer", func(ctx context.Context, s *ui.Step) error {
 		if err := p.WaitReady(ctx, restoreReadyTimeout, showReadiness(s, "Starting Fluxer")); err != nil {
 			return err

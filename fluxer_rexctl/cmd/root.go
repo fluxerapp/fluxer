@@ -117,6 +117,7 @@ func newRoot(app *App) *cobra.Command {
 		newUninstallCmd(app),
 		newTakeoverCmd(app),
 		newEjectCmd(app),
+		newUseCmd(app),
 		newProxyCmd(app),
 		newUsersCmd(app),
 		newAdminsCmd(app),
@@ -159,7 +160,7 @@ const (
 )
 
 var commandGroups = map[string][]string{
-	"run":    {"install", "setup", "status", "doctor", "logs", "start", "stop", "restart", "upgrade", "auto-upgrade", "rollback", "backup", "restore", "proxy", "takeover", "eject", "uninstall"},
+	"run":    {"install", "setup", "status", "doctor", "logs", "start", "stop", "restart", "upgrade", "auto-upgrade", "rollback", "backup", "restore", "proxy", "takeover", "eject", "use", "uninstall"},
 	"manage": {"users", "admins", "invites", "registration", "email", "branding", "search", "config"},
 	"other":  {"version", "docs"},
 }

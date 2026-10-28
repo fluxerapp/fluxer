@@ -84,6 +84,7 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 	if err != nil {
 		return err
 	}
+	app.forget(inst.Dir)
 	if keepData {
 		app.UI.Info("Your data and backups are still in %s.", inst.Dir)
 		return nil

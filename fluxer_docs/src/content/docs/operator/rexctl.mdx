@@ -801,6 +801,14 @@ rexctl upgrade [flags]
 
   Upgrade to this version, not the latest.
 
+## rexctl use
+
+Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs, so you only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. The services rexctl sets up for starting and upgrading Fluxer always name their folder, so this doesn't change them.
+
+```sh
+rexctl use [folder]
+```
+
 ## rexctl users
 
 Manage accounts on your instance.
