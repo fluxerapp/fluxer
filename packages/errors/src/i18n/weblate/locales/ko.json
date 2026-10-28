@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "id_token과 userinfo 사이의 SSO 신원이 일치하지 않아요.",
 	"auth_and_oauth.sso_misconfigured": "SSO 구성이 잘못되었어요. 관리자에게 문의해 주세요.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "SSO 제공자가 이메일 주소를 반환하지 않았어요.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {이 인스턴스는 싱글 사인온이 필요해서 이메일과 비밀번호는 SSO 제공자가 관리해요.} no_account {이 인스턴스는 기존 계정만 SSO로 로그인할 수 있는데, 아직 계정이 없어요. 이 인스턴스 관리자에게 접근 권한을 요청하세요.} other {이 인스턴스는 싱글 사인온이 필요해요. 로그인 페이지의 SSO 버튼으로 로그인하세요.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {이 인스턴스는 싱글 사인온이 필요해서 이메일과 비밀번호는 SSO 제공자가 관리해요.} no_account {이 인스턴스는 기존 계정만 SSO로 로그인할 수 있는데, 아직 계정이 없어요. 이 인스턴스 관리자에게 접근 권한을 요청하세요.} managed_username {이 인스턴스는 싱글 사인온이 필요해서 사용자 이름은 SSO 제공자에서 가져와요.} other {이 인스턴스는 싱글 사인온이 필요해요. 로그인 페이지의 SSO 버튼으로 로그인하세요.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO 테스트 코드에 이메일 페이로드가 없어요.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "SSO 계정에 디스크리미네이터를 할당하지 못했어요. 다시 시도해 주세요.",
 	"auth_and_oauth.sudo_mode_required": "Sudo 모드가 필요해요.",

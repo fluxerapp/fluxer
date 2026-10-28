@@ -13,6 +13,19 @@ export async function assertCredentialsNotSsoManaged(ssoService: SsoService, use
 	}
 }
 
+export async function assertUsernameNotSsoManaged(
+	ssoService: SsoService,
+	user: User,
+	body: {username?: string; discriminator?: number},
+): Promise<void> {
+	const renames =
+		(body.username !== undefined && body.username !== user.username) ||
+		(body.discriminator !== undefined && body.discriminator !== user.discriminator);
+	if (renames && !user.isBot && isSsoLinkedUser(user) && (await ssoService.managesUsernames())) {
+		throw new SsoRequiredError(SsoRequiredReasons.MANAGED_USERNAME);
+	}
+}
+
 export const SsoManagedCredentialsMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	await assertCredentialsNotSsoManaged(ctx.get('ssoService'), ctx.get('user'));
 	await next();

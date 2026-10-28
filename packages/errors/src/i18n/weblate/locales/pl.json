@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Niezgodność tożsamości SSO w id_token i userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO jest nieprawidłowo skonfigurowane. Skontaktuj się z administratorem.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Twój dostawca SSO nie zwrócił adresu e-mail.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ta instancja wymaga logowania jednokrotnego, więc Twoim adresem e-mail i hasłem zarządza Twój dostawca SSO.} no_account {Ta instancja pozwala logować się przez SSO tylko istniejącym kontom, a Ty nie masz jeszcze konta. Poproś administratora tej instancji o dostęp.} other {Ta instancja wymaga logowania jednokrotnego. Zaloguj się przyciskiem SSO na stronie logowania.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ta instancja wymaga logowania jednokrotnego, więc Twoim adresem e-mail i hasłem zarządza Twój dostawca SSO.} no_account {Ta instancja pozwala logować się przez SSO tylko istniejącym kontom, a Ty nie masz jeszcze konta. Poproś administratora tej instancji o dostęp.} managed_username {Ta instancja wymaga logowania jednokrotnego, więc Twoja nazwa użytkownika pochodzi od Twojego dostawcy SSO.} other {Ta instancja wymaga logowania jednokrotnego. Zaloguj się przyciskiem SSO na stronie logowania.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Testowy kod SSO nie zawiera danych adresu e-mail.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nie udało się przydzielić dyskryminatora dla Twojego konta SSO. Spróbuj ponownie.",
 	"auth_and_oauth.sudo_mode_required": "Wymagany tryb sudo.",

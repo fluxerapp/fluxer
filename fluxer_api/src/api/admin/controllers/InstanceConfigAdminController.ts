@@ -255,6 +255,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			scope: ssoConfig.scope,
 			allowed_domains: ssoConfig.allowedEmailDomains,
 			auto_provision: ssoConfig.autoProvision,
+			username_from_provider: ssoConfig.usernameFromProvider,
 			redirect_uri: deriveSsoRedirectUri(Config.endpoints.webApp),
 			groups_claim: ssoConfig.groupsClaim,
 			group_role_mappings: ssoConfig.groupRoleMappings.map(({group, roleId}) => ({group, role_id: roleId})),
@@ -490,6 +491,12 @@ async function assertConsistentInstanceConfig(
 			ValidationErrorCodes.IDENTIFIER_FIRST_REQUIRES_EMAIL_IDENTITY,
 		);
 	}
+	if (!usernameMode && data.sso?.username_from_provider === true) {
+		throw InputValidationError.create(
+			'sso.username_from_provider',
+			'Usernames can only come from your sign-in provider when people sign in with a username',
+		);
+	}
 	const deliveryField = emailDeliveryPatchField(integrationsPatch?.email);
 	if (usernameMode && deliveryField !== null) {
 		throw InputValidationError.fromCode(deliveryField, ValidationErrorCodes.EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY);
@@ -708,6 +715,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 				scope: supplied('scope', next.scope),
 				allowedEmailDomains: supplied('allowed_domains', validated.allowedEmailDomains),
 				autoProvision: supplied('auto_provision', next.autoProvision),
+				usernameFromProvider: readOptionalField(sso, 'username_from_provider'),
 				groupsClaim: readOptionalField(sso, 'groups_claim'),
 				groupRoleMappings: await validateSsoGroupRoleMappings(readOptionalField(sso, 'group_role_mappings')),
 			});

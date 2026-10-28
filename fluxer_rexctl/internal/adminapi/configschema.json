@@ -823,6 +823,11 @@
     "nullable": true
   },
   {
+    "key": "sso.username_from_provider",
+    "type": "boolean",
+    "help": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+  },
+  {
     "key": "voice_p2p.enabled",
     "type": "boolean",
     "help": "Voice P2P enabled"

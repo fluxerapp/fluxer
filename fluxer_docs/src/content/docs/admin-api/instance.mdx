@@ -72,6 +72,7 @@ Settings for the instance's OpenID Connect provider.
 | scope | ?string | Space-separated scopes |
 | allowed_domains | array[string] | Email domains allowed to sign in (up to 100 entries) |
 | auto_provision | boolean | Whether a first sign-in creates an account |
+| username_from_provider | boolean | Whether each SSO sign-in sets the username from the provider, so SSO accounts can't change it. Off by default, and only on `username` instances |
 | redirect_uri<sup>1</sup> | ?string | Redirect URI to register with the provider |
 | groups_claim | ?string | The claim that lists a person's groups, or null for `groups` (up to 128 characters) |
 | group_role_mappings<sup>2</sup> | array[[SSO group role mapping](#sso-group-role-mapping-object) object] | Groups whose members get a role in the single community (up to 100 entries) |
@@ -672,6 +673,8 @@ Fluxer checks the merged settings before it writes anything, and refuses these c
 - `EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY` when email delivery is set to `smtp` on a `username` instance
 - `SMTP_HOST_REQUIRED` when email delivery is set to `smtp` with no SMTP host saved or in the environment
 - `VERIFICATION_BASIS_REQUIRES_EMAIL_DELIVERY` when `verification_basis` is `confirmed_email` while the instance doesn't send email
+
+It also refuses `sso.username_from_provider` set to true on an instance that isn't a `username` instance.
 
 #### Instance policy update structure
 

@@ -2235,6 +2235,9 @@ type InstanceConfigResponse struct {
 		Scope       *string `json:"scope"`
 		TokenUrl    *string `json:"token_url"`
 		UserinfoUrl *string `json:"userinfo_url"`
+
+		// UsernameFromProvider Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances
+		UsernameFromProvider bool `json:"username_from_provider"`
 	} `json:"sso"`
 	VoiceP2p VoiceP2pConfigResponse `json:"voice_p2p"`
 }
@@ -2429,6 +2432,9 @@ type InstanceConfigUpdateRequest struct {
 		Scope       *string `json:"scope,omitempty"`
 		TokenUrl    *string `json:"token_url,omitempty"`
 		UserinfoUrl *string `json:"userinfo_url,omitempty"`
+
+		// UsernameFromProvider Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances
+		UsernameFromProvider *bool `json:"username_from_provider,omitempty"`
 	} `json:"sso,omitempty"`
 	VoiceP2p *VoiceP2pConfigUpdateRequest `json:"voice_p2p,omitempty"`
 }

@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Nepotrivire de identitate SSO între id_token și userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO este configurat incorect. Contactează administratorul.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Furnizorul tău SSO nu a returnat o adresă de e-mail.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Această instanță necesită autentificare unică, așa că furnizorul tău SSO îți gestionează adresa de e-mail și parola.} no_account {Această instanță permite conectarea prin SSO doar conturilor existente, iar tu nu ai încă un cont. Cere acces unui administrator al acestei instanțe.} other {Această instanță necesită autentificare unică. Conectează-te cu butonul SSO de pe pagina de conectare.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Această instanță necesită autentificare unică, așa că furnizorul tău SSO îți gestionează adresa de e-mail și parola.} no_account {Această instanță permite conectarea prin SSO doar conturilor existente, iar tu nu ai încă un cont. Cere acces unui administrator al acestei instanțe.} managed_username {Această instanță necesită autentificare unică, așa că numele tău de utilizator vine de la furnizorul tău SSO.} other {Această instanță necesită autentificare unică. Conectează-te cu butonul SSO de pe pagina de conectare.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Codului de test SSO îi lipsește payload-ul de e-mail.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nu s-a putut aloca un discriminator pentru contul tău SSO. Încearcă din nou.",
 	"auth_and_oauth.sudo_mode_required": "Modul Sudo este necesar.",

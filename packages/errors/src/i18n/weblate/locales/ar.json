@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "عدم تطابق هوية SSO بين id_token وuserinfo.",
 	"auth_and_oauth.sso_misconfigured": "تم إعداد SSO بشكل غير صحيح. تواصل مع المسؤول.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "لم يُرجع مزوّد SSO عنوان بريد إلكتروني.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {يتطلب هذا المثيل تسجيل الدخول الموحد، لذا يدير مزوّد SSO بريدك الإلكتروني وكلمة مرورك.} no_account {يسمح هذا المثيل للحسابات الموجودة فقط بتسجيل الدخول عبر SSO، ولا يوجد حساب لك بعد. اطلب الوصول من أحد مسؤولي هذا المثيل.} other {يتطلب هذا المثيل تسجيل الدخول الموحد. سجّل الدخول باستخدام زر SSO في صفحة تسجيل الدخول.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {يتطلب هذا المثيل تسجيل الدخول الموحد، لذا يدير مزوّد SSO بريدك الإلكتروني وكلمة مرورك.} no_account {يسمح هذا المثيل للحسابات الموجودة فقط بتسجيل الدخول عبر SSO، ولا يوجد حساب لك بعد. اطلب الوصول من أحد مسؤولي هذا المثيل.} managed_username {يتطلب هذا المثيل تسجيل الدخول الموحد، لذا يأتي اسم المستخدم الخاص بك من مزوّد SSO.} other {يتطلب هذا المثيل تسجيل الدخول الموحد. سجّل الدخول باستخدام زر SSO في صفحة تسجيل الدخول.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "رمز اختبار SSO يفتقر إلى حمولة البريد الإلكتروني.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "لم نتمكن من تخصيص مميّز لحساب SSO الخاص بك. حاول مجددًا.",
 	"auth_and_oauth.sudo_mode_required": "وضع Sudo مطلوب.",

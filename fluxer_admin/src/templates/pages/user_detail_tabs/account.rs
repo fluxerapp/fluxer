@@ -30,6 +30,7 @@ const BTN_CLS: &str = "w-full inline-flex items-center justify-center rounded-md
 pub struct AccountTabOptions<'a> {
     pub admin_acls: &'a [String],
     pub account_identity: AccountIdentityMode,
+    pub username_from_sso: bool,
     pub reset_link_available: bool,
     pub password_reset_link: Option<&'a PasswordResetLinkResponse>,
 }
@@ -54,7 +55,7 @@ pub fn account_tab(
             @if can_create_reset_link {
                 (password_reset_link_card(base, user, csrf_token, options.password_reset_link))
             }
-            (edit_account_card(base, user, csrf_token, identity))
+            (edit_account_card(base, user, csrf_token, identity, options.username_from_sso))
             (sessions_card(config, sessions))
             (quick_actions_card(base, user, csrf_token, &QuickActions {
                 identity,
@@ -139,6 +140,7 @@ fn edit_account_card(
     user: &AdminUser,
     csrf_token: &str,
     identity: AccountIdentityMode,
+    username_from_sso: bool,
 ) -> Markup {
     html! {
         (card_with_header("Edit Account Information", html! {
@@ -155,6 +157,11 @@ fn edit_account_card(
                     (form_actions(html! {
                         (submit_button("Change Username"))
                     }))
+                    @if username_from_sso && !user.bot {
+                        p class="text-sm text-neutral-500" {
+                            "Usernames come from your SSO provider. The person's next SSO sign-in replaces this change."
+                        }
+                    }
                 }, csrf_token))
                 @if !identity.is_username() {
                     (post_form(base, &user.id, "change_email", "account", html! {

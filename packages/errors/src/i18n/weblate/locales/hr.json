@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Nepodudaranje SSO identiteta između id_token i userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO je pogrešno konfiguriran. Javi se administratoru.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Tvoj SSO davatelj nije vratio e-mail adresu.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ova instanca zahtijeva jedinstvenu prijavu, pa tvoj SSO davatelj upravlja tvojom e-mail adresom i lozinkom.} no_account {Ova instanca dopušta prijavu putem SSO-a samo postojećim računima, a ti još nemaš račun. Zatraži pristup od administratora ove instance.} other {Ova instanca zahtijeva jedinstvenu prijavu. Prijavi se gumbom SSO na stranici za prijavu.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ova instanca zahtijeva jedinstvenu prijavu, pa tvoj SSO davatelj upravlja tvojom e-mail adresom i lozinkom.} no_account {Ova instanca dopušta prijavu putem SSO-a samo postojećim računima, a ti još nemaš račun. Zatraži pristup od administratora ove instance.} managed_username {Ova instanca zahtijeva jedinstvenu prijavu, pa tvoje korisničko ime dolazi od tvog SSO davatelja.} other {Ova instanca zahtijeva jedinstvenu prijavu. Prijavi se gumbom SSO na stranici za prijavu.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO testnom kodu nedostaje e-mail adresa.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nismo mogli dodijeliti diskriminator tvom SSO računu. Pokušaj ponovno.",
 	"auth_and_oauth.sudo_mode_required": "Potreban je sudo način rada.",

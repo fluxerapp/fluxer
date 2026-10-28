@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "ข้อมูลประจำตัว SSO ไม่ตรงกันระหว่าง id_token และ userinfo",
 	"auth_and_oauth.sso_misconfigured": "SSO ตั้งค่าไม่ถูกต้อง โปรดติดต่อผู้ดูแลระบบ",
 	"auth_and_oauth.sso_provider_did_not_return_email": "ผู้ให้บริการ SSO ของคุณไม่ได้ส่งคืนที่อยู่อีเมล",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {อินสแตนซ์นี้กำหนดให้เข้าสู่ระบบแบบ SSO ผู้ให้บริการ SSO ของคุณจึงเป็นผู้จัดการอีเมลและรหัสผ่านของคุณ} no_account {อินสแตนซ์นี้อนุญาตให้เฉพาะบัญชีที่มีอยู่แล้วเข้าสู่ระบบด้วย SSO และคุณยังไม่มีบัญชี โปรดขอสิทธิ์เข้าถึงจากผู้ดูแลอินสแตนซ์นี้} other {อินสแตนซ์นี้กำหนดให้เข้าสู่ระบบแบบ SSO โปรดเข้าสู่ระบบด้วยปุ่ม SSO ในหน้าเข้าสู่ระบบ}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {อินสแตนซ์นี้กำหนดให้เข้าสู่ระบบแบบ SSO ผู้ให้บริการ SSO ของคุณจึงเป็นผู้จัดการอีเมลและรหัสผ่านของคุณ} no_account {อินสแตนซ์นี้อนุญาตให้เฉพาะบัญชีที่มีอยู่แล้วเข้าสู่ระบบด้วย SSO และคุณยังไม่มีบัญชี โปรดขอสิทธิ์เข้าถึงจากผู้ดูแลอินสแตนซ์นี้} managed_username {อินสแตนซ์นี้กำหนดให้เข้าสู่ระบบแบบ SSO ชื่อผู้ใช้ของคุณจึงมาจากผู้ให้บริการ SSO ของคุณ} other {อินสแตนซ์นี้กำหนดให้เข้าสู่ระบบแบบ SSO โปรดเข้าสู่ระบบด้วยปุ่ม SSO ในหน้าเข้าสู่ระบบ}}",
 	"auth_and_oauth.sso_test_code_missing_email": "รหัสทดสอบ SSO ไม่มีเพย์โหลดอีเมล",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "ไม่สามารถสร้าง discriminator สำหรับบัญชี SSO ของคุณได้ โปรดลองอีกครั้ง",
 	"auth_and_oauth.sudo_mode_required": "ต้องใช้โหมด sudo",

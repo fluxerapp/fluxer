@@ -2,7 +2,7 @@
 
 use crate::templates::pages::instance_config::ConfigForm;
 use crate::{
-    api::types::SsoConfigResponse,
+    api::types::{AccountIdentityMode, SsoConfigResponse},
     templates::components::{
         form::{
             Checkbox, FORM_INPUT_CLASS, form_actions, form_field_group, submit_button, text_input,
@@ -21,6 +21,7 @@ pub(super) fn sso_config_section(
     base: &str,
     config_form: ConfigForm<'_>,
     sso: &SsoConfigResponse,
+    identity: AccountIdentityMode,
 ) -> Markup {
     let allowed_domains = sso.allowed_domains.join("\n");
     let group_role_mappings = sso
@@ -69,6 +70,20 @@ pub(super) fn sso_config_section(
                             checked: sso.auto_provision,
                             enabled: true,
                         }.render())
+                        (Checkbox {
+                            name: "sso_username_from_provider",
+                            value: "true",
+                            label: "Usernames come from your sign-in provider",
+                            checked: sso.username_from_provider,
+                            enabled: identity.is_username(),
+                        }.render())
+                        p class="text-xs text-neutral-500" {
+                            @if identity.is_username() {
+                                "Every SSO sign-in sets the person's username from the provider, and people can't change it in Fluxer."
+                            } @else {
+                                "Only for instances where people sign in with a username."
+                            }
+                        }
                     }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                         (text_input("sso_display_name", "Display Name", sso.display_name.as_deref().unwrap_or(""), "Example Identity Provider"))

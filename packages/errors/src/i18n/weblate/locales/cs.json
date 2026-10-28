@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Nesoulad SSO identity mezi id_token a userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO je nesprávně nakonfigurováno. Kontaktujte svého správce.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Váš poskytovatel SSO nevrátil e-mailovou adresu.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Tato instance vyžaduje jednotné přihlášení, takže váš e-mail a heslo spravuje váš poskytovatel SSO.} no_account {Tato instance umožňuje přihlášení přes SSO jen existujícím účtům a vy zatím účet nemáte. Požádejte o přístup správce této instance.} other {Tato instance vyžaduje jednotné přihlášení. Přihlaste se tlačítkem SSO na přihlašovací stránce.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Tato instance vyžaduje jednotné přihlášení, takže váš e-mail a heslo spravuje váš poskytovatel SSO.} no_account {Tato instance umožňuje přihlášení přes SSO jen existujícím účtům a vy zatím účet nemáte. Požádejte o přístup správce této instance.} managed_username {Tato instance vyžaduje jednotné přihlášení, takže vaše uživatelské jméno pochází od vašeho poskytovatele SSO.} other {Tato instance vyžaduje jednotné přihlášení. Přihlaste se tlačítkem SSO na přihlašovací stránce.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO testovací kód neobsahuje e-mailovou adresu.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nepodařilo se přidělit čtyřmístný identifikátor pro váš účet SSO. Zkuste to znovu.",
 	"auth_and_oauth.sudo_mode_required": "Je vyžadován režim sudo.",

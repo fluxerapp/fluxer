@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Incompatibilidade de identidade SSO entre id_token e userinfo.",
 	"auth_and_oauth.sso_misconfigured": "O SSO está mal configurado. Entre em contato com seu administrador.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Seu provedor SSO não retornou um endereço de e-mail.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Esta instância exige login único (SSO), então seu provedor SSO gerencia seu e-mail e sua senha.} no_account {Esta instância só permite entrar com SSO em contas existentes, e você ainda não tem uma conta. Peça acesso a um administrador desta instância.} other {Esta instância exige login único (SSO). Entre com o botão de SSO na página de login.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Esta instância exige login único (SSO), então seu provedor SSO gerencia seu e-mail e sua senha.} no_account {Esta instância só permite entrar com SSO em contas existentes, e você ainda não tem uma conta. Peça acesso a um administrador desta instância.} managed_username {Esta instância exige login único (SSO), então seu nome de usuário vem do seu provedor SSO.} other {Esta instância exige login único (SSO). Entre com o botão de SSO na página de login.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "O código de teste do SSO está sem o payload de e-mail.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Não foi possível alocar um discriminador para sua conta SSO. Tente novamente.",
 	"auth_and_oauth.sudo_mode_required": "O modo sudo é obrigatório.",

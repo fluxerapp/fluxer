@@ -94,6 +94,7 @@ pub async fn render(
                 &tabs::account::AccountTabOptions {
                     admin_acls,
                     account_identity: account_identity.mode,
+                    username_from_sso: account_identity.sso_manages_usernames(),
                     reset_link_available: account_identity.admin_reset_links_available(),
                     password_reset_link: None,
                 },

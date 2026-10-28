@@ -44110,6 +44110,11 @@ msgstr "CSS вашей темы слишком большой для отпра�
 msgid "Your themes"
 msgstr "Ваши темы"
 
+#. Tooltip on the disabled Change username button when the sign-in provider sets usernames. Keep the tone plain and specific.
+#: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
+msgid "Your username comes from your sign-in provider."
+msgstr "Твоё имя пользователя задаёт твой провайдер входа."
+
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx
 msgid "Your vanity URL has been removed."

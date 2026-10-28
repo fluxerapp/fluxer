@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO-identiteten samsvarer ikke mellom id_token og userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO er feilkonfigurert. Kontakt administratoren din.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "SSO-leverandøren din returnerte ikke en e-postadresse.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Denne instansen krever enkeltpålogging, så SSO-leverandøren din styrer e-postadressen og passordet ditt.} no_account {Denne instansen lar bare eksisterende kontoer logge inn med SSO, og det finnes ingen konto for deg ennå. Be en administrator for denne instansen om tilgang.} other {Denne instansen krever enkeltpålogging. Logg inn med SSO-knappen på innloggingssiden.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Denne instansen krever enkeltpålogging, så SSO-leverandøren din styrer e-postadressen og passordet ditt.} no_account {Denne instansen lar bare eksisterende kontoer logge inn med SSO, og det finnes ingen konto for deg ennå. Be en administrator for denne instansen om tilgang.} managed_username {Denne instansen krever enkeltpålogging, så brukernavnet ditt kommer fra SSO-leverandøren din.} other {Denne instansen krever enkeltpålogging. Logg inn med SSO-knappen på innloggingssiden.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "SSO-testkoden mangler e-postdataene.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Vi klarte ikke å tildele en diskriminator til SSO-kontoen din. Prøv igjen.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-modus er påkrevd.",

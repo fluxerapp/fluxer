@@ -16105,6 +16105,10 @@
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 							"auto_provision": {"type": "boolean"},
+							"username_from_provider": {
+								"type": "boolean",
+								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+							},
 							"redirect_uri": {"nullable": true, "type": "string"},
 							"groups_claim": {
 								"nullable": true,
@@ -16150,6 +16154,7 @@
 							"scope",
 							"allowed_domains",
 							"auto_provision",
+							"username_from_provider",
 							"redirect_uri",
 							"groups_claim",
 							"group_role_mappings"
@@ -16918,6 +16923,10 @@
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 							"auto_provision": {"type": "boolean"},
+							"username_from_provider": {
+								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+								"type": "boolean"
+							},
 							"groups_claim": {
 								"nullable": true,
 								"type": "string",
@@ -25388,7 +25397,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
-					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
+					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
 					"This purchase could not be verified.",

@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Az id_token és a userinfo eltérő SSO-azonosságot jelez.",
 	"auth_and_oauth.sso_misconfigured": "Az SSO rosszul van beállítva. Lépj kapcsolatba az adminisztrátoroddal.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Az SSO-szolgáltatód nem adott vissza e-mail-címet.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ez a példány egységes bejelentkezést (SSO) igényel, ezért az e-mail-címedet és a jelszavadat az SSO-szolgáltatód kezeli.} no_account {Ez a példány csak meglévő fiókoknak engedi az SSO-s bejelentkezést, neked pedig még nincs fiókod. Kérj hozzáférést a példány egyik adminisztrátorától.} other {Ez a példány egységes bejelentkezést (SSO) igényel. Jelentkezz be a bejelentkezési oldalon az SSO gombbal.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Ez a példány egységes bejelentkezést (SSO) igényel, ezért az e-mail-címedet és a jelszavadat az SSO-szolgáltatód kezeli.} no_account {Ez a példány csak meglévő fiókoknak engedi az SSO-s bejelentkezést, neked pedig még nincs fiókod. Kérj hozzáférést a példány egyik adminisztrátorától.} managed_username {Ez a példány egységes bejelentkezést (SSO) igényel, ezért a felhasználónevedet az SSO-szolgáltatód adja meg.} other {Ez a példány egységes bejelentkezést (SSO) igényel. Jelentkezz be a bejelentkezési oldalon az SSO gombbal.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Az SSO-tesztkódból hiányzik az e-mail-adat.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Nem sikerült számazonosítót kiosztani az SSO-fiókodhoz. Próbáld újra.",
 	"auth_and_oauth.sudo_mode_required": "Sudo mód szükséges.",

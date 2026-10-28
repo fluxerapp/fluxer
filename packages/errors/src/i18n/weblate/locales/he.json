@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "אי-התאמה בזהות SSO בין id_token ל-userinfo.",
 	"auth_and_oauth.sso_misconfigured": "ה-SSO מוגדר באופן שגוי. יש לפנות למנהל.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "ספק ה-SSO שלך לא החזיר כתובת אימייל.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {מופע זה דורש כניסה יחידה (SSO), ולכן ספק ה-SSO שלך מנהל את האימייל והסיסמה שלך.} no_account {מופע זה מאפשר כניסה דרך SSO רק לחשבונות קיימים, ועדיין אין לך חשבון. בקש גישה ממנהל של מופע זה.} other {מופע זה דורש כניסה יחידה (SSO). התחבר באמצעות כפתור ה-SSO בדף הכניסה.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {מופע זה דורש כניסה יחידה (SSO), ולכן ספק ה-SSO שלך מנהל את האימייל והסיסמה שלך.} no_account {מופע זה מאפשר כניסה דרך SSO רק לחשבונות קיימים, ועדיין אין לך חשבון. בקש גישה ממנהל של מופע זה.} managed_username {מופע זה דורש כניסה יחידה (SSO), ולכן שם המשתמש שלך מגיע מספק ה-SSO שלך.} other {מופע זה דורש כניסה יחידה (SSO). התחבר באמצעות כפתור ה-SSO בדף הכניסה.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "בקוד הבדיקה של SSO חסר מטען האימייל.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "לא הצלחנו להקצות מזהה לחשבון ה-SSO שלך. ניתן לנסות שוב.",
 	"auth_and_oauth.sudo_mode_required": "נדרש מצב sudo.",

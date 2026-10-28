@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Mancata corrispondenza dell'identità SSO tra id_token e userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO configurato in modo errato. Contatta l'amministratore.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Il tuo provider SSO non ha restituito un indirizzo email.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Questa istanza richiede il single sign-on, quindi la tua email e la tua password sono gestite dal tuo provider SSO.} no_account {Questa istanza consente l'accesso con SSO solo agli account esistenti e non hai ancora un account. Chiedi l'accesso a un amministratore di questa istanza.} other {Questa istanza richiede il single sign-on. Accedi con il pulsante SSO nella pagina di accesso.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Questa istanza richiede il single sign-on, quindi la tua email e la tua password sono gestite dal tuo provider SSO.} no_account {Questa istanza consente l'accesso con SSO solo agli account esistenti e non hai ancora un account. Chiedi l'accesso a un amministratore di questa istanza.} managed_username {Questa istanza richiede il single sign-on, quindi il tuo nome utente arriva dal tuo provider SSO.} other {Questa istanza richiede il single sign-on. Accedi con il pulsante SSO nella pagina di accesso.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Il codice di test SSO non contiene il payload email.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Non è stato possibile assegnare un discriminatore al tuo account SSO. Riprova.",
 	"auth_and_oauth.sudo_mode_required": "La modalità Sudo è richiesta.",

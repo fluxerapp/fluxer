@@ -545,6 +545,11 @@ const SsoConfigResponse = z.object({
 	scope: z.string().nullable(),
 	allowed_domains: SsoAllowedDomainsSchema,
 	auto_provision: z.boolean(),
+	username_from_provider: z
+		.boolean()
+		.describe(
+			"Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+		),
 	redirect_uri: z.string().nullable(),
 	groups_claim: SsoGroupsClaimSchema.nullable(),
 	group_role_mappings: SsoGroupRoleMappingsSchema,
@@ -905,6 +910,12 @@ export const InstanceConfigUpdateRequest = z.object({
 			scope: z.string().nullish(),
 			allowed_domains: SsoAllowedDomainsSchema.optional(),
 			auto_provision: z.boolean().optional(),
+			username_from_provider: z
+				.boolean()
+				.optional()
+				.describe(
+					"Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+				),
 			groups_claim: SsoGroupsClaimSchema.nullish(),
 			group_role_mappings: SsoGroupRoleMappingsSchema.optional(),
 		})

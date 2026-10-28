@@ -55,6 +55,7 @@ The public single sign-on state. The [instance discovery document](/http-api/ins
 | --- | --- | --- |
 | enabled | boolean | Whether SSO is turned on and its provider is fully configured |
 | enforced | boolean | Whether every user has to sign in with SSO |
+| username_from_provider | boolean | Whether each SSO sign-in sets the username from the provider, so SSO accounts can't change it |
 | display_name | ?string | The provider display name |
 | button_label | ?string | The text for the SSO sign-in button, or null to use the app's default |
 | redirect_uri | string | The default redirect URI for the provider callback |

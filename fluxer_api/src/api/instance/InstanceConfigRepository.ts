@@ -1420,6 +1420,7 @@ interface InstanceSsoFlags {
 	enabled: boolean;
 	enforced: boolean;
 	autoProvision: boolean;
+	usernameFromProvider: boolean;
 }
 
 export interface InstanceSsoConfig extends InstanceSsoFlags {
@@ -1472,7 +1473,7 @@ function formatSsoGroupRoleMappings(value: Array<SsoGroupRoleMapping>): string {
 
 function readStoredSsoBoolean(
 	configs: ReadonlyMap<string, string>,
-	key: 'sso_enabled' | 'sso_enforced' | 'sso_auto_provision',
+	key: 'sso_enabled' | 'sso_enforced' | 'sso_auto_provision' | 'sso_username_from_provider',
 	fallback: boolean,
 	options?: {invalidFallback?: boolean; log?: boolean},
 ): boolean {
@@ -1492,6 +1493,7 @@ function readStoredSsoFlags(configs: ReadonlyMap<string, string>, log = false): 
 		enabled,
 		enforced: readStoredSsoBoolean(configs, 'sso_enforced', enabled, {invalidFallback: false, log}),
 		autoProvision: readStoredSsoBoolean(configs, 'sso_auto_provision', true, {log}),
+		usernameFromProvider: readStoredSsoBoolean(configs, 'sso_username_from_provider', false, {log}),
 	};
 }
 
@@ -3237,6 +3239,7 @@ export class InstanceConfigRepository {
 			ssoRow('sso_scope', config.scope, current.scope, formatSsoString),
 			ssoRow('sso_allowed_domains', allowedEmailDomains, current.allowedEmailDomains, formatSsoDomains),
 			ssoRow('sso_auto_provision', config.autoProvision, current.autoProvision, formatSsoBoolean),
+			ssoRow('sso_username_from_provider', config.usernameFromProvider, current.usernameFromProvider, formatSsoBoolean),
 			ssoRow('sso_redirect_uri', undefined, null, formatSsoString),
 			ssoRow('sso_groups_claim', config.groupsClaim, current.groupsClaim, formatSsoString),
 			ssoRow(

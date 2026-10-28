@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Incohérence d'identité SSO entre id_token et userinfo.",
 	"auth_and_oauth.sso_misconfigured": "Le SSO est mal configuré. Contactez votre administrateur.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Votre fournisseur SSO n’a pas renvoyé d’adresse e-mail.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Cette instance exige l’authentification unique, votre fournisseur SSO gère donc votre adresse e-mail et votre mot de passe.} no_account {Cette instance n’autorise la connexion SSO qu’aux comptes existants, et vous n’avez pas encore de compte. Demandez l’accès à un administrateur de cette instance.} other {Cette instance exige l’authentification unique. Connectez-vous avec le bouton SSO de la page de connexion.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Cette instance exige l’authentification unique, votre fournisseur SSO gère donc votre adresse e-mail et votre mot de passe.} no_account {Cette instance n’autorise la connexion SSO qu’aux comptes existants, et vous n’avez pas encore de compte. Demandez l’accès à un administrateur de cette instance.} managed_username {Cette instance exige l’authentification unique, votre nom d’utilisateur vient donc de votre fournisseur SSO.} other {Cette instance exige l’authentification unique. Connectez-vous avec le bouton SSO de la page de connexion.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Il manque l'e-mail dans la charge utile du code de test SSO.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Impossible d’attribuer un discriminateur à votre compte SSO. Réessayez.",
 	"auth_and_oauth.sudo_mode_required": "Le mode Sudo est requis.",

@@ -335,6 +335,7 @@ interface SsoConfig {
 	scope: string;
 	allowed_domains: Array<string>;
 	auto_provision: boolean;
+	username_from_provider?: boolean;
 	redirect_uri: string;
 	display_name?: string;
 	button_label?: string;

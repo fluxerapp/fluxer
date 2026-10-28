@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "SSO-Identität zwischen id_token und userinfo stimmt nicht überein.",
 	"auth_and_oauth.sso_misconfigured": "SSO ist falsch konfiguriert. Bitte kontaktiere deinen Administrator.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Dein SSO-Anbieter hat keine E-Mail-Adresse zurückgegeben.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Diese Instanz erfordert Single Sign-on, deshalb verwaltet dein SSO-Anbieter deine E-Mail-Adresse und dein Passwort.} no_account {Auf dieser Instanz können sich nur bestehende Konten per SSO anmelden, und für dich gibt es noch kein Konto. Bitte einen Admin dieser Instanz um Zugang.} other {Diese Instanz erfordert Single Sign-on. Melde dich über den SSO-Button auf der Anmeldeseite an.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Diese Instanz erfordert Single Sign-on, deshalb verwaltet dein SSO-Anbieter deine E-Mail-Adresse und dein Passwort.} no_account {Auf dieser Instanz können sich nur bestehende Konten per SSO anmelden, und für dich gibt es noch kein Konto. Bitte einen Admin dieser Instanz um Zugang.} managed_username {Diese Instanz erfordert Single Sign-on, deshalb kommt dein Benutzername von deinem SSO-Anbieter.} other {Diese Instanz erfordert Single Sign-on. Melde dich über den SSO-Button auf der Anmeldeseite an.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Im SSO-Testcode fehlen die E-Mail-Nutzdaten.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Wir konnten keinen Discriminator für deinen SSO-Account vergeben. Versuche es noch einmal.",
 	"auth_and_oauth.sudo_mode_required": "Sudo-Modus ist erforderlich.",

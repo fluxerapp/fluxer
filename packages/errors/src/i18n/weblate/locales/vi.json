@@ -155,7 +155,7 @@
 	"auth_and_oauth.sso_identity_mismatch": "Thông tin nhận dạng SSO không khớp giữa id_token và userinfo.",
 	"auth_and_oauth.sso_misconfigured": "SSO bị cấu hình sai. Vui lòng liên hệ quản trị viên.",
 	"auth_and_oauth.sso_provider_did_not_return_email": "Nhà cung cấp SSO của bạn không trả về địa chỉ email.",
-	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Phiên bản này yêu cầu đăng nhập một lần, nên nhà cung cấp SSO của bạn quản lý email và mật khẩu của bạn.} no_account {Phiên bản này chỉ cho phép tài khoản hiện có đăng nhập bằng SSO và bạn chưa có tài khoản. Hãy xin quyền truy cập từ quản trị viên của phiên bản này.} other {Phiên bản này yêu cầu đăng nhập một lần. Hãy đăng nhập bằng nút SSO trên trang đăng nhập.}}",
+	"auth_and_oauth.sso_required": "{reason, select, managed_credentials {Phiên bản này yêu cầu đăng nhập một lần, nên nhà cung cấp SSO của bạn quản lý email và mật khẩu của bạn.} no_account {Phiên bản này chỉ cho phép tài khoản hiện có đăng nhập bằng SSO và bạn chưa có tài khoản. Hãy xin quyền truy cập từ quản trị viên của phiên bản này.} managed_username {Phiên bản này yêu cầu đăng nhập một lần, nên tên người dùng của bạn đến từ nhà cung cấp SSO của bạn.} other {Phiên bản này yêu cầu đăng nhập một lần. Hãy đăng nhập bằng nút SSO trên trang đăng nhập.}}",
 	"auth_and_oauth.sso_test_code_missing_email": "Mã kiểm tra SSO thiếu dữ liệu email.",
 	"auth_and_oauth.sso_unable_to_allocate_discriminator": "Chúng tôi không thể cấp phát mã phân biệt cho tài khoản SSO của bạn. Vui lòng thử lại.",
 	"auth_and_oauth.sudo_mode_required": "Yêu cầu chế độ sudo.",
