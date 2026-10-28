@@ -94,6 +94,12 @@ describe('Identifier-first sign-in', () => {
 		await getUserRepository().patchUpsert(user.id, {password_hash: null}, user.toRow());
 	}
 
+	async function stayInsideOneLookupWindow(): Promise<void> {
+		const windowMs = 10 * 60 * 1000;
+		const remainingMs = windowMs - (Date.now() % windowMs);
+		if (remainingMs < 15_000) await new Promise((resolve) => setTimeout(resolve, remainingMs + 100));
+	}
+
 	function lastCode(email: string, type: string, emails: Awaited<ReturnType<typeof listTestEmails>>): string {
 		const record = findLastTestEmail(
 			emails.filter((entry) => entry.to.toLowerCase() === email.toLowerCase()),
@@ -515,6 +521,7 @@ describe('Identifier-first sign-in', () => {
 
 	it('asks a stranger for a captcha once one network looks up too many addresses', async () => {
 		await useCheapCaptcha();
+		await stayInsideOneLookupWindow();
 		const lookups = async (count: number) => {
 			for (let index = 0; index < count; index++) {
 				await createBuilderWithoutAuth(harness)
