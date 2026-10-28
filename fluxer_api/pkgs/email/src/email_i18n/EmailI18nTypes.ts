@@ -6,6 +6,49 @@ export type BillingPaymentProblem = 'declined' | 'action_required';
 
 export type YesNo = 'yes' | 'no';
 
+type BillingRecurringPlanName = 'monthly' | 'yearly';
+
+type BillingPaymentMethodKind = 'card' | 'plain_card' | 'named' | 'none';
+
+interface SellerVariables {
+	sellerAddress: string;
+	sellerEmail: string;
+}
+
+interface PaymentMethodVariables {
+	method: BillingPaymentMethodKind;
+	brand: string;
+	last4: string;
+	methodName: string;
+}
+
+interface UpcomingChargeVariables extends SellerVariables, PaymentMethodVariables {
+	chargeAt: Date;
+	nextFormatted: string;
+	regularFormatted: string;
+	tax: YesNo;
+	differs: YesNo;
+	cancelByFormatted: string;
+}
+
+interface CardExpiringVariables extends SellerVariables {
+	branded: YesNo;
+	brand: string;
+	last4: string;
+	expiryFormatted: string;
+	chargeAt: Date;
+	amountFormatted: string;
+	tax: YesNo;
+}
+
+interface CancellationVariables extends SellerVariables {
+	receivedFormatted: string;
+	endsAt: Date;
+	reference: string;
+	unpaid: YesNo;
+	unpaidFormatted: string;
+}
+
 export type ReportReceivedTargetKind = 'message' | 'user' | 'guild';
 
 export type ReporterOutcome = 'removed' | 'restricted' | 'action_taken' | 'no_violation';
@@ -43,6 +86,12 @@ export interface EmailTemplateVariables {
 		message_count: number;
 		channel_count: number;
 	};
+	billing_credit_note: SellerVariables & {
+		amountFormatted: string;
+		numbered: YesNo;
+		invoiceNumber: string;
+		upcoming: YesNo;
+	};
 	donation_confirmation: {
 		amount: string;
 		interval: string;
@@ -51,6 +100,8 @@ export interface EmailTemplateVariables {
 	donation_magic_link: {
 		minutes: number;
 	};
+	donation_cancellation_confirmation: CancellationVariables;
+	donation_card_expiring: CardExpiringVariables;
 	donation_payment_failed: {
 		reason: BillingPaymentProblem;
 		attemptedAt: Date;
@@ -65,6 +116,7 @@ export interface EmailTemplateVariables {
 		pdf: YesNo;
 		invoiceLinkUntil: Date;
 	};
+	donation_renewal_notice: UpcomingChargeVariables;
 	donation_refund_receipt: {
 		refundedAt: Date;
 		amountFormatted: string;
@@ -87,7 +139,10 @@ export interface EmailTemplateVariables {
 	email_verification_code: {
 		minutes: number;
 	};
-	gift_chargeback_notification: Record<string, never>;
+	gift_chargeback_notification: {
+		premiumName: string;
+		plan: BillingRecurringPlanName;
+	};
 	enforcement_ended: {
 		outcome: 'lifted' | 'reversed';
 		decision_id: string | null;
@@ -210,6 +265,28 @@ export interface EmailTemplateVariables {
 		orderDate: Date;
 		warningDate: Date;
 	};
+	plutonium_cancellation_confirmation: CancellationVariables & {
+		premiumName: string;
+		plan: BillingRecurringPlanName;
+	};
+	plutonium_card_expiring: CardExpiringVariables & {
+		premiumName: string;
+	};
+	plutonium_ended_unpaid: SellerVariables & {
+		premiumName: string;
+		numbered: YesNo;
+		invoiceNumber: string;
+		owed: 'none' | 'stopped' | 'open' | 'unknown';
+		amountFormatted: string;
+	};
+	plutonium_gift_applied: SellerVariables &
+		PaymentMethodVariables & {
+			premiumName: string;
+			plan: BillingRecurringPlanName;
+			trialEnd: Date;
+			amountFormatted: string;
+			tax: YesNo;
+		};
 	plutonium_payment_failed: {
 		premiumName: string;
 		reason: BillingPaymentProblem;
@@ -246,6 +323,16 @@ export interface EmailTemplateVariables {
 		paidFormatted: string;
 		paidAt: Date;
 		partial: YesNo;
+		requestedFormatted: string;
+		reference: string;
+	};
+	plutonium_renewal_notice: UpcomingChargeVariables & {
+		premiumName: string;
+		gift: YesNo;
+		annual: YesNo;
+		plan: BillingRecurringPlanName;
+		giftEndsAt: Date;
+		yearStartsAt: Date;
 	};
 	reauth_code: {
 		minutes: number;

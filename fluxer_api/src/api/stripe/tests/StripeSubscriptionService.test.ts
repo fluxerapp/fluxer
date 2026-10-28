@@ -99,7 +99,12 @@ describe('StripeSubscriptionService', () => {
 			stripeHandlers.spies.updatedSubscriptionSchedules.length = 0;
 			stripeHandlers.spies.releasedSubscriptionSchedules.length = 0;
 			await createBuilder(harness, account.token).post('/premium/cancel-subscription').expect(204).execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
+			expect(stripeHandlers.spies.updatedSubscriptions.map((update) => Object.keys(update.params))).toEqual([
+				['metadata'],
+			]);
+			expect(stripeHandlers.spies.updatedSubscriptions[0]?.params.metadata).toMatchObject({
+				fluxer_cancel_source: 'customer_request',
+			});
 			expect(stripeHandlers.spies.releasedSubscriptionSchedules).toHaveLength(0);
 			expect(stripeHandlers.spies.updatedSubscriptionSchedules).toHaveLength(1);
 			const scheduleUpdate = stripeHandlers.spies.updatedSubscriptionSchedules[0];

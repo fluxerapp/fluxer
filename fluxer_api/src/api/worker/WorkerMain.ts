@@ -95,6 +95,10 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		ledger: false,
 		enabled: () => getStripeClient() !== null,
 	});
+	cron.upsert('scanBillingNotices', 'scanBillingNotices', {}, '0 15 9 * * *', {
+		ledger: false,
+		enabled: () => getStripeClient() !== null,
+	});
 	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
 	cron.upsert('closePaymentDisputeAccounts', 'closePaymentDisputeAccounts', {}, '0 40 * * * *', {ledger: false});
 	if (!Config.instance.selfHosted) {

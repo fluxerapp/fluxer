@@ -64,6 +64,7 @@ import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
+import scanBillingNotices from '@app/api/worker/tasks/ScanBillingNotices';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
@@ -153,6 +154,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	pruneGuildVisits: pruneGuildVisitsTask,
 	refreshSearchIndex,
 	seedThreadPermissions,
+	scanBillingNotices,
 	sendBillingEmail,
 	removeChannelFollowers,
 	sendSystemDm,

@@ -396,6 +396,7 @@ export function renderEmailText(slots: Slots, links: EmailTextLinks = 'plain'): 
 		summary.join('\n'),
 		textList(slots.points_list, slots, links),
 		textParagraphs(slots.lead, slots, links),
+		textParagraphs(slots.box, slots, links),
 		textLink(slots.cta, slots.cta_url, links),
 		textParagraphs(slots.expiry, slots, links),
 		textParagraphs(slots.text_1, slots, links),

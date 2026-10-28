@@ -25,6 +25,7 @@ import {
 	type PaymentDisputeReviewService,
 	type PaymentDisputeSubject,
 } from '@app/api/payment_disputes/PaymentDisputeReviews';
+import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
 import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
@@ -34,7 +35,7 @@ import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordi
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
-import type {IEmailService} from '@pkgs/email/src/IEmailService';
+import type {BillingRecurringPlan, IEmailService} from '@pkgs/email/src/IEmailService';
 import type Stripe from 'stripe';
 
 type PlutoniumDisputeTarget =
@@ -143,7 +144,7 @@ export class StripeDisputeWebhookHandler {
 		const user = await this.userRepository.findUnique(review.purchaser_id);
 		if (user?.stripeSubscriptionId && !user.premiumWillCancel) {
 			try {
-				await this.subscriptionService.cancelSubscriptionAtPeriodEnd(user.id);
+				await this.subscriptionService.cancelSubscriptionAtPeriodEnd(user.id, 'payment_dispute');
 			} catch (error) {
 				Logger.error(
 					{error, disputeId: review.dispute_id, userId: user.id},
@@ -294,13 +295,19 @@ export class StripeDisputeWebhookHandler {
 		);
 	}
 
+	private async sendGiftRemoved(redeemerId: UserID, plan: BillingRecurringPlan | null): Promise<void> {
+		const redeemer = await this.userRepository.findUnique(redeemerId);
+		if (!redeemer?.email) {
+			return;
+		}
+		const billingResumed = plan ? {premiumName: (await getBillingBranding()).premiumName, plan} : null;
+		await this.emailService.send('gift_chargeback_notification', redeemer.email, {billingResumed}, redeemer.locale);
+	}
+
 	private async takeBackGift(giftCode: GiftCode, dispute: Stripe.Dispute): Promise<void> {
 		if (giftCode.redeemedByUserId) {
-			await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {reason: 'gift_chargeback'});
-			const redeemer = await this.userRepository.findUnique(giftCode.redeemedByUserId);
-			if (redeemer?.email) {
-				await this.emailService.send('gift_chargeback_notification', redeemer.email, {}, redeemer.locale);
-			}
+			const outcome = await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {reason: 'gift_chargeback'});
+			await this.sendGiftRemoved(giftCode.redeemedByUserId, outcome.billingResumed);
 			Logger.debug(
 				{giftCode: giftCode.code, redeemerId: giftCode.redeemedByUserId},
 				'Premium taken back after a lost gift dispute',
@@ -375,10 +382,13 @@ export class StripeDisputeWebhookHandler {
 		const giftCode = await this.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);
 		if (giftCode) {
 			if (giftCode.redeemedByUserId) {
-				await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {
+				const outcome = await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {
 					reason: 'gift_refund',
 					chargeId: charge.id,
 				});
+				if (outcome.billingResumed) {
+					await this.sendGiftRemoved(giftCode.redeemedByUserId, outcome.billingResumed);
+				}
 			} else if (!giftCode.revokedAt) {
 				await this.userRepository.revokeGiftCode(giftCode.code);
 				Logger.debug({giftCode: giftCode.code, chargeId: charge.id}, 'Revoked unredeemed gift code after refund');

@@ -20,12 +20,46 @@
 		"signoff": "El equipo de {product_name}",
 		"subject": "Tu cuenta de {product_name} se eliminará el {deletion_date}"
 	},
+	"billing_credit_note": {
+		"credit_note_link": "Ver la nota de crédito",
+		"footer_reason": "Recibiste este correo porque se agregó saldo a tu cuenta de {product_name}.",
+		"heading": "Saldo agregado a tu cuenta",
+		"intro": "{numbered, select, yes {Agregamos {amountFormatted} de saldo a tu cuenta por la factura {invoiceNumber}.} other {Agregamos {amountFormatted} de saldo a tu cuenta.}} {upcoming, select, yes {Se descontará de tu próxima factura de {product_name}, por ejemplo, la de la renovación de una suscripción.} other {{reply, select, yes {No tienes ninguna factura próxima en la que se pueda usar. Si prefieres que te lo reembolsemos, responde a este correo.} other {No tienes ninguna factura próxima en la que se pueda usar. Si prefieres que te lo reembolsemos, comunícate con los administradores de esta instancia.}}}}",
+		"preheader": "{amountFormatted} de saldo agregados a tu cuenta",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Tienes {amountFormatted} de saldo en {product_name}"
+	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "Recibiste este correo porque se solicitó la eliminación de un mensaje para tu cuenta de {product_name}.",
 		"intro": "Terminamos de eliminar tus mensajes. Eliminamos {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 lugares} one {# lugar} other {# lugares}}.",
 		"note": "{reply, select, yes {Si no solicitaste esto, cambia tu contraseña ahora y responde a este correo.} other {Si no solicitaste esto, cambia tu contraseña ahora y contacta a los administradores de esta instancia.}}",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Terminamos de eliminar tus mensajes de {product_name}"
+	},
+	"donation_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Hay una factura de {unpaidFormatted} pendiente de pago. La cancelación no la anula y seguiremos intentando cobrarla.} other {No te cobraremos nada más.}}",
+		"cta": "Administrar tu donación",
+		"ends_line": "Tu donación recurrente termina el {endsAt, date, long}.",
+		"footer_reason": "Recibiste este correo porque cancelaste tu donación recurrente a {product_name}.",
+		"heading": "Recibimos tu cancelación",
+		"intro": "El {receivedFormatted} recibimos tu solicitud para cancelar tu donación recurrente a {product_name}.",
+		"preheader": "Tu donación recurrente termina el {endsAt, date, long}",
+		"reference_line": "Referencia: {reference}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Recibimos la cancelación de tu donación a {product_name}"
+	},
+	"donation_card_expiring": {
+		"cta": "Actualizar tu método de pago",
+		"footer_reason": "Recibiste este correo porque una tarjeta que usas para tu donación a {product_name} está a punto de vencer.",
+		"heading": "Actualiza tu tarjeta",
+		"intro": "{branded, select, yes {Tu tarjeta {brand} terminada en {last4}} other {Tu tarjeta terminada en {last4}}} vence a finales de {expiryFormatted}. Tu próximo pago, de {tax, select, yes {{amountFormatted}} other {{amountFormatted} más los impuestos aplicables}}, está previsto para el {chargeAt, date, long}.",
+		"lead": "Actualízala antes de esa fecha para que tu donación siga activa.",
+		"preheader": "{branded, select, yes {Tu tarjeta {brand} terminada en {last4}} other {Tu tarjeta terminada en {last4}}} vence pronto",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Tu tarjeta vence antes del próximo pago de tu donación a {product_name}"
 	},
 	"donation_confirmation": {
 		"amount_label": "Monto",
@@ -64,6 +98,7 @@
 		"manage_link": "Administrar tus donaciones",
 		"note": "{reply, select, yes {Si necesitas ayuda, responde a este correo.} other {Si necesitas ayuda, comunícate con los administradores de esta instancia.}}",
 		"preheader": "{reason, select, action_required {Confirma {amountFormatted} de tu donación} other {No pudimos cobrar {amountFormatted} de tu donación}}",
+		"reminder_subject": "Recordatorio: confirma el pago de tu donación",
 		"signoff": "El equipo de {product_name}",
 		"subject": "{reason, select, action_required {Confirma el pago de tu donación a {product_name}} other {No se pudo cobrar tu donación a {product_name}}}"
 	},
@@ -98,6 +133,20 @@
 		"refund_label": "Monto reembolsado",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Reembolso de tu donación a {product_name}"
+	},
+	"donation_renewal_notice": {
+		"after_line": "{differs, select, yes {Después, el precio será de {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} al año.} other {Después, pagarás {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} cada año hasta que la canceles.}}",
+		"box": "Para que no se renueve, cancela antes del {cancelByFormatted}.",
+		"charge_line": "{method, select, card {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu tarjeta {brand} terminada en {last4}.} plain_card {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu tarjeta terminada en {last4}.} named {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} con {methodName}.} other {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu método de pago guardado.}}",
+		"cta": "Administrar tu donación",
+		"footer_reason": "Recibiste este correo porque tu donación anual a {product_name} se renueva automáticamente.",
+		"heading": "Tu donación se renovará pronto",
+		"intro": "Tu donación anual a {product_name} se renovará automáticamente el {chargeAt, date, long}, salvo que la canceles antes.",
+		"keep_line": "Si la cancelas, no te cobraremos nada más.",
+		"preheader": "Tu donación anual se renueva el {chargeAt, date, long}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Tu donación anual a {product_name} se renueva el {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {Esto es sobre tu reporte de un mensaje en #{channelName} en “{communityName}”, enviado el {reportedAt, date, long}.} message_dm {Esto es sobre tu reporte de un mensaje directo, enviado el {reportedAt, date, long}.} message {Esto es sobre tu reporte de un mensaje, enviado el {reportedAt, date, long}.} user {Esto es sobre tu reporte de la cuenta “{username}”, enviado el {reportedAt, date, long}.} community {Esto es sobre tu reporte de la comunidad “{communityName}”, enviado el {reportedAt, date, long}.} other {Esto es sobre el reporte que enviaste el {reportedAt, date, long}.}}",
@@ -187,8 +236,10 @@
 		"why_title": "Por qué"
 	},
 	"gift_chargeback_notification": {
+		"billing_resumed": "Como se quitó el regalo, tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} vuelve a cobrarse a partir de hoy. Recibirás un recibo aparte por este cobro. Puedes cancelarla cuando quieras en “Administrar suscripción”.",
 		"footer_reason": "Recibiste este correo electrónico porque se eliminaron los beneficios de tu cuenta de {product_name}.",
 		"intro": "Se revirtió el pago de un código de regalo que canjeaste, así que quitamos los beneficios que agregó a tu cuenta.",
+		"manage_cta": "Administrar tu suscripción",
 		"note": "{reply, select, yes {Si crees que es un error, responde a este correo y cuéntanos lo que sepas sobre el código de regalo.} other {Si crees que es un error, comunícate con los administradores de esta instancia y cuéntales lo que sepas sobre el código de regalo.}}",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Quitamos los beneficios de un regalo de {product_name} que canjeaste"
@@ -479,6 +530,56 @@
 		"why_body": "El pago lo hiciste tú o alguien a quien autorizaste, cobramos el monto correcto, {product, select, plutonium {Plutonium se proporcionó como se describió} other {el Operator Pass se entregó como se describió}}, no habíamos reembolsado el pago y tu período de desistimiento ya había terminado cuando lo disputaste.",
 		"why_title": "Por qué la consideramos injustificada"
 	},
+	"plutonium_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Hay una factura de {unpaidFormatted} pendiente de pago. La cancelación no la anula y seguiremos intentando cobrarla.} other {No te cobraremos nada más.}}",
+		"cta": "Administrar tu suscripción",
+		"ends_line": "Seguirás teniendo {premiumName} hasta el {endsAt, date, long}. Después, tu suscripción terminará y no se renovará.",
+		"footer_reason": "Recibiste este correo porque cancelaste tu suscripción a {premiumName}.",
+		"heading": "Recibimos tu cancelación",
+		"intro": "El {receivedFormatted} recibimos tu solicitud para cancelar tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName}.",
+		"lead": "¿Cambiaste de opinión? Puedes reanudar tu suscripción en “Administrar suscripción” antes del {endsAt, date, long}.",
+		"preheader": "Seguirás teniendo {premiumName} hasta el {endsAt, date, long}",
+		"reference_line": "Referencia: {reference}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Recibimos la cancelación de tu suscripción a {premiumName} en {product_name}"
+	},
+	"plutonium_card_expiring": {
+		"cta": "Actualizar tu método de pago",
+		"footer_reason": "Recibiste este correo porque una tarjeta que usas para {premiumName} está a punto de vencer.",
+		"heading": "Actualiza tu tarjeta",
+		"intro": "{branded, select, yes {Tu tarjeta {brand} terminada en {last4}} other {Tu tarjeta terminada en {last4}}} vence a finales de {expiryFormatted}. Tu próximo pago, de {tax, select, yes {{amountFormatted}} other {{amountFormatted} más los impuestos aplicables}}, está previsto para el {chargeAt, date, long}.",
+		"lead": "Actualízala antes de esa fecha para que tu suscripción siga funcionando.",
+		"preheader": "{branded, select, yes {Tu tarjeta {brand} terminada en {last4}} other {Tu tarjeta terminada en {last4}}} vence pronto",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Tu tarjeta vence antes de tu próximo pago de {premiumName} en {product_name}"
+	},
+	"plutonium_ended_unpaid": {
+		"cta": "Obtén {premiumName}",
+		"footer_reason": "Recibiste este correo porque tu suscripción a {premiumName} terminó.",
+		"heading": "Tu suscripción terminó",
+		"intro": "{numbered, select, yes {Tu suscripción a {premiumName} terminó porque no pudimos cobrar el pago de la factura {invoiceNumber}.} other {Tu suscripción a {premiumName} terminó porque no pudimos cobrar el pago de renovación.}}",
+		"invoice_link": "Ver la factura",
+		"lead": "Puedes volver a suscribirte cuando quieras.",
+		"owed_line": "{owed, select, none {No debes nada por esta factura.} stopped {Dejamos de intentar cobrar esta factura.} open {La factura de {amountFormatted} sigue pendiente de pago. Puedes pagarla en la página de la factura.} other {}}",
+		"preheader": "No pudimos cobrar el pago de tu suscripción a {premiumName}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Tu suscripción a {premiumName} en {product_name} terminó"
+	},
+	"plutonium_gift_applied": {
+		"charge_line": "{method, select, card {El {trialEnd, date, long} te cobraremos {tax, select, yes {{amountFormatted}} other {{amountFormatted}, más los impuestos aplicables,}} en tu tarjeta {brand} terminada en {last4}, y tu suscripción se renovará cada {plan, select, yearly {año} other {mes}} hasta que la canceles.} plain_card {El {trialEnd, date, long} te cobraremos {tax, select, yes {{amountFormatted}} other {{amountFormatted}, más los impuestos aplicables,}} en tu tarjeta terminada en {last4}, y tu suscripción se renovará cada {plan, select, yearly {año} other {mes}} hasta que la canceles.} named {El {trialEnd, date, long} te cobraremos {tax, select, yes {{amountFormatted}} other {{amountFormatted}, más los impuestos aplicables,}} con {methodName}, y tu suscripción se renovará cada {plan, select, yearly {año} other {mes}} hasta que la canceles.} other {El {trialEnd, date, long} te cobraremos {tax, select, yes {{amountFormatted}} other {{amountFormatted}, más los impuestos aplicables,}} en tu método de pago guardado, y tu suscripción se renovará cada {plan, select, yearly {año} other {mes}} hasta que la canceles.}}",
+		"cta": "Administrar tu suscripción",
+		"footer_reason": "Recibiste este correo porque canjeaste un regalo de {premiumName}.",
+		"heading": "Regalo agregado",
+		"intro": "Agregamos tu tiempo de regalo. No se te cobrará nada por tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} hasta el {trialEnd, date, long}.",
+		"lead": "Hasta entonces, puedes cancelarla cuando quieras en “Administrar suscripción”.",
+		"preheader": "No se te cobrará nada hasta el {trialEnd, date, long}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "Agregamos tu regalo a tu suscripción a {premiumName} en {product_name}"
+	},
 	"plutonium_payment_failed": {
 		"amount_label": "Monto",
 		"cta": "{reason, select, action_required {Confirmar el pago} other {Pagar la factura}}",
@@ -487,11 +588,13 @@
 		"footer_reason": "Recibiste este correo porque un pago de tu suscripción a {premiumName} en {product_name} requiere tu atención.",
 		"heading": "{reason, select, action_required {Tu banco necesita que confirmes un pago} other {No se pudo cobrar tu pago de {premiumName}}}",
 		"intro": "{reason, select, action_required {Tu banco quiere que confirmes el pago de renovación de tu suscripción a {premiumName}.} other {No pudimos cobrar el pago de renovación de tu suscripción a {premiumName}.}} {access, select, yes {Seguirás teniendo {premiumName} hasta el {accessEndsAt, date, long}.} other {}}",
+		"intro_change": "{reason, select, action_required {Tu banco quiere que confirmes el pago del cambio en tu suscripción a {premiumName}.} other {No pudimos cobrar el pago del cambio en tu suscripción a {premiumName}.}} {access, select, yes {Seguirás teniendo {premiumName} hasta el {accessEndsAt, date, long}.} other {}}",
 		"invoice_label": "Número de factura",
 		"lead": "{reason, select, action_required {Abre la página de la factura y confirma allí el pago.} other {{access, select, yes {Para seguir teniéndolo después, paga la factura o actualiza tu método de pago.} other {Para recuperar {premiumName}, paga la factura o actualiza tu método de pago.}}}}",
 		"manage_link": "Actualizar tu método de pago en “Administrar suscripción”",
 		"note": "{reply, select, yes {Si necesitas ayuda, responde a este correo.} other {Si necesitas ayuda, comunícate con los administradores de esta instancia.}}",
 		"preheader": "{reason, select, action_required {Confirma {amountFormatted} para {premiumName}} other {No pudimos cobrar {amountFormatted} para {premiumName}}}",
+		"reminder_subject": "Recordatorio: confirma tu pago de {premiumName}",
 		"signoff": "El equipo de {product_name}",
 		"subject": "{reason, select, action_required {Confirma tu pago de {premiumName} en {product_name}} other {No se pudo cobrar tu pago de {premiumName} en {product_name}}}"
 	},
@@ -535,6 +638,7 @@
 		"cta": "Ver detalles del reembolso",
 		"date_label": "Fecha del reembolso",
 		"date_value": "{refundedAt, date, long}",
+		"ended_line": "Recibimos tu solicitud de reembolso el {requestedFormatted}. El reembolso también canceló tu suscripción a {premiumName}, que terminó y no se renovará. Referencia: {reference}.",
 		"footer_reason": "Recibiste este correo porque se reembolsó un pago de {premiumName} en {product_name}.",
 		"heading": "Reembolso de {amountFormatted}",
 		"intro": "{partial, select, yes {Reembolsamos {amountFormatted}, una parte de tu pago, a la tarjeta o cuenta con la que pagaste.} other {Reembolsamos {amountFormatted} a la tarjeta o cuenta con la que pagaste.}} Suele tardar entre 5 y 10 días hábiles en verse reflejado, según tu banco.",
@@ -548,6 +652,23 @@
 		"refund_label": "Monto reembolsado",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Tu reembolso de {product_name} {premiumName}"
+	},
+	"plutonium_renewal_notice": {
+		"after_line": "{differs, select, yes {Después, el precio será de {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} {plan, select, yearly {al año} other {al mes}}.} other {Después, pagarás {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} cada {plan, select, yearly {año} other {mes}} hasta que la canceles.}}",
+		"annual_line": "Este es tu recordatorio anual de que tu suscripción mensual a {premiumName} se renueva automáticamente cada mes hasta que la canceles.",
+		"box": "Para que no se renueve, cancela antes del {cancelByFormatted}.",
+		"charge_line": "{method, select, card {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu tarjeta {brand} terminada en {last4}.} plain_card {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu tarjeta terminada en {last4}.} named {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} con {methodName}.} other {El {chargeAt, date, long} te cobraremos {tax, select, yes {{nextFormatted}} other {{nextFormatted}, más los impuestos aplicables,}} en tu método de pago guardado.}}",
+		"cta": "Administrar tu suscripción",
+		"footer_reason": "Recibiste este correo porque tu suscripción a {premiumName} se renueva automáticamente.",
+		"gift_line": "Tu tiempo de regalo termina el {giftEndsAt, date, long}. Después, tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} se renovará automáticamente, salvo que la canceles antes.",
+		"heading": "{gift, select, yes {Tu tiempo de regalo termina pronto} other {{annual, select, yes {Tu recordatorio anual de renovación} other {Tu suscripción se renovará pronto}}}}",
+		"intro": "Tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} se renovará automáticamente el {chargeAt, date, long}, salvo que la canceles antes.",
+		"keep_line": "Si cancelas, seguirás teniendo {premiumName} hasta el {chargeAt, date, long} y no te cobraremos nada más.",
+		"preheader": "Tu suscripción a {premiumName} se renueva el {chargeAt, date, long}",
+		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "El equipo de {product_name}",
+		"subject": "{gift, select, yes {Tu tiempo de regalo de {premiumName} en {product_name} termina el {giftEndsAt, date, long}} other {{annual, select, yes {Recordatorio anual sobre tu suscripción a {premiumName} en {product_name}} other {Tu suscripción a {premiumName} en {product_name} se renueva el {chargeAt, date, long}}}}}",
+		"year_line": "Con el cobro del {yearStartsAt, date, long} empieza tu próximo año de {premiumName}."
 	},
 	"reauth_code": {
 		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",

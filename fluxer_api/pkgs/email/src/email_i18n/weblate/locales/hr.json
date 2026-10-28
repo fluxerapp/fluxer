@@ -20,12 +20,46 @@
 		"signoff": "Tim platforme {product_name}",
 		"subject": "Tvoj {product_name} račun bit će izbrisan {deletion_date}"
 	},
+	"billing_credit_note": {
+		"credit_note_link": "Pogledaj knjižno odobrenje",
+		"footer_reason": "Ovu si e-poruku primio jer je na tvoj {product_name} račun dodan saldo.",
+		"heading": "Na tvoj račun dodan je saldo",
+		"intro": "{numbered, select, yes {Na tvoj korisnički račun dodali smo {amountFormatted} salda po računu {invoiceNumber}.} other {Na tvoj korisnički račun dodali smo {amountFormatted} salda.}} {upcoming, select, yes {Odbit ćemo ga od tvog sljedećeg {product_name} računa, primjerice pri obnovi pretplate.} other {{reply, select, yes {Trenutačno nemaš nadolazeći račun na koji bi se mogao iskoristiti. Ako želiš da ti ga vratimo, odgovori na ovu e-poruku.} other {Trenutačno nemaš nadolazeći račun na koji bi se mogao iskoristiti. Ako želiš da ti ga vratimo, javi se administratorima ove instance.}}}}",
+		"preheader": "Na tvoj račun dodano je {amountFormatted} salda",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Na svom {product_name} računu imaš {amountFormatted} salda"
+	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "Ovu si e-poruku primio jer je zatraženo brisanje poruka za tvoj {product_name} račun.",
 		"intro": "Završili smo s brisanjem tvojih poruka. Uklonili smo {message_count, plural, =0 {0 poruka} one {# poruku} few {# poruke} other {# poruka}} iz {channel_count, plural, =0 {0 mjesta} one {# mjesta} few {# mjesta} other {# mjesta}}.",
 		"note": "{reply, select, yes {Ako ovo nisi zatražio, odmah promijeni lozinku i odgovori na ovu e-poruku.} other {Ako ovo nisi zatražio, odmah promijeni lozinku i javi se administratorima ove instance.}}",
 		"signoff": "Tim {product_name}a",
 		"subject": "Završili smo brisanje tvojih {product_name} poruka"
+	},
+	"donation_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Jedan račun na {unpaidFormatted} još nije plaćen. Otkazivanje ga ne poništava, pa ćemo ga i dalje pokušavati naplatiti.} other {Više ti nećemo ništa naplaćivati.}}",
+		"cta": "Upravljaj donacijom",
+		"ends_line": "{endsAt, date, long} završava tvoja redovna donacija.",
+		"footer_reason": "Ovu si e-poruku primio jer si otkazao redovnu donaciju za {product_name}.",
+		"heading": "Otkazivanje primljeno",
+		"intro": "Tvoj zahtjev za otkazivanje redovne donacije za {product_name} primili smo {receivedFormatted}.",
+		"preheader": "Tvoja redovna donacija završava {endsAt, date, long}",
+		"reference_line": "Referentni broj: {reference}",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Primili smo tvoje otkazivanje donacije za {product_name}"
+	},
+	"donation_card_expiring": {
+		"cta": "Promijeni način plaćanja",
+		"footer_reason": "Ovu si e-poruku primio jer uskoro istječe kartica kojom plaćaš donaciju za {product_name}.",
+		"heading": "Ažuriraj karticu",
+		"intro": "{branded, select, yes {Tvoja kartica {brand} koja završava na {last4}} other {Tvoja kartica koja završava na {last4}}} istječe krajem mjeseca {expiryFormatted}, a {chargeAt, date, long} dospijeva sljedeća uplata od {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}}.",
+		"lead": "Ažuriraj karticu prije toga kako bi se tvoja donacija nastavila bez prekida.",
+		"preheader": "{branded, select, yes {Tvoja kartica {brand} koja završava na {last4}} other {Tvoja kartica koja završava na {last4}}} uskoro istječe",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoja kartica istječe prije sljedeće uplate donacije za {product_name}"
 	},
 	"donation_confirmation": {
 		"amount_label": "Iznos",
@@ -64,6 +98,7 @@
 		"manage_link": "Upravljaj donacijama",
 		"note": "{reply, select, yes {Ako trebaš pomoć, odgovori na ovu e-poruku.} other {Ako trebaš pomoć, javi se administratorima ove instance.}}",
 		"preheader": "{reason, select, action_required {Potvrdi plaćanje od {amountFormatted} za svoju donaciju} other {Nismo uspjeli naplatiti {amountFormatted} za tvoju donaciju}}",
+		"reminder_subject": "Podsjetnik: potvrdi plaćanje donacije",
 		"signoff": "Tim {product_name}a",
 		"subject": "{reason, select, action_required {Potvrdi plaćanje donacije za {product_name}} other {Plaćanje donacije za {product_name} nije uspjelo}}"
 	},
@@ -98,6 +133,20 @@
 		"refund_label": "Vraćeno",
 		"signoff": "Tim {product_name}a",
 		"subject": "Povrat tvoje donacije za {product_name}"
+	},
+	"donation_renewal_notice": {
+		"after_line": "{differs, select, yes {Nakon toga godišnja cijena iznosi {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventualni porez}}.} other {Nakon toga plaćaš godišnje {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventualni porez}} dok ne otkažeš.}}",
+		"box": "Ako ne želiš obnovu, otkaži prije {cancelByFormatted}.",
+		"charge_line": "{method, select, card {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} s tvoje kartice {brand} koja završava na {last4}.} plain_card {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} s tvoje kartice koja završava na {last4}.} named {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} putem usluge {methodName}.} other {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} putem tvog spremljenog načina plaćanja.}}",
+		"cta": "Upravljaj donacijom",
+		"footer_reason": "Ovu si e-poruku primio jer se tvoja godišnja donacija za {product_name} automatski obnavlja.",
+		"heading": "Tvoja donacija uskoro se obnavlja",
+		"intro": "Tvoja godišnja donacija za {product_name} automatski se obnavlja {chargeAt, date, long}, osim ako je prije toga ne otkažeš.",
+		"keep_line": "Ako otkažeš, više ti nećemo ništa naplaćivati.",
+		"preheader": "Tvoja godišnja donacija obnavlja se {chargeAt, date, long}",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoja godišnja donacija za {product_name} obnavlja se {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {Riječ je o tvojoj prijavi poruke u #{channelName} u zajednici „{communityName}“, poslanoj {reportedAt, date, long}.} message_dm {Riječ je o tvojoj prijavi poruke u izravnoj poruci, poslanoj {reportedAt, date, long}.} message {Riječ je o tvojoj prijavi poruke, poslanoj {reportedAt, date, long}.} user {Riječ je o tvojoj prijavi računa „{username}“, poslanoj {reportedAt, date, long}.} community {Riječ je o tvojoj prijavi zajednice „{communityName}“, poslanoj {reportedAt, date, long}.} other {Riječ je o prijavi koju si poslao {reportedAt, date, long}.}}",
@@ -187,8 +236,10 @@
 		"why_title": "Zašto"
 	},
 	"gift_chargeback_notification": {
+		"billing_resumed": "Budući da je poklon uklonjen, tvoja {plan, select, yearly {godišnja} other {mjesečna}} pretplata na {premiumName} od danas se ponovno naplaćuje. Za tu naplatu dobit ćeš zasebnu potvrdu. Pretplatu možeš otkazati bilo kada pod „Upravljaj pretplatom“.",
 		"footer_reason": "Ovu si e-poruku primio jer su pogodnosti uklonjene s tvog {product_name} računa.",
 		"intro": "Plaćanje za kôd poklona koji si iskoristio poništeno je, pa smo uklonili pogodnosti koje je dodao tvom računu.",
+		"manage_cta": "Upravljaj pretplatom",
 		"note": "{reply, select, yes {Ako misliš da je riječ o pogrešci, odgovori na ovu e-poruku i napiši nam što znaš o kôdu poklona.} other {Ako misliš da je riječ o pogrešci, javi se administratorima ove instance i reci im što znaš o kôdu poklona.}}",
 		"signoff": "Tim {product_name}a",
 		"subject": "Uklonili smo pogodnosti {product_name} poklona koji si iskoristio"
@@ -479,6 +530,56 @@
 		"why_body": "Uplatu si izvršio ti ili netko kome si to dopustio, naplatili smo točan iznos, {product, select, plutonium {Plutonium je pružen kako je opisano} other {Operator Pass je isporučen kako je opisano}}, nismo ti vratili novac za tu uplatu, a rok za odustajanje već je istekao kad si uložio prigovor.",
 		"why_title": "Zašto smo utvrdili da je neopravdan"
 	},
+	"plutonium_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Jedan račun na {unpaidFormatted} još nije plaćen. Otkazivanje ga ne poništava, pa ćemo ga i dalje pokušavati naplatiti.} other {Više ti nećemo ništa naplaćivati.}}",
+		"cta": "Upravljaj pretplatom",
+		"ends_line": "Do {endsAt, date, long} ti ostaje {premiumName}, a nakon toga pretplata završava i neće se obnoviti.",
+		"footer_reason": "Ovu si e-poruku primio jer si otkazao pretplatu na {premiumName}.",
+		"heading": "Otkazivanje primljeno",
+		"intro": "Tvoj zahtjev za otkazivanje {plan, select, yearly {godišnje} other {mjesečne}} pretplate na {premiumName} primili smo {receivedFormatted}.",
+		"lead": "Predomislio si se? Do {endsAt, date, long} pretplatu možeš nastaviti pod „Upravljaj pretplatom“.",
+		"preheader": "{premiumName} ti ostaje do {endsAt, date, long}",
+		"reference_line": "Referentni broj: {reference}",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Primili smo tvoje otkazivanje pretplate na {product_name} {premiumName}"
+	},
+	"plutonium_card_expiring": {
+		"cta": "Promijeni način plaćanja",
+		"footer_reason": "Ovu si e-poruku primio jer uskoro istječe kartica kojom plaćaš {premiumName}.",
+		"heading": "Ažuriraj karticu",
+		"intro": "{branded, select, yes {Tvoja kartica {brand} koja završava na {last4}} other {Tvoja kartica koja završava na {last4}}} istječe krajem mjeseca {expiryFormatted}, a {chargeAt, date, long} dospijeva sljedeće plaćanje od {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}}.",
+		"lead": "Ažuriraj karticu prije toga kako bi ti pretplata i dalje bila aktivna.",
+		"preheader": "{branded, select, yes {Tvoja kartica {brand} koja završava na {last4}} other {Tvoja kartica koja završava na {last4}}} uskoro istječe",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoja kartica istječe prije sljedećeg plaćanja za {product_name} {premiumName}"
+	},
+	"plutonium_ended_unpaid": {
+		"cta": "Nabavi {premiumName}",
+		"footer_reason": "Ovu si e-poruku primio jer je tvoja pretplata na {premiumName} završila.",
+		"heading": "Tvoja pretplata je završila",
+		"intro": "{numbered, select, yes {Tvoja pretplata na {premiumName} je završila jer nismo uspjeli naplatiti račun {invoiceNumber}.} other {Tvoja pretplata na {premiumName} je završila jer nismo uspjeli naplatiti obnovu.}}",
+		"invoice_link": "Pogledaj račun",
+		"lead": "Ponovno se možeš pretplatiti bilo kada.",
+		"owed_line": "{owed, select, none {Za ovaj račun ništa ne duguješ.} stopped {Prestali smo pokušavati naplatiti ovaj račun.} open {Račun na {amountFormatted} još nije plaćen. Možeš ga platiti na stranici računa.} other {}}",
+		"preheader": "Nismo uspjeli naplatiti tvoju pretplatu na {premiumName}",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoja pretplata na {product_name} {premiumName} je završila"
+	},
+	"plutonium_gift_applied": {
+		"charge_line": "{method, select, card {Dana {trialEnd, date, long} naplatit ćemo {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}} s tvoje kartice {brand} koja završava na {last4}, a pretplata se zatim obnavlja {plan, select, yearly {svake godine} other {svaki mjesec}} dok je ne otkažeš.} plain_card {Dana {trialEnd, date, long} naplatit ćemo {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}} s tvoje kartice koja završava na {last4}, a pretplata se zatim obnavlja {plan, select, yearly {svake godine} other {svaki mjesec}} dok je ne otkažeš.} named {Dana {trialEnd, date, long} naplatit ćemo {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}} putem usluge {methodName}, a pretplata se zatim obnavlja {plan, select, yearly {svake godine} other {svaki mjesec}} dok je ne otkažeš.} other {Dana {trialEnd, date, long} naplatit ćemo {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventualni porez}} putem tvog spremljenog načina plaćanja, a pretplata se zatim obnavlja {plan, select, yearly {svake godine} other {svaki mjesec}} dok je ne otkažeš.}}",
+		"cta": "Upravljaj pretplatom",
+		"footer_reason": "Ovu si e-poruku primio jer si iskoristio poklon {premiumName}.",
+		"heading": "Poklon je dodan",
+		"intro": "Poklonjeno razdoblje je dodano. Za {plan, select, yearly {godišnju} other {mjesečnu}} pretplatu na {premiumName} do {trialEnd, date, long} ništa ti nećemo naplatiti.",
+		"lead": "Do tada je možeš bilo kada otkazati pod „Upravljaj pretplatom“.",
+		"preheader": "Do {trialEnd, date, long} ništa ti nećemo naplatiti",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "Tvoj poklon dodan je tvojoj pretplati na {product_name} {premiumName}"
+	},
 	"plutonium_payment_failed": {
 		"amount_label": "Iznos",
 		"cta": "{reason, select, action_required {Potvrdi plaćanje} other {Plati račun}}",
@@ -487,11 +588,13 @@
 		"footer_reason": "Ovu si e-poruku primio jer plaćanje tvoje pretplate na {premiumName} na {product_name}u traži tvoju pažnju.",
 		"heading": "{reason, select, action_required {Tvoja banka traži da potvrdiš plaćanje} other {Plaćanje za {premiumName} nije uspjelo}}",
 		"intro": "{reason, select, action_required {Tvoja banka traži da potvrdiš plaćanje za obnovu pretplate na {premiumName}.} other {Nismo uspjeli naplatiti obnovu tvoje pretplate na {premiumName}.}} {access, select, yes {{premiumName} ti ostaje do {accessEndsAt, date, long}.} other {}}",
+		"intro_change": "{reason, select, action_required {Tvoja banka traži da potvrdiš plaćanje za promjenu pretplate na {premiumName}.} other {Nismo uspjeli naplatiti promjenu tvoje pretplate na {premiumName}.}} {access, select, yes {{premiumName} ti ostaje do {accessEndsAt, date, long}.} other {}}",
 		"invoice_label": "Broj računa",
 		"lead": "{reason, select, action_required {Otvori stranicu računa i ondje potvrdi plaćanje.} other {{access, select, yes {Ako ga želiš zadržati i nakon toga, plati račun ili promijeni način plaćanja.} other {Ako želiš ponovno imati {premiumName}, plati račun ili promijeni način plaćanja.}}}}",
 		"manage_link": "Promijeni način plaćanja pod „Upravljaj pretplatom“",
 		"note": "{reply, select, yes {Ako trebaš pomoć, odgovori na ovu e-poruku.} other {Ako trebaš pomoć, javi se administratorima ove instance.}}",
 		"preheader": "{reason, select, action_required {Potvrdi plaćanje od {amountFormatted} za {premiumName}} other {Nismo uspjeli naplatiti {amountFormatted} za {premiumName}}}",
+		"reminder_subject": "Podsjetnik: potvrdi plaćanje za {premiumName}",
 		"signoff": "Tim {product_name}a",
 		"subject": "{reason, select, action_required {Potvrdi plaćanje za {product_name} {premiumName}} other {Plaćanje za {product_name} {premiumName} nije uspjelo}}"
 	},
@@ -535,6 +638,7 @@
 		"cta": "Pogledaj pojedinosti povrata",
 		"date_label": "Datum povrata",
 		"date_value": "{refundedAt, date, long}",
+		"ended_line": "Tvoj zahtjev za povrat novca primili smo {requestedFormatted}. Povratom je otkazana i tvoja pretplata na {premiumName}. Pretplata je završila i neće se obnoviti. Referentni broj: {reference}.",
 		"footer_reason": "Ovu si e-poruku primio jer ti je vraćen novac za {premiumName} na {product_name}u.",
 		"heading": "Vraćeno {amountFormatted}",
 		"intro": "{partial, select, yes {Vratili smo ti {amountFormatted}, dio tvoje uplate, na karticu ili bankovni račun kojim si platio.} other {Vratili smo ti {amountFormatted} na karticu ili bankovni račun kojim si platio.}} Novac obično stigne za 5 do 10 radnih dana, ovisno o tvojoj banci.",
@@ -548,6 +652,23 @@
 		"refund_label": "Vraćeno",
 		"signoff": "Tim {product_name}a",
 		"subject": "Povrat novca za {product_name} {premiumName}"
+	},
+	"plutonium_renewal_notice": {
+		"after_line": "{differs, select, yes {Nakon toga {plan, select, yearly {godišnja} other {mjesečna}} cijena iznosi {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventualni porez}}.} other {Nakon toga plaćaš {plan, select, yearly {godišnje} other {mjesečno}} {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventualni porez}} dok ne otkažeš.}}",
+		"annual_line": "Ovo je tvoj godišnji podsjetnik da se tvoja mjesečna pretplata na {premiumName} automatski obnavlja svaki mjesec dok je ne otkažeš.",
+		"box": "Ako ne želiš obnovu, otkaži prije {cancelByFormatted}.",
+		"charge_line": "{method, select, card {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} s tvoje kartice {brand} koja završava na {last4}.} plain_card {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} s tvoje kartice koja završava na {last4}.} named {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} putem usluge {methodName}.} other {Dana {chargeAt, date, long} naplatit ćemo {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventualni porez}} putem tvog spremljenog načina plaćanja.}}",
+		"cta": "Upravljaj pretplatom",
+		"footer_reason": "Ovu si e-poruku primio jer se tvoja pretplata na {premiumName} automatski obnavlja.",
+		"gift_line": "Tvoje poklonjeno razdoblje završava {giftEndsAt, date, long}, a nakon toga tvoja {plan, select, yearly {godišnja} other {mjesečna}} pretplata na {premiumName} automatski se obnavlja, osim ako je prije toga ne otkažeš.",
+		"heading": "{gift, select, yes {Tvoje poklonjeno razdoblje uskoro završava} other {{annual, select, yes {Tvoj godišnji podsjetnik o obnovi} other {Tvoja pretplata uskoro se obnavlja}}}}",
+		"intro": "Tvoja {plan, select, yearly {godišnja} other {mjesečna}} pretplata na {premiumName} automatski se obnavlja {chargeAt, date, long}, osim ako je prije toga ne otkažeš.",
+		"keep_line": "Ako otkažeš, {premiumName} ti ostaje do {chargeAt, date, long} i više ti nećemo ništa naplaćivati.",
+		"preheader": "Tvoja pretplata na {premiumName} obnavlja se {chargeAt, date, long}",
+		"seller": "Prodavatelj: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Tim {product_name}a",
+		"subject": "{gift, select, yes {Tvoje poklonjeno razdoblje {product_name} {premiumName} završava {giftEndsAt, date, long}} other {{annual, select, yes {Tvoj godišnji podsjetnik o pretplati na {product_name} {premiumName}} other {Tvoja pretplata na {product_name} {premiumName} obnavlja se {chargeAt, date, long}}}}}",
+		"year_line": "Naplatom {yearStartsAt, date, long} počinje tvoja sljedeća godina pretplate na {premiumName}."
 	},
 	"reauth_code": {
 		"expiry": "Ovaj kod istječe za {minutes, plural, one {# minutu} few {# minute} other {# minuta}}.",

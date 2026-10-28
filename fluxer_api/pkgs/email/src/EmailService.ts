@@ -19,11 +19,13 @@ import {
 	restoreEmailLiterals,
 	stripInlineMarkup,
 } from '@pkgs/email/src/email_html/EmailHtmlRenderer';
-import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
+import {getEmailTemplate, resolveEmailTimeZone} from '@pkgs/email/src/email_i18n/EmailI18n';
 import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplate, EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 import type {
+	BillingEndedInvoiceStatus,
 	BillingInvoiceDocument,
+	BillingPaymentMethod,
 	BillingTotals,
 	EmailSendParams,
 	IBulkEmailSession,
@@ -169,6 +171,83 @@ function yesNo(value: boolean): 'yes' | 'no' {
 	return value ? 'yes' : 'no';
 }
 
+const ENDED_INVOICE_OWED: Record<BillingEndedInvoiceStatus, 'none' | 'stopped' | 'open' | 'unknown'> = {
+	void: 'none',
+	uncollectible: 'stopped',
+	open: 'open',
+	paid: 'unknown',
+	other: 'unknown',
+};
+
+const CARD_BRAND_NAMES: Record<string, string> = {
+	amex: 'American Express',
+	cartes_bancaires: 'Cartes Bancaires',
+	diners: 'Diners Club',
+	discover: 'Discover',
+	eftpos_au: 'eftpos',
+	jcb: 'JCB',
+	mastercard: 'Mastercard',
+	unionpay: 'UnionPay',
+	visa: 'Visa',
+};
+
+function cardBrandName(brand: string): string | null {
+	if (!brand || brand === 'unknown') {
+		return null;
+	}
+	return CARD_BRAND_NAMES[brand] ?? `${brand.charAt(0).toUpperCase()}${brand.slice(1)}`;
+}
+
+function paymentMethodVariables(method: BillingPaymentMethod) {
+	const brand = method.kind === 'card' ? cardBrandName(method.brand) : null;
+	return {
+		method: method.kind === 'card' && !brand ? ('plain_card' as const) : method.kind,
+		brand: brand ?? '',
+		last4: method.kind === 'card' ? method.last4 : '',
+		methodName: method.kind === 'named' ? method.name : '',
+	};
+}
+
+function sellerVariables() {
+	return {sellerAddress: SELLER_ADDRESS, sellerEmail: OPERATOR_PASS_TRADER_EMAIL};
+}
+
+function formatWithLocale(date: Date, locale: string | null, options: Intl.DateTimeFormatOptions): string {
+	try {
+		return new Intl.DateTimeFormat(locale ?? 'en-US', options).format(date);
+	} catch {
+		return new Intl.DateTimeFormat('en-US', options).format(date);
+	}
+}
+
+function formatMoment(date: Date, locale: string | null, timeZone: string | null | undefined): string {
+	return formatWithLocale(date, locale, {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZone: resolveEmailTimeZone(timeZone) ?? 'UTC',
+		timeZoneName: 'short',
+	});
+}
+
+function formatCardExpiry(month: number, year: number, locale: string | null): string {
+	return formatWithLocale(new Date(Date.UTC(year, month - 1, 1)), locale, {
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC',
+	});
+}
+
+function chargeFormatted(totals: BillingTotals, locale: string | null): string {
+	return formatTotals(totals, locale).totalWithCode;
+}
+
+function paragraphsOf(...lines: Array<string | null | undefined>): string {
+	return lines.filter((line): line is string => Boolean(line)).join('\n');
+}
+
 function appealSection(template: EmailTemplate): EmailSlots {
 	return {
 		section_1_title: template.appeal_title,
@@ -183,12 +262,16 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	account_deletion_cancelled: 'safety',
 	account_deletion_scheduled_inactivity: 'support',
 	account_deletion_scheduled_requested: 'safety',
+	billing_credit_note: 'support',
 	bulk_message_deletion_completed: 'privacy',
+	donation_cancellation_confirmation: 'support',
+	donation_card_expiring: 'support',
 	donation_confirmation: 'support',
 	donation_magic_link: 'support',
 	donation_payment_failed: 'support',
 	donation_receipt: 'support',
 	donation_refund_receipt: 'support',
+	donation_renewal_notice: 'support',
 	dsa_report_resolved: 'appeals',
 	dsa_report_verification: 'safety',
 	email_change_new: 'support',
@@ -221,9 +304,14 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	password_change_verification: 'support',
 	password_reset: 'support',
 	payment_dispute_warning: 'appeals',
+	plutonium_cancellation_confirmation: 'support',
+	plutonium_card_expiring: 'support',
+	plutonium_ended_unpaid: 'support',
+	plutonium_gift_applied: 'support',
 	plutonium_payment_failed: 'support',
 	plutonium_payment_receipt: 'support',
 	plutonium_refund_receipt: 'support',
+	plutonium_renewal_notice: 'support',
 	reauth_code: 'support',
 	registration_approved: 'support',
 	registration_pending: 'support',
@@ -670,6 +758,7 @@ export class EmailService implements IEmailService {
 						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
 						end_link: template.manage_link,
 						end_link_url: params.manageUrl,
+						...(params.reminder ? {subject: template.reminder_subject} : {}),
 					}),
 				},
 			);
@@ -692,8 +781,24 @@ export class EmailService implements IEmailService {
 		bulk_message_deletion_completed: async (email, totals, locale) => {
 			return this.sendTemplatedEmail(email, 'bulk_message_deletion_completed', locale, totals);
 		},
-		gift_chargeback_notification: async (email, _params, locale) => {
-			return this.sendTemplatedEmail(email, 'gift_chargeback_notification', locale, {});
+		gift_chargeback_notification: async (email, params, locale) => {
+			const resumed = params.billingResumed ?? null;
+			return this.sendTemplatedEmail(
+				email,
+				'gift_chargeback_notification',
+				locale,
+				{premiumName: resumed?.premiumName ?? '', plan: resumed?.plan ?? 'monthly'},
+				{
+					slots: (template) =>
+						resumed
+							? {
+									lead: template.billing_resumed,
+									cta: template.manage_cta,
+									cta_url: plutoniumUrl(this.config.appBaseUrl),
+								}
+							: {},
+				},
+			);
 		},
 		operator_pass_welcome: async (email, params, locale) => {
 			return this.sendTemplatedEmail(
@@ -1051,6 +1156,10 @@ export class EmailService implements IEmailService {
 					paidFormatted: formatMinorUnitPrice(params.paidMinor, params.currency, locale),
 					paidAt: params.paidAt,
 					partial: yesNo(params.amountMinor < params.paidMinor),
+					requestedFormatted: params.subscriptionEnded
+						? formatMoment(params.subscriptionEnded.requestedAt, locale, params.timeZone)
+						: '',
+					reference: params.subscriptionEnded?.reference ?? '',
 				},
 				{
 					slots: (template) => ({
@@ -1064,6 +1173,7 @@ export class EmailService implements IEmailService {
 							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
 						),
 						...(params.refundUrl ? {cta_url: params.refundUrl} : {cta: null}),
+						lead: params.subscriptionEnded ? template.ended_line : null,
 					}),
 					timeZone: params.timeZone,
 				},
@@ -1094,8 +1204,196 @@ export class EmailService implements IEmailService {
 						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
 						end_link: template.manage_link,
 						end_link_url: plutoniumUrl(this.config.appBaseUrl),
+						...(params.reminder ? {subject: template.reminder_subject} : {}),
+						...(params.planChange ? {intro: template.intro_change} : {}),
 					}),
 					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_renewal_notice: async (email, params, locale) => {
+			const gift = params.giftEndsAt != null;
+			const annual = params.variant === 'annual';
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_renewal_notice',
+				locale,
+				{
+					...this.upcomingChargeVariables(params, locale),
+					premiumName: params.premiumName,
+					gift: yesNo(gift),
+					annual: yesNo(annual),
+					plan: params.plan,
+					giftEndsAt: params.giftEndsAt ?? params.chargeAt,
+					yearStartsAt: params.yearStartsAt ?? params.chargeAt,
+				},
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(
+							annual ? template.annual_line : null,
+							gift ? template.gift_line : null,
+							gift || annual ? null : template.intro,
+							template.charge_line,
+							params.yearStartsAt ? template.year_line : null,
+							template.after_line,
+						),
+						cta_url: plutoniumUrl(this.config.appBaseUrl),
+						text_1: template.keep_line,
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		donation_renewal_notice: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'donation_renewal_notice',
+				locale,
+				this.upcomingChargeVariables(params, locale),
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(template.intro, template.charge_line, template.after_line),
+						cta_url: params.manageUrl,
+						text_1: template.keep_line,
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_card_expiring: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_card_expiring',
+				locale,
+				{...this.cardExpiringVariables(params, locale), premiumName: params.premiumName},
+				{
+					slots: (template) => ({
+						cta_url: plutoniumUrl(this.config.appBaseUrl),
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		donation_card_expiring: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'donation_card_expiring',
+				locale,
+				this.cardExpiringVariables(params, locale),
+				{
+					slots: (template) => ({cta_url: params.manageUrl, note: params.seller ? template.seller : null}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_cancellation_confirmation: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_cancellation_confirmation',
+				locale,
+				{
+					...this.cancellationVariables(params, locale),
+					premiumName: params.premiumName,
+					plan: params.plan,
+				},
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(template.intro, template.ends_line, template.charge_line),
+						cta_url: plutoniumUrl(this.config.appBaseUrl),
+						text_1: template.reference_line,
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		donation_cancellation_confirmation: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'donation_cancellation_confirmation',
+				locale,
+				this.cancellationVariables(params, locale),
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(template.intro, template.ends_line, template.charge_line),
+						cta_url: params.manageUrl,
+						text_1: template.reference_line,
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_ended_unpaid: async (email, params, locale) => {
+			const owed = ENDED_INVOICE_OWED[params.invoiceStatus];
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_ended_unpaid',
+				locale,
+				{
+					...sellerVariables(),
+					premiumName: params.premiumName,
+					numbered: yesNo(params.invoiceNumber != null),
+					invoiceNumber: params.invoiceNumber ?? '',
+					owed,
+					amountFormatted: amountWithCode(params.amountMinor, params.currency, locale),
+				},
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(template.intro, template.owed_line),
+						cta_url: plutoniumUrl(this.config.appBaseUrl),
+						note: params.seller ? template.seller : null,
+						...(owed === 'open' && params.invoiceUrl
+							? {end_link: template.invoice_link, end_link_url: params.invoiceUrl}
+							: {}),
+					}),
+				},
+			);
+		},
+		plutonium_gift_applied: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_gift_applied',
+				locale,
+				{
+					...sellerVariables(),
+					...paymentMethodVariables(params.paymentMethod),
+					premiumName: params.premiumName,
+					plan: params.plan,
+					trialEnd: params.trialEnd,
+					amountFormatted: chargeFormatted(params.amount, locale),
+					tax: yesNo(params.taxIncluded),
+				},
+				{
+					slots: (template) => ({
+						intro: paragraphsOf(template.intro, template.charge_line),
+						cta_url: plutoniumUrl(this.config.appBaseUrl),
+						note: params.seller ? template.seller : null,
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		billing_credit_note: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'billing_credit_note',
+				locale,
+				{
+					...sellerVariables(),
+					amountFormatted: amountWithCode(params.amountMinor, params.currency, locale),
+					numbered: yesNo(params.invoiceNumber != null),
+					invoiceNumber: params.invoiceNumber ?? '',
+					upcoming: yesNo(params.upcomingInvoice),
+				},
+				{
+					slots: (template) => ({
+						note: params.seller ? template.seller : null,
+						...(params.pdfUrl ? {end_link: template.credit_note_link, end_link_url: params.pdfUrl} : {}),
+					}),
 				},
 			);
 		},
@@ -1237,6 +1535,55 @@ export class EmailService implements IEmailService {
 		});
 	}
 
+	private upcomingChargeVariables(
+		params: EmailSendParams['donation_renewal_notice'] | EmailSendParams['plutonium_renewal_notice'],
+		locale: string | null,
+	) {
+		return {
+			...sellerVariables(),
+			...paymentMethodVariables(params.paymentMethod),
+			chargeAt: params.chargeAt,
+			nextFormatted: chargeFormatted(params.next ?? params.regular, locale),
+			regularFormatted: chargeFormatted(params.regular, locale),
+			tax: yesNo(params.taxIncluded),
+			differs: yesNo(params.next != null && params.next.totalMinor !== params.regular.totalMinor),
+			cancelByFormatted: formatMoment(params.chargeAt, locale, params.timeZone),
+		};
+	}
+
+	private cardExpiringVariables(
+		params: EmailSendParams['donation_card_expiring'] | EmailSendParams['plutonium_card_expiring'],
+		locale: string | null,
+	) {
+		const brand = cardBrandName(params.brand);
+		return {
+			...sellerVariables(),
+			branded: yesNo(brand != null),
+			brand: brand ?? '',
+			last4: params.last4,
+			expiryFormatted: formatCardExpiry(params.expMonth, params.expYear, locale),
+			chargeAt: params.chargeAt,
+			amountFormatted: chargeFormatted(params.amount, locale),
+			tax: yesNo(params.taxIncluded),
+		};
+	}
+
+	private cancellationVariables(
+		params:
+			| EmailSendParams['donation_cancellation_confirmation']
+			| EmailSendParams['plutonium_cancellation_confirmation'],
+		locale: string | null,
+	) {
+		return {
+			...sellerVariables(),
+			receivedFormatted: formatMoment(params.receivedAt, locale, params.timeZone),
+			endsAt: params.endsAt,
+			reference: params.reference,
+			unpaid: yesNo(params.unpaid != null),
+			unpaidFormatted: params.unpaid ? chargeFormatted(params.unpaid, locale) : '',
+		};
+	}
+
 	private sendCode<T extends EmailTemplateKey>(
 		email: string,
 		templateKey: T,
@@ -1270,7 +1617,7 @@ export class EmailService implements IEmailService {
 			return false;
 		}
 		const slots = this.composeSlots(result.locale, result.value, options);
-		const subject = restoreEmailLiterals(result.value.subject);
+		const subject = restoreEmailLiterals(slots.subject ?? result.value.subject);
 		const text = renderEmailText(slots);
 		const html = this.renderHtml(templateKey, result.locale, slots);
 		const attachments = options.attachments;

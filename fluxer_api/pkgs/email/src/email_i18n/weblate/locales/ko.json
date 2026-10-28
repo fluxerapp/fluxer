@@ -20,12 +20,46 @@
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} 계정이 {deletion_date}에 삭제돼요"
 	},
+	"billing_credit_note": {
+		"credit_note_link": "크레딧 노트 보기",
+		"footer_reason": "{product_name} 계정에 잔액이 추가되어 이 이메일을 받으셨어요.",
+		"heading": "계정에 잔액이 추가되었어요",
+		"intro": "{numbered, select, yes {인보이스 {invoiceNumber}에 대해 계정 잔액에 {amountFormatted}을(를) 추가했어요.} other {계정 잔액에 {amountFormatted}을(를) 추가했어요.}} {upcoming, select, yes {이 잔액은 구독 갱신 등 다음 {product_name} 인보이스에서 차감돼요.} other {{reply, select, yes {현재 이 잔액을 사용할 수 있는 예정된 인보이스가 없어요. 환불을 원하시면 이 이메일에 회신해 주세요.} other {현재 이 잔액을 사용할 수 있는 예정된 인보이스가 없어요. 환불을 원하시면 이 인스턴스의 관리자에게 문의해 주세요.}}}}",
+		"preheader": "계정 잔액에 {amountFormatted}이(가) 추가되었어요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} 계정에 {amountFormatted}의 잔액이 있어요"
+	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "회원님의 {product_name} 계정에 대한 메시지 삭제가 요청되어 이 이메일을 받으셨어요.",
 		"intro": "메시지 삭제를 완료했습니다. {channel_count, plural, =0 {0곳에서} other {#곳에서}} {message_count, plural, =0 {메시지 0개를 삭제했습니다} other {메시지 #개를 삭제했습니다}}.",
 		"note": "{reply, select, yes {이 요청을 하지 않으셨다면 지금 바로 비밀번호를 변경하고 이 이메일에 회신해 주세요.} other {이 요청을 하지 않으셨다면 지금 바로 비밀번호를 변경하고 이 인스턴스의 관리자에게 문의해 주세요.}}",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} 메시지 삭제가 완료되었습니다"
+	},
+	"donation_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {{unpaidFormatted} 인보이스 1건이 아직 결제되지 않았어요. 취소하셔도 이 인보이스는 없어지지 않으며, 계속 결제를 시도할 예정이에요.} other {앞으로 더 이상 요금이 청구되지 않아요.}}",
+		"cta": "후원 관리하기",
+		"ends_line": "정기 후원은 {endsAt, date, long}에 종료돼요.",
+		"footer_reason": "{product_name} 정기 후원을 취소하셔서 이 이메일을 받으셨어요.",
+		"heading": "취소 요청을 접수했어요",
+		"intro": "{receivedFormatted}에 {product_name} 정기 후원 취소 요청을 접수했어요.",
+		"preheader": "정기 후원은 {endsAt, date, long}에 종료돼요",
+		"reference_line": "참조 번호: {reference}",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} 후원 취소 요청을 접수했어요"
+	},
+	"donation_card_expiring": {
+		"cta": "결제 수단 업데이트하기",
+		"footer_reason": "{product_name} 후원에 사용하시는 카드의 유효기간이 곧 만료되어 이 이메일을 받으셨어요.",
+		"heading": "카드 정보를 업데이트해 주세요",
+		"intro": "{branded, select, yes {끝자리가 {last4}인 {brand} 카드} other {끝자리가 {last4}인 카드}}의 유효기간이 {expiryFormatted} 말에 만료돼요. {chargeAt, date, long}에 다음 결제 금액 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}이(가) 청구될 예정이에요.",
+		"lead": "후원이 계속 이어지도록 그 전에 카드 정보를 업데이트해 주세요.",
+		"preheader": "{branded, select, yes {끝자리가 {last4}인 {brand} 카드} other {끝자리가 {last4}인 카드}}의 유효기간이 곧 만료돼요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "다음 {product_name} 후원 결제 전에 카드 유효기간이 만료돼요"
 	},
 	"donation_confirmation": {
 		"amount_label": "금액",
@@ -64,6 +98,7 @@
 		"manage_link": "후원 관리하기",
 		"note": "{reply, select, yes {도움이 필요하시면 이 이메일에 회신해 주세요.} other {도움이 필요하시면 이 인스턴스의 관리자에게 문의해 주세요.}}",
 		"preheader": "{reason, select, action_required {후원금 {amountFormatted} 결제를 인증해 주세요} other {후원금 {amountFormatted} 결제에 실패했어요}}",
+		"reminder_subject": "다시 알려 드려요: 후원 결제를 인증해 주세요",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{reason, select, action_required {{product_name} 후원 결제를 인증해 주세요} other {{product_name} 후원 결제가 처리되지 않았어요}}"
 	},
@@ -98,6 +133,20 @@
 		"refund_label": "환불 금액",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} 후원 환불 안내"
+	},
+	"donation_renewal_notice": {
+		"after_line": "{differs, select, yes {그 이후에는 매년 {tax, select, yes {{regularFormatted}} other {{regularFormatted}(세금 별도)}}씩 결제돼요.} other {그 이후에도 취소하실 때까지 매년 {tax, select, yes {{regularFormatted}} other {{regularFormatted}(세금 별도)}}씩 결제돼요.}}",
+		"box": "갱신을 중단하려면 {cancelByFormatted} 전에 취소해 주세요.",
+		"charge_line": "{method, select, card {{chargeAt, date, long}에 끝자리가 {last4}인 {brand} 카드로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} plain_card {{chargeAt, date, long}에 끝자리가 {last4}인 카드로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} named {{chargeAt, date, long}에 {methodName}(으)로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} other {{chargeAt, date, long}에 저장된 결제 수단으로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.}}",
+		"cta": "후원 관리하기",
+		"footer_reason": "{product_name} 연간 후원이 자동 갱신되어 이 이메일을 받으셨어요.",
+		"heading": "후원이 곧 갱신돼요",
+		"intro": "{product_name} 연간 후원은 그 전에 취소하지 않으시면 {chargeAt, date, long}에 자동 갱신돼요.",
+		"keep_line": "취소하시면 앞으로 더 이상 요금이 청구되지 않아요.",
+		"preheader": "연간 후원이 {chargeAt, date, long}에 갱신돼요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} 연간 후원이 {chargeAt, date, long}에 갱신돼요"
 	},
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {{reportedAt, date, long}에 보내신 \"{communityName}\"의 #{channelName} 메시지에 대한 신고에 관한 안내예요.} message_dm {{reportedAt, date, long}에 보내신 다이렉트 메시지 속 메시지에 대한 신고에 관한 안내예요.} message {{reportedAt, date, long}에 보내신 메시지 신고에 관한 안내예요.} user {{reportedAt, date, long}에 보내신 \"{username}\" 계정에 대한 신고에 관한 안내예요.} community {{reportedAt, date, long}에 보내신 \"{communityName}\" 커뮤니티에 대한 신고에 관한 안내예요.} other {{reportedAt, date, long}에 보내신 신고에 관한 안내예요.}}",
@@ -187,8 +236,10 @@
 		"why_title": "사유"
 	},
 	"gift_chargeback_notification": {
+		"billing_resumed": "선물이 제거되어 오늘부터 {premiumName} {plan, select, yearly {연간} other {월간}} 구독 요금이 다시 청구돼요. 이 결제에 대한 영수증은 별도로 보내 드려요. ‘구독 관리’에서 언제든지 취소하실 수 있어요.",
 		"footer_reason": "이 이메일은 {product_name} 계정에서 혜택이 제거되어 발송되었어요.",
 		"intro": "사용하신 선물 코드의 결제가 취소되어, 그 코드로 계정에 추가된 혜택을 제거했어요.",
+		"manage_cta": "구독 관리하기",
 		"note": "{reply, select, yes {착오라고 생각하시면 이 이메일에 회신해 선물 코드에 대해 알고 계신 내용을 알려 주세요.} other {착오라고 생각하시면 이 인스턴스의 관리자에게 문의해 선물 코드에 대해 알고 계신 내용을 알려 주세요.}}",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "사용하신 {product_name} 선물의 혜택을 제거했어요"
@@ -479,6 +530,56 @@
 		"why_body": "결제는 회원님 본인 또는 회원님이 허락한 사람이 했고, 청구 금액은 정확했으며, {product, select, plutonium {Plutonium은 안내된 대로 제공되었고} other {Operator Pass는 안내된 대로 전달되었고}}, 저희가 결제 금액을 환불하지 않았으며, 분쟁을 제기했을 때 철회 기간은 이미 끝난 상태였어요.",
 		"why_title": "부당하다고 판단한 이유"
 	},
+	"plutonium_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {{unpaidFormatted} 인보이스 1건이 아직 결제되지 않았어요. 취소하셔도 이 인보이스는 없어지지 않으며, 계속 결제를 시도할 예정이에요.} other {앞으로 더 이상 요금이 청구되지 않아요.}}",
+		"cta": "구독 관리하기",
+		"ends_line": "{endsAt, date, long}까지는 {premiumName}을(를) 계속 이용하실 수 있어요. 그 후 구독이 종료되며 갱신되지 않아요.",
+		"footer_reason": "{premiumName} 구독을 취소하셔서 이 이메일을 받으셨어요.",
+		"heading": "취소 요청을 접수했어요",
+		"intro": "{receivedFormatted}에 {premiumName} {plan, select, yearly {연간} other {월간}} 구독 취소 요청을 접수했어요.",
+		"lead": "마음이 바뀌셨나요? {endsAt, date, long} 전까지 ‘구독 관리’에서 구독을 재개하실 수 있어요.",
+		"preheader": "{endsAt, date, long}까지 {premiumName}을(를) 이용하실 수 있어요",
+		"reference_line": "참조 번호: {reference}",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} {premiumName} 취소 요청을 접수했어요"
+	},
+	"plutonium_card_expiring": {
+		"cta": "결제 수단 업데이트하기",
+		"footer_reason": "{premiumName}에 사용하시는 카드의 유효기간이 곧 만료되어 이 이메일을 받으셨어요.",
+		"heading": "카드 정보를 업데이트해 주세요",
+		"intro": "{branded, select, yes {끝자리가 {last4}인 {brand} 카드} other {끝자리가 {last4}인 카드}}의 유효기간이 {expiryFormatted} 말에 만료돼요. {chargeAt, date, long}에 다음 결제 금액 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}이(가) 청구될 예정이에요.",
+		"lead": "구독이 끊기지 않도록 그 전에 카드 정보를 업데이트해 주세요.",
+		"preheader": "{branded, select, yes {끝자리가 {last4}인 {brand} 카드} other {끝자리가 {last4}인 카드}}의 유효기간이 곧 만료돼요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "다음 {product_name} {premiumName} 결제 전에 카드 유효기간이 만료돼요"
+	},
+	"plutonium_ended_unpaid": {
+		"cta": "{premiumName} 구독하기",
+		"footer_reason": "{premiumName} 구독이 종료되어 이 이메일을 받으셨어요.",
+		"heading": "구독이 종료되었어요",
+		"intro": "{numbered, select, yes {인보이스 {invoiceNumber}의 결제를 처리하지 못해 {premiumName} 구독이 종료되었어요.} other {갱신 결제를 처리하지 못해 {premiumName} 구독이 종료되었어요.}}",
+		"invoice_link": "인보이스 보기",
+		"lead": "언제든지 다시 구독하실 수 있어요.",
+		"owed_line": "{owed, select, none {이 인보이스에 대해 결제하실 금액은 없어요.} stopped {이 인보이스에 대한 결제 시도를 중단했어요.} open {{amountFormatted} 인보이스가 아직 결제되지 않았어요. 인보이스 페이지에서 결제하실 수 있어요.} other {}}",
+		"preheader": "{premiumName} 구독 결제를 처리하지 못했어요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} {premiumName} 구독이 종료되었어요"
+	},
+	"plutonium_gift_applied": {
+		"charge_line": "{method, select, card {{trialEnd, date, long}에 끝자리가 {last4}인 {brand} 카드로 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}을(를) 결제하며, 이후 취소하실 때까지 구독이 {plan, select, yearly {매년} other {매월}} 갱신돼요.} plain_card {{trialEnd, date, long}에 끝자리가 {last4}인 카드로 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}을(를) 결제하며, 이후 취소하실 때까지 구독이 {plan, select, yearly {매년} other {매월}} 갱신돼요.} named {{trialEnd, date, long}에 {methodName}(으)로 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}을(를) 결제하며, 이후 취소하실 때까지 구독이 {plan, select, yearly {매년} other {매월}} 갱신돼요.} other {{trialEnd, date, long}에 저장된 결제 수단으로 {tax, select, yes {{amountFormatted}} other {{amountFormatted}(세금 별도)}}을(를) 결제하며, 이후 취소하실 때까지 구독이 {plan, select, yearly {매년} other {매월}} 갱신돼요.}}",
+		"cta": "구독 관리하기",
+		"footer_reason": "{premiumName} 선물을 사용하셔서 이 이메일을 받으셨어요.",
+		"heading": "선물이 적용되었어요",
+		"intro": "선물받은 이용 기간이 추가되었어요. {trialEnd, date, long}까지는 {premiumName} {plan, select, yearly {연간} other {월간}} 구독 요금이 청구되지 않아요.",
+		"lead": "그 전까지 ‘구독 관리’에서 언제든지 취소하실 수 있어요.",
+		"preheader": "{trialEnd, date, long}까지 요금이 청구되지 않아요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{product_name} {premiumName} 구독에 선물이 적용되었어요"
+	},
 	"plutonium_payment_failed": {
 		"amount_label": "금액",
 		"cta": "{reason, select, action_required {결제 인증하기} other {인보이스 결제하기}}",
@@ -487,11 +588,13 @@
 		"footer_reason": "{product_name}의 {premiumName} 구독 결제에 확인이 필요해서 이 이메일을 받으셨어요.",
 		"heading": "{reason, select, action_required {은행에서 결제 인증을 요청했어요} other {{premiumName} 결제가 처리되지 않았어요}}",
 		"intro": "{reason, select, action_required {{premiumName} 구독 갱신 결제에 대해 은행에서 인증을 요청했어요.} other {{premiumName} 구독 갱신 결제를 처리하지 못했어요.}} {access, select, yes {{accessEndsAt, date, long}까지는 {premiumName}을(를) 계속 이용하실 수 있어요.} other {}}",
+		"intro_change": "{reason, select, action_required {{premiumName} 구독 변경에 따른 결제에 대해 은행에서 인증을 요청했어요.} other {{premiumName} 구독 변경에 따른 결제를 처리하지 못했어요.}} {access, select, yes {{accessEndsAt, date, long}까지는 {premiumName}을(를) 계속 이용하실 수 있어요.} other {}}",
 		"invoice_label": "인보이스 번호",
 		"lead": "{reason, select, action_required {인보이스 페이지를 열고 결제를 인증해 주세요.} other {{access, select, yes {그 이후에도 계속 이용하시려면 인보이스를 결제하거나 결제 수단을 업데이트해 주세요.} other {{premiumName}을(를) 다시 이용하시려면 인보이스를 결제하거나 결제 수단을 업데이트해 주세요.}}}}",
 		"manage_link": "‘구독 관리’에서 결제 수단 업데이트하기",
 		"note": "{reply, select, yes {도움이 필요하시면 이 이메일에 회신해 주세요.} other {도움이 필요하시면 이 인스턴스의 관리자에게 문의해 주세요.}}",
 		"preheader": "{reason, select, action_required {{premiumName} {amountFormatted} 결제를 인증해 주세요} other {{premiumName} {amountFormatted} 결제에 실패했어요}}",
+		"reminder_subject": "다시 알려 드려요: {premiumName} 결제를 인증해 주세요",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{reason, select, action_required {{product_name} {premiumName} 결제를 인증해 주세요} other {{product_name} {premiumName} 결제가 처리되지 않았어요}}"
 	},
@@ -535,6 +638,7 @@
 		"cta": "환불 상세 내역 보기",
 		"date_label": "환불 날짜",
 		"date_value": "{refundedAt, date, long}",
+		"ended_line": "{requestedFormatted}에 환불 요청을 접수했어요. 환불에 따라 {premiumName} 구독도 취소되었어요. 구독은 종료되었으며 갱신되지 않아요. 참조 번호: {reference}.",
 		"footer_reason": "{product_name}에서 {premiumName} 결제가 환불되어 이 이메일을 받으셨어요.",
 		"heading": "{amountFormatted} 환불",
 		"intro": "{partial, select, yes {결제 금액 중 일부인 {amountFormatted}을(를) 결제하신 카드 또는 계좌로 환불했어요.} other {{amountFormatted}을(를) 결제하신 카드 또는 계좌로 환불했어요.}} 은행에 따라 다르지만 보통 5~10영업일 후에 반영돼요.",
@@ -548,6 +652,23 @@
 		"refund_label": "환불 금액",
 		"signoff": "{product_name} 팀 드림",
 		"subject": "{product_name} {premiumName} 환불"
+	},
+	"plutonium_renewal_notice": {
+		"after_line": "{differs, select, yes {그 이후에는 {plan, select, yearly {매년} other {매월}} {tax, select, yes {{regularFormatted}} other {{regularFormatted}(세금 별도)}}씩 결제돼요.} other {그 이후에도 취소하실 때까지 {plan, select, yearly {매년} other {매월}} {tax, select, yes {{regularFormatted}} other {{regularFormatted}(세금 별도)}}씩 결제돼요.}}",
+		"annual_line": "매년 한 번 보내 드리는 안내예요. {premiumName} 월간 구독은 취소하실 때까지 매월 자동 갱신돼요.",
+		"box": "갱신을 중단하려면 {cancelByFormatted} 전에 취소해 주세요.",
+		"charge_line": "{method, select, card {{chargeAt, date, long}에 끝자리가 {last4}인 {brand} 카드로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} plain_card {{chargeAt, date, long}에 끝자리가 {last4}인 카드로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} named {{chargeAt, date, long}에 {methodName}(으)로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.} other {{chargeAt, date, long}에 저장된 결제 수단으로 {tax, select, yes {{nextFormatted}} other {{nextFormatted}(세금 별도)}}을(를) 결제할 예정이에요.}}",
+		"cta": "구독 관리하기",
+		"footer_reason": "{premiumName} 구독이 자동 갱신되어 이 이메일을 받으셨어요.",
+		"gift_line": "선물받은 이용 기간은 {giftEndsAt, date, long}에 끝나요. 그 전에 취소하지 않으시면 이후 {premiumName} {plan, select, yearly {연간} other {월간}} 구독이 자동 갱신돼요.",
+		"heading": "{gift, select, yes {선물받은 이용 기간이 곧 끝나요} other {{annual, select, yes {연례 구독 갱신 안내} other {구독이 곧 갱신돼요}}}}",
+		"intro": "{premiumName} {plan, select, yearly {연간} other {월간}} 구독은 그 전에 취소하지 않으시면 {chargeAt, date, long}에 자동 갱신돼요.",
+		"keep_line": "취소하셔도 {chargeAt, date, long}까지는 {premiumName}을(를) 이용하실 수 있으며, 앞으로 더 이상 요금이 청구되지 않아요.",
+		"preheader": "{premiumName} 구독이 {chargeAt, date, long}에 갱신돼요",
+		"seller": "판매자: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "{product_name} 팀 드림",
+		"subject": "{gift, select, yes {{product_name} {premiumName} 선물 이용 기간이 {giftEndsAt, date, long}에 끝나요} other {{annual, select, yes {{product_name} {premiumName} 구독 연례 안내} other {{product_name} {premiumName} 구독이 {chargeAt, date, long}에 갱신돼요}}}}",
+		"year_line": "{yearStartsAt, date, long} 결제부터 {premiumName}의 다음 1년이 시작돼요."
 	},
 	"reauth_code": {
 		"expiry": "이 코드는 {minutes, plural, other {#분}} 후에 만료돼요.",

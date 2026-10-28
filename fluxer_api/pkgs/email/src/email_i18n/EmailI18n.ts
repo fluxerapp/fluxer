@@ -30,7 +30,14 @@ const ISOLATED_VARIABLES = new Set([
 	'channelName',
 	'communityName',
 	'amountFormatted',
+	'cancelByFormatted',
+	'expiryFormatted',
+	'nextFormatted',
 	'priceFormatted',
+	'receivedFormatted',
+	'regularFormatted',
+	'requestedFormatted',
+	'unpaidFormatted',
 	'founderName',
 	'otherName',
 	'premiumName',
@@ -47,7 +54,7 @@ function isolateForLocale(value: string, locale: string): string {
 	return getEmailTextDirection(locale) === 'rtl' ? isolateEmailValue(value) : value;
 }
 
-function resolveEmailTimeZone(timeZone: string | null | undefined): string | null {
+export function resolveEmailTimeZone(timeZone: string | null | undefined): string | null {
 	if (!timeZone) return null;
 	try {
 		new Intl.DateTimeFormat('en-US', {timeZone});

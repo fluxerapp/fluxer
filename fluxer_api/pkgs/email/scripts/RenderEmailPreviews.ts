@@ -8,7 +8,7 @@ import type {EmailConfig, EmailMessage, IEmailProvider} from '@pkgs/email/src/Em
 import {EmailService} from '@pkgs/email/src/EmailService';
 import {EMAIL_I18N_LOCALE_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nLocales';
 import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
-import type {BillingTotals} from '@pkgs/email/src/IEmailService';
+import type {BillingPaymentMethod, BillingTotals, EmailSendParams} from '@pkgs/email/src/IEmailService';
 
 const DEFAULT_LOCALES = ['en-US', 'sv-SE', 'de', 'ar', 'ja'];
 const PRICES: Record<string, {currency: string; earlyBird: number}> = {
@@ -37,6 +37,18 @@ function plutoniumTotals(locale: string, multiplier = 1): BillingTotals {
 		reverseCharge: false,
 	};
 }
+
+function yearlyTotals(locale: string): BillingTotals {
+	return plutoniumTotals(locale, 10);
+}
+
+const CARD: BillingPaymentMethod = {kind: 'card', brand: 'visa', last4: '4242'};
+const PIX: BillingPaymentMethod = {kind: 'named', name: 'Pix'};
+const NO_METHOD: BillingPaymentMethod = {kind: 'none'};
+const CHARGE_AT = new Date('2026-11-12T08:00:00Z');
+const TIME_ZONE = 'Europe/Stockholm';
+const DONATION_MANAGE_URL = 'https://fluxer.app/donate/manage?email=operator%40example.com';
+const SUBSCRIPTION_ID = 'sub_1SJHDHFPC94Os7Fd';
 
 class CaptureEmailProvider implements IEmailProvider {
 	last: EmailMessage | null = null;
@@ -87,6 +99,73 @@ const service = new EmailService(config, provider);
 const token = `${'0f'.repeat(16)}.${'a1'.repeat(32)}`;
 
 type Preview = (locale: string) => Promise<boolean>;
+
+function renewalNotice(
+	locale: string,
+	patch: Partial<EmailSendParams['plutonium_renewal_notice']> = {},
+): Promise<boolean> {
+	const regular = yearlyTotals(locale);
+	return service.send(
+		'plutonium_renewal_notice',
+		USER,
+		{
+			variant: 'renewal',
+			premiumName: 'Plutonium',
+			plan: 'yearly',
+			chargeAt: CHARGE_AT,
+			giftEndsAt: null,
+			yearStartsAt: null,
+			next: regular,
+			regular,
+			taxIncluded: true,
+			paymentMethod: CARD,
+			seller: true,
+			timeZone: TIME_ZONE,
+			...patch,
+		},
+		locale,
+	);
+}
+
+function cancellation(
+	locale: string,
+	patch: Partial<EmailSendParams['plutonium_cancellation_confirmation']> = {},
+): Promise<boolean> {
+	return service.send(
+		'plutonium_cancellation_confirmation',
+		USER,
+		{
+			premiumName: 'Plutonium',
+			plan: 'monthly',
+			receivedAt: DATE,
+			endsAt: CHARGE_AT,
+			reference: SUBSCRIPTION_ID,
+			unpaid: null,
+			seller: true,
+			timeZone: TIME_ZONE,
+			...patch,
+		},
+		locale,
+	);
+}
+
+function endedUnpaid(locale: string, invoiceStatus: 'void' | 'open' | 'uncollectible'): Promise<boolean> {
+	const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+	return service.send(
+		'plutonium_ended_unpaid',
+		USER,
+		{
+			premiumName: 'Plutonium',
+			invoiceNumber: 'B1Q2W3E4-0011',
+			invoiceStatus,
+			amountMinor: price.monthly,
+			currency: price.currency,
+			invoiceUrl: INVOICE_URL,
+			seller: true,
+		},
+		locale,
+	);
+}
 
 const DATE = new Date('2026-10-09T14:30:00Z');
 const USER = 'operator@example.com';
@@ -740,6 +819,212 @@ const previews: Record<string, Preview> = {
 			locale,
 		);
 	},
+	plutonium_renewal_notice: (locale) => renewalNotice(locale),
+	plutonium_renewal_notice_annual: (locale) =>
+		renewalNotice(locale, {
+			variant: 'annual',
+			plan: 'monthly',
+			yearStartsAt: new Date(CHARGE_AT.getTime() + 31 * 24 * 60 * 60 * 1000),
+			next: plutoniumTotals(locale),
+			regular: plutoniumTotals(locale),
+		}),
+	plutonium_renewal_notice_gift: (locale) =>
+		renewalNotice(locale, {
+			variant: 'gift',
+			plan: 'monthly',
+			giftEndsAt: CHARGE_AT,
+			next: plutoniumTotals(locale),
+			regular: plutoniumTotals(locale),
+		}),
+	plutonium_renewal_notice_yearly_gift: (locale) => renewalNotice(locale, {giftEndsAt: CHARGE_AT}),
+	plutonium_renewal_notice_named_method: (locale) => renewalNotice(locale, {paymentMethod: PIX}),
+	plutonium_renewal_notice_no_method: (locale) => renewalNotice(locale, {paymentMethod: NO_METHOD}),
+	plutonium_renewal_notice_price_differs: (locale) => renewalNotice(locale, {next: plutoniumTotals(locale, 5)}),
+	plutonium_renewal_notice_no_preview: (locale) =>
+		renewalNotice(locale, {next: null, regular: {...yearlyTotals(locale), tax: null}, taxIncluded: false}),
+	donation_renewal_notice: (locale) =>
+		service.send(
+			'donation_renewal_notice',
+			USER,
+			{
+				chargeAt: CHARGE_AT,
+				next: null,
+				regular: {totalMinor: 5000, paidMinor: 5000, currency: 'USD', tax: null, reverseCharge: false},
+				taxIncluded: true,
+				paymentMethod: CARD,
+				seller: true,
+				manageUrl: DONATION_MANAGE_URL,
+			},
+			locale,
+		),
+	plutonium_card_expiring: (locale) =>
+		service.send(
+			'plutonium_card_expiring',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				brand: 'mastercard',
+				last4: '4444',
+				expMonth: 10,
+				expYear: 2026,
+				chargeAt: CHARGE_AT,
+				amount: plutoniumTotals(locale),
+				taxIncluded: true,
+				seller: true,
+				timeZone: TIME_ZONE,
+			},
+			locale,
+		),
+	donation_card_expiring: (locale) =>
+		service.send(
+			'donation_card_expiring',
+			USER,
+			{
+				brand: 'visa',
+				last4: '4242',
+				expMonth: 10,
+				expYear: 2026,
+				chargeAt: CHARGE_AT,
+				amount: {totalMinor: 1000, paidMinor: 1000, currency: 'USD', tax: null, reverseCharge: false},
+				taxIncluded: true,
+				seller: true,
+				manageUrl: DONATION_MANAGE_URL,
+			},
+			locale,
+		),
+	plutonium_cancellation_confirmation: (locale) => cancellation(locale),
+	plutonium_cancellation_confirmation_unpaid: (locale) => cancellation(locale, {unpaid: plutoniumTotals(locale)}),
+	donation_cancellation_confirmation: (locale) =>
+		service.send(
+			'donation_cancellation_confirmation',
+			USER,
+			{
+				receivedAt: DATE,
+				endsAt: CHARGE_AT,
+				reference: SUBSCRIPTION_ID,
+				unpaid: null,
+				seller: true,
+				manageUrl: DONATION_MANAGE_URL,
+			},
+			locale,
+		),
+	plutonium_ended_unpaid_void: (locale) => endedUnpaid(locale, 'void'),
+	plutonium_ended_unpaid_open: (locale) => endedUnpaid(locale, 'open'),
+	plutonium_ended_unpaid_uncollectible: (locale) => endedUnpaid(locale, 'uncollectible'),
+	plutonium_gift_applied: (locale) =>
+		service.send(
+			'plutonium_gift_applied',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				plan: 'monthly',
+				trialEnd: CHARGE_AT,
+				amount: plutoniumTotals(locale),
+				taxIncluded: true,
+				paymentMethod: CARD,
+				seller: true,
+				timeZone: TIME_ZONE,
+			},
+			locale,
+		),
+	billing_credit_note: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'billing_credit_note',
+			USER,
+			{
+				amountMinor: price.monthly,
+				currency: price.currency,
+				invoiceNumber: 'B1Q2W3E4-0012',
+				pdfUrl: 'https://pay.stripe.com/credit_notes/acct_1Example/test_YWNjdF8x/pdf',
+				upcomingInvoice: true,
+				seller: true,
+			},
+			locale,
+		);
+	},
+	billing_credit_note_no_upcoming_invoice: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'billing_credit_note',
+			USER,
+			{
+				amountMinor: price.monthly,
+				currency: price.currency,
+				invoiceNumber: 'B1Q2W3E4-0012',
+				pdfUrl: 'https://pay.stripe.com/credit_notes/acct_1Example/test_YWNjdF8x/pdf',
+				upcomingInvoice: false,
+				seller: true,
+			},
+			locale,
+		);
+	},
+	plutonium_refund_receipt_subscription_ended: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'plutonium_refund_receipt',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				plan: 'monthly',
+				invoiceNumber: 'B1Q2W3E4-0007',
+				refundedAt: DATE,
+				amountMinor: price.monthly,
+				paidMinor: price.monthly,
+				paidAt: new Date('2026-10-08T14:30:00Z'),
+				currency: price.currency,
+				refundUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
+				subscriptionEnded: {requestedAt: DATE, reference: SUBSCRIPTION_ID},
+				timeZone: TIME_ZONE,
+			},
+			locale,
+		);
+	},
+	plutonium_payment_action_required_reminder: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'plutonium_payment_failed',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				reason: 'action_required',
+				invoiceNumber: 'B1Q2W3E4-0009',
+				attemptedAt: DATE,
+				amountMinor: price.monthly,
+				currency: price.currency,
+				invoiceUrl: INVOICE_URL,
+				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
+				reminder: true,
+			},
+			locale,
+		);
+	},
+	plutonium_payment_action_required_plan_change: (locale) => {
+		const price = PLUTONIUM_PRICES[locale] ?? PLUTONIUM_USD;
+		return service.send(
+			'plutonium_payment_failed',
+			USER,
+			{
+				premiumName: 'Plutonium',
+				reason: 'action_required',
+				invoiceNumber: 'B1Q2W3E4-0010',
+				attemptedAt: DATE,
+				amountMinor: price.monthly,
+				currency: price.currency,
+				invoiceUrl: INVOICE_URL,
+				accessEndsAt: new Date('2026-10-23T14:30:00Z'),
+				planChange: true,
+			},
+			locale,
+		);
+	},
+	gift_chargeback_notification_billing_resumed: (locale) =>
+		service.send(
+			'gift_chargeback_notification',
+			USER,
+			{billingResumed: {premiumName: 'Plutonium', plan: 'monthly'}},
+			locale,
+		),
 	operator_pass_invoice: (locale) =>
 		service.send(
 			'operator_pass_invoice',

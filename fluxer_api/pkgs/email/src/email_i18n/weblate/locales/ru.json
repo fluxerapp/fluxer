@@ -20,12 +20,46 @@
 		"signoff": "Команда {product_name}",
 		"subject": "Ваш аккаунт {product_name} будет удалён {deletion_date}"
 	},
+	"billing_credit_note": {
+		"credit_note_link": "Открыть кредит-ноту",
+		"footer_reason": "Вы получили это письмо, потому что на баланс вашего аккаунта {product_name} были зачислены средства.",
+		"heading": "Средства зачислены на ваш баланс",
+		"intro": "{numbered, select, yes {Мы зачислили {amountFormatted} на баланс вашего аккаунта по счёту {invoiceNumber}.} other {Мы зачислили {amountFormatted} на баланс вашего аккаунта.}} {upcoming, select, yes {Эта сумма будет учтена в вашем следующем счёте {product_name}, например за продление подписки.} other {{reply, select, yes {Сейчас у вас нет предстоящего счёта, в котором можно учесть эту сумму. Если хотите, чтобы мы вернули эти деньги, ответьте на это письмо.} other {Сейчас у вас нет предстоящего счёта, в котором можно учесть эту сумму. Если хотите, чтобы мы вернули эти деньги, свяжитесь с администраторами этого экземпляра.}}}}",
+		"preheader": "На ваш баланс зачислено {amountFormatted}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "У вас {amountFormatted} на балансе {product_name}"
+	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "Вы получили это письмо, так как было запрошено удаление сообщений для вашего аккаунта {product_name}.",
 		"intro": "Мы завершили удаление ваших сообщений. Удалено {message_count, plural, =0 {0 сообщений} one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщений}} из {channel_count, plural, =0 {0 мест} one {# места} few {# мест} many {# мест} other {# мест}}.",
 		"note": "{reply, select, yes {Если вы не запрашивали это, сразу смените пароль и ответьте на это письмо.} other {Если вы не запрашивали это, сразу смените пароль и свяжитесь с администраторами этого экземпляра.}}",
 		"signoff": "Команда {product_name}",
 		"subject": "Мы закончили удаление ваших сообщений {product_name}"
+	},
+	"donation_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Один счёт на сумму {unpaidFormatted} всё ещё не оплачен. Отмена его не аннулирует, и мы продолжим попытки списать по нему оплату.} other {Больше никаких списаний не будет.}}",
+		"cta": "Управлять пожертвованием",
+		"ends_line": "Ваше регулярное пожертвование прекратится {endsAt, date, long}.",
+		"footer_reason": "Вы получили это письмо, потому что отменили регулярное пожертвование для {product_name}.",
+		"heading": "Запрос на отмену получен",
+		"intro": "{receivedFormatted} мы получили ваш запрос на отмену регулярного пожертвования для {product_name}.",
+		"preheader": "Ваше регулярное пожертвование прекратится {endsAt, date, long}",
+		"reference_line": "Номер операции: {reference}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Мы получили ваш запрос на отмену пожертвования для {product_name}"
+	},
+	"donation_card_expiring": {
+		"cta": "Обновить способ оплаты",
+		"footer_reason": "Вы получили это письмо, потому что скоро истекает срок действия карты, которой вы оплачиваете пожертвование для {product_name}.",
+		"heading": "Обновите данные карты",
+		"intro": "{branded, select, yes {Ваша карта {brand}, оканчивающаяся на {last4},} other {Ваша карта, оканчивающаяся на {last4},}} действует по {expiryFormatted} включительно. Следующий платёж на сумму {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} запланирован на {chargeAt, date, long}.",
+		"lead": "Обновите данные карты до этой даты, чтобы ваше пожертвование не прервалось.",
+		"preheader": "{branded, select, yes {Срок действия вашей карты {brand}, оканчивающейся на {last4}, скоро истекает} other {Срок действия вашей карты, оканчивающейся на {last4}, скоро истекает}}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Срок действия вашей карты истечёт до следующего платежа по пожертвованию для {product_name}"
 	},
 	"donation_confirmation": {
 		"amount_label": "Сумма",
@@ -64,6 +98,7 @@
 		"manage_link": "Управлять пожертвованиями",
 		"note": "{reply, select, yes {Если вам нужна помощь, ответьте на это письмо.} other {Если вам нужна помощь, свяжитесь с администраторами этого экземпляра.}}",
 		"preheader": "{reason, select, action_required {Подтвердите платёж {amountFormatted} по пожертвованию} other {Нам не удалось списать {amountFormatted} по вашему пожертвованию}}",
+		"reminder_subject": "Напоминание: подтвердите платёж по пожертвованию",
 		"signoff": "Команда {product_name}",
 		"subject": "{reason, select, action_required {Подтвердите платёж по пожертвованию для {product_name}} other {Платёж по пожертвованию для {product_name} не прошёл}}"
 	},
@@ -98,6 +133,20 @@
 		"refund_label": "Возвращено",
 		"signoff": "Команда {product_name}",
 		"subject": "Возврат пожертвования для {product_name}"
+	},
+	"donation_renewal_notice": {
+		"after_line": "{differs, select, yes {После этого цена составит {tax, select, yes {{regularFormatted}} other {{regularFormatted} (плюс налог, если он взимается)}} в год.} other {После этого вы будете платить {tax, select, yes {{regularFormatted}} other {{regularFormatted} (плюс налог, если он взимается)}} каждый год, пока не отмените пожертвование.}}",
+		"box": "Чтобы пожертвование не продлилось, отмените его до {cancelByFormatted}.",
+		"charge_line": "{method, select, card {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с вашей карты {brand}, оканчивающейся на {last4}.} plain_card {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с вашей карты, оканчивающейся на {last4}.} named {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} через {methodName}.} other {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с помощью сохранённого способа оплаты.}}",
+		"cta": "Управлять пожертвованием",
+		"footer_reason": "Вы получили это письмо, потому что ваше ежегодное пожертвование для {product_name} продлевается автоматически.",
+		"heading": "Ваше пожертвование скоро продлится",
+		"intro": "Ваше ежегодное пожертвование для {product_name} автоматически продлится {chargeAt, date, long}, если вы не отмените его до этой даты.",
+		"keep_line": "Если вы отмените пожертвование, больше никаких списаний не будет.",
+		"preheader": "Ваше ежегодное пожертвование продлится {chargeAt, date, long}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Ваше ежегодное пожертвование для {product_name} продлится {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {Это о вашей жалобе на сообщение в #{channelName} в сообществе «{communityName}», отправленной {reportedAt, date, long}.} message_dm {Это о вашей жалобе на сообщение в личной переписке, отправленной {reportedAt, date, long}.} message {Это о вашей жалобе на сообщение, отправленной {reportedAt, date, long}.} user {Это о вашей жалобе на аккаунт «{username}», отправленной {reportedAt, date, long}.} community {Это о вашей жалобе на сообщество «{communityName}», отправленной {reportedAt, date, long}.} other {Это о жалобе, которую вы отправили {reportedAt, date, long}.}}",
@@ -187,8 +236,10 @@
 		"why_title": "Почему"
 	},
 	"gift_chargeback_notification": {
+		"billing_resumed": "Поскольку подарок был удалён, с сегодняшнего дня ваша {plan, select, yearly {годовая} other {месячная}} подписка {premiumName} снова оплачивается. Чек за это списание придёт отдельным письмом. Отменить подписку можно в любой момент в разделе «Управлять подпиской».",
 		"footer_reason": "Вы получили это письмо, потому что привилегии были удалены из вашего аккаунта {product_name}.",
 		"intro": "Платёж за подарочный код, который вы активировали, был отменён, поэтому мы убрали преимущества, которые он добавил в ваш аккаунт.",
+		"manage_cta": "Управлять подпиской",
 		"note": "{reply, select, yes {Если вы считаете, что это ошибка, ответьте на это письмо и расскажите всё, что знаете об этом подарочном коде.} other {Если вы считаете, что это ошибка, свяжитесь с администраторами этого экземпляра и расскажите им всё, что знаете об этом подарочном коде.}}",
 		"signoff": "Команда {product_name}",
 		"subject": "Мы убрали преимущества подарка {product_name}, который вы активировали"
@@ -479,6 +530,56 @@
 		"why_body": "Платёж совершили вы или человек с вашего разрешения, мы списали правильную сумму, {product, select, plutonium {Plutonium был предоставлен так, как описано} other {Operator Pass был предоставлен так, как описано}}, мы не возвращали этот платёж, а срок для отказа от покупки уже истёк, когда вы его оспорили.",
 		"why_title": "Почему мы признали его необоснованным"
 	},
+	"plutonium_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Один счёт на сумму {unpaidFormatted} всё ещё не оплачен. Отмена его не аннулирует, и мы продолжим попытки списать по нему оплату.} other {Больше никаких списаний не будет.}}",
+		"cta": "Управлять подпиской",
+		"ends_line": "{premiumName} останется у вас до {endsAt, date, long}. После этого подписка закончится и не продлится.",
+		"footer_reason": "Вы получили это письмо, потому что отменили подписку {premiumName}.",
+		"heading": "Запрос на отмену получен",
+		"intro": "{receivedFormatted} мы получили ваш запрос на отмену {plan, select, yearly {годовой} other {месячной}} подписки {premiumName}.",
+		"lead": "Передумали? До {endsAt, date, long} подписку можно возобновить в разделе «Управлять подпиской».",
+		"preheader": "{premiumName} останется у вас до {endsAt, date, long}",
+		"reference_line": "Номер операции: {reference}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Мы получили ваш запрос на отмену подписки {premiumName} в {product_name}"
+	},
+	"plutonium_card_expiring": {
+		"cta": "Обновить способ оплаты",
+		"footer_reason": "Вы получили это письмо, потому что скоро истекает срок действия карты, которой вы оплачиваете {premiumName}.",
+		"heading": "Обновите данные карты",
+		"intro": "{branded, select, yes {Ваша карта {brand}, оканчивающаяся на {last4},} other {Ваша карта, оканчивающаяся на {last4},}} действует по {expiryFormatted} включительно. Следующий платёж на сумму {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} запланирован на {chargeAt, date, long}.",
+		"lead": "Обновите данные карты до этой даты, чтобы подписка не прервалась.",
+		"preheader": "{branded, select, yes {Срок действия вашей карты {brand}, оканчивающейся на {last4}, скоро истекает} other {Срок действия вашей карты, оканчивающейся на {last4}, скоро истекает}}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Срок действия вашей карты истечёт до следующего платежа за {premiumName} в {product_name}"
+	},
+	"plutonium_ended_unpaid": {
+		"cta": "Оформить {premiumName}",
+		"footer_reason": "Вы получили это письмо, потому что ваша подписка {premiumName} закончилась.",
+		"heading": "Ваша подписка закончилась",
+		"intro": "{numbered, select, yes {Ваша подписка {premiumName} закончилась, потому что нам не удалось получить оплату по счёту {invoiceNumber}.} other {Ваша подписка {premiumName} закончилась, потому что нам не удалось списать платёж за продление.}}",
+		"invoice_link": "Открыть счёт",
+		"lead": "Вы можете снова оформить подписку в любой момент.",
+		"owed_line": "{owed, select, none {По этому счёту вы ничего не должны.} stopped {Мы прекратили попытки получить оплату по этому счёту.} open {Счёт на сумму {amountFormatted} всё ещё не оплачен. Оплатить его можно на странице счёта.} other {}}",
+		"preheader": "Нам не удалось списать платёж за вашу подписку {premiumName}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Ваша подписка {premiumName} в {product_name} закончилась"
+	},
+	"plutonium_gift_applied": {
+		"charge_line": "{method, select, card {{trialEnd, date, long} мы спишем {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} с вашей карты {brand}, оканчивающейся на {last4}, а затем подписка будет продлеваться каждый {plan, select, yearly {год} other {месяц}}, пока вы её не отмените.} plain_card {{trialEnd, date, long} мы спишем {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} с вашей карты, оканчивающейся на {last4}, а затем подписка будет продлеваться каждый {plan, select, yearly {год} other {месяц}}, пока вы её не отмените.} named {{trialEnd, date, long} мы спишем {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} через {methodName}, а затем подписка будет продлеваться каждый {plan, select, yearly {год} other {месяц}}, пока вы её не отмените.} other {{trialEnd, date, long} мы спишем {tax, select, yes {{amountFormatted}} other {{amountFormatted} (плюс налог, если он взимается)}} с помощью сохранённого способа оплаты, а затем подписка будет продлеваться каждый {plan, select, yearly {год} other {месяц}}, пока вы её не отмените.}}",
+		"cta": "Управлять подпиской",
+		"footer_reason": "Вы получили это письмо, потому что активировали подарок {premiumName}.",
+		"heading": "Подарок добавлен",
+		"intro": "Подаренный период добавлен. До {trialEnd, date, long} мы ничего не будем списывать за вашу {plan, select, yearly {годовую} other {месячную}} подписку {premiumName}.",
+		"lead": "До этой даты подписку можно в любой момент отменить в разделе «Управлять подпиской».",
+		"preheader": "До {trialEnd, date, long} мы ничего не спишем",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "Подарок добавлен к вашей подписке {premiumName} в {product_name}"
+	},
 	"plutonium_payment_failed": {
 		"amount_label": "Сумма",
 		"cta": "{reason, select, action_required {Подтвердить платёж} other {Оплатить счёт}}",
@@ -487,11 +588,13 @@
 		"footer_reason": "Вы получили это письмо, потому что платёж за вашу подписку {premiumName} в {product_name} требует вашего внимания.",
 		"heading": "{reason, select, action_required {Банк просит вас подтвердить платёж} other {Платёж за {premiumName} не прошёл}}",
 		"intro": "{reason, select, action_required {Ваш банк просит подтвердить платёж за продление подписки {premiumName}.} other {Нам не удалось списать платёж за продление подписки {premiumName}.}} {access, select, yes {{premiumName} останется у вас до {accessEndsAt, date, long}.} other {}}",
+		"intro_change": "{reason, select, action_required {Ваш банк просит подтвердить платёж за изменение подписки {premiumName}.} other {Нам не удалось списать платёж за изменение подписки {premiumName}.}} {access, select, yes {{premiumName} останется у вас до {accessEndsAt, date, long}.} other {}}",
 		"invoice_label": "Номер счёта",
 		"lead": "{reason, select, action_required {Откройте страницу счёта и подтвердите там платёж.} other {{access, select, yes {Чтобы сохранить подписку и после этой даты, оплатите счёт или обновите способ оплаты.} other {Чтобы вернуть {premiumName}, оплатите счёт или обновите способ оплаты.}}}}",
 		"manage_link": "Обновить способ оплаты в разделе «Управлять подпиской»",
 		"note": "{reply, select, yes {Если вам нужна помощь, ответьте на это письмо.} other {Если вам нужна помощь, свяжитесь с администраторами этого экземпляра.}}",
 		"preheader": "{reason, select, action_required {Подтвердите платёж {amountFormatted} за {premiumName}} other {Нам не удалось списать {amountFormatted} за {premiumName}}}",
+		"reminder_subject": "Напоминание: подтвердите платёж за {premiumName}",
 		"signoff": "Команда {product_name}",
 		"subject": "{reason, select, action_required {Подтвердите платёж за {premiumName} в {product_name}} other {Платёж за {premiumName} в {product_name} не прошёл}}"
 	},
@@ -535,6 +638,7 @@
 		"cta": "Подробнее о возврате",
 		"date_label": "Дата возврата",
 		"date_value": "{refundedAt, date, long}",
+		"ended_line": "{requestedFormatted} мы получили ваш запрос на возврат. Вместе с возвратом мы отменили и вашу подписку {premiumName}: она закончилась и не продлится. Номер операции: {reference}.",
 		"footer_reason": "Вы получили это письмо, потому что платёж за {premiumName} в {product_name} был возвращён.",
 		"heading": "Возврат {amountFormatted}",
 		"intro": "{partial, select, yes {Мы вернули {amountFormatted}, часть вашего платежа, на карту или счёт, с которых вы платили.} other {Мы вернули {amountFormatted} на карту или счёт, с которых вы платили.}} Обычно деньги поступают в течение 5–10 рабочих дней в зависимости от банка.",
@@ -548,6 +652,23 @@
 		"refund_label": "Возвращено",
 		"signoff": "Команда {product_name}",
 		"subject": "Возврат за {product_name} {premiumName}"
+	},
+	"plutonium_renewal_notice": {
+		"after_line": "{differs, select, yes {После этого цена составит {tax, select, yes {{regularFormatted}} other {{regularFormatted} (плюс налог, если он взимается)}} в {plan, select, yearly {год} other {месяц}}.} other {После этого вы будете платить {tax, select, yes {{regularFormatted}} other {{regularFormatted} (плюс налог, если он взимается)}} каждый {plan, select, yearly {год} other {месяц}}, пока не отмените подписку.}}",
+		"annual_line": "Это ежегодное напоминание: ваша месячная подписка {premiumName} автоматически продлевается каждый месяц, пока вы её не отмените.",
+		"box": "Чтобы подписка не продлилась, отмените её до {cancelByFormatted}.",
+		"charge_line": "{method, select, card {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с вашей карты {brand}, оканчивающейся на {last4}.} plain_card {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с вашей карты, оканчивающейся на {last4}.} named {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} через {methodName}.} other {{chargeAt, date, long} мы спишем {tax, select, yes {{nextFormatted}} other {{nextFormatted} (плюс налог, если он взимается)}} с помощью сохранённого способа оплаты.}}",
+		"cta": "Управлять подпиской",
+		"footer_reason": "Вы получили это письмо, потому что ваша подписка {premiumName} продлевается автоматически.",
+		"gift_line": "Подаренный период закончится {giftEndsAt, date, long}. После этого ваша {plan, select, yearly {годовая} other {месячная}} подписка {premiumName} автоматически продлится, если вы не отмените её до этой даты.",
+		"heading": "{gift, select, yes {Подаренный период скоро закончится} other {{annual, select, yes {Ежегодное напоминание о продлении} other {Ваша подписка скоро продлится}}}}",
+		"intro": "Ваша {plan, select, yearly {годовая} other {месячная}} подписка {premiumName} автоматически продлится {chargeAt, date, long}, если вы не отмените её до этой даты.",
+		"keep_line": "Если вы отмените подписку, {premiumName} останется у вас до {chargeAt, date, long}, и больше никаких списаний не будет.",
+		"preheader": "Ваша подписка {premiumName} продлится {chargeAt, date, long}",
+		"seller": "Продавец: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Команда {product_name}",
+		"subject": "{gift, select, yes {Подаренный период {premiumName} в {product_name} закончится {giftEndsAt, date, long}} other {{annual, select, yes {Ежегодное напоминание о подписке {premiumName} в {product_name}} other {Ваша подписка {premiumName} в {product_name} продлится {chargeAt, date, long}}}}}",
+		"year_line": "С платежа {yearStartsAt, date, long} начнётся ваш следующий год {premiumName}."
 	},
 	"reauth_code": {
 		"expiry": "Срок действия кода истекает через {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}.",

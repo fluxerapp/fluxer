@@ -20,12 +20,46 @@
 		"signoff": "Екипът на {product_name}",
 		"subject": "Акаунтът ти във {product_name} ще бъде изтрит на {deletion_date}"
 	},
+	"billing_credit_note": {
+		"credit_note_link": "Виж кредитното известие",
+		"footer_reason": "Получи този имейл, защото към акаунта ти във {product_name} беше добавен кредит.",
+		"heading": "Добавихме кредит към акаунта ти",
+		"intro": "{numbered, select, yes {Добавихме кредит от {amountFormatted} към акаунта ти по фактура {invoiceNumber}.} other {Добавихме кредит от {amountFormatted} към акаунта ти.}} {upcoming, select, yes {Той ще бъде приспаднат от следващата ти фактура за {product_name}, например при подновяване на абонамент.} other {{reply, select, yes {Нямаш предстояща фактура, за която да бъде използван. Ако искаш да ти го възстановим, отговори на този имейл.} other {Нямаш предстояща фактура, за която да бъде използван. Ако искаш да ти го възстановим, свържи се с администраторите на тази инстанция.}}}}",
+		"preheader": "Към акаунта ти е добавен кредит от {amountFormatted}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Имаш кредит от {amountFormatted} във {product_name}"
+	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "Получи този имейл, защото е заявено изтриване на съобщения за твоя акаунт във {product_name}.",
 		"intro": "Изтриването на съобщенията ти приключи. Премахнахме {message_count, plural, =0 {0 съобщения} one {# съобщение} other {# съобщения}} от {channel_count, plural, =0 {0 места} one {# място} other {# места}}.",
 		"note": "{reply, select, yes {Ако не си поискал това, смени паролата си веднага и отговори на този имейл.} other {Ако не си поискал това, смени паролата си веднага и се свържи с администраторите на тази инстанция.}}",
 		"signoff": "Екипът на {product_name}",
 		"subject": "Приключихме с изтриването на твоите съобщения във {product_name}"
+	},
+	"donation_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Една фактура за {unpaidFormatted} все още не е платена. Прекратяването не я отменя и ще продължим да се опитваме да удържим сумата по нея.} other {Повече няма да те таксуваме.}}",
+		"cta": "Управлявай дарението си",
+		"ends_line": "На {endsAt, date, long} периодичното ти дарение приключва.",
+		"footer_reason": "Получи този имейл, защото прекрати периодичното си дарение за {product_name}.",
+		"heading": "Заявката за прекратяване е получена",
+		"intro": "На {receivedFormatted} получихме заявката ти за прекратяване на периодичното дарение за {product_name}.",
+		"preheader": "Периодичното ти дарение приключва на {endsAt, date, long}",
+		"reference_line": "Референтен номер: {reference}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Получихме заявката ти за прекратяване на дарението за {product_name}"
+	},
+	"donation_card_expiring": {
+		"cta": "Обнови начина на плащане",
+		"footer_reason": "Получи този имейл, защото карта, която използваш за дарението си за {product_name}, скоро изтича.",
+		"heading": "Обнови картата си",
+		"intro": "{branded, select, yes {Картата ти {brand}, завършваща на {last4},} other {Картата ти, завършваща на {last4},}} изтича в края на {expiryFormatted}. На {chargeAt, date, long} е дължимо следващото ти плащане от {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}}.",
+		"lead": "Обнови картата си преди това, за да не прекъсне дарението ти.",
+		"preheader": "{branded, select, yes {Картата ти {brand}, завършваща на {last4},} other {Картата ти, завършваща на {last4},}} изтича скоро",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Картата ти изтича преди следващото плащане на дарението ти за {product_name}"
 	},
 	"donation_confirmation": {
 		"amount_label": "Сума",
@@ -64,6 +98,7 @@
 		"manage_link": "Управлявай даренията си",
 		"note": "{reply, select, yes {Ако имаш нужда от помощ, отговори на този имейл.} other {Ако имаш нужда от помощ, свържи се с администраторите на тази инстанция.}}",
 		"preheader": "{reason, select, action_required {Потвърди {amountFormatted} за дарението си} other {Не успяхме да удържим {amountFormatted} за дарението ти}}",
+		"reminder_subject": "Напомняне: потвърди плащането на дарението си",
 		"signoff": "Екипът на {product_name}",
 		"subject": "{reason, select, action_required {Потвърди плащането на дарението си за {product_name}} other {Плащането на дарението ти за {product_name} не беше успешно}}"
 	},
@@ -98,6 +133,20 @@
 		"refund_label": "Възстановена сума",
 		"signoff": "Екипът на {product_name}",
 		"subject": "Възстановяване на дарението ти за {product_name}"
+	},
+	"donation_renewal_notice": {
+		"after_line": "{differs, select, yes {След това годишната цена е {tax, select, yes {{regularFormatted}} other {{regularFormatted} плюс приложимия данък}}.} other {След това плащаш всяка година {tax, select, yes {{regularFormatted}} other {{regularFormatted} плюс приложимия данък}}, докато не прекратиш дарението.}}",
+		"box": "За да спреш подновяването, прекрати дарението преди {cancelByFormatted}.",
+		"charge_line": "{method, select, card {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} от картата ти {brand}, завършваща на {last4}.} plain_card {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} от картата ти, завършваща на {last4}.} named {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} чрез {methodName}.} other {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} чрез запазения ти начин на плащане.}}",
+		"cta": "Управлявай дарението си",
+		"footer_reason": "Получи този имейл, защото годишното ти дарение за {product_name} се подновява автоматично.",
+		"heading": "Дарението ти скоро се подновява",
+		"intro": "Годишното ти дарение за {product_name} се подновява автоматично на {chargeAt, date, long}, освен ако не го прекратиш преди това.",
+		"keep_line": "Ако прекратиш, повече няма да те таксуваме.",
+		"preheader": "Годишното ти дарение се подновява на {chargeAt, date, long}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Годишното ти дарение за {product_name} се подновява на {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {Това е за сигнала ти за съобщение в #{channelName} в „{communityName}“, подаден на {reportedAt, date, long}.} message_dm {Това е за сигнала ти за съобщение в личен чат, подаден на {reportedAt, date, long}.} message {Това е за сигнала ти за съобщение, подаден на {reportedAt, date, long}.} user {Това е за сигнала ти за акаунта „{username}“, подаден на {reportedAt, date, long}.} community {Това е за сигнала ти за общността „{communityName}“, подаден на {reportedAt, date, long}.} other {Това е за сигнала, който подаде на {reportedAt, date, long}.}}",
@@ -187,8 +236,10 @@
 		"why_title": "Защо"
 	},
 	"gift_chargeback_notification": {
+		"billing_resumed": "Тъй като подаръкът беше премахнат, от днес {plan, select, yearly {годишният} other {месечният}} ти абонамент за {premiumName} отново се таксува. Ще получиш отделна разписка за плащането. Можеш да прекратиш абонамента по всяко време от „Управлявай абонамента“.",
 		"footer_reason": "Получи този имейл, защото предимствата бяха премахнати от акаунта ти във {product_name}.",
 		"intro": "Плащането за подаръчен код, който активира, беше върнато, затова премахнахме предимствата, които той добави към акаунта ти.",
+		"manage_cta": "Управлявай абонамента си",
 		"note": "{reply, select, yes {Ако смяташ, че това е грешка, отговори на този имейл и ни кажи какво знаеш за подаръчния код.} other {Ако смяташ, че това е грешка, свържи се с администраторите на тази инстанция и им кажи какво знаеш за подаръчния код.}}",
 		"signoff": "Екипът на {product_name}",
 		"subject": "Премахнахме предимствата от подарък за {product_name}, който активира"
@@ -479,6 +530,56 @@
 		"why_body": "Плащането е направено от теб или от някого, на когото си позволил, начислихме правилната сума, {product, select, plutonium {Plutonium е предоставен както е описано} other {Operator Pass е предоставен както е описано}}, не бяхме възстановили плащането и срокът за отказ беше изтекъл, когато го оспори.",
 		"why_title": "Защо го сметнахме за неоснователно"
 	},
+	"plutonium_cancellation_confirmation": {
+		"charge_line": "{unpaid, select, yes {Една фактура за {unpaidFormatted} все още не е платена. Прекратяването не я отменя и ще продължим да се опитваме да удържим сумата по нея.} other {Повече няма да те таксуваме.}}",
+		"cta": "Управлявай абонамента си",
+		"ends_line": "Запазваш {premiumName} до {endsAt, date, long}, след което абонаментът ти приключва и няма да се поднови.",
+		"footer_reason": "Получи този имейл, защото прекрати абонамента си за {premiumName}.",
+		"heading": "Заявката за прекратяване е получена",
+		"intro": "На {receivedFormatted} получихме заявката ти за прекратяване на {plan, select, yearly {годишния ти} other {месечния ти}} абонамент за {premiumName}.",
+		"lead": "Размисли ли? До {endsAt, date, long} можеш да възобновиш абонамента си от „Управлявай абонамента“.",
+		"preheader": "Запазваш {premiumName} до {endsAt, date, long}",
+		"reference_line": "Референтен номер: {reference}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Получихме заявката ти за прекратяване на абонамента за {product_name} {premiumName}"
+	},
+	"plutonium_card_expiring": {
+		"cta": "Обнови начина на плащане",
+		"footer_reason": "Получи този имейл, защото карта, която използваш за {premiumName}, скоро изтича.",
+		"heading": "Обнови картата си",
+		"intro": "{branded, select, yes {Картата ти {brand}, завършваща на {last4},} other {Картата ти, завършваща на {last4},}} изтича в края на {expiryFormatted}. На {chargeAt, date, long} е дължимо следващото ти плащане от {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}}.",
+		"lead": "Обнови картата си преди това, за да не прекъсне абонаментът ти.",
+		"preheader": "{branded, select, yes {Картата ти {brand}, завършваща на {last4},} other {Картата ти, завършваща на {last4},}} изтича скоро",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Картата ти изтича преди следващото плащане за {product_name} {premiumName}"
+	},
+	"plutonium_ended_unpaid": {
+		"cta": "Вземи {premiumName}",
+		"footer_reason": "Получи този имейл, защото абонаментът ти за {premiumName} приключи.",
+		"heading": "Абонаментът ти приключи",
+		"intro": "{numbered, select, yes {Абонаментът ти за {premiumName} приключи, защото не успяхме да удържим плащането по фактура {invoiceNumber}.} other {Абонаментът ти за {premiumName} приключи, защото не успяхме да удържим плащането за подновяване.}}",
+		"invoice_link": "Виж фактурата",
+		"lead": "Можеш да се абонираш отново по всяко време.",
+		"owed_line": "{owed, select, none {Не дължиш нищо по тази фактура.} stopped {Спряхме опитите да удържим плащането по тази фактура.} open {Фактурата за {amountFormatted} все още не е платена. Можеш да я платиш от страницата на фактурата.} other {}}",
+		"preheader": "Не успяхме да удържим плащането за абонамента ти за {premiumName}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Абонаментът ти за {product_name} {premiumName} приключи"
+	},
+	"plutonium_gift_applied": {
+		"charge_line": "{method, select, card {На {trialEnd, date, long} ще удържим {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}} от картата ти {brand}, завършваща на {last4}, а след това абонаментът ти се подновява {plan, select, yearly {всяка година} other {всеки месец}}, докато не го прекратиш.} plain_card {На {trialEnd, date, long} ще удържим {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}} от картата ти, завършваща на {last4}, а след това абонаментът ти се подновява {plan, select, yearly {всяка година} other {всеки месец}}, докато не го прекратиш.} named {На {trialEnd, date, long} ще удържим {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}} чрез {methodName}, а след това абонаментът ти се подновява {plan, select, yearly {всяка година} other {всеки месец}}, докато не го прекратиш.} other {На {trialEnd, date, long} ще удържим {tax, select, yes {{amountFormatted}} other {{amountFormatted} плюс приложимия данък}} чрез запазения ти начин на плащане, а след това абонаментът ти се подновява {plan, select, yearly {всяка година} other {всеки месец}}, докато не го прекратиш.}}",
+		"cta": "Управлявай абонамента си",
+		"footer_reason": "Получи този имейл, защото активира подарък за {premiumName}.",
+		"heading": "Подаръкът е добавен",
+		"intro": "Подареното време е добавено. До {trialEnd, date, long} няма да плащаш нищо за {plan, select, yearly {годишния си} other {месечния си}} абонамент за {premiumName}.",
+		"lead": "Дотогава можеш да го прекратиш по всяко време от „Управлявай абонамента“.",
+		"preheader": "Няма да плащаш нищо до {trialEnd, date, long}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "Подаръкът ти е добавен към абонамента ти за {product_name} {premiumName}"
+	},
 	"plutonium_payment_failed": {
 		"amount_label": "Сума",
 		"cta": "{reason, select, action_required {Потвърди плащането} other {Плати фактурата}}",
@@ -487,11 +588,13 @@
 		"footer_reason": "Получи този имейл, защото плащане за абонамента ти за {premiumName} във {product_name} изисква вниманието ти.",
 		"heading": "{reason, select, action_required {Банката ти иска да потвърдиш плащане} other {Плащането ти за {premiumName} не беше успешно}}",
 		"intro": "{reason, select, action_required {Банката ти иска да потвърдиш плащането за подновяване на абонамента ти за {premiumName}.} other {Не успяхме да удържим плащането за подновяване на абонамента ти за {premiumName}.}} {access, select, yes {Запазваш {premiumName} до {accessEndsAt, date, long}.} other {}}",
+		"intro_change": "{reason, select, action_required {Банката ти иска да потвърдиш плащането за промяната на абонамента ти за {premiumName}.} other {Не успяхме да удържим плащането за промяната на абонамента ти за {premiumName}.}} {access, select, yes {Запазваш {premiumName} до {accessEndsAt, date, long}.} other {}}",
 		"invoice_label": "Номер на фактура",
 		"lead": "{reason, select, action_required {Отвори страницата на фактурата и потвърди плащането там.} other {{access, select, yes {За да го запазиш и след това, плати фактурата или обнови начина на плащане.} other {За да си върнеш {premiumName}, плати фактурата или обнови начина на плащане.}}}}",
 		"manage_link": "Обнови начина на плащане от „Управлявай абонамента“",
 		"note": "{reply, select, yes {Ако имаш нужда от помощ, отговори на този имейл.} other {Ако имаш нужда от помощ, свържи се с администраторите на тази инстанция.}}",
 		"preheader": "{reason, select, action_required {Потвърди {amountFormatted} за {premiumName}} other {Не успяхме да удържим {amountFormatted} за {premiumName}}}",
+		"reminder_subject": "Напомняне: потвърди плащането си за {premiumName}",
 		"signoff": "Екипът на {product_name}",
 		"subject": "{reason, select, action_required {Потвърди плащането си за {premiumName} във {product_name}} other {Плащането ти за {premiumName} във {product_name} не беше успешно}}"
 	},
@@ -535,6 +638,7 @@
 		"cta": "Виж подробностите за възстановяването",
 		"date_label": "Дата на възстановяване",
 		"date_value": "{refundedAt, date, long}",
+		"ended_line": "На {requestedFormatted} получихме заявката ти за възстановяване на сумата. С възстановяването беше прекратен и абонаментът ти за {premiumName}. Той приключи и няма да се поднови. Референтен номер: {reference}.",
 		"footer_reason": "Получи този имейл, защото плащане за {premiumName} във {product_name} беше възстановено.",
 		"heading": "Възстановени {amountFormatted}",
 		"intro": "{partial, select, yes {Възстановихме ти {amountFormatted}, част от плащането, по картата или сметката, с която плати.} other {Възстановихме ти {amountFormatted} по картата или сметката, с която плати.}} Обикновено парите се появяват след 5 до 10 работни дни, в зависимост от банката ти.",
@@ -548,6 +652,23 @@
 		"refund_label": "Възстановена сума",
 		"signoff": "Екипът на {product_name}",
 		"subject": "Възстановено плащане за {product_name} {premiumName}"
+	},
+	"plutonium_renewal_notice": {
+		"after_line": "{differs, select, yes {След това {plan, select, yearly {годишната} other {месечната}} цена е {tax, select, yes {{regularFormatted}} other {{regularFormatted} плюс приложимия данък}}.} other {След това плащаш {plan, select, yearly {всяка година} other {всеки месец}} {tax, select, yes {{regularFormatted}} other {{regularFormatted} плюс приложимия данък}}, докато не прекратиш абонамента.}}",
+		"annual_line": "Веднъж годишно ти напомняме, че месечният ти абонамент за {premiumName} се подновява автоматично всеки месец, докато не го прекратиш.",
+		"box": "За да спреш подновяването, прекрати абонамента преди {cancelByFormatted}.",
+		"charge_line": "{method, select, card {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} от картата ти {brand}, завършваща на {last4}.} plain_card {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} от картата ти, завършваща на {last4}.} named {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} чрез {methodName}.} other {На {chargeAt, date, long} ще удържим {tax, select, yes {{nextFormatted}} other {{nextFormatted} плюс приложимия данък}} чрез запазения ти начин на плащане.}}",
+		"cta": "Управлявай абонамента си",
+		"footer_reason": "Получи този имейл, защото абонаментът ти за {premiumName} се подновява автоматично.",
+		"gift_line": "Подареното ти време изтича на {giftEndsAt, date, long}, след което {plan, select, yearly {годишният} other {месечният}} ти абонамент за {premiumName} се подновява автоматично, освен ако не го прекратиш преди това.",
+		"heading": "{gift, select, yes {Подареното ти време изтича скоро} other {{annual, select, yes {Годишно напомняне за подновяването} other {Абонаментът ти скоро се подновява}}}}",
+		"intro": "{plan, select, yearly {Годишният} other {Месечният}} ти абонамент за {premiumName} се подновява автоматично на {chargeAt, date, long}, освен ако не го прекратиш преди това.",
+		"keep_line": "Ако прекратиш, запазваш {premiumName} до {chargeAt, date, long} и повече няма да те таксуваме.",
+		"preheader": "Абонаментът ти за {premiumName} се подновява на {chargeAt, date, long}",
+		"seller": "Продавач: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"signoff": "Екипът на {product_name}",
+		"subject": "{gift, select, yes {Подареното ти време за {product_name} {premiumName} изтича на {giftEndsAt, date, long}} other {{annual, select, yes {Годишно напомняне за абонамента ти за {product_name} {premiumName}} other {Абонаментът ти за {product_name} {premiumName} се подновява на {chargeAt, date, long}}}}}",
+		"year_line": "С плащането на {yearStartsAt, date, long} започва следващата ти година с {premiumName}."
 	},
 	"reauth_code": {
 		"expiry": "Този код изтича след {minutes, plural, one {# минута} other {# минути}}.",

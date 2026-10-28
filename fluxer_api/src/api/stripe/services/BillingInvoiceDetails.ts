@@ -2,6 +2,7 @@
 
 import {Config} from '@app/api/Config';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {BillingTotals, PlutoniumPurchaseTerms} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
@@ -55,6 +56,14 @@ export function findChargedLine(invoice: Stripe.Invoice, productRegistry: Produc
 	};
 }
 
+export function billingSellerShown(): boolean {
+	return !Config.instance.selfHosted;
+}
+
+export function plainTotals(amountMinor: number, currency: string): BillingTotals {
+	return {totalMinor: amountMinor, paidMinor: amountMinor, currency, tax: null, reverseCharge: false};
+}
+
 export function invoiceTotals(invoice: Stripe.Invoice): BillingTotals {
 	const taxes = invoice.total_taxes ?? [];
 	const charged = taxes.filter((tax) => tax.amount > 0);
@@ -78,6 +87,28 @@ export function invoiceLinkUntil(invoice: Stripe.Invoice, now: number = Date.now
 	const issued = unixToDate(invoice.due_date) ?? unixToDate(invoice.status_transitions?.finalized_at);
 	const base = issued?.getTime() ?? invoice.created * 1000;
 	return new Date(Math.max(base + INVOICE_LINK_LIFETIME_MS, now + INVOICE_LINK_API_MINIMUM_MS));
+}
+
+export function isDonationSubscription(subscription: Stripe.Subscription): boolean {
+	return subscription.metadata?.is_donation === 'true';
+}
+
+export function subscriptionBillingProduct(
+	subscription: Stripe.Subscription,
+	productRegistry: ProductRegistry,
+): 'plutonium' | 'donation' | null {
+	if (isDonationSubscription(subscription)) {
+		return 'donation';
+	}
+	const priceId = getPrimarySubscriptionItem(subscription)?.price?.id;
+	const product = priceId ? productRegistry.getProduct(priceId) : null;
+	return product && !product.isGift && product.billingCycle ? 'plutonium' : null;
+}
+
+export function primaryInvoiceLine(invoice: Stripe.Invoice): Stripe.InvoiceLineItem | null {
+	return (invoice.lines?.data ?? [])
+		.filter((line) => line.amount > 0 && !isProration(line))
+		.reduce<Stripe.InvoiceLineItem | null>((best, line) => (best && best.amount >= line.amount ? best : line), null);
 }
 
 export function isDonationInvoice(invoice: Stripe.Invoice): boolean {
@@ -125,6 +156,6 @@ export function plutoniumPurchaseTerms(invoice: Stripe.Invoice, line: ChargedLin
 		consentAt: consentAt && !Number.isNaN(consentAt.getTime()) ? consentAt : null,
 		withdrawalEndsAt:
 			metadata.eu_withdrawal_waiver_required === 'true' ? new Date(paidAt.getTime() + WITHDRAWAL_PERIOD_MS) : null,
-		seller: !Config.instance.selfHosted,
+		seller: billingSellerShown(),
 	};
 }

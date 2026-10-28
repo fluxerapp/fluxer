@@ -28,7 +28,7 @@ import {
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
-import {isDonationInvoice} from '@app/api/stripe/services/BillingInvoiceDetails';
+import {isDonationInvoice, isDonationSubscription} from '@app/api/stripe/services/BillingInvoiceDetails';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
@@ -44,10 +44,6 @@ const TERMINAL_SUBSCRIPTION_STATUSES: ReadonlySet<Stripe.Subscription.Status> = 
 	'canceled',
 	'incomplete_expired',
 ]);
-
-function isDonationSubscription(subscription: Stripe.Subscription): boolean {
-	return subscription.metadata?.is_donation === 'true';
-}
 
 export class StripeSubscriptionWebhookHandler {
 	private readonly paymentRepository = new PaymentRepository();
