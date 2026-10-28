@@ -68,15 +68,15 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	if err := refuseEjected(inst); err != nil {
 		return nil, err
 	}
-	if err := refuseUpgrade(inst); err != nil {
-		return nil, err
-	}
 	if inst.State.Pending != nil {
 		return nil, ui.Refused("An earlier settings change didn't finish.", "Run rexctl doctor --fix to put the old values back, then try again.")
 	}
 	if _, ok := changes[settings.EngineHost]; ok {
 		if len(changes) > 1 {
 			return nil, ui.Usage("Change engine.host on its own, without other settings.")
+		}
+		if err := refuseUpgrade(inst); err != nil {
+			return nil, err
 		}
 		return setEngineHost(ctx, inst, e, changes[settings.EngineHost])
 	}
@@ -94,6 +94,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	st := inst.State
 	next := maps.Clone(st.Settings)
 	var promised, changed []string
+	repairs := true
 	for _, name := range keys {
 		k, err := Lookup(rs, custom, name)
 		if err != nil {
@@ -104,6 +105,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		}
 		v := changes[name]
 		current, had := st.Settings[name]
+		repairs = repairs && had && validate(k, current) != nil
 		if v == nil {
 			delete(next, name)
 		} else {
@@ -133,11 +135,32 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	if next[settings.StorageSecret] != st.Settings[settings.StorageSecret] && next[settings.StorageEndpoint] == "" && next[settings.StorageSecret] != "" {
 		return nil, ui.Refused("storage.secret_key only applies to your own object store.", "Set storage.endpoint in the same command, for example rexctl config set storage.endpoint=https://s3.example.com storage.secret_key=-.")
 	}
-	oldEnv, err := Environment(rs, st, st.Settings)
+	if st.Upgrade != nil && !repairs {
+		if err := refuseUpgrade(inst); err != nil {
+			return nil, err
+		}
+	}
+	slices.Sort(promised)
+	preview := Preview{Keys: changed, Promised: slices.Compact(promised)}
+	newEnv, err := Environment(rs, st, next)
 	if err != nil {
 		return nil, err
 	}
-	newEnv, err := Environment(rs, st, next)
+	if st.Upgrade != nil {
+		oldEnv, _ := Environment(rs, st, st.Settings)
+		if err := checkPorts(ctx, e, inst.Project(), oldEnv, newEnv, changed, next[settings.EdgeMode]); err != nil {
+			return nil, err
+		}
+		if o.Confirm != nil && !o.Confirm(preview) {
+			return nil, ErrDeclined
+		}
+		st.Settings = next
+		if err := save(inst); err != nil {
+			return nil, err
+		}
+		return &Change{Keys: changed}, nil
+	}
+	oldEnv, err := Environment(rs, st, st.Settings)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +194,6 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		return nil, err
 	}
 	ipv6 := parseBool(st.Settings[settings.IPv6]) != parseBool(next[settings.IPv6])
-	slices.Sort(promised)
-	preview := Preview{Keys: changed, Promised: slices.Compact(promised)}
 	if live {
 		if err := oldP.Pull(ctx, o.OnEvent); err != nil {
 			return nil, err
@@ -186,14 +207,8 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 			preview.Restarts = newP.Services()
 		}
 	}
-	added, _ := portDiff(oldEnv, newEnv)
-	if err := checkPortsFree(ctx, e, inst.Project(), added); err != nil {
+	if err := checkPorts(ctx, e, inst.Project(), oldEnv, newEnv, changed, next[settings.EdgeMode]); err != nil {
 		return nil, err
-	}
-	if portKeyChanged(changed) {
-		if err := checkPortsDistinct(effectivePorts(newEnv, next[settings.EdgeMode])); err != nil {
-			return nil, err
-		}
 	}
 	if o.Confirm != nil && !o.Confirm(preview) {
 		return nil, ErrDeclined
@@ -247,6 +262,17 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	return &Change{Keys: changed, Restarted: preview.Restarts, Removed: preview.Removes, Applied: true}, nil
 }
 
+func checkPorts(ctx context.Context, e *engine.Engine, project string, oldEnv, newEnv map[string]string, changed []string, mode string) error {
+	added, _ := portDiff(oldEnv, newEnv)
+	if err := checkPortsFree(ctx, e, project, added); err != nil {
+		return err
+	}
+	if portKeyChanged(changed) {
+		return checkPortsDistinct(effectivePorts(newEnv, mode))
+	}
+	return nil
+}
+
 func bringUp(ctx context.Context, oldP, newP *engine.Project, ipv6 bool, onEvent func(engine.Event)) error {
 	bg := context.WithoutCancel(ctx)
 	if ipv6 {
@@ -291,12 +317,15 @@ func stageOverlays(inst *instance.Instance, rs *stack.Set, chosen map[string]str
 	var created []string
 	for _, o := range stack.OverlaysFor(chosen) {
 		name := stack.OverlayFiles[o]
-		target := inst.Path(name)
+		target := inst.Generated(name)
 		if _, err := os.Stat(target); err == nil {
 			continue
 		}
 		data, err := stack.ReadFile(rs, name)
 		if err == nil {
+			if !inst.OldLayout() {
+				data = stack.Managed(name, data)
+			}
 			err = os.WriteFile(target, data, 0o644)
 		}
 		if err != nil {

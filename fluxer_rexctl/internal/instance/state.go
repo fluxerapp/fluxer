@@ -18,7 +18,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
-const StateSchema = 2
+const StateSchema = generatedSchema
 
 var ErrNewerState = errors.New("instance: state was written by a newer rexctl")
 
@@ -40,6 +40,7 @@ type State struct {
 	Stopped         bool              `json:"stopped"`
 	Rendered        map[string]string `json:"rendered"`
 	Mounted         map[string]string `json:"mounted"`
+	LeftInRoot      map[string]string `json:"left_in_root,omitempty"`
 	Ejected         *Ejected          `json:"ejected"`
 	BackupDir       string            `json:"backup_dir,omitempty"`
 	KeepBackups     int               `json:"keep_backups,omitempty"`
@@ -47,7 +48,8 @@ type State struct {
 	InstalledAt     time.Time         `json:"installed_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 
-	Unknown []string `json:"-"`
+	Unknown    []string `json:"-"`
+	rootLayout bool
 }
 
 type EngineRef struct {
@@ -98,19 +100,27 @@ func (e *SettingError) Error() string {
 }
 
 func (e *SettingError) Fix() string {
-	return "Run rexctl config unset " + e.Key + "."
+	return "Run rexctl config set " + e.Key + " <value>, or rexctl config unset " + e.Key + " to go back to the default."
 }
 
 func LoadState(path string) (*State, error) {
+	return loadState(path, nil)
+}
+
+func loadState(path string, repairing []string) (*State, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	dir := filepath.Dir(filepath.Dir(path))
-	return ParseState(data, dir)
+	return parseStateRepairing(data, dir, repairing)
 }
 
 func ParseState(data []byte, dir string) (*State, error) {
+	return parseStateRepairing(data, dir, nil)
+}
+
+func parseStateRepairing(data []byte, dir string, repairing []string) (*State, error) {
 	var head struct {
 		Schema  int    `json:"schema"`
 		Project string `json:"project"`
@@ -124,10 +134,11 @@ func ParseState(data []byte, dir string) (*State, error) {
 	if head.Project == "" {
 		return nil, fmt.Errorf("instance: the state in %s names no project", dir)
 	}
-	s, err := parseState(data, dir)
+	s, err := parseState(data, dir, repairing)
 	if err != nil {
 		return nil, err
 	}
+	s.rootLayout = head.Schema < generatedSchema
 	s.normalize()
 	return s, nil
 }
@@ -135,11 +146,11 @@ func ParseState(data []byte, dir string) (*State, error) {
 var stateFields = map[string]bool{
 	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "failed_release": true,
 	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
-	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "ejected": true,
+	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "ejected": true,
 	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true,
 }
 
-func parseState(data []byte, dir string) (*State, error) {
+func parseState(data []byte, dir string, repairing []string) (*State, error) {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("instance: reading state in %s: %w", dir, err)
@@ -150,7 +161,7 @@ func parseState(data []byte, dir string) (*State, error) {
 			unknown = append(unknown, k)
 		}
 	}
-	values, more, err := checkSettings(raw["settings"], dir)
+	values, more, err := checkSettings(raw["settings"], dir, repairing)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +181,7 @@ func parseState(data []byte, dir string) (*State, error) {
 	return &s, nil
 }
 
-func checkSettings(data json.RawMessage, dir string) (map[string]string, []string, error) {
+func checkSettings(data json.RawMessage, dir string, repairing []string) (map[string]string, []string, error) {
 	out := map[string]string{}
 	if len(data) == 0 || string(data) == "null" {
 		return out, nil, nil
@@ -196,6 +207,7 @@ func checkSettings(data json.RawMessage, dir string) (map[string]string, []strin
 			continue
 		}
 		switch {
+		case isNamed && slices.Contains(repairing, name):
 		case isNamed:
 			if k.Validate != nil {
 				if err := k.Validate(v); err != nil {
@@ -218,6 +230,9 @@ func (s *State) InstallUnfinished() bool { return s.Installing }
 
 func (s *State) normalize() {
 	s.Schema = StateSchema
+	if s.rootLayout {
+		s.Schema = generatedSchema - 1
+	}
 	if s.Settings == nil {
 		s.Settings = map[string]string{}
 	}
@@ -237,13 +252,16 @@ func (s *State) normalize() {
 
 func (s *State) Save(path string) error {
 	c := *s
-	c.Schema = StateSchema
 	c.normalize()
 	data, err := json.MarshalIndent(&c, "", "  ")
 	if err != nil {
 		return err
 	}
-	return writePrivate(path, append(data, '\n'))
+	if err := writePrivate(path, append(data, '\n')); err != nil {
+		return err
+	}
+	s.Schema = c.Schema
+	return nil
 }
 
 func writePrivate(path string, data []byte) error {

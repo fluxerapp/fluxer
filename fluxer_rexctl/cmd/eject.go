@@ -44,13 +44,8 @@ func runEject(ctx context.Context, app *App) error {
 		}
 		e, engineErr := app.Engine(ctx, inst)
 		tool := composeTool(inst, e)
-		u.Info("rexctl writes every setting for %s into %s and stops changing this instance. Fluxer keeps running.", tool, inst.Dir)
-		ok, err := u.Confirm("Manage this instance yourself?", false)
-		if err != nil {
+		if ok, err := confirmEject(u, inst, tool); err != nil || !ok {
 			return err
-		}
-		if !ok {
-			return ui.Refused("Your instance was left as it was.", "")
 		}
 		removed := false
 		err = instance.Eject(inst, instance.EjectOptions{
@@ -83,6 +78,26 @@ func runEject(ctx context.Context, app *App) error {
 		u.OK("You manage this instance with %s in %s from here on. Run rexctl takeover to hand it back to rexctl.", tool, inst.Dir)
 		return nil
 	})
+}
+
+func confirmEject(u *ui.UI, inst *instance.Instance, tool string) (bool, error) {
+	u.Info("You probably don't need to eject. rexctl keeps these changes when it upgrades Fluxer.")
+	u.Info("  rexctl config set changes settings, including the FLUXER_* variables, and rexctl config list shows them.")
+	u.Info("  rexctl config edit changes %s for labels, images, ports and volumes.", instance.CustomCompose)
+	u.Info("  A .caddy file in %s adds your own Caddy directives.", instance.CaddyDropInDir)
+	u.Info("  See %s for more.", changeHowFluxerRunsURL)
+	u.Info("If you eject, rexctl writes every setting for %s into %s and stops managing the instance. You start, stop and change Fluxer with %s yourself, and rexctl turns off automatic upgrades. To upgrade later, you run rexctl takeover, rexctl upgrade and rexctl eject one after the other. Fluxer keeps running.", tool, inst.Dir, tool)
+	if !u.Interactive() && !u.Yes() {
+		return false, &ui.ExitError{Code: ui.ExitUsage, Msg: "rexctl eject asks before it hands the instance over.", Fix: "Pass --yes to eject without the question."}
+	}
+	ok, err := u.Confirm("Manage this instance yourself?", false)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, ui.Refused("Your instance was left as it was.", "")
+	}
+	return true, nil
 }
 
 func sendAdminImport(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) {

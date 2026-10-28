@@ -93,8 +93,8 @@ type configView struct {
 	schema []adminapi.ConfigKey
 }
 
-func loadConfigView(app *App) (*configView, error) {
-	inst, err := app.Instance()
+func loadConfigView(app *App, repairing []string) (*configView, error) {
+	inst, err := app.InstanceRepairing(repairing)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (v *configView) deploymentKeys() []settings.Key {
 
 func newConfigCmd(app *App) *cobra.Command {
 	c := &cobra.Command{Use: "config", Short: "Read and change Fluxer's settings", Args: noArgs}
-	c.AddCommand(newConfigListCmd(app), newConfigGetCmd(app), newConfigSetCmd(app), newConfigUnsetCmd(app), newConfigRenderCmd(app))
+	c.AddCommand(newConfigListCmd(app), newConfigGetCmd(app), newConfigSetCmd(app), newConfigUnsetCmd(app), newConfigEditCmd(app), newConfigRenderCmd(app))
 	return c
 }
 
@@ -282,7 +282,7 @@ func newConfigListCmd(app *App) *cobra.Command {
 	app.jsonFlag(list)
 	list.RunE = func(c *cobra.Command, _ []string) error {
 		ctx := c.Context()
-		v, err := loadConfigView(app)
+		v, err := loadConfigView(app, nil)
 		if err != nil {
 			return err
 		}
@@ -333,7 +333,7 @@ func newConfigGetCmd(app *App) *cobra.Command {
 	app.jsonFlag(get)
 	get.Flags().BoolVar(&reveal, "reveal", false, "print a secret rexctl keeps")
 	get.RunE = func(c *cobra.Command, args []string) error {
-		v, err := loadConfigView(app)
+		v, err := loadConfigView(app, nil)
 		if err != nil {
 			return err
 		}
@@ -487,7 +487,11 @@ func newConfigUnsetCmd(app *App) *cobra.Command {
 }
 
 func runConfigChange(ctx context.Context, app *App, changes []configChange) error {
-	v, err := loadConfigView(app)
+	typed := make([]string, 0, len(changes))
+	for _, ch := range changes {
+		typed = append(typed, ch.name)
+	}
+	v, err := loadConfigView(app, typed)
 	if err != nil {
 		return err
 	}
@@ -513,7 +517,7 @@ func runConfigChange(ctx context.Context, app *App, changes []configChange) erro
 		if err != nil {
 			return err
 		}
-		reportConfigChange(app, change, deployment, sent)
+		reportConfigChange(app, change, deployment, sent, v.inst.State.Upgrade != nil)
 		names := slices.Collect(maps.Keys(deployment))
 		for _, ac := range admin {
 			names = append(names, ac.key.Key)
@@ -539,7 +543,7 @@ func runConfigChange(ctx context.Context, app *App, changes []configChange) erro
 	})
 }
 
-func reportConfigChange(app *App, change *deploy.Change, values map[string]*string, admin []adminChange) {
+func reportConfigChange(app *App, change *deploy.Change, values map[string]*string, admin []adminChange, upgrading bool) {
 	var keys []string
 	if change != nil && !change.Unchanged {
 		keys = change.Keys
@@ -555,7 +559,10 @@ func reportConfigChange(app *App, change *deploy.Change, values map[string]*stri
 	default:
 		app.UI.OK("%s", deploymentDone(keys[0], values[keys[0]]))
 	}
-	if len(keys) > 0 && !change.Applied {
+	switch {
+	case len(keys) > 0 && upgrading:
+		app.UI.Info("rexctl upgrade uses the new setting when it finishes.")
+	case len(keys) > 0 && !change.Applied:
 		app.UI.Info("Fluxer uses the new settings the next time it starts.")
 	}
 }

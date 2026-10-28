@@ -685,7 +685,7 @@ func (in *installer) proxyNote() {
 		return
 	}
 	in.app.UI.Info("Set up your proxy to forward https://%s to http://%s.", normaliseDomain(in.f.Domain), in.f.Bind)
-	in.app.UI.Info("See https://docs.fluxer.app/operator/reverse-proxy/ for what your proxy needs to do.")
+	in.app.UI.Info("See %sreverse-proxy/ for what your proxy needs to do.", docsURL)
 }
 
 func (in *installer) installDocker(ctx context.Context) error {
@@ -1010,7 +1010,7 @@ func (in *installer) findLegacy(ctx context.Context) *instance.Legacy {
 			continue
 		}
 		first := strings.Split(p.ConfigFiles, ",")[0]
-		if l, err := instance.DetectLegacy(filepath.Dir(first)); err == nil && l != nil {
+		if l, err := instance.DetectLegacy(stack.ProjectDir(first)); err == nil && l != nil {
 			return l
 		}
 	}
@@ -1110,9 +1110,12 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	if err := release.WriteRelease(inst, set); err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "Check the free disk space, then run rexctl install again.")
 	}
-	r, err := stack.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs, inst.Project(), inst.Dir)
+	r, err := inst.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs)
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "Check the free disk space, then run rexctl install again.")
+	}
+	if err := inst.WriteCustomTemplate(); err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't write %s to %s.", instance.CustomCompose, inst.Dir), "Check the free disk space, then run rexctl install again.")
 	}
 	st.Rendered = r.Hashes
 	if err := inst.Save(); err != nil {

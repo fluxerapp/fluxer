@@ -323,6 +323,7 @@ func notifyUpgrade(ctx context.Context, app *App, runErr error) {
 	default:
 		return
 	}
+	n.Text = strings.Join(append([]string{n.Text}, app.putBack...), " ")
 	if n.Instance != "" {
 		n.Text = n.Instance + ": " + n.Text
 	}

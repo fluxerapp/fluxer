@@ -131,7 +131,17 @@ Each time rexctl starts Fluxer, it sizes memory limits, database connections and
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service instead of a separate worker service. rexctl then removes the worker and adds half of its memory limit to the api.
 
-To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in a `custom.compose.yml` file in your instance folder.
+## Change how Fluxer runs
+
+rexctl writes Fluxer's Compose files and Caddyfile to `.rexctl/generated` in your instance folder and writes them again each time it changes the instance. If you edit one of them, rexctl keeps a copy of your version in `.rexctl/edited` and puts its own version back.
+
+To change the Compose setup, such as labels, images, ports or volumes, run `rexctl config edit`. It opens `custom.compose.yml` in your instance folder, checks it, tells you which services restart and applies it. rexctl adds this file after its own Compose files, and upgrades keep it.
+
+```sh
+rexctl config edit
+```
+
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
 
 ## When something is wrong
 
@@ -145,6 +155,6 @@ This checks your instance and the machine, and tells you how to fix each problem
 
 ## Manage it without rexctl
 
-To run your instance yourself with docker compose, run `rexctl eject`. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
+To run your instance yourself with docker compose, run `rexctl eject`. rexctl moves the Compose files and Caddyfile back into your instance folder and stops managing them. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
 
 To upgrade Fluxer while you manage it yourself, run `rexctl takeover`, `rexctl upgrade` and `rexctl eject` one after the other. You can also [upgrade with the compose bundle](/operator/docker-compose/#upgrade) of the new version, the same way as an instance that never used rexctl.

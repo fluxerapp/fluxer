@@ -104,6 +104,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if f.Resume != "" && f.Resume != release.ResumeRecovery {
 		return resumeUpgrade(ctx, app, f)
 	}
+	app.keepLayout = true
 	inst, tookOver, err := upgradeInstance(ctx, app, f.DryRun)
 	if err != nil || inst == nil {
 		return err
@@ -146,10 +147,8 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	case cmp < 0:
 		return ui.Refused(fmt.Sprintf("Fluxer %s is older than the release you run, %s.", to, from), "Run rexctl rollback to go back to the release you ran before.")
 	}
-	if e != nil {
-		if err := release.CheckTarget(e, rel); err != nil {
-			return floorRefusal(err, to)
-		}
+	if err := release.CheckTarget(e, rel, inst.State.Schema); err != nil {
+		return floorRefusal(err, to)
 	}
 	if release.Valid(cur) {
 		app.UI.Info("Fluxer %s is available. You're on %s.", to, from)
@@ -157,6 +156,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 		app.UI.Info("Fluxer %s is available.", to)
 	}
 	needSelf := release.Compare(rel.Version, app.Version) != 0
+	app.keepLayout = needSelf && rel.StateSchema > 0 && rel.StateSchema < instance.StateSchema
 	if f.DryRun {
 		for _, k := range keptCopies(inst) {
 			warnKeptCopy(app.UI, k.Name, k.Copy, true)
@@ -581,7 +581,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	if err := setPhase(inst, from, to, release.PhaseMigrated); err != nil {
 		return abortUpgrade(ctx, app, inst, e, err, ui.Wrap(err, "Couldn't save your settings.", "Run rexctl upgrade --verbose to see why."))
 	}
-	r, err := stack.Render(set, stack.OverlaysFor(next.Settings), next.Images.Refs, inst.Project(), inst.Dir)
+	r, err := inst.Render(set, stack.OverlaysFor(next.Settings), next.Images.Refs)
 	if err != nil {
 		return abortUpgrade(ctx, app, inst, e, err, ui.Wrap(err, fmt.Sprintf("Couldn't write the files for Fluxer %s.", toShort), "Run rexctl upgrade --verbose to see why."))
 	}
@@ -601,6 +601,9 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 			return failedStart(ctx, app, inst, e, p, waiting, err)
 		}
 		return abortUpgrade(ctx, app, inst, e, err, ctx.Err())
+	}
+	if err := inst.DropRootCopies(ctx, true); err != nil {
+		app.UI.Detail("%v", err)
 	}
 	if err := setPhase(inst, from, to, release.PhaseVerified); err != nil {
 		return err
@@ -655,7 +658,7 @@ func retryUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't read the files for Fluxer %s.", toShort), "Run rexctl doctor to see what's wrong.")
 	}
-	r, err := stack.Render(set, stack.OverlaysFor(next.Settings), next.Images.Refs, inst.Project(), inst.Dir)
+	r, err := inst.Render(set, stack.OverlaysFor(next.Settings), next.Images.Refs)
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't write the files for Fluxer %s.", toShort), "Run rexctl upgrade --verbose to see why.")
 	}
@@ -682,6 +685,9 @@ func retryUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *eng
 			fix = fmt.Sprintf("Read %s to see why. %s", logPath, fix)
 		}
 		return ui.Wrap(err, fmt.Sprintf("Fluxer %s didn't start either.", toShort), fix)
+	}
+	if err := inst.DropRootCopies(ctx, true); err != nil {
+		app.UI.Detail("%v", err)
 	}
 	if err := setPhase(inst, pend.From, pend.To, release.PhaseVerified); err != nil {
 		return err
@@ -778,7 +784,7 @@ func refList(refs map[string]string) []string {
 func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, set *stack.Set, next *instance.State, toShort string) error {
 	scratch := filepath.Join(release.Dir(inst, next.Release), scratchDir)
 	defer os.RemoveAll(scratch)
-	r, err := stack.Render(set, stack.OverlaysFor(next.Settings), next.Images.Refs, inst.Project(), scratch)
+	r, err := stack.RenderAt(set, stack.OverlaysFor(next.Settings), next.Images.Refs, inst.Project(), scratch, inst.OldLayout())
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't prepare the files for Fluxer %s.", toShort), "Run rexctl upgrade --verbose to see why.")
 	}

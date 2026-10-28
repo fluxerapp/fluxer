@@ -52,6 +52,10 @@ func Eject(inst *Instance, o EjectOptions) error {
 	if err != nil {
 		return err
 	}
+	rendered, err := writePlain(inst)
+	if err != nil {
+		return err
+	}
 	f := envfile.New(inst.Path(EnvFileName))
 	for _, k := range slices.Sorted(maps.Keys(env)) {
 		f.Set(k, env[k])
@@ -66,20 +70,50 @@ func Eject(inst *Instance, o EjectOptions) error {
 			return err
 		}
 	}
+	s.Rendered = rendered
 	s.Ejected = &Ejected{At: time.Now().UTC().Truncate(time.Second), Rexctl: o.Rexctl}
 	s.UpdatedAt = time.Now().UTC().Truncate(time.Second)
-	return s.Save(inst.StatePath())
+	if err := s.Save(inst.StatePath()); err != nil {
+		return err
+	}
+	for name := range rendered {
+		if _, mounted := stack.MountedFiles[name]; !mounted && !inst.OldLayout() {
+			if err := removeIfExists(inst.Generated(name)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func writePlain(inst *Instance) (map[string]string, error) {
+	out := map[string]string{}
+	for _, name := range stack.FileNames() {
+		data, err := os.ReadFile(inst.Generated(name))
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		data = stack.Plain(name, data)
+		if err := envfile.WriteFileAtomic(inst.Path(name), data, false); err != nil {
+			return nil, err
+		}
+		out[name] = stack.Hash(data)
+	}
+	return out, nil
 }
 
 func composeFileList(inst *Instance) string {
-	var rel []string
-	for _, f := range inst.ComposeFiles() {
-		if r, err := filepath.Rel(inst.Dir, f); err == nil && !strings.HasPrefix(r, "..") {
-			f = r
-		}
-		rel = append(rel, f)
+	names := []string{stack.ComposeFile}
+	for _, o := range inst.Overlays() {
+		names = append(names, stack.OverlayFiles[o])
 	}
-	return strings.Join(rel, string(os.PathListSeparator))
+	if exists(inst.Path(CustomCompose)) {
+		names = append(names, CustomCompose)
+	}
+	return strings.Join(names, string(os.PathListSeparator))
 }
 
 func importEjected(ctx context.Context, dir string, e *engine.Engine, s *State, dry bool) (*State, *ImportReport, error) {

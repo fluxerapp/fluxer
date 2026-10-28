@@ -587,7 +587,10 @@ func runBootStart(ctx context.Context, app *App) error {
 			if err != nil {
 				return engineFailure(err)
 			}
-			return readyFailure(ctx, inst, p, p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: engine.DefaultReadyTimeout}))
+			if err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: engine.DefaultReadyTimeout}); err != nil {
+				return readyFailure(ctx, inst, p, err)
+			}
+			return inst.DropRootCopies(ctx, true)
 		}
 		if p, err := deploy.Load(ctx, inst, e); err == nil && stackRunning(ctx, p) {
 			app.sendAdminImport(ctx, inst, p)
@@ -636,7 +639,7 @@ func bootLocked(ctx context.Context, app *App, inst *instance.Instance, fn func(
 	for {
 		l, err := inst.Lock(ctx)
 		if err == nil {
-			return app.holding(inst, l, fn)
+			return app.holding(ctx, inst, l, fn)
 		}
 		if !errors.Is(err, instance.ErrLocked) || time.Now().After(deadline) {
 			return app.Locked(ctx, inst, fn)

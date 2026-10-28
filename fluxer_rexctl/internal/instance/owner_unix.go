@@ -20,3 +20,18 @@ func (i *Instance) OwnerUID() (int, bool) {
 	}
 	return int(st.Uid), true
 }
+
+func (i *Instance) giveToOwner(path string) error {
+	if euid() != 0 {
+		return nil
+	}
+	info, err := os.Stat(i.Dir)
+	if err != nil {
+		return err
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st.Uid == 0 {
+		return nil
+	}
+	return chown(path, int(st.Uid), int(st.Gid))
+}

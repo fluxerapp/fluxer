@@ -11,11 +11,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -64,7 +66,7 @@ func Environment(set *stack.Set, s *instance.State, chosen map[string]string) (m
 }
 
 func composeFiles(inst *instance.Instance, chosen map[string]string) []string {
-	files := stack.ComposeFiles(inst.Dir, stack.OverlaysFor(chosen))
+	files := inst.StackFiles(stack.OverlaysFor(chosen))
 	if _, err := os.Stat(inst.Path(instance.CustomCompose)); err == nil {
 		files = append(files, inst.Path(instance.CustomCompose))
 	}
@@ -96,7 +98,7 @@ func Load(ctx context.Context, inst *instance.Instance, e *engine.Engine) (*engi
 }
 
 func render(inst *instance.Instance, set *stack.Set, chosen map[string]string) (*stack.Rendered, error) {
-	r, err := stack.Render(set, stack.OverlaysFor(chosen), inst.State.Images.Refs, inst.Project(), inst.Dir)
+	r, err := inst.Render(set, stack.OverlaysFor(chosen), inst.State.Images.Refs)
 	if err != nil {
 		return nil, ui.Wrap(err, "Couldn't write Fluxer's files.", "Check that you can write to "+inst.Dir+", then try again.")
 	}
@@ -144,6 +146,9 @@ func mountedHashes(inst *instance.Instance) (map[string]string, error) {
 }
 
 func checkDrift(inst *instance.Instance, withEnv bool) error {
+	if _, err := instance.KeepEdits(inst); err != nil {
+		return ui.Wrap(err, "rexctl can't keep a copy of the files you changed.", "Check that you can write to "+inst.Dir+", then try again.")
+	}
 	r, err := instance.Drift(inst)
 	if err != nil {
 		return ui.Wrap(err, "rexctl can't check Fluxer's files.", "Check that you can read "+inst.Dir+", then try again.")
@@ -173,10 +178,16 @@ func refuseEjected(inst *instance.Instance) error {
 }
 
 func refuseUpgrade(inst *instance.Instance) error {
-	if inst.State.Upgrade == nil {
+	if inst.State.Upgrade == nil || upgradeNotPulled(inst) {
 		return nil
 	}
 	return ui.Refused("An upgrade of this instance hasn't finished.", "Run rexctl upgrade to finish it, then try again.")
+}
+
+func upgradeNotPulled(inst *instance.Instance) bool {
+	u := inst.State.Upgrade
+	i := slices.Index(release.Phases, u.Phase)
+	return i >= 0 && i < slices.Index(release.Phases, release.PhasePulled)
 }
 
 func now() time.Time { return time.Now().UTC().Truncate(time.Second) }

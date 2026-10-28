@@ -12,6 +12,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -290,12 +292,9 @@ func writeBootUnit(ctx context.Context, u BootUnit) error {
 	if err != nil {
 		return err
 	}
-	if !u.Rootless && !sameFile(u.Binary, LibexecBinary) {
-		if _, err := output(ctx, false, "install", "-D", "-m", "0755", u.Binary, LibexecBinary); err != nil {
+	if !u.Rootless {
+		if err := installBinary(ctx, true, u.Binary, LibexecBinary); err != nil {
 			return err
-		}
-		if has("restorecon") {
-			_, _ = output(ctx, false, "restorecon", LibexecBinary)
 		}
 	}
 	changed, err := writeHostFile(ctx, u.Rootless, path, []byte(u.content(ctx)))
@@ -303,6 +302,140 @@ func writeBootUnit(ctx context.Context, u BootUnit) error {
 		return err
 	}
 	return systemctlRun(ctx, u.Rootless, "daemon-reload")
+}
+
+func installBinary(ctx context.Context, system bool, src, dst string) error {
+	if sameFile(src, dst) {
+		return nil
+	}
+	if !system {
+		if out, err := exec.CommandContext(ctx, "install", "-D", "-m", "0755", src, dst).CombinedOutput(); err != nil {
+			return &CommandError{Command: "install " + dst, Output: string(out), Err: err}
+		}
+		return nil
+	}
+	if _, err := output(ctx, false, "install", installArgs(src, dst)...); err != nil {
+		return err
+	}
+	if has("restorecon") {
+		_, _ = output(ctx, false, "restorecon", dst)
+	}
+	return nil
+}
+
+func installArgs(src, dst string) []string {
+	args := []string{"-D", "-m", "0755"}
+	if uid, gid, ok := fileOwner(dst); ok {
+		args = append(args, "-o", strconv.Itoa(uid), "-g", strconv.Itoa(gid))
+	}
+	return append(args, src, dst)
+}
+
+var asRoot = isRoot
+
+func unitFiles(project string) (map[string]bool, error) {
+	boot, upgrade := BootUnit{Project: project}.Name(), AutoUpgrade{Project: project}.ServiceName()
+	units := map[string]bool{
+		filepath.Join("/etc/systemd/system", boot):    true,
+		filepath.Join("/etc/systemd/system", upgrade): true,
+		filepath.Join(cronDir, project+"-upgrade"):    true,
+	}
+	if asRoot() {
+		return units, nil
+	}
+	userDir, err := unitDir(true)
+	if err != nil {
+		return nil, err
+	}
+	units[filepath.Join(userDir, boot)] = false
+	units[filepath.Join(userDir, upgrade)] = false
+	return units, nil
+}
+
+func RefreshUnitBinaries(ctx context.Context, project, bin string) error {
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+	units, err := unitFiles(project)
+	if err != nil {
+		return err
+	}
+	for path, system := range units {
+		data, err := os.ReadFile(path)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		for _, b := range unitBinaries(data) {
+			if err := installBinary(ctx, system, bin, b); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func unitBinaries(data []byte) []string {
+	var out []string
+	for _, line := range strings.Split(string(data), "\n") {
+		var bin string
+		if v, ok := strings.CutPrefix(line, "ExecStart="); ok {
+			bin = systemdWord(v)
+		} else {
+			bin = cronBinary(line)
+		}
+		if filepath.IsAbs(bin) && !slices.Contains(out, bin) {
+			out = append(out, bin)
+		}
+	}
+	return out
+}
+
+func systemdWord(v string) string {
+	var word string
+	if rest, ok := strings.CutPrefix(v, `"`); ok {
+		var b strings.Builder
+		for i := 0; i < len(rest) && rest[i] != '"'; i++ {
+			if rest[i] == '\\' && i+1 < len(rest) {
+				i++
+			}
+			b.WriteByte(rest[i])
+		}
+		word = b.String()
+	} else {
+		word, _, _ = strings.Cut(v, " ")
+	}
+	return strings.NewReplacer("%%", "%", "$$", "$").Replace(word)
+}
+
+func cronBinary(line string) string {
+	f := strings.Fields(line)
+	if len(f) < 7 || strings.Contains(f[0], "=") || strings.HasPrefix(f[0], "#") {
+		return ""
+	}
+	i := strings.Index(line, " '")
+	if i < 0 {
+		return ""
+	}
+	var b strings.Builder
+	rest := line[i+2:]
+	for {
+		end := strings.IndexByte(rest, '\'')
+		if end < 0 {
+			return ""
+		}
+		b.WriteString(rest[:end])
+		rest = rest[end+1:]
+		next, ok := strings.CutPrefix(rest, `\''`)
+		if !ok {
+			break
+		}
+		b.WriteByte('\'')
+		rest = next
+	}
+	return strings.ReplaceAll(b.String(), `\%`, "%")
 }
 
 func writeHostFile(ctx context.Context, user bool, path string, data []byte) (bool, error) {

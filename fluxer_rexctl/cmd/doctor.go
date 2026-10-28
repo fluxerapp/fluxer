@@ -71,6 +71,12 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 	}
 	run := func() error {
 		results := diagnose(ctx, app, env, phase, fix)
+		if env.Instance != nil {
+			warnUnusedRootFiles(ctx, app, env.Instance)
+		}
+		if env.Instance != nil && app.UI.Interactive() {
+			instance.SeenEdits(env.Instance)
+		}
 		var ej *instance.EjectedError
 		if errors.As(env.Instance.Managed(), &ej) && !app.Flags.JSON {
 			defer app.UI.Info("%s %s", ej.Error(), ej.Fix())

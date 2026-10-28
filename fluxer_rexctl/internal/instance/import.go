@@ -277,6 +277,7 @@ func finishImport(dir string, s *State) error {
 		return err
 	}
 	s.UpdatedAt = time.Now().UTC().Truncate(time.Second)
+	s.rootLayout = true
 	if err := s.Save(filepath.Join(dir, StateDirName, StateFileName)); err != nil {
 		return err
 	}
@@ -448,13 +449,8 @@ func newSet(release string, files fs.FS, profiles map[string]map[string]string) 
 }
 
 func renderedNames(dir string) []string {
-	names := []string{stack.ComposeFile}
-	for _, o := range slices.Sorted(maps.Keys(stack.OverlayFiles)) {
-		names = append(names, stack.OverlayFiles[o])
-	}
-	names = append(names, stack.Caddyfile)
 	var out []string
-	for _, n := range names {
+	for _, n := range stack.FileNames() {
 		if isFile(filepath.Join(dir, n)) {
 			out = append(out, n)
 		}

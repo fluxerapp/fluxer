@@ -22,8 +22,9 @@ const defaultProject = "fluxer"
 var defaultName = regexp.MustCompile(`(?m)^name: ` + defaultProject + `$`)
 
 const (
-	ComposeFile = "docker-compose.yml"
-	Caddyfile   = "Caddyfile"
+	ComposeFile  = "docker-compose.yml"
+	Caddyfile    = "Caddyfile"
+	GeneratedDir = ".rexctl/generated"
 )
 
 type Overlay string
@@ -101,17 +102,87 @@ func OverlaysFor(settings map[string]string) []Overlay {
 	return out
 }
 
-func ComposeFiles(dir string, overlays []Overlay) []string {
+func FileNames() []string {
+	names := []string{ComposeFile, Caddyfile}
+	for _, o := range overlayOrder {
+		names = append(names, OverlayFiles[o])
+	}
+	return names
+}
+
+func GeneratedPath(dir string, name ...string) string {
+	return filepath.Join(append([]string{dir, filepath.FromSlash(GeneratedDir)}, name...)...)
+}
+
+func ProjectDir(composeFile string) string {
+	dir := filepath.Dir(composeFile)
+	if trimmed, ok := strings.CutSuffix(dir, string(filepath.Separator)+filepath.FromSlash(GeneratedDir)); ok {
+		return trimmed
+	}
+	return dir
+}
+
+func FilesDir(dir string, root bool) string {
 	if abs, err := filepath.Abs(dir); err == nil {
 		dir = abs
 	}
-	files := []string{filepath.Join(dir, ComposeFile)}
+	if root {
+		return dir
+	}
+	return GeneratedPath(dir)
+}
+
+func ComposeFiles(dir string, overlays []Overlay) []string {
+	return ComposeFilesAt(dir, overlays, false)
+}
+
+func ComposeFilesAt(dir string, overlays []Overlay, root bool) []string {
+	files := FilesDir(dir, root)
+	out := []string{filepath.Join(files, ComposeFile)}
 	for _, o := range overlayOrder {
 		if slices.Contains(overlays, o) {
-			files = append(files, filepath.Join(dir, OverlayFiles[o]))
+			out = append(out, filepath.Join(files, OverlayFiles[o]))
 		}
 	}
-	return files
+	return out
+}
+
+func header(name string) []byte {
+	how := "To change it, run rexctl config edit."
+	if name == Caddyfile {
+		how = "To add Caddy directives, put a .caddy file in caddy.d in your instance folder."
+	}
+	return []byte("# rexctl writes this file and puts its own version back when it changes Fluxer.\n# " + how + "\n\n")
+}
+
+func mountRefs(name string) (plain, managed []byte) {
+	return []byte("./" + name + ":"), []byte("./" + GeneratedDir + "/" + name + ":")
+}
+
+func Managed(name string, data []byte) []byte {
+	if name != Caddyfile {
+		for mounted := range MountedFiles {
+			plain, managed := mountRefs(mounted)
+			data = bytes.ReplaceAll(data, plain, managed)
+		}
+	}
+	return append(header(name), data...)
+}
+
+func Plain(name string, data []byte) []byte {
+	data = bytes.TrimPrefix(data, header(name))
+	if name != Caddyfile {
+		for mounted := range MountedFiles {
+			plain, managed := mountRefs(mounted)
+			data = bytes.ReplaceAll(data, managed, plain)
+		}
+	}
+	return data
+}
+
+func MountsGenerated(compose []byte, name string) bool {
+	_, managed := mountRefs(name)
+	return bytes.Contains(compose, managed)
 }
 
 type renderedFile struct {
@@ -221,12 +292,25 @@ func nameProject(compose []byte, project string) []byte {
 	return bytes.ReplaceAll(compose, []byte("compose -p "+defaultProject+" "), []byte("compose -p "+project+" "))
 }
 
-func Render(set *Set, selected []Overlay, images map[string]string, project, dir string) (*Rendered, error) {
-	files, overlays, err := renderFiles(set, selected, images, project)
+func Files(set *Set, selected []Overlay, images map[string]string, project string) (map[string][]byte, error) {
+	files, _, err := renderFiles(set, selected, images, project)
 	if err != nil {
 		return nil, err
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	out := make(map[string][]byte, len(files))
+	for _, f := range files {
+		out[f.name] = Managed(f.name, f.data)
+	}
+	return out, nil
+}
+
+func Render(set *Set, selected []Overlay, images map[string]string, project, dir string) (*Rendered, error) {
+	return RenderAt(set, selected, images, project, dir, false)
+}
+
+func RenderAt(set *Set, selected []Overlay, images map[string]string, project, dir string, root bool) (*Rendered, error) {
+	files, overlays, err := renderFiles(set, selected, images, project)
+	if err != nil {
 		return nil, err
 	}
 	for _, d := range MountedDirs {
@@ -234,7 +318,16 @@ func Render(set *Set, selected []Overlay, images map[string]string, project, dir
 			return nil, err
 		}
 	}
-	changed, stale, err := plan(dir, files, overlays)
+	if !root {
+		for i, f := range files {
+			files[i].data = Managed(f.name, f.data)
+		}
+	}
+	gen := FilesDir(dir, root)
+	if err := os.MkdirAll(gen, 0o755); err != nil {
+		return nil, err
+	}
+	changed, stale, err := plan(gen, files, overlays)
 	if err != nil {
 		return nil, err
 	}
@@ -244,15 +337,15 @@ func Render(set *Set, selected []Overlay, images map[string]string, project, dir
 			write = append(write, f)
 		}
 	}
-	if err := writeAll(dir, write); err != nil {
+	if err := writeAll(gen, write); err != nil {
 		return nil, err
 	}
 	for _, name := range stale {
-		if err := os.Remove(filepath.Join(dir, name)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		if err := os.Remove(filepath.Join(gen, name)); err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return nil, err
 		}
 	}
-	r := &Rendered{Dir: dir, Hashes: make(map[string]string, len(files)), ComposeFiles: ComposeFiles(dir, overlays)}
+	r := &Rendered{Dir: dir, Hashes: make(map[string]string, len(files)), ComposeFiles: ComposeFilesAt(dir, overlays, root)}
 	for _, f := range files {
 		r.Hashes[f.name] = Hash(f.data)
 	}

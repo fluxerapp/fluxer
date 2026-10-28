@@ -85,12 +85,16 @@ func present(dir string) bool {
 }
 
 func Find(dir string) (*Instance, error) {
+	return FindRepairing(dir, nil)
+}
+
+func FindRepairing(dir string, keys []string) (*Instance, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
 	i := &Instance{Dir: dir}
-	state, err := LoadState(i.StatePath())
+	state, err := loadState(i.StatePath(), keys)
 	if errors.Is(err, fs.ErrNotExist) {
 		if isLegacy(dir) {
 			return nil, ErrLegacy
@@ -323,7 +327,7 @@ func (i *Instance) Overlays() []stack.Overlay {
 }
 
 func (i *Instance) ComposeFiles() []string {
-	files := stack.ComposeFiles(i.Dir, i.Overlays())
+	files := i.StackFiles(i.Overlays())
 	if exists(i.Path(CustomCompose)) {
 		files = append(files, i.Path(CustomCompose))
 	}
@@ -331,9 +335,9 @@ func (i *Instance) ComposeFiles() []string {
 }
 
 func (i *Instance) MissingFiles() []string {
-	files := stack.ComposeFiles(i.Dir, i.Overlays())
+	files := i.StackFiles(i.Overlays())
 	for name := range stack.MountedFiles {
-		files = append(files, i.Path(name))
+		files = append(files, i.Generated(name))
 	}
 	var out []string
 	for _, f := range files {

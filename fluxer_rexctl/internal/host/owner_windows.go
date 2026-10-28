@@ -3,3 +3,5 @@
 package host
 
 func dirOwner(string) string { return "" }
+
+func fileOwner(string) (int, int, bool) { return 0, 0, false }

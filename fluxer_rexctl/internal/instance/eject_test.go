@@ -56,7 +56,10 @@ func ejectedInstance(t *testing.T, declared *stack.Set, refs map[string]string) 
 	if err := stack.WriteSet(filepath.Join(dir, StateDirName, ReleasesDir, ejectedAt, StackDir), old); err != nil {
 		t.Fatal(err)
 	}
-	r, err := stack.Render(old, nil, fluxerRefs("a"), "fluxer", dir)
+	if _, err := stack.Render(old, nil, fluxerRefs("a"), "fluxer", dir); err != nil {
+		t.Fatal(err)
+	}
+	rendered, err := writePlain(&Instance{Dir: dir})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +76,7 @@ func ejectedInstance(t *testing.T, declared *stack.Set, refs map[string]string) 
 		Images:    Images{Release: ejectedAt, Refs: fluxerRefs("a")},
 		Settings:  map[string]string{},
 		Secrets:   map[string]string{},
-		Rendered:  r.Hashes,
+		Rendered:  rendered,
 		SetupDone: true,
 		Ejected:   &Ejected{At: time.Now().UTC().Truncate(time.Second)},
 	}
