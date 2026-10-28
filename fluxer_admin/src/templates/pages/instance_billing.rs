@@ -207,10 +207,16 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
         "Buyers must accept your terms of service at checkout. Needs a terms of service URL in the Stripe dashboard public details. Currently {}.",
         on_off(billing.effective_terms_consent_required)
     );
+    let billing_emails = format!(
+        "Sends receipts, refund notices and failed payment notices from this instance. Turn off Stripe's own \
+         customer emails for successful payments, refunds and failed card payments when you turn this on, or buyers \
+         get both. Currently {}.",
+        on_off(billing.effective_billing_emails)
+    );
     html! {
         div class="space-y-4" {
             h4 class="text-sm font-medium text-neutral-900" { "Checkout options" }
-            div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
+            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                 (tri_state_select(
                     "billing_automatic_tax",
                     "Automatic tax",
@@ -231,6 +237,13 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
                     "Use default",
                     billing.terms_consent_required,
                     &terms,
+                ))
+                (tri_state_select(
+                    "billing_billing_emails",
+                    "Billing emails",
+                    "Use default",
+                    billing.billing_emails,
+                    &billing_emails,
                 ))
             }
             p class="text-xs text-neutral-500" {
@@ -409,7 +422,11 @@ pub(crate) fn premium_billing_section(
                             "billing_webhook_url",
                             false,
                             None,
-                            Some("Add this endpoint in the Stripe dashboard, then paste its signing secret above."),
+                            Some(
+                                "Add this endpoint in the Stripe dashboard, then paste its signing secret above. \
+                                 Send it at least the checkout.session.*, customer.subscription.*, invoice.*, \
+                                 charge.refunded, charge.dispute.* and refund.* events.",
+                            ),
                             html! {
                                 input type="text" id="billing_webhook_url" value=(billing.webhook_url)
                                     readonly class=(FORM_INPUT_CLASS);

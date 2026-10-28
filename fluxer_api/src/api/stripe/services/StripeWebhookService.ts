@@ -11,6 +11,7 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
+import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {PaymentDisputeEnforcementService} from '@app/api/payment_disputes/PaymentDisputeEnforcement';
@@ -20,6 +21,7 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import {type BillingEmailJob, enqueueBillingEmail, isRecentRefund} from '@app/api/stripe/services/BillingEmailService';
 import {StripeCheckoutWebhookHandler} from '@app/api/stripe/services/StripeCheckoutWebhookHandler';
 import {StripeDisputeWebhookHandler} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
@@ -212,18 +214,21 @@ export class StripeWebhookService {
 				const inv = event.data.object as Stripe.Invoice;
 				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentSucceeded(event.id, inv);
+				await this.queueBillingEmail(inv.id ? {kind: 'invoice_paid', id: inv.id} : null);
 				break;
 			}
 			case 'invoice.payment_failed': {
 				const inv = event.data.object as Stripe.Invoice;
 				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentFailed(inv);
+				await this.queueInvoicePaymentProblem(inv, false);
 				break;
 			}
 			case 'invoice.payment_action_required': {
 				const inv = event.data.object as Stripe.Invoice;
 				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentActionRequired(inv);
+				await this.queueInvoicePaymentProblem(inv, true);
 				break;
 			}
 			case 'invoice.finalization_failed': {
@@ -293,6 +298,9 @@ export class StripeWebhookService {
 					);
 				}
 				await this.disputeHandler.handleRefund(c);
+				for (const r of refunds.filter((refund) => isRecentRefund(refund, event.created))) {
+					await this.queueBillingEmail({kind: 'refund', id: r.id});
+				}
 				break;
 			}
 			case 'customer.created':
@@ -361,6 +369,7 @@ export class StripeWebhookService {
 					}),
 				);
 				await this.refundService.handleRefundWebhookEvent(r);
+				await this.queueBillingEmail({kind: 'refund', id: r.id});
 				break;
 			}
 			case 'invoice.created':
@@ -380,6 +389,20 @@ export class StripeWebhookService {
 				Logger.debug({eventType: event.type, eventId: event.id}, 'Stripe webhook event type not handled');
 			}
 		}
+	}
+
+	private async queueBillingEmail(job: BillingEmailJob | null): Promise<void> {
+		if (job) {
+			await enqueueBillingEmail(getWorkerService(), job);
+		}
+	}
+
+	private async queueInvoicePaymentProblem(invoice: Stripe.Invoice, actionRequired: boolean): Promise<void> {
+		await this.queueBillingEmail(
+			invoice.id
+				? {kind: 'invoice_payment_problem', id: invoice.id, paymentAttempt: invoice.attempt_count, actionRequired}
+				: null,
+		);
 	}
 
 	private async handleMandateUpdated(mandate: Stripe.Mandate): Promise<void> {

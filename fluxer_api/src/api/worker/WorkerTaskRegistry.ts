@@ -65,6 +65,7 @@ import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
+import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -152,6 +153,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	pruneGuildVisits: pruneGuildVisitsTask,
 	refreshSearchIndex,
 	seedThreadPermissions,
+	sendBillingEmail,
 	removeChannelFollowers,
 	sendSystemDm,
 	syncStripeCustomerEmail,

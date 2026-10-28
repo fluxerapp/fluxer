@@ -827,6 +827,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 					automatic_tax: readOptionalField(billing, 'automatic_tax'),
 					tax_id_collection: readOptionalField(billing, 'tax_id_collection'),
 					terms_consent_required: readOptionalField(billing, 'terms_consent_required'),
+					billing_emails: readOptionalField(billing, 'billing_emails'),
 				}),
 			);
 		},

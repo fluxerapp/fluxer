@@ -448,9 +448,11 @@ Stripe billing for premium. Each `effective_` field gives the value in use.
 | automatic_tax | ?boolean | Saved switch for Stripe automatic tax, or null for off |
 | tax_id_collection | ?boolean | Saved switch for collecting a buyer tax ID, or null for off |
 | terms_consent_required | ?boolean | Saved switch for requiring terms consent at checkout, or null for off |
+| billing_emails<sup>3</sup> | ?boolean | Saved switch for sending billing emails from this instance, or null for off |
 | effective_automatic_tax | boolean | Whether checkout uses Stripe automatic tax |
 | effective_tax_id_collection | boolean | Whether checkout collects a buyer tax ID |
 | effective_terms_consent_required | boolean | Whether checkout requires terms consent |
+| effective_billing_emails | boolean | Whether this instance sends billing emails |
 | default_currency | ?string | Currency when no country mapping applies, or null |
 | prices | ?map[string, [billing price set](#billing-price-set-object) object] | Saved price sets by currency, or null to use the environment |
 | country_currencies | ?object | Saved map of two-letter country codes to currencies, or null |
@@ -463,6 +465,20 @@ Stripe billing for premium. Each `effective_` field gives the value in use.
 <sup>1</sup> A slot is `monthly`, `yearly`, `gift_1_month` or `gift_1_year` and a currency, such as `monthly_GBP`. Subscriptions on a listed price keep renewing
 
 <sup>2</sup> True when billing is on, a Stripe secret key is set, the premium mode is `mirror` and at least one currency has a monthly and a yearly price
+
+<sup>3</sup> With billing emails on, the instance emails receipts, refund notices and failed or unconfirmed payment notices for premium, donations and Operator Pass purchases. See [billing emails](#billing-emails)
+
+### Billing emails
+
+When `billing_emails` is on, turn off the matching Stripe customer emails, or buyers get two of each:
+
+- Settings > Business > Customer emails > Payments: **Successful payments** and **Refunds**
+- Revenue recovery > Emails: **Send emails when card payments fail** and **Send a Stripe-hosted link for customers to confirm their payments when required**, and with it **Send reminders if payment confirmation isn't completed**
+- Settings > Billing > Subscriptions and emails > Manage invoices sent to customers: **Send credit notes to customers**
+
+Keep **Send emails about upcoming renewals** and **Send emails about expiring cards** on. Gifts redeemed on a paying subscription are Stripe trials, so also turn off **Send a reminder email 7 days before a free trial ends**.
+
+The webhook endpoint at `webhook_url` must receive these events for the emails: `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed`, `invoice.payment_action_required`, `refund.created`, `refund.updated` and `charge.refunded`. Billing itself also needs the `checkout.session.*`, `customer.subscription.*`, `invoice.*`, `charge.dispute.*` and `refund.failed` events.
 
 ## Billing price set object
 

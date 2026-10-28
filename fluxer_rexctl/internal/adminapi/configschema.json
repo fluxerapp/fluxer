@@ -235,6 +235,12 @@
     "nullable": true
   },
   {
+    "key": "billing.billing_emails",
+    "type": "boolean",
+    "help": "Billing billing emails",
+    "nullable": true
+  },
+  {
     "key": "billing.country_currencies",
     "type": "json",
     "help": "Billing country currencies",

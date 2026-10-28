@@ -82,6 +82,7 @@ function operatorConfig(overrides: Partial<StoredBillingConfig> = {}): StoredBil
 		automatic_tax: null,
 		tax_id_collection: null,
 		terms_consent_required: null,
+		billing_emails: null,
 		default_currency: 'GBP',
 		prices: {
 			GBP: {
@@ -153,6 +154,7 @@ describe('BillingConfigCache', () => {
 			automatic_tax: null,
 			tax_id_collection: null,
 			terms_consent_required: null,
+			billing_emails: null,
 			default_currency: null,
 			prices: null,
 			country_currencies: {SE: 'SEK'},
@@ -277,6 +279,7 @@ describe('BillingConfigCache', () => {
 					automatic_tax: false,
 					tax_id_collection: false,
 					terms_consent_required: false,
+					billing_emails: false,
 				}),
 			);
 			const config = getEffectiveBillingConfig();
@@ -290,6 +293,7 @@ describe('BillingConfigCache', () => {
 			expect(config.automaticTax).toBe(true);
 			expect(config.taxIdCollection).toBe(true);
 			expect(config.termsConsentRequired).toBe(true);
+			expect(config.billingEmails).toBe(true);
 			expect(isBillingActive()).toBe(true);
 		});
 	});
@@ -301,13 +305,20 @@ describe('BillingConfigCache', () => {
 			expect(config.automaticTax).toBe(false);
 			expect(config.taxIdCollection).toBe(false);
 			expect(config.termsConsentRequired).toBe(false);
+			expect(config.billingEmails).toBe(false);
 			setStoredBillingConfig(
-				operatorConfig({automatic_tax: true, tax_id_collection: false, terms_consent_required: true}),
+				operatorConfig({
+					automatic_tax: true,
+					tax_id_collection: false,
+					terms_consent_required: true,
+					billing_emails: true,
+				}),
 			);
 			config = getEffectiveBillingConfig();
 			expect(config.automaticTax).toBe(true);
 			expect(config.taxIdCollection).toBe(false);
 			expect(config.termsConsentRequired).toBe(true);
+			expect(config.billingEmails).toBe(true);
 		});
 
 		it('default to off on self-hosted without any stored config', () => {

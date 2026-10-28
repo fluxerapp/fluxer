@@ -244,6 +244,7 @@ export interface InstanceBillingConfigPatch {
 	automatic_tax?: boolean | null;
 	tax_id_collection?: boolean | null;
 	terms_consent_required?: boolean | null;
+	billing_emails?: boolean | null;
 	default_currency?: string | null;
 	prices?: Record<string, InstanceBillingPriceSetPatch> | null;
 	country_currencies?: Record<string, string> | null;
@@ -260,9 +261,11 @@ export interface InstanceBillingAdminConfig {
 	automatic_tax: boolean | null;
 	tax_id_collection: boolean | null;
 	terms_consent_required: boolean | null;
+	billing_emails: boolean | null;
 	effective_automatic_tax: boolean;
 	effective_tax_id_collection: boolean;
 	effective_terms_consent_required: boolean;
+	effective_billing_emails: boolean;
 	default_currency: string | null;
 	prices: StoredBillingConfig['prices'];
 	country_currencies: StoredBillingConfig['country_currencies'];
@@ -2905,6 +2908,7 @@ export class InstanceConfigRepository {
 				tax_id_collection: patch.tax_id_collection === undefined ? current.tax_id_collection : patch.tax_id_collection,
 				terms_consent_required:
 					patch.terms_consent_required === undefined ? current.terms_consent_required : patch.terms_consent_required,
+				billing_emails: patch.billing_emails === undefined ? current.billing_emails : patch.billing_emails,
 				default_currency: patch.default_currency === undefined ? current.default_currency : patch.default_currency,
 				prices: patch.prices === undefined ? current.prices : normalizeBillingPrices(patch.prices),
 				country_currencies:
@@ -2929,9 +2933,11 @@ export class InstanceConfigRepository {
 			automatic_tax: stored.automatic_tax,
 			tax_id_collection: stored.tax_id_collection,
 			terms_consent_required: stored.terms_consent_required,
+			billing_emails: stored.billing_emails,
 			effective_automatic_tax: effective.automaticTax,
 			effective_tax_id_collection: effective.taxIdCollection,
 			effective_terms_consent_required: effective.termsConsentRequired,
+			effective_billing_emails: effective.billingEmails,
 			default_currency: stored.default_currency,
 			prices: stored.prices,
 			country_currencies: stored.country_currencies,

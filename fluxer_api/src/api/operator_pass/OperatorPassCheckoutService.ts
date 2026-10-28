@@ -412,6 +412,8 @@ export class OperatorPassCheckoutService {
 								donation_email: email ?? '',
 								donation_type: 'recurring',
 								donation_locale: locale ?? 'en-US',
+								operator_pass: 'true',
+								operator_pass_purchaser_id: userId,
 							},
 						},
 					}

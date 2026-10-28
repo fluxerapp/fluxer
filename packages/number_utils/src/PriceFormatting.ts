@@ -72,7 +72,8 @@ const HOME_COUNTRIES_BY_CURRENCY: Readonly<Record<string, ReadonlySet<string>>> 
 	]),
 };
 
-const STRIPE_TWO_DECIMAL_WHOLE_UNIT_CURRENCIES = new Set(['ISK', 'HUF', 'UGX']);
+const STRIPE_TWO_DECIMAL_WHOLE_UNIT_CURRENCIES = new Set(['ISK', 'UGX']);
+const STRIPE_TWO_DECIMAL_CURRENCIES = new Set(['HUF']);
 const RIGHT_TO_LEFT_LANGUAGES = new Set(['ar', 'he']);
 const BIDI_MARKS = /[\u200E\u200F\u061C]/g;
 const LEFT_TO_RIGHT_ISOLATE = '\u2066';
@@ -199,12 +200,31 @@ export function formatMinorUnitPrice(
 	if (amountMinor == null || !currency) {
 		return null;
 	}
+	return formatPrice(amountMinor, currency, locale, countryCode, false);
+}
+
+export function formatMinorUnitPriceWithFraction(
+	amountMinor: number,
+	currency: string,
+	locale: string | null | undefined,
+): string {
+	return formatPrice(amountMinor, currency, locale, null, true);
+}
+
+function formatPrice(
+	amountMinor: number,
+	currency: string,
+	locale: string | null | undefined,
+	countryCode: string | null | undefined,
+	keepFraction: boolean,
+): string {
 	const code = currency.toUpperCase();
 	const resolvedLocale = resolveLocale(locale);
 	const wholeUnitDisplay = STRIPE_TWO_DECIMAL_WHOLE_UNIT_CURRENCIES.has(code);
-	const fractionDigits = wholeUnitDisplay ? 0 : currencyFractionDigits(code);
-	const exponent = wholeUnitDisplay ? 2 : fractionDigits;
-	const digits = amountMinor % 10 ** exponent === 0 ? 0 : fractionDigits;
+	const twoDecimal = STRIPE_TWO_DECIMAL_CURRENCIES.has(code);
+	const exponent = wholeUnitDisplay || twoDecimal ? 2 : currencyFractionDigits(code);
+	const fractionDigits = wholeUnitDisplay ? 0 : exponent;
+	const digits = !keepFraction && amountMinor % 10 ** exponent === 0 ? 0 : fractionDigits;
 	const formatted = formatWithCurrency(amountMinor / 10 ** exponent, code, resolvedLocale, digits, countryCode);
 	if (!RIGHT_TO_LEFT_LANGUAGES.has(resolvedLocale.split(/[-_]/)[0].toLowerCase())) {
 		return formatted;

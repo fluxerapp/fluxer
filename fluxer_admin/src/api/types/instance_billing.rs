@@ -72,11 +72,15 @@ pub struct InstanceBillingResponse {
     pub tax_id_collection: Option<bool>,
     pub terms_consent_required: Option<bool>,
     #[serde(default)]
+    pub billing_emails: Option<bool>,
+    #[serde(default)]
     pub effective_automatic_tax: bool,
     #[serde(default)]
     pub effective_tax_id_collection: bool,
     #[serde(default)]
     pub effective_terms_consent_required: bool,
+    #[serde(default)]
+    pub effective_billing_emails: bool,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -101,6 +105,8 @@ pub struct InstanceBillingUpdateRequest {
     pub tax_id_collection: Option<Option<bool>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terms_consent_required: Option<Option<bool>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing_emails: Option<Option<bool>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]

@@ -31,6 +31,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import closePaymentDisputeAccounts from '@app/api/worker/tasks/ClosePaymentDisputeAccounts';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
+import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import {getWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import Stripe from 'stripe';
@@ -122,7 +123,9 @@ export function setupSyncStripeWebhookWorker(): void {
 		snowflakeService: getSnowflakeService(),
 		billingRepository: getBillingRepository(),
 	});
-	setInjectedWorkerService(new SyncTaskWorkerService({processStripeWebhook, closePaymentDisputeAccounts}));
+	setInjectedWorkerService(
+		new SyncTaskWorkerService({processStripeWebhook, closePaymentDisputeAccounts, sendBillingEmail}),
+	);
 }
 
 let originalWebhookSecretDescriptor: PropertyDescriptor | undefined;

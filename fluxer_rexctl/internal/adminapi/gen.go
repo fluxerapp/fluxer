@@ -1971,10 +1971,12 @@ type IdentifierFirstModeSchema string
 type InstanceBillingResponse struct {
 	AutomaticTax                  *bool                               `json:"automatic_tax"`
 	BillingActive                 bool                                `json:"billing_active"`
+	BillingEmails                 *bool                               `json:"billing_emails"`
 	CatalogMode                   BillingCatalogModeSchema            `json:"catalog_mode"`
 	CountryCurrencies             *map[string]string                  `json:"country_currencies"`
 	DefaultCurrency               *PremiumCurrency                    `json:"default_currency"`
 	EffectiveAutomaticTax         bool                                `json:"effective_automatic_tax"`
+	EffectiveBillingEmails        bool                                `json:"effective_billing_emails"`
 	EffectiveEnabled              bool                                `json:"effective_enabled"`
 	EffectiveTaxIdCollection      bool                                `json:"effective_tax_id_collection"`
 	EffectiveTermsConsentRequired bool                                `json:"effective_terms_consent_required"`
@@ -1994,6 +1996,7 @@ type InstanceBillingResponse struct {
 // InstanceBillingUpdateRequest defines model for InstanceBillingUpdateRequest.
 type InstanceBillingUpdateRequest struct {
 	AutomaticTax         *bool                                    `json:"automatic_tax,omitempty"`
+	BillingEmails        *bool                                    `json:"billing_emails,omitempty"`
 	CountryCurrencies    *BillingCountryCurrenciesSchema          `json:"country_currencies,omitempty"`
 	DefaultCurrency      *PremiumCurrency                         `json:"default_currency,omitempty"`
 	Enabled              *bool                                    `json:"enabled,omitempty"`

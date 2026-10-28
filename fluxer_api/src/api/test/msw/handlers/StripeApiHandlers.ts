@@ -289,8 +289,9 @@ interface MockStripeInvoice {
 	hosted_invoice_url: string | null;
 	invoice_pdf: string | null;
 	number: string | null;
-	lines: {
-		data: Array<{period: {start: number; end: number}}>;
+	lines?: {
+		object?: 'list';
+		data: Array<Record<string, unknown>>;
 	};
 	payments: {
 		object: 'list';
@@ -419,9 +420,19 @@ function parseFormDataToObject<T extends object = Record<string, unknown>>(formD
 	return result as T;
 }
 
+type StripeMockObject = {id: string} & Record<string, unknown>;
+
+interface StripeApiMockStore {
+	invoice: (invoice: StripeMockObject) => void;
+	refund: (refund: StripeMockObject) => void;
+	paymentIntent: (paymentIntent: StripeMockObject) => void;
+	charge: (charge: StripeMockObject) => void;
+}
+
 export interface StripeApiHandlers {
 	handlers: Array<RequestHandler>;
 	spies: StripeApiMockSpies;
+	put: StripeApiMockStore;
 	reset: () => void;
 }
 
@@ -1212,6 +1223,31 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			refundStore.set(refund.id, refund);
 			return HttpResponse.json(refund);
 		}),
+		http.get(`${STRIPE_API_BASE}/v1/refunds/:id`, ({params, request}) => {
+			const refund = refundStore.get(params.id as string);
+			if (!refund) {
+				return HttpResponse.json(
+					{error: {type: 'invalid_request_error', message: 'No such refund', code: 'resource_missing'}},
+					{status: 404},
+				);
+			}
+			const expand = [...new URL(request.url).searchParams.entries()]
+				.filter(([key]) => key.startsWith('expand'))
+				.map(([, value]) => value);
+			return HttpResponse.json({
+				...refund,
+				charge: expand.includes('charge') && refund.charge ? getCharge(refund.charge) : refund.charge,
+				payment_intent:
+					expand.includes('payment_intent') && refund.payment_intent
+						? getPaymentIntent(refund.payment_intent)
+						: refund.payment_intent,
+			});
+		}),
+		http.get('https://pay.stripe.com/invoice/:id/pdf', () =>
+			HttpResponse.arrayBuffer(new TextEncoder().encode('%PDF-1.7 test invoice').buffer, {
+				headers: {'content-type': 'application/pdf'},
+			}),
+		),
 		http.get(`${STRIPE_API_BASE}/v1/refunds`, ({request}) => {
 			const requestUrl = new URL(request.url);
 			const chargeId = requestUrl.searchParams.get('charge');
@@ -1835,7 +1871,14 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		subscriptionScheduleCounter = 0;
 		hydrateStores();
 	}
-	return {handlers, spies, reset};
+	const put: StripeApiMockStore = {
+		invoice: (invoice) => invoiceStore.set(invoice.id, invoice as unknown as MockStripeInvoice),
+		refund: (refund) => refundStore.set(refund.id, refund as unknown as MockStripeRefund),
+		paymentIntent: (paymentIntent) =>
+			paymentIntentStore.set(paymentIntent.id, paymentIntent as unknown as MockStripePaymentIntent),
+		charge: (charge) => chargeStore.set(charge.id, {...createDefaultCharge(charge.id), ...charge} as MockStripeCharge),
+	};
+	return {handlers, spies, put, reset};
 }
 
 export interface StripeWebhookEventData {

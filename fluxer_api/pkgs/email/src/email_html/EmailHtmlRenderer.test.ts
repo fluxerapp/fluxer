@@ -50,6 +50,14 @@ const REPORT_REFERENCE = {
 	channelName: '',
 } as const;
 const DECISION_ID = '1290874512349872640';
+const INVOICE_URL = 'https://invoice.stripe.com/i/acct_1Example/live_abc';
+const PAID_TOTALS = {
+	totalMinor: 999,
+	paidMinor: 499,
+	currency: 'eur',
+	tax: {amountMinor: 166, behavior: 'inclusive'},
+	reverseCharge: false,
+} as const;
 const RULE_URL = 'https://example.com/guidelines#6-spam-and-service-abuse';
 const ENFORCEMENT_NOTICE: EmailTemplateVariables['enforcement_notice'] = {
 	kind_label: 'suspension',
@@ -294,6 +302,155 @@ const EMAILS: Array<[string, string | null, Send]> = [
 				locale,
 			),
 	],
+	[
+		'plutonium_payment_receipt',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'plutonium_payment_receipt',
+				USER,
+				{
+					premiumName: 'Plutonium',
+					plan: 'monthly',
+					invoiceNumber: 'A1B2C3D4-0008',
+					paidAt: DATE,
+					period: {start: DATE, end: DATE},
+					totals: PAID_TOTALS,
+					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
+					purchase: {
+						renewal: {interval: 'month', amountMinor: 999, tax: 'included'},
+						consentAt: DATE,
+						withdrawalEndsAt: DATE,
+						seller: true,
+					},
+				},
+				locale,
+			),
+	],
+	[
+		'plutonium_refund_receipt',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'plutonium_refund_receipt',
+				USER,
+				{
+					premiumName: 'Plutonium',
+					plan: 'gift_1_year',
+					invoiceNumber: 'A1B2C3D4-0009',
+					refundedAt: DATE,
+					amountMinor: 500,
+					paidMinor: 4999,
+					paidAt: DATE,
+					currency: 'usd',
+					refundUrl: INVOICE_URL,
+				},
+				locale,
+			),
+	],
+	[
+		'plutonium_payment_failed',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'plutonium_payment_failed',
+				USER,
+				{
+					premiumName: 'Plutonium',
+					reason: 'action_required',
+					invoiceNumber: 'A1B2C3D4-0010',
+					attemptedAt: DATE,
+					amountMinor: 499,
+					currency: 'usd',
+					invoiceUrl: INVOICE_URL,
+					accessEndsAt: null,
+				},
+				locale,
+			),
+	],
+	[
+		'donation_receipt',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'donation_receipt',
+				USER,
+				{
+					interval: 'year',
+					invoiceNumber: 'A1B2C3D4-0011',
+					paidAt: DATE,
+					period: {start: DATE, end: DATE},
+					totals: {...PAID_TOTALS, paidMinor: 999, tax: null},
+					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
+					manageUrl: MANAGE_URL,
+				},
+				locale,
+			),
+	],
+	[
+		'donation_refund_receipt',
+		null,
+		(service, locale) =>
+			service.send(
+				'donation_refund_receipt',
+				USER,
+				{reference: '1234-5678', refundedAt: DATE, amountMinor: 1000, currency: 'eur', refundUrl: null},
+				locale,
+			),
+	],
+	[
+		'donation_payment_failed',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'donation_payment_failed',
+				USER,
+				{
+					reason: 'declined',
+					invoiceNumber: 'A1B2C3D4-0012',
+					attemptedAt: DATE,
+					amountMinor: 1000,
+					currency: 'eur',
+					invoiceUrl: INVOICE_URL,
+					manageUrl: MANAGE_URL,
+				},
+				locale,
+			),
+	],
+	[
+		'operator_pass_invoice',
+		INVOICE_URL,
+		(service, locale) =>
+			service.send(
+				'operator_pass_invoice',
+				USER,
+				{
+					invoiceNumber: 'A1B2C3D4-0013',
+					paidAt: DATE,
+					totals: {...PAID_TOTALS, paidMinor: 999, tax: null, reverseCharge: true},
+					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
+				},
+				locale,
+			),
+	],
+	[
+		'operator_pass_refund_receipt',
+		null,
+		(service, locale) =>
+			service.send(
+				'operator_pass_refund_receipt',
+				USER,
+				{
+					invoiceNumber: 'A1B2C3D4-0014',
+					orderDate: DATE,
+					refundedAt: DATE,
+					amountMinor: 19900,
+					currency: 'usd',
+					full: false,
+				},
+				locale,
+			),
+	],
 ];
 
 function captureService(): {service: EmailService; sent: Array<EmailMessage>} {
@@ -411,7 +568,7 @@ describe.each(EMAILS)('%s email', (_name, ctaUrl, send) => {
 		expect(html).toContain(`role="article" lang="${locale}" dir="${direction}"`);
 		expect(html).toContain(`<title>${escapeHtml(message.subject)}</title>`);
 		expect(html).not.toMatch(/%%|\[\[/);
-		expect(html).not.toMatch(/<h1[\s>]/);
+		expect(html.match(/<h1[\s>]/g)?.length ?? 0).toBeLessThanOrEqual(1);
 		expect(message.text).not.toMatch(/%%|\{[A-Za-z_]+[,}]/);
 		if (ctaUrl) {
 			expect(html).toContain(`href="${escapeHtml(ctaUrl)}"`);

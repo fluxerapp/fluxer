@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmailSendParams, IBulkEmailSession, IEmailService} from '@pkgs/email/src/IEmailService';
+import type {BillingTotals, EmailSendParams, IBulkEmailSession, IEmailService} from '@pkgs/email/src/IEmailService';
 import {OPERATOR_PASS_TERMS_VERSION} from '@pkgs/email/src/operator_pass_terms/OperatorPassTerms';
 
 export interface SentEmailRecord {
@@ -10,12 +10,29 @@ export interface SentEmailRecord {
 	metadata: Record<string, string>;
 }
 
+function totalsMetadata(totals: BillingTotals): Record<string, string> {
+	return {
+		total_minor: String(totals.totalMinor),
+		paid_minor: String(totals.paidMinor),
+		currency: totals.currency,
+		tax_minor: totals.tax ? String(totals.tax.amountMinor) : '',
+		tax_behavior: totals.tax?.behavior ?? '',
+		reverse_charge: totals.reverseCharge ? 'true' : 'false',
+	};
+}
+
 function stringMetadata(variables: Record<string, string | null>): Record<string, string> {
 	return Object.fromEntries(Object.entries(variables).map(([key, value]) => [key, value ?? '']));
 }
 
 export class TestEmailService implements IEmailService {
 	private readonly sentEmails: Array<SentEmailRecord> = [];
+
+	readonly bouncedEmails = new Set<string>();
+
+	async isEmailBounced(email: string): Promise<boolean> {
+		return this.bouncedEmails.has(email);
+	}
 
 	async openBulkSession(): Promise<IBulkEmailSession> {
 		return {
@@ -136,12 +153,40 @@ export class TestEmailService implements IEmailService {
 				expires_at: expiresAt.toISOString(),
 			});
 		},
-		donation_confirmation: async (email, {amountCents, currency, interval, manageUrl}) => {
+		donation_confirmation: async (email, params) => {
 			return this.record(email, 'donation_confirmation', {
-				amount: (amountCents / 100).toString(),
-				currency: currency.toUpperCase(),
-				interval,
-				manage_url: manageUrl,
+				amount: (params.amountCents / 100).toString(),
+				currency: params.currency.toUpperCase(),
+				interval: params.interval,
+				manage_url: params.manageUrl,
+				paid_at: params.paidAt?.toISOString() ?? '',
+				reference: params.reference ?? '',
+				receipt_url: params.receiptUrl ?? '',
+			});
+		},
+		donation_receipt: async (email, params, locale) => {
+			return this.record(email, 'donation_receipt', {
+				interval: params.interval,
+				invoice_number: params.invoiceNumber ?? '',
+				invoice_url: params.invoice?.url ?? '',
+				...totalsMetadata(params.totals),
+				locale: locale ?? '',
+			});
+		},
+		donation_refund_receipt: async (email, params, locale) => {
+			return this.record(email, 'donation_refund_receipt', {
+				reference: params.reference ?? '',
+				amount_minor: String(params.amountMinor),
+				currency: params.currency,
+				locale: locale ?? '',
+			});
+		},
+		donation_payment_failed: async (email, params, locale) => {
+			return this.record(email, 'donation_payment_failed', {
+				reason: params.reason,
+				invoice_number: params.invoiceNumber ?? '',
+				amount_minor: String(params.amountMinor),
+				locale: locale ?? '',
 			});
 		},
 		harvest_completed: async (email, {downloadUrl, totalMessages, fileSize, expiresAt}) => {
@@ -269,6 +314,64 @@ export class TestEmailService implements IEmailService {
 				purchaser_id: params.purchaserId,
 				reason: params.reason,
 				blockers: params.blockers.join(','),
+			});
+		},
+		plutonium_payment_receipt: async (email, params, locale) => {
+			return this.record(email, 'plutonium_payment_receipt', {
+				premium_name: params.premiumName,
+				plan: params.plan,
+				invoice_number: params.invoiceNumber ?? '',
+				paid_at: params.paidAt.toISOString(),
+				period_start: params.period?.start.toISOString() ?? '',
+				period_end: params.period?.end.toISOString() ?? '',
+				...totalsMetadata(params.totals),
+				invoice_url: params.invoice?.url ?? '',
+				invoice_pdf: params.invoice?.pdf?.filename ?? '',
+				renewal: params.purchase?.renewal?.interval ?? '',
+				withdrawal_ends_at: params.purchase?.withdrawalEndsAt?.toISOString() ?? '',
+				consent_at: params.purchase?.consentAt?.toISOString() ?? '',
+				locale: locale ?? '',
+			});
+		},
+		plutonium_refund_receipt: async (email, params, locale) => {
+			return this.record(email, 'plutonium_refund_receipt', {
+				premium_name: params.premiumName,
+				plan: params.plan,
+				invoice_number: params.invoiceNumber ?? '',
+				refunded_at: params.refundedAt.toISOString(),
+				amount_minor: String(params.amountMinor),
+				paid_minor: String(params.paidMinor),
+				currency: params.currency,
+				refund_url: params.refundUrl ?? '',
+				locale: locale ?? '',
+			});
+		},
+		plutonium_payment_failed: async (email, params, locale) => {
+			return this.record(email, 'plutonium_payment_failed', {
+				premium_name: params.premiumName,
+				reason: params.reason,
+				invoice_number: params.invoiceNumber ?? '',
+				attempted_at: params.attemptedAt.toISOString(),
+				amount_minor: String(params.amountMinor),
+				currency: params.currency,
+				invoice_url: params.invoiceUrl ?? '',
+				access_ends_at: params.accessEndsAt?.toISOString() ?? '',
+				locale: locale ?? '',
+			});
+		},
+		operator_pass_invoice: async (email, params) => {
+			return this.record(email, 'operator_pass_invoice', {
+				invoice_number: params.invoiceNumber ?? '',
+				invoice_url: params.invoice.url,
+				...totalsMetadata(params.totals),
+			});
+		},
+		operator_pass_refund_receipt: async (email, params) => {
+			return this.record(email, 'operator_pass_refund_receipt', {
+				invoice_number: params.invoiceNumber ?? '',
+				amount_minor: String(params.amountMinor),
+				currency: params.currency,
+				full: params.full ? 'true' : 'false',
 			});
 		},
 		operator_pass_waitlist_verification: async (email, params) => {

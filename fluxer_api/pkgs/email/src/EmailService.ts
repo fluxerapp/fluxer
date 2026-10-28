@@ -2,7 +2,7 @@
 
 import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
 import {createLogger} from '@fluxer/logger/src/Logger';
-import {formatMinorUnitPrice} from '@fluxer/number_utils/src/PriceFormatting';
+import {formatMinorUnitPrice, formatMinorUnitPriceWithFraction} from '@fluxer/number_utils/src/PriceFormatting';
 import type {
 	EmailAttachment,
 	EmailConfig,
@@ -23,6 +23,8 @@ import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplate, EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 import type {
+	BillingInvoiceDocument,
+	BillingTotals,
 	EmailSendParams,
 	IBulkEmailSession,
 	IEmailService,
@@ -79,6 +81,94 @@ function facts(...rows: Array<FactRow>): EmailSlots {
 	return slots;
 }
 
+type SummaryRow = readonly [string | undefined, string | null | undefined];
+
+const SUMMARY_ROWS_BEFORE_TOTAL = 5;
+const SUMMARY_ROWS_AFTER_TOTAL = 2;
+const POP_DIRECTIONAL_ISOLATE = '\u2069';
+const SELLER_ADDRESS = 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden';
+
+function summary(
+	rows: Array<SummaryRow>,
+	total: readonly [string | undefined, string],
+	tax: string | null = null,
+	after: Array<SummaryRow> = [],
+): EmailSlots {
+	const slots: EmailSlots = {sum_total_label: total[0], sum_total_value: total[1], sum_tax: tax};
+	const fill = (list: Array<SummaryRow>, first: number, max: number) => {
+		let n = first;
+		for (const [label, value] of list) {
+			if (!label || !value || n >= first + max) {
+				continue;
+			}
+			slots[`sum_${n}_label`] = label;
+			slots[`sum_${n}_value`] = value;
+			n += 1;
+		}
+	};
+	fill(rows, 1, SUMMARY_ROWS_BEFORE_TOTAL);
+	fill(after, SUMMARY_ROWS_BEFORE_TOTAL + 1, SUMMARY_ROWS_AFTER_TOTAL);
+	return slots;
+}
+
+const SHARED_CURRENCY_SYMBOLS = new Set(['$', '¥', '￥']);
+
+function withCurrencyCode(formatted: string, currency: string): string {
+	const code = currency.toUpperCase();
+	const symbol = formatted.replace(/[\p{Nd}\p{Zs}\p{Cf}.,'\u066b\u066c+\-\u2212]/gu, '');
+	if (formatted.includes(code) || !SHARED_CURRENCY_SYMBOLS.has(symbol)) {
+		return formatted;
+	}
+	return formatted.endsWith(POP_DIRECTIONAL_ISOLATE)
+		? `${formatted.slice(0, -1)}\u00a0${code}${POP_DIRECTIONAL_ISOLATE}`
+		: `${formatted}\u00a0${code}`;
+}
+
+function amountWithCode(amountMinor: number, currency: string, locale: string | null): string {
+	return withCurrencyCode(formatMinorUnitPrice(amountMinor, currency, locale), currency);
+}
+
+interface FormattedTotals {
+	total: string;
+	totalWithCode: string;
+	tax: string | null;
+	credit: string | null;
+	paid: string | null;
+}
+
+function formatTotals(totals: BillingTotals, locale: string | null): FormattedTotals {
+	const format = totals.tax
+		? (amount: number) => formatMinorUnitPriceWithFraction(amount, totals.currency, locale)
+		: (amount: number) => formatMinorUnitPrice(amount, totals.currency, locale);
+	const total = format(totals.totalMinor);
+	const credit = totals.totalMinor - totals.paidMinor;
+	return {
+		total,
+		totalWithCode: withCurrencyCode(total, totals.currency),
+		tax: totals.tax ? format(totals.tax.amountMinor) : null,
+		credit: credit > 0 ? `-${format(credit)}` : null,
+		paid: credit > 0 ? withCurrencyCode(format(totals.paidMinor), totals.currency) : null,
+	};
+}
+
+function taxLine(template: EmailTemplate, totals: BillingTotals): string | null {
+	if (totals.reverseCharge) {
+		return template.reverse_charge;
+	}
+	if (!totals.tax) {
+		return null;
+	}
+	return totals.tax.behavior === 'inclusive' ? template.tax_included : template.tax_added;
+}
+
+function invoiceSlots(template: EmailTemplate, invoice: BillingInvoiceDocument | null): EmailSlots {
+	return invoice ? {cta_url: invoice.url, expiry: template.link_expiry} : {lead: null, cta: null};
+}
+
+function yesNo(value: boolean): 'yes' | 'no' {
+	return value ? 'yes' : 'no';
+}
+
 function appealSection(template: EmailTemplate): EmailSlots {
 	return {
 		section_1_title: template.appeal_title,
@@ -96,6 +186,9 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	bulk_message_deletion_completed: 'privacy',
 	donation_confirmation: 'support',
 	donation_magic_link: 'support',
+	donation_payment_failed: 'support',
+	donation_receipt: 'support',
+	donation_refund_receipt: 'support',
 	dsa_report_resolved: 'appeals',
 	dsa_report_verification: 'safety',
 	email_change_new: 'support',
@@ -110,11 +203,13 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	inactivity_warning: 'support',
 	ip_authorization: 'support',
 	mfa_backup_codes_view: 'support',
+	operator_pass_invoice: 'support',
 	operator_pass_offer_accepted: 'support',
 	operator_pass_offer_ended: 'support',
 	operator_pass_offer_received: 'support',
 	operator_pass_perks_removed: 'appeals',
 	operator_pass_purchase_confirmation: 'support',
+	operator_pass_refund_receipt: 'support',
 	operator_pass_removal_notice: 'appeals',
 	operator_pass_revoked: 'support',
 	operator_pass_sale_open: 'support',
@@ -126,6 +221,9 @@ const EMAIL_REPLY_INBOX: Record<EmailTemplateKey, ReplyInbox> = {
 	password_change_verification: 'support',
 	password_reset: 'support',
 	payment_dispute_warning: 'appeals',
+	plutonium_payment_failed: 'support',
+	plutonium_payment_receipt: 'support',
+	plutonium_refund_receipt: 'support',
 	reauth_code: 'support',
 	registration_approved: 'support',
 	registration_pending: 'support',
@@ -167,6 +265,14 @@ function daysUntil(date: Date): number {
 }
 
 const CODE_MINUTES = 10;
+
+function plutoniumUrl(appBaseUrl: string): string {
+	return `${appBaseUrl}/channels/@premium`;
+}
+
+function isGiftPlan(plan: string): boolean {
+	return plan === 'gift_1_month' || plan === 'gift_1_year';
+}
 
 function getPaymentDisputeTermsUrl(product: 'operator_pass' | 'plutonium', marketingBaseUrl: string): string {
 	return product === 'plutonium' ? `${marketingBaseUrl}/terms` : getOperatorPassTermsUrl(marketingBaseUrl);
@@ -462,16 +568,108 @@ export class EmailService implements IEmailService {
 				{slots: () => ({cta_url: manageUrl})},
 			);
 		},
-		donation_confirmation: async (email, {amountCents, currency, interval, manageUrl}, locale) => {
+		donation_confirmation: async (email, params, locale) => {
+			const once = params.interval === 'once';
 			return this.sendTemplatedEmail(
 				email,
 				'donation_confirmation',
 				locale,
-				{amount: formatMinorUnitPrice(amountCents, currency, locale), interval},
+				{
+					amount: formatMinorUnitPrice(params.amountCents, params.currency, locale),
+					interval: params.interval,
+					paidAt: params.paidAt ?? new Date(),
+				},
 				{
 					slots: (template) => ({
-						cta_url: manageUrl,
-						...facts([template.amount_label, template.amount_value], [template.currency_label, currency.toUpperCase()]),
+						cta_url: params.manageUrl,
+						...facts(
+							[template.amount_label, template.amount_value],
+							[template.currency_label, params.currency.toUpperCase()],
+							[template.date_label, once && params.paidAt ? template.date_value : null],
+							[template.reference_label, once ? params.reference : null],
+						),
+						...(once && params.receiptUrl ? {end_link: template.receipt_link, end_link_url: params.receiptUrl} : {}),
+					}),
+				},
+			);
+		},
+		donation_receipt: async (email, params, locale) => {
+			const totals = formatTotals(params.totals, locale);
+			const invoice = params.invoice;
+			return this.sendTemplatedEmail(
+				email,
+				'donation_receipt',
+				locale,
+				{
+					interval: params.interval,
+					paidAt: params.paidAt,
+					periodStart: params.period?.start ?? params.paidAt,
+					periodEnd: params.period?.end ?? params.paidAt,
+					amountFormatted: totals.total,
+					pdf: yesNo(invoice?.pdf != null),
+					invoiceLinkUntil: invoice?.linkUntil ?? params.paidAt,
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.date_label, template.date_value],
+								[template.period_label, params.period ? template.period_value : null],
+							],
+							[template.total_label, totals.totalWithCode],
+						),
+						...invoiceSlots(template, invoice),
+						end_link: template.manage_link,
+						end_link_url: params.manageUrl,
+					}),
+					attachments: invoice?.pdf ? [invoice.pdf] : undefined,
+				},
+			);
+		},
+		donation_refund_receipt: async (email, params, locale) => {
+			const amountFormatted = formatMinorUnitPrice(params.amountMinor, params.currency, locale);
+			return this.sendTemplatedEmail(
+				email,
+				'donation_refund_receipt',
+				locale,
+				{refundedAt: params.refundedAt, amountFormatted},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.reference_label, params.reference],
+								[template.date_label, template.date_value],
+							],
+							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
+						),
+						...(params.refundUrl ? {cta_url: params.refundUrl} : {cta: null}),
+					}),
+				},
+			);
+		},
+		donation_payment_failed: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'donation_payment_failed',
+				locale,
+				{
+					reason: params.reason,
+					attemptedAt: params.attemptedAt,
+					amountFormatted: formatMinorUnitPrice(params.amountMinor, params.currency, locale),
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.date_label, template.date_value],
+							],
+							[template.amount_label, amountWithCode(params.amountMinor, params.currency, locale)],
+						),
+						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
+						end_link: template.manage_link,
+						end_link_url: params.manageUrl,
 					}),
 				},
 			);
@@ -762,6 +960,201 @@ export class EmailService implements IEmailService {
 			];
 			return this.sendPlainEmail(email, `${product} payment dispute ${params.disputeId}`, lines.join('\n'));
 		},
+		plutonium_payment_receipt: async (email, params, locale) => {
+			const gift = isGiftPlan(params.plan);
+			const totals = formatTotals(params.totals, locale);
+			const invoice = params.invoice;
+			const purchase = params.purchase;
+			const renewal = purchase?.renewal ?? null;
+			const withdrawal = purchase?.seller && purchase.withdrawalEndsAt ? purchase.withdrawalEndsAt : null;
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_payment_receipt',
+				locale,
+				{
+					premiumName: params.premiumName,
+					plan: params.plan,
+					gift: yesNo(gift),
+					paidAt: params.paidAt,
+					periodStart: params.period?.start ?? params.paidAt,
+					periodEnd: params.period?.end ?? params.paidAt,
+					amountFormatted: totals.total,
+					taxFormatted: totals.tax ?? '',
+					pdf: yesNo(invoice?.pdf != null),
+					invoiceLinkUntil: invoice?.linkUntil ?? params.paidAt,
+					renewal: renewal?.interval ?? 'none',
+					renewalFormatted: renewal ? formatMinorUnitPrice(renewal.amountMinor, params.totals.currency, locale) : '',
+					renewalTax: renewal?.tax ?? 'none',
+					consentAt: purchase?.consentAt ?? params.paidAt,
+					withdrawalEndsAt: withdrawal ?? params.paidAt,
+					invoiceNumber: params.invoiceNumber ?? '',
+					sellerAddress: SELLER_ADDRESS,
+					sellerEmail: OPERATOR_PASS_TRADER_EMAIL,
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.date_label, template.date_value],
+								[template.product_label, template.product_value],
+								[template.period_label, params.period && !gift ? template.period_value : null],
+							],
+							[template.total_label, totals.totalWithCode],
+							taxLine(template, params.totals),
+							[
+								[template.credit_label, totals.credit],
+								[template.paid_label, totals.paid],
+							],
+						),
+						...invoiceSlots(template, invoice),
+						lead:
+							[gift ? template.gift_note : null, invoice ? template.lead : null].filter(Boolean).join('\n\n') || null,
+						...(purchase
+							? {
+									section_1_title: template.plan_title,
+									section_1_body: template.plan_body,
+									...(withdrawal && purchase.consentAt
+										? {section_2_title: template.consent_title, section_2_body: template.consent_body}
+										: {}),
+									...(withdrawal
+										? {
+												section_3_title: template.withdrawal_title,
+												section_3_body: template.withdrawal_body,
+												section_3_note: template.withdrawal_note,
+												section_4_title: template.form_title,
+												section_4_body: template.form_body,
+											}
+										: {}),
+									note: purchase.seller ? template.seller : null,
+								}
+							: {}),
+						end_link: gift ? null : template.manage_link,
+						end_link_url: gift ? null : plutoniumUrl(this.config.appBaseUrl),
+					}),
+					attachments: invoice?.pdf ? [invoice.pdf] : undefined,
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_refund_receipt: async (email, params, locale) => {
+			const amountFormatted = formatMinorUnitPrice(params.amountMinor, params.currency, locale);
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_refund_receipt',
+				locale,
+				{
+					premiumName: params.premiumName,
+					plan: params.plan,
+					refundedAt: params.refundedAt,
+					amountFormatted,
+					paidFormatted: formatMinorUnitPrice(params.paidMinor, params.currency, locale),
+					paidAt: params.paidAt,
+					partial: yesNo(params.amountMinor < params.paidMinor),
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.product_label, template.product_value],
+								[template.original_label, template.original_value],
+								[template.date_label, template.date_value],
+							],
+							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
+						),
+						...(params.refundUrl ? {cta_url: params.refundUrl} : {cta: null}),
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		plutonium_payment_failed: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'plutonium_payment_failed',
+				locale,
+				{
+					premiumName: params.premiumName,
+					reason: params.reason,
+					attemptedAt: params.attemptedAt,
+					amountFormatted: formatMinorUnitPrice(params.amountMinor, params.currency, locale),
+					access: yesNo(params.accessEndsAt != null),
+					accessEndsAt: params.accessEndsAt ?? params.attemptedAt,
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.date_label, template.date_value],
+							],
+							[template.amount_label, amountWithCode(params.amountMinor, params.currency, locale)],
+						),
+						...(params.invoiceUrl ? {cta_url: params.invoiceUrl} : {cta: null}),
+						end_link: template.manage_link,
+						end_link_url: plutoniumUrl(this.config.appBaseUrl),
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		operator_pass_invoice: async (email, params, locale) => {
+			const totals = formatTotals(params.totals, locale);
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_invoice',
+				locale,
+				{
+					paidAt: params.paidAt,
+					amountFormatted: totals.total,
+					taxFormatted: totals.tax ?? '',
+					pdf: yesNo(params.invoice.pdf != null),
+					invoiceLinkUntil: params.invoice.linkUntil,
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.invoice_label, params.invoiceNumber],
+								[template.date_label, template.date_value],
+							],
+							[template.total_label, totals.totalWithCode],
+							taxLine(template, params.totals),
+						),
+						...invoiceSlots(template, params.invoice),
+					}),
+					attachments: params.invoice.pdf ? [params.invoice.pdf] : undefined,
+					timeZone: params.timeZone,
+				},
+			);
+		},
+		operator_pass_refund_receipt: async (email, params, locale) => {
+			return this.sendTemplatedEmail(
+				email,
+				'operator_pass_refund_receipt',
+				locale,
+				{
+					orderDate: params.orderDate,
+					refundedAt: params.refundedAt,
+					amountFormatted: formatMinorUnitPrice(params.amountMinor, params.currency, locale),
+					full: yesNo(params.full),
+				},
+				{
+					slots: (template) => ({
+						...summary(
+							[
+								[template.order_number_label, params.invoiceNumber],
+								[template.order_date_label, template.order_date_value],
+								[template.date_label, template.date_value],
+							],
+							[template.refund_label, amountWithCode(params.amountMinor, params.currency, locale)],
+						),
+					}),
+					timeZone: params.timeZone,
+				},
+			);
+		},
 		operator_pass_waitlist_verification: async (email, params, locale) => {
 			return this.sendTemplatedEmail(
 				email,
@@ -810,6 +1203,10 @@ export class EmailService implements IEmailService {
 			logger.error({language, error}, 'Failed to render the Operator Pass terms PDF');
 			return null;
 		}
+	}
+
+	async isEmailBounced(email: string): Promise<boolean> {
+		return (await this.bouncedEmailChecker?.isEmailBounced(email)) ?? false;
 	}
 
 	async openBulkSession(): Promise<IBulkEmailSession> {
@@ -911,7 +1308,7 @@ export class EmailService implements IEmailService {
 		const assetsUrl = `${this.config.staticCdnBaseUrl.replace(/\/+$/, '')}${EMAIL_ASSETS_PATH}`;
 		return {
 			...template,
-			preheader: stripInlineMarkup(template.intro),
+			preheader: stripInlineMarkup(template.preheader ?? template.intro),
 			lang: locale,
 			product_name: this.config.productName,
 			home_url: this.config.marketingBaseUrl,

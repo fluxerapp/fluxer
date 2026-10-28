@@ -35,6 +35,7 @@ const LANE_CONFIG = {
 		consumerName: 'workers_lifecycle',
 		tasks: [
 			'processStripeWebhook',
+			'sendBillingEmail',
 			'closePaymentDisputeAccounts',
 			'sendSystemDm',
 			'notifyRegistrationApprovers',

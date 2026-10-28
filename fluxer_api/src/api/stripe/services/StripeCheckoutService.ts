@@ -218,6 +218,7 @@ export class StripeCheckoutService {
 				? {
 						invoice_creation: {
 							enabled: true,
+							invoice_data: {metadata: checkoutMetadata},
 						},
 					}
 				: {}),
