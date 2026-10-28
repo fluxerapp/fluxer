@@ -30,7 +30,7 @@ pub fn pending_registrations_page(
     let content = html! {
         (page_header(
             "Pending Registrations",
-            Some("Approve or reject accounts waiting for a registration decision."),
+            Some("Approve or reject accounts waiting for a registration decision. Rejecting deletes the account."),
         ))
         @match pending_registrations {
             Some(pending_registrations) => {
@@ -128,8 +128,15 @@ fn pending_registration_row(
             }
             td class="px-4 py-3 align-top" {
                 div class="flex flex-nowrap gap-2" {
-                    (decision_form(&approve_action, csrf_token, &pending.user_id, "Approve", CompactButtonVariant::Neutral))
-                    (decision_form(&reject_action, csrf_token, &pending.user_id, "Reject", CompactButtonVariant::Danger))
+                    (decision_form(&approve_action, csrf_token, &pending.user_id, "Approve", CompactButtonVariant::Neutral, None))
+                    (decision_form(
+                        &reject_action,
+                        csrf_token,
+                        &pending.user_id,
+                        "Reject",
+                        CompactButtonVariant::Danger,
+                        Some("Reject this registration and delete the account?"),
+                    ))
                 }
             }
         }
@@ -142,6 +149,7 @@ fn decision_form(
     user_id: &str,
     label: &str,
     variant: CompactButtonVariant,
+    confirm: Option<&str>,
 ) -> Markup {
     html! {
         form method="post" action=(action)
@@ -149,6 +157,7 @@ fn decision_form(
             hx-target="#pending-registration-list"
             hx-swap="outerHTML"
             hx-push-url="false"
+            hx-confirm=[confirm]
             data-admin-allow-swap="true" {
             (csrf_input(csrf_token))
             input type="hidden" name="user_id" value=(user_id);

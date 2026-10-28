@@ -129,9 +129,10 @@ async fn decide_pending_registration(
         PendingRegistrationStatus::Approved => {
             ("Registration approved", "Failed to approve registration")
         }
-        PendingRegistrationStatus::Rejected => {
-            ("Registration rejected", "Failed to reject registration")
-        }
+        PendingRegistrationStatus::Rejected => (
+            "Registration rejected and account deleted",
+            "Failed to reject registration",
+        ),
     };
     let flash = match clean_string(form.user_id.as_deref().unwrap_or("")) {
         None => FlashData::error("User ID is required"),
