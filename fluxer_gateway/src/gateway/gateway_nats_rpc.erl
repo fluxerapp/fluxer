@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, get_connection/0, subscribe/2]).
--export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
+-export([enable_rpc_subscription/0, disable_rpc_subscription/0, nats_ready/0]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -13,9 +13,12 @@
     {no_opaque, [
         handle_info/2,
         handle_connect_ok/3,
+        handle_connect_timeout/2,
         conn_from_term/1
     ]}
 ).
+
+-define(STATUS_KEY, {?MODULE, subscription_status}).
 
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
@@ -37,45 +40,50 @@ enable_rpc_subscription() ->
 disable_rpc_subscription() ->
     gen_server:call(?MODULE, disable_rpc_subscription, 5000).
 
+-spec nats_ready() -> boolean().
+nats_ready() ->
+    case persistent_term:get(?STATUS_KEY, missing) of
+        not_required -> true;
+        ready -> gateway_nats_pool:has_ready_connection();
+        _ -> false
+    end.
+
 -spec init([]) -> {ok, map()}.
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 10),
     RpcEnabled = gateway_nats_pool_conn:nats_rpc_enabled(),
     self() ! connect,
-    {ok, #{
-        conn => undefined,
-        sub => undefined,
-        handler_count => 0,
-        handler_refs => #{},
-        max_handlers => gateway_nats_pool_conn:max_handlers(),
-        monitor_ref => undefined,
-        connecting_pid => undefined,
-        connecting_token => undefined,
-        connecting_timer => undefined,
-        rpc_enabled => RpcEnabled,
-        extra_subscriptions => #{}
-    }}.
+    {ok,
+        publish_status(#{
+            conn => undefined,
+            ready => false,
+            rpc_subs => #{},
+            subscribe_timer => undefined,
+            subscribe_failures => 0,
+            handler_count => 0,
+            handler_refs => #{},
+            max_handlers => gateway_nats_pool_conn:max_handlers(),
+            monitor_ref => undefined,
+            connecting_pid => undefined,
+            connecting_token => undefined,
+            connecting_timer => undefined,
+            rpc_enabled => RpcEnabled,
+            extra_subscriptions => #{}
+        })}.
 
 -spec handle_call(term(), gen_server:from(), map()) -> {reply, term(), map()}.
 handle_call(get_connection, _From, #{conn := Conn} = State) ->
     {reply, {ok, Conn}, State};
-handle_call({subscribe_subject, Subject, QueueGroup}, _From, #{conn := Conn} = State) when
-    Conn =/= undefined, is_binary(Subject), is_binary(QueueGroup)
+handle_call({subscribe_subject, Subject, QueueGroup}, _From, State) when
+    is_binary(Subject), is_binary(QueueGroup)
 ->
-    {Reply, NewState} = subscribe_extra_subject(Conn, Subject, QueueGroup, State),
+    {Reply, NewState} = subscribe_extra_subject(Subject, QueueGroup, State),
     {reply, Reply, NewState};
-handle_call({subscribe_subject, _Subject, _QueueGroup}, _From, State) ->
-    {reply, {error, not_connected}, State};
-handle_call(enable_rpc_subscription, _From, #{conn := Conn} = State) when
-    Conn =/= undefined
-->
-    NewState = gateway_nats_rpc_handler:do_subscribe(State#{rpc_enabled => true}),
+handle_call(enable_rpc_subscription, _From, State) ->
+    NewState = ensure_subscriptions(State#{rpc_enabled => true}),
     ignore_pool_call(fun gateway_nats_pool:enable_rpc_subscription/0),
     {reply, ok, NewState};
-handle_call(enable_rpc_subscription, _From, State) ->
-    ignore_pool_call(fun gateway_nats_pool:enable_rpc_subscription/0),
-    {reply, ok, State#{rpc_enabled => true}};
 handle_call(disable_rpc_subscription, _From, State) ->
     {reply, ok, do_disable_rpc(State)};
 handle_call(_Request, _From, State) ->
@@ -95,14 +103,21 @@ handle_info({nats_connect_result, Pid, {error, Reason}}, State) when is_pid(Pid)
 handle_info({connect_timeout, Token}, State) when is_reference(Token) ->
     {noreply, handle_connect_timeout(Token, State)};
 handle_info({Conn, ready}, #{conn := Conn} = State) ->
-    RpcState = gateway_nats_rpc_handler:do_subscribe(State),
-    {noreply, subscribe_extra_subjects(Conn, RpcState)};
+    {noreply, handle_ready(State)};
+handle_info(resubscribe, State) ->
+    {noreply, ensure_subscriptions(State#{subscribe_timer => undefined})};
 handle_info({Conn, closed}, #{conn := Conn} = State) ->
     logger:warning("Gateway NATS RPC connection closed, reconnecting"),
     {noreply, reconnect_after_disconnect(Conn, State)};
 handle_info({Conn, {error, Reason}}, #{conn := Conn} = State) ->
     logger:warning("Gateway NATS RPC connection error, reconnecting", #{reason => Reason}),
     {noreply, reconnect_after_disconnect(Conn, State)};
+handle_info({Conn, closed}, State) when is_pid(Conn) ->
+    gateway_nats_pool_conn:ignore_disconnect(Conn),
+    {noreply, State};
+handle_info({Conn, {error, _Reason}}, State) when is_pid(Conn) ->
+    gateway_nats_pool_conn:ignore_disconnect(Conn),
+    {noreply, State};
 handle_info({Conn, _Sid, {msg, Subject, Payload, MsgOpts}}, #{conn := Conn} = State) when
     is_binary(Subject), is_binary(Payload), is_map(MsgOpts)
 ->
@@ -134,11 +149,13 @@ handle_handler_down(MRef, HRefs, HandlerCount, State) ->
 
 -spec terminate(term(), map()) -> ok.
 terminate(_Reason, #{conn := Conn} = State) when Conn =/= undefined ->
+    persistent_term:erase(?STATUS_KEY),
     cleanup_connect_attempt(State),
     gateway_nats_pool_conn:ignore_disconnect(Conn),
     logger:info("Gateway NATS RPC subscriber stopped"),
     ok;
 terminate(_Reason, State) ->
+    persistent_term:erase(?STATUS_KEY),
     cleanup_connect_attempt(State),
     ok.
 
@@ -168,15 +185,16 @@ reconnect_after_disconnect(Conn, State) ->
 schedule_conn_reconnect(State) ->
     cancel_connect_timer(State),
     gateway_nats_rpc_handler:schedule_reconnect(
-        State#{
+        publish_status(State#{
             conn => undefined,
-            sub => undefined,
+            ready => false,
+            rpc_subs => #{},
             monitor_ref => undefined,
             connecting_pid => undefined,
             connecting_token => undefined,
             connecting_timer => undefined,
             extra_subscriptions => clear_extra_subscription_sids(State)
-        }
+        })
     ).
 
 -spec handle_connect_ok(pid(), nats:conn(), map()) -> map().
@@ -184,16 +202,14 @@ handle_connect_ok(Pid, Conn, State) ->
     case maps:find(connecting_pid, State) of
         {ok, Pid} ->
             cleanup_old(State),
-            cancel_connect_timer(State),
             MRef = nats:monitor(Conn),
-            logger:info("Gateway NATS RPC connected"),
-            State#{
+            OpenState = State#{
                 conn => Conn,
+                ready => false,
                 monitor_ref => MRef,
-                connecting_pid => undefined,
-                connecting_token => undefined,
-                connecting_timer => undefined
-            };
+                connecting_pid => undefined
+            },
+            ready_if_already(gateway_nats_pool_conn:conn_ready(Conn), OpenState);
         _ ->
             gateway_nats_pool_conn:ignore_disconnect(Conn),
             State
@@ -245,49 +261,123 @@ handle_connect_error(Pid, Reason, State) ->
             State
     end.
 
+-spec ready_if_already(boolean(), map()) -> map().
+ready_if_already(true, State) ->
+    handle_ready(State);
+ready_if_already(false, State) ->
+    State.
+
+-spec handle_ready(map()) -> map().
+handle_ready(State) ->
+    cancel_connect_timer(State),
+    logger:info("Gateway NATS RPC connected"),
+    ensure_subscriptions(State#{
+        ready => true,
+        connecting_token => undefined,
+        connecting_timer => undefined
+    }).
+
 -spec handle_connect_timeout(reference(), map()) -> map().
-handle_connect_timeout(Token, State) ->
-    case maps:get(connecting_token, State, undefined) of
-        Token ->
-            Pid = maps:get(connecting_pid, State, undefined),
-            gateway_nats_pool_conn:maybe_kill_connect_pid(Pid),
-            logger:warning("Gateway NATS RPC connect attempt timed out, retrying"),
-            gateway_nats_rpc_handler:do_connect(
-                State#{
-                    connecting_pid => undefined,
-                    connecting_token => undefined,
-                    connecting_timer => undefined
-                }
-            );
-        _ ->
-            State
+handle_connect_timeout(Token, #{connecting_token := Token, conn := Conn} = State) when
+    Conn =/= undefined
+->
+    logger:warning("Gateway NATS RPC connection did not become ready, reconnecting"),
+    reconnect_after_disconnect(conn_from_term(Conn), State);
+handle_connect_timeout(Token, #{connecting_token := Token} = State) ->
+    Pid = maps:get(connecting_pid, State, undefined),
+    gateway_nats_pool_conn:maybe_kill_connect_pid(Pid),
+    logger:warning("Gateway NATS RPC connect attempt timed out, retrying"),
+    gateway_nats_rpc_handler:do_connect(
+        State#{
+            connecting_pid => undefined,
+            connecting_token => undefined,
+            connecting_timer => undefined
+        }
+    );
+handle_connect_timeout(_Token, State) ->
+    State.
+
+-spec ensure_subscriptions(map()) -> map().
+ensure_subscriptions(#{ready := true, conn := Conn} = State) when Conn =/= undefined ->
+    {RpcState, RpcDone} = gateway_nats_rpc_handler:do_subscribe(State),
+    {ExtraState, ExtraDone} = subscribe_extra_subjects(Conn, RpcState),
+    publish_status(subscribe_outcome(RpcDone andalso ExtraDone, ExtraState));
+ensure_subscriptions(State) ->
+    publish_status(State).
+
+-spec subscribe_outcome(boolean(), map()) -> map().
+subscribe_outcome(true, State) ->
+    State#{subscribe_failures => 0};
+subscribe_outcome(false, #{subscribe_timer := TimerRef} = State) when is_reference(TimerRef) ->
+    State;
+subscribe_outcome(false, State) ->
+    Failures = maps:get(subscribe_failures, State, 0) + 1,
+    Delay = gateway_nats_pool_conn:subscribe_retry_delay(Failures),
+    logger:warning("Gateway NATS RPC will retry its subscriptions", #{
+        attempt => Failures, delay_ms => Delay
+    }),
+    State#{
+        subscribe_failures => Failures,
+        subscribe_timer => erlang:send_after(Delay, self(), resubscribe)
+    }.
+
+-spec publish_status(map()) -> map().
+publish_status(State) ->
+    Status = subscription_status(State),
+    case persistent_term:get(?STATUS_KEY, undefined) of
+        Status -> ok;
+        _ -> persistent_term:put(?STATUS_KEY, Status)
+    end,
+    State.
+
+-spec subscription_status(map()) -> not_required | ready | missing.
+subscription_status(#{rpc_enabled := false}) ->
+    not_required;
+subscription_status(State) ->
+    Role = fluxer_gateway_sup:current_role(),
+    case gateway_nats_rpc_handler:rpc_subjects_for_role(Role) of
+        [] -> not_required;
+        Subjects -> subjects_status(Subjects, State)
     end.
 
--spec subscribe_extra_subject(nats:conn(), binary(), binary(), map()) ->
+-spec subjects_status([binary()], map()) -> ready | missing.
+subjects_status(Subjects, #{ready := true, rpc_subs := Subs}) ->
+    Subscribed = lists:all(fun(Subject) -> maps:is_key(Subject, Subs) end, Subjects),
+    case Subscribed of
+        true -> ready;
+        false -> missing
+    end;
+subjects_status(_Subjects, _State) ->
+    missing.
+
+-spec subscribe_extra_subject(binary(), binary(), map()) ->
     {{ok, term()} | {error, term()}, map()}.
-subscribe_extra_subject(Conn, Subject, QueueGroup, #{extra_subscriptions := Extra} = State) ->
+subscribe_extra_subject(Subject, QueueGroup, #{extra_subscriptions := Extra} = State) ->
     Key = {Subject, QueueGroup},
     case maps:get(Key, Extra, undefined) of
         #{sid := Sid} when Sid =/= undefined ->
             {{ok, Sid}, State};
         _ ->
-            subscribe_new_extra_subject(Conn, Subject, QueueGroup, Key, Extra, State)
+            Wanted = #{subject => Subject, queue_group => QueueGroup, sid => undefined},
+            subscribe_wanted_extra_subject(Key, State#{
+                extra_subscriptions => Extra#{Key => Wanted}
+            })
     end.
 
--spec subscribe_new_extra_subject(nats:conn(), binary(), binary(), term(), map(), map()) ->
+-spec subscribe_wanted_extra_subject(term(), map()) ->
     {{ok, term()} | {error, term()}, map()}.
-subscribe_new_extra_subject(Conn, Subject, QueueGroup, Key, Extra, State) ->
-    case nats:sub(Conn, Subject, subscription_opts(QueueGroup)) of
-        {ok, Sid} ->
-            NewExtra = Extra#{
-                Key => #{subject => Subject, queue_group => QueueGroup, sid => Sid}
-            },
-            {{ok, Sid}, State#{extra_subscriptions => NewExtra}};
-        {error, Reason} ->
-            {{error, Reason}, State}
-    end.
+subscribe_wanted_extra_subject(Key, #{ready := true, conn := Conn} = State) when
+    Conn =/= undefined
+->
+    NewState = ensure_subscriptions(State),
+    case maps:get(Key, maps:get(extra_subscriptions, NewState)) of
+        #{sid := Sid} when Sid =/= undefined -> {{ok, Sid}, NewState};
+        _ -> {{error, subscribe_failed}, NewState}
+    end;
+subscribe_wanted_extra_subject(_Key, State) ->
+    {{error, not_connected}, State}.
 
--spec subscribe_extra_subjects(nats:conn(), map()) -> map().
+-spec subscribe_extra_subjects(nats:conn(), map()) -> {map(), boolean()}.
 subscribe_extra_subjects(Conn, #{extra_subscriptions := Extra} = State) ->
     NewExtra = maps:fold(
         fun(Key, Sub, Acc) ->
@@ -296,7 +386,8 @@ subscribe_extra_subjects(Conn, #{extra_subscriptions := Extra} = State) ->
         Extra,
         Extra
     ),
-    State#{extra_subscriptions => NewExtra}.
+    Done = lists:all(fun(#{sid := Sid}) -> Sid =/= undefined end, maps:values(NewExtra)),
+    {State#{extra_subscriptions => NewExtra}, Done}.
 
 -spec subscribe_recorded_extra_subject(nats:conn(), term(), map(), map()) -> map().
 subscribe_recorded_extra_subject(_Conn, _Key, #{sid := Sid}, Acc) when Sid =/= undefined ->
@@ -304,12 +395,12 @@ subscribe_recorded_extra_subject(_Conn, _Key, #{sid := Sid}, Acc) when Sid =/= u
 subscribe_recorded_extra_subject(
     Conn, Key, #{subject := Subject, queue_group := QueueGroup} = Sub, Acc
 ) ->
-    case nats:sub(Conn, Subject, subscription_opts(QueueGroup)) of
+    case gateway_nats_pool_conn:guarded_sub(Conn, Subject, subscription_opts(QueueGroup)) of
         {ok, Sid} ->
-            notify_resubscribed(Subject),
-            Acc#{Key => Sub#{sid => Sid}};
+            notify_if_resubscribed(maps:get(subscribed_before, Sub, false), Subject),
+            Acc#{Key => Sub#{sid => Sid, subscribed_before => true}};
         {error, Reason} ->
-            logger:error("Gateway NATS RPC failed to resubscribe extra subject", #{
+            logger:error("Gateway NATS RPC failed to subscribe extra subject", #{
                 subject => Subject, reason => Reason
             }),
             Acc#{Key => Sub#{sid => undefined}}
@@ -350,6 +441,12 @@ handle_msg(
 subject_owner(<<"config.gateway.rollout">>) -> gateway_rollout_config;
 subject_owner(<<"config.channel.threads">>) -> channel_threads_config;
 subject_owner(_Subject) -> undefined.
+
+-spec notify_if_resubscribed(boolean(), binary()) -> ok.
+notify_if_resubscribed(true, Subject) ->
+    notify_resubscribed(Subject);
+notify_if_resubscribed(false, _Subject) ->
+    ok.
 
 -spec notify_resubscribed(binary()) -> ok.
 notify_resubscribed(Subject) ->
@@ -416,7 +513,7 @@ do_dispatch_rpc(ReplyTo, _Subject, _Payload, HC, MaxH, _HRefs, State) when HC >=
             <<"ok">> => false, <<"error">> => <<"overloaded">>
         })
     ),
-    _ = gateway_nats_pool:pub_reply(ReplyTo, ErrResp),
+    _ = spawn(fun() -> gateway_nats_pool:pub_reply(ReplyTo, ErrResp) end),
     State;
 do_dispatch_rpc(ReplyTo, Subject, Payload, HC, _MaxH, HRefs, State) ->
     {_Pid, MRef} = spawn_monitor(fun() ->
@@ -425,23 +522,16 @@ do_dispatch_rpc(ReplyTo, Subject, Payload, HC, _MaxH, HRefs, State) ->
     State#{handler_count => HC + 1, handler_refs => HRefs#{MRef => true}}.
 
 -spec do_disable_rpc(map()) -> map().
-do_disable_rpc(#{conn := Conn, sub := Sids} = State) when
-    Conn =/= undefined, is_list(Sids)
+do_disable_rpc(#{conn := Conn, rpc_subs := Subs} = State) when
+    Conn =/= undefined, map_size(Subs) > 0
 ->
-    [gateway_nats_pool_conn:ignore_unsub(Conn, Sid) || Sid <- Sids],
+    [gateway_nats_pool_conn:ignore_unsub(Conn, Sid) || Sid <- maps:values(Subs)],
     ignore_pool_call(fun gateway_nats_pool:disable_rpc_subscription/0),
-    logger:info("Gateway NATS RPC unsubscribed", #{subscription_count => length(Sids)}),
-    State#{sub => undefined, rpc_enabled => false};
-do_disable_rpc(#{conn := Conn, sub := Sid} = State) when
-    Conn =/= undefined, Sid =/= undefined
-->
-    gateway_nats_pool_conn:ignore_unsub(Conn, Sid),
-    ignore_pool_call(fun gateway_nats_pool:disable_rpc_subscription/0),
-    logger:info("Gateway NATS RPC unsubscribed"),
-    State#{sub => undefined, rpc_enabled => false};
+    logger:info("Gateway NATS RPC unsubscribed", #{subscription_count => map_size(Subs)}),
+    publish_status(State#{rpc_subs => #{}, rpc_enabled => false});
 do_disable_rpc(State) ->
     ignore_pool_call(fun gateway_nats_pool:disable_rpc_subscription/0),
-    State#{rpc_enabled => false}.
+    publish_status(State#{rpc_subs => #{}, rpc_enabled => false}).
 
 -spec conn_from_term(term()) -> nats:conn().
 conn_from_term(Conn) when is_pid(Conn) ->

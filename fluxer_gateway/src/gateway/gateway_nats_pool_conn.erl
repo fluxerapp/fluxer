@@ -12,7 +12,11 @@
     update_persistent_term/2,
     schedule_reconnect/2,
     reset_failure_count/1,
+    publish_ready_slots/1,
     subscribe_slot/3,
+    guarded_sub/3,
+    conn_ready/1,
+    subscribe_retry_delay/1,
     unsubscribe_slot_sids/2,
     is_rpc_subject/1,
     pool_size/0,
@@ -37,6 +41,9 @@
 -define(CIRCUIT_BREAKER_THRESHOLD, 5).
 -define(CIRCUIT_BREAKER_COOLDOWN_MS, 15000).
 -define(FAILURE_COUNTS_KEY, {gateway_nats_pool, failure_counts}).
+-define(SUBSCRIBE_RETRY_BASE_MS, 250).
+-define(SUBSCRIBE_RETRY_MAX_MS, 5000).
+-define(SUBSCRIBE_TIMEOUT_MS, 5000).
 
 -spec get_pool_conn() -> {ok, nats:conn()} | {error, no_connection}.
 get_pool_conn() ->
@@ -134,17 +141,37 @@ address_family(Host) ->
 handle_conn_down(
     Idx,
     Conn,
-    PoolSize,
-    #{slots := Slots, subs := Subs, monitors := Monitors} = State
+    _PoolSize,
+    #{slots := Slots, subs := Subs, monitors := Monitors, connecting := Connecting} = State
 ) ->
     logger:warning("Gateway NATS pool slot connection lost, reconnecting", #{slot => Idx}),
     ignore_disconnect(Conn),
+    cancel_entry_timer(maps:get(Idx, Connecting, undefined)),
     CleanMonitors = maps:filter(fun(_Ref, SlotIdx) -> SlotIdx =/= Idx end, Monitors),
-    NewSlots = Slots#{Idx => undefined},
-    NewSubs = maps:remove(Idx, Subs),
-    update_persistent_term(NewSlots, PoolSize),
+    NewState = State#{
+        slots => Slots#{Idx => undefined},
+        subs => maps:remove(Idx, Subs),
+        monitors => CleanMonitors,
+        connecting => maps:remove(Idx, Connecting)
+    },
+    publish_ready_slots(NewState),
     schedule_reconnect(Idx, self()),
-    State#{slots => NewSlots, subs => NewSubs, monitors => CleanMonitors}.
+    NewState.
+
+-spec cancel_entry_timer(term()) -> ok.
+cancel_entry_timer(#{timer := TimerRef}) when is_reference(TimerRef) ->
+    _ = erlang:cancel_timer(TimerRef, [{async, true}, {info, false}]),
+    ok;
+cancel_entry_timer(_) ->
+    ok.
+
+-spec publish_ready_slots(map()) -> ok.
+publish_ready_slots(#{slots := Slots, connecting := Connecting, pool_size := PoolSize}) ->
+    Ready = maps:filter(
+        fun(Idx, Conn) -> Conn =/= undefined andalso not maps:is_key(Idx, Connecting) end,
+        Slots
+    ),
+    update_persistent_term(Ready, PoolSize).
 
 -spec find_slot_by_conn(nats:conn(), map()) -> non_neg_integer() | undefined.
 find_slot_by_conn(Conn, #{slots := Slots}) ->
@@ -206,37 +233,84 @@ subscribe_slot(Idx, Conn, #{subs := Subs} = State) ->
 subscribe_new_slot(Idx, Conn, Subs, State) ->
     Role = fluxer_gateway_sup:current_role(),
     Subjects = gateway_nats_rpc_handler:rpc_subjects_for_role(Role),
-    Sids = subscribe_slot_subjects(Idx, Conn, Role, Subjects),
-    case Sids of
-        [] -> State;
-        _ -> State#{subs => Subs#{Idx => Sids}}
+    Results = [subscribe_slot_subject(Idx, Conn, Role, Subject) || Subject <- Subjects],
+    Sids = [Sid || {ok, Sid} <- Results],
+    case length(Sids) =:= length(Subjects) of
+        true when Sids =:= [] ->
+            State;
+        true ->
+            State#{subs => Subs#{Idx => Sids}, sub_failures => clear_sub_failures(Idx, State)};
+        false ->
+            unsubscribe_slot_sids(Conn, Sids),
+            schedule_slot_resubscribe(Idx, State)
     end.
 
--spec subscribe_slot_subjects(non_neg_integer(), nats:conn(), atom(), [binary()]) -> [term()].
-subscribe_slot_subjects(Idx, Conn, Role, Subjects) ->
-    lists:filtermap(
-        fun(Subject) ->
-            subscribe_slot_subject(Idx, Conn, Role, Subject)
-        end,
-        Subjects
-    ).
-
 -spec subscribe_slot_subject(non_neg_integer(), nats:conn(), atom(), binary()) ->
-    {true, term()} | false.
+    {ok, nats:sid()} | {error, term()}.
 subscribe_slot_subject(Idx, Conn, Role, Subject) ->
-    case nats:sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
+    case guarded_sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
         {ok, Sid} ->
             logger:info(
                 "Gateway NATS pool slot ~p subscribed to ~s (role=~p)",
                 [Idx, Subject, Role]
             ),
-            {true, Sid};
+            {ok, Sid};
         {error, Reason} ->
             logger:error(
                 "Gateway NATS pool slot ~p failed to subscribe to ~s: ~p",
                 [Idx, Subject, Reason]
             ),
-            false
+            {error, Reason}
+    end.
+
+-spec clear_sub_failures(non_neg_integer(), map()) -> map().
+clear_sub_failures(Idx, State) ->
+    maps:remove(Idx, maps:get(sub_failures, State, #{})).
+
+-spec schedule_slot_resubscribe(non_neg_integer(), map()) -> map().
+schedule_slot_resubscribe(Idx, State) ->
+    Failures = maps:get(sub_failures, State, #{}),
+    Count = maps:get(Idx, Failures, 0) + 1,
+    Delay = subscribe_retry_delay(Count),
+    logger:warning("Gateway NATS pool slot will retry its subscriptions", #{
+        slot => Idx, attempt => Count, delay_ms => Delay
+    }),
+    erlang:send_after(Delay, self(), {resubscribe_slot, Idx}),
+    State#{sub_failures => Failures#{Idx => Count}}.
+
+-spec subscribe_retry_delay(term()) -> pos_integer().
+subscribe_retry_delay(Failures) when is_integer(Failures), Failures > 5 ->
+    ?SUBSCRIBE_RETRY_MAX_MS;
+subscribe_retry_delay(Failures) when is_integer(Failures), Failures > 0 ->
+    min(?SUBSCRIBE_RETRY_MAX_MS, ?SUBSCRIBE_RETRY_BASE_MS bsl (Failures - 1));
+subscribe_retry_delay(_Failures) ->
+    ?SUBSCRIBE_RETRY_BASE_MS.
+
+-spec guarded_sub(nats:conn(), binary(), map()) -> {ok, nats:sid()} | {error, term()}.
+guarded_sub(Conn, Subject, Opts) ->
+    Guard = spawn(fun() -> disconnect_unless_done(Conn) end),
+    try nats:sub(Conn, Subject, Opts) of
+        Result -> Result
+    catch
+        exit:Reason -> {error, {exit, Reason}}
+    after
+        Guard ! done
+    end.
+
+-spec disconnect_unless_done(nats:conn()) -> ok.
+disconnect_unless_done(Conn) ->
+    receive
+        done -> ok
+    after ?SUBSCRIBE_TIMEOUT_MS ->
+        logger:warning("Gateway NATS subscribe did not finish in time, closing the connection"),
+        ignore_disconnect(Conn)
+    end.
+
+-spec conn_ready(nats:conn()) -> boolean().
+conn_ready(Conn) ->
+    case nats:is_ready(Conn) of
+        true -> true;
+        _ -> false
     end.
 
 -spec unsubscribe_slot_sids(nats:conn(), term()) -> ok.

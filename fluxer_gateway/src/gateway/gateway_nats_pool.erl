@@ -5,6 +5,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, pub/2, pub_reply/2, reply_publish_failures/0, get_pool_status/0]).
+-export([has_ready_connection/0]).
 -export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -18,7 +19,8 @@
         handle_connect_ok_entry/5,
         accept_connect_ok/4,
         ignore_stale_connect_ok/2,
-        handle_ready/4,
+        handle_ready/2,
+        accept_connect_timeout/3,
         handle_conn_event_down/2,
         handle_slot_monitor_down/5,
         conn_from_term/1
@@ -79,6 +81,13 @@ reply_failure_counter() ->
             Ref
     end.
 
+-spec has_ready_connection() -> boolean().
+has_ready_connection() ->
+    case gateway_nats_pool_conn:get_pool_conn() of
+        {ok, _Conn} -> true;
+        {error, _Reason} -> false
+    end.
+
 -spec get_pool_status() -> map().
 get_pool_status() ->
     gen_server:call(?MODULE, get_pool_status).
@@ -107,6 +116,7 @@ init([]) ->
         connecting => #{},
         rpc_enabled => gateway_nats_pool_conn:nats_rpc_enabled(),
         subs => #{},
+        sub_failures => #{},
         handler_count => 0,
         handler_refs => #{},
         max_handlers => gateway_nats_pool_conn:max_handlers()
@@ -144,8 +154,10 @@ handle_info({reconnect_slot, Idx}, #{slots := Slots} = State) when
     is_integer(Idx), Idx >= 0
 ->
     {noreply, reconnect_slot(Idx, Slots, State)};
-handle_info({Conn, ready}, #{rpc_enabled := RpcEnabled, slots := Slots} = State) ->
-    {noreply, handle_ready(conn_from_term(Conn), RpcEnabled, Slots, State)};
+handle_info({Conn, ready}, State) ->
+    {noreply, handle_ready(conn_from_term(Conn), State)};
+handle_info({resubscribe_slot, Idx}, State) when is_integer(Idx), Idx >= 0 ->
+    {noreply, resubscribe_slot(Idx, State)};
 handle_info({_Conn, _Sid, {msg, Subject, Payload, MsgOpts}}, State) when
     is_binary(Subject), is_binary(Payload), is_map(MsgOpts)
 ->
@@ -229,8 +241,17 @@ enable_subscriptions(Slots, State) ->
 -spec enable_slot_subscription(non_neg_integer(), nats:conn() | undefined, map()) -> map().
 enable_slot_subscription(_Idx, undefined, State) ->
     State;
-enable_slot_subscription(Idx, Conn, State) ->
-    gateway_nats_pool_conn:subscribe_slot(Idx, Conn, State).
+enable_slot_subscription(Idx, Conn, #{connecting := Connecting} = State) ->
+    case maps:is_key(Idx, Connecting) of
+        true -> State;
+        false -> gateway_nats_pool_conn:subscribe_slot(Idx, Conn, State)
+    end.
+
+-spec resubscribe_slot(non_neg_integer(), map()) -> map().
+resubscribe_slot(_Idx, #{rpc_enabled := false} = State) ->
+    State;
+resubscribe_slot(Idx, #{slots := Slots} = State) ->
+    enable_slot_subscription(Idx, maps:get(Idx, Slots, undefined), State).
 
 -spec disable_subscriptions(map(), map()) -> ok.
 disable_subscriptions(Slots, Subs) ->
@@ -273,25 +294,34 @@ handle_connect_ok_entry(Idx, Pid, Entry, Conn, State) ->
 
 -spec accept_connect_ok(non_neg_integer(), map(), nats:conn(), map()) -> map().
 accept_connect_ok(Idx, Entry, Conn, State) ->
-    #{
-        connecting := Connecting,
-        slots := Slots,
-        monitors := Monitors,
-        pool_size := PoolSize
-    } = State,
-    cancel_connect_timer(Entry),
+    #{connecting := Connecting, slots := Slots, monitors := Monitors} = State,
     cleanup_old_conn(maps:get(Idx, Slots, undefined)),
     CleanMon = remove_slot_monitors(Idx, Monitors),
     MRef = nats:monitor(Conn),
-    NewSlots = Slots#{Idx => Conn},
-    gateway_nats_pool_conn:update_persistent_term(NewSlots, PoolSize),
     gateway_nats_pool_conn:reset_failure_count(Idx),
-    logger:info("Gateway NATS pool slot connected", #{slot => Idx}),
-    State#{
-        slots => NewSlots,
+    NewState = State#{
+        slots => Slots#{Idx => Conn},
         monitors => CleanMon#{MRef => Idx},
-        connecting => maps:remove(Idx, Connecting)
-    }.
+        connecting => Connecting#{Idx => connecting_entry_with_conn(Entry, Conn)}
+    },
+    case gateway_nats_pool_conn:conn_ready(Conn) of
+        true -> mark_slot_ready(Idx, NewState);
+        false -> NewState
+    end.
+
+-spec connecting_entry_with_conn(term(), nats:conn()) -> map().
+connecting_entry_with_conn(Entry, Conn) when is_map(Entry) ->
+    Entry#{conn => Conn};
+connecting_entry_with_conn(Pid, Conn) ->
+    #{pid => Pid, conn => Conn}.
+
+-spec mark_slot_ready(non_neg_integer(), map()) -> map().
+mark_slot_ready(Idx, #{connecting := Connecting} = State) ->
+    cancel_connect_timer(maps:get(Idx, Connecting, undefined)),
+    ReadyState = State#{connecting => maps:remove(Idx, Connecting)},
+    gateway_nats_pool_conn:publish_ready_slots(ReadyState),
+    logger:info("Gateway NATS pool slot connected", #{slot => Idx}),
+    resubscribe_slot(Idx, ReadyState).
 
 -spec ignore_stale_connect_ok(nats:conn(), map()) -> map().
 ignore_stale_connect_ok(Conn, State) ->
@@ -331,20 +361,12 @@ accept_connect_error(Idx, Entry, Reason, #{connecting := Connecting} = State) ->
     gateway_nats_pool_conn:schedule_reconnect(Idx, self()),
     State#{connecting => maps:remove(Idx, Connecting)}.
 
--spec handle_ready(nats:conn(), boolean(), map(), map()) -> map().
-handle_ready(_Conn, false, _Slots, State) ->
-    State;
-handle_ready(Conn, true, Slots, State) ->
+-spec handle_ready(nats:conn(), map()) -> map().
+handle_ready(Conn, #{connecting := Connecting} = State) ->
     case gateway_nats_pool_conn:find_slot_by_conn(Conn, State) of
         undefined -> State;
-        Idx -> handle_ready_slot(Idx, Conn, Slots, State)
-    end.
-
--spec handle_ready_slot(non_neg_integer(), nats:conn(), map(), map()) -> map().
-handle_ready_slot(Idx, Conn, Slots, State) ->
-    case maps:find(Idx, Slots) of
-        {ok, Conn} -> gateway_nats_pool_conn:subscribe_slot(Idx, Conn, State);
-        _ -> State
+        Idx when is_map_key(Idx, Connecting) -> mark_slot_ready(Idx, State);
+        Idx -> resubscribe_slot(Idx, State)
     end.
 
 -spec handle_rpc_msg(binary(), binary(), map(), map()) -> map().
@@ -372,7 +394,7 @@ dispatch_rpc_msg(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State) ->
         undefined ->
             State;
         ReplyTo when HC >= MaxH ->
-            _ = send_overloaded(ReplyTo),
+            send_overloaded_async(ReplyTo),
             State;
         ReplyTo ->
             {_Pid, MRef} = spawn_rpc_handler(Subject, Payload, ReplyTo),
@@ -384,6 +406,11 @@ spawn_rpc_handler(Subject, Payload, ReplyTo) ->
     spawn_monitor(fun() ->
         gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo)
     end).
+
+-spec send_overloaded_async(binary()) -> ok.
+send_overloaded_async(ReplyTo) ->
+    _ = spawn(fun() -> send_overloaded(ReplyTo) end),
+    ok.
 
 -spec send_overloaded(binary()) -> ok | {error, term()}.
 send_overloaded(ReplyTo) ->
@@ -474,6 +501,9 @@ handle_legacy_connect_timeout(Idx, #{connecting := Connecting} = State) ->
     end.
 
 -spec accept_connect_timeout(non_neg_integer(), term(), map()) -> map().
+accept_connect_timeout(Idx, #{conn := Conn}, #{pool_size := PoolSize} = State) ->
+    logger:warning("Gateway NATS pool slot connection did not become ready", #{slot => Idx}),
+    gateway_nats_pool_conn:handle_conn_down(Idx, conn_from_term(Conn), PoolSize, State);
 accept_connect_timeout(Idx, Entry, #{connecting := Connecting} = State) ->
     gateway_nats_pool_conn:maybe_kill_connect_pid(connecting_entry_pid(Entry)),
     logger:warning("Gateway NATS pool slot connect attempt timed out", #{slot => Idx}),

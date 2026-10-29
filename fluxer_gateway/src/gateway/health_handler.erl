@@ -41,14 +41,16 @@ readiness_response(Req) ->
         false ->
             {403, <<"FORBIDDEN">>};
         true ->
-            readiness_status(gateway_node_router:is_ready())
+            readiness_status(gateway_node_router:is_ready(), gateway_nats_rpc:nats_ready())
     end.
 
--spec readiness_status(boolean()) -> {200 | 503, binary()}.
-readiness_status(true) ->
-    {200, <<"OK">>};
-readiness_status(false) ->
-    {503, <<"DRAINING">>}.
+-spec readiness_status(boolean(), boolean()) -> {200 | 503, binary()}.
+readiness_status(false, _NatsReady) ->
+    {503, <<"DRAINING">>};
+readiness_status(true, false) ->
+    {503, <<"NATS_UNAVAILABLE">>};
+readiness_status(true, true) ->
+    {200, <<"OK">>}.
 
 -spec drain_response(cowboy_req:req()) -> {200 | 403, binary()}.
 drain_response(Req) ->

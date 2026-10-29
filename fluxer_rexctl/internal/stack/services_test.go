@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"go.yaml.in/yaml/v4"
 )
 
 func TestPortsDefaults(t *testing.T) {
@@ -59,5 +61,39 @@ func TestComposeVoicePortsShareOneVar(t *testing.T) {
 	}
 	if !strings.Contains(s, "port: 7880") {
 		t.Error("docker-compose.yml should keep the livekit signal port 7880 fixed and internal")
+	}
+}
+
+func TestNatsClientsWaitForHealthyNats(t *testing.T) {
+	data, err := ReadFile(Embedded(), "docker-compose.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var compose struct {
+		Services map[string]struct {
+			DependsOn map[string]struct {
+				Condition string `yaml:"condition"`
+			} `yaml:"depends_on"`
+			Healthcheck struct {
+				Test []string `yaml:"test"`
+			} `yaml:"healthcheck"`
+		} `yaml:"services"`
+	}
+	if err := yaml.Unmarshal(data, &compose); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"api", "worker", "gateway", "push", "media-proxy", "snowflakes", "users", "gifs", "messages", "unfurl"} {
+		service, ok := compose.Services[name]
+		if !ok {
+			t.Errorf("docker-compose.yml has no %s service", name)
+			continue
+		}
+		if got := service.DependsOn["nats"].Condition; got != "service_healthy" {
+			t.Errorf("%s depends on nats with condition %q, want service_healthy", name, got)
+		}
+	}
+	check := strings.Join(compose.Services["gateway"].Healthcheck.Test, " ")
+	if !strings.Contains(check, "GET /_health/ready ") {
+		t.Errorf("gateway healthcheck %q should ask /_health/ready, which fails while the gateway's NATS subscriptions are missing", check)
 	}
 }

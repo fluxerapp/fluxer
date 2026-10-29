@@ -157,56 +157,54 @@ connect_and_notify(Host, Port, Opts, Parent) ->
         end,
     ok.
 
--spec do_subscribe(map()) -> map().
-do_subscribe(#{conn := Conn, rpc_enabled := RpcEnabled} = State) when
+-spec do_subscribe(map()) -> {map(), boolean()}.
+do_subscribe(#{conn := Conn, ready := true, rpc_enabled := true} = State) when
     Conn =/= undefined
 ->
-    case RpcEnabled of
-        false ->
-            logger:info(
-                "Gateway NATS RPC connected but subscription disabled"
-                " (FLUXER_GATEWAY_NATS_RPC_ENABLED=false)"
-            ),
-            State;
-        _ ->
-            subscribe_for_role(Conn, State)
-    end;
+    subscribe_for_role(Conn, State);
+do_subscribe(#{conn := Conn, ready := true} = State) when Conn =/= undefined ->
+    logger:info(
+        "Gateway NATS RPC connected but subscription disabled"
+        " (FLUXER_GATEWAY_NATS_RPC_ENABLED=false)"
+    ),
+    {State, true};
 do_subscribe(State) ->
-    State.
+    {State, false}.
 
--spec subscribe_for_role(nats:conn(), map()) -> map().
+-spec subscribe_for_role(nats:conn(), map()) -> {map(), boolean()}.
 subscribe_for_role(Conn, State) ->
     Role = fluxer_gateway_sup:current_role(),
-    Subjects = rpc_subjects_for_role(Role),
-    case Subjects of
+    Subs = maps:get(rpc_subs, State, #{}),
+    case [Subject || Subject <- rpc_subjects_for_role(Role), not maps:is_key(Subject, Subs)] of
         [] ->
-            logger:info("Gateway NATS RPC connected but not subscribing", #{role => Role}),
-            State;
-        _ ->
-            Sids = subscribe_subjects(Conn, Role, Subjects),
-            State#{sub => Sids}
+            {State, true};
+        Missing ->
+            NewSubs = subscribe_missing(Conn, Role, Missing, Subs),
+            {
+                State#{rpc_subs => NewSubs},
+                map_size(NewSubs) - map_size(Subs) =:= length(Missing)
+            }
     end.
 
--spec subscribe_subjects(nats:conn(), atom(), [binary()]) -> [term()].
-subscribe_subjects(Conn, Role, Subjects) ->
-    lists:filtermap(
-        fun(Subject) ->
-            subscribe_subject(Conn, Role, Subject)
-        end,
-        Subjects
+-spec subscribe_missing(nats:conn(), atom(), [binary()], map()) -> map().
+subscribe_missing(Conn, Role, Missing, Subs) ->
+    lists:foldl(
+        fun(Subject, Acc) -> subscribe_subject(Conn, Role, Subject, Acc) end,
+        Subs,
+        Missing
     ).
 
--spec subscribe_subject(nats:conn(), atom(), binary()) -> {true, term()} | false.
-subscribe_subject(Conn, Role, Subject) ->
-    case nats:sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
+-spec subscribe_subject(nats:conn(), atom(), binary(), map()) -> map().
+subscribe_subject(Conn, Role, Subject, Subs) ->
+    case gateway_nats_pool_conn:guarded_sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
         {ok, Sid} ->
             logger:info("Gateway NATS RPC subscribed", #{subject => Subject, role => Role}),
-            {true, Sid};
+            Subs#{Subject => Sid};
         {error, Reason} ->
             logger:error("Gateway NATS RPC failed to subscribe", #{
                 subject => Subject, reason => Reason
             }),
-            false
+            Subs
     end.
 
 -spec schedule_reconnect(map()) -> map().
