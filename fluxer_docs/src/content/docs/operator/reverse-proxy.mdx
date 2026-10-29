@@ -119,6 +119,18 @@ If Cloudflare proxies your domain, change these settings in the Cloudflare dashb
 - Turn Bot Fight Mode off and don't add challenges for `/api/`, `/gateway` or `/livekit/`. The desktop and mobile apps can't solve a challenge.
 - Set the SSL/TLS encryption mode to "Full (strict)".
 
+### Purging deleted media
+
+Cloudflare keeps serving cached copies of media after someone deletes it, until the cached copy expires. Fluxer can ask Cloudflare to purge those copies straight away. Create an API token with the Zone Cache Purge permission for your zone, find the zone ID on the zone's overview page, and set these variables.
+
+```bash
+rexctl config set FLUXER_CACHE_PURGE_ADAPTER http
+rexctl config set FLUXER_CACHE_PURGE_HTTP_ENDPOINT https://api.cloudflare.com/client/v4/zones/<zone id>/purge_cache
+rexctl config set FLUXER_CACHE_PURGE_HTTP_TOKEN <api token>
+```
+
+Fluxer sends at most 100 prefixes per request, which is the most Cloudflare accepts. See [Environment variables](/operator/environment/#media) for the other cache purge settings.
+
 ## Voice and video
 
 Call audio and video don't go through your proxy. They connect directly to the machine on TCP port 7881 and UDP port 7882, and both ports need to be open. A tunnel such as Cloudflare Tunnel can't forward them, and an instance you only serve through a tunnel has no voice or video calls.

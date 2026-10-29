@@ -128,6 +128,21 @@ describe('processCachePurgeQueue', () => {
 		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
 	});
 
+	it('keeps every request within the Cloudflare limit of 100 prefixes', async () => {
+		const {kvClient, queue} = createHarness();
+		const urls = Array.from({length: 150}, (_, index) => `${MEDIA}/attachments/1/${index}/photo.png`);
+		await queue.addUrls(urls);
+		const requests = recordPurges((body) => new HttpResponse(null, {status: body.prefixes.length > 100 ? 400 : 200}));
+
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
+		await kvClient.del(BUDGET_KEY);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
+
+		expect(requests.map((request) => request.body.prefixes.length)).toEqual([100, 50]);
+		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
+	});
+
 	it('never queues a URL that is not a media CDN object', async () => {
 		const {kvClient, queue} = createHarness();
 		await queue.addUrls(['https://elsewhere.test/avatars/1/b35cc3d3', `${MEDIA}/avatars`, 'not-a-url']);
