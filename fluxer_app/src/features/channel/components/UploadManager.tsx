@@ -10,6 +10,7 @@ import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
+import {countOversizedAttachments} from '@app/features/messaging/utils/AttachmentUtils';
 import {isDialogPasteTarget} from '@app/features/messaging/utils/TextInputEditUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -84,8 +85,7 @@ export const UploadManager = observer(({channel, canAttachFiles, canSendMessages
 					);
 					return;
 				}
-				const maxFileSize = Users.getCurrentUser()?.maxAttachmentFileSize ?? 25 * 1024 * 1024;
-				const oversizedFileCount = files.filter((file) => file.size > maxFileSize).length;
+				const oversizedFileCount = await countOversizedAttachments(files);
 				if (oversizedFileCount > 0) {
 					ModalCommands.push(
 						modal(() => (
@@ -140,8 +140,7 @@ export const UploadManager = observer(({channel, canAttachFiles, canSendMessages
 					);
 					return;
 				}
-				const maxFileSize = Users.getCurrentUser()?.maxAttachmentFileSize ?? 25 * 1024 * 1024;
-				const oversizedFileCount = files.filter((file) => file.size > maxFileSize).length;
+				const oversizedFileCount = await countOversizedAttachments(files);
 				if (oversizedFileCount > 0) {
 					ModalCommands.push(
 						modal(() => (

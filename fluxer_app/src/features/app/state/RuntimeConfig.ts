@@ -684,6 +684,7 @@ class RuntimeConfig {
 			appPublic: resolution.snapshot.appPublic,
 			notice: resolution.snapshot.notice,
 			guildBadges: resolution.snapshot.guildBadges,
+			limits: resolution.snapshot.limits,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
 		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
