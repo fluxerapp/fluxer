@@ -39,6 +39,7 @@ import {
 } from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import {
 	checkEmojiAvailability,
+	checkRoleIconEmojiAvailability,
 	shouldShowEmojiPremiumUpsell,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 
@@ -60,7 +61,15 @@ const NO_EMOJIS_MATCH_YOUR_SEARCH_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the channel and chat emoji picker.',
 });
 export const EmojiPicker = observer(
-	({channelId, handleSelect}: {channelId?: string; handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void}) => {
+	({
+		channelId,
+		roleIconGuildId,
+		handleSelect,
+	}: {
+		channelId?: string;
+		roleIconGuildId?: string;
+		handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
+	}) => {
 		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const headerContext = useContext(ExpressionPickerHeaderContext);
 		if (!headerContext) {
@@ -85,8 +94,11 @@ export const EmojiPicker = observer(
 		const skinTone = Emoji.skinTone;
 		const shouldAnimateEmoji = useShouldAnimate({kind: 'emoji'});
 		const getEmojiAvailability = useCallback(
-			(emoji: FlatEmoji) => checkEmojiAvailability(i18n, emoji, channel),
-			[channel, i18n, permissionVersion],
+			(emoji: FlatEmoji) =>
+				roleIconGuildId
+					? checkRoleIconEmojiAvailability(emoji, roleIconGuildId)
+					: checkEmojiAvailability(i18n, emoji, channel),
+			[channel, i18n, permissionVersion, roleIconGuildId],
 		);
 		const getEmojiGuildId = useCallback((emoji: FlatEmoji) => emoji.guildId, []);
 		const renderEmojiPreviewItem = useCallback(
@@ -101,8 +113,12 @@ export const EmojiPicker = observer(
 		}, []);
 		useSearchInputAutofocus(searchInputRef);
 		const searchItems = useMemo(
-			() => Emoji.search(channel, normalizedSearchTerm).slice(),
-			[channel, normalizedSearchTerm, emojiDataVersion],
+			() =>
+				(roleIconGuildId
+					? Emoji.searchForRoleIcon(roleIconGuildId, normalizedSearchTerm)
+					: Emoji.search(channel, normalizedSearchTerm)
+				).slice(),
+			[channel, normalizedSearchTerm, emojiDataVersion, roleIconGuildId],
 		);
 		const searchUpsell = usePremiumUpsellData({
 			items: searchItems,
@@ -110,7 +126,10 @@ export const EmojiPicker = observer(
 			getGuildId: getEmojiGuildId,
 		});
 		const renderedEmojis = searchUpsell.accessibleItems;
-		const allItems = useMemo(() => Emoji.getAllEmojis(channel).slice(), [channel, emojiDataVersion]);
+		const allItems = useMemo(
+			() => (roleIconGuildId ? Emoji.getAllEmojisForRoleIcon(roleIconGuildId) : Emoji.getAllEmojis(channel)).slice(),
+			[channel, emojiDataVersion, roleIconGuildId],
+		);
 		const allUpsell = usePremiumUpsellData({
 			items: allItems,
 			getAvailability: getEmojiAvailability,
@@ -198,14 +217,15 @@ export const EmojiPicker = observer(
 
 		const handleEmojiSelect = useCallback(
 			(emoji: FlatEmoji, shiftKey?: boolean) => {
-				const availability = checkEmojiAvailability(i18n, emoji, channel);
-				if (!availability.canUse) {
+				if (!getEmojiAvailability(emoji).canUse) {
 					return;
 				}
-				EmojiPickerState.trackEmoji(emoji);
+				if (!roleIconGuildId) {
+					EmojiPickerState.trackEmoji(emoji);
+				}
 				handleSelect(emoji, shiftKey);
 			},
-			[channel, handleSelect, i18n],
+			[getEmojiAvailability, handleSelect, roleIconGuildId],
 		);
 
 		const handleSelectEmoji = useCallback(
@@ -279,7 +299,7 @@ export const EmojiPicker = observer(
 													handleHover={handleHover}
 													handleSelect={handleEmojiSelect}
 													skinTone={skinTone}
-													channel={channel}
+													getAvailability={getEmojiAvailability}
 													allowAnimation={shouldAnimateEmoji}
 													gridColumns={gridColumns}
 													cellTrackWidth={EMOJI_GRID_TRACK_WIDTH}
@@ -309,7 +329,9 @@ export const EmojiPicker = observer(
 							)}
 						</div>
 					</div>
-					<EmojiPickerInspector hoveredEmoji={hoveredEmoji} data-flx="channel.emoji-picker.emoji-picker-inspector" />
+					{!roleIconGuildId && (
+						<EmojiPickerInspector hoveredEmoji={hoveredEmoji} data-flx="channel.emoji-picker.emoji-picker-inspector" />
+					)}
 				</div>
 				<EmojiPickerCategoryList
 					customEmojisByGuildId={customEmojisByGuildId}

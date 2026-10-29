@@ -1581,6 +1581,11 @@ msgstr "{fifteenMinutes} นาที"
 msgid "{folderName} folder"
 msgstr "โฟลเดอร์ {folderName}"
 
+#. Helper line under the role icon buttons in the community role editor. formats is a list of image types such as PNG, JPEG, WebP. minimumSize is an image size such as 32×32px. maxSize is a file size such as 256 KB.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "{formats}. At least {minimumSize}, up to {maxSize}."
+msgstr "{formats} ขนาดอย่างน้อย {minimumSize} ไม่เกิน {maxSize}"
+
 #. Helper text in an asset upload source modal. formats is a formatted list of accepted file types; maxSize is a formatted file size; minimumSize is a minimum image size; aspectRatio is a formatted aspect ratio.
 #: src/features/expressions/utils/AssetUploadHintCopy.ts
 msgid "{formats}. Max {maxSize}. Minimum: {minimumSize} ({aspectRatio})"
@@ -4776,7 +4781,9 @@ msgid "Animated icons are not supported when creating a new community. Use a sta
 msgstr "ไม่รองรับไอคอนแบบเคลื่อนไหวเมื่อสร้างคอมมูนิตี้ใหม่ ใช้ภาพนิ่งแทน"
 
 #. Description text in the edit group modal.
+#. Error under the role icon buttons when the picked image is animated.
 #: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "Animated icons are not supported. Use a static image."
 msgstr "ไม่รองรับไอคอนแบบเคลื่อนไหว ใช้ภาพนิ่งแทน"
 
@@ -8375,6 +8382,11 @@ msgstr "เลือกพื้นหลัง"
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "เลือก guild_id หรือ channel_id อย่างใดอย่างหนึ่ง ไม่ใช่ทั้งสองอย่าง"
 
+#. Button in the role icon field that opens the emoji picker. Keep it short.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Choose emoji"
+msgstr "เลือกอิโมจิ"
+
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx
 msgid "Choose File, then Add to Dock."
@@ -11789,6 +11801,11 @@ msgstr "ตัวอย่างการครอบตัด"
 msgid "Crop profile banner"
 msgstr "ครอบตัดแบนเนอร์โปรไฟล์"
 
+#. Modal title for cropping a role icon before upload.
+#: src/features/expressions/components/modals/AssetCropModal.tsx
+msgid "Crop role icon"
+msgstr "ครอบตัดไอคอนบทบาท"
+
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx
@@ -11872,6 +11889,16 @@ msgstr "ตรงปัจจุบัน"
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
 msgstr "Ping ปัจจุบัน:"
+
+#. Accessible label of the role icon tile in the community role editor when the icon is an emoji, also read out after an emoji is picked. emojiName is the emoji short name such as :shield:. Clicking the tile opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Current role icon, {emojiName}"
+msgstr "ไอคอนบทบาทปัจจุบัน {emojiName}"
+
+#. Accessible label of the role icon tile in the community role editor when the icon is an uploaded image, also read out after an image is added. Clicking the tile opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Current role icon, uploaded image"
+msgstr "ไอคอนบทบาทปัจจุบัน รูปภาพที่อัปโหลด"
 
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Current session"
@@ -14191,6 +14218,11 @@ msgstr "ลากเพื่อปรับตำแหน่งไอคอน
 #: src/features/expressions/components/modals/AssetCropModal.tsx
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "ลากเพื่อปรับตำแหน่งพื้นหลังคำเชิญของคุณ และใช้ล้อเลื่อนเมาส์หรือบีบนิ้วเพื่อซูม ขนาดขั้นต่ำที่แนะนำคือ {minimumWidth}×{minimumHeight} พิกเซล (16:9)"
+
+#. Description in the role icon crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.
+#: src/features/expressions/components/modals/AssetCropModal.tsx
+msgid "Drag to reposition your role icon and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels."
+msgstr "ลากเพื่อปรับตำแหน่งไอคอนบทบาท และใช้ล้อเลื่อนเมาส์หรือบีบนิ้วเพื่อซูม ขนาดขั้นต่ำที่แนะนำคือ {minimumWidth}×{minimumHeight} พิกเซล"
 
 #. Desktop setting description under the dark taskbar badge toggle on Windows.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
@@ -29240,6 +29272,7 @@ msgstr "นำออกจาก GIF รายการโปรด (เฉพ�
 
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "Remove icon"
 msgstr "ลบไอคอน"
 
@@ -30576,6 +30609,16 @@ msgstr "ลบบทบาทแล้ว"
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx
 msgid "Role deleted successfully"
 msgstr "ลบบทบาทสำเร็จแล้ว"
+
+#. Label of the role icon field in the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Role icon"
+msgstr "ไอคอนบทบาท"
+
+#. Accessible label read by screen readers for the small icon next to a member name. roleName is the name of the community role the icon belongs to.
+#: src/features/guild/components/RoleIcon.tsx
+msgid "Role icon, {roleName}"
+msgstr "ไอคอนบทบาท {roleName}"
 
 #. Label of the role name input in the community role editor.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -37218,8 +37261,10 @@ msgstr "ไฟล์นี้มีขนาด {fileSize} ซึ่งเกิ
 msgid "This file is larger than {size}. Choose a smaller one."
 msgstr "ไฟล์นี้ใหญ่กว่า {size} โปรดเลือกไฟล์ที่เล็กกว่านี้"
 
+#. Error under the role icon buttons when the picked file has an unsupported type. formats is a list such as PNG, JPEG, WebP.
 #. Error when a branding image has an unsupported file type in the setup wizard. formats is a list such as PNG, JPEG, WebP.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "This file type is not supported. Supported types are {formats}."
 msgstr "ไม่รองรับไฟล์ประเภทนี้ ประเภทที่รองรับคือ {formats}"
 
@@ -37280,6 +37325,11 @@ msgstr "รหัสส่งต่อนี้หมดอายุแล้ว
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "This image could not be loaded after saving. Press \"Continue\" to try again, or choose a different file."
 msgstr "ไม่สามารถโหลดรูปภาพนี้หลังจากบันทึกได้ กด \"ดำเนินการต่อ\" เพื่อลองใหม่ หรือเลือกไฟล์อื่น"
+
+#. Error under the role icon buttons when the picked image or emoji could not be used.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "This image could not be loaded. Try another one."
+msgstr "โหลดรูปภาพนี้ไม่ได้ ลองใช้รูปอื่น"
 
 #. Error modal body shown when an animated image fails to decode during cropping.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
@@ -37380,6 +37430,8 @@ msgid "This is disabled"
 msgstr "ปิดใช้งานอยู่"
 
 #. Label in the messages tab.
+#. Sample message text in the role icon preview of the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "This is how messages appear"
 msgstr "ลักษณะการแสดงผลของข้อความ"
@@ -39917,6 +39969,11 @@ msgstr "อัปโหลดเสียงที่คุณต้องกา
 msgid "Upload a file"
 msgstr "อัปโหลดไฟล์"
 
+#. Helper text under the role icon label in the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Upload an image or pick an emoji. Members get the icon of their highest role that has one."
+msgstr "อัปโหลดรูปภาพหรือเลือกอิโมจิ ข้างชื่อสมาชิกจะแสดงไอคอนของบทบาทสูงสุดที่มีไอคอน"
+
 #: src/features/theme_settings/components/AssetsSection.tsx
 msgid "Upload assets"
 msgstr "อัปโหลดไฟล์ประกอบ"
@@ -39978,6 +40035,7 @@ msgid "Upload icon"
 msgstr "อัปโหลดไอคอน"
 
 #. Button label for uploading a webhook avatar image.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 #: src/features/webhook/components/WebhookListItem.tsx
 msgid "Upload image"
 msgstr "อัปโหลดรูปภาพ"
@@ -40001,6 +40059,11 @@ msgstr "อัปโหลดอิโมจิและสติกเกอร
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx
 msgid "Upload preview frames for screen shares."
 msgstr "อัปโหลดเฟรมตัวอย่างสำหรับการแชร์หน้าจอ"
+
+#. Accessible label of the empty role icon tile in the community role editor. Clicking it opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Upload role icon"
+msgstr "อัปโหลดไอคอนบทบาท"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts

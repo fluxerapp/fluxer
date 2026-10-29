@@ -27,8 +27,9 @@ type AssetType =
 	| 'embed_splash'
 	| 'branding'
 	| 'branding_backdrop'
-	| 'custom_badge';
-type EntityType = 'user' | 'guild' | 'guild_member' | 'instance';
+	| 'custom_badge'
+	| 'role_icon';
+type EntityType = 'user' | 'guild' | 'guild_member' | 'instance' | 'role';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	avatar: 'avatars',
@@ -39,6 +40,7 @@ const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	branding: 'branding',
 	branding_backdrop: 'branding-backdrops',
 	custom_badge: 'custom-badges',
+	role_icon: 'role-icons',
 };
 
 function normalizeContentType(contentType: string | null | undefined): string {
@@ -49,6 +51,19 @@ function isSvgMetadata(metadata: MediaProxyMetadataResponse): boolean {
 	const format = metadata.format.toLowerCase();
 	const contentType = normalizeContentType(metadata.content_type);
 	return format === 'svg' || contentType === 'image/svg+xml' || contentType === 'image/svg';
+}
+
+function requireDimensionsWithinPolicy(metadata: MediaProxyMetadataResponse, kind: AssetKind, errorPath: string): void {
+	const dims = getPolicy(kind).dims;
+	if (!dims) return;
+	const {width, height} = metadata;
+	const inRange = (value: number | null | undefined) => value != null && value >= dims.min && value <= dims.max;
+	if (!inRange(width) || !inRange(height)) {
+		throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_DIMENSIONS_OUT_OF_RANGE, {
+			min: dims.min,
+			max: dims.max,
+		});
+	}
 }
 
 export interface PreparedAssetUpload {
@@ -65,6 +80,7 @@ export interface PreparedAssetUpload {
 	format?: string | null;
 	contentType?: string | null;
 	previousReference: QueuedAssetReference | null;
+	newReference: QueuedAssetReference | null;
 	_uploaded: boolean;
 }
 
@@ -105,6 +121,8 @@ export class EntityAssetService {
 				return 'embed_splash';
 			case 'branding_backdrop':
 				return 'sign_in_backdrop';
+			case 'role_icon':
+				return 'role_icon';
 		}
 	}
 
@@ -127,6 +145,7 @@ export class EntityAssetService {
 				newCdnUrl: null,
 				previousCdnUrl,
 				previousReference,
+				newReference: null,
 				_uploaded: false,
 				format: null,
 				contentType: null,
@@ -154,6 +173,7 @@ export class EntityAssetService {
 			newCdnUrl,
 			previousCdnUrl,
 			previousReference,
+			newReference: this.buildQueuedAssetReference(assetType, entityType, entityId, newHash, guildId),
 			height,
 			width,
 			_uploaded: false,
@@ -189,6 +209,49 @@ export class EntityAssetService {
 		return prepared;
 	}
 
+	async prepareAssetCopy(options: {
+		assetType: AssetType;
+		entityType: EntityType;
+		sourceEntityId: bigint;
+		entityId: bigint;
+		guildId?: bigint;
+		hash: string;
+		errorPath: string;
+	}): Promise<PreparedAssetUpload | null> {
+		const {assetType, entityType, sourceEntityId, entityId, guildId, hash, errorPath} = options;
+		const objectName = stripAnimationPrefix(hash);
+		const sourceS3Key = `${this.buildS3KeyBase(assetType, entityType, sourceEntityId, guildId)}/${objectName}`;
+		if ((await this.storageService.getObjectMetadata(Config.s3.buckets.cdn, sourceS3Key)) === null) {
+			Logger.warn({sourceS3Key, assetType, entityType}, 'Asset to copy does not exist, leaving the copy without it');
+			return null;
+		}
+		const s3KeyBase = this.buildS3KeyBase(assetType, entityType, entityId, guildId);
+		const newS3Key = `${s3KeyBase}/${objectName}`;
+		const prepared: PreparedAssetUpload = {
+			newHash: hash,
+			previousHash: null,
+			isAnimated: hash.startsWith('a_'),
+			newS3Key,
+			previousS3Key: null,
+			newCdnUrl: `${Config.endpoints.media}/${s3KeyBase}/${hash}`,
+			previousCdnUrl: null,
+			previousReference: null,
+			newReference: this.buildQueuedAssetReference(assetType, entityType, entityId, hash, guildId),
+			_uploaded: false,
+		};
+		await this.storageService.copyObject({
+			sourceBucket: Config.s3.buckets.cdn,
+			sourceKey: sourceS3Key,
+			destinationBucket: Config.s3.buckets.cdn,
+			destinationKey: newS3Key,
+		});
+		if (!(await this.verifyAssetExistsWithRetry(assetType, entityType, newS3Key))) {
+			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.FAILED_TO_UPLOAD_IMAGE);
+		}
+		prepared._uploaded = true;
+		return prepared;
+	}
+
 	async commitAssetChange(prepared: PreparedAssetUpload): Promise<void> {
 		if (!prepared.previousHash || !prepared.previousS3Key || prepared.newHash === prepared.previousHash) {
 			return;
@@ -203,6 +266,18 @@ export class EntityAssetService {
 			{previousS3Key: prepared.previousS3Key, previousCdnUrl: prepared.previousCdnUrl},
 			'Queued old asset for deferred deletion',
 		);
+	}
+
+	async queueUploadForStaleCheck(prepared: PreparedAssetUpload): Promise<void> {
+		if (!prepared._uploaded || !prepared.newS3Key || !prepared.newReference) {
+			return;
+		}
+		await this.assetDeletionQueue.queueDeletion({
+			s3Key: prepared.newS3Key,
+			cdnUrl: null,
+			reason: 'asset_upload_stale_check',
+			staleReference: prepared.newReference,
+		});
 	}
 
 	async commitAssetChanges(preparedAssets: ReadonlyArray<PreparedAssetUpload | null>): Promise<void> {
@@ -297,10 +372,13 @@ export class EntityAssetService {
 			errorPath,
 			kind,
 			maxSize:
-				kind === 'sign_in_backdrop'
+				kind === 'sign_in_backdrop' || kind === 'role_icon'
 					? getPolicy(kind).maxBytes
 					: resolveAssetSizeLimit(this.limitConfigService, 'avatar_max_size', AVATAR_MAX_SIZE, null, uploader),
 		});
+		if (kind === 'role_icon') {
+			requireDimensionsWithinPolicy(metadata, kind, errorPath);
+		}
 		const isAnimatedImage = metadata.animated ?? false;
 		const keepDimensions = !isSvgMetadata(metadata);
 		return {

@@ -16,12 +16,16 @@ const MAX_RETRIES = 5;
 function isQueuedAssetReference(value: unknown): value is QueuedAssetReference {
 	if (!isJsonRecord(value)) return false;
 	return (
-		(value.entityType === 'user' || value.entityType === 'guild' || value.entityType === 'guild_member') &&
+		(value.entityType === 'user' ||
+			value.entityType === 'guild' ||
+			value.entityType === 'guild_member' ||
+			value.entityType === 'role') &&
 		(value.assetType === 'avatar' ||
 			value.assetType === 'banner' ||
 			value.assetType === 'icon' ||
 			value.assetType === 'splash' ||
-			value.assetType === 'embed_splash') &&
+			value.assetType === 'embed_splash' ||
+			value.assetType === 'role_icon') &&
 		typeof value.entityId === 'string' &&
 		(value.guildId === undefined || typeof value.guildId === 'string') &&
 		typeof value.hash === 'string'

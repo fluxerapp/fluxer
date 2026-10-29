@@ -10,6 +10,7 @@ import {
 	snapMediaProxyImageSize,
 } from '@app/features/messaging/utils/MediaProxyUtils';
 import {mediaUrl, setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import avatar0 from '@app/media/images/avatars/0.png';
 import avatar1 from '@app/media/images/avatars/1.png';
@@ -91,6 +92,8 @@ const MEDIA_PROXY_WIDE_ASSET_SERVER_MIN_DIMENSION = 480;
 const MEDIA_PROXY_WIDE_ASSET_SERVER_MAX_DIMENSION = 2400;
 const MEDIA_PROXY_ICON_SERVER_MIN_DIMENSION = 128;
 const MEDIA_PROXY_ICON_SERVER_MAX_DIMENSION = 1024;
+const MEDIA_PROXY_ROLE_ICON_SERVER_MIN_DIMENSION = 16;
+const MEDIA_PROXY_ROLE_ICON_SERVER_MAX_DIMENSION = 512;
 
 function snapImageSizeWithinServerRange(
 	cssPixels: number,
@@ -325,6 +328,25 @@ export function getGuildIconURL({id, icon}: IconOptions, animated = false) {
 		hash,
 		size: snapIconImageSize(MEDIA_PROXY_ICON_SIZE_DEFAULT),
 		animated: shouldAnimate,
+	});
+}
+
+export function getRoleIconURL({id, icon}: {id: string; icon: string | null}, cssSize: number): string {
+	if (!icon) {
+		return '';
+	}
+	if (icon.startsWith('data:')) {
+		return icon;
+	}
+	return buildWebpMediaUrl({
+		path: 'role-icons',
+		id,
+		hash: icon,
+		size: snapImageSizeWithinServerRange(
+			cssSize * getAppRemScale() * Math.max(2, window.devicePixelRatio || 1),
+			MEDIA_PROXY_ROLE_ICON_SERVER_MIN_DIMENSION,
+			MEDIA_PROXY_ROLE_ICON_SERVER_MAX_DIMENSION,
+		),
 	});
 }
 

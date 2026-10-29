@@ -55,6 +55,7 @@ An asset request snaps `size` to the ladder and clamps it to the range of its as
 | --- | --- | --- |
 | Icon | avatars, icons, guild member avatars | 128 through 1024 |
 | Banner | banners, splashes, embed splashes, guild member banners | 480 through 2400 |
+| Role icon | role icons | 16 through 512 |
 | Emoji | emojis | 32 through 512 |
 | Sticker | stickers | 128 through 512 |
 | Branding | branding, sign-in backdrops | 16 through 4096 |

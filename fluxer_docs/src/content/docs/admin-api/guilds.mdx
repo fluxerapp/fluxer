@@ -129,6 +129,8 @@ The owner fields are null when the owner account doesn't exist.
 | permissions | string | The [permission](/http-api/permissions/) bitfield as a decimal string |
 | hoist | boolean | Whether the role shows separately in the member list |
 | mentionable | boolean | Whether anyone can mention the role |
+| icon | ?string | The hash of the [role icon](/http-api/permissions/#role-icons) image |
+| unicode_emoji | ?string | The Unicode emoji used as the role icon |
 
 ## Admin guild update object
 
@@ -470,6 +472,21 @@ Removes a guild ban and sends [Guild Ban Remove](/gateway/events/#guild-ban-remo
 | 204 | empty | The ban was removed |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `USER_IS_NOT_BANNED` when the user isn't banned |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD` when the guild doesn't exist |
+
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
+
+## Clear guild role icon
+
+<RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}/roles/{role_id}/icon" auditReason />
+
+Clears the image and Unicode emoji of a [role icon](/http-api/permissions/#role-icons), deletes the old image later and sends [Guild Role Update](/gateway/events/#guild-role-update) to the guild. You need `guild:update:settings`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The role icon was cleared |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ROLE` when the role doesn't exist in the guild |
 
 The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 

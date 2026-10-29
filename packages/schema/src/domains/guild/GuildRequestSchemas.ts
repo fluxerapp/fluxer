@@ -13,10 +13,12 @@ import {
 	MAX_TEMP_BAN_DURATION_SECONDS,
 	MIN_TEMP_BAN_DURATION_SECONDS,
 } from '@fluxer/constants/src/LimitConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {GuildFeatureSchema} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import {VanityURLCodeType} from '@fluxer/schema/src/primitives/ChannelValidators';
+import {UnicodeRoleEmojiType} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	ContentWarningLevelSchema,
@@ -170,22 +172,53 @@ export const MyGuildMemberUpdateRequest = GuildMemberUpdateRequest.omit({roles: 
 
 export type MyGuildMemberUpdateRequest = z.infer<typeof MyGuildMemberUpdateRequest>;
 
-export const GuildRoleCreateRequest = z.object({
-	name: createStringType(1, 100).describe('The name of the role (1-100 characters)'),
-	color: ColorType.default(0x000000).describe('The color of the role as an integer (default: 0)'),
-	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
-});
+const RoleIconFields = {
+	icon: createBase64ImageType().nullish().describe('Base64 data URI for the role icon image, or null to remove it'),
+	unicode_emoji: UnicodeRoleEmojiType.nullish().describe(
+		'A single Unicode emoji to use as the role icon, or null to remove it',
+	),
+};
+
+function requireExclusiveRoleIcon(value: {icon?: string | null; unicode_emoji?: string | null}, ctx: z.RefinementCtx) {
+	if (value.icon != null && value.unicode_emoji != null) {
+		ctx.addIssue({code: 'custom', message: ValidationErrorCodes.ROLE_ICON_AND_EMOJI_EXCLUSIVE, path: ['icon']});
+	}
+}
+
+export const GuildRoleCreateRequest = z
+	.object({
+		name: createStringType(1, 100).describe('The name of the role (1-100 characters)'),
+		color: ColorType.default(0x000000).describe('The color of the role as an integer (default: 0)'),
+		permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
+		...RoleIconFields,
+		icon_source_role_id: SnowflakeType.optional().describe(
+			'The ID of a role in this community whose icon the new role copies. An image is stored again for the new role',
+		),
+	})
+	.superRefine((value, ctx) => {
+		requireExclusiveRoleIcon(value, ctx);
+		if (value.icon_source_role_id !== undefined && (value.icon != null || value.unicode_emoji != null)) {
+			ctx.addIssue({
+				code: 'custom',
+				message: ValidationErrorCodes.ROLE_ICON_SOURCE_AND_ICON_EXCLUSIVE,
+				path: ['icon_source_role_id'],
+			});
+		}
+	});
 
 export type GuildRoleCreateRequest = z.infer<typeof GuildRoleCreateRequest>;
 
-export const GuildRoleUpdateRequest = z.object({
-	name: createStringType(1, 100).optional().describe('The name of the role (1-100 characters)'),
-	color: ColorType.optional().describe('The color of the role as an integer'),
-	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
-	hoist: z.boolean().optional().describe('Whether the role should be displayed separately in the member list'),
-	hoist_position: z.number().int().nullish().describe('The position of the role in the hoisted member list'),
-	mentionable: z.boolean().optional().describe('Whether the role can be mentioned by anyone'),
-});
+export const GuildRoleUpdateRequest = z
+	.object({
+		name: createStringType(1, 100).optional().describe('The name of the role (1-100 characters)'),
+		color: ColorType.optional().describe('The color of the role as an integer'),
+		permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
+		hoist: z.boolean().optional().describe('Whether the role should be displayed separately in the member list'),
+		hoist_position: z.number().int().nullish().describe('The position of the role in the hoisted member list'),
+		mentionable: z.boolean().optional().describe('Whether the role can be mentioned by anyone'),
+		...RoleIconFields,
+	})
+	.superRefine(requireExclusiveRoleIcon);
 
 export type GuildRoleUpdateRequest = z.infer<typeof GuildRoleUpdateRequest>;
 

@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {GuildSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import styles from '@app/features/guild/components/RoleManagement.module.css';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import GuildSettingsModalState from '@app/features/guild/state/GuildSettingsModal';
@@ -109,6 +110,7 @@ const RoleBadge: React.FC<{
 					{roleIndicator}
 				</div>
 			)}
+			<RoleIcon role={role} size={16} decorative={true} data-flx="guild.role-management.role-badge.role-icon" />
 			<div className={styles.roleName} data-flx="guild.role-management.role-badge.role-name">
 				{role.name}
 			</div>

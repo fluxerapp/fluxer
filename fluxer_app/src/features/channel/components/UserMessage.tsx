@@ -19,6 +19,7 @@ import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {isOriginalPoster} from '@app/features/forum/utils/ForumChannelUtils';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
@@ -175,6 +176,7 @@ export const UserMessage = observer(() => {
 	const hasStyleableTextContent = useMemo(() => hasStyleableMessageText(astNodes), [astNodes]);
 	const guild = Guilds.getGuild(channel.guildId ?? '');
 	const member = GuildMembers.getMember(guild?.id ?? '', author?.id ?? '');
+	const iconRole = previewOverrides?.iconRole !== undefined ? previewOverrides.iconRole : member?.getIconRole();
 	const mobileLayout = MobileLayout;
 	const shouldShowFailedFooter =
 		message.state === MessageStates.FAILED && (mobileLayout.enabled || shouldHideContent || !hasStyleableTextContent);
@@ -501,17 +503,27 @@ export const UserMessage = observer(() => {
 						userId={author.id}
 						data-flx="channel.user-message.message-timeout-indicator"
 					/>
-					<MessageUsername
-						user={author}
-						message={message}
-						guild={guild}
-						member={member ?? undefined}
-						className={styles.messageUsername}
-						isPreview={!!previewContext}
-						previewColor={previewOverrides?.usernameColor}
-						previewName={previewOverrides?.displayName}
-						data-flx="channel.user-message.message-username--2"
-					/>
+					<span className={styles.messageAuthorName} data-flx="channel.user-message.message-author-name">
+						<MessageUsername
+							user={author}
+							message={message}
+							guild={guild}
+							member={member ?? undefined}
+							className={styles.messageUsername}
+							isPreview={!!previewContext}
+							previewColor={previewOverrides?.usernameColor}
+							previewName={previewOverrides?.displayName}
+							data-flx="channel.user-message.message-username--2"
+						/>
+						{iconRole && (
+							<RoleIcon
+								role={iconRole}
+								size={20}
+								className={styles.messageRoleIcon}
+								data-flx="channel.user-message.role-icon"
+							/>
+						)}
+					</span>
 					{(author.bot || message.isCrosspostCopy) && (
 						<UserTag
 							className={styles.userTagOffset}

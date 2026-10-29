@@ -14,7 +14,7 @@ The Media Proxy serves attachments, image assets, themes, entrance sounds and si
 | Signed external | `/external/{signature}/{target}` | [Get signed external media](/media-proxy/routes/#get-signed-external-media) |
 | Theme CSS | `/themes/{path}.css` | [Get theme CSS](/media-proxy/routes/#get-theme-css) |
 | Entrance sound | `/entrance-sounds/{user_id}/{filename}` | [Get entrance sound](/media-proxy/routes/#get-entrance-sound) |
-| Image asset<sup>1</sup> | `/avatars`, `/icons`, `/branding`, `/banners`, `/splashes`, `/embed-splashes`, `/emojis`, `/stickers` | [Image asset contract](/media-proxy/routes/#image-asset-contract) |
+| Image asset<sup>1</sup> | `/avatars`, `/icons`, `/branding`, `/banners`, `/splashes`, `/embed-splashes`, `/role-icons`, `/emojis`, `/stickers` | [Image asset contract](/media-proxy/routes/#image-asset-contract) |
 | Static object<sup>2</sup> | `/{key}` | [Get static object](/media-proxy/routes/#get-static-object) |
 | Upload relay | `/v1/relay/{key}` | [Upload relay](/media-proxy/upload-relay/) |
 | Operator and internal | `/_health`, `/_metrics`, `/_metadata`, `/_sniff`, `/_thumbnail`, `/_frames` | [Operator and internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) |

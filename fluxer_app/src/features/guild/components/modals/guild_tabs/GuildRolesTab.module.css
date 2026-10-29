@@ -215,6 +215,15 @@
 	flex-shrink: 0;
 }
 
+.roleIconSlot {
+	display: flex;
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+}
+
 .overwriteName {
 	flex: 1 1 0%;
 	min-width: 0;

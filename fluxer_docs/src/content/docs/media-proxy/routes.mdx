@@ -180,6 +180,12 @@ Returns a guild splash in the banner size class.
 
 Returns a guild embed splash in the banner size class.
 
+## Get role icon
+
+<RouteHeader method="GET" path="/role-icons/{role_id}/{hash}.{ext}" unauthenticated />
+
+Returns a [role icon](/http-api/permissions/#role-icons) in the role icon size class. Role icons are never animated.
+
 ## Get guild member avatar
 
 <RouteHeader method="GET" path="/guilds/{guild_id}/users/{user_id}/avatars/{hash}.{ext}" unauthenticated />

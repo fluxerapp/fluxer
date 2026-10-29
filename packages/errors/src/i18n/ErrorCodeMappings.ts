@@ -452,6 +452,7 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM]: 'attachments_and_uploads.file_index_exceeds_maximum',
 	[ValidationErrorCodes.FILE_NOT_FOUND]: 'attachments_and_uploads.file_not_found',
 	[ValidationErrorCodes.FILENAME_LENGTH_INVALID]: 'attachments_and_uploads.filename_length_invalid',
+	[ValidationErrorCodes.IMAGE_DIMENSIONS_OUT_OF_RANGE]: 'attachments_and_uploads.image_dimensions_out_of_range',
 	[ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT]: 'attachments_and_uploads.image_size_exceeds_limit',
 	[ValidationErrorCodes.INVALID_FILE_FIELD_NAME]: 'attachments_and_uploads.invalid_file_field_name',
 	[ValidationErrorCodes.INVALID_URL_FORMAT]: 'urls.invalid_url_format',
@@ -601,6 +602,9 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.FAVORITE_MEME_NAME_REQUIRED]: 'media_and_memes.favorite_meme_name_required',
 	[ValidationErrorCodes.FAVORITE_MEME_NOT_FOUND]: 'media_and_memes.favorite_meme_not_found',
 	[ValidationErrorCodes.CANNOT_SET_HOIST_FOR_EVERYONE_ROLE]: 'roles.cannot_set_everyone_hoist',
+	[ValidationErrorCodes.CANNOT_SET_ICON_ON_EVERYONE_ROLE]: 'roles.cannot_set_everyone_icon',
+	[ValidationErrorCodes.ROLE_ICON_AND_EMOJI_EXCLUSIVE]: 'roles.icon_and_emoji_exclusive',
+	[ValidationErrorCodes.ROLE_ICON_SOURCE_AND_ICON_EXCLUSIVE]: 'roles.icon_source_and_icon_exclusive',
 	[ValidationErrorCodes.PARSE_AND_USERS_OR_ROLES_CANNOT_BE_USED_TOGETHER]:
 		'roles.parse_and_users_or_roles_cannot_be_used_together',
 	[ValidationErrorCodes.ANIMATED_GUILD_BANNER_REQUIRES_FEATURE]:

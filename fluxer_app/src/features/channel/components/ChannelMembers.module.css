@@ -30,6 +30,11 @@
 	white-space: nowrap;
 }
 
+.groupHeaderRoleIcon {
+	flex-shrink: 0;
+	margin-inline-end: 0.25rem;
+}
+
 .groupHeaderSeparator {
 	flex-shrink: 0;
 }

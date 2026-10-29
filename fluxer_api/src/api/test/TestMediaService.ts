@@ -116,19 +116,29 @@ export class TestMediaService extends IMediaService {
 			if (!format) {
 				return null;
 			}
+			const dimensions = this.readPngDimensions(buffer, format);
 			return {
 				format,
 				content_type: this.contentTypeForFormat(format),
 				content_hash: crypto.createHash('md5').update(buffer).digest('hex'),
 				size: buffer.length,
-				width: 128,
-				height: 128,
-				animated: format === 'gif',
+				width: dimensions?.width ?? 128,
+				height: dimensions?.height ?? 128,
+				animated: this.isAnimatedImage(buffer, format),
 				nsfw: false,
 			};
 		} catch (_error) {
 			return null;
 		}
+	}
+
+	private readPngDimensions(buffer: Buffer, format: string): {width: number; height: number} | null {
+		if (format !== 'png' || buffer.length < 24 || buffer.toString('latin1', 12, 16) !== 'IHDR') {
+			return null;
+		}
+		const width = buffer.readUInt32BE(16);
+		const height = buffer.readUInt32BE(20);
+		return width > 0 && height > 0 ? {width, height} : null;
 	}
 
 	private detectImageFormat(buffer: Buffer): string | null {

@@ -104,6 +104,10 @@ export class GuildMember {
 			});
 	}
 
+	getIconRole(): GuildRole | undefined {
+		return this.getSortedRoles().find((role) => role.icon !== null || role.unicodeEmoji !== null);
+	}
+
 	getColorString(): string | undefined {
 		const sortedRoles = this.getSortedRoles();
 		for (const role of sortedRoles) {

@@ -838,4 +838,51 @@ mod tests {
         assert_eq!(Some("64"), filtered.get("width").map(String::as_str));
         assert_eq!(Some("1"), filtered.get("download").map(String::as_str));
     }
+
+    #[tokio::test]
+    async fn role_icons_are_served_as_webp_and_png() {
+        let tmp = tempfile::tempdir().expect("storage root");
+        let root = tmp.path().canonicalize().expect("canonical storage root");
+        let root = root.as_path();
+        write_object(
+            root,
+            "cdn",
+            "role-icons/123456789012345678/a1b2c3d4",
+            &crate::test_fixtures::synthetic_png(64, 64),
+        );
+        let app = dispatch_app("mp", root, &[]);
+        for (uri, content_type) in [
+            (
+                "/role-icons/123456789012345678/a1b2c3d4.webp?size=32",
+                "image/webp",
+            ),
+            (
+                "/role-icons/123456789012345678/a1b2c3d4.png?size=16",
+                "image/png",
+            ),
+        ] {
+            let response = dispatch_uri(&app, Method::GET, uri, &[], None).await;
+            assert_eq!(StatusCode::OK, response.status(), "{uri}");
+            assert_eq!(
+                Some(content_type.to_owned()),
+                header_value(&response, header::CONTENT_TYPE),
+                "{uri}"
+            );
+            assert!(!body_of(response).await.is_empty(), "{uri}");
+        }
+    }
+
+    #[tokio::test]
+    async fn role_icons_return_not_found_for_a_bad_owner_or_missing_object() {
+        let tmp = tempfile::tempdir().expect("storage root");
+        let root = tmp.path().canonicalize().expect("canonical storage root");
+        let app = dispatch_app("mp", root.as_path(), &[]);
+        for uri in [
+            "/role-icons/not-a-snowflake/a1b2c3d4.webp",
+            "/role-icons/123456789012345678/a1b2c3d4.webp?size=32",
+        ] {
+            let response = dispatch_uri(&app, Method::GET, uri, &[], None).await;
+            assert_eq!(StatusCode::NOT_FOUND, response.status(), "{uri}");
+        }
+    }
 }

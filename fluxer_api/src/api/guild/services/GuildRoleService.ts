@@ -2,6 +2,8 @@
 
 import assert from 'node:assert/strict';
 import {createRoleID, type GuildID, guildIdToRoleId, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {valuesEqual} from '@app/api/database/CassandraVersionedUpdate';
+import type {GuildRoleRow} from '@app/api/database/types/GuildTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
@@ -13,8 +15,10 @@ import {
 	shouldMaskThreadPermissionBits,
 	stripThreadPermissionBits,
 } from '@app/api/guild/services/ThreadPermissionBits';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -50,11 +54,20 @@ type RoleUpdateData = Partial<{
 	position: number;
 	hoistPosition: number | null;
 	permissions: bigint;
-	iconHash: string | null;
-	unicodeEmoji: string | null;
 	hoist: boolean;
 	mentionable: boolean;
 }>;
+
+interface RoleIconRequest {
+	icon?: string | null;
+	unicode_emoji?: string | null;
+}
+
+interface RoleIconChange {
+	iconHash: string | null;
+	unicodeEmoji: string | null;
+	prepared: PreparedAssetUpload | null;
+}
 
 export class GuildRoleService {
 	private async buildRoleManageCheck(
@@ -94,6 +107,7 @@ export class GuildRoleService {
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly userRepository: UserRepository,
+		private readonly entityAssetService: EntityAssetService,
 	) {}
 
 	async systemCreateRole(params: {
@@ -175,7 +189,16 @@ export class GuildRoleService {
 				: ((await this.guildRepository.getRole(guildIdToRoleId(guildId), guildId))?.permissions ?? DEFAULT_PERMISSIONS);
 		const roleId = createRoleID(await this.snowflakeService.generate());
 		const position = 1;
-		const role = await this.guildRepository.upsertRole({
+		const iconChange =
+			data.icon_source_role_id !== undefined
+				? await this.prepareRoleIconCopy({guildId, roleId, sourceRoleId: createRoleID(data.icon_source_role_id)})
+				: await this.prepareRoleIcon({
+						guildId,
+						roleId,
+						current: {iconHash: null, unicodeEmoji: null},
+						data,
+					});
+		const role = await this.writeRoleWithIcon(iconChange.prepared, {
 			guild_id: guildId,
 			role_id: roleId,
 			name: data.name,
@@ -183,8 +206,8 @@ export class GuildRoleService {
 			position,
 			hoist_position: null,
 			color: data.color || 0,
-			icon_hash: null,
-			unicode_emoji: null,
+			icon_hash: iconChange.iconHash,
+			unicode_emoji: iconChange.unicodeEmoji,
 			hoist: false,
 			mentionable: false,
 			version: 1,
@@ -280,7 +303,9 @@ export class GuildRoleService {
 				throw new MissingPermissionsError();
 			}
 		}
-		const previousSnapshot = this.serializeRoleForAudit(role);
+		if (role.id === guildIdToRoleId(guildId)) {
+			this.rejectEveryoneRoleIcon(data);
+		}
 		const updateData = await this.buildRoleUpdateData({
 			role,
 			guildId,
@@ -291,23 +316,43 @@ export class GuildRoleService {
 			viewer,
 			getMyPermissions,
 		});
-		const updatedRoleData = {
+		const iconChange = await this.prepareRoleIcon({guildId, roleId: role.id, current: role, data});
+		const liveRole = await this.guildRepository.getRole(role.id, guildId);
+		if (!liveRole) {
+			await this.queueRoleIconStaleCheck(iconChange.prepared);
+			throw new UnknownGuildRoleError();
+		}
+		const previousSnapshot = this.serializeRoleForAudit(liveRole);
+		const requestedRoleData = {
 			...role.toRow(),
 			name: updateData.name ?? role.name,
 			color: updateData.color ?? role.color,
 			position: updateData.position ?? role.position,
 			hoist_position: updateData.hoistPosition !== undefined ? updateData.hoistPosition : role.hoistPosition,
 			permissions: updateData.permissions ?? role.permissions,
-			icon_hash: updateData.iconHash ?? role.iconHash,
-			unicode_emoji: updateData.unicodeEmoji ?? role.unicodeEmoji,
+			icon_hash: iconChange.iconHash,
+			unicode_emoji: iconChange.unicodeEmoji,
 			hoist: updateData.hoist ?? role.isHoisted,
 			mentionable: updateData.mentionable ?? role.isMentionable,
 		};
-		const updatedRole = await this.guildRepository.upsertRole(updatedRoleData);
+		const liveRow = liveRole.toRow();
+		const updatedRole = await this.writeRoleWithIcon(
+			iconChange.prepared,
+			this.rebaseRoleRow(role.toRow(), requestedRoleData, liveRow),
+			liveRow,
+		);
+		await this.commitRoleIcon(guildId, iconChange.prepared);
+		await this.queueReplacedRoleIcon({
+			guildId,
+			roleId: role.id,
+			replacedHash: liveRole.iconHash,
+			newHash: updatedRole.iconHash,
+			prepared: iconChange.prepared,
+		});
 		await this.dispatchGuildRoleUpdate({guildId, role: updatedRole});
 		const changes = this.guildAuditLogService.computeChanges(previousSnapshot, this.serializeRoleForAudit(updatedRole));
-		if (role.permissions !== updatedRole.permissions) {
-			const permissionsDiff = computePermissionsDiff(role.permissions, updatedRole.permissions, {
+		if (liveRole.permissions !== updatedRole.permissions) {
+			const permissionsDiff = computePermissionsDiff(liveRole.permissions, updatedRole.permissions, {
 				threads: true,
 			});
 			changes.push({key: 'permissions_diff', new_value: permissionsDiff});
@@ -364,7 +409,19 @@ export class GuildRoleService {
 				}
 			}),
 		);
+		const liveRole = await this.guildRepository.getRole(role.id, guildId);
 		await this.guildRepository.deleteRole(guildId, role.id);
+		const iconHashes = new Set([role.iconHash, liveRole?.iconHash ?? null]);
+		for (const iconHash of iconHashes) {
+			if (!iconHash) continue;
+			const {prepared} = await this.prepareRoleIcon({
+				guildId,
+				roleId: role.id,
+				current: {iconHash, unicodeEmoji: null},
+				data: {icon: null},
+			});
+			await this.commitRoleIcon(guildId, prepared);
+		}
 		await this.dispatchGuildRoleDelete({guildId, roleId: role.id});
 		await this.guildAuditLogService.record({
 			guildId,
@@ -480,11 +537,9 @@ export class GuildRoleService {
 				if (role.hoistPosition === update.hoistPosition) {
 					continue;
 				}
-				const updatedRole = await this.guildRepository.upsertRole({
-					...role.toRow(),
-					hoist_position: update.hoistPosition,
-				});
-				changedRoles.push(updatedRole);
+				await this.guildRepository.upsertRole({...role.toRow(), hoist_position: update.hoistPosition}, role.toRow());
+				const updatedRole = await this.guildRepository.getRole(role.id, guildId);
+				if (updatedRole) changedRoles.push(updatedRole);
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
@@ -526,8 +581,9 @@ export class GuildRoleService {
 				if (role.hoistPosition === null) {
 					continue;
 				}
-				const updatedRole = await this.guildRepository.upsertRole({...role.toRow(), hoist_position: null});
-				changedRoles.push(updatedRole);
+				await this.guildRepository.upsertRole({...role.toRow(), hoist_position: null}, role.toRow());
+				const updatedRole = await this.guildRepository.getRole(role.id, guildId);
+				if (updatedRole) changedRoles.push(updatedRole);
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
@@ -547,6 +603,147 @@ export class GuildRoleService {
 			}
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
+		}
+	}
+
+	private rejectEveryoneRoleIcon(data: RoleIconRequest): void {
+		if (data.icon != null) {
+			throw InputValidationError.fromCode('icon', ValidationErrorCodes.CANNOT_SET_ICON_ON_EVERYONE_ROLE);
+		}
+		if (data.unicode_emoji != null) {
+			throw InputValidationError.fromCode('unicode_emoji', ValidationErrorCodes.CANNOT_SET_ICON_ON_EVERYONE_ROLE);
+		}
+	}
+
+	private async prepareRoleIcon(params: {
+		guildId: GuildID;
+		roleId: RoleID;
+		current: {iconHash: string | null; unicodeEmoji: string | null};
+		data: RoleIconRequest;
+	}): Promise<RoleIconChange> {
+		const {guildId, roleId, current, data} = params;
+		let image = data.icon;
+		let unicodeEmoji = data.unicode_emoji !== undefined ? data.unicode_emoji : current.unicodeEmoji;
+		if (data.icon) {
+			unicodeEmoji = null;
+		}
+		if (image === undefined && data.unicode_emoji) {
+			image = null;
+		}
+		if (image === undefined) {
+			return {iconHash: current.iconHash, unicodeEmoji, prepared: null};
+		}
+		if (image === null && current.iconHash === null) {
+			return {iconHash: null, unicodeEmoji, prepared: null};
+		}
+		const prepared = await this.entityAssetService.prepareAssetUpload({
+			assetType: 'role_icon',
+			entityType: 'role',
+			entityId: roleId,
+			guildId,
+			previousHash: current.iconHash,
+			base64Image: image,
+			errorPath: 'icon',
+		});
+		return {iconHash: prepared.newHash, unicodeEmoji, prepared};
+	}
+
+	private async prepareRoleIconCopy(params: {
+		guildId: GuildID;
+		roleId: RoleID;
+		sourceRoleId: RoleID;
+	}): Promise<RoleIconChange> {
+		const {guildId, roleId, sourceRoleId} = params;
+		const source = await this.guildRepository.getRole(sourceRoleId, guildId);
+		if (!source) {
+			throw new UnknownGuildRoleError();
+		}
+		if (!source.iconHash) {
+			return {iconHash: null, unicodeEmoji: source.unicodeEmoji, prepared: null};
+		}
+		const prepared = await this.entityAssetService.prepareAssetCopy({
+			assetType: 'role_icon',
+			entityType: 'role',
+			sourceEntityId: source.id,
+			entityId: roleId,
+			guildId,
+			hash: source.iconHash,
+			errorPath: 'icon_source_role_id',
+		});
+		return {iconHash: prepared?.newHash ?? null, unicodeEmoji: null, prepared};
+	}
+
+	private rebaseRoleRow(snapshot: GuildRoleRow, requested: GuildRoleRow, live: GuildRoleRow): GuildRoleRow {
+		const rebased: Record<string, unknown> = {...live};
+		const snapshotFields = snapshot as unknown as Record<string, unknown>;
+		const requestedFields = requested as unknown as Record<string, unknown>;
+		for (const [column, value] of Object.entries(requestedFields)) {
+			if (!valuesEqual(value, snapshotFields[column])) {
+				rebased[column] = value;
+			}
+		}
+		if (
+			!valuesEqual(requested.icon_hash, snapshot.icon_hash) ||
+			!valuesEqual(requested.unicode_emoji, snapshot.unicode_emoji)
+		) {
+			rebased.icon_hash = requested.icon_hash;
+			rebased.unicode_emoji = requested.unicode_emoji;
+		}
+		return rebased as unknown as GuildRoleRow;
+	}
+
+	private async writeRoleWithIcon(
+		prepared: PreparedAssetUpload | null,
+		row: GuildRoleRow,
+		oldRow?: GuildRoleRow,
+	): Promise<GuildRole> {
+		try {
+			return await this.guildRepository.upsertRole(row, oldRow);
+		} catch (error) {
+			await this.queueRoleIconStaleCheck(prepared);
+			throw error;
+		}
+	}
+
+	private async queueRoleIconStaleCheck(prepared: PreparedAssetUpload | null): Promise<void> {
+		if (!prepared) return;
+		await this.entityAssetService
+			.queueUploadForStaleCheck(prepared)
+			.catch((error) => Logger.error({error, s3Key: prepared.newS3Key}, 'Failed to queue role icon cleanup'));
+	}
+
+	private async queueReplacedRoleIcon(params: {
+		guildId: GuildID;
+		roleId: RoleID;
+		replacedHash: string | null;
+		newHash: string | null;
+		prepared: PreparedAssetUpload | null;
+	}): Promise<void> {
+		const {guildId, roleId, replacedHash, newHash, prepared} = params;
+		if (!replacedHash || replacedHash === newHash || replacedHash === prepared?.previousHash) return;
+		try {
+			const replaced = await this.entityAssetService.prepareAssetUpload({
+				assetType: 'role_icon',
+				entityType: 'role',
+				entityId: roleId,
+				guildId,
+				previousHash: replacedHash,
+				base64Image: null,
+				errorPath: 'icon',
+			});
+			await this.entityAssetService.commitAssetChange(replaced);
+		} catch (error) {
+			Logger.error({error, guildId}, 'Failed to queue replaced role icon for deletion');
+		}
+	}
+
+	private async commitRoleIcon(guildId: GuildID, prepared: PreparedAssetUpload | null): Promise<void> {
+		if (!prepared) return;
+		try {
+			await this.entityAssetService.commitAssetChange(prepared);
+			await this.entityAssetService.queueUploadForStaleCheck(prepared);
+		} catch (error) {
+			Logger.error({error, guildId}, 'Failed to queue role icon cleanup');
 		}
 	}
 
@@ -683,7 +880,11 @@ export class GuildRoleService {
 		});
 		const reorderedIds = targetOrder.map((r) => r.id);
 		const reorderedRoles = this.reorderRolePositions({allRoles, reorderedIds, guildId});
-		const updatePromises = reorderedRoles.map((role) => this.guildRepository.upsertRole(role.toRow()));
+		const updatePromises = reorderedRoles.map((role) => {
+			const listed = roleMap.get(role.id);
+			assert(listed !== undefined);
+			return this.guildRepository.upsertRole(role.toRow(), listed.toRow());
+		});
 		await Promise.all(updatePromises);
 		const updatedRoles = await this.guildRepository.listRoles(guildId);
 		const changedRoles = updatedRoles.filter((role) => {

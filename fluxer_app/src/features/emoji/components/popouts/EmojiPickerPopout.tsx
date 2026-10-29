@@ -8,10 +8,12 @@ import {useCallback} from 'react';
 export const EmojiPickerPopout = observer(
 	({
 		channelId,
+		roleIconGuildId,
 		handleSelect,
 		onClose,
 	}: {
 		channelId: string | null;
+		roleIconGuildId?: string;
 		handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 		onClose?: () => void;
 	}) => {
@@ -27,6 +29,7 @@ export const EmojiPickerPopout = observer(
 		return (
 			<ExpressionPickerPopout
 				channelId={channelId ?? undefined}
+				roleIconGuildId={roleIconGuildId}
 				onEmojiSelect={handleEmojiSelect}
 				onClose={onClose}
 				visibleTabs={['emojis']}

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import emojiRegex from 'emoji-regex';
+import {z} from 'zod';
 
 const EMOJI_REGEX = emojiRegex();
 const REGIONAL_INDICATOR_START = 0x1f1e6;
@@ -26,3 +28,8 @@ export function isValidSingleUnicodeEmoji(value: string): boolean {
 	}
 	return isSingleRegionalIndicator(value);
 }
+
+export const UnicodeRoleEmojiType = z
+	.string()
+	.max(64, ValidationErrorCodes.NOT_A_VALID_UNICODE_EMOJI)
+	.refine(isValidSingleUnicodeEmoji, ValidationErrorCodes.NOT_A_VALID_UNICODE_EMOJI);

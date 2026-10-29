@@ -429,6 +429,7 @@ These are the values of `code` inside `errors`.
 | `CANNOT_REORDER_EVERYONE_ROLE` | You can't reorder the @everyone role |
 | `CANNOT_REPLY_TO_SYSTEM_MESSAGE` | You can't reply to a system message |
 | `CANNOT_SET_HOIST_FOR_EVERYONE_ROLE` | You can't set hoist position for the @everyone role |
+| `CANNOT_SET_ICON_ON_EVERYONE_ROLE` | The @everyone role can't have an icon |
 | `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` | You can't specify both `before` and `after` |
 | `CAPTCHA_REQUIRED_BY_INSTANT_ACCOUNTS` | Turn off instant accounts before turning off the captcha |
 | `CATEGORIES_CANNOT_HAVE_PARENTS` | Categories can't have parents |
@@ -514,6 +515,7 @@ These are the values of `code` inside `errors`.
 | `GUILD_ID_MUST_MATCH_REFERENCED_MESSAGE` | Community ID must match the community containing the channel the referenced message was fetched from |
 | `GUILD_ID_REQUIRED_FOR_SEARCH_INDEX` | Community ID is required for channel message and member search indexes |
 | `IDENTIFIER_FIRST_REQUIRES_EMAIL_IDENTITY` | Email-first sign-in only works when people sign in with an email |
+| `IMAGE_DIMENSIONS_OUT_OF_RANGE` | Image width and height must each be between {min} and {max} pixels |
 | `IMAGE_SIZE_EXCEEDS_LIMIT` | Image size exceeds {maxSize} bytes |
 | `INSTANCE_ADDRESS_REQUIRED` | This instance uses usernames |
 | `INSTANT_ACCOUNTS_REQUIRE_CAPTCHA` | Turn on the captcha before allowing instant accounts |
@@ -601,6 +603,8 @@ These are the values of `code` inside `errors`.
 | `RECIPIENT_IDS_CANNOT_BE_EMPTY` | Recipient IDs can't be empty |
 | `REFERENCED_ATTACHMENT_NOT_FOUND` | Referenced attachment "{filename}" wasn't found in message attachments |
 | `REPORT_OUTCOME_INVALID` | An actioned resolution needs an outcome other than no violation |
+| `ROLE_ICON_AND_EMOJI_EXCLUSIVE` | A role can have an image icon or an emoji, not both |
+| `ROLE_ICON_SOURCE_AND_ICON_EXCLUSIVE` | Set a role icon or copy one from another role, not both |
 | `SEARCH_FILTER_NEEDS_MEMBERSHIP` | Join this community to search by person or mention |
 | `SESSION_TIMEOUT` | Session timed out |
 | `SETUP_TOKEN_INVALID` | That setup token is not correct |

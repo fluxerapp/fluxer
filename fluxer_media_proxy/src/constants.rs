@@ -57,6 +57,7 @@ pub enum AssetKind {
     Emoji,
     Sticker,
     Branding,
+    RoleIcon,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -152,6 +153,7 @@ pub fn dims_for(kind: AssetKind) -> Dims {
         AssetKind::Emoji => Dims { min: 32, max: 512 },
         AssetKind::Sticker => Dims { min: 128, max: 512 },
         AssetKind::Branding => Dims { min: 16, max: 4096 },
+        AssetKind::RoleIcon => Dims { min: 16, max: 512 },
     }
 }
 
@@ -159,4 +161,17 @@ pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
     let value = raw_target.max(1);
     let dims = dims_for(kind);
     value.clamp(dims.min, dims.max)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn role_icon_sizes_clamp_between_16_and_512() {
+        assert_eq!(Dims { min: 16, max: 512 }, dims_for(AssetKind::RoleIcon));
+        assert_eq!(16, clamp_size(8, AssetKind::RoleIcon));
+        assert_eq!(32, clamp_size(32, AssetKind::RoleIcon));
+        assert_eq!(512, clamp_size(4096, AssetKind::RoleIcon));
+    }
 }

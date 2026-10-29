@@ -1581,6 +1581,11 @@ msgstr "{fifteenMinutes} minučių"
 msgid "{folderName} folder"
 msgstr "Aplankas {folderName}"
 
+#. Helper line under the role icon buttons in the community role editor. formats is a list of image types such as PNG, JPEG, WebP. minimumSize is an image size such as 32×32px. maxSize is a file size such as 256 KB.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "{formats}. At least {minimumSize}, up to {maxSize}."
+msgstr "{formats}. Ne mažiau kaip {minimumSize}, iki {maxSize}."
+
 #. Helper text in an asset upload source modal. formats is a formatted list of accepted file types; maxSize is a formatted file size; minimumSize is a minimum image size; aspectRatio is a formatted aspect ratio.
 #: src/features/expressions/utils/AssetUploadHintCopy.ts
 msgid "{formats}. Max {maxSize}. Minimum: {minimumSize} ({aspectRatio})"
@@ -4776,7 +4781,9 @@ msgid "Animated icons are not supported when creating a new community. Use a sta
 msgstr "Animuotų piktogramų negalima naudoti kuriant naują bendruomenę. Naudokite statinį paveikslėlį."
 
 #. Description text in the edit group modal.
+#. Error under the role icon buttons when the picked image is animated.
 #: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "Animated icons are not supported. Use a static image."
 msgstr "Animuotos piktogramos nepalaikomos. Naudokite statinį paveikslėlį."
 
@@ -8375,6 +8382,11 @@ msgstr "Pasirinkite foną"
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Pasirinkite „guild_id“ arba „channel_id“, bet ne abu."
 
+#. Button in the role icon field that opens the emoji picker. Keep it short.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Choose emoji"
+msgstr "Pasirinkti jaustuką"
+
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx
 msgid "Choose File, then Add to Dock."
@@ -11789,6 +11801,11 @@ msgstr "Apkarpymo peržiūra"
 msgid "Crop profile banner"
 msgstr "Apkarpyti profilio reklamjuostę"
 
+#. Modal title for cropping a role icon before upload.
+#: src/features/expressions/components/modals/AssetCropModal.tsx
+msgid "Crop role icon"
+msgstr "Apkarpyti vaidmens piktogramą"
+
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx
@@ -11872,6 +11889,16 @@ msgstr "Dabartinis atitikmuo"
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Current ping:"
 msgstr "Dabartinis ping:"
+
+#. Accessible label of the role icon tile in the community role editor when the icon is an emoji, also read out after an emoji is picked. emojiName is the emoji short name such as :shield:. Clicking the tile opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Current role icon, {emojiName}"
+msgstr "Dabartinė vaidmens piktograma, {emojiName}"
+
+#. Accessible label of the role icon tile in the community role editor when the icon is an uploaded image, also read out after an image is added. Clicking the tile opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Current role icon, uploaded image"
+msgstr "Dabartinė vaidmens piktograma, įkeltas paveikslėlis"
 
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Current session"
@@ -14191,6 +14218,11 @@ msgstr "Vilkite, kad pakeistumėte grupės piktogramos padėtį, ir priartinkite
 #: src/features/expressions/components/modals/AssetCropModal.tsx
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "Vilkite, kad pakeistumėte kvietimo fono padėtį, ir priartinkite pelės ratuku arba suglausdami pirštus. Rekomenduojamas minimalus dydis yra {minimumWidth}×{minimumHeight} pikselių (16:9)."
+
+#. Description in the role icon crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.
+#: src/features/expressions/components/modals/AssetCropModal.tsx
+msgid "Drag to reposition your role icon and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels."
+msgstr "Vilkite, kad pakeistumėte vaidmens piktogramos padėtį, ir priartinkite pelės ratuku arba suglausdami pirštus. Rekomenduojamas minimalus dydis yra {minimumWidth}×{minimumHeight} pikselių."
 
 #. Desktop setting description under the dark taskbar badge toggle on Windows.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
@@ -29241,6 +29273,7 @@ msgstr "Pašalinti iš mėgstamiausių GIF (tik URL)"
 
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "Remove icon"
 msgstr "Pašalinti piktogramą"
 
@@ -30577,6 +30610,16 @@ msgstr "Vaidmuo ištrintas"
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx
 msgid "Role deleted successfully"
 msgstr "Vaidmuo sėkmingai ištrintas"
+
+#. Label of the role icon field in the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Role icon"
+msgstr "Vaidmens piktograma"
+
+#. Accessible label read by screen readers for the small icon next to a member name. roleName is the name of the community role the icon belongs to.
+#: src/features/guild/components/RoleIcon.tsx
+msgid "Role icon, {roleName}"
+msgstr "Vaidmens piktograma, {roleName}"
 
 #. Label of the role name input in the community role editor.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
@@ -37219,8 +37262,10 @@ msgstr "Šis failas yra {fileSize}, viršijantis {maxSize} limitą. Animuoti lip
 msgid "This file is larger than {size}. Choose a smaller one."
 msgstr "Šis failas didesnis nei {size}. Pasirinkite mažesnį."
 
+#. Error under the role icon buttons when the picked file has an unsupported type. formats is a list such as PNG, JPEG, WebP.
 #. Error when a branding image has an unsupported file type in the setup wizard. formats is a list such as PNG, JPEG, WebP.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 msgid "This file type is not supported. Supported types are {formats}."
 msgstr "Šis failo tipas nepalaikomas. Palaikomi tipai: {formats}."
 
@@ -37281,6 +37326,11 @@ msgstr "Šis perdavimo kodas nebegalioja. Norėdami tęsti, sugeneruokite naują
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
 msgid "This image could not be loaded after saving. Press \"Continue\" to try again, or choose a different file."
 msgstr "Nepavyko įkelti šio paveikslėlio po išsaugojimo. Paspauskite „Tęsti“, kad bandytumėte dar kartą, arba pasirinkite kitą failą."
+
+#. Error under the role icon buttons when the picked image or emoji could not be used.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "This image could not be loaded. Try another one."
+msgstr "Nepavyko įkelti šio paveikslėlio. Pabandykite kitą."
 
 #. Error modal body shown when an animated image fails to decode during cropping.
 #: src/features/messaging/components/modals/ImageCropModal.tsx
@@ -37381,6 +37431,8 @@ msgid "This is disabled"
 msgstr "Tai išjungta"
 
 #. Label in the messages tab.
+#. Sample message text in the role icon preview of the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "This is how messages appear"
 msgstr "Štai kaip atrodo žinutės"
@@ -39918,6 +39970,11 @@ msgstr "Įkelkite pasirinktinį garsą, kuris automatiškai leidžiamas, kai pri
 msgid "Upload a file"
 msgstr "Įkelti failą"
 
+#. Helper text under the role icon label in the community role editor.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Upload an image or pick an emoji. Members get the icon of their highest role that has one."
+msgstr "Įkelkite paveikslėlį arba pasirinkite jaustuką. Prie nario vardo rodoma aukščiausio jo vaidmens, turinčio piktogramą, piktograma."
+
 #: src/features/theme_settings/components/AssetsSection.tsx
 msgid "Upload assets"
 msgstr "Įkelti išteklius"
@@ -39979,6 +40036,7 @@ msgid "Upload icon"
 msgstr "Įkelti piktogramą"
 
 #. Button label for uploading a webhook avatar image.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
 #: src/features/webhook/components/WebhookListItem.tsx
 msgid "Upload image"
 msgstr "Įkelti paveikslėlį"
@@ -40002,6 +40060,11 @@ msgstr "Įkelkite naujų jaustukų ir lipdukų bei tvarkykite savo kūrinius."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx
 msgid "Upload preview frames for screen shares."
 msgstr "Įkelkite ekrano bendrinimo peržiūros kadrus."
+
+#. Accessible label of the empty role icon tile in the community role editor. Clicking it opens the file picker.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleIconField.tsx
+msgid "Upload role icon"
+msgstr "Įkelti vaidmens piktogramą"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts

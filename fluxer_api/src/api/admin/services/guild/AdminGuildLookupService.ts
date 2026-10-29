@@ -90,6 +90,8 @@ export class AdminGuildLookupService {
 					permissions: r.permissions.toString(),
 					hoist: r.isHoisted,
 					mentionable: r.isMentionable,
+					icon: r.iconHash,
+					unicode_emoji: r.unicodeEmoji,
 				})),
 			},
 		};

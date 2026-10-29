@@ -136,6 +136,8 @@ export const ERROR_I18N_MESSAGES = {
 	'attachments_and_uploads.file_not_found': 'File not found.',
 	'attachments_and_uploads.file_size_too_large': 'File size is too large. Maximum file size is {maxSize}.',
 	'attachments_and_uploads.filename_length_invalid': 'Filename must be between {min} and {max} characters.',
+	'attachments_and_uploads.image_dimensions_out_of_range':
+		'Image width and height must each be between {min} and {max} pixels.',
 	'attachments_and_uploads.image_size_exceeds_limit': 'Image size exceeds {maxSize} bytes.',
 	'attachments_and_uploads.invalid_file_field_name':
 		'Invalid file field name: {key}. Expected format: `files[N]` where N is a number.',
@@ -631,6 +633,9 @@ export const ERROR_I18N_MESSAGES = {
 		'You can only update your voice activity sharing default once every 24 hours. Please try again in {retry_after, plural, one {# second} other {# seconds}}.',
 	'roles.cannot_reorder_everyone_role': "You can't reorder the @everyone role.",
 	'roles.cannot_set_everyone_hoist': "You can't set hoist position for the @everyone role.",
+	'roles.cannot_set_everyone_icon': "The @everyone role can't have an icon.",
+	'roles.icon_and_emoji_exclusive': 'A role can have an image icon or an emoji, not both.',
+	'roles.icon_source_and_icon_exclusive': 'Set a role icon or copy one from another role, not both.',
 	'roles.invalid_role_id': 'Invalid role ID: {roleId}.',
 	'roles.parse_and_users_or_roles_cannot_be_used_together':
 		"You can't use `parse` together with `allowed_mentions.users` or `allowed_mentions.roles`.",

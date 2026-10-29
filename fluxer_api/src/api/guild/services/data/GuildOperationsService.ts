@@ -111,6 +111,7 @@ import type {
 	TemplateRole,
 	TemplateSerializedGuild,
 } from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
+import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
@@ -1111,7 +1112,8 @@ export class GuildOperationsService {
 					hoist_position: null,
 					color: role.color ?? 0,
 					icon_hash: null,
-					unicode_emoji: role.unicode_emoji ?? null,
+					unicode_emoji:
+						role.unicode_emoji != null && isValidSingleUnicodeEmoji(role.unicode_emoji) ? role.unicode_emoji : null,
 					hoist: role.hoist ?? false,
 					mentionable: role.mentionable ?? false,
 					version: 1,

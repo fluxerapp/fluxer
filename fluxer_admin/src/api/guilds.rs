@@ -178,6 +178,14 @@ impl AdminApiClient {
         Ok(())
     }
 
+    pub async fn clear_guild_role_icon(&self, guild_id: &str, role_id: &str) -> ApiResult<()> {
+        self.generated()
+            .clear_admin_guild_role_icon(&snowflake(guild_id), &snowflake(role_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        Ok(())
+    }
+
     pub async fn update_guild_settings(
         &self,
         guild_id: &str,

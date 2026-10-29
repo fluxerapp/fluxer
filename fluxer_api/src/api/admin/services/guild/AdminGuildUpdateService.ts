@@ -4,7 +4,7 @@ import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {assertCustomBadgeIdsOfType} from '@app/api/admin/services/AdminBadgeService';
 import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
-import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import {createGuildID, createRoleID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
@@ -20,6 +20,7 @@ import {Logger} from '@app/api/Logger';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
 import type {
 	ClearGuildFieldsRequest,
 	TransferGuildOwnershipRequest,
@@ -193,6 +194,56 @@ export class AdminGuildUpdateService {
 			action: 'clear_fields',
 			auditLogReason,
 			metadata: new Map([['fields', data.fields.join(',')]]),
+		});
+	}
+
+	async clearRoleIcon(
+		data: {guild_id: bigint; role_id: bigint},
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<void> {
+		const {guildRepository, entityAssetService, auditService, updatePropagator} = this.deps;
+		const guildId = createGuildID(data.guild_id);
+		const roleId = createRoleID(data.role_id);
+		const role = await guildRepository.getRole(roleId, guildId);
+		if (!role) {
+			throw new UnknownGuildRoleError();
+		}
+		const prepared = await entityAssetService.prepareAssetUpload({
+			assetType: 'role_icon',
+			entityType: 'role',
+			entityId: roleId,
+			guildId,
+			previousHash: role.iconHash,
+			base64Image: null,
+			errorPath: 'icon',
+		});
+		const updatedRole = await guildRepository.upsertRole(
+			{...role.toRow(), icon_hash: null, unicode_emoji: null},
+			role.toRow(),
+		);
+		try {
+			await entityAssetService.commitAssetChange(prepared);
+		} catch (error) {
+			Logger.error(
+				{error, guildId, previousS3Key: prepared.previousS3Key},
+				'Failed to queue cleared role icon for deletion after successful DB update',
+			);
+		}
+		await updatePropagator.dispatchGuildRoleUpdate(guildId, updatedRole);
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'guild',
+			targetId: BigInt(guildId),
+			action: 'clear_role_icon',
+			auditLogReason,
+			metadata: new Map(
+				[
+					['role_id', roleId.toString()],
+					['icon_hash', role.iconHash],
+					['unicode_emoji', role.unicodeEmoji],
+				].filter((entry): entry is [string, string] => entry[1] !== null),
+			),
 		});
 	}
 

@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .role > :first-child {
-	margin-inline-end: 0.25rem;
 	margin-inline-start: 0.0625rem;
 }
 

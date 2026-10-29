@@ -78,12 +78,21 @@ async function containToSquareBase64(
 	maxBytes: number,
 	preferredMime: StaticOutputMime,
 ): Promise<string> {
+	return readBlobAsBase64NoPrefix(await containImageInSquare(file, target, maxBytes, preferredMime));
+}
+
+export async function containImageInSquare(
+	image: Blob,
+	target: number,
+	maxBytes: number,
+	preferredMime: StaticOutputMime = 'image/png',
+): Promise<Blob> {
 	const canvas = document.createElement('canvas');
 	canvas.width = target;
 	canvas.height = target;
 	const ctx = canvas.getContext('2d');
 	if (!ctx) throw new Error('Could not create canvas context');
-	const objectUrl = URL.createObjectURL(file);
+	const objectUrl = URL.createObjectURL(image);
 	try {
 		const img = await loadImageElement(objectUrl);
 		const sourcePixels = img.naturalWidth * img.naturalHeight;
@@ -104,7 +113,7 @@ async function containToSquareBase64(
 		URL.revokeObjectURL(objectUrl);
 	}
 
-	return readBlobAsBase64NoPrefix(await encodeCanvasWithinBytes(canvas, ctx, preferredMime, maxBytes));
+	return encodeCanvasWithinBytes(canvas, ctx, preferredMime, maxBytes);
 }
 
 export async function fitImageWithin(file: File, maxSide: number, maxBytes: number): Promise<Blob> {

@@ -162,7 +162,7 @@ A template lists the roles and channels that [Create guild](#create-guild) creat
 | color? | integer | Role color (default 0) |
 | hoist? | boolean | Whether the role is shown separately in the member list (default false) |
 | mentionable? | boolean | Whether anyone can mention the role (default false) |
-| unicode_emoji? | ?string | Role Unicode emoji |
+| unicode_emoji? | ?string | Role Unicode emoji, stored as null when it isn't a single Unicode emoji. Templates can't set an image icon |
 
 <sup>1</sup> The role called `@everyone`, or the role with ID `0` when none has that name, sets the permissions of the everyone role. The other roles are created in array order
 

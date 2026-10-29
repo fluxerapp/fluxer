@@ -1546,6 +1546,8 @@ const AdminGuildRoleSummarySchema = z.object({
 	permissions: PermissionStringType.describe('The role permissions bitfield'),
 	hoist: z.boolean(),
 	mentionable: z.boolean(),
+	icon: z.string().nullable().describe('The hash of the role icon image, or null'),
+	unicode_emoji: z.string().nullable().describe('The Unicode emoji used as the role icon, or null'),
 });
 const AdminLookupGuildSchema = z.object({
 	id: SnowflakeStringType,

@@ -28,7 +28,12 @@ import {
 	LookupGuildResponse,
 	SearchGuildsResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {GuildIdParam, GuildIdUserIdParam, SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import {
+	GuildIdParam,
+	GuildIdRoleIdParam,
+	GuildIdUserIdParam,
+	SuccessResponse,
+} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {GuildAuditLogListQuery} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 
 const GUILD_UPDATE_ACLS = [
@@ -438,6 +443,32 @@ export function GuildAdminController(app: HonoApp) {
 				{guild_id: params.guild_id, user_id: params.user_id},
 				adminUserId,
 				auditLogReason,
+			);
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/admin/guilds/:guild_id/roles/:role_id/icon',
+		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.GUILD_UPDATE_SETTINGS),
+		Validator('param', GuildIdRoleIdParam),
+		OpenAPI({
+			operationId: 'clear_admin_guild_role_icon',
+			summary: 'Clear guild role icon',
+			description:
+				'Removes the image icon and Unicode emoji from a guild role and queues the old image for deletion. Members see the change at once. Logged to audit log. Requires GUILD_UPDATE_SETTINGS permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const params = ctx.req.valid('param');
+			await adminService.guildServiceAggregate.updateService.clearRoleIcon(
+				{guild_id: params.guild_id, role_id: params.role_id},
+				ctx.get('adminUserId'),
+				ctx.get('auditLogReason'),
 			);
 			return ctx.body(null, 204);
 		},

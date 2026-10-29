@@ -120,9 +120,12 @@ A role is a permission mask that a guild assigns to its members.
 | permissions | decimal string | The [permission](#permissions) mask the role grants |
 | hoist | boolean | Whether the role's members show as their own group in the member list |
 | mentionable | boolean | Whether members without `MENTION_EVERYONE` can mention the role |
-| unicode_emoji? | ?string | The Unicode emoji shown beside the role name (not returned by the role routes) |
+| icon | ?string | The hash of the role icon image, or null |
+| unicode_emoji | ?string | The Unicode emoji used as the role icon, or null |
 
-The everyone role has the guild's ID, is called `@everyone` and is always at position 0. You can change its color and permissions, but you can't delete it, move it or give it a hoist position.
+The everyone role has the guild's ID, is called `@everyone` and is always at position 0. You can change its color and permissions, but you can't delete it, move it, give it a hoist position or give it an icon.
+
+A role has at most one of `icon` and `unicode_emoji`. Clients show the icon of a member's highest role that has one. An image icon is served by the Media Proxy at [Get role icon](/media-proxy/routes/#get-role-icon).
 
 ### Example
 
@@ -135,7 +138,9 @@ The everyone role has the guild's ID, is called `@everyone` and is always at pos
   "hoist_position": 1,
   "permissions": "1099511637006",
   "hoist": true,
-  "mentionable": false
+  "mentionable": false,
+  "icon": "5d4c7a1e",
+  "unicode_emoji": null
 }
 ```
 
@@ -194,6 +199,12 @@ Creates a role at position 1 and returns its [guild role object](#guild-role-obj
 | name | string | The name of the role (1-100 characters) |
 | color? | integer | The color of the role as an RGB integer (0-16777215, default 0) |
 | permissions? | decimal string \| integer | The [permission](#permissions) mask, which defaults to the everyone role's mask |
+| icon? | ?base64 string | A PNG, JPEG, WebP or AVIF image for the [role icon](#role-icons), or null to remove it |
+| unicode_emoji? | ?string | A single Unicode emoji for the role icon, or null to remove it |
+| icon_source_role_id? | snowflake | A role in this guild whose icon the new role copies |
+
+
+With `icon_source_role_id`, Fluxer stores a separate copy of an image icon. Deleting either role leaves the other's icon in place.
 
 ### Response
 
@@ -201,6 +212,10 @@ Creates a role at position 1 and returns its [guild role object](#guild-role-obj
 | --- | --- | --- |
 | 200 | [guild role object](#guild-role-object) | The role was created |
 | 400 | [error response](/http-api/#error-response) | `MAX_GUILD_ROLES` when the guild is at its role limit, 250 by default, counting the everyone role |
+| 400 | [error response](/http-api/#error-response) | A [role icon](#role-icons) is not valid |
+| 400 | [error response](/http-api/#error-response) | `ROLE_ICON_SOURCE_AND_ICON_EXCLUSIVE` when `icon_source_role_id` comes with `icon` or `unicode_emoji` |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_ROLE` when `icon_source_role_id` is not a role in this guild |
+| 413 | [error response](/http-api/#error-response) | The body is larger than a role icon allows |
 
 The rate limit is 10 requests per minute, on the `guild:role:create::guild_id` bucket.
 
@@ -218,7 +233,7 @@ Modifies a role and returns its [guild role object](#guild-role-object). You nee
 
 ### JSON body
 
-Fields you leave out keep their value. On the everyone role, Fluxer ignores every field except `color` and `permissions`.
+Fields you leave out keep their value. On the everyone role, Fluxer ignores every field except `color`, `permissions`, `icon` and `unicode_emoji`, and the last two can only be null.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -228,14 +243,34 @@ Fields you leave out keep their value. On the everyone role, Fluxer ignores ever
 | hoist? | boolean | Whether the role's members show as their own group in the member list |
 | hoist_position? | ?integer | The member list position to give the role, or null to clear it |
 | mentionable? | boolean | Whether members without `MENTION_EVERYONE` can mention the role |
+| icon? | ?base64 string | A PNG, JPEG, WebP or AVIF image for the [role icon](#role-icons), or null to remove it |
+| unicode_emoji? | ?string | A single Unicode emoji for the role icon, or null to remove it |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [guild role object](#guild-role-object) | The role was modified |
+| 400 | [error response](/http-api/#error-response) | A [role icon](#role-icons) is not valid |
+| 413 | [error response](/http-api/#error-response) | The body is larger than a role icon allows |
 
 The rate limit is 20 requests per 10 seconds, on the `guild:role:update::guild_id` bucket.
+
+### Role icons
+
+Create guild role and Modify guild role take the same two icon fields.
+
+| Body | Result |
+| --- | --- |
+| field left out | The icon stays as it is |
+| `icon` with an image | The image is stored and `unicode_emoji` is cleared |
+| `unicode_emoji` with an emoji | The emoji is stored and any image is cleared |
+| `icon` set to null | The image is cleared |
+| `unicode_emoji` set to null | The emoji is cleared |
+| both non-null | 400 with `ROLE_ICON_AND_EMOJI_EXCLUSIVE` on `icon` |
+| either non-null on the everyone role | 400 with `CANNOT_SET_ICON_ON_EVERYONE_ROLE` on that field |
+
+An image can't be animated, can be at most 256 KiB and each side must be between 32 and 1024 pixels. An image outside these limits returns 400 with `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `IMAGE_DIMENSIONS_OUT_OF_RANGE`, and an emoji that isn't a single Unicode emoji returns `NOT_A_VALID_UNICODE_EMOJI`. Role icons are free and need no guild feature. When an image is replaced or cleared, or the role is deleted, Fluxer deletes the old image later.
 
 ## Modify guild role positions
 

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import {mapGuildRoleToResponse, mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {Guild} from '@app/api/models/Guild';
+import type {GuildRole} from '@app/api/models/GuildRole';
 import {getGuildSearchService} from '@app/api/SearchFactory';
 import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
@@ -23,6 +24,14 @@ interface AdminGuildUpdateDispatchOptions {
 
 export class AdminGuildUpdatePropagator {
 	constructor(private readonly deps: AdminGuildUpdatePropagatorDeps) {}
+
+	async dispatchGuildRoleUpdate(guildId: GuildID, role: GuildRole): Promise<void> {
+		await this.deps.gatewayService.dispatchGuild({
+			guildId,
+			event: 'GUILD_ROLE_UPDATE',
+			data: {role: mapGuildRoleToResponse(role)},
+		});
+	}
 
 	async dispatchGuildUpdate(
 		guildId: GuildID,

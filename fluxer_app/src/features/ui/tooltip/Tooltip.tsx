@@ -125,6 +125,7 @@ interface TooltipProps {
 	size?: 'default' | 'large';
 	openOnMountHover?: boolean;
 	allowWhenContextMenuOpen?: boolean;
+	ariaHidden?: boolean;
 	children?: React.ReactElement;
 }
 
@@ -224,6 +225,7 @@ export const Tooltip = observer(
 		size = 'default',
 		openOnMountHover = true,
 		allowWhenContextMenuOpen = false,
+		ariaHidden = false,
 		children,
 	}: TooltipProps) => {
 		const tooltipId = useId();
@@ -701,9 +703,10 @@ export const Tooltip = observer(
 			tooltipModel.hovered,
 		]);
 		if (!child) return null;
-		const describedBy = shouldRenderTooltip
-			? [childProps['aria-describedby'], tooltipId].filter(Boolean).join(' ')
-			: childProps['aria-describedby'];
+		const describedBy =
+			shouldRenderTooltip && !ariaHidden
+				? [childProps['aria-describedby'], tooltipId].filter(Boolean).join(' ')
+				: childProps['aria-describedby'];
 		const shouldUseTooltipAsName =
 			typeof text === 'string' &&
 			!childProps['aria-label'] &&
@@ -805,7 +808,8 @@ export const Tooltip = observer(
 							<motion.div
 								key="tooltip"
 								id={tooltipId}
-								role="tooltip"
+								role={ariaHidden ? undefined : 'tooltip'}
+								aria-hidden={ariaHidden || undefined}
 								ref={(node: HTMLDivElement | null) => {
 									tooltipRef.current = node;
 									if (node && targetRef.current) {

@@ -7,6 +7,7 @@ export type AssetKind =
 	| 'splash'
 	| 'embed_splash'
 	| 'sign_in_backdrop'
+	| 'role_icon'
 	| 'emoji'
 	| 'sticker'
 	| 'attachment';
@@ -84,6 +85,7 @@ const RASTER_STATIC_ONLY = Object.freeze<Array<AssetExtension>>([
 	'svg',
 ]);
 const BACKDROP_UPLOAD = Object.freeze<Array<AssetExtension>>(['png', 'jpeg', 'webp', 'avif']);
+const ROLE_ICON_UPLOAD = BACKDROP_UPLOAD;
 const STICKER_UPLOAD = Object.freeze<Array<AssetExtension>>(['png', 'jpeg', 'apng', 'gif', 'webp', 'avif', 'svg']);
 const STORE_ANIMATED = Object.freeze<Array<CanonicalExtension>>(['webp', 'apng', 'gif']);
 const STORE_STATIC = Object.freeze<Array<CanonicalExtension>>(['webp', 'png', 'jpeg']);
@@ -148,6 +150,14 @@ export const ASSET_FORMAT_POLICY: Readonly<Record<AssetKind, AssetFormatPolicyEn
 		animated: 'never',
 		maxBytes: 4 * 1024 * 1024,
 		dims: {min: 480, max: 2400},
+	},
+	role_icon: {
+		upload: ROLE_ICON_UPLOAD,
+		mimes: pickMimes(ROLE_ICON_UPLOAD),
+		storeAs: STORE_STATIC,
+		animated: 'never',
+		maxBytes: 256 * 1024,
+		dims: {min: 32, max: 1024},
 	},
 	emoji: {
 		upload: RASTER_FULL,

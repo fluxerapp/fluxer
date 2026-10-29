@@ -319,6 +319,13 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				if (updates.permissions !== undefined) {
 					updateData.permissions = (updates.permissions & ~retiredPermissions).toString();
 				}
+				const originalRole = guild.roles[roleId];
+				if (updates.icon !== undefined && updates.icon !== originalRole?.icon) {
+					updateData.icon = updates.icon;
+				}
+				if (updates.unicodeEmoji !== undefined && updates.unicodeEmoji !== originalRole?.unicodeEmoji) {
+					updateData.unicode_emoji = updates.unicodeEmoji;
+				}
 				await GuildCommands.updateRole(guild.id, roleId, updateData);
 			}
 			setRoleUpdates(new Map());
@@ -367,7 +374,9 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					(merged.color !== undefined && merged.color !== originalRole.color) ||
 					(merged.hoist !== undefined && merged.hoist !== originalRole.hoist) ||
 					(merged.mentionable !== undefined && merged.mentionable !== originalRole.mentionable) ||
-					(merged.permissions !== undefined && merged.permissions !== originalRole.permissions);
+					(merged.permissions !== undefined && merged.permissions !== originalRole.permissions) ||
+					(merged.icon !== undefined && merged.icon !== originalRole.icon) ||
+					(merged.unicodeEmoji !== undefined && merged.unicodeEmoji !== originalRole.unicodeEmoji);
 				if (hasChanges) newMap.set(roleId, merged);
 				else newMap.delete(roleId);
 				return newMap;
@@ -402,6 +411,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				const createdRole = await GuildCommands.createRole(guild.id, copyName, {
 					color: sourceRole.color,
 					permissions: grantablePermissions,
+					iconSourceRoleId: sourceRole.icon || sourceRole.unicodeEmoji ? sourceRole.id : undefined,
 				});
 				const orderedRoleIds = roles.map((role: GuildRole) => role.id).filter((id) => id !== createdRole.id);
 				const sourceIndex = orderedRoleIds.indexOf(sourceRoleId);
@@ -616,6 +626,15 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, [selectedRole, handleRoleUpdate]);
 	const handleEnterHoistOrderMode = useCallback(() => setHoistOrderMode(true), []);
 	const handleExitHoistOrderMode = useCallback(() => setHoistOrderMode(false), []);
+	const reserveIconSlot = useMemo(
+		() =>
+			roles.some((role) => {
+				if (role.isEveryone) return false;
+				const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
+				return Boolean(roleWithUpdates.icon || roleWithUpdates.unicodeEmoji);
+			}),
+		[roles, roleUpdates],
+	);
 	const sidebarContent = useMemo(() => {
 		if (!guild || !currentUser) return null;
 		return (
@@ -628,6 +647,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				hoistOrderMode={hoistOrderMode}
 				hasCustomHoistOrder={hasCustomHoistOrder}
 				roleUpdates={roleUpdates}
+				reserveIconSlot={reserveIconSlot}
 				isRoleLocked={isRoleLocked}
 				onSelectRole={setSelectedRoleId}
 				onCreateRole={handleCreateRole}
@@ -660,6 +680,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		handleHoistDrop,
 		handleResetHoistOrder,
 		roleUpdates,
+		reserveIconSlot,
 		isRoleLocked,
 		hoistOrderMode,
 		hasCustomHoistOrder,

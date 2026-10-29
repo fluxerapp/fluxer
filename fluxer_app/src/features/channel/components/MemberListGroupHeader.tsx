@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/ChannelMembers.module.css';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {openRoleContextMenu, openRoleContextMenuForElement} from '@app/features/ui/action_menu/RoleContextMenu';
@@ -50,6 +51,15 @@ export function MemberListGroupHeader({
 			data-member-list-focus-item={guildRole ? 'true' : undefined}
 			data-flx="channel.member-list-group-header"
 		>
+			{guildRole && (
+				<RoleIcon
+					role={guildRole}
+					size={16}
+					decorative={true}
+					className={styles.groupHeaderRoleIcon}
+					data-flx="channel.member-list-group-header.group-header-role-icon"
+				/>
+			)}
 			<span className={styles.groupHeaderLabel} data-flx="channel.member-list-group-header.label">
 				{name}
 			</span>

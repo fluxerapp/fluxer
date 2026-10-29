@@ -286,6 +286,27 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id/roles/:role_id/icon',
+		async prepare({harness, admin}) {
+			const guild = await createGuild(harness, admin.token, 'Audit Role Icon Guild');
+			const role = await createBuilder<{id: string}>(harness, admin.token)
+				.post(`/guilds/${guild.id}/roles`)
+				.body({name: 'Mods', unicode_emoji: '🛡️'})
+				.expect(200)
+				.execute();
+			return {
+				request: {path: `/admin/guilds/${guild.id}/roles/${role.id}/icon`, expectStatus: 204},
+				expected: {
+					action: 'clear_role_icon',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {role_id: role.id, unicode_emoji: '🛡️'},
+				},
+			};
+		},
+	},
+	{
 		method: 'GET',
 		route: '/admin/guilds/:guild_id/emojis',
 		async prepare({harness, admin}) {

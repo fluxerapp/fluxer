@@ -72,7 +72,9 @@ pub fn simple_tab_content(
 ) -> Markup {
     let guild_info = GuildInfo::from(guild.clone());
     match tab {
-        "overview" => guild_detail_tabs::overview::overview_tab(config, guild, csrf_token),
+        "overview" => {
+            guild_detail_tabs::overview::overview_tab(config, guild, csrf_token, admin_acls)
+        }
         "features" => {
             guild_detail_tabs::features::features_tab(config, &guild_info, csrf_token, admin_acls)
         }
@@ -103,7 +105,7 @@ pub fn simple_tab_content(
             csrf_token,
             guild_detail_tabs::emojis::GuildAssetKind::Sticker,
         ),
-        _ => guild_detail_tabs::overview::overview_tab(config, guild, csrf_token),
+        _ => guild_detail_tabs::overview::overview_tab(config, guild, csrf_token, admin_acls),
     }
 }
 

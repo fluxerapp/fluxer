@@ -168,6 +168,8 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 				permissions: r.permissions.toString(),
 				mentionable: r.isMentionable,
 				hoist: r.isHoisted,
+				icon: r.iconHash,
+				unicode_emoji: r.unicodeEmoji,
 			})),
 			members: members.map((m) => ({
 				user_id: m.userId.toString(),
@@ -281,6 +283,20 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 			assetJobs.push({
 				key: buildHashedAssetKey(prefix, guildIdStr, hash),
 				dest: path.join(contentDir, 'assets', 'guild', `${fileName}.${ext}`),
+			});
+		}
+		for (const role of roles) {
+			if (!role.iconHash) continue;
+			const id = role.id.toString();
+			assetJobs.push({
+				key: buildHashedAssetKey('role-icons', id, role.iconHash),
+				dest: path.join(
+					contentDir,
+					'assets',
+					'guild',
+					'role-icons',
+					`${id}.${getAnimatedAssetExtension(role.iconHash)}`,
+				),
 			});
 		}
 		for (const emoji of emojis) {

@@ -5,10 +5,9 @@ import {
 	getEmojiSpriteSheetLayout,
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
-import type {Channel} from '@app/features/channel/models/Channel';
 import EmojiPicker, {getEmojiUsageKey} from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
+import type {AvailabilityCheck} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
 import {loadImage} from '@app/features/messaging/utils/ImageCacheUtils';
@@ -17,7 +16,6 @@ import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiCon
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
-import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import React, {useEffect, useImperativeHandle, useMemo, useRef} from 'react';
 
@@ -83,7 +81,7 @@ interface EmojiRendererProps {
 	handleHover: (emoji: FlatEmoji | null) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	channel: Channel | null;
+	getAvailability: (emoji: FlatEmoji) => AvailabilityCheck;
 	shouldAnimate: boolean;
 	isHighlighted?: boolean;
 	shouldScrollIntoView?: boolean;
@@ -96,7 +94,7 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			handleHover,
 			handleSelect,
 			skinTone,
-			channel,
+			getAvailability,
 			shouldAnimate,
 			isHighlighted = false,
 			shouldScrollIntoView = false,
@@ -105,14 +103,13 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 		forwardedRef,
 	) => {
 		const emojiRef = useRef<HTMLButtonElement | null>(null);
-		const {i18n} = useLingui();
 		useImperativeHandle(forwardedRef, () => emojiRef.current!);
 		useEffect(() => {
 			if (shouldScrollIntoView && emojiRef.current) {
 				emojiRef.current.scrollIntoView({block: 'nearest', inline: 'nearest'});
 			}
 		}, [shouldScrollIntoView]);
-		const availability = checkEmojiAvailability(i18n, emoji, channel);
+		const availability = getAvailability(emoji);
 		const customEmojiUrl = useMemo(
 			() =>
 				emoji.id

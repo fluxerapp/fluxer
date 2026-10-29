@@ -279,6 +279,16 @@ async fn dispatch_guild_action(
                 "Failed to clear guild fields",
             )
         }
+        "clear_role_icon" => {
+            let Some(role_id) = get("role_id") else {
+                return FlashData::error("Role ID is required");
+            };
+            action_result(
+                client.clear_guild_role_icon(guild_id, &role_id).await,
+                "Role icon cleared",
+                "Failed to clear role icon",
+            )
+        }
         "update_name" => {
             let Some(name) = get("name") else {
                 return FlashData::error("Guild name is required");

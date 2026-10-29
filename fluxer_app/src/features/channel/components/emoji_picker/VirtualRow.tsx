@@ -4,10 +4,10 @@ import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {EMOJI_ROW_HEIGHT} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiRenderer} from '@app/features/channel/components/emoji_picker/EmojiRenderer';
 import {PickerCategoryHeaderRow} from '@app/features/channel/components/pickers/shared/PickerCategoryHeaderRow';
-import type {Channel} from '@app/features/channel/models/Channel';
 
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import type {AvailabilityCheck} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 
@@ -23,7 +23,7 @@ interface VirtualRowRendererProps {
 	handleHover: (emoji: FlatEmoji | null, row?: number, column?: number) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	channel: Channel | null;
+	getAvailability: (emoji: FlatEmoji) => AvailabilityCheck;
 	shouldAnimate: boolean;
 	gridColumns?: number;
 	gridWidth?: number;
@@ -40,7 +40,7 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 		handleHover,
 		handleSelect,
 		skinTone,
-		channel,
+		getAvailability,
 		shouldAnimate,
 		gridColumns = 9,
 		gridWidth,
@@ -89,7 +89,7 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 								handleHover={(e) => handleHover(e, emojiRowIndex, colIndex)}
 								handleSelect={handleSelect}
 								skinTone={skinTone}
-								channel={channel}
+								getAvailability={getAvailability}
 								shouldAnimate={shouldAnimate}
 								isHighlighted={shouldHighlight}
 								shouldScrollIntoView={isSelected && shouldScrollOnSelection}
@@ -116,7 +116,7 @@ interface VirtualizedRowProps {
 	handleHover: (emoji: FlatEmoji | null, row?: number, column?: number) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	channel: Channel | null;
+	getAvailability: (emoji: FlatEmoji) => AvailabilityCheck;
 	allowAnimation: boolean;
 	gridColumns?: number;
 	gridWidth?: number;
@@ -134,7 +134,7 @@ export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(
 		handleHover,
 		handleSelect,
 		skinTone,
-		channel,
+		getAvailability,
 		allowAnimation,
 		gridColumns,
 		gridWidth,
@@ -152,7 +152,7 @@ export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(
 				handleHover={handleHover}
 				handleSelect={handleSelect}
 				skinTone={skinTone}
-				channel={channel}
+				getAvailability={getAvailability}
 				shouldAnimate={allowAnimation}
 				gridColumns={gridColumns}
 				gridWidth={gridWidth}

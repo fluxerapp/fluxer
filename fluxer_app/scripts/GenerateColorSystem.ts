@@ -861,7 +861,7 @@ function generateCSS(
 	darkLegacyTokens: Array<OutputToken>,
 ): string {
 	const blocks = [
-		renderBlock(':root', rootTokens, cfg.families),
+		renderBlock(':root,\n.theme-dark', rootTokens, cfg.families),
 		renderBlock('.theme-light', lightTokens, cfg.families),
 		renderBlock('.theme-coal', coalTokens, cfg.families),
 		renderBlock('.theme-dark_legacy', darkLegacyTokens, cfg.families),

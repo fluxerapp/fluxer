@@ -1,0 +1,28 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.roleIcon {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	cursor: default;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.roleIconImage {
+	display: block;
+	object-fit: contain;
+	pointer-events: none;
+	filter: var(--role-icon-image-filter, none);
+}
+
+:global(.theme-light) {
+	--role-icon-image-filter: drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.35));
+}
+
+:global(.theme-dark),
+:global(.theme-coal),
+:global(.theme-dark_legacy) {
+	--role-icon-image-filter: none;
+}

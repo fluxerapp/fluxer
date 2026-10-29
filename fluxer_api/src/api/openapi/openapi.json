@@ -10613,7 +10613,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, and color.",
+				"description": "Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, colour and an optional icon image or Unicode emoji.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -10860,7 +10860,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Update guild role. Requires manage_roles permission. Modifies role name, permissions, color, and other settings.",
+				"description": "Update guild role. Requires manage_roles permission. Modifies role name, permissions, colour, icon and other settings.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -33440,7 +33440,15 @@
 						"description": "The position of the role in the hoisted member list",
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
-					"mentionable": {"description": "Whether the role can be mentioned by anyone", "type": "boolean"}
+					"mentionable": {"description": "Whether the role can be mentioned by anyone", "type": "boolean"},
+					"icon": {
+						"description": "Base64 data URI for the role icon image, or null to remove it",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"unicode_emoji": {
+						"description": "A single Unicode emoji to use as the role icon, or null to remove it",
+						"anyOf": [{"type": "string", "maxLength": 64}, {"type": "null"}]
+					}
 				}
 			},
 			"GuildRoleResponse": {
@@ -33466,9 +33474,13 @@
 					},
 					"hoist": {"type": "boolean", "description": "Whether this role is displayed separately in the member list"},
 					"mentionable": {"type": "boolean", "description": "Whether this role can be mentioned by anyone"},
-					"unicode_emoji": {"description": "The unicode emoji for this role", "type": ["string", "null"]}
+					"icon": {"description": "The hash of the role icon image, or null", "type": ["string", "null"]},
+					"unicode_emoji": {
+						"description": "The Unicode emoji used as the role icon, or null",
+						"type": ["string", "null"]
+					}
 				},
-				"required": ["id", "name", "color", "position", "permissions", "hoist", "mentionable"],
+				"required": ["id", "name", "color", "position", "permissions", "hoist", "mentionable", "icon", "unicode_emoji"],
 				"additionalProperties": false
 			},
 			"GuildRoleHoistPositionsRequest": {
@@ -33517,6 +33529,18 @@
 					"permissions": {
 						"description": "The permissions bitfield for the role",
 						"$ref": "#/components/schemas/UnsignedInt64Type"
+					},
+					"icon": {
+						"description": "Base64 data URI for the role icon image, or null to remove it",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"unicode_emoji": {
+						"description": "A single Unicode emoji to use as the role icon, or null to remove it",
+						"anyOf": [{"type": "string", "maxLength": 64}, {"type": "null"}]
+					},
+					"icon_source_role_id": {
+						"description": "The ID of a role in this community whose icon the new role copies. An image is stored again for the new role",
+						"$ref": "#/components/schemas/SnowflakeType"
 					}
 				},
 				"required": ["name"]
