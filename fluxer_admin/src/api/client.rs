@@ -346,16 +346,22 @@ impl AdminApiClient {
         serde_json::from_value(json).map_err(|e| ApiError::Parse(e.to_string()))
     }
 
-    pub(crate) fn generated_error<E: std::fmt::Debug>(
+    pub(crate) fn generated_error<E: std::fmt::Debug + Serialize>(
         &self,
         error: progenitor_client::Error<E>,
     ) -> ApiError {
         if let progenitor_client::Error::InvalidResponsePayload(_, err) = &error {
             return ApiError::Parse(format!("invalid response payload: {err}"));
         }
+        let message = match &error {
+            progenitor_client::Error::ErrorResponse(response) => {
+                serde_json::to_string(response.as_ref()).unwrap_or_else(|_| format!("{error:?}"))
+            }
+            _ => format!("{error:?}"),
+        };
         match error.status() {
-            Some(status) => ApiError::http(status.as_u16(), format!("{error:?}")),
-            None => ApiError::Network(format!("{error:?}")),
+            Some(status) => ApiError::http(status.as_u16(), message),
+            None => ApiError::Network(message),
         }
     }
 
@@ -442,4 +448,36 @@ fn audit_log_reason_header(reason: &str) -> ApiResult<HeaderValue> {
         .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
     value.set_sensitive(true);
     Ok(value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::generated::types;
+
+    #[test]
+    fn generated_error_response_keeps_api_message() {
+        let client = AdminApiClient {
+            generated: GeneratedClient::new_with_client(
+                "http://localhost",
+                reqwest::Client::new(),
+                HeaderMap::new(),
+            ),
+        };
+        let body = types::Error {
+            code: "DIRECT_MESSAGES_DISABLED".to_owned(),
+            errors: Vec::new(),
+            message: "Direct messages are disabled on this instance.".to_owned(),
+            extra: serde_json::Map::new(),
+        };
+        let error = progenitor_client::Error::ErrorResponse(progenitor_client::ResponseValue::new(
+            body,
+            reqwest::StatusCode::BAD_REQUEST,
+            HeaderMap::new(),
+        ));
+        assert_eq!(
+            client.generated_error(error).detail_message().as_deref(),
+            Some("Direct messages are disabled on this instance.")
+        );
+    }
 }
