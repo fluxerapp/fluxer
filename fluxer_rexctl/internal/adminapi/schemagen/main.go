@@ -44,6 +44,7 @@ type key struct {
 
 var skip = map[string]bool{
 	"app_public.setup.configured": true,
+	"sso.migrate_identities":      true,
 }
 
 type gen struct {

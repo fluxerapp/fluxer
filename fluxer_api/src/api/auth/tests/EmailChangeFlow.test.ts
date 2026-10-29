@@ -488,6 +488,7 @@ describe('Email change flow', () => {
 			backup_codes: true,
 			email_code: false,
 			password: false,
+			sso_reauth: false,
 		});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
@@ -509,6 +510,7 @@ describe('Email change flow', () => {
 			backup_codes: true,
 			email_code: false,
 			password: false,
+			sso_reauth: false,
 		});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.patch('/users/@me')
@@ -587,6 +589,7 @@ describe('Email change flow', () => {
 			backup_codes: true,
 			email_code: false,
 			password: false,
+			sso_reauth: false,
 		});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
@@ -608,6 +611,7 @@ describe('Email change flow', () => {
 			backup_codes: true,
 			email_code: false,
 			password: false,
+			sso_reauth: false,
 		});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
@@ -689,6 +693,7 @@ describe('Email change flow', () => {
 			backup_codes: true,
 			email_code: false,
 			password: false,
+			sso_reauth: false,
 		});
 		const applied = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')

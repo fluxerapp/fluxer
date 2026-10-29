@@ -4075,6 +4075,11 @@ msgstr "Nakon 14 dana vaš će račun biti trajno izbrisan"
 msgid "After date"
 msgstr "Nakon datuma"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Nakon prijave ponovno pokušaj radnju."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Nakon brisanja računa više nećete moći izbrisati poruke koje ste poslali"
@@ -9899,6 +9904,11 @@ msgstr "Potvrda ili dvostruki klik za pridruživanje glasovnim kanalima zajednic
 msgid "Conflicts with {conflictLabel}"
 msgstr "U sukobu s {conflictLabel}"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Poveži"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Povežite kameru i pokušajte ponovno."
@@ -10152,7 +10162,11 @@ msgstr "Kontekstni izbornici mogu se otvoriti lijevim klikom (na gumbe) ili desn
 msgid "Continue"
 msgstr "Nastavi"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Nastavi u aplikaciji {productName}."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Nastavi u desktop aplikaciji."
@@ -10830,6 +10844,11 @@ msgstr "Nije moguće zatvoriti izravnu poruku"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Nije moguće dovršiti prijavu. Pokušajte ponovno."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Jedinstvenu prijavu nije moguće povezati"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "Omogućuje vam poništavanje lozinke ako je zaboravite."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Omogućuje dijeljenje zaslona ili prozora."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Omogućuje ti prijavu u ovaj račun putem {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "Nač"
 msgid "Sign-in page"
 msgstr "Stranica za prijavu"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "Prijava je otkazana."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "Jednoslojno"
 msgid "Single line"
 msgstr "Jedan redak"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Jedinstvena prijava"
 
@@ -43200,6 +43231,11 @@ msgstr "Prijavljujete se kodom poslanim na vašu e-poštu. Lozinka nije obavezna
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Prijavljuješ se ovim korisničkim imenom. Odaberi ono kojeg ćeš se sjetiti."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Prijavio si se na drugi račun. Prijavi se računom koji ovdje koristiš."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "Vaš je račun uspješno povezan. Sada možete zatvoriti ovu karticu i v
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Tvoj račun nema pridruženu e-adresu. Ako zaboraviš lozinku, komplet za oporavak jedini je način da se vratiš. Potrebna je samo minuta."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Tvoj je račun povezan s jedinstvenom prijavom."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "Vaš privatni prostor za misli i podsjetnike"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Vaše postavke privatnosti profila su ograničene, pa čak i kada je odabrano \"Svi\", neki ljudi neće vidjeti ovu vezu."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Tvoj pružatelj traži da se ponovno prijaviš."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Tvoj pružatelj prijavio je pogrešku."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "Vaše dijeljenje zaslona nije se moglo objaviti s kompatibilnim video ko
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Vaš token za postavljanje više ne radi. Unesite ga ponovno."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Tvoj davatelj prijave nije dostupan. Pokušaj ponovno kasnije."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Tvoj davatelj prijave upravlja tvojom e-poštom i lozinkom."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

@@ -194,6 +194,9 @@ export const SsoStartResponse = z.object({
 	authorization_url: z.string().describe('URL to redirect user to for SSO authentication'),
 	state: z.string().describe('State parameter for CSRF protection'),
 	redirect_uri: z.string().describe('OAuth redirect URI used for the SSO provider callback'),
+	client_binding: z
+		.string()
+		.describe('Secret the client keeps and sends back with the code and state to complete this sign-in'),
 });
 
 export type SsoStartResponse = z.infer<typeof SsoStartResponse>;
@@ -239,6 +242,11 @@ const SsoRedirectField = {
 export const SsoCompleteResponse = z.union([
 	AuthTokenWithUserIdResponse.extend(SsoRedirectField),
 	AuthMfaRequiredResponse.extend(SsoRedirectField),
+	z
+		.object({
+			linked: z.literal(true).describe('The SSO identity is now connected to the account that started the link'),
+		})
+		.extend(SsoRedirectField),
 ]);
 
 export type SsoCompleteResponse = z.infer<typeof SsoCompleteResponse>;
@@ -390,6 +398,9 @@ export type SsoStartRequest = z.infer<typeof SsoStartRequest>;
 export const SsoCompleteRequest = z.object({
 	code: createStringType(1, 4096).describe('Authorization code from the SSO provider'),
 	state: createStringType(1, 4096).describe('State parameter for CSRF protection'),
+	client_binding: createStringType(1, 128)
+		.nullish()
+		.describe('The client_binding returned by SSO start. Required except for the mobile app callback'),
 });
 
 export type SsoCompleteRequest = z.infer<typeof SsoCompleteRequest>;

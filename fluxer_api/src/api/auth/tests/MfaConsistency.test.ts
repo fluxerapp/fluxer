@@ -67,6 +67,7 @@ describe('MFA Consistency Tests', () => {
 				backup_codes: methods.backup_codes,
 				email_code: methods.email_code,
 				password: methods.password,
+				sso_reauth: false,
 			});
 		});
 		test('mfa-methods agrees with the SUDO_MODE_REQUIRED body for an enrolled TOTP user', async () => {
@@ -104,6 +105,7 @@ describe('MFA Consistency Tests', () => {
 				backup_codes: methods.backup_codes,
 				email_code: methods.email_code,
 				password: methods.password,
+				sso_reauth: false,
 			});
 		});
 	});

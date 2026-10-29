@@ -55,7 +55,12 @@ import DesktopHandoffAccountSelector from '@app/features/auth/flow/DesktopHandof
 import {HandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
 import IpAuthorizationScreen from '@app/features/auth/flow/IpAuthorizationScreen';
 import {AuthIdentifierFirstStep} from '@app/features/auth/flow/identifier_first/AuthIdentifierFirstStep';
-import {markSsoAutoStartSpent, useSsoAutoStart, withoutSsoStartRequest} from '@app/features/auth/flow/SsoAutoStart';
+import {
+	isSsoStartRequested,
+	markSsoAutoStartSpent,
+	useSsoAutoStart,
+	withoutSsoStartRequest,
+} from '@app/features/auth/flow/SsoAutoStart';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {type StepTitleChangeHandler, useReportStepTitle} from '@app/features/auth/flow/useReportStepTitle';
 import {getAuthErrorMessage} from '@app/features/auth/hooks/useAuthForm';
@@ -458,11 +463,13 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		desktopHandoff,
 		excludeCurrentUser,
 	});
+	const [handoffStartsSso] = useState(() => desktopHandoff && isSsoStartRequested(location.search));
 	const hasHandoffAccounts = handoffAccounts.length > 0;
+	const offersHandoffAccounts = hasHandoffAccounts && !handoffStartsSso;
 	const handoff = useDesktopHandoffFlow({
 		enabled: desktopHandoff,
-		hasStoredAccounts: hasHandoffAccounts,
-		initialMode: resolveHandoffInitialMode(desktopHandoff, hasHandoffAccounts),
+		hasStoredAccounts: offersHandoffAccounts,
+		initialMode: resolveHandoffInitialMode(desktopHandoff, offersHandoffAccounts),
 	});
 	const [ipAuthChallenge, setIpAuthChallenge] = useState<IpAuthorizationChallenge | null>(null);
 	const flow = useAuthLoginFlow({

@@ -35,6 +35,16 @@ func (c *Client) PatchConfig(ctx context.Context, patch any) error {
 	return c.Call(ctx, http.MethodPatch, configPath, nil, patch, nil)
 }
 
+func (c *Client) PatchConfigWithWarnings(ctx context.Context, patch any) ([]string, error) {
+	var resp struct {
+		Warnings []string `json:"warnings"`
+	}
+	if err := c.Call(ctx, http.MethodPatch, configPath, nil, patch, &resp); err != nil {
+		return nil, err
+	}
+	return resp.Warnings, nil
+}
+
 var RegistrationModes = []string{"open", "approval", "invite", "closed"}
 
 func RegistrationPatch(mode string) (map[string]any, error) {

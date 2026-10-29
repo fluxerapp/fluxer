@@ -18,6 +18,10 @@ import {
 	RecoveryKitReminderAlert,
 	RecoveryKitRow,
 } from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
+import {
+	canConnectSso,
+	SsoConnectRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/SsoConnectRow';
 import type {User} from '@app/features/user/models/User';
 import {needsEmailConfirmation} from '@app/features/user/utils/AccountGates';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -26,6 +30,7 @@ import {
 	REVEAL_DESCRIPTOR as REVEAL_EMAIL_TOGGLE_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import {AccountTiers, AccountVerificationNeeds} from '@fluxer/constants/src/AccountTierConstants';
+import {hasUserTrait, UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -41,6 +46,14 @@ const maskEmail = (email: string): string => {
 	return `${maskedUsername}@${domain}`;
 };
 
+function isSsoRequired(): boolean {
+	return RuntimeConfig.getSnapshot().sso?.enforced === true;
+}
+
+function credentialsManagedBySso(user: User): boolean {
+	return isSsoRequired() && hasUserTrait(user.traits, UserTraits.SSO);
+}
+
 interface AccountTabProps {
 	user: User;
 	showMaskedEmail: boolean;
@@ -53,6 +66,8 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 	const need = user.verificationNeed;
 	const needsPassword = need === AccountVerificationNeeds.SET_PASSWORD;
 	const isClaimed = user.accountTier !== AccountTiers.UNCLAIMED;
+	const credentialsManaged = credentialsManagedBySso(user);
+	const showsRecoveryKit = usesUsernameSignIn && isClaimed && !isSsoRequired();
 	const email = user.email;
 	let emailRow: React.ReactNode;
 	if (usesUsernameSignIn) {
@@ -84,7 +99,7 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 				}
 				data-flx="user.account-security-tab.account-tab.account-tab-content.email-row"
 			>
-				{RuntimeConfig.emailsEnabled && isClaimed && (
+				{RuntimeConfig.emailsEnabled && isClaimed && !credentialsManaged && (
 					<Button
 						variant="secondary"
 						small={true}
@@ -112,7 +127,7 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 				warning={<Trans>No email address set</Trans>}
 				data-flx="user.account-security-tab.account-tab.account-tab-content.email-row--unclaimed"
 			>
-				{!isClaimed && (
+				{!isClaimed && !credentialsManaged && (
 					<Button
 						small={true}
 						onClick={() => openClaimAccountModal()}
@@ -127,6 +142,18 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 	let passwordRow: React.ReactNode;
 	if (need === AccountVerificationNeeds.ADD_EMAIL) {
 		passwordRow = null;
+	} else if (credentialsManaged) {
+		passwordRow = (
+			<AccountSecurityRow
+				label={<Trans>Password</Trans>}
+				description={
+					<Trans comment="Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.">
+						Your sign-in provider manages your email and password.
+					</Trans>
+				}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.password-row--sso"
+			/>
+		);
 	} else if (needsPassword) {
 		passwordRow = (
 			<AccountSecurityRow
@@ -210,10 +237,10 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 	}
 	return (
 		<>
-			{needsPassword && (
+			{needsPassword && !credentialsManaged && (
 				<UnclaimedAccountAlert data-flx="user.account-security-tab.account-tab.account-tab-content.unclaimed-account-alert" />
 			)}
-			{usesUsernameSignIn && isClaimed && (
+			{showsRecoveryKit && (
 				<RecoveryKitReminderAlert
 					user={user}
 					data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-reminder-alert"
@@ -225,11 +252,14 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 			>
 				{emailRow}
 				{passwordRow}
-				{usesUsernameSignIn && isClaimed && (
+				{showsRecoveryKit && (
 					<RecoveryKitRow
 						user={user}
 						data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-row"
 					/>
+				)}
+				{canConnectSso(user) && (
+					<SsoConnectRow data-flx="user.account-security-tab.account-tab.account-tab-content.sso-connect-row" />
 				)}
 			</AccountSecurityCard>
 			{needsEmailConfirmation(user) && (

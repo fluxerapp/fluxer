@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createAPIApp} from '@app/api/App';
+import {resetSsoProviderCachesForTests} from '@app/api/auth/services/SsoService';
 import {Config} from '@app/api/Config';
 import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
 import {
@@ -110,6 +111,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		kvProvider.reset();
 		setInjectedUnfurlerService(undefined);
 		resetSharedListsForTests();
+		resetSsoProviderCachesForTests();
 	}
 	async function resetData(): Promise<void> {
 		resetGuildVisitorCachesForTesting();

@@ -4075,6 +4075,11 @@ msgstr "לאחר 14 יום, החשבון שלך יימחק לצמיתות"
 msgid "After date"
 msgstr "אחרי תאריך"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "לאחר ההתחברות יש לנסות שוב את הפעולה."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "לאחר מחיקת החשבון שלך, לא ניתן יהיה למחוק את ההודעות ששלחת"
@@ -9899,6 +9904,11 @@ msgstr "אישור או לחיצה כפולה להצטרפות לערוץ קול
 msgid "Conflicts with {conflictLabel}"
 msgstr "מתנגש עם {conflictLabel}"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "חיבור"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "חבר מצלמה ונסה שוב."
@@ -10152,7 +10162,11 @@ msgstr "ניתן לפתוח תפריטי הקשר בלחיצה שמאלית (ע�
 msgid "Continue"
 msgstr "המשך"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "יש להמשיך באפליקציית {productName}."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "המשך באפליקציית שולחן העבודה."
@@ -10830,6 +10844,11 @@ msgstr "לא ניתן היה לסגור את הצ'אט"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "ההתחברות לא הושלמה. יש לנסות שוב."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "לא ניתן היה לחבר את הכניסה היחידה"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "מאפשר לך לאפס את הסיסמה שלך אם תשכח אותה
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "מאפשר לך לשתף את המסך שלך או חלון."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "מאפשר לך להיכנס לחשבון הזה עם {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "שיטות כניסה"
 msgid "Sign-in page"
 msgstr "דף ההתחברות"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "ההתחברות בוטלה."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "שכבה אחת"
 msgid "Single line"
 msgstr "שורה בודדת"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "כניסה יחידה"
 
@@ -43200,6 +43231,11 @@ msgstr "אתה נכנס באמצעות קוד שנשלח לאימייל שלך. 
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "אתה נכנס עם שם המשתמש הזה. בחר אחד שתזכור."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "התחברת לחשבון אחר. יש להתחבר עם החשבון שבו נעשה שימוש כאן."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "החשבון שלך קושר בהצלחה. עכשיו אפשר לסגו�
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "לחשבונך אין כתובת אימייל. אם תשכח את הסיסמה שלך, ערכת שחזור היא הדרך היחידה לחזור. זה לוקח רק דקה."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "החשבון שלך מחובר לכניסה היחידה."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "המרחב הפרטי שלך למחשבות ותזכורות"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "פרטיות הפרופיל שלך מוגבלת, כך שאנשים מסוימים עדיין לא יראו את החיבור הזה גם כאשר האפשרות 'כולם' מופעלת."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "הספק שלך מבקש שתתחבר שוב."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "הספק שלך דיווח על שגיאה."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "לא ניתן היה לפרסם את שיתוף המסך שלך בקוד
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "אסימון ההגדרה שלך הפסיק לעבוד. הזן אותו שוב."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "ספק ההתחברות שלך לא זמין. נסה שוב מאוחר יותר."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "ספק ההתחברות שלך מנהל את כתובת האימייל והסיסמה שלך."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

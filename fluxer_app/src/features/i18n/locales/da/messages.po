@@ -4075,6 +4075,11 @@ msgstr "Din konto slettes permanent efter 14 dage"
 msgid "After date"
 msgstr "Efter dato"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Prøv handlingen igen, når du har logget ind."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Når din konto er blevet slettet, kan du ikke længere slette de beskeder, du har sendt"
@@ -9899,6 +9904,11 @@ msgstr "Bekræftelse eller dobbeltklik ved deltagelse i fællesskabets talekanal
 msgid "Conflicts with {conflictLabel}"
 msgstr "Konflikter med {conflictLabel}"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Forbind"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Tilslut et kamera og prøv igen."
@@ -10152,7 +10162,11 @@ msgstr "Genvejsmenuer kan åbnes med venstreklik (på knapper) eller højreklik 
 msgid "Continue"
 msgstr "Fortsæt"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Fortsæt i {productName}-appen."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Fortsæt i desktop-appen."
@@ -10830,6 +10844,11 @@ msgstr "Kunne ikke lukke den direkte samtale"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Kunne ikke gennemføre login. Prøv igen."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Enkelt log på kunne ikke forbindes"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "Gør det muligt at nulstille din adgangskode, hvis du glemmer den."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Giver dig mulighed for at dele din skærm eller et vindue."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Gør det muligt at logge ind på denne konto med {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "Loginmetoder"
 msgid "Sign-in page"
 msgstr "Loginside"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "Login blev annulleret."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "Enkelt lag"
 msgid "Single line"
 msgstr "Én linje"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Enkelt log på"
 
@@ -43200,6 +43231,11 @@ msgstr "Du logger ind med en kode, der sendes til din e-mail. En adgangskode er 
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Du logger ind med dette brugernavn. Vælg et, du vil huske."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Du loggede ind på en anden konto. Log ind med den konto, du bruger her."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "Din konto er blevet forbundet. Du kan nu lukke denne fane og vende tilba
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Din konto har ingen e-mailadresse. Hvis du glemmer din adgangskode, er et gendannelsessæt den eneste vej tilbage. Det tager kun et minut."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Din konto er forbundet med enkelt log på."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "Dit private sted til tanker og påmindelser"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Din profils synlighed er begrænset, så nogle personer vil stadig ikke kunne se denne forbindelse, selvom indstillingen \"Alle\" er aktiveret."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Din udbyder vil have dig til at logge ind igen."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Din udbyder rapporterede en fejl."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "Din skærmdeling kunne ikke sendes med et kompatibelt videokodek, så de
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Dit opsætningstoken virker ikke længere. Indtast det igen."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Din login-udbyder er ikke tilgængelig. Prøv igen senere."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Din login-udbyder administrerer din e-mail og din adgangskode."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

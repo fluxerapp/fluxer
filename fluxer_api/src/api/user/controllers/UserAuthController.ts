@@ -24,6 +24,7 @@ import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
@@ -34,6 +35,7 @@ import {
 	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
+	SsoStartResponse,
 	SudoMfaMethodsResponse,
 	SudoVerificationSchema,
 	WebAuthnChallengeResponse,
@@ -185,6 +187,33 @@ export function UserAuthController(app: HonoApp) {
 			}
 			await requireSudoMode(ctx, user, ctx.req.valid('json'));
 			return ctx.json(await createRecoveryKit(user.id));
+		},
+	);
+	app.post(
+		'/users/@me/sso/link/start',
+		RateLimitMiddleware(RateLimitConfigs.AUTH_SSO_START),
+		LoginRequired,
+		DefaultUserOnly,
+		SudoModeMiddleware,
+		Validator('json', SudoVerificationSchema),
+		OpenAPI({
+			operationId: 'start_sso_link',
+			summary: 'Start connecting SSO',
+			responseSchema: SsoStartResponse,
+			statusCode: 200,
+			security: ['sessionToken'],
+			tags: ['Users'],
+			description:
+				'Start connecting the instance SSO provider to the current account. Send the user to authorization_url, then finish with complete_sso, which returns linked and creates no new session. Works while SSO is required. Requires sudo mode verification.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const authSession = ctx.get('authSession');
+			if (!authSession) {
+				throw new UnauthorizedError();
+			}
+			await requireSudoMode(ctx, user, ctx.req.valid('json'));
+			return ctx.json(await ctx.get('ssoService').startLink(user, authSession.sessionIdHash));
 		},
 	);
 	app.post(

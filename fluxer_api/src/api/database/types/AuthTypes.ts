@@ -23,6 +23,7 @@ export interface AuthSessionRow {
 	app_release_channel: string | null;
 	app_build_number: number | null;
 	app_beta_number: number | null;
+	auth_method: string | null;
 	version: number;
 }
 
@@ -154,6 +155,7 @@ export const AUTH_SESSION_COLUMNS = [
 	'app_release_channel',
 	'app_build_number',
 	'app_beta_number',
+	'auth_method',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionRow>;
 export const AUTH_SESSION_BY_APP_CHANNEL_COLUMNS = [

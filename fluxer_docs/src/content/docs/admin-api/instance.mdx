@@ -36,6 +36,7 @@ The full runtime configuration. A setting that was never saved uses the default 
 | accounts | [accounts configuration](#accounts-configuration-object) object | Date of birth step, account tiers and cleanup |
 | guild_visits | [guild visits configuration](#guild-visits-configuration-object) object | Rollout of visiting communities before joining |
 | notice | ?[instance notice](/http-api/instance/#instance-notice-object) object | Notice shown to everyone, or null |
+| warnings | array[string] | Problems that didn't stop the last save. Empty except in the response to [update instance configuration](#update-instance-configuration) |
 
 ## Account identity configuration object
 
@@ -62,7 +63,7 @@ Settings for the instance's OpenID Connect provider.
 | enforced | boolean | Whether single sign-on is the only way to sign in |
 | display_name | ?string | Provider name shown on the sign-in screen |
 | button_label | ?string | Text on the sign-in button, or null for the default (up to 64 characters) |
-| issuer | ?string | OpenID Connect issuer |
+| issuer | ?string | OpenID Connect issuer. Required while `enabled` is true |
 | authorization_url | ?string | Authorization endpoint |
 | token_url | ?string | Token endpoint |
 | userinfo_url | ?string | Userinfo endpoint |
@@ -79,7 +80,7 @@ Settings for the instance's OpenID Connect provider.
 
 <sup>1</sup> The web app URL followed by `/auth/sso/callback`, which mobile sign-in also uses. It is read-only
 
-<sup>2</sup> Used only in single-community mode. At each sign-in that has the groups claim, Fluxer adds or removes each mapped role to match the person's groups and leaves other roles alone
+<sup>2</sup> Used only in single-community mode. At each sign-in, Fluxer adds or removes each mapped role to match the person's groups and leaves other roles alone. If the groups claim is missing, the person loses every mapped role. Keycloak leaves the claim out when someone is in no groups
 
 ## SSO group role mapping object
 
@@ -632,13 +633,13 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="PATCH" path="/v1/admin/instance/config" auditReason />
 
-Merges the body into the saved configuration and returns the [instance configuration](#instance-configuration-object). You need `instance:config:update`. Sections and keys you leave out keep their saved value, and null clears a nullable key.
+Merges the body into the saved configuration and returns the [instance configuration](#instance-configuration-object) with a `warnings` array. You need `instance:config:update`. Sections and keys you leave out keep their saved value, and null clears a nullable key.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| sso?<sup>1</sup> | object | [SSO configuration](#sso-configuration-object) fields except `client_secret_set` and `redirect_uri`, plus `client_secret` |
+| sso?<sup>1</sup> | object | [SSO configuration](#sso-configuration-object) fields except `client_secret_set` and `redirect_uri`, plus `client_secret` and `migrate_identities` |
 | gateway_rollout? | object | Any [Gateway rollout configuration](#gateway-rollout-configuration-object) fields |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | voice_p2p? | object | Any [peer-to-peer voice](#peer-to-peer-voice-configuration-object) fields |
@@ -655,7 +656,7 @@ Merges the body into the saved configuration and returns the [instance configura
 | guild_visits? | object | Any [guild visits configuration](#guild-visits-configuration-object) fields |
 | notice?<sup>5</sup> | object | `message`, `url`, `starts_at` and `ends_at` of the [instance notice](/http-api/instance/#instance-notice-object) |
 
-<sup>1</sup> While `enabled` is true, endpoint URLs must use `https` and point at a public address unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true. Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` unless there is an `issuer`, or an authorization endpoint, a token endpoint, a client ID and `jwks_url` or `userinfo_url`
+<sup>1</sup> While `enabled` is true, a save without an `issuer` fails with `SSO_ISSUER_REQUIRED`, and endpoint URLs must use `https` and point at a public address unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true. Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` without a `client_id`. When endpoints come from the `issuer`, Fluxer fetches the provider's discovery document. If that fails, turning on `enforced` fails with `SSO_DISCOVERY_FAILED`, and a save without `enforced` goes through with a line in `warnings`. A save that changes the provider ID while accounts are linked to the old one moves those links itself when only a trailing `/` changed, or when it adds an `issuer` whose authorization endpoint is the one already in use. Otherwise it fails with `SSO_ISSUER_CHANGE_HAS_IDENTITIES` unless it sends `migrate_identities`. True moves the links to the new issuer, and false leaves them on the old one. Each move writes a `migrate_sso_identities` audit log entry. `migrate_identities` applies to that save only and is never stored
 
 <sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters and `branding.theme_color` is a hex color. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
 
@@ -704,7 +705,7 @@ It also refuses `sso.username_from_provider` set to true on an instance that isn
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [instance configuration](#instance-configuration-object) object | The update was applied |
+| 200 | [instance configuration](#instance-configuration-object) object with `warnings`, a list of problems that didn't stop the save | The update was applied |
 | 400 | [error response](/admin-api/#error-response) | `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` when a policy change isn't allowed |
 
 Fluxer saves the sections one at a time, and a failure partway keeps the sections saved before it.

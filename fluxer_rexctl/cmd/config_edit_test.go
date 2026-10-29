@@ -326,7 +326,7 @@ func TestConfigRepairsSettingAfterUpgradePulled(t *testing.T) {
 	if err := inst.Save(); err != nil {
 		t.Fatal(err)
 	}
-	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort}}); err != nil {
+	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort}}, nil); err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	found, err := instance.Find(inst.Dir)
@@ -337,7 +337,7 @@ func TestConfigRepairsSettingAfterUpgradePulled(t *testing.T) {
 		t.Fatal("the invalid setting is still there")
 	}
 	v := "8080"
-	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort, value: &v}}); exitCode(err) != ui.ExitRefused {
+	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort, value: &v}}, nil); exitCode(err) != ui.ExitRefused {
 		t.Fatalf("changed a valid setting halfway through an upgrade: %v", err)
 	}
 }
@@ -349,7 +349,7 @@ func TestConfigSetDuringUpgradeChecksPorts(t *testing.T) {
 		t.Fatal(err)
 	}
 	v := "7881"
-	err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort, value: &v}})
+	err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort, value: &v}}, nil)
 	if exitCode(err) != ui.ExitRefused || !strings.Contains(err.Error(), "already uses") {
 		t.Fatalf("err %v\n%s", err, out)
 	}

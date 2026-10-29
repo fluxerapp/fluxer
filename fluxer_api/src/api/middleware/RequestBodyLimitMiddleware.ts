@@ -61,8 +61,10 @@ function limiterFor(maxSize: number): MiddlewareHandler {
 	return limiter;
 }
 
+const limitedRequests = new WeakSet<Request>();
+
 export const RequestBodyLimitMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
-	if (!ctx.req.raw.body) {
+	if (!ctx.req.raw.body || limitedRequests.has(ctx.req.raw)) {
 		await next();
 		return;
 	}
@@ -70,5 +72,9 @@ export const RequestBodyLimitMiddleware = createMiddleware<HonoEnv>(async (ctx, 
 		await next();
 		return;
 	}
-	await limiterFor(resolveRouteBodyLimit(ctx))(ctx, next);
+	limitedRequests.add(ctx.req.raw);
+	await limiterFor(resolveRouteBodyLimit(ctx))(ctx, async () => {
+		limitedRequests.add(ctx.req.raw);
+		await next();
+	});
 });

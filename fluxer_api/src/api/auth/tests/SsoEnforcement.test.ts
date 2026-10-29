@@ -45,10 +45,13 @@ describe('SSO after enforcement ends', () => {
 	}
 
 	async function ssoSignIn(claims: Record<string, unknown>) {
-		const {state} = await createBuilderWithoutAuth<{state: string}>(harness).post('/auth/sso/start').body({}).execute();
+		const {state, client_binding} = await createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
+			.post('/auth/sso/start')
+			.body({})
+			.execute();
 		return createBuilderWithoutAuth<SsoCompleteBody>(harness)
 			.post('/auth/sso/complete')
-			.body({code: JSON.stringify(claims), state})
+			.body({code: JSON.stringify(claims), state, client_binding})
 			.executeRaw();
 	}
 

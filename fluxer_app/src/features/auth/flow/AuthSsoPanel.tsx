@@ -13,7 +13,7 @@ import {type LoginSuccessPayload, startSsoLogin} from '@app/features/auth/state/
 import {isolateBidi} from '@app/features/i18n/utils/BidiIsolate';
 import {Button} from '@app/features/ui/button/Button';
 import {isDesktop, navigateToExternalURL} from '@app/features/ui/utils/NativeUtils';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -34,7 +34,12 @@ const CONTINUE_WITH_PROVIDER_DESCRIPTOR = msg({
 });
 const SINGLE_SIGN_ON_TITLE_DESCRIPTOR = msg({
 	message: 'Single sign-on',
-	comment: 'Heading of the single sign-on panel when the admin has not named the sign-in provider.',
+	comment: 'Heading of the single sign-on panel when the admin has not given the sign-in provider a name.',
+});
+const SSO_PROVIDER_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'Your sign-in provider is unavailable. Try again later.',
+	comment:
+		'Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.',
 });
 const SSO_NOT_CONFIGURED_DESCRIPTOR = msg({
 	message: 'This instance has not finished setting up single sign-on. Ask an administrator to enable it.',
@@ -68,6 +73,11 @@ export function SsoButtonLabel({ssoConfig, 'data-flx': dataFlx}: SsoButtonLabelP
 
 export function isInstanceSsoAvailable(ssoConfig: InstanceSsoConfig | null): boolean {
 	return ssoConfig?.enabled === true;
+}
+
+function resolveSsoSubtitle(ssoConfig: InstanceSsoConfig | null): MessageDescriptor {
+	if (isInstanceSsoAvailable(ssoConfig)) return ORGANIZATION_SSO_PROVIDER_DESCRIPTOR;
+	return isSsoLoginEnforced(ssoConfig) ? SSO_PROVIDER_UNAVAILABLE_DESCRIPTOR : SSO_NOT_CONFIGURED_DESCRIPTOR;
 }
 
 export function resolveAuthPanelSso(runtimeSnapshot: RuntimeConfigSnapshot): InstanceSsoConfig | null {
@@ -168,7 +178,7 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 				</h1>
 			) : null}
 			<p className={styles.ssoSubtitle} data-flx={`${dataFlx}.subtitle`}>
-				{isAvailable ? i18n._(ORGANIZATION_SSO_PROVIDER_DESCRIPTOR) : i18n._(SSO_NOT_CONFIGURED_DESCRIPTOR)}
+				{i18n._(resolveSsoSubtitle(ssoConfig))}
 			</p>
 			<Button
 				fitContainer
@@ -190,5 +200,5 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 });
 
 export function isSsoLoginEnforced(ssoConfig: InstanceSsoConfig | null): boolean {
-	return isInstanceSsoAvailable(ssoConfig) && ssoConfig?.enforced === true;
+	return ssoConfig?.enforced === true;
 }

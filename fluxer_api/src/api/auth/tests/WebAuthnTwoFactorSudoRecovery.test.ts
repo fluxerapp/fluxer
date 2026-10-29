@@ -134,6 +134,7 @@ describe('Sudo mode recovery for passkey two-factor accounts without TOTP', () =
 			backup_codes: methods.backup_codes,
 			email_code: methods.email_code,
 			password: methods.password,
+			sso_reauth: false,
 		});
 	});
 	it('spends a backup code accepted as a sudo proof and refuses the same code afterwards', async () => {

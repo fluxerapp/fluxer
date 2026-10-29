@@ -47,6 +47,20 @@ describe('request body size limit', () => {
 		return harness.requestJson({path, method, body, headers: {Authorization: owner.token, ...headers}});
 	}
 
+	it('answers an unknown route with a JSON body with 404', async () => {
+		const response = await send('/v1/this-route-does-not-exist', 'POST', JSON.stringify({hello: 'world'}), {
+			'Content-Type': 'application/json',
+		});
+
+		expect(response.status).toBe(404);
+	});
+
+	it('answers an unknown route with a body and no content type with 404', async () => {
+		const response = await send('/this-route-does-not-exist', 'POST', 'plain body');
+
+		expect(response.status).toBe(404);
+	});
+
 	it('accepts a maximum-size avatar under the default limit', async () => {
 		const body = JSON.stringify({name: 'Avatar Hook', avatar: maxSizeAvatarDataUrl()});
 		expect(body.length).toBeLessThanOrEqual(DEFAULT_REQUEST_BODY_LIMIT);

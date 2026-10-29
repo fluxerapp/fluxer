@@ -11388,7 +11388,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Release every provider subject bound to the account. On an instance that stores email addresses, the next single sign-on with the same verified email binds the account again. A released subject of a deleted account can sign in to a new account. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.",
+				"description": "Release every provider subject bound to the account and sign it out on every device. On an instance that stores email addresses, the next single sign-on with the same verified email binds the account again. A released subject of a deleted account can sign in to a new account. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -16664,6 +16664,11 @@
 						"nullable": true,
 						"description": "Notice shown to everyone on the instance, or null",
 						"allOf": [{"$ref": "#/components/schemas/InstanceNoticeSchema"}]
+					},
+					"warnings": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Problems the save found that did not stop it. Always empty outside a save response"
 					}
 				},
 				"required": [
@@ -16685,7 +16690,8 @@
 					"integrations",
 					"media",
 					"billing",
-					"notice"
+					"notice",
+					"warnings"
 				],
 				"additionalProperties": false
 			},
@@ -16953,6 +16959,10 @@
 									"required": ["group", "role_id"]
 								},
 								"description": "Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in"
+							},
+							"migrate_identities": {
+								"description": "Only for a save that changes the issuer while accounts are linked to the old one. True moves those links to the new issuer, false leaves them on the old one. Applies to this save only and is never stored",
+								"type": "boolean"
 							}
 						}
 					},
@@ -25033,6 +25043,7 @@
 					"INSTANCE_POLICY_TRANSITION_NOT_ALLOWED",
 					"SLOWMODE_RATE_LIMITED",
 					"SEARCH_INDEX_NOT_READY",
+					"SSO_PROVIDER_UNAVAILABLE",
 					"SSO_REQUIRED",
 					"STORE_BILLING_UNAVAILABLE",
 					"STORE_NOTIFICATION_UNAUTHORIZED",
@@ -25397,6 +25408,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
+					"Your sign-in provider didn't answer. Try again in a moment.",
 					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",

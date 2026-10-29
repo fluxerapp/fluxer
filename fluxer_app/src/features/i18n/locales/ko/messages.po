@@ -4075,6 +4075,11 @@ msgstr "14일 후 계정이 영구적으로 삭제됩니다"
 msgid "After date"
 msgstr "날짜 이후"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "로그인한 후 작업을 다시 시도하세요."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "계정 삭제 후에는 보낸 메시지를 삭제할 수 없습니다"
@@ -9899,6 +9904,11 @@ msgstr "커뮤니티 음성 채널 참여 시 확인 또는 더블 클릭"
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel}과(와) 충돌"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "연결"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "카메라를 연결하고 다시 시도하세요."
@@ -10152,7 +10162,11 @@ msgstr "좌클릭(버튼) 또는 우클릭(다른 요소)으로 상황별 메뉴
 msgid "Continue"
 msgstr "계속"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "{productName} 앱에서 계속하세요."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "데스크톱 앱에서 계속하세요."
@@ -10830,6 +10844,11 @@ msgstr "DM을 닫을 수 없습니다"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "로그인을 완료할 수 없습니다. 다시 시도해 주세요."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "SSO 로그인을 연결할 수 없습니다"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "비밀번호를 잊어버렸을 때 재설정할 수 있습니다."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "화면이나 창을 공유할 수 있습니다."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "{providerName}(으)로 이 계정에 로그인할 수 있습니다."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "로그인 방법"
 msgid "Sign-in page"
 msgstr "로그인 페이지"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "로그인이 취소되었습니다."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "단일 레이어"
 msgid "Single line"
 msgstr "한 줄"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "SSO 로그인"
 
@@ -43200,6 +43231,11 @@ msgstr "이메일로 전송된 코드로 로그인합니다. 비밀번호는 선
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "이 사용자 이름으로 로그인합니다. 기억하기 쉬운 이름으로 선택하세요."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "다른 계정으로 로그인했습니다. 여기서 사용하는 계정으로 로그인하세요."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "계정이 성공적으로 연결되었습니다. 이 탭을 닫고 앱�
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "계정에 이메일 주소가 없습니다. 비밀번호를 잊으셨을 경우, 복구 키트가 유일한 복구 방법입니다. 1분이면 충분합니다."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "계정이 SSO 로그인에 연결되었습니다."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "생각과 미리 알림을 위한 나만의 공간"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "프로필 개인 정보 설정에 제한이 있으므로 일부 사용자는 \"모두\"로 설정하더라도 이 연결을 볼 수 없습니다."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "제공자가 다시 로그인하도록 요청합니다."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "제공자가 오류를 보고했습니다."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "호환되는 비디오 코덱으로 화면 공유를 게시할 수 없�
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "설정 토큰이 더 이상 작동하지 않습니다. 다시 입력하세요."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "로그인 제공자를 사용할 수 없어요. 나중에 다시 시도해 주세요."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "이메일과 비밀번호는 로그인 제공자가 관리해요."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

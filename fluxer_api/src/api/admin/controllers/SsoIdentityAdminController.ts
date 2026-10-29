@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
-import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {SsoIdentityLinkService, ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {createUserID} from '@app/api/BrandedTypes';
@@ -11,7 +12,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
-import type {HonoApp} from '@app/api/types/HonoEnv';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -25,6 +26,7 @@ import {
 	AdminUserSsoIdentityListResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSsoSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import type {Context} from 'hono';
 
 const ssoIdentityRepository = new SsoIdentityRepository();
 
@@ -39,6 +41,26 @@ function mapSsoIdentity(row: UserSsoIdentityRow): AdminSsoIdentityResponse {
 
 async function currentProviderId(): Promise<string> {
 	return ssoProviderIdOf(await getInstanceConfigRepository().getSsoConfig());
+}
+
+export async function migrateSsoIdentities(
+	ctx: Context<HonoEnv>,
+	fromProviderId: string,
+	toProviderId: string,
+): Promise<{moved: number; skipped: number}> {
+	const result = await new SsoIdentityLinkService(ctx.get('userRepository')).migrate(fromProviderId, toProviderId);
+	await recordAdminWrite(ctx, {
+		targetType: 'instance_config',
+		targetId: 0n,
+		action: 'migrate_sso_identities',
+		metadata: {
+			from_provider_id: fromProviderId,
+			to_provider_id: toProviderId,
+			moved_count: result.moved,
+			skipped_count: result.skipped,
+		},
+	});
+	return result;
 }
 
 export function SsoIdentityAdminController(app: HonoApp) {
@@ -146,7 +168,7 @@ export function SsoIdentityAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Release every provider subject bound to the account. On an instance that stores email addresses, the next single sign-on with the same verified email binds the account again. A released subject of a deleted account can sign in to a new account. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.',
+				'Release every provider subject bound to the account and sign it out on every device. On an instance that stores email addresses, the next single sign-on with the same verified email binds the account again. A released subject of a deleted account can sign in to a new account. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.',
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
@@ -164,6 +186,7 @@ export function SsoIdentityAdminController(app: HonoApp) {
 				auditLogReason: ctx.get('auditLogReason'),
 				metadata: new Map([['identity_count', before.length.toString()]]),
 			});
+			await revokeAllAuthSessions(ctx.get('apiContext').services, userId);
 			return ctx.json({sso_identities: identities.map(mapSsoIdentity)});
 		},
 	);
@@ -188,23 +211,7 @@ export function SsoIdentityAdminController(app: HonoApp) {
 			if (fromProviderId === toProviderId) {
 				throw InputValidationError.create('from_provider_id', 'This is the provider in use');
 			}
-			const {moved, skipped} = await new SsoIdentityLinkService(ctx.get('userRepository')).migrate(
-				fromProviderId,
-				toProviderId,
-			);
-			await ctx.get('adminService').auditService.createAuditLog({
-				adminUserId: ctx.get('adminUserId'),
-				targetType: 'instance_config',
-				targetId: 0n,
-				action: 'migrate_sso_identities',
-				auditLogReason: ctx.get('auditLogReason'),
-				metadata: new Map([
-					['from_provider_id', fromProviderId],
-					['to_provider_id', toProviderId],
-					['moved_count', moved.toString()],
-					['skipped_count', skipped.toString()],
-				]),
-			});
+			const {moved, skipped} = await migrateSsoIdentities(ctx, fromProviderId, toProviderId);
 			return ctx.json({to_provider_id: toProviderId, moved_count: moved, skipped_count: skipped});
 		},
 	);

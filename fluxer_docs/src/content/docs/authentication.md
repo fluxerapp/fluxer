@@ -93,7 +93,7 @@ Sudo mode is a recent proof that the account holder re-verified a credential. An
 
 After a TOTP, passkey or emailed-code proof, the response returns a token in the `X-Fluxer-Sudo-Mode-JWT` header. Send it in that request header for five minutes to skip the proof. An account that proves sudo mode with its password gets no token and sends the password each time.
 
-A bot account, or an account with no password, TOTP secret, WebAuthn credential or confirmed email, passes sudo mode without a proof. An account with only a confirmed email proves it with an [emailed code](/http-api/users/mfa/#send-a-sudo-email-code). [Multi-factor authentication](/http-api/users/mfa/#sudo-mode) covers the accepted proofs and the [sudo mode methods object](/http-api/users/mfa/#sudo-mode-methods-object).
+A bot account, or an account with no password, TOTP secret, WebAuthn credential or confirmed email, passes sudo mode without a proof. If that account is connected to SSO, it passes only from a session that signed in with SSO in the last 10 minutes. While the instance has SSO turned off, such an account can't pass sudo mode, and the person needs a password set before SSO goes off. An account with only a confirmed email proves it with an [emailed code](/http-api/users/mfa/#send-a-sudo-email-code). [Multi-factor authentication](/http-api/users/mfa/#sudo-mode) covers the accepted proofs and the [sudo mode methods object](/http-api/users/mfa/#sudo-mode-methods-object).
 
 ## Gateway authentication
 

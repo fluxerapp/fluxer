@@ -90,7 +90,7 @@ func TestConfigUnsetRepairsSettingDuringUnfinishedUpgrade(t *testing.T) {
 	if _, err := app.Instance(); exitCode(err) != ui.ExitRefused {
 		t.Fatalf("loaded an invalid setting: %v", err)
 	}
-	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort}}); err != nil {
+	if err := runConfigChange(context.Background(), app, []configChange{{name: settings.EdgeHTTPPort}}, nil); err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	found, err := instance.Find(inst.Dir)

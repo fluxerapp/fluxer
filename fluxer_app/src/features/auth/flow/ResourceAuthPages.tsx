@@ -14,7 +14,7 @@ import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
 import {AuthRuntimeTargetResetAction} from '@app/features/auth/flow/AuthRuntimeTargetResetAction';
-import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthSsoPanel, isSsoLoginEnforced, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {linkRegisterFields, readRegistrationUrlCode} from '@app/features/auth/flow/RegisterFormFields';
@@ -165,7 +165,7 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 			</AuthLoginStepCarousel>
 		);
 	const runtimeSso = resolveAuthPanelSso(runtimeSnapshot);
-	const sso = runtimeSso?.enabled === true && runtimeSso.enforced === true;
+	const sso = isSsoLoginEnforced(runtimeSso);
 	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
 	const header = (
 		<>

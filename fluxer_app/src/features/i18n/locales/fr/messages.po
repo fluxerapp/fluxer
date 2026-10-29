@@ -4075,6 +4075,11 @@ msgstr "Après 14 jours, votre compte sera définitivement supprimé"
 msgid "After date"
 msgstr "Après le"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Après t'être connecté, réessaie l'action."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Après la suppression de votre compte, vous ne pourrez plus supprimer les messages que vous avez envoyés"
@@ -9899,6 +9904,11 @@ msgstr "Confirmation ou double-clic pour rejoindre les salons vocaux des communa
 msgid "Conflicts with {conflictLabel}"
 msgstr "Conflit avec {conflictLabel}"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Connecter"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Connectez une caméra et réessayez."
@@ -10152,7 +10162,11 @@ msgstr "Les menus contextuels peuvent être ouverts par un clic gauche (sur les 
 msgid "Continue"
 msgstr "Continuer"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Continue dans l'app {productName}."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Continuer dans l'application de bureau."
@@ -10830,6 +10844,11 @@ msgstr "Impossible de fermer la conversation privée"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Impossible de terminer la connexion. Veuillez réessayer."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Impossible de connecter la connexion unique"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "Permet de réinitialiser votre mot de passe si vous l'oubliez."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Permet de partager votre écran ou une fenêtre."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Te permet de te connecter à ce compte avec {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "Méthodes de connexion"
 msgid "Sign-in page"
 msgstr "Page de connexion"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "La connexion a été annulée."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "Couche unique"
 msgid "Single line"
 msgstr "Ligne unique"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Connexion unique"
 
@@ -43200,6 +43231,11 @@ msgstr "Vous vous connectez avec un code envoyé à votre adresse e-mail. Un mot
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Vous vous connectez avec ce nom d'utilisateur. Choisissez-en un dont vous vous souviendrez."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Tu t'es connecté à un autre compte. Connecte-toi avec le compte que tu utilises ici."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "Votre compte a été lié avec succès. Vous pouvez maintenant fermer ce
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Votre compte n'a pas d'adresse e-mail. Si vous oubliez votre mot de passe, un kit de récupération est le seul moyen de revenir. Cela ne prend qu'une minute."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Ton compte est relié à la connexion unique."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "Votre espace privé pour vos pensées et rappels"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Les paramètres de confidentialité de votre profil sont limités, certaines personnes ne verront donc pas cette connexion même si l’option Tout le monde est activée."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Ton fournisseur te demande de te reconnecter."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Ton fournisseur a signalé une erreur."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "Votre partage d'écran n'a pas pu être publié avec un codec vidéo com
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Votre jeton d'installation ne fonctionne plus. Saisissez-le à nouveau."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Votre fournisseur de connexion n’est pas disponible. Réessayez plus tard."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Votre fournisseur de connexion gère votre adresse e-mail et votre mot de passe."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

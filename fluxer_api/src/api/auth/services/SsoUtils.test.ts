@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {tryDiscoverOidcProviderMetadata} from '@app/api/auth/services/SsoUtils';
+import {sanitizeSsoRedirectTo, tryDiscoverOidcProviderMetadata} from '@app/api/auth/services/SsoUtils';
 import {Config} from '@app/api/Config';
 import {resetSsoRequestUrlPolicyForTesting} from '@app/api/instance/SsoConfigValidation';
 import {server} from '@app/api/test/msw/server';
@@ -52,5 +52,31 @@ describe('tryDiscoverOidcProviderMetadata', () => {
 		resetSsoRequestUrlPolicyForTesting();
 		await expect(tryDiscoverOidcProviderMetadata(PRIVATE_ISSUER)).resolves.toBeNull();
 		expect(discoveryRequests).toBe(0);
+	});
+});
+
+describe('sanitizeSsoRedirectTo', () => {
+	it.each([
+		['/\\evil.example'],
+		['/\t/evil.example'],
+		['//evil.example'],
+		['/..//evil.example'],
+		['/.//evil.example'],
+		['/%2e%2e//evil.example'],
+		['/a/..//evil.example'],
+		['https://evil.example/'],
+		['/\u0000x'],
+		[''],
+		[`/${'a'.repeat(2048)}`],
+	])('refuses %j', (value) => {
+		expect(sanitizeSsoRedirectTo(value)).toBeUndefined();
+	});
+
+	it('keeps a path with a query and fragment', () => {
+		expect(sanitizeSsoRedirectTo('/channels/@me?x=1#y')).toBe('/channels/@me?x=1#y');
+	});
+
+	it('trims the value', () => {
+		expect(sanitizeSsoRedirectTo('  /channels/@me  ')).toBe('/channels/@me');
 	});
 });

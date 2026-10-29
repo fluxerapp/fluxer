@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
-import {hasNoVerifiableCredential} from '@app/api/auth/services/SudoVerificationService';
+import {
+	deriveSudoMethods,
+	hasNoVerifiableCredential,
+	userHasMfa,
+	userHasSudoCapability,
+} from '@app/api/auth/services/SudoMethods';
 import {createUserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
 import {User} from '@app/api/models/User';
@@ -23,10 +27,30 @@ function createUser(overrides: Partial<UserRow> = {}): User {
 }
 
 describe('sudo verification credential capability', () => {
-	it('lets an SSO provisioned account without a password satisfy sudo mode', () => {
+	it('finds no verifiable credential on an SSO provisioned account without a password', () => {
 		const user = createUser({password_hash: null, traits: new Set<string>(['sso'])});
 		expect(getAccountTier(user)).toBe('verified');
 		expect(hasNoVerifiableCredential(user, userHasMfa(user), false)).toBe(true);
+	});
+
+	it('offers signing in again with SSO to an SSO account without credentials', () => {
+		const user = createUser({password_hash: null, traits: new Set<string>(['sso'])});
+		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(true);
+	});
+
+	it('does not offer signing in again with SSO while SSO is off', () => {
+		const user = createUser({password_hash: null, traits: new Set<string>(['sso'])});
+		expect(deriveSudoMethods(user, false, false, false).sso_reauth).toBe(false);
+	});
+
+	it('does not offer signing in again with SSO to an SSO account with a password', () => {
+		const user = createUser({password_hash: 'hash', traits: new Set<string>(['sso'])});
+		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(false);
+	});
+
+	it('does not offer signing in again with SSO to an unclaimed account', () => {
+		const user = createUser({password_hash: null});
+		expect(deriveSudoMethods(user, false, false, true).sso_reauth).toBe(false);
 	});
 
 	it('still lets an unclaimed account satisfy sudo mode', () => {

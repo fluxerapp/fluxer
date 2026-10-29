@@ -9,7 +9,7 @@ import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
-import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthSsoPanel, isSsoLoginEnforced, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {
 	InstantAccountForm,
@@ -144,7 +144,7 @@ const InviteRegisterPageContent = observer(function InviteRegisterPageContent({
 		);
 
 	const runtimeSso = resolveAuthPanelSso(runtimeSnapshot);
-	if (runtimeSso?.enabled === true && runtimeSso.enforced === true) {
+	if (isSsoLoginEnforced(runtimeSso)) {
 		return (
 			<>
 				<DesktopDeepLinkPrompt

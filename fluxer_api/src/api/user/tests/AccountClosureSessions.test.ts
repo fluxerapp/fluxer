@@ -52,6 +52,7 @@ function sessionRow(userId: UserID): AuthSessionRow {
 		app_release_channel: null,
 		app_build_number: null,
 		app_beta_number: null,
+		auth_method: null,
 		version: 1,
 	};
 }

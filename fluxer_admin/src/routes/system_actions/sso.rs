@@ -72,6 +72,11 @@ pub(super) fn build_sso_update(
                 .first("sso_group_role_mappings")
                 .map(parse_sso_group_role_mappings)
                 .transpose()?,
+            migrate_identities: match form.clean("sso_migrate_identities").as_deref() {
+                Some("move") => Some(true),
+                Some("leave") => Some(false),
+                _ => None,
+            },
         }),
         ..Default::default()
     })

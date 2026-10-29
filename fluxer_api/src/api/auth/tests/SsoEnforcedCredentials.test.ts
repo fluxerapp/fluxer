@@ -15,6 +15,7 @@ import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from '
 
 interface SsoStartResponse {
 	state: string;
+	client_binding: string;
 }
 
 interface SsoCompleteResponse {
@@ -84,7 +85,7 @@ describe('Credentials of SSO accounts while SSO is enforced', () => {
 		const start = await createBuilderWithoutAuth<SsoStartResponse>(harness).post('/auth/sso/start').body({}).execute();
 		const login = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
 			.post('/auth/sso/complete')
-			.body({code: createUniqueEmail('sso-credentials'), state: start.state})
+			.body({code: createUniqueEmail('sso-credentials'), state: start.state, client_binding: start.client_binding})
 			.execute();
 		await createBuilder(harness, login.token)
 			.put('/users/@me/date-of-birth')

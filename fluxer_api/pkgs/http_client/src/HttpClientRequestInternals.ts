@@ -105,7 +105,7 @@ export function resolveRequestBody(body: unknown, headers: Headers): string | un
 export function createRequestSignal(timeoutMs: number, inputSignal?: AbortSignal): RequestSignalContext {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => {
-		controller.abort('Request timed out');
+		controller.abort(new DOMException('Request timed out', 'TimeoutError'));
 	}, timeoutMs);
 	timeoutId.unref();
 	let inputSubscription: Disposable | undefined;
@@ -126,7 +126,7 @@ export function createRequestSignal(timeoutMs: number, inputSignal?: AbortSignal
 
 export function classifyRequestError(error: unknown): ClassifiedRequestError {
 	const message = error instanceof Error ? error.message : 'Request failed';
-	if (error instanceof Error && error.name === 'AbortError') {
+	if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
 		return {
 			message,
 			isNetworkError: false,

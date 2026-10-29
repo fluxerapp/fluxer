@@ -47,7 +47,12 @@ func newAdminsCmd(app *App) *cobra.Command {
 			return nil
 		})
 	}
-	signInLink := &cobra.Command{Use: "sign-in-link <user>", Short: "Print a link that signs an admin in once", Args: exactArgs(userArg)}
+	signInLink := &cobra.Command{
+		Use:   "sign-in-link <user>",
+		Short: "Print a link that signs an admin in once",
+		Long:  "Print a link that signs an admin in once. Use it to get in when Require SSO is on and your sign-in provider is down or set up wrong. See " + docsURL + "sign-in/#single-sign-on.",
+		Args:  exactArgs(userArg),
+	}
 	signInLink.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			u, err := api.ResolveUser(ctx, args[0])

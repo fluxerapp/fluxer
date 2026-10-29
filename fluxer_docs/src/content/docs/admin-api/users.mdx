@@ -1258,7 +1258,7 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/sso-identities" auditReason />
 
-Releases every subject bound to the account. You need `user:update:email`. On an email instance, the next single sign-on with a matching verified email binds the account again.
+Releases every subject bound to the account and signs it out on every device. You need `user:update:email`. On an email instance, the next single sign-on with a matching verified email binds the account again.
 
 ### Response body
 

@@ -21,7 +21,7 @@ interface SsoAutoStartRequest {
 	readonly spent: boolean;
 }
 
-function isSsoStartRequested(search: string): boolean {
+export function isSsoStartRequested(search: string): boolean {
 	return new URLSearchParams(search).get(SSO_START_QUERY_PARAM) === '1';
 }
 

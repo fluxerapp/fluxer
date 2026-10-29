@@ -4075,6 +4075,11 @@ msgstr "Po 14 dienų jūsų paskyra bus visam laikui ištrinta"
 msgid "After date"
 msgstr "Po datos"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Prisijungęs pabandyk veiksmą dar kartą."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Ištrynus paskyrą, išsiųstų žinučių ištrinti nebegalėsite"
@@ -9899,6 +9904,11 @@ msgstr "Patvirtinimas arba dvigubas spustelėjimas prisijungiant prie bendruomen
 msgid "Conflicts with {conflictLabel}"
 msgstr "Kertasi su „{conflictLabel}“"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Susieti"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Prijunkite kamerą ir bandykite dar kartą."
@@ -10152,7 +10162,11 @@ msgstr "Kontekstiniai meniu atidaromi kairiuoju pelės mygtuku (ant mygtukų) ar
 msgid "Continue"
 msgstr "Tęsti"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Tęsk programėlėje {productName}."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Tęsti darbalaukio programėlėje."
@@ -10830,6 +10844,11 @@ msgstr "Nepavyko uždaryti tiesioginio pokalbio"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Nepavyko prisijungti. Bandykite dar kartą."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Nepavyko susieti vienkartinio prisijungimo"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21065,6 +21084,11 @@ msgstr "Leidžia atkurti slaptažodį, jei jį pamiršite."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Leidžia bendrinti jūsų ekraną arba langą."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Leidžia prisijungti prie šios paskyros per {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33614,6 +33638,11 @@ msgstr "Prisijungimo būdai"
 msgid "Sign-in page"
 msgstr "Prisijungimo puslapis"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "Prisijungimas atšauktas."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33703,8 +33732,10 @@ msgstr "Vienas sluoksnis"
 msgid "Single line"
 msgstr "Viena eilutė"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Vienkartinis prisijungimas"
 
@@ -43201,6 +43232,11 @@ msgstr "Prisijungiate naudodami kodą, išsiųstą jūsų el. paštu. Slaptažod
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Prisijunkite naudodami šį vartotojo vardą. Pasirinkite tokį, kurį atsiminsite."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Prisijungei prie kitos paskyros. Prisijunk paskyra, kurią naudoji čia."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43568,6 +43604,11 @@ msgstr "Jūsų paskyra sėkmingai susieta. Dabar galite uždaryti šį skirtuką
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Jūsų paskyroje nėra el. pašto adreso. Jei pamiršite slaptažodį, atsigavimo rinkinys yra vienintelis būdas grįžti. Tai užtruks tik minutę."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Tavo paskyra susieta su vienkartiniu prisijungimu."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43977,6 +44018,16 @@ msgstr "Jūsų privati erdvė mintims ir priminimams"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Jūsų profilio privatumas yra ribotas, todėl net jei nustatyta „Visi“, kai kurie žmonės vis tiek nematys šio ryšio."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Tavo teikėjas prašo prisijungti iš naujo."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Tavo teikėjas pranešė apie klaidą."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44017,6 +44068,16 @@ msgstr "Jūsų ekrano bendrinimas negalėjo būti paskelbtas naudojant suderinam
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Jūsų sąrankos žetonas nebeveikia. Įveskite jį dar kartą."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Tavo prisijungimo teikėjas nepasiekiamas. Bandyk dar kartą vėliau."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Tavo el. paštą ir slaptažodį tvarko tavo prisijungimo teikėjas."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
+import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {getCacheService} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -47,6 +47,15 @@ describe('SSO provider discovery cache', () => {
 
 		expect(await cachedFor(OLD_ISSUER)).toBeNull();
 		expect(await cachedFor(NEW_ISSUER)).toBeNull();
+	});
+
+	it('forgets the entries older servers wrote for the issuer when the SSO settings are saved', async () => {
+		await saveSso({enabled: false, issuer: OLD_ISSUER});
+		await getCacheService().set(legacySsoDiscoveryCacheKey(OLD_ISSUER), {issuer: OLD_ISSUER}, 3600);
+
+		await saveSso({client_id: 'another-client'});
+
+		expect(await getCacheService().get(legacySsoDiscoveryCacheKey(OLD_ISSUER))).toBeNull();
 	});
 
 	it('forgets the discovered endpoints when other SSO settings change', async () => {

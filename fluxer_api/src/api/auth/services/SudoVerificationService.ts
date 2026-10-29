@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import {hasOwnedEmail, verifySudoEmailCode} from '@app/api/auth/services/SudoEmailCode';
+import {verifySudoEmailCode} from '@app/api/auth/services/SudoEmailCode';
 import {
 	createSudoModeRequiredError,
 	emailCodeSudoAvailable,
+	hasNoVerifiableCredential,
 	userHasMfa,
 	userHasSudoCapability,
 } from '@app/api/auth/services/SudoMethods';
 import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
 import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
+import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {isSsoLinkedUser} from '@app/api/user/UserHelpers';
 import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -30,15 +33,10 @@ export interface SudoVerificationBody {
 
 type SudoVerificationMethod = 'password' | 'mfa' | 'sudo_token' | 'email_code';
 
-export function hasNoVerifiableCredential(
-	user: {passwordHash: string | null; isBot: boolean; email: string | null; emailVerified: boolean},
-	hasMfa: boolean,
-	hasPasskeyCredentials: boolean,
-): boolean {
-	if (user.isBot || hasMfa || hasPasskeyCredentials || hasOwnedEmail(user)) {
-		return false;
-	}
-	return user.passwordHash === null;
+const SSO_SIGN_IN_SUDO_WINDOW_MS = 10 * 60 * 1000;
+
+function isRecentSsoSignIn(session: AuthSession | undefined): boolean {
+	return session?.authMethod === 'sso' && Date.now() - session.createdAt.getTime() < SSO_SIGN_IN_SUDO_WINDOW_MS;
 }
 
 export interface SudoVerificationResult {
@@ -100,7 +98,10 @@ async function verifySudoMode(
 		const sudoToken = issueSudoToken ? await sudoModeService.generateSudoToken(user.id) : undefined;
 		return {verified: true, sudoToken, method: 'mfa'};
 	}
-	if (hasNoVerifiableCredential(user, hasUsableMfa, hasPasskeyCredentials)) {
+	if (
+		hasNoVerifiableCredential(user, hasUsableMfa, hasPasskeyCredentials) &&
+		(!isSsoLinkedUser(user) || isRecentSsoSignIn(ctx.get('authSession')))
+	) {
 		return {verified: true, method: 'password'};
 	}
 	if (body.password && !hasUsableMfa) {

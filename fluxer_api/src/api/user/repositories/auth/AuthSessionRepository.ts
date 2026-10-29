@@ -33,6 +33,7 @@ interface CachedAuthSession {
 	app_release_channel?: string | null;
 	app_build_number?: number | null;
 	app_beta_number?: number | null;
+	auth_method?: string | null;
 	version: number;
 }
 
@@ -52,6 +53,7 @@ const CachedAuthSessionSchema = z.object({
 	app_release_channel: z.string().nullish(),
 	app_build_number: z.int().nullish(),
 	app_beta_number: z.int().nullish(),
+	auth_method: z.string().nullish(),
 	version: z.int().nonnegative(),
 }) satisfies z.ZodType<CachedAuthSession>;
 
@@ -74,6 +76,7 @@ function encodeCachedAuthSession(row: AuthSessionRow): CachedAuthSession {
 		app_release_channel: row.app_release_channel,
 		app_build_number: row.app_build_number,
 		app_beta_number: row.app_beta_number,
+		auth_method: row.auth_method,
 		version: row.version,
 	};
 }
@@ -101,6 +104,7 @@ function decodeCachedAuthSession(value: unknown, sessionIdHash: Buffer): AuthSes
 		app_release_channel: cached.app_release_channel ?? null,
 		app_build_number: cached.app_build_number ?? null,
 		app_beta_number: cached.app_beta_number ?? null,
+		auth_method: cached.auth_method ?? null,
 		version: cached.version,
 	};
 }

@@ -19,6 +19,7 @@ import {type AuthRuntimeTarget, useAuthRuntimeTarget} from '@app/features/auth/s
 import {
 	consumeSsoPendingContext,
 	getSsoPendingContext,
+	isValidOAuthState,
 	type SsoPendingContext,
 } from '@app/features/auth/state/SsoPendingContext';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
@@ -28,7 +29,9 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {navigateToExternalURL} from '@app/features/ui/utils/NativeUtils';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
@@ -36,7 +39,7 @@ import * as FormUtils from '@app/lib/forms';
 import {flxElementClassName} from '@app/lib/react';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {SSO_MOBILE_CALLBACK_URI, SSO_MOBILE_STATE_PREFIX} from '@fluxer/constants/src/SsoConstants';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -69,7 +72,25 @@ const OPEN_PRODUCT_DESCRIPTOR = msg({
 	message: 'Open {productName}',
 	comment: 'Button that hands SSO sign-in back to the mobile app. productName is the app name.',
 });
+const SSO_SIGN_IN_CANCELLED_DESCRIPTOR = msg({
+	message: 'Sign-in was cancelled.',
+	comment: 'SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.',
+});
+const SSO_PROVIDER_NEEDS_SIGN_IN_DESCRIPTOR = msg({
+	message: 'Your provider needs you to sign in again.',
+	comment: 'SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.',
+});
+const SSO_PROVIDER_REPORTED_ERROR_DESCRIPTOR = msg({
+	message: 'Your provider reported an error.',
+	comment: 'SSO callback page error shown when the sign-in provider sent back any other error.',
+});
+const SSO_PROVIDER_SIGN_IN_AGAIN_ERRORS = new Set(['login_required', 'consent_required', 'interaction_required']);
+const SSO_CONNECTED_DESCRIPTOR = msg({
+	message: 'Your account is connected to single sign-on.',
+	comment: 'Toast shown after the account was connected to single sign-on from account settings.',
+});
 const SSO_TIMEOUT_MS = 30_000;
+const logger = new Logger('SsoCallbackPage');
 
 interface SsoCallbackParameters {
 	code: string;
@@ -79,6 +100,7 @@ interface SsoCallbackParameters {
 interface SsoCallbackAttemptDependencies {
 	callbackContext: SsoPendingContext | null;
 	callbackParameters: SsoCallbackParameters | null;
+	callbackState: string | null;
 	i18n: I18n;
 	isCurrent: () => boolean;
 	onError: (error: SsoCallbackError) => void;
@@ -127,9 +149,9 @@ class SsoCallbackAttempt {
 	}
 
 	private async run(): Promise<void> {
-		const providerErrorMessage = this.providerErrorMessage();
-		if (providerErrorMessage != null) {
-			this.finishWithError(providerErrorMessage);
+		const {providerError, callbackContext, i18n} = this.dependencies;
+		if (providerError != null && providerError.length > 0) {
+			this.finishWithError(i18n._(this.providerErrorDescriptor(providerError, callbackContext)));
 			return;
 		}
 		const callbackParameters = this.dependencies.callbackParameters;
@@ -145,6 +167,7 @@ class SsoCallbackAttempt {
 		const result = await completeSsoLogin({
 			code: callbackParameters.code,
 			state: callbackParameters.state,
+			clientBinding: this.dependencies.callbackContext?.clientBinding ?? null,
 			runtimeSnapshot,
 		});
 		consumeSsoPendingContext(callbackParameters.state);
@@ -160,6 +183,14 @@ class SsoCallbackAttempt {
 				redirectTo: resolveSsoRedirectTarget(result.redirectTo, this.dependencies.callbackContext, runtimeSnapshot),
 				runtimeSnapshot,
 			});
+			return;
+		}
+		if (result.type === 'linked') {
+			this.settled = true;
+			ToastCommands.success(this.dependencies.i18n._(SSO_CONNECTED_DESCRIPTOR));
+			RouterUtils.replaceWith(
+				resolveSsoRedirectTarget(result.redirectTo, this.dependencies.callbackContext, runtimeSnapshot),
+			);
 			return;
 		}
 		const redirectTo = resolveSsoRedirectTarget(
@@ -209,15 +240,20 @@ class SsoCallbackAttempt {
 		this.dependencies.onProcessingChange(false);
 	}
 
-	private providerErrorMessage(): string | null {
-		const {providerError, providerErrorDescription} = this.dependencies;
-		if (providerError == null || providerError.length === 0) {
-			return null;
+	private providerErrorDescriptor(providerError: string, callbackContext: SsoPendingContext | null): MessageDescriptor {
+		const {callbackState, providerErrorDescription} = this.dependencies;
+		if (callbackContext == null || callbackState == null) {
+			return FAILED_TO_COMPLETE_SSO_SIGN_IN_DESCRIPTOR;
 		}
-		if (providerErrorDescription != null && providerErrorDescription.length > 0) {
-			return `${providerError}: ${providerErrorDescription}`;
+		consumeSsoPendingContext(callbackState);
+		logger.warn('SSO provider returned an error', {error: providerError, description: providerErrorDescription});
+		if (providerError === 'access_denied') {
+			return SSO_SIGN_IN_CANCELLED_DESCRIPTOR;
 		}
-		return providerError;
+		if (SSO_PROVIDER_SIGN_IN_AGAIN_ERRORS.has(providerError)) {
+			return SSO_PROVIDER_NEEDS_SIGN_IN_DESCRIPTOR;
+		}
+		return SSO_PROVIDER_REPORTED_ERROR_DESCRIPTOR;
 	}
 
 	private stopTimeout(): void {
@@ -300,11 +336,12 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			window.location.replace(mobileCallbackUrl);
 			return;
 		}
-		const callbackContext = state == null ? null : getSsoPendingContext(state);
+		const callbackContext = state == null || !isValidOAuthState(state) ? null : getSsoPendingContext(state);
 		setPendingContext(callbackContext);
 		const attempt = new SsoCallbackAttempt({
 			callbackContext,
 			callbackParameters: resolveCallbackParameters(code, state),
+			callbackState: state,
 			i18n,
 			isCurrent: () => request.isCurrent(),
 			onError: setError,
@@ -317,6 +354,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 		attempt.start();
 	});
 	if (mobileCallbackUrl != null) {
+		const productName = RuntimeConfig.productName;
 		return (
 			<flx-auth-sso-callback-page
 				className={flxElementClassName(styles.loginContainer)}
@@ -326,7 +364,9 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 					<Trans>Completing sign-in…</Trans>
 				</h1>
 				<p className={styles.ssoProcessingHint} data-flx="auth.sso-callback-page.sso-processing-hint--mobile">
-					<Trans>Continue in the desktop app.</Trans>
+					<Trans comment="Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.">
+						Continue in the {productName} app.
+					</Trans>
 				</p>
 				<flx-auth-sso-callback-page-actions
 					className={flxElementClassName(styles.ssoCallbackActions)}

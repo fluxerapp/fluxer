@@ -5,12 +5,14 @@ import {
 	createTestAccount,
 	disableSso,
 	enableSso,
+	enableTotp,
 	setUserACLs,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
@@ -76,11 +78,18 @@ describe('Usernames from the SSO provider', () => {
 		return `itest-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 	}
 
-	async function completeSso(sub: string, preferredUsername?: string): Promise<SsoCompleteResponse> {
-		const start = await createBuilderWithoutAuth<{state: string}>(harness).post('/auth/sso/start').body({}).execute();
-		return createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+	async function completeSso<T = SsoCompleteResponse>(sub: string, preferredUsername?: string): Promise<T> {
+		const start = await createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
+			.post('/auth/sso/start')
+			.body({})
+			.execute();
+		return createBuilderWithoutAuth<T>(harness)
 			.post('/auth/sso/complete')
-			.body({code: JSON.stringify({sub, preferred_username: preferredUsername}), state: start.state})
+			.body({
+				code: JSON.stringify({sub, preferred_username: preferredUsername}),
+				state: start.state,
+				client_binding: start.client_binding,
+			})
 			.execute();
 	}
 
@@ -127,6 +136,54 @@ describe('Usernames from the SSO provider', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.executeWithResponse();
 		expect(json.errors.map(({path}) => path)).toEqual(['sso.username_from_provider']);
+	});
+
+	async function linkWithSecondFactor(account: TestAccount, sub: string): Promise<string> {
+		const link = await createBuilder<{state: string; client_binding: string}>(harness, account.token)
+			.post('/users/@me/sso/link/start')
+			.body({password: account.password})
+			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/sso/complete')
+			.body({
+				code: JSON.stringify({sub, preferred_username: 'before'}),
+				state: link.state,
+				client_binding: link.client_binding,
+			})
+			.execute();
+		const [backupCode] = await enableTotp(harness, account);
+		return backupCode!;
+	}
+
+	function finishSecondFactor(ticket: string, code: string) {
+		return createBuilderWithoutAuth<SsoCompleteResponse>(harness).post('/auth/login/mfa/totp').body({ticket, code});
+	}
+
+	it('takes a changed provider username once the second factor is done', async () => {
+		const account = await createTestAccount(harness);
+		await enableUsernameSso({enforced: false, username_from_provider: true});
+		const sub = subject('mfa');
+		const backupCode = await linkWithSecondFactor(account, sub);
+		const {ticket} = await completeSso<{ticket: string}>(sub, 'after');
+		const login = await finishSecondFactor(ticket, backupCode).execute();
+		expect((await createBuilder<CurrentUser>(harness, login.token).get('/users/@me').execute()).username).toBe('after');
+	});
+
+	it('keeps the username of a suspended account that finishes the second factor', async () => {
+		const account = await createTestAccount(harness);
+		await enableUsernameSso({enforced: false, username_from_provider: true});
+		const sub = subject('mfa-suspended');
+		const backupCode = await linkWithSecondFactor(account, sub);
+		const users = getUserRepository();
+		const user = (await users.findUnique(createUserID(BigInt(account.userId))))!;
+		await users.patchUpsert(
+			user.id,
+			{flags: user.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() + 3_600_000)},
+			user.toRow(),
+		);
+		const {ticket} = await completeSso<{ticket: string}>(sub, 'after');
+		await finishSecondFactor(ticket, backupCode).expect(403).execute();
+		expect((await users.findUnique(user.id))!.username).toBe(user.username);
 	});
 
 	describe('while the setting is on', () => {

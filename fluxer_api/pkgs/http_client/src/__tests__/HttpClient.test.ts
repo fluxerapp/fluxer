@@ -18,6 +18,13 @@ describe('HttpClient', () => {
 		await redirectServer.close();
 	});
 	describe('sendRequest', () => {
+		it('reports a request that runs out of time as aborted', async () => {
+			const client = createHttpClient(TEST_USER_AGENT);
+			testServer.setHandler(() => {});
+			const failure = await client.sendRequest({url: testServer.url, timeout: 50}).catch((error: unknown) => error);
+			expect(failure).toBeInstanceOf(HttpError);
+			expect(failure).toMatchObject({errorType: 'aborted', message: 'Request timed out'});
+		});
 		describe('redirects', () => {
 			it('strips sensitive headers on cross-origin redirects', async () => {
 				const client = createHttpClient(TEST_USER_AGENT);

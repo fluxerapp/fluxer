@@ -519,12 +519,14 @@ describe('Enforcement sign-in', () => {
 	}
 
 	async function ssoSignIn(email: string, ip?: string) {
-		const start = createBuilderWithoutAuth<{state: string}>(harness).post('/auth/sso/start').body({});
+		const start = createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
+			.post('/auth/sso/start')
+			.body({});
 		if (ip) start.header('x-forwarded-for', ip);
-		const {state} = await start.execute();
+		const {state, client_binding} = await start.execute();
 		const complete = createBuilderWithoutAuth<SignInBody & {user_id?: string}>(harness)
 			.post('/auth/sso/complete')
-			.body({code: email, state});
+			.body({code: email, state, client_binding});
 		if (ip) complete.header('x-forwarded-for', ip);
 		return complete.executeRaw();
 	}

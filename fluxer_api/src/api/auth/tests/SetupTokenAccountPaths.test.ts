@@ -139,8 +139,8 @@ describe('Setup token on every way to create an account', () => {
 	async function completeSso(prefix: string): Promise<{status: number; json: GateResponse}> {
 		const started = await post('/auth/sso/start', {});
 		expect(started.status).toBe(HTTP_STATUS.OK);
-		const state = (started.json as GateResponse & {state?: string}).state;
-		return post('/auth/sso/complete', {code: `${prefix}-${Date.now()}@example.com`, state});
+		const {state, client_binding} = started.json as GateResponse & {state?: string; client_binding?: string};
+		return post('/auth/sso/complete', {code: `${prefix}-${Date.now()}@example.com`, state, client_binding});
 	}
 
 	it('sends no sign-up code before the first admin exists', async () => {

@@ -231,6 +231,7 @@ export const Endpoints = {
 	USER_PASSWORD_CHANGE_COMPLETE: '/users/@me/password-change/complete',
 	USER_PASSWORD: '/users/@me/password',
 	USER_RECOVERY_KIT: '/users/@me/recovery-kit',
+	USER_SSO_LINK_START: '/users/@me/sso/link/start',
 	USER_DISABLE: '/users/@me/disable',
 	USER_DELETE: '/users/@me/delete',
 	USER_BULK_DELETE_MY_MESSAGES: '/users/@me/messages/bulk-delete-mine',

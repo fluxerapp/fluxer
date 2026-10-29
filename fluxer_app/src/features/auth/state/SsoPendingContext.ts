@@ -12,7 +12,16 @@ const PENDING_SSO_CONTEXT_TTL_MS = 30 * 60 * 1000;
 const PENDING_SSO_CONTEXT_MAX_ENTRIES = 16;
 const PENDING_SSO_CONTEXT_JSON_MAX_LENGTH = 262_144;
 const OAUTH_STATE_MAX_LENGTH = 512;
-const STORED_SSO_PENDING_CONTEXT_KEYS: ReadonlyArray<string> = ['createdAtMs', 'expiresAtMs', 'instance', 'redirectTo'];
+const PRE_BINDING_SSO_PENDING_CONTEXT_KEYS: ReadonlyArray<string> = [
+	'createdAtMs',
+	'expiresAtMs',
+	'instance',
+	'redirectTo',
+];
+const STORED_SSO_PENDING_CONTEXT_KEYS: ReadonlyArray<string> = [
+	...PRE_BINDING_SSO_PENDING_CONTEXT_KEYS,
+	'clientBinding',
+];
 
 const LEGACY_SSO_REDIRECT_TO_STORAGE_KEY = 'fluxer:sso:redirect_to';
 
@@ -21,6 +30,7 @@ const logger = new Logger('SsoPendingContext');
 export interface SsoPendingContext {
 	readonly redirectTo: string | null;
 	readonly runtimeSnapshot: RuntimeConfigSnapshot | null;
+	readonly clientBinding: string | null;
 }
 
 interface StoredSsoPendingContext extends SsoPendingContext {
@@ -118,7 +128,10 @@ function parseStoredContext(raw: string, nowMs: number): StoredSsoPendingContext
 	} catch {
 		return null;
 	}
-	if (!isExactRecord(value, STORED_SSO_PENDING_CONTEXT_KEYS)) {
+	if (
+		!isExactRecord(value, STORED_SSO_PENDING_CONTEXT_KEYS) &&
+		!isExactRecord(value, PRE_BINDING_SSO_PENDING_CONTEXT_KEYS)
+	) {
 		return null;
 	}
 	const createdAtMs = value['createdAtMs'];
@@ -140,7 +153,11 @@ function parseStoredContext(raw: string, nowMs: number): StoredSsoPendingContext
 	if (redirectTo === undefined) {
 		return null;
 	}
-	return {createdAtMs, redirectTo, runtimeSnapshot};
+	const clientBinding = value['clientBinding'] ?? null;
+	if (clientBinding !== null && typeof clientBinding !== 'string') {
+		return null;
+	}
+	return {createdAtMs, redirectTo, runtimeSnapshot, clientBinding};
 }
 
 function removeStoredContext(key: string): void {
@@ -178,12 +195,14 @@ function pruneStoredContexts(retainedEntries: number, excludedKey: string | null
 		removeStoredContext(entry.key);
 	}
 	return new Map(
-		entries
-			.slice(0, retainedEntries)
-			.map((entry) => [
-				entry.key,
-				{redirectTo: entry.context.redirectTo, runtimeSnapshot: entry.context.runtimeSnapshot},
-			]),
+		entries.slice(0, retainedEntries).map((entry) => [
+			entry.key,
+			{
+				redirectTo: entry.context.redirectTo,
+				runtimeSnapshot: entry.context.runtimeSnapshot,
+				clientBinding: entry.context.clientBinding,
+			},
+		]),
 	);
 }
 
@@ -196,6 +215,7 @@ function serializeStoredContext(createdAtMs: number, context: SsoPendingContext)
 		}
 	}
 	const serialized = JSON.stringify({
+		clientBinding: context.clientBinding,
 		createdAtMs,
 		expiresAtMs: createdAtMs + PENDING_SSO_CONTEXT_TTL_MS,
 		instance: context.runtimeSnapshot,
@@ -221,7 +241,7 @@ export async function storeSsoPendingContext(state: string, context: SsoPendingC
 export function getSsoPendingContext(state: string): SsoPendingContext | null {
 	const legacyRedirectTo = safeRedirectTarget(readLegacySsoRedirectTo());
 	if (!isValidOAuthState(state)) {
-		return legacyRedirectTo == null ? null : {redirectTo: legacyRedirectTo, runtimeSnapshot: null};
+		return legacyRedirectTo == null ? null : {redirectTo: legacyRedirectTo, runtimeSnapshot: null, clientBinding: null};
 	}
 	const context = pruneStoredContexts(PENDING_SSO_CONTEXT_MAX_ENTRIES, null).get(ssoPendingContextKey(state));
 	if (context != null) {
@@ -230,7 +250,7 @@ export function getSsoPendingContext(state: string): SsoPendingContext | null {
 	if (legacyRedirectTo == null) {
 		return null;
 	}
-	return {redirectTo: legacyRedirectTo, runtimeSnapshot: null};
+	return {redirectTo: legacyRedirectTo, runtimeSnapshot: null, clientBinding: null};
 }
 
 export function consumeSsoPendingContext(state: string): SsoPendingContext | null {

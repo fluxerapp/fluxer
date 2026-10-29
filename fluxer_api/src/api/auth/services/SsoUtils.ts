@@ -8,23 +8,27 @@ import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms} from 'itty-time';
 
-interface DiscoveredOidcProviderMetadata {
+export interface DiscoveredOidcProviderMetadata {
 	issuer: string;
 	authorization_endpoint?: string;
 	token_endpoint?: string;
 	userinfo_endpoint?: string;
 	jwks_uri?: string;
+	token_endpoint_auth_methods_supported?: Array<string>;
 }
 
+const SSO_REDIRECT_BASE = 'https://sso-redirect.invalid';
+const SSO_REDIRECT_MAX_LENGTH = 2048;
+const SSO_REDIRECT_FORBIDDEN_CHARACTERS = /[\\\p{Cc}]/u;
+
 export function sanitizeSsoRedirectTo(redirectTo?: string): string | undefined {
-	if (!redirectTo) return undefined;
-	const trimmed = redirectTo.trim();
-	if (!trimmed) return undefined;
-	if (!trimmed.startsWith('/')) return undefined;
-	if (trimmed.startsWith('//')) return undefined;
-	if (trimmed.length > 2048) return undefined;
-	if (trimmed.includes('\r') || trimmed.includes('\n')) return undefined;
-	return trimmed;
+	const trimmed = redirectTo?.trim();
+	if (!trimmed || trimmed.length > SSO_REDIRECT_MAX_LENGTH || !trimmed.startsWith('/')) return undefined;
+	if (SSO_REDIRECT_FORBIDDEN_CHARACTERS.test(trimmed)) return undefined;
+	const url = URL.parse(trimmed, SSO_REDIRECT_BASE);
+	if (url?.origin !== SSO_REDIRECT_BASE) return undefined;
+	const path = `${url.pathname}${url.search}${url.hash}`;
+	return path.startsWith('//') || path.startsWith('/\\') ? undefined : path;
 }
 
 export function parseTokenEndpointResponse(
@@ -36,7 +40,7 @@ export function parseTokenEndpointResponse(
 } {
 	const contentType = contentTypeHeader?.toLowerCase() ?? '';
 	const raw = rawResponseBody;
-	if (contentType.includes('application/json') || contentType.includes('application/jwt')) {
+	if (contentType.includes('application/json')) {
 		const parsed = parseJsonRecord(raw);
 		if (!parsed) {
 			return {id_token: undefined, access_token: undefined};
@@ -66,6 +70,23 @@ function normalizeIssuerForCompare(value: string): string {
 	return value.replace(/\/$/, '');
 }
 
+export function acceptedIssuers(issuer: string): Array<string> {
+	const base = normalizeIssuerForCompare(issuer);
+	return [base, `${base}/`];
+}
+
+function discoveryFailed(issuer: string, reason: string, details: Record<string, unknown> = {}): null {
+	Logger.warn(
+		{issuer: formatUrlForDiagnostics(issuer), reason, ...details},
+		'Failed to discover OIDC provider metadata',
+	);
+	return null;
+}
+
+function readStringList(value: unknown): Array<string> | undefined {
+	return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : undefined;
+}
+
 export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<DiscoveredOidcProviderMetadata | null> {
 	try {
 		const url = buildDiscoveryUrl(issuer);
@@ -77,11 +98,11 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 				timeout: ms('10 seconds'),
 				serviceName: 'sso_oidc_discovery',
 			},
-			{requestUrlPolicy: getSsoRequestUrlPolicy()},
+			{requestUrlPolicy: getSsoRequestUrlPolicy(), maxRedirects: 0},
 		);
 		if (resp.status < 200 || resp.status >= 300) {
 			FetchUtils.discardResponseBody(resp.stream, resp.status);
-			return null;
+			return discoveryFailed(issuer, 'unexpected HTTP status', {status: resp.status});
 		}
 		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
 			maxBytes: EXTERNAL_RESPONSE_LIMITS.ssoDiscoveryBytes,
@@ -90,11 +111,13 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 			description: 'OIDC discovery response',
 		});
 		const json = parseJsonRecord(rawBody);
-		if (!json) return null;
+		if (!json) return discoveryFailed(issuer, 'response is not a JSON object');
 		const discoveredIssuer = typeof json['issuer'] === 'string' ? json['issuer'] : null;
-		if (!discoveredIssuer) return null;
+		if (!discoveredIssuer) return discoveryFailed(issuer, 'response has no issuer');
 		if (normalizeIssuerForCompare(discoveredIssuer) !== normalizeIssuerForCompare(issuer)) {
-			return null;
+			return discoveryFailed(issuer, 'response issuer does not match', {
+				discovered_issuer: formatUrlForDiagnostics(discoveredIssuer),
+			});
 		}
 		return {
 			issuer: discoveredIssuer,
@@ -103,9 +126,9 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 			token_endpoint: typeof json['token_endpoint'] === 'string' ? json['token_endpoint'] : undefined,
 			userinfo_endpoint: typeof json['userinfo_endpoint'] === 'string' ? json['userinfo_endpoint'] : undefined,
 			jwks_uri: typeof json['jwks_uri'] === 'string' ? json['jwks_uri'] : undefined,
+			token_endpoint_auth_methods_supported: readStringList(json['token_endpoint_auth_methods_supported']),
 		};
 	} catch (error) {
-		Logger.debug({issuer: formatUrlForDiagnostics(issuer), error}, 'Failed to discover OIDC provider metadata');
-		return null;
+		return discoveryFailed(issuer, 'request failed', {error});
 	}
 }

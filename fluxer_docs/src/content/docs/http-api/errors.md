@@ -311,6 +311,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `SINGLE_COMMUNITY_CANNOT_DELETE` | The community for this instance cannot be deleted |
 | `SINGLE_COMMUNITY_CANNOT_LEAVE` | You cannot leave the community for this instance |
 | `SLOWMODE_RATE_LIMITED` | Slowmode rate limited |
+| `SSO_PROVIDER_UNAVAILABLE` | Your sign-in provider didn't answer. Try again in a moment |
 | `SSO_REQUIRED` | This instance requires single sign-on |
 | `STREAM_KEY_CHANNEL_MISMATCH` | Stream key channel mismatch |
 | `STREAM_KEY_SCOPE_MISMATCH` | Stream key scope mismatch |
@@ -607,13 +608,18 @@ These are the values of `code` inside `errors`.
 | `SMTP_HOST_REQUIRED` | Enter an SMTP server before turning on email delivery |
 | `SNOWFLAKE_OUT_OF_RANGE` | Invalid snowflake |
 | `SSO_ACCOUNT_LINKED_TO_ANOTHER_IDENTITY` | This account is already linked to a different SSO identity |
+| `SSO_ACCOUNT_LINK_REQUIRES_SIGN_IN` | An account with this email already exists. Sign in to it another way, then connect single sign-on |
+| `SSO_DISCOVERY_FAILED` | Couldn't connect to the sign-in provider at its issuer URL |
 | `SSO_EMAIL_NOT_VERIFIED` | Your SSO provider has not verified your email address |
 | `SSO_IDENTITY_LINKED_TO_ANOTHER_ACCOUNT` | This SSO identity is already linked to a different account |
 | `SSO_IDENTITY_MISMATCH` | SSO identity mismatch between id_token and userinfo |
+| `SSO_ISSUER_CHANGE_HAS_IDENTITIES` | {count} accounts are linked to the old issuer. Choose whether to move those links to the new issuer |
+| `SSO_ISSUER_REQUIRED` | Enter the issuer URL of your sign-in provider |
 | `SSO_MISCONFIGURED` | SSO is misconfigured |
 | `SSO_PROVIDER_DID_NOT_RETURN_EMAIL` | Your SSO provider didn't return an email address |
 | `SSO_TEST_CODE_MISSING_EMAIL` | SSO test code is missing the email payload |
 | `SSO_UNABLE_TO_ALLOCATE_DISCRIMINATOR` | We couldn't allocate a discriminator for your SSO account |
+| `SSO_USER_INFO_SIGNED_RESPONSE_UNSUPPORTED` | Your sign-in provider sent your profile in a signed format that Fluxer can't use |
 | `STRING_LENGTH_EXACT` | String must be exactly {length} characters |
 | `STRING_LENGTH_INVALID` | String length must be between {min} and {max} characters |
 | `SYSTEM_CHANNEL_MUST_BE_IN_GUILD` | System channel must be in this community |
@@ -632,6 +638,7 @@ These are the values of `code` inside `errors`.
 | `UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN` | Claim your account before changing your profile |
 | `UNRESOLVED_ATTACHMENT_URL` | Unresolved `attachment://` URL detected |
 | `UPLOADED_ATTACHMENT_NOT_FOUND` | Uploaded attachment {filename} wasn't found |
+| `URL_HOSTNAME_NOT_RESOLVABLE` | Fluxer couldn't look up the hostname in this URL |
 | `URL_LENGTH_INVALID` | URL must be between {min} and {max} characters |
 | `URL_MUST_USE_HTTPS` | URL must start with https:// |
 | `URL_NOT_PUBLICLY_ROUTABLE` | URL must resolve to a publicly routable address |

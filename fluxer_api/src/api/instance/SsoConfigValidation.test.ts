@@ -115,3 +115,38 @@ describe('normalizeAndValidateSsoConfig URL scheme', () => {
 		).rejects.toMatchObject({localizedErrors: [{path: 'issuer', code: ValidationErrorCodes.INVALID_URL_FORMAT}]});
 	});
 });
+
+describe('normalizeAndValidateSsoConfig issuer', () => {
+	it('requires an issuer for a real provider', async () => {
+		await expect(
+			normalizeAndValidateSsoConfig(
+				ssoConfig({authorizationUrl: 'https://1.1.1.1/auth', tokenUrl: 'https://1.1.1.1/token'}),
+				{testModeEnabled: false},
+			),
+		).rejects.toMatchObject({localizedErrors: [{path: 'issuer', code: ValidationErrorCodes.SSO_ISSUER_REQUIRED}]});
+	});
+});
+
+describe('normalizeAndValidateSsoConfig provider address', () => {
+	it('points at the hostname when it does not resolve', async () => {
+		await expect(
+			normalizeAndValidateSsoConfig(
+				{...ssoConfig({authorizationUrl: null, tokenUrl: null}), issuer: 'https://sso.example.invalid'},
+				{testModeEnabled: false},
+			),
+		).rejects.toMatchObject({
+			localizedErrors: [{path: 'issuer', code: ValidationErrorCodes.URL_HOSTNAME_NOT_RESOLVABLE}],
+		});
+	});
+
+	it('points at the private address rule for a private address', async () => {
+		await expect(
+			normalizeAndValidateSsoConfig(
+				{...ssoConfig({authorizationUrl: null, tokenUrl: null}), issuer: 'https://10.0.0.1'},
+				{testModeEnabled: false},
+			),
+		).rejects.toMatchObject({
+			localizedErrors: [{path: 'issuer', code: ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE}],
+		});
+	});
+});

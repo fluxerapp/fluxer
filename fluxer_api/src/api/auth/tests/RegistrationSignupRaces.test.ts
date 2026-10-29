@@ -174,13 +174,13 @@ describe('signups racing on registration URLs and pending approvals', () => {
 			failureEmail = email;
 		}
 		const operation = (async () => {
-			const start = await createBuilderWithoutAuth<{state: string}>(harness)
+			const start = await createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
 				.post('/auth/sso/start')
 				.body({redirect_to: '/me'})
 				.execute();
 			return createBuilderWithoutAuth(harness)
 				.post('/auth/sso/complete')
-				.body({code: email, state: start.state})
+				.body({code: email, state: start.state, client_binding: start.client_binding})
 				.executeRaw();
 		})();
 		requests.add(operation);

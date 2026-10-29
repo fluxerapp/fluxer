@@ -3,9 +3,13 @@
 import {isDeepStrictEqual} from 'node:util';
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {migrateSsoIdentities} from '@app/api/admin/controllers/SsoIdentityAdminController';
 import {startAttachmentDecayReconcile} from '@app/api/attachment/AttachmentDecayReconcileRun';
 import {maybeAutoJoinInvite} from '@app/api/auth/AuthRegistration';
-import {ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
+import {ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
+import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
+import {legacySsoDiscoveryCacheKey, ssoDiscoveryCacheKey} from '@app/api/auth/services/SsoService';
+import {tryDiscoverOidcProviderMetadata} from '@app/api/auth/services/SsoUtils';
 import {createGuildID, createInviteCode, createUserID} from '@app/api/BrandedTypes';
 import {loadSigningKey} from '@app/api/bluesky/BlueskyOAuthService';
 import {Config} from '@app/api/Config';
@@ -17,6 +21,7 @@ import {
 	type InstanceConfigRepository,
 	type InstanceIntegrationsConfigPatch,
 	type InstancePolicyConfig,
+	type InstanceSsoConfig,
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 	REGISTRATION_REJECTED_TRAIT,
 	type SsoGroupRoleMapping,
@@ -152,6 +157,32 @@ async function readSavedSmtpConfig(): Promise<StoredEmailSmtpConfig> {
 	return (await getInstanceConfigRepository().getInstanceIntegrationsConfig()).email.smtp;
 }
 
+type SsoProviderKey = Pick<InstanceSsoConfig, 'issuer' | 'authorizationUrl'>;
+
+async function isSameSsoProvider(current: SsoProviderKey, next: SsoProviderKey): Promise<boolean> {
+	const withoutTrailingSlash = (id: string) => id.replace(/\/+$/, '');
+	if (withoutTrailingSlash(ssoProviderIdOf(current)) === withoutTrailingSlash(ssoProviderIdOf(next))) return true;
+	if (current.issuer || !current.authorizationUrl || !next.issuer) return false;
+	const discovered = await tryDiscoverOidcProviderMetadata(next.issuer);
+	return discovered?.authorization_endpoint === current.authorizationUrl;
+}
+
+async function shouldMoveSsoIdentities(
+	current: SsoProviderKey,
+	next: SsoProviderKey,
+	choice: boolean | undefined,
+): Promise<boolean> {
+	const fromProviderId = ssoProviderIdOf(current);
+	if (!next.issuer || fromProviderId === ssoProviderIdOf(next)) return false;
+	const linked = (await new SsoIdentityRepository().listForProvider(fromProviderId)).length;
+	if (linked === 0) return false;
+	if (choice !== undefined) return choice;
+	if (await isSameSsoProvider(current, next)) return true;
+	throw InputValidationError.fromCode('issuer', ValidationErrorCodes.SSO_ISSUER_CHANGE_HAS_IDENTITIES, {
+		count: linked,
+	});
+}
+
 async function validateSsoGroupRoleMappings(
 	mappings: Array<{group: string; role_id: string}> | undefined,
 ): Promise<Array<SsoGroupRoleMapping> | undefined> {
@@ -187,7 +218,7 @@ function nonEmptyPatch<T extends object>(value: T | null | undefined): Partial<T
 	return Object.keys(patch).length > 0 ? patch : undefined;
 }
 
-async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
+async function buildInstanceConfigResponse(warnings: Array<string> = []): Promise<InstanceConfigResponse> {
 	const instanceConfigRepository = getInstanceConfigRepository();
 	const [
 		ssoConfig,
@@ -306,6 +337,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		media,
 		billing,
 		notice,
+		warnings,
 	};
 }
 
@@ -586,6 +618,7 @@ interface InstanceConfigUpdateContext {
 	readonly data: InstanceConfigUpdateRequest;
 	readonly instanceConfigRepository: InstanceConfigRepository;
 	readonly integrationsPatch: InstanceIntegrationsConfigPatch | null;
+	readonly warnings: Array<string>;
 }
 
 function createInstanceConfigSectionApplier<T extends object>(
@@ -677,7 +710,7 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 	),
 	sso: createInstanceConfigSectionApplier(
 		({data}) => data.sso,
-		async (sso, {ctx, instanceConfigRepository}) => {
+		async (sso, {ctx, instanceConfigRepository, warnings}) => {
 			const suppliedButtonLabel = readOptionalField(sso, 'button_label');
 			const buttonLabel = suppliedButtonLabel === undefined ? undefined : normalizeSsoButtonLabel(suppliedButtonLabel);
 			const current = await instanceConfigRepository.getSsoConfig({includeSecret: true});
@@ -698,6 +731,11 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 			const validated = await normalizeAndValidateSsoConfig(next, {
 				testModeEnabled: Config.dev.testModeEnabled,
 			});
+			const moveIdentities = await shouldMoveSsoIdentities(
+				current,
+				validated,
+				readOptionalField(sso, 'migrate_identities'),
+			);
 			const supplied = <T>(field: keyof typeof sso, value: T): T | undefined =>
 				readOptionalField(sso, field) === undefined ? undefined : value;
 			await instanceConfigRepository.setSsoConfig({
@@ -719,8 +757,18 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 				groupsClaim: readOptionalField(sso, 'groups_claim'),
 				groupRoleMappings: await validateSsoGroupRoleMappings(readOptionalField(sso, 'group_role_mappings')),
 			});
+			if (moveIdentities) {
+				await migrateSsoIdentities(ctx, ssoProviderIdOf(current), ssoProviderIdOf(validated));
+			}
 			for (const issuer of new Set([current.issuer, validated.issuer])) {
-				if (issuer) await ctx.get('cacheService').delete(ssoDiscoveryCacheKey(issuer));
+				if (!issuer) continue;
+				await ctx.get('cacheService').delete(ssoDiscoveryCacheKey(issuer));
+				await ctx.get('cacheService').delete(legacySsoDiscoveryCacheKey(issuer));
+			}
+			if (validated.providerUnreachable) {
+				warnings.push(
+					"Couldn't connect to the sign-in provider at its issuer URL. The SSO button stays hidden until the provider answers.",
+				);
 			}
 		},
 	),
@@ -920,7 +968,8 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			const integrationsPatch = toIntegrationsPatch(data.integrations, await readSavedSmtpConfig());
 			await assertConsistentInstanceConfig(data, integrationsPatch);
 			await assertValidBlueskyKeys(integrationsPatch);
-			const updateContext = {ctx, data, instanceConfigRepository, integrationsPatch};
+			const warnings: Array<string> = [];
+			const updateContext = {ctx, data, instanceConfigRepository, integrationsPatch, warnings};
 			for (const applySection of Object.values(INSTANCE_CONFIG_SECTION_APPLIERS)) {
 				const pendingUpdate = applySection(updateContext);
 				if (pendingUpdate) await pendingUpdate;
@@ -933,7 +982,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					sections: listSuppliedSections(data),
 				},
 			});
-			return ctx.json(await buildInstanceConfigResponse());
+			return ctx.json(await buildInstanceConfigResponse(warnings));
 		},
 	);
 	app.post(

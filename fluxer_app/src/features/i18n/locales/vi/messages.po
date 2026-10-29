@@ -4075,6 +4075,11 @@ msgstr "Sau 14 ngày, tài khoản của bạn sẽ bị xóa vĩnh viễn"
 msgid "After date"
 msgstr "Sau ngày"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Sau khi đăng nhập, hãy thử lại thao tác."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Sau khi tài khoản bị xóa, bạn sẽ không thể xóa các tin nhắn đã gửi"
@@ -9899,6 +9904,11 @@ msgstr "Xác nhận hoặc nhấp đúp để tham gia kênh thoại cộng đ�
 msgid "Conflicts with {conflictLabel}"
 msgstr "Xung đột với {conflictLabel}"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Kết nối"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Kết nối camera và thử lại."
@@ -10152,7 +10162,11 @@ msgstr "Bạn có thể mở menu ngữ cảnh bằng cách nhấp chuột trái
 msgid "Continue"
 msgstr "Tiếp tục"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Tiếp tục trong ứng dụng {productName}."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Tiếp tục trong ứng dụng máy tính."
@@ -10830,6 +10844,11 @@ msgstr "Không thể đóng tin nhắn trực tiếp"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Không thể hoàn tất đăng nhập. Vui lòng thử lại."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Không thể kết nối đăng nhập một lần"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "Cho phép bạn đặt lại mật khẩu nếu bạn quên."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Cho phép bạn chia sẻ màn hình hoặc một cửa sổ."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Cho phép bạn đăng nhập vào tài khoản này bằng {providerName}."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "Phương thức đăng nhập"
 msgid "Sign-in page"
 msgstr "Trang đăng nhập"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "Đã hủy đăng nhập."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "Một lớp"
 msgid "Single line"
 msgstr "Một dòng"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Đăng nhập một lần"
 
@@ -43200,6 +43231,11 @@ msgstr "Bạn đăng nhập bằng mã gửi đến email của bạn. Mật kh�
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Bạn đăng nhập bằng tên người dùng này. Hãy chọn một tên bạn sẽ nhớ."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Bạn đã đăng nhập vào một tài khoản khác. Hãy đăng nhập bằng tài khoản bạn đang dùng ở đây."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "Tài khoản của bạn đã được liên kết thành công. Bây gi
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Tài khoản của bạn chưa có địa chỉ email. Nếu quên mật khẩu, bộ dụng cụ khôi phục là cách duy nhất để truy cập lại. Chỉ mất một phút thôi."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Tài khoản của bạn đã được kết nối với đăng nhập một lần."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "Không gian riêng tư để ghi chú và nhắc nhở"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Quyền riêng tư hồ sơ của bạn bị giới hạn, vì vậy một số người vẫn không thấy kết nối này ngay cả khi bật tùy chọn \"Mọi người\"."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Nhà cung cấp của bạn yêu cầu bạn đăng nhập lại."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Nhà cung cấp của bạn đã báo lỗi."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "Không thể phát lượt chia sẻ màn hình của bạn bằng codec
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Mã thiết lập của bạn không còn hoạt động. Hãy nhập lại."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Nhà cung cấp đăng nhập của bạn hiện không khả dụng. Vui lòng thử lại sau."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Email và mật khẩu của bạn do nhà cung cấp đăng nhập của bạn quản lý."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

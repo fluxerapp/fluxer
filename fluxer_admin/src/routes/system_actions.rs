@@ -278,11 +278,16 @@ pub async fn instance_config_post(
         if matches!(feedback, UpdateFeedback::Premium | UpdateFeedback::Billing) {
             remember_premium_branding(&state, &result);
         }
-        match feedback {
+        let warnings = result
+            .as_ref()
+            .map(|saved| saved.warnings.clone())
+            .unwrap_or_default();
+        let flash = match feedback {
             UpdateFeedback::Field(api_path, field) => field_result(result, api_path, field),
             UpdateFeedback::Billing => super::billing_actions::billing_result(result),
             UpdateFeedback::Standard | UpdateFeedback::Premium => instance_config_result(result),
-        }
+        };
+        with_save_warnings(flash, &warnings)
     };
     state.forget_instance_settings();
     instance_config_response(config, &headers, flash)
@@ -326,6 +331,13 @@ fn with_api_reason(summary: &str, error: &crate::api::client::ApiError) -> Strin
         Some(reason) => format!("{summary}: {reason}"),
         None => summary.to_owned(),
     }
+}
+
+fn with_save_warnings(flash: FlashData, warnings: &[String]) -> FlashData {
+    if warnings.is_empty() {
+        return flash;
+    }
+    FlashData::info(format!("Instance config updated. {}", warnings.join(" ")))
 }
 
 fn instance_config_result<T>(result: Result<T, crate::api::client::ApiError>) -> FlashData {
@@ -535,5 +547,21 @@ fn build_media_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
             }),
         }),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_save_with_warnings_shows_them_instead_of_plain_success() {
+        let warnings = vec!["Couldn't connect to the sign-in provider.".to_owned()];
+        let flash = with_save_warnings(FlashData::success("Instance config updated"), &warnings);
+        assert_eq!(flash.flash_type, "info");
+        assert_eq!(
+            flash.message,
+            "Instance config updated. Couldn't connect to the sign-in provider."
+        );
     }
 }

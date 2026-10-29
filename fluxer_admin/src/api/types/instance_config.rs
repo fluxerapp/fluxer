@@ -56,6 +56,8 @@ pub struct InstanceConfigResponse {
     pub guild_visits: GuildVisitsConfigResponse,
     #[serde(default)]
     pub notice: Option<InstanceNoticeResponse>,
+    #[serde(default)]
+    pub warnings: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1238,6 +1240,8 @@ pub struct SsoConfigUpdateRequest {
     pub groups_claim: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group_role_mappings: Option<Vec<SsoGroupRoleMapping>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub migrate_identities: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

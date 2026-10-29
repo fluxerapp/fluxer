@@ -44,6 +44,7 @@ The first row that matches the account says which proofs it can send.
 | A second factor is turned on | `mfa_method` of `totp` or `webauthn` with its fields |
 | Has a password | `password`, or `webauthn` with a passkey |
 | Has a confirmed email address on an instance that sends email | `mfa_method` of `email_code` after [Send a sudo email code](#send-a-sudo-email-code), or `webauthn` with a passkey |
+| Connected to SSO | Nothing, from a session that signed in with SSO in the last 10 minutes. Older sessions sign in with SSO again first |
 | None of these | Nothing, and the operation goes ahead |
 
 Without a proof, the request returns 403 `SUDO_MODE_REQUIRED` with the [sudo mode methods](#sudo-mode-methods-object) fields. A wrong password returns 400 `INVALID_PASSWORD` on the path `password`, and a wrong TOTP code, backup code or passkey assertion returns 400 `INVALID_MFA_CODE` on the path `mfa_code`. The `totp` method allows 10 attempts per 15 minutes for each account, and a correct code resets the count. A wrong email code returns 400 `INVALID_SIGN_IN_CODE`, a ticket past 10 minutes or 5 wrong tries returns 400 `SIGN_IN_CODE_EXPIRED`, and an unknown ticket returns 400 `UNKNOWN_SIGN_IN_TICKET`.
@@ -70,6 +71,7 @@ Without a proof, the request returns 403 `SUDO_MODE_REQUIRED` with the [sudo mod
 | backup_codes<sup>1</sup> | boolean | Whether the account has at least one unused backup code |
 | email_code? | boolean | Whether the account can prove sudo mode with an emailed code |
 | password? | boolean | Whether the account can prove sudo mode with its password |
+| sso_reauth | boolean | Whether the account proves sudo mode by signing in with SSO again. Always false while the instance has SSO turned off |
 
 <sup>1</sup> A backup code goes in `mfa_code` with `mfa_method` set to `totp`, also on an account without TOTP. There is no `backup_codes` method
 

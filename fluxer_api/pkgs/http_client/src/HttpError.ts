@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type HttpErrorType = 'aborted' | 'network_error' | 'unknown';
+export type HttpErrorType = 'aborted' | 'blocked' | 'network_error' | 'unresolvable_host' | 'unknown';
 
 export class HttpError extends Error {
 	constructor(

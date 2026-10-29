@@ -260,6 +260,15 @@ export function totpCodeNow(secret: string): string {
 	return generateTotpCode(secret, Date.now());
 }
 
+export async function enableTotp(harness: ApiTestHarness, account: TestAccount): Promise<Array<string>> {
+	const secret = createTotpSecret();
+	const enabled = await createBuilder<BackupCodesResponse>(harness, account.token)
+		.post('/users/@me/mfa/totp/enable')
+		.body({secret, code: totpCodeNow(secret), password: account.password})
+		.execute();
+	return enabled.backup_codes.map(({code}) => code);
+}
+
 export async function loginWithTotp(
 	harness: ApiTestHarness,
 	account: TestAccount,
@@ -328,6 +337,7 @@ export async function unclaimAccount(harness: ApiTestHarness, userId: string): P
 interface SsoConfig {
 	enabled: boolean;
 	enforced: boolean;
+	issuer?: string;
 	authorization_url: string;
 	token_url: string;
 	client_id: string;

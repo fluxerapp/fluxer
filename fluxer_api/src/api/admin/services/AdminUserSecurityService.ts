@@ -599,16 +599,18 @@ export class AdminUserSecurityService {
 			app: AdminSessionApp;
 			deletedAt: Date | null;
 		}> = [
-			...activeSessions.map((s) => ({
-				sessionIdHash: s.sessionIdHash,
-				createdAt: s.createdAt,
-				approximateLastUsedAt: s.approximateLastUsedAt,
-				clientIp: s.clientIp,
-				clientUserAgent: s.clientUserAgent,
-				clientOs: s.clientOs ?? null,
-				app: sessionApp(s),
-				deletedAt: null as Date | null,
-			})),
+			...activeSessions
+				.filter((s) => !s.isExpiredSsoSession())
+				.map((s) => ({
+					sessionIdHash: s.sessionIdHash,
+					createdAt: s.createdAt,
+					approximateLastUsedAt: s.approximateLastUsedAt,
+					clientIp: s.clientIp,
+					clientUserAgent: s.clientUserAgent,
+					clientOs: s.clientOs ?? null,
+					app: sessionApp(s),
+					deletedAt: null as Date | null,
+				})),
 			...tombstones.map((t) => ({
 				sessionIdHash: t.sessionIdHash,
 				createdAt: t.createdAt,

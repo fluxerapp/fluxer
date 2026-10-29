@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {tryDiscoverOidcProviderMetadata} from '@app/api/auth/services/SsoUtils';
 import {Config} from '@app/api/Config';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {RequestUrlPolicy} from '@pkgs/http_client/src/HttpClientTypes';
+import {HttpError} from '@pkgs/http_client/src/HttpError';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 
 interface SsoConfigValidationInput {
@@ -22,6 +24,7 @@ interface SsoConfigValidationInput {
 
 interface NormalizedSsoConfigValidationResult extends SsoConfigValidationInput {
 	ready: boolean;
+	providerUnreachable: boolean;
 }
 
 let ssoRequestUrlPolicy: RequestUrlPolicy | null = null;
@@ -141,7 +144,12 @@ function normalizeDomainList(
 	return Array.from(normalized);
 }
 
-export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
+export function isHttpsSsoUrl(rawUrl: string): boolean {
+	const url = URL.parse(rawUrl);
+	return url?.protocol === 'https:' && !url.username && !url.password && !url.hash;
+}
+
+async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(rawUrl);
@@ -159,8 +167,12 @@ export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: st
 			phase: 'initial',
 			redirectCount: 0,
 		});
-	} catch {
-		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE);
+	} catch (error) {
+		const unresolvable = error instanceof HttpError && error.errorType === 'unresolvable_host';
+		throw InputValidationError.fromCode(
+			fieldName,
+			unresolvable ? ValidationErrorCodes.URL_HOSTNAME_NOT_RESOLVABLE : ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE,
+		);
 	}
 	// Return the caller's exact input rather than parsedUrl.toString(), which would normalize
 	// the URL (e.g. appending a trailing slash) and break exact-match comparisons such as the
@@ -184,14 +196,22 @@ function resolveSsoReadiness(config: SsoConfigValidationInput, isTestProvider: b
 	if (!config.enabled) {
 		return false;
 	}
-	if (isTestProvider) {
-		return Boolean(config.clientId);
+	return Boolean(config.clientId) && (isTestProvider || Boolean(config.issuer));
+}
+
+async function providerUnreachable(config: SsoConfigValidationInput): Promise<boolean> {
+	const reliesOnIssuer = !config.authorizationUrl || !config.tokenUrl || (!config.jwksUrl && !config.userInfoUrl);
+	if (!config.issuer || !reliesOnIssuer) {
+		return false;
 	}
-	const canUseIssuerDiscovery = Boolean(config.issuer);
-	const hasAuthorizationEndpoint = Boolean(config.authorizationUrl) || canUseIssuerDiscovery;
-	const hasTokenEndpoint = Boolean(config.tokenUrl) || canUseIssuerDiscovery;
-	const canResolveClaims = Boolean(config.jwksUrl || config.userInfoUrl || canUseIssuerDiscovery);
-	return Boolean(hasAuthorizationEndpoint && hasTokenEndpoint && config.clientId && canResolveClaims);
+	const discovered = await tryDiscoverOidcProviderMetadata(config.issuer);
+	const found = (explicit: string | null, ...discoveredUrls: Array<string | undefined>) =>
+		Boolean(explicit) || discoveredUrls.some((url) => url !== undefined && isHttpsSsoUrl(url));
+	return !(
+		found(config.authorizationUrl, discovered?.authorization_endpoint) &&
+		found(config.tokenUrl, discovered?.token_endpoint) &&
+		found(config.jwksUrl ?? config.userInfoUrl, discovered?.jwks_uri, discovered?.userinfo_endpoint)
+	);
 }
 
 export async function normalizeAndValidateSsoConfig(
@@ -222,9 +242,16 @@ export async function normalizeAndValidateSsoConfig(
 		userInfoUrl: await normalizeOptionalSsoUrl(baseConfig.userInfoUrl, 'userinfo_url', skipUrlValidation),
 		jwksUrl: await normalizeOptionalSsoUrl(baseConfig.jwksUrl, 'jwks_url', skipUrlValidation),
 	};
+	if (normalized.enabled && !isTestProvider && !normalized.issuer) {
+		throw InputValidationError.fromCode('issuer', ValidationErrorCodes.SSO_ISSUER_REQUIRED);
+	}
 	const ready = resolveSsoReadiness(normalized, isTestProvider);
 	if (normalized.enabled && normalized.enforced && !ready) {
 		throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_MISCONFIGURED);
 	}
-	return {...normalized, ready};
+	const unreachable = ready && !isTestProvider && (await providerUnreachable(normalized));
+	if (unreachable && normalized.enforced) {
+		throw InputValidationError.fromCode('sso', ValidationErrorCodes.SSO_DISCOVERY_FAILED);
+	}
+	return {...normalized, ready, providerUnreachable: unreachable};
 }

@@ -72,10 +72,11 @@ Where to send the user to sign in with the identity provider.
 | authorization_url | string | The provider URL to send the user to, unchanged |
 | state | string | The one-use state to pass to [complete SSO](#complete-sso), valid for 10 minutes |
 | redirect_uri | string | The callback URI for this state |
+| client_binding | string | A one-use secret to send back to [complete SSO](#complete-sso) with this state |
 
 ## SSO completion response object
 
-The result of [complete SSO](#complete-sso). It extends an [authentication token response](#authentication-token-response) or an [MFA challenge response](#mfa-challenge-response) with the redirect bound to the state.
+The result of [complete SSO](#complete-sso). It extends an [authentication token response](#authentication-token-response) or an [MFA challenge response](#mfa-challenge-response) with the redirect bound to the state. A flow from [start connecting SSO](#start-connecting-sso) returns only `linked` and `redirect_to`.
 
 ### Structure
 
@@ -85,6 +86,7 @@ The result of [complete SSO](#complete-sso). It extends an [authentication token
 | user_id | snowflake | The authenticated user ID |
 | user | [partial user](/http-api/users/#partial-user-object) object | The authenticated account |
 | redirect_to | string | The `redirect_to` given to [start SSO](#start-sso), or an empty string |
+| linked? | boolean | `true` when the identity was connected to the account that started [start connecting SSO](#start-connecting-sso). No session is created |
 
 When `mfa` is `true`, finish the sign-in with the ticket the same way as after [password login](#log-in-with-a-password).
 
@@ -395,7 +397,7 @@ Starts single sign-on and returns an [SSO start](#sso-start-object) object. Send
 | redirect_to?<sup>1</sup> | ?string | The path to open after sign-in |
 | redirect_uri?<sup>2</sup> | ?string | The callback URI for the result |
 
-<sup>1</sup> Kept only when it starts with a single `/` and is at most 2,048 characters
+<sup>1</sup> Kept only when it is a path on this instance that starts with a single `/`, is at most 2,048 characters and has no backslash or control character
 
 <sup>2</sup> Must be the instance default from [get SSO status](#get-sso-status) or `fluxer://auth/sso/callback` for the mobile apps. Any other value returns the field code `INVALID_URL_FORMAT`
 
@@ -405,6 +407,7 @@ Starts single sign-on and returns an [SSO start](#sso-start-object) object. Send
 | --- | --- | --- |
 | 200 | [SSO start](#sso-start-object) object | The state was created |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when SSO is off or not fully configured |
+| 503 | [error response](/http-api/#error-response) | `SSO_PROVIDER_UNAVAILABLE` when SSO is on but the provider's discovery document can't be fetched |
 
 The rate limit is 10 requests per 10 seconds, on the `auth:sso:start` bucket.
 
@@ -414,9 +417,9 @@ The rate limit is 10 requests per 10 seconds, on the `auth:sso:start` bucket.
 
 Signs in or creates the account linked to the provider identity and returns an [SSO completion response](#sso-completion-response-object). The state works once, and after any failure you start again with [start SSO](#start-sso).
 
-An unlinked identity is linked to the account with the same verified email, after the second factor if the account has one. A new account has no password and accepts no invite, and it joins the instance's single community when the instance has one. On an `email` instance it gets the provider's verified email, and when SSO is enforced each sign-in sets the account email to it.
+An unlinked identity is linked to the account with the same verified email only when the instance sends email and that account's email is confirmed. Otherwise it returns `SSO_ACCOUNT_LINK_REQUIRES_SIGN_IN`, and the person connects the account with [start connecting SSO](#start-connecting-sso). An account with a second factor or a passkey is asked for it on every SSO sign-in, except a sign-in to an already linked account from a state started with the mobile `redirect_uri`. A new account has no password and accepts no invite, and it joins the instance's single community when the instance has one. On an `email` instance it gets the provider's verified email, and when SSO is enforced each sign-in sets the account email to it.
 
-:::caution[A verified provider email takes over a matching account]
+:::caution[A verified provider email signs in to a matching confirmed account]
 Turn on SSO only for a provider that controls the email addresses it asserts.
 :::
 
@@ -426,6 +429,7 @@ Turn on SSO only for a provider that controls the email addresses it asserts.
 | --- | --- | --- |
 | code | string | The authorization code from the provider (1-4096 characters) |
 | state | string | The state from [start SSO](#start-sso) (1-4096 characters) |
+| client_binding? | ?string | The `client_binding` from [start SSO](#start-sso). Required unless the state was started with the mobile `redirect_uri` (1-128 characters) |
 
 ### Response
 
@@ -433,10 +437,32 @@ Turn on SSO only for a provider that controls the email addresses it asserts.
 | --- | --- | --- |
 | 200 | [SSO completion response](#sso-completion-response-object) | The account was signed in, or its second factor is needed |
 | 400 | [error response](/http-api/#error-response) | `INVALID_OR_EXPIRED_SSO_STATE`, `SSO_EMAIL_NOT_VERIFIED` or another provider or linking code |
+| 400 | [error response](/http-api/#error-response) | `INVALID_OR_EXPIRED_SSO_STATE` also when `client_binding` is missing or does not match the state |
 | 403 | [error response](/http-api/#error-response) | `SSO_REQUIRED` when the account is unknown and new accounts are off |
 | 403 | [error response](/http-api/#error-response) | `REGISTRATION_PENDING_APPROVAL`, `REGISTRATION_REJECTED` or a suspension code |
+| 503 | [error response](/http-api/#error-response) | `SSO_PROVIDER_UNAVAILABLE` when the provider didn't answer or its token or keys URL returned a 5xx |
 
 The rate limit is 15 requests per 10 seconds, on the `auth:sso:complete` bucket.
+
+## Start connecting SSO
+
+<RouteHeader method="POST" path="/v1/users/@me/sso/link/start" mfa />
+
+Starts connecting the instance's SSO provider to the current account after [sudo mode](/http-api/users/mfa/#sudo-mode) and returns an [SSO start](#sso-start-object) object. Send the user to `authorization_url`, then finish with [complete SSO](#complete-sso), which returns `linked` and creates no new session. It works while the instance enforces SSO. The session that started it has to stay signed in until it finishes, and an identity another account holds returns `SSO_IDENTITY_LINKED_TO_ANOTHER_ACCOUNT`.
+
+### JSON body
+
+The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SSO start](#sso-start-object) object | The state was created |
+| 403 | [error response](/http-api/#error-response) | `SUDO_MODE_REQUIRED` without a valid sudo proof |
+| 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when SSO is off or not fully configured |
+
+The rate limit is 10 requests per 10 seconds, on the shared `auth:sso:start` bucket.
 
 ## Register an account
 

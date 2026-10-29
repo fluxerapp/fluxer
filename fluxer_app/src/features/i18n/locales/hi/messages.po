@@ -4075,6 +4075,11 @@ msgstr "14 दिनों के बाद, आपका अकाउंट ह
 msgid "After date"
 msgstr "इस तारीख के बाद"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "साइन इन करने के बाद कार्रवाई फिर से करें।"
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "आपका अकाउंट डिलीट होने के बाद आप अपने भेजे गए मैसेज डिलीट नहीं कर पाएँगे"
@@ -9899,6 +9904,11 @@ msgstr "कम्युनिटी वॉइस जॉइन के लिए �
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel} से टकराता है"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "कनेक्ट करें"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "कैमरा कनेक्ट करें और फिर से प्रयास करें।"
@@ -10152,7 +10162,11 @@ msgstr "कॉन्टेक्स्ट मेन्यू को लेफ्
 msgid "Continue"
 msgstr "जारी रखें"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "{productName} ऐप में जारी रखें।"
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "डेस्कटॉप ऐप में जारी रखें।"
@@ -10830,6 +10844,11 @@ msgstr "DM बंद नहीं कर पाए"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "साइन-इन पूरा नहीं हो सका। फिर से कोशिश करें।"
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "सिंगल साइन-ऑन कनेक्ट नहीं हो सका"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "यह आपको अपना पासवर्ड भूल जा�
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "आपको अपनी स्क्रीन या कोई विंडो शेयर करने की सुविधा देता है।"
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "इससे आप {providerName} से इस खाते में साइन इन कर सकते हैं।"
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "साइन-इन के तरीके"
 msgid "Sign-in page"
 msgstr "साइन-इन पेज"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "साइन-इन रद्द कर दिया गया।"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "सिंगल लेयर"
 msgid "Single line"
 msgstr "एकल पंक्ति"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "सिंगल साइन-ऑन"
 
@@ -43200,6 +43231,11 @@ msgstr "आप अपने ईमेल पर भेजे गए कोड �
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "आप इस यूज़रनेम से साइन इन करते हैं। ऐसा यूज़रनेम चुनें जो आपको याद रहे।"
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "आपने किसी दूसरे खाते में साइन इन किया। उसी खाते से साइन इन करें जिसका आप यहाँ उपयोग कर रहे हैं।"
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "आपका अकाउंट सफलतापूर्वक लि
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "आपके खाते में कोई ईमेल पता नहीं है। यदि आप अपना पासवर्ड भूल जाते हैं, तो रिकवरी किट ही वापस आने का एकमात्र तरीका है। इसमें बस एक मिनट लगता है।"
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "आपका खाता सिंगल साइन-ऑन से कनेक्ट हो गया है।"
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "आपके विचारों और रिमाइंडर क�
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "आपकी प्रोफ़ाइल गोपनीयता सीमित है, इसलिए \"हर कोई\" चालू होने पर भी कुछ लोग यह कनेक्शन नहीं देख पाएँगे।"
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "आपका प्रदाता चाहता है कि आप फिर से साइन इन करें।"
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "आपके प्रदाता ने एक त्रुटि बताई।"
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "आपका स्क्रीन शेयर किसी कम्�
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "आपका सेटअप टोकन काम करना बंद कर चुका है। इसे फिर से डालें।"
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "आपका साइन-इन प्रोवाइडर अभी उपलब्ध नहीं है। बाद में फिर से कोशिश करें।"
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "आपका साइन-इन प्रोवाइडर आपका ईमेल और पासवर्ड मैनेज करता है।"
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

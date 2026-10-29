@@ -4075,6 +4075,11 @@ msgstr "Tilisi poistetaan pysyvästi 14 päivän kuluttua"
 msgid "After date"
 msgstr "Päivämäärän jälkeen"
 
+#. Shown above the single sign-on button when confirming it's you. Signing in can leave the page, and the person repeats the action afterwards.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "After you sign in, try the action again."
+msgstr "Kun olet kirjautunut, yritä toimintoa uudelleen."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "Tilisi poistamisen jälkeen et voi enää poistaa lähettämiäsi viestejä"
@@ -9899,6 +9904,11 @@ msgstr "Vahvistus tai kaksoisnapsautus yhteisön äänikanaviin liittyessä"
 msgid "Conflicts with {conflictLabel}"
 msgstr "Ristiriidassa kohteen {conflictLabel} kanssa"
 
+#. Button in account settings that connects the account to single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Connect"
+msgstr "Yhdistä"
+
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
 msgid "Connect a camera and try again."
 msgstr "Liitä kamera ja yritä uudelleen."
@@ -10152,7 +10162,11 @@ msgstr "Pikavalikot voi avata vasemmalla napsautuksella (painikkeissa) tai oikea
 msgid "Continue"
 msgstr "Jatka"
 
+#. Shown on the web page after an SSO sign-in that started in the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Continue in the {productName} app."
+msgstr "Jatka {productName}-sovelluksessa."
+
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx
 msgid "Continue in the desktop app."
 msgstr "Jatka työpöytäsovelluksessa."
@@ -10830,6 +10844,11 @@ msgstr "Yksityisviestiä ei voitu sulkea"
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Kirjautuminen epäonnistui. Yritä uudelleen."
+
+#. Error title shown when starting to connect single sign-on from account settings fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Couldn't connect single sign-on"
+msgstr "Kertakirjautumista ei voitu yhdistää"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -21064,6 +21083,11 @@ msgstr "Mahdollistaa salasanasi nollaamisen, jos unohdat sen."
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx
 msgid "Lets you share your screen or a window."
 msgstr "Antaa sinun jakaa näyttösi tai ikkunasi."
+
+#. Description of the account settings row that connects the account to the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "Lets you sign in to this account with {providerName}."
+msgstr "Voit kirjautua tähän tiliin palvelun {providerName} kautta."
 
 #: src/features/ui/components/form/UsernameValidationRules.tsx
 msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
@@ -33613,6 +33637,11 @@ msgstr "Kirjautumistavat"
 msgid "Sign-in page"
 msgstr "Kirjautumissivu"
 
+#. SSO callback page error shown when the person cancelled the sign-in at their sign-in provider.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Sign-in was cancelled."
+msgstr "Kirjautuminen peruttiin."
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Signal strength loading"
@@ -33702,8 +33731,10 @@ msgstr "Yksikerroksinen"
 msgid "Single line"
 msgstr "Yksi rivi"
 
-#. Heading of the single sign-on panel when the admin has not named the sign-in provider.
+#. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
+#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
 msgstr "Yhden kirjautumisen tunnistautuminen"
 
@@ -43200,6 +43231,11 @@ msgstr "Kirjaudut sisään sähköpostiisi lähetettävällä koodilla. Salasana
 msgid "You sign in with this username. Pick one you will remember."
 msgstr "Kirjaudut sisään tällä käyttäjänimellä. Valitse sellainen, jonka muistat."
 
+#. Error shown when the person confirmed it's them by signing in to a different account than the one they are using.
+#: src/features/auth/components/modals/SudoSsoReauth.tsx
+msgid "You signed in to a different account. Sign in with the account you're using here."
+msgstr "Kirjauduit eri tilille. Kirjaudu tilillä, jota käytät täällä."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "You were deafened by moderators"
@@ -43567,6 +43603,11 @@ msgstr "Tilisi on nyt yhdistetty. Voit sulkea tämän välilehden ja palata sove
 #: src/features/user/components/RecoveryKitReminderGate.tsx
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
 msgstr "Tililläsi ei ole sähköpostiosoitetta. Jos unohdat salasanasi, palautussarja on ainoa tapa päästä takaisin sisään. Se vie vain minuutin."
+
+#. Toast shown after the account was connected to single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your account is connected to single sign-on."
+msgstr "Tilisi on yhdistetty kertakirjautumiseen."
 
 #. Settings alert for an unclaimed account on an instance where people sign in with a username.
 #: src/features/user/utils/AccountGatePresentation.tsx
@@ -43976,6 +44017,16 @@ msgstr "Yksityinen tilasi ajatuksille ja muistutuksille"
 msgid "Your profile privacy is limited, so some people still won't see this connection even when Everyone is enabled."
 msgstr "Profiilisi yksityisyysasetukset ovat rajoitetut, joten jotkut eivät silti näe tätä yhteyttä, vaikka \"Kaikki\" olisi käytössä."
 
+#. SSO callback page error shown when the sign-in provider asks the person to sign in or give consent again.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider needs you to sign in again."
+msgstr "Palveluntarjoajasi pyytää sinua kirjautumaan uudelleen."
+
+#. SSO callback page error shown when the sign-in provider sent back any other error.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Your provider reported an error."
+msgstr "Palveluntarjoajasi ilmoitti virheestä."
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
@@ -44016,6 +44067,16 @@ msgstr "Näyttösi jakamista ei voitu julkaista yhteensopivalla videokoodekilla,
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Your setup token stopped working. Enter it again."
 msgstr "Asennustunnuksesi lakkasi toimimasta. Syötä se uudelleen."
+
+#. Explanation shown in place of the single sign-on description when the instance requires single sign-on but cannot connect to its sign-in provider right now.
+#: src/features/auth/flow/AuthSsoPanel.tsx
+msgid "Your sign-in provider is unavailable. Try again later."
+msgstr "Kirjautumispalvelusi tarjoaja ei ole käytettävissä. Yritä myöhemmin uudelleen."
+
+#. Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
+msgid "Your sign-in provider manages your email and password."
+msgstr "Kirjautumispalvelusi tarjoaja hallinnoi sähköpostiosoitettasi ja salasanaasi."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts

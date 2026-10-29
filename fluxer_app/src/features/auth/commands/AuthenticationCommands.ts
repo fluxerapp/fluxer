@@ -19,6 +19,7 @@ import type {
 	AuthRegistrationPendingApprovalResponse,
 	DesktopHandoffReturnMethod,
 	RegisterRequest,
+	SsoCompleteRequest,
 	SsoCompleteResponse,
 	SsoStartRequest,
 	SsoStartResponse,
@@ -853,17 +854,20 @@ export async function startSso({
 export async function completeSso({
 	code,
 	state,
+	clientBinding,
 	target,
 }: {
 	code: string;
 	state: string;
+	clientBinding: string | null;
 	target: InstanceHTTPTarget;
 }): Promise<SsoCompleteResponse> {
+	const body: SsoCompleteRequest = {code, state, client_binding: clientBinding};
 	const response = await instanceRequest<SsoCompleteResponse>({
 		method: 'POST',
 		path: Endpoints.AUTH_SSO_COMPLETE,
 		target,
-		body: {code, state},
+		body,
 		headers: withAuthLocaleHeader(),
 	});
 	return response.body;

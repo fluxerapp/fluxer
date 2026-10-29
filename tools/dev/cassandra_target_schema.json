@@ -1449,6 +1449,10 @@
 					"type": "int"
 				},
 				{
+					"name": "auth_method",
+					"type": "text"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				}

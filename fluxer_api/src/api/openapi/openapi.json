@@ -2082,7 +2082,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Complete the SSO authentication flow with the authorization code from the SSO provider. Returns authentication token and user information.",
+				"description": "Complete the SSO authentication flow with the authorization code from the SSO provider. Returns authentication token and user information, or linked when the flow was started from account settings.",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoCompleteRequest"}}}
@@ -23863,6 +23863,63 @@
 				}
 			}
 		},
+		"/users/@me/sso/link/start": {
+			"post": {
+				"operationId": "start_sso_link",
+				"summary": "Start connecting SSO",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Start connecting the instance SSO provider to the current account. Send the user to authorization_url, then finish with complete_sso, which returns linked and creates no new session. Works while SSO is required. Requires sudo mode verification.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+				}
+			}
+		},
 		"/users/@me/sudo/email-code": {
 			"post": {
 				"operationId": "send_sudo_email_code",
@@ -27461,6 +27518,54 @@
 				"required": ["ticket", "code_expires_at", "resend_available_at"],
 				"additionalProperties": false
 			},
+			"SudoVerificationSchema": {
+				"type": "object",
+				"properties": {
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn", "Email code"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication",
+							"A 6-digit code sent to the account email address"
+						],
+						"enum": ["totp", "webauthn", "email_code"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"email_code_ticket": {
+						"description": "Ticket from POST /users/@me/sudo/email-code, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"email_code": {
+						"description": "The 6-digit code from the email, sent with mfa_method email_code",
+						"type": "string"
+					},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
+				}
+			},
+			"SsoStartResponse": {
+				"type": "object",
+				"properties": {
+					"authorization_url": {"type": "string", "description": "URL to redirect user to for SSO authentication"},
+					"state": {"type": "string", "description": "State parameter for CSRF protection"},
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI used for the SSO provider callback"},
+					"client_binding": {
+						"type": "string",
+						"description": "Secret the client keeps and sends back with the code and state to complete this sign-in"
+					}
+				},
+				"required": ["authorization_url", "state", "redirect_uri", "client_binding"],
+				"additionalProperties": false
+			},
 			"VoiceActivitySharingUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -27962,40 +28067,6 @@
 				"required": ["username"]
 			},
 			"RelationshipListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/RelationshipResponse"}},
-			"SudoVerificationSchema": {
-				"type": "object",
-				"properties": {
-					"password": {
-						"description": "Account password for sudo verification",
-						"$ref": "#/components/schemas/PasswordType"
-					},
-					"mfa_method": {
-						"description": "MFA method to use for verification",
-						"x-enumNames": ["TOTP", "WebAuthn", "Email code"],
-						"x-enumDescriptions": [
-							"Time-based one-time password authentication via authenticator app",
-							"Security key or biometric authentication",
-							"A 6-digit code sent to the account email address"
-						],
-						"enum": ["totp", "webauthn", "email_code"],
-						"type": "string"
-					},
-					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
-					"email_code_ticket": {
-						"description": "Ticket from POST /users/@me/sudo/email-code, sent with mfa_method email_code",
-						"type": "string"
-					},
-					"email_code": {
-						"description": "The 6-digit code from the email, sent with mfa_method email_code",
-						"type": "string"
-					},
-					"webauthn_response": {
-						"description": "WebAuthn authentication response",
-						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
-					},
-					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
-				}
-			},
 			"RecoveryKitCreateResponse": {
 				"type": "object",
 				"properties": {
@@ -36236,21 +36307,15 @@
 					}
 				}
 			},
-			"SsoStartResponse": {
-				"type": "object",
-				"properties": {
-					"authorization_url": {"type": "string", "description": "URL to redirect user to for SSO authentication"},
-					"state": {"type": "string", "description": "State parameter for CSRF protection"},
-					"redirect_uri": {"type": "string", "description": "OAuth redirect URI used for the SSO provider callback"}
-				},
-				"required": ["authorization_url", "state", "redirect_uri"],
-				"additionalProperties": false
-			},
 			"SsoCompleteRequest": {
 				"type": "object",
 				"properties": {
 					"code": {"description": "Authorization code from the SSO provider", "type": "string"},
-					"state": {"description": "State parameter for CSRF protection", "type": "string"}
+					"state": {"description": "State parameter for CSRF protection", "type": "string"},
+					"client_binding": {
+						"description": "The client_binding returned by SSO start. Required except for the mobile app callback",
+						"type": ["string", "null"]
+					}
 				},
 				"required": ["code", "state"]
 			},
@@ -36301,6 +36366,19 @@
 							"redirect_to": {"type": "string", "description": "URL to redirect the user to after completion"}
 						},
 						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn", "backup_codes", "redirect_to"],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"linked": {
+								"type": "boolean",
+								"const": true,
+								"description": "The SSO identity is now connected to the account that started the link"
+							},
+							"redirect_to": {"type": "string", "description": "URL to redirect the user to after completion"}
+						},
+						"required": ["linked", "redirect_to"],
 						"additionalProperties": false
 					}
 				]
@@ -44892,6 +44970,7 @@
 					"INSTANCE_POLICY_TRANSITION_NOT_ALLOWED",
 					"SLOWMODE_RATE_LIMITED",
 					"SEARCH_INDEX_NOT_READY",
+					"SSO_PROVIDER_UNAVAILABLE",
 					"SSO_REQUIRED",
 					"STORE_BILLING_UNAVAILABLE",
 					"STORE_NOTIFICATION_UNAUTHORIZED",
@@ -45256,6 +45335,7 @@
 					"This instance policy change is not allowed.",
 					"Slowmode rate limited.",
 					"The search index isn't ready yet. Try again in a moment.",
+					"Your sign-in provider didn't answer. Try again in a moment.",
 					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",

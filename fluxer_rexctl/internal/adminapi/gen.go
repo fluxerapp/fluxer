@@ -2240,6 +2240,9 @@ type InstanceConfigResponse struct {
 		UsernameFromProvider bool `json:"username_from_provider"`
 	} `json:"sso"`
 	VoiceP2p VoiceP2pConfigResponse `json:"voice_p2p"`
+
+	// Warnings Problems the save found that did not stop it. Always empty outside a save response
+	Warnings []string `json:"warnings"`
 }
 
 // InstanceConfigResponseIntegrationsEmailEffectiveProvider Deprecated, use delivery
@@ -2429,9 +2432,12 @@ type InstanceConfigUpdateRequest struct {
 		GroupsClaim *string `json:"groups_claim,omitempty"`
 		Issuer      *string `json:"issuer,omitempty"`
 		JwksUrl     *string `json:"jwks_url,omitempty"`
-		Scope       *string `json:"scope,omitempty"`
-		TokenUrl    *string `json:"token_url,omitempty"`
-		UserinfoUrl *string `json:"userinfo_url,omitempty"`
+
+		// MigrateIdentities Only for a save that changes the issuer while accounts are linked to the old one. True moves those links to the new issuer, false leaves them on the old one. Applies to this save only and is never stored
+		MigrateIdentities *bool   `json:"migrate_identities,omitempty"`
+		Scope             *string `json:"scope,omitempty"`
+		TokenUrl          *string `json:"token_url,omitempty"`
+		UserinfoUrl       *string `json:"userinfo_url,omitempty"`
 
 		// UsernameFromProvider Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances
 		UsernameFromProvider *bool `json:"username_from_provider,omitempty"`

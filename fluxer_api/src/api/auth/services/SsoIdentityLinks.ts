@@ -22,9 +22,16 @@ export function ssoIdentityTrait(providerId: string, sub: string): string {
 	return `sso_identity:${digest}`;
 }
 
+function ssoProviderTrait(providerId: string): string {
+	return `sso_provider:${createHash('sha256').update(providerId).digest('hex').slice(0, 32)}`;
+}
+
+export function isLinkedToSsoProvider(user: User, providerId: string): boolean {
+	return user.traits.has(`sso:${providerId}`) || user.traits.has(ssoProviderTrait(providerId));
+}
+
 export function ssoIdentityTraits(providerId: string, sub: string): Array<string> {
-	const providerDigest = createHash('sha256').update(providerId).digest('hex').slice(0, 32);
-	return [UserTraits.SSO, `sso:${providerId}`, `sso_provider:${providerDigest}`, ssoIdentityTrait(providerId, sub)];
+	return [UserTraits.SSO, `sso:${providerId}`, ssoProviderTrait(providerId), ssoIdentityTrait(providerId, sub)];
 }
 
 function withoutSsoIdentityTraits(traits: Iterable<string>): Set<string> {

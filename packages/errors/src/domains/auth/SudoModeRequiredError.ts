@@ -9,6 +9,7 @@ export interface SudoModeMethods {
 	backup_codes: boolean;
 	email_code: boolean;
 	password: boolean;
+	sso_reauth: boolean;
 }
 
 const EMPTY_METHODS: SudoModeMethods = {
@@ -17,6 +18,7 @@ const EMPTY_METHODS: SudoModeMethods = {
 	backup_codes: false,
 	email_code: false,
 	password: false,
+	sso_reauth: false,
 };
 
 export class SudoModeRequiredError extends ForbiddenError {

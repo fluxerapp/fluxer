@@ -100,12 +100,30 @@ func explainAPI(e *APIError) error {
 
 const SSOPrivateFix = "If the provider is on your own network, run rexctl config set sso.allow_private_addresses true, then try again."
 
-var ssoURLFields = []string{"issuer", "authorization_url", "token_url", "user_info_url", "jwks_url"}
+const SSOHostnameFix = "Check the hostname is spelled right and resolves from the Fluxer server."
+
+const SSODiscoveryFix = "Check sso.issuer with rexctl config get sso.issuer, or turn on Require SSO once the provider is back."
+
+const SSOIssuerRequiredFix = "Set it with rexctl config set sso.issuer <issuer URL>, or turn SSO off with rexctl config set sso.enabled false."
+
+const SSOIssuerChangeFix = "If it's the same provider at a new address, run rexctl config set sso.issuer <issuer URL> --migrate-identities. If it's a different provider, use --no-migrate-identities."
+
+var ssoURLFields = []string{"issuer", "authorization_url", "token_url", "userinfo_url", "jwks_url"}
 
 func fieldFix(fields []FieldError) string {
 	for _, f := range fields {
 		if f.Code == "URL_NOT_PUBLICLY_ROUTABLE" && slices.Contains(ssoURLFields, f.Path) {
 			return SSOPrivateFix
+		}
+		switch f.Code {
+		case "URL_HOSTNAME_NOT_RESOLVABLE":
+			return SSOHostnameFix
+		case "SSO_DISCOVERY_FAILED":
+			return SSODiscoveryFix
+		case "SSO_ISSUER_REQUIRED":
+			return SSOIssuerRequiredFix
+		case "SSO_ISSUER_CHANGE_HAS_IDENTITIES":
+			return SSOIssuerChangeFix
 		}
 	}
 	return ""

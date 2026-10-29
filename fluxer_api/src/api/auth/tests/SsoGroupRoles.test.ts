@@ -75,10 +75,13 @@ describe('SSO groups to community roles', () => {
 	}
 
 	async function signIn(claims: Record<string, unknown>): Promise<string> {
-		const {state} = await createBuilderWithoutAuth<{state: string}>(harness).post('/auth/sso/start').body({}).execute();
+		const {state, client_binding} = await createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
+			.post('/auth/sso/start')
+			.body({})
+			.execute();
 		const login = await createBuilderWithoutAuth<{user_id: string}>(harness)
 			.post('/auth/sso/complete')
-			.body({code: JSON.stringify(claims), state})
+			.body({code: JSON.stringify(claims), state, client_binding})
 			.expect(200)
 			.execute();
 		return login.user_id;
@@ -106,10 +109,31 @@ describe('SSO groups to community roles', () => {
 		expect(await rolesOf(userId)).toEqual([handRole]);
 	});
 
-	it('leaves the roles alone when the provider sends no groups claim', async () => {
+	it('removes the mapped roles when the provider sends no groups claim', async () => {
 		await enableWithMappings();
 		const claims = {sub: subject('absent'), email: createUniqueEmail('sso-groups-absent')};
 		const userId = await signIn({...claims, groups: ['staff']});
+		await addMemberRole(harness, owner.token, guildId, userId, handRole);
+		await signIn(claims);
+		expect(await rolesOf(userId)).toEqual([handRole]);
+	});
+
+	it('removes the mapped roles when the provider has too many groups to send', async () => {
+		await enableWithMappings();
+		const claims = {sub: subject('overage'), email: createUniqueEmail('sso-groups-overage')};
+		const userId = await signIn({...claims, groups: ['staff']});
+		await signIn({...claims, _claim_names: {groups: 'src1'}, _claim_sources: {src1: {endpoint: 'https://graph'}}});
+		expect(await rolesOf(userId)).toEqual([]);
+	});
+
+	it('leaves the roles alone when no groups are mapped', async () => {
+		await enableWithMappings();
+		const claims = {sub: subject('unmapped'), email: createUniqueEmail('sso-groups-unmapped')};
+		const userId = await signIn({...claims, groups: ['staff']});
+		await createBuilder(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({sso: {group_role_mappings: []}})
+			.execute();
 		await signIn(claims);
 		expect(await rolesOf(userId)).toEqual([staffRole]);
 	});

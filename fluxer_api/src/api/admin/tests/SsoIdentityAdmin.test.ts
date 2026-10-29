@@ -50,7 +50,7 @@ describe('SSO identity admin routes', () => {
 		await disableSso(harness, admin.token);
 		await createBuilder(harness, admin.token)
 			.patch('/admin/instance/config')
-			.body({sso: {issuer: null}})
+			.body({sso: {issuer: null, migrate_identities: false}})
 			.execute();
 		getConfig().instance.selfHosted = originalSelfHosted;
 		getInstanceConfigRepository().clearCacheForTesting();
@@ -69,14 +69,14 @@ describe('SSO identity admin routes', () => {
 		return {
 			expect(status: number, code?: string) {
 				return {
-					async execute(): Promise<{user_id: string}> {
-						const start = await createBuilderWithoutAuth<{state: string}>(harness)
+					async execute(): Promise<{user_id: string; token: string}> {
+						const start = await createBuilderWithoutAuth<{state: string; client_binding: string}>(harness)
 							.post('/auth/sso/start')
 							.body({})
 							.execute();
-						return createBuilderWithoutAuth<{user_id: string}>(harness)
+						return createBuilderWithoutAuth<{user_id: string; token: string}>(harness)
 							.post('/auth/sso/complete')
-							.body({code: JSON.stringify(claims), state: start.state})
+							.body({code: JSON.stringify(claims), state: start.state, client_binding: start.client_binding})
 							.expect(status, code)
 							.execute();
 					},
@@ -86,7 +86,10 @@ describe('SSO identity admin routes', () => {
 	}
 
 	async function setIssuer(issuer: string): Promise<void> {
-		await createBuilder(harness, admin.token).patch('/admin/instance/config').body({sso: {issuer}}).execute();
+		await createBuilder(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({sso: {issuer, migrate_identities: false}})
+			.execute();
 	}
 
 	async function listIdentities(userId: string) {
@@ -177,13 +180,20 @@ describe('SSO identity admin routes', () => {
 	});
 
 	describe('after the issuer changes', () => {
-		it('refuses the old account until the subjects are moved, then signs it in', async () => {
+		it('links the account again by email when the subjects stay on the old issuer', async () => {
+			await setIssuer('test-old');
+			const email = createUniqueEmail('sso-admin-relink');
+			const userId = await signInWithSso(`itest-admin-sso-relink-old-${Date.now()}`, email);
+			await setIssuer('test-new');
+			expect(await signInWithSso(`itest-admin-sso-relink-new-${Date.now()}`, email)).toBe(userId);
+		});
+
+		it('moves the subjects to the new issuer, then signs the account in', async () => {
 			await setIssuer('test-old');
 			const sub = `itest-admin-sso-move-${Date.now()}`;
 			const email = createUniqueEmail('sso-admin-move');
 			const userId = await signInWithSso(sub, email);
 			await setIssuer('test-new');
-			await completeSso(sub, email).expect(400, 'INVALID_FORM_BODY').execute();
 			const moved = await migrate('test-old').expect(200).execute();
 			expect(moved).toEqual({to_provider_id: 'test-new', moved_count: 1, skipped_count: 0});
 			expect(await signInWithSso(sub, email)).toBe(userId);
@@ -240,6 +250,14 @@ describe('SSO identity admin routes', () => {
 			const after = `itest-admin-sso-after-${Date.now()}`;
 			expect(await signInWithSso(after, email)).toBe(userId);
 			expect(await listIdentities(userId)).toEqual([{provider_id: 'test', subject: after}]);
+		});
+
+		it('signs the account out when it unbinds it', async () => {
+			const login = await completeSso(`itest-admin-sso-signout-${Date.now()}`, createUniqueEmail('sso-admin-signout'))
+				.expect(200)
+				.execute();
+			await unlink(login.user_id).expect(200).execute();
+			await createBuilder(harness, login.token).get('/users/@me').expect(401).execute();
 		});
 
 		it('requires the email update permission to bind or unbind', async () => {
