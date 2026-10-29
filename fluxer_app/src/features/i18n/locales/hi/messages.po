@@ -33464,10 +33464,10 @@ msgstr "यह तभी दिखता है जब आपका विजन
 msgid "Shows the banner in its own section below the community header."
 msgstr "कम्युनिटी हेडर के नीचे बैनर को उसके अपने सेक्शन में दिखाता है।"
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "जब कोई YouTube लिंक पोस्ट करता है, तो उसका टाइटल और थंबनेल दिखाता है।"
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "जब कोई YouTube लिंक पोस्ट करता है, तो उसका टाइटल और थंबनेल दिखाता है। YouTube Data API v3 को 0 से अधिक दैनिक कोटा के साथ चालू करें। कुंजी को IP पते से सीमित करें या बिल्कुल सीमित न करें। वेबसाइट प्रतिबंध इसे ब्लॉक करते हैं।"
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

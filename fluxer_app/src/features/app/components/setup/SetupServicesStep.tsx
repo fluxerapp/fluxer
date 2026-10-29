@@ -33,8 +33,10 @@ const YOUTUBE_KEY_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for the YouTube Data API key field. YouTube Data API is a product name.',
 });
 const YOUTUBE_KEY_HELP_DESCRIPTOR = msg({
-	message: 'Shows the title and thumbnail when someone posts a YouTube link.',
-	comment: 'Help under the YouTube Data API key field in the setup wizard.',
+	message:
+		'Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it.',
+	comment:
+		'Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.',
 });
 const KEY_ALREADY_SET_DESCRIPTOR = msg({
 	message: 'Already set up',

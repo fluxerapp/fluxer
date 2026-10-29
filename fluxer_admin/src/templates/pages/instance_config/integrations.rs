@@ -120,6 +120,10 @@ pub(super) fn integrations_config_section(
                             (secret_badge("API key", integrations.youtube.api_key_set))
                         }
                         (password_input("integration_youtube_api_key", "YouTube API key", Some("Leave blank to keep the current key.")))
+                        p class="text-xs text-neutral-500" {
+                            "The key needs YouTube Data API v3 enabled and a daily quota above 0. \
+                             Restrict it by IP address or not at all. Website restrictions block it."
+                        }
                     }
 
                     @if account_identity.is_username() {

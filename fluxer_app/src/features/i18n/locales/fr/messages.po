@@ -33464,10 +33464,10 @@ msgstr "Affiché uniquement quand votre badge Visionary est visible et n'est pas
 msgid "Shows the banner in its own section below the community header."
 msgstr "Affiche la bannière dans sa propre section sous l'en-tête de la communauté."
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "Affiche le titre et la miniature quand quelqu'un publie un lien YouTube."
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "Affiche le titre et la miniature quand quelqu'un publie un lien YouTube. Activez YouTube Data API v3 avec un quota quotidien supérieur à 0. Limitez la clé par adresse IP ou ne la limitez pas. Les restrictions par site web la bloquent."
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

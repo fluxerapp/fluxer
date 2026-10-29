@@ -33464,10 +33464,10 @@ msgstr "Zobrazuje se jen tehdy, když je váš odznak Visionary viditelný a nen
 msgid "Shows the banner in its own section below the community header."
 msgstr "Zobrazí banner v samostatné sekci pod záhlavím komunity."
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "Zobrazí název a náhledový obrázek, když někdo pošle odkaz na YouTube."
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "Zobrazí název a náhledový obrázek, když někdo pošle odkaz na YouTube. Zapněte YouTube Data API v3 s denní kvótou vyšší než 0. Omezte klíč podle IP adresy, nebo ho neomezujte vůbec. Omezení podle webů ho blokuje."
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

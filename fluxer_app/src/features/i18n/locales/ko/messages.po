@@ -33464,10 +33464,10 @@ msgstr "Visionary 배지가 표시되고 구독으로 표시되지 않을 때만
 msgid "Shows the banner in its own section below the community header."
 msgstr "커뮤니티 헤더 아래에 배너가 별도의 섹션으로 표시됩니다."
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "누군가 YouTube 링크를 올리면 제목과 썸네일을 표시합니다."
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "누군가 YouTube 링크를 올리면 제목과 썸네일을 표시합니다. 일일 할당량이 0보다 큰 상태로 YouTube Data API v3을 사용 설정하세요. 키는 IP 주소로 제한하거나 제한하지 마세요. 웹사이트 제한을 사용하면 차단됩니다."
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

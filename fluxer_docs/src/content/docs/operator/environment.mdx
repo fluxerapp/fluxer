@@ -1217,7 +1217,7 @@ The Klipy API key for GIF search and Klipy link previews. A key saved in the adm
 
 ### `FLUXER_YOUTUBE_API_KEY`
 
-The YouTube Data API key Fluxer uses for YouTube link previews. A key saved in the admin panel is used first. Keep it secret. With rexctl, use `rexctl config set integrations.youtube.api_key`.
+The YouTube Data API key Fluxer uses for YouTube link previews. A key saved in the admin panel is used first. The unfurl service calls the API from your server. The key needs YouTube Data API v3 enabled, a daily quota above 0, and an application restriction of None or IP addresses. A key restricted to websites (HTTP referrers) always fails. When Google rejects the key, the unfurl logs show the reason it gives, such as `quotaExceeded` or `API_KEY_HTTP_REFERRER_BLOCKED`. Keep it secret. With rexctl, use `rexctl config set integrations.youtube.api_key`.
 
 ### `FLUXER_API_UNFURL_IGNORED_HOSTS`
 

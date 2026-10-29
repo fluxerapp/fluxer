@@ -33464,10 +33464,10 @@ msgstr "僅在您的 Visionary 徽章可見且未顯示為訂閱時顯示。"
 msgid "Shows the banner in its own section below the community header."
 msgstr "在社群標頭下方的獨立區塊中顯示橫幅。"
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "有人張貼 YouTube 連結時顯示標題和縮圖。"
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "有人張貼 YouTube 連結時顯示標題和縮圖。啟用 YouTube Data API v3，並將每日配額設為大於 0。依 IP 位址限制金鑰，或不加限制。網站限制會導致金鑰遭到封鎖。"
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

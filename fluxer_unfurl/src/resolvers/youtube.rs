@@ -15,6 +15,7 @@ const YOUTUBE_API_BASE: &str = "https://www.googleapis.com/youtube/v3/videos";
 const YOUTUBE_API_MAX_BYTES: usize = 256 * 1024;
 const YOUTUBE_API_TIMEOUT: Duration = Duration::from_secs(10);
 const YOUTUBE_DESCRIPTION_MAX: usize = 350;
+const YOUTUBE_PLAYER_SIZE: (u32, u32) = (1280, 720);
 
 const YOUTUBE_HOSTS: &[&str] = &[
     "www.youtube.com",
@@ -51,132 +52,202 @@ impl Resolver for YouTubeResolver {
         &'a self,
         ctx: &'a ResolveContext<'_>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<ResolverResult>> + Send + 'a>> {
-        Box::pin(async move {
-            let parsed = match parse_youtube_url(&ctx.original_url) {
-                Some(p) => p,
-                None => {
-                    return Ok(ResolverResult { embeds: vec![] });
-                }
-            };
+        Box::pin(resolve_video(ctx, YOUTUBE_API_BASE))
+    }
+}
 
-            let Some(api_key) = ctx.youtube_api_key.clone() else {
-                tracing::debug!("No YouTube API key configured");
-                return Ok(ResolverResult { embeds: vec![] });
-            };
+async fn resolve_video(ctx: &ResolveContext<'_>, api_base: &str) -> anyhow::Result<ResolverResult> {
+    let Some(parsed) = parse_youtube_url(&ctx.original_url) else {
+        return Ok(ResolverResult { embeds: vec![] });
+    };
 
-            let api_url = build_youtube_api_url(&parsed.video_id, &api_key)?;
-            let api_response = http_fetch::fetch_url(
-                &ctx.http_client,
-                api_url.as_ref(),
-                YOUTUBE_API_MAX_BYTES,
-                YOUTUBE_API_TIMEOUT,
-            )
-            .await?;
-            if api_response.status != 200 {
-                tracing::error!(
-                    video_id = %parsed.video_id,
-                    status = api_response.status,
-                    "Failed to fetch YouTube API data"
-                );
-                return Ok(ResolverResult { embeds: vec![] });
-            }
-            let data: YouTubeApiResponse = serde_json::from_slice(&api_response.bytes)?;
-            let Some(video) = data.items.and_then(|mut items| items.pop()) else {
-                tracing::error!(video_id = %parsed.video_id, "No YouTube video data found");
-                return Ok(ResolverResult { embeds: vec![] });
-            };
+    let api_video = match ctx.youtube_api_key.as_deref() {
+        Some(api_key) => fetch_api_video(ctx, api_base, &parsed.video_id, api_key).await,
+        None => {
+            tracing::debug!("No YouTube API key configured");
+            None
+        }
+    };
 
-            let mut embed_url_parsed = Url::parse(&format!(
-                "https://www.youtube.com/embed/{}",
-                parsed.video_id
-            ))
-            .unwrap_or_else(|_| ctx.url.clone());
-            if let Some(t) = parsed.timestamp {
-                embed_url_parsed
-                    .query_pairs_mut()
-                    .append_pair("start", &t.to_string());
-            }
+    let Some(video) = api_video else {
+        return Ok(ResolverResult { embeds: vec![] });
+    };
+    let embed = build_api_embed(ctx, &parsed, video).await?;
 
-            let mut main_url = Url::parse("https://www.youtube.com/watch")?;
-            main_url
-                .query_pairs_mut()
-                .append_pair("v", &parsed.video_id);
-            if let Some(t) = parsed.timestamp {
-                main_url
-                    .query_pairs_mut()
-                    .append_pair("start", &t.to_string());
-            }
+    Ok(ResolverResult {
+        embeds: vec![embed],
+    })
+}
 
-            let mut embed = MessageEmbed::new("video");
-            embed.url = Some(main_url.to_string());
-            embed.title = Some(video.snippet.title);
-            embed.description = Some(parse_youtube_string(
-                &video.snippet.description,
-                YOUTUBE_DESCRIPTION_MAX,
-            ));
-            embed.color = Some(YOUTUBE_COLOR);
+async fn fetch_api_video(
+    ctx: &ResolveContext<'_>,
+    api_base: &str,
+    video_id: &str,
+    api_key: &str,
+) -> Option<YouTubeVideo> {
+    let api_url = build_youtube_api_url(api_base, video_id, api_key).ok()?;
+    let api_response = match http_fetch::fetch_url(
+        &ctx.http_client,
+        api_url.as_ref(),
+        YOUTUBE_API_MAX_BYTES,
+        YOUTUBE_API_TIMEOUT,
+    )
+    .await
+    {
+        Ok(response) => response,
+        Err(err) => {
+            tracing::error!(video_id, error = %err, "Failed to fetch YouTube API data");
+            return None;
+        }
+    };
+    if api_response.status != 200 {
+        let error = api_error(&api_response.bytes);
+        tracing::error!(
+            video_id,
+            status = api_response.status,
+            reason = error.reason.as_deref().unwrap_or("unknown"),
+            message = error.message.as_deref().unwrap_or(""),
+            "YouTube Data API rejected the request"
+        );
+        return None;
+    }
+    let data: YouTubeApiResponse = match serde_json::from_slice(&api_response.bytes) {
+        Ok(data) => data,
+        Err(err) => {
+            tracing::error!(video_id, error = %err, "Failed to parse YouTube API data");
+            return None;
+        }
+    };
+    let video = data.items.and_then(|mut items| items.pop());
+    if video.is_none() {
+        tracing::error!(video_id, "No YouTube video data found");
+    }
+    video
+}
 
-            if !video.snippet.channel_title.is_empty() {
-                embed.author = Some(EmbedAuthor {
-                    name: text_limits::truncate(
-                        &video.snippet.channel_title,
-                        text_limits::AUTHOR_NAME_MAX,
-                    ),
-                    url: Some(format!(
-                        "https://www.youtube.com/channel/{}",
-                        video.snippet.channel_id
-                    )),
-                    ..Default::default()
-                });
-            }
+async fn build_api_embed(
+    ctx: &ResolveContext<'_>,
+    parsed: &ParsedYouTube,
+    video: YouTubeVideo,
+) -> anyhow::Result<MessageEmbed> {
+    let mut embed = base_video_embed(parsed)?;
+    embed.title = Some(video.snippet.title);
+    embed.description = Some(parse_youtube_string(
+        &video.snippet.description,
+        YOUTUBE_DESCRIPTION_MAX,
+    ));
 
-            embed.provider = Some(EmbedProvider {
-                name: "YouTube".to_owned(),
-                url: Some("https://www.youtube.com".to_owned()),
-            });
+    if !video.snippet.channel_title.is_empty() {
+        embed.author = Some(EmbedAuthor {
+            name: text_limits::truncate(&video.snippet.channel_title, text_limits::AUTHOR_NAME_MAX),
+            url: Some(format!(
+                "https://www.youtube.com/channel/{}",
+                video.snippet.channel_id
+            )),
+            ..Default::default()
+        });
+    }
 
-            if let Some(thumbnail) = video.snippet.thumbnails.best() {
-                let nsfw_str = crate::media_proxy::MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
-                let thumbnail_meta =
-                    match ctx.media_proxy.get_metadata(&thumbnail.url, nsfw_str).await {
-                        Ok(meta) => Some(meta),
-                        Err(err) => {
-                            tracing::warn!(
-                                error = %err,
-                                url = thumbnail.url,
-                                "failed to enrich YouTube thumbnail metadata"
-                            );
-                            None
-                        }
-                    };
-                let media = thumbnail_meta
-                    .as_ref()
-                    .map(|meta| meta.to_embed_media(&thumbnail.url))
-                    .unwrap_or_else(|| EmbedMedia {
-                        url: Some(thumbnail.url.clone()),
-                        content_type: Some("image/jpeg".to_owned()),
-                        ..Default::default()
-                    });
-                embed.thumbnail = Some(EmbedMedia {
-                    width: thumbnail.width.or(media.width),
-                    height: thumbnail.height.or(media.height),
-                    ..media
-                });
-            }
+    if let Some(thumbnail) = video.snippet.thumbnails.best() {
+        embed.thumbnail =
+            Some(thumbnail_media(ctx, &thumbnail.url, thumbnail.width, thumbnail.height).await);
+    }
 
-            let (embed_width, embed_height) =
-                parse_player_embed_dimensions(&video.player.embed_html).unwrap_or((1280, 720));
-            embed.video = Some(EmbedMedia {
-                url: Some(embed_url_parsed.to_string()),
-                width: Some(embed_width),
-                height: Some(embed_height),
+    let (embed_width, embed_height) =
+        parse_player_embed_dimensions(&video.player.embed_html).unwrap_or(YOUTUBE_PLAYER_SIZE);
+    if let Some(media) = embed.video.as_mut() {
+        media.width = Some(embed_width);
+        media.height = Some(embed_height);
+    }
+
+    Ok(embed)
+}
+
+fn base_video_embed(parsed: &ParsedYouTube) -> anyhow::Result<MessageEmbed> {
+    let mut embed_url = Url::parse(&format!(
+        "https://www.youtube.com/embed/{}",
+        parsed.video_id
+    ))?;
+    let mut main_url = Url::parse("https://www.youtube.com/watch")?;
+    main_url
+        .query_pairs_mut()
+        .append_pair("v", &parsed.video_id);
+    if let Some(t) = parsed.timestamp {
+        embed_url
+            .query_pairs_mut()
+            .append_pair("start", &t.to_string());
+        main_url
+            .query_pairs_mut()
+            .append_pair("start", &t.to_string());
+    }
+
+    let (width, height) = YOUTUBE_PLAYER_SIZE;
+    let mut embed = MessageEmbed::new("video");
+    embed.url = Some(main_url.to_string());
+    embed.color = Some(YOUTUBE_COLOR);
+    embed.provider = Some(EmbedProvider {
+        name: "YouTube".to_owned(),
+        url: Some("https://www.youtube.com".to_owned()),
+    });
+    embed.video = Some(EmbedMedia {
+        url: Some(embed_url.to_string()),
+        width: Some(width),
+        height: Some(height),
+        ..Default::default()
+    });
+    Ok(embed)
+}
+
+async fn thumbnail_media(
+    ctx: &ResolveContext<'_>,
+    url: &str,
+    width: Option<u32>,
+    height: Option<u32>,
+) -> EmbedMedia {
+    let nsfw_str = crate::media_proxy::MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
+    let media = match ctx.media_proxy.get_metadata(url, nsfw_str).await {
+        Ok(meta) => meta.to_embed_media(url),
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                url,
+                "failed to enrich YouTube thumbnail metadata"
+            );
+            EmbedMedia {
+                url: Some(url.to_owned()),
+                content_type: Some("image/jpeg".to_owned()),
                 ..Default::default()
-            });
+            }
+        }
+    };
+    EmbedMedia {
+        width: width.or(media.width),
+        height: height.or(media.height),
+        ..media
+    }
+}
 
-            Ok(ResolverResult {
-                embeds: vec![embed],
-            })
+#[derive(Debug, Default, PartialEq, Eq)]
+struct YouTubeApiError {
+    reason: Option<String>,
+    message: Option<String>,
+}
+
+fn api_error(body: &[u8]) -> YouTubeApiError {
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return YouTubeApiError::default();
+    };
+    let error = &value["error"];
+    let first_reason = |key: &str| {
+        error[key].as_array().and_then(|entries| {
+            entries
+                .iter()
+                .find_map(|entry| entry["reason"].as_str().map(ToOwned::to_owned))
         })
+    };
+    YouTubeApiError {
+        reason: first_reason("details").or_else(|| first_reason("errors")),
+        message: error["message"].as_str().map(ToOwned::to_owned),
     }
 }
 
@@ -234,8 +305,8 @@ struct YouTubeThumbnail {
     height: Option<u32>,
 }
 
-fn build_youtube_api_url(video_id: &str, api_key: &str) -> anyhow::Result<Url> {
-    let mut url = Url::parse(YOUTUBE_API_BASE)?;
+fn build_youtube_api_url(base: &str, video_id: &str, api_key: &str) -> anyhow::Result<Url> {
+    let mut url = Url::parse(base)?;
     url.query_pairs_mut()
         .append_pair("key", api_key)
         .append_pair("id", video_id)
@@ -348,4 +419,106 @@ fn extract_timestamp(url: &Url) -> Option<u64> {
         return secs.parse().ok();
     }
     t.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::media_proxy::MediaProxyClient;
+    use crate::types::NsfwMode;
+    use std::io::{BufRead, BufReader, Write};
+    use std::net::TcpListener;
+
+    const QUOTA_EXCEEDED_BODY: &str = r#"{"error":{"code":403,"message":"The request cannot be completed because you have exceeded your quota.","errors":[{"message":"The request cannot be completed because you have exceeded your quota.","domain":"youtube.quota","reason":"quotaExceeded"}]}}"#;
+
+    fn spawn_google_stub() -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let mut stream = stream.unwrap();
+                let mut reader = BufReader::new(stream.try_clone().unwrap());
+                let mut request_line = String::new();
+                reader.read_line(&mut request_line).unwrap();
+                loop {
+                    let mut line = String::new();
+                    reader.read_line(&mut line).unwrap();
+                    if line.trim_end().is_empty() {
+                        break;
+                    }
+                }
+                let body = QUOTA_EXCEEDED_BODY;
+                let response = format!(
+                    "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                stream.write_all(response.as_bytes()).unwrap();
+            }
+        });
+        proxy
+    }
+
+    async fn resolve_against_stub(api_key: Option<&str>) -> Vec<MessageEmbed> {
+        let proxy = spawn_google_stub();
+        let http_client = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .proxy(reqwest::Proxy::http(proxy).unwrap())
+            .build()
+            .unwrap();
+        let media_proxy = MediaProxyClient::new_with_public_endpoint(
+            "http://127.0.0.1:1",
+            "secret",
+            None,
+            reqwest::Client::new(),
+        );
+        let watch = Url::parse("https://www.youtube.com/watch?v=dQw4w9WgXcQ").unwrap();
+        let ctx = ResolveContext {
+            url: watch.clone(),
+            original_url: watch,
+            http_client,
+            nsfw_mode: NsfwMode::Allow,
+            media_proxy: &media_proxy,
+            self_hosted: true,
+            youtube_api_key: api_key.map(ToOwned::to_owned),
+            klipy_api_key: None,
+            activity_pub_signer: None,
+        };
+        resolve_video(&ctx, "http://1.1.1.1/youtube/v3/videos")
+            .await
+            .unwrap()
+            .embeds
+    }
+
+    #[tokio::test]
+    async fn rejected_api_key_yields_no_embed() {
+        assert!(
+            resolve_against_stub(Some("restricted-key"))
+                .await
+                .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn missing_api_key_yields_no_embed() {
+        assert!(resolve_against_stub(None).await.is_empty());
+    }
+
+    #[test]
+    fn api_error_reports_google_reason() {
+        assert_eq!(
+            api_error(QUOTA_EXCEEDED_BODY.as_bytes()).reason.as_deref(),
+            Some("quotaExceeded")
+        );
+
+        let referrer_blocked = br#"{"error":{"code":403,"message":"Requests from referer <empty> are blocked.","errors":[{"message":"Requests from referer <empty> are blocked.","domain":"global","reason":"forbidden"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_HTTP_REFERRER_BLOCKED","domain":"googleapis.com"}]}}"#;
+        assert_eq!(
+            api_error(referrer_blocked),
+            YouTubeApiError {
+                reason: Some("API_KEY_HTTP_REFERRER_BLOCKED".to_owned()),
+                message: Some("Requests from referer <empty> are blocked.".to_owned()),
+            }
+        );
+
+        assert_eq!(api_error(b"not json"), YouTubeApiError::default());
+    }
 }

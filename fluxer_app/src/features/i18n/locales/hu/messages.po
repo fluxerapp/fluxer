@@ -33464,10 +33464,10 @@ msgstr "Csak akkor látszik, ha a Visionary-jelvényed látható, és nem normá
 msgid "Shows the banner in its own section below the community header."
 msgstr "A borítóképet külön szakaszban jeleníti meg a közösség fejléce alatt."
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "Megmutatja a címet és a bélyegképet, amikor valaki YouTube-linket oszt meg."
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "Megmutatja a címet és a bélyegképet, amikor valaki YouTube-linket oszt meg. Kapcsold be a YouTube Data API v3-at 0-nál nagyobb napi kvótával. Korlátozd a kulcsot IP-cím szerint, vagy ne korlátozd. A webhely szerinti korlátozás letiltja."
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx

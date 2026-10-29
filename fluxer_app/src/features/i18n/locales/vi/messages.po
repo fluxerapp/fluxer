@@ -33464,10 +33464,10 @@ msgstr "Chỉ hiển thị khi huy hiệu Visionary của bạn đang hiện và
 msgid "Shows the banner in its own section below the community header."
 msgstr "Hiển thị ảnh bìa trong phần riêng bên dưới tiêu đề cộng đồng."
 
-#. Help under the YouTube Data API key field in the setup wizard.
+#. Help under the YouTube Data API key field in the setup wizard. YouTube Data API v3 is a product name. Website restrictions means the Websites application restriction in the Google Cloud console.
 #: src/features/app/components/setup/SetupServicesStep.tsx
-msgid "Shows the title and thumbnail when someone posts a YouTube link."
-msgstr "Hiện tiêu đề và hình thu nhỏ khi ai đó đăng liên kết YouTube."
+msgid "Shows the title and thumbnail when someone posts a YouTube link. Enable YouTube Data API v3 with a daily quota above 0. Restrict the key by IP address or not at all. Website restrictions block it."
+msgstr "Hiện tiêu đề và hình thu nhỏ khi ai đó đăng liên kết YouTube. Bật YouTube Data API v3 với hạn mức hằng ngày lớn hơn 0. Giới hạn khóa theo địa chỉ IP hoặc không giới hạn. Giới hạn theo trang web sẽ chặn khóa."
 
 #. Where the app icon branding image appears and the recommended format, in the setup wizard. size is a file size such as 10 MB.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
