@@ -38,10 +38,8 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);
 	const currentMember = GuildMembers.getMember(guildId, member.user.id);
-	const {canManageRole, canManageTarget} = useRoleHierarchy(guild);
-	const canManageRoles =
-		Permission.can(Permissions.MANAGE_ROLES, {guildId}) &&
-		(member.user.id === Authentication.currentUserId || canManageTarget(member.user.id));
+	const {canManageRole} = useRoleHierarchy(guild);
+	const canManageRoles = Permission.can(Permissions.MANAGE_ROLES, {guildId});
 	const allRoles = useMemo(() => {
 		if (!guild) return [];
 		return Object.values(guild.roles)
