@@ -24,5 +24,5 @@ export function smtpTlsModeFromSecure(
 ): SmtpTlsMode | null {
 	if (secure == null) return null;
 	if (!secure) return SmtpTlsModes.OPPORTUNISTIC;
-	return port == null || port === SMTP_IMPLICIT_TLS_PORT ? SmtpTlsModes.IMPLICIT : SmtpTlsModes.STARTTLS;
+	return port === SMTP_IMPLICIT_TLS_PORT ? SmtpTlsModes.IMPLICIT : SmtpTlsModes.STARTTLS;
 }
