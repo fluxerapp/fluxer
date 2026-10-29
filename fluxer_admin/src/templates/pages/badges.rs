@@ -44,7 +44,7 @@ pub fn badges_page(
     let content = html! {
         (page_header(
             "Badges",
-            Some("Badges that you give to users and guilds. Users show them on their profile, and guilds show them next to their name. You can make up to 10 badges of each type."),
+            Some("Badges that you give to users and guilds. Users show them on their profile, and guilds show them next to their name. You can make up to 100 badges of each type."),
         ))
         @match badges {
             None => (error_alert("Failed to load badges.")),

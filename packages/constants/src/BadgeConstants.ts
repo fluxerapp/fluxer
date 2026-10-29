@@ -9,7 +9,7 @@ export const CustomBadgeTypes = {
 
 export type CustomBadgeType = ValueOf<typeof CustomBadgeTypes>;
 
-export const MAX_CUSTOM_BADGES_PER_TYPE = 10;
+export const MAX_CUSTOM_BADGES_PER_TYPE = 100;
 export const MAX_CUSTOM_BADGES_PER_ENTITY = 10;
 export const CUSTOM_BADGE_NAME_MAX_LENGTH = 64;
 export const CUSTOM_BADGE_DESCRIPTION_MAX_LENGTH = 256;
@@ -28,7 +28,7 @@ export type ProfileBadgeKind = (typeof PROFILE_BADGE_KINDS)[number];
 
 export type ProfileBadgeKey = ProfileBadgeKind | `custom:${string}`;
 
-export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + MAX_CUSTOM_BADGES_PER_TYPE;
+export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + MAX_CUSTOM_BADGES_PER_ENTITY;
 
 export const PREMIUM_PROFILE_BADGE_KINDS: ReadonlyArray<ProfileBadgeKind> = ['plutonium', 'visionary', 'premium'];
 

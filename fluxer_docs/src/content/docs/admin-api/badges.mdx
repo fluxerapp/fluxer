@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A custom badge is an image that instance admins make and give out. A user badge shows on the [profile](/http-api/users/#profile-badge-object) of each account it's given to, after the built-in badges. A guild badge shows next to the guild name, after its verified, partnered or discoverable badge, and [instance discovery](/http-api/instance/#guild-badge-object) lists every guild badge for clients.
 
-You can make up to 10 badges of each type, and an account or guild can have up to 10. Give badges with [Update user badges](/admin-api/users/#update-user-badges) and the `badge_ids` field of [Update guild](/admin-api/guilds/#update-guild). Deleting a badge takes it off everyone who had it.
+You can make up to 100 badges of each type, and an account or guild can have up to 10. Give badges with [Update user badges](/admin-api/users/#update-user-badges) and the `badge_ids` field of [Update guild](/admin-api/guilds/#update-guild). Deleting a badge takes it off everyone who had it.
 
 ## Admin custom badge object
 
@@ -79,7 +79,7 @@ Uploads the image to the media proxy, makes the badge and returns it. You need `
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [Admin custom badge](#admin-custom-badge-object) object | The badge was made |
-| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the type already has 10 badges, or `INVALID_FORM_BODY` for a bad field |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the type already has 100 badges, or `INVALID_FORM_BODY` for a bad field |
 | 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

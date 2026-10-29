@@ -37404,7 +37404,7 @@
 					},
 					"guild_badges": {
 						"description": "Custom badges that communities on this instance can show next to their name, in display order",
-						"maxItems": 10,
+						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/InstanceGuildBadgeSchema"}
 					}

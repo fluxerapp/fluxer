@@ -91,6 +91,26 @@ describe('custom badges', () => {
 			.execute();
 	});
 
+	test('allows 100 badges of a type and refuses the next one', async () => {
+		const template = await createTestCustomBadge(harness, admin.token, 'user');
+		const [stored] = await getInstanceConfigRepository().getCustomBadges();
+		await getInstanceConfigRepository().updateCustomBadges((current) => [
+			...current,
+			...Array.from({length: 98}, (_, index) => ({
+				...stored!,
+				id: (BigInt(template.id) + BigInt(index + 1)).toString(),
+				name: `Badge ${index}`,
+			})),
+		]);
+		await createTestCustomBadge(harness, admin.token, 'user', 'Last one');
+		await createTestCustomBadge(harness, admin.token, 'guild', 'Other type');
+		await createBuilder(harness, admin.token)
+			.post('/admin/badges')
+			.body({type: 'user', name: 'One too many', image: getPngDataUrl()})
+			.expect(HTTP_STATUS.BAD_REQUEST, 'MAX_BADGES')
+			.execute();
+	});
+
 	test('needs the matching ACL on every route', async () => {
 		const badge = await createTestCustomBadge(harness, admin.token);
 		const target = await createTestAccount(harness);
