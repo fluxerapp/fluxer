@@ -350,6 +350,9 @@ impl AdminApiClient {
         &self,
         error: progenitor_client::Error<E>,
     ) -> ApiError {
+        if let progenitor_client::Error::InvalidResponsePayload(_, err) = &error {
+            return ApiError::Parse(format!("invalid response payload: {err}"));
+        }
         match error.status() {
             Some(status) => ApiError::http(status.as_u16(), format!("{error:?}")),
             None => ApiError::Network(format!("{error:?}")),

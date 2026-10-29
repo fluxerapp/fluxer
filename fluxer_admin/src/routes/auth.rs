@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::AdminApiClient,
+    api::client::{AdminApiClient, ApiError},
     config::AdminConfig,
     oauth2,
     session::{
@@ -81,15 +81,7 @@ async fn login_page(
     {
         return Redirect::to(&format!("{}/dashboard", config.base_path)).into_response();
     }
-    let error_msg = match query.error.as_deref() {
-        Some("oauth_failed") => Some("Authentication failed. Please try again."),
-        Some("missing_admin_acl") => Some(
-            "Access denied: missing admin:authenticate permission. \
-             Ask an administrator to grant access.",
-        ),
-        Some(_) => Some("Login error. Please try again."),
-        None => None,
-    };
+    let error_msg = query.error.as_deref().map(login_error_message);
     let branding = state.self_hosted_branding().await;
     Html(login::login_page(config, branding.as_ref(), error_msg).into_string()).into_response()
 }
@@ -181,12 +173,16 @@ async fn oauth2_callback_finish(
         created_at: 0,
     };
     let api_client = AdminApiClient::new(state.http_client(), config, &temp_session);
-    if api_client.get_current_admin().await.is_err() {
-        return oauth_finish_response(
-            StatusCode::FORBIDDEN,
-            &format!("{base}/login?error=missing_admin_acl"),
-            &[],
-        );
+    if let Err(err) = api_client.get_current_admin().await {
+        let code = admin_check_error_code(&err);
+        let status = if code == "missing_admin_acl" {
+            tracing::warn!(%err, user_id = %user.id, "Admin access check denied");
+            StatusCode::FORBIDDEN
+        } else {
+            tracing::error!(%err, user_id = %user.id, "Admin access check failed");
+            StatusCode::BAD_GATEWAY
+        };
+        return oauth_finish_response(status, &format!("{base}/login?error={code}"), &[]);
     }
 
     let session_cookie_value =
@@ -484,6 +480,43 @@ fn now_seconds() -> u64 {
         .as_secs()
 }
 
+fn admin_check_error_code(err: &ApiError) -> &'static str {
+    match err {
+        ApiError::Http {
+            status: 401 | 403, ..
+        } => "missing_admin_acl",
+        ApiError::Http {
+            status: 404 | 405, ..
+        }
+        | ApiError::Parse(_) => "admin_api_mismatch",
+        ApiError::Network(_) => "admin_api_unreachable",
+        ApiError::Http { .. } => "admin_check_failed",
+    }
+}
+
+fn login_error_message(code: &str) -> &'static str {
+    match code {
+        "oauth_failed" => "Authentication failed. Please try again.",
+        "missing_admin_acl" => {
+            "Access denied: missing admin:authenticate permission. \
+             Ask an administrator to grant access."
+        }
+        "admin_api_mismatch" => {
+            "Could not verify admin access because the API response did not match this admin panel. \
+             Make sure the admin and API services run the same release."
+        }
+        "admin_api_unreachable" => {
+            "Could not connect to the API to verify admin access. \
+             Check that the admin service can connect to the API and try again."
+        }
+        "admin_check_failed" => {
+            "Could not verify admin access. \
+             Try again in a moment and check the admin service logs if it keeps failing."
+        }
+        _ => "Login error. Please try again.",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -498,5 +531,195 @@ mod tests {
             &issued(OAUTH_STATE_MAX_AGE_SECONDS + 60),
             verifier
         ));
+    }
+
+    const TEST_SECRET: &str = "test-secret";
+
+    fn wildcard_admin_me_body() -> serde_json::Value {
+        serde_json::from_str(
+            r#"{
+            "user": {
+                "id": "100",
+                "username": "owner",
+                "discriminator": 1,
+                "global_name": null,
+                "bot": false,
+                "system": false,
+                "flags": "0",
+                "premium_flags": 0,
+                "avatar": null,
+                "banner": null,
+                "bio": null,
+                "pronouns": null,
+                "accent_color": null,
+                "email": "owner@example.com",
+                "email_verified": true,
+                "email_bounced": false,
+                "date_of_birth": null,
+                "locale": null,
+                "premium_type": null,
+                "premium_since": null,
+                "premium_until": null,
+                "premium_grace_ends_at": null,
+                "premium_lifetime_sequence": null,
+                "profile_badges": [],
+                "temp_banned_until": null,
+                "pending_deletion_at": null,
+                "pending_bulk_message_deletion_at": null,
+                "deletion_reason_code": null,
+                "deletion_public_reason": null,
+                "deletion_audit_log_reason": null,
+                "deletion_scheduled_by": null,
+                "deletion_scheduled_at": null,
+                "enforcement_decision_id": null,
+                "acls": ["*"],
+                "traits": [],
+                "badge_ids": [],
+                "has_totp": false,
+                "has_password": true,
+                "claimed": true,
+                "account_tier": "verified",
+                "date_of_birth_required": false,
+                "authenticator_types": [],
+                "last_active_at": null,
+                "last_active_ip": null,
+                "last_active_ip_reverse": null,
+                "last_active_location": null
+            },
+            "pending_registration_count": null
+        }"#,
+        )
+        .unwrap()
+    }
+
+    async fn finish_login(
+        admin_me_status: u16,
+        admin_me_body: serde_json::Value,
+    ) -> (StatusCode, String) {
+        let admin_me_status = StatusCode::from_u16(admin_me_status).unwrap();
+        let api = Router::new()
+            .route(
+                "/oauth2/token",
+                post(|| async { Json(serde_json::json!({"access_token": "token"})) }),
+            )
+            .route(
+                "/users/@me",
+                get(|| async { Json(serde_json::json!({"id": "100"})) }),
+            )
+            .route(
+                "/admin/users/@me",
+                get(move || async move { (admin_me_status, Json(admin_me_body)) }),
+            );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let api_endpoint = format!("http://{}", listener.local_addr().unwrap());
+        tokio::spawn(async move { axum::serve(listener, api).await.unwrap() });
+
+        let state = AppState::new(AdminConfig {
+            host: "127.0.0.1".into(),
+            port: 0,
+            secret_key_base: TEST_SECRET.into(),
+            base_path: String::new(),
+            api_endpoint: api_endpoint.clone(),
+            api_public_endpoint: api_endpoint,
+            media_endpoint: String::new(),
+            static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
+            admin_endpoint: "http://admin.test".into(),
+            web_app_endpoint: "http://app.test".into(),
+            oauth_client_id: "1234567890123456789".into(),
+            oauth_client_secret: "client-secret".into(),
+            oauth_redirect_uri: "http://admin.test/oauth2_callback".into(),
+            build_version: "test".into(),
+            self_hosted: true,
+            proxy: crate::config::ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: "x-forwarded-for".into(),
+            },
+        });
+        let mut headers = HeaderMap::new();
+        headers.insert(OAUTH_FINISH_HEADER, "1".parse().unwrap());
+        let verifier = "verifier".to_owned();
+        let body = CallbackFinishBody {
+            code: "code".into(),
+            state: generate_oauth_state(TEST_SECRET, &verifier),
+            verifier,
+        };
+        let response = oauth2_callback_finish(State(state), headers, Json(body)).await;
+        let status = response.status();
+        let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        (status, body["redirect_to"].as_str().unwrap().to_owned())
+    }
+
+    #[tokio::test]
+    async fn wildcard_admin_signs_in_when_the_api_matches() {
+        let (status, redirect_to) = finish_login(200, wildcard_admin_me_body()).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(redirect_to, "/dashboard");
+    }
+
+    #[tokio::test]
+    async fn account_without_admin_acl_is_told_it_lacks_the_acl() {
+        let (status, redirect_to) = finish_login(
+            403,
+            serde_json::json!({"code": "MISSING_PERMISSIONS", "message": "Missing permissions"}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert_eq!(redirect_to, "/login?error=missing_admin_acl");
+    }
+
+    #[tokio::test]
+    async fn wildcard_admin_on_an_older_api_is_not_told_it_lacks_the_acl() {
+        let mut body = wildcard_admin_me_body();
+        body["user"].as_object_mut().unwrap().remove("badge_ids");
+        let (status, redirect_to) = finish_login(200, body).await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(redirect_to, "/login?error=admin_api_mismatch");
+    }
+
+    #[tokio::test]
+    async fn api_without_the_current_admin_route_is_not_reported_as_missing_acl() {
+        let (status, redirect_to) = finish_login(
+            404,
+            serde_json::json!({"code": "NOT_FOUND", "message": "Not found"}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(redirect_to, "/login?error=admin_api_mismatch");
+    }
+
+    #[tokio::test]
+    async fn rate_limited_admin_check_is_not_reported_as_missing_acl() {
+        let (status, redirect_to) = finish_login(
+            429,
+            serde_json::json!({"code": "RATE_LIMITED", "message": "Too many requests"}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(redirect_to, "/login?error=admin_check_failed");
+    }
+
+    #[test]
+    fn transport_failures_point_at_connectivity() {
+        let err = ApiError::Network("connection refused".into());
+        assert_eq!(admin_check_error_code(&err), "admin_api_unreachable");
+    }
+
+    #[test]
+    fn each_admin_check_failure_has_its_own_message() {
+        let messages = [
+            "missing_admin_acl",
+            "admin_api_mismatch",
+            "admin_api_unreachable",
+            "admin_check_failed",
+        ]
+        .map(login_error_message);
+        for (index, message) in messages.iter().enumerate() {
+            assert_ne!(*message, login_error_message("unknown"));
+            assert!(!messages[index + 1..].contains(message), "{message}");
+        }
     }
 }
