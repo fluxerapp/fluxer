@@ -528,8 +528,6 @@ const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 	FLUXER_NATS_URL: 'FLUXER_NATS_CORE_URL',
 };
 
-export const NAMED_FLUXER_ENV_NAMES = Object.keys(NAMED_FLUXER_ENV_OVERRIDES);
-
 function nonBlank(value: string | undefined): string | undefined {
 	return value === undefined || value.trim().length === 0 ? undefined : value;
 }

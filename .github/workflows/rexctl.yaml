@@ -7,6 +7,7 @@ on:
       - fluxer_rexctl/**
       - fluxer_admin/openapi-admin.json
       - fluxer_docs/src/content/docs/operator/rexctl.mdx
+      - fluxer_docs/src/content/docs/operator/environment.mdx
       - .github/workflows/rexctl.yaml
   push:
     branches:
@@ -15,6 +16,7 @@ on:
       - fluxer_rexctl/**
       - fluxer_admin/openapi-admin.json
       - fluxer_docs/src/content/docs/operator/rexctl.mdx
+      - fluxer_docs/src/content/docs/operator/environment.mdx
       - .github/workflows/rexctl.yaml
 
 permissions:
@@ -77,11 +79,11 @@ jobs:
           go run ./internal/instance/shipped
           git diff --exit-code -- internal/instance/shipped.json
 
-      - name: command reference is current
-        run: |
-          set -euo pipefail
-          go run . docs --out ../fluxer_docs/src/content/docs/operator/rexctl.mdx
-          git diff --exit-code -- ../fluxer_docs/src/content/docs/operator/rexctl.mdx
+      - name: tests
+        run: go test -count=1 ./...
+
+      - name: command and environment references are current
+        run: scripts/check-references.sh
 
   build:
     runs-on: ubuntu-24.04

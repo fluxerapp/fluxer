@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: env-reference
+
+on:
+  pull_request:
+    paths:
+      - fluxer_rexctl/**
+      - fluxer_admin/**
+      - fluxer_api/**
+      - fluxer_app_proxy/**
+      - fluxer_common/**
+      - fluxer_gateway/**
+      - fluxer_gifs/**
+      - fluxer_media_proxy/**
+      - fluxer_messages/**
+      - fluxer_push/**
+      - fluxer_snowflakes/**
+      - fluxer_static/**
+      - fluxer_svc/**
+      - fluxer_unfurl/**
+      - fluxer_users/**
+      - fluxer_*/Dockerfile
+      - packages/**
+      - fluxer_docs/scripts/**
+      - fluxer_docs/src/installer/**
+      - fluxer_docs/src/pages/**
+      - fluxer_docs/src/server/**
+      - fluxer_docs/src/content/docs/**
+      - deploy/helm/**
+      - .github/workflows/env-reference.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_rexctl/**
+      - fluxer_admin/**
+      - fluxer_api/**
+      - fluxer_app_proxy/**
+      - fluxer_common/**
+      - fluxer_gateway/**
+      - fluxer_gifs/**
+      - fluxer_media_proxy/**
+      - fluxer_messages/**
+      - fluxer_push/**
+      - fluxer_snowflakes/**
+      - fluxer_static/**
+      - fluxer_svc/**
+      - fluxer_unfurl/**
+      - fluxer_users/**
+      - fluxer_*/Dockerfile
+      - packages/**
+      - fluxer_docs/scripts/**
+      - fluxer_docs/src/installer/**
+      - fluxer_docs/src/pages/**
+      - fluxer_docs/src/server/**
+      - fluxer_docs/src/content/docs/**
+      - deploy/helm/**
+      - .github/workflows/env-reference.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+    working-directory: fluxer_rexctl
+
+jobs:
+  env-reference:
+    name: environment variables are documented
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.x"
+          check-latest: true
+          cache-dependency-path: fluxer_rexctl/go.sum
+
+      - name: every environment variable is documented
+        run: go test -count=1 ./internal/instance

@@ -89,7 +89,7 @@ func buildNamed() []Key {
 			Help:    "The domain Fluxer runs on",
 			Confirm: "Fluxer gets a new certificate for the new domain. Passkeys made for the old domain stop working. The domain_migration settings help people move over."},
 		{Name: EdgeMode, Type: "choice", Options: []string{EdgeBundled, EdgeProxy, EdgeTunnel}, Validate: oneOf(EdgeBundled, EdgeProxy, EdgeTunnel),
-			Help: "Whether Fluxer serves HTTPS itself, sits behind your reverse proxy or behind a tunnel"},
+			Help: "Whether Fluxer serves HTTPS itself or runs behind your reverse proxy or a tunnel"},
 		{Name: EdgeBind, Type: "address", Vars: []string{"FLUXER_EDGE_BIND"}, Validate: validBind,
 			Help: "The address your reverse proxy or tunnel connects to"},
 		{Name: EdgeHTTPPort, Type: "port", Vars: []string{"FLUXER_HTTP_PORT"}, Validate: validPort,
@@ -99,7 +99,7 @@ func buildNamed() []Key {
 		{Name: EdgePublicPort, Type: "port", Vars: []string{"FLUXER_PUBLIC_PORT"}, Validate: validPort,
 			Help: "The port people use in Fluxer's address, when it differs from the one Fluxer listens on"},
 		{Name: EdgeTrusted, Type: "list", Vars: []string{"FLUXER_EDGE_TRUSTED_PROXIES"}, Validate: validTrustedProxies,
-			Help: "Proxies whose client address headers Fluxer trusts"},
+			Help: "Proxies whose client address headers Fluxer trusts, separated by spaces"},
 		{Name: VoiceTCPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_TCP_PORT"}, Validate: validPort,
 			Help: "The TCP port for voice and video"},
 		{Name: VoiceUDPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_UDP_PORT"}, Validate: validPort,
@@ -107,7 +107,7 @@ func buildNamed() []Key {
 		{Name: VoicePublicIP, Type: "ip", Vars: []string{"FLUXER_LIVEKIT_NODE_IP", "FLUXER_LIVEKIT_USE_EXTERNAL_IP"}, Validate: validIP,
 			Help: "The public IP address voice and video use, when Fluxer can't find it by itself"},
 		{Name: StorageEndpoint, Type: "url", Vars: []string{"FLUXER_S3_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,
-			Help: "Your own S3-compatible object store"},
+			Help: "The address of the S3-compatible object store"},
 		{Name: StoragePublic, Type: "url", Vars: []string{"FLUXER_S3_PUBLIC_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,
 			Help: "The object store address browsers use, when it differs from the one Fluxer uses"},
 		{Name: StorageRegion, Type: "text", Vars: []string{"FLUXER_S3_REGION"}, Validate: validText, Confirm: storageConfirm,
@@ -119,25 +119,28 @@ func buildNamed() []Key {
 		{Name: StorageSecret, Type: "secret", Vars: []string{"FLUXER_S3_SECRET_KEY"}, Validate: validText, Secret: true, Confirm: storageConfirm,
 			Help: "The object store secret key"},
 		{Name: HTTPProxy, Type: "url", Vars: []string{"HTTP_PROXY"}, Validate: validURL,
-			Help: "The proxy Fluxer uses for outgoing HTTP requests"},
+			Help: "The proxy the Rust services other than the app-proxy use for outgoing HTTP requests"},
 		{Name: HTTPSProxy, Type: "url", Vars: []string{"HTTPS_PROXY"}, Validate: validURL,
-			Help: "The proxy Fluxer uses for outgoing HTTPS requests"},
+			Help: "The proxy the Rust services other than the app-proxy use for outgoing HTTPS requests"},
 		{Name: NoProxy, Type: "list", Vars: []string{"NO_PROXY"}, Validate: validText,
-			Help: "Hosts Fluxer connects to without the proxy"},
+			Help: "Hosts the Rust services other than the app-proxy connect to without the proxy, separated by commas"},
 		{Name: IPv6, Type: "bool", Validate: validBool, Confirm: "Every Fluxer service restarts.",
 			Help: "Whether Fluxer's network uses IPv6"},
 		{Name: SSOPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
 			Help: "Whether single sign-on can use a provider on a private or local network address"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
-			Help: "A registry mirror for the database, cache, search, storage, voice and edge images"},
+			Help: "A registry mirror for the database, cache, queue, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),
-			Help: "A fixed amount of memory for Fluxer's services, instead of sizing them to this machine on every start"},
+			Help: "A fixed amount of memory for Fluxer's services, or empty to size them to this machine on every start"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
 	}
 	for _, svc := range slices.Sorted(maps.Keys(ImageVars)) {
-		keys = append(keys, Key{Name: ImagesPrefix + svc, Type: "image", Vars: []string{ImageVars[svc]}, Validate: validImage,
-			Help: "The image for " + svc})
+		help := "The image the " + svc + " container runs"
+		if svc == "seaweedfs" {
+			help = "The image the seaweedfs and seaweedfs-init containers run"
+		}
+		keys = append(keys, Key{Name: ImagesPrefix + svc, Type: "image", Vars: []string{ImageVars[svc]}, Validate: validImage, Help: help})
 	}
 	for i := range keys {
 		keys[i].Kind = Deployment

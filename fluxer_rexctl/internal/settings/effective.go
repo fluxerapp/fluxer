@@ -4,6 +4,7 @@ package settings
 
 import (
 	"fmt"
+	"maps"
 	"net"
 	"slices"
 	"strconv"
@@ -155,6 +156,10 @@ func derived(chosen map[string]string) map[string]string {
 		}
 	}
 	return out
+}
+
+func DerivedVars() []string {
+	return slices.Sorted(maps.Keys(derived(map[string]string{Domain: "example.com"})))
 }
 
 func RewriteRegistry(ref, registry string) string {

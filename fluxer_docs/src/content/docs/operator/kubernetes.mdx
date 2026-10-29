@@ -66,7 +66,7 @@ The chart's `values.yaml` explains every value. These are the ones most installs
 | `email` | The contact address for Let's Encrypt and web push |
 | `edge.expose` | `ingress`, `gateway`, `loadBalancer` or `none` for a proxy of your own |
 | `livekit.expose` | `hostNetwork` (the default, needs a privileged namespace), `loadBalancer` or `nodePort` |
-| `env` | Fluxer settings as `NAME: value` |
+| `env` | Fluxer settings as `NAME: value`, listed on [Environment variables](/operator/environment/) |
 | `secrets.extra` | Settings that have a password or a key |
 
 Under Argo CD or `helm template`, set `secrets.generate: false` and give every key in `secrets.values`, or put a Secret you manage in `secrets.existingSecret`.

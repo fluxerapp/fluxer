@@ -31,7 +31,7 @@ for key in POSTGRES_PASSWORD MEILI_MASTER_KEY FLUXER_S3_SECRET_KEY FLUXER_SUDO_M
   FLUXER_ADMIN_OAUTH_CLIENT_SECRET LIVEKIT_API_SECRET; do
   sed -i "s|^$key=.*|$key=$(openssl rand -hex 32)|" .env
 done
-sed -i "s|^FLUXER_SETUP_TOKEN=.*|FLUXER_SETUP_TOKEN=$(openssl rand -hex 16)|" .env
+sed -i "s|^FLUXER_SETUP_TOKEN=.*|FLUXER_SETUP_TOKEN=$(openssl rand -hex 32)|" .env
 sed -i "s|^FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=.*|FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=$(openssl rand -base64 32)|" .env
 sed -i "s|^FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64=.*|FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64=$(openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform DER | base64 | tr -d '\n')|" .env
 openssl ecparam -name prime256v1 -genkey -noout -out vapid.pem
@@ -40,7 +40,9 @@ sed -i "s|^FLUXER_VAPID_PRIVATE_KEY=.*|FLUXER_VAPID_PRIVATE_KEY=$(openssl ec -in
 rm vapid.pem
 ```
 
-Keep a copy of `.env` somewhere safe. The database, search, storage, voice and push keys can't change once Fluxer has started, because your data depends on them. If your platform asks for environment values instead of a `.env` file, paste the lines from `.env` there.
+You can put [every other setting](/operator/environment/) in `.env` too.
+
+Keep a copy of `.env` somewhere safe. The database, search and push keys can't change once Fluxer has started. Your data depends on them. If your platform has its own place for environment values, paste the lines from `.env` there.
 
 ## Start it
 
@@ -61,7 +63,7 @@ When every service is healthy, open your domain in a browser and enter the `FLUX
 
 ## Upgrade
 
-Download the new bundle into the same folder and unpack it, which replaces every file except `.env`. If the new `.env.example` has a key your `.env` doesn't have yet, add it, then run `docker compose up -d`.
+Download the new bundle into the same folder and unpack it, which replaces every file except `.env`. If the new `.env.example` has an uncommented line your `.env` doesn't have yet, add it, then run `docker compose up -d`.
 
 Back up the Docker volumes yourself before you upgrade, because `rexctl backup` isn't available without rexctl.
 

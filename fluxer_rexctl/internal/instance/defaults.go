@@ -9,13 +9,17 @@ import (
 
 func composeDefaults(files [][]byte) map[string][]string {
 	out := map[string][]string{}
+	alt := map[string]bool{}
 	for _, data := range files {
-		scanDefaults(string(data), out)
+		scanDefaults(string(data), out, alt)
+	}
+	for name := range alt {
+		delete(out, name)
 	}
 	return out
 }
 
-func scanDefaults(s string, out map[string][]string) {
+func scanDefaults(s string, out map[string][]string, alt map[string]bool) {
 	for i := 0; i < len(s); i++ {
 		if s[i] != '$' || i+1 >= len(s) {
 			continue
@@ -41,6 +45,10 @@ func scanDefaults(s string, out map[string][]string) {
 			op = ":-"
 		case s[j] == '-':
 			op = "-"
+		case strings.HasPrefix(s[j:], ":+"):
+			op = ":+"
+		case s[j] == '+':
+			op = "+"
 		}
 		if op == "" {
 			continue
@@ -51,10 +59,13 @@ func scanDefaults(s string, out map[string][]string) {
 			continue
 		}
 		def := s[start:end]
-		if !slices.Contains(out[name], def) {
+		switch {
+		case strings.HasSuffix(op, "+"):
+			alt[name] = true
+		case !slices.Contains(out[name], def):
 			out[name] = append(out[name], def)
 		}
-		scanDefaults(def, out)
+		scanDefaults(def, out, alt)
 		i = end
 	}
 }
@@ -63,9 +74,8 @@ func closingBrace(s string, from int) int {
 	depth := 0
 	for k := from; k < len(s); k++ {
 		switch {
-		case s[k] == '$' && k+1 < len(s) && s[k+1] == '{':
+		case s[k] == '{':
 			depth++
-			k++
 		case s[k] == '}':
 			if depth == 0 {
 				return k

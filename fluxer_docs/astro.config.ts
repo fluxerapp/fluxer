@@ -168,6 +168,7 @@ export default defineConfig({
 						'operator/sign-in',
 						'operator/kubernetes',
 						'operator/docker-compose',
+						'operator/environment',
 						'operator/rexctl',
 					],
 				},

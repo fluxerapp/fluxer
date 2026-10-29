@@ -32,7 +32,7 @@ type Set struct {
 	Vars     []string
 }
 
-//go:embed all:files
+//go:embed files
 var releaseFiles embed.FS
 
 var embeddedSet = sync.OnceValue(func() *Set {

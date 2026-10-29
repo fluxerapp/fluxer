@@ -10,7 +10,6 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
@@ -36,11 +35,9 @@ func TestBundleEnvKeys(t *testing.T) {
 	}
 
 	var wantCommented []string
-	for _, k := range settings.Named() {
-		for _, v := range k.Vars {
-			if _, ok := wantActive[v]; !ok && slices.Contains(stack.Embedded().Vars, v) {
-				wantCommented = append(wantCommented, v)
-			}
+	for _, d := range envDocs() {
+		if _, ok := wantActive[d.name]; !ok && d.bundled {
+			wantCommented = append(wantCommented, d.name)
 		}
 	}
 	var gotCommented []string

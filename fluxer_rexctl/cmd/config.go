@@ -218,6 +218,28 @@ func restartText(services []string) string {
 	return "Restarts " + ui.JoinAnd(parts)
 }
 
+var rexctlKeyHelp = map[string]string{
+	stack.SettingsLoadedVar: "rexctl sets this. Docker Compose refuses to start without it.",
+	instance.SetupTokenVar:  "The token the setup wizard asks for before it creates the first admin account. rexctl generates it when it installs Fluxer, and rexctl setup token shows it.",
+}
+
+func keyHelp(k settings.Key) string {
+	if k.Help != "" || k.Kind != settings.Raw {
+		return k.Help
+	}
+	if help := rexctlKeyHelp[k.Name]; help != "" {
+		return help
+	}
+	return instance.EnvHelp(k.Name)
+}
+
+func firstSentence(text string) string {
+	if i := strings.Index(text, ". "); i >= 0 {
+		return text[:i+1]
+	}
+	return text
+}
+
 type configRow struct {
 	Key      string   `json:"key"`
 	Kind     string   `json:"kind"`
@@ -235,7 +257,7 @@ func (v *configView) row(k settings.Key, reveal bool) configRow {
 	if reveal {
 		shown = value
 	}
-	r := configRow{Key: k.Name, Kind: "deployment", Type: k.Type, Value: shown, Secret: k.Secret, Help: k.Help, Restarts: []string{}}
+	r := configRow{Key: k.Name, Kind: "deployment", Type: k.Type, Value: shown, Secret: k.Secret, Help: keyHelp(k), Restarts: []string{}}
 	if k.Name != settings.EngineHost {
 		r.Restarts = deploy.Promised(v.set, v.custom, k)
 	}
@@ -263,6 +285,9 @@ func (v *configView) deploymentKeys() []settings.Key {
 	}
 	slices.Sort(raw)
 	for _, name := range slices.Compact(raw) {
+		if name == stack.SettingsLoadedVar {
+			continue
+		}
 		k, err := settings.Lookup(v.set, v.vars, name, nil)
 		if err == nil && k.Kind == settings.Raw {
 			out = append(out, k)
@@ -296,7 +321,7 @@ func newConfigListCmd(app *App) *cobra.Command {
 				}
 			}
 			rows = append(rows, r)
-			table = append(table, []string{r.Key, clip(fmt.Sprint(r.Value)), v.applies(k), r.Help})
+			table = append(table, []string{r.Key, clip(fmt.Sprint(r.Value)), v.applies(k), firstSentence(r.Help)})
 		}
 		instanceKeys, apiErr := instanceValues(ctx, app)
 		for _, k := range instanceKeys {
@@ -365,8 +390,8 @@ func newConfigGetCmd(app *App) *cobra.Command {
 			rows = append(rows, []string{"Default", fmt.Sprint(r.Default)})
 		}
 		rows = append(rows, []string{"Applies", v.applies(k)})
-		if k.Help != "" {
-			rows = append(rows, []string{"Help", k.Help})
+		if r.Help != "" {
+			rows = append(rows, []string{"Help", r.Help})
 		}
 		app.UI.Table([]string{"Setting", k.Name}, rows)
 		return nil

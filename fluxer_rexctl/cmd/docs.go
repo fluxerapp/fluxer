@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/mdx"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
@@ -24,25 +26,32 @@ This page is made from the help that rexctl prints, and ` + "`rexctl <command> -
 `
 
 func newDocsCmd(app *App) *cobra.Command {
-	var out string
+	var out, envPage, envExample string
 	c := &cobra.Command{
 		Use:    "docs",
-		Short:  "Write the command reference page",
+		Short:  "Write the command reference, environment variable page and reference .env.example",
 		Hidden: true,
 		Args:   noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			page := renderDocs(c.Root())
-			if out == "" {
+			if out == "" && envPage == "" && envExample == "" {
 				_, err := app.UI.Stdout().Write(page)
 				return err
 			}
-			if err := os.WriteFile(out, page, 0o644); err != nil {
-				return ui.Wrap(err, fmt.Sprintf("Couldn't write %s.", out), "Check that the folder exists and that you can write to it.")
+			for file, data := range map[string][]byte{out: page, envPage: []byte(instance.EnvPage()), envExample: []byte(instance.ReferenceEnv())} {
+				if file == "" {
+					continue
+				}
+				if err := os.WriteFile(file, data, 0o644); err != nil {
+					return ui.Wrap(err, fmt.Sprintf("Couldn't write %s.", file), "Check that the folder exists and that you can write to it.")
+				}
 			}
 			return nil
 		},
 	}
 	c.Flags().StringVar(&out, "out", "", "file to write")
+	c.Flags().StringVar(&envPage, "env-page", "", "environment variable page to write")
+	c.Flags().StringVar(&envExample, "env-example", "", "reference .env.example to write")
 	return c
 }
 
@@ -70,7 +79,7 @@ func docsCommands(c *cobra.Command) []*cobra.Command {
 
 func writeCommand(b *bytes.Buffer, c *cobra.Command, level int) {
 	fmt.Fprintf(b, "\n%s %s\n\n", strings.Repeat("#", level), c.CommandPath())
-	b.WriteString(docsProse(docsDescription(c)))
+	b.WriteString(mdx.Prose(docsDescription(c)))
 	b.WriteString("\n")
 	if c.Runnable() && c.Annotations[helpOnly] == "" {
 		fmt.Fprintf(b, "\n```sh\n%s\n```\n", c.UseLine())
@@ -118,7 +127,7 @@ func writeFlags(b *bytes.Buffer, fs *pflag.FlagSet) {
 		if f.Shorthand != "" {
 			head = "`-" + f.Shorthand + "`, " + head
 		}
-		fmt.Fprintf(b, "- %s\n\n  %s", head, docsProse(sentence(usage)))
+		fmt.Fprintf(b, "- %s\n\n  %s", head, mdx.Prose(sentence(usage)))
 		if d := flagDefault(f); d != "" {
 			fmt.Fprintf(b, " The default is `%s`.", d)
 		}
@@ -144,19 +153,4 @@ func sentence(s string) string {
 		s += "."
 	}
 	return s
-}
-
-func docsProse(s string) string {
-	var b strings.Builder
-	code := false
-	for _, r := range s {
-		if r == '`' {
-			code = !code
-		}
-		if !code && strings.ContainsRune("<{}", r) {
-			b.WriteByte('\\')
-		}
-		b.WriteRune(r)
-	}
-	return b.String()
 }
