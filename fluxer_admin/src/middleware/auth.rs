@@ -26,6 +26,12 @@ impl AuthContext {
             .as_ref()
             .map_or(&[], |user| user.acls.as_slice())
     }
+
+    pub fn discovery_enabled(&self) -> bool {
+        self.branding
+            .as_ref()
+            .is_none_or(|branding| branding.discovery_enabled)
+    }
 }
 
 pub async fn require_auth(

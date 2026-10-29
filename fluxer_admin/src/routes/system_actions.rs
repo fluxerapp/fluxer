@@ -314,9 +314,7 @@ fn remember_premium_branding(
     result: &Result<crate::api::types::InstanceConfigResponse, crate::api::client::ApiError>,
 ) {
     if let Ok(instance_config) = result {
-        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
-            instance_config,
-        ));
+        state.remember_instance_config_branding(instance_config);
     }
 }
 

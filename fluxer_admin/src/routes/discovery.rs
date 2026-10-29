@@ -55,7 +55,9 @@ async fn discovery_page(
         _ => "pending",
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (pending, listed, load_error) = if tab == "pending" {
+    let (pending, listed, load_error) = if !auth.0.discovery_enabled() {
+        (None, None, None)
+    } else if tab == "pending" {
         match client.list_pending_discovery_applications().await {
             Ok(pending) => (Some(pending), None, None),
             Err(error) => {

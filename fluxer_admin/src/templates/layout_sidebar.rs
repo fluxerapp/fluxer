@@ -13,6 +13,7 @@ pub fn render_sidebar(
     active_page: &str,
     inspected_voice_region_id: Option<&str>,
     pending_registration_count: Option<u32>,
+    discovery_enabled: bool,
 ) -> Markup {
     let base = &config.base_path;
     html! {
@@ -36,6 +37,7 @@ pub fn render_sidebar(
                         .filter(|item| {
                             item.active_key != "voice-servers" || inspected_voice_region_id.is_some()
                         })
+                        .filter(|item| item.active_key != "discovery" || discovery_enabled)
                         .collect();
                     @if !visible_items.is_empty() {
                         div {

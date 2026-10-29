@@ -122,7 +122,7 @@ pub fn admin_layout_ext(
             body class="min-h-screen overflow-hidden bg-neutral-50" hx-boost="true" {
                 a href="#main-content" class="skip-link" { "Skip to main content" }
                 div class="flex h-[100dvh]" {
-                    (render_sidebar(config, &admin_title(auth.branding.as_ref()), admin_acls, active_page, options.inspected_voice_region_id, auth.pending_registration_count))
+                    (render_sidebar(config, &admin_title(auth.branding.as_ref()), admin_acls, active_page, options.inspected_voice_region_id, auth.pending_registration_count, auth.discovery_enabled()))
                     div data-sidebar-overlay="" class="pointer-events-none fixed inset-0 z-30 bg-black/50 opacity-0 transition-opacity duration-200 ease-in-out lg:hidden" aria-hidden="true" {}
                     div class="flex h-[100dvh] w-full flex-1 flex-col overflow-y-auto" {
                         (render_header(config, auth, csrf_token))

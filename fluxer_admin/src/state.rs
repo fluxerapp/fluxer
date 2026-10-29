@@ -3,7 +3,10 @@
 use crate::{
     api::{
         client::{AdminApiClient, ApiResultExt},
-        types::{AccountIdentityMode, AccountIdentitySettings, PremiumBranding, ReportReasonEntry},
+        types::{
+            AccountIdentityMode, AccountIdentitySettings, InstanceConfigResponse, PremiumBranding,
+            ReportReasonEntry,
+        },
     },
     config::AdminConfig,
 };
@@ -72,6 +75,25 @@ impl AppState {
             .premium_branding
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some((Instant::now(), branding));
+    }
+
+    pub fn remember_instance_config_branding(&self, instance_config: &InstanceConfigResponse) {
+        self.merge_instance_config_branding(PremiumBranding::from_instance_config(instance_config));
+    }
+
+    fn merge_instance_config_branding(&self, branding: PremiumBranding) {
+        let mut cache = self
+            .inner
+            .premium_branding
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some((fetched_at, previous)) = cache.as_ref() {
+            let branding = PremiumBranding {
+                discovery_enabled: previous.discovery_enabled,
+                ..branding
+            };
+            *cache = Some((*fetched_at, branding));
+        }
     }
 
     pub async fn premium_branding(&self, client: &AdminApiClient) -> Option<PremiumBranding> {
@@ -186,5 +208,75 @@ impl AppState {
 impl axum::extract::FromRef<AppState> for AdminConfig {
     fn from_ref(state: &AppState) -> Self {
         state.inner.config.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ProxyConfig;
+
+    fn self_hosted_state() -> AppState {
+        AppState::new(AdminConfig {
+            host: String::new(),
+            port: 0,
+            secret_key_base: String::new(),
+            base_path: String::new(),
+            api_endpoint: String::new(),
+            api_public_endpoint: String::new(),
+            media_endpoint: String::new(),
+            static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
+            admin_endpoint: String::new(),
+            web_app_endpoint: String::new(),
+            oauth_client_id: String::new(),
+            oauth_client_secret: String::new(),
+            oauth_redirect_uri: String::new(),
+            build_version: String::new(),
+            self_hosted: true,
+            proxy: ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: String::new(),
+            },
+        })
+    }
+
+    fn seed(state: &AppState, fetched_at: Instant, discovery_enabled: bool) {
+        *state.inner.premium_branding.lock().unwrap() = Some((
+            fetched_at,
+            PremiumBranding {
+                discovery_enabled,
+                ..PremiumBranding::default()
+            },
+        ));
+    }
+
+    #[test]
+    fn instance_config_branding_keeps_the_discovery_fetch_time() {
+        let state = self_hosted_state();
+        let expired = Instant::now()
+            .checked_sub(PREMIUM_BRANDING_TTL + Duration::from_secs(1))
+            .unwrap();
+        seed(&state, expired, false);
+        state.merge_instance_config_branding(PremiumBranding {
+            discovery_enabled: true,
+            product_name: Some("Example".to_owned()),
+            ..PremiumBranding::default()
+        });
+        assert_eq!(None, state.cached_premium_branding());
+    }
+
+    #[test]
+    fn instance_config_branding_updates_a_fresh_entry_and_keeps_discovery() {
+        let state = self_hosted_state();
+        seed(&state, Instant::now(), false);
+        state.merge_instance_config_branding(PremiumBranding {
+            discovery_enabled: true,
+            product_name: Some("Example".to_owned()),
+            ..PremiumBranding::default()
+        });
+        let cached = state.cached_premium_branding().unwrap();
+        assert_eq!(Some("Example"), cached.product_name.as_deref());
+        assert!(!cached.discovery_enabled);
     }
 }
