@@ -2,7 +2,14 @@
 
 import {LISTS_BUCKET, SHARED_LISTS} from '@app/api/infrastructure/activity/Contract.generated';
 import {Logger} from '@app/api/Logger';
-import {type ConsumerMessages, DeliverPolicy, type JetStreamClient} from '@nats-io/jetstream';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
+import {
+	type ConsumerMessages,
+	DeliverPolicy,
+	JetStreamApiCodes,
+	JetStreamApiError,
+	type JetStreamClient,
+} from '@nats-io/jetstream';
 
 export type SharedListName = (typeof SHARED_LISTS)[number];
 
@@ -16,6 +23,8 @@ const lists = new Map<string, ReadonlySet<string>>();
 interface WatchState {
 	stopped: boolean;
 	retryDelayMs: number;
+	logger: LoggerInterface;
+	streamMissingLogged: boolean;
 	messages: ConsumerMessages | null;
 	retry: ReturnType<typeof setTimeout> | null;
 }
@@ -73,7 +82,17 @@ export function renderSharedListMetrics(): string {
 	return lines.join('\n');
 }
 
+function isStreamNotFound(error: unknown): boolean {
+	return error instanceof JetStreamApiError && error.code === JetStreamApiCodes.StreamNotFound;
+}
+
 async function watchOnce(js: JetStreamClient, state: WatchState): Promise<void> {
+	await js.streams.get(STREAM_NAME);
+	if (state.streamMissingLogged) {
+		state.logger.info({stream: STREAM_NAME}, 'Shared list stream found, watching lists');
+		state.streamMissingLogged = false;
+	}
+	if (state.stopped) return;
 	const consumer = await js.consumers.get(STREAM_NAME, {
 		filter_subjects: [`${SUBJECT_PREFIX}>`],
 		deliver_policy: DeliverPolicy.LastPerSubject,
@@ -97,7 +116,14 @@ function scheduleWatch(js: JetStreamClient, state: WatchState, delayMs: number):
 		if (state.stopped) return;
 		watchOnce(js, state)
 			.catch((error: unknown) => {
-				Logger.debug({err: error}, 'Shared list watch unavailable, retrying');
+				if (isStreamNotFound(error)) {
+					if (!state.streamMissingLogged) {
+						state.logger.info({stream: STREAM_NAME}, 'Shared list stream does not exist, checking again later');
+						state.streamMissingLogged = true;
+					}
+					return;
+				}
+				state.logger.debug({err: error}, 'Shared list watch unavailable, retrying');
 			})
 			.finally(() => {
 				state.messages = null;
@@ -107,11 +133,16 @@ function scheduleWatch(js: JetStreamClient, state: WatchState, delayMs: number):
 	state.retry.unref?.();
 }
 
-export function startSharedListWatch(js: JetStreamClient, options: {selfHosted: boolean}): void {
+export function startSharedListWatch(
+	js: JetStreamClient,
+	options: {selfHosted: boolean; retryDelayMs?: number; logger?: LoggerInterface},
+): void {
 	stopSharedListWatch();
 	const state: WatchState = {
 		stopped: false,
-		retryDelayMs: options.selfHosted ? SELF_HOSTED_RETRY_DELAY_MS : RETRY_DELAY_MS,
+		retryDelayMs: options.retryDelayMs ?? (options.selfHosted ? SELF_HOSTED_RETRY_DELAY_MS : RETRY_DELAY_MS),
+		logger: options.logger ?? Logger,
+		streamMissingLogged: false,
 		messages: null,
 		retry: null,
 	};
