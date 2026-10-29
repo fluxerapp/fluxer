@@ -115,7 +115,7 @@ func save(inst *instance.Instance) error {
 
 func mountedHashes(inst *instance.Instance) (map[string]string, error) {
 	out := map[string]string{}
-	for _, dir := range stack.MountedDirs {
+	for dir := range stack.MountedDirs {
 		h := sha256.New()
 		root := inst.Path(dir)
 		err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {

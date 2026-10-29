@@ -473,6 +473,7 @@ func clearInstanceFiles(dir string) error {
 	}
 	for _, p := range []string{
 		filepath.Join(dir, instance.CertsDir),
+		filepath.Join(dir, instance.CADir),
 		filepath.Join(dir, instance.CaddyDropInDir),
 		stack.GeneratedPath(dir),
 		filepath.Join(dir, instance.StateDirName, instance.ReleasesDir),

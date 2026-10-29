@@ -40,6 +40,7 @@ const (
 	StackDir       = "stack"
 	BackupsDir     = "backups"
 	CertsDir       = "certs"
+	CADir          = "ca"
 	CaddyDropInDir = "caddy.d"
 
 	DefaultKeepBackups = 3
@@ -160,7 +161,7 @@ func Create(dir, project string) (*Instance, error) {
 			return nil, err
 		}
 	}
-	for _, d := range []string{CertsDir, CaddyDropInDir} {
+	for _, d := range []string{CertsDir, CADir, CaddyDropInDir} {
 		if err := os.MkdirAll(i.Path(d), 0o755); err != nil {
 			return nil, err
 		}

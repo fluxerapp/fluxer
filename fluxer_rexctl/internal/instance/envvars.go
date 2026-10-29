@@ -158,7 +158,7 @@ var envVars = []envVar{
 	{"HTTP_PROXY", "network", "The api, worker and gateway don't use it."},
 	{"HTTPS_PROXY", "network", "The api, worker and gateway don't use it."},
 	{"NO_PROXY", "network", ""},
-	{"FLUXER_NODE_EXTRA_CA_CERTS", "network", "The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. The path is inside their containers. A file you set replaces the system bundle. Add your CA to a copy of that bundle. The Rust services don't use it and take their CA certificates from SSL_CERT_FILE."},
+	{"FLUXER_NODE_EXTRA_CA_CERTS", "network", "The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their containers. With Docker Compose they see the ca folder of your instance at /etc/fluxer/ca, and nothing else from the instance folder. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can hold only your own CA. The Rust services don't use it and take their CA certificates from SSL_CERT_FILE."},
 	{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES", "sso", "Use `true` or `false`. When it's empty, Fluxer uses `false`."},
 	{"FLUXER_PASSKEY_RP_ID", "sso", "The relying party ID that passkeys are tied to, a domain such as `chat.example.com`. When it's empty, Fluxer uses FLUXER_DOMAIN. Changing it makes every passkey registered against the old value stop working."},
 	{"FLUXER_PASSKEY_RP_NAME", "sso", "The title browsers show for Fluxer when someone creates or uses a passkey. When it's empty, browsers show `Fluxer`."},

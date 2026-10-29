@@ -23,6 +23,7 @@ func oldLayoutDir(t *testing.T) (string, map[string][]byte) {
 		stack.Caddyfile:        []byte(":80 {\n}\n"),
 		instance.CustomCompose: []byte("services: {}\n"),
 		filepath.Join(instance.CaddyDropInDir, "x.caddy"):            []byte("header X-Mine yes\n"),
+		filepath.Join("ca", "ca.pem"):                                []byte("pem\n"),
 		filepath.Join(instance.StateDirName, instance.StateFileName): []byte(oldState),
 	}
 	for name, data := range files {
@@ -112,6 +113,10 @@ func TestNewBackupKeepsGeneratedFolder(t *testing.T) {
 	inst := restoredFrom(t, archiveOf(t, movedInstance(t, dir)))
 	if got, err := os.ReadFile(inst.Generated(stack.ComposeFile)); err != nil || !bytes.Equal(got, files[stack.ComposeFile]) {
 		t.Fatalf("compose file: %q, %v", got, err)
+	}
+	ca := filepath.Join("ca", "ca.pem")
+	if got, err := os.ReadFile(inst.Path(ca)); err != nil || !bytes.Equal(got, files[ca]) {
+		t.Fatalf("%s: %q, %v", ca, got, err)
 	}
 	if _, err := os.Stat(inst.Path(stack.ComposeFile)); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("a compose file showed up in the instance folder")

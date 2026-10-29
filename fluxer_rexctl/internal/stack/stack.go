@@ -49,7 +49,13 @@ var MountedFiles = map[string][]string{
 	Caddyfile: {"edge"},
 }
 
-var MountedDirs = []string{"certs", "caddy.d"}
+const NodeCADir = "/etc/fluxer/ca"
+
+var MountedDirs = map[string][]string{
+	"ca":      {"api", "worker"},
+	"caddy.d": {"edge"},
+	"certs":   {"edge"},
+}
 
 var (
 	ErrUnknownOverlay  = errors.New("stack: unknown overlay")
@@ -313,7 +319,7 @@ func RenderAt(set *Set, selected []Overlay, images map[string]string, project, d
 	if err != nil {
 		return nil, err
 	}
-	for _, d := range MountedDirs {
+	for d := range MountedDirs {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
 			return nil, err
 		}

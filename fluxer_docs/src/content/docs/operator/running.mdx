@@ -139,6 +139,13 @@ rexctl email set
 rexctl email test you@example.com
 ```
 
+If your email server's certificate comes from your own CA, put that CA's PEM file in the `ca` folder of your instance. The api and worker see that folder at `/etc/fluxer/ca`, and they can't see the edge's `certs` folder. The file needs only the CA certificate, never a private key. Tell them to trust the file, then test again.
+
+```sh
+rexctl config set FLUXER_NODE_EXTRA_CA_CERTS /etc/fluxer/ca/ca.pem
+rexctl email test you@example.com
+```
+
 Change your instance's name, color, logo or icon.
 
 ```sh

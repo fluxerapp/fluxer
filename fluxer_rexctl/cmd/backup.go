@@ -422,7 +422,7 @@ func backupLocationProblem(ctx context.Context, app *App, inst *instance.Instanc
 	if filepath.Clean(inst.Dir) == dir {
 		return fmt.Sprintf("%s is your instance folder, and every backup copies the files in it.", dir)
 	}
-	for _, sub := range []string{instance.StateDirName, instance.CertsDir, instance.CaddyDropInDir} {
+	for _, sub := range []string{instance.StateDirName, instance.CertsDir, instance.CADir, instance.CaddyDropInDir} {
 		if within(inst.Path(sub), dir) {
 			return fmt.Sprintf("%s is inside %s, which every backup copies.", dir, inst.Path(sub))
 		}

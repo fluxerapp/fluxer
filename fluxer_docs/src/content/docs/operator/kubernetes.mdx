@@ -90,6 +90,35 @@ The Postgres database and role, and the S3 buckets in `s3.buckets`, must exist b
 
 Point your LiveKit server's webhook at `https://<your domain>/api/webhooks/livekit`, signed with the key in `FLUXER_LIVEKIT_API_KEY`.
 
+## Trust your own CA
+
+When your email server or another service the api calls has a certificate from your own CA, mount that CA's PEM file into the api and worker and set `NODE_EXTRA_CA_CERTS` to its path. This example reads `ca.pem` from a ConfigMap called `smtp-ca`.
+
+```yaml
+api:
+  env:
+    NODE_EXTRA_CA_CERTS: /etc/fluxer/ca/ca.pem
+  extraVolumes:
+    - name: smtp-ca
+      configMap:
+        name: smtp-ca
+  extraVolumeMounts:
+    - name: smtp-ca
+      mountPath: /etc/fluxer/ca
+      readOnly: true
+worker:
+  env:
+    NODE_EXTRA_CA_CERTS: /etc/fluxer/ca/ca.pem
+  extraVolumes:
+    - name: smtp-ca
+      configMap:
+        name: smtp-ca
+  extraVolumeMounts:
+    - name: smtp-ca
+      mountPath: /etc/fluxer/ca
+      readOnly: true
+```
+
 ## Upgrade
 
 Pull the chart and upgrade with the same values file. A new `image.revision` restarts every Fluxer pod, which pulls the newest Fluxer images.

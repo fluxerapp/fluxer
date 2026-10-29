@@ -597,7 +597,7 @@ func addInstanceFiles(w *archiveWriter, inst *instance.Instance) error {
 			return err
 		}
 	}
-	for _, sub := range []string{instance.CertsDir, instance.CaddyDropInDir, stack.GeneratedDir} {
+	for _, sub := range []string{instance.CertsDir, instance.CADir, instance.CaddyDropInDir, stack.GeneratedDir} {
 		if err := addTree(w, filepath.Join(dir, filepath.FromSlash(sub)), FilesPrefix+sub, 0); err != nil {
 			return err
 		}

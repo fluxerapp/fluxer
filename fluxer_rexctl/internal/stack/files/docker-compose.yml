@@ -532,6 +532,8 @@ services:
       FLUXER_POSTGRES_MAX_CONNECTIONS: "${FLUXER_API_POSTGRES_MAX_CONNECTIONS:-25}"
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "${FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED:-true}"
       FLUXER_API_EMBEDDED_WORKER: "${FLUXER_API_EMBEDDED_WORKER:-false}"
+    volumes:
+      - ./ca:/etc/fluxer/ca:ro
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck
@@ -565,6 +567,8 @@ services:
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "${FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS:-25}"
       FLUXER_WORKER_POSTGRES_SYNCHRONOUS_COMMIT: "${FLUXER_WORKER_POSTGRES_SYNCHRONOUS_COMMIT:-}"
+    volumes:
+      - ./ca:/etc/fluxer/ca:ro
     healthcheck:
       test: ["CMD-SHELL", "find /tmp/fluxer-worker-heartbeat -newermt '-30 seconds' | grep -q ."]
       <<: *fluxer-app-healthcheck

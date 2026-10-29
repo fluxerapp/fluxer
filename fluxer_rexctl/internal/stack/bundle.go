@@ -22,7 +22,7 @@ func Bundle(dir string, images map[string]string) error {
 		}
 		files = append(files, renderedFile{OverlayFiles[o], data})
 	}
-	for _, d := range MountedDirs {
+	for d := range MountedDirs {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
 			return err
 		}
