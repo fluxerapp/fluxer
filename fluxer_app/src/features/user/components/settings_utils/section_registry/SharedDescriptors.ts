@@ -32,7 +32,7 @@ export const KEYBOARD_HINTS_DESCRIPTOR = msg({
 	comment: 'Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.',
 });
 export const SHOW_NEKO_DESCRIPTOR = msg({
-	message: 'Show Neko',
+	message: 'Display Neko',
 	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor.',
 });
 export const USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR = msg({
