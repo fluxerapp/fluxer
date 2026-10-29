@@ -258,30 +258,44 @@ input:disabled + .checkbox-custom {
   --color-red-50: oklch(0.258 0.092 26.042);
   --color-red-100: oklch(0.396 0.141 25.723);
   --color-red-200: oklch(0.444 0.177 26.899);
+  --color-red-300: oklch(0.505 0.213 27.518);
   --color-red-700: oklch(0.808 0.114 19.571);
   --color-red-800: oklch(0.885 0.062 18.334);
   --color-red-900: oklch(0.936 0.032 17.717);
   --color-green-50: oklch(0.266 0.065 152.934);
   --color-green-100: oklch(0.393 0.095 152.535);
   --color-green-200: oklch(0.448 0.119 151.328);
+  --color-green-300: oklch(0.527 0.154 150.069);
   --color-green-700: oklch(0.871 0.15 154.449);
   --color-green-800: oklch(0.925 0.084 155.995);
   --color-green-900: oklch(0.962 0.044 156.743);
   --color-blue-50: oklch(0.282 0.091 267.935);
   --color-blue-100: oklch(0.379 0.146 265.522);
   --color-blue-200: oklch(0.424 0.199 265.638);
+  --color-blue-300: oklch(0.488 0.243 264.376);
+  --color-blue-400: oklch(0.546 0.245 262.881);
   --color-blue-600: oklch(0.707 0.165 254.624);
   --color-blue-700: oklch(0.809 0.105 251.813);
   --color-blue-800: oklch(0.882 0.059 254.128);
   --color-amber-50: oklch(0.279 0.077 45.635);
   --color-amber-100: oklch(0.414 0.112 45.904);
   --color-amber-200: oklch(0.473 0.137 46.201);
+  --color-amber-300: oklch(0.555 0.163 48.998);
   --color-amber-700: oklch(0.879 0.169 91.605);
   --color-amber-800: oklch(0.924 0.12 95.746);
+  --color-yellow-50: oklch(0.286 0.066 53.813);
   --color-yellow-100: oklch(0.421 0.095 57.708);
+  --color-yellow-200: oklch(0.476 0.114 61.907);
   --color-yellow-700: oklch(0.905 0.182 98.111);
   --color-orange-50: oklch(0.266 0.079 36.259);
+  --color-orange-200: oklch(0.47 0.157 37.304);
+  --color-orange-600: oklch(0.75 0.183 55.934);
+  --color-orange-700: oklch(0.837 0.128 66.29);
+  --color-orange-900: oklch(0.954 0.038 75.164);
+  --color-indigo-600: oklch(0.673 0.182 276.935);
+  --color-purple-50: oklch(0.291 0.149 302.717);
   --color-purple-100: oklch(0.381 0.176 304.987);
+  --color-purple-700: oklch(0.827 0.119 306.383);
 }
 
 :root[data-theme="dark"] #admin-sidebar {
