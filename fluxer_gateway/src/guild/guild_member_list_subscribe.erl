@@ -38,8 +38,7 @@ subscribe_ranges(SessionId, ListId, Ranges, State) ->
                 SessionId, ListId, NormalizedRanges, SubsTab, StateWithStore
             ),
             RangesToSync = compute_ranges_to_sync(NormalizedRanges, OldRanges, ShouldSync),
-            ShouldActuallySync = ShouldSync andalso RangesToSync =/= [],
-            {StateExclusive, ShouldActuallySync, RangesToSync};
+            {StateExclusive, RangesToSync =/= [], RangesToSync};
         false ->
             {State, false, []}
     end.
