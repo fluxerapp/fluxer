@@ -72,7 +72,7 @@ Settings for the instance's OpenID Connect provider.
 | scope | ?string | Space-separated scopes |
 | allowed_domains | array[string] | Email domains allowed to sign in (up to 100 entries) |
 | auto_provision | boolean | Whether a first sign-in creates an account |
-| username_from_provider | boolean | Whether each SSO sign-in sets the username from the provider, so SSO accounts can't change it. Off by default, and only on `username` instances |
+| username_from_provider | boolean | Whether SSO accounts get their username from the provider and can't change it, on `username` instances only |
 | redirect_uri<sup>1</sup> | ?string | Redirect URI to register with the provider |
 | groups_claim | ?string | The claim that lists a person's groups, or null for `groups` (up to 128 characters) |
 | group_role_mappings<sup>2</sup> | array[[SSO group role mapping](#sso-group-role-mapping-object) object] | Groups whose members get a role in the single community (up to 100 entries) |

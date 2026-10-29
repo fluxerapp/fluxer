@@ -50,3 +50,75 @@ Returns the embeds for `url`. Fluxer only fetches public HTTP and HTTPS addresse
 | 504 | [error response](/http-api/#error-response) | `GATEWAY_TIMEOUT` when the unfurl service doesn't answer within 12 seconds |
 
 The rate limit is 10 requests per minute, on the `unfurl:debug` bucket.
+
+## ActivityPub actor
+
+To preview a fediverse post, the unfurl service fetches the post's ActivityPub object. With `FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64` set, it signs those fetches as the instance actor, and the server it fetches from checks the signature against the actor's public key. Without the key, each actor route returns 404 `NOT_FOUND`.
+
+The actor's ID is the `api_public` [endpoint](/http-api/instance/#instance-endpoints-object) followed by `/activitypub/actor`. Its key ID is the actor ID followed by `#main-key`.
+
+These routes share a rate limit of 60 requests per minute, on the `activity_pub:document` bucket.
+
+## Get the ActivityPub actor
+
+<RouteHeader method="GET" path="/activitypub/actor" unauthenticated />
+
+Returns the instance actor as an `application/activity+json` document of type `Application`, with its public key in PEM form. Its `preferredUsername` is the hostname of the `api_public` endpoint. Responses may be cached for 5 minutes.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | ActivityPub actor document | Request signing is on |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when request signing is off |
+| 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when no unfurl service is answering |
+
+## Get the ActivityPub outbox
+
+<RouteHeader method="GET" path="/activitypub/actor/outbox" unauthenticated />
+
+Returns the actor's outbox as an empty `OrderedCollection`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | ActivityPub collection document | Request signing is on |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when request signing is off |
+| 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when no unfurl service is answering |
+
+## Post to the ActivityPub inbox
+
+<RouteHeader method="POST" path="/activitypub/actor/inbox" unauthenticated />
+
+Accepts any activity and discards it.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 202 | empty | Request signing is on |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when request signing is off |
+| 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when no unfurl service is answering |
+
+## Look up the actor with WebFinger
+
+<RouteHeader method="GET" path="/.well-known/webfinger" unauthenticated />
+
+Returns an `application/jrd+json` document whose `self` link points to the actor. The edge serves this path at the root of the public origin. Responses may be cached for 5 minutes.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| resource | string | The actor ID, or `acct:{hostname}@{host}` for the `api_public` endpoint |
+
+For an `api_public` endpoint of `https://chat.example.com/api`, the account is `acct:chat.example.com@chat.example.com`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | WebFinger document | `resource` is the actor |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when request signing is off or `resource` is anything else |
+| 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when no unfurl service is answering |

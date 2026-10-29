@@ -79,6 +79,7 @@ A voice server is one LiveKit deployment in one region, identified by its `regio
 | longitude | ?number | The longitude used for this server, or null to use the region's |
 | is_active | boolean | Whether new sessions can be placed on the server |
 | soft_connection_limit | ?integer | See [soft connection limits](#soft-connection-limits), or null for none (1-2147483647) |
+| notes | ?string | Admin notes about the server, or null for none |
 | vip_only | boolean | Whether the guild needs `VIP_VOICE` |
 | required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
@@ -295,6 +296,7 @@ Adds a server to a region, and a `server_id` already in the region overwrites th
 | longitude?<sup>1</sup> | ?number | The longitude used for this server, or null to use the region's |
 | is_active? | boolean | Whether new sessions can be placed on the server (default true) |
 | soft_connection_limit? | ?integer | See [soft connection limits](#soft-connection-limits), or null for none (1-2147483647) |
+| notes? | ?string | Admin notes about the server, trimmed, with an empty value stored as null (max 2000 characters) |
 | vip_only? | boolean | Whether the guild needs `VIP_VOICE` (default false) |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
@@ -334,6 +336,7 @@ Updates a server, and an array you send replaces the stored one. Requires `voice
 | longitude?<sup>1</sup> | ?number | The longitude used for this server, or null to use the region's |
 | is_active? | boolean | Whether new sessions can be placed on the server |
 | soft_connection_limit? | ?integer | See [soft connection limits](#soft-connection-limits), or null for none (1-2147483647) |
+| notes? | ?string | Admin notes about the server, trimmed, with null or an empty value clearing them (max 2000 characters) |
 | vip_only? | boolean | Whether the guild needs `VIP_VOICE` |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |

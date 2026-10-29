@@ -1254,7 +1254,7 @@ Returns the [handoff status](#handoff-status-object) and, once, the new session 
 | --- | --- | --- |
 | 200 | [handoff status](#handoff-status-object) object | The status was returned |
 | 400 | [error response](/http-api/#error-response) | `INVALID_HANDOFF_CODE` when the code is malformed |
-| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` when this IP address has 5 failed handoff attempts in 15 minutes and the poll secret is wrong, with `retry_after` |
+| 429 | [error response](/http-api/#error-response) | `HANDOFF_ATTEMPTS_EXCEEDED` with `retry_after` for a wrong poll secret once this IP address has 5 failures in 15 minutes |
 
 The rate limit is 60 requests per minute, on the shared `auth:handoff:status` bucket.
 

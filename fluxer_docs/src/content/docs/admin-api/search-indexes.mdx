@@ -65,12 +65,14 @@ An unknown or expired `job_id` returns the not found structure, and every other 
 | status | string | One of `in_progress`, `completed`, or `failed` |
 | index_type | string | The [search index name](#search-index-names) being rebuilt |
 | phase? | string | For `all`, the index it is on, `messages`, or `queued` before it starts |
-| total? | number | Equal to `indexed` until `status` is `completed`, except for `discovery`, where it is the number of approved listings, and in the `all` phases that count guilds or channels |
-| indexed? | number | The number of documents written so far, or of guilds or channels done in the `guild_members`, `threads` and `messages` phases of `all` |
+| total?<sup>1</sup> | number | The progress total |
+| indexed?<sup>1</sup> | number | The number of documents written so far |
 | started_at? | ISO8601 timestamp | The time the rebuild last reported progress |
 | completed_at? | ISO8601 timestamp | The time the rebuild finished, when `status` is `completed` |
 | failed_at? | ISO8601 timestamp | The time the rebuild failed, when `status` is `failed` |
 | error? | string | The failure text, when `status` is `failed` |
+
+<sup>1</sup> In the `guild_members`, `threads` and `messages` phases of `all`, both count guilds or channels. For `discovery`, `total` is the number of approved listings. Otherwise `total` equals `indexed` until `status` is `completed`.
 
 ## Refresh search index
 
