@@ -23,6 +23,26 @@ pub struct MissingAttachment {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct EmbedField {
+    pub name: String,
+    pub value: String,
+    pub inline: bool,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Embed {
+    pub title: Option<String>,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub author_name: Option<String>,
+    pub fields: Vec<EmbedField>,
+    pub footer_text: Option<String>,
+    pub image_url: Option<String>,
+    pub thumbnail_url: Option<String>,
+    pub nsfw: bool,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Message {
     pub id: String,
     pub content: String,
@@ -42,6 +62,7 @@ pub struct Message {
     pub guild_nsfw: Option<bool>,
     pub attachments: Vec<Attachment>,
     pub missing_attachments: Vec<MissingAttachment>,
+    pub embeds: Vec<Embed>,
 }
 
 pub fn ordered_messages(values: &[Value]) -> Vec<Message> {
@@ -62,6 +83,12 @@ fn message_from_value(value: &Value) -> Message {
         .into_iter()
         .flatten()
         .map(missing_attachment_from_value)
+        .collect();
+    let embeds = value["embeds"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(embed_from_value)
         .collect();
     Message {
         id: value_id(&value["id"]).unwrap_or_default(),
@@ -90,7 +117,42 @@ fn message_from_value(value: &Value) -> Message {
         guild_nsfw: value["guild_nsfw"].as_bool(),
         attachments,
         missing_attachments,
+        embeds,
     }
+}
+
+fn embed_from_value(value: &Value) -> Embed {
+    Embed {
+        title: non_empty_str(&value["title"]),
+        url: non_empty_str(&value["url"]),
+        description: non_empty_str(&value["description"]),
+        author_name: non_empty_str(&value["author"]["name"]),
+        fields: value["fields"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|field| EmbedField {
+                name: field["name"].as_str().unwrap_or("").to_owned(),
+                value: field["value"].as_str().unwrap_or("").to_owned(),
+                inline: field["inline"].as_bool().unwrap_or(false),
+            })
+            .collect(),
+        footer_text: non_empty_str(&value["footer"]["text"]),
+        image_url: embed_media_url(&value["image"]),
+        thumbnail_url: embed_media_url(&value["thumbnail"]),
+        nsfw: value["nsfw"].as_bool().unwrap_or(false),
+    }
+}
+
+fn embed_media_url(value: &Value) -> Option<String> {
+    non_empty_str(&value["proxy_url"]).or_else(|| non_empty_str(&value["url"]))
+}
+
+fn non_empty_str(value: &Value) -> Option<String> {
+    value
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn missing_attachment_from_value(value: &Value) -> MissingAttachment {
@@ -127,5 +189,54 @@ fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
     match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
         (Ok(l), Ok(r)) => l.cmp(&r),
         _ => left.id.cmp(&right.id),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn embeds_are_read_from_the_admin_message() {
+        let messages = ordered_messages(&[json!({
+            "id": "200",
+            "content": "",
+            "webhook_id": "400",
+            "author_bot": true,
+            "embeds": [{
+                "type": "rich",
+                "title": "Deploy finished",
+                "description": "Build 42 is live",
+                "url": "https://example.com/builds/42",
+                "author": {"name": "CI"},
+                "fields": [{"name": "Region", "value": "eu-north", "inline": true}],
+                "footer": {"text": "CI pipeline"},
+                "image": {"url": "https://example.com/image.png", "proxy_url": "https://media.example.com/image.png"},
+                "thumbnail": {"url": "https://example.com/thumb.png"},
+                "nsfw": true
+            }]
+        })]);
+        let message = &messages[0];
+        assert_eq!(message.webhook_id.as_deref(), Some("400"));
+        assert_eq!(message.author_bot, Some(true));
+        assert_eq!(
+            message.embeds,
+            vec![Embed {
+                title: Some("Deploy finished".to_owned()),
+                url: Some("https://example.com/builds/42".to_owned()),
+                description: Some("Build 42 is live".to_owned()),
+                author_name: Some("CI".to_owned()),
+                fields: vec![EmbedField {
+                    name: "Region".to_owned(),
+                    value: "eu-north".to_owned(),
+                    inline: true,
+                }],
+                footer_text: Some("CI pipeline".to_owned()),
+                image_url: Some("https://media.example.com/image.png".to_owned()),
+                thumbnail_url: Some("https://example.com/thumb.png".to_owned()),
+                nsfw: true,
+            }]
+        );
     }
 }

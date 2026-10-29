@@ -33,9 +33,12 @@ One message with its author, content, attachments and the NSFW settings of its c
 | author_global_name | ?string | The author display name, or null when unset |
 | author_discriminator | string | The author discriminator tag (1-10 characters) |
 | author_avatar | ?string | The author avatar hash, or null when unset |
+| author_bot? | boolean | Whether the author is a bot |
+| webhook_id? | ?snowflake | The ID of the webhook that sent the message, or null when a user sent it |
 | content | string | The message content (0-4,000 characters) |
 | timestamp | ISO8601 timestamp | When the message was sent |
 | attachments | array[[Admin message attachment](#admin-message-attachment-object) object] | The attachments of the message (at most 10) |
+| embeds? | array[[embed](/http-api/messages/#embed-object) object] | The embeds of the message |
 
 <sup>1</sup> These come from the channel in the request and are the same on every object in one response. All are null when the channel no longer exists
 

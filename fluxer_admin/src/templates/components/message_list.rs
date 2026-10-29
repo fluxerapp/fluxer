@@ -11,7 +11,7 @@ use super::user_display::format_user_display;
 use crate::config::AdminConfig;
 use crate::utils::timestamps::format_admin_timestamp;
 
-use super::message_data::{Attachment, Message};
+use super::message_data::{Attachment, Embed, Message};
 
 fn is_image(att: &Attachment) -> bool {
     att.content_type
@@ -82,6 +82,106 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
                       class="text-blue-600 hover:underline" { (att.filename) }
                     (attachment_nsfw_badge(att.nsfw.unwrap_or(false)))
                 }
+            }
+        }
+    }
+}
+
+fn safe_link(url: &str) -> Option<&str> {
+    (url.starts_with("https://") || url.starts_with("http://")).then_some(url)
+}
+
+fn render_embed_image(url: &str, alt: &str, class: &str) -> Markup {
+    match safe_link(url) {
+        Some(href) => html! {
+            a href=(href) target="_blank" rel="noopener noreferrer"
+              class="block overflow-hidden rounded bg-neutral-100" {
+                img src=(href) alt=(alt) loading="lazy"
+                    class={(class) " scale-110 object-contain blur-2xl \
+                                    transition-[filter,transform] duration-150 \
+                                    hover:scale-100 hover:blur-none"};
+            }
+        },
+        None => html! {},
+    }
+}
+
+fn render_embed(embed: &Embed) -> Markup {
+    html! {
+        div class="max-w-xl rounded-lg border border-neutral-200 border-l-4 border-l-neutral-400 \
+                   bg-neutral-50 p-3 text-sm"
+            data-message-embed="" {
+            div class="flex gap-3" {
+                div class="min-w-0 flex-1 space-y-1" {
+                    @if let Some(author) = &embed.author_name {
+                        div class="font-medium text-neutral-700 text-xs" { (author) }
+                    }
+                    @if let Some(title) = &embed.title {
+                        @match embed.url.as_deref().and_then(safe_link) {
+                            Some(href) => a href=(href) target="_blank" rel="noopener noreferrer"
+                                class="block break-words font-semibold text-blue-600 hover:underline" {
+                                (title)
+                            },
+                            None => div class="break-words font-semibold text-neutral-900" { (title) },
+                        }
+                    }
+                    @if let Some(description) = &embed.description {
+                        div class="whitespace-pre-wrap break-words text-neutral-800 leading-snug" {
+                            (description)
+                        }
+                    }
+                    @if !embed.fields.is_empty() {
+                        div class="grid gap-2 pt-1" style="grid-template-columns:repeat(3,minmax(0,1fr));" {
+                            @for field in &embed.fields {
+                                @let span = if field.inline { "" } else { "grid-column:1/-1;" };
+                                div class="min-w-0" style=(span) {
+                                    div class="break-words font-semibold text-neutral-900 text-xs" {
+                                        (field.name)
+                                    }
+                                    div class="whitespace-pre-wrap break-words text-neutral-700 text-xs" {
+                                        (field.value)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                @if let Some(thumbnail) = &embed.thumbnail_url {
+                    div class="flex-shrink-0" style="width:80px;" {
+                        (render_embed_image(thumbnail, "Embed thumbnail", "block max-h-20 w-full"))
+                    }
+                }
+            }
+            @if let Some(image) = &embed.image_url {
+                div class="mt-2" {
+                    (render_embed_image(image, "Embed image", "block max-h-96 w-full"))
+                }
+            }
+            @if embed.footer_text.is_some() || embed.nsfw {
+                div class="mt-2 flex flex-wrap items-center gap-2 text-neutral-500 text-xs" {
+                    @if let Some(footer) = &embed.footer_text {
+                        span class="break-words" { (footer) }
+                    }
+                    (attachment_nsfw_badge(embed.nsfw))
+                }
+            }
+        }
+    }
+}
+
+fn render_embeds(msg: &Message) -> Markup {
+    if msg.embeds.is_empty() {
+        return html! {};
+    }
+    let spacer = if !msg.content.is_empty() || !msg.attachments.is_empty() {
+        "mt-2 space-y-2"
+    } else {
+        "mt-1 space-y-2"
+    };
+    html! {
+        div class=(spacer) {
+            @for embed in &msg.embeds {
+                (render_embed(embed))
             }
         }
     }
@@ -192,6 +292,7 @@ fn message_row(
                         (render_image_attachments(msg, include_delete))
                         (render_other_attachments(msg, has_content_or_images))
                     }
+                    (render_embeds(msg))
                     (render_missing_attachments(msg))
                     (meta)
                     @if include_delete && !has_images {
@@ -273,6 +374,7 @@ fn message_row(
                     (render_image_attachments(msg, include_delete))
                     (render_other_attachments(msg, has_content_or_images))
                 }
+                (render_embeds(msg))
                 (render_missing_attachments(msg))
                 (meta)
             }
@@ -353,3 +455,77 @@ const MESSAGE_DELETE_PREFILL_SCRIPT: &str = r#"(function() {
         form.querySelector('[name="basis"]').focus({preventScroll: true});
     });
 })();"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ProxyConfig;
+    use crate::templates::components::message_data::ordered_messages;
+    use serde_json::json;
+
+    fn test_config() -> AdminConfig {
+        AdminConfig {
+            host: "127.0.0.1".to_owned(),
+            port: 3020,
+            secret_key_base: "secret".to_owned(),
+            base_path: String::new(),
+            api_endpoint: "https://api.example.com".to_owned(),
+            api_public_endpoint: "https://api.example.com".to_owned(),
+            media_endpoint: "https://media.example.com".to_owned(),
+            static_cdn_endpoint: "https://static.example.com".to_owned(),
+            reports_bucket_origin: "https://reports.example.com".to_owned(),
+            admin_endpoint: "https://admin.example.com".to_owned(),
+            web_app_endpoint: "https://app.example.com".to_owned(),
+            oauth_client_id: "1".to_owned(),
+            oauth_client_secret: "secret".to_owned(),
+            oauth_redirect_uri: "https://admin.example.com/oauth2_callback".to_owned(),
+            build_version: "test".to_owned(),
+            self_hosted: true,
+            proxy: ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: "x-forwarded-for".to_owned(),
+            },
+        }
+    }
+
+    #[test]
+    fn webhook_message_with_only_embeds_renders_the_embed() {
+        let values = vec![json!({
+            "id": "200",
+            "channel_id": "100",
+            "guild_id": "50",
+            "author_id": "300",
+            "author_username": "Status Bot",
+            "author_discriminator": "0000",
+            "author_avatar": null,
+            "author_global_name": null,
+            "author_bot": true,
+            "webhook_id": "400",
+            "content": "",
+            "timestamp": "2026-10-29T12:00:00.000Z",
+            "attachments": [],
+            "embeds": [{
+                "type": "rich",
+                "title": "Deploy finished",
+                "description": "Build 42 is live",
+                "url": "https://example.com/builds/42",
+                "fields": [{"name": "Region", "value": "eu-north", "inline": true}],
+                "footer": {"text": "CI pipeline"},
+                "image": {"url": "https://media.example.com/image.png"},
+                "thumbnail": {"url": "https://media.example.com/thumb.png"}
+            }]
+        })];
+        let messages = ordered_messages(&values);
+        let html = message_list(&test_config(), "", &messages, true, None, None).into_string();
+        assert!(html.contains("data-message-webhook=\"400\""));
+        assert!(html.contains("data-message-embed"));
+        assert!(html.contains("Deploy finished"));
+        assert!(html.contains("https://example.com/builds/42"));
+        assert!(html.contains("Build 42 is live"));
+        assert!(html.contains("Region"));
+        assert!(html.contains("eu-north"));
+        assert!(html.contains("CI pipeline"));
+        assert!(html.contains("https://media.example.com/image.png"));
+        assert!(html.contains("https://media.example.com/thumb.png"));
+    }
+}

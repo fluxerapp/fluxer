@@ -262,6 +262,8 @@ export class AdminMessageService {
 			author_global_name: message.author.global_name ?? null,
 			author_discriminator: message.author.discriminator,
 			author_avatar: message.author.avatar,
+			author_bot: message.author.bot ?? false,
+			webhook_id: message.webhook_id ?? null,
 			content: message.content ?? '',
 			timestamp: message.timestamp,
 			attachments:
@@ -275,6 +277,7 @@ export class AdminMessageService {
 					height: attachment.height ?? null,
 					size: attachment.size == null ? null : assertSafeByteSize(attachment.size, 'admin message attachment size'),
 				})) ?? [],
+			embeds: message.embeds ?? [],
 		};
 	}
 

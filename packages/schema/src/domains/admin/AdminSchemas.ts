@@ -61,6 +61,7 @@ import {
 	InstanceRegistrationModeSchema,
 	TagStyleSchema,
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
+import {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
@@ -1648,9 +1649,12 @@ export const AdminMessageSchema = z.object({
 	author_global_name: z.string().nullable(),
 	author_discriminator: createStringType(1, 10),
 	author_avatar: z.string().nullable(),
+	author_bot: z.boolean().optional(),
+	webhook_id: SnowflakeStringType.nullable().optional(),
 	content: createStringType(0, 4000),
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
+	embeds: z.array(MessageEmbedResponse).optional(),
 });
 export const LookupMessageResponse = z.object({
 	messages: z.array(AdminMessageSchema).max(100),
