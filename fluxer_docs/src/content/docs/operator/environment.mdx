@@ -295,6 +295,10 @@ The first STUN host LiveKit asks to find its public IP address, as `host:port`. 
 
 The second STUN host LiveKit asks to find its public IP address, as `host:port`. The default is `stun1.l.google.com:19302`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_STUN_SECONDARY`.
 
+### `FLUXER_LIVEKIT_TURN_SERVERS`
+
+TURN relays LiveKit offers to browsers and apps, as a JSON array of objects with `host`, `port`, `protocol` and optional `username` and `credential`, such as `[{"host":"turn.example.com","port":3478,"protocol":"udp","username":"fluxer","credential":"secret"}]`. Use `udp`, `tcp` or `tls` for `protocol`. Set it when browsers and apps can't connect to the LiveKit ports directly, such as behind Cloudflare Tunnel. When it's empty, LiveKit offers no TURN relay. The default is `[]`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_TURN_SERVERS`.
+
 ## Object storage
 
 By default Fluxer keeps files in the bundled object store. To use your own S3-compatible store, set its address and buckets, add `external-object-store.compose.yml` to `COMPOSE_FILE` and put its keys in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.

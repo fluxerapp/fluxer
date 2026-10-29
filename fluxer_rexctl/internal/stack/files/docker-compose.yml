@@ -502,6 +502,7 @@ services:
           stun_servers:
             - ${FLUXER_LIVEKIT_STUN_PRIMARY:-stun.l.google.com:19302}
             - ${FLUXER_LIVEKIT_STUN_SECONDARY:-stun1.l.google.com:19302}
+          turn_servers: ${FLUXER_LIVEKIT_TURN_SERVERS:-[]}
         webhook:
           api_key: ${LIVEKIT_API_KEY:-}
           urls:

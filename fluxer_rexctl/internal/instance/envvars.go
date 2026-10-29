@@ -100,6 +100,7 @@ var envVars = []envVar{
 	{"FLUXER_LIVEKIT_USE_EXTERNAL_IP", "voice", "Whether LiveKit finds its public IP address through STUN. Use `true` or `false`. Set it to `false` when you set FLUXER_LIVEKIT_NODE_IP."},
 	{"FLUXER_LIVEKIT_STUN_PRIMARY", "voice", "The first STUN host LiveKit asks to find its public IP address, as `host:port`. Point it at another STUN host to avoid contacting Google."},
 	{"FLUXER_LIVEKIT_STUN_SECONDARY", "voice", "The second STUN host LiveKit asks to find its public IP address, as `host:port`."},
+	{"FLUXER_LIVEKIT_TURN_SERVERS", "voice", "TURN relays LiveKit offers to browsers and apps, as a JSON array of objects with `host`, `port`, `protocol` and optional `username` and `credential`, such as `[{\"host\":\"turn.example.com\",\"port\":3478,\"protocol\":\"udp\",\"username\":\"fluxer\",\"credential\":\"secret\"}]`. Use `udp`, `tcp` or `tls` for `protocol`. Set it when browsers and apps can't connect to the LiveKit ports directly, such as behind Cloudflare Tunnel. When it's empty, LiveKit offers no TURN relay."},
 	{"FLUXER_S3_ENDPOINT", "storage", ""},
 	{"FLUXER_S3_PUBLIC_ENDPOINT", "storage", "When it's empty, the api and worker use FLUXER_S3_ENDPOINT, and the web app doesn't let browsers upload to the object store."},
 	{"FLUXER_S3_REGION", "storage", ""},

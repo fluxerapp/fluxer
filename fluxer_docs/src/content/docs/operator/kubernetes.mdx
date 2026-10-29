@@ -69,6 +69,8 @@ The chart's `values.yaml` explains every value. These are the ones most installs
 | `env` | Fluxer settings as `NAME: value`, listed on [Environment variables](/operator/environment/) |
 | `secrets.extra` | Settings that have a password or a key |
 
+To relay calls through a TURN server when people can't connect to LiveKit directly, add it to `livekit.extraConfig`, as [Voice behind a tunnel](/operator/reverse-proxy/#voice-behind-a-tunnel) shows.
+
 Under Argo CD or `helm template`, set `secrets.generate: false` and give every key in `secrets.values`, or put a Secret you manage in `secrets.existingSecret`.
 
 ## External services
