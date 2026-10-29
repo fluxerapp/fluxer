@@ -140,8 +140,7 @@ pub(in crate::server) fn transform_error_is_timeout(error: &anyhow::Error) -> bo
     // A shed admission is reported as a timeout: the old era had one admission semaphore whose
     // exhaustion surfaced as TimedSemaphoreError::RequestTimeout, so every caller answered 504
     // with its own timeout reason code. Giving a full queue its own class moves the transform
-    // routes to 503, metadata SVG rasterize to 400, and on a stored asset it stops counting as a
-    // timeout at all, which degrades the reply to the untransformed original.
+    // routes to 503 and metadata SVG rasterize to 400.
     let admission = error.downcast_ref::<TimedSemaphoreError>();
     error.downcast_ref::<MediaError>() == Some(&MediaError::RequestTimeout)
         || admission == Some(&TimedSemaphoreError::RequestTimeout)

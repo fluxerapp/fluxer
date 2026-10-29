@@ -201,6 +201,17 @@ pub(in crate::server) fn is_svg_content_type(content_type: &str) -> bool {
         .is_some_and(|value| value.eq_ignore_ascii_case("image/svg+xml"))
 }
 
+pub(in crate::server) fn is_untransformed_fallback_image(
+    content_type: &str,
+    source_format: Option<AssetExtension>,
+) -> bool {
+    content_type.starts_with("image/")
+        && content_type != "image/heic"
+        && content_type != "image/heif"
+        && source_format != Some(AssetExtension::Svg)
+        && !is_svg_content_type(content_type)
+}
+
 pub(in crate::server) fn extension_from_mime(mime: &str) -> Option<AssetExtension> {
     let mime = mime::normalize(Some(mime))?;
     AssetExtension::ALL

@@ -7,7 +7,10 @@ use crate::{
     output_format::OutputFormat,
     server::{response::error::text_with_reason, transform::TransformRuntime},
 };
-use axum::{http::StatusCode, response::Response};
+use axum::{
+    http::{HeaderValue, StatusCode, header},
+    response::Response,
+};
 use std::{future::Future, time::Instant};
 
 pub(in crate::server) struct CachedTransformRequest<'a, F> {
@@ -50,6 +53,19 @@ where
         runtime.metrics().transform_failures.inc();
     }
     result
+}
+
+pub(in crate::server) fn coalescer_error_is_transient(error: CoalescerError) -> bool {
+    !matches!(
+        error,
+        CoalescerError::WorkFailed | CoalescerError::TooLargeToProcess
+    )
+}
+
+pub(in crate::server) fn forbid_storing(response: &mut Response) {
+    let headers = response.headers_mut();
+    headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    headers.insert("CDN-Cache-Control", HeaderValue::from_static("no-store"));
 }
 
 pub(in crate::server) fn coalescer_failure_response(

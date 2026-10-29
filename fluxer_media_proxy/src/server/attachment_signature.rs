@@ -77,10 +77,16 @@ pub(in crate::server) fn limit_cache_lifetime(response: &mut Response, verificat
     {
         return;
     }
+    let headers = response.headers_mut();
+    if headers
+        .get(header::CACHE_CONTROL)
+        .is_some_and(|value| value == "no-store")
+    {
+        return;
+    }
     let max_age = verification
         .remaining_secs
         .unwrap_or(ATTACHMENT_URL_TTL_SECS);
-    let headers = response.headers_mut();
     let no_transform = headers
         .get(header::CACHE_CONTROL)
         .and_then(|value| value.to_str().ok())

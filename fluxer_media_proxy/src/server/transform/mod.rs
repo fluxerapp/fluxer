@@ -23,7 +23,7 @@ use crate::{
             OriginalImageRequest, content_type_is_trustworthy, default_transform_quality,
             effective_animated_image_output_format, extension_from_mime,
             external_default_output_extension, image_extension_from_filename,
-            is_browser_displayable_image, is_svg_content_type,
+            is_browser_displayable_image, is_svg_content_type, is_untransformed_fallback_image,
             same_format_loaded_image_request_can_use_original_with_sniff, source_image_format,
             transform_response_content_type, transform_static_quality_default,
         },
@@ -36,7 +36,7 @@ use crate::{
         transform::{
             cache::{
                 CachedTransformRequest, cached_transform, cached_transform_hit,
-                coalescer_failure_response,
+                coalescer_error_is_transient, coalescer_failure_response, forbid_storing,
             },
             cache_key::{TransformCacheKeyInput, transform_cache_key},
             execution::{
@@ -568,6 +568,8 @@ async fn serve_image_transform(
     let can_serve_original = ((transform.width.is_none() && transform.height.is_none())
         || options.is_animated())
         && is_browser_displayable_image(sniffed.mime);
+    let fallback_original =
+        is_untransformed_fallback_image(sniffed.mime, source_format).then(|| data.clone());
     let mut too_large_original = None;
     let leader_original = &mut too_large_original;
     let transformed = match cached_transform(CachedTransformRequest {
@@ -600,6 +602,20 @@ async fn serve_image_transform(
                     range_header,
                     requested_download: transform.requested_download,
                 });
+            }
+            if coalescer_error_is_transient(error)
+                && let Some(original) = fallback_original
+            {
+                let mut response = original_bytes_response(OriginalBytes {
+                    method,
+                    data: original,
+                    content_type: sniffed.mime,
+                    filename,
+                    range_header,
+                    requested_download: transform.requested_download,
+                });
+                forbid_storing(&mut response);
+                return response;
             }
             if let Some(response) = coalescer_failure_response(error, "coalescer_timeout_image") {
                 return response;
