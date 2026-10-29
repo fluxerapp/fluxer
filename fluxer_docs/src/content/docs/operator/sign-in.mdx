@@ -26,6 +26,17 @@ On an email instance, and whenever "Allowed Email Domains" is filled in, Fluxer 
 
 Every URL for your provider has to use https and a public address. If your provider runs on your own network or in Docker next to Fluxer, run `rexctl config set sso.allow_private_addresses true`. The URLs still have to use https.
 
+The browser opens your provider's sign-in page, and the API then connects to your provider from inside its container. When your provider runs on the same machine behind the same reverse proxy, the browser part can work while the API can't connect to the provider's public hostname, often because of hairpin NAT or IPv6 in Docker. Sign-in then fails after about 10 seconds, and the API logs say `fetch failed`. `sso.allow_private_addresses` doesn't help here. `rexctl doctor` checks that the API can load your provider's discovery document and connect to its token endpoint, and says which host failed and why. To fix it, run `rexctl config edit` and send the provider's hostname to this machine for the `api` service.
+
+```yaml
+services:
+  api:
+    extra_hosts:
+      - "id.example.com:host-gateway"
+```
+
+Your reverse proxy has to accept connections from Docker, for example by listening on every interface. You can also make the provider's hostname resolve to an address that the API container can connect to.
+
 With "Automatically provision users on first SSO login" on, the first sign-in from someone new creates their account. This happens even when registration is closed or needs an invite, and if new accounts need your approval, they still wait for it. To choose who gets in, limit access to Fluxer at your provider or fill in "Allowed Email Domains". In single-community mode, "Community Roles From Groups" maps groups at your provider to roles in the community, and each SSO sign-in adds or removes those roles. If the provider leaves out the groups claim, the person loses every mapped role. Keycloak leaves the claim out when someone is in no groups. Entra leaves it out when someone is in too many groups. Limit the token to the groups you map.
 
 When your provider's discovery document lists `client_secret_post`, Fluxer sends the client secret in the request body. When it lists no methods, or lists `client_secret_basic` and not `client_secret_post`, Fluxer uses HTTP Basic authentication first. If the provider turns the first attempt down with a 400 or 401 for any reason other than `invalid_grant`, Fluxer tries the other method once and remembers what worked. Fluxer doesn't follow redirects from your provider's discovery, token, userinfo or keys URLs, and each URL you enter has to be the one that answers. Fluxer can't use signed userinfo responses (`application/jwt`), and sign-in fails with `SSO_USER_INFO_SIGNED_RESPONSE_UNSUPPORTED` until you turn off userinfo signing for the client at your provider. When a sign-in fails at the provider, the API logs say what the provider sent back.

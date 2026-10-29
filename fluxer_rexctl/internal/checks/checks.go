@@ -110,6 +110,7 @@ var order = []string{
 	"postgres-scram",
 	"livekit-ip",
 	"client-ip",
+	"sso-provider",
 	"backup-age",
 }
 
