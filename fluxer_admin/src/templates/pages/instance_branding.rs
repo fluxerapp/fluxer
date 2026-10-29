@@ -145,19 +145,24 @@ pub(super) fn branding_section(
                             "Links to these domains open without the external link warning for everyone on this instance. Put one domain on each line, up to 50. Start a line with *. to also cover its subdomains, as in *.example.com. Your instance's own addresses are always trusted."
                         }
                     }
-                    div class="grid grid-cols-1 gap-4 border-t border-neutral-200 pt-6 sm:grid-cols-2" {
-                        (text_input(
-                            "app_status_page_url",
-                            "Status page URL",
-                            app_public.branding.status_page_url.as_deref().unwrap_or(""),
-                            "https://fluxerstatus.com",
-                        ))
-                        (text_input(
-                            "app_status_page_incident_history_url",
-                            "Status page history URL",
-                            app_public.branding.status_page_incident_history_url.as_deref().unwrap_or(""),
-                            "https://fluxerstatus.com/history",
-                        ))
+                    div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {
+                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                            (text_input(
+                                "app_status_page_url",
+                                "Status page URL",
+                                app_public.branding.status_page_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com",
+                            ))
+                            (text_input(
+                                "app_status_page_incident_history_url",
+                                "Status page history URL",
+                                app_public.branding.status_page_incident_history_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com/history",
+                            ))
+                        }
+                        p class="text-xs leading-5 text-neutral-500" {
+                            "The web app links to the status page when loading takes a long time. Fluxer checks whether it is an Instatus page. If it is, the web app also reads its current incidents and maintenance automatically. Pages from other providers are only linked."
+                        }
                     }
                     div class="space-y-2" {
                         (Checkbox {

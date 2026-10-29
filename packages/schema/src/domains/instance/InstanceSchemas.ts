@@ -58,6 +58,11 @@ export const InstanceBrandingSchema = z
 			.describe('Optional favicon URL a self-hosted instance shows when the browser uses a dark color scheme'),
 		theme_color: z.string().nullable().describe('Optional browser theme color'),
 		status_page_url: z.string().nullable().describe('Optional public status page URL'),
+		status_page_instatus: z
+			.boolean()
+			.describe(
+				'Whether the server detected that the status page is an Instatus page that clients can read current incidents from',
+			),
 		status_page_incident_history_url: z
 			.string()
 			.nullable()

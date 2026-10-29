@@ -480,6 +480,8 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 				: null,
 			theme_color: normalizeThemeColor(branding.theme_color),
 			status_page_url: readOptionalText(branding, 'status_page_url'),
+			status_page_instatus:
+				readOptionalBoolean(branding, 'status_page_instatus', 'appPublic.branding.status_page_instatus') ?? false,
 			status_page_incident_history_url: readOptionalText(branding, 'status_page_incident_history_url'),
 			premium_product_name: readOptionalText(branding, 'premium_product_name') ?? DEFAULT_PREMIUM_PRODUCT_NAME,
 			premium_info_url: Object.hasOwn(branding, 'premium_info_url')

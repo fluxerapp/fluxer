@@ -884,6 +884,10 @@ function parseBranding(value: unknown): Readonly<Partial<InstanceBranding>> {
 			branding[key] = readAbsoluteHTTPURL(source, key);
 		}
 	}
+	const statusPageInstatus = readBoolean(source, 'status_page_instatus');
+	if (statusPageInstatus != null) {
+		branding.status_page_instatus = statusPageInstatus;
+	}
 	if (Object.hasOwn(source, 'theme_color')) {
 		branding.theme_color = readNonEmptyString(source, 'theme_color');
 	}

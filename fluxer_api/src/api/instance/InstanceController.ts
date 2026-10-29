@@ -11,6 +11,7 @@ import {
 import {customBadgeImageUrl} from '@app/api/instance/InstanceAssetReferences';
 import type {CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
 import {assertSetupToken} from '@app/api/instance/SetupToken';
+import {getStatusPageDetector} from '@app/api/instance/StatusPageDetector';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -199,6 +200,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getActiveInstanceNotice(),
 				instanceConfigRepository.getCustomBadges(),
 			]);
+			const statusPageInstatus = await getStatusPageDetector().isInstatus(appPublicConfig.branding.status_page_url);
 			const lockReason =
 				Config.instance.selfHosted && !appPublicConfig.setup.configured
 					? await instanceConfigRepository.getAccountIdentityLockReason()
@@ -216,6 +218,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					gifService,
 					{
 						...appPublicConfig,
+						branding: {...appPublicConfig.branding, status_page_instatus: statusPageInstatus},
 						setup: {
 							...appPublicConfig.setup,
 							admin_url: Config.endpoints.admin || null,

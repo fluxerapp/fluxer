@@ -135,6 +135,7 @@ function projectAppPublic(appPublic: InstanceDiscoveryDocument['appPublic']): In
 			favicon_dark_url: value.branding.favicon_dark_url ?? null,
 			theme_color: requireDefined(value.branding.theme_color, 'app_public.branding.theme_color'),
 			status_page_url: value.branding.status_page_url ?? null,
+			status_page_instatus: value.branding.status_page_instatus ?? false,
 			status_page_incident_history_url: value.branding.status_page_incident_history_url ?? null,
 			premium_product_name: value.branding.premium_product_name ?? DEFAULT_PREMIUM_PRODUCT_NAME,
 			premium_info_url: value.branding.premium_info_url ?? null,

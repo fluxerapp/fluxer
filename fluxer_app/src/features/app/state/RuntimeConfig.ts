@@ -709,7 +709,12 @@ class RuntimeConfig {
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
 		const current = this.requireActiveSnapshot();
 		const appPublic: InstanceAppPublic = {
-			branding: config.app_public.branding,
+			branding: {
+				...config.app_public.branding,
+				status_page_instatus:
+					current.appPublic.branding.status_page_instatus &&
+					current.appPublic.branding.status_page_url === config.app_public.branding.status_page_url,
+			},
 			setup: {
 				configured: config.app_public.setup.configured,
 				admin_url: current.appPublic.setup.admin_url,
@@ -774,6 +779,10 @@ class RuntimeConfig {
 
 	get statusPageUrl(): string {
 		return this.activeRuntime?.snapshot.appPublic.branding.status_page_url ?? '';
+	}
+
+	get statusPageInstatus(): boolean {
+		return this.activeRuntime?.snapshot.appPublic.branding.status_page_instatus ?? false;
 	}
 
 	isSelfHosted(): boolean {

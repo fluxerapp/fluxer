@@ -219,11 +219,14 @@ export interface InstanceRegistrationConfig extends InstanceRegistration {
 	allowed_email_domains: Array<string>;
 }
 
-interface InstanceAppPublicConfig extends Omit<InstanceAppPublic, 'setup'> {
+type InstanceBrandingConfig = Omit<InstanceBranding, 'status_page_instatus'>;
+
+interface InstanceAppPublicConfig extends Omit<InstanceAppPublic, 'setup' | 'branding'> {
+	branding: InstanceBrandingConfig;
 	setup: Pick<InstanceSetup, 'configured'>;
 }
 
-type InstanceBrandingPatch = Partial<Omit<InstanceBranding, 'premium_product_name'>> & {
+type InstanceBrandingPatch = Partial<Omit<InstanceBrandingConfig, 'premium_product_name'>> & {
 	premium_product_name?: string | null;
 };
 
@@ -943,6 +946,7 @@ function parseStoredCollection<T>(schema: z.ZodType<T>, raw: string | null, sect
 
 const StoredInstanceAppPublicSchema = InstanceAppPublicSchema.extend({
 	branding: InstanceAppPublicSchema.shape.branding
+		.omit({status_page_instatus: true})
 		.extend({premium_product_name: z.string().max(40).nullable()})
 		.partial()
 		.optional(),

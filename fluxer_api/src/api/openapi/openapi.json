@@ -37628,6 +37628,10 @@
 					},
 					"theme_color": {"description": "Optional browser theme color", "type": ["string", "null"]},
 					"status_page_url": {"description": "Optional public status page URL", "type": ["string", "null"]},
+					"status_page_instatus": {
+						"type": "boolean",
+						"description": "Whether the server detected that the status page is an Instatus page that clients can read current incidents from"
+					},
 					"status_page_incident_history_url": {
 						"description": "Optional public status page incident history URL",
 						"type": ["string", "null"]
@@ -37668,6 +37672,7 @@
 					"favicon_dark_url",
 					"theme_color",
 					"status_page_url",
+					"status_page_instatus",
 					"status_page_incident_history_url",
 					"premium_product_name",
 					"premium_info_url",
