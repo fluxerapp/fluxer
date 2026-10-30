@@ -48,7 +48,7 @@ func keepSearchReadable(ctx context.Context, app *App, inst *instance.Instance, 
 	}
 	name := capitalise(fluxerName(release.Short(version)))
 	list, _ := backup.List(inst.BackupDir())
-	if b := backup.NewestOf(list, version); b != nil {
+	if b := backupFor(inst, list, version); b != nil {
 		err := backup.RestoreVolume(ctx, b.Path, inst, p, searchVolume)
 		if err == nil {
 			app.UI.Info("%s can't read the search index that a newer Meilisearch wrote, so rexctl put back the copy from the backup from %s. Messages sent since then don't show up in search.", name, backupTime(b.CreatedAt))

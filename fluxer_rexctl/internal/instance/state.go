@@ -28,6 +28,7 @@ type State struct {
 	Engine          EngineRef         `json:"engine"`
 	Release         string            `json:"release"`
 	PreviousRelease string            `json:"previous_release"`
+	PreviousBackup  string            `json:"previous_backup,omitempty"`
 	FailedRelease   string            `json:"failed_release"`
 	Upgrade         *Upgrade          `json:"upgrade"`
 	Pending         *Pending          `json:"pending"`
@@ -144,7 +145,7 @@ func parseStateRepairing(data []byte, dir string, repairing []string) (*State, e
 }
 
 var stateFields = map[string]bool{
-	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "failed_release": true,
+	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "previous_backup": true, "failed_release": true,
 	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
 	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "ejected": true,
 	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true,

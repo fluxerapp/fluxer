@@ -85,7 +85,10 @@ func (w *archiveWriter) addBytes(name string, mode int64, data []byte) error {
 }
 
 func (w *archiveWriter) finish(m *Manifest) error {
-	m.Format = FormatVersion
+	m.Format = formatFull
+	if m.WithoutUploads() {
+		m.Format = FormatVersion
+	}
 	m.Entries = append([]Entry{}, w.entries...)
 	if m.Volumes == nil {
 		m.Volumes = []string{}

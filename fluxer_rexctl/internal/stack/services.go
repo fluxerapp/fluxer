@@ -21,6 +21,8 @@ var Volumes = []string{
 
 var BackupVolumes = []string{"seaweedfs-data", "valkey-data", "nats-data", "meilisearch-data"}
 
+var UploadsServices = []string{"seaweedfs", "seaweedfs-init"}
+
 type DataMount struct {
 	Service string
 	Target  string

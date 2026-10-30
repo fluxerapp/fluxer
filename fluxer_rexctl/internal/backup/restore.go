@@ -6,6 +6,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +28,16 @@ import (
 const postgresReadyTimeout = 3 * time.Minute
 
 var errStop = errors.New("backup: stop")
+
+var ErrUploadsNotHere = errors.New("backup: the uploads this backup belongs with aren't on this machine")
+
+type UploadsNotHereError struct {
+	Why string
+}
+
+func (e *UploadsNotHereError) Error() string { return ErrUploadsNotHere.Error() + ": " + e.Why }
+
+func (e *UploadsNotHereError) Unwrap() error { return ErrUploadsNotHere }
 
 type RestoreOptions struct {
 	Progress func(stage string)
@@ -82,6 +93,9 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil && !errors.Is(err, instance.ErrNotFound) {
 		return nil, err
 	}
+	if err := CheckUploadsInPlace(ctx, dir, existing, e, m); err != nil {
+		return nil, err
+	}
 	if err := checkProjectFree(ctx, e, m.Project, dir); err != nil {
 		return nil, err
 	}
@@ -92,18 +106,9 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	}
 
 	progress(StageClearing)
-	var stale []string
-	if existing != nil {
-		if existing.State != nil {
-			stale = slices.Collect(maps.Values(existing.State.Images.Refs))
-		}
-		stale = append(stale, release.KeptImages(existing)...)
-		if err := e.Named(existing.Project(), existing.Dir).Down(ctx, true); err != nil {
-			return nil, err
-		}
-		if err := clearInstanceFiles(dir); err != nil {
-			return nil, err
-		}
+	stale, err := clearForRestore(ctx, dir, existing, e, m)
+	if err != nil {
+		return nil, err
 	}
 
 	progress(StageFiles)
@@ -133,7 +138,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil {
 		return nil, &RestoreError{Part: "containers", Err: err}
 	}
-	if err := p.Down(ctx, true); err != nil {
+	if err := down(ctx, p, m); err != nil {
 		return nil, err
 	}
 	if err := p.Create(ctx); err != nil {
@@ -167,8 +172,179 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{}); err != nil {
 		return nil, err
 	}
+	if err := os.Remove(restoreMarkerPath(dir)); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
 	removeStaleImages(ctx, p, stale)
 	return inst, nil
+}
+
+func clearForRestore(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, m *Manifest) ([]string, error) {
+	if existing == nil {
+		return nil, nil
+	}
+	var stale []string
+	if existing.State != nil {
+		stale = slices.Collect(maps.Values(existing.State.Images.Refs))
+	}
+	stale = append(stale, release.KeptImages(existing)...)
+	if m.WithoutUploads() {
+		if err := writeRestoreMarker(dir, m, e); err != nil {
+			return nil, err
+		}
+	}
+	if err := down(ctx, e.Named(existing.Project(), existing.Dir), m); err != nil {
+		return nil, err
+	}
+	if err := clearInstanceFiles(dir); err != nil {
+		return nil, err
+	}
+	return stale, nil
+}
+
+var downProject = func(ctx context.Context, p *engine.Project, keep []string) error {
+	if len(keep) > 0 {
+		return p.DownKeeping(ctx, keep...)
+	}
+	return p.Down(ctx, true)
+}
+
+func down(ctx context.Context, p *engine.Project, m *Manifest) error {
+	return downProject(ctx, p, keptVolumes(m))
+}
+
+const restoreMarkerName = "restoring-without-uploads.json"
+
+type restoreMarker struct {
+	Project string             `json:"project"`
+	Domain  string             `json:"domain"`
+	Engine  instance.EngineRef `json:"engine"`
+	Uploads UploadsRef         `json:"uploads"`
+}
+
+func restoreMarkerPath(dir string) string {
+	return filepath.Join(dir, instance.StateDirName, restoreMarkerName)
+}
+
+func writeRestoreMarker(dir string, m *Manifest, e *engine.Engine) error {
+	data, err := json.Marshal(restoreMarker{Project: m.Project, Domain: m.Domain, Engine: instance.EngineRef{Kind: string(e.Kind), Host: e.Host, ID: e.ID}, Uploads: *m.Uploads})
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(restoreMarkerPath(dir)), 0o700); err != nil {
+		return err
+	}
+	return envfile.WriteFileAtomic(restoreMarkerPath(dir), data, true)
+}
+
+func ResumesRestore(dir string, m *Manifest) bool {
+	mk := readRestoreMarker(dir)
+	return mk != nil && m.Uploads != nil && mk.Project == m.Project && mk.Domain == m.Domain && mk.Uploads == *m.Uploads
+}
+
+func readRestoreMarker(dir string) *restoreMarker {
+	if dir == "" {
+		return nil
+	}
+	data, err := os.ReadFile(restoreMarkerPath(dir))
+	if err != nil {
+		return nil
+	}
+	var mk restoreMarker
+	if json.Unmarshal(data, &mk) != nil {
+		return nil
+	}
+	return &mk
+}
+
+func keptVolumes(m *Manifest) []string {
+	if m.WithoutUploads() {
+		return []string{UploadsVolume}
+	}
+	return nil
+}
+
+func CheckUploadsInPlace(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, m *Manifest) error {
+	if existing != nil {
+		if err := os.Remove(restoreMarkerPath(dir)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	if !m.WithoutUploads() {
+		return nil
+	}
+	var vols []engine.Volume
+	if m.Uploads != nil && m.Uploads.Bind == "" && e != nil && (existing != nil || ResumesRestore(dir, m)) {
+		var err error
+		if vols, err = e.Volumes(ctx, m.Project); err != nil {
+			return err
+		}
+	}
+	return uploadsInPlace(dir, existing, e, vols, m)
+}
+
+func uploadsInPlace(dir string, existing *instance.Instance, e *engine.Engine, vols []engine.Volume, m *Manifest) error {
+	refuse := func(why string) error { return &UploadsNotHereError{Why: why} }
+	if existing == nil && ResumesRestore(dir, m) {
+		mk := readRestoreMarker(dir)
+		switch {
+		case e == nil:
+			return refuse("no engine to check the uploads on")
+		case movesEngine(mk.Engine, e):
+			return refuse("the restore moves the instance to another engine")
+		}
+		return uploadsIdentity(m.Uploads, vols)
+	}
+	switch {
+	case existing == nil || existing.State == nil:
+		return refuse("there is no instance here")
+	case m.Project != existing.Project() || m.Domain != existing.Domain():
+		return refuse(fmt.Sprintf("the backup is for %s and the instance here is %s", m.Domain, existing.Domain()))
+	case e == nil:
+		return refuse("no engine to check the uploads on")
+	case movesEngine(existing.State.Engine, e):
+		return refuse("the restore moves the instance to another engine")
+	case m.Uploads == nil:
+		return refuse("the backup doesn't record which uploads it belongs with")
+	case m.Uploads.Definition == "" || m.Uploads.Definition != uploadsDefinition(existing):
+		return refuse("the uploads here were written by another version of the uploads service")
+	}
+	return uploadsIdentity(m.Uploads, vols)
+}
+
+func uploadsIdentity(u *UploadsRef, vols []engine.Volume) error {
+	refuse := func(why string) error { return &UploadsNotHereError{Why: why} }
+	if u.Bind != "" {
+		ino, ok := fileInode(u.Bind)
+		if !ok {
+			return refuse(u.Bind + " is missing")
+		}
+		id, err := bindID(u.Bind, false)
+		if err != nil {
+			return refuse("couldn't read " + filepath.Join(u.Bind, UploadsIDFile))
+		}
+		if u.ID == "" || id != u.ID || ino != u.Inode {
+			return refuse(u.Bind + " was made again since the backup")
+		}
+		return nil
+	}
+	for _, v := range vols {
+		if v.Name != u.Volume {
+			continue
+		}
+		if v.CreatedAt != u.CreatedAt {
+			return refuse("volume " + u.Volume + " was made again since the backup")
+		}
+		return nil
+	}
+	return refuse("volume " + u.Volume + " is missing")
+}
+
+func movesEngine(was instance.EngineRef, e *engine.Engine) bool {
+	if was.Kind != "" && was.Kind != string(e.Kind) {
+		return true
+	}
+	return was.ID != "" && e.ID != "" && was.ID != e.ID
 }
 
 func adoptRestored(inst *instance.Instance, e *engine.Engine) error {
@@ -185,6 +361,11 @@ func adoptRestored(inst *instance.Instance, e *engine.Engine) error {
 	if prev := st.PreviousRelease; prev != "" {
 		if _, err := os.Stat(inst.ReleaseDir(prev)); err != nil {
 			st.PreviousRelease = ""
+		}
+	}
+	if st.PreviousBackup != "" {
+		if _, err := os.Stat(st.PreviousBackup); err != nil || st.PreviousRelease == "" {
+			st.PreviousBackup = ""
 		}
 	}
 	rendered, err := renderRestored(inst)
@@ -434,6 +615,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var sink *volumeSink
+	uploadsBind := ""
 	closeSink := func(failed error) error {
 		if sink == nil {
 			return failed
@@ -460,6 +642,9 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		v, ok := dataVolume(p.Model, p.Name, vols, short)
 		if !ok {
 			return &RestoreError{Part: short, Err: errors.New("the volume wasn't created")}
+		}
+		if short == UploadsVolume && v.bind != "" {
+			uploadsBind = v.bind
 		}
 		pr, pw := io.Pipe()
 		s := &volumeSink{name: short, pw: pw, tw: tar.NewWriter(pw), done: make(chan error, 1), out: &bytes.Buffer{}}
@@ -539,9 +724,23 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		return nil
 	})
 	if err != nil {
-		return closeSink(err)
+		err = closeSink(err)
+	} else {
+		err = closeSink(nil)
 	}
-	return closeSink(nil)
+	if uploadsBind != "" {
+		if ferr := forgetUploadsID(uploadsBind); err == nil {
+			err = ferr
+		}
+	}
+	return err
+}
+
+func forgetUploadsID(bind string) error {
+	if err := os.Remove(filepath.Join(bind, UploadsIDFile)); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return &RestoreError{Part: UploadsVolume, Err: err}
+	}
+	return nil
 }
 
 func restoreDump(ctx context.Context, p *engine.Project, r io.Reader) error {

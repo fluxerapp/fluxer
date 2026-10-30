@@ -22,7 +22,7 @@ func TestUnitBinariesReadWhatRexctlWrites(t *testing.T) {
 		"rootful boot unit":  {BootUnit{Project: "fluxer", Dir: "/srv/fluxer", Binary: bin}.render(false, "fluxer"), LibexecBinary},
 		"rootless boot unit": {BootUnit{Project: "fluxer", Dir: "/srv/fluxer", Binary: bin, Rootless: true}.render(false, ""), bin},
 		"upgrade service":    {a.service("fluxer"), bin},
-		"cron job":           {a.cron(4, 0, "fluxer"), bin},
+		"cron job":           {a.cron(-1, 4, 0, "fluxer"), bin},
 	} {
 		if got := unitBinaries([]byte(c.unit)); !slices.Equal(got, []string{c.want}) {
 			t.Errorf("%s runs %q, want %q", name, got, c.want)

@@ -22,6 +22,34 @@ If you installed Fluxer before rexctl existed, upgrade it with the current insta
 curl -fsSL https://fluxer.dev/install.sh | sh -s -- --update --dir /path/to/your/instance
 ```
 
+### Upgrade by itself
+
+```sh
+rexctl auto-upgrade on
+```
+
+This runs `rexctl upgrade --yes` every day at about 04:00 with a systemd timer, or with cron on machines without systemd. Each run backs up your instance first and goes back to the version you had if the new one doesn't start. Run `rexctl auto-upgrade` to see when it runs next and how the last run went, and `rexctl auto-upgrade off` to stop it.
+
+- `--at 03:30` picks the time of day, in this machine's time zone. A systemd timer starts within 30 minutes after it, and cron starts at a fixed minute in that window.
+- `--day sun` upgrades once a week on that day. A weekly run that is skipped or fails waits a week, and you can run `rexctl upgrade` yourself at any time.
+- `--notify https://ntfy.sh/your-topic` posts to that address when an upgrade installs a new release or fails.
+- `--backup without-uploads` leaves uploads out of the backup before each upgrade.
+- `--full-backup monthly` also makes a full backup with uploads on the 1st of every month.
+
+Run `rexctl auto-upgrade on` again to change any of these. A flag you leave out goes back to its default.
+
+Uploads are often the largest part of an instance, and they stay on this machine while Fluxer upgrades. A backup without them is enough to go back to the version you had, and it takes less time and disk space. When a new version changes how uploads are stored, rexctl includes them in that backup anyway and says so.
+
+A backup without uploads doesn't help if you lose the machine. Keep a full backup on a schedule as well.
+
+```sh
+rexctl auto-upgrade on --day sun --backup without-uploads --full-backup monthly
+```
+
+This upgrades every Sunday with backups that leave out uploads, and makes a full backup with `rexctl backup` on the 1st of every month. The full backup has its own systemd timer or cron entry and starts 3 hours before the upgrade time. With systemd, an upgrade waits until a running full backup has finished, and a backup missed while the machine was off runs once the machine starts again. With cron, an upgrade that starts while the full backup is still running skips that run, and a missed backup waits for the next month. `rexctl auto-upgrade off` stops both.
+
+With `--backup without-uploads`, `rexctl auto-upgrade` warns when no backup from the last 5 weeks has your uploads.
+
 ## Roll back
 
 ```sh
@@ -29,6 +57,8 @@ rexctl rollback
 ```
 
 This goes back to the version you had before your last upgrade and keeps your database as it is. To also restore the backup rexctl made before the upgrade, add `--restore-database`.
+
+If that backup leaves out uploads, the uploads stay as they are. Files uploaded since the upgrade stay on disk, and attachments deleted since the upgrade don't come back. For backups before upgrades that also hold uploads, run `rexctl auto-upgrade on` again with your other flags and `--backup full`, or pass `--backup full` to `rexctl upgrade`. This applies from the next upgrade.
 
 ## Back up and restore
 
@@ -40,7 +70,9 @@ This saves your settings, database and uploads in one file in the `backups` fold
 
 rexctl keeps the newest 3 backups and deletes older ones after each backup, but it always keeps the one `rexctl rollback` needs. To keep more, run `rexctl backup keep 10`, or `rexctl backup keep all` to keep every backup. To save backups on another drive, run `rexctl backup location /mnt/backups/fluxer`.
 
-To put your instance back the way it was when a backup was made, find the file with `rexctl backup list` and pass its path to `rexctl restore`.
+To put your instance back the way it was when a backup was made, find the file with `rexctl backup list` and pass its path to `rexctl restore`. `rexctl backup list` marks the backups without uploads.
+
+A backup without uploads only restores on the instance it was made for, where it leaves the uploads as they are. If that restore stops partway, run the same `rexctl restore` again. Anywhere else rexctl refuses before it changes anything. In the folder of the instance the backup was made for, it also suggests that instance's newest backup with uploads. rexctl never deletes the newest backup with uploads to keep the number of backups down.
 
 ```sh
 rexctl restore /opt/fluxer/backups/fluxer-chat.example.com-20261105-120000.tar.zst
@@ -48,7 +80,7 @@ rexctl restore /opt/fluxer/backups/fluxer-chat.example.com-20261105-120000.tar.z
 
 ## Move to a new machine
 
-Back up your instance on the old machine and copy the backup file to the new one. On the new machine, install rexctl and restore the backup with one command, run from the folder you copied the backup to.
+Back up your instance on the old machine with `rexctl backup` and copy the backup file to the new one. A backup without uploads can't move an instance. On the new machine, install rexctl and restore the backup with one command, run from the folder you copied the backup to.
 
 ```sh
 curl -fsSL https://fluxer.dev/install.sh | sh -s -- restore fluxer-chat.example.com-20261105-120000.tar.zst

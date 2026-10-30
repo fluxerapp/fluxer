@@ -169,7 +169,7 @@ func importEjected(ctx context.Context, dir string, e *engine.Engine, s *State, 
 			return nil, nil, err
 		}
 		r.Minted, r.Release = minted, updated.Release
-		s.PreviousRelease, s.Release = s.Release, updated.Release
+		s.PreviousRelease, s.Release, s.PreviousBackup = s.Release, updated.Release, ""
 		s.Images = Images{Release: updated.Release, Refs: maps.Clone(updated.Images)}
 		if s.Rendered, err = stack.Hashes(stack.Embedded(), stack.OverlaysFor(s.Settings), s.Images.Refs, s.Project); err != nil {
 			return nil, nil, err

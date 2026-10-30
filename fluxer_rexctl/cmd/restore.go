@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -28,7 +29,7 @@ func newRestoreCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "restore <file>",
 		Short: "Restore your instance from a backup",
-		Long:  "Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command.",
+		Long:  "Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are.",
 		Args:  exactArgs("the backup file"),
 		RunE: func(c *cobra.Command, args []string) error {
 			return runRestore(c.Context(), app, args[0], confirm, engineFlag)
@@ -75,14 +76,36 @@ func runRestore(ctx context.Context, app *App, arg, confirm, engineFlag string) 
 		}
 	}
 
+	old := oldEngineRef(existing)
+	if m.WithoutUploads() {
+		if existing == nil && !backup.ResumesRestore(dir, m) || toDocker && existing != nil && old.Kind != string(engine.Docker) {
+			return uploadsNotHere(existing, m.Domain, m.Project, backup.ErrUploadsNotHere)
+		}
+		e, err := app.Engine(ctx, existing)
+		if err != nil {
+			return err
+		}
+		if toDocker && e.Kind != engine.Docker {
+			return uploadsNotHere(existing, m.Domain, m.Project, backup.ErrUploadsNotHere)
+		}
+		if err := checkUploadsInPlace(ctx, dir, existing, e, path); err != nil {
+			return err
+		}
+	}
+
 	made := backupTime(m.CreatedAt)
 	domain := m.Domain
 	what := fmt.Sprintf("This restores %s in %s from the backup made on %s.", m.Domain, dir, made)
-	if existing != nil {
+	switch {
+	case existing != nil && m.WithoutUploads():
+		domain = existing.Domain()
+		what = fmt.Sprintf("This replaces everything on %s except uploads with the backup made on %s. Uploads stay as they are.", domain, made)
+	case existing != nil:
 		domain = existing.Domain()
 		what = fmt.Sprintf("This replaces everything on %s with the backup made on %s.", domain, made)
+	case m.WithoutUploads():
+		what = fmt.Sprintf("This finishes restoring %s in %s from the backup made on %s. Uploads stay as they are.", m.Domain, dir, made)
 	}
-	old := oldEngineRef(existing)
 	if toDocker && old.Kind == string(engine.Podman) {
 		what += " Fluxer stops on Podman and starts on Docker. Podman keeps its copy of your data."
 	}
@@ -104,6 +127,34 @@ func runRestore(ctx context.Context, app *App, arg, confirm, engineFlag string) 
 		return app.Locked(ctx, existing, run)
 	}
 	return run()
+}
+
+func checkUploadsInPlace(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, path string) error {
+	m, err := backup.ReadManifest(path)
+	if err != nil {
+		return backupFileErr(path, err)
+	}
+	err = backup.CheckUploadsInPlace(ctx, dir, existing, e, m)
+	switch {
+	case errors.Is(err, backup.ErrUploadsNotHere):
+		return uploadsNotHere(existing, m.Domain, m.Project, err)
+	case err != nil:
+		return engineFailure(err)
+	}
+	return nil
+}
+
+func uploadsNotHere(existing *instance.Instance, domain, project string, err error) error {
+	fix := "Restore a backup made with rexctl backup."
+	if existing != nil {
+		if list, lerr := backup.List(existing.BackupDir()); lerr == nil {
+			same := slices.DeleteFunc(list, func(b backup.Info) bool { return b.Domain != domain || b.Project != project })
+			if b := backup.NewestWithUploads(same); b != nil {
+				fix = fmt.Sprintf("Restore %s, the newest backup with uploads.", b.Path)
+			}
+		}
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: "This backup leaves out uploads, and this machine doesn't have the uploads it belongs with.", Fix: fix, Err: err}
 }
 
 func oldEngineRef(inst *instance.Instance) instance.EngineRef {
@@ -318,6 +369,8 @@ func restoreErr(path string, err error, logPath string) error {
 			return engineFailure(pull.Err)
 		}
 		return ui.Wrap(pull.Err, "Couldn't download Fluxer.", "Run rexctl restore again with --verbose to see why.")
+	case errors.Is(err, backup.ErrUploadsNotHere):
+		return uploadsNotHere(nil, "", "", err)
 	case errors.As(err, &inUse):
 		return ui.Refused(
 			fmt.Sprintf("Another Fluxer instance on this machine is in %s.", inUse.Dir),

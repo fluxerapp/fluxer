@@ -40,8 +40,10 @@ const (
 var fatalChecks = map[string]bool{"services": true, "health": true}
 
 var (
-	selfUpdate = release.SelfUpdate
-	reexec     = release.Reexec
+	selfUpdate     = release.SelfUpdate
+	reexec         = release.Reexec
+	createBackup   = backup.Create
+	estimateBackup = backup.Estimate
 )
 
 type upgradeFlags struct {
@@ -49,6 +51,7 @@ type upgradeFlags struct {
 	To       string
 	Prefetch bool
 	NoBackup bool
+	Backup   string
 	DryRun   bool
 	Resume   string
 }
@@ -69,6 +72,9 @@ func newUpgradeCmd(app *App) *cobra.Command {
 		Short: "Upgrade rexctl and Fluxer to the latest release",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
+			if !c.Flags().Changed("backup") {
+				f.Backup = ""
+			}
 			err := runUpgrade(c.Context(), app, &f)
 			if !f.Check && !f.DryRun {
 				notifyUpgrade(c.Context(), app, err)
@@ -81,6 +87,7 @@ func newUpgradeCmd(app *App) *cobra.Command {
 	fl.StringVar(&f.To, "to", "", "upgrade to this version, not the latest")
 	fl.BoolVar(&f.Prefetch, "prefetch", false, "download the new version and upgrade later")
 	fl.BoolVar(&f.NoBackup, "no-backup", false, "skip the backup before upgrading")
+	fl.StringVar(&f.Backup, "backup", backup.ScopeFull, "what the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway.")
 	fl.BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
 	fl.StringVar(&f.Resume, release.ResumeFlag, "", "")
 	_ = fl.MarkHidden(release.ResumeFlag)
@@ -90,7 +97,7 @@ func newUpgradeCmd(app *App) *cobra.Command {
 
 func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if f.Check {
-		if f.Prefetch || f.NoBackup || f.DryRun {
+		if f.Prefetch || f.NoBackup || f.DryRun || f.Backup != "" {
 			return ui.Usage("Use --check on its own, or with --to and --json.")
 		}
 		return runUpgradeCheck(ctx, app, f)
@@ -100,6 +107,15 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	}
 	if f.Prefetch && f.NoBackup {
 		return ui.Usage("Use --no-backup when you upgrade, not with --prefetch.")
+	}
+	if f.Prefetch && f.Backup != "" {
+		return ui.Usage("Use --backup when you upgrade, not with --prefetch.")
+	}
+	if f.Backup != "" && f.NoBackup {
+		return ui.Usage("Use --backup or --no-backup, not both.")
+	}
+	if _, err := parseBackupScope(f.Backup); err != nil {
+		return err
 	}
 	if f.Resume != "" && f.Resume != release.ResumeRecovery {
 		return resumeUpgrade(ctx, app, f)
@@ -161,7 +177,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 		for _, k := range keptCopies(inst) {
 			warnKeptCopy(app.UI, k.Name, k.Copy, true)
 		}
-		printUpgradePlan(ctx, app, inst, f, needSelf, to)
+		printUpgradePlan(ctx, app, inst, f, needSelf, cur, rel.Version)
 		return nil
 	}
 	if f.Prefetch {
@@ -199,6 +215,12 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err != nil {
 		return ui.Failed(fmt.Sprintf("There's no rexctl %s for this machine.", to), "")
 	}
+	args := os.Args[1:]
+	if release.Valid(app.Version) && release.Compare(rel.Version, app.Version) < 0 {
+		if args, err = switchBack(ctx, app, inst, e, args, to); err != nil {
+			return err
+		}
+	}
 	err = app.Change(ctx, inst, func(*engine.Engine) error {
 		if err := setPhase(inst, cur, rel.Version, release.PhaseResolved); err != nil {
 			return err
@@ -220,10 +242,97 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err != nil {
 		return err
 	}
-	if err := reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated, app.pickedDir())); err != nil {
+	if err := reexec(resumeArgs(args, release.PhaseSelfUpdated, app.pickedDir())); err != nil {
 		return ui.Wrap(err, "Updated rexctl but couldn't start it again.", "Run rexctl upgrade again.")
 	}
 	return nil
+}
+
+var dropScheduledBackup = func(ctx context.Context, inst *instance.Instance, e *engine.Engine) (host.AutoUpgradeState, bool, error) {
+	a, err := autoUpgradeFor(inst, e)
+	if err != nil || a.Scheduler == "" {
+		return host.AutoUpgradeState{}, false, err
+	}
+	s, err := host.CheckAutoUpgrade(ctx, a, time.Now())
+	if err != nil {
+		return s, false, err
+	}
+	s.Day, s.At = a.Requested(s.Day, s.At)
+	changed, err := host.DropBackupFlag(ctx, a)
+	return s, changed, err
+}
+
+func switchBack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, args []string, to string) ([]string, error) {
+	kept, dropped := withoutFlag(args, "--backup")
+	lean := dropped != "" && dropped != backup.ScopeFull
+	if lean {
+		app.UI.Info("rexctl %s may not know --backup. This upgrade makes a full backup.", to)
+	}
+	s, changed, err := dropScheduledBackup(ctx, inst, e)
+	if err != nil {
+		if errors.Is(err, host.ErrNeedsRoot) {
+			return nil, ui.Refused(fmt.Sprintf("Automatic upgrades pass --backup without-uploads, which rexctl %s may not know. Changing that needs root.", to), "Run sudo rexctl upgrade with the same flags.")
+		}
+		return nil, ui.Wrap(err, fmt.Sprintf("Couldn't change automatic upgrades for rexctl %s.", to), "Run rexctl auto-upgrade on again without --backup and with your other flags, then run this upgrade again.")
+	}
+	again := scheduleCommand(s)
+	offered := changed
+	switch {
+	case changed && lean:
+		app.UI.Info("Automatic upgrades make full backups from now on as well. Once rexctl is newer than %s, run %s again.", to, again)
+	case changed:
+		app.UI.Info("rexctl %s may not know --backup. Automatic upgrades make full backups from now on. Once rexctl is newer than %s, run %s again.", to, to, again)
+	}
+	if long := host.DayLong(s.Day); long != "" {
+		app.UI.Info("rexctl %s shows this weekly schedule as every day, and it keeps running every %s. Once rexctl is newer than %s, run rexctl auto-upgrade to see it again.", to, long, to)
+		if !changed {
+			app.UI.Info("rexctl auto-upgrade on from rexctl %s makes the schedule daily. Once rexctl is newer than %s, run %s to make it weekly again.", to, to, again)
+			offered = true
+		}
+	}
+	if offered && inst != nil && inst.State != nil && inst.State.NotifyURL != "" {
+		app.UI.Info("Add --notify with your address to that command to keep the notifications.")
+	}
+	if s.FullBackup != "" {
+		app.UI.Info("The monthly full backup keeps running. rexctl %s doesn't know about it, and rexctl auto-upgrade off from rexctl %s leaves it on.", to, to)
+	}
+	return kept, nil
+}
+
+func scheduleCommand(s host.AutoUpgradeState) string {
+	cmd := "rexctl auto-upgrade on"
+	if s.Day != "" {
+		cmd += " --day " + strings.ToLower(s.Day)
+	}
+	if s.At != "" && s.At != autoUpgradeDefault {
+		cmd += " --at " + s.At
+	}
+	if s.Backup == backup.ScopeWithoutUploads {
+		cmd += " --backup " + backup.ScopeWithoutUploads
+	}
+	if s.FullBackup != "" {
+		cmd += " --full-backup " + s.FullBackup
+	}
+	return cmd
+}
+
+func withoutFlag(args []string, flag string) ([]string, string) {
+	out := make([]string, 0, len(args))
+	value := ""
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if a == flag && i+1 < len(args) {
+			value = args[i+1]
+			i++
+			continue
+		}
+		if v, ok := strings.CutPrefix(a, flag+"="); ok {
+			value = v
+			continue
+		}
+		out = append(out, a)
+	}
+	return out, value
 }
 
 func updateBeforeRecovery(ctx context.Context, app *App, resume, to, command string) (bool, error) {
@@ -396,30 +505,78 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	})
 }
 
-func printUpgradePlan(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags, needSelf bool, to string) {
+func printUpgradePlan(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags, needSelf bool, from, version string) {
+	_, to := versionPair(from, version)
 	if needSelf {
 		app.UI.Info("rexctl updates itself to %s.", to)
 	}
 	app.UI.Info("Fluxer %s downloads while your instance keeps running.", to)
+	lean := !f.Prefetch && !f.NoBackup && upgradeScope(f) == backup.ScopeWithoutUploads
+	planned, known := f, !needSelf
+	if lean && known {
+		changed, ok := plannedUploadsChange(inst, from, version)
+		known = ok
+		if changed {
+			app.UI.Info("Fluxer %s changes how uploads are stored. The backup before it includes them.", to)
+			full := *f
+			full.Backup = backup.ScopeFull
+			planned, lean = &full, false
+		}
+	}
 	if e, err := app.Engine(ctx, inst); err != nil {
 		app.UI.Detail("%v", err)
-	} else if needSelf {
-		printSpace(ctx, app, inst, e, nil, f, to)
 	} else {
-		printSpace(ctx, app, inst, e, embeddedRefs(), f, to)
+		var refs map[string]string
+		if !needSelf {
+			refs = embeddedRefs()
+		}
+		printSpace(ctx, app, inst, e, refs, planned, to)
+		if lean && !known {
+			printFullBackupSpace(ctx, app, inst, e, refs, planned, to)
+		}
 	}
 	if f.Prefetch {
 		app.UI.Info("Dry run. Nothing changed.")
 		return
 	}
-	if f.NoBackup {
+	switch {
+	case f.NoBackup:
 		app.UI.Info("Your instance isn't backed up first.")
-	} else {
+	case lean && !known:
+		app.UI.Info("Your instance is backed up first, without uploads unless Fluxer %s changes how uploads are stored.", to)
+	case lean:
+		app.UI.Info("Your instance is backed up first, without uploads.")
+	default:
 		app.UI.Info("Your instance is backed up first.")
 	}
 	app.UI.Info("Fluxer stops for about 2 minutes while it moves to %s.", to)
 	app.UI.Info("If %s doesn't start, rexctl goes back to the release you have today.", to)
 	app.UI.Info("Dry run. Nothing changed.")
+}
+
+func plannedUploadsChange(inst *instance.Instance, from, version string) (bool, bool) {
+	set := stack.Embedded()
+	images, err := stack.EmbeddedImages()
+	if err != nil {
+		return false, false
+	}
+	next, _, err := nextState(inst, set, images, version)
+	if err != nil {
+		return false, false
+	}
+	return uploadsChange(inst, from, set, next), true
+}
+
+func printFullBackupSpace(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, refs map[string]string, f *upgradeFlags, to string) {
+	full := *f
+	full.Backup = backup.ScopeFull
+	lean := upgradeSpace(ctx, app, inst, e, refs, f)
+	for i, sp := range upgradeSpace(ctx, app, inst, e, refs, &full) {
+		if i < len(lean) && ui.Bytes(int64(lean[i].Need)) == ui.Bytes(int64(sp.Need)) {
+			continue
+		}
+		app.UI.Info("If Fluxer %s changes how uploads are stored, the backup includes them and Fluxer %s needs about %s of free disk space in %s.", to, to, ui.Bytes(int64(sp.Need)), sp.Path)
+	}
 }
 
 func printSpace(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, next map[string]string, f *upgradeFlags, to string) {
@@ -448,7 +605,7 @@ func upgradeSpace(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	}
 	var saved uint64
 	if !f.Prefetch && !f.NoBackup {
-		if saved, err = backup.Estimate(ctx, inst, old); err != nil {
+		if saved, err = estimateBackup(ctx, inst, old, upgradeScope(f)); err != nil {
 			app.UI.Detail("%v", err)
 		}
 	}
@@ -517,6 +674,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		clearUpgrade(inst)
 		return ui.Wrap(err, fmt.Sprintf("Couldn't save the settings for Fluxer %s.", toShort), "Check that the disk isn't full, then run rexctl upgrade again.")
 	}
+	f = backupFlagsFor(app, inst, from, set, next, f, toShort)
 	old := e.Named(inst.Project(), inst.Dir)
 	for _, sp := range upgradeSpace(ctx, app, inst, e, next.Images.Refs, f) {
 		if sp.Short() {
@@ -543,23 +701,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	if f.NoBackup {
 		app.UI.Warn("Skipped the backup.", "")
 	} else {
-		err := app.UI.Step(ctx, "Backing up your instance", func(ctx context.Context, s *ui.Step) error {
-			info, err := backup.Create(ctx, inst, old, backup.CreateOptions{Reason: "upgrade", OnEvent: app.progress(s, "Starting"), Progress: func(stage string) {
-				if t := backupStageTitle(stage); t != "" {
-					s.Title(t)
-				}
-			}})
-			if errors.Is(err, backup.ErrNeverStarted) {
-				s.Done("There was nothing to back up yet.")
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			inst.State.Upgrade.Backup = info.Path
-			s.Done("Backed up your instance.")
-			return nil
-		})
+		err := backUpForUpgrade(ctx, app, inst, old, upgradeScope(f))
 		if err != nil {
 			fix := "Run rexctl backup to see why, then run rexctl upgrade again."
 			if logPath := writeBackupLog(inst, "upgrade-"+release.DirName(to)+".log", err); logPath != "" {
@@ -612,6 +754,62 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		app.UI.Info("rexctl kept your own %s image.", pin)
 	}
 	return finishUpgrade(ctx, app, inst, e)
+}
+
+func upgradeScope(f *upgradeFlags) string {
+	if f.Backup == backup.ScopeWithoutUploads {
+		return backup.ScopeWithoutUploads
+	}
+	return backup.ScopeFull
+}
+
+func backUpForUpgrade(ctx context.Context, app *App, inst *instance.Instance, old *engine.Project, scope string) error {
+	return app.UI.Step(ctx, "Backing up your instance", func(ctx context.Context, s *ui.Step) error {
+		info, err := createBackup(ctx, inst, old, backup.CreateOptions{Reason: "upgrade", Scope: scope, OnEvent: app.progress(s, "Starting"), Progress: func(stage string) {
+			if t := backupStageTitle(stage); t != "" {
+				s.Title(t)
+			}
+		}})
+		if errors.Is(err, backup.ErrNeverStarted) {
+			s.Done("There was nothing to back up yet.")
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if info.WithoutUploads() {
+			s.Title("Checking the backup")
+			if _, err := backup.Verify(info.Path); err != nil {
+				os.Remove(info.Path)
+				return err
+			}
+			inst.State.Upgrade.Backup = info.Path
+			s.Done("Backed up your instance without uploads.")
+			return nil
+		}
+		inst.State.Upgrade.Backup = info.Path
+		s.Done("Backed up your instance.")
+		return nil
+	})
+}
+
+func backupFlagsFor(app *App, inst *instance.Instance, from string, set *stack.Set, next *instance.State, f *upgradeFlags, toShort string) *upgradeFlags {
+	if f.NoBackup || f.Prefetch || upgradeScope(f) != backup.ScopeWithoutUploads || !uploadsChange(inst, from, set, next) {
+		return f
+	}
+	app.UI.Info("Fluxer %s changes how uploads are stored. This backup includes them.", toShort)
+	full := *f
+	full.Backup = backup.ScopeFull
+	return &full
+}
+
+func uploadsChange(inst *instance.Instance, from string, set *stack.Set, next *instance.State) bool {
+	old, err := release.LoadSet(inst, from)
+	if err != nil {
+		return true
+	}
+	was, now := backup.UploadsDefinition(old, inst.State), backup.UploadsDefinition(set, next)
+	return was == "" || now == "" || was != now
 }
 
 func startRelease(ctx context.Context, app *App, target *instance.Instance, e *engine.Engine, p *engine.Project, toShort string) ([]string, error) {
@@ -769,12 +967,7 @@ func nextState(inst *instance.Instance, set *stack.Set, images stack.ImageSet, t
 }
 
 func postgresRef(s *instance.State) string {
-	for _, v := range []string{s.Settings[settings.ImagesPrefix+"postgres"], s.Settings[settings.ImageVars["postgres"]], s.Images.Refs["postgres"]} {
-		if v != "" {
-			return v
-		}
-	}
-	return ""
+	return settings.ImageRef(s.Settings, s.Images.Refs, "postgres")
 }
 
 func refList(refs map[string]string) []string {
@@ -1089,6 +1282,7 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 		inst.State.SetupDone = done
 	}
 	inst.State.PreviousRelease = pend.From
+	inst.State.PreviousBackup = pend.Backup
 	inst.State.Release = pend.To
 	inst.State.Images = next.Images
 	inst.State.Settings = next.Settings

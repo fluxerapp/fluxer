@@ -18,6 +18,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
@@ -29,18 +30,22 @@ const (
 	autoUpgradeLog     = "auto-upgrade.log"
 	autoUpgradeDefault = "04:00"
 	notifyTimeout      = 15 * time.Second
+	uploadsBackupAge   = 35 * 24 * time.Hour
 )
 
 type autoUpgradeJSON struct {
-	On        bool   `json:"on"`
-	Scheduler string `json:"scheduler,omitempty"`
-	At        string `json:"at,omitempty"`
-	NextRun   string `json:"next_run,omitempty"`
-	LastRun   string `json:"last_run,omitempty"`
-	ExitCode  *int   `json:"exit_code,omitempty"`
-	Running   bool   `json:"running"`
-	Notify    string `json:"notify,omitempty"`
-	Log       string `json:"log,omitempty"`
+	On         bool   `json:"on"`
+	Scheduler  string `json:"scheduler,omitempty"`
+	At         string `json:"at,omitempty"`
+	Day        string `json:"day,omitempty"`
+	Backup     string `json:"backup,omitempty"`
+	FullBackup string `json:"full_backup,omitempty"`
+	NextRun    string `json:"next_run,omitempty"`
+	LastRun    string `json:"last_run,omitempty"`
+	ExitCode   *int   `json:"exit_code,omitempty"`
+	Running    bool   `json:"running"`
+	Notify     string `json:"notify,omitempty"`
+	Log        string `json:"log,omitempty"`
 }
 
 type upgradeNotice struct {
@@ -54,30 +59,34 @@ type upgradeNotice struct {
 func newAutoUpgradeCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "auto-upgrade",
-		Short: "Show whether rexctl upgrades Fluxer by itself every day",
-		Long:  "Show whether rexctl upgrades Fluxer by itself every day, when it runs next and how the last run went. The daily run is rexctl upgrade --yes, so it works like an upgrade you run yourself.",
+		Short: "Show whether rexctl upgrades Fluxer by itself",
+		Long:  "Show whether rexctl upgrades Fluxer by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeShow(c.Context(), app)
 		},
 	}
 	app.jsonFlag(c)
-	var at, notify string
+	var o autoUpgradeOptions
 	on := &cobra.Command{
 		Use:   "on",
-		Short: "Upgrade Fluxer by itself every day",
-		Long: "Run rexctl upgrade --yes every day with a systemd timer, or with cron on machines without systemd. Each run backs up your instance first, goes back to the release you had if the new one doesn't start, and waits for the next day if another rexctl command is changing the instance. Run it again to change the time or the address, and leave out --notify to stop the notifications.\n\n" +
+		Short: "Upgrade Fluxer by itself every day or once a week",
+		Long: "Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the upgrade time. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.\n\n" +
 			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m={{.text}} to the topic address.",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runAutoUpgradeOn(c.Context(), app, at, notify)
+			return runAutoUpgradeOn(c.Context(), app, o)
 		},
 	}
-	on.Flags().StringVar(&at, "at", autoUpgradeDefault, "time of day to upgrade, as HH:MM in this machine's time zone")
-	on.Flags().StringVar(&notify, "notify", "", "web address rexctl posts to when an upgrade installs a new release or fails")
+	on.Flags().StringVar(&o.At, "at", autoUpgradeDefault, "time of day to upgrade, as HH:MM in this machine's time zone")
+	on.Flags().StringVar(&o.Day, "day", "", "run once a week on this day, like sun. Leave it out to run every day.")
+	on.Flags().StringVar(&o.Backup, "backup", backup.ScopeFull, "what the backup before each upgrade holds, full or without-uploads. When an upgrade changes how uploads are stored, the backup includes them anyway.")
+	on.Flags().StringVar(&o.FullBackup, "full-backup", "", "pass monthly to also make a full backup with uploads on the 1st of every month")
+	on.Flags().StringVar(&o.Notify, "notify", "", "web address rexctl posts to when an upgrade installs a new release or fails")
 	off := &cobra.Command{
 		Use:   "off",
 		Short: "Stop upgrading Fluxer by itself",
+		Long:  "Stop upgrading Fluxer by itself. This also stops the monthly full backup that --full-backup turned on.",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeOff(c.Context(), app)
@@ -115,12 +124,63 @@ func noScheduler() error {
 	return ui.Refused("rexctl can upgrade Fluxer by itself only on Linux with systemd or cron.", "Run rexctl upgrade --yes every day from your own scheduler.")
 }
 
-func runAutoUpgradeOn(ctx context.Context, app *App, at, notify string) error {
-	t, err := time.Parse("15:04", at)
+type autoUpgradeOptions struct {
+	At         string
+	Day        string
+	Backup     string
+	FullBackup string
+	Notify     string
+}
+
+func parseFullBackup(s string) (string, error) {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "":
+		return "", nil
+	case host.FullBackupMonthly:
+		return host.FullBackupMonthly, nil
+	}
+	return "", ui.Usage("Pass --full-backup as monthly, or leave it out.")
+}
+
+func parseDay(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+	d, ok := host.Weekday(s)
+	if !ok {
+		return "", ui.Usage("Pass --day as a day of the week like sun or sunday.")
+	}
+	return time.Weekday(d).String()[:3], nil
+}
+
+func parseBackupScope(s string) (string, error) {
+	switch s {
+	case "", backup.ScopeFull:
+		return backup.ScopeFull, nil
+	case backup.ScopeWithoutUploads:
+		return s, nil
+	}
+	return "", ui.Usage("Pass --backup as full or without-uploads.")
+}
+
+func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error {
+	t, err := time.Parse("15:04", o.At)
 	if err != nil {
 		return ui.Usage("Pass --at as a time of day like 04:00.")
 	}
-	at = t.Format("15:04")
+	at, notify := t.Format("15:04"), o.Notify
+	day, err := parseDay(o.Day)
+	if err != nil {
+		return err
+	}
+	scope, err := parseBackupScope(o.Backup)
+	if err != nil {
+		return err
+	}
+	fullBackup, err := parseFullBackup(o.FullBackup)
+	if err != nil {
+		return err
+	}
 	if notify != "" {
 		if u, err := url.Parse(notify); err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
 			return ui.Usage("Pass --notify as a web address like https://ntfy.sh/your-topic.")
@@ -144,7 +204,7 @@ func runAutoUpgradeOn(ctx context.Context, app *App, at, notify string) error {
 	if a.Scheduler == "" {
 		return noScheduler()
 	}
-	a.At = at
+	a.At, a.Day, a.Backup, a.FullBackup = at, day, scope, fullBackup
 	return app.Locked(ctx, inst, func() error {
 		if err := host.InstallAutoUpgrade(ctx, a); err != nil {
 			return schedulerError(err, "Couldn't turn on automatic upgrades.", "rexctl auto-upgrade on")
@@ -155,11 +215,18 @@ func runAutoUpgradeOn(ctx context.Context, app *App, at, notify string) error {
 				return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
 			}
 		}
-		start, err := a.Start()
+		startDay, start, err := a.Start()
 		if err != nil {
 			return ui.Usage("Pass --at as a time of day like 04:00.")
 		}
-		app.UI.OK("rexctl upgrades Fluxer every day %s.", autoUpgradeWhen(a.Scheduler, start))
+		app.UI.OK("rexctl upgrades Fluxer %s.", autoUpgradeWhen(a.Scheduler, startDay, start))
+		if fullBackup != "" {
+			backupAt, _ := a.BackupStart()
+			app.UI.Info("%s", fullBackupWhen(backupAt))
+		}
+		if scope == backup.ScopeWithoutUploads && fullBackup == "" {
+			leanBackupNote(app, host.AutoUpgradeState{Day: day, At: at, Backup: scope}, notify)
+		}
 		if notify != "" {
 			app.UI.Info("rexctl tells %s when an upgrade installs a new release or fails.", maskURL(notify))
 		}
@@ -235,9 +302,14 @@ func runAutoUpgradeShow(ctx context.Context, app *App) error {
 	if err != nil {
 		return ui.Wrap(err, "Couldn't read the automatic upgrade schedule.", "Run rexctl auto-upgrade --verbose to see why.")
 	}
+	return showAutoUpgrade(app, inst, a, s, time.Now())
+}
+
+func showAutoUpgrade(app *App, inst *instance.Instance, a host.AutoUpgrade, s host.AutoUpgradeState, now time.Time) error {
 	out := autoUpgradeJSON{On: s.On}
 	if s.On {
 		out.Scheduler, out.At, out.NextRun, out.LastRun, out.Running = string(a.Scheduler), s.At, s.Next, s.Last, s.Running
+		out.Day, out.Backup, out.FullBackup = strings.ToLower(s.Day), s.Backup, s.FullBackup
 		out.Log = autoUpgradeLogs(a)
 		if inst.State.NotifyURL != "" {
 			out.Notify = maskURL(inst.State.NotifyURL)
@@ -251,10 +323,16 @@ func runAutoUpgradeShow(ctx context.Context, app *App) error {
 		return app.UI.JSON(out)
 	}
 	if !s.On {
-		app.UI.Info("Automatic upgrades are off. Run rexctl auto-upgrade on to upgrade Fluxer every day.")
+		app.UI.Info("Automatic upgrades are off. Run rexctl auto-upgrade on to upgrade Fluxer every day or once a week.")
 		return nil
 	}
-	app.UI.OK("rexctl upgrades Fluxer every day %s.", autoUpgradeWhen(a.Scheduler, s.At))
+	app.UI.OK("rexctl upgrades Fluxer %s.", autoUpgradeWhen(a.Scheduler, s.Day, s.At))
+	if s.FullBackup != "" {
+		app.UI.Info("%s", fullBackupWhen(s.FullBackupAt))
+	}
+	if s.Backup == backup.ScopeWithoutUploads {
+		uploadsBackupNote(app, inst, a, s, now)
+	}
 	switch {
 	case s.Running:
 		app.UI.Info("An automatic upgrade is running now.")
@@ -270,12 +348,69 @@ func runAutoUpgradeShow(ctx context.Context, app *App) error {
 	return nil
 }
 
-func autoUpgradeWhen(s host.Scheduler, at string) string {
+func autoUpgradeWhen(s host.Scheduler, day, at string) string {
+	every := "every day"
+	if long := host.DayLong(day); long != "" {
+		every = "every " + long
+	}
 	t, err := time.Parse("15:04", at)
 	if err != nil || s != host.Systemd {
-		return "at " + at
+		return every + " at " + at
 	}
-	return fmt.Sprintf("between %s and %s", at, t.Add(host.UpgradeWindow).Format("15:04"))
+	return fmt.Sprintf("%s between %s and %s", every, at, t.Add(host.UpgradeWindow).Format("15:04"))
+}
+
+func leanBackupNote(app *App, s host.AutoUpgradeState, notify string) {
+	s.FullBackup = host.FullBackupMonthly
+	app.UI.Info("Backups before upgrades leave out uploads. Run %s to keep a full backup as well, or run rexctl backup yourself now and then.", scheduleCommand(s))
+	if notify != "" {
+		app.UI.Info("Add --notify with your address to that command to keep the notifications.")
+	}
+}
+
+func uploadsBackupNote(app *App, inst *instance.Instance, a host.AutoUpgrade, s host.AutoUpgradeState, now time.Time) {
+	list, err := backup.List(inst.BackupDir())
+	if err != nil {
+		app.UI.Detail("%v", err)
+		return
+	}
+	b := backup.NewestWithUploads(list)
+	if b != nil {
+		app.UI.Info("The newest backup with uploads is from %s.", b.CreatedAt.In(now.Location()).Format("2 January 2006 at 15:04 MST"))
+	}
+	if b == nil || now.Sub(b.CreatedAt) > uploadsBackupAge {
+		full := s
+		full.Day, full.At = a.Requested(s.Day, s.At)
+		full.FullBackup = host.FullBackupMonthly
+		fix := fmt.Sprintf("Run rexctl backup now, and run %s.", scheduleCommand(full))
+		if inst.State != nil && inst.State.NotifyURL != "" {
+			fix += " Add --notify with your address to that command to keep the notifications."
+		}
+		switch {
+		case s.FullBackup != "" && s.FullBackupRan:
+			fix = fmt.Sprintf("Run rexctl backup now, and read %s to see why the monthly backup failed.", fullBackupLogs(a))
+		case s.FullBackup != "":
+			fix = "Run rexctl backup now. The monthly backup hasn't run yet."
+		}
+		app.UI.Warn("No backup from the last 5 weeks has your uploads.", fix)
+	}
+}
+
+func fullBackupWhen(at string) string {
+	if at == "" {
+		return "rexctl makes a full backup with uploads once a month."
+	}
+	return fmt.Sprintf("rexctl makes a full backup with uploads on the 1st of every month at %s.", at)
+}
+
+func fullBackupLogs(a host.AutoUpgrade) string {
+	if a.Scheduler == host.Cron {
+		return a.BackupLog()
+	}
+	if a.Rootless {
+		return "journalctl --user -u " + a.BackupServiceName()
+	}
+	return "journalctl -u " + a.BackupServiceName()
 }
 
 func autoUpgradeLogs(a host.AutoUpgrade) string {

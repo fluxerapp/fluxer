@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	FormatVersion = 1
+	FormatVersion = 2
+	formatFull    = 1
 	Extension     = ".tar.zst"
 	ManifestName  = "manifest.json"
 	SumsName      = "SHA256SUMS"
@@ -41,6 +42,12 @@ const (
 	SkippedUploads  = "uploads"
 )
 
+const (
+	ScopeFull           = "full"
+	ScopeWithoutUploads = "without-uploads"
+	UploadsVolume       = "seaweedfs-data"
+)
+
 var (
 	ErrNotBackup = errors.New("backup: not a rexctl backup")
 	ErrDamaged   = errors.New("backup: damaged")
@@ -54,16 +61,31 @@ type Entry struct {
 }
 
 type Manifest struct {
-	Format    int       `json:"format"`
-	Release   string    `json:"release"`
-	Project   string    `json:"project"`
-	Domain    string    `json:"domain"`
-	CreatedAt time.Time `json:"created_at"`
-	Reason    string    `json:"reason,omitempty"`
-	Database  string    `json:"database"`
-	Volumes   []string  `json:"volumes"`
-	Skipped   []string  `json:"skipped,omitempty"`
-	Entries   []Entry   `json:"entries"`
+	Format    int         `json:"format"`
+	Release   string      `json:"release"`
+	Project   string      `json:"project"`
+	Domain    string      `json:"domain"`
+	CreatedAt time.Time   `json:"created_at"`
+	Reason    string      `json:"reason,omitempty"`
+	Database  string      `json:"database"`
+	Volumes   []string    `json:"volumes"`
+	Skipped   []string    `json:"skipped,omitempty"`
+	Scope     string      `json:"scope,omitempty"`
+	Uploads   *UploadsRef `json:"uploads,omitempty"`
+	Entries   []Entry     `json:"entries"`
+}
+
+type UploadsRef struct {
+	Volume     string `json:"volume,omitempty"`
+	CreatedAt  string `json:"created_at,omitempty"`
+	Bind       string `json:"bind,omitempty"`
+	ID         string `json:"id,omitempty"`
+	Inode      uint64 `json:"inode,omitempty"`
+	Definition string `json:"definition,omitempty"`
+}
+
+func (m *Manifest) WithoutUploads() bool {
+	return m.Scope == ScopeWithoutUploads
 }
 
 func (m *Manifest) HasSkipped(what string) bool {
@@ -75,7 +97,31 @@ type Info struct {
 	Path      string    `json:"path"`
 	CreatedAt time.Time `json:"created_at"`
 	Release   string    `json:"release"`
+	Reason    string    `json:"reason,omitempty"`
+	Scope     string    `json:"scope,omitempty"`
 	SizeBytes int64     `json:"size_bytes"`
+	Domain    string    `json:"-"`
+	Project   string    `json:"-"`
+}
+
+func (b Info) WithoutUploads() bool {
+	return b.Scope == ScopeWithoutUploads
+}
+
+func Stat(path string) (*Info, error) {
+	m, err := ReadManifest(path)
+	if err != nil {
+		return nil, err
+	}
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	return infoFor(path, m, fi.Size()), nil
+}
+
+func infoFor(path string, m *Manifest, size int64) *Info {
+	return &Info{File: filepath.Base(path), Path: path, CreatedAt: m.CreatedAt, Release: m.Release, Reason: m.Reason, Scope: m.Scope, SizeBytes: size, Domain: m.Domain, Project: m.Project}
 }
 
 func List(dir string) ([]Info, error) {
@@ -101,7 +147,7 @@ func List(dir string) ([]Info, error) {
 		if err != nil {
 			continue
 		}
-		out = append(out, Info{File: name, Path: path, CreatedAt: m.CreatedAt, Release: m.Release, SizeBytes: fi.Size()})
+		out = append(out, *infoFor(path, m, fi.Size()))
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
 	return out, nil
@@ -119,6 +165,32 @@ func NewestOf(list []Info, release string) *Info {
 		}
 	}
 	return best
+}
+
+func NewestWithUploads(list []Info) *Info {
+	var best *Info
+	for i := range list {
+		b := &list[i]
+		if b.WithoutUploads() {
+			continue
+		}
+		if best == nil || b.CreatedAt.After(best.CreatedAt) {
+			best = b
+		}
+	}
+	return best
+}
+
+func Find(list []Info, path string) *Info {
+	if path == "" {
+		return nil
+	}
+	for i := range list {
+		if samePath(list[i].Path, path) {
+			return &list[i]
+		}
+	}
+	return nil
 }
 
 func Prune(dir string, keep int, protect ...string) ([]Info, error) {

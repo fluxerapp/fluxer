@@ -133,3 +133,28 @@ func TestTakeoverOfEjectedInstanceNeverGoesBack(t *testing.T) {
 		}
 	})
 }
+
+func TestTakeoverAfterHandUpgradeForgetsPreviousBackup(t *testing.T) {
+	shipped := stack.Embedded()
+	dir := ejectedInstance(t, shipped, fluxerRefs("b"))
+	path := filepath.Join(dir, StateDirName, StateFileName)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := ParseState(data, dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.PreviousRelease, s.PreviousBackup = "2026.1001.100000", filepath.Join(dir, "backups", "fluxer-a.tar.zst")
+	if err := s.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := Import(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.PreviousRelease != ejectedAt || got.PreviousBackup != "" {
+		t.Errorf("after takeover the previous release is %s and the previous backup %q", got.PreviousRelease, got.PreviousBackup)
+	}
+}

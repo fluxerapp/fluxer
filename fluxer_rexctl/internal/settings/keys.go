@@ -69,6 +69,15 @@ const (
 	EdgeTunnel  = "tunnel"
 )
 
+func ImageRef(chosen, refs map[string]string, svc string) string {
+	for _, v := range []string{chosen[ImagesPrefix+svc], chosen[ImageVars[svc]], refs[svc]} {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 var ImageVars = map[string]string{
 	"postgres":    "FLUXER_POSTGRES_IMAGE",
 	"valkey":      "FLUXER_VALKEY_IMAGE",

@@ -149,6 +149,7 @@ type Volume struct {
 	Labels     map[string]string
 	Mountpoint string
 	Device     string
+	CreatedAt  string
 }
 
 type ProjectInfo struct {

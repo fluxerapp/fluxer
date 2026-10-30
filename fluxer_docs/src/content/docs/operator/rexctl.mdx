@@ -54,7 +54,7 @@ rexctl admins sign-in-link <user>
 
 ## rexctl auto-upgrade
 
-Show whether rexctl upgrades Fluxer by itself every day, when it runs next and how the last run went. The daily run is rexctl upgrade --yes, so it works like an upgrade you run yourself.
+Show whether rexctl upgrades Fluxer by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.
 
 ```sh
 rexctl auto-upgrade [flags]
@@ -66,7 +66,7 @@ rexctl auto-upgrade [flags]
 
 ### rexctl auto-upgrade off
 
-Stop upgrading Fluxer by itself.
+Stop upgrading Fluxer by itself. This also stops the monthly full backup that --full-backup turned on.
 
 ```sh
 rexctl auto-upgrade off
@@ -74,7 +74,7 @@ rexctl auto-upgrade off
 
 ### rexctl auto-upgrade on
 
-Run rexctl upgrade --yes every day with a systemd timer, or with cron on machines without systemd. Each run backs up your instance first, goes back to the release you had if the new one doesn't start, and waits for the next day if another rexctl command is changing the instance. Run it again to change the time or the address, and leave out --notify to stop the notifications.
+Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the upgrade time. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.
 
 With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m=\{\{.text\}\} to the topic address.
 
@@ -86,13 +86,25 @@ rexctl auto-upgrade on [flags]
 
   Time of day to upgrade, as HH:MM in this machine's time zone. The default is `04:00`.
 
+- `--backup string`
+
+  What the backup before each upgrade holds, full or without-uploads. When an upgrade changes how uploads are stored, the backup includes them anyway. The default is `full`.
+
+- `--day string`
+
+  Run once a week on this day, like sun. Leave it out to run every day.
+
+- `--full-backup string`
+
+  Pass monthly to also make a full backup with uploads on the 1st of every month.
+
 - `--notify string`
 
   Web address rexctl posts to when an upgrade installs a new release or fails.
 
 ## rexctl backup
 
-Back up your instance. Fluxer pauses while uploads are copied.
+Back up your instance in one file that restores on this machine or a new one. It holds the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.
 
 ```sh
 rexctl backup
@@ -100,7 +112,7 @@ rexctl backup
 
 ### rexctl backup keep
 
-Show or change how many backups rexctl keeps. After each backup, rexctl deletes the oldest ones beyond this number, except the backup that rexctl rollback needs. Pass all to keep every backup.
+Show or change how many backups rexctl keeps. After each backup, rexctl deletes the oldest ones beyond this number, except the backup that rexctl rollback needs and the newest backup with uploads. Pass all to keep every backup.
 
 ```sh
 rexctl backup keep [count|all] [flags]
@@ -607,7 +619,7 @@ rexctl restart
 
 ## rexctl restore
 
-Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command.
+Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are.
 
 ```sh
 rexctl restore <file> [flags]
@@ -788,6 +800,10 @@ Upgrade rexctl and Fluxer to the latest release.
 ```sh
 rexctl upgrade [flags]
 ```
+
+- `--backup string`
+
+  What the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway. The default is `full`.
 
 - `--check`
 

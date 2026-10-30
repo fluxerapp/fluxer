@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/compose-spec/compose-go/v2/types"
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/client"
 )
@@ -357,6 +358,56 @@ func (p *Project) Down(ctx context.Context, volumes bool) error {
 		return err
 	}
 	return p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes}))
+}
+
+func (p *Project) DownKeeping(ctx context.Context, keep ...string) error {
+	if err := p.Down(ctx, false); err != nil {
+		return err
+	}
+	vols, err := p.Engine.Volumes(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+	a, err := p.Engine.api()
+	if err != nil {
+		return err
+	}
+	for _, name := range volumesToDrop(p.Model, vols, p.Name, keep) {
+		if _, err := a.VolumeRemove(ctx, name, client.VolumeRemoveOptions{}); err != nil && !cerrdefs.IsNotFound(err) {
+			return p.wrap("down", err)
+		}
+	}
+	return nil
+}
+
+func volumesToDrop(model *types.Project, vols []Volume, project string, keep []string) []string {
+	var kept, out []string
+	if model != nil {
+		for short, v := range model.Volumes {
+			if slices.Contains(keep, short) {
+				kept = append(kept, v.Name)
+			}
+		}
+		for short, v := range model.Volumes {
+			if !bool(v.External) && v.Name != "" && !slices.Contains(keep, short) && !slices.Contains(kept, v.Name) {
+				out = append(out, v.Name)
+			}
+		}
+	}
+	for _, v := range vols {
+		if v.Project != project || slices.Contains(kept, v.Name) {
+			continue
+		}
+		short := v.Labels[api.VolumeLabel]
+		if short == "" {
+			short = strings.TrimPrefix(v.Name, project+"_")
+		}
+		if !slices.Contains(keep, short) {
+			out = append(out, v.Name)
+		}
+	}
+	slices.Sort(out)
+	return slices.Compact(out)
 }
 
 func (p *Project) modelOrNil() *types.Project {
