@@ -114,6 +114,11 @@ export const VoiceNodeResponse = z.object({
 	public_ipv4: z.string().nullable().describe('Public IPv4 address the server last reported, or null'),
 	public_ipv6: z.string().nullable().describe('Public IPv6 address the server last reported, or null'),
 	turn_servers: TurnServersType,
+	features: z
+		.array(z.string())
+		.describe(
+			'What this API supports for voice servers. server_addresses means it accepts public_ipv4 and public_ipv6 in updates',
+		),
 	health: VoiceServerHealthResponse.describe('Health of the server as this API node last saw it'),
 });
 

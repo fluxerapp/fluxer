@@ -27381,6 +27381,11 @@
 						"items": {"$ref": "#/components/schemas/VoiceTurnServer"},
 						"description": "TURN servers of the instance, for the LiveKit configuration of the voice server"
 					},
+					"features": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "What this API supports for voice servers. server_addresses means it accepts public_ipv4 and public_ipv6 in updates"
+					},
 					"health": {
 						"description": "Health of the server as this API node last saw it",
 						"$ref": "#/components/schemas/VoiceServerHealthResponse"
@@ -27398,6 +27403,7 @@
 					"public_ipv4",
 					"public_ipv6",
 					"turn_servers",
+					"features",
 					"health"
 				],
 				"additionalProperties": false

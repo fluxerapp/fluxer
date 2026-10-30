@@ -594,7 +594,7 @@ Fluxer refuses tokens with a `video` grant. LiveKit participant tokens and webho
 
 <RouteHeader method="GET" path="/v1/voice/node" unauthenticated />
 
-Returns the server's `region_id`, `server_id`, `endpoint`, `latitude`, `longitude`, `is_active`, `draining`, `soft_connection_limit`, `public_ipv4`, `public_ipv6`, `turn_servers` and `health`.
+Returns the server's `region_id`, `server_id`, `endpoint`, `latitude`, `longitude`, `is_active`, `draining`, `soft_connection_limit`, `public_ipv4`, `public_ipv6`, `turn_servers`, `features` and `health`. `features` lists what the API supports for voice servers. `server_addresses` means `PATCH` takes `public_ipv4` and `public_ipv6`.
 
 <RouteHeader method="PATCH" path="/v1/voice/node" unauthenticated />
 

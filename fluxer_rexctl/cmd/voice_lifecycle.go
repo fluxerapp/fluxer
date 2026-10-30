@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sync"
 	"time"
 
@@ -319,10 +320,6 @@ func refreshJoinedServers(ctx context.Context, app *App, inst *instance.Instance
 		return
 	}
 	client := &voice.Client{HTTP: &http.Client{Timeout: 30 * time.Second}}
-	code := 0
-	if d, err := client.Discover(ctx, inst.State.Voice[0].Instance); err == nil {
-		code = d.APICodeVersion
-	}
 	for i := range inst.State.Voice {
 		srv := &inst.State.Voice[i]
 		if srv.NodeURL == "" {
@@ -336,7 +333,7 @@ func refreshJoinedServers(ctx context.Context, app *App, inst *instance.Instance
 		if node.Turn != nil {
 			srv.Turn = settings.TurnServersValue(*node.Turn)
 		}
-		if !report || code < voice.AddressesCodeVersion || stringOf(node.PublicIPv4) == srv.NodeIP && stringOf(node.PublicIPv6) == srv.NodeIPv6 {
+		if !report || !slices.Contains(node.Features, voice.FeatureServerAddresses) || stringOf(node.PublicIPv4) == srv.NodeIP && stringOf(node.PublicIPv6) == srv.NodeIPv6 {
 			continue
 		}
 		v4, v6 := srv.NodeIP, srv.NodeIPv6

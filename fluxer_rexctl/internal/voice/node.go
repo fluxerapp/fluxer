@@ -27,7 +27,7 @@ const (
 	NodePath      = "/voice/node"
 	nodeTokenLife = 2 * time.Minute
 
-	AddressesCodeVersion = 2
+	FeatureServerAddresses = "server_addresses"
 )
 
 const (
@@ -246,6 +246,7 @@ type Node struct {
 	Turn       *[]settings.TurnServer `json:"turn_servers"`
 	PublicIPv4 *string                `json:"public_ipv4"`
 	PublicIPv6 *string                `json:"public_ipv6"`
+	Features   []string               `json:"features"`
 	Health     struct {
 		Status    string  `json:"status"`
 		CheckedAt *string `json:"checked_at"`

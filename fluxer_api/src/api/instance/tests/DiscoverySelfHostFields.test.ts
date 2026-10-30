@@ -32,6 +32,7 @@ describe('discovery fields for self-hosted clients', () => {
 		const discovery = await createBuilderWithoutAuth<WellKnownFluxerResponse>(harness)
 			.get('/.well-known/fluxer')
 			.execute();
+		expect(discovery.api_code_version).toBe(1);
 		expect(discovery.community).toMatchObject({direct_messages_disabled: true, friends_disabled: true});
 	});
 

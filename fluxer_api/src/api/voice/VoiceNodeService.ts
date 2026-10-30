@@ -365,6 +365,7 @@ export class VoiceNodeService {
 			public_ipv4: server.publicIpv4,
 			public_ipv6: server.publicIpv6,
 			turn_servers: turnServers(),
+			features: ['server_addresses'],
 			health: toHealthResponse(healthOf(this.deps.health, server)),
 		};
 	}
