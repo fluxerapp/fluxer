@@ -264,6 +264,9 @@
 	],
 	"voice/Caddyfile.voice": ["193a85faef0174276028f154858bfd98aaaebc2e2ba2d09c1154ff24156d3060"],
 	"voice/voice-edge.compose.yml": ["8c42013b22dc829072af16e1db89a902358cf2c07e1a44bdd6297421ffba397c"],
-	"voice/voice-http.compose.yml": ["f7a207a03625b080768b57f89a44b5828384d0efb528f92f30aa18034e4cf40d"],
+	"voice/voice-http.compose.yml": [
+		"80433a0f965a050fcc88dad63d6887cca9dbc06b1d2344c4e8a898049ad55d6b",
+		"f7a207a03625b080768b57f89a44b5828384d0efb528f92f30aa18034e4cf40d"
+	],
 	"voice/voice.compose.yml": ["b0ea7cf174eea1b5b882f21f7ab08f6526ecac6e96cb98ab990b3a0e8e6f26d9"]
 }

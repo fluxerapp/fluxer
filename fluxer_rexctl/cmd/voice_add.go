@@ -25,28 +25,30 @@ import (
 )
 
 type voiceFlags struct {
-	ID         string
-	Region     string
-	NewRegion  string
-	RegionName string
-	Lat, Long  float64
-	HasCoords  bool
-	Hostname   string
-	IP         string
-	TCPPort    int
-	UDPPort    int
-	SoftLimit  int
-	Memory     string
-	Image      string
-	Email      string
-	NoEdge     bool
-	Endpoint   string
-	HTTPPort   int
-	TokenStdin bool
-	NoFirewall bool
-	DryRun     bool
-	Force      bool
-	Count      int
+	ID          string
+	Region      string
+	NewRegion   string
+	RegionName  string
+	Lat, Long   float64
+	HasCoords   bool
+	Hostname    string
+	IP          string
+	TCPPort     int
+	UDPPort     int
+	SoftLimit   int
+	Memory      string
+	Image       string
+	Email       string
+	NoEdge      bool
+	Endpoint    string
+	HTTPPort    int
+	HTTPBind    string
+	HTTPBindSet bool
+	TokenStdin  bool
+	NoFirewall  bool
+	DryRun      bool
+	Force       bool
+	Count       int
 }
 
 func addVoiceOverrideFlags(c *cobra.Command, f *voiceFlags) {
@@ -63,6 +65,24 @@ func addVoiceOverrideFlags(c *cobra.Command, f *voiceFlags) {
 	fl.StringVar(&f.Image, "image", "", "LiveKit image to run")
 	fl.BoolVar(&f.NoFirewall, "no-firewall", false, "leave the firewall on this machine alone")
 	fl.BoolVar(&f.DryRun, "dry-run", false, "show what would happen and change nothing")
+}
+
+func checkHTTPBind(f *voiceFlags, local []string) error {
+	if f.HTTPBind == "" {
+		return nil
+	}
+	if !f.NoEdge {
+		return ui.Usage("Pass --http-bind with --no-edge.")
+	}
+	bind, ok := voice.NormalHTTPBind(f.HTTPBind)
+	if !ok {
+		return ui.Usage(fmt.Sprintf("Pass --http-bind as an IPv4 or IPv6 address. %s isn't one.", f.HTTPBind))
+	}
+	if bind != "" && !voice.HTTPBindOnMachine(bind, local) {
+		return ui.Refused(fmt.Sprintf("%s isn't an address of this machine.", f.HTTPBind), "Pass one of its own addresses, or 0.0.0.0 for every address.")
+	}
+	f.HTTPBind, f.HTTPBindSet = bind, true
+	return nil
 }
 
 func validateVoiceFlags(c *cobra.Command, f *voiceFlags) error {

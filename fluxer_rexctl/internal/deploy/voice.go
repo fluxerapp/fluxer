@@ -56,6 +56,7 @@ func VoiceEnv(inst *instance.Instance, srv *instance.VoiceServer) voice.Env {
 		TCPPort:    srv.TCPPort,
 		UDPPort:    srv.UDPPort,
 		HTTPPort:   srv.HTTPPort,
+		HTTPBind:   srv.HTTPBind,
 		NodeIP:     srv.NodeIP,
 		BindIP:     srv.BindIP,
 		Image:      srv.Image,

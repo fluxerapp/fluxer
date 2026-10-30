@@ -315,7 +315,7 @@ func moveVoicePublicIP(ctx context.Context, app *App, inst *instance.Instance, e
 func voiceProbeTarget(inst *instance.Instance, srv *instance.VoiceServer) (string, string) {
 	switch {
 	case srv.Edge == voice.EdgeNone:
-		return voice.LocalBase(srv.HTTPPort), ""
+		return voice.LocalBase(srv.HTTPBind, srv.HTTPPort), ""
 	case inst.State.IsVoice():
 		return voice.HTTPBase(srv.Endpoint), "127.0.0.1:443"
 	}

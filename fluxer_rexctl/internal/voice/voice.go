@@ -96,6 +96,7 @@ type Env struct {
 	TCPPort       int
 	UDPPort       int
 	HTTPPort      int
+	HTTPBind      string
 	NodeIP        string
 	BindIP        string
 	Image         string
@@ -129,6 +130,7 @@ func (e Env) Values() map[string]string {
 	}
 	if e.HTTPPort > 0 {
 		out["FLUXER_VOICE_HTTP_PORT"] = strconv.Itoa(e.HTTPPort)
+		out["FLUXER_VOICE_HTTP_BIND"] = HTTPBindValue(e.HTTPBind)
 	}
 	for k, v := range map[string]string{
 		"FLUXER_LIVEKIT_STUN_PRIMARY":   e.StunPrimary,

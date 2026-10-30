@@ -46,7 +46,7 @@ func (e *Env) voiceServers() []instance.VoiceServer {
 func (e *Env) voiceProbeTarget(s instance.VoiceServer) (string, string) {
 	switch {
 	case s.Edge == voice.EdgeNone:
-		return voice.LocalBase(s.HTTPPort), ""
+		return voice.LocalBase(s.HTTPBind, s.HTTPPort), ""
 	case e.Instance.State.IsVoice():
 		return voice.HTTPBase(s.Endpoint), "127.0.0.1:443"
 	}

@@ -127,8 +127,8 @@ When nginx or another proxy already holds ports 80 and 443 on the machine, skip 
    docker network create fluxer-voice
    ```
 
-2. Set `FLUXER_VOICE_HTTP_PORT` in the server's settings file to a free port on `127.0.0.1`, such as 7880 for the first server and 7885 for the next.
-3. Start the server with `voice-http.compose.yml` as well. It publishes the server's HTTP port on `127.0.0.1` only.
+2. Set `FLUXER_VOICE_HTTP_PORT` in the server's settings file to a free port, such as 7880 for the first server and 7885 for the next. When your proxy runs in another network, also set `FLUXER_VOICE_HTTP_BIND` to an address of the machine that the proxy can connect to.
+3. Start the server with `voice-http.compose.yml` as well. It publishes the server's HTTP port on `127.0.0.1`, or on `FLUXER_VOICE_HTTP_BIND` when you set it. That port has no TLS of its own. Let only your proxy's network connect to it.
 
    ```sh
    docker compose -p fluxer-voice-fra-server-1 --env-file fra-server-1.env -f voice.compose.yml -f voice-http.compose.yml up -d

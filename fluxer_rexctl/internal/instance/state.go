@@ -69,6 +69,7 @@ type VoiceServer struct {
 	TCPPort   int       `json:"tcp_port"`
 	UDPPort   int       `json:"udp_port"`
 	HTTPPort  int       `json:"http_port,omitempty"`
+	HTTPBind  string    `json:"http_bind,omitempty"`
 	NodeIP    string    `json:"node_ip,omitempty"`
 	IPPinned  bool      `json:"pinned_node_ip,omitempty"`
 	BindIP    string    `json:"bind_ip,omitempty"`

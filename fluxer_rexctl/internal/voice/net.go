@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -207,8 +208,66 @@ func HTTPBase(endpoint string) string {
 	return strings.TrimRight(u.String(), "/")
 }
 
-func LocalBase(httpPort int) string {
-	return fmt.Sprintf("http://127.0.0.1:%d", httpPort)
+const DefaultHTTPBind = "127.0.0.1"
+
+func LocalBase(bind string, httpPort int) string {
+	return "http://" + net.JoinHostPort(dialHost(bind), strconv.Itoa(httpPort))
+}
+
+func HTTPAddress(bind string, httpPort int) string {
+	if bind == "" {
+		bind = DefaultHTTPBind
+	}
+	return net.JoinHostPort(bind, strconv.Itoa(httpPort))
+}
+
+func HTTPBindValue(bind string) string {
+	if bind == "" {
+		return DefaultHTTPBind
+	}
+	if a, err := netip.ParseAddr(bind); err == nil && a.Is6() {
+		return "[" + a.String() + "]"
+	}
+	return bind
+}
+
+func NormalHTTPBind(bind string) (string, bool) {
+	a, err := netip.ParseAddr(strings.TrimSpace(bind))
+	if err != nil || a.Zone() != "" {
+		return "", false
+	}
+	a = a.Unmap()
+	if a.String() == DefaultHTTPBind {
+		return "", true
+	}
+	return a.String(), true
+}
+
+func HTTPBindPrivate(bind string) bool {
+	if bind == "" {
+		return true
+	}
+	a, err := netip.ParseAddr(bind)
+	return err == nil && a.IsLoopback()
+}
+
+func HTTPBindOnMachine(bind string, local []string) bool {
+	a, err := netip.ParseAddr(bind)
+	if err != nil {
+		return false
+	}
+	if a.IsUnspecified() || a.IsLoopback() {
+		return true
+	}
+	return slices.Contains(local, a.String())
+}
+
+func dialHost(bind string) string {
+	a, err := netip.ParseAddr(bind)
+	if err != nil || a.IsUnspecified() {
+		return DefaultHTTPBind
+	}
+	return a.String()
 }
 
 func InstanceEdge(endpoint, mode, httpsPort, bind string) (string, string) {

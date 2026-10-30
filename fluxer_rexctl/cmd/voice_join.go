@@ -68,6 +68,9 @@ func newVoiceJoinCmd(app *App) *cobra.Command {
 			if f.Endpoint != "" && !strings.HasPrefix(f.Endpoint, "wss://") {
 				return ui.Usage("Pass --endpoint as a wss:// URL.")
 			}
+			if err := checkHTTPBind(f, voice.InterfaceAddresses()); err != nil {
+				return err
+			}
 			token, err := joinToken(c, args, f)
 			if err != nil {
 				return err
@@ -79,9 +82,10 @@ func newVoiceJoinCmd(app *App) *cobra.Command {
 	fl := c.Flags()
 	fl.StringVar(&f.Hostname, "hostname", "", "hostname for the server's endpoint and certificate")
 	fl.StringVar(&f.Email, "email", "", "email address for Let's Encrypt notices")
-	fl.BoolVar(&f.NoEdge, "no-edge", false, "start no edge and publish the server on 127.0.0.1 for your own proxy")
+	fl.BoolVar(&f.NoEdge, "no-edge", false, "start no edge and publish the server's HTTP port for your own proxy")
 	fl.StringVar(&f.Endpoint, "endpoint", "", "public wss:// URL of the server behind your own proxy")
-	fl.IntVar(&f.HTTPPort, "http-port", 0, "port on 127.0.0.1 for your own proxy, with --no-edge")
+	fl.IntVar(&f.HTTPPort, "http-port", 0, "port for your own proxy, with --no-edge")
+	fl.StringVar(&f.HTTPBind, "http-bind", "", "address the port for your own proxy listens on, with --no-edge (default 127.0.0.1)")
 	fl.BoolVar(&f.TokenStdin, "token-stdin", false, "read the join token from standard input")
 	return c
 }
@@ -317,7 +321,7 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 	if plan.edgeInst != nil {
 		network = plan.edgeInst.Project() + "_fluxer"
 	}
-	httpPort := 0
+	httpPort, httpBind := 0, ""
 	if f.NoEdge {
 		httpPort = f.HTTPPort
 		if existing := inst.State.VoiceServer(id); httpPort == 0 && existing != nil {
@@ -325,6 +329,10 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 		}
 		if httpPort == 0 {
 			httpPort = pickHTTPPort(takenVoicePorts(ctx, e, inst), tcp, freeOnHost)
+		}
+		httpBind = f.HTTPBind
+		if existing := inst.State.VoiceServer(id); !f.HTTPBindSet && existing != nil {
+			httpBind = existing.HTTPBind
 		}
 	}
 	plan.srv = instance.VoiceServer{
@@ -335,6 +343,7 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 		TCPPort:   tcp,
 		UDPPort:   udp,
 		HTTPPort:  httpPort,
+		HTTPBind:  httpBind,
 		NodeIP:    publicIP,
 		BindIP:    bindAddress(f.IP, voice.InterfaceAddresses()),
 		Image:     plan.image,
@@ -639,7 +648,7 @@ func showJoinSummary(app *App, plan *joinPlan, f *voiceFlags) {
 		{"Webhook", s.Webhook},
 	}
 	if s.HTTPPort > 0 {
-		rows = append(rows, []string{"Local port", fmt.Sprintf("127.0.0.1:%d for your proxy", s.HTTPPort)})
+		rows = append(rows, []string{"Local port", voice.HTTPAddress(s.HTTPBind, s.HTTPPort) + " for your proxy"})
 	}
 	u.Info("Voice server for %s", plan.domain)
 	u.Info("")
@@ -733,7 +742,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 			if u, perr := url.Parse(srv.Endpoint); perr == nil && u.Path != "" {
 				path = u.Path
 			}
-			check = fmt.Sprintf("Check that your proxy sends %s to 127.0.0.1:%d with WebSocket upgrades", path, saved.HTTPPort)
+			check = fmt.Sprintf("Check that your proxy sends %s to %s with WebSocket upgrades", path, voice.HTTPAddress(saved.HTTPBind, saved.HTTPPort))
 		}
 		return ui.Wrap(err, fmt.Sprintf("%s doesn't answer yet.", srv.Endpoint), check+", then "+strings.ToLower(undo[:1])+undo[1:])
 	}
@@ -1003,7 +1012,10 @@ func routeVoiceServer(ctx context.Context, app *App, e *engine.Engine, inst *ins
 		}
 		return reloadCaddy(ctx, e.Named(target.Project(), target.Dir), "edge", "/etc/caddy/Caddyfile")
 	}
-	app.UI.Info("Point your proxy at 127.0.0.1:%d for %s, with WebSocket upgrades and a read timeout of at least 120 seconds.", srv.HTTPPort, srv.Endpoint)
+	app.UI.Info("Point your proxy at %s for %s, with WebSocket upgrades and a read timeout of at least 120 seconds.", voice.HTTPAddress(srv.HTTPBind, srv.HTTPPort), srv.Endpoint)
+	if !voice.HTTPBindPrivate(srv.HTTPBind) {
+		app.UI.Warn(fmt.Sprintf("%s has no TLS of its own.", voice.HTTPAddress(srv.HTTPBind, srv.HTTPPort)), "Let only your proxy's network connect to it in your firewall.")
+	}
 	return nil
 }
 

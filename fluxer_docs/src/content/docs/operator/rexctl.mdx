@@ -1075,9 +1075,13 @@ rexctl voice join <domain> [token] [flags]
 
   Hostname for the server's endpoint and certificate.
 
+- `--http-bind string`
+
+  Address the port for your own proxy listens on, with --no-edge (default 127.0.0.1).
+
 - `--http-port int`
 
-  Port on 127.0.0.1 for your own proxy, with --no-edge.
+  Port for your own proxy, with --no-edge.
 
 - `--id string`
 
@@ -1105,7 +1109,7 @@ rexctl voice join <domain> [token] [flags]
 
 - `--no-edge`
 
-  Start no edge and publish the server on 127.0.0.1 for your own proxy.
+  Start no edge and publish the server's HTTP port for your own proxy.
 
 - `--no-firewall`
 

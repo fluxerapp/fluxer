@@ -179,6 +179,12 @@ rexctl voice join chat.example.com fvj_... --no-edge --endpoint wss://voice.exam
 
 rexctl publishes the server's HTTP port on `127.0.0.1`, from 7880 upwards, or at `--http-port`. Point your proxy at it with WebSocket upgrades and a read timeout of at least 120 seconds.
 
+When your proxy runs in another network or on another machine, pass `--http-bind` with an address of the voice machine that the proxy can connect to, or `0.0.0.0` for every address. This port has no TLS of its own. Let only your proxy's network connect to it in your firewall. To change the address later, remove the server and join it again with a new token.
+
+```sh
+rexctl voice join chat.example.com fvj_... --no-edge --endpoint wss://voice.example.com/livekit-fra-server-1 --http-bind 10.0.0.5
+```
+
 nginx needs a location block like this one.
 
 ```nginx
