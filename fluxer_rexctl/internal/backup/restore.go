@@ -42,6 +42,7 @@ func (e *UploadsNotHereError) Unwrap() error { return ErrUploadsNotHere }
 type RestoreOptions struct {
 	Progress func(stage string)
 	OnEvent  func(engine.Event)
+	Adopted  func(*instance.Instance)
 }
 
 type ProjectInUseError struct {
@@ -122,7 +123,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil {
 		return nil, err
 	}
-	if err := adoptRestored(inst, e); err != nil {
+	if err := adoptRestored(inst, e, opts.Adopted); err != nil {
 		return nil, err
 	}
 	for _, d := range []string{inst.StateDir(), inst.BackupDir()} {
@@ -347,7 +348,7 @@ func movesEngine(was instance.EngineRef, e *engine.Engine) bool {
 	return was.ID != "" && e.ID != "" && was.ID != e.ID
 }
 
-func adoptRestored(inst *instance.Instance, e *engine.Engine) error {
+func adoptRestored(inst *instance.Instance, e *engine.Engine, adopted func(*instance.Instance)) error {
 	st := inst.State
 	if st == nil {
 		return fmt.Errorf("%w: no state in the backup", ErrDamaged)
@@ -367,6 +368,9 @@ func adoptRestored(inst *instance.Instance, e *engine.Engine) error {
 		if _, err := os.Stat(st.PreviousBackup); err != nil || st.PreviousRelease == "" {
 			st.PreviousBackup = ""
 		}
+	}
+	if adopted != nil {
+		adopted(inst)
 	}
 	rendered, err := renderRestored(inst)
 	if err != nil {

@@ -182,7 +182,7 @@ To change the Compose setup, such as labels, images, ports or volumes, run `rexc
 rexctl config edit
 ```
 
-To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To serve a whole extra site, such as another domain on the same machine, put its `.caddy` file in `caddy.d/sites`. Fluxer loads those files next to its own site, and `rexctl upgrade` moves a file of whole sites from `caddy.d` to `caddy.d/sites` for you. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
 
 ## When something is wrong
 

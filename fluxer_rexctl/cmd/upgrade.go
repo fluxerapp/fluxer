@@ -720,7 +720,13 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 			return ui.Refused(spaceLine(sp, toShort)+" "+capitalise(fluxerName(fromShort))+" is still running.", spaceFix(e, sp))
 		}
 	}
-	if err := pullRelease(ctx, app, inst, e, set, next, toShort); err != nil {
+	if !f.Prefetch {
+		if err := moveSites(app, inst); err != nil {
+			clearUpgrade(inst)
+			return ui.Wrap(err, fmt.Sprintf("Couldn't move your sites in %s to %s.", instance.CaddyDropInDir, instance.CaddySitesDir), "Check that you can write to "+inst.Path(instance.CaddyDropInDir)+", then run rexctl upgrade again.")
+		}
+	}
+	if err := pullRelease(ctx, app, inst, e, set, next, toShort, f.Prefetch); err != nil {
 		clearUpgrade(inst)
 		if ctx.Err() != nil {
 			app.UI.Info("Stopped the upgrade. %s is still running.", capitalise(fluxerName(fromShort)))
@@ -911,6 +917,12 @@ func retryUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	if err != nil {
 		return engineFailure(err)
 	}
+	if err := moveSites(app, inst); err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't move your sites in %s to %s.", instance.CaddyDropInDir, instance.CaddySitesDir), release.UnfinishedFix(pend))
+	}
+	if err := checkEdge(ctx, inst, p, "", toShort, release.UnfinishedFix(pend)); err != nil {
+		return err
+	}
 	waiting, err := startRelease(ctx, app, target, e, p, toShort)
 	if err != nil {
 		if ctx.Err() != nil {
@@ -1012,7 +1024,7 @@ func refList(refs map[string]string) []string {
 	return slices.Sorted(maps.Values(refs))
 }
 
-func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, set *stack.Set, next *instance.State, toShort string) error {
+func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, set *stack.Set, next *instance.State, toShort string, prefetch bool) error {
 	scratch := filepath.Join(release.Dir(inst, next.Release), scratchDir)
 	defer os.RemoveAll(scratch)
 	r, err := stack.RenderAt(set, stack.OverlaysFor(next.Settings), next.Images.Refs, inst.Project(), scratch, inst.OldLayout())
@@ -1075,7 +1087,10 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 		return nil
 	})
 	if err == nil {
-		return nil
+		if prefetch {
+			return nil
+		}
+		return checkEdge(ctx, inst, p, filepath.Join(filepath.Dir(base[0]), stack.Caddyfile), toShort, still)
 	}
 	if ctx.Err() != nil {
 		return ctx.Err()
@@ -1087,6 +1102,81 @@ func pullRelease(ctx context.Context, app *App, inst *instance.Instance, e *engi
 		return ee
 	}
 	return ui.Wrap(err, fmt.Sprintf("Couldn't download Fluxer %s. %s", toShort, still), "Check this machine's internet connection, then run rexctl upgrade again.")
+}
+
+func moveSites(app *App, inst *instance.Instance) error {
+	moved, err := inst.RestoreSites(inst.State.MovedSites)
+	if err == nil {
+		var found []string
+		found, err = inst.MoveSites()
+		moved = append(moved, found...)
+	}
+	if pend := inst.State.Upgrade; pend != nil && len(moved) > 0 {
+		pend.Sites = slices.Compact(slices.Sorted(slices.Values(append(pend.Sites, moved...))))
+		if serr := inst.Save(); err == nil {
+			err = serr
+		}
+	}
+	for _, f := range moved {
+		app.UI.Info("Moved %s/%s to %s/%s. It defines its own site.", instance.CaddyDropInDir, f, instance.CaddySitesDir, f)
+	}
+	return err
+}
+
+func matchSites(app *App, inst *instance.Instance) error {
+	set, err := inst.Set()
+	if err != nil {
+		return nil
+	}
+	data, err := stack.ReadFile(set, stack.Caddyfile)
+	if err != nil {
+		return nil
+	}
+	switch sites, dropIns := instance.TopLevelImports(data); {
+	case sites:
+		back, err := inst.RestoreSites(inst.State.MovedSites)
+		for _, f := range back {
+			app.UI.Info("Moved %s/%s to %s/%s.", instance.CaddyDropInDir, f, instance.CaddySitesDir, f)
+		}
+		if err != nil || len(inst.State.MovedSites) == 0 {
+			return err
+		}
+		inst.State.MovedSites = nil
+		return inst.Save()
+	case dropIns:
+		moved, err := inst.UnloadSites()
+		for _, f := range moved {
+			app.UI.Info("Moved %s/%s to %s/%s. The release you went back to loads sites from there.", instance.CaddySitesDir, f, instance.CaddyDropInDir, f)
+		}
+		if len(moved) > 0 {
+			inst.State.MovedSites = slices.Compact(slices.Sorted(slices.Values(append(inst.State.MovedSites, moved...))))
+			if serr := inst.Save(); err == nil {
+				err = serr
+			}
+		}
+		return err
+	}
+	if files, err := inst.SiteFiles(); err == nil && len(files) > 0 {
+		app.UI.Warn(fmt.Sprintf("The release you went back to doesn't load %s. The sites there stay off until you upgrade.", instance.CaddySitesDir), "")
+	}
+	return nil
+}
+
+func matchRestoredSites(app *App) func(*instance.Instance) {
+	return func(inst *instance.Instance) {
+		if err := matchSites(app, inst); err != nil {
+			app.UI.Warn(fmt.Sprintf("Couldn't move the Caddy sites to where Fluxer %s loads them (%v).", release.Short(inst.State.Release), err), "Check "+instance.CaddyDropInDir+" and "+instance.CaddySitesDir+" before you reload Caddy.")
+		}
+	}
+}
+
+func checkEdge(ctx context.Context, inst *instance.Instance, p *engine.Project, caddyfile, toShort, still string) error {
+	err := deploy.CheckEdge(ctx, inst, p, caddyfile)
+	var edge *deploy.EdgeError
+	if !errors.As(err, &edge) {
+		return err
+	}
+	return ui.Refused(fmt.Sprintf("Fluxer %s can't start with your Caddy files.\n%s", toShort, edge.Caddy), edge.Fix("run rexctl upgrade again")+" "+still)
 }
 
 func composeProblem(err error) string {
@@ -1150,8 +1240,11 @@ func failedStart(ctx context.Context, app *App, inst *instance.Instance, e *engi
 
 func writeFailureLog(ctx context.Context, inst *instance.Instance, p *engine.Project, name string, cause error, waiting []string) string {
 	ctx = context.WithoutCancel(ctx)
-	if len(waiting) == 0 {
-		waiting = notRunning(ctx, p)
+	waiting = slices.Clone(waiting)
+	for _, svc := range notRunning(ctx, p) {
+		if !slices.Contains(waiting, svc) {
+			waiting = append(waiting, svc)
+		}
 	}
 	path := inst.Path(instance.StateDirName, name)
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
@@ -1192,7 +1285,7 @@ func notRunning(ctx context.Context, p *engine.Project) []string {
 	}
 	var out []string
 	for _, c := range containers {
-		ok := c.State == "running" && c.Health != "unhealthy" || stack.OneShot[c.Service] && c.State == "exited" && c.ExitCode == 0
+		ok := c.State == "running" && c.Health != "unhealthy" && c.RestartCount == 0 || stack.OneShot[c.Service] && c.State == "exited" && c.ExitCode == 0
 		if !ok && !slices.Contains(out, c.Service) {
 			out = append(out, c.Service)
 		}
@@ -1239,6 +1332,11 @@ func abandonUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *e
 
 func goBack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, version string) error {
 	pend := inst.State.Upgrade
+	if pend != nil {
+		if err := inst.PutBackSites(pend.Sites); err != nil {
+			app.UI.Detail("%v", err)
+		}
+	}
 	cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), recoveryTimeout)
 	defer cancel()
 	if _, err := restoreRelease(cctx, app, inst, e, version); err != nil {
@@ -1284,6 +1382,9 @@ func restoreRelease(ctx context.Context, app *App, inst *instance.Instance, e *e
 		if err := inst.Save(); err != nil {
 			return put, err
 		}
+	}
+	if err := matchSites(app, inst); err != nil {
+		return put, err
 	}
 	pull := false
 	for _, ref := range inst.State.Images.Refs {
@@ -1347,6 +1448,7 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 		inst.State.AdminImport = nil
 	}
 	inst.State.FailedRelease = ""
+	inst.State.MovedSites = nil
 	inst.State.Upgrade = nil
 	if err := inst.Save(); err != nil {
 		return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl doctor to see what's wrong.")
@@ -1490,6 +1592,9 @@ func setPhase(inst *instance.Instance, from, to, phase string) error {
 }
 
 func clearUpgrade(inst *instance.Instance) {
+	if pend := inst.State.Upgrade; pend != nil {
+		_ = inst.PutBackSites(pend.Sites)
+	}
 	inst.State.Upgrade = nil
 	_ = inst.Save()
 }

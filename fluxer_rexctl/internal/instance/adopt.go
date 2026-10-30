@@ -301,7 +301,7 @@ func adoptFiles(ctx context.Context, p *AdoptPlan) error {
 	if err := p.keepRunning(); err != nil {
 		return err
 	}
-	for _, d := range []string{BackupsDir, CertsDir, CADir, CaddyDropInDir} {
+	for _, d := range []string{BackupsDir, CertsDir, CADir, CaddyDropInDir, CaddySitesDir} {
 		mode := os.FileMode(0o755)
 		if d == BackupsDir {
 			mode = 0o700

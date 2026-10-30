@@ -234,6 +234,11 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	if err := newP.Pull(ctx, o.OnEvent); err != nil {
 		return nil, err
 	}
+	if slices.Contains(preview.Restarts, edgeService) {
+		if err := CheckEdge(ctx, inst, newP, ""); err != nil {
+			return nil, err
+		}
+	}
 	st.Pending = &instance.Pending{Settings: next, Keys: changed, StartedAt: now()}
 	if err := save(inst); err != nil {
 		st.Pending = nil

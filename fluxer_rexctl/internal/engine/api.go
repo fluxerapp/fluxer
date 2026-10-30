@@ -103,6 +103,7 @@ type HelperOptions struct {
 	Image      string
 	Entrypoint []string
 	Command    []string
+	Env        []string
 	Mounts     []Mount
 	Stdin      io.Reader
 	Stdout     io.Writer

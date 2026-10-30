@@ -244,11 +244,14 @@ func rollbackWithBackup(ctx context.Context, app *App, inst *instance.Instance, 
 		return err
 	}
 	return app.UI.Step(ctx, "Restoring the backup from "+when, func(ctx context.Context, s *ui.Step) error {
-		restored, err := backup.Restore(ctx, info.Path, inst.Dir, e, backup.RestoreOptions{Progress: func(stage string) {
-			if t := restoreStageTitle(stage); t != "" {
-				s.Title(t)
-			}
-		}})
+		restored, err := backup.Restore(ctx, info.Path, inst.Dir, e, backup.RestoreOptions{
+			Progress: func(stage string) {
+				if t := restoreStageTitle(stage); t != "" {
+					s.Title(t)
+				}
+			},
+			Adopted: matchRestoredSites(app),
+		})
 		if err != nil {
 			if errors.Is(err, backup.ErrUploadsNotHere) {
 				return uploadsNotHere(inst, info.Domain, info.Project, err)

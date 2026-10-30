@@ -492,11 +492,28 @@ func TestRestoreForgetsBackupOfAMissingRelease(t *testing.T) {
 		t.Fatal(err)
 	}
 	inst.State.PreviousRelease, inst.State.PreviousBackup = "2026.1001.100000", kept
-	if err := adoptRestored(inst, dockerEngine); err != nil {
+	if err := adoptRestored(inst, dockerEngine, nil); err != nil {
 		t.Fatal(err)
 	}
 	if inst.State.PreviousRelease != "" || inst.State.PreviousBackup != "" {
 		t.Errorf("after the restore the previous release is %q and the previous backup %q", inst.State.PreviousRelease, inst.State.PreviousBackup)
+	}
+}
+
+func TestRestoreLetsTheCallerFixFilesBeforeRendering(t *testing.T) {
+	inst := leanInstance(t)
+	inst.State.Upgrade = &instance.Upgrade{From: "2026.1001.100000", To: "2026.1029.100000", Sites: []string{"Mastodon.caddy"}}
+	var seen *instance.Upgrade
+	calls := 0
+	err := adoptRestored(inst, dockerEngine, func(got *instance.Instance) {
+		calls++
+		seen = got.State.Upgrade
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 || seen != nil {
+		t.Fatalf("hook ran %d times and saw upgrade %+v", calls, seen)
 	}
 }
 

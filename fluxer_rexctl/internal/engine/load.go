@@ -197,6 +197,28 @@ func (p *Project) Image(service string) string {
 	return p.Model.Services[service].Image
 }
 
+func (p *Project) HelperFor(service string) HelperOptions {
+	if p.Model == nil {
+		return HelperOptions{}
+	}
+	svc, ok := p.Model.Services[service]
+	if !ok {
+		return HelperOptions{}
+	}
+	o := HelperOptions{Image: svc.Image}
+	for _, k := range slices.Sorted(maps.Keys(svc.Environment)) {
+		if v := svc.Environment[k]; v != nil {
+			o.Env = append(o.Env, k+"="+*v)
+		}
+	}
+	for _, v := range svc.Volumes {
+		if v.Type == types.VolumeTypeBind && v.Source != "" {
+			o.Mounts = append(o.Mounts, Mount{Bind: v.Source, Target: v.Target, ReadOnly: v.ReadOnly})
+		}
+	}
+	return o
+}
+
 func (p *Project) Hashes() (map[string]string, error) {
 	if err := p.needModel("hash"); err != nil {
 		return nil, err

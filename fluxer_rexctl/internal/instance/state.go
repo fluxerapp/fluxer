@@ -42,6 +42,7 @@ type State struct {
 	Rendered        map[string]string `json:"rendered"`
 	Mounted         map[string]string `json:"mounted"`
 	LeftInRoot      map[string]string `json:"left_in_root,omitempty"`
+	MovedSites      []string          `json:"moved_sites,omitempty"`
 	Ejected         *Ejected          `json:"ejected"`
 	BackupDir       string            `json:"backup_dir,omitempty"`
 	KeepBackups     int               `json:"keep_backups,omitempty"`
@@ -65,6 +66,7 @@ type Upgrade struct {
 	Phase      string    `json:"phase"`
 	Backup     string    `json:"backup,omitempty"`
 	BackFailed bool      `json:"back_failed,omitempty"`
+	Sites      []string  `json:"sites,omitempty"`
 	StartedAt  time.Time `json:"started_at"`
 }
 
@@ -147,7 +149,7 @@ func parseStateRepairing(data []byte, dir string, repairing []string) (*State, e
 var stateFields = map[string]bool{
 	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "previous_backup": true, "failed_release": true,
 	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
-	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "ejected": true,
+	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "moved_sites": true, "ejected": true,
 	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true,
 }
 

@@ -11,6 +11,8 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
+const edgeService = "edge"
+
 func Apply(ctx context.Context, inst *instance.Instance, e *engine.Engine, o ApplyOptions) (*Change, error) {
 	if err := refuseEjected(inst); err != nil {
 		return nil, err
@@ -50,6 +52,11 @@ func Apply(ctx context.Context, inst *instance.Instance, e *engine.Engine, o App
 	plan, err := p.Plan(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if slices.Contains(restart, edgeService) || slices.Contains(restarted(plan), edgeService) {
+		if err := CheckEdge(ctx, inst, p, ""); err != nil {
+			return nil, err
+		}
 	}
 	if err := up(ctx, p, o.Wait, o.OnEvent); err != nil {
 		return nil, err

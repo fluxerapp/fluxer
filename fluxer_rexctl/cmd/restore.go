@@ -197,6 +197,7 @@ func restoreInto(ctx context.Context, app *App, e *engine.Engine, path, dir stri
 					s.Progress(ev.Current, ev.Total)
 				}
 			},
+			Adopted: matchRestoredSites(app),
 		})
 		if err != nil {
 			return err

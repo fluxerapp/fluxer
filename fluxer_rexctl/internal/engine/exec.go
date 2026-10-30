@@ -270,6 +270,7 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 			Image:        image,
 			Entrypoint:   append([]string{"sh", "-c", heartbeatScript, "rexctl"}, o.Entrypoint...),
 			Cmd:          o.Command,
+			Env:          o.Env,
 			AttachStdin:  o.Stdin != nil,
 			AttachStdout: true,
 			AttachStderr: true,

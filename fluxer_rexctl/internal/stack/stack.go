@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -56,6 +57,8 @@ var MountedDirs = map[string][]string{
 	"caddy.d": {"edge"},
 	"certs":   {"edge"},
 }
+
+var madeDirs = append(slices.Sorted(maps.Keys(MountedDirs)), "caddy.d/sites")
 
 var (
 	ErrUnknownOverlay  = errors.New("stack: unknown overlay")
@@ -319,7 +322,7 @@ func RenderAt(set *Set, selected []Overlay, images map[string]string, project, d
 	if err != nil {
 		return nil, err
 	}
-	for d := range MountedDirs {
+	for _, d := range madeDirs {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
 			return nil, err
 		}
