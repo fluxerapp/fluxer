@@ -409,7 +409,7 @@ services:
     environment:
       GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
       WEED_MASTER_VOLUME_GROWTH_COPY_1: ${FLUXER_SEAWEEDFS_VOLUME_GROWTH:-1}
-    command: ["server", "-s3", "-s3.iam=false", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}", "-master.volumeSizeLimitMB=${FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB:-1024}", "-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}", "-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}"]
+    command: ["server", "-s3", "-s3.iam=false", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}", "-master.volumeSizeLimitMB=${FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB:-1024}", "-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}", "-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}", "-s3.concurrentFileUploadLimit=${FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS:-5}"]
     volumes:
       - seaweedfs-data:/data
     healthcheck:

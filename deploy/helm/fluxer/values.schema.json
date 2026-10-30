@@ -576,6 +576,10 @@
 						}
 					]
 				},
+				"concurrentUploads": {
+					"type": "integer",
+					"minimum": 1
+				},
 				"gomemlimit": {
 					"type": "string"
 				},

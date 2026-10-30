@@ -394,6 +394,7 @@ var envVars = []envVar{
 	{"FLUXER_SEAWEEDFS_VOLUME_GROWTH", "tuning", "How many volumes SeaweedFS creates at once when a bucket has no writable volume left, set as its WEED_MASTER_VOLUME_GROWTH_COPY_1."},
 	{"FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB", "tuning", "The size in MB a volume can grow to before SeaweedFS stops writing to it, set as its `-master.volumeSizeLimitMB`."},
 	{"FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD", "tuning", "The share of deleted space in a volume that makes SeaweedFS compact it, as a fraction, set as its `-master.garbageThreshold`."},
+	{"FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS", "tuning", "How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress holds up to 32 MB of memory in SeaweedFS. Raise FLUXER_SEAWEEDFS_MEMORY_LIMIT before you raise this."},
 	{"FLUXER_SEAWEEDFS_VOLUME_MAX", "tuning", "The most volumes the SeaweedFS volume store may have, set as its `-volume.max`."},
 	{"FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT", "tuning", "The memory limit for the seaweedfs-init container, which creates the buckets, sets up the S3 key and the expiry of the uploads bucket, and then exits."},
 	{"FLUXER_LIVEKIT_MEMORY_LIMIT", "tuning", "The memory limit for the livekit container."},

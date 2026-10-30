@@ -1528,6 +1528,10 @@ The size in MB a volume can grow to before SeaweedFS stops writing to it, set as
 
 The share of deleted space in a volume that makes SeaweedFS compact it, as a fraction, set as its `-master.garbageThreshold`. The default is `0.1`. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD`.
 
+### `FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`
+
+How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress holds up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this. The default is `5`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`.
+
 ### `FLUXER_SEAWEEDFS_VOLUME_MAX`
 
 The most volumes the SeaweedFS volume store may have, set as its `-volume.max`. The default is `10000`. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_VOLUME_MAX`.

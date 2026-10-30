@@ -108,7 +108,9 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 
 	out["FLUXER_LIVEKIT_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_LIVEKIT_MEMORY_LIMIT", 6, 320, 2048)*85/100) + "MiB"
 	out["FLUXER_NATS_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_NATS_MEMORY_LIMIT", 3, 192, 1024)*4/5) + "MiB"
-	out["FLUXER_SEAWEEDFS_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_SEAWEEDFS_MEMORY_LIMIT", 8, 448, 2048)*85/100) + "MiB"
+	seaweed := share("FLUXER_SEAWEEDFS_MEMORY_LIMIT", 8, 768, 2048)
+	out["FLUXER_SEAWEEDFS_GOMEMLIMIT"] = strconv.Itoa(seaweed*85/100) + "MiB"
+	setInt(out, "FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS", clamp(seaweed/384, 2, 8))
 	out["FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY"] = strconv.Itoa(share("FLUXER_MEILISEARCH_MEMORY_LIMIT", 15, 512, 4096)/3) + "mb"
 
 	out["FLUXER_VALKEY_MEMORY_LIMIT"] = strconv.Itoa(clamp(m*45/1000+32, 224, 1568)) + "mb"
