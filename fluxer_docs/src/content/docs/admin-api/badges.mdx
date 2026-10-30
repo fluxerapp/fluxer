@@ -75,13 +75,13 @@ Guilds have a lower ceiling because every guild a person is in sends its `badge_
 
 Returns one page of custom badges in display order, with the badge settings and the built-in badge images. Without `type` the list holds every user badge, then every guild badge. You need `badge:list`.
 
-### Query string parameters
+### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | type? | string | `user` or `guild` |
 | query? | string | Only badges whose ID is this value, or whose name holds it, ignoring case (1-64 characters) |
-| ids? | string | Up to 100 badge IDs separated by commas. Only these badges come back, and `next` is null. Can't be sent with `query` or `after` |
+| ids? | string | Up to 100 badge IDs separated by commas. Only these come back, and `next` is null. Not with `query` or `after` |
 | after? | string | The `next` value of the previous page |
 | limit? | integer | How many badges to return (1-200, default 100) |
 
@@ -190,7 +190,7 @@ Moves one badge within the badges of its type and returns it. Send either `direc
 | Field | Type | Description |
 | --- | --- | --- |
 | badge_id | snowflake | The badge to move |
-| direction? | string | `up` or `down` to swap places with the badge before or after it, `first` or `last` to put it before or after every other badge of its type |
+| direction? | string | `up` or `down` swaps it with the badge before or after it. `first` or `last` puts it before or after every badge of its type |
 | after_id? | ?snowflake | Put the badge right after this badge of the same type, or first when null |
 
 ### Response
@@ -217,11 +217,21 @@ It works on instances with up to 1,000 badges. Larger instances move badges one 
 | --- | --- | --- |
 | badge_ids | array[snowflake] | Every badge ID on the instance in the new order (up to 1000) |
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
+| next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
+| version | string | The catalog version |
+| settings | [badge settings](#badge-settings-object) object | The badge limits |
+| built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [List badges](#list-badges) response body | The order was saved |
+| 200 | response body | The order was saved |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when `badge_ids` leaves out a badge or lists one twice, or the instance has more than 1,000 badges |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when an ID isn't a badge on the instance |
 
@@ -267,11 +277,21 @@ Uploads an image and shows it everywhere the built-in badge appears, then return
 
 <sup>1</sup> The same formats and limits as [Create badge](#create-badge)
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
+| next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
+| version | string | The catalog version |
+| settings | [badge settings](#badge-settings-object) object | The badge limits |
+| built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [List badges](#list-badges) response body | The image was replaced |
+| 200 | response body | The image was replaced |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` for an unknown `kind` |
 | 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
 
@@ -283,11 +303,21 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 Goes back to the built-in image for a badge, deletes the uploaded one and returns the first page of [List badges](#list-badges) with up to 200 badges. You need `badge:update`.
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
+| next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
+| version | string | The catalog version |
+| settings | [badge settings](#badge-settings-object) object | The badge limits |
+| built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [List badges](#list-badges) response body | The built-in image is used again |
+| 200 | response body | The built-in image is used again |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` for an unknown `kind` |
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

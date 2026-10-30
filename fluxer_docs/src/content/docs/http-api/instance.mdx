@@ -52,7 +52,7 @@ A custom badge that instance admins give to guilds. A guild lists the badges it 
 | description | ?string | The tooltip text under the name, or null |
 | asset_url | string | The badge image as WebP from the media proxy. Add a `size` query parameter to get it at the size you draw it |
 | href | ?string | The `https` URL a click opens, or null |
-| position? | string | The display position, a 64-bit integer as a string. Older instances leave it out, and clients then keep the order of `guild_badges` |
+| position? | string | The display position as a 64-bit integer string. Older instances leave it out, and clients keep the `guild_badges` order |
 
 ### Loading badges
 
@@ -535,7 +535,7 @@ The rate limit is 60 requests per minute, on the `instance:info` bucket.
 
 Returns custom guild badges in display order. Send `ids` to look up the badges of some guilds, or page through every badge with `after` and `limit`. User badges aren't listed here. They come back in each [profile](/http-api/users/#profile-badge-object) instead.
 
-### Query string parameters
+### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
