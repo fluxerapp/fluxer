@@ -53,7 +53,7 @@ const setElectronBadge = (badge: number): void => {
 		if (electronApi?.setUnreadBadge) {
 			electronApi.setUnreadBadge(badge);
 		} else {
-			electronApi?.setBadgeCount?.(badge > 0 ? badge : 0);
+			electronApi?.setBadgeCount?.(Math.max(badge, 0));
 		}
 	} catch (e) {
 		logger.warn('Failed to set Electron badge', e);

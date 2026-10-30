@@ -89,7 +89,7 @@ export function getSubscriptionPremiumPeriodEnd(subscription: Stripe.Subscriptio
 	const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null;
 	const currentPeriodEnd = getSubscriptionCurrentPeriodEnd(subscription);
 	if (trialEnd && currentPeriodEnd) {
-		return trialEnd > currentPeriodEnd ? trialEnd : currentPeriodEnd;
+		return new Date(Math.max(trialEnd.getTime(), currentPeriodEnd.getTime()));
 	}
 	return trialEnd ?? currentPeriodEnd;
 }

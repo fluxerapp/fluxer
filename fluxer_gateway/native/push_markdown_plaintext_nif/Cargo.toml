@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 fluxer_markdown_parser = { path = "../../../packages/markdown_parser/rust" }
-rustler = "0.38.0"
+rustler = "0.39.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

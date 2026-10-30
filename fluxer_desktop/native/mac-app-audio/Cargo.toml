@@ -13,12 +13,12 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 fluxer_sample_pool = {path = "../sample-pool"}
-napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
-napi-derive = "3.6.7"
-parking_lot = "0.12"
+napi = {version = "3.16.0", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
+napi-derive = "3.7.0"
+parking_lot = "0.13"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2.189"
+libc = "0.2.191"
 objc2 = "0.6"
 objc2-foundation = {version = "0.3", features = ["NSString", "NSArray", "NSDictionary", "NSError", "NSValue", "NSBundle", "NSProcessInfo"]}
 objc2-screen-capture-kit = {version = "0.3", features = ["SCStream", "SCShareableContent", "objc2-core-graphics", "objc2-core-media", "objc2-core-foundation", "block2", "dispatch2", "libc"]}
@@ -31,4 +31,4 @@ block2 = "0.6"
 dispatch2 = "0.3"
 
 [build-dependencies]
-napi-build = "2.4.3"
+napi-build = "2.6.0"

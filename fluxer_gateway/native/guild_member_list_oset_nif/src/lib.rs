@@ -55,9 +55,9 @@ impl<'a> Decoder<'a> for MemberKey {
 
 impl Encoder for MemberKey {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        let mut sort_key = OwnedBinary::new(self.sort_key.len()).expect("binary allocation failed");
-        sort_key.as_mut_slice().copy_from_slice(&self.sort_key);
-        let sort_key_term = sort_key.release(env).to_term(env);
+        let sort_key_term = OwnedBinary::from_slice(&self.sort_key)
+            .release(env)
+            .to_term(env);
         let terms = [
             self.section_idx.encode(env),
             sort_key_term,

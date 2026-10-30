@@ -10,17 +10,17 @@
 	},
 	"dependencies": {
 		"@livekit/mutex": "1.1.1",
-		"@livekit/protocol": "1.51.0",
+		"@livekit/protocol": "1.53.1",
 		"events": "^3.3.0",
-		"jose": "^6.1.0",
+		"jose": "^6.2.14",
 		"loglevel": "^1.9.2",
-		"machina": "^7.0.1",
-		"sdp-transform": "^2.15.0",
+		"machina": "^8.2.0",
+		"sdp-transform": "^3.0.0",
 		"typed-emitter": "^2.1.0",
 		"webrtc-adapter": "^9.0.6"
 	},
 	"devDependencies": {
-		"@types/events": "^3.0.0",
-		"@types/sdp-transform": "^2.15.0"
+		"@types/events": "^3.0.3",
+		"@types/sdp-transform": "^3.0.0"
 	}
 }

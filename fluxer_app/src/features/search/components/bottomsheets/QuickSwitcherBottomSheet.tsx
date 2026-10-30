@@ -259,7 +259,7 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 		setSelectedIndex: setKeyboardIndex,
 	} = useListNavigation({
 		itemCount: results.length,
-		initialIndex: selectedIndex >= 0 ? selectedIndex : 0,
+		initialIndex: Math.max(selectedIndex, 0),
 	});
 	if (rowRefs.current.length !== results.length) {
 		rowRefs.current = Array(results.length).fill(null);

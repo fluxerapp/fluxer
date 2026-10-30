@@ -96,7 +96,7 @@ function findWelcomeLocaleIndex(localeCode: string): number {
 	const localeIndex = WELCOME_ROTATION.findIndex((entry) => entry.code === localeCode);
 	if (localeIndex >= 0) return localeIndex;
 	const defaultIndex = WELCOME_ROTATION.findIndex((entry) => entry.code === DEFAULT_WELCOME_LOCALE);
-	return defaultIndex >= 0 ? defaultIndex : 0;
+	return Math.max(defaultIndex, 0);
 }
 
 function pickWelcomeGroupIndex(group: WelcomeTextGroup, random: RandomSource): number {

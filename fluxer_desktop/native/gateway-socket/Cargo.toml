@@ -12,17 +12,17 @@ resolver = "2"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-futures-util = {version = "0.3.32", default-features = false, features = ["sink", "std"]}
-napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
-napi-derive = "3.6.7"
-rustls = {version = "0.23.40", default-features = false, features = ["ring", "std"]}
-rustls-native-certs = "0.8.4"
-tokio = {version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "sync", "time"]}
+futures-util = {version = "0.3.34", default-features = false, features = ["sink", "std"]}
+napi = {version = "3.16.0", default-features = false, features = ["dyn-symbols", "napi8"]}
+napi-derive = "3.7.0"
+rustls = {version = "0.23.46", default-features = false, features = ["ring", "std"]}
+rustls-native-certs = "0.8.5"
+tokio = {version = "1.54.1", features = ["macros", "net", "rt-multi-thread", "sync", "time"]}
 tokio-tungstenite = {version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-native-roots"]}
 url = "2.5.8"
 
 [build-dependencies]
-napi-build = "2.4.3"
+napi-build = "2.6.0"
 
 [target.'cfg(windows)'.dependencies]
-schannel = "0.1.29"
+schannel = "0.1.30"

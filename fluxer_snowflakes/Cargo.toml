@@ -9,5 +9,5 @@ publish = false
 anyhow = "1.0.104"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
-tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 tracing = "0.1.44"

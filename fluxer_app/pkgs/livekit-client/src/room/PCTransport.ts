@@ -43,6 +43,10 @@ const requiredOpusFmtpParameters = {
 	usedtx: '0',
 };
 
+function msidHasTrack(media: MediaDescription, trackId: string): boolean {
+	return media.msid?.some(({id, appdata}) => id === trackId || appdata === trackId) ?? false;
+}
+
 export function applyVideoStartBitrate(
 	media: MediaDescription,
 	cid: string,
@@ -50,7 +54,7 @@ export function applyVideoStartBitrate(
 	maxbr: number,
 	isScreenShare = false,
 ): number | undefined {
-	if (!media.msid?.includes(cid)) {
+	if (!msidHasTrack(media, cid)) {
 		return undefined;
 	}
 
@@ -859,7 +863,7 @@ export function collectStereoMids(
 			continue;
 		}
 		for (const m of media) {
-			if (m.type === 'audio' && m.mid !== undefined && m.msid?.includes(trackId)) {
+			if (m.type === 'audio' && m.mid !== undefined && msidHasTrack(m, trackId)) {
 				stereoMids.push(getMidString(m.mid));
 			}
 		}

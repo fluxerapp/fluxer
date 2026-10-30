@@ -123,7 +123,7 @@
 				"noSvgWithoutTitle": "off"
 			},
 			"nursery": {
-				"useSortedClasses": "error"
+				"useTailwindSortedClasses": "error"
 			}
 		}
 	},
@@ -202,6 +202,9 @@
 			"!packages/schema/src/gen",
 			"!**/tailwind.css",
 			"!**/*.html",
+			"!**/*.md",
+			"!**/*.yaml",
+			"!**/*.yml",
 			"!**/*.module.css.d.ts",
 			"!**/fluxer_app/src/features/ui/components/SVGMasks.tsx",
 			"!fluxer_static",

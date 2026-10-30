@@ -135,7 +135,7 @@ class Invites {
 			this.handleInviteDelete(invite.code, target);
 			return;
 		}
-		const wait = remaining > SETTIMEOUT_LIMIT_MS ? SETTIMEOUT_LIMIT_MS : remaining;
+		const wait = Math.min(remaining, SETTIMEOUT_LIMIT_MS);
 		const handle = setTimeout(() => {
 			runInAction(() => {
 				this.armTimer(invite, target);

@@ -28,54 +28,54 @@ blockExoticSubdeps: true
 
 catalog:
   '@arborium/arborium': 2.18.2
-  '@astrojs/check': 0.9.10
-  '@astrojs/markdown-remark': 7.3.1
-  '@astrojs/mdx': 8.0.1
-  '@astrojs/node': 11.1.7
-  '@astrojs/starlight': 0.42.1
+  '@astrojs/check': 0.9.12
+  '@astrojs/markdown-remark': 7.3.5
+  '@astrojs/mdx': 8.1.2
+  '@astrojs/node': 11.1.9
+  '@astrojs/starlight': 0.42.7
   '@atproto/jwk-jose': 0.2.4
-  '@atproto/oauth-client-node': 0.5.7
-  '@aws-sdk/client-s3': 3.1133.0
-  '@aws-sdk/lib-storage': 3.1133.0
-  '@aws-sdk/s3-request-presigner': 3.1133.0
-  '@base-ui/react': 1.8.0
-  '@biomejs/biome': 2.5.14
+  '@atproto/oauth-client-node': 0.5.13
+  '@aws-sdk/client-s3': 3.1159.0
+  '@aws-sdk/lib-storage': 3.1159.0
+  '@aws-sdk/s3-request-presigner': 3.1159.0
+  '@base-ui/react': 1.9.0
+  '@biomejs/biome': 2.6.4
   '@elastic/elasticsearch': 9.5.1
   '@floating-ui/react': 0.27.20
   '@floating-ui/react-dom': 2.1.9
-  '@hono/node-server': 2.1.3
-  '@lexical/history': 0.50.0
-  '@lexical/react': 0.50.0
-  '@lexical/utils': 0.50.0
-  '@lingui/cli': 6.7.0
-  '@lingui/core': 6.7.0
-  '@lingui/format-po': 6.7.0
-  '@lingui/react': 6.7.0
-  '@lingui/swc-plugin': 6.7.0
+  '@hono/node-server': 2.1.5
+  '@lexical/history': 0.53.0
+  '@lexical/react': 0.53.0
+  '@lexical/utils': 0.53.0
+  '@lingui/cli': 6.11.0
+  '@lingui/core': 6.11.0
+  '@lingui/format-po': 6.11.0
+  '@lingui/react': 6.11.0
+  '@lingui/swc-plugin': 6.7.1
   '@livekit/components-react': 2.9.24
-  '@messageformat/core': 3.4.0
-  '@messageformat/parser': 5.1.1
+  '@messageformat/core': 3.4.1
+  '@messageformat/parser': 5.2.0
   '@nats-io/jetstream': 3.4.0
   '@nats-io/transport-node': 3.4.0
   '@phosphor-icons/react': 2.1.10
-  '@radix-ui/react-checkbox': 1.3.11
-  '@radix-ui/react-radio-group': 1.4.7
-  '@radix-ui/react-switch': 1.3.7
-  '@redocly/openapi-core': 2.53.2
-  '@rspack/cli': 2.2.5
-  '@rspack/core': 2.2.5
-  '@rspack/dev-server': 2.2.1
-  '@sapphi-red/web-noise-suppressor': 0.4.0
+  '@radix-ui/react-checkbox': 1.4.1
+  '@radix-ui/react-radio-group': 1.5.1
+  '@radix-ui/react-switch': 1.4.1
+  '@redocly/openapi-core': 2.72.1
+  '@rspack/cli': 2.3.0
+  '@rspack/core': 2.3.0
+  '@rspack/dev-server': 2.2.2
+  '@sapphi-red/web-noise-suppressor': 0.4.1
   '@simplewebauthn/browser': 14.0.0
-  '@simplewebauthn/server': 14.0.2
+  '@simplewebauthn/server': 14.0.3
   '@svgr/webpack': 8.1.0
   '@tailwindcss/cli': 4.3.3
   '@types/archiver': 8.0.0
   '@types/combokeys': 2.4.9
   '@types/hast': 3.0.5
-  '@types/lodash': 4.17.25
-  '@types/luxon': 3.7.5
-  '@types/node': 26.6.1
+  '@types/lodash': 4.17.27
+  '@types/luxon': 3.7.6
+  '@types/node': 26.6.6
   '@types/pg': 8.23.1
   '@types/qrcode': 1.5.6
   '@types/react': 19.3.0
@@ -83,69 +83,69 @@ catalog:
   '@types/send': 1.2.1
   '@types/three': 0.186.0
   '@types/validator': 13.15.10
-  '@vvo/tzdb': 6.198.0
-  '@webgpu/types': 0.1.72
-  altcha-lib: 2.5.0
+  '@vvo/tzdb': 6.202.0
+  '@webgpu/types': 0.1.74
+  altcha-lib: 2.8.0
   archiver: 8.0.0
-  argon2: 0.44.0
-  astro: 7.3.3
-  autoprefixer: 10.6.1
-  bowser: 2.14.1
-  cassandra-driver: 4.9.0
+  argon2: 0.45.1
+  astro: 7.4.4
+  autoprefixer: 10.6.2
+  bowser: 2.15.0
+  cassandra-driver: 4.10.0
   clsx: 2.1.1
   combokeys: 3.0.1
   emoji-regex: 11.0.0
   esbuild: 0.28.2
-  eslint: 10.10.0
+  eslint: 10.13.0
   eslint-plugin-react-google-translate: 1.0.4
   eventemitter3: 5.0.4
   favico.js: 0.3.10
-  framer-motion: 13.4.0
-  hi-base32: 0.5.1
-  hono: 4.13.11
+  framer-motion: 14.7.1
+  hi-base32: 0.6.0
+  hono: 4.13.14
   html-entities: 2.6.0
-  idna-uts46-hx: 6.2.1
+  idna-uts46-hx: 6.2.4
   ioredis: 6.0.0
   itty-time: 2.0.2
-  jose: 6.2.12
-  katex: 0.18.7
-  knip: 6.36.0
-  lexical: 0.50.0
-  livekit-server-sdk: 2.19.0
+  jose: 6.2.14
+  katex: 0.19.1
+  knip: 6.43.0
+  lexical: 0.53.0
+  livekit-server-sdk: 2.19.2
   lodash: 4.18.1
-  lru-cache: 11.5.2
+  lru-cache: 11.5.3
   luxon: 3.7.2
   match-sorter: 8.3.0
   maxmind: 5.0.7
   mdast-util-to-hast: 13.2.1
-  mime: 4.1.0
+  mime: 4.1.2
   mjml-core: 5.4.1
   mjml-preset-core: 5.4.1
   mjml-validator: 5.4.1
-  mobx: 7.0.3
+  mobx: 7.1.3
   mobx-persist-store: 1.1.8
-  mobx-react-lite: 5.0.3
+  mobx-react-lite: 5.1.2
   msw: 2.15.0
-  nodemailer: 10.1.4
-  onnxruntime-web: 1.30.0
+  nodemailer: 10.3.1
+  onnxruntime-web: 1.31.1
   pdf-lib: 1.17.1
-  pg: 8.23.0
-  pino: 10.3.1
-  pino-pretty: 13.1.3
-  postcss: 8.5.28
+  pg: 8.23.1
+  pino: 10.4.0
+  pino-pretty: 13.2.0
+  postcss: 8.5.32
   postcss-discard-comments: 9.0.2
   postcss-loader: 8.2.1
-  postcss-preset-env: 11.5.3
+  postcss-preset-env: 11.6.1
   qrcode: 1.5.4
-  react: 19.3.0
-  react-aria-components: 1.21.1
-  react-day-picker: 10.0.1
+  react: 19.3.1
+  react-aria-components: 1.22.1
+  react-day-picker: 10.0.2
   react-dnd: 16.0.1
   react-dnd-accessible-backend: 2.1.0
   react-dnd-html5-backend: 16.0.1
   react-dnd-multi-backend: 9.0.0
-  react-dom: 19.3.0
-  react-hook-form: 7.88.0
+  react-dom: 19.3.1
+  react-hook-form: 7.91.0
   react-hotkeys-hook: 5.3.3
   rxjs: 7.8.2
   send: 1.2.1
@@ -153,24 +153,24 @@ catalog:
   stripe: 22.6.2
   tailwindcss: 4.3.3
   tempy: 3.2.0
-  three: 0.186.0
+  three: 0.186.1
   thumbhash: 0.1.1
   tiny-invariant: 1.3.3
-  tldts: 7.4.13
-  transliteration: 2.6.1
+  tldts: 7.4.19
+  transliteration: 2.7.0
   ts-morph: 28.0.0
-  tsx: 4.23.13
+  tsx: 4.23.15
   typed-css-modules: 0.9.1
   typescript: 6.0.3
-  typescript-eslint: 8.70.0
-  uint8array-extras: 1.5.0
-  undici: 8.12.2
+  typescript-eslint: 8.72.1
+  uint8array-extras: 1.6.0
+  undici: 8.12.3
   unique-names-generator: 4.7.1
   urlpattern-polyfill: 10.1.0
   valibot: 1.5.0
   validator: 13.15.35
-  vite: 8.3.4
-  vitest: 5.0.1
+  vite: 8.3.5
+  vitest: 5.0.5
   yaml: 2.9.1
   zod: 4.6.7
 
@@ -181,12 +181,11 @@ catalogs:
 minimumReleaseAge: 1440
 
 overrides:
-  '@astrojs/check@0.9.10>chokidar': 5.0.0
+  '@opentelemetry/api': 1.9.1
   '@floating-ui/dom': 1.8.0
   '@lingui/swc-plugin': 'catalog:'
   '@rspack/cli': 'catalog:'
   '@rspack/core': 'catalog:'
-  cassandra-driver@4.9.0>adm-zip: 0.6.1
   emscripten-wasm-loader@3.0.3>nanoid: 3.3.19
   hunspell-asm@4.0.2>nanoid: 3.3.19
   semver: 7.8.5

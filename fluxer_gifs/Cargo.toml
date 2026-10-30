@@ -15,8 +15,8 @@ futures = "0.3"
 moka = { version = "0.12.16", features = ["future", "sync"] }
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = "1.0.151"
-tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
 tracing = "0.1.44"
 url = "2.5"
 urlencoding = "2.1"

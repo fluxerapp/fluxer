@@ -64,7 +64,7 @@ function withRecord(map: ReactionMap, key: string, record: ReactionRecord | null
 }
 
 function clamp(n: number): number {
-	return n < 0 ? 0 : n;
+	return Math.max(n, 0);
 }
 
 const EMPTY_REACTIONS: ReadonlyArray<MessageReaction> = Object.freeze([]);

@@ -7,11 +7,11 @@ publish = false
 
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
-ammonia = "4.2.3"
+ammonia = "4.2.4"
 anyhow = "1.0.104"
 base64 = "0.23.1"
 chrono = { version = "0.4.45", default-features = false, features = ["std"] }
-encoding_rs = "0.8.41"
+encoding_rs = "0.8.44"
 entities = "1.0.1"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 hickory-resolver = { version = "0.26.3", default-features = false, features = ["tokio"] }
@@ -20,11 +20,11 @@ moka = { version = "0.12.16", features = ["future", "sync"] }
 regex = "1.13"
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "stream"] }
 ring = "0.17.14"
-scraper = "0.27"
+scraper = "0.29"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = "1.0.151"
-thiserror = "2.0.20"
-tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
 tracing = "0.1.44"
 url = "2.5"
 urlencoding = "2.1"

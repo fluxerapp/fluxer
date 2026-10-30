@@ -14,8 +14,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 fluxer_sample_pool = {path = "../sample-pool"}
 fluxer_rt_thread = {path = "../rt-thread"}
-napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
-napi-derive = "3.6.7"
+napi = {version = "3.16.0", default-features = false, features = ["dyn-symbols", "napi8"]}
+napi-derive = "3.7.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = {version = "0.62.2", features = [
@@ -38,4 +38,4 @@ windows = {version = "0.62.2", features = [
 windows-core = "0.62.2"
 
 [build-dependencies]
-napi-build = "2.4.3"
+napi-build = "2.6.0"

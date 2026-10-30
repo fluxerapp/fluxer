@@ -83,9 +83,7 @@ fn render_push_preview_nif<'a>(
 }
 
 fn binary_term<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<Term<'a>> {
-    let mut binary = OwnedBinary::new(bytes.len()).ok_or(Error::BadArg)?;
-    binary.as_mut_slice().copy_from_slice(bytes);
-    Ok(binary.release(env).to_term(env))
+    Ok(OwnedBinary::from_slice(bytes).release(env).to_term(env))
 }
 
 rustler::init!("push_markdown_plaintext_nif");

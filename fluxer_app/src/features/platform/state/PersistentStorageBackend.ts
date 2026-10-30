@@ -105,7 +105,7 @@ let stampSequence = 0;
 
 function nextStamp(): AppStorageStamp {
 	const now = Date.now();
-	stampWall = now > stampWall ? now : stampWall;
+	stampWall = Math.max(now, stampWall);
 	stampSequence += 1;
 	return {wall: stampWall, seq: stampSequence};
 }
