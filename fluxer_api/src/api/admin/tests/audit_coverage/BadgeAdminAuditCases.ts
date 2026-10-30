@@ -56,6 +56,36 @@ export const BadgeAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'PUT',
+		route: '/admin/badges/built-in/:kind',
+		async prepare() {
+			return {
+				request: {path: '/admin/badges/built-in/staff', body: {image: getPngDataUrl()}},
+				expected: {
+					action: 'replace_built_in_badge_image',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {kind: 'staff'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/badges/built-in/:kind',
+		async prepare() {
+			return {
+				request: {path: '/admin/badges/built-in/guild_verified'},
+				expected: {
+					action: 'reset_built_in_badge_image',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {kind: 'guild_verified'},
+				},
+			};
+		},
+	},
+	{
 		method: 'PATCH',
 		route: '/admin/badges/:badge_id',
 		async prepare({harness, admin}) {

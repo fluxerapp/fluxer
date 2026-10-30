@@ -14,9 +14,11 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	AdminCustomBadgeListResponse,
 	AdminCustomBadgeResponse,
+	BuiltInBadgeKindParam,
 	CreateCustomBadgeRequest,
 	CustomBadgeIdParam,
 	ReorderCustomBadgesRequest,
+	ReplaceBuiltInBadgeImageRequest,
 	UpdateCustomBadgeRequest,
 	UpdateUserCustomBadgesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
@@ -98,6 +100,63 @@ export function BadgeAdminController(app: HonoApp) {
 				targetId: 0n,
 				action: 'reorder_badges',
 				metadata: {badge_ids: badgeIds.join(',')},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.put(
+		'/admin/badges/built-in/:kind',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		Validator('param', BuiltInBadgeKindParam),
+		Validator('json', ReplaceBuiltInBadgeImageRequest),
+		OpenAPI({
+			operationId: 'replace_admin_built_in_badge_image',
+			summary: 'Replace built-in badge image',
+			description:
+				'Shows an uploaded image everywhere a built-in profile or community badge appears. The name, tooltip and meaning of the badge stay the same. Creates audit log entry. Requires BADGE_UPDATE permission.',
+			responseSchema: AdminCustomBadgeListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {kind} = ctx.req.valid('param');
+			const response = await ctx
+				.get('adminService')
+				.badgeService.replaceBuiltInBadgeImage(kind, ctx.req.valid('json').image);
+			await recordAdminWrite(ctx, {
+				targetType: 'badge',
+				targetId: 0n,
+				action: 'replace_built_in_badge_image',
+				metadata: {kind},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.delete(
+		'/admin/badges/built-in/:kind',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		Validator('param', BuiltInBadgeKindParam),
+		OpenAPI({
+			operationId: 'reset_admin_built_in_badge_image',
+			summary: 'Use built-in badge image',
+			description:
+				'Goes back to the built-in artwork for a built-in profile or community badge and deletes the uploaded image. Creates audit log entry. Requires BADGE_UPDATE permission.',
+			responseSchema: AdminCustomBadgeListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {kind} = ctx.req.valid('param');
+			const response = await ctx.get('adminService').badgeService.resetBuiltInBadgeImage(kind);
+			await recordAdminWrite(ctx, {
+				targetType: 'badge',
+				targetId: 0n,
+				action: 'reset_built_in_badge_image',
+				metadata: {kind},
 			});
 			return ctx.json(response);
 		},

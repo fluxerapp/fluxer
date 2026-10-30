@@ -9,7 +9,7 @@ import {
 	nextDiscoveryValidators,
 } from '@app/api/instance/DiscoveryValidators';
 import {customBadgeImageUrl} from '@app/api/instance/InstanceAssetReferences';
-import type {CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
+import type {BuiltInBadgeImages, CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
 import {assertSetupToken} from '@app/api/instance/SetupToken';
 import {getStatusPageDetector} from '@app/api/instance/StatusPageDetector';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -45,6 +45,7 @@ import {toDomainMigrationDiscovery} from '@fluxer/schema/src/domains/admin/Domai
 import {
 	InstanceAccountIdentityResponse,
 	InstanceAccountIdentityUpdateRequest,
+	type InstanceBuiltInGuildBadgeImages,
 	type InstanceGuildBadge,
 	InstanceSetupTokenCheckRequest,
 	WellKnownFluxerResponse,
@@ -154,6 +155,15 @@ function listVoiceOrigins(): Array<string> {
 	return Array.from(origins).sort();
 }
 
+function mapBuiltInGuildBadgeImagesForDiscovery(images: BuiltInBadgeImages): InstanceBuiltInGuildBadgeImages {
+	const url = (asset: string | undefined) => (asset ? customBadgeImageUrl(asset, Config.endpoints.media) : null);
+	return {
+		verified: url(images.guild_verified),
+		partnered: url(images.guild_partnered),
+		discoverable: url(images.guild_discoverable),
+	};
+}
+
 function mapGuildBadgesForDiscovery(badges: ReadonlyArray<CustomBadgeDefinition>): Array<InstanceGuildBadge> {
 	return badges
 		.filter((badge) => badge.type === 'guild')
@@ -200,6 +210,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instantAccountAvailability,
 				notice,
 				customBadges,
+				builtInBadgeImages,
 			] = await Promise.all([
 				instanceConfigRepository.getRegistrationPublicConfig(),
 				instanceConfigRepository.getInstanceCommunityPublicConfig(),
@@ -214,6 +225,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getInstantAccountAvailability(),
 				instanceConfigRepository.getActiveInstanceNotice(),
 				instanceConfigRepository.getCustomBadges(),
+				instanceConfigRepository.getBuiltInBadgeImages(),
 			]);
 			const statusPageInstatus = await getStatusPageDetector().isInstatus(appPublicConfig.branding.status_page_url);
 			const lockReason =
@@ -262,6 +274,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				notice,
 				domain_migration: toDomainMigrationDiscovery(domainMigration),
 				guild_badges: mapGuildBadgesForDiscovery(customBadges),
+				built_in_guild_badge_images: mapBuiltInGuildBadgeImagesForDiscovery(builtInBadgeImages),
 				voice_origins: listVoiceOrigins(),
 			};
 			discoveryValidators = nextDiscoveryValidators(response, discoveryValidators);

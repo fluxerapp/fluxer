@@ -398,8 +398,8 @@ A [profile badge](/http-api/users/#profile-badge-object) with a `hidden` field. 
 | key | string | The badge's identity, and the value to put in `hidden_profile_badges` |
 | kind | string | The badge type |
 | label | string | The badge description in your locale |
-| asset | ?string | The badge image hash, or null for a text badge or a custom badge |
-| asset_url | ?string | The image URL of a custom badge |
+| asset | ?string | The badge image hash, or null for a text badge, a custom badge or a built-in badge with a replaced image |
+| asset_url | ?string | The image URL of a custom badge or of a built-in badge with a replaced image |
 | aspect_ratio | ?number | The image width divided by its height |
 | caption | ?string | The short badge text, such as `#42` |
 | href | ?string | The URL a click opens |

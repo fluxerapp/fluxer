@@ -8,6 +8,7 @@ import {
 import type {
 	InstanceAgePolicy,
 	InstanceAppPublic,
+	InstanceBuiltInGuildBadgeImages,
 	InstanceCommunity,
 	InstanceDomainMigration,
 	InstanceFeatures,
@@ -22,6 +23,12 @@ import type {
 import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
 
 const DEFAULT_PREMIUM_PRODUCT_NAME = 'Plutonium';
+
+export const NO_BUILT_IN_GUILD_BADGE_IMAGES: InstanceBuiltInGuildBadgeImages = {
+	verified: null,
+	partnered: null,
+	discoverable: null,
+};
 
 export interface ClientRuntimeDiscoveryEndpoints {
 	readonly discoveryApiEndpoint: string;
@@ -56,6 +63,7 @@ export interface ClientRuntimeDiscovery {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
 	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
+	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 }
 
 export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocument): ClientRuntimeDiscovery {
@@ -76,6 +84,7 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		domainMigration: document.domainMigration,
 		notice: document.notice ?? null,
 		guildBadges: document.guildBadges ?? [],
+		builtInGuildBadgeImages: document.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES,
 	};
 }
 

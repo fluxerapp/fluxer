@@ -32,6 +32,7 @@ The public description of one instance.
 | age_policy? | [age policy](#age-policy-object) object | Regional age policy |
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
 | guild_badges? | array[[guild badge](#guild-badge-object) object] | The custom badges that guilds can show next to their name, in display order (at most 10) |
+| built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
 | voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies (at most 1000) |
 
 ## Guild badge object
@@ -47,6 +48,18 @@ A custom badge that instance admins give to guilds. A guild lists the badges it 
 | description | ?string | The tooltip text under the name, or null |
 | asset_url | string | The badge image as WebP from the media proxy. Add a `size` query parameter to get it at the size you draw it |
 | href | ?string | The `https` URL a click opens, or null |
+
+## Built-in guild badge images object
+
+Instance admins can replace the artwork of the built-in guild badges. When a field has a URL, draw that image wherever the badge appears and keep the badge's usual tooltip. When it's null, draw the built-in artwork.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| verified | ?string | The image for the verified badge, as WebP from the media proxy, or null |
+| partnered | ?string | The image for the partnered badge, or null |
+| discoverable | ?string | The image for the discoverable badge, or null |
 
 ## Instance notice object
 

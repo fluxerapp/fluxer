@@ -24,6 +24,7 @@ import {
 	type InstanceAgePolicyGeo,
 	type InstanceAppRegistration,
 	type InstanceBranding,
+	type InstanceBuiltInGuildBadgeImages,
 	type InstanceCommunity,
 	type InstanceDomainMigration,
 	type InstanceFeatures,
@@ -145,6 +146,7 @@ export interface InstanceDiscoveryDocument {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
 	readonly guildBadges?: ReadonlyArray<InstanceGuildBadge>;
+	readonly builtInGuildBadgeImages?: InstanceBuiltInGuildBadgeImages;
 }
 
 interface InstanceDiscoveryAttempt {
@@ -308,6 +310,7 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		domainMigration: parseInstanceDomainMigration(source.domain_migration),
 		notice: parseNotice(source.notice),
 		guildBadges: parseGuildBadges(source.guild_badges),
+		builtInGuildBadgeImages: parseBuiltInGuildBadgeImages(source.built_in_guild_badge_images),
 	};
 }
 
@@ -694,6 +697,15 @@ function parseNotice(value: unknown): InstanceNotice | null {
 		url: readNonEmptyString(source, 'url'),
 		starts_at: readDateString(source, 'starts_at'),
 		ends_at: readDateString(source, 'ends_at'),
+	};
+}
+
+function parseBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadgeImages {
+	const source = asRecord(value) ?? {};
+	return {
+		verified: readNonEmptyString(source, 'verified'),
+		partnered: readNonEmptyString(source, 'partnered'),
+		discoverable: readNonEmptyString(source, 'discoverable'),
 	};
 }
 

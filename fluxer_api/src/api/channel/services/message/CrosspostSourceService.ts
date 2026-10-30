@@ -73,6 +73,7 @@ export class CrosspostSourceService {
 				icon: partial.icon ?? null,
 				banner: partial.banner ?? null,
 				features: partial.features.filter((feature) => CROSSPOST_SOURCE_PUBLIC_FEATURES.has(feature)),
+				badge_ids: partial.badge_ids,
 				approximate_member_count: counts?.memberCount ?? null,
 				approximate_presence_count: counts?.presenceCount ?? null,
 				description,

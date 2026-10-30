@@ -95,7 +95,7 @@ import {
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {resolveIdentifierFirst, resolveInstantAccountAvailability} from '@fluxer/constants/src/AccountTierRules';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
+import {BUILT_IN_BADGE_KINDS, type BuiltInBadgeKind, CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {resolveSmtpTlsMode, type SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -923,14 +923,23 @@ const StoredCustomBadgeSchema = z.object({
 	href: z.string().nullable(),
 });
 
+const StoredBuiltInBadgeImagesSchema = z
+	.partialRecord(z.enum(BUILT_IN_BADGE_KINDS), z.string().refine(isCustomBadgeAssetReference))
+	.default({});
+
 const StoredCustomBadgesSchema = z.object({
 	badges: z.array(StoredCustomBadgeSchema).default([]),
+	built_in: StoredBuiltInBadgeImagesSchema,
 });
 
 export type CustomBadgeDefinition = z.infer<typeof StoredCustomBadgeSchema>;
 
-function parseStoredCustomBadges(raw: string | null): Array<CustomBadgeDefinition> {
-	return parseStoredConfigOrDefault(StoredCustomBadgesSchema, raw, 'custom badges').badges;
+export type BuiltInBadgeImages = Readonly<Partial<Record<BuiltInBadgeKind, string>>>;
+
+type StoredCustomBadges = z.infer<typeof StoredCustomBadgesSchema>;
+
+function parseStoredCustomBadges(raw: string | null): StoredCustomBadges {
+	return parseStoredConfigOrDefault(StoredCustomBadgesSchema, raw, 'custom badges');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1620,7 +1629,7 @@ export class InstanceConfigRepository {
 	private configCache: InstanceConfigCache;
 	private effectiveBlueskyConfig: BlueskyOAuthConfig | null = null;
 	private effectiveBlueskyConfigSource: string | null = null;
-	private parsedCustomBadges: {raw: string | null; badges: ReadonlyArray<CustomBadgeDefinition>} | null = null;
+	private parsedCustomBadges: {raw: string | null; stored: StoredCustomBadges} | null = null;
 
 	constructor(kvClient: IKVProvider | null = null) {
 		this.kvClient = kvClient;
@@ -2153,25 +2162,47 @@ export class InstanceConfigRepository {
 		);
 	}
 
-	async getCustomBadges(): Promise<ReadonlyArray<CustomBadgeDefinition>> {
+	private async getStoredCustomBadges(): Promise<StoredCustomBadges> {
 		const raw = await this.getConfig(CUSTOM_BADGES_CONFIG_KEY);
 		if (this.parsedCustomBadges?.raw !== raw) {
-			this.parsedCustomBadges = {raw, badges: parseStoredCustomBadges(raw)};
+			this.parsedCustomBadges = {raw, stored: parseStoredCustomBadges(raw)};
 		}
-		return this.parsedCustomBadges.badges;
+		return this.parsedCustomBadges.stored;
+	}
+
+	async getCustomBadges(): Promise<ReadonlyArray<CustomBadgeDefinition>> {
+		return (await this.getStoredCustomBadges()).badges;
+	}
+
+	async getBuiltInBadgeImages(): Promise<BuiltInBadgeImages> {
+		return (await this.getStoredCustomBadges()).built_in;
+	}
+
+	private updateStoredCustomBadges(update: (current: StoredCustomBadges) => StoredCustomBadges) {
+		return this.updateStoredConfig(CUSTOM_BADGES_CONFIG_KEY, (raw) =>
+			validateStoredConfig(
+				StoredCustomBadgesSchema,
+				update(parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges')),
+				'custom badges',
+			),
+		);
 	}
 
 	async updateCustomBadges(
 		update: (current: ReadonlyArray<CustomBadgeDefinition>) => Array<CustomBadgeDefinition>,
 	): Promise<ReadonlyArray<CustomBadgeDefinition>> {
-		const config = await this.updateStoredConfig(CUSTOM_BADGES_CONFIG_KEY, (raw) =>
-			validateStoredConfig(
-				StoredCustomBadgesSchema,
-				{badges: update(parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges').badges)},
-				'custom badges',
-			),
-		);
+		const config = await this.updateStoredCustomBadges((current) => ({...current, badges: update(current.badges)}));
 		return config.badges;
+	}
+
+	async updateBuiltInBadgeImages(
+		update: (current: BuiltInBadgeImages) => BuiltInBadgeImages,
+	): Promise<BuiltInBadgeImages> {
+		const config = await this.updateStoredCustomBadges((current) => ({
+			...current,
+			built_in: {...update(current.built_in)},
+		}));
+		return config.built_in;
 	}
 
 	async readStoredCustomBadgeAssetKeys(): Promise<Set<string>> {
@@ -2179,8 +2210,8 @@ export class InstanceConfigRepository {
 		cache.assertActive();
 		const raw = await this.fetchConfigFromDatabase(CUSTOM_BADGES_CONFIG_KEY);
 		cache.assertActive();
-		const {badges} = parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges');
-		return new Set(badges.map((badge) => assetStorageKey(badge.asset)));
+		const {badges, built_in: builtIn} = parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges');
+		return new Set([...badges.map((badge) => badge.asset), ...Object.values(builtIn)].map(assetStorageKey));
 	}
 
 	async getCaptchaConfig(): Promise<CaptchaConfig> {

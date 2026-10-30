@@ -15,6 +15,7 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {LIMIT_KEYS, type LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
+import {NO_BUILT_IN_GUILD_BADGE_IMAGES} from '@fluxer/instance_bootstrap/src/ClientRuntimeDiscovery';
 import {
 	ACCOUNT_DELETION_GRACE_PERIOD_HOURS_MAX,
 	ACCOUNT_DELETION_GRACE_PERIOD_HOURS_MIN,
@@ -30,6 +31,7 @@ import {
 	type InstanceAgePolicy,
 	type InstanceAgePolicyGeo,
 	type InstanceAppPublic,
+	type InstanceBuiltInGuildBadgeImages,
 	type InstanceCommunity,
 	type InstanceDomainMigration,
 	type InstanceFeatures,
@@ -76,6 +78,7 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice: InstanceNotice | null;
 	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
+	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 }
 
 export class InvalidRuntimeConfigSnapshotError extends Error {
@@ -587,6 +590,16 @@ function readGuildBadges(value: unknown): Array<InstanceGuildBadge> {
 	});
 }
 
+function readBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadgeImages {
+	if (value === undefined) {
+		return NO_BUILT_IN_GUILD_BADGE_IMAGES;
+	}
+	const source = readRecord(value, 'builtInGuildBadgeImages');
+	const read = (key: keyof InstanceBuiltInGuildBadgeImages) =>
+		source[key] === undefined ? null : readNullableNonEmptyString(source, key, `builtInGuildBadgeImages.${key}`);
+	return {verified: read('verified'), partnered: read('partnered'), discoverable: read('discoverable')};
+}
+
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
 	const source = readRecord(value, 'root');
 	return {
@@ -617,5 +630,6 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 		domainMigration: parseInstanceDomainMigration(source.domainMigration),
 		notice: readNotice(source.notice),
 		guildBadges: readGuildBadges(source.guildBadges),
+		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
 	};
 }

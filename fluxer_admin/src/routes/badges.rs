@@ -29,6 +29,8 @@ pub fn router() -> Router<AppState> {
         .route("/badges/{badge_id}", post(update_badge))
         .route("/badges/{badge_id}/delete", post(delete_badge))
         .route("/badges/{badge_id}/move/{direction}", post(move_badge))
+        .route("/badges/built-in/{kind}", post(replace_built_in_image))
+        .route("/badges/built-in/{kind}/reset", post(reset_built_in_image))
         .layer(DefaultBodyLimit::max(BADGE_IMAGE_MAX_BYTES + 64 * 1024))
 }
 
@@ -179,6 +181,64 @@ async fn delete_badge(
     let flash = match client.delete_badge(&badge_id).await {
         Ok(()) => FlashData::success("Badge deleted"),
         Err(error) => failure("delete", &error),
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
+}
+
+async fn replace_built_in_image(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(kind): Path<String>,
+    mut multipart: Multipart,
+) -> Response {
+    let config = state.config();
+    let back = format!("{}/badges", config.base_path);
+    let mut image = None;
+    while let Ok(Some(field)) = multipart.next_field().await {
+        if field.name() != Some("image") {
+            continue;
+        }
+        let content_type = field.content_type().unwrap_or_default().to_owned();
+        let Ok(bytes) = field.bytes().await else {
+            return flash::redirect_error(config, &back, "The image must be under 10 MB");
+        };
+        if bytes.is_empty() {
+            continue;
+        }
+        if !BADGE_IMAGE_TYPES.contains(&content_type.as_str()) {
+            return flash::redirect_error(
+                config,
+                &back,
+                "Choose a PNG, JPEG, GIF, WebP or SVG image",
+            );
+        }
+        image = Some(format!(
+            "data:{content_type};base64,{}",
+            STANDARD.encode(&bytes)
+        ));
+    }
+    let Some(image) = image else {
+        return flash::redirect_error(config, &back, "Choose an image to upload");
+    };
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let flash = match client.replace_built_in_badge_image(&kind, &image).await {
+        Ok(_) => FlashData::success("Badge image replaced"),
+        Err(error) => failure("replace the image of", &error),
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
+}
+
+async fn reset_built_in_image(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(kind): Path<String>,
+) -> Response {
+    let config = state.config();
+    let back = format!("{}/badges", config.base_path);
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let flash = match client.reset_built_in_badge_image(&kind).await {
+        Ok(_) => FlashData::success("Badge uses the built-in image again"),
+        Err(error) => failure("reset the image of", &error),
     };
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }

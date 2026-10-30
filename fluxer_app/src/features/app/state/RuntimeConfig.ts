@@ -48,11 +48,13 @@ import {
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {resolveEffectiveVerificationBasis, resolveEmailCodeAvailability} from '@fluxer/constants/src/AccountTierRules';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
+import {NO_BUILT_IN_GUILD_BADGE_IMAGES} from '@fluxer/instance_bootstrap/src/ClientRuntimeDiscovery';
 import {InstanceDiscoveryUnreachableError} from '@fluxer/instance_bootstrap/src/Discovery';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_DISPLAY_HOST} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
 	InstanceAppPublic,
+	InstanceBuiltInGuildBadgeImages,
 	InstanceCommunity,
 	InstanceFeatures,
 	InstanceGuildBadge,
@@ -684,6 +686,7 @@ class RuntimeConfig {
 			appPublic: resolution.snapshot.appPublic,
 			notice: resolution.snapshot.notice,
 			guildBadges: resolution.snapshot.guildBadges,
+			builtInGuildBadgeImages: resolution.snapshot.builtInGuildBadgeImages,
 			limits: resolution.snapshot.limits,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
@@ -919,6 +922,10 @@ class RuntimeConfig {
 
 	get guildBadges(): ReadonlyArray<InstanceGuildBadge> {
 		return this.activeRuntime?.snapshot.guildBadges ?? [];
+	}
+
+	get builtInGuildBadgeImages(): InstanceBuiltInGuildBadgeImages {
+		return this.activeRuntime?.snapshot.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES;
 	}
 
 	get gifEnabled(): boolean {

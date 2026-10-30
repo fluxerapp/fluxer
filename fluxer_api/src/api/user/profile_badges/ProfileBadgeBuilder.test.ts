@@ -21,6 +21,7 @@ const HOSTED: ProfileBadgeEnvironment = {
 	marketingUrl: 'https://fluxer.example',
 	mediaUrl: 'https://media.fluxer.example',
 	customBadges: [],
+	builtInImages: {},
 };
 
 const OCTOBER = new Date('2026-10-15T12:00:00Z');

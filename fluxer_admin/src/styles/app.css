@@ -317,3 +317,13 @@ input:disabled + .checkbox-custom {
 :root:not([data-theme="dark"]) .theme-toggle-to-light {
   display: none;
 }
+
+.built-in-guild-badge {
+  --guild-badge-seal: var(--brand-primary);
+  --guild-badge-icon: #fff;
+}
+
+:root[data-theme="dark"] .built-in-guild-badge {
+  --guild-badge-seal: #fff;
+  --guild-badge-icon: var(--brand-primary);
+}

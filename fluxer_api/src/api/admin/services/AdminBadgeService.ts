@@ -13,13 +13,24 @@ import {
 	customBadgeAssetReferenceFromOwnUrl,
 	customBadgeImageUrl,
 } from '@app/api/instance/InstanceAssetReferences';
-import type {CustomBadgeDefinition, InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import type {
+	BuiltInBadgeImages,
+	CustomBadgeDefinition,
+	InstanceConfigRepository,
+} from '@app/api/instance/InstanceConfigRepository';
+import {PROFILE_BADGE_ASSETS} from '@app/api/user/profile_badges/ProfileBadgeAssets';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {type CustomBadgeType, MAX_CUSTOM_BADGES_PER_TYPE} from '@fluxer/constants/src/BadgeConstants';
+import {
+	BUILT_IN_BADGE_KINDS,
+	type BuiltInBadgeKind,
+	type CustomBadgeType,
+	MAX_CUSTOM_BADGES_PER_TYPE,
+} from '@fluxer/constants/src/BadgeConstants';
 import {MaxBadgesError} from '@fluxer/errors/src/domains/badge/MaxBadgesError';
 import {UnknownBadgeError} from '@fluxer/errors/src/domains/badge/UnknownBadgeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {
+	AdminBuiltInBadgeImageResponse,
 	AdminCustomBadgeListResponse,
 	AdminCustomBadgeResponse,
 	CreateCustomBadgeRequest,
@@ -46,6 +57,21 @@ function mapCustomBadgeToAdminResponse(badge: CustomBadgeDefinition): AdminCusto
 		asset_url: customBadgeImageUrl(badge.asset, Config.endpoints.media),
 		href: badge.href,
 	};
+}
+
+function builtInBadgeAsset(kind: BuiltInBadgeKind): string | null {
+	return kind === 'staff' || kind === 'premium' ? PROFILE_BADGE_ASSETS[kind] : null;
+}
+
+function mapBuiltInBadgeImages(images: BuiltInBadgeImages): Array<AdminBuiltInBadgeImageResponse> {
+	return BUILT_IN_BADGE_KINDS.map((kind) => {
+		const asset = images[kind];
+		return {
+			kind,
+			asset_url: asset ? customBadgeImageUrl(asset, Config.endpoints.media) : null,
+			built_in_asset: builtInBadgeAsset(kind),
+		};
+	});
 }
 
 function findBadge(badges: ReadonlyArray<CustomBadgeDefinition>, badgeId: string): CustomBadgeDefinition {
@@ -78,8 +104,49 @@ export class AdminBadgeService {
 	constructor(private readonly deps: AdminBadgeServiceDeps) {}
 
 	async listBadges(): Promise<AdminCustomBadgeListResponse> {
-		const badges = await this.deps.instanceConfigRepository.getCustomBadges();
-		return {badges: badges.map(mapCustomBadgeToAdminResponse)};
+		const {instanceConfigRepository} = this.deps;
+		const [badges, builtIn] = await Promise.all([
+			instanceConfigRepository.getCustomBadges(),
+			instanceConfigRepository.getBuiltInBadgeImages(),
+		]);
+		return {badges: badges.map(mapCustomBadgeToAdminResponse), built_in: mapBuiltInBadgeImages(builtIn)};
+	}
+
+	async replaceBuiltInBadgeImage(kind: BuiltInBadgeKind, image: string): Promise<AdminCustomBadgeListResponse> {
+		const {instanceConfigRepository, snowflakeService} = this.deps;
+		const previous = (await instanceConfigRepository.getBuiltInBadgeImages())[kind];
+		const prepared = await this.uploadImage(
+			await snowflakeService.generate(),
+			image,
+			previous ? assetReferenceHash(previous) : null,
+		);
+		const replaced: {asset?: string} = {};
+		try {
+			await instanceConfigRepository.updateBuiltInBadgeImages((current) => {
+				replaced.asset = current[kind];
+				return {...current, [kind]: this.storedReference(prepared)};
+			});
+		} catch (error) {
+			await this.deps.entityAssetService.rollbackAssetUpload(prepared);
+			throw error;
+		}
+		if (replaced.asset) {
+			await this.releaseAsset(replaced.asset);
+		}
+		return this.listBadges();
+	}
+
+	async resetBuiltInBadgeImage(kind: BuiltInBadgeKind): Promise<AdminCustomBadgeListResponse> {
+		const removed: {asset?: string} = {};
+		await this.deps.instanceConfigRepository.updateBuiltInBadgeImages((current) => {
+			removed.asset = current[kind];
+			const {[kind]: _, ...rest} = current;
+			return rest;
+		});
+		if (removed.asset) {
+			await this.releaseAsset(removed.asset);
+		}
+		return this.listBadges();
 	}
 
 	async createBadge(data: CreateCustomBadgeRequest): Promise<AdminCustomBadgeResponse> {
@@ -151,7 +218,10 @@ export class AdminBadgeService {
 			}
 			return reordered;
 		});
-		return {badges: badges.map(mapCustomBadgeToAdminResponse)};
+		return {
+			badges: badges.map(mapCustomBadgeToAdminResponse),
+			built_in: mapBuiltInBadgeImages(await this.deps.instanceConfigRepository.getBuiltInBadgeImages()),
+		};
 	}
 
 	async updateUserBadges(params: {

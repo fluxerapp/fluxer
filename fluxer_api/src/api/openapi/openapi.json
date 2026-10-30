@@ -35734,6 +35734,10 @@
 								"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 								"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
 							},
+							"badge_ids": {
+								"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document",
+								"$ref": "#/components/schemas/CustomBadgeIdListResponse"
+							},
 							"approximate_member_count": {
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 								"description": "Approximate number of members in the source community, or null when unavailable"
@@ -37854,6 +37858,10 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/InstanceGuildBadgeSchema"}
 					},
+					"built_in_guild_badge_images": {
+						"description": "Images this instance shows in place of the built-in verified, partnered and discoverable community badges",
+						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
+					},
 					"voice_origins": {
 						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies",
 						"maxItems": 1000,
@@ -37875,6 +37883,25 @@
 					"push",
 					"app_public"
 				],
+				"additionalProperties": false
+			},
+			"InstanceBuiltInGuildBadgeImagesSchema": {
+				"type": "object",
+				"properties": {
+					"verified": {
+						"description": "URL of the image this instance shows for the badge, or null to use the built-in artwork",
+						"type": ["string", "null"]
+					},
+					"partnered": {
+						"description": "URL of the image this instance shows for the badge, or null to use the built-in artwork",
+						"type": ["string", "null"]
+					},
+					"discoverable": {
+						"description": "URL of the image this instance shows for the badge, or null to use the built-in artwork",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["verified", "partnered", "discoverable"],
 				"additionalProperties": false
 			},
 			"InstanceGuildBadgeSchema": {
@@ -40616,6 +40643,10 @@
 						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 						"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
 					},
+					"badge_ids": {
+						"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document",
+						"$ref": "#/components/schemas/CustomBadgeIdListResponse"
+					},
 					"approximate_member_count": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "Approximate number of members in the source community, or null when unavailable"
@@ -40634,6 +40665,7 @@
 					"name",
 					"description",
 					"features",
+					"badge_ids",
 					"approximate_member_count",
 					"approximate_presence_count",
 					"discoverable"

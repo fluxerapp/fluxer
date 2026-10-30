@@ -10,12 +10,13 @@ import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 export async function loadProfileBadgeEnvironment(): Promise<ProfileBadgeEnvironment> {
 	const selfHosted = Config.instance.selfHosted;
 	const instanceConfigRepository = getInstanceConfigRepository();
-	const [branding, premiumInfoUrl, customBadges] = await Promise.all([
+	const [branding, premiumInfoUrl, customBadges, builtInImages] = await Promise.all([
 		getBillingBranding(),
 		selfHosted
 			? instanceConfigRepository.getAppPublicConfig().then((config) => config.branding.premium_info_url)
 			: Promise.resolve(null),
 		instanceConfigRepository.getCustomBadges(),
+		instanceConfigRepository.getBuiltInBadgeImages(),
 	]);
 	return {
 		selfHosted,
@@ -26,5 +27,6 @@ export async function loadProfileBadgeEnvironment(): Promise<ProfileBadgeEnviron
 		marketingUrl: Config.endpoints.marketing,
 		mediaUrl: Config.endpoints.media,
 		customBadges: customBadges.filter((badge) => badge.type === CustomBadgeTypes.USER),
+		builtInImages,
 	};
 }

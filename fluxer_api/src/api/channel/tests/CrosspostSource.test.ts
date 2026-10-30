@@ -84,6 +84,7 @@ describe('Crosspost source', () => {
 				banner: null,
 				description: null,
 				features: [],
+				badge_ids: [],
 				approximate_member_count: 5,
 				approximate_presence_count: 0,
 				discoverable: false,

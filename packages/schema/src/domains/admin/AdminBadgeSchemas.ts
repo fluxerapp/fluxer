@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	BUILT_IN_BADGE_KINDS,
 	CUSTOM_BADGE_DESCRIPTION_MAX_LENGTH,
 	CUSTOM_BADGE_NAME_MAX_LENGTH,
 	CustomBadgeTypes,
@@ -50,8 +51,37 @@ export const AdminCustomBadgeResponse = z.object({
 
 export type AdminCustomBadgeResponse = z.infer<typeof AdminCustomBadgeResponse>;
 
+export const BuiltInBadgeKindSchema = withOpenApiType(
+	z
+		.enum(BUILT_IN_BADGE_KINDS)
+		.describe(
+			'A built-in badge whose image can be replaced: the staff or premium profile badge, or a community badge starting with guild_',
+		),
+	'BuiltInBadgeKind',
+);
+
+export const AdminBuiltInBadgeImageResponse = z.object({
+	kind: BuiltInBadgeKindSchema,
+	asset_url: z
+		.string()
+		.nullable()
+		.describe('URL of the image shown in place of the built-in artwork, or null when the built-in artwork is used'),
+	built_in_asset: z
+		.string()
+		.nullable()
+		.describe(
+			'Hash of the built-in artwork at {static_cdn}/badges/{hash}.webp, or null for a guild badge, which clients draw themselves',
+		),
+});
+
+export type AdminBuiltInBadgeImageResponse = z.infer<typeof AdminBuiltInBadgeImageResponse>;
+
 export const AdminCustomBadgeListResponse = z.object({
 	badges: z.array(AdminCustomBadgeResponse).describe('Badges defined on this instance, in display order'),
+	built_in: z
+		.array(AdminBuiltInBadgeImageResponse)
+		.max(BUILT_IN_BADGE_KINDS.length)
+		.describe('Every built-in badge and the image this instance shows for it'),
 });
 
 export type AdminCustomBadgeListResponse = z.infer<typeof AdminCustomBadgeListResponse>;
@@ -109,3 +139,13 @@ export const CustomBadgeIdListResponse = z
 	.array(SnowflakeStringType)
 	.max(MAX_CUSTOM_BADGES_PER_ENTITY)
 	.describe('IDs of the custom badges assigned to it');
+
+export const BuiltInBadgeKindParam = z.object({
+	kind: BuiltInBadgeKindSchema,
+});
+
+export const ReplaceBuiltInBadgeImageRequest = z.object({
+	image: CustomBadgeImageType,
+});
+
+export type ReplaceBuiltInBadgeImageRequest = z.infer<typeof ReplaceBuiltInBadgeImageRequest>;

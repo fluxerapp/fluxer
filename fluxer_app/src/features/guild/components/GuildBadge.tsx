@@ -9,6 +9,7 @@ import {VerifiedBadgeIcon} from '@app/features/ui/components/icons/VerifiedBadge
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
 import {customBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
+import type {BuiltInGuildBadgeKind} from '@fluxer/constants/src/BadgeConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {InstanceGuildBadge} from '@fluxer/instance_bootstrap/src/Types';
 import {msg} from '@lingui/core/macro';
@@ -161,14 +162,17 @@ const BuiltInGuildBadge = observer(function BuiltInGuildBadge({
 	} else {
 		badgeClassName = onLightSurface ? styles.badgeOnLightSurface : styles.badge;
 	}
+	let kind: BuiltInGuildBadgeKind = 'discoverable';
 	let tooltipText: string;
 	let icon: React.JSX.Element;
 	if (isPartnered) {
+		kind = 'partnered';
 		tooltipText = isVerified ? i18n._(VERIFIED_PARTNERED_COMMUNITY_DESCRIPTOR) : i18n._(PARTNERED_COMMUNITY_DESCRIPTOR);
 		icon = (
 			<PartneredBadgeIcon size={size} className={badgeClassName} data-flx="guild.guild-badge.partnered-badge-icon" />
 		);
 	} else if (isVerified) {
+		kind = 'verified';
 		tooltipText = i18n._(VERIFIED_COMMUNITY_DESCRIPTOR);
 		icon = (
 			<VerifiedBadgeIcon size={size} className={badgeClassName} data-flx="guild.guild-badge.verified-badge-icon" />
@@ -180,6 +184,19 @@ const BuiltInGuildBadge = observer(function BuiltInGuildBadge({
 				size={size}
 				className={badgeClassName}
 				data-flx="guild.guild-badge.discoverable-badge-icon"
+			/>
+		);
+	}
+	const replacement = RuntimeConfig.builtInGuildBadgeImages[kind];
+	if (replacement !== null) {
+		icon = (
+			<img
+				src={customBadgeImageUrl(replacement)}
+				alt={tooltipText}
+				width={size}
+				height={size}
+				className={styles.customBadge}
+				data-flx="guild.guild-badge.replaced-badge-image"
 			/>
 		);
 	}
@@ -207,26 +224,28 @@ export const GuildBadge = observer(function GuildBadge({
 	onLightSurface = false,
 }: GuildBadgeProps) {
 	const size = variant === 'large' ? 24 : 20;
+	const builtIn = (
+		<BuiltInGuildBadge
+			features={features}
+			variant={variant}
+			size={size}
+			tooltipPosition={tooltipPosition}
+			showTooltip={showTooltip}
+			forceDarkTheme={forceDarkTheme}
+			onLightSurface={onLightSurface}
+			data-flx="guild.guild-badge.built-in-guild-badge"
+		/>
+	);
 	useEffect(() => {
 		if (badgeIds.length > 0) revalidateUnknownBadges(badgeIds);
 	}, [badgeIds]);
 	const customBadges = assignedCustomBadges(badgeIds).slice(0, customBadgeLimit);
 	if (customBadges.length === 0) {
-		return (
-			<BuiltInGuildBadge
-				features={features}
-				variant={variant}
-				size={size}
-				tooltipPosition={tooltipPosition}
-				showTooltip={showTooltip}
-				forceDarkTheme={forceDarkTheme}
-				onLightSurface={onLightSurface}
-				data-flx="guild.guild-badge.built-in-guild-badge"
-			/>
-		);
+		return builtIn;
 	}
 	return (
 		<span className={styles.badgeRow} data-flx="guild.guild-badge.badge-row">
+			{builtIn}
 			{customBadges.map((badge) => (
 				<CustomGuildBadge
 					key={badge.id}

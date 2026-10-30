@@ -84,6 +84,33 @@ impl AdminApiClient {
         Ok(())
     }
 
+    pub async fn replace_built_in_badge_image(
+        &self,
+        kind: &str,
+        image: &str,
+    ) -> ApiResult<AdminCustomBadgeList> {
+        let body = generated_types::ReplaceBuiltInBadgeImageRequest {
+            image: image.try_into().map_err(parse_error)?,
+        };
+        let kind: generated_types::BuiltInBadgeKindSchema = kind.parse().map_err(parse_error)?;
+        let response = self
+            .generated()
+            .replace_admin_built_in_badge_image(kind, &body)
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
+    pub async fn reset_built_in_badge_image(&self, kind: &str) -> ApiResult<AdminCustomBadgeList> {
+        let kind: generated_types::BuiltInBadgeKindSchema = kind.parse().map_err(parse_error)?;
+        let response = self
+            .generated()
+            .reset_admin_built_in_badge_image(kind)
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
     pub async fn reorder_badges(&self, ids: &[String]) -> ApiResult<AdminCustomBadgeList> {
         let body = generated_types::ReorderCustomBadgesRequest {
             badge_ids: ids.iter().map(|id| snowflake(id)).collect(),

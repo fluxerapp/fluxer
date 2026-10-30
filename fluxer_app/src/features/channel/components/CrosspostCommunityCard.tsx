@@ -54,6 +54,7 @@ interface CommunityCardData {
 	banner: string | null;
 	description: string | null;
 	features: ReadonlySet<string> | ReadonlyArray<string>;
+	badgeIds: ReadonlyArray<string>;
 	onlineCount: number | null;
 	memberCount: number | null;
 	isMember: boolean;
@@ -90,6 +91,7 @@ function useCommunityCardView(message: Message, sourceGuildId: string | null): C
 				banner: localGuild.banner,
 				description: fetched?.description ?? null,
 				features: localGuild.features,
+				badgeIds: localGuild.badgeIds,
 				onlineCount: counts?.onlineCount ?? null,
 				memberCount: counts?.memberCount ?? null,
 				isMember: true,
@@ -116,6 +118,7 @@ function useCommunityCardView(message: Message, sourceGuildId: string | null): C
 			banner: card.banner ?? null,
 			description: card.description ?? null,
 			features: card.features,
+			badgeIds: card.badge_ids,
 			onlineCount: card.approximate_presence_count,
 			memberCount: card.approximate_member_count,
 			isMember: false,
@@ -199,6 +202,7 @@ export const CrosspostCommunityCard = observer(function CrosspostCommunityCard({
 					{data != null && (
 						<GuildBadge
 							features={data.features}
+							badgeIds={data.badgeIds}
 							tooltipPosition="bottom"
 							data-flx="channel.crosspost-community-card.guild-badge"
 						/>

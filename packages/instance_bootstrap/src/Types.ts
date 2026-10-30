@@ -20,6 +20,7 @@ export type {
 	InstanceAgePolicyGeo,
 	InstanceAppPublic,
 	InstanceBranding,
+	InstanceBuiltInGuildBadgeImages,
 	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceEndpoints,

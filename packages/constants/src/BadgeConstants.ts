@@ -30,6 +30,27 @@ export type ProfileBadgeKey = ProfileBadgeKind | `custom:${string}`;
 
 export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + MAX_CUSTOM_BADGES_PER_ENTITY;
 
+const BUILT_IN_GUILD_BADGE_KINDS = ['verified', 'partnered', 'discoverable'] as const;
+
+export type BuiltInGuildBadgeKind = (typeof BUILT_IN_GUILD_BADGE_KINDS)[number];
+
+const REPLACEABLE_PROFILE_BADGE_KINDS = ['staff', 'premium'] as const satisfies ReadonlyArray<ProfileBadgeKind>;
+
+export type ReplaceableProfileBadgeKind = (typeof REPLACEABLE_PROFILE_BADGE_KINDS)[number];
+
+export type BuiltInBadgeKind = ReplaceableProfileBadgeKind | `guild_${BuiltInGuildBadgeKind}`;
+
+export const BUILT_IN_BADGE_KINDS = [
+	...REPLACEABLE_PROFILE_BADGE_KINDS,
+	'guild_verified',
+	'guild_partnered',
+	'guild_discoverable',
+] as const satisfies ReadonlyArray<BuiltInBadgeKind>;
+
+export function isReplaceableProfileBadgeKind(kind: ProfileBadgeKind): kind is ReplaceableProfileBadgeKind {
+	return (REPLACEABLE_PROFILE_BADGE_KINDS as ReadonlyArray<string>).includes(kind);
+}
+
 export const PREMIUM_PROFILE_BADGE_KINDS: ReadonlyArray<ProfileBadgeKind> = ['plutonium', 'visionary', 'premium'];
 
 const CUSTOM_PROFILE_BADGE_KEY_PREFIX = 'custom:';

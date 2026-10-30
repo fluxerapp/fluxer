@@ -54,8 +54,43 @@ impl AdminCustomBadge {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BuiltInBadgeImage {
+    pub kind: String,
+    pub asset_url: Option<String>,
+    #[serde(default)]
+    pub built_in_asset: Option<String>,
+}
+
+impl BuiltInBadgeImage {
+    pub fn image_url(&self) -> Option<String> {
+        self.asset_url.as_ref().map(|url| format!("{url}?size=96"))
+    }
+
+    pub fn badge_type(&self) -> CustomBadgeType {
+        if self.kind.starts_with("guild_") {
+            CustomBadgeType::Guild
+        } else {
+            CustomBadgeType::User
+        }
+    }
+
+    pub fn label(&self) -> &str {
+        match self.kind.as_str() {
+            "staff" => "Staff",
+            "premium" => "Premium",
+            "guild_verified" => "Verified",
+            "guild_partnered" => "Partnered",
+            "guild_discoverable" => "Discoverable",
+            other => other,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AdminCustomBadgeList {
     pub badges: Vec<AdminCustomBadge>,
+    #[serde(default)]
+    pub built_in: Vec<BuiltInBadgeImage>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -82,6 +117,15 @@ impl BadgeMove {
 }
 
 impl AdminCustomBadgeList {
+    pub fn built_in_of_type(
+        &self,
+        badge_type: CustomBadgeType,
+    ) -> impl Iterator<Item = &BuiltInBadgeImage> {
+        self.built_in
+            .iter()
+            .filter(move |badge| badge.badge_type() == badge_type)
+    }
+
     pub fn of_type(&self, badge_type: CustomBadgeType) -> impl Iterator<Item = &AdminCustomBadge> {
         self.badges
             .iter()

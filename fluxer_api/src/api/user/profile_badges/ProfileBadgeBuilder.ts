@@ -15,7 +15,12 @@ import {
 	type ProfileBadgeView,
 	type VisibleOperatorPass,
 } from '@app/api/user/profile_badges/ProfileBadgeRegistry';
-import {customProfileBadgeKey, type ProfileBadgeKey, type ProfileBadgeKind} from '@fluxer/constants/src/BadgeConstants';
+import {
+	customProfileBadgeKey,
+	isReplaceableProfileBadgeKind,
+	type ProfileBadgeKey,
+	type ProfileBadgeKind,
+} from '@fluxer/constants/src/BadgeConstants';
 import {PremiumFlags, stripHiddenProfileBadgeFlags} from '@fluxer/constants/src/UserConstants';
 import type {
 	AdminProfileBadgeResponse,
@@ -108,14 +113,21 @@ function render(source: ViewSource | null): Array<KeyedProfileBadge> {
 		const content = definition.qualify({...source, shown});
 		if (!content) continue;
 		shown.add(definition.kind);
+		const replacement = isReplaceableProfileBadgeKind(definition.kind)
+			? source.environment.builtInImages[definition.kind]
+			: undefined;
 		badges.push({
 			key: definition.kind,
 			kind: definition.kind,
 			label: content.label,
-			asset: content.asset ?? definition.asset,
-			asset_url: null,
-			...(content.smallAsset ? {small_asset: content.smallAsset} : {}),
-			aspect_ratio: content.aspectRatio ?? null,
+			...(replacement
+				? {asset: null, asset_url: customBadgeImageUrl(replacement, source.environment.mediaUrl), aspect_ratio: null}
+				: {
+						asset: content.asset ?? definition.asset,
+						asset_url: null,
+						...(content.smallAsset ? {small_asset: content.smallAsset} : {}),
+						aspect_ratio: content.aspectRatio ?? null,
+					}),
 			caption: content.caption ?? null,
 			href: definition.href(source.environment),
 			...(content.count !== undefined ? {count: content.count} : {}),

@@ -399,6 +399,19 @@ export const InstanceGuildBadgeSchema = z.object({
 
 export type InstanceGuildBadge = z.infer<typeof InstanceGuildBadgeSchema>;
 
+const BuiltInGuildBadgeImageType = z
+	.string()
+	.nullable()
+	.describe('URL of the image this instance shows for the badge, or null to use the built-in artwork');
+
+export const InstanceBuiltInGuildBadgeImagesSchema = z.object({
+	verified: BuiltInGuildBadgeImageType,
+	partnered: BuiltInGuildBadgeImageType,
+	discoverable: BuiltInGuildBadgeImageType,
+});
+
+export type InstanceBuiltInGuildBadgeImages = z.infer<typeof InstanceBuiltInGuildBadgeImagesSchema>;
+
 export const WellKnownFluxerResponse = z.object({
 	codename: z.string().optional().describe('Protocol generation spoken by this instance'),
 	api_code_version: z.number().int().describe('Version of the API server code'),
@@ -425,6 +438,9 @@ export const WellKnownFluxerResponse = z.object({
 		.max(MAX_CUSTOM_BADGES_PER_TYPE)
 		.optional()
 		.describe('Custom badges that communities on this instance can show next to their name, in display order'),
+	built_in_guild_badge_images: InstanceBuiltInGuildBadgeImagesSchema.optional().describe(
+		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
+	),
 	voice_origins: z
 		.array(z.string())
 		.max(1000)
