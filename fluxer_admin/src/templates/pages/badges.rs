@@ -4,7 +4,7 @@ use crate::{
     acl,
     api::types::{
         AdminCustomBadge, AdminCustomBadgeList, BADGE_IMAGE_MAX_BYTES, BADGE_IMAGE_TYPES,
-        CustomBadgeType,
+        BadgeMove, CustomBadgeType,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -14,7 +14,7 @@ use crate::{
             error_display::error_alert,
             form::{
                 FORM_INPUT_CLASS, FORM_LABEL_CLASS, FORM_SELECT_CLASS, csrf_input, danger_button,
-                submit_button,
+                secondary_button, submit_button,
             },
             page_container::{card_with_header, page_header},
         },
@@ -84,8 +84,11 @@ fn badge_section(
                 (empty_state_full(None, "No badges of this type yet.", None))
             } @else {
                 div class="divide-y divide-neutral-100" {
-                    @for badge in badges {
-                        (badge_row(config, badge, permissions, csrf_token))
+                    @for (index, badge) in badges.iter().enumerate() {
+                        (badge_row(config, badge, permissions, csrf_token, BadgePosition {
+                            first: index == 0,
+                            last: index + 1 == badges.len(),
+                        }))
                     }
                 }
             }
@@ -93,11 +96,36 @@ fn badge_section(
     )
 }
 
+struct BadgePosition {
+    first: bool,
+    last: bool,
+}
+
+fn move_form(
+    config: &AdminConfig,
+    badge: &AdminCustomBadge,
+    direction: BadgeMove,
+    csrf_token: &str,
+) -> Markup {
+    let label = match direction {
+        BadgeMove::Up => "Move up",
+        BadgeMove::Down => "Move down",
+    };
+    html! {
+        form method="post"
+            action={(config.base_path) "/badges/" (badge.id) "/move/" (direction.as_str())} {
+            (csrf_input(csrf_token))
+            (secondary_button(label))
+        }
+    }
+}
+
 fn badge_row(
     config: &AdminConfig,
     badge: &AdminCustomBadge,
     permissions: &BadgePermissions,
     csrf_token: &str,
+    position: BadgePosition,
 ) -> Markup {
     let base = &config.base_path;
     html! {
@@ -130,6 +158,12 @@ fn badge_row(
                                 div { (submit_button("Save changes")) }
                             }
                         }
+                    }
+                    @if permissions.update && !position.first {
+                        (move_form(config, badge, BadgeMove::Up, csrf_token))
+                    }
+                    @if permissions.update && !position.last {
+                        (move_form(config, badge, BadgeMove::Down, csrf_token))
                     }
                     @if permissions.delete {
                         form method="post" action={(base) "/badges/" (badge.id) "/delete"}

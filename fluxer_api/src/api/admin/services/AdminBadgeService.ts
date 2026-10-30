@@ -18,6 +18,7 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {type CustomBadgeType, MAX_CUSTOM_BADGES_PER_TYPE} from '@fluxer/constants/src/BadgeConstants';
 import {MaxBadgesError} from '@fluxer/errors/src/domains/badge/MaxBadgesError';
 import {UnknownBadgeError} from '@fluxer/errors/src/domains/badge/UnknownBadgeError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {
 	AdminCustomBadgeListResponse,
 	AdminCustomBadgeResponse,
@@ -136,6 +137,21 @@ export class AdminBadgeService {
 		if (removed.badge) {
 			await this.releaseAsset(removed.badge.asset);
 		}
+	}
+
+	async reorderBadges(badgeIds: ReadonlyArray<bigint>): Promise<AdminCustomBadgeListResponse> {
+		const order = badgeIds.map(String);
+		const badges = await this.deps.instanceConfigRepository.updateCustomBadges((current) => {
+			const reordered = order.map((id) => findBadge(current, id));
+			if (new Set(order).size !== order.length) {
+				throw InputValidationError.create('badge_ids', 'Each badge can only be listed once');
+			}
+			if (reordered.length !== current.length) {
+				throw InputValidationError.create('badge_ids', 'List every badge on this instance');
+			}
+			return reordered;
+		});
+		return {badges: badges.map(mapCustomBadgeToAdminResponse)};
 	}
 
 	async updateUserBadges(params: {

@@ -3,7 +3,9 @@
 use crate::{
     api::{
         client::{AdminApiClient, ApiError},
-        types::{BADGE_IMAGE_MAX_BYTES, BADGE_IMAGE_TYPES, CustomBadgeFields, CustomBadgeType},
+        types::{
+            BADGE_IMAGE_MAX_BYTES, BADGE_IMAGE_TYPES, BadgeMove, CustomBadgeFields, CustomBadgeType,
+        },
     },
     middleware::{
         auth::AuthContext,
@@ -26,6 +28,7 @@ pub fn router() -> Router<AppState> {
         .route("/badges", get(badges_page).post(create_badge))
         .route("/badges/{badge_id}", post(update_badge))
         .route("/badges/{badge_id}/delete", post(delete_badge))
+        .route("/badges/{badge_id}/move/{direction}", post(move_badge))
         .layer(DefaultBodyLimit::max(BADGE_IMAGE_MAX_BYTES + 64 * 1024))
 }
 
@@ -176,6 +179,37 @@ async fn delete_badge(
     let flash = match client.delete_badge(&badge_id).await {
         Ok(()) => FlashData::success("Badge deleted"),
         Err(error) => failure("delete", &error),
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
+}
+
+async fn move_badge(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path((badge_id, direction)): Path<(String, String)>,
+) -> Response {
+    let config = state.config();
+    let back = format!("{}/badges", config.base_path);
+    let Some(direction) = BadgeMove::parse(&direction) else {
+        return flash::redirect_error(config, &back, "Choose up or down");
+    };
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let badges = match client.list_badges().await {
+        Ok(badges) => badges,
+        Err(error) => {
+            return flash::redirect_with_flash(
+                &back,
+                failure("move", &error),
+                config.secure_cookies(),
+            );
+        }
+    };
+    let Some(order) = badges.moved_order(&badge_id, direction) else {
+        return flash::redirect_error(config, &back, "This badge cannot move any further");
+    };
+    let flash = match client.reorder_badges(&order).await {
+        Ok(_) => FlashData::success("Badge moved"),
+        Err(error) => failure("move", &error),
     };
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }

@@ -16,6 +16,7 @@ import {
 	AdminCustomBadgeResponse,
 	CreateCustomBadgeRequest,
 	CustomBadgeIdParam,
+	ReorderCustomBadgesRequest,
 	UpdateCustomBadgeRequest,
 	UpdateUserCustomBadgesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
@@ -72,6 +73,33 @@ export function BadgeAdminController(app: HonoApp) {
 				metadata: {type: badge.type},
 			});
 			return ctx.json(badge);
+		},
+	);
+	app.put(
+		'/admin/badges/order',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		Validator('json', ReorderCustomBadgesRequest),
+		OpenAPI({
+			operationId: 'reorder_admin_badges',
+			summary: 'Reorder custom badges',
+			description:
+				'Sets the display order of the custom badges. The body lists every user and guild badge on this instance exactly once, in the new order. Creates audit log entry. Requires BADGE_UPDATE permission.',
+			responseSchema: AdminCustomBadgeListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {badge_ids: badgeIds} = ctx.req.valid('json');
+			const response = await ctx.get('adminService').badgeService.reorderBadges(badgeIds);
+			await recordAdminWrite(ctx, {
+				targetType: 'badge',
+				targetId: 0n,
+				action: 'reorder_badges',
+				metadata: {badge_ids: badgeIds.join(',')},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(

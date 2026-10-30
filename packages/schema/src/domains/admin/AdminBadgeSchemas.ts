@@ -5,6 +5,7 @@ import {
 	CUSTOM_BADGE_NAME_MAX_LENGTH,
 	CustomBadgeTypes,
 	MAX_CUSTOM_BADGES_PER_ENTITY,
+	MAX_CUSTOM_BADGES_PER_TYPE,
 } from '@fluxer/constants/src/BadgeConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
@@ -94,6 +95,15 @@ export const UpdateUserCustomBadgesRequest = z.object({
 });
 
 export type UpdateUserCustomBadgesRequest = z.infer<typeof UpdateUserCustomBadgesRequest>;
+
+export const ReorderCustomBadgesRequest = z.object({
+	badge_ids: z
+		.array(SnowflakeType)
+		.max(MAX_CUSTOM_BADGES_PER_TYPE * 2)
+		.describe('IDs of every custom badge on this instance, user and guild, in the new display order'),
+});
+
+export type ReorderCustomBadgesRequest = z.infer<typeof ReorderCustomBadgesRequest>;
 
 export const CustomBadgeIdListResponse = z
 	.array(SnowflakeStringType)

@@ -39,6 +39,23 @@ export const BadgeAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'PUT',
+		route: '/admin/badges/order',
+		async prepare({harness, admin}) {
+			const first = await createTestCustomBadge(harness, admin.token, 'user');
+			const second = await createTestCustomBadge(harness, admin.token, 'guild');
+			return {
+				request: {path: '/admin/badges/order', body: {badge_ids: [second.id, first.id]}},
+				expected: {
+					action: 'reorder_badges',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {badge_ids: `${second.id},${first.id}`},
+				},
+			};
+		},
+	},
+	{
 		method: 'PATCH',
 		route: '/admin/badges/:badge_id',
 		async prepare({harness, admin}) {

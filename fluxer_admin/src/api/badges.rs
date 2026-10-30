@@ -84,6 +84,18 @@ impl AdminApiClient {
         Ok(())
     }
 
+    pub async fn reorder_badges(&self, ids: &[String]) -> ApiResult<AdminCustomBadgeList> {
+        let body = generated_types::ReorderCustomBadgesRequest {
+            badge_ids: ids.iter().map(|id| snowflake(id)).collect(),
+        };
+        let response = self
+            .generated()
+            .reorder_admin_badges(&body)
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
     pub async fn update_user_badges(&self, user_id: &str, ids: &[String]) -> ApiResult<AdminUser> {
         let body = generated_types::UpdateUserCustomBadgesRequest {
             badge_ids: badge_ids(ids),
