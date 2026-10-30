@@ -21,6 +21,7 @@ import {installRuntimeConfigEffects} from '@app/features/app/state/RuntimeConfig
 import {captureAccountHandoffFromLocation} from '@app/features/auth/state/AccountHandoffCapture';
 import {installImageRetention} from '@app/features/messaging/utils/ImageRetention';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {installChunkIntegrityRecovery} from '@app/features/platform/utils/ChunkIntegrityRecovery';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {installUnhandledRejectionReporter} from '@app/features/platform/utils/UnhandledRejectionReporter';
 import {captureCustomCssOffFromLocation} from '@app/features/theme_settings/state/CustomCssOff';
@@ -33,6 +34,7 @@ captureAccountHandoffFromLocation();
 captureCustomCssOffFromLocation();
 installBrowserStorageAccessProtection();
 installUnhandledRejectionReporter();
+installChunkIntegrityRecovery();
 
 configure({disableErrorBoundaries: true, enforceActions: 'observed'});
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {existsSync, readdirSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -9,6 +10,7 @@ import {
 	DefinePlugin,
 	HtmlRspackPlugin,
 	LightningCssMinimizerRspackPlugin,
+	SubresourceIntegrityPlugin,
 	SwcJsMinimizerRspackPlugin,
 	sources,
 } from '@rspack/core';
@@ -33,7 +35,7 @@ const BOOT_PRELOAD_FONT_FILES = [
 ];
 const BOOT_LOW_PRIORITY_FONT_FILES = ['FluxerSans/FluxerSans-Medium.woff2'];
 const AUTH_ENTRY_DOCUMENT = 'auth-index.html';
-const ENTRY_STYLESHEET_LINK_PATTERN = /<link href="([^"]+\.css)" rel="stylesheet">/gu;
+const ENTRY_STYLESHEET_LINK_PATTERN = /<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+\.css)"[^>]*>/gu;
 const CSS_URL_PATTERN = /url\(\s*['"]?([^'")]+)/gu;
 const DESKTOP_MODULE_ASSET_SOURCES = [
 	{
@@ -149,7 +151,28 @@ function mirrorCacheGroups(groups) {
 	return mirrored;
 }
 
-function bootPreloadPlugin() {
+const ENTRY_RECOVERY_ATTRIBUTE = 'data-fluxer-entry';
+
+function subresourceIntegrity(source) {
+	return `sha384-${createHash('sha384').update(source).digest('base64')}`;
+}
+
+function entryRecoveryMarkerPlugin() {
+	return {
+		apply(compiler) {
+			compiler.hooks.thisCompilation.tap('EntryRecoveryMarkerPlugin', (compilation) => {
+				HtmlRspackPlugin.getCompilationHooks(compilation).alterAssetTags.tap('EntryRecoveryMarkerPlugin', (data) => {
+					for (const tag of [...data.assetTags.scripts, ...data.assetTags.styles]) {
+						tag.attributes = {...tag.attributes, [ENTRY_RECOVERY_ATTRIBUTE]: ''};
+					}
+					return data;
+				});
+			});
+		},
+	};
+}
+
+function bootPreloadPlugin({withIntegrity}) {
 	return {
 		apply(compiler) {
 			compiler.hooks.thisCompilation.tap('BootPreloadPlugin', (compilation) => {
@@ -181,13 +204,26 @@ function bootPreloadPlugin() {
 							}
 						}
 						const ordered = [...files];
+						const integrityAttributes = (file) => {
+							if (!withIntegrity) {
+								return '';
+							}
+							const source = compilation.getAsset(file)?.source.buffer();
+							return source == null ? '' : ` crossorigin integrity="${subresourceIntegrity(source)}"`;
+						};
 						const links = [
 							...ordered
 								.filter((file) => file.endsWith('.css'))
-								.map((file) => `<link rel="preload" as="style" fetchpriority="low" href="${base}${file}">`),
+								.map(
+									(file) =>
+										`<link rel="preload" as="style" fetchpriority="low" href="${base}${file}"${integrityAttributes(file)}>`,
+								),
 							...ordered
 								.filter((file) => file.endsWith('.js'))
-								.map((file) => `<link rel="preload" as="script" fetchpriority="low" href="${base}${file}">`),
+								.map(
+									(file) =>
+										`<link rel="preload" as="script" fetchpriority="low" href="${base}${file}"${integrityAttributes(file)}>`,
+								),
 						].join('');
 						if (links === '') {
 							return;
@@ -463,6 +499,7 @@ export default () => {
 			publicPath,
 			workerPublicPath: '/',
 			workerChunkLoading: false,
+			crossOriginLoading: isProduction && !isDesktopRenderer ? 'anonymous' : false,
 			filename: jsFilename,
 			chunkFilename: jsFilename,
 			cssFilename: isProduction ? 'assets/[contenthash:16].css' : devCssName,
@@ -672,8 +709,12 @@ export default () => {
 			nodeAssertStrictSchemePlugin(),
 			fontPreloadPlugin(),
 			rocketLoaderOptOutPlugin(),
-			...(isProduction ? [bootPreloadPlugin()] : []),
+			...(isProduction ? [bootPreloadPlugin({withIntegrity: !isDesktopRenderer})] : []),
+			...(isProduction && !isDesktopRenderer ? [entryRecoveryMarkerPlugin()] : []),
 			...(isProduction && !isDesktopRenderer ? [authEntryDocumentPlugin()] : []),
+			...(isProduction && !isDesktopRenderer
+				? [new SubresourceIntegrityPlugin({hashFuncNames: ['sha384'], enabled: true})]
+				: []),
 			new HtmlRspackPlugin({
 				template: path.join(ROOT_DIR, 'index.html'),
 				filename: 'index.html',
