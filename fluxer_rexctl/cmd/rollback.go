@@ -159,7 +159,7 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 		}
 		prevBackup := inst.State.PreviousBackup
 		if err := release.Snapshot(inst, cur, refList(inst.State.Images.Refs)); err != nil {
-			return ui.Wrap(err, fmt.Sprintf("Couldn't save the files of Fluxer %s.", curShort), "Check that the disk isn't full, then run rexctl rollback again.")
+			return saveFailed(inst, err, fmt.Sprintf("Couldn't save the files of Fluxer %s.", curShort), "rexctl rollback")
 		}
 		var put []string
 		err = app.UI.Step(ctx, "Going back to "+prevShort, func(ctx context.Context, s *ui.Step) error {

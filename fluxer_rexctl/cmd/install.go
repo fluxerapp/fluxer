@@ -1160,14 +1160,14 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 		st.Images.Refs = map[string]string{}
 	}
 	if err := release.WriteRelease(inst, set); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "Check the free disk space, then run rexctl install again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "rexctl install")
 	}
 	r, err := inst.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs)
 	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "Check the free disk space, then run rexctl install again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "rexctl install")
 	}
 	if err := inst.WriteCustomTemplate(); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't write %s to %s.", instance.CustomCompose, inst.Dir), "Check the free disk space, then run rexctl install again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't write %s to %s.", instance.CustomCompose, inst.Dir), "rexctl install")
 	}
 	st.Rendered = r.Hashes
 	if err := inst.Save(); err != nil {

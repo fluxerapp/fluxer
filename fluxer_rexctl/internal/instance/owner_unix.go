@@ -39,3 +39,15 @@ func (i *Instance) giveToOwner(path string) error {
 	}
 	return chown(path, int(st.Uid), int(st.Gid))
 }
+
+func dirIDs(dir string) (int, int, bool) {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return 0, 0, false
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, 0, false
+	}
+	return int(st.Uid), int(st.Gid), true
+}

@@ -695,11 +695,11 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	}
 	if err := release.Snapshot(inst, from, refList(inst.State.Images.Refs)); err != nil {
 		clearUpgrade(inst)
-		return ui.Wrap(err, fmt.Sprintf("Couldn't save the files of %s.", fluxerName(fromShort)), "Check that the disk isn't full, then run rexctl upgrade again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't save the files of %s.", fluxerName(fromShort)), "rexctl upgrade")
 	}
 	if err := release.WriteRelease(inst, set); err != nil {
 		clearUpgrade(inst)
-		return ui.Wrap(err, fmt.Sprintf("Couldn't save the files of Fluxer %s.", toShort), "Check that the disk isn't full, then run rexctl upgrade again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't save the files of Fluxer %s.", toShort), "rexctl upgrade")
 	}
 	next, pins, err := nextState(inst, set, images, to)
 	if err != nil {
@@ -716,7 +716,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 	}
 	if err := release.Snapshot(&instance.Instance{Dir: inst.Dir, State: next}, to, refList(next.Images.Refs)); err != nil {
 		clearUpgrade(inst)
-		return ui.Wrap(err, fmt.Sprintf("Couldn't save the settings for Fluxer %s.", toShort), "Check that the disk isn't full, then run rexctl upgrade again.")
+		return saveFailed(inst, err, fmt.Sprintf("Couldn't save the settings for Fluxer %s.", toShort), "rexctl upgrade")
 	}
 	f = backupFlagsFor(app, inst, from, set, next, f, toShort)
 	old := e.Named(inst.Project(), inst.Dir)

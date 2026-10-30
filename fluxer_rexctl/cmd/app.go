@@ -403,6 +403,10 @@ func (a *App) holding(ctx context.Context, inst *instance.Instance, l *instance.
 	if err := rootlessGuard(inst); err != nil {
 		return err
 	}
+	if err := checkOwnership(a, inst); err != nil {
+		return err
+	}
+	defer giveFilesBack(a, inst)
 	a.held = inst
 	defer func() { a.held = nil }()
 	a.migrate(ctx, inst)
