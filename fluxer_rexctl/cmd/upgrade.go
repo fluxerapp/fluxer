@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"time"
@@ -208,7 +209,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 			if err := setPhase(inst, cur, rel.Version, release.PhaseResolved); err != nil {
 				return err
 			}
-			return upgradeStack(ctx, app, inst, e, f)
+			return guardedUpgradeStack(ctx, app, inst, e, f)
 		})
 	}
 	asset, err := rel.AssetFor(runtime.GOOS, runtime.GOARCH)
@@ -438,7 +439,7 @@ func runUpgradeCheck(ctx context.Context, app *App, f *upgradeFlags) error {
 	}
 	if inst != nil && inst.State.FailedRelease == rel.Version {
 		fix := "Run rexctl logs api to see why before you try again."
-		if log := inst.Path(instance.StateDirName, "upgrade-"+release.DirName(rel.Version)+".log"); fileExists(log) {
+		if log := inst.Path(instance.StateDirName, upgradeLog(rel.Version)); fileExists(log) {
 			fix = fmt.Sprintf("Read %s to see why before you try again.", log)
 		}
 		app.UI.Warn(fmt.Sprintf("The last upgrade to Fluxer %s didn't start.", to), fix)
@@ -501,8 +502,45 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 		if err := refreshBootUnit(ctx, inst, e, nil); err != nil {
 			app.UI.Detail("%v", err)
 		}
-		return upgradeStack(ctx, app, inst, e, f)
+		return guardedUpgradeStack(ctx, app, inst, e, f)
 	})
+}
+
+func guardedUpgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, f *upgradeFlags) (err error) {
+	defer guardUpgrade(inst, inst.State.Upgrade.To, &err)
+	return upgradeStack(ctx, app, inst, e, f)
+}
+
+func guardUpgrade(inst *instance.Instance, to string, err *error) {
+	r := recover()
+	if r == nil {
+		return
+	}
+	fix := "Run rexctl upgrade --verbose to see why."
+	if inst.State.Upgrade != nil {
+		fix = release.UnfinishedFix(inst.State.Upgrade)
+	}
+	if logPath := writeUpgradeText(inst, to, fmt.Sprintf("rexctl: %v\n\n%s", r, debug.Stack())); logPath != "" {
+		fix = fmt.Sprintf("Read %s to see why. %s", logPath, fix)
+	}
+	*err = ui.Wrap(fmt.Errorf("%v", r), fmt.Sprintf("The upgrade to Fluxer %s stopped because rexctl hit a bug.", release.Short(to)), fix)
+}
+
+func writeUpgradeText(inst *instance.Instance, to, text string) string {
+	path := inst.Path(instance.StateDirName, upgradeLog(to))
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if loggedThisAttempt(inst, to) {
+		flag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	}
+	f, err := os.OpenFile(path, flag, 0o600)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	if _, err := f.WriteString(text); err != nil {
+		return ""
+	}
+	return path
 }
 
 func printUpgradePlan(ctx context.Context, app *App, inst *instance.Instance, f *upgradeFlags, needSelf bool, from, version string) {
@@ -704,7 +742,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 		err := backUpForUpgrade(ctx, app, inst, old, upgradeScope(f))
 		if err != nil {
 			fix := "Run rexctl backup to see why, then run rexctl upgrade again."
-			if logPath := writeBackupLog(inst, "upgrade-"+release.DirName(to)+".log", err); logPath != "" {
+			if logPath := writeBackupLog(inst, upgradeLog(to), err); logPath != "" {
 				fix = fmt.Sprintf("Read %s to see why, then run rexctl upgrade again.", logPath)
 			}
 			report := ui.Wrap(err, fmt.Sprintf("Couldn't back up your instance. %s is still running.", capitalise(fluxerName(fromShort))), fix)
@@ -713,7 +751,7 @@ func upgradeStack(ctx context.Context, app *App, inst *instance.Instance, e *eng
 				report.Msg = be.Msg + " " + capitalise(fluxerName(fromShort)) + " is still running."
 				report.Fix = be.Fix
 			}
-			return abortUpgrade(ctx, app, inst, e, err, report)
+			return abandonUpgrade(ctx, app, inst, e, err, report)
 		}
 		if err := setPhase(inst, from, to, release.PhaseBackedUp); err != nil {
 			return err
@@ -879,7 +917,7 @@ func retryUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *eng
 			return ctx.Err()
 		}
 		fix := release.UnfinishedFix(pend)
-		if logPath := writeFailureLog(ctx, inst, p, "upgrade-"+release.DirName(pend.To)+".log", err, waiting); logPath != "" {
+		if logPath := writeFailureLog(ctx, inst, p, upgradeLog(pend.To), err, waiting); logPath != "" {
 			fix = fmt.Sprintf("Read %s to see why. %s", logPath, fix)
 		}
 		return ui.Wrap(err, fmt.Sprintf("Fluxer %s didn't start either.", toShort), fix)
@@ -1093,7 +1131,7 @@ func failedStart(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	}
 	app.UI.Fail(msg, "")
 	app.UI.Detail("%v", cause)
-	logPath := writeFailureLog(ctx, inst, p, "upgrade-"+release.DirName(pend.To)+".log", cause, waiting)
+	logPath := writeFailureLog(ctx, inst, p, upgradeLog(pend.To), cause, waiting)
 	if err := goBack(ctx, app, inst, e, pend.From); err != nil {
 		return err
 	}
@@ -1162,7 +1200,25 @@ func notRunning(ctx context.Context, p *engine.Project) []string {
 	return out
 }
 
+func upgradeLog(to string) string {
+	return "upgrade-" + release.DirName(to) + ".log"
+}
+
+func loggedThisAttempt(inst *instance.Instance, to string) bool {
+	pend := inst.State.Upgrade
+	if pend == nil || pend.To != to || pend.StartedAt.IsZero() {
+		return false
+	}
+	info, err := os.Stat(inst.Path(instance.StateDirName, upgradeLog(to)))
+	return err == nil && !info.ModTime().Before(pend.StartedAt)
+}
+
 func abortUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, cause, report error) error {
+	writeFailureLog(ctx, inst, e.Named(inst.Project(), inst.Dir), upgradeLog(inst.State.Upgrade.To), cause, nil)
+	return abandonUpgrade(ctx, app, inst, e, cause, report)
+}
+
+func abandonUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, cause, report error) error {
 	pend := inst.State.Upgrade
 	app.UI.Detail("%v", cause)
 	if err := goBack(ctx, app, inst, e, pend.From); err != nil {
@@ -1309,12 +1365,21 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 	return nil
 }
 
-func recoverUpgrade(ctx context.Context, app *App, inst *instance.Instance, forward bool) error {
+func recoverUpgrade(ctx context.Context, app *App, inst *instance.Instance, forward bool) (err error) {
 	pend := inst.State.Upgrade
 	if pend == nil {
 		return nil
 	}
+	defer guardUpgrade(inst, pend.To, &err)
 	phase := phaseIndex(pend.Phase)
+	if phase >= phaseIndex(release.PhasePulled) && phase < phaseIndex(release.PhaseVerified) && !loggedThisAttempt(inst, pend.To) {
+		cause := fmt.Errorf("the upgrade stopped after the %s step and didn't finish", pend.Phase)
+		if e, err := app.Engine(ctx, inst); err == nil {
+			writeFailureLog(ctx, inst, e.Named(inst.Project(), inst.Dir), upgradeLog(pend.To), cause, nil)
+		} else {
+			writeUpgradeText(inst, pend.To, fmt.Sprintf("rexctl: %v\n", cause))
+		}
+	}
 	switch {
 	case phase >= phaseIndex(release.PhaseVerified):
 		e, err := app.Engine(ctx, inst)

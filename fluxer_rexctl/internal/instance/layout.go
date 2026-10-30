@@ -176,7 +176,11 @@ func (i *Instance) rootMounted(ctx context.Context, name string) bool {
 	if _, err := os.Stat(custom); errors.Is(err, fs.ErrNotExist) {
 		return false
 	}
-	sources, err := engine.BindSources(ctx, i.Dir, i.Project(), []string{custom}, map[string]string{"PWD": i.Dir})
+	env, err := i.Environment()
+	if err != nil {
+		return true
+	}
+	sources, err := engine.BindSources(ctx, engine.Spec{Name: i.Project(), Dir: i.Dir, Files: i.ComposeFiles(), Env: env})
 	if err != nil {
 		return true
 	}

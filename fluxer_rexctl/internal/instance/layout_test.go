@@ -602,3 +602,18 @@ func TestEjectOnTheOldLayoutKeepsTheFiles(t *testing.T) {
 	}
 	checkOldLayout(t, dir, old)
 }
+
+func TestDropRootCopiesReadsACustomComposeServiceWithNoBody(t *testing.T) {
+	dir, old := oldLayout(t)
+	inst := migrated(t, dir, old)
+	writeTestFile(t, inst.Path(CustomCompose), []byte("services:\n  livekit:\n"))
+	startedWithGenerated(t, inst)
+	if _, err := os.Stat(inst.Path(stack.Caddyfile)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("kept the Caddyfile though custom.compose.yml mounts nothing")
+	}
+	writeTestFile(t, inst.Path(stack.Caddyfile), []byte(":443 {\n}\n"))
+	writeTestFile(t, inst.Path(CustomCompose), []byte("services:\n  livekit:\n  edge:\n    volumes:\n      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n"))
+	if !inst.rootMounted(context.Background(), stack.Caddyfile) {
+		t.Fatal("missed the Caddyfile that custom.compose.yml mounts next to a service with no body")
+	}
+}
