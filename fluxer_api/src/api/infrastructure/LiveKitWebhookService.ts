@@ -11,6 +11,15 @@ import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import type {WebhookEvent} from 'livekit-server-sdk';
 import {TrackSource, WebhookReceiver} from 'livekit-server-sdk';
 
+const WEBHOOK_CLOCK_TOLERANCE_SECONDS = 60;
+
+interface SourceServer {
+	regionId: string;
+	serverId: string;
+}
+
+export const REXCTL_TEST_ROOM_PREFIX = 'rexctl-test-';
+
 interface VoiceWebhookParticipantContext {
 	readonly type: 'dm' | 'guild';
 	readonly channelId: ChannelID;
@@ -19,13 +28,7 @@ interface VoiceWebhookParticipantContext {
 
 export class LiveKitWebhookService {
 	private receivers: Map<string, WebhookReceiver>;
-	private serverMap: Map<
-		string,
-		{
-			regionId: string;
-			serverId: string;
-		}
-	>;
+	private serversByKey: Map<string, Array<SourceServer>>;
 
 	constructor(
 		private voiceRoomStore: IVoiceRoomStore,
@@ -34,7 +37,7 @@ export class LiveKitWebhookService {
 		private voiceTopology: VoiceTopology,
 	) {
 		this.receivers = new Map();
-		this.serverMap = new Map();
+		this.serversByKey = new Map();
 		this.rebuildReceivers();
 		this.voiceTopology.registerSubscriber(() => this.rebuildReceivers());
 	}
@@ -52,7 +55,7 @@ export class LiveKitWebhookService {
 		let lastError: Error | null = null;
 		for (const [apiKey, receiver] of this.receivers.entries()) {
 			try {
-				const event = await receiver.receive(body, authHeader);
+				const event = await receiver.receive(body, authHeader, false, WEBHOOK_CLOCK_TOLERANCE_SECONDS);
 				return {event: event as WebhookEvent, apiKey};
 			} catch (error) {
 				lastError = error as Error;
@@ -106,23 +109,19 @@ export class LiveKitWebhookService {
 
 	private rebuildReceivers(): void {
 		const newReceivers = new Map<string, WebhookReceiver>();
-		const newServerMap = new Map<
-			string,
-			{
-				regionId: string;
-				serverId: string;
-			}
-		>();
+		const newServersByKey = new Map<string, Array<SourceServer>>();
 		const regions = this.voiceTopology.getAllRegions();
 		for (const region of regions) {
 			const servers = this.voiceTopology.getServersForRegion(region.id);
 			for (const server of servers) {
 				newReceivers.set(server.apiKey, new WebhookReceiver(server.apiKey, server.apiSecret));
-				newServerMap.set(server.apiKey, {regionId: region.id, serverId: server.serverId});
+				const sharing = newServersByKey.get(server.apiKey) ?? [];
+				sharing.push({regionId: region.id, serverId: server.serverId});
+				newServersByKey.set(server.apiKey, sharing);
 			}
 		}
 		this.receivers = newReceivers;
-		this.serverMap = newServerMap;
+		this.serversByKey = newServersByKey;
 		Logger.debug(
 			{
 				regionCount: regions.length,
@@ -130,6 +129,44 @@ export class LiveKitWebhookService {
 			},
 			'Rebuilt LiveKit webhook receivers',
 		);
+	}
+
+	private resolveSource(
+		apiKey: string,
+		raw: {region_id?: string; server_id?: string} | undefined,
+	): SourceServer | undefined {
+		const servers = this.serversByKey.get(apiKey) ?? [];
+		if (servers.length === 1) {
+			return servers[0];
+		}
+		if (!raw?.region_id || !raw.server_id) {
+			return undefined;
+		}
+		return servers.find((server) => server.regionId === raw.region_id && server.serverId === raw.server_id);
+	}
+
+	private async isFromPinnedServer(
+		guildId: GuildID | undefined,
+		channelId: ChannelID,
+		source: SourceServer | undefined,
+	): Promise<boolean> {
+		if (!source) {
+			return false;
+		}
+		const pinned = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
+		if (pinned && (pinned.regionId !== source.regionId || pinned.serverId !== source.serverId)) {
+			Logger.debug(
+				{
+					guildId: guildId?.toString(),
+					channelId: channelId.toString(),
+					sourceServer: source.serverId,
+					pinnedServer: pinned.serverId,
+				},
+				'Ignoring LiveKit webhook from a server the room is not pinned to',
+			);
+			return false;
+		}
+		return true;
 	}
 
 	async handleRoomFinished(event: WebhookEvent, apiKey: string): Promise<void> {
@@ -142,54 +179,34 @@ export class LiveKitWebhookService {
 			Logger.warn({roomName}, 'Unknown room name format');
 			return;
 		}
+		const guildId = isDMRoom(context) ? undefined : context.guildId;
 		Logger.debug(
-			{
-				roomName,
-				contextType: context.type,
-				guildId: isDMRoom(context) ? undefined : context.guildId.toString(),
-				channelId: context.channelId.toString(),
-			},
+			{roomName, contextType: context.type, guildId: guildId?.toString(), channelId: context.channelId.toString()},
 			'Processing LiveKit room_finished event',
 		);
-		const sourceServer = this.serverMap.get(apiKey);
-		if (isDMRoom(context)) {
-			const pinned = await this.voiceRoomStore.getPinnedRoomServer(undefined, context.channelId);
-			if (pinned && sourceServer && pinned.serverId !== sourceServer.serverId) {
-				Logger.debug(
-					{
-						channelId: context.channelId.toString(),
-						finishedServer: sourceServer.serverId,
-						pinnedServer: pinned.serverId,
-					},
-					'Ignoring room_finished from stale server — room has moved to a different server',
-				);
-				return;
-			}
-			await this.voiceRoomStore.deleteRoomServer(undefined, context.channelId);
-			Logger.debug({channelId: context.channelId.toString()}, 'Cleared DM voice room server pinning');
-		} else {
-			const pinned = await this.voiceRoomStore.getPinnedRoomServer(context.guildId, context.channelId);
-			if (pinned && sourceServer && pinned.serverId !== sourceServer.serverId) {
-				Logger.debug(
-					{
-						guildId: context.guildId.toString(),
-						channelId: context.channelId.toString(),
-						finishedServer: sourceServer.serverId,
-						pinnedServer: pinned.serverId,
-					},
-					'Ignoring room_finished from stale server — room has moved to a different server',
-				);
-				return;
-			}
-			await this.voiceRoomStore.deleteRoomServer(context.guildId, context.channelId);
-			Logger.debug(
-				{guildId: context.guildId.toString(), channelId: context.channelId.toString()},
-				'Cleared guild voice room server pinning',
-			);
+		const servers = this.serversByKey.get(apiKey) ?? [];
+		if (servers.length === 0) {
+			return;
 		}
+		const pinned = await this.voiceRoomStore.getPinnedRoomServer(guildId, context.channelId);
+		if (
+			pinned &&
+			!servers.some((server) => server.regionId === pinned.regionId && server.serverId === pinned.serverId)
+		) {
+			Logger.debug(
+				{guildId: guildId?.toString(), channelId: context.channelId.toString(), pinnedServer: pinned.serverId},
+				'Ignoring LiveKit webhook from a server the room is not pinned to',
+			);
+			return;
+		}
+		await this.voiceRoomStore.deleteRoomServer(guildId, context.channelId);
+		Logger.debug(
+			{guildId: guildId?.toString(), channelId: context.channelId.toString()},
+			'Cleared voice room server pinning',
+		);
 	}
 
-	private async handleParticipantJoined(event: WebhookEvent): Promise<void> {
+	private async handleParticipantJoined(event: WebhookEvent, apiKey: string): Promise<void> {
 		if (event.event !== 'participant_joined') {
 			return;
 		}
@@ -205,6 +222,17 @@ export class LiveKitWebhookService {
 		}
 		const {context, raw} = parsed;
 		const tokenNonce = raw.token_nonce;
+		const source = this.resolveSource(apiKey, raw);
+		if (
+			!source ||
+			!(await this.isFromPinnedServer(
+				context.type === 'guild' ? context.guildId : undefined,
+				context.channelId,
+				source,
+			))
+		) {
+			return;
+		}
 		Logger.debug(
 			{
 				type: context.type,
@@ -278,8 +306,8 @@ export class LiveKitWebhookService {
 						channelId: context.channelId,
 						userId: context.userId,
 						connectionId: context.connectionId,
-						regionId: raw.region_id ?? '',
-						serverId: raw.server_id ?? '',
+						regionId: source.regionId,
+						serverId: source.serverId,
 					});
 				} catch (disconnectError) {
 					Logger.error({error: disconnectError}, 'Failed to disconnect rejected participant');
@@ -294,23 +322,11 @@ export class LiveKitWebhookService {
 	private async isParticipantStillInRoom(params: {
 		participantIdentity: string;
 		context: VoiceWebhookParticipantContext;
-		regionId?: string;
-		serverId?: string;
+		source: SourceServer;
 	}): Promise<'present' | 'absent' | 'unknown'> {
 		const {participantIdentity, context} = params;
 		const guildId = context.type === 'guild' ? context.guildId : undefined;
-		let regionId = params.regionId;
-		let serverId = params.serverId;
-		if (!regionId || !serverId) {
-			const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, context.channelId);
-			if (pinnedServer) {
-				regionId = pinnedServer.regionId;
-				serverId = pinnedServer.serverId;
-			}
-		}
-		if (!regionId || !serverId) {
-			return 'unknown';
-		}
+		const {regionId, serverId} = params.source;
 		const result = await this.liveKitService.listParticipants({
 			guildId,
 			channelId: context.channelId,
@@ -327,7 +343,7 @@ export class LiveKitWebhookService {
 		return result.participants.some((p) => p.identity === participantIdentity) ? 'present' : 'absent';
 	}
 
-	private async handleParticipantLeft(event: WebhookEvent): Promise<void> {
+	private async handleParticipantLeft(event: WebhookEvent, apiKey: string): Promise<void> {
 		if (event.event !== 'participant_left' && event.event !== 'participant_connection_aborted') {
 			return;
 		}
@@ -342,6 +358,7 @@ export class LiveKitWebhookService {
 			return;
 		}
 		const {context, raw} = parsed;
+		const source = this.resolveSource(apiKey, raw);
 		Logger.debug(
 			{
 				type: context.type,
@@ -355,32 +372,14 @@ export class LiveKitWebhookService {
 			`Processing LiveKit ${event.event} event`,
 		);
 		try {
-			if (raw.region_id && raw.server_id) {
-				const guildId = context.type === 'guild' ? context.guildId : undefined;
-				const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, context.channelId);
-				if (pinnedServer && (pinnedServer.regionId !== raw.region_id || pinnedServer.serverId !== raw.server_id)) {
-					Logger.debug(
-						{
-							type: context.type,
-							participantIdentity: participant.identity,
-							channelId: context.channelId.toString(),
-							guildId: context.type === 'guild' ? context.guildId.toString() : undefined,
-							connectionId: context.connectionId,
-							eventRegionId: raw.region_id,
-							eventServerId: raw.server_id,
-							currentRegionId: pinnedServer.regionId,
-							currentServerId: pinnedServer.serverId,
-						},
-						'Ignoring participant_left from stale server - room has migrated to a different server',
-					);
-					return;
-				}
+			const guildIdForPin = context.type === 'guild' ? context.guildId : undefined;
+			if (!source || !(await this.isFromPinnedServer(guildIdForPin, context.channelId, source))) {
+				return;
 			}
 			const presenceStatus = await this.isParticipantStillInRoom({
 				participantIdentity: participant.identity,
 				context,
-				regionId: raw.region_id,
-				serverId: raw.server_id,
+				source,
 			});
 			if (presenceStatus === 'present') {
 				Logger.warn(
@@ -441,7 +440,7 @@ export class LiveKitWebhookService {
 		}
 	}
 
-	private async handleTrackPublished(event: WebhookEvent): Promise<void> {
+	private async handleTrackPublished(event: WebhookEvent, apiKey: string): Promise<void> {
 		if (event.event !== 'track_published') {
 			return;
 		}
@@ -458,11 +457,9 @@ export class LiveKitWebhookService {
 			return;
 		}
 		const {context, raw} = parsed;
-		if (!raw.region_id || !raw.server_id) {
-			Logger.warn(
-				{participantIdentity: participant.identity, trackSid: track.sid},
-				'Cannot mute published microphone without a region and server',
-			);
+		const source = this.resolveSource(apiKey, raw);
+		const guildId = context.type === 'guild' ? context.guildId : undefined;
+		if (!source || !(await this.isFromPinnedServer(guildId, context.channelId, source))) {
 			return;
 		}
 		Logger.debug(
@@ -470,12 +467,12 @@ export class LiveKitWebhookService {
 			'Muting microphone published while server muted',
 		);
 		await this.liveKitService.muteMicrophoneTrack({
-			guildId: context.type === 'guild' ? context.guildId : undefined,
+			guildId,
 			channelId: context.channelId,
 			userId: context.userId,
 			connectionId: context.connectionId,
-			regionId: raw.region_id,
-			serverId: raw.server_id,
+			regionId: source.regionId,
+			serverId: source.serverId,
 			trackSid: track.sid,
 		});
 	}
@@ -483,19 +480,22 @@ export class LiveKitWebhookService {
 	async processEvent(data: {event: WebhookEvent; apiKey: string}): Promise<void> {
 		const {event, apiKey} = data;
 		Logger.debug({event: event.event, apiKey}, 'Dispatching LiveKit webhook event');
+		if (event.room?.name.startsWith(REXCTL_TEST_ROOM_PREFIX)) {
+			return;
+		}
 		switch (event.event) {
 			case 'participant_joined':
-				await this.handleParticipantJoined(event);
+				await this.handleParticipantJoined(event, apiKey);
 				break;
 			case 'participant_left':
 			case 'participant_connection_aborted':
-				await this.handleParticipantLeft(event);
+				await this.handleParticipantLeft(event, apiKey);
 				break;
 			case 'room_finished':
 				await this.handleRoomFinished(event, apiKey);
 				break;
 			case 'track_published':
-				await this.handleTrackPublished(event);
+				await this.handleTrackPublished(event, apiKey);
 				break;
 			default:
 				Logger.debug({event: event.event}, 'Ignoring LiveKit webhook event');

@@ -143,6 +143,9 @@ Each route needs one or more ACLs, and the caller needs at least one of them. Th
 | user:update:profile | Clears profile fields |
 | user:update:traits | Replaces account traits |
 | user:update:username | Updates usernames and discriminators |
+| voice:join_token:create | Creates join tokens for new voice servers |
+| voice:join_token:list | Reads join tokens |
+| voice:join_token:revoke | Revokes join tokens |
 | voice:region:create | Creates [voice](/admin-api/voice/) regions |
 | voice:region:delete | Deletes voice regions |
 | voice:region:list | Reads voice regions |
@@ -355,6 +358,7 @@ These entries have `access` set to `read`.
 | list_user_relationships | The relationships of an account were read |
 | list_user_sessions | An account's login sessions were read |
 | list_user_sso_identities | The single sign-on identities of an account were read |
+| list_voice_join_tokens | Voice join tokens were listed |
 | list_voice_regions | Voice regions were listed |
 | list_voice_servers | The voice servers of a region were listed |
 | list_webauthn_credentials | An account's WebAuthn credentials were read |
@@ -408,8 +412,10 @@ These entries have `access` set to `write`.
 | create_registration_url | A registration URL was issued |
 | create_sign_in_link | A sign-in link was created for an admin account |
 | create_user | An account was created by an Admin |
+| create_voice_join_token | A voice join token was created |
 | create_voice_region | A voice region was created |
 | create_voice_server | A voice server was registered |
+| create_voice_server_test_token | A test token for a voice server was signed |
 | delete_all_user_messages | Deletion of every message an account sent was queued |
 | delete_all_user_messages_dry_run | Deletion of every message an account sent was previewed with `dry_run`, and nothing was deleted |
 | delete_badge | A custom badge was deleted |
@@ -449,6 +455,7 @@ These entries have `access` set to `write`.
 | revoke_admin_api_key | An Admin API key was revoked |
 | revoke_recovery_kit | The recovery kit of an account was revoked |
 | revoke_registration_url | A registration URL was revoked |
+| revoke_voice_join_token | A voice join token was revoked |
 | schedule_deletion | Account deletion was scheduled |
 | send_password_reset | A password reset message was requested for an account |
 | set_acls | The Admin ACL set of an account was replaced |

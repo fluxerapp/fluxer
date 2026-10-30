@@ -45,6 +45,9 @@ func run() error {
 	for _, name := range stack.OverlayFiles {
 		names = append(names, name)
 	}
+	for _, name := range []string{"voice.compose.yml", "voice-http.compose.yml", "voice-edge.compose.yml", "Caddyfile.voice"} {
+		names = append(names, "voice/"+name)
+	}
 	for _, name := range names {
 		data, err := stack.ReadFile(set, name)
 		if err != nil {

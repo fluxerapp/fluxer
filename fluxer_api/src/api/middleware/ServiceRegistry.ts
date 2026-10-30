@@ -23,6 +23,7 @@ import {singleton} from '@app/api/middleware/Singleton';
 import {readOptionalEnv, readOptionalIntegerEnv} from '@app/api/utils/IntegerOptions';
 import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import {VoiceServerHealthMonitor} from '@app/api/voice/VoiceServerHealth';
 import {VoiceServerLoadTracker} from '@app/api/voice/VoiceServerLoad';
 import {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -224,6 +225,7 @@ interface VoiceResources {
 	readonly availability: VoiceAvailabilityService | null;
 	readonly liveKit: ILiveKitService;
 	readonly roomStore: IVoiceRoomStore;
+	readonly health: VoiceServerHealthMonitor | null;
 }
 
 class VoiceResourceSession {
@@ -263,6 +265,7 @@ class VoiceResourceSession {
 	}
 
 	shutdown(): Promise<void> {
+		this.current?.health?.stop();
 		this.current = null;
 		this.stopCompletion ??= this.close();
 		return this.stopCompletion;
@@ -284,17 +287,23 @@ function createVoiceSession(): VoiceResourceSession {
 			availability: null,
 			liveKit: new DisabledLiveKitService(),
 			roomStore: new InMemoryVoiceRoomStore(),
+			health: null,
 		}));
 	}
 	const kvClient = getKVClient();
 	const gatewayService = getGatewayService();
 	const topology = new VoiceTopology(new VoiceRepository(), kvClient);
-	return new VoiceResourceSession(topology, () => ({
-		topology,
-		availability: new VoiceAvailabilityService(topology, new VoiceServerLoadTracker({gatewayService})),
-		liveKit: new LiveKitService(topology),
-		roomStore: new VoiceRoomStore(kvClient),
-	}));
+	return new VoiceResourceSession(topology, () => {
+		const health = new VoiceServerHealthMonitor(topology);
+		health.start();
+		return {
+			topology,
+			availability: new VoiceAvailabilityService(topology, new VoiceServerLoadTracker({gatewayService}), health),
+			liveKit: new LiveKitService(topology),
+			roomStore: new VoiceRoomStore(kvClient),
+			health,
+		};
+	});
 }
 
 export async function ensureVoiceResourcesInitialized(): Promise<void> {
@@ -317,6 +326,10 @@ export async function shutdownVoiceResources(): Promise<void> {
 
 export function getVoiceTopology(): VoiceTopology | null {
 	return voiceSession?.resources?.topology ?? null;
+}
+
+export function getVoiceServerHealth(): VoiceServerHealthMonitor | null {
+	return voiceSession?.resources?.health ?? null;
 }
 
 export function getVoiceAvailabilityService(): VoiceAvailabilityService | null {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +39,7 @@ func oldInstance(t *testing.T, yes bool) (*App, *instance.Instance, *bytes.Buffe
 	if err := inst.Save(); err != nil {
 		t.Fatal(err)
 	}
-	data := bytes.Replace(readFile(t, inst.StatePath()), []byte(`"schema": 3`), []byte(`"schema": 2`), 1)
+	data := bytes.Replace(readFile(t, inst.StatePath()), fmt.Appendf(nil, `"schema": %d`, instance.StateSchema), []byte(`"schema": 2`), 1)
 	if err := os.WriteFile(inst.StatePath(), data, 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -234,5 +235,32 @@ func TestStatusAndDoctorSayAnEditedRootCaddyfileIsUnused(t *testing.T) {
 	last := lines[len(lines)-1]
 	if len(lines) == 0 || !strings.Contains(last, "no longer uses "+inst.Path(stack.Caddyfile)) || !strings.Contains(last, instance.CaddyDropInDir+"/") {
 		t.Fatalf("output:\n%s", out)
+	}
+}
+
+func TestStateWithVoiceServersRefusesARexctlThatWouldDropThem(t *testing.T) {
+	inst, err := instance.Create(t.TempDir(), "fluxer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	inst.State.Voice = []instance.VoiceServer{{ID: "fra-server-1"}}
+	if err := inst.Save(); err != nil {
+		t.Fatal(err)
+	}
+	saved, err := instance.Find(inst.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.State.Schema != instance.StateSchema || instance.StateSchema <= instance.LayoutSchema {
+		t.Fatalf("saved schema %d, layout schema %d", saved.State.Schema, instance.LayoutSchema)
+	}
+	older := &release.Release{Version: "2026.1029.100000", StateSchema: instance.LayoutSchema}
+	if err := release.CheckTarget(nil, older, saved.State.Schema); !errors.Is(err, release.ErrOlderSchema) {
+		t.Fatalf("CheckTarget = %v, want ErrOlderSchema", err)
+	}
+	data := bytes.Replace(readFile(t, saved.StatePath()), fmt.Appendf(nil, `"schema": %d`, instance.StateSchema), fmt.Appendf(nil, `"schema": %d`, instance.LayoutSchema), 1)
+	s, err := instance.ParseState(data, inst.Dir)
+	if err != nil || s.Schema != instance.StateSchema || len(s.Voice) != 1 {
+		t.Fatalf("state from the layout schema = %+v, %v", s, err)
 	}
 }

@@ -104,6 +104,63 @@ pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
             },
         );
     }
+    if let Some(raw) = form.first("internal_endpoint") {
+        let trimmed = raw.trim();
+        body.insert(
+            "internal_endpoint".into(),
+            if trimmed.is_empty() {
+                serde_json::Value::Null
+            } else {
+                trimmed.into()
+            },
+        );
+    }
+    if form.contains_key("draining_field") {
+        body.insert("draining".into(), form.bool_value("draining").into());
+    }
+    body.insert("vip_only".into(), form.bool_value("vip_only").into());
+    insert_submitted_list(&mut body, form, "required_guild_features");
+    insert_submitted_list(&mut body, form, "allowed_guild_ids");
+    serde_json::Value::Object(body)
+}
+
+pub(crate) fn build_join_token_body(form: &MultiValueForm) -> serde_json::Value {
+    let mut body = serde_json::Map::new();
+    match form.clean("region_choice").as_deref() {
+        Some("new") => {
+            for (field, key) in [
+                ("new_region_id", "region_id"),
+                ("new_region_name", "region_name"),
+                ("new_region_emoji", "region_emoji"),
+            ] {
+                if let Some(value) = form.clean(field) {
+                    body.insert(key.into(), value.into());
+                }
+            }
+        }
+        Some("auto") | None => {}
+        Some(region) => {
+            body.insert("region_id".into(), region.into());
+        }
+    }
+    for field in ["server_id", "hostname"] {
+        if let Some(value) = form.clean(field) {
+            body.insert(field.into(), value.into());
+        }
+    }
+    if let Some(limit) = form
+        .clean("soft_connection_limit")
+        .and_then(|value| value.parse::<i64>().ok())
+        .filter(|limit| *limit > 0)
+    {
+        body.insert("soft_connection_limit".into(), limit.into());
+    }
+    let hours = form
+        .clean("expires_hours")
+        .and_then(|value| value.parse::<i64>().ok())
+        .unwrap_or(1)
+        .clamp(1, 24);
+    body.insert("expires_in_seconds".into(), (hours * 3600).into());
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
     insert_submitted_list(&mut body, form, "required_guild_features");
     insert_submitted_list(&mut body, form, "allowed_guild_ids");
@@ -183,7 +240,36 @@ pub(crate) async fn voice_servers_post(
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let action = aq.action.as_deref().unwrap_or("");
 
+    if action == "join_token" {
+        let body = build_join_token_body(&form);
+        let region_id = form.clean("region_id");
+        return match client.create_voice_join_token(&body).await {
+            Ok(created) => axum::response::Html(
+                crate::templates::pages::voice_servers::join_token_created_page(
+                    config,
+                    &auth.0,
+                    region_id.as_deref(),
+                    &created,
+                )
+                .into_string(),
+            )
+            .into_response(),
+            Err(e) => flash::redirect_with_flash(
+                &servers_url(base, region_id.as_deref()),
+                FlashData::error(format!("Failed to create a join token: {e:?}")),
+                config.secure_cookies(),
+            ),
+        };
+    }
+
     let (msg, level) = match action {
+        "revoke_token" => match form.clean("token_id") {
+            Some(token_id) => match client.revoke_voice_join_token(&token_id).await {
+                Ok(_) => ("Join token revoked".to_string(), "success"),
+                Err(e) => (format!("Failed to revoke join token: {e:?}"), "error"),
+            },
+            None => ("Token ID is required".to_string(), "error"),
+        },
         "create" => {
             let body = build_server_body(&form);
             let has_ids = body.get("region_id").and_then(|v| v.as_str()).is_some()
@@ -225,17 +311,81 @@ pub(crate) async fn voice_servers_post(
         _ => ("Unknown action".to_string(), "error"),
     };
 
-    let redirect_url = if let Some(region_id) = form.clean("region_id") {
-        format!(
-            "{base}/voice-servers?region_id={}",
-            urlencoding::encode(&region_id)
-        )
-    } else {
-        format!("{base}/voice-servers")
-    };
     flash::redirect_with_flash(
-        &redirect_url,
+        &servers_url(base, form.clean("region_id").as_deref()),
         flash_from_level(level, &msg),
         config.secure_cookies(),
     )
+}
+
+fn servers_url(base: &str, region_id: Option<&str>) -> String {
+    match region_id {
+        Some(region_id) => format!(
+            "{base}/voice-servers?region_id={}",
+            urlencoding::encode(region_id)
+        ),
+        None => format!("{base}/voice-servers"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn form(pairs: &[(&str, &str)]) -> MultiValueForm {
+        let encoded = pairs
+            .iter()
+            .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
+            .collect::<Vec<_>>()
+            .join("&");
+        MultiValueForm::parse(encoded.as_bytes())
+    }
+
+    #[test]
+    fn join_token_body_for_a_new_region_and_presets() {
+        let body = build_join_token_body(&form(&[
+            ("region_choice", "new"),
+            ("new_region_id", "sgp"),
+            ("new_region_name", "Singapore"),
+            ("new_region_emoji", "🇸🇬"),
+            ("server_id", "sgp-server-1"),
+            ("hostname", " voice-sgp.chat.example.com "),
+            ("soft_connection_limit", "300"),
+            ("expires_hours", "48"),
+        ]));
+        assert_eq!(body["region_id"], "sgp");
+        assert_eq!(body["region_name"], "Singapore");
+        assert_eq!(body["server_id"], "sgp-server-1");
+        assert_eq!(body["hostname"], "voice-sgp.chat.example.com");
+        assert_eq!(body["soft_connection_limit"], 300);
+        assert_eq!(body["expires_in_seconds"], 86400);
+    }
+
+    #[test]
+    fn join_token_body_with_automatic_region_has_no_region() {
+        let body = build_join_token_body(&form(&[("region_choice", "auto")]));
+        assert!(body.get("region_id").is_none());
+        assert_eq!(body["expires_in_seconds"], 3600);
+        let picked = build_join_token_body(&form(&[("region_choice", "fra")]));
+        assert_eq!(picked["region_id"], "fra");
+    }
+
+    #[test]
+    fn server_body_keeps_draining_unless_the_form_shows_it() {
+        let toggle = build_server_body(&form(&[
+            ("region_id", "fra"),
+            ("server_id", "a"),
+            ("is_active", "false"),
+        ]));
+        assert!(toggle.get("draining").is_none());
+        assert!(toggle.get("internal_endpoint").is_none());
+        let edit = build_server_body(&form(&[
+            ("region_id", "fra"),
+            ("server_id", "a"),
+            ("draining_field", "1"),
+            ("internal_endpoint", ""),
+        ]));
+        assert_eq!(edit["draining"], false);
+        assert!(edit["internal_endpoint"].is_null());
+    }
 }

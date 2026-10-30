@@ -137,6 +137,22 @@ map_legacy_flags() {
 	[ "$help" -eq 0 ] || add --help
 }
 
+voice_join_shorthand() {
+	[ "${1:-}" = voice ] || return 1
+	case ${2:-} in
+		'' | -* | add | join | token | list | status | test | hostname | remove | help) return 1 ;;
+	esac
+	case ${3:-} in
+		fvj_*) return 0 ;;
+		'' | -*)
+			case $2 in
+				*.*) return 0 ;;
+			esac
+			;;
+	esac
+	return 1
+}
+
 self_dir=''
 case $0 in
 	*/install.sh) self_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || self_dir='' ;;
@@ -146,7 +162,12 @@ trial=0
 case ${1:-} in
 	'' | -*) map_legacy_flags "$@" ;;
 	*)
-		add "$@"
+		if voice_join_shorthand "$@"; then
+			shift
+			add voice join "$@"
+		else
+			add "$@"
+		fi
 		for arg in "$@"; do
 			case $arg in
 				--dry-run | --check) trial=1 ;;

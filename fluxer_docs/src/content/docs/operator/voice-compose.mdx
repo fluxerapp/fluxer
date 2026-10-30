@@ -1,0 +1,239 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Run a voice server with Docker Compose
+description: Run a standalone LiveKit voice server from the compose bundle and connect it to any Fluxer instance by hand.
+sidebar:
+  label: Voice server with Compose
+---
+
+Use this page to run a voice server on a machine where you can't run rexctl, or next to an instance on Kubernetes or another platform. When you can run rexctl, [`rexctl voice add`](/operator/voice-servers/#on-the-fluxer-machine) and [`rexctl voice join`](/operator/voice-servers/#on-another-machine) do all of this for you.
+
+## Get the files
+
+The `voice` folder of the [compose bundle](/operator/docker-compose/#get-the-files) has everything for one machine:
+
+- `voice.compose.yml` runs one LiveKit server.
+- `voice-http.compose.yml` publishes the server's HTTP port on `127.0.0.1` for your own proxy.
+- `voice-edge.compose.yml` and `Caddyfile.voice` run Caddy on ports 80 and 443 for every server on a voice machine.
+- `sites.d/voice.caddy.example` is a site with one server.
+- `voice.env.example` lists every setting of a server.
+- `edge.env.example` lists the settings of the edge.
+
+```sh
+curl -fsSL https://fluxer.dev/compose/latest -o fluxer-compose.tar.gz
+tar -xzf fluxer-compose.tar.gz
+cd voice
+```
+
+## Ask the instance first
+
+With a join token, ask your instance what the join would choose before you fill in anything. Create the token on the Fluxer machine with `rexctl voice token`, or with **Add a voice server** on the admin panel's voice servers page. The preview doesn't use the token.
+
+```sh
+curl -fsS https://chat.example.com/api/voice/join/preview \
+  -H "Authorization: VoiceJoin fvj_..." \
+  -H "Content-Type: application/json" \
+  -d '{"public_ipv4": "203.0.113.7"}'
+```
+
+Use the `server_id` from the answer as the server's ID, and its `webhook_url` as the webhook address. A token can set the server ID, and the join then uses the token's ID whatever you send. The answer also shows the region, the hostname the token wants and the soft limit.
+
+Without a token, pick an ID that no other server of your instance uses, such as `fra-server-1`. The webhook address is your instance's public API address followed by `/webhooks/livekit`, such as `https://chat.example.com/api/webhooks/livekit`.
+
+## Fill in the settings
+
+Each server needs its own settings file, Compose project name, key and ports. Make one file for each server, with its ID in the file name.
+
+```sh
+cp voice.env.example fra-server-1.env
+```
+
+Set at least these values in it:
+
+- `FLUXER_VOICE_ID` to the server's ID.
+- `FLUXER_VOICE_API_KEY` to a key no other server of your instance uses, such as `fluxer-fra-server-1`.
+- `FLUXER_VOICE_API_SECRET` to the output of `openssl rand -hex 32`.
+- `FLUXER_VOICE_WEBHOOK_URL` to the webhook address.
+- `FLUXER_VOICE_NODE_IP` to the machine's public IPv4 address, and `FLUXER_VOICE_USE_EXTERNAL_IP` to `false`.
+
+A second server on the same machine needs another `FLUXER_VOICE_TCP_PORT` and `FLUXER_VOICE_UDP_PORT`, such as 7883 and 7884.
+
+## Raise the UDP buffers
+
+LiveKit needs larger UDP buffers for many calls. Raise them once on each machine that runs a voice server, as `rexctl voice join` does.
+
+```sh
+printf 'net.core.rmem_max = 16777216\nnet.core.wmem_max = 16777216\n' | sudo tee /etc/sysctl.d/61-fluxer-voice.conf
+sudo sysctl -p /etc/sysctl.d/61-fluxer-voice.conf
+```
+
+## On another machine
+
+### Set up the edge
+
+Copy the example site and change the address and the server ID in it.
+
+```sh
+cp sites.d/voice.caddy.example sites.d/voice-fra.chat.example.com.caddy
+cp edge.env.example edge.env
+```
+
+The site address is a hostname that points at the machine, or the machine's public IPv4 address. For an address, add this inside the site. Caddy then gets a certificate for the address from Let's Encrypt.
+
+```caddy
+tls {
+	issuer acme {
+		profile shortlived
+	}
+}
+```
+
+Then set `FLUXER_VOICE_EDGE_IP` to that address in `edge.env`. Browsers send no server name for an address, and the edge then answers them with that certificate. Set `FLUXER_VOICE_EDGE_EMAIL` there to get notices from Let's Encrypt.
+
+Each server on the machine gets a `handle_path` block of its own in the site, with its ID in the path and in the upstream. The server's endpoint is `wss://` followed by the site address and `/livekit-` with the ID, such as `wss://voice-fra.chat.example.com/livekit-fra-server-1`.
+
+### Open the ports
+
+Open the server's TCP and UDP ports, and TCP ports 80 and 443, in the firewall on the machine and in your provider's firewall. Behind a router or another NAT, forward each port to the same port number on the machine. [Ports and firewalls](/operator/voice-servers/#ports-and-firewalls) has the details.
+
+### Start it
+
+Start the edge first. It creates the `fluxer-voice` network that the servers join.
+
+```sh
+docker compose -p fluxer-voice-edge --env-file edge.env -f voice-edge.compose.yml up -d
+docker compose -p fluxer-voice-fra-server-1 --env-file fra-server-1.env -f voice.compose.yml up -d
+```
+
+After you change a site, reload Caddy.
+
+```sh
+docker compose -p fluxer-voice-edge --env-file edge.env -f voice-edge.compose.yml exec edge caddy reload --config /etc/caddy/Caddyfile
+```
+
+Check that the server answers through the edge. It answers `OK`. The first certificate can take a minute.
+
+```sh
+curl https://voice-fra.chat.example.com/livekit-fra-server-1/
+```
+
+### Behind your own proxy
+
+When nginx or another proxy already holds ports 80 and 443 on the machine, skip the edge and let your proxy serve the server.
+
+1. Create the network that the servers join. Do this once on the machine.
+
+   ```sh
+   docker network create fluxer-voice
+   ```
+
+2. Set `FLUXER_VOICE_HTTP_PORT` in the server's settings file to a free port on `127.0.0.1`, such as 7880 for the first server and 7885 for the next.
+3. Start the server with `voice-http.compose.yml` as well. It publishes the server's HTTP port on `127.0.0.1` only.
+
+   ```sh
+   docker compose -p fluxer-voice-fra-server-1 --env-file fra-server-1.env -f voice.compose.yml -f voice-http.compose.yml up -d
+   ```
+
+4. Point a path of your proxy at that port with WebSocket upgrades and a read timeout of at least 120 seconds. [The nginx and Caddy examples](/operator/voice-servers/#machines-with-something-else-on-ports-80-and-443) show how.
+5. Open only the server's TCP and UDP ports in the firewall on the machine and in your provider's firewall. Your proxy already has 80 and 443.
+
+The server's endpoint is the `wss://` address of that path on your proxy, such as `wss://voice.example.com/livekit-fra-server-1`.
+
+## On the Fluxer machine
+
+A server next to a Fluxer instance from the compose bundle uses Fluxer's network and edge. It needs no edge of its own and no DNS record. Use ports other than the bundled server's 7881 and 7882, such as 7883 and 7884.
+
+Find the name of Fluxer's network first. It's the Compose project name followed by `_fluxer`, such as `fluxer_fluxer` for a plain `docker compose up`. Portainer, TrueNAS and Unraid use the stack name as the project name.
+
+```sh
+docker network ls --filter name=_fluxer
+```
+
+Set these values in the server's settings file as well:
+
+- `FLUXER_VOICE_NETWORK` to that network, such as `fluxer_fluxer`.
+- `FLUXER_VOICE_WEBHOOK_URL` to `http://api:8080/webhooks/livekit`.
+
+Start the server from the `voice` folder.
+
+```sh
+docker compose -p fluxer-voice-fra-server-1 --env-file fra-server-1.env -f voice.compose.yml up -d
+```
+
+Add a route for it to Fluxer's edge. Put this in a file in the `caddy.d` folder next to Fluxer's `docker-compose.yml`, such as `caddy.d/voice-fra-server-1.caddy`.
+
+```caddy
+handle_path /livekit-fra-server-1/* {
+	import upstream voice-fra-server-1:7880
+}
+```
+
+Then reload Fluxer's edge from the folder of its `docker-compose.yml`. People connected to Fluxer reconnect once.
+
+```sh
+docker compose exec edge caddy reload --config /etc/caddy/Caddyfile
+```
+
+The server's endpoint is `wss://` followed by your domain and the path, such as `wss://chat.example.com/livekit-fra-server-1`. Open its TCP and UDP ports in the firewall on the machine and in your provider's firewall.
+
+## Register the server
+
+### With a join token
+
+Call the join route of your instance's API with the token.
+
+```sh
+curl -fsS https://chat.example.com/api/voice/join \
+  -H "Authorization: VoiceJoin fvj_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_id": "fra-server-1",
+    "region_id": "fra",
+    "public_ipv4": "203.0.113.7",
+    "endpoint": "wss://voice-fra.chat.example.com/livekit-fra-server-1",
+    "api_key": "fluxer-fra-server-1",
+    "api_secret": "<the secret from fra-server-1.env>"
+  }'
+```
+
+Set `region_id` to the region from the preview's answer, and `public_ipv4` to the voice machine's address. These fields set where the server goes. The curl can then run on any machine. Without them, Fluxer places the server by the address the request comes from. Fluxer checks that the endpoint answers and that the key and secret work before it saves the server. Add `latitude` with `longitude` to place the server on the map yourself. The [voice admin API](/admin-api/voice/#join-a-voice-server) lists every field and error.
+
+### In the admin panel
+
+Open **Voice servers** for the region in the admin panel and fill in **Add Voice Server** with these values:
+
+| Field | Value |
+| --- | --- |
+| Server ID | The value of `FLUXER_VOICE_ID` |
+| Endpoint | The server's endpoint |
+| API Key | The value of `FLUXER_VOICE_API_KEY` |
+| API Secret | The value of `FLUXER_VOICE_API_SECRET` |
+| Internal URL | The address the API connects to, or nothing |
+
+On the Fluxer machine, set **Internal URL** to `http://voice-` followed by the ID and `:7880`, such as `http://voice-fra-server-1:7880`. On another machine, leave it empty unless the API connects to the server on a private address.
+
+## Upgrade
+
+The bundle of each Fluxer release sets the LiveKit image of that release in `voice.compose.yml`, and the Caddy image of the edge in `voice-edge.compose.yml`.
+
+1. Download the bundle of the new release.
+2. Copy `voice.compose.yml`, `voice-http.compose.yml`, `voice-edge.compose.yml` and `Caddyfile.voice` from its `voice` folder over yours. Keep `sites.d` and your settings files as they are.
+3. On a machine with the edge, run the edge's `up -d` command first.
+4. Run the `up -d` command of each server.
+
+A `FLUXER_LIVEKIT_IMAGE` in the server's settings file overrides the release's image. Remove that line to follow the release.
+
+Docker waits up to `FLUXER_VOICE_STOP_GRACE`, 15 minutes by default, for calls on the server to end. Turn on **Draining** for the server in the admin panel first. New calls then go elsewhere while it waits. Turn it off when the server is back.
+
+## Remove a server
+
+1. Turn on **Draining** for the server in the admin panel, and wait for its calls to end.
+2. Delete the server in the admin panel. A server that joined with a token can also delete itself with `DELETE /v1/voice/node`, as the [voice admin API](/admin-api/voice/) describes.
+3. Stop it and delete its container.
+
+   ```sh
+   docker compose -p fluxer-voice-fra-server-1 --env-file fra-server-1.env -f voice.compose.yml down -v
+   ```
+
+4. Delete its `handle_path` block, or its file in `caddy.d` on the Fluxer machine, and reload Caddy.
+5. Close its TCP and UDP ports in the firewall on the machine and in your provider's firewall.

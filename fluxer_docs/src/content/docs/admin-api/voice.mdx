@@ -84,8 +84,26 @@ A voice server is one LiveKit deployment in one region, identified by its `regio
 | required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
 | allowed_user_ids | array[snowflake] | The only accounts allowed to use the server, when not empty (max 1000) |
+| internal_endpoint | ?string | The `http://` or `https://` URL the API uses for the LiveKit control API and health checks, or null to use `endpoint` |
+| draining | boolean | Whether new calls go to other servers while calls already on this one keep going |
+| health | [health](#voice-server-health-object) object | The server's health as the API node that answered last saw it |
+| duplicate_api_key | boolean | Whether another server uses the same `api_key` |
 | created_at | ?ISO8601 timestamp | When the server was created |
 | updated_at | ?ISO8601 timestamp | When the server last changed |
+
+### Voice server health object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | `up`, `down`, or `unknown` before the first check |
+| checked_at | ?ISO8601 timestamp | When the last check ran, or null before the first |
+| error | ?string | The status code or short transport error of the last failed check |
+
+Every API node checks every active server every `FLUXER_VOICE_HEALTH_INTERVAL_MS`, 15 seconds by default, with `GET` on `internal_endpoint` or `endpoint`. Two failed checks in a row mark a server down, and one passing check marks it up. Placement sends no new calls to a server that is down, unless every server it could pick is down. A call pinned to a server that is down moves on its next join. A check of a public endpoint that resolves to a private address doesn't run, and the status stays `unknown`.
+
+## Draining
+
+A server with `draining` set gets no new calls. Calls already on it keep going, and people who join those calls still land on it. `rexctl` sets it while it upgrades or removes a server. Unlike `is_active` false, draining never splits a call in two.
 
 ## Soft connection limits
 
@@ -282,7 +300,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="POST" path="/v1/admin/voice/regions/{region_id}/servers" auditReason />
 
-Adds a server to a region, and a `server_id` already in the region overwrites that server. Requires `voice:server:create`.
+Adds a server to a region. Requires `voice:server:create`.
 
 ### JSON body
 
@@ -301,6 +319,8 @@ Adds a server to a region, and a `server_id` already in the region overwrites th
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
 | allowed_user_ids? | array[snowflake] | The only accounts allowed to use the server, when not empty (max 1000) |
+| internal_endpoint? | ?string | The `http://` or `https://` URL the API uses for the control API and health checks (max 512 characters) |
+| draining? | boolean | Whether new calls go to other servers (default false) |
 
 <sup>1</sup> Send both coordinates or neither
 
@@ -316,6 +336,7 @@ Adds a server to a region, and a `server_id` already in the region overwrites th
 | --- | --- | --- |
 | 200 | response body | The server was created |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_VOICE_REGION` when no region has the ID |
+| 409 | [error response](/admin-api/#error-response) | `VOICE_SERVER_ID_IN_USE` for a taken ID, or `VOICE_SERVER_API_KEY_IN_USE` for a taken key |
 
 The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
@@ -341,6 +362,8 @@ Updates a server, and an array you send replaces the stored one. Requires `voice
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without other guild checks (max 1000) |
 | allowed_user_ids? | array[snowflake] | The only accounts allowed to use the server, when not empty (max 1000) |
+| internal_endpoint? | ?string | The `http://` or `https://` URL the API uses for the control API and health checks, or null to use `endpoint` |
+| draining? | boolean | Whether new calls go to other servers |
 
 <sup>1</sup> Send both coordinates or neither, and send both as null to use the region's coordinates
 
@@ -356,6 +379,7 @@ Updates a server, and an array you send replaces the stored one. Requires `voice
 | --- | --- | --- |
 | 200 | response body | The server was updated |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_VOICE_SERVER` when no server matches |
+| 409 | [error response](/admin-api/#error-response) | `VOICE_SERVER_API_KEY_IN_USE` when another server uses the new key |
 
 The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
@@ -379,3 +403,202 @@ Deletes a server and its stored credentials. Sessions on it stay connected, but 
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_VOICE_SERVER` when no server matches |
 
 The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
+
+## Create voice server test token
+
+<RouteHeader method="POST" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}/test-token" auditReason />
+
+Signs a LiveKit token for a hidden, audio only participant in a throwaway room whose name starts with `rexctl-test-`. The token works for 60 seconds. `rexctl voice test` uses it to test a server from outside its network, and Fluxer ignores webhooks for these rooms. Requires `voice:server:update`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The LiveKit token |
+| endpoint | string | The server's endpoint |
+| room | string | The name of the throwaway room |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The token was signed |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_VOICE_SERVER` when no server matches |
+
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
+
+## Voice join tokens
+
+A join token lets one machine register one voice server with [Join a voice server](#join-a-voice-server). It looks like `fvj_` followed by its ID, an underscore and a 43 character secret. Fluxer stores only a hash of the secret. A token works once, for 60 seconds to 24 hours, and the list keeps it for 7 days after it expires. Whoever runs the server can record the calls placed on it. A token trusts that machine with calls, and it gives no other access.
+
+### Voice join token object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token_id | snowflake | The ID of the token |
+| status | string | `pending`, `used`, `expired` or `revoked` |
+| created_at | ISO8601 timestamp | When the token was created |
+| expires_at | ISO8601 timestamp | When the token stops working |
+| used_at | ?ISO8601 timestamp | When a server joined with it |
+| used_server_id | ?string | The server that joined with it |
+| revoked_at | ?ISO8601 timestamp | When it was revoked |
+| region_id | ?string | The region preset, or null to let Fluxer pick |
+| region_name | ?string | The name of the new region the join creates, or null |
+| server_id | ?string | The server ID preset, or null |
+| hostname | ?string | The hostname the endpoint must use, or null |
+| notes | ?string | The notes for the new server, or null |
+
+## Create voice join token
+
+<RouteHeader method="POST" path="/v1/admin/voice/join-tokens" auditReason />
+
+Requires `voice:join_token:create`. Every preset wins over what the joining machine sends.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id? | ?string | An existing region, or the ID of a new region with `region_name` (lowercase letters, digits and dashes, 1-64 characters) |
+| region_name? | ?string | The name of a new region the join creates (1-100 characters) |
+| region_emoji? | ?string | The emoji of the new region (1-64 characters) |
+| region_latitude? | ?number | The latitude of the new region, with `region_longitude` (-90 to 90) |
+| region_longitude? | ?number | The longitude of the new region, with `region_latitude` (-180 to 180) |
+| server_id? | ?string | The server ID (lowercase letters, digits and dashes, 1-64 characters) |
+| hostname? | ?string | The hostname the endpoint must use |
+| internal_endpoint? | ?string | The URL the API uses for the control API and health checks of the new server |
+| soft_connection_limit? | ?integer | The soft connection limit of the new server |
+| notes? | ?string | The notes of the new server (max 2000 characters) |
+| vip_only? | boolean | Restricts the new server to `VIP_VOICE` guilds (default false) |
+| required_guild_features? | array[string] | Guild features that admit a guild to the new server (max 100) |
+| allowed_guild_ids? | array[snowflake] | Guilds admitted to the new server (max 1000) |
+| allowed_user_ids? | array[snowflake] | The only accounts allowed on the new server (max 1000) |
+| expires_in_seconds? | integer | Seconds until the token stops working (60-86400, default 3600) |
+
+A new region from `region_name` gets `region_latitude` and `region_longitude`. Without them, it gets the location of the server that joins.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token_id | snowflake | The ID of the token |
+| token | string | The token, which no other response returns |
+| expires_at | ISO8601 timestamp | When the token stops working |
+| command | string | The install command to run on the voice machine |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The token was created |
+| 400 | [error response](/admin-api/#error-response) | `region_latitude` or `region_longitude` comes without the other, or without `region_name` |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_VOICE_REGION` when no region has the ID in `region_id` and `region_name` is empty |
+
+The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
+
+## List voice join tokens
+
+<RouteHeader method="GET" path="/v1/admin/voice/join-tokens" />
+
+Lists the tokens of the last 7 days, newest first, without their secrets. Requires `voice:join_token:list`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| tokens | array[[voice join token](#voice-join-token-object) object] | The tokens |
+
+The rate limit is on the `admin:lookup` bucket.
+
+## Revoke voice join token
+
+<RouteHeader method="DELETE" path="/v1/admin/voice/join-tokens/{token_id}" auditReason />
+
+Stops a pending token from working. Requires `voice:join_token:revoke`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | `{"success": true}` | The token was revoked |
+| 401 | [error response](/admin-api/#error-response) | `VOICE_JOIN_TOKEN_INVALID` when the token is unknown, used, expired or revoked |
+
+## Join a voice server
+
+These routes are for the voice machine, not for admins. They take `Authorization: VoiceJoin` followed by a join token, and the rate limit is 10 requests per minute for each address.
+
+<RouteHeader method="POST" path="/v1/voice/join/preview" unauthenticated />
+
+Shows what a join would choose, without using the token. The JSON body has `public_ipv4`, `region_id`, `cpu_count`, `memory_bytes` and `rexctl_version`, all optional. The response has the suggested `server_id`, `server_id_pinned` set to true when the token sets the server ID, the `region` with its `id`, `name`, `distance_km`, whether it's `new` and its `source`, the `latitude` and `longitude` from GeoIP rounded to 0.1 degrees, the `hostname` preset, a `suggested_hostname`, the `soft_connection_limit` preset, the `webhook_url`, the `api_code_version`, the `release` of the API and `expires_at`.
+
+Fluxer picks the token's region first, then an existing region in `region_id`, then the existing region nearest to the machine when the instance has a GeoIP database, and the default region otherwise. It never creates a region unless the token has a new one. The `source` says which of these it used, as `token`, `requested`, `nearest` or `default`.
+
+<RouteHeader method="POST" path="/v1/voice/join" unauthenticated />
+
+Registers the server and uses the token.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| endpoint | string | The public `wss://` URL of the server. A host that is an IP address must be IPv4 |
+| api_key | string | A LiveKit API key no other server uses (1-256 characters) |
+| api_secret | string | Its secret (32-256 characters) |
+| server_id? | string | The server ID, ignored when the token has one |
+| region_id? | string | An existing region, ignored when the token has one |
+| latitude?<sup>1</sup> | number | The server's latitude |
+| longitude?<sup>1</sup> | number | The server's longitude |
+| soft_connection_limit? | integer | Ignored when the token has one |
+| public_ipv4? | string | The machine's public address, for GeoIP |
+
+<sup>1</sup> Send both coordinates or neither
+
+Fluxer resolves the endpoint's host, refuses it when any address is private unless `FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS` is true, and connects to the address it checked. `GET` on the endpoint's path must answer `OK` within 10 seconds with a certificate Fluxer trusts, and the room service must accept the key and secret. Then Fluxer saves the server, active and not draining, and the token stops working. The response has `server_id`, `region_id`, `endpoint`, `webhook_url` and `node_url`.
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 400 | `VOICE_JOIN_ENDPOINT_INVALID` | The endpoint isn't `wss://`, uses an IPv6 address, a private address or another hostname than the token's |
+| 400 | `VOICE_JOIN_ENDPOINT_UNREACHABLE` | The endpoint didn't answer `OK`, with the status or error in `detail` |
+| 400 | `VOICE_JOIN_KEY_MISMATCH` | The server refused the key and secret |
+| 401 | `VOICE_JOIN_TOKEN_INVALID` | The token is unknown, used, expired or revoked |
+| 404 | `UNKNOWN_VOICE_REGION` | No region has the ID in `region_id` |
+| 409 | `VOICE_JOIN_TOKEN_BUSY` | Another join with the token is running |
+| 409 | `VOICE_SERVER_ID_IN_USE` | Another server has the ID |
+| 409 | `VOICE_SERVER_API_KEY_IN_USE` | Another server uses the key |
+
+A failed join leaves the token unused. The same machine can try again.
+
+## Voice node routes
+
+A server that joined manages its own row with `GET`, `PATCH` and `DELETE` on `/v1/voice/node`. The request takes `Authorization: Bearer` followed by an HS256 JWT signed with the server's API secret, with these claims:
+
+- `iss` set to the server's API key.
+- `aud` set to `fluxer-voice-node`.
+- `method` and `path` of the request, with `path` set to `/voice/node`.
+- `exp` in the future and at most 5 minutes ahead, and `iat` when present. Fluxer allows 60 seconds of clock difference either way.
+- `sha256` set to the base64 SHA-256 of the body, or an empty string for `GET` and `DELETE`.
+
+Fluxer refuses tokens with a `video` grant. LiveKit participant tokens and webhooks signed with the same secret don't work here.
+
+<RouteHeader method="GET" path="/v1/voice/node" unauthenticated />
+
+Returns the server's `region_id`, `server_id`, `endpoint`, `latitude`, `longitude`, `is_active`, `draining`, `soft_connection_limit` and `health`.
+
+<RouteHeader method="PATCH" path="/v1/voice/node" unauthenticated />
+
+Takes `endpoint`, `draining`, `latitude`, `longitude` and `soft_connection_limit`, and returns the server like `GET`. Fluxer checks a new endpoint the same way as a join. When the server has an internal endpoint, Fluxer also tries the new public endpoint and logs a warning when it doesn't answer, without refusing the change. A new endpoint must keep the token's hostname, and a server can't change a soft connection limit the token set. A server can't change its region, its restrictions, `internal_endpoint` or `is_active`. A server an admin turned off stays off.
+
+<RouteHeader method="DELETE" path="/v1/voice/node" unauthenticated />
+
+Removes the server and answers 204.
+
+Every node route can fail with these errors.
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 401 | `VOICE_NODE_UNKNOWN` | No server has the key in `iss`, usually because an admin deleted it |
+| 401 | `VOICE_NODE_SIGNATURE_INVALID` | The signature or a claim is wrong, or an admin changed the server's secret |
+| 401 | `VOICE_NODE_TOKEN_EXPIRED` | The signature matches, and `exp` or `iat` is outside the allowed time. The clock of the voice machine is usually off |

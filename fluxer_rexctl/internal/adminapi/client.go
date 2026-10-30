@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 )
@@ -53,6 +54,9 @@ func (c *Client) Loopback(ctx context.Context, method, path string, headers map[
 }
 
 func (c *Client) do(ctx context.Context, req Request, in, out any) error {
+	if in == nil && req.Method == http.MethodDelete && req.Target == TargetOperator {
+		in = json.RawMessage("{}")
+	}
 	switch body := in.(type) {
 	case nil:
 	case RawBody:

@@ -3,8 +3,10 @@
 package stack
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const BundleProject = "fluxer"
@@ -32,5 +34,23 @@ func Bundle(dir string, images map[string]string) error {
 			return err
 		}
 	}
-	return nil
+	return fs.WalkDir(set.Files, "voice", func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(dir, filepath.FromSlash(name))
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		data, err := ReadFile(set, name)
+		if err != nil {
+			return err
+		}
+		if strings.HasSuffix(name, ".compose.yml") && set.Release != LegacyRelease {
+			if data, err = pinImages(data, set.Release, images); err != nil {
+				return err
+			}
+		}
+		return os.WriteFile(target, data, 0o644)
+	})
 }

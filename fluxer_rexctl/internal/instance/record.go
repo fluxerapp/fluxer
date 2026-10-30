@@ -212,20 +212,31 @@ func (r Record) remember(dir string, makeDefault bool) Record {
 			r = Record{Default: clean(fb), Instances: []string{clean(fb)}}
 		}
 	}
-	var others []string
+	var others, fluxer []string
 	for _, d := range r.Instances {
 		if !same(d, dir) && !gone(d) {
 			others = append(others, d)
+			if !voiceMachine(d) {
+				fluxer = append(fluxer, d)
+			}
 		}
 	}
 	out := r.With(dir)
 	switch {
 	case makeDefault:
 		out.Default, out.Used = dir, true
-	case out.Default == "" && len(others) == 1:
-		out.Default, out.Used = others[0], false
+	case out.Default != "":
+	case len(fluxer) == 1:
+		out.Default, out.Used = fluxer[0], false
+	case len(fluxer) == 0 && len(others) > 0 && !voiceMachine(dir):
+		out.Default, out.Used = dir, false
 	}
 	return out
+}
+
+func voiceMachine(dir string) bool {
+	s, err := loadState(filepath.Join(dir, StateDirName, StateFileName), nil)
+	return err == nil && s.IsVoice()
 }
 
 func (r Record) Encode() []byte {

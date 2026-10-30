@@ -3,6 +3,7 @@
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import {bundledVoiceServerId} from '@app/api/voice/VoiceServerEndpoints';
 
 export function resolveLivekitEndpoint(configuredUrl: string | undefined, apiPublicUrl: string): string {
 	if (configuredUrl) {
@@ -21,13 +22,13 @@ export class VoiceDataInitializer {
 		const defaultRegion = Config.voice.defaultRegion;
 		const livekitApiKey = Config.voice.apiKey;
 		const livekitApiSecret = Config.voice.apiSecret;
-		if (!livekitApiKey || !livekitApiSecret) {
+		const serverId = bundledVoiceServerId();
+		if (serverId && (!livekitApiKey || !livekitApiSecret)) {
 			Logger.warn('[VoiceDataInitializer] LiveKit API key/secret not configured, cannot create default region');
 			return;
 		}
 		try {
 			const repository = new VoiceRepository();
-			const serverId = `${defaultRegion.id}-server-1`;
 			const livekitEndpoint = resolveLivekitEndpoint(Config.voice.url, Config.endpoints.apiPublic);
 			const existingRegions = await repository.listRegions();
 			if (existingRegions.length === 0) {
@@ -47,6 +48,12 @@ export class VoiceDataInitializer {
 					},
 				});
 				Logger.info(`[VoiceDataInitializer] Created region: ${defaultRegion.name} (${defaultRegion.id})`);
+				if (!serverId || !livekitApiKey || !livekitApiSecret) {
+					Logger.info(
+						'[VoiceDataInitializer] No bundled voice server, add servers with rexctl voice join or in the admin panel',
+					);
+					return;
+				}
 				await repository.createServer({
 					regionId: defaultRegion.id,
 					serverId,
@@ -58,6 +65,10 @@ export class VoiceDataInitializer {
 					isActive: true,
 					softConnectionLimit: null,
 					notes: null,
+					internalEndpoint: null,
+					draining: false,
+					pinnedHostname: null,
+					pinnedSoftLimit: false,
 					restrictions: {
 						vipOnly: false,
 						requiredGuildFeatures: new Set(),
@@ -76,6 +87,10 @@ export class VoiceDataInitializer {
 				);
 				return;
 			}
+			if (!serverId || !livekitApiKey || !livekitApiSecret) {
+				await this.removeBundledServer(repository, defaultRegion.id, livekitApiKey);
+				return;
+			}
 			const configuredServer = await repository.getServer(defaultRegion.id, serverId);
 			if (!configuredServer) {
 				Logger.info(
@@ -90,6 +105,12 @@ export class VoiceDataInitializer {
 				Logger.info(`[VoiceDataInitializer] Default voice server ${serverId} already matches config credentials`);
 				return;
 			}
+			if (endpointChanged && apiKeyChanged) {
+				Logger.warn(
+					`[VoiceDataInitializer] Server ${serverId} has another endpoint and API key than the bundled LiveKit, leaving it unchanged`,
+				);
+				return;
+			}
 			await repository.upsertServer({
 				...configuredServer,
 				endpoint: livekitEndpoint,
@@ -101,5 +122,19 @@ export class VoiceDataInitializer {
 		} catch (error) {
 			Logger.error({error}, '[VoiceDataInitializer] Failed to initialise config-managed voice topology');
 		}
+	}
+
+	private async removeBundledServer(
+		repository: VoiceRepository,
+		regionId: string,
+		bundledApiKey: string | undefined,
+	): Promise<void> {
+		const serverId = `${regionId}-server-1`;
+		const server = await repository.getServer(regionId, serverId);
+		if (!server || !bundledApiKey || server.apiKey !== bundledApiKey) {
+			return;
+		}
+		await repository.deleteServer(regionId, serverId);
+		Logger.info(`[VoiceDataInitializer] Removed ${serverId}, the bundled voice server is turned off`);
 	}
 }

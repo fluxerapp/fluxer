@@ -358,8 +358,9 @@ s3:
     harvests: fluxer-harvests
 
 livekit:
-  # Run LiveKit for voice and video. false with no external.url turns voice off.
+  # Run LiveKit for voice and video. false turns voice off unless external.url or joined is set.
   enabled: true
+  joined: false
   # A LiveKit server of your own, used when enabled is false. Its key and
   # secret go in secrets.values.FLUXER_LIVEKIT_API_KEY and FLUXER_LIVEKIT_API_SECRET.
   # Point its webhook at <origin>/api/webhooks/livekit, signed with the same key.

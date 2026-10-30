@@ -47,6 +47,10 @@ export interface VoiceServerRow {
 	required_guild_features: Set<string> | null;
 	allowed_guild_ids: Set<bigint> | null;
 	allowed_user_ids: Set<bigint> | null;
+	internal_endpoint: string | null;
+	draining: boolean | null;
+	pinned_hostname: string | null;
+	pinned_soft_limit: boolean | null;
 	created_at: Date | null;
 	updated_at: Date | null;
 }
@@ -66,9 +70,69 @@ export const VOICE_SERVER_COLUMNS = [
 	'required_guild_features',
 	'allowed_guild_ids',
 	'allowed_user_ids',
+	'internal_endpoint',
+	'draining',
+	'pinned_hostname',
+	'pinned_soft_limit',
 	'created_at',
 	'updated_at',
 ] as const satisfies ReadonlyArray<keyof VoiceServerRow>;
+
+export interface VoiceJoinTokenRow {
+	token_id: bigint;
+	secret_hash: string;
+	created_by: bigint;
+	created_at: Date;
+	expires_at: Date;
+	claim_id: string | null;
+	claimed_at: Date | null;
+	used_at: Date | null;
+	used_by_ip: string | null;
+	used_server_id: string | null;
+	revoked_at: Date | null;
+	region_id: string | null;
+	region_name: string | null;
+	region_emoji: string | null;
+	region_latitude: number | null;
+	region_longitude: number | null;
+	server_id: string | null;
+	hostname: string | null;
+	internal_endpoint: string | null;
+	soft_connection_limit: number | null;
+	notes: string | null;
+	vip_only: boolean | null;
+	required_guild_features: Set<string> | null;
+	allowed_guild_ids: Set<bigint> | null;
+	allowed_user_ids: Set<bigint> | null;
+}
+
+export const VOICE_JOIN_TOKEN_COLUMNS = [
+	'token_id',
+	'secret_hash',
+	'created_by',
+	'created_at',
+	'expires_at',
+	'claim_id',
+	'claimed_at',
+	'used_at',
+	'used_by_ip',
+	'used_server_id',
+	'revoked_at',
+	'region_id',
+	'region_name',
+	'region_emoji',
+	'region_latitude',
+	'region_longitude',
+	'server_id',
+	'hostname',
+	'internal_endpoint',
+	'soft_connection_limit',
+	'notes',
+	'vip_only',
+	'required_guild_features',
+	'allowed_guild_ids',
+	'allowed_user_ids',
+] as const satisfies ReadonlyArray<keyof VoiceJoinTokenRow>;
 
 export interface VoiceP2pConnectionReportRow {
 	user_id: UserID;

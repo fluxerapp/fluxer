@@ -136,6 +136,8 @@ func importValues(in valueInput) (*valueResult, error) {
 			r.settings[settings.EdgeMode] = string(o)
 		case stack.OverlayIPv6:
 			r.settings[settings.IPv6] = "true"
+		case stack.OverlayExternalVoice:
+			r.settings[settings.VoiceBundled] = "false"
 		}
 	}
 	if err := dropRedundant(in.set, r); err != nil {

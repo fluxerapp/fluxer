@@ -14,6 +14,7 @@ import {
 } from '@app/api/infrastructure/ILiveKitService';
 import {Logger} from '@app/api/Logger';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import {resolveRoomServiceEndpoint, toHttpUrl} from '@app/api/voice/VoiceServerEndpoints';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {AccessToken, RoomServiceClient, type TrackInfo, TrackSource} from 'livekit-server-sdk';
 
@@ -49,10 +50,6 @@ export function computeLiveKitPublishSources(permissions: LiveKitPublishPermissi
 	return sources;
 }
 
-function toHttpUrl(wsUrl: string): string {
-	return wsUrl.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://');
-}
-
 function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: string): RoomServiceClient {
 	const httpUrl = toHttpUrl(endpoint);
 	const parsed = new URL(httpUrl);
@@ -65,18 +62,6 @@ function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: st
 		}
 	}
 	return client;
-}
-
-function resolveRoomServiceEndpoint(server: VoiceServerRecord): string {
-	const defaultRegion = Config.voice.defaultRegion;
-	const internalUrl = Config.voice.internalUrl;
-	if (!defaultRegion || !internalUrl) {
-		return server.endpoint;
-	}
-	if (server.regionId !== defaultRegion.id || server.serverId !== `${defaultRegion.id}-server-1`) {
-		return server.endpoint;
-	}
-	return internalUrl;
 }
 
 export class LiveKitService extends ILiveKitService {

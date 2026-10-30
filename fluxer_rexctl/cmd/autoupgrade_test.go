@@ -136,6 +136,19 @@ func TestUnknownDayIsRefused(t *testing.T) {
 	}
 }
 
+func TestVoiceMachineRefusesBackupOptions(t *testing.T) {
+	inst := voiceMachine(t)
+	app, _ := testVoiceApp()
+	app.Flags.Dir = inst.Dir
+	for _, o := range []autoUpgradeOptions{{At: "04:00", FullBackup: "monthly"}, {At: "04:00", Backup: backup.ScopeWithoutUploads}} {
+		err := runAutoUpgradeOn(context.Background(), app, o)
+		var ee *ui.ExitError
+		if !errors.As(err, &ee) || ee.Code != ui.ExitUsage || !strings.Contains(ee.Msg, "voice machine") {
+			t.Errorf("%+v returned %v, want a usage error about the voice machine", o, err)
+		}
+	}
+}
+
 func TestDayAcceptsFullNames(t *testing.T) {
 	for in, want := range map[string]string{"sun": "Sun", "Sunday": "Sun", "MONDAY": "Mon", "thu": "Thu", "saturday": "Sat", "": ""} {
 		got, err := parseDay(in)

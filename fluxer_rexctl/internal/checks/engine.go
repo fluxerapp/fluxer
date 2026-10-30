@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "engine", Phases: Preinstall | Installed, Run: runEngine, Fix: fixEngine, SafeFix: true})
+	Register(Check{ID: "engine", Phases: Preinstall | Installed | Voice, Run: runEngine, Fix: fixEngine, SafeFix: true})
 }
 
 func runEngine(ctx context.Context, e *Env) Result {

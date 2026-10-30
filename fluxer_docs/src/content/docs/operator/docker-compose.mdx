@@ -61,6 +61,10 @@ FLUXER_EDGE_BIND=127.0.0.1:8080
 
 When every service is healthy, open your domain in a browser and enter the `FLUXER_SETUP_TOKEN` from `.env` to create your admin account.
 
+## Add voice servers
+
+The `voice` folder of the bundle runs extra LiveKit servers on this machine or on others. See [Run a voice server with Docker Compose](/operator/voice-compose/).
+
 ## Upgrade
 
 Download the new bundle into the same folder and unpack it, which replaces every file except `.env`. If the new `.env.example` has an uncommented line your `.env` doesn't have yet, add it, then run `docker compose up -d`.

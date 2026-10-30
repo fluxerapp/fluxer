@@ -52,10 +52,12 @@ type Port struct {
 const (
 	VoiceTCPPortKey = "FLUXER_LIVEKIT_TCP_PORT"
 	VoiceUDPPortKey = "FLUXER_LIVEKIT_UDP_PORT"
+	VoiceBundledKey = "FLUXER_LIVEKIT_BUNDLED"
 )
 
 func Ports(env map[string]string) []Port {
 	out := make([]Port, 0, len(PublishedPorts))
+	bundled := VoiceBundled(env[VoiceBundledKey])
 	for _, p := range PublishedPorts {
 		key := ""
 		switch {
@@ -63,6 +65,9 @@ func Ports(env map[string]string) []Port {
 			key = VoiceTCPPortKey
 		case p.Number == 7882 && p.Proto == "udp":
 			key = VoiceUDPPortKey
+		}
+		if key != "" && !bundled {
+			continue
 		}
 		if n, err := strconv.Atoi(strings.TrimSpace(env[key])); key != "" && err == nil && n > 0 && n <= 65535 {
 			p.Number = n

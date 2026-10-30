@@ -46,6 +46,7 @@ const (
 	VoiceTCPPort    = "voice.tcp_port"
 	VoiceUDPPort    = "voice.udp_port"
 	VoicePublicIP   = "voice.public_ip"
+	VoiceBundled    = "voice.bundled"
 	StorageEndpoint = "storage.endpoint"
 	StoragePublic   = "storage.public_endpoint"
 	StorageRegion   = "storage.region"
@@ -115,6 +116,9 @@ func buildNamed() []Key {
 			Help: "The UDP port for voice and video"},
 		{Name: VoicePublicIP, Type: "ip", Vars: []string{"FLUXER_LIVEKIT_NODE_IP", "FLUXER_LIVEKIT_USE_EXTERNAL_IP"}, Validate: validIP,
 			Help: "The public IP address voice and video use, when Fluxer can't find it by itself"},
+		{Name: VoiceBundled, Type: "bool", Vars: []string{"FLUXER_LIVEKIT_BUNDLED"}, Validate: validBool,
+			Confirm: "The bundled LiveKit starts or stops, and calls on it end.",
+			Help:    "Whether Fluxer runs its own LiveKit voice server on this machine"},
 		{Name: StorageEndpoint, Type: "url", Vars: []string{"FLUXER_S3_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,
 			Help: "The address of the S3-compatible object store"},
 		{Name: StoragePublic, Type: "url", Vars: []string{"FLUXER_S3_PUBLIC_ENDPOINT"}, Validate: validURL, Confirm: storageConfirm,

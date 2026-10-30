@@ -5,6 +5,7 @@ import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {expect} from 'vitest';
 
 const REGION_ID = 'coverage-region';
 const REGION_NAME = 'Coverage Region';
@@ -235,6 +236,73 @@ export const VoiceAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'voice_server',
 					targetId: '0',
 					metadata: {region_id: REGION_ID, server_id: SERVER_ID, endpoint: SERVER_ENDPOINT},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/voice/regions/:region_id/servers/:server_id/test-token',
+		async prepare({harness, admin}) {
+			await createRegionWithServer(harness, admin);
+			return {
+				request: {path: `/admin/voice/regions/${REGION_ID}/servers/${SERVER_ID}/test-token`},
+				expected: {
+					action: 'create_voice_server_test_token',
+					targetType: 'voice_server',
+					targetId: '0',
+					metadata: {region_id: REGION_ID, server_id: SERVER_ID},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/voice/join-tokens',
+		async prepare({harness, admin}) {
+			await createRegion(harness, admin);
+			return {
+				request: {path: '/admin/voice/join-tokens', body: {region_id: REGION_ID}},
+				expected: {
+					action: 'create_voice_join_token',
+					targetType: 'voice_join_token',
+					targetId: '0',
+					metadata: {token_id: expect.any(String), region_id: REGION_ID},
+				},
+			};
+		},
+	},
+	{
+		method: 'GET',
+		route: '/admin/voice/join-tokens',
+		async prepare() {
+			return {
+				request: {path: '/admin/voice/join-tokens'},
+				expected: {
+					action: 'list_voice_join_tokens',
+					targetType: 'voice_join_token',
+					targetId: '0',
+					metadata: {result_count: '0'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/voice/join-tokens/:token_id',
+		async prepare({harness, admin}) {
+			const created = await createBuilder<{token_id: string}>(harness, admin.token)
+				.post('/admin/voice/join-tokens')
+				.body({})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			return {
+				request: {path: `/admin/voice/join-tokens/${created.token_id}`},
+				expected: {
+					action: 'revoke_voice_join_token',
+					targetType: 'voice_join_token',
+					targetId: '0',
+					metadata: {token_id: created.token_id},
 				},
 			};
 		},

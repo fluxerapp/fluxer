@@ -39,6 +39,9 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 	if err != nil {
 		return err
 	}
+	if inst.State.IsVoice() {
+		return runVoiceMachineUninstall(ctx, app, inst)
+	}
 	p, err := app.Named(ctx, inst)
 	if err != nil {
 		return err
@@ -64,6 +67,7 @@ func runUninstall(ctx context.Context, app *App, keepData bool, confirm string) 
 					}
 				}
 			}
+			removeLocalVoiceServersForUninstall(ctx, app, inst, p.Engine)
 			if err := p.Down(context.WithoutCancel(ctx), !keepData); err != nil {
 				return engineFailure(err)
 			}

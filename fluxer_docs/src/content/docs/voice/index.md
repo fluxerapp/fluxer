@@ -79,7 +79,7 @@ A refused join sends no Voice Server Update. The client gets a [Gateway Error](/
 
 ### Regions
 
-[List RTC regions](/http-api/channels/#list-rtc-regions) returns the regions the caller can pick for a channel, and the list can be empty. [Modify channel](/http-api/channels/#modify-channel) sets `rtc_region`, which needs UPDATE_RTC_REGION, and a null region lets Fluxer pick one. Instance admins manage regions and voice servers through the [Admin voice resource](/admin-api/voice/).
+[List RTC regions](/http-api/channels/#list-rtc-regions) returns the regions the caller can pick for a channel, and the list can be empty. [Modify channel](/http-api/channels/#modify-channel) sets `rtc_region`, which needs UPDATE_RTC_REGION, and a null region lets Fluxer pick one. Instance admins manage regions and voice servers through the [Admin voice resource](/admin-api/voice/), and run more servers with [Add voice servers](/operator/voice-servers/).
 
 ## Private calls
 

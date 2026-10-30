@@ -40,6 +40,7 @@ import {ThemeController} from '@app/api/theme/ThemeController';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {UnfurlController} from '@app/api/unfurl/UnfurlController';
 import {UserController} from '@app/api/user/controllers/UserController';
+import {VoiceNodeController} from '@app/api/voice/VoiceNodeController';
 import {VoiceP2pConnectionReportController} from '@app/api/voice/VoiceP2pConnectionReportController';
 import {WebhookController} from '@app/api/webhook/WebhookController';
 
@@ -78,6 +79,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	}
 	UserController(routes);
 	VoiceP2pConnectionReportController(routes);
+	VoiceNodeController(routes);
 	StoreBillingController(routes);
 	WebhookController(routes);
 	OAuth2Controller(routes);

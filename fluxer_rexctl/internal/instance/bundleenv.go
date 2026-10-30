@@ -4,6 +4,7 @@ package instance
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ var envOverlays = []struct {
 	{stack.OverlayTunnel, "for a tunnel"},
 	{stack.OverlayExternalObjectStore, "for your own object store"},
 	{stack.OverlayIPv6, "for IPv6 on Fluxer's network"},
+	{stack.OverlayExternalVoice, "for voice servers of your own without the bundled LiveKit"},
 }
 
 var envExamples = map[string]string{
@@ -311,4 +313,88 @@ func literalDefault(defs []string) string {
 		return ""
 	}
 	return defs[0]
+}
+
+var voiceSharedVars = []string{"FLUXER_LIVEKIT_IMAGE", "FLUXER_LIVEKIT_LOG_LEVEL", "FLUXER_LIVEKIT_STUN_PRIMARY", "FLUXER_LIVEKIT_STUN_SECONDARY"}
+
+var voiceRequiredVars = []string{"FLUXER_VOICE_ID", "FLUXER_VOICE_API_KEY", "FLUXER_VOICE_API_SECRET", "FLUXER_VOICE_WEBHOOK_URL"}
+
+var composeDefaultPattern = regexp.MustCompile(`\$\{([A-Z][A-Z0-9_]*):-([^}$]*)\}`)
+
+func voiceDefaults() map[string]string {
+	out := map[string]string{}
+	set := stack.Embedded()
+	for _, name := range []string{"voice/voice.compose.yml", "voice/voice-http.compose.yml", "voice/voice-edge.compose.yml"} {
+		data, err := stack.ReadFile(set, name)
+		if err != nil {
+			continue
+		}
+		for _, m := range composeDefaultPattern.FindAllStringSubmatch(string(data), -1) {
+			if _, ok := out[m[1]]; !ok {
+				out[m[1]] = m[2]
+			}
+		}
+	}
+	return out
+}
+
+func VoiceBundleEnv() string {
+	return voiceEnvFile("Settings for one standalone voice server",
+		"Copy this file to <id>.env, fill in the required values and start the server with `docker compose -p fluxer-voice-<id> --env-file <id>.env -f voice.compose.yml up -d`. "+
+			"Each server needs its own settings file, project name, key and ports. Settings that start with # are optional.",
+		voiceRequiredVars, envVoiceServerSection, voiceSharedVars)
+}
+
+func VoiceEdgeBundleEnv() string {
+	return voiceEnvFile("Settings for the voice edge",
+		"Copy this file to edge.env and start the edge with `docker compose -p fluxer-voice-edge --env-file edge.env -f voice-edge.compose.yml up -d`. "+
+			"Every setting is optional.",
+		nil, envVoiceEdgeSection, nil)
+}
+
+func voiceEnvFile(title, intro string, required []string, section string, shared []string) string {
+	docs := envDocs()
+	defaults := voiceDefaults()
+	var b strings.Builder
+	b.WriteString(envRule + "\n")
+	b.WriteString("#  " + title + "\n#\n")
+	envComment(&b, "#  ", intro)
+	b.WriteString(envRule + "\n")
+	entry := func(name string, active bool) {
+		d := docs.get(name)
+		if d.name == "" {
+			return
+		}
+		d.setting, d.active, d.defaults = "", active, nil
+		if v, ok := defaults[name]; ok && v != "" {
+			d.defaults = []envDefault{{value: v}}
+		}
+		envEntry(&b, d)
+	}
+	if len(required) > 0 {
+		envFrame(&b, "REQUIRED", "", nil)
+		for i, name := range required {
+			if i > 0 {
+				b.WriteString("\n")
+			}
+			entry(name, true)
+		}
+	}
+	envFrame(&b, "OPTIONAL", "", nil)
+	first := true
+	for _, d := range docs.inAll(section) {
+		if slices.Contains(required, d.name) {
+			continue
+		}
+		if !first {
+			b.WriteString("\n")
+		}
+		first = false
+		entry(d.name, false)
+	}
+	for _, name := range shared {
+		b.WriteString("\n")
+		entry(name, false)
+	}
+	return b.String()
 }

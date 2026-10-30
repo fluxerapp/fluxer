@@ -43,8 +43,12 @@ func Resolve(ctx context.Context, inst *instance.Instance, e *engine.Engine) err
 	if err := save(inst); err != nil {
 		return err
 	}
+	var detached []AttachedVoice
 	if ipv6 {
-		if err := e.Named(inst.Project(), inst.Dir).Down(context.WithoutCancel(ctx), false); err != nil {
+		if detached, err = detachVoice(ctx, e, inst); err != nil {
+			return err
+		}
+		if err := downInstance(ctx, e, inst); err != nil {
 			return err
 		}
 	}
@@ -62,5 +66,14 @@ func Resolve(ctx context.Context, inst *instance.Instance, e *engine.Engine) err
 		}
 	}
 	inst.State.Pending = nil
-	return save(inst)
+	if err := save(inst); err != nil {
+		return err
+	}
+	if inst.State.Stopped {
+		return nil
+	}
+	if failed := attachVoice(ctx, e, detached); len(failed) > 0 {
+		return fmt.Errorf("deploy: voice servers %s didn't start again", strings.Join(failed, ", "))
+	}
+	return nil
 }

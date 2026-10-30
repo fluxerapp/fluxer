@@ -52,11 +52,13 @@ type App struct {
 	engine  *engine.Engine
 	warned  bool
 	located *instance.Located
+	command string
 
 	keepLayout bool
 }
 
 func (a *App) init(c *cobra.Command) {
+	a.command = c.CommandPath()
 	a.UI = ui.New(ui.Options{
 		Context: c.Context(),
 		Yes:     a.Flags.Yes,
@@ -227,6 +229,9 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 	case err == nil:
 		if err := rootlessGuard(inst); err != nil {
 			return nil, err
+		}
+		if inst.State.IsVoice() && !voiceCommandAllowed(a.command) {
+			return nil, ui.Refused(fmt.Sprintf("%s holds voice servers that joined %s, not a Fluxer instance.", dir, voiceInstances(inst)), "On a voice machine, use rexctl voice status, rexctl doctor or rexctl upgrade.")
 		}
 		a.warnUnknown(inst)
 		a.rememberFirst(inst)

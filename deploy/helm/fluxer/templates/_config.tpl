@@ -69,6 +69,9 @@
 {{- $_ := set $c "FLUXER_LIVEKIT_INTERNAL_URL" $v.livekit.external.url }}
 {{- $_ := set $c "FLUXER_LIVEKIT_DEFAULT_REGION" $v.livekit.defaultRegion }}
 {{- $_ := set $c "FLUXER_LIVEKIT_URL" $v.livekit.external.publicUrl }}
+{{- else if eq $livekit "joined" }}
+{{- $_ := set $c "FLUXER_LIVEKIT_BUNDLED" "false" }}
+{{- $_ := set $c "FLUXER_LIVEKIT_DEFAULT_REGION" $v.livekit.defaultRegion }}
 {{- end }}
 {{- $_ := set $c "FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED" "false" }}
 {{- $_ := set $c "FLUXER_EMAIL_FROM_EMAIL" "noreply@localhost" }}

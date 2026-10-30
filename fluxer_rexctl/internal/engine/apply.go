@@ -256,6 +256,14 @@ func (p *Project) present(ctx context.Context, op string, services []string) err
 }
 
 func (p *Project) Stop(ctx context.Context, services ...string) error {
+	return p.stop(ctx, nil, services)
+}
+
+func (p *Project) StopWithin(ctx context.Context, timeout time.Duration) error {
+	return p.stop(ctx, &timeout, nil)
+}
+
+func (p *Project) stop(ctx context.Context, timeout *time.Duration, services []string) error {
 	c, err := p.Engine.conn()
 	if err != nil {
 		return err
@@ -268,7 +276,7 @@ func (p *Project) Stop(ctx context.Context, services ...string) error {
 	if marker := p.stopMarker(); marker != "" && os.WriteFile(marker, []byte(strings.Join(services, "\n")), 0o600) == nil {
 		defer os.Remove(marker)
 	}
-	if err := c.svc.Stop(ctx, p.Name, api.StopOptions{Project: p.modelOrNil(), Services: services}); err != nil {
+	if err := c.svc.Stop(ctx, p.Name, api.StopOptions{Project: p.modelOrNil(), Services: services, Timeout: timeout}); err != nil {
 		return p.wrap("stop", err)
 	}
 	return p.stopPodmanCompose(ctx, services)
@@ -346,6 +354,14 @@ func (p *Project) Remove(ctx context.Context, services ...string) error {
 }
 
 func (p *Project) Down(ctx context.Context, volumes bool) error {
+	return p.down(ctx, volumes, nil)
+}
+
+func (p *Project) DownWithin(ctx context.Context, volumes bool, timeout time.Duration) error {
+	return p.down(ctx, volumes, &timeout)
+}
+
+func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration) error {
 	c, err := p.Engine.conn()
 	if err != nil {
 		return err
@@ -357,7 +373,7 @@ func (p *Project) Down(ctx context.Context, volumes bool) error {
 	if err := p.removeHelpers(ctx, a); err != nil {
 		return err
 	}
-	return p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes}))
+	return p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes, Timeout: timeout}))
 }
 
 func (p *Project) DownKeeping(ctx context.Context, keep ...string) error {
@@ -433,4 +449,24 @@ func (p *Project) wrap(op string, err error) error {
 		return err
 	}
 	return &Error{Op: op, Class: ClassOf(err), Err: err}
+}
+
+func (e *Engine) EnsureNetwork(ctx context.Context, name, project, key string) error {
+	c, err := e.api()
+	if err != nil {
+		return err
+	}
+	if _, err := c.NetworkInspect(ctx, name, client.NetworkInspectOptions{}); err == nil {
+		return nil
+	} else if !cerrdefs.IsNotFound(err) {
+		return err
+	}
+	_, err = c.NetworkCreate(ctx, name, client.NetworkCreateOptions{
+		Driver: "bridge",
+		Labels: map[string]string{api.ProjectLabel: project, api.NetworkLabel: key},
+	})
+	if cerrdefs.IsConflict(err) {
+		return nil
+	}
+	return err
 }

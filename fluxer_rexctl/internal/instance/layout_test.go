@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"os"
 	"path/filepath"
@@ -561,12 +562,12 @@ func TestOlderRexctlRefusesMovedState(t *testing.T) {
 	dir, old := oldLayout(t)
 	migrated(t, dir, old)
 	data := readTestFile(t, filepath.Join(dir, StateDirName, StateFileName))
-	older := strings.Replace(string(data), `"schema": 3`, `"schema": 4`, 1)
-	if _, err := ParseState([]byte(older), dir); !errors.Is(err, ErrNewerState) {
+	newer := strings.Replace(string(data), fmt.Sprintf(`"schema": %d`, StateSchema), fmt.Sprintf(`"schema": %d`, StateSchema+1), 1)
+	if _, err := ParseState([]byte(newer), dir); !errors.Is(err, ErrNewerState) {
 		t.Fatalf("got %v, want ErrNewerState", err)
 	}
-	if !bytes.Contains(data, []byte(`"schema": 3`)) {
-		t.Fatal("the moved state isn't schema 3, so rexctl with schema 2 would read it")
+	if !bytes.Contains(data, fmt.Appendf(nil, `"schema": %d`, StateSchema)) || StateSchema <= LayoutSchema {
+		t.Fatalf("the moved state has another schema than %d, and an older rexctl would read it", StateSchema)
 	}
 }
 

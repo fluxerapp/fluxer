@@ -147,6 +147,30 @@ jobs:
           expect_failure "Set livekit.nodeCIDRs" --set $d --set networkPolicy.ingressNamespaceSelector.matchLabels.name=ingress
           expect_failure "set livekit.external.publicUrl" --set $d --set livekit.enabled=false --set livekit.external.url=http://livekit.voice.svc:7880
           expect_failure "reserve a public address" --set $d --set livekit.expose=loadBalancer
+          expect_failure "livekit.joined keeps voice on" --set $d --set livekit.joined=true
+
+      - name: Check that joined voice keeps voice on without LiveKit
+        run: |
+          set -euo pipefail
+          helm template fluxer "$CHART" -n fluxer -f "$CHART/ci/joined-voice-values.yaml" > rendered.yaml
+          python3 - rendered.yaml <<'PY'
+          import sys, yaml
+          docs = [d for d in yaml.safe_load_all(open(sys.argv[1])) if d]
+          workloads = [d['metadata']['name'] for d in docs if d.get('kind') in ('Deployment', 'StatefulSet', 'DaemonSet')]
+          if any('livekit' in name for name in workloads):
+              sys.exit('joined voice renders a LiveKit workload: ' + ', '.join(workloads))
+          config = {}
+          for d in docs:
+              if d.get('kind') == 'ConfigMap':
+                  config.update(d.get('data') or {})
+          want = {'FLUXER_LIVEKIT_ENABLED': 'true', 'FLUXER_LIVEKIT_BUNDLED': 'false'}
+          for key, value in want.items():
+              if config.get(key) != value:
+                  sys.exit(f'{key} is {config.get(key)!r}, want {value!r}')
+          if 'FLUXER_LIVEKIT_INTERNAL_URL' in config or 'FLUXER_LIVEKIT_DEFAULT_REGION' not in config:
+              sys.exit('joined voice sets the internal URL or leaves out the default region')
+          print('joined voice keeps voice on with no LiveKit workload')
+          PY
 
       - name: Check that a chart version bump restarts nothing
         run: |

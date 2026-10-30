@@ -1147,6 +1147,14 @@ func rangeValue(v string) string {
 func TestEnvInventory(t *testing.T) {
 	var err error
 	set := stack.Embedded()
+	voiceFiles, err := fs.Sub(set.Files, "voice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	voiceVars, err := stack.FilesVars(voiceFiles)
+	if err != nil {
+		t.Fatal(err)
+	}
 	reads, all := codeEnvNames(t)
 	code := runtimeReads(reads)
 	fluxer, other, feeds := composeEnv(t, set)
@@ -1170,6 +1178,10 @@ func TestEnvInventory(t *testing.T) {
 			if slices.Contains(set.Vars, v.name) || !passed(v.name) {
 				t.Errorf("%s is listed as set by the compose stack, but compose doesn't set it for any service, or it's a .env setting", v.name)
 			}
+		case v.section == envVoiceServerSection || v.section == envVoiceEdgeSection:
+			if !slices.Contains(voiceVars, v.name) {
+				t.Errorf("%s is listed as a voice server setting, but no voice compose file uses it", v.name)
+			}
 		case v.section == envRexctlSection:
 			if passed(v.name) {
 				t.Errorf("%s is listed in the rexctl section, but compose passes it", v.name)
@@ -1190,6 +1202,11 @@ func TestEnvInventory(t *testing.T) {
 	for _, v := range set.Vars {
 		if _, ok := registry[v]; !ok {
 			t.Errorf("%s is used by a compose file but has no entry in envVars", v)
+		}
+	}
+	for _, v := range voiceVars {
+		if _, ok := registry[v]; !ok {
+			t.Errorf("%s is used by a voice compose file but has no entry in envVars", v)
 		}
 	}
 	for _, k := range slices.Sorted(maps.Keys(fluxer)) {

@@ -425,6 +425,11 @@ export const WellKnownFluxerResponse = z.object({
 		.max(MAX_CUSTOM_BADGES_PER_TYPE)
 		.optional()
 		.describe('Custom badges that communities on this instance can show next to their name, in display order'),
+	voice_origins: z
+		.array(z.string())
+		.max(1000)
+		.optional()
+		.describe('Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies'),
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;

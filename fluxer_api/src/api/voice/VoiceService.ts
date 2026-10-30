@@ -193,11 +193,11 @@ export class VoiceService {
 				if (!regionId) {
 					throw new FeatureTemporarilyDisabledError();
 				}
-				const serverSelection = this.selectServerForRegion({
+				const serverSelection = this.voiceAvailabilityService.selectServerOrFallback(
 					regionId,
 					context,
 					accessibleRegions,
-				});
+				);
 				if (!serverSelection) {
 					throw new FeatureTemporarilyDisabledError();
 				}
@@ -321,7 +321,11 @@ export class VoiceService {
 			return null;
 		}
 		const serverRecord = this.liveKitService.getServer(pinnedServer.regionId, pinnedServer.serverId);
-		if (serverRecord && this.voiceAvailabilityService.isServerAccessible(serverRecord, context)) {
+		if (
+			serverRecord &&
+			this.voiceAvailabilityService.isServerAccessible(serverRecord, context) &&
+			!this.voiceAvailabilityService.isServerDown(serverRecord)
+		) {
 			return {
 				regionId: pinnedServer.regionId,
 				serverId: pinnedServer.serverId,
@@ -329,35 +333,6 @@ export class VoiceService {
 			};
 		}
 		await this.voiceRoomStore.deleteRoomServer(guildId, channelId);
-		return null;
-	}
-
-	private selectServerForRegion({
-		regionId,
-		context,
-		accessibleRegions,
-	}: {
-		regionId: string;
-		context: VoiceAccessContext;
-		accessibleRegions: Array<VoiceRegionAvailability>;
-	}): {
-		regionId: string;
-		server: VoiceServerRecord;
-	} | null {
-		const initialServer = this.voiceAvailabilityService.selectServer(regionId, context);
-		if (initialServer) {
-			return {regionId, server: initialServer};
-		}
-		const fallbackRegion = accessibleRegions.find((region) => region.id !== regionId);
-		if (fallbackRegion) {
-			const fallbackServer = this.voiceAvailabilityService.selectServer(fallbackRegion.id, context);
-			if (fallbackServer) {
-				return {
-					regionId: fallbackRegion.id,
-					server: fallbackServer,
-				};
-			}
-		}
 		return null;
 	}
 
@@ -369,7 +344,7 @@ export class VoiceService {
 		for (const region of accessibleRegions) {
 			servers.push(...this.voiceAvailabilityService.getAccessibleServersForRegion(region.id, context));
 		}
-		return servers;
+		return this.voiceAvailabilityService.preferPlaceableServers(servers);
 	}
 
 	async updateParticipant(params: {

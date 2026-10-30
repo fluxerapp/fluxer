@@ -59,6 +59,9 @@ func runStatus(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsVoice() {
+		return listVoiceMachine(ctx, app, inst)
+	}
 	out := statusJSON{
 		URL:      inst.Origin(),
 		Domain:   inst.Domain(),

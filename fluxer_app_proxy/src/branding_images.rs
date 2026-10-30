@@ -105,11 +105,43 @@ fn instance_sources_from_discovery(discovery: &serde_json::Value) -> InstanceCsp
     {
         connect_origins.push(origin);
     }
+    for origin in voice_origins(discovery) {
+        if !connect_origins.contains(&origin) {
+            connect_origins.push(origin);
+        }
+    }
     InstanceCspSources {
         static_cdn_endpoint: http_origin("static_cdn"),
         media_endpoint: http_origin("media"),
         connect_origins,
     }
+}
+
+fn voice_origins(discovery: &serde_json::Value) -> Vec<String> {
+    let Some(values) = discovery
+        .pointer("/voice_origins")
+        .and_then(serde_json::Value::as_array)
+    else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for origin in values
+        .iter()
+        .filter_map(serde_json::Value::as_str)
+        .filter_map(|value| connect_origin(value.trim()))
+    {
+        let twin = origin
+            .strip_prefix("wss://")
+            .map(|rest| format!("https://{rest}"))
+            .or_else(|| {
+                origin
+                    .strip_prefix("ws://")
+                    .map(|rest| format!("http://{rest}"))
+            });
+        out.push(origin);
+        out.extend(twin);
+    }
+    out
 }
 
 fn connect_origin(value: &str) -> Option<String> {
@@ -349,5 +381,58 @@ impl InstanceBranding {
             };
             gate.next_attempt = Some(Instant::now() + wait);
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn voice_origins_from_discovery_join_connect_sources_with_their_https_twins() {
+        let discovery = serde_json::json!({
+            "endpoints": {"api": "https://chat.example.com/api"},
+            "voice_origins": [
+                "wss://voice-fra.chat.example.com",
+                "wss://203.0.113.7:8443",
+                "not a url",
+                42
+            ]
+        });
+        let sources = instance_sources_from_discovery(&discovery);
+        for origin in [
+            "wss://voice-fra.chat.example.com",
+            "https://voice-fra.chat.example.com",
+            "wss://203.0.113.7:8443",
+            "https://203.0.113.7:8443",
+        ] {
+            assert!(
+                sources.connect_origins.iter().any(|o| o == origin),
+                "{origin} missing from {:?}",
+                sources.connect_origins
+            );
+        }
+        assert!(
+            !sources
+                .connect_origins
+                .iter()
+                .any(|o| o.contains("not a url"))
+        );
+    }
+
+    #[test]
+    fn a_server_that_leaves_discovery_leaves_the_connect_sources() {
+        let with = serde_json::json!({"voice_origins": ["wss://voice-old.example.com"]});
+        let without = serde_json::json!({"voice_origins": []});
+        assert!(
+            instance_sources_from_discovery(&with)
+                .connect_origins
+                .contains(&"wss://voice-old.example.com".to_owned())
+        );
+        assert!(
+            instance_sources_from_discovery(&without)
+                .connect_origins
+                .is_empty()
+        );
     }
 }

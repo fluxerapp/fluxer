@@ -35,7 +35,7 @@ func Promised(set *stack.Set, custom []byte, k settings.Key) []string {
 	switch k.Name {
 	case settings.EngineHost:
 		return nil
-	case settings.EdgeMode, settings.IPv6, settings.ImagesRegistry, settings.StorageEndpoint:
+	case settings.EdgeMode, settings.IPv6, settings.ImagesRegistry, settings.StorageEndpoint, settings.VoiceBundled:
 		return slices.Clone(stack.Services)
 	case settings.MemoryProfile:
 		return settings.Services(set, custom, append(stack.ProfileKeys(set), stack.SizingKeys()...))
@@ -215,8 +215,16 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	}
 
 	if !live {
+		var stopped []string
 		if ipv6 {
-			if err := e.Named(inst.Project(), inst.Dir).Down(context.WithoutCancel(ctx), false); err != nil {
+			detached, err := detachVoice(ctx, e, inst)
+			if err != nil {
+				return nil, err
+			}
+			for _, v := range detached {
+				stopped = append(stopped, v.Server.ID)
+			}
+			if err := downInstance(ctx, e, inst); err != nil {
 				return nil, err
 			}
 		}
@@ -228,7 +236,7 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		if err := save(inst); err != nil {
 			return nil, err
 		}
-		return &Change{Keys: changed}, nil
+		return &Change{Keys: changed, VoiceDown: stopped}, nil
 	}
 
 	if err := newP.Pull(ctx, o.OnEvent); err != nil {
@@ -249,6 +257,10 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	if err == nil {
 		err = save(inst)
 	}
+	var detached []AttachedVoice
+	if err == nil && ipv6 {
+		detached, err = detachVoice(ctx, e, inst)
+	}
 	if err == nil {
 		err = bringUp(ctx, oldP, newP, ipv6, o.OnEvent)
 	}
@@ -257,14 +269,14 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 			o.Failed(newP, err)
 		}
 		rerr := revert(ctx, inst, rs, oldP, ipv6, o.OnEvent)
-		return &Change{Keys: changed, Reverted: rerr == nil}, errors.Join(err, rerr)
+		return &Change{Keys: changed, Reverted: rerr == nil, VoiceDown: attachVoice(ctx, e, detached)}, errors.Join(err, rerr)
 	}
 	st.Settings = next
 	st.Pending = nil
 	if err := save(inst); err != nil {
 		return nil, err
 	}
-	return &Change{Keys: changed, Restarted: preview.Restarts, Removed: preview.Removes, Applied: true}, nil
+	return &Change{Keys: changed, Restarted: preview.Restarts, Removed: preview.Removes, Applied: true, VoiceDown: attachVoice(ctx, e, detached)}, nil
 }
 
 func checkPorts(ctx context.Context, e *engine.Engine, project string, oldEnv, newEnv map[string]string, changed []string, mode string) error {

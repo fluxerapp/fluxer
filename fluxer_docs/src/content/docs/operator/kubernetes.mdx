@@ -90,6 +90,10 @@ The Postgres database and role, and the S3 buckets in `s3.buckets`, must exist b
 
 Point your LiveKit server's webhook at `https://<your domain>/api/webhooks/livekit`, signed with the key in `FLUXER_LIVEKIT_API_KEY`.
 
+Give every LiveKit server of an instance its own API key. Fluxer finds the server that sent a webhook by its key. To add more voice servers, create a join token in the admin panel and run [`rexctl voice join`](/operator/voice-servers/#on-another-machine) on another machine, or follow [Run a voice server with Docker Compose](/operator/voice-compose/). Joining talks only to your instance's public API, and it works with the Helm chart too.
+
+Joined servers work next to the chart's LiveKit and next to a LiveKit of your own in `livekit.external.url`. To run with only joined servers and no LiveKit of the chart's, set `livekit.enabled: false` and `livekit.joined: true`. Voice stays on, the default region starts with no server in it and calls go to the servers you join. `livekit.enabled: false` without `livekit.external.url` or `livekit.joined` turns voice off.
+
 ## Trust your own CA
 
 When your email server or another service the api calls has a certificate from your own CA, mount that CA's PEM file into the api and worker and set `NODE_EXTRA_CA_CERTS` to its path. This example reads `ca.pem` from a ConfigMap called `smtp-ca`.

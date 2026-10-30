@@ -197,6 +197,38 @@ func TestRememberKeepsTheFirstAsDefault(t *testing.T) {
 	}
 }
 
+func voiceMachineAt(t *testing.T, dir string) string {
+	t.Helper()
+	inst, err := Create(dir, "fluxer-voice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	inst.State.Kind = KindVoice
+	if err := inst.Save(); err != nil {
+		t.Fatal(err)
+	}
+	return clean(inst.Dir)
+}
+
+func TestRememberDoesNotMakeAVoiceMachineTheDefault(t *testing.T) {
+	isolateRecords(t)
+	machine, fluxer := voiceMachineAt(t, t.TempDir()), managedAt(t, t.TempDir())
+	remember(t, ScopeUser, machine, false)
+	if r := ReadRecord(ScopeUser); r.Default != "" {
+		t.Fatalf("a lone voice machine became the default: %+v", r)
+	}
+	remember(t, ScopeUser, fluxer, false)
+	r := ReadRecord(ScopeUser)
+	if r.Default != fluxer || !slices.Equal(r.Instances, []string{machine, fluxer}) {
+		t.Fatalf("record = %+v", r)
+	}
+	second := voiceMachineAt(t, t.TempDir())
+	remember(t, ScopeUser, second, false)
+	if l, err := Resolve(""); err != nil || l.Dir != fluxer {
+		t.Errorf("Resolve = %+v, %v", l, err)
+	}
+}
+
 func TestRememberTakesTheDefaultFromItsOwnScope(t *testing.T) {
 	isolateRecords(t)
 	machine := managedAt(t, t.TempDir())

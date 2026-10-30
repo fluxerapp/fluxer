@@ -1,14 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildIDSet, createUserIDSet, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {VoiceJoinTokenRow} from '@app/api/database/types/VoiceTypes';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {REXCTL_TEST_ROOM_PREFIX} from '@app/api/infrastructure/LiveKitWebhookService';
+import {getVoiceServerHealth} from '@app/api/middleware/ServiceRegistry';
 import {VOICE_CONFIGURATION_CHANNEL} from '@app/api/voice/VoiceConstants';
+import type {VoiceJoinTokenRepository} from '@app/api/voice/VoiceJoinTokenRepository';
 import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import {
+	hashJoinSecret,
+	joinTokenStatus,
+	VOICE_JOIN_TOKEN_PREFIX,
+	voiceJoinCommand,
+} from '@app/api/voice/VoiceNodeService';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import {bundledVoiceServerId} from '@app/api/voice/VoiceServerEndpoints';
+import {healthOf, toHealthResponse} from '@app/api/voice/VoiceServerHealth';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownVoiceRegionError} from '@fluxer/errors/src/domains/voice/UnknownVoiceRegionError';
 import {UnknownVoiceServerError} from '@fluxer/errors/src/domains/voice/UnknownVoiceServerError';
+import {VoiceJoinTokenInvalidError} from '@fluxer/errors/src/domains/voice/VoiceJoinTokenInvalidError';
+import {VoiceServerApiKeyInUseError} from '@fluxer/errors/src/domains/voice/VoiceServerApiKeyInUseError';
+import {VoiceServerIdInUseError} from '@fluxer/errors/src/domains/voice/VoiceServerIdInUseError';
 import type {
+	CreateVoiceJoinTokenRequest,
+	CreateVoiceJoinTokenResponse,
 	CreateVoiceRegionRequest,
 	CreateVoiceServerRequest,
 	DeleteVoiceRegionRequest,
@@ -19,15 +40,21 @@ import type {
 	ListVoiceServersRequest,
 	UpdateVoiceRegionRequest,
 	UpdateVoiceServerRequest,
+	VoiceJoinTokenAdminResponse,
 	VoiceRegionAdminResponse,
 	VoiceServerAdminResponse,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
+import {AccessToken, TrackSource} from 'livekit-server-sdk';
 
 interface AdminVoiceServiceDeps {
 	apiContext: ApiContext;
 	voiceRepository: VoiceRepository;
+	joinTokenRepository: VoiceJoinTokenRepository;
+	snowflakeService: ISnowflakeService;
 	auditService: AdminAuditService;
 }
+
+const TEST_TOKEN_TTL_SECONDS = 60;
 
 interface VoiceRestrictionData {
 	vip_only?: boolean;
@@ -85,6 +112,7 @@ export class AdminVoiceService {
 			? await voiceRepository.listRegionsWithServers()
 			: await voiceRepository.listRegions();
 		regions.sort((a, b) => a.name.localeCompare(b.name));
+		const duplicates = await this.duplicateApiKeys();
 		if (data.include_servers) {
 			const regionsWithServers = regions as Array<VoiceRegionWithServers>;
 			return {
@@ -92,7 +120,7 @@ export class AdminVoiceService {
 					...this.mapVoiceRegionToAdminResponse(region),
 					servers: region.servers
 						.sort((a, b) => a.serverId.localeCompare(b.serverId))
-						.map((server) => this.mapVoiceServerToAdminResponse(server)),
+						.map((server) => this.mapVoiceServerToAdminResponse(server, duplicates)),
 				})),
 			};
 		}
@@ -112,10 +140,11 @@ export class AdminVoiceService {
 		}
 		if (data.include_servers && 'servers' in region) {
 			const regionWithServers = region as VoiceRegionWithServers;
+			const duplicates = await this.duplicateApiKeys();
 			return {
 				region: {
 					...this.mapVoiceRegionToAdminResponse(regionWithServers),
-					servers: regionWithServers.servers.map((server) => this.mapVoiceServerToAdminResponse(server)),
+					servers: regionWithServers.servers.map((server) => this.mapVoiceServerToAdminResponse(server, duplicates)),
 				},
 			};
 		}
@@ -206,8 +235,9 @@ export class AdminVoiceService {
 	async listVoiceServers(data: ListVoiceServersRequest) {
 		const {voiceRepository} = this.deps;
 		const servers = await voiceRepository.listServers(data.region_id);
+		const duplicates = await this.duplicateApiKeys();
 		return {
-			servers: servers.map((server) => this.mapVoiceServerToAdminResponse(server)),
+			servers: servers.map((server) => this.mapVoiceServerToAdminResponse(server, duplicates)),
 		};
 	}
 
@@ -215,7 +245,7 @@ export class AdminVoiceService {
 		const {voiceRepository} = this.deps;
 		const server = await voiceRepository.getServer(data.region_id, data.server_id);
 		return {
-			server: server ? this.mapVoiceServerToAdminResponse(server) : null,
+			server: server ? this.mapVoiceServerToAdminResponse(server, await this.duplicateApiKeys()) : null,
 		};
 	}
 
@@ -224,6 +254,16 @@ export class AdminVoiceService {
 		const region = await voiceRepository.getRegion(data.region_id);
 		if (!region) {
 			throw new UnknownVoiceRegionError();
+		}
+		const existing = await voiceRepository.listAllServers();
+		if (existing.some((server) => server.regionId === data.region_id && server.serverId === data.server_id)) {
+			throw new VoiceServerIdInUseError();
+		}
+		if (data.server_id === bundledVoiceServerId() && data.api_key !== Config.voice.apiKey) {
+			throw new VoiceServerIdInUseError();
+		}
+		if (existing.some((server) => server.apiKey === data.api_key)) {
+			throw new VoiceServerApiKeyInUseError();
 		}
 		const server = await voiceRepository.createServer({
 			regionId: data.region_id,
@@ -236,6 +276,10 @@ export class AdminVoiceService {
 			apiSecret: data.api_secret ?? null,
 			latitude: data.latitude ?? null,
 			longitude: data.longitude ?? null,
+			internalEndpoint: data.internal_endpoint ?? null,
+			draining: data.draining ?? false,
+			pinnedHostname: null,
+			pinnedSoftLimit: false,
 			restrictions: buildVoiceRestrictions(data),
 		});
 		await this.publishVoiceConfiguration({type: 'server_created', regionId: data.region_id, serverId: data.server_id});
@@ -252,7 +296,7 @@ export class AdminVoiceService {
 			]),
 		});
 		return {
-			server: this.mapVoiceServerToAdminResponse(server),
+			server: this.mapVoiceServerToAdminResponse(server, await this.duplicateApiKeys()),
 		};
 	}
 
@@ -264,13 +308,21 @@ export class AdminVoiceService {
 		}
 		const updates: VoiceServerRecord = {...existing};
 		if (data.endpoint !== undefined) updates.endpoint = data.endpoint;
-		if (data.api_key !== undefined && data.api_key !== '') updates.apiKey = data.api_key;
+		if (data.api_key !== undefined && data.api_key !== '' && data.api_key !== existing.apiKey) {
+			const servers = await voiceRepository.listAllServers();
+			if (servers.some((server) => server.apiKey === data.api_key)) {
+				throw new VoiceServerApiKeyInUseError();
+			}
+			updates.apiKey = data.api_key;
+		}
 		if (data.api_secret !== undefined && data.api_secret !== '') updates.apiSecret = data.api_secret;
 		if (data.latitude !== undefined) updates.latitude = data.latitude;
 		if (data.longitude !== undefined) updates.longitude = data.longitude;
 		if (data.is_active !== undefined) updates.isActive = data.is_active;
 		if (data.soft_connection_limit !== undefined) updates.softConnectionLimit = data.soft_connection_limit;
 		if (data.notes !== undefined) updates.notes = data.notes;
+		if (data.internal_endpoint !== undefined) updates.internalEndpoint = data.internal_endpoint;
+		if (data.draining !== undefined) updates.draining = data.draining;
 		updates.restrictions = patchVoiceRestrictions(existing.restrictions, data);
 		updates.updatedAt = new Date();
 		await voiceRepository.upsertServer(updates);
@@ -287,7 +339,7 @@ export class AdminVoiceService {
 			]),
 		});
 		return {
-			server: this.mapVoiceServerToAdminResponse(updates),
+			server: this.mapVoiceServerToAdminResponse(updates, await this.duplicateApiKeys()),
 		};
 	}
 
@@ -332,7 +384,17 @@ export class AdminVoiceService {
 		};
 	}
 
-	private mapVoiceServerToAdminResponse(server: VoiceServerRecord): VoiceServerAdminResponse {
+	private async duplicateApiKeys(): Promise<Set<string>> {
+		const seen = new Set<string>();
+		const duplicates = new Set<string>();
+		for (const server of await this.deps.voiceRepository.listAllServers()) {
+			if (seen.has(server.apiKey)) duplicates.add(server.apiKey);
+			seen.add(server.apiKey);
+		}
+		return duplicates;
+	}
+
+	private mapVoiceServerToAdminResponse(server: VoiceServerRecord, duplicates: Set<string>): VoiceServerAdminResponse {
 		const allowedGuildIds = Array.from(server.restrictions.allowedGuildIds).map((id) => id.toString());
 		return {
 			region_id: server.regionId,
@@ -347,9 +409,161 @@ export class AdminVoiceService {
 			required_guild_features: Array.from(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: allowedGuildIds,
 			allowed_user_ids: Array.from(server.restrictions.allowedUserIds).map((id) => id.toString()),
+			internal_endpoint: server.internalEndpoint,
+			draining: server.draining,
+			health: toHealthResponse(healthOf(getVoiceServerHealth(), server)),
+			duplicate_api_key: duplicates.has(server.apiKey),
 			created_at: server.createdAt?.toISOString() ?? null,
 			updated_at: server.updatedAt?.toISOString() ?? null,
 		};
+	}
+
+	async createJoinToken(
+		data: CreateVoiceJoinTokenRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<CreateVoiceJoinTokenResponse> {
+		if (data.region_name && !data.region_id) {
+			throw new UnknownVoiceRegionError();
+		}
+		if ((data.region_latitude === null) !== (data.region_longitude === null)) {
+			throw InputValidationError.create('region_latitude', 'Pass region_latitude and region_longitude together.');
+		}
+		if (data.region_latitude !== null && !data.region_name) {
+			throw InputValidationError.create(
+				'region_latitude',
+				'Region coordinates only apply to a new region in region_name.',
+			);
+		}
+		if (data.region_id && !data.region_name && !(await this.deps.voiceRepository.getRegion(data.region_id))) {
+			throw new UnknownVoiceRegionError();
+		}
+		if (data.server_id && data.server_id === bundledVoiceServerId()) {
+			throw new VoiceServerIdInUseError();
+		}
+		const tokenId = await this.deps.snowflakeService.generate();
+		const secret = randomBytes(32).toString('base64url');
+		const now = new Date();
+		const row: VoiceJoinTokenRow = {
+			token_id: tokenId,
+			secret_hash: hashJoinSecret(secret),
+			created_by: adminUserId,
+			created_at: now,
+			expires_at: new Date(now.getTime() + data.expires_in_seconds * 1000),
+			claim_id: null,
+			claimed_at: null,
+			used_at: null,
+			used_by_ip: null,
+			used_server_id: null,
+			revoked_at: null,
+			region_id: data.region_id,
+			region_name: data.region_name,
+			region_emoji: data.region_emoji,
+			region_latitude: data.region_latitude,
+			region_longitude: data.region_longitude,
+			server_id: data.server_id,
+			hostname: data.hostname,
+			internal_endpoint: data.internal_endpoint,
+			soft_connection_limit: data.soft_connection_limit,
+			notes: data.notes,
+			vip_only: data.vip_only,
+			required_guild_features: new Set(data.required_guild_features),
+			allowed_guild_ids: new Set(data.allowed_guild_ids.map(BigInt)),
+			allowed_user_ids: new Set(data.allowed_user_ids.map(BigInt)),
+		};
+		await this.deps.joinTokenRepository.create(row);
+		await this.deps.auditService.createAuditLog({
+			targetId: 0n,
+			adminUserId,
+			targetType: 'voice_join_token',
+			action: 'create_voice_join_token',
+			auditLogReason,
+			metadata: new Map([
+				['token_id', tokenId.toString()],
+				['region_id', data.region_id ?? ''],
+			]),
+		});
+		const token = `${VOICE_JOIN_TOKEN_PREFIX}${tokenId}_${secret}`;
+		return {
+			token_id: tokenId.toString(),
+			token,
+			expires_at: row.expires_at.toISOString(),
+			command: voiceJoinCommand(Config.endpoints.webApp, Config.instance.baseDomain, token),
+		};
+	}
+
+	async listJoinTokens(): Promise<{tokens: Array<VoiceJoinTokenAdminResponse>}> {
+		const rows = await this.deps.joinTokenRepository.list();
+		rows.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+		return {
+			tokens: rows.map((row) => ({
+				token_id: row.token_id.toString(),
+				status: joinTokenStatus(row),
+				created_at: row.created_at.toISOString(),
+				expires_at: row.expires_at.toISOString(),
+				used_at: row.used_at?.toISOString() ?? null,
+				used_server_id: row.used_server_id,
+				revoked_at: row.revoked_at?.toISOString() ?? null,
+				region_id: row.region_id,
+				region_name: row.region_name,
+				server_id: row.server_id,
+				hostname: row.hostname,
+				notes: row.notes,
+			})),
+		};
+	}
+
+	async revokeJoinToken(tokenId: bigint, adminUserId: UserID, auditLogReason: string | null) {
+		const row = await this.deps.joinTokenRepository.get(tokenId);
+		if (!row || joinTokenStatus(row) !== 'pending' || !(await this.deps.joinTokenRepository.revoke(row, new Date()))) {
+			throw new VoiceJoinTokenInvalidError();
+		}
+		await this.deps.auditService.createAuditLog({
+			targetId: 0n,
+			adminUserId,
+			targetType: 'voice_join_token',
+			action: 'revoke_voice_join_token',
+			auditLogReason,
+			metadata: new Map([['token_id', tokenId.toString()]]),
+		});
+		return {success: true};
+	}
+
+	async createServerTestToken(
+		data: GetVoiceServerRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<{token: string; endpoint: string; room: string}> {
+		const server = await this.deps.voiceRepository.getServer(data.region_id, data.server_id);
+		if (!server) {
+			throw new UnknownVoiceServerError();
+		}
+		const room = `${REXCTL_TEST_ROOM_PREFIX}${randomBytes(6).toString('hex')}`;
+		const token = new AccessToken(server.apiKey, server.apiSecret, {
+			identity: `rexctl-test-${randomBytes(4).toString('hex')}`,
+			ttl: TEST_TOKEN_TTL_SECONDS,
+		});
+		token.addGrant({
+			room,
+			roomJoin: true,
+			hidden: true,
+			canPublish: true,
+			canSubscribe: true,
+			canPublishData: false,
+			canPublishSources: [TrackSource.MICROPHONE],
+		});
+		await this.deps.auditService.createAuditLog({
+			targetId: 0n,
+			adminUserId,
+			targetType: 'voice_server',
+			action: 'create_voice_server_test_token',
+			auditLogReason,
+			metadata: new Map([
+				['region_id', server.regionId],
+				['server_id', server.serverId],
+			]),
+		});
+		return {token: await token.toJwt(), endpoint: server.endpoint, room};
 	}
 
 	private async publishVoiceConfiguration(message: VoiceConfigurationMessage): Promise<void> {

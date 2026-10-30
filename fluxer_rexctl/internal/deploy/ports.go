@@ -14,6 +14,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
@@ -21,13 +22,18 @@ type portVar struct {
 	name   string
 	def    int
 	protos []string
+	voice  bool
 }
 
 var portVars = []portVar{
-	{"FLUXER_HTTP_PORT", 80, []string{"tcp"}},
-	{"FLUXER_HTTPS_PORT", 443, []string{"tcp", "udp"}},
-	{"FLUXER_LIVEKIT_TCP_PORT", 7881, []string{"tcp"}},
-	{"FLUXER_LIVEKIT_UDP_PORT", 7882, []string{"udp"}},
+	{"FLUXER_HTTP_PORT", 80, []string{"tcp"}, false},
+	{"FLUXER_HTTPS_PORT", 443, []string{"tcp", "udp"}, false},
+	{"FLUXER_LIVEKIT_TCP_PORT", 7881, []string{"tcp"}, true},
+	{"FLUXER_LIVEKIT_UDP_PORT", 7882, []string{"udp"}, true},
+}
+
+func published(env map[string]string, v portVar) bool {
+	return !v.voice || stack.VoiceBundled(env[stack.VoiceBundledKey])
 }
 
 func portKeyChanged(changed []string) bool {
@@ -50,12 +56,17 @@ func portOf(env map[string]string, v portVar) int {
 func portDiff(oldEnv, newEnv map[string]string) (added, removed []host.Port) {
 	for _, v := range portVars {
 		was, will := portOf(oldEnv, v), portOf(newEnv, v)
-		if was == will {
+		wasOn, willOn := published(oldEnv, v), published(newEnv, v)
+		if was == will && wasOn == willOn {
 			continue
 		}
 		for _, proto := range v.protos {
-			added = append(added, host.Port{Number: will, Proto: proto})
-			removed = append(removed, host.Port{Number: was, Proto: proto})
+			if willOn {
+				added = append(added, host.Port{Number: will, Proto: proto})
+			}
+			if wasOn {
+				removed = append(removed, host.Port{Number: was, Proto: proto})
+			}
 		}
 	}
 	return added, removed
@@ -99,6 +110,12 @@ func checkPortsFree(ctx context.Context, e *engine.Engine, self string, ports []
 					published[key] = o.Project
 				}
 			}
+		}
+	}
+	for _, v := range instance.RecordedVoicePorts() {
+		key := host.Port{Number: v.Number, Proto: v.Proto}
+		if _, ok := published[key]; !ok {
+			published[key] = "the voice server " + v.Server
 		}
 	}
 	seen := map[host.Port]bool{}
@@ -145,6 +162,9 @@ func effectivePorts(env map[string]string, mode string) []portRole {
 			portRole{Port: host.Port{Number: https, Proto: "tcp"}, subject: "The web address", noun: "the web address", setting: settings.EdgeHTTPSPort},
 			portRole{Port: host.Port{Number: https, Proto: "udp"}, subject: "The web address", noun: "the web address", setting: settings.EdgeHTTPSPort},
 		)
+	}
+	if !published(env, portVars[2]) {
+		return out
 	}
 	tcp := portOf(env, portVars[2])
 	udp := portOf(env, portVars[3])

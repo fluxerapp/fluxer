@@ -24473,6 +24473,231 @@
 				}
 			}
 		},
+		"/voice/join": {
+			"post": {
+				"operationId": "create_voice_join",
+				"summary": "Join a voice server to the instance",
+				"tags": ["Voice"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceJoinResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Registers a new voice server with a join token. Send Authorization: VoiceJoin with the token. Fluxer checks that the endpoint answers and that the key and secret match before it saves the server, then the token stops working.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceJoinRequest"}}}
+				}
+			}
+		},
+		"/voice/join/preview": {
+			"post": {
+				"operationId": "preview_voice_join",
+				"summary": "Preview joining a voice server",
+				"tags": ["Voice"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceJoinPreviewResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Shows the server id, region, coordinates and webhook URL a new voice server would get from a join token. Send Authorization: VoiceJoin with the token. The call changes nothing and does not use the token.",
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceJoinPreviewRequest"}}}
+				}
+			}
+		},
+		"/voice/node": {
+			"get": {
+				"operationId": "get_voice_node",
+				"summary": "Get the calling voice server",
+				"tags": ["Voice"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceNodeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the voice server that signed the request, with its health as the API sees it. Send Authorization: Bearer with an HS256 JWT signed with the API secret of the server, with iss set to its API key, aud set to fluxer-voice-node, method and path of the request, an exp at most 5 minutes ahead and sha256 holding the base64 SHA-256 of the body, or an empty string for a request without a body."
+			},
+			"patch": {
+				"operationId": "update_voice_node",
+				"summary": "Update the calling voice server",
+				"tags": ["Voice"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceNodeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Changes the endpoint, draining flag, coordinates or soft connection limit of the voice server that signed the request. A new endpoint is checked before it is saved. Send Authorization: Bearer with an HS256 JWT signed with the API secret of the server, with iss set to its API key, aud set to fluxer-voice-node, method and path of the request, an exp at most 5 minutes ahead and sha256 holding the base64 SHA-256 of the body, or an empty string for a request without a body.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateVoiceNodeRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "delete_voice_node",
+				"summary": "Remove the calling voice server",
+				"tags": ["Voice"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes the voice server that signed the request. Send Authorization: Bearer with an HS256 JWT signed with the API secret of the server, with iss set to its API key, aud set to fluxer-voice-node, method and path of the request, an exp at most 5 minutes ahead and sha256 holding the base64 SHA-256 of the body, or an empty string for a request without a body."
+			}
+		},
 		"/voice/p2p/connection-reports": {
 			"post": {
 				"operationId": "create_voice_p2p_connection_reports",
@@ -27024,6 +27249,203 @@
 					}
 				},
 				"required": ["reports"]
+			},
+			"UpdateVoiceNodeRequest": {
+				"type": "object",
+				"properties": {
+					"endpoint": {"description": "New public wss endpoint", "type": "string", "maxLength": 512, "format": "uri"},
+					"draining": {"description": "Whether placement sends new calls elsewhere", "type": "boolean"},
+					"latitude": {"anyOf": [{"type": "number", "minimum": -90, "maximum": 90}, {"type": "null"}]},
+					"longitude": {"anyOf": [{"type": "number", "minimum": -180, "maximum": 180}, {"type": "null"}]},
+					"soft_connection_limit": {
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 2147483647}, {"type": "null"}]
+					}
+				},
+				"additionalProperties": false
+			},
+			"VoiceNodeResponse": {
+				"type": "object",
+				"properties": {
+					"region_id": {"type": "string", "description": "Region of the server"},
+					"server_id": {"type": "string", "description": "ID of the server"},
+					"endpoint": {"type": "string", "description": "Endpoint of the server"},
+					"latitude": {"description": "Server latitude", "type": ["number", "null"]},
+					"longitude": {"description": "Server longitude", "type": ["number", "null"]},
+					"is_active": {"type": "boolean", "description": "Whether an admin keeps the server turned on"},
+					"draining": {"type": "boolean", "description": "Whether placement sends new calls elsewhere"},
+					"soft_connection_limit": {"description": "Soft connection limit, or null", "type": ["number", "null"]},
+					"health": {
+						"description": "Health of the server as this API node last saw it",
+						"$ref": "#/components/schemas/VoiceServerHealthResponse"
+					}
+				},
+				"required": [
+					"region_id",
+					"server_id",
+					"endpoint",
+					"latitude",
+					"longitude",
+					"is_active",
+					"draining",
+					"soft_connection_limit",
+					"health"
+				],
+				"additionalProperties": false
+			},
+			"VoiceJoinPreviewRequest": {
+				"type": "object",
+				"properties": {
+					"public_ipv4": {
+						"description": "Public IPv4 address of the voice machine",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "ipv4",
+								"pattern": "^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"
+							},
+							{"type": "null"}
+						]
+					},
+					"region_id": {
+						"description": "Existing region the operator asked for",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[a-z0-9][a-z0-9-]*$"
+					},
+					"cpu_count": {
+						"description": "CPU count of the voice machine",
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 4096
+					},
+					"memory_bytes": {
+						"description": "Memory of the voice machine in bytes",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"rexctl_version": {"description": "Version of rexctl on the voice machine", "type": "string", "maxLength": 64}
+				}
+			},
+			"VoiceJoinPreviewResponse": {
+				"type": "object",
+				"properties": {
+					"server_id": {"type": "string", "description": "Suggested server id, or the preset of the token"},
+					"server_id_pinned": {
+						"type": "boolean",
+						"description": "Whether the token sets the server id, which the join then always uses"
+					},
+					"region": {
+						"type": "object",
+						"properties": {
+							"id": {"type": "string", "description": "Region id"},
+							"name": {"type": "string", "description": "Region name"},
+							"distance_km": {
+								"description": "Distance from the voice machine, or null without GeoIP data",
+								"type": ["number", "null"]
+							},
+							"new": {"type": "boolean", "description": "Whether the region is created when the server joins"},
+							"source": {
+								"type": "string",
+								"enum": ["token", "requested", "nearest", "default"],
+								"description": "Why Fluxer picked the region, from the token, region_id, the nearest region or the default region"
+							}
+						},
+						"required": ["id", "name", "distance_km", "new", "source"],
+						"additionalProperties": false
+					},
+					"latitude": {"description": "Server latitude from GeoIP, rounded to 0.1 degrees", "type": ["number", "null"]},
+					"longitude": {
+						"description": "Server longitude from GeoIP, rounded to 0.1 degrees",
+						"type": ["number", "null"]
+					},
+					"hostname": {"description": "Hostname preset of the token, or null", "type": ["string", "null"]},
+					"suggested_hostname": {
+						"type": "string",
+						"description": "A hostname under the instance domain the operator may use"
+					},
+					"soft_connection_limit": {
+						"description": "Soft limit preset of the token, or null",
+						"type": ["number", "null"]
+					},
+					"webhook_url": {"type": "string", "description": "URL the server sends LiveKit webhooks to"},
+					"api_code_version": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Version of the API server code"
+					},
+					"release": {
+						"type": "string",
+						"description": "Fluxer release of the API, or an empty string for a development build"
+					},
+					"expires_at": {"type": "string", "description": "ISO 8601 timestamp when the token stops working"}
+				},
+				"required": [
+					"server_id",
+					"server_id_pinned",
+					"region",
+					"latitude",
+					"longitude",
+					"hostname",
+					"suggested_hostname",
+					"soft_connection_limit",
+					"webhook_url",
+					"api_code_version",
+					"release",
+					"expires_at"
+				],
+				"additionalProperties": false
+			},
+			"VoiceJoinRequest": {
+				"type": "object",
+				"properties": {
+					"server_id": {
+						"description": "Server id, ignored when the token has a preset",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[a-z0-9][a-z0-9-]*$"
+					},
+					"region_id": {
+						"description": "Existing region, ignored when the token has a preset",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[a-z0-9][a-z0-9-]*$"
+					},
+					"endpoint": {
+						"type": "string",
+						"maxLength": 512,
+						"format": "uri",
+						"description": "Public wss endpoint of the server"
+					},
+					"api_key": {"description": "LiveKit API key of the server", "type": "string"},
+					"api_secret": {"description": "LiveKit API secret of the server", "type": "string"},
+					"latitude": {"type": "number", "minimum": -90, "maximum": 90},
+					"longitude": {"type": "number", "minimum": -180, "maximum": 180},
+					"soft_connection_limit": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+					"public_ipv4": {
+						"description": "Public IPv4 address of the voice machine",
+						"type": "string",
+						"format": "ipv4",
+						"pattern": "^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"
+					}
+				},
+				"required": ["endpoint", "api_key", "api_secret"]
+			},
+			"VoiceJoinResponse": {
+				"type": "object",
+				"properties": {
+					"server_id": {"type": "string", "description": "ID of the new server"},
+					"region_id": {"type": "string", "description": "Region of the new server"},
+					"endpoint": {"type": "string", "description": "Endpoint of the new server"},
+					"webhook_url": {"type": "string", "description": "URL the server sends LiveKit webhooks to"},
+					"node_url": {"type": "string", "description": "URL of the node routes for this server"}
+				},
+				"required": ["server_id", "region_id", "endpoint", "webhook_url", "node_url"],
+				"additionalProperties": false
 			},
 			"EntranceSoundPlayRequest": {
 				"type": "object",
@@ -37431,6 +37853,12 @@
 						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/InstanceGuildBadgeSchema"}
+					},
+					"voice_origins": {
+						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies",
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string"}
 					}
 				},
 				"required": [
@@ -44780,6 +45208,26 @@
 				"enum": ["online", "dnd", "idle", "invisible"],
 				"type": "string"
 			},
+			"VoiceServerHealthResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["up", "down", "unknown"],
+						"description": "up, down, or unknown before the first check"
+					},
+					"checked_at": {
+						"description": "ISO 8601 timestamp of the last check, or null before the first",
+						"type": ["string", "null"]
+					},
+					"error": {
+						"description": "Status code or short transport error of the last failed check",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["status", "checked_at", "error"],
+				"additionalProperties": false
+			},
 			"Int64Type": {
 				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}],
 				"format": "int64"
@@ -45128,6 +45576,16 @@
 					"USER_OWNS_GUILDS",
 					"VALIDATION_ERROR",
 					"VOICE_CHANNEL_FULL",
+					"VOICE_JOIN_ENDPOINT_INVALID",
+					"VOICE_JOIN_ENDPOINT_UNREACHABLE",
+					"VOICE_JOIN_KEY_MISMATCH",
+					"VOICE_JOIN_TOKEN_BUSY",
+					"VOICE_JOIN_TOKEN_INVALID",
+					"VOICE_NODE_SIGNATURE_INVALID",
+					"VOICE_NODE_TOKEN_EXPIRED",
+					"VOICE_NODE_UNKNOWN",
+					"VOICE_SERVER_API_KEY_IN_USE",
+					"VOICE_SERVER_ID_IN_USE",
 					"WEBAUTHN_CREDENTIAL_LIMIT_REACHED",
 					"ACCOUNT_VERIFICATION_REQUIRED",
 					"DATE_OF_BIRTH_REQUIRED",
@@ -45493,6 +45951,16 @@
 					"This user owns communities.",
 					"Validation failed.",
 					"Voice channel is full.",
+					"The voice server endpoint isn't allowed.",
+					"Fluxer couldn't connect to the voice server endpoint.",
+					"The voice server rejected its API key and secret.",
+					"Another voice server is joining with this token right now.",
+					"The voice join token is not valid.",
+					"The voice server's signature doesn't match its secret.",
+					"The voice server's request is expired or not valid yet. Check the clock on that machine.",
+					"No voice server has this API key.",
+					"Another voice server already uses this API key.",
+					"Another voice server already uses this ID.",
 					"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
 					"{need, select, add_email {{action, select, message {Add an email to your account to send messages.} typing {Add an email to your account to send messages.} reaction {Add an email to your account to add reactions.} direct_message {Add an email to your account to send direct messages.} direct_message_open {Add an email to your account to start direct messages.} group_dm {Add an email to your account to join group chats.} friend_request {Add an email to your account to send friend requests.} friend_accept {Add an email to your account to accept friend requests.} invite_create {Add an email to your account to create invites.} guild_join {Add an email to your account to join this community.} guild_create {Add an email to your account to create a community.} voice {Add an email to your account to join voice channels.} call {Add an email to your account to start calls.} group_call {Add an email to your account to join group calls.} thread_join {Add an email to your account to join threads.} channel_follow {Add an email to your account to follow channels.} ownership_transfer {This person needs to add an email to their account before they can own a community.} application_create {Add an email to your account to create applications.} gift_redeem {Add an email to your account to redeem gifts.} profile_customize {Add an email to your account to change your profile.} report {Add an email to your account to submit reports.} mfa {Add an email to your account to turn on two-factor authentication.} guild_verification {Add an email to your account to talk in this community.} other {Add an email to your account to do this.}}} confirm_email {{action, select, message {Confirm your email to send messages.} typing {Confirm your email to send messages.} reaction {Confirm your email to add reactions.} direct_message {Confirm your email to send direct messages.} direct_message_open {Confirm your email to start direct messages.} group_dm {Confirm your email to join group chats.} friend_request {Confirm your email to send friend requests.} friend_accept {Confirm your email to accept friend requests.} invite_create {Confirm your email to create invites.} guild_join {Confirm your email to join this community.} guild_create {Confirm your email to create a community.} voice {Confirm your email to join voice channels.} call {Confirm your email to start calls.} group_call {Confirm your email to join group calls.} thread_join {Confirm your email to join threads.} channel_follow {Confirm your email to follow channels.} ownership_transfer {This person needs to confirm their email before they can own a community.} application_create {Confirm your email to create applications.} gift_redeem {Confirm your email to redeem gifts.} profile_customize {Confirm your email to change your profile.} report {Confirm your email to submit reports.} mfa {Confirm your email to turn on two-factor authentication.} guild_verification {Confirm your email to talk in this community.} other {Confirm your email to do this.}}} password {{action, select, message {Set a password to send messages.} typing {Set a password to send messages.} reaction {Set a password to add reactions.} direct_message {Set a password to send direct messages.} direct_message_open {Set a password to start direct messages.} group_dm {Set a password to join group chats.} friend_request {Set a password to send friend requests.} friend_accept {Set a password to accept friend requests.} invite_create {Set a password to create invites.} guild_join {Set a password to join this community.} guild_create {Set a password to create a community.} voice {Set a password to join voice channels.} call {Set a password to start calls.} group_call {Set a password to join group calls.} thread_join {Set a password to join threads.} channel_follow {Set a password to follow channels.} ownership_transfer {This person needs to set a password before they can own a community.} application_create {Set a password to create applications.} gift_redeem {Set a password to redeem gifts.} profile_customize {Set a password to change your profile.} report {Set a password to submit reports.} mfa {Set a password to turn on two-factor authentication.} guild_verification {Set a password to talk in this community.} other {Set a password to do this.}}} other {{action, select, message {Claim your account to send messages.} typing {Claim your account to send messages.} reaction {Claim your account to add reactions.} direct_message {Claim your account to send direct messages.} direct_message_open {Claim your account to start direct messages.} group_dm {Claim your account to join group chats.} friend_request {Claim your account to send friend requests.} friend_accept {Claim your account to accept friend requests.} invite_create {Claim your account to create invites.} guild_join {Claim your account to join this community.} guild_create {Claim your account to create a community.} voice {Claim your account to join voice channels.} call {Claim your account to start calls.} group_call {Claim your account to join group calls.} thread_join {Claim your account to join threads.} channel_follow {Claim your account to follow channels.} ownership_transfer {This person needs to claim their account before they can own a community.} application_create {Claim your account to create applications.} gift_redeem {Claim your account to redeem gifts.} profile_customize {Claim your account to change your profile.} report {Claim your account to submit reports.} mfa {Claim your account to turn on two-factor authentication.} guild_verification {Claim your account to talk in this community.} other {Claim your account to do this.}}}}",
 					"Enter your date of birth to continue.",

@@ -53,6 +53,7 @@ import type {ReportService} from '@app/api/report/ReportService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {systemDmsHidden} from '@app/api/user/services/SystemDmMessage';
 import type {UserService} from '@app/api/user/services/UserService';
+import {VoiceJoinTokenRepository} from '@app/api/voice/VoiceJoinTokenRepository';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {DirectMessagesDisabledError} from '@fluxer/errors/src/domains/channel/DirectMessagesDisabledError';
 import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
@@ -232,6 +233,8 @@ export class AdminService {
 		this.voiceService = new AdminVoiceService({
 			apiContext: this.apiContext,
 			voiceRepository: this.voiceRepository,
+			joinTokenRepository: new VoiceJoinTokenRepository(),
+			snowflakeService: snowflake,
 			auditService: this.auditService,
 		});
 		this.badgeService = new AdminBadgeService({

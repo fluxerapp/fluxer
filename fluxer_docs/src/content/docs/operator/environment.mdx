@@ -110,6 +110,7 @@ The optional compose files change how Fluxer runs. To use one, list it after `do
 - `tunnel.compose.yml` for a tunnel
 - `external-object-store.compose.yml` for your own object store
 - `ipv6.compose.yml` for IPv6 on Fluxer's network
+- `external-voice.compose.yml` for voice servers of your own without the bundled LiveKit
 
 ### `COMPOSE_FILE`
 
@@ -249,7 +250,7 @@ The arguments of a Caddy tls directive for the edge, such as `internal` for a ce
 
 ## Voice and video
 
-Calls connect directly to this machine on `FLUXER_LIVEKIT_TCP_PORT` and `FLUXER_LIVEKIT_UDP_PORT`, even when Fluxer is behind your own proxy.
+Calls connect directly to this machine on `FLUXER_LIVEKIT_TCP_PORT` and `FLUXER_LIVEKIT_UDP_PORT`, even when Fluxer is behind your own proxy. To run without the bundled LiveKit, add `external-voice.compose.yml` to `COMPOSE_FILE` and set `FLUXER_LIVEKIT_BUNDLED` to `false`.
 
 ### `FLUXER_LIVEKIT_ENABLED`
 
@@ -257,7 +258,11 @@ Whether voice and video calls are turned on. Use `true` or `false`. The default 
 
 ### `FLUXER_LIVEKIT_INTERNAL_URL`
 
-The URL the API uses for the LiveKit control API of the bundled LiveKit, the first server in the default voice region. Servers added in the admin panel use their own address. The default is `http://livekit:7880`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_INTERNAL_URL`.
+The URL the API uses for the LiveKit control API of the bundled LiveKit, the first server in the default voice region. Servers added in the admin panel use their own address. Fluxer ignores it when `FLUXER_LIVEKIT_BUNDLED` is `false`. The default is `http://livekit:7880`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_INTERNAL_URL`.
+
+### `FLUXER_LIVEKIT_BUNDLED`
+
+Whether Fluxer runs its own LiveKit voice server on this machine. Use `true` or `false`. The bundled LiveKit is the first server in the default voice region. With `false`, Fluxer creates the default region with no server in it, removes the server it made for the bundled LiveKit and keeps calls on the servers you add with `rexctl voice add`, `rexctl voice join` or the admin panel. With Docker Compose, also add `external-voice.compose.yml` to `COMPOSE_FILE`. The default is `true`. With rexctl, use `rexctl config set voice.bundled`.
 
 ### `FLUXER_LIVEKIT_DEFAULT_REGION`
 
@@ -270,6 +275,14 @@ The URL browsers and apps use for voice signalling. When it's empty, Fluxer uses
 ### `FLUXER_VOICE_P2P_STUN_URLS`
 
 STUN URLs for peer-to-peer calls, separated by commas, such as `stun:stun.example.com:3478`. When it's empty, peer-to-peer calls work only between devices with a direct route to each other, such as on one local network. With rexctl, use `rexctl config set FLUXER_VOICE_P2P_STUN_URLS`.
+
+### `FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS`
+
+Whether the API accepts a voice server joining with an endpoint that resolves to a private address. Use `true` or `false`. Set it to `true` only for tests and private networks. With rexctl, use `rexctl config set FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS`.
+
+### `FLUXER_VOICE_HEALTH_INTERVAL_MS`
+
+How often each API node checks every active voice server, in milliseconds. A server that fails two checks in a row gets no new calls until a check passes. Set it to `0` to turn the checks off. When it's empty, the API checks every 15 seconds. With rexctl, use `rexctl config set FLUXER_VOICE_HEALTH_INTERVAL_MS`.
 
 ### `FLUXER_LIVEKIT_TCP_PORT`
 
@@ -298,6 +311,78 @@ The second STUN host LiveKit asks to find its public IP address, as `host:port`.
 ### `FLUXER_LIVEKIT_TURN_SERVERS`
 
 TURN relays LiveKit offers to browsers and apps, as a JSON array of objects with `host`, `port`, `protocol` and optional `username` and `credential`, such as `[{"host":"turn.example.com","port":3478,"protocol":"udp","username":"fluxer","credential":"secret"}]`. Use `udp`, `tcp` or `tls` for `protocol`. Set it when browsers and apps can't connect to the LiveKit ports directly, such as behind Cloudflare Tunnel. When it's empty, LiveKit offers no TURN relay. The default is `[]`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_TURN_SERVERS`.
+
+## Standalone voice servers
+
+These go in the settings file of a voice server from the voice folder of the compose bundle, such as `fra-server-1.env`, not in Fluxer's `.env`. `rexctl voice add` and `rexctl voice join` write them for you.
+
+### `FLUXER_VOICE_ID`
+
+The ID of the voice server, such as `fra-server-2`. Use lowercase letters, digits and dashes. The container answers as `voice-` followed by this ID on the voice network, and the edge routes `/livekit-` followed by this ID to it.
+
+### `FLUXER_VOICE_API_KEY`
+
+The LiveKit API key of this server. Every voice server of an instance needs its own key, such as `fluxer-` followed by the server ID.
+
+### `FLUXER_VOICE_API_SECRET`
+
+The LiveKit API secret that goes with `FLUXER_VOICE_API_KEY`, at least 32 characters, such as the output of `openssl rand -hex 32`.
+
+### `FLUXER_VOICE_WEBHOOK_URL`
+
+The URL LiveKit sends its webhooks to. On the Fluxer machine it's `http://api:8080/webhooks/livekit`. On another machine it's the public API address followed by `/webhooks/livekit`.
+
+### `FLUXER_VOICE_TCP_PORT`
+
+The TCP port for media on this host. LiveKit listens on the same port inside the container, and each server on a host needs its own.
+
+### `FLUXER_VOICE_UDP_PORT`
+
+The UDP port for media on this host. LiveKit listens on the same port inside the container, and each server on a host needs its own.
+
+### `FLUXER_VOICE_NODE_IP`
+
+The public IPv4 address LiveKit gives to clients. Set `FLUXER_VOICE_USE_EXTERNAL_IP` to `false` with it.
+
+### `FLUXER_VOICE_USE_EXTERNAL_IP`
+
+Whether LiveKit finds its public IP address through STUN. Use `true` or `false`.
+
+### `FLUXER_VOICE_BIND_IP`
+
+The host address the media ports are published on, for a host with more than one public address. When it's empty, Docker publishes them on every address.
+
+### `FLUXER_VOICE_HTTP_PORT`
+
+The port on 127.0.0.1 that `voice-http.compose.yml` publishes LiveKit's HTTP and WebSocket port on, for your own proxy.
+
+### `FLUXER_VOICE_NETWORK`
+
+The Docker network the server joins. On a voice machine it's the network of the voice edge. On the Fluxer machine it's the network of the instance, such as `fluxer_fluxer`, and Fluxer's own edge routes to the server.
+
+### `FLUXER_VOICE_MEMORY_LIMIT`
+
+The memory limit for the server's container.
+
+### `FLUXER_VOICE_GOMEMLIMIT`
+
+The soft memory limit of the Go runtime in LiveKit. Keep it at about 85% of `FLUXER_VOICE_MEMORY_LIMIT`.
+
+### `FLUXER_VOICE_STOP_GRACE`
+
+How long Docker waits for the calls on the server to end when it stops or replaces the container, before it stops LiveKit anyway.
+
+## Voice edge
+
+These go in `edge.env` next to `voice-edge.compose.yml` in the voice folder of the compose bundle. `rexctl voice join` writes them for you.
+
+### `FLUXER_VOICE_EDGE_IP`
+
+The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then answers clients that send no server name with the certificate for that address, which browsers need.
+
+### `FLUXER_VOICE_EDGE_EMAIL`
+
+The email address the voice edge gives Let's Encrypt for notices about its certificates. When it's empty, the edge gets certificates without one.
 
 ## Object storage
 
@@ -1779,6 +1864,10 @@ The file form doesn't work for the docs site variables either, or for variables 
 ## rexctl
 
 rexctl and its install scripts look these up in the shell you run them from. A value in `.env` has no effect.
+
+### `FLUXER_VOICE_JOIN_TOKEN`
+
+The join token for `rexctl voice join` when the command line doesn't have one. Other accounts on the machine can't see it in the process list.
 
 ### `REXCTL_RELEASE_URL`
 

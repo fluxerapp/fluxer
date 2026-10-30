@@ -1,0 +1,329 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Add voice servers
+description: Run extra LiveKit voice servers next to Fluxer or on other machines, and connect them to your instance with rexctl.
+sidebar:
+  label: Voice servers
+---
+
+A Fluxer instance comes with one LiveKit voice server on the same machine, the bundled server. You can add more, or [run without it](#run-without-the-bundled-voice-server). rexctl installs each one, gives it its own keys and ports, sets up HTTPS, registers it with your instance and checks that calls can connect to it.
+
+## When to add one
+
+Add a voice server to:
+
+- Put calls closer to people in another part of the world, in a voice region of its own.
+- Spread calls over more machines when one machine runs out of CPU or bandwidth.
+- Give a server its own public IP address, or keep it for some communities with restrictions in the admin panel.
+- Keep large calls away from the rest.
+
+A call always stays on one server. Fluxer picks the server when the first person joins, and everyone who joins later goes to the same one. A voice server on the same machine as Fluxer shares its CPU and adds no capacity. It helps when the machine has more than one public address, or when you want to keep some calls apart.
+
+## On the Fluxer machine
+
+```sh
+rexctl voice add
+```
+
+rexctl picks every value and shows them in one summary before it changes anything:
+
+- **ID.** The region followed by `-server-` and the first free number, such as `default-server-2`. rexctl skips IDs that another voice server on the machine uses, whatever instance it belongs to. While the bundled server is on, `-server-1` in the default region stays free for it, even after you delete it in the admin panel.
+- **Region.** The default region of your instance. Pass `--region` for another existing region, or `--new-region` with `--region-name`, `--lat` and `--long` to create one.
+- **Ports.** The next free TCP and UDP pair from 7881 and 7882 upwards, skipping the ports of every other server and instance on the machine.
+- **Endpoint.** A path on your domain, such as `wss://chat.example.com/livekit-default-server-2`. It needs no DNS record, no new certificate and no change to a proxy that forwards every path.
+- **Keys.** The key `fluxer-` followed by the ID, and a new random secret.
+- **Address, memory and image.** The same public address, LiveKit release and memory limit as the bundled server.
+- **Soft limit.** 75 connections per CPU. Placement prefers another server once a server holds this many.
+
+Add several at once with `--count`.
+
+```sh
+rexctl voice add --count 3
+```
+
+When the machine has more than one public IPv4 address, pass `--ip` to give a server its own. LiveKit gives that address to clients and Docker publishes the server's ports on it alone.
+
+Behind 1:1 NAT, as on AWS, Google Cloud, Oracle Cloud or a home router, the public address isn't on the machine. Pass it with `--ip` all the same. LiveKit gives it to clients, and Docker publishes the ports on every address of the machine.
+
+```sh
+rexctl voice add --ip 198.51.100.8
+```
+
+A server added without `--ip` follows `voice.public_ip`. When you change that setting with `rexctl config set`, rexctl gives these servers the new address and restarts them one at a time, as an upgrade does. When Fluxer is stopped, they get it at the next `rexctl start`. A server added with `--ip` keeps its address.
+
+After it adds a server, rexctl prints its TCP and UDP ports. Open them in your provider's firewall as well. The test at the end runs on the same machine and can't see that firewall.
+
+Adding a server writes a route to `caddy.d` and reloads the edge. People connected to Fluxer reconnect once, and calls keep going.
+
+When you change the domain or the public HTTPS port with `rexctl config set`, rexctl moves these servers to the new address in your instance. When Fluxer was stopped at the time, it moves them at the next `rexctl start`.
+
+## On another machine
+
+On the Fluxer machine, create a join token.
+
+```sh
+rexctl voice token
+```
+
+It prints the command to run on the voice machine.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- voice chat.example.com fvj_...
+```
+
+With rexctl already on the voice machine, this does the same.
+
+```sh
+rexctl voice join chat.example.com fvj_...
+```
+
+The token works once and expires after an hour. Pass `--expires` to `rexctl voice token` for up to 24 hours. The **Add a voice server** button on the admin panel's voice servers page creates the same token and shows the same command.
+
+The join command does this:
+
+1. Reads your instance's public settings from its domain and stops when voice is off there.
+2. Installs Docker when the machine has neither Docker nor Podman, as `rexctl install` does. On a machine with Podman older than 5.8.2 and no Fluxer instance, it stops. That Podman doesn't start voice servers again after a restart.
+3. Finds the machine's public IPv4 address, its CPU count, its memory and its firewall.
+4. Asks your instance for the server's ID, region and webhook address, without using the token.
+5. Picks free ports and a hostname or IP address for the endpoint.
+6. Shows a summary and asks once. Pass `--yes` to go ahead without asking.
+7. Raises the UDP buffer limits in `/etc/sysctl.d/61-fluxer-voice.conf`, which LiveKit needs for many calls. This needs root. Without root, rexctl shows the two commands to run with sudo. Then it starts an edge on ports 80 and 443 with Caddy, and the LiveKit server behind it.
+8. Opens the server's ports, and ports 80 and 443, in ufw or firewalld.
+9. Waits for a certificate, then registers the server with your instance. The token stops working once it's registered.
+10. Checks that browsers on your instance can connect to the server, that calls connect over UDP and TCP, and that your instance accepts the server's webhooks.
+
+When a step fails, run the same command again with the same token. rexctl picks up where it stopped, because the token is used only once the server is registered.
+
+A machine can run more than one voice server. Each one needs a token of its own and a `rexctl voice join` of its own. They share the machine's edge and get their own ports.
+
+rexctl keeps the voice servers of a machine in the voice folder. That's `/opt/fluxer-voice` when rexctl runs as root, and `~/fluxer-voice` for any other account. Pass `--dir` to use another folder.
+
+The token is a command line argument, which other accounts on the machine can see while the command runs. rexctl also reads it from `FLUXER_VOICE_JOIN_TOKEN`, or from standard input with `--token-stdin`.
+
+### Join tokens and trust
+
+A voice server handles the audio and video of every call placed on it, and whoever runs it can record those calls. A join token lets one machine add one server. Give it only to a machine you trust. The token gives no other access to your instance.
+
+```sh
+rexctl voice token list
+rexctl voice token revoke <id>
+```
+
+A token can set the region, the server ID, the hostname, a soft limit and the restrictions of the new server. The machine that joins can't change those.
+
+## Hostnames and certificates
+
+With no hostname, the endpoint uses the machine's public IPv4 address, such as `wss://203.0.113.7/livekit-fra-server-1`. Caddy gets a short-lived Let's Encrypt certificate for that address. The certificate lasts about 6 days, and Caddy renews it before it expires. This needs ports 80 and 443 open to the internet and no DNS record.
+
+To use a hostname, add an `A` record that points at the machine first.
+
+```
+voice-fra.chat.example.com.  A  203.0.113.7
+```
+
+Then pass it when you join.
+
+```sh
+rexctl voice join chat.example.com fvj_... --hostname voice-fra.chat.example.com
+```
+
+When `voice-` followed by the region and your domain already points at the machine, rexctl uses it without being asked. When the hostname doesn't point at the machine yet, rexctl prints the record and waits up to 10 minutes. After that it uses the IP address and prints the command to switch later. With `--yes`, or without a terminal, it uses the IP address straight away.
+
+A token made with `--hostname` works only with that hostname. rexctl stops when you pass another one. It waits up to 10 minutes for the name to point at the machine, also with `--yes`, and stops before it starts anything when the name still doesn't. Add the record, then run the same command again.
+
+```sh
+rexctl voice hostname fra-server-1 voice-fra.chat.example.com
+```
+
+On Cloudflare, set this record to **DNS only**. `rexctl voice join` checks that the name points at the machine before the edge asks Let's Encrypt for a certificate, and a proxied name points at Cloudflare. Remove any `AAAA` record that points somewhere else, because Let's Encrypt checks IPv6 first.
+
+A server from `rexctl voice add` uses your instance's domain, which can stay proxied. Only signalling goes through Cloudflare. Audio and video go straight to the machine's IP address, which LiveKit gives to clients.
+
+Voice servers serve IPv4 only. A machine with only an IPv6 address can't run one.
+
+## Ports and firewalls
+
+Each server needs these ports.
+
+| Port | Use |
+| --- | --- |
+| TCP port of the server, 7881 for the first | Media over TCP, for networks that block UDP |
+| UDP port of the server, 7882 for the first | Media |
+| TCP 80 and 443, on a voice machine | The edge, for signalling and certificates |
+
+rexctl opens them in ufw or firewalld when one of them is on. Your provider's firewall, such as a Hetzner Cloud Firewall or an AWS security group, is outside the machine, and you need to open the same ports there yourself. Docker publishes ports past ufw. An open port in ufw doesn't prove that the port is open from the internet.
+
+A provider firewall that follows connections, such as a Hetzner Cloud Firewall, can let call audio over UDP through with the UDP port closed. It lets replies in once the server has sent packets to a client. TCP still fails. Open both ports.
+
+After you change a firewall, run `rexctl voice test <id>` on the Fluxer machine for a server on another machine. It connects from outside that machine and reports UDP and TCP on their own. A server from `rexctl voice add` runs on the Fluxer machine, and its test can't see your provider's firewall. Check that firewall by hand, or join a call from another network.
+
+Behind a router or another NAT, forward each port to the same port number on the machine. LiveKit tells clients the port it listens on, and a different outside port doesn't work.
+
+## Networks a voice server can't serve
+
+- **Shared address NAT (CGNAT, 100.64.0.0/10).** A machine with an address from 100.64.0.0/10 on its main network usually can't take incoming calls, and rexctl stops. Some providers use that range for private networks behind 1:1 NAT. When the machine has a public IPv4 address of its own, pass it with `--ip`. CGNAT behind a home router doesn't show on the machine. Run `rexctl voice test <id>` on the Fluxer machine to find it.
+- **IPv6 only.** Voice servers need a public IPv4 address.
+- **Networks that allow only port 443.** Some office and school networks block everything but HTTPS. Calls from there need TURN over TLS on port 443, which rexctl doesn't set up. See LiveKit's guide to [TURN](https://docs.livekit.io/transport/self-hosting/deployment/#improving-connectivity-with-turn).
+
+## Machines with something else on ports 80 and 443
+
+When another rexctl Fluxer instance holds ports 80 and 443 on the voice machine, the server uses that instance's domain and edge, such as `wss://other.example.com/livekit-fra-server-1`. You can't pass `--hostname` then.
+
+The server's files go in the voice folder, and the Fluxer instance stays the default folder. `rexctl voice status`, `rexctl voice test` and `rexctl voice remove` find the server by its ID. The server uses that instance's domain, and `rexctl voice hostname` doesn't apply to it. `rexctl upgrade` on the Fluxer instance upgrades it too. Other commands for it need `--dir` with the voice folder.
+
+When nginx or another program holds them, rexctl stops. Pass `--no-edge` and the public address of your own proxy.
+
+```sh
+rexctl voice join chat.example.com fvj_... --no-edge --endpoint wss://voice.example.com/livekit-fra-server-1
+```
+
+rexctl publishes the server's HTTP port on `127.0.0.1`, from 7880 upwards, or at `--http-port`. Point your proxy at it with WebSocket upgrades and a read timeout of at least 120 seconds.
+
+nginx needs a location block like this one.
+
+```nginx
+location /livekit-fra-server-1/ {
+    proxy_pass http://127.0.0.1:7880/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 120s;
+}
+```
+
+Caddy needs a route like this one.
+
+```caddy
+voice.example.com {
+	handle_path /livekit-fra-server-1/* {
+		reverse_proxy 127.0.0.1:7880
+	}
+}
+```
+
+## Regions and placement
+
+On another machine, the server goes to the region in the token. Without one, it goes to the existing region nearest to the machine, when your instance has a GeoIP database, and to the default region otherwise. The summary shows the region and the distance. Pass `--region` to pick another existing region. Fluxer never creates a region by itself, because GeoIP data for cloud addresses is often wrong. Create a region with a token for it, or with `rexctl voice add` on the Fluxer machine. Give the region's location, because placement sends people to the nearest region.
+
+```sh
+rexctl voice token --new-region fra --region-name Frankfurt --lat 50.1 --long 8.7
+rexctl voice add --new-region fra --region-name Frankfurt --lat 50.1 --long 8.7
+```
+
+A token without `--lat` and `--long` puts the new region where your instance's GeoIP database places the voice machine, or at the place you pass to `rexctl voice join` with `--lat` and `--long`. Without either, the region gets latitude 0 and longitude 0. Fix that in the admin panel.
+
+A channel with a region set in its settings uses that region. Other calls go to the nearest region of the person who starts them. Within a region, Fluxer takes turns between the servers and prefers servers below their soft limit. Restrictions on a server or region in the admin panel apply to new calls on it.
+
+Every API node checks every active server every 15 seconds. A server that fails two checks in a row gets no new calls, and calls that reconnect move to another server. When every server in a region is down or draining, new calls for that region go to a server in another region. When every server is down, Fluxer places calls as before.
+
+Fluxer lists the address of every voice server in its discovery document, and the web app allows browsers to connect to them. Anyone can read that list, as anyone who joins a call already sees the address of its server.
+
+The web app reads that list about once a minute. `rexctl voice join` and `rexctl voice hostname` wait until browsers can connect to a new address. A page opened before then can't join calls on that server until it's reloaded.
+
+## Run without the bundled voice server
+
+Calls can go only to the servers you add, with no LiveKit next to Fluxer. Install that way from the start, or turn the bundled server off later.
+
+```sh
+rexctl install --no-bundled-voice
+rexctl config set voice.bundled false
+```
+
+Fluxer then:
+
+- Stops and removes the bundled LiveKit container, and no longer needs ports 7881 and 7882. `rexctl config set` offers to close them in the firewall.
+- Creates the default region with no server in it, or removes `default-server-1` from it when that server is the bundled one. Servers you added stay as they are.
+- Places every call on the servers you add with `rexctl voice add`, `rexctl voice join` or the admin panel. Until you add one, calls can't start.
+
+`rexctl config set voice.bundled true` starts the bundled server again, opens its ports and adds `default-server-1` back to the default region.
+
+With Docker Compose and no rexctl, add `external-voice.compose.yml` to `COMPOSE_FILE` and set `FLUXER_LIVEKIT_BUNDLED=false` in `.env`. To turn it back on, take both out again and add `default-server-1` in the admin panel, with the key and secret from `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`.
+
+## Check a server
+
+```sh
+rexctl voice list
+rexctl voice status
+rexctl voice test
+rexctl doctor
+```
+
+`rexctl voice list` on the Fluxer machine shows every server of your instance with its health, and marks the ones that run on that machine. On a voice machine it shows the servers there.
+
+`rexctl voice test` joins a throwaway room and reports whether UDP and TCP connect. A test on the machine that runs the server can't see your provider's firewall or your router. On the Fluxer machine, `rexctl voice test <id>` tests a server on another machine from outside its network, with a token your instance signs. When the server rejects that token, your instance has another secret for it than the server has.
+
+## Upgrade
+
+`rexctl upgrade` on the Fluxer machine upgrades Fluxer first. Then it moves each voice server on the machine to the new LiveKit release, one at a time. It marks the server as draining. New calls then go elsewhere, and calls on it keep going. Docker then replaces the container, and LiveKit waits until those calls end, for up to 15 minutes. The server then takes new calls again, also when the upgrade fails or you stop it. A server you turned off or marked as draining in the admin panel stays that way.
+
+On a voice machine, `rexctl upgrade` updates rexctl to the release your instance runs, then upgrades the servers the same way. It never goes past your instance's release, and it refuses `--prefetch` and `--to`. It also updates the edge.
+
+rexctl upgrades a server when the release has a new LiveKit image, and also when the release changes the server's files or settings. A server added with `--image` keeps that image.
+
+A voice machine doesn't upgrade with the Fluxer machine. Run `rexctl upgrade` there after you upgrade Fluxer, or run `rexctl auto-upgrade on` on it to upgrade it every day.
+
+## Stop, restart and back up
+
+`rexctl stop` on the Fluxer machine stops the voice servers there too, and calls on them end. `rexctl start` starts them again. `rexctl restart` restarts Fluxer and leaves running voice servers alone.
+
+`rexctl backup` keeps the voice servers of the instance, with their keys. `rexctl restore` writes their files again, starts them and opens their ports in the firewall. A server added after the backup is removed by the restore.
+
+Changing `network.ipv6` with `rexctl config set` rebuilds Fluxer's network. rexctl stops the voice servers on the machine first and starts them again afterwards, and calls on them end.
+
+On a voice machine, `rexctl stop`, `rexctl restart`, `rexctl logs` and `rexctl backup` don't apply. Docker runs each server as `fluxer-voice-<id>-livekit-1`, and the edge as `fluxer-voice-edge-edge-1`.
+
+```sh
+docker logs fluxer-voice-fra-server-1-livekit-1
+docker logs fluxer-voice-edge-edge-1
+docker restart fluxer-voice-fra-server-1-livekit-1
+```
+
+A voice machine has nothing to back up. When you lose one, remove the server in the admin panel and join a new machine with a new token.
+
+## Remove a server
+
+Run it on the machine that runs the server. For a server on a machine you no longer have, delete it in the admin panel.
+
+```sh
+rexctl voice remove fra-server-1
+```
+
+rexctl marks the server as draining, waits up to 15 minutes for its calls to end, removes it from your instance, and deletes its container, files, route and the ports it opened. Pass `--now` to skip the wait.
+
+On a voice machine, `rexctl voice remove --all` or `rexctl uninstall` removes every server and the edge. `rexctl uninstall` on the Fluxer machine removes its voice servers too.
+
+## Troubleshooting
+
+`rexctl doctor` checks voice servers with these checks.
+
+The secret of a server is `FLUXER_VOICE_API_SECRET` in `voice/<id>/.env` in the rexctl folder. On a voice machine that's the voice folder.
+
+| Check | What's wrong | What to do |
+| --- | --- | --- |
+| `voice-servers` | A container isn't running, or the endpoint doesn't answer through the edge. | Run `rexctl voice status <id>`. |
+| `voice-endpoints` | A server from `rexctl voice add` still uses an old domain or port of your instance. | Run `rexctl doctor --fix`. |
+| `voice-ports` | A port isn't published, another container publishes it, or the firewall on the machine closes it. | Open the port, and check your provider's firewall. |
+| `voice-node-ip` | The server gives clients another address than the machine's public address. | Set the right address. The steps follow this table. |
+| `voice-tls` | The certificate of an endpoint is missing or expires within 2 days. | Open ports 80 and 443. `docker logs fluxer-voice-edge-edge-1` shows the error from Let's Encrypt. |
+| `voice-registration` | The instance deleted the server, has another secret for it, or rejects the time on its requests. | Run `rexctl voice remove <id>` and join with a new token, put the secret back in the admin panel, or fix the clock. |
+| `voice-webhook` | The instance doesn't accept a signed test webhook. A rejection means it has another secret for the server. | Put the server's secret back in the admin panel, or check that the webhook address answers. |
+| `voice-keys` | Two servers share an API key. | Give each server its own key. Remove the newer server and add it again. |
+| `voice-health` | The API can't connect to a server, or a server has been draining for more than an hour. | Run `rexctl voice status` on the machine that runs it. For a server stuck draining, clear Draining in the admin panel. |
+
+When `voice-node-ip` warns, set the address the server gives clients. On the Fluxer machine, run `rexctl config set voice.public_ip <address>`. A server added with `--ip` keeps its address. Remove it and add it again with the right `--ip`. On a voice machine, run `rexctl voice remove <id>`, then join again with a new token and the right `--ip`.
+
+When `voice-registration` says the clock on a voice machine is off, turn on time sync there with `sudo timedatectl set-ntp true`. Fluxer allows a minute of difference.
+
+People on the same network as a voice machine at home may fail to connect while everyone else can. That happens when the router can't send traffic for its own public address back inside. The router needs NAT loopback, also called hairpin NAT, for those clients. A local DNS record isn't enough, because LiveKit gives clients the server's public address for audio and video. Turn on NAT loopback in the router, or run the server elsewhere.
+
+When the instance is behind a firewall or bot protection, such as Cloudflare's, let these requests through from your voice machines:
+
+- `/.well-known/fluxer` and `/` on your domain.
+- `voice/join`, `voice/join/preview`, `voice/node` and `webhooks/livekit` under your instance's public API address. With the API on your domain, these are `/api/voice/` and `/api/webhooks/livekit`. With the API on a host of its own, such as `api.example.com`, they have no `/api` in front.
+
+rexctl and LiveKit send them without a browser, and bot protection can block them. A voice machine that can't send them can't join, can't drain its servers for an upgrade and can't remove them cleanly. Webhooks tell Fluxer when people leave calls.
+
+## Without rexctl
+
+To run a voice server with Docker Compose by hand, see [Run a voice server with Docker Compose](/operator/voice-compose/). A join token also adds a voice server to an instance on [Kubernetes](/operator/kubernetes/), because joining talks only to the instance's public API.

@@ -96,7 +96,7 @@ You can run more than one instance on the same machine. Each one needs three thi
 rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bind 127.0.0.1:8081
 ```
 
-rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports.
+rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports. To run more voice servers for one instance, on this machine or on others, see [Add voice servers](/operator/voice-servers/).
 
 rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default.
 
@@ -182,7 +182,7 @@ To change the Compose setup, such as labels, images, ports or volumes, run `rexc
 rexctl config edit
 ```
 
-To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. To serve a whole extra site, such as another domain on the same machine, put its `.caddy` file in `caddy.d/sites`. Fluxer loads those files next to its own site, and `rexctl upgrade` moves a file of whole sites from `caddy.d` to `caddy.d/sites` for you. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. `rexctl voice add` writes a `voice-` file there for each voice server it adds, and `rexctl voice remove` deletes it again. To serve a whole extra site, such as another domain on the same machine, put its `.caddy` file in `caddy.d/sites`. Fluxer loads those files next to its own site, and `rexctl upgrade` moves a file of whole sites from `caddy.d` to `caddy.d/sites` for you. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
 
 ## When something is wrong
 

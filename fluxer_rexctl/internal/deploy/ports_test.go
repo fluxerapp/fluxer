@@ -100,3 +100,32 @@ func samePorts(a, b []host.Port) bool {
 	}
 	return true
 }
+
+func TestPortDiffTurningBundledVoiceOffAndOn(t *testing.T) {
+	on := map[string]string{"FLUXER_LIVEKIT_TCP_PORT": "7883"}
+	off := map[string]string{"FLUXER_LIVEKIT_TCP_PORT": "7883", "FLUXER_LIVEKIT_BUNDLED": "false"}
+	voicePorts := []host.Port{{Number: 7883, Proto: "tcp"}, {Number: 7882, Proto: "udp"}}
+	added, removed := portDiff(on, off)
+	if len(added) != 0 || !samePorts(removed, voicePorts) {
+		t.Errorf("turning bundled voice off: added %v removed %v", added, removed)
+	}
+	added, removed = portDiff(off, on)
+	if !samePorts(added, voicePorts) || len(removed) != 0 {
+		t.Errorf("turning bundled voice on: added %v removed %v", added, removed)
+	}
+	if added, removed := portDiff(off, map[string]string{"FLUXER_LIVEKIT_TCP_PORT": "7885", "FLUXER_LIVEKIT_BUNDLED": "false"}); len(added)+len(removed) != 0 {
+		t.Errorf("moving an unused voice port: added %v removed %v", added, removed)
+	}
+}
+
+func TestEffectivePortsWithoutBundledVoice(t *testing.T) {
+	env := map[string]string{"FLUXER_LIVEKIT_TCP_PORT": "443", "FLUXER_LIVEKIT_BUNDLED": "false"}
+	if err := checkPortsDistinct(effectivePorts(env, settings.EdgeBundled)); err != nil {
+		t.Errorf("an unused voice port can't clash, got %v", err)
+	}
+	for _, p := range effectivePorts(env, settings.EdgeBundled) {
+		if p.subject == "Voice" {
+			t.Errorf("effective ports list %v without the bundled LiveKit", p)
+		}
+	}
+}

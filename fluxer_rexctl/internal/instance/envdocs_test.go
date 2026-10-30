@@ -90,6 +90,9 @@ func TestDocsEnvNames(t *testing.T) {
 		}
 		for _, m := range docsDottedName.FindAllStringSubmatch(data, -1) {
 			first, _, _ := strings.Cut(m[1], ".")
+			if slices.ContainsFunc([]string{".yml", ".yaml", ".env", ".example"}, func(ext string) bool { return strings.HasSuffix(m[1], ext) }) {
+				continue
+			}
 			if prefixes[first] && strings.HasPrefix(rel, docsContent+"/operator/") && !slices.Contains(helmPages, rel) {
 				keys[m[1]] = true
 			}

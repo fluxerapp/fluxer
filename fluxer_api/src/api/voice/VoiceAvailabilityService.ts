@@ -3,6 +3,7 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import type {VoiceRegionAvailability, VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {preferServersUnderSoftLimit} from '@app/api/voice/VoiceRegionSelection';
+import type {VoiceServerHealthSource} from '@app/api/voice/VoiceServerHealth';
 import type {VoiceServerLoadSource} from '@app/api/voice/VoiceServerLoad';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -58,7 +59,24 @@ export class VoiceAvailabilityService {
 	constructor(
 		private topology: VoiceTopology,
 		private loadSource: VoiceServerLoadSource | null = null,
+		private healthSource: VoiceServerHealthSource | null = null,
 	) {}
+
+	isServerDown(server: VoiceServerRecord): boolean {
+		return this.healthSource?.get(server).status === 'down';
+	}
+
+	isServerPlaceable(server: VoiceServerRecord): boolean {
+		return !server.draining && !this.isServerDown(server);
+	}
+
+	preferPlaceableServers(servers: Array<VoiceServerRecord>): Array<VoiceServerRecord> {
+		const open = servers.filter((server) => !server.draining);
+		const up = open.filter((server) => !this.isServerDown(server));
+		if (up.length > 0) return up;
+		if (open.length > 0) return open;
+		return servers;
+	}
 
 	getServerConnectionCounts(): ReadonlyMap<string, number> {
 		return this.loadSource?.getConnectionCounts() ?? EMPTY_CONNECTION_COUNTS;
@@ -113,10 +131,42 @@ export class VoiceAvailabilityService {
 		if (accessibleServers.length === 0) {
 			return null;
 		}
-		const candidateServers = preferServersUnderSoftLimit(accessibleServers, this.getServerConnectionCounts());
+		const candidateServers = preferServersUnderSoftLimit(
+			this.preferPlaceableServers(accessibleServers),
+			this.getServerConnectionCounts(),
+		);
 		const index = this.rotationIndex.get(regionId) ?? 0;
 		const server = candidateServers[index % candidateServers.length];
 		this.rotationIndex.set(regionId, (index + 1) % candidateServers.length);
 		return server;
+	}
+
+	selectServerOrFallback(
+		regionId: string,
+		context: VoiceAccessContext,
+		accessibleRegions: Array<VoiceRegionAvailability>,
+	): {regionId: string; server: VoiceServerRecord} | null {
+		const initialServer = this.selectServer(regionId, context);
+		if (initialServer && this.isServerPlaceable(initialServer)) {
+			return {regionId, server: initialServer};
+		}
+		let fallback: {regionId: string; server: VoiceServerRecord} | null = null;
+		for (const region of accessibleRegions) {
+			if (region.id === regionId) {
+				continue;
+			}
+			const server = this.selectServer(region.id, context);
+			if (!server) {
+				continue;
+			}
+			if (this.isServerPlaceable(server)) {
+				return {regionId: region.id, server};
+			}
+			fallback ??= {regionId: region.id, server};
+		}
+		if (initialServer) {
+			return {regionId, server: initialServer};
+		}
+		return fallback;
 	}
 }

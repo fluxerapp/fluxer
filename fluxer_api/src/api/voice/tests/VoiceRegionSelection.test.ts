@@ -65,6 +65,10 @@ function createVoiceServer({
 		isActive: true,
 		softConnectionLimit,
 		notes: null,
+		internalEndpoint: null,
+		pinnedHostname: null,
+		pinnedSoftLimit: false,
+		draining: false,
 		restrictions: {
 			vipOnly: false,
 			requiredGuildFeatures: new Set(),

@@ -23,12 +23,25 @@ function areServerCoordinatesPaired(
 
 const SoftConnectionLimitType = z.number().int().min(1).max(2147483647).nullable();
 
+export const VoiceInternalEndpointType = z
+	.url({protocol: /^https?$/})
+	.max(512)
+	.describe('URL the API uses for the control API and health checks of this server, such as http://voice-fra:7880');
+
 const VoiceServerNotesType = z
 	.string()
 	.trim()
 	.max(2000)
 	.nullable()
 	.transform((value) => value || null);
+
+export const VoiceServerHealthResponse = z.object({
+	status: z.enum(['up', 'down', 'unknown']).describe('up, down, or unknown before the first check'),
+	checked_at: z.string().nullable().describe('ISO 8601 timestamp of the last check, or null before the first'),
+	error: z.string().nullable().describe('Status code or short transport error of the last failed check'),
+});
+
+export type VoiceServerHealthResponse = z.infer<typeof VoiceServerHealthResponse>;
 
 export const VoiceRegionAdminResponse = z.object({
 	id: z.string().describe('Unique identifier for the voice region'),
@@ -62,6 +75,13 @@ export const VoiceServerAdminResponse = z.object({
 	required_guild_features: z.array(z.string()).max(100).describe('Guild features required to use this server'),
 	allowed_guild_ids: z.array(SnowflakeStringType).max(1000).describe('Guild IDs explicitly allowed to use this server'),
 	allowed_user_ids: z.array(SnowflakeStringType).max(1000).describe('User IDs explicitly allowed to use this server'),
+	internal_endpoint: z
+		.string()
+		.nullable()
+		.describe('URL the API uses for the control API and health checks, or null to use the endpoint'),
+	draining: z.boolean().describe('Whether placement sends new calls elsewhere while calls on this server finish'),
+	health: VoiceServerHealthResponse.describe('Health of the server as this API node last saw it'),
+	duplicate_api_key: z.boolean().describe('Whether another server uses the same API key'),
 	created_at: z.string().nullable().describe('ISO 8601 timestamp when the server was created'),
 	updated_at: z.string().nullable().describe('ISO 8601 timestamp when the server was last updated'),
 });
@@ -165,6 +185,12 @@ export const CreateVoiceServerRequestBody = z
 			.optional()
 			.default([])
 			.describe('User IDs explicitly allowed to use this server'),
+		internal_endpoint: VoiceInternalEndpointType.nullable().optional().default(null),
+		draining: z
+			.boolean()
+			.optional()
+			.default(false)
+			.describe('Whether placement sends new calls elsewhere while calls on this server finish'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
 		error: 'Latitude and longitude must both be provided or both be omitted',
@@ -205,6 +231,11 @@ export const UpdateVoiceServerRequestBody = z
 			.max(1000)
 			.optional()
 			.describe('User IDs explicitly allowed to use this server'),
+		internal_endpoint: VoiceInternalEndpointType.nullable().optional(),
+		draining: z
+			.boolean()
+			.optional()
+			.describe('Whether placement sends new calls elsewhere while calls on this server finish'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
 		error: 'Latitude and longitude must both be provided or both be omitted',
@@ -337,3 +368,115 @@ export const GetVoiceRegionQuery = z.object({
 });
 
 export type GetVoiceRegionQuery = z.infer<typeof GetVoiceRegionQuery>;
+
+const VoiceIdType = z
+	.string()
+	.min(1)
+	.max(64)
+	.regex(/^[a-z0-9][a-z0-9-]*$/, {error: 'Use lowercase letters, digits and dashes'});
+
+export const VoiceJoinTokenStatus = z.enum(['pending', 'used', 'expired', 'revoked']);
+
+export const CreateVoiceJoinTokenRequest = z.object({
+	region_id: VoiceIdType.nullable()
+		.optional()
+		.default(null)
+		.describe('Region for the new server, or null to let the API pick the nearest existing region'),
+	region_name: createStringType(1, 100)
+		.nullable()
+		.optional()
+		.default(null)
+		.describe('Name for a new region with the id in region_id, created when the server joins'),
+	region_emoji: createStringType(1, 64)
+		.nullable()
+		.optional()
+		.default(null)
+		.describe('Emoji for the new region in region_name'),
+	region_latitude: z
+		.number()
+		.min(-90)
+		.max(90)
+		.nullable()
+		.optional()
+		.default(null)
+		.describe('Latitude of the new region in region_name. Placement sends people to the nearest region'),
+	region_longitude: z
+		.number()
+		.min(-180)
+		.max(180)
+		.nullable()
+		.optional()
+		.default(null)
+		.describe('Longitude of the new region in region_name'),
+	server_id: VoiceIdType.nullable().optional().default(null).describe('Id for the new server'),
+	hostname: z
+		.string()
+		.trim()
+		.max(253)
+		.regex(/^[A-Za-z0-9.-]+$/)
+		.nullable()
+		.optional()
+		.default(null)
+		.describe('Hostname the server must use for its endpoint'),
+	internal_endpoint: VoiceInternalEndpointType.nullable().optional().default(null),
+	soft_connection_limit: SoftConnectionLimitType.optional().default(null),
+	notes: VoiceServerNotesType.optional().default(null),
+	vip_only: z.boolean().optional().default(false),
+	required_guild_features: z.array(createStringType(1, 64)).max(100).optional().default([]),
+	allowed_guild_ids: z.array(SnowflakeType).max(1000).optional().default([]),
+	allowed_user_ids: z.array(SnowflakeType).max(1000).optional().default([]),
+	expires_in_seconds: z
+		.number()
+		.int()
+		.min(60)
+		.max(86400)
+		.optional()
+		.default(3600)
+		.describe('Seconds until the token stops working, from 60 to 86400'),
+});
+
+export type CreateVoiceJoinTokenRequest = z.infer<typeof CreateVoiceJoinTokenRequest>;
+
+export const CreateVoiceJoinTokenResponse = z.object({
+	token_id: SnowflakeStringType.describe('ID of the token'),
+	token: z.string().describe('The token. It appears in this response only'),
+	expires_at: z.string().describe('ISO 8601 timestamp when the token stops working'),
+	command: z.string().describe('Command to run on the voice machine'),
+});
+
+export type CreateVoiceJoinTokenResponse = z.infer<typeof CreateVoiceJoinTokenResponse>;
+
+export const VoiceJoinTokenAdminResponse = z.object({
+	token_id: SnowflakeStringType.describe('ID of the token'),
+	status: VoiceJoinTokenStatus.describe('pending, used, expired or revoked'),
+	created_at: z.string().describe('ISO 8601 timestamp when the token was created'),
+	expires_at: z.string().describe('ISO 8601 timestamp when the token stops working'),
+	used_at: z.string().nullable().describe('ISO 8601 timestamp when a server joined with it'),
+	used_server_id: z.string().nullable().describe('ID of the server that joined with it'),
+	revoked_at: z.string().nullable().describe('ISO 8601 timestamp when it was revoked'),
+	region_id: z.string().nullable().describe('Region preset, or null'),
+	region_name: z.string().nullable().describe('Name of the new region it creates, or null'),
+	server_id: z.string().nullable().describe('Server id preset, or null'),
+	hostname: z.string().nullable().describe('Hostname preset, or null'),
+	notes: z.string().nullable().describe('Notes for the new server, or null'),
+});
+
+export type VoiceJoinTokenAdminResponse = z.infer<typeof VoiceJoinTokenAdminResponse>;
+
+export const ListVoiceJoinTokensResponse = z.object({
+	tokens: z.array(VoiceJoinTokenAdminResponse).describe('Join tokens, newest first'),
+});
+
+export type ListVoiceJoinTokensResponse = z.infer<typeof ListVoiceJoinTokensResponse>;
+
+export const VoiceJoinTokenIdParam = z.object({
+	token_id: SnowflakeType.describe('ID of the join token'),
+});
+
+export const CreateVoiceServerTestTokenResponse = z.object({
+	token: z.string().describe('LiveKit token for a hidden audio only participant, valid for 60 seconds'),
+	endpoint: z.string().describe('Endpoint of the server'),
+	room: z.string().describe('Name of the throwaway test room'),
+});
+
+export type CreateVoiceServerTestTokenResponse = z.infer<typeof CreateVoiceServerTestTokenResponse>;

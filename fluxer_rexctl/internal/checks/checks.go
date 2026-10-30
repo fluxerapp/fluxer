@@ -27,6 +27,7 @@ type Phase int
 const (
 	Preinstall Phase = 1 << iota
 	Installed
+	Voice
 )
 
 type Result struct {
@@ -109,6 +110,15 @@ var order = []string{
 	"postgres-password",
 	"postgres-scram",
 	"livekit-ip",
+	"voice-servers",
+	"voice-endpoints",
+	"voice-ports",
+	"voice-node-ip",
+	"voice-tls",
+	"voice-registration",
+	"voice-webhook",
+	"voice-keys",
+	"voice-health",
 	"client-ip",
 	"sso-provider",
 	"backup-age",
@@ -173,7 +183,7 @@ func RunOne(ctx context.Context, env *Env, c Check) Result {
 	env.prepare(ctx)
 	r := c.Run(ctx, env)
 	r.ID = c.ID
-	if env.phase&Installed == 0 {
+	if env.phase&(Installed|Voice) == 0 {
 		r.Fix = strings.Replace(r.Fix, "then run rexctl doctor.", "then run rexctl install.", 1)
 	}
 	r.Fixable = r.Fixable && c.Fix != nil && (r.Status == Warn || r.Status == Fail)

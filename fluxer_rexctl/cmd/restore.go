@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
 	"slices"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
 
 const restoreReadyTimeout = 10 * time.Minute
@@ -184,12 +186,23 @@ func stopOnOldEngine(ctx context.Context, app *App, inst *instance.Instance, old
 
 func restoreInto(ctx context.Context, app *App, e *engine.Engine, path, dir string, m *backup.Manifest, existing *instance.Instance, old instance.EngineRef) error {
 	var inst *instance.Instance
+	var before []instance.VoiceServer
+	if existing != nil && existing.State != nil {
+		before = slices.Clone(existing.State.Voice)
+	}
 	err := app.UI.Step(ctx, "Checking the backup", func(ctx context.Context, s *ui.Step) error {
 		var err error
 		inst, err = backup.Restore(ctx, path, dir, e, backup.RestoreOptions{
 			Progress: func(stage string) {
 				if t := restoreStageTitle(stage); t != "" {
 					s.Title(t)
+				}
+				if stage == backup.StageClearing {
+					for i := range before {
+						if err := removeVoiceServerProject(ctx, e, &before[i]); err != nil {
+							app.UI.Detail("stopping voice server %s: %v", before[i].ID, err)
+						}
+					}
 				}
 			},
 			OnEvent: func(ev engine.Event) {
@@ -229,10 +242,65 @@ func restoreInto(ctx context.Context, app *App, e *engine.Engine, path, dir stri
 		}
 		return ui.Wrap(err, "Fluxer didn't start after the restore.", "Run rexctl doctor to find the problem.")
 	}
+	restoreVoiceServers(ctx, app, e, p, inst, before)
 	if origin := inst.Origin(); origin != "" {
 		app.UI.Highlight(origin)
 	}
 	return nil
+}
+
+func droppedVoiceServers(before, after []instance.VoiceServer) []instance.VoiceServer {
+	var out []instance.VoiceServer
+	for _, b := range before {
+		if !slices.ContainsFunc(after, func(a instance.VoiceServer) bool { return a.ID == b.ID && a.Project == b.Project }) {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
+func restoreVoiceServers(ctx context.Context, app *App, e *engine.Engine, p *engine.Project, inst *instance.Instance, before []instance.VoiceServer) {
+	for _, gone := range droppedVoiceServers(before, inst.State.Voice) {
+		closeVoiceFirewall(ctx, app, gone.Opened)
+		_ = os.RemoveAll(voice.ServerDir(inst.Dir, gone.ID))
+		app.UI.Info("Removed the voice server %s, which isn't in the backup.", gone.ID)
+	}
+	if len(inst.State.Voice) == 0 {
+		return
+	}
+	err := app.UI.Step(ctx, "Starting the voice servers", func(ctx context.Context, s *ui.Step) error {
+		started := 0
+		for i := range inst.State.Voice {
+			srv := &inst.State.Voice[i]
+			err := writeVoiceServer(inst, srv)
+			if err == nil {
+				err = startVoiceServer(ctx, app, e, inst, srv, s)
+			}
+			if err != nil {
+				app.UI.Warn(fmt.Sprintf("Voice server %s didn't start (%v).", srv.ID, err), "Run rexctl voice status "+srv.ID+" to see why.")
+				continue
+			}
+			started++
+			if len(srv.Opened) > 0 {
+				for _, o := range openVoiceFirewall(ctx, app, voicePortStrings(srv), false) {
+					if !slices.Contains(srv.Opened, o) {
+						srv.Opened = append(srv.Opened, o)
+					}
+				}
+			}
+		}
+		if err := reloadCaddy(ctx, p, "edge", "/etc/caddy/Caddyfile"); err != nil {
+			app.UI.Detail("reloading the edge: %v", err)
+		}
+		if err := saveVoiceState(inst); err != nil {
+			return err
+		}
+		s.Done("Started %s.", plural(started, "voice server", "voice servers"))
+		return nil
+	})
+	if err != nil {
+		app.UI.Warn(fmt.Sprintf("The voice servers didn't start (%v).", err), "Run rexctl voice status to see why.")
+	}
 }
 
 func restoreBootUnit(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, p *engine.Project, existing *instance.Instance, old instance.EngineRef) {
@@ -307,13 +375,19 @@ func restoreEngine(ctx context.Context, app *App, existing *instance.Instance, d
 }
 
 func installDockerForRestore(ctx context.Context, app *App, dir string) (*engine.Engine, error) {
-	manual := ui.Refused("Docker isn't installed or isn't running.", engine.Docker.InstallHint()+", then run rexctl restore again.")
+	return installDockerHere(ctx, app, dir, "run rexctl restore again", func() (bool, error) {
+		return app.UI.Confirm("Install Docker?", true)
+	})
+}
+
+func installDockerHere(ctx context.Context, app *App, dir, again string, confirm func() (bool, error)) (*engine.Engine, error) {
+	manual := ui.Refused("Docker isn't installed or isn't running.", engine.Docker.InstallHint()+", then "+again+".")
 	info, err := host.Detect(ctx, dir)
 	if err != nil || !host.CanInstallDocker(info) {
 		return nil, manual
 	}
 	app.UI.Warn("Docker isn't installed.", "")
-	ok, err := app.UI.Confirm("Install Docker?", true)
+	ok, err := confirm()
 	if err != nil {
 		return nil, err
 	}
@@ -328,14 +402,14 @@ func installDockerForRestore(ctx context.Context, app *App, dir string) (*engine
 		return nil
 	})
 	if errors.Is(err, host.ErrRelogin) {
-		return nil, ui.Refused("Docker is installed, and your account can use it after you sign in again.", "Sign out and back in, then run rexctl restore again.")
+		return nil, ui.Refused("Docker is installed, and your account can use it after you sign in again.", "Sign out and back in, then "+again+".")
 	}
 	if err != nil {
-		return nil, ui.Wrap(err, "Couldn't install Docker.", "Install Docker, then run rexctl restore again.")
+		return nil, ui.Wrap(err, "Couldn't install Docker.", "Install Docker, then "+again+".")
 	}
 	e, err := engine.Connect(ctx, engine.ConnectOptions{Prefer: engine.Docker})
 	if err != nil || e.Kind != engine.Docker {
-		return nil, ui.Wrap(err, "Docker was installed but isn't answering.", "Start Docker, then run rexctl restore again.")
+		return nil, ui.Wrap(err, "Docker was installed but isn't answering.", "Start Docker, then "+again+".")
 	}
 	return e, nil
 }

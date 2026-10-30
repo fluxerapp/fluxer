@@ -633,6 +633,9 @@
 				"enabled": {
 					"type": "boolean"
 				},
+				"joined": {
+					"type": "boolean"
+				},
 				"image": {
 					"$ref": "#/definitions/thirdPartyImage"
 				},

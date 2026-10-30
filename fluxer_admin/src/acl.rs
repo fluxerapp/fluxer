@@ -108,6 +108,9 @@ pub const USER_UPDATE_MFA: &str = "user:update:mfa";
 pub const USER_UPDATE_PROFILE: &str = "user:update:profile";
 pub const USER_UPDATE_TRAITS: &str = "user:update:traits";
 pub const USER_UPDATE_USERNAME: &str = "user:update:username";
+pub const VOICE_JOIN_TOKEN_CREATE: &str = "voice:join_token:create";
+pub const VOICE_JOIN_TOKEN_LIST: &str = "voice:join_token:list";
+pub const VOICE_JOIN_TOKEN_REVOKE: &str = "voice:join_token:revoke";
 pub const VOICE_REGION_CREATE: &str = "voice:region:create";
 pub const VOICE_REGION_DELETE: &str = "voice:region:delete";
 pub const VOICE_REGION_LIST: &str = "voice:region:list";
@@ -225,6 +228,9 @@ pub const ALL_ACLS: &[&str] = &[
     USER_UPDATE_PROFILE,
     USER_UPDATE_TRAITS,
     USER_UPDATE_USERNAME,
+    VOICE_JOIN_TOKEN_CREATE,
+    VOICE_JOIN_TOKEN_LIST,
+    VOICE_JOIN_TOKEN_REVOKE,
     VOICE_REGION_CREATE,
     VOICE_REGION_DELETE,
     VOICE_REGION_LIST,

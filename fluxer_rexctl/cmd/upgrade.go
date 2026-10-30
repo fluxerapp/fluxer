@@ -126,6 +126,12 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	if err != nil || inst == nil {
 		return err
 	}
+	if inst.State.IsVoice() {
+		if f.Prefetch || f.To != "" {
+			return ui.Usage("A voice machine follows the release its instance runs. Run rexctl upgrade without --prefetch or --to.")
+		}
+		return runVoiceMachineUpgrade(ctx, app, inst, f.DryRun)
+	}
 	if err := managed(inst); err != nil {
 		return err
 	}
@@ -173,7 +179,7 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 		app.UI.Info("Fluxer %s is available.", to)
 	}
 	needSelf := release.Compare(rel.Version, app.Version) != 0
-	app.keepLayout = needSelf && rel.StateSchema > 0 && rel.StateSchema < instance.StateSchema
+	app.keepLayout = needSelf && rel.StateSchema > 0 && rel.StateSchema < instance.LayoutSchema
 	if f.DryRun {
 		for _, k := range keptCopies(inst) {
 			warnKeptCopy(app.UI, k.Name, k.Copy, true)
@@ -1464,6 +1470,7 @@ func finishUpgrade(ctx context.Context, app *App, inst *instance.Instance, e *en
 	_, toShort := versionPair(pend.From, pend.To)
 	app.outcome = fmt.Sprintf("Upgraded to Fluxer %s.", toShort)
 	app.UI.OK("Your instance is on Fluxer %s.", toShort)
+	upgradeLocalVoiceServers(ctx, app, inst, e)
 	return nil
 }
 

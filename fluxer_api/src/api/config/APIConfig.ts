@@ -211,6 +211,7 @@ export interface APIConfig {
 		apiSecret?: string;
 		url?: string;
 		internalUrl?: string;
+		bundled: boolean;
 		defaultRegion?: {
 			id: string;
 			name: string;
@@ -219,6 +220,8 @@ export interface APIConfig {
 			longitude: number;
 		};
 		p2pStunUrls?: Array<string>;
+		joinAllowPrivateEndpoints: boolean;
+		healthIntervalMs: number;
 	};
 	stripe: {
 		enabled: boolean;

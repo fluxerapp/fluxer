@@ -8,9 +8,10 @@ use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
-    CreateVoiceRegionResponse, CreateVoiceServerResponse, DeleteVoiceResponse,
-    GetVoiceRegionResponse, ListVoiceRegionsResponse, ListVoiceServersResponse,
-    UpdateVoiceRegionResponse, UpdateVoiceServerResponse,
+    CreateVoiceJoinTokenResponse, CreateVoiceRegionResponse, CreateVoiceServerResponse,
+    DeleteVoiceResponse, GetVoiceRegionResponse, ListVoiceJoinTokensResponse,
+    ListVoiceRegionsResponse, ListVoiceServersResponse, UpdateVoiceRegionResponse,
+    UpdateVoiceServerResponse,
 };
 
 impl AdminApiClient {
@@ -123,6 +124,34 @@ impl AdminApiClient {
                 urlencoding::encode(&server_id)
             ),
             Some(&body),
+            None,
+        )
+        .await
+    }
+
+    pub async fn create_voice_join_token(
+        &self,
+        params: &serde_json::Value,
+    ) -> ApiResult<CreateVoiceJoinTokenResponse> {
+        validate_against::<generated_types::CreateVoiceJoinTokenRequest>(params)?;
+        self.send(Method::POST, "/admin/voice/join-tokens", Some(params), None)
+            .await
+    }
+
+    pub async fn list_voice_join_tokens(&self) -> ApiResult<ListVoiceJoinTokensResponse> {
+        let response = self
+            .generated()
+            .list_admin_voice_join_tokens()
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
+    pub async fn revoke_voice_join_token(&self, token_id: &str) -> ApiResult<DeleteVoiceResponse> {
+        self.send(
+            Method::DELETE,
+            &format!("/admin/voice/join-tokens/{}", urlencoding::encode(token_id)),
+            None::<&serde_json::Value>,
             None,
         )
         .await

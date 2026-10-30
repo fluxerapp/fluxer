@@ -14,11 +14,13 @@ import {assertSetupToken} from '@app/api/instance/SetupToken';
 import {getStatusPageDetector} from '@app/api/instance/StatusPageDetector';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {getVoiceTopology} from '@app/api/middleware/ServiceRegistry';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {isBillingActive, isPremiumTieringActive, isStripeServiceable} from '@app/api/stripe/BillingConfigCache';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
+import {endpointOrigin} from '@app/api/voice/VoiceServerEndpoints';
 import {
 	type EmailDeliveryState,
 	EmailDeliveryStates,
@@ -139,6 +141,19 @@ function buildDiscoveryStaticInput(
 	};
 }
 
+function listVoiceOrigins(): Array<string> {
+	const topology = getVoiceTopology();
+	if (!topology) return [];
+	const origins = new Set<string>();
+	for (const region of topology.getAllRegions()) {
+		for (const server of topology.getServersForRegion(region.id)) {
+			const origin = endpointOrigin(server.endpoint);
+			if (origin) origins.add(origin);
+		}
+	}
+	return Array.from(origins).sort();
+}
+
 function mapGuildBadgesForDiscovery(badges: ReadonlyArray<CustomBadgeDefinition>): Array<InstanceGuildBadge> {
 	return badges
 		.filter((badge) => badge.type === 'guild')
@@ -247,6 +262,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				notice,
 				domain_migration: toDomainMigrationDiscovery(domainMigration),
 				guild_badges: mapGuildBadgesForDiscovery(customBadges),
+				voice_origins: listVoiceOrigins(),
 			};
 			discoveryValidators = nextDiscoveryValidators(response, discoveryValidators);
 			ctx.header('ETag', discoveryValidators.etag);

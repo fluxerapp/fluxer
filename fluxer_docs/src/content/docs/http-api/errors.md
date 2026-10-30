@@ -389,6 +389,16 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `USE_CLAIM_ROUTE` | Add an email address to your account first |
 | `VALIDATION_ERROR` | Validation failed |
 | `VOICE_CHANNEL_FULL` | Voice channel is full |
+| `VOICE_JOIN_ENDPOINT_INVALID` | The voice server endpoint isn't allowed |
+| `VOICE_JOIN_ENDPOINT_UNREACHABLE` | Fluxer couldn't connect to the voice server endpoint |
+| `VOICE_JOIN_KEY_MISMATCH` | The voice server rejected its API key and secret |
+| `VOICE_JOIN_TOKEN_BUSY` | Another voice server is joining with this token right now |
+| `VOICE_JOIN_TOKEN_INVALID` | The voice join token is not valid |
+| `VOICE_NODE_SIGNATURE_INVALID` | The voice server's signature doesn't match its secret |
+| `VOICE_NODE_TOKEN_EXPIRED` | The voice server's request is expired or not valid yet. Check the clock on that machine |
+| `VOICE_NODE_UNKNOWN` | No voice server has this API key |
+| `VOICE_SERVER_API_KEY_IN_USE` | Another voice server already uses this API key |
+| `VOICE_SERVER_ID_IN_USE` | Another voice server already uses this ID |
 | `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` | You've reached the maximum of {count} WebAuthn credentials |
 | `WEBHOOK_FORUM_TARGET_CONFLICT` | You can't specify both `thread_id` and `thread_name` |
 | `WEBHOOK_FORUM_TARGET_REQUIRED` | Webhooks posting to this channel need a `thread_id` or a `thread_name` |

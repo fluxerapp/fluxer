@@ -135,6 +135,8 @@ Fluxer sends at most 100 prefixes per request, which is the most Cloudflare acce
 
 Call audio and video don't go through your proxy. They connect directly to the machine on TCP port 7881 and UDP port 7882, and both ports need to be open. A tunnel such as Cloudflare Tunnel can't forward them.
 
+Extra voice servers on this machine from [`rexctl voice add`](/operator/voice-servers/#on-the-fluxer-machine) use paths on your domain, such as `/livekit-default-server-2/`. A proxy that forwards every path already passes them. Their media ports skip the proxy too. Open each server's TCP and UDP port as well.
+
 ### Voice behind a tunnel
 
 If you only serve Fluxer through a tunnel, calls need a TURN server. It relays call media between people's devices and LiveKit. Run one on a machine with a public address, such as coturn on a small VPS, and open its port there, usually UDP port 3478.

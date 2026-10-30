@@ -97,3 +97,42 @@ func TestNatsClientsWaitForHealthyNats(t *testing.T) {
 		t.Errorf("gateway healthcheck %q should ask /_health/ready, which fails while the gateway's NATS subscriptions are missing", check)
 	}
 }
+
+func TestPortsWithoutBundledVoice(t *testing.T) {
+	got := Ports(map[string]string{VoiceBundledKey: "false", VoiceTCPPortKey: "7883"})
+	want := []Port{
+		{Number: 80, Proto: "tcp"},
+		{Number: 443, Proto: "tcp"},
+		{Number: 443, Proto: "udp"},
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("Ports without bundled voice = %v, want %v", got, want)
+	}
+	if got := Ports(map[string]string{VoiceBundledKey: "true"}); !slices.Equal(got, PublishedPorts) {
+		t.Errorf("Ports with bundled voice = %v", got)
+	}
+}
+
+func TestOverlaysForBundledVoice(t *testing.T) {
+	for value, want := range map[string]bool{"": false, "true": false, "1": false, "false": true, "0": true, "nonsense": false} {
+		got := slices.Contains(OverlaysFor(map[string]string{"voice.bundled": value}), OverlayExternalVoice)
+		if got != want {
+			t.Errorf("voice.bundled %q: external voice overlay = %v, want %v", value, got, want)
+		}
+	}
+	data, err := ReadFile(Embedded(), OverlayFiles[OverlayExternalVoice])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var overlay struct {
+		Services map[string]struct {
+			Profiles []string `yaml:"profiles"`
+		} `yaml:"services"`
+	}
+	if err := yaml.Unmarshal(data, &overlay); err != nil {
+		t.Fatal(err)
+	}
+	if got := overlay.Services["livekit"].Profiles; !slices.Equal(got, []string{"bundled-voice"}) {
+		t.Errorf("livekit profiles = %v", got)
+	}
+}

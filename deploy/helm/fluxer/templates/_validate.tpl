@@ -41,6 +41,9 @@
 {{- if not (has $v.livekit.expose (list "hostNetwork" "loadBalancer" "nodePort")) }}
 {{- fail "livekit.expose must be hostNetwork, loadBalancer or nodePort" }}
 {{- end }}
+{{- if and $v.livekit.joined (or $v.livekit.enabled $v.livekit.external.url) }}
+{{- fail "livekit.joined keeps voice on with only the servers you add, and it needs livekit.enabled false and no livekit.external.url" }}
+{{- end }}
 {{- if and $v.livekit.enabled $v.livekit.external.url }}
 {{- fail "livekit.external.url names a LiveKit server of your own, so set livekit.enabled to false" }}
 {{- end }}

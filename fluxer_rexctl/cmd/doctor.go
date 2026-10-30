@@ -49,6 +49,9 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 	case err == nil:
 		env.Instance = inst
 		app.UI.Info("Using %s (%s).", inst.Dir, l.Why())
+		if inst.State.IsVoice() {
+			phase = checks.Voice
+		}
 	case errors.Is(err, instance.ErrNotFound):
 		phase = checks.Preinstall
 	case errors.Is(err, instance.ErrLegacy):
@@ -68,7 +71,7 @@ func runDoctor(ctx context.Context, app *App, fix bool) error {
 		}
 		e, err := app.Engine(ctx, env.Instance)
 		env.SetEngine(e, err)
-		if err == nil {
+		if err == nil && phase != checks.Voice {
 			env.Admin = adminapi.New(adminapi.NewExec(e.Named(env.Instance.Project(), env.Instance.Dir)), app.Version)
 		}
 	}

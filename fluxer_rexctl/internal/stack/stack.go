@@ -35,6 +35,7 @@ const (
 	OverlayTunnel              Overlay = "tunnel"
 	OverlayExternalObjectStore Overlay = "external-object-store"
 	OverlayIPv6                Overlay = "ipv6"
+	OverlayExternalVoice       Overlay = "external-voice"
 )
 
 var OverlayFiles = map[Overlay]string{
@@ -42,9 +43,10 @@ var OverlayFiles = map[Overlay]string{
 	OverlayTunnel:              "tunnel.compose.yml",
 	OverlayExternalObjectStore: "external-object-store.compose.yml",
 	OverlayIPv6:                "ipv6.compose.yml",
+	OverlayExternalVoice:       "external-voice.compose.yml",
 }
 
-var overlayOrder = []Overlay{OverlayProxy, OverlayTunnel, OverlayExternalObjectStore, OverlayIPv6}
+var overlayOrder = []Overlay{OverlayProxy, OverlayTunnel, OverlayExternalObjectStore, OverlayIPv6, OverlayExternalVoice}
 
 var MountedFiles = map[string][]string{
 	Caddyfile: {"edge"},
@@ -108,7 +110,15 @@ func OverlaysFor(settings map[string]string) []Overlay {
 	if on, err := strconv.ParseBool(strings.TrimSpace(settings["network.ipv6"])); err == nil && on {
 		out = append(out, OverlayIPv6)
 	}
+	if !VoiceBundled(settings["voice.bundled"]) {
+		out = append(out, OverlayExternalVoice)
+	}
 	return out
+}
+
+func VoiceBundled(value string) bool {
+	on, err := strconv.ParseBool(strings.TrimSpace(value))
+	return err != nil || on
 }
 
 func FileNames() []string {

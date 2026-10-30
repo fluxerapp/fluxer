@@ -60,7 +60,7 @@ func newAutoUpgradeCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "auto-upgrade",
 		Short: "Show whether rexctl upgrades Fluxer by itself",
-		Long:  "Show whether rexctl upgrades Fluxer by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.",
+		Long:  "Show whether rexctl upgrades Fluxer, or the voice servers on a voice machine, by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeShow(c.Context(), app)
@@ -190,6 +190,9 @@ func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error
 	if err != nil {
 		return err
 	}
+	if inst.State.IsVoice() && (scope != backup.ScopeFull || fullBackup != "") {
+		return ui.Usage("A voice machine has nothing to back up. Leave out --backup and --full-backup.")
+	}
 	if err := managed(inst); err != nil {
 		return err
 	}
@@ -219,7 +222,7 @@ func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error
 		if err != nil {
 			return ui.Usage("Pass --at as a time of day like 04:00.")
 		}
-		app.UI.OK("rexctl upgrades Fluxer %s.", autoUpgradeWhen(a.Scheduler, startDay, start))
+		app.UI.OK("rexctl upgrades %s %s.", autoUpgradeTarget(inst), autoUpgradeWhen(a.Scheduler, startDay, start))
 		if fullBackup != "" {
 			backupAt, _ := a.BackupStart()
 			app.UI.Info("%s", fullBackupWhen(backupAt))
@@ -323,10 +326,10 @@ func showAutoUpgrade(app *App, inst *instance.Instance, a host.AutoUpgrade, s ho
 		return app.UI.JSON(out)
 	}
 	if !s.On {
-		app.UI.Info("Automatic upgrades are off. Run rexctl auto-upgrade on to upgrade Fluxer every day or once a week.")
+		app.UI.Info("Automatic upgrades are off. Run rexctl auto-upgrade on to upgrade %s every day or once a week.", autoUpgradeTarget(inst))
 		return nil
 	}
-	app.UI.OK("rexctl upgrades Fluxer %s.", autoUpgradeWhen(a.Scheduler, s.Day, s.At))
+	app.UI.OK("rexctl upgrades %s %s.", autoUpgradeTarget(inst), autoUpgradeWhen(a.Scheduler, s.Day, s.At))
 	if s.FullBackup != "" {
 		app.UI.Info("%s", fullBackupWhen(s.FullBackupAt))
 	}
@@ -346,6 +349,13 @@ func showAutoUpgrade(app *App, inst *instance.Instance, a host.AutoUpgrade, s ho
 		}
 	}
 	return nil
+}
+
+func autoUpgradeTarget(inst *instance.Instance) string {
+	if inst.State.IsVoice() {
+		return "the voice servers on this machine"
+	}
+	return "Fluxer"
 }
 
 func autoUpgradeWhen(s host.Scheduler, day, at string) string {

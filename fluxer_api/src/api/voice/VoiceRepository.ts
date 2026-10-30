@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createGuildIDSet, createUserIDSet} from '@app/api/BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	BatchBuilder,
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	VOICE_REGION_COLUMNS,
@@ -136,8 +143,24 @@ export class VoiceRepository {
 		return fullServer;
 	}
 
+	async createServerIfAbsent(server: Omit<VoiceServerRecord, 'createdAt' | 'updatedAt'>): Promise<boolean> {
+		const now = new Date();
+		return executeConditional(
+			VoiceServers.insertIfNotExists(this.toServerRow({...server, createdAt: now, updatedAt: now})),
+		);
+	}
+
+	async listAllServers(): Promise<Array<VoiceServerRecord>> {
+		const regions = await this.listRegionsWithServers();
+		return regions.flatMap((region) => region.servers);
+	}
+
 	async upsertServer(server: VoiceServerRecord): Promise<void> {
-		const row: VoiceServerRow = {
+		await upsertOne(VoiceServers.upsertAll(this.toServerRow(server)));
+	}
+
+	private toServerRow(server: VoiceServerRecord): VoiceServerRow {
+		return {
 			region_id: server.regionId,
 			server_id: server.serverId,
 			endpoint: server.endpoint,
@@ -152,10 +175,13 @@ export class VoiceRepository {
 			required_guild_features: new Set(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(server.restrictions.allowedGuildIds).map((id) => BigInt(id))),
 			allowed_user_ids: new Set(Array.from(server.restrictions.allowedUserIds).map((id) => BigInt(id))),
+			internal_endpoint: server.internalEndpoint,
+			draining: server.draining,
+			pinned_hostname: server.pinnedHostname,
+			pinned_soft_limit: server.pinnedSoftLimit,
 			created_at: server.createdAt ?? new Date(),
 			updated_at: server.updatedAt ?? new Date(),
 		};
-		await upsertOne(VoiceServers.upsertAll(row));
 	}
 
 	async deleteServer(regionId: string, serverId: string): Promise<void> {
@@ -199,6 +225,10 @@ export class VoiceRepository {
 				allowedGuildIds: createGuildIDSet(new Set(toIterable<bigint>(row.allowed_guild_ids))),
 				allowedUserIds: createUserIDSet(new Set(toIterable<bigint>(row.allowed_user_ids))),
 			},
+			internalEndpoint: row.internal_endpoint ?? null,
+			draining: row.draining ?? false,
+			pinnedHostname: row.pinned_hostname ?? null,
+			pinnedSoftLimit: row.pinned_soft_limit ?? false,
 			createdAt: row.created_at,
 			updatedAt: row.updated_at,
 		};

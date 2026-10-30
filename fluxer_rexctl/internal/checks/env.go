@@ -63,7 +63,7 @@ func (e *Env) prepare(ctx context.Context) {
 		}
 		e.Engine, e.engineErr = engine.Connect(ctx, opts)
 	}
-	if e.Project == nil && e.Engine != nil && e.Instance != nil && e.Instance.Project() != "" {
+	if e.Project == nil && e.Engine != nil && e.Instance != nil && e.Instance.Project() != "" && !e.Instance.State.IsVoice() {
 		p, err := deploy.Load(ctx, e.Instance, e.Engine)
 		if err != nil {
 			e.loadErr = err
@@ -291,6 +291,7 @@ func (e *Env) ports() []stack.Port {
 	return stack.Ports(map[string]string{
 		stack.VoiceTCPPortKey: e.value(stack.VoiceTCPPortKey),
 		stack.VoiceUDPPortKey: e.value(stack.VoiceUDPPortKey),
+		stack.VoiceBundledKey: e.value(stack.VoiceBundledKey),
 	})
 }
 

@@ -18,15 +18,17 @@ import (
 )
 
 const (
-	envRequiredSection = "required"
-	envAdminSection    = "admin"
-	envSecretsSection  = "secrets"
-	envComposeSection  = "compose"
-	envFilesSection    = "files"
-	envRexctlSection   = "rexctl"
-	envStackSection    = "stack"
-	envInternalSection = "internal"
-	envNetworkSection  = "network"
+	envRequiredSection    = "required"
+	envAdminSection       = "admin"
+	envSecretsSection     = "secrets"
+	envComposeSection     = "compose"
+	envFilesSection       = "files"
+	envRexctlSection      = "rexctl"
+	envStackSection       = "stack"
+	envInternalSection    = "internal"
+	envNetworkSection     = "network"
+	envVoiceServerSection = "voice-server"
+	envVoiceEdgeSection   = "voice-edge"
 )
 
 type envSection struct {
@@ -46,7 +48,10 @@ var envSections = []envSection{
 		stack.ComposeFile, stack.ComposeFile, stack.OverlayFiles[stack.OverlayProxy]), ""},
 	{"address", "Public address", "Fluxer works out every address from FLUXER_DOMAIN. Set these only when a part of Fluxer runs on another address.", ""},
 	{"edge", "Edge and HTTPS", "By default Fluxer listens on ports 80 and 443 and gets its own HTTPS certificate for your domain.", ""},
-	{"voice", "Voice and video", "Calls connect directly to this machine on FLUXER_LIVEKIT_TCP_PORT and FLUXER_LIVEKIT_UDP_PORT, even when Fluxer is behind your own proxy.", ""},
+	{"voice", "Voice and video", "Calls connect directly to this machine on FLUXER_LIVEKIT_TCP_PORT and FLUXER_LIVEKIT_UDP_PORT, even when Fluxer is behind your own proxy. " +
+		"To run without the bundled LiveKit, add " + stack.OverlayFiles[stack.OverlayExternalVoice] + " to COMPOSE_FILE and set FLUXER_LIVEKIT_BUNDLED to `false`.", ""},
+	{envVoiceServerSection, "Standalone voice servers", "These go in the settings file of a voice server from the voice folder of the compose bundle, such as `fra-server-1.env`, not in Fluxer's .env. `rexctl voice add` and `rexctl voice join` write them for you.", ""},
+	{envVoiceEdgeSection, "Voice edge", "These go in `edge.env` next to voice-edge.compose.yml in the voice folder of the compose bundle. `rexctl voice join` writes them for you.", ""},
 	{"storage", "Object storage", "By default Fluxer keeps files in the bundled object store. To use your own S3-compatible store, set its address and buckets, add " +
 		stack.OverlayFiles[stack.OverlayExternalObjectStore] + " to COMPOSE_FILE and put its keys in FLUXER_S3_ACCESS_KEY and FLUXER_S3_SECRET_KEY.", ""},
 	{"database", "Database", "Leave these unset to use the bundled Postgres.", ""},
@@ -143,6 +148,16 @@ func (l envDocList) in(section string) []envDoc {
 	return out
 }
 
+func (l envDocList) inAll(section string) []envDoc {
+	var out []envDoc
+	for _, d := range l {
+		if d.section == section {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
 func (l envDocList) get(name string) envDoc {
 	for _, d := range l {
 		if d.name == name {
@@ -226,7 +241,7 @@ func envDocs() envDocList {
 	return out
 }
 
-var envUnbundledSections = []string{envRexctlSection, envStackSection, envInternalSection}
+var envUnbundledSections = []string{envRexctlSection, envStackSection, envInternalSection, envVoiceServerSection, envVoiceEdgeSection}
 
 var envRotatableVars = []string{"FLUXER_S3_SECRET_KEY", "LIVEKIT_API_SECRET"}
 

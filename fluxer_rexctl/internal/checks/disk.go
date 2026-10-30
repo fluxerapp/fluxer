@@ -22,7 +22,7 @@ const (
 )
 
 func init() {
-	Register(Check{ID: "disk", Phases: Preinstall | Installed, Run: runDisk})
+	Register(Check{ID: "disk", Phases: Preinstall | Installed | Voice, Run: runDisk})
 }
 
 func runDisk(ctx context.Context, e *Env) Result {

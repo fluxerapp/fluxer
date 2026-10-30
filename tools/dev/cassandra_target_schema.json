@@ -10422,9 +10422,132 @@
 				{
 					"name": "notes",
 					"type": "text"
+				},
+				{
+					"name": "internal_endpoint",
+					"type": "text"
+				},
+				{
+					"name": "draining",
+					"type": "boolean"
+				},
+				{
+					"name": "pinned_hostname",
+					"type": "text"
+				},
+				{
+					"name": "pinned_soft_limit",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((region_id), server_id)",
+			"options": ""
+		},
+		{
+			"name": "voice_join_tokens",
+			"columns": [
+				{
+					"name": "token_id",
+					"type": "bigint"
+				},
+				{
+					"name": "secret_hash",
+					"type": "text"
+				},
+				{
+					"name": "created_by",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "claim_id",
+					"type": "text"
+				},
+				{
+					"name": "claimed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "used_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "used_by_ip",
+					"type": "text"
+				},
+				{
+					"name": "used_server_id",
+					"type": "text"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "region_id",
+					"type": "text"
+				},
+				{
+					"name": "region_name",
+					"type": "text"
+				},
+				{
+					"name": "region_emoji",
+					"type": "text"
+				},
+				{
+					"name": "region_latitude",
+					"type": "double"
+				},
+				{
+					"name": "region_longitude",
+					"type": "double"
+				},
+				{
+					"name": "server_id",
+					"type": "text"
+				},
+				{
+					"name": "hostname",
+					"type": "text"
+				},
+				{
+					"name": "internal_endpoint",
+					"type": "text"
+				},
+				{
+					"name": "soft_connection_limit",
+					"type": "int"
+				},
+				{
+					"name": "notes",
+					"type": "text"
+				},
+				{
+					"name": "vip_only",
+					"type": "boolean"
+				},
+				{
+					"name": "required_guild_features",
+					"type": "set<text>"
+				},
+				{
+					"name": "allowed_guild_ids",
+					"type": "set<bigint>"
+				},
+				{
+					"name": "allowed_user_ids",
+					"type": "set<bigint>"
+				}
+			],
+			"primary_key": "((token_id))",
 			"options": ""
 		},
 		{

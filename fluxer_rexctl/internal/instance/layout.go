@@ -19,6 +19,8 @@ import (
 
 const generatedSchema = 3
 
+const LayoutSchema = generatedSchema
+
 var (
 	euid  = os.Geteuid
 	chown = os.Lchown

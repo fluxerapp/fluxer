@@ -771,6 +771,14 @@ func applySettings(ctx context.Context, app *App, inst *instance.Instance, e *en
 			r = <-done
 		}
 	}
+	if r.change != nil && len(r.change.VoiceDown) > 0 {
+		ids := ui.JoinAnd(r.change.VoiceDown)
+		if r.change.Applied || r.err != nil {
+			app.UI.Warn(fmt.Sprintf("Voice servers %s didn't start again.", ids), "Run rexctl voice status to see why.")
+		} else {
+			app.UI.Info("Stopped voice servers %s. They start again with Fluxer.", ids)
+		}
+	}
 	if errors.Is(r.err, deploy.ErrDeclined) {
 		return nil, &ui.ExitError{Code: ui.ExitRefused, Msg: "rexctl left your settings as they were.", Err: r.err}
 	}
@@ -779,6 +787,13 @@ func applySettings(ctx context.Context, app *App, inst *instance.Instance, e *en
 	}
 	if r.change.Applied && !r.change.Unchanged {
 		closePorts()
+		moveVoiceEndpoints(ctx, app, inst)
+	}
+	if _, ok := changes[settings.VoicePublicIP]; ok && !r.change.Unchanged {
+		moveVoicePublicIP(ctx, app, inst, e, r.change.Applied)
+	}
+	if _, ok := changes[settings.VoiceBundled]; ok && r.change.Applied && !r.change.Unchanged {
+		restoreBundledVoiceServer(ctx, app, inst)
 	}
 	return r.change, nil
 }
@@ -828,7 +843,7 @@ func confirmPreview(app *App, p deploy.Preview) (bool, error) {
 func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes map[string]*string) (func(), error) {
 	nothing := func() {}
 	opened, closed, err := deploy.PortChanges(inst, changes)
-	if err != nil || len(opened) == 0 {
+	if err != nil || (len(opened) == 0 && len(closed) == 0) {
 		return nothing, err
 	}
 	fw, err := host.DetectFirewall(ctx)
@@ -851,6 +866,9 @@ func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes m
 		}
 	}
 	return func() {
+		if len(closed) == 0 {
+			return
+		}
 		ok, err := app.UI.Confirm(fmt.Sprintf("Close port %s in the firewall? Fluxer doesn't use it any more.", deploy.PortList(closed)), true)
 		if err != nil || !ok {
 			return

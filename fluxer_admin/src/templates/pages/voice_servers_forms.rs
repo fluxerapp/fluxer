@@ -32,6 +32,7 @@ pub fn edit_server_form(
         .soft_connection_limit
         .map_or_else(String::new, |v| v.to_string());
     let notes = server.notes.as_deref().unwrap_or("");
+    let internal_endpoint = server.internal_endpoint.as_deref().unwrap_or("");
     let vip_only = server.vip_only.unwrap_or(false);
     let features_csv = server.required_guild_features.join(", ");
     let guild_ids_csv = server.allowed_guild_ids.join(", ");
@@ -72,6 +73,15 @@ pub fn edit_server_form(
                     "Leave empty for no limit",
                     "Placement prefers another server once this server holds this many connections",
                 ))
+                (form_field_with_helper(
+                    "Internal URL",
+                    &format!("{id_prefix}-internal-endpoint"),
+                    "internal_endpoint",
+                    "url",
+                    internal_endpoint,
+                    "http://voice-fra-server-1:7880",
+                    INTERNAL_URL_HELPER,
+                ))
                 (notes_field(&format!("{id_prefix}-notes"), notes))
                 (form_field_with_helper(
                     "API Key",
@@ -99,6 +109,14 @@ pub fn edit_server_form(
                         checked: is_active,
                         enabled: true,
                     }.render())
+                    input type="hidden" name="draining_field" value="1";
+                    (Checkbox {
+                        name: "draining",
+                        value: "true",
+                        label: "Draining. New calls go to other servers and calls already here keep going.",
+                        checked: server.draining,
+                        enabled: true,
+                    }.render())
                 }
                 (voice_restriction_fields(&id_prefix, vip_only, &features_csv, &guild_ids_csv))
                 button type="submit"
@@ -123,7 +141,10 @@ pub fn create_server_form(config: &AdminConfig, region_id: &str, csrf_token: &st
             div class="grid grid-cols-1 gap-4 md:grid-cols-2" {
                 (form_field_with_id("Server ID", "new-server-id", "server_id", "text", "", "livekit-us-east-1", true))
                 (form_field_with_id("Endpoint", "new-server-endpoint", "endpoint", "url", "", "wss://livekit.example.com", true))
-                (form_field_with_id("API Key", "new-server-api-key", "api_key", "text", "", "LiveKit API key", true))
+                div class="space-y-1" {
+                    (form_field_with_id("API Key", "new-server-api-key", "api_key", "text", "", "LiveKit API key", true))
+                    p class="text-xs text-neutral-500" { "Each server needs its own key." }
+                }
                 (form_field_with_id("API Secret", "new-server-api-secret", "api_secret", "password", "", "LiveKit API secret", true))
                 (form_field_with_id("Latitude (optional)", "new-server-latitude", "latitude", "number", "", "40.7128", false))
                 (form_field_with_id("Longitude (optional)", "new-server-longitude", "longitude", "number", "", "-74.0060", false))
@@ -135,6 +156,15 @@ pub fn create_server_form(config: &AdminConfig, region_id: &str, csrf_token: &st
                     "",
                     "Leave empty for no limit",
                     "Placement prefers another server once this server holds this many connections",
+                ))
+                (form_field_with_helper(
+                    "Internal URL (optional)",
+                    "new-server-internal-endpoint",
+                    "internal_endpoint",
+                    "url",
+                    "",
+                    "http://voice-fra-server-1:7880",
+                    INTERNAL_URL_HELPER,
                 ))
             }
             (notes_field("new-server-notes", ""))
@@ -158,6 +188,8 @@ pub fn create_server_form(config: &AdminConfig, region_id: &str, csrf_token: &st
         }
     })
 }
+
+const INTERNAL_URL_HELPER: &str = "Fluxer uses this address for the LiveKit control API and health checks. Leave it empty to use the endpoint.";
 
 fn form_field_with_helper(
     label: &str,

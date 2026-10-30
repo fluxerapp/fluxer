@@ -57,6 +57,7 @@ type installFlags struct {
 	Project       string
 	VoiceTCPPort  int
 	VoiceUDPPort  int
+	NoVoice       bool
 	Setup         setupFlags
 	Storage       storageFlags
 }
@@ -106,10 +107,51 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl.StringVar(&f.Project, "project", defaultProject, "name for this instance's containers and volumes, for running more than one instance on a host")
 	fl.IntVar(&f.VoiceTCPPort, "voice-tcp-port", 0, "TCP port for voice and video, for running more than one instance on a host")
 	fl.IntVar(&f.VoiceUDPPort, "voice-udp-port", 0, "UDP port for voice and video, for running more than one instance on a host")
+	fl.BoolVar(&f.NoVoice, "no-bundled-voice", false, "run without the bundled LiveKit and use only voice servers you add later")
 	confirmFlag(c, &f.Confirm)
 	f.Setup.bind(c)
 	f.Storage.bind(c)
 	return c
+}
+
+func installTarget(app *App) (string, error) {
+	l, err := app.locate()
+	if err != nil {
+		return "", err
+	}
+	dir := l.Dir
+	switch {
+	case l.Stale != "" && l.Chosen:
+		dir = l.Stale
+		app.located = &instance.Located{Dir: dir, From: instance.FromRecord, Scope: l.Scope}
+		app.UI.Info("Installing Fluxer in %s, the folder you picked with rexctl use.", dir)
+	case l.Stale != "":
+		app.warnStale(l)
+	}
+	if dir, err = filepath.Abs(dir); err != nil {
+		return "", err
+	}
+	inst, err := instance.Find(dir)
+	if err != nil || !inst.State.IsVoice() {
+		return dir, nil
+	}
+	refusal := ui.Refused(fmt.Sprintf("%s holds voice servers that joined %s, not a Fluxer instance.", dir, voiceInstances(inst)), "Pass --dir with another folder to install Fluxer there.")
+	if l.From == instance.FromFlag || l.From == instance.FromWorkdir {
+		return "", refusal
+	}
+	fallback, err := instance.DefaultDir()
+	if err != nil {
+		return "", err
+	}
+	if fallback, err = filepath.Abs(fallback); err != nil {
+		return "", err
+	}
+	if other, err := instance.Find(fallback); err == nil && other.State.IsVoice() {
+		return "", refusal
+	}
+	app.located = &instance.Located{Dir: fallback, From: instance.FromFallback}
+	app.UI.Info("Installing Fluxer in %s. %s holds this machine's voice servers.", fallback, dir)
+	return fallback, nil
 }
 
 func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags) error {
@@ -125,20 +167,7 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 	if names := f.Setup.passedNames(c); f.SetupWhere == "browser" && len(names) > 0 {
 		return &ui.ExitError{Code: ui.ExitUsage, Msg: fmt.Sprintf("--setup browser doesn't take %s.", ui.JoinAnd(names)), Fix: "Pass --setup terminal instead, or leave out the setup options and enter them in the browser."}
 	}
-	l, err := app.locate()
-	if err != nil {
-		return err
-	}
-	dir := l.Dir
-	switch {
-	case l.Stale != "" && l.Chosen:
-		dir = l.Stale
-		app.located = &instance.Located{Dir: dir, From: instance.FromRecord, Scope: l.Scope}
-		app.UI.Info("Installing Fluxer in %s, the folder you picked with rexctl use.", dir)
-	case l.Stale != "":
-		app.warnStale(l)
-	}
-	dir, err = filepath.Abs(dir)
+	dir, err := installTarget(app)
 	if err != nil {
 		return err
 	}
@@ -305,6 +334,9 @@ func validateInstallFlags(f *installFlags) error {
 		if p < 0 || p > 65535 {
 			return ui.Usage("Pass a voice port from 1 to 65535.")
 		}
+	}
+	if f.NoVoice && (f.VoiceTCPPort > 0 || f.VoiceUDPPort > 0) {
+		return ui.Usage("Pass --voice-tcp-port and --voice-udp-port only with the bundled LiveKit, not with --no-bundled-voice.")
 	}
 	if !projectPattern.MatchString(f.Project) {
 		return ui.Usage("Pass --project with lowercase letters, numbers, dashes or underscores.")
@@ -753,16 +785,25 @@ func (in *installer) settings() map[string]string {
 	if in.f.VoiceUDPPort > 0 {
 		out[stack.VoiceUDPPortKey] = strconv.Itoa(in.f.VoiceUDPPort)
 	}
+	if in.f.NoVoice {
+		out[stack.VoiceBundledKey] = "false"
+	}
 	return out
 }
 
 func (in *installer) resolveVoicePorts(ctx context.Context) {
+	if in.f.NoVoice {
+		return
+	}
 	tcpSet := in.f.VoiceTCPPort > 0
 	udpSet := in.f.VoiceUDPPort > 0
 	if tcpSet && udpSet {
 		return
 	}
 	pub := in.publishedPorts(ctx)
+	for _, v := range instance.RecordedVoicePorts() {
+		pub[host.Port{Number: v.Number, Proto: v.Proto}] = true
+	}
 	free := func(number int, proto string) bool {
 		if number < 1 || number > 65535 {
 			return false
@@ -1096,6 +1137,9 @@ func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteO
 	}
 	if f.VoiceIP != "" {
 		st.Settings[settings.VoicePublicIP] = f.VoiceIP
+	}
+	if f.NoVoice {
+		st.Settings[settings.VoiceBundled] = "false"
 	}
 	if f.MemoryProfile != "" {
 		st.Settings[settings.MemoryProfile] = f.MemoryProfile

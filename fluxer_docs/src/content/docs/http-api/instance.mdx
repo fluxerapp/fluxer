@@ -32,6 +32,7 @@ The public description of one instance.
 | age_policy? | [age policy](#age-policy-object) object | Regional age policy |
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
 | guild_badges? | array[[guild badge](#guild-badge-object) object] | The custom badges that guilds can show next to their name, in display order (at most 10) |
+| voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies (at most 1000) |
 
 ## Guild badge object
 

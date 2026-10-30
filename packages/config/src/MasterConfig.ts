@@ -210,6 +210,7 @@ export interface MasterConfig {
 			api_secret: string;
 			url: string;
 			internal_url: string;
+			bundled?: boolean;
 			default_region?: {
 				id: string;
 				name: string;
@@ -218,6 +219,8 @@ export interface MasterConfig {
 				longitude: number;
 			};
 			p2p_stun_urls?: Array<string>;
+			join_allow_private_endpoints?: boolean;
+			health_interval_ms?: number;
 		};
 		search: {
 			engine: 'elasticsearch' | 'meilisearch' | 'none';

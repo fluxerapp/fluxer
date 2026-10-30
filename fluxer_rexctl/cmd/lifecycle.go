@@ -81,6 +81,17 @@ func servicesForName(name string) ([]string, error) {
 	}
 }
 
+func runningPart(inst *instance.Instance, args, services []string) ([]string, error) {
+	if len(services) == 0 || deploy.VoiceBundled(inst) {
+		return services, nil
+	}
+	out := slices.DeleteFunc(slices.Clone(services), func(s string) bool { return s == "livekit" })
+	if len(out) == 0 {
+		return nil, ui.Refused(fmt.Sprintf("This instance runs without the bundled LiveKit, and %s has no logs here.", args[0]), "Run rexctl voice status to check your voice servers.")
+	}
+	return out, nil
+}
+
 func engineFailure(err error) error {
 	return engineFailureFor("", err)
 }
@@ -462,6 +473,9 @@ func newLogsCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if services, err = runningPart(inst, args, services); err != nil {
+				return err
+			}
 			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: app.UI.Stdout()}
 			if since == "" {
 				opts.Tail = 200
@@ -526,6 +540,8 @@ func runStart(ctx context.Context, app *App) error {
 			if err := waitForFluxer(ctx, inst, p, s, "Starting"); err != nil {
 				return err
 			}
+			startLocalVoiceServers(ctx, app, inst, e)
+			moveVoiceEndpoints(ctx, app, inst)
 			s.Done("Started Fluxer at %s.", inst.Origin())
 			return nil
 		})
@@ -559,10 +575,35 @@ func runBootStart(ctx context.Context, app *App) error {
 	if err != nil || inst == nil {
 		return err
 	}
-	if inst.State.Stopped || inst.State.Ejected != nil || alreadyUp(ctx, app, inst) {
+	if inst.State.Stopped || inst.State.Ejected != nil {
 		return nil
 	}
-	waitForRoute(ctx, bootRouteWait)
+	if !bootStackUp(ctx, app, inst) {
+		waitForRoute(ctx, bootRouteWait)
+		if err := bootStack(ctx, app, inst); err != nil {
+			return err
+		}
+		if err := reload(inst); err != nil {
+			return err
+		}
+		if inst.State.Stopped || inst.State.Ejected != nil {
+			return nil
+		}
+	}
+	e, err := app.Engine(ctx, inst)
+	if err != nil {
+		return err
+	}
+	startVoiceAtBoot(ctx, app, inst, e)
+	return nil
+}
+
+var (
+	bootStackUp      = alreadyUp
+	startVoiceAtBoot = startLocalVoiceServers
+)
+
+func bootStack(ctx context.Context, app *App, inst *instance.Instance) error {
 	return bootLocked(ctx, app, inst, func() error {
 		if err := reload(inst); err != nil {
 			return err
@@ -691,6 +732,13 @@ func runStop(ctx context.Context, app *App) error {
 			return err
 		}
 		err = app.UI.Step(ctx, "Stopping Fluxer", func(ctx context.Context, s *ui.Step) error {
+			switch n := len(inst.State.Voice); {
+			case n == 1:
+				s.Info("Stopping the voice server %s too. Calls on it end.", inst.State.Voice[0].ID)
+			case n > 1:
+				s.Info("Stopping %d voice servers too. Calls on them end.", n)
+			}
+			stopLocalVoiceServers(ctx, app, inst, p.Engine)
 			if err := p.Stop(ctx); err != nil {
 				return ui.Wrap(engineFailure(err), "Couldn't stop Fluxer.", "Run rexctl status to see what's still running.")
 			}
@@ -755,6 +803,8 @@ func newRestartCmd(app *App) *cobra.Command {
 					if err := waitForFluxer(ctx, inst, p, s, "Restarting"); err != nil {
 						return err
 					}
+					startLocalVoiceServers(ctx, app, inst, e)
+					moveVoiceEndpoints(ctx, app, inst)
 					if inst.State.Stopped {
 						inst.State.Stopped = false
 						if err := inst.Save(); err != nil {

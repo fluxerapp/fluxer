@@ -209,6 +209,9 @@ const (
 	UserViewDob                   AdminAclType = "user:view:dob"
 	UserViewEmail                 AdminAclType = "user:view:email"
 	UserViewIp                    AdminAclType = "user:view:ip"
+	VoiceJoinTokenCreate          AdminAclType = "voice:join_token:create"
+	VoiceJoinTokenList            AdminAclType = "voice:join_token:list"
+	VoiceJoinTokenRevoke          AdminAclType = "voice:join_token:revoke"
 	VoiceRegionCreate             AdminAclType = "voice:region:create"
 	VoiceRegionDelete             AdminAclType = "voice:region:delete"
 	VoiceRegionList               AdminAclType = "voice:region:list"
@@ -437,6 +440,12 @@ func (e AdminAclType) Valid() bool {
 	case UserViewEmail:
 		return true
 	case UserViewIp:
+		return true
+	case VoiceJoinTokenCreate:
+		return true
+	case VoiceJoinTokenList:
+		return true
+	case VoiceJoinTokenRevoke:
 		return true
 	case VoiceRegionCreate:
 		return true
@@ -1416,6 +1425,51 @@ func (e VerificationBasisSchema) Valid() bool {
 	}
 }
 
+// Defines values for VoiceJoinTokenStatus.
+const (
+	Expired VoiceJoinTokenStatus = "expired"
+	Pending VoiceJoinTokenStatus = "pending"
+	Revoked VoiceJoinTokenStatus = "revoked"
+	Used    VoiceJoinTokenStatus = "used"
+)
+
+// Valid indicates whether the value is a known member of the VoiceJoinTokenStatus enum.
+func (e VoiceJoinTokenStatus) Valid() bool {
+	switch e {
+	case Expired:
+		return true
+	case Pending:
+		return true
+	case Revoked:
+		return true
+	case Used:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VoiceServerHealthResponseStatus.
+const (
+	Down    VoiceServerHealthResponseStatus = "down"
+	Unknown VoiceServerHealthResponseStatus = "unknown"
+	Up      VoiceServerHealthResponseStatus = "up"
+)
+
+// Valid indicates whether the value is a known member of the VoiceServerHealthResponseStatus enum.
+func (e VoiceServerHealthResponseStatus) Valid() bool {
+	switch e {
+	case Down:
+		return true
+	case Unknown:
+		return true
+	case Up:
+		return true
+	default:
+		return false
+	}
+}
+
 // AccountIdentityLockReasonSchema Why the sign-in method can no longer change
 type AccountIdentityLockReasonSchema string
 
@@ -1745,6 +1799,159 @@ type CreateRegistrationUrlResponse struct {
 	Url string `json:"url"`
 }
 
+// CreateVoiceJoinTokenRequest defines model for CreateVoiceJoinTokenRequest.
+type CreateVoiceJoinTokenRequest struct {
+	AllowedGuildIds *[]SnowflakeType `json:"allowed_guild_ids,omitempty"`
+	AllowedUserIds  *[]SnowflakeType `json:"allowed_user_ids,omitempty"`
+
+	// ExpiresInSeconds Seconds until the token stops working, from 60 to 86400
+	ExpiresInSeconds *int `json:"expires_in_seconds,omitempty"`
+
+	// Hostname Hostname the server must use for its endpoint
+	Hostname         *string                    `json:"hostname,omitempty"`
+	InternalEndpoint *VoiceInternalEndpointType `json:"internal_endpoint,omitempty"`
+	Notes            *string                    `json:"notes,omitempty"`
+
+	// RegionEmoji Emoji for the new region in region_name
+	RegionEmoji *string `json:"region_emoji,omitempty"`
+
+	// RegionId Region for the new server, or null to let the API pick the nearest existing region
+	RegionId *string `json:"region_id,omitempty"`
+
+	// RegionLatitude Latitude of the new region in region_name. Placement sends people to the nearest region
+	RegionLatitude *float32 `json:"region_latitude,omitempty"`
+
+	// RegionLongitude Longitude of the new region in region_name
+	RegionLongitude *float32 `json:"region_longitude,omitempty"`
+
+	// RegionName Name for a new region with the id in region_id, created when the server joins
+	RegionName            *string   `json:"region_name,omitempty"`
+	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
+
+	// ServerId Id for the new server
+	ServerId            *string `json:"server_id,omitempty"`
+	SoftConnectionLimit *int    `json:"soft_connection_limit,omitempty"`
+	VipOnly             *bool   `json:"vip_only,omitempty"`
+}
+
+// CreateVoiceJoinTokenResponse defines model for CreateVoiceJoinTokenResponse.
+type CreateVoiceJoinTokenResponse struct {
+	// Command Command to run on the voice machine
+	Command string `json:"command"`
+
+	// ExpiresAt ISO 8601 timestamp when the token stops working
+	ExpiresAt string `json:"expires_at"`
+
+	// Token The token. It appears in this response only
+	Token string `json:"token"`
+
+	// TokenId ID of the token
+	TokenId SnowflakeStringType `json:"token_id"`
+}
+
+// CreateVoiceRegionRequest defines model for CreateVoiceRegionRequest.
+type CreateVoiceRegionRequest struct {
+	// AllowedGuildIds Guild IDs explicitly allowed to use this region
+	AllowedGuildIds *[]SnowflakeType `json:"allowed_guild_ids,omitempty"`
+
+	// AllowedUserIds User IDs explicitly allowed to use this region
+	AllowedUserIds *[]SnowflakeType `json:"allowed_user_ids,omitempty"`
+
+	// Emoji Emoji representing the region
+	Emoji string `json:"emoji"`
+
+	// Id Unique identifier for the voice region
+	Id string `json:"id"`
+
+	// IsDefault Whether this is the default region
+	IsDefault *bool `json:"is_default,omitempty"`
+
+	// Latitude Geographic latitude coordinate
+	Latitude float32 `json:"latitude"`
+
+	// Longitude Geographic longitude coordinate
+	Longitude float32 `json:"longitude"`
+
+	// Name Display name of the voice region
+	Name string `json:"name"`
+
+	// RequiredGuildFeatures Guild features required to use this region
+	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
+
+	// VipOnly Whether this region is restricted to VIP users
+	VipOnly *bool `json:"vip_only,omitempty"`
+}
+
+// CreateVoiceRegionResponse defines model for CreateVoiceRegionResponse.
+type CreateVoiceRegionResponse struct {
+	// Region Created voice region
+	Region VoiceRegionAdminResponse `json:"region"`
+}
+
+// CreateVoiceServerRequestBody defines model for CreateVoiceServerRequestBody.
+type CreateVoiceServerRequestBody struct {
+	// AllowedGuildIds Guild IDs explicitly allowed to use this server
+	AllowedGuildIds *[]SnowflakeType `json:"allowed_guild_ids,omitempty"`
+
+	// AllowedUserIds User IDs explicitly allowed to use this server
+	AllowedUserIds *[]SnowflakeType `json:"allowed_user_ids,omitempty"`
+
+	// ApiKey API key for authenticating with the voice server
+	ApiKey string `json:"api_key"`
+
+	// ApiSecret API secret for authenticating with the voice server
+	ApiSecret string `json:"api_secret"`
+
+	// Draining Whether placement sends new calls elsewhere while calls on this server finish
+	Draining *bool `json:"draining,omitempty"`
+
+	// Endpoint Client signal WebSocket endpoint URL for the voice server
+	Endpoint         string                     `json:"endpoint"`
+	InternalEndpoint *VoiceInternalEndpointType `json:"internal_endpoint,omitempty"`
+
+	// IsActive Whether the server is currently active
+	IsActive *bool `json:"is_active,omitempty"`
+
+	// Latitude Optional geographic latitude override for this server
+	Latitude *float32 `json:"latitude,omitempty"`
+
+	// Longitude Optional geographic longitude override for this server
+	Longitude *float32 `json:"longitude,omitempty"`
+
+	// Notes Free-form admin notes about this server
+	Notes *string `json:"notes,omitempty"`
+
+	// RequiredGuildFeatures Guild features required to use this server
+	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
+
+	// ServerId Unique identifier for the voice server
+	ServerId string `json:"server_id"`
+
+	// SoftConnectionLimit Connection count above which placement prefers another server, or null for no limit
+	SoftConnectionLimit *int `json:"soft_connection_limit,omitempty"`
+
+	// VipOnly Whether this server is restricted to VIP users
+	VipOnly *bool `json:"vip_only,omitempty"`
+}
+
+// CreateVoiceServerResponse defines model for CreateVoiceServerResponse.
+type CreateVoiceServerResponse struct {
+	// Server Created voice server
+	Server VoiceServerAdminResponse `json:"server"`
+}
+
+// CreateVoiceServerTestTokenResponse defines model for CreateVoiceServerTestTokenResponse.
+type CreateVoiceServerTestTokenResponse struct {
+	// Endpoint Endpoint of the server
+	Endpoint string `json:"endpoint"`
+
+	// Room Name of the throwaway test room
+	Room string `json:"room"`
+
+	// Token LiveKit token for a hidden audio only participant, valid for 60 seconds
+	Token string `json:"token"`
+}
+
 // CustomBadgeIdListResponse IDs of the custom badges assigned to it
 type CustomBadgeIdListResponse = []SnowflakeStringType
 
@@ -1765,6 +1972,12 @@ type DeleteAllUserMessagesResponse struct {
 
 // DeleteAllUserMessagesResponseSuccess defines model for DeleteAllUserMessagesResponse.Success.
 type DeleteAllUserMessagesResponseSuccess bool
+
+// DeleteVoiceResponse defines model for DeleteVoiceResponse.
+type DeleteVoiceResponse struct {
+	// Success Whether the deletion was successful
+	Success bool `json:"success"`
+}
 
 // DeletionReasonCode Reason the account was scheduled for deletion
 type DeletionReasonCode int32
@@ -2568,6 +2781,57 @@ type ListUserSessionsResponse struct {
 	} `json:"sessions"`
 }
 
+// ListVoiceJoinTokensResponse defines model for ListVoiceJoinTokensResponse.
+type ListVoiceJoinTokensResponse struct {
+	// Tokens Join tokens, newest first
+	Tokens []VoiceJoinTokenAdminResponse `json:"tokens"`
+}
+
+// ListVoiceRegionsResponse defines model for ListVoiceRegionsResponse.
+type ListVoiceRegionsResponse struct {
+	// Regions List of voice regions
+	Regions []struct {
+		// AllowedGuildIds Guild IDs explicitly allowed to use this region
+		AllowedGuildIds []SnowflakeStringType `json:"allowed_guild_ids"`
+
+		// AllowedUserIds User IDs explicitly allowed to use this region
+		AllowedUserIds []SnowflakeStringType `json:"allowed_user_ids"`
+
+		// CreatedAt ISO 8601 timestamp when the region was created
+		CreatedAt *string `json:"created_at"`
+
+		// Emoji Emoji representing the region
+		Emoji string `json:"emoji"`
+
+		// Id Unique identifier for the voice region
+		Id string `json:"id"`
+
+		// IsDefault Whether this is the default region
+		IsDefault bool `json:"is_default"`
+
+		// Latitude Geographic latitude coordinate
+		Latitude float32 `json:"latitude"`
+
+		// Longitude Geographic longitude coordinate
+		Longitude float32 `json:"longitude"`
+
+		// Name Display name of the voice region
+		Name string `json:"name"`
+
+		// RequiredGuildFeatures Guild features required to use this region
+		RequiredGuildFeatures []string `json:"required_guild_features"`
+
+		// Servers Voice servers in this region
+		Servers *[]VoiceServerAdminResponse `json:"servers,omitempty"`
+
+		// UpdatedAt ISO 8601 timestamp when the region was last updated
+		UpdatedAt *string `json:"updated_at"`
+
+		// VipOnly Whether this region is restricted to VIP users
+		VipOnly bool `json:"vip_only"`
+	} `json:"regions"`
+}
+
 // LookupUserResponse defines model for LookupUserResponse.
 type LookupUserResponse struct {
 	Users []UserAdminResponseSchema `json:"users"`
@@ -2727,6 +2991,55 @@ type ThrottledError struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// UpdateVoiceServerRequestBody defines model for UpdateVoiceServerRequestBody.
+type UpdateVoiceServerRequestBody struct {
+	// AllowedGuildIds Guild IDs explicitly allowed to use this server
+	AllowedGuildIds *[]SnowflakeType `json:"allowed_guild_ids,omitempty"`
+
+	// AllowedUserIds User IDs explicitly allowed to use this server
+	AllowedUserIds *[]SnowflakeType `json:"allowed_user_ids,omitempty"`
+
+	// ApiKey API key for authenticating with the voice server
+	ApiKey *string `json:"api_key,omitempty"`
+
+	// ApiSecret API secret for authenticating with the voice server
+	ApiSecret *string `json:"api_secret,omitempty"`
+
+	// Draining Whether placement sends new calls elsewhere while calls on this server finish
+	Draining *bool `json:"draining,omitempty"`
+
+	// Endpoint Client signal WebSocket endpoint URL for the voice server
+	Endpoint         *string                    `json:"endpoint,omitempty"`
+	InternalEndpoint *VoiceInternalEndpointType `json:"internal_endpoint,omitempty"`
+
+	// IsActive Whether the server is currently active
+	IsActive *bool `json:"is_active,omitempty"`
+
+	// Latitude Optional geographic latitude override for this server
+	Latitude *float32 `json:"latitude,omitempty"`
+
+	// Longitude Optional geographic longitude override for this server
+	Longitude *float32 `json:"longitude,omitempty"`
+
+	// Notes Free-form admin notes about this server, or null to clear them
+	Notes *string `json:"notes,omitempty"`
+
+	// RequiredGuildFeatures Guild features required to use this server
+	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
+
+	// SoftConnectionLimit Connection count above which placement prefers another server, or null for no limit
+	SoftConnectionLimit *int `json:"soft_connection_limit,omitempty"`
+
+	// VipOnly Whether this server is restricted to VIP users
+	VipOnly *bool `json:"vip_only,omitempty"`
+}
+
+// UpdateVoiceServerResponse defines model for UpdateVoiceServerResponse.
+type UpdateVoiceServerResponse struct {
+	// Server Updated voice server
+	Server VoiceServerAdminResponse `json:"server"`
+}
+
 // UserAdminResponseSchema defines model for UserAdminResponseSchema.
 type UserAdminResponseSchema struct {
 	AccentColor        *Int32Type                `json:"accent_color"`
@@ -2816,6 +3129,51 @@ type UsernameType = string
 // VerificationBasisSchema What an account needs to finish setting up
 type VerificationBasisSchema string
 
+// VoiceInternalEndpointType URL the API uses for the control API and health checks of this server, such as http://voice-fra:7880
+type VoiceInternalEndpointType = string
+
+// VoiceJoinTokenAdminResponse defines model for VoiceJoinTokenAdminResponse.
+type VoiceJoinTokenAdminResponse struct {
+	// CreatedAt ISO 8601 timestamp when the token was created
+	CreatedAt string `json:"created_at"`
+
+	// ExpiresAt ISO 8601 timestamp when the token stops working
+	ExpiresAt string `json:"expires_at"`
+
+	// Hostname Hostname preset, or null
+	Hostname *string `json:"hostname"`
+
+	// Notes Notes for the new server, or null
+	Notes *string `json:"notes"`
+
+	// RegionId Region preset, or null
+	RegionId *string `json:"region_id"`
+
+	// RegionName Name of the new region it creates, or null
+	RegionName *string `json:"region_name"`
+
+	// RevokedAt ISO 8601 timestamp when it was revoked
+	RevokedAt *string `json:"revoked_at"`
+
+	// ServerId Server id preset, or null
+	ServerId *string `json:"server_id"`
+
+	// Status pending, used, expired or revoked
+	Status VoiceJoinTokenStatus `json:"status"`
+
+	// TokenId ID of the token
+	TokenId SnowflakeStringType `json:"token_id"`
+
+	// UsedAt ISO 8601 timestamp when a server joined with it
+	UsedAt *string `json:"used_at"`
+
+	// UsedServerId ID of the server that joined with it
+	UsedServerId *string `json:"used_server_id"`
+}
+
+// VoiceJoinTokenStatus defines model for VoiceJoinTokenStatus.
+type VoiceJoinTokenStatus string
+
 // VoiceP2pConfigResponse defines model for VoiceP2pConfigResponse.
 type VoiceP2pConfigResponse struct {
 	ConfigVersion       int                                 `json:"config_version"`
@@ -2842,6 +3200,117 @@ type VoiceP2pConfigUpdateRequest struct {
 	RolloutCountryCodes *ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes,omitempty"`
 	RolloutSalt         *string                              `json:"rollout_salt,omitempty"`
 }
+
+// VoiceRegionAdminResponse defines model for VoiceRegionAdminResponse.
+type VoiceRegionAdminResponse struct {
+	// AllowedGuildIds Guild IDs explicitly allowed to use this region
+	AllowedGuildIds []SnowflakeStringType `json:"allowed_guild_ids"`
+
+	// AllowedUserIds User IDs explicitly allowed to use this region
+	AllowedUserIds []SnowflakeStringType `json:"allowed_user_ids"`
+
+	// CreatedAt ISO 8601 timestamp when the region was created
+	CreatedAt *string `json:"created_at"`
+
+	// Emoji Emoji representing the region
+	Emoji string `json:"emoji"`
+
+	// Id Unique identifier for the voice region
+	Id string `json:"id"`
+
+	// IsDefault Whether this is the default region
+	IsDefault bool `json:"is_default"`
+
+	// Latitude Geographic latitude coordinate
+	Latitude float32 `json:"latitude"`
+
+	// Longitude Geographic longitude coordinate
+	Longitude float32 `json:"longitude"`
+
+	// Name Display name of the voice region
+	Name string `json:"name"`
+
+	// RequiredGuildFeatures Guild features required to use this region
+	RequiredGuildFeatures []string `json:"required_guild_features"`
+
+	// UpdatedAt ISO 8601 timestamp when the region was last updated
+	UpdatedAt *string `json:"updated_at"`
+
+	// VipOnly Whether this region is restricted to VIP users
+	VipOnly bool `json:"vip_only"`
+}
+
+// VoiceServerAdminResponse defines model for VoiceServerAdminResponse.
+type VoiceServerAdminResponse struct {
+	// AllowedGuildIds Guild IDs explicitly allowed to use this server
+	AllowedGuildIds []SnowflakeStringType `json:"allowed_guild_ids"`
+
+	// AllowedUserIds User IDs explicitly allowed to use this server
+	AllowedUserIds []SnowflakeStringType `json:"allowed_user_ids"`
+
+	// CreatedAt ISO 8601 timestamp when the server was created
+	CreatedAt *string `json:"created_at"`
+
+	// Draining Whether placement sends new calls elsewhere while calls on this server finish
+	Draining bool `json:"draining"`
+
+	// DuplicateApiKey Whether another server uses the same API key
+	DuplicateApiKey bool `json:"duplicate_api_key"`
+
+	// Endpoint Client signal WebSocket endpoint URL for the voice server
+	Endpoint string `json:"endpoint"`
+
+	// Health Health of the server as this API node last saw it
+	Health VoiceServerHealthResponse `json:"health"`
+
+	// InternalEndpoint URL the API uses for the control API and health checks, or null to use the endpoint
+	InternalEndpoint *string `json:"internal_endpoint"`
+
+	// IsActive Whether the server is currently active
+	IsActive bool `json:"is_active"`
+
+	// Latitude Optional geographic latitude override for this server
+	Latitude *float32 `json:"latitude"`
+
+	// Longitude Optional geographic longitude override for this server
+	Longitude *float32 `json:"longitude"`
+
+	// Notes Free-form admin notes about this server, or null when there are none
+	Notes *string `json:"notes"`
+
+	// RegionId ID of the region this server belongs to
+	RegionId string `json:"region_id"`
+
+	// RequiredGuildFeatures Guild features required to use this server
+	RequiredGuildFeatures []string `json:"required_guild_features"`
+
+	// ServerId Unique identifier for the voice server
+	ServerId string `json:"server_id"`
+
+	// SoftConnectionLimit Connection count above which placement prefers another server, or null when the server has no limit
+	SoftConnectionLimit *int `json:"soft_connection_limit"`
+
+	// UpdatedAt ISO 8601 timestamp when the server was last updated
+	UpdatedAt *string `json:"updated_at"`
+
+	// VipOnly Whether this server is restricted to VIP users
+	VipOnly bool `json:"vip_only"`
+}
+
+// VoiceServerHealthResponse defines model for VoiceServerHealthResponse.
+type VoiceServerHealthResponse struct {
+	// CheckedAt ISO 8601 timestamp of the last check, or null before the first
+	CheckedAt *string `json:"checked_at"`
+
+	// Error Status code or short transport error of the last failed check
+	Error *string `json:"error"`
+
+	// Status up, down, or unknown before the first check
+	Status VoiceServerHealthResponseStatus `json:"status"`
+}
+
+// VoiceServerHealthResponseStatus up, down, or unknown before the first check
+type VoiceServerHealthResponseStatus string
 
 // adminApiKeyContextKey is the context key for adminApiKey security scheme
 type adminApiKeyContextKey string
@@ -2896,6 +3365,12 @@ type DeleteAdminUserMessagesParams struct {
 	DryRun *string `form:"dry_run,omitempty" json:"dry_run,omitempty"`
 }
 
+// ListAdminVoiceRegionsParams defines parameters for ListAdminVoiceRegions.
+type ListAdminVoiceRegionsParams struct {
+	// IncludeServers Whether to include voice servers in the response
+	IncludeServers *string `form:"include_servers,omitempty" json:"include_servers,omitempty"`
+}
+
 // UpdateAdminInstanceConfigJSONRequestBody defines body for UpdateAdminInstanceConfig for application/json ContentType.
 type UpdateAdminInstanceConfigJSONRequestBody = InstanceConfigUpdateRequest
 
@@ -2925,6 +3400,18 @@ type ScheduleAdminUserDeletionJSONRequestBody = AdminUserDeletionScheduleRequest
 
 // DeleteAdminUserMessagesJSONRequestBody defines body for DeleteAdminUserMessages for application/json ContentType.
 type DeleteAdminUserMessagesJSONRequestBody = AdminUserMessageDeleteRequest
+
+// CreateAdminVoiceJoinTokenJSONRequestBody defines body for CreateAdminVoiceJoinToken for application/json ContentType.
+type CreateAdminVoiceJoinTokenJSONRequestBody = CreateVoiceJoinTokenRequest
+
+// CreateAdminVoiceRegionJSONRequestBody defines body for CreateAdminVoiceRegion for application/json ContentType.
+type CreateAdminVoiceRegionJSONRequestBody = CreateVoiceRegionRequest
+
+// CreateAdminVoiceServerJSONRequestBody defines body for CreateAdminVoiceServer for application/json ContentType.
+type CreateAdminVoiceServerJSONRequestBody = CreateVoiceServerRequestBody
+
+// UpdateAdminVoiceServerJSONRequestBody defines body for UpdateAdminVoiceServer for application/json ContentType.
+type UpdateAdminVoiceServerJSONRequestBody = UpdateVoiceServerRequestBody
 
 // Getter for additional properties for Error. Returns the specified
 // element and whether it was found

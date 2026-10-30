@@ -28,4 +28,5 @@ type Change struct {
 	Applied   bool
 	Reverted  bool
 	Unchanged bool
+	VoiceDown []string
 }

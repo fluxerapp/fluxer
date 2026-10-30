@@ -25,3 +25,12 @@ output-options:
     - update_admin_instance_config
     - create_admin_instance_branding_asset
     - create_admin_instance_smtp_test
+    - list_admin_voice_regions
+    - create_admin_voice_region
+    - create_admin_voice_server
+    - update_admin_voice_server
+    - delete_admin_voice_server
+    - create_admin_voice_server_test_token
+    - create_admin_voice_join_token
+    - list_admin_voice_join_tokens
+    - revoke_admin_voice_join_token

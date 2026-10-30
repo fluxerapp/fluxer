@@ -54,7 +54,7 @@ rexctl admins sign-in-link <user>
 
 ## rexctl auto-upgrade
 
-Show whether rexctl upgrades Fluxer by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.
+Show whether rexctl upgrades Fluxer, or the voice servers on a voice machine, by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.
 
 ```sh
 rexctl auto-upgrade [flags]
@@ -381,6 +381,10 @@ rexctl install [flags]
 - `--name string`
 
   Your instance's name.
+
+- `--no-bundled-voice`
+
+  Run without the bundled LiveKit and use only voice servers you add later.
 
 - `--no-start`
 
@@ -960,3 +964,289 @@ rexctl version [flags]
 - `--json`
 
   Print JSON.
+
+## rexctl voice
+
+Run standalone LiveKit voice servers next to Fluxer with rexctl voice add, or on other machines with rexctl voice token and rexctl voice join.
+
+To run without the bundled voice server, run rexctl config set voice.bundled false, or install with rexctl install --no-bundled-voice. Calls then go only to the servers you add. rexctl config set voice.bundled true brings the bundled server back.
+
+### rexctl voice add
+
+Add standalone LiveKit voice servers next to your Fluxer instance on this machine. Each one gets its own ID, ports, keys and path on your domain, and rexctl registers it with your instance.
+
+```sh
+rexctl voice add [flags]
+```
+
+- `--count int`
+
+  How many servers to add. The default is `1`.
+
+- `--dry-run`
+
+  Show what would happen and change nothing.
+
+- `--force`
+
+  Add servers even when Fluxer runs through a tunnel.
+
+- `--id string`
+
+  Server ID, such as fra-server-2.
+
+- `--image string`
+
+  LiveKit image to run.
+
+- `--ip string`
+
+  Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
+
+- `--lat float`
+
+  Latitude of the server.
+
+- `--long float`
+
+  Longitude of the server.
+
+- `--memory string`
+
+  Memory limit for the server, such as 2g.
+
+- `--new-region string`
+
+  Create a voice region with this ID for the servers.
+
+- `--no-firewall`
+
+  Leave the firewall on this machine alone.
+
+- `--region string`
+
+  Existing voice region for the server.
+
+- `--region-name string`
+
+  Name of the new region.
+
+- `--soft-limit int`
+
+  Connections above which placement prefers another server.
+
+- `--tcp-port int`
+
+  TCP port for media.
+
+- `--udp-port int`
+
+  UDP port for media.
+
+### rexctl voice hostname
+
+Move a voice server on this machine to a hostname once its DNS record points here. rexctl gets a certificate and updates the server's endpoint on the instance.
+
+```sh
+rexctl voice hostname <id> <host>
+```
+
+### rexctl voice join
+
+Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at \<domain>. Get the token with rexctl voice token on the Fluxer machine, or with Add a voice server in the admin panel. The token works once. rexctl also reads it from FLUXER_VOICE_JOIN_TOKEN or, with --token-stdin, from standard input.
+
+```sh
+rexctl voice join <domain> [token] [flags]
+```
+
+- `--dry-run`
+
+  Show what would happen and change nothing.
+
+- `--email string`
+
+  Email address for Let's Encrypt notices.
+
+- `--endpoint string`
+
+  Public wss:// URL of the server behind your own proxy.
+
+- `--hostname string`
+
+  Hostname for the server's endpoint and certificate.
+
+- `--http-port int`
+
+  Port on 127.0.0.1 for your own proxy, with --no-edge.
+
+- `--id string`
+
+  Server ID, such as fra-server-2.
+
+- `--image string`
+
+  LiveKit image to run.
+
+- `--ip string`
+
+  Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
+
+- `--lat float`
+
+  Latitude of the server.
+
+- `--long float`
+
+  Longitude of the server.
+
+- `--memory string`
+
+  Memory limit for the server, such as 2g.
+
+- `--no-edge`
+
+  Start no edge and publish the server on 127.0.0.1 for your own proxy.
+
+- `--no-firewall`
+
+  Leave the firewall on this machine alone.
+
+- `--region string`
+
+  Existing voice region for the server.
+
+- `--soft-limit int`
+
+  Connections above which placement prefers another server.
+
+- `--tcp-port int`
+
+  TCP port for media.
+
+- `--token-stdin`
+
+  Read the join token from standard input.
+
+- `--udp-port int`
+
+  UDP port for media.
+
+### rexctl voice list
+
+List voice servers.
+
+```sh
+rexctl voice list [flags]
+```
+
+- `--json`
+
+  Print JSON.
+
+### rexctl voice remove
+
+Drain, unregister and delete a voice server.
+
+```sh
+rexctl voice remove [id] [flags]
+```
+
+- `--all`
+
+  Remove every voice server and the edge on this machine.
+
+- `--drain-timeout duration`
+
+  How long to wait for calls to end. The default is `15m0s`.
+
+- `--now`
+
+  Don't wait for calls to end.
+
+### rexctl voice status
+
+Show the voice servers on this machine.
+
+```sh
+rexctl voice status [id]
+```
+
+### rexctl voice test
+
+Join a throwaway room on a voice server and report which transports connect. On the Fluxer machine it can test any server of the instance, including servers on other machines.
+
+```sh
+rexctl voice test [id]
+```
+
+### rexctl voice token
+
+Create a join token and print the command that installs a voice server with it. The token works once.
+
+```sh
+rexctl voice token [flags]
+```
+
+- `--expires string`
+
+  How long the token works, at most 24h. The default is `1h`.
+
+- `--hostname string`
+
+  Hostname the server must use.
+
+- `--id string`
+
+  Server ID.
+
+- `--internal-endpoint string`
+
+  URL the API uses to connect to the server, such as http://10.0.0.5:7880.
+
+- `--lat float`
+
+  Latitude of the new region.
+
+- `--long float`
+
+  Longitude of the new region.
+
+- `--name string`
+
+  A note for the server.
+
+- `--new-region string`
+
+  Create a region with this ID when the server joins.
+
+- `--region string`
+
+  Existing region for the server.
+
+- `--region-name string`
+
+  Name of the new region.
+
+- `--soft-limit int`
+
+  Connections above which placement prefers another server.
+
+### rexctl voice token list
+
+List join tokens.
+
+```sh
+rexctl voice token list [flags]
+```
+
+- `--json`
+
+  Print JSON.
+
+### rexctl voice token revoke
+
+Stop a join token from working.
+
+```sh
+rexctl voice token revoke <token id>
+```

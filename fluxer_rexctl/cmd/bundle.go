@@ -38,6 +38,12 @@ func newBundleCmd(app *App) *cobra.Command {
 			if err := os.WriteFile(filepath.Join(out, ".env.example"), []byte(instance.BundleEnv()), 0o644); err != nil {
 				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
 			}
+			if err := os.WriteFile(filepath.Join(out, "voice", "voice.env.example"), []byte(instance.VoiceBundleEnv()), 0o644); err != nil {
+				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
+			}
+			if err := os.WriteFile(filepath.Join(out, "voice", "edge.env.example"), []byte(instance.VoiceEdgeBundleEnv()), 0o644); err != nil {
+				return ui.Wrap(err, fmt.Sprintf("Couldn't write the files to %s.", out), "Check that you can write to that folder.")
+			}
 			return nil
 		},
 	}
