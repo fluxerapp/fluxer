@@ -335,6 +335,7 @@ export default defineConfig({
 		mdx(),
 	],
 	markdown: {
+		smartypants: false,
 		processor: unified({
 			rehypePlugins: [rehypeRootRelativeLinkPrefix(basePath), rehypeTableColumnWidths()],
 		}),
