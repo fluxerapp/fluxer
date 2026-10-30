@@ -138,9 +138,9 @@ const WALL_SQUISH_HEAVY_SPEED = 1.5;
 const WALL_SQUISH_WINDUP_MS = 120;
 const WALL_SQUISH_SMALL_HOLD_MS = 200;
 const WALL_SQUISH_LARGE_HOLD_MS = 350;
-const WALL_SLOW_NEAR_MS = 140;
-const WALL_SLOW_SCALE = 0.08;
-const WALL_SLOW_EXIT_MS = 200;
+const WALL_SLOW_NEAR_MS = 90;
+const WALL_SLOW_SCALE = 0.5;
+const WALL_SLOW_EXIT_MS = 120;
 
 const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
 
@@ -610,9 +610,9 @@ const NekoEngine = observer((): React.ReactElement => {
 			if (petOnTap && !wasDragging) pet();
 			isDragging = false;
 			const fling = wasDragging ? computeVelocity(dragBufferRef.current, event.timeStamp) : {vx: 0, vy: 0, scalar: 0};
-			const stale = isDragBufferStale(dragBufferRef.current, event.timeStamp);
-			velocityRef.current = stale ? {vx: 0, vy: 0} : {vx: fling.vx, vy: fling.vy};
-			isFlingingRef.current = !stale && fling.scalar > MIN_FLING_SPEED;
+			const noFling = reducedMotionRef.current || isDragBufferStale(dragBufferRef.current, event.timeStamp);
+			velocityRef.current = noFling ? {vx: 0, vy: 0} : {vx: fling.vx, vy: fling.vy};
+			isFlingingRef.current = !noFling && fling.scalar > MIN_FLING_SPEED;
 			smash = null;
 			slowRelease = null;
 			didBounce = false;
