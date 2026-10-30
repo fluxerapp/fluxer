@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Невалидна заявка.",
 	"misc.invalid_snowflake": "Невалиден snowflake.",
 	"misc_limits.max_applications_reached": "Достигна максимума от {limit} {limit, plural, one {приложение} other {приложения}}.",
-	"misc_limits.max_badges_reached": "Достигна максимума от {count} {count, plural, one {значка} other {значки}} за този тип.",
+	"misc_limits.max_badges_reached": "Ограничението е {count} {count, plural, one {значка} other {значки}}.",
 	"misc_limits.max_bookmarks_reached": "Достигна максимума от {count} {count, plural, one {отметка} other {отметки}}.",
 	"misc_limits.max_category_channels_reached": "Достигна максимума от {count} {count, plural, one {категория} other {категории}}.",
 	"misc_limits.max_friends_reached": "Достигна максимума от {count} {count, plural, one {приятел} other {приятели}}.",

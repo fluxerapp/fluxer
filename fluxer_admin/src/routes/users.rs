@@ -54,6 +54,8 @@ struct UserDetailQuery {
     delete_all_messages_message_count: Option<u64>,
     report_id: Option<String>,
     message: Option<String>,
+    badge_q: Option<String>,
+    badge_pick: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -331,6 +333,8 @@ async fn user_tab(
         delete_all_messages_message_count: None,
         report_id: None,
         message: None,
+        badge_query: None,
+        badge_picks: Vec::new(),
     };
     let admin_acls = auth.0.acls();
     let account_identity = state.account_identity_settings(&client).await;
@@ -390,6 +394,8 @@ fn to_tab_query(q: &UserDetailQuery) -> user_tabs::TabQuery {
         delete_all_messages_message_count: q.delete_all_messages_message_count,
         report_id: q.report_id.clone(),
         message: q.message.clone(),
+        badge_query: q.badge_q.clone(),
+        badge_picks: crate::api::badges::parse_badge_picks(q.badge_pick.as_deref()),
     }
 }
 

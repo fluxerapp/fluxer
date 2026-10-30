@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Nevažeći zahtjev.",
 	"misc.invalid_snowflake": "Nevažeći snowflake.",
 	"misc_limits.max_applications_reached": "Dosegnut je maksimum od {limit, plural, one {# aplikacije} few {# aplikacije} other {# aplikacija}}.",
-	"misc_limits.max_badges_reached": "Dosegnut je maksimum od {count, plural, one {# značke} few {# značke} other {# znački}} za ovu vrstu.",
+	"misc_limits.max_badges_reached": "Ograničenje je {count, plural, one {# značka} few {# značke} other {# znački}}.",
 	"misc_limits.max_bookmarks_reached": "Dosegnut je maksimum od {count, plural, one {# oznake} few {# oznake} other {# oznaka}}.",
 	"misc_limits.max_category_channels_reached": "Dosegnut je maksimum od {count, plural, one {# kanala kategorije} few {# kanala kategorije} other {# kanala kategorije}}.",
 	"misc_limits.max_friends_reached": "Dosegnut je maksimum od {count, plural, one {# prijatelja} few {# prijatelja} other {# prijatelja}}.",

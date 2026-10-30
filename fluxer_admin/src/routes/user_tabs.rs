@@ -5,7 +5,7 @@ use crate::{
     api::{
         audit::SearchAuditLogsParams,
         client::{AdminApiClient, ApiResultExt},
-        types::AccountIdentitySettings,
+        types::{AccountIdentitySettings, CustomBadgeType},
     },
     config::AdminConfig,
     templates::{
@@ -27,6 +27,8 @@ pub struct TabQuery {
     pub delete_all_messages_message_count: Option<u64>,
     pub report_id: Option<String>,
     pub message: Option<String>,
+    pub badge_query: Option<String>,
+    pub badge_picks: Vec<String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -64,7 +66,12 @@ pub async fn render(
                 async {
                     if acl::has_permission(admin_acls, acl::BADGE_LIST) {
                         client
-                            .list_badges()
+                            .load_badge_assignment(
+                                CustomBadgeType::User,
+                                &u.badge_ids,
+                                query.badge_query.as_deref(),
+                                &query.badge_picks,
+                            )
                             .await
                             .log_error("load badges for user overview")
                     } else {

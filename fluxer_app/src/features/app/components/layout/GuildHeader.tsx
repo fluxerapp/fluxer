@@ -155,7 +155,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 							<GuildBadge
 								features={guild.features}
 								badgeIds={guild.badgeIds}
-								customBadgeLimit={2}
+								visibleCustomBadges={2}
 								linkable
 								variant={onBanner ? 'banner' : 'default'}
 								tooltipPosition="bottom"

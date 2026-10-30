@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "请求无效。",
 	"misc.invalid_snowflake": "雪花 ID 无效。",
 	"misc_limits.max_applications_reached": "你已达到 {limit, plural, other {# 个应用}}的上限。",
-	"misc_limits.max_badges_reached": "此类型已达到 {count, plural, other {# 个徽章}}的上限。",
+	"misc_limits.max_badges_reached": "上限为 {count, plural, other {# 个徽章}}。",
 	"misc_limits.max_bookmarks_reached": "你已达到 {count, plural, other {# 条书签}}的上限。",
 	"misc_limits.max_category_channels_reached": "你已达到 {count, plural, other {# 个分类频道}}的上限。",
 	"misc_limits.max_friends_reached": "你已达到 {count, plural, other {# 位好友}}的上限。",

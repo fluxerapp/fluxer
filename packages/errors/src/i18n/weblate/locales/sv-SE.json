@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Ogiltig begäran.",
 	"misc.invalid_snowflake": "Ogiltig snowflake.",
 	"misc_limits.max_applications_reached": "Du har nått gränsen på {limit, plural, one {# applikation} other {# applikationer}}.",
-	"misc_limits.max_badges_reached": "Du har nått gränsen på {count, plural, one {# märke} other {# märken}} för den här typen.",
+	"misc_limits.max_badges_reached": "Gränsen är {count, plural, one {# märke} other {# märken}}.",
 	"misc_limits.max_bookmarks_reached": "Du har nått gränsen på {count, plural, one {# bokmärke} other {# bokmärken}}.",
 	"misc_limits.max_category_channels_reached": "Du har nått gränsen på {count, plural, one {# kanal} other {# kanaler}} i en kategori.",
 	"misc_limits.max_friends_reached": "Du har nått gränsen på {count, plural, one {# vän} other {# vänner}}.",

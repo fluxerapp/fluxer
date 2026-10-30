@@ -15,7 +15,7 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import type {CustomBadgeCatalog} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -32,7 +32,7 @@ interface AdminGuildServiceDeps {
 	auditService: AdminAuditService;
 	discoveryRepository: GuildDiscoveryRepository;
 	enforcement: EnforcementDecisionService;
-	instanceConfigRepository: Pick<InstanceConfigRepository, 'getCustomBadges'>;
+	customBadgeCatalog: Pick<CustomBadgeCatalog, 'getByIds' | 'state'>;
 }
 
 export class AdminGuildService {
@@ -63,7 +63,7 @@ export class AdminGuildService {
 			auditService: deps.auditService,
 			updatePropagator: this.updatePropagator,
 			guildService: deps.guildService,
-			instanceConfigRepository: deps.instanceConfigRepository,
+			customBadgeCatalog: deps.customBadgeCatalog,
 		});
 		this.vanityService = new AdminGuildVanityService({
 			guildRepository: deps.guildRepository,

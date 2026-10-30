@@ -11741,6 +11741,92 @@
 				]
 			}
 		},
+		"/instance/badges": {
+			"get": {
+				"operationId": "list_instance_badges",
+				"summary": "List community badges",
+				"tags": ["Instance"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/InstanceBadgesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the custom badges that communities on this instance can show, in display order. Send ids to look up the badges listed in badge_ids of a community, or page through every badge with after and limit. Send the custom_badges_version from discovery as version. While that is still the current version, the response can be cached for a day.",
+				"parameters": [
+					{
+						"name": "ids",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Up to 100 badge IDs separated by commas. Only these badges are returned. Cannot be sent with after",
+							"type": "string",
+							"pattern": "^[0-9]{1,20}(?:,[0-9]{1,20}){0,99}$"
+						},
+						"description": "Up to 100 badge IDs separated by commas. Only these badges are returned. Cannot be sent with after"
+					},
+					{
+						"name": "after",
+						"in": "query",
+						"required": false,
+						"schema": {"$ref": "#/components/schemas/CustomBadgeCursorType"},
+						"description": "Opaque cursor from the next field of a previous page"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Most badges to return, from 1 to 200. Not used with ids",
+							"default": "100",
+							"type": "string"
+						},
+						"description": "Most badges to return, from 1 to 200. Not used with ids"
+					},
+					{
+						"name": "version",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "The catalog version the client already holds. When it is the current version the response can be cached for a day",
+							"type": "string",
+							"maxLength": 64
+						},
+						"description": "The catalog version the client already holds. When it is the current version the response can be cached for a day"
+					}
+				]
+			}
+		},
 		"/instance/setup/account-identity": {
 			"put": {
 				"operationId": "set_instance_account_identity",
@@ -30146,7 +30232,7 @@
 						"description": "Array of guild feature flags"
 					},
 					"badge_ids": {
-						"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document and skip IDs that are not there",
+						"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return",
 						"$ref": "#/components/schemas/CustomBadgeIdListResponse"
 					},
 					"verification_level": {
@@ -33687,6 +33773,54 @@
 				"required": ["mode", "tag_style"],
 				"additionalProperties": false
 			},
+			"CustomBadgeCursorType": {
+				"type": "string",
+				"pattern": "^[gu]-?[0-9]{1,19}$",
+				"description": "Opaque cursor from the next field of a previous page"
+			},
+			"InstanceBadgesResponse": {
+				"type": "object",
+				"properties": {
+					"version": {
+						"type": "string",
+						"maxLength": 64,
+						"description": "Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved"
+					},
+					"badges": {
+						"maxItems": 200,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the badge, as listed in badge_ids of a community",
+									"$ref": "#/components/schemas/SnowflakeStringType"
+								},
+								"name": {"type": "string", "description": "The name of the badge"},
+								"description": {
+									"description": "Text shown under the name when hovering over the badge, or null",
+									"type": ["string", "null"]
+								},
+								"asset_url": {
+									"type": "string",
+									"description": "URL of the badge image, served as WebP by the media proxy"
+								},
+								"href": {"description": "URL opened when the badge is clicked, or null", "type": ["string", "null"]},
+								"position": {"$ref": "#/components/schemas/CustomBadgePositionType"}
+							},
+							"required": ["id", "name", "description", "asset_url", "href", "position"],
+							"additionalProperties": false
+						},
+						"description": "Community badges in display order. IDs that are unknown or deleted are left out"
+					},
+					"next": {
+						"anyOf": [{"$ref": "#/components/schemas/CustomBadgeCursorType"}, {"type": "null"}],
+						"description": "Pass this as after to get the next page, or null on the last page and for a lookup by ids"
+					}
+				},
+				"required": ["version", "badges", "next"],
+				"additionalProperties": false
+			},
 			"HarvestArchiveResponse": {
 				"type": "string",
 				"format": "binary",
@@ -35787,7 +35921,7 @@
 								"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
 							},
 							"badge_ids": {
-								"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document",
+								"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return",
 								"$ref": "#/components/schemas/CustomBadgeIdListResponse"
 							},
 							"approximate_member_count": {
@@ -37905,10 +38039,19 @@
 						"$ref": "#/components/schemas/DomainMigrationDiscoveryResponse"
 					},
 					"guild_badges": {
-						"description": "Custom badges that communities on this instance can show next to their name, in display order",
+						"description": "The first 100 custom badges that communities on this instance can show next to their name, in display order. GET /instance/badges serves every badge",
 						"maxItems": 100,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/InstanceGuildBadgeSchema"}
+					},
+					"guild_badges_partial": {
+						"description": "True when the instance has more community badges than guild_badges lists",
+						"type": "boolean"
+					},
+					"custom_badges_version": {
+						"type": "string",
+						"maxLength": 64,
+						"description": "Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved"
 					},
 					"built_in_guild_badge_images": {
 						"description": "Images this instance shows in place of the built-in verified, partnered and discoverable community badges",
@@ -37969,7 +38112,8 @@
 						"type": ["string", "null"]
 					},
 					"asset_url": {"type": "string", "description": "URL of the badge image, served as WebP by the media proxy"},
-					"href": {"description": "URL opened when the badge is clicked, or null", "type": ["string", "null"]}
+					"href": {"description": "URL opened when the badge is clicked, or null", "type": ["string", "null"]},
+					"position": {"$ref": "#/components/schemas/CustomBadgePositionType"}
 				},
 				"required": ["id", "name", "description", "asset_url", "href"],
 				"additionalProperties": false
@@ -38586,6 +38730,11 @@
 				"description": "Age policy for one region"
 			},
 			"InstanceAgePolicyActionSchema": {"type": "string", "enum": ["restrict", "block"]},
+			"CustomBadgePositionType": {
+				"type": "string",
+				"pattern": "^-?[0-9]{1,19}$",
+				"description": "Display position of the badge. Badges are shown in ascending order of this value"
+			},
 			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"BotFlags": {
 				"type": "integer",
@@ -39454,7 +39603,7 @@
 								"description": "Array of guild feature flags"
 							},
 							"badge_ids": {
-								"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document and skip IDs that are not there",
+								"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return",
 								"$ref": "#/components/schemas/CustomBadgeIdListResponse"
 							},
 							"visits_enabled": {
@@ -39589,7 +39738,7 @@
 						"description": "Array of guild feature flags"
 					},
 					"badge_ids": {
-						"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document and skip IDs that are not there",
+						"description": "IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return",
 						"$ref": "#/components/schemas/CustomBadgeIdListResponse"
 					},
 					"visits_enabled": {
@@ -39602,7 +39751,7 @@
 				"additionalProperties": false
 			},
 			"CustomBadgeIdListResponse": {
-				"maxItems": 10,
+				"maxItems": 1000,
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
 				"description": "IDs of the custom badges assigned to it"
@@ -40696,7 +40845,7 @@
 						"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
 					},
 					"badge_ids": {
-						"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document",
+						"description": "IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return",
 						"$ref": "#/components/schemas/CustomBadgeIdListResponse"
 					},
 					"approximate_member_count": {
@@ -44426,7 +44575,7 @@
 				]
 			},
 			"HiddenProfileBadgesType": {
-				"maxItems": 18,
+				"maxItems": 1008,
 				"type": "array",
 				"items": {
 					"type": "string",
@@ -45886,7 +46035,7 @@
 					"This IP address cannot be added to the blocklist.",
 					"This network block belongs to an enforcement decision. End the decision to remove it.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
-					"You've reached the maximum of {count, plural, one {# badge} other {# badges}} for this type.",
+					"The limit is {count, plural, one {# badge} other {# badges}}.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 					"This community has reached its active thread limit of {count}.",
 					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",

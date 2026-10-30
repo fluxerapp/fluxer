@@ -2,11 +2,18 @@
 
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
+import {BadgeListModal} from '@app/features/user/components/modals/BadgeListModal';
 import styles from '@app/features/user/components/popouts/UserProfileBadges.module.css';
 import {profileBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
+import {
+	MORE_BADGES_DESCRIPTOR,
+	SHOW_ALL_BADGES_COUNT_DESCRIPTOR,
+	SHOW_ALL_BADGES_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {ProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -20,6 +27,7 @@ interface UserProfileBadgesProps {
 	badges: ReadonlyArray<ProfileBadgeResponse>;
 	isModal?: boolean;
 	isMobile?: boolean;
+	maxVisible?: number;
 	onEditBadges?: () => void;
 	'data-flx'?: string;
 }
@@ -31,6 +39,26 @@ const EDIT_BADGES_DESCRIPTOR = msg({
 });
 
 const BADGE_REVEAL_TIMEOUT_MS = 1000;
+const COMPACT_VISIBLE_BADGES = 7;
+const WIDE_VISIBLE_BADGES = 15;
+
+function openBadgeList(badges: ReadonlyArray<ProfileBadgeResponse>, dataFlx: string): void {
+	ModalCommands.push(
+		ModalCommands.modal(() => (
+			<BadgeListModal
+				items={badges.map((badge) => ({
+					key: badge.key,
+					imageUrl: profileBadgeImageUrl(badge),
+					caption: badge.caption ?? null,
+					title: badge.details?.title ?? badge.label,
+					lines: badge.details?.lines ?? [],
+					href: badge.href ?? null,
+				}))}
+				data-flx={`${dataFlx}.badge-list-modal`}
+			/>
+		)),
+	);
+}
 
 function isSettledImage(url: string): boolean {
 	return ImageCacheUtils.hasImage(url) || ImageCacheUtils.hasFailedImage(url);
@@ -97,9 +125,19 @@ function opensPremiumModal(badge: ProfileBadgeResponse): boolean {
 }
 
 export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
-	({badges, isModal = false, isMobile = false, onEditBadges, 'data-flx': dataFlx = 'user.user-profile-badges'}) => {
+	({
+		badges,
+		isModal = false,
+		isMobile = false,
+		maxVisible,
+		onEditBadges,
+		'data-flx': dataFlx = 'user.user-profile-badges',
+	}) => {
 		const {i18n} = useLingui();
-		const ready = useBadgeImagesReady(badges);
+		const limit = maxVisible ?? (isModal && !isMobile ? WIDE_VISIBLE_BADGES : COMPACT_VISIBLE_BADGES);
+		const visible = badges.length > limit ? badges.slice(0, limit) : badges;
+		const hidden = badges.length - visible.length;
+		const ready = useBadgeImagesReady(visible);
 		if (badges.length === 0 && !onEditBadges) {
 			return null;
 		}
@@ -143,7 +181,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 		};
 		return (
 			<div className={clsx(containerClassName, !ready && styles.pending)} data-flx={dataFlx}>
-				{badges.map((badge) => {
+				{visible.map((badge) => {
 					const imageUrl = profileBadgeImageUrl(badge);
 					const content =
 						imageUrl !== null ? (
@@ -178,6 +216,21 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 						</Tooltip>
 					);
 				})}
+				{hidden > 0 && (
+					<Tooltip text={i18n._(SHOW_ALL_BADGES_DESCRIPTOR)} data-flx={`${dataFlx}.more-tooltip`}>
+						<FocusRing offset={-2} data-flx={`${dataFlx}.more-focus-ring`}>
+							<button
+								type="button"
+								className={clsx(styles.moreButton, touch ? styles.moreButtonMobile : styles.moreButtonDesktop)}
+								aria-label={i18n._(SHOW_ALL_BADGES_COUNT_DESCRIPTOR, {count: hidden})}
+								onClick={() => openBadgeList(badges, dataFlx)}
+								data-flx={`${dataFlx}.more-button`}
+							>
+								{i18n._(MORE_BADGES_DESCRIPTOR, {count: hidden})}
+							</button>
+						</FocusRing>
+					</Tooltip>
+				)}
 				{onEditBadges && (
 					<Tooltip text={i18n._(EDIT_BADGES_DESCRIPTOR)} data-flx={`${dataFlx}.edit-tooltip`}>
 						<FocusRing offset={-2} data-flx={`${dataFlx}.edit-focus-ring`}>

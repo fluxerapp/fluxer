@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "リクエストが無効です。",
 	"misc.invalid_snowflake": "Snowflakeが無効です。",
 	"misc_limits.max_applications_reached": "アプリケーションの上限{limit, plural, other {#件}}に達しました。",
-	"misc_limits.max_badges_reached": "この種類のバッジの上限{count, plural, other {#個}}に達しました。",
+	"misc_limits.max_badges_reached": "上限は{count, plural, other {#個}}です。",
 	"misc_limits.max_bookmarks_reached": "ブックマークの上限{count, plural, other {#件}}に達しました。",
 	"misc_limits.max_category_channels_reached": "カテゴリチャンネルの上限{count, plural, other {#件}}に達しました。",
 	"misc_limits.max_friends_reached": "友だちの上限{count, plural, other {#人}}に達しました。",

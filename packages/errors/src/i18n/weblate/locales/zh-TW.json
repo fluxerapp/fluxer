@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "無效的要求。",
 	"misc.invalid_snowflake": "無效的 Snowflake。",
 	"misc_limits.max_applications_reached": "你已達到 {limit, plural, other {# 個應用程式}}的上限。",
-	"misc_limits.max_badges_reached": "此類型已達到 {count, plural, other {# 個徽章}}的上限。",
+	"misc_limits.max_badges_reached": "上限為 {count, plural, other {# 個徽章}}。",
 	"misc_limits.max_bookmarks_reached": "你已達到 {count, plural, other {# 個書籤}}的上限。",
 	"misc_limits.max_category_channels_reached": "你已達到 {count, plural, other {# 個類別頻道}}的上限。",
 	"misc_limits.max_friends_reached": "你已達到 {count, plural, other {# 位好友}}的上限。",

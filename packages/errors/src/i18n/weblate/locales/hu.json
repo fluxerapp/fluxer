@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Érvénytelen kérés.",
 	"misc.invalid_snowflake": "Érvénytelen snowflake-azonosító.",
 	"misc_limits.max_applications_reached": "Elérted az alkalmazások megengedett számát ({limit, plural, one {#} other {#}}).",
-	"misc_limits.max_badges_reached": "Elérted az ilyen típusú jelvények megengedett számát ({count, plural, one {#} other {#}}).",
+	"misc_limits.max_badges_reached": "A korlát {count, plural, one {# jelvény} other {# jelvény}}.",
 	"misc_limits.max_bookmarks_reached": "Elérted a mentett üzenetek megengedett számát ({count, plural, one {#} other {#}}).",
 	"misc_limits.max_category_channels_reached": "Elérted a kategóriacsatornák megengedett számát ({count, plural, one {#} other {#}}).",
 	"misc_limits.max_friends_reached": "Elérted az ismerősök megengedett számát ({count, plural, one {#} other {#}}).",

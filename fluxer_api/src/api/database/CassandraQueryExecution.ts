@@ -103,7 +103,7 @@ export interface PagedQueryResult<T> {
 }
 
 interface CassandraReadOptions {
-	consistency: 'all' | 'serial';
+	consistency: 'all' | 'serial' | 'localQuorum';
 }
 
 async function collectSelectRows<T>(queryType: string, result: cassandra.types.ResultSet): Promise<Array<T>> {
@@ -320,7 +320,11 @@ interface BatchQuery {
 	meta?: KvQueryMeta;
 }
 
-async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<void> {
+async function executeBatch(
+	queries: Array<BatchQuery>,
+	atomic = true,
+	consistency?: CassandraReadOptions['consistency'],
+): Promise<void> {
 	if (queries.length === 0) return;
 	for (const {query, params, meta} of queries) {
 		assertUnconditional({cql: query, params: params as CassandraParams, kvMeta: meta});
@@ -340,6 +344,7 @@ async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<
 		prepare: true,
 		logged: atomic,
 		counter: false,
+		...(consistency ? {consistency: getLoadedCassandraDriver()?.types.consistencies[consistency]} : {}),
 	};
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
@@ -373,9 +378,9 @@ export class BatchBuilder {
 		return this;
 	}
 
-	async execute(atomic = true): Promise<void> {
+	async execute(atomic = true, consistency?: CassandraReadOptions['consistency']): Promise<void> {
 		if (this.queries.length === 0) return;
-		await executeBatch(this.queries, atomic);
+		await executeBatch(this.queries, atomic, consistency);
 	}
 
 	async executeChunked(chunkSize: number, atomic = false): Promise<void> {

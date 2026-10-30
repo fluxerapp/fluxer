@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "अमान्य रिक्वेस्ट।",
 	"misc.invalid_snowflake": "अमान्य स्नोफ्लेक।",
 	"misc_limits.max_applications_reached": "आप अधिकतम {limit} {limit, plural, one {एप्लिकेशन} other {एप्लिकेशन}} तक पहुँच गए हैं।",
-	"misc_limits.max_badges_reached": "आप इस प्रकार के अधिकतम {count} {count, plural, one {बैज} other {बैज}} तक पहुँच गए हैं।",
+	"misc_limits.max_badges_reached": "सीमा {count} {count, plural, one {बैज} other {बैज}} है।",
 	"misc_limits.max_bookmarks_reached": "आप अधिकतम {count} {count, plural, one {बुकमार्क} other {बुकमार्क}} तक पहुँच गए हैं।",
 	"misc_limits.max_category_channels_reached": "आप अधिकतम {count} कैटेगरी {count, plural, one {चैनल} other {चैनल}} तक पहुँच गए हैं।",
 	"misc_limits.max_friends_reached": "आप अधिकतम {count} {count, plural, one {दोस्त} other {दोस्त}} तक पहुँच गए हैं।",

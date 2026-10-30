@@ -43,6 +43,8 @@ struct GuildDetailQuery {
     page: Option<u32>,
     reports_page: Option<u32>,
     before: Option<String>,
+    badge_q: Option<String>,
+    badge_pick: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -580,6 +582,8 @@ fn to_tab_query(q: &GuildDetailQuery) -> guild_tabs::GuildTabQuery {
         members_page: q.page,
         reports_page: q.reports_page,
         audit_before: q.before.clone(),
+        badge_query: q.badge_q.clone(),
+        badge_picks: crate::api::badges::parse_badge_picks(q.badge_pick.as_deref()),
     }
 }
 

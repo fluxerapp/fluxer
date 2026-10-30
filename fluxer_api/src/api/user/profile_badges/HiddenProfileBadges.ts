@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
 import type {User} from '@app/api/models/User';
 import {heldPremiumBadgeKind} from '@app/api/user/profile_badges/PremiumBadgeMasking';
 import {getBadgePremiumType} from '@app/api/user/UserHelpers';
 import {
-	CustomBadgeTypes,
 	customBadgeIdFromProfileBadgeKey,
 	PREMIUM_PROFILE_BADGE_KINDS,
 	type ProfileBadgeKey,
@@ -46,13 +44,17 @@ export function resolveHiddenProfileBadges(
 	return next;
 }
 
+export function hiddenCustomBadgeIds(hidden: ReadonlySet<ProfileBadgeKey>): Array<string> {
+	return [...hidden].flatMap((key) => {
+		const id = customBadgeIdFromProfileBadgeKey(key);
+		return id === null ? [] : [id];
+	});
+}
+
 export function dropUndefinedCustomBadgeKeys(
 	hidden: ReadonlySet<ProfileBadgeKey>,
-	customBadges: ReadonlyArray<CustomBadgeDefinition>,
+	userBadgeIds: ReadonlySet<string>,
 ): Set<ProfileBadgeKey> {
-	const userBadgeIds = new Set(
-		customBadges.filter((badge) => badge.type === CustomBadgeTypes.USER).map((badge) => badge.id),
-	);
 	return new Set(
 		[...hidden].filter((key) => {
 			const id = customBadgeIdFromProfileBadgeKey(key);

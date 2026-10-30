@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "คำขอไม่ถูกต้อง",
 	"misc.invalid_snowflake": "Snowflake ไม่ถูกต้อง",
 	"misc_limits.max_applications_reached": "คุณมีแอปพลิเคชันครบ {limit} {limit, plural, other {รายการ}} แล้ว",
-	"misc_limits.max_badges_reached": "คุณมีเหรียญตราประเภทนี้ครบ {count} {count, plural, other {รายการ}} แล้ว",
+	"misc_limits.max_badges_reached": "จำกัดไว้ที่ {count} {count, plural, other {รายการ}}",
 	"misc_limits.max_bookmarks_reached": "คุณมีบุ๊กมาร์กครบ {count} {count, plural, other {รายการ}} แล้ว",
 	"misc_limits.max_category_channels_reached": "คุณมีช่องหมวดหมู่ครบ {count} {count, plural, other {ช่อง}} แล้ว",
 	"misc_limits.max_friends_reached": "คุณมีเพื่อนครบ {count} {count, plural, other {คน}} แล้ว",

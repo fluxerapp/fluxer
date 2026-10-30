@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Ungültige Anfrage.",
 	"misc.invalid_snowflake": "Ungültige Snowflake-Kennung.",
 	"misc_limits.max_applications_reached": "Du hast die maximale Anzahl von {limit, plural, one {# Anwendung} other {# Anwendungen}} erreicht.",
-	"misc_limits.max_badges_reached": "Du hast die maximale Anzahl von {count, plural, one {# Abzeichen} other {# Abzeichen}} für diesen Typ erreicht.",
+	"misc_limits.max_badges_reached": "Das Limit liegt bei {count, plural, one {# Abzeichen} other {# Abzeichen}}.",
 	"misc_limits.max_bookmarks_reached": "Du hast die maximale Anzahl von {count, plural, one {# Lesezeichen} other {# Lesezeichen}} erreicht.",
 	"misc_limits.max_category_channels_reached": "Du hast das Limit von {count, plural, one {# Kanal} other {# Kanälen}} pro Kategorie erreicht.",
 	"misc_limits.max_friends_reached": "Du hast das Limit von {count, plural, one {# Freund} other {# Freunden}} erreicht.",

@@ -61,6 +61,12 @@ This goes back to the version you had before your last upgrade and keeps your da
 
 If that backup leaves out uploads, the uploads stay as they are. Files uploaded since the upgrade stay on disk, and attachments deleted since the upgrade don't come back. For backups before upgrades that also hold uploads, run `rexctl auto-upgrade on` again with your other flags and `--backup full`, or pass `--backup full` to `rexctl upgrade`. This applies from the next upgrade.
 
+### Custom badges and rollbacks
+
+Custom badges are stored in their own tables. The first start of a version with these tables copies the badges from the instance settings into them, and it does nothing on later starts. If you roll back past that version, the older version shows the badges as they were before the upgrade, with their images. Badges you made, changed or moved after the upgrade come back when you upgrade again. Changes you make while the older version runs aren't copied when you upgrade again. A badge you make there is missing after the upgrade, and a badge you delete or give a new image there comes back without its image. Delete it or upload its image again.
+
+Set how many badges one user or one guild can have under Limits on the Badges page of the admin panel.
+
 ## Back up and restore
 
 ```sh

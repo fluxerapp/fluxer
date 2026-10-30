@@ -53,7 +53,7 @@ The full admin view of one account, with the flags, lifecycle, contact and netwo
 | enforcement_decision_id | ?snowflake | The [enforcement decision](/admin-api/enforcement/) that owns the account's state |
 | acls | array[string] | The [Admin ACLs](/admin-api/#acl-registry) set on the account |
 | traits | array[string] | The operator labels on the account, sorted (at most 100) |
-| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) given to the account (at most 10) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) given to the account (at most 1000) |
 | has_totp | boolean | Whether a TOTP authenticator is registered |
 | has_password | boolean | Whether the account has a password |
 | claimed | boolean | Whether the account can sign in from another device |
@@ -844,7 +844,7 @@ Replaces the [custom badges](/admin-api/badges/) given to the account and return
 
 | Field | Type | Description |
 | --- | --- | --- |
-| badge_ids | array[snowflake] | The user badges to give, replacing the current ones (at most 10) |
+| badge_ids | array[snowflake] | The user badges to give, replacing the current ones (at most 1000) |
 
 ### Response body
 
@@ -857,7 +857,10 @@ Replaces the [custom badges](/admin-api/badges/) given to the account and return
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The badges were replaced |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the list adds a badge and holds more than `max_per_user` of the [badge settings](/admin-api/badges/#badge-settings-object) |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when an ID isn't a user badge, or `UNKNOWN_USER` |
+
+A list that only removes badges always works, even when the account still has more than the limit after a limit was lowered.
 
 The profile shows the change the next time someone loads it, and Fluxer sends no Gateway event.
 

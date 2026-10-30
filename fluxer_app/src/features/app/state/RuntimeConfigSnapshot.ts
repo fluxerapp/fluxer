@@ -78,6 +78,8 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice: InstanceNotice | null;
 	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
+	readonly guildBadgesPartial: boolean;
+	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 }
 
@@ -580,12 +582,15 @@ function readGuildBadges(value: unknown): Array<InstanceGuildBadge> {
 	return value.map((entry, index) => {
 		const path = `guildBadges[${index}]`;
 		const source = readRecord(entry, path);
+		const position =
+			source.position === undefined ? undefined : readNonEmptyString(source, 'position', `${path}.position`);
 		return {
 			id: readNonEmptyString(source, 'id', `${path}.id`),
 			name: readNonEmptyString(source, 'name', `${path}.name`),
 			description: readNullableNonEmptyString(source, 'description', `${path}.description`),
 			asset_url: readNonEmptyString(source, 'asset_url', `${path}.asset_url`),
 			href: readNullableAbsoluteHttpUrl(source, 'href', `${path}.href`),
+			...(position === undefined ? {} : {position}),
 		};
 	});
 }
@@ -630,6 +635,11 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 		domainMigration: parseInstanceDomainMigration(source.domainMigration),
 		notice: readNotice(source.notice),
 		guildBadges: readGuildBadges(source.guildBadges),
+		guildBadgesPartial: source.guildBadgesPartial === true,
+		customBadgesVersion:
+			source.customBadgesVersion === undefined || source.customBadgesVersion === null
+				? null
+				: readNonEmptyString(source, 'customBadgesVersion', 'customBadgesVersion'),
 		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
 	};
 }

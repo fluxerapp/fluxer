@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Solicitação inválida.",
 	"misc.invalid_snowflake": "Snowflake inválido.",
 	"misc_limits.max_applications_reached": "Você atingiu o máximo de {limit, plural, =1 {# aplicativo} other {# aplicativos}}.",
-	"misc_limits.max_badges_reached": "Você atingiu o limite de {count, plural, one {# insígnia} other {# insígnias}} para este tipo.",
+	"misc_limits.max_badges_reached": "O limite é de {count, plural, one {# insígnia} other {# insígnias}}.",
 	"misc_limits.max_bookmarks_reached": "Você atingiu o limite de {count, plural, =1 {# mensagem salva} other {# mensagens salvas}}.",
 	"misc_limits.max_category_channels_reached": "Você atingiu o limite de {count, plural, =1 {# canal por categoria} other {# canais por categoria}}.",
 	"misc_limits.max_friends_reached": "Você atingiu o máximo de {count, plural, =1 {# amigo} other {# amigos}}.",

@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Ugyldig anmodning.",
 	"misc.invalid_snowflake": "Ugyldig snowflake.",
 	"misc_limits.max_applications_reached": "Du har nået det maksimale antal på {limit} {limit, plural, one {applikation} other {applikationer}}.",
-	"misc_limits.max_badges_reached": "Du har nået grænsen på {count, plural, one {# badge} other {# badges}} for denne type.",
+	"misc_limits.max_badges_reached": "Grænsen er {count, plural, one {# badge} other {# badges}}.",
 	"misc_limits.max_bookmarks_reached": "Du har nået grænsen på {count, plural, one {# gemt besked} other {# gemte beskeder}}.",
 	"misc_limits.max_category_channels_reached": "Du har nået det maksimale antal på {count} {count, plural, one {kategorikanal} other {kategorikanaler}}.",
 	"misc_limits.max_friends_reached": "Du har nået det maksimale antal på {count} {count, plural, one {ven} other {venner}}.",

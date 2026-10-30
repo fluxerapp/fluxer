@@ -3,6 +3,7 @@
 import {ME} from '@fluxer/constants/src/AppConstants';
 
 export const Endpoints = {
+	INSTANCE_BADGES: '/instance/badges',
 	INSTANCE_SETUP_ACCOUNT_IDENTITY: '/instance/setup/account-identity',
 	INSTANCE_SETUP_TOKEN_CHECKS: '/instance/setup/token-checks',
 	ATTACHMENTS_REFRESH_URLS: '/attachments/refresh-urls',

@@ -8,10 +8,11 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getCustomBadgeCatalog} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {
 	dropUndefinedCustomBadgeKeys,
+	hiddenCustomBadgeIds,
 	resolveHiddenProfileBadges,
 } from '@app/api/user/profile_badges/HiddenProfileBadges';
 import {applyProfileBadgeSettings} from '@app/api/user/profile_badges/PremiumBadgeMasking';
@@ -19,6 +20,7 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
+import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {PremiumFlags, ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -391,7 +393,8 @@ export class UserAccountProfileService {
 		const {user, data, updates} = params;
 		const requested = resolveHiddenProfileBadges(user.hiddenProfileBadges, data);
 		if (!requested) return;
-		const next = dropUndefinedCustomBadgeKeys(requested, await getInstanceConfigRepository().getCustomBadges());
+		const known = await getCustomBadgeCatalog().getByIds(hiddenCustomBadgeIds(requested), CustomBadgeTypes.USER);
+		const next = dropUndefinedCustomBadgeKeys(requested, new Set(known.map((badge) => badge.id)));
 		if (next.size === user.hiddenProfileBadges.size && [...next].every((key) => user.hiddenProfileBadges.has(key))) {
 			return;
 		}

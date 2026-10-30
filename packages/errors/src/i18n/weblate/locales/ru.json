@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Неверный запрос.",
 	"misc.invalid_snowflake": "Недействительный ID Snowflake.",
 	"misc_limits.max_applications_reached": "Ты достиг максимума: {limit} {limit, plural, one {приложение} few {приложения} many {приложений} other {приложения}}.",
-	"misc_limits.max_badges_reached": "Достигнут максимум для этого типа: {count} {count, plural, one {значок} few {значка} many {значков} other {значка}}.",
+	"misc_limits.max_badges_reached": "Максимум {count} {count, plural, one {значок} few {значка} many {значков} other {значка}}.",
 	"misc_limits.max_bookmarks_reached": "Ты достиг максимума: {count} {count, plural, one {закладка} few {закладки} many {закладок} other {закладки}}.",
 	"misc_limits.max_category_channels_reached": "Ты достиг максимума: {count} {count, plural, one {канал} few {канала} many {каналов} other {канала}} в категории.",
 	"misc_limits.max_friends_reached": "Ты достиг максимума: {count} {count, plural, one {друг} few {друга} many {друзей} other {друга}}.",

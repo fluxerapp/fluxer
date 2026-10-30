@@ -9,8 +9,15 @@ export const CustomBadgeTypes = {
 
 export type CustomBadgeType = ValueOf<typeof CustomBadgeTypes>;
 
-export const MAX_CUSTOM_BADGES_PER_TYPE = 100;
-export const MAX_CUSTOM_BADGES_PER_ENTITY = 10;
+export const CUSTOM_BADGES_PER_USER_CEILING = 1000;
+export const CUSTOM_BADGES_PER_GUILD_CEILING = 200;
+export const DEFAULT_CUSTOM_BADGES_PER_USER = 100;
+export const DEFAULT_CUSTOM_BADGES_PER_GUILD = 50;
+export const DISCOVERY_GUILD_BADGE_LIMIT = 100;
+export const CUSTOM_BADGE_LOOKUP_IDS_MAX = 100;
+export const CUSTOM_BADGE_PAGE_LIMIT_MAX = 200;
+export const CUSTOM_BADGE_PAGE_LIMIT_DEFAULT = 100;
+export const CUSTOM_BADGE_REORDER_IDS_MAX = 1000;
 export const CUSTOM_BADGE_NAME_MAX_LENGTH = 64;
 export const CUSTOM_BADGE_DESCRIPTION_MAX_LENGTH = 256;
 const PROFILE_BADGE_KINDS = [
@@ -28,7 +35,7 @@ export type ProfileBadgeKind = (typeof PROFILE_BADGE_KINDS)[number];
 
 export type ProfileBadgeKey = ProfileBadgeKind | `custom:${string}`;
 
-export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + MAX_CUSTOM_BADGES_PER_ENTITY;
+export const MAX_HIDDEN_PROFILE_BADGES = PROFILE_BADGE_KINDS.length + CUSTOM_BADGES_PER_USER_CEILING;
 
 const BUILT_IN_GUILD_BADGE_KINDS = ['verified', 'partnered', 'discoverable'] as const;
 

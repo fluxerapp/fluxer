@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Solicitud no válida.",
 	"misc.invalid_snowflake": "ID de snowflake no válido.",
 	"misc_limits.max_applications_reached": "Has alcanzado el máximo de {limit} {limit, plural, one {aplicación} other {aplicaciones}}.",
-	"misc_limits.max_badges_reached": "Has alcanzado el máximo de {count, plural, one {# insignia} other {# insignias}} para este tipo.",
+	"misc_limits.max_badges_reached": "El límite es de {count, plural, one {# insignia} other {# insignias}}.",
 	"misc_limits.max_bookmarks_reached": "Has alcanzado el máximo de {count, plural, one {# mensaje guardado} other {# mensajes guardados}}.",
 	"misc_limits.max_category_channels_reached": "Has alcanzado el máximo de {count} {count, plural, one {canal de categoría} other {canales de categoría}}.",
 	"misc_limits.max_friends_reached": "Has alcanzado el máximo de {count} {count, plural, one {amigo} other {amigos}}.",

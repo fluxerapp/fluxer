@@ -2,7 +2,7 @@
 
 import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {assertCustomBadgeIdsOfType} from '@app/api/admin/services/AdminBadgeService';
+import {assertCustomBadgeAssignmentLimit, assertCustomBadgeIdsOfType} from '@app/api/admin/services/AdminBadgeService';
 import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
 import {createGuildID, createRoleID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -15,7 +15,7 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import {onGuildVisitSettingsChanged} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
-import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import type {CustomBadgeCatalog} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
 import {Logger} from '@app/api/Logger';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -35,7 +35,7 @@ interface AdminGuildUpdateServiceDeps {
 	auditService: AdminAuditService;
 	updatePropagator: AdminGuildUpdatePropagator;
 	guildService: Pick<GuildService, 'withUpdateLock'>;
-	instanceConfigRepository: Pick<InstanceConfigRepository, 'getCustomBadges'>;
+	customBadgeCatalog: Pick<CustomBadgeCatalog, 'getByIds' | 'state'>;
 }
 
 export class AdminGuildUpdateService {
@@ -125,14 +125,16 @@ export class AdminGuildUpdateService {
 		adminUserId: UserID;
 		auditLogReason: string | null;
 	}) {
-		const {guildRepository, auditService, updatePropagator, guildService, instanceConfigRepository} = this.deps;
-		await assertCustomBadgeIdsOfType(instanceConfigRepository, 'guild', badgeIds);
+		const {guildRepository, auditService, updatePropagator, guildService, customBadgeCatalog} = this.deps;
+		await assertCustomBadgeIdsOfType(customBadgeCatalog, 'guild', badgeIds);
 		const assigned = new Set(badgeIds);
+		const {max_per_guild: maxPerGuild} = await customBadgeCatalog.state();
 		const updatedGuild = await guildService.withUpdateLock(guildId, async () => {
 			const guild = await guildRepository.findUnique(guildId);
 			if (!guild) {
 				throw new UnknownGuildError();
 			}
+			assertCustomBadgeAssignmentLimit(guild.badgeIds, assigned, maxPerGuild);
 			return guildRepository.upsertPartial(guildId, {badge_ids: assigned.size > 0 ? assigned : null}, guild.toRow());
 		});
 		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);

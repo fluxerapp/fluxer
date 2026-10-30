@@ -133,6 +133,7 @@ import {
 	type WebhooksBySourceChannelRow,
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
+import {CUSTOM_BADGE_COLUMNS, type CustomBadgeRow} from '@app/api/database/types/CustomBadgeTypes';
 import {
 	ENFORCEMENT_DECISION_BY_SUBJECT_COLUMNS,
 	ENFORCEMENT_DECISION_COLUMNS,
@@ -1344,6 +1345,17 @@ export const InstanceConfiguration = defineTable<InstanceConfigurationRow, 'key'
 	name: 'instance_configuration',
 	columns: INSTANCE_CONFIGURATION_COLUMNS,
 	primaryKey: ['key'],
+});
+export const CustomBadges = defineTable<CustomBadgeRow, 'badge_id'>({
+	name: 'custom_badges',
+	columns: CUSTOM_BADGE_COLUMNS,
+	primaryKey: ['badge_id'],
+});
+export const CustomBadgesByPosition = defineTable<CustomBadgeRow, 'type' | 'position', 'type'>({
+	name: 'custom_badges_by_position',
+	columns: CUSTOM_BADGE_COLUMNS,
+	primaryKey: ['type', 'position'],
+	partitionKey: ['type'],
 });
 export const JobsById = defineTable<JobByIdRow, 'job_id'>({
 	name: 'jobs_by_id',

@@ -8,6 +8,10 @@ export const MiscRateLimitConfigs = {
 		bucket: 'instance:info',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	INSTANCE_BADGES: {
+		bucket: 'instance:badges',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	VOICE_JOIN: {
 		bucket: 'voice:join',
 		config: {limit: 10, windowMs: ms('1 minute')},

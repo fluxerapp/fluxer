@@ -155,6 +155,22 @@ pub fn secondary_button(label: &str) -> Markup {
     button_markup(label, "submit", SECONDARY_BUTTON_CLASS)
 }
 
+fn subject_button_markup(label: &str, subject: &str, variant_class: &str) -> Markup {
+    html! {
+        button type="submit" class={(BUTTON_BASE_CLASS) " " (variant_class)} {
+            span { (label) span class="sr-only" { ", " (subject) } }
+        }
+    }
+}
+
+pub fn secondary_button_for(label: &str, subject: &str) -> Markup {
+    subject_button_markup(label, subject, SECONDARY_BUTTON_CLASS)
+}
+
+pub fn danger_button_for(label: &str, subject: &str) -> Markup {
+    subject_button_markup(label, subject, DANGER_BUTTON_CLASS)
+}
+
 pub fn form_field_group(
     label: &str,
     name: &str,

@@ -567,8 +567,7 @@ export const ERROR_I18N_MESSAGES = {
 	'misc.invalid_snowflake': 'Invalid snowflake.',
 	'misc_limits.max_applications_reached':
 		"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
-	'misc_limits.max_badges_reached':
-		"You've reached the maximum of {count, plural, one {# badge} other {# badges}} for this type.",
+	'misc_limits.max_badges_reached': 'The limit is {count, plural, one {# badge} other {# badges}}.',
 	'misc_limits.max_bookmarks_reached':
 		"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 	'misc_limits.max_category_channels_reached':

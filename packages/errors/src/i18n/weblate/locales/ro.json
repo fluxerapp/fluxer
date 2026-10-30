@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Solicitare invalidă.",
 	"misc.invalid_snowflake": "ID-ul Snowflake este invalid.",
 	"misc_limits.max_applications_reached": "Ai atins numărul maxim de {limit, plural, one {# aplicație} few {# aplicații} other {# de aplicații}}.",
-	"misc_limits.max_badges_reached": "Ai atins numărul maxim de {count, plural, one {# insignă} few {# insigne} other {# de insigne}} pentru acest tip.",
+	"misc_limits.max_badges_reached": "Limita este de {count, plural, one {# insignă} few {# insigne} other {# de insigne}}.",
 	"misc_limits.max_bookmarks_reached": "Ai atins numărul maxim de {count, plural, one {# marcaj} few {# marcaje} other {# de marcaje}}.",
 	"misc_limits.max_category_channels_reached": "Ai atins numărul maxim de {count, plural, one {# canal de tip categorie} few {# canale de tip categorie} other {# de canale de tip categorie}}.",
 	"misc_limits.max_friends_reached": "Ai atins numărul maxim de {count, plural, one {# prieten} few {# prieteni} other {# de prieteni}}.",

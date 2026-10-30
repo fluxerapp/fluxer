@@ -7,6 +7,13 @@ import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastruct
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {
+	type CustomBadgeCatalog,
+	CustomBadgeCatalogUnpublishedError,
+	type CustomBadgeMove,
+	type CustomBadgePage,
+} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
+import type {CustomBadge} from '@app/api/instance/custom_badges/CustomBadgeRepository';
+import {
 	assetReferenceHash,
 	assetReferenceUrl,
 	assetStorageKey,
@@ -15,7 +22,7 @@ import {
 } from '@app/api/instance/InstanceAssetReferences';
 import type {
 	BuiltInBadgeImages,
-	CustomBadgeDefinition,
+	CustomBadgeCatalogState,
 	InstanceConfigRepository,
 } from '@app/api/instance/InstanceConfigRepository';
 import {PROFILE_BADGE_ASSETS} from '@app/api/user/profile_badges/ProfileBadgeAssets';
@@ -23,24 +30,29 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	BUILT_IN_BADGE_KINDS,
 	type BuiltInBadgeKind,
+	CUSTOM_BADGE_PAGE_LIMIT_MAX,
 	type CustomBadgeType,
-	MAX_CUSTOM_BADGES_PER_TYPE,
 } from '@fluxer/constants/src/BadgeConstants';
 import {MaxBadgesError} from '@fluxer/errors/src/domains/badge/MaxBadgesError';
 import {UnknownBadgeError} from '@fluxer/errors/src/domains/badge/UnknownBadgeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {
 	AdminBuiltInBadgeImageResponse,
+	AdminCustomBadgeListQuery,
 	AdminCustomBadgeListResponse,
 	AdminCustomBadgeResponse,
+	AdminCustomBadgeSettingsResponse,
 	CreateCustomBadgeRequest,
+	MoveCustomBadgeRequest,
 	UpdateCustomBadgeRequest,
+	UpdateCustomBadgeSettingsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import type {UserMutationResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 interface AdminBadgeServiceDeps {
-	instanceConfigRepository: InstanceConfigRepository;
+	instanceConfigRepository: Pick<InstanceConfigRepository, 'getBuiltInBadgeImages' | 'updateBuiltInBadgeImages'>;
+	catalog: CustomBadgeCatalog;
 	entityAssetService: EntityAssetService;
 	assetDeletionQueue: IAssetDeletionQueue;
 	snowflakeService: ISnowflakeService;
@@ -48,10 +60,11 @@ interface AdminBadgeServiceDeps {
 	cacheService: ICacheService;
 }
 
-function mapCustomBadgeToAdminResponse(badge: CustomBadgeDefinition): AdminCustomBadgeResponse {
+function mapCustomBadgeToAdminResponse(badge: CustomBadge): AdminCustomBadgeResponse {
 	return {
 		id: badge.id,
 		type: badge.type,
+		position: badge.position.toString(),
 		name: badge.name,
 		description: badge.description,
 		asset_url: customBadgeImageUrl(badge.asset, Config.endpoints.media),
@@ -74,42 +87,78 @@ function mapBuiltInBadgeImages(images: BuiltInBadgeImages): Array<AdminBuiltInBa
 	});
 }
 
-function findBadge(badges: ReadonlyArray<CustomBadgeDefinition>, badgeId: string): CustomBadgeDefinition {
-	const badge = badges.find((candidate) => candidate.id === badgeId);
-	if (!badge) {
-		throw new UnknownBadgeError();
-	}
-	return badge;
-}
+const INT64_MAX = (1n << 63n) - 1n;
 
-function assertBelowTypeLimit(badges: ReadonlyArray<CustomBadgeDefinition>, type: CustomBadgeType): void {
-	if (badges.filter((badge) => badge.type === type).length >= MAX_CUSTOM_BADGES_PER_TYPE) {
-		throw new MaxBadgesError({maxBadges: MAX_CUSTOM_BADGES_PER_TYPE});
-	}
+function mapSettings(state: CustomBadgeCatalogState): AdminCustomBadgeSettingsResponse {
+	return {max_per_user: state.max_per_user, max_per_guild: state.max_per_guild};
 }
 
 export async function assertCustomBadgeIdsOfType(
-	instanceConfigRepository: Pick<InstanceConfigRepository, 'getCustomBadges'>,
+	catalog: Pick<CustomBadgeCatalog, 'getByIds'>,
 	type: CustomBadgeType,
 	badgeIds: ReadonlyArray<bigint>,
 ): Promise<void> {
-	const badges = await instanceConfigRepository.getCustomBadges();
-	const known = new Set(badges.filter((badge) => badge.type === type).map((badge) => badge.id));
+	const known = new Set((await catalog.getByIds(badgeIds, type)).map((badge) => badge.id));
 	if (badgeIds.some((badgeId) => !known.has(badgeId.toString()))) {
 		throw new UnknownBadgeError();
 	}
 }
 
+export function assertCustomBadgeAssignmentLimit(
+	current: ReadonlySet<bigint>,
+	next: ReadonlySet<bigint>,
+	max: number,
+): void {
+	if (next.size > max && [...next].some((badgeId) => !current.has(badgeId))) {
+		throw new MaxBadgesError({maxBadges: max});
+	}
+}
+
+function toMove(request: MoveCustomBadgeRequest): CustomBadgeMove {
+	const hasDirection = request.direction !== undefined;
+	const hasAfter = request.after_id !== undefined;
+	if (hasDirection === hasAfter) {
+		throw InputValidationError.create('direction', 'Send either direction or after_id');
+	}
+	return request.direction !== undefined ? {direction: request.direction} : {afterId: request.after_id ?? null};
+}
+
 export class AdminBadgeService {
 	constructor(private readonly deps: AdminBadgeServiceDeps) {}
 
-	async listBadges(): Promise<AdminCustomBadgeListResponse> {
-		const {instanceConfigRepository} = this.deps;
-		const [badges, builtIn] = await Promise.all([
-			instanceConfigRepository.getCustomBadges(),
+	async listBadges(query: AdminCustomBadgeListQuery): Promise<AdminCustomBadgeListResponse> {
+		const {catalog, instanceConfigRepository} = this.deps;
+		if (query.ids !== undefined && (query.query !== undefined || query.after !== undefined)) {
+			throw InputValidationError.create('ids', 'Send ids without query and after');
+		}
+		const [page, state, builtIn] = await Promise.all([
+			this.readListPage(query),
+			catalog.state(),
 			instanceConfigRepository.getBuiltInBadgeImages(),
 		]);
-		return {badges: badges.map(mapCustomBadgeToAdminResponse), built_in: mapBuiltInBadgeImages(builtIn)};
+		return {
+			badges: page.badges.map(mapCustomBadgeToAdminResponse),
+			next: page.next,
+			version: catalog.clientVersion(state.version),
+			settings: mapSettings(state),
+			built_in: mapBuiltInBadgeImages(builtIn),
+		};
+	}
+
+	private async readListPage(query: AdminCustomBadgeListQuery): Promise<CustomBadgePage> {
+		const {catalog} = this.deps;
+		if (query.ids !== undefined) {
+			const ids = [...new Set(query.ids.split(','))].filter((id) => BigInt(id) <= INT64_MAX);
+			return {badges: await catalog.getByIds(ids, query.type), next: null};
+		}
+		if (query.query !== undefined) {
+			return catalog.search({type: query.type, query: query.query, after: query.after, limit: query.limit});
+		}
+		return (await catalog.readPage({type: query.type, after: query.after, limit: query.limit})).value;
+	}
+
+	private firstPage(): Promise<AdminCustomBadgeListResponse> {
+		return this.listBadges({limit: CUSTOM_BADGE_PAGE_LIMIT_MAX});
 	}
 
 	async replaceBuiltInBadgeImage(kind: BuiltInBadgeKind, image: string): Promise<AdminCustomBadgeListResponse> {
@@ -133,7 +182,7 @@ export class AdminBadgeService {
 		if (replaced.asset) {
 			await this.releaseAsset(replaced.asset);
 		}
-		return this.listBadges();
+		return this.firstPage();
 	}
 
 	async resetBuiltInBadgeImage(kind: BuiltInBadgeKind): Promise<AdminCustomBadgeListResponse> {
@@ -146,82 +195,64 @@ export class AdminBadgeService {
 		if (removed.asset) {
 			await this.releaseAsset(removed.asset);
 		}
-		return this.listBadges();
+		return this.firstPage();
 	}
 
 	async createBadge(data: CreateCustomBadgeRequest): Promise<AdminCustomBadgeResponse> {
-		const {instanceConfigRepository, snowflakeService} = this.deps;
-		assertBelowTypeLimit(await instanceConfigRepository.getCustomBadges(), data.type);
+		const {catalog, snowflakeService} = this.deps;
 		const badgeId = await snowflakeService.generate();
 		const prepared = await this.uploadImage(badgeId, data.image);
-		const badge: CustomBadgeDefinition = {
-			id: badgeId.toString(),
-			type: data.type,
-			name: data.name,
-			description: data.description ?? null,
-			asset: this.storedReference(prepared),
-			href: data.href ?? null,
-		};
-		await this.writeOrRollback(prepared, (current) => {
-			assertBelowTypeLimit(current, data.type);
-			return [...current, badge];
-		});
+		const badge = await this.orRollback(prepared, () =>
+			catalog.create({
+				id: badgeId,
+				type: data.type,
+				name: data.name,
+				description: data.description ?? null,
+				asset: this.storedReference(prepared),
+				href: data.href ?? null,
+			}),
+		);
 		return mapCustomBadgeToAdminResponse(badge);
 	}
 
 	async updateBadge(badgeId: bigint, data: UpdateCustomBadgeRequest): Promise<AdminCustomBadgeResponse> {
-		const id = badgeId.toString();
-		const existing = findBadge(await this.deps.instanceConfigRepository.getCustomBadges(), id);
+		const {catalog} = this.deps;
+		const existing = await catalog.getById(badgeId);
+		if (!existing) throw new UnknownBadgeError();
 		const prepared =
 			data.image === undefined ? null : await this.uploadImage(badgeId, data.image, assetReferenceHash(existing.asset));
-		const replaced: {badge?: CustomBadgeDefinition} = {};
-		const badges = await this.writeOrRollback(prepared, (current) => {
-			const previous = findBadge(current, id);
-			replaced.badge = previous;
-			const next: CustomBadgeDefinition = {
-				...previous,
-				name: data.name,
-				description: data.description,
-				href: data.href,
-				asset: prepared ? this.storedReference(prepared) : previous.asset,
-			};
-			return current.map((badge) => (badge.id === id ? next : badge));
-		});
-		const updated = findBadge(badges, id);
-		if (replaced.badge && replaced.badge.asset !== updated.asset) {
-			await this.releaseAsset(replaced.badge.asset);
-		}
-		return mapCustomBadgeToAdminResponse(updated);
+		const {after} = await this.orRollback(prepared, () =>
+			catalog.update(
+				badgeId,
+				{
+					name: data.name,
+					description: data.description,
+					href: data.href,
+					...(prepared ? {asset: this.storedReference(prepared)} : {}),
+				},
+				async ({before, after}) => {
+					if (before.asset !== after.asset) await this.releaseAsset(before.asset);
+				},
+			),
+		);
+		return mapCustomBadgeToAdminResponse(after);
 	}
 
 	async deleteBadge(badgeId: bigint): Promise<void> {
-		const id = badgeId.toString();
-		const removed: {badge?: CustomBadgeDefinition} = {};
-		await this.deps.instanceConfigRepository.updateCustomBadges((current) => {
-			removed.badge = findBadge(current, id);
-			return current.filter((badge) => badge.id !== id);
-		});
-		if (removed.badge) {
-			await this.releaseAsset(removed.badge.asset);
-		}
+		await this.deps.catalog.delete(badgeId, (removed) => this.releaseAsset(removed.asset));
+	}
+
+	async moveBadge(badgeId: bigint, request: MoveCustomBadgeRequest): Promise<AdminCustomBadgeResponse> {
+		return mapCustomBadgeToAdminResponse(await this.deps.catalog.move(badgeId, toMove(request)));
 	}
 
 	async reorderBadges(badgeIds: ReadonlyArray<bigint>): Promise<AdminCustomBadgeListResponse> {
-		const order = badgeIds.map(String);
-		const badges = await this.deps.instanceConfigRepository.updateCustomBadges((current) => {
-			const reordered = order.map((id) => findBadge(current, id));
-			if (new Set(order).size !== order.length) {
-				throw InputValidationError.create('badge_ids', 'Each badge can only be listed once');
-			}
-			if (reordered.length !== current.length) {
-				throw InputValidationError.create('badge_ids', 'List every badge on this instance');
-			}
-			return reordered;
-		});
-		return {
-			badges: badges.map(mapCustomBadgeToAdminResponse),
-			built_in: mapBuiltInBadgeImages(await this.deps.instanceConfigRepository.getBuiltInBadgeImages()),
-		};
+		await this.deps.catalog.reorderAll(badgeIds);
+		return this.firstPage();
+	}
+
+	async updateSettings(patch: UpdateCustomBadgeSettingsRequest): Promise<AdminCustomBadgeSettingsResponse> {
+		return mapSettings(await this.deps.catalog.updateSettings(patch));
 	}
 
 	async updateUserBadges(params: {
@@ -229,10 +260,11 @@ export class AdminBadgeService {
 		badgeIds: ReadonlyArray<bigint>;
 		acls: ReadonlySet<string>;
 	}): Promise<UserMutationResponse> {
-		const {userRepository, cacheService, instanceConfigRepository} = this.deps;
+		const {userRepository, cacheService, catalog} = this.deps;
 		const user = await userRepository.findUniqueAssert(params.userId);
-		await assertCustomBadgeIdsOfType(instanceConfigRepository, 'user', params.badgeIds);
+		await assertCustomBadgeIdsOfType(catalog, 'user', params.badgeIds);
 		const badgeIds = new Set(params.badgeIds);
+		assertCustomBadgeAssignmentLimit(user.badgeIds, badgeIds, (await catalog.state()).max_per_user);
 		const updatedUser = await userRepository.patchUpsert(
 			params.userId,
 			{badge_ids: badgeIds.size > 0 ? badgeIds : null},
@@ -263,14 +295,13 @@ export class AdminBadgeService {
 		return customBadgeAssetReferenceFromOwnUrl(prepared.newCdnUrl, Config.endpoints.media);
 	}
 
-	private async writeOrRollback(
-		prepared: PreparedAssetUpload | null,
-		update: (current: ReadonlyArray<CustomBadgeDefinition>) => Array<CustomBadgeDefinition>,
-	): Promise<ReadonlyArray<CustomBadgeDefinition>> {
+	private async orRollback<T>(prepared: PreparedAssetUpload | null, write: () => Promise<T>): Promise<T> {
 		try {
-			return await this.deps.instanceConfigRepository.updateCustomBadges(update);
+			return await write();
 		} catch (error) {
-			if (prepared) await this.deps.entityAssetService.rollbackAssetUpload(prepared);
+			if (prepared && !(error instanceof CustomBadgeCatalogUnpublishedError)) {
+				await this.deps.entityAssetService.rollbackAssetUpload(prepared);
+			}
 			throw error;
 		}
 	}

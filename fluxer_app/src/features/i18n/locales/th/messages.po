@@ -1166,6 +1166,11 @@ msgstr "{count, plural, one {การสมัครรับการแจ้
 msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {ไฟล์แนบ # รายการ} other {ไฟล์แนบ # รายการ}}"
 
+#. Read out by screen readers while typing in the badge filter of the "Badges" profile settings, with the number of badges that match.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "{count, plural, one {# badge matches} other {# badges match}}"
+msgstr "{count, plural, other {ตรงกัน # เหรียญตรา}}"
+
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
@@ -1351,6 +1356,11 @@ msgstr "{count, plural, other {#สัปดาห์}}"
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#y} other {#y}}"
 msgstr "{count, plural, other {#ปี}}"
+
+#. Screen reader label for the +3 style button that opens the full list of badges. It starts with the same +3 text that is shown on the button, so voice control users can say it.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "{count, plural, one {+# more badge, show all} other {+# more badges, show all}}"
+msgstr "{count, plural, other {+# เหรียญตราเพิ่มเติม แสดงทั้งหมด}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
@@ -2459,7 +2469,9 @@ msgid "/tts"
 msgstr "/tts"
 
 #. Badge on the forward modal preview thumbnail. count is the number of other attachments that the thumbnail does not show.
+#. Short count of badges that are not shown next to a name or on a profile, such as +3. Pressing it opens the full list. Keep it as short as possible.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
+#: src/features/user/utils/UserMessageDescriptors.ts
 msgid "+{count}"
 msgstr "+{count}"
 
@@ -6115,6 +6127,8 @@ msgid "Badge and wall count: {count}"
 msgstr "จำนวนสำหรับป้ายและกำแพง: {count}"
 
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
+#. Title of the window that lists every badge of a person or community.
+#: src/features/user/components/modals/BadgeListModal.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Badges"
 msgstr "ป้าย"
@@ -16568,6 +16582,11 @@ msgstr "แสดงเต็มหน้าลงชื่อเข้าใช
 msgid "Filter"
 msgstr "ตัวกรอง"
 
+#. Placeholder and screen reader label of the text field above a long list of badges in the "Badges" profile settings. Typing in it shows only the badges whose name holds the text.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "Filter badges"
+msgstr "กรองป้าย"
+
 #. Accessible label for the account-age filter chip on the community members page.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx
 msgid "Filter by account creation date"
@@ -24261,6 +24280,11 @@ msgstr "ไม่มีคำแนะนำการเติมข้อคว
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "No background"
 msgstr "ไม่มีพื้นหลัง"
+
+#. Shown under the badge filter in the "Badges" profile settings when the typed text matches none of your badges.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "No badges match."
+msgstr "ไม่มีเหรียญตราที่ตรงกัน"
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx
 msgid "No banned users"
@@ -32973,6 +32997,11 @@ msgstr "แสดงสถานะกำลังใช้งานบนหน
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Show activity on other accounts"
 msgstr "แสดงกิจกรรมในบัญชีอื่น"
+
+#. Tooltip for the +3 style button that opens the full list of badges.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Show all badges"
+msgstr "แสดงป้ายทั้งหมด"
 
 #. Short label for an advanced media button preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx

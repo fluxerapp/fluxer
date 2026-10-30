@@ -31,13 +31,17 @@ The public description of one instance.
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, setup state and legal links |
 | age_policy? | [age policy](#age-policy-object) object | Regional age policy |
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
-| guild_badges? | array[[guild badge](#guild-badge-object) object] | The custom badges that guilds can show next to their name, in display order (at most 10) |
+| guild_badges?<sup>1</sup> | array[[guild badge](#guild-badge-object) object] | The first custom badges that guilds can show next to their name, in display order (at most 100) |
+| guild_badges_partial? | boolean | True when the instance has more guild badges than `guild_badges` lists |
+| custom_badges_version? | string | The badge catalog version. It changes whenever a badge is created, edited, deleted or moved |
 | built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
 | voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies (at most 1000) |
 
+<sup>1</sup> An instance can have any number of guild badges. Discovery lists the first 100 in display order, and [List guild badges](#list-guild-badges) serves every one. A client that knows only `guild_badges` can't show a badge past the first 100
+
 ## Guild badge object
 
-A custom badge that instance admins give to guilds. A guild lists the badges it has in `badge_ids`, and clients skip any ID that isn't in `guild_badges`.
+A custom badge that instance admins give to guilds. A guild lists the badges it has in `badge_ids`. Clients look up the IDs they don't know with [List guild badges](#list-guild-badges), skip the IDs it leaves out, and show the badges in ascending `position` order.
 
 ### Structure
 
@@ -48,6 +52,18 @@ A custom badge that instance admins give to guilds. A guild lists the badges it 
 | description | ?string | The tooltip text under the name, or null |
 | asset_url | string | The badge image as WebP from the media proxy. Add a `size` query parameter to get it at the size you draw it |
 | href | ?string | The `https` URL a click opens, or null |
+| position? | string | The display position, a 64-bit integer as a string. Older instances leave it out, and clients then keep the order of `guild_badges` |
+
+### Loading badges
+
+A client can show guild badges without holding the whole catalog.
+
+1. Keep the badges from `guild_badges` and the `custom_badges_version` of the discovery document.
+2. For each guild, look up the IDs in `badge_ids` that you don't know, in batches of up to 100, with `ids` and `version` set.
+3. Remember the IDs the response leaves out, and don't ask for them again while the version stays the same.
+4. When discovery or a lookup returns a newer version, forget the badges you looked up and ask again when you need them.
+
+An instance without `custom_badges_version` doesn't have [List guild badges](#list-guild-badges). Use `guild_badges` alone and fetch discovery again for an unknown ID.
 
 ## Built-in guild badge images object
 
@@ -512,6 +528,48 @@ Returns the [instance discovery object](#instance-discovery-object). The respons
 | 304 | None | The document hasn't changed |
 
 The rate limit is 60 requests per minute, on the `instance:info` bucket.
+
+## List guild badges
+
+<RouteHeader method="GET" path="/v1/instance/badges" unauthenticated />
+
+Returns custom guild badges in display order. Send `ids` to look up the badges of some guilds, or page through every badge with `after` and `limit`. User badges aren't listed here. They come back in each [profile](/http-api/users/#profile-badge-object) instead.
+
+### Query string parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ids? | string | Up to 100 badge IDs separated by commas. Can't be sent with `after` |
+| after? | string | The `next` value of the previous page |
+| limit? | integer | How many badges to return when paging (1-200, default 100) |
+| version? | string | The `custom_badges_version` the client holds |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| version | string | The current badge catalog version |
+| badges | array[[guild badge](#guild-badge-object) object] | The badges in display order. IDs that are unknown, deleted or user badges are left out |
+| next | ?string | Send this as `after` to get the next page, or null on the last page and for a lookup by `ids` |
+
+### Caching
+
+| Request | `Cache-Control` |
+| --- | --- |
+| `version` is the current version | `public, max-age=86400, immutable` |
+| no `version`, or an older one | `public, max-age=60, must-revalidate` |
+
+The response has an `ETag` header, and a request with a matching `If-None-Match` gets 304 with no body. A response read while the catalog changes gets the short lifetime and no `ETag`. The version also changes when the instance moves to a new media URL, because every `asset_url` changes with it.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badges were returned |
+| 304 | None | The badges haven't changed |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` for a bad parameter, a cursor from another list, or `ids` sent with `after` |
+
+The rate limit is 60 requests per minute, on the `instance:badges` bucket. A request with a valid token counts against the account, and a request without one counts against the IP address.
 
 ## Get client geolocation
 

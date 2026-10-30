@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "طلب غير صالح.",
 	"misc.invalid_snowflake": "معرف Snowflake غير صالح.",
 	"misc_limits.max_applications_reached": "لقد وصلت إلى الحد الأقصى وهو {limit, plural, zero {# تطبيق} one {تطبيق واحد} two {تطبيقان} few {# تطبيقات} many {# تطبيقًا} other {# تطبيق}}.",
-	"misc_limits.max_badges_reached": "لقد وصلت إلى الحد الأقصى لهذا النوع وهو {count, plural, zero {# شارة} one {شارة واحدة} two {شارتان} few {# شارات} many {# شارة} other {# شارة}}.",
+	"misc_limits.max_badges_reached": "الحد الأقصى هو {count, plural, zero {# شارة} one {شارة واحدة} two {شارتان} few {# شارات} many {# شارة} other {# شارة}}.",
 	"misc_limits.max_bookmarks_reached": "لقد وصلت إلى الحد الأقصى وهو {count, plural, zero {# إشارة مرجعية} one {إشارة مرجعية واحدة} two {إشارتان مرجعيتان} few {# إشارات مرجعية} many {# إشارة مرجعية} other {# إشارة مرجعية}}.",
 	"misc_limits.max_category_channels_reached": "لقد وصلت إلى الحد الأقصى وهو {count, plural, zero {# قناة} one {قناة واحدة} two {قناتان} few {# قنوات} many {# قناة} other {# قناة}} في الفئة الواحدة.",
 	"misc_limits.max_friends_reached": "لقد وصلت إلى الحد الأقصى وهو {count, plural, zero {# صديق} one {صديق واحد} two {صديقان} few {# أصدقاء} many {# صديقًا} other {# صديق}}.",

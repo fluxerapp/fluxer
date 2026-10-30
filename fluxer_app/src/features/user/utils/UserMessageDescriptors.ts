@@ -242,6 +242,23 @@ export const PROFILE_BADGES_DESCRIPTOR = msg({
 	comment: 'Title of the profile settings section that lists the badges you hold and lets you hide each one.',
 });
 
+export const MORE_BADGES_DESCRIPTOR = msg({
+	message: '+{count}',
+	comment:
+		'Short count of badges that are not shown next to a name or on a profile, such as +3. Pressing it opens the full list. Keep it as short as possible.',
+});
+
+export const SHOW_ALL_BADGES_DESCRIPTOR = msg({
+	message: 'Show all badges',
+	comment: 'Tooltip for the +3 style button that opens the full list of badges.',
+});
+
+export const SHOW_ALL_BADGES_COUNT_DESCRIPTOR = msg({
+	message: '{count, plural, one {+# more badge, show all} other {+# more badges, show all}}',
+	comment:
+		'Screen reader label for the +3 style button that opens the full list of badges. It starts with the same +3 text that is shown on the button, so voice control users can say it.',
+});
+
 export const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
 	message: 'Community nickname',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',

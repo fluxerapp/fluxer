@@ -45,6 +45,7 @@ import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
 import {type ContactEmails, resolveContactEmails, resolveLegalAddress} from '@app/api/instance/ContactEmails';
+import {CustomBadgeCatalog} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {NatsConfigPublisher} from '@app/api/instance/NatsConfigPublisher';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
@@ -177,6 +178,15 @@ export const getNatsConfigPublisher = singleton(
 
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
+export const getCustomBadgeCatalog = singleton(
+	() =>
+		new CustomBadgeCatalog({
+			instanceConfigRepository: getInstanceConfigRepository(),
+			cacheService: getCacheService(),
+			snowflakeService: getSnowflakeService(),
+			mediaEndpoint: () => Config.endpoints.media,
+		}),
+);
 export const getRateLimitService = singleton(() => new RateLimitService(getKVClient()));
 export const getEmailDnsValidationService = singleton(() => new EmailDnsValidationService());
 export const getOperatorPassEntitlementService = singleton(

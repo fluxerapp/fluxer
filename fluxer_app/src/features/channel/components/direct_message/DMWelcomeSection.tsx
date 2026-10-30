@@ -283,6 +283,7 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 				</FocusRing>
 				<UserProfileBadges
 					badges={profile?.profileBadges ?? []}
+					maxVisible={7}
 					isModal={true}
 					isMobile={mobileLayout.enabled}
 					data-flx="channel.direct-message.dm-welcome-section.user-profile-badges"

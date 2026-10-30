@@ -145,6 +145,7 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 										<div className={styles.badgesWrapper} data-flx="app.you-page.badges-wrapper">
 											<UserProfileBadges
 												badges={profile?.profileBadges ?? []}
+												maxVisible={15}
 												isModal={true}
 												isMobile={true}
 												onEditBadges={canEditOwnProfileBadges(user.id, profile) ? openProfileBadgeSettings : undefined}

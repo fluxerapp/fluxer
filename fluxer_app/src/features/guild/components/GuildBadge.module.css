@@ -57,3 +57,27 @@
 	--guild-badge-seal: var(--brand-primary-fill);
 	--guild-badge-icon: var(--brand-primary);
 }
+
+.morePill {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.25rem;
+	height: 1.25rem;
+	border: 0;
+	border-radius: 0.625rem;
+	padding: 0 0.375rem;
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+	font: inherit;
+	font-weight: 600;
+	font-size: 0.75rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+button.morePill {
+	cursor: pointer;
+}

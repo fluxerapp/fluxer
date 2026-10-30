@@ -56,6 +56,38 @@ export const BadgeAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'PATCH',
+		route: '/admin/badges/settings',
+		async prepare() {
+			return {
+				request: {path: '/admin/badges/settings', body: {max_per_user: 20}},
+				expected: {
+					action: 'update_badge_settings',
+					targetType: 'badge',
+					targetId: '0',
+					metadata: {max_per_user: '20', max_per_guild: '50'},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/badges/order',
+		async prepare({harness, admin}) {
+			await createTestCustomBadge(harness, admin.token, 'user');
+			const badge = await createTestCustomBadge(harness, admin.token, 'user');
+			return {
+				request: {path: '/admin/badges/order', body: {badge_id: badge.id, direction: 'up'}},
+				expected: {
+					action: 'move_badge',
+					targetType: 'badge',
+					targetId: badge.id,
+					metadata: {direction: 'up'},
+				},
+			};
+		},
+	},
+	{
 		method: 'PUT',
 		route: '/admin/badges/built-in/:kind',
 		async prepare() {

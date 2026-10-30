@@ -6,7 +6,12 @@ import {
 	AccountIdentityModes,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
-import {MAX_CUSTOM_BADGES_PER_TYPE} from '@fluxer/constants/src/BadgeConstants';
+import {
+	CUSTOM_BADGE_LOOKUP_IDS_MAX,
+	CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+	CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	DISCOVERY_GUILD_BADGE_LIMIT,
+} from '@fluxer/constants/src/BadgeConstants';
 import {
 	CaptchaProviderSchema,
 	EffectiveVerificationBasisSchema,
@@ -15,8 +20,10 @@ import {
 	InstantAccountAvailabilitySchema,
 	InteractionTierModeSchema,
 } from '@fluxer/schema/src/domains/account/AccountTierSchemas';
+import {CustomBadgeCursorType, CustomBadgePositionType} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -395,9 +402,53 @@ export const InstanceGuildBadgeSchema = z.object({
 	description: z.string().nullable().describe('Text shown under the name when hovering over the badge, or null'),
 	asset_url: z.string().describe('URL of the badge image, served as WebP by the media proxy'),
 	href: z.string().nullable().describe('URL opened when the badge is clicked, or null'),
+	position: CustomBadgePositionType.optional(),
 });
 
 export type InstanceGuildBadge = z.infer<typeof InstanceGuildBadgeSchema>;
+
+export const InstanceBadgeSchema = InstanceGuildBadgeSchema.extend({position: CustomBadgePositionType});
+
+export type InstanceBadge = z.infer<typeof InstanceBadgeSchema>;
+
+const CustomBadgesVersionType = z
+	.string()
+	.max(64)
+	.describe('Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved');
+
+export const InstanceBadgesQuery = z.object({
+	ids: z
+		.string()
+		.regex(new RegExp(`^[0-9]{1,20}(?:,[0-9]{1,20}){0,${CUSTOM_BADGE_LOOKUP_IDS_MAX - 1}}$`))
+		.optional()
+		.describe(
+			`Up to ${CUSTOM_BADGE_LOOKUP_IDS_MAX} badge IDs separated by commas. Only these badges are returned. Cannot be sent with after`,
+		),
+	after: CustomBadgeCursorType.optional(),
+	limit: createQueryIntegerType({
+		defaultValue: CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+		minValue: 1,
+		maxValue: CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	}).describe(`Most badges to return, from 1 to ${CUSTOM_BADGE_PAGE_LIMIT_MAX}. Not used with ids`),
+	version: CustomBadgesVersionType.optional().describe(
+		'The catalog version the client already holds. When it is the current version the response can be cached for a day',
+	),
+});
+
+export type InstanceBadgesQuery = z.infer<typeof InstanceBadgesQuery>;
+
+export const InstanceBadgesResponse = z.object({
+	version: CustomBadgesVersionType,
+	badges: z
+		.array(InstanceGuildBadgeSchema.required({position: true}))
+		.max(CUSTOM_BADGE_PAGE_LIMIT_MAX)
+		.describe('Community badges in display order. IDs that are unknown or deleted are left out'),
+	next: CustomBadgeCursorType.nullable().describe(
+		'Pass this as after to get the next page, or null on the last page and for a lookup by ids',
+	),
+});
+
+export type InstanceBadgesResponse = z.infer<typeof InstanceBadgesResponse>;
 
 const BuiltInGuildBadgeImageType = z
 	.string()
@@ -435,9 +486,16 @@ export const WellKnownFluxerResponse = z.object({
 	),
 	guild_badges: z
 		.array(InstanceGuildBadgeSchema)
-		.max(MAX_CUSTOM_BADGES_PER_TYPE)
+		.max(DISCOVERY_GUILD_BADGE_LIMIT)
 		.optional()
-		.describe('Custom badges that communities on this instance can show next to their name, in display order'),
+		.describe(
+			`The first ${DISCOVERY_GUILD_BADGE_LIMIT} custom badges that communities on this instance can show next to their name, in display order. GET /instance/badges serves every badge`,
+		),
+	guild_badges_partial: z
+		.boolean()
+		.optional()
+		.describe('True when the instance has more community badges than guild_badges lists'),
+	custom_badges_version: CustomBadgesVersionType.optional(),
 	built_in_guild_badge_images: InstanceBuiltInGuildBadgeImagesSchema.optional().describe(
 		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
 	),

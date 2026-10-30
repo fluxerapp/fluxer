@@ -342,17 +342,18 @@ export class UserAccountRequestService {
 
 	async getUserProfile(params: UserProfileParams): Promise<UserProfileFullResponse> {
 		const guildId = params.guildId ? createGuildID(params.guildId) : undefined;
+		const profileLookup = this.userAccountService.lookupService.getUserProfile({
+			userId: params.currentUserId,
+			targetId: params.targetUserId,
+			guildId,
+			withMutualFriends: params.withMutualFriends,
+			withMutualGuilds: params.withMutualGuilds,
+			requestCache: params.requestCache,
+		});
 		const [profile, operatorPassState, badgeEnvironment] = await Promise.all([
-			this.userAccountService.lookupService.getUserProfile({
-				userId: params.currentUserId,
-				targetId: params.targetUserId,
-				guildId,
-				withMutualFriends: params.withMutualFriends,
-				withMutualGuilds: params.withMutualGuilds,
-				requestCache: params.requestCache,
-			}),
+			profileLookup,
 			this.operatorPassEntitlementService?.loadState(params.targetUserId) ?? null,
-			loadProfileBadgeEnvironment(),
+			profileLookup.then((found) => loadProfileBadgeEnvironment(found.user.badgeIds)),
 		]);
 		let profileUser = profile.user;
 		let premiumType = profile.premiumType;
@@ -450,7 +451,7 @@ export class UserAccountRequestService {
 		const {user, settings} = params;
 		const [operatorPassState, environment] = await Promise.all([
 			user.isBot ? null : (this.operatorPassEntitlementService?.loadState(user.id) ?? null),
-			loadProfileBadgeEnvironment(),
+			loadProfileBadgeEnvironment(user.badgeIds),
 		]);
 		const expired = shouldStripExpiredPremium(user);
 		const input = {

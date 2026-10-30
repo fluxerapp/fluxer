@@ -12,9 +12,10 @@ pub const BADGE_IMAGE_TYPES: &[&str] = &[
     "image/svg+xml",
 ];
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CustomBadgeType {
+    #[default]
     User,
     Guild,
 }
@@ -41,6 +42,8 @@ pub struct AdminCustomBadge {
     pub id: String,
     #[serde(rename = "type")]
     pub badge_type: CustomBadgeType,
+    #[serde(default)]
+    pub position: String,
     pub name: String,
     pub description: Option<String>,
     pub asset_url: String,
@@ -86,9 +89,31 @@ impl BuiltInBadgeImage {
     }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct BadgeSettings {
+    pub max_per_user: u32,
+    pub max_per_guild: u32,
+}
+
+impl Default for BadgeSettings {
+    fn default() -> Self {
+        Self {
+            max_per_user: 100,
+            max_per_guild: 50,
+        }
+    }
+}
+
+pub const BADGES_PER_USER_CEILING: u32 = 1000;
+pub const BADGES_PER_GUILD_CEILING: u32 = 200;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AdminCustomBadgeList {
     pub badges: Vec<AdminCustomBadge>,
+    #[serde(default)]
+    pub next: Option<String>,
+    #[serde(default)]
+    pub settings: BadgeSettings,
     #[serde(default)]
     pub built_in: Vec<BuiltInBadgeImage>,
 }
@@ -97,6 +122,8 @@ pub struct AdminCustomBadgeList {
 pub enum BadgeMove {
     Up,
     Down,
+    First,
+    Last,
 }
 
 impl BadgeMove {
@@ -104,6 +131,8 @@ impl BadgeMove {
         match value {
             "up" => Some(Self::Up),
             "down" => Some(Self::Down),
+            "first" => Some(Self::First),
+            "last" => Some(Self::Last),
             _ => None,
         }
     }
@@ -112,8 +141,27 @@ impl BadgeMove {
         match self {
             Self::Up => "up",
             Self::Down => "down",
+            Self::First => "first",
+            Self::Last => "last",
         }
     }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Up => "Move up",
+            Self::Down => "Move down",
+            Self::First => "Move to top",
+            Self::Last => "Move to bottom",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct BadgeListQuery {
+    pub badge_type: Option<CustomBadgeType>,
+    pub query: Option<String>,
+    pub after: Option<String>,
+    pub limit: Option<u32>,
 }
 
 impl AdminCustomBadgeList {
@@ -125,25 +173,17 @@ impl AdminCustomBadgeList {
             .iter()
             .filter(move |badge| badge.badge_type() == badge_type)
     }
+}
 
-    pub fn of_type(&self, badge_type: CustomBadgeType) -> impl Iterator<Item = &AdminCustomBadge> {
-        self.badges
-            .iter()
-            .filter(move |badge| badge.badge_type == badge_type)
-    }
-
-    pub fn moved_order(&self, badge_id: &str, direction: BadgeMove) -> Option<Vec<String>> {
-        let index = self.badges.iter().position(|badge| badge.id == badge_id)?;
-        let badge_type = self.badges[index].badge_type;
-        let same_type = |candidate: &AdminCustomBadge| candidate.badge_type == badge_type;
-        let neighbour = match direction {
-            BadgeMove::Up => self.badges[..index].iter().rposition(same_type)?,
-            BadgeMove::Down => index + 1 + self.badges[index + 1..].iter().position(same_type)?,
-        };
-        let mut order: Vec<String> = self.badges.iter().map(|badge| badge.id.clone()).collect();
-        order.swap(index, neighbour);
-        Some(order)
-    }
+#[derive(Clone, Debug, Default)]
+pub struct BadgeAssignment {
+    pub assigned: Vec<AdminCustomBadge>,
+    pub picked: Vec<AdminCustomBadge>,
+    pub candidates: Vec<AdminCustomBadge>,
+    pub more_candidates: bool,
+    pub search_incomplete: bool,
+    pub query: Option<String>,
+    pub limit: u32,
 }
 
 pub struct CustomBadgeFields {

@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Недійсний запит.",
 	"misc.invalid_snowflake": "Недійсний Snowflake ID.",
 	"misc_limits.max_applications_reached": "Досягнуто максимуму: {limit} {limit, plural, one {застосунок} few {застосунки} many {застосунків} other {застосунку}}.",
-	"misc_limits.max_badges_reached": "Досягнуто максимуму для цього типу: {count} {count, plural, one {значок} few {значки} many {значків} other {значка}}.",
+	"misc_limits.max_badges_reached": "Максимум {count} {count, plural, one {значок} few {значки} many {значків} other {значка}}.",
 	"misc_limits.max_bookmarks_reached": "Досягнуто максимуму: {count} {count, plural, one {закладка} few {закладки} many {закладок} other {закладки}}.",
 	"misc_limits.max_category_channels_reached": "Досягнуто максимуму: {count} {count, plural, one {категорія} few {категорії} many {категорій} other {категорії}}.",
 	"misc_limits.max_friends_reached": "Досягнуто максимуму: {count} {count, plural, one {друг} few {друзі} many {друзів} other {друга}}.",

@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Nieprawidłowe żądanie.",
 	"misc.invalid_snowflake": "Nieprawidłowy identyfikator Snowflake.",
 	"misc_limits.max_applications_reached": "Osiągnięto limit {limit, plural, one {# aplikacji} few {# aplikacji} many {# aplikacji} other {# aplikacji}}.",
-	"misc_limits.max_badges_reached": "Osiągnięto limit {count, plural, one {# odznaki} few {# odznak} many {# odznak} other {# odznaki}} dla tego typu.",
+	"misc_limits.max_badges_reached": "Limit wynosi {count, plural, one {# odznakę} few {# odznaki} many {# odznak} other {# odznaki}}.",
 	"misc_limits.max_bookmarks_reached": "Osiągnięto limit {count, plural, one {# zakładki} few {# zakładek} many {# zakładek} other {# zakładki}}.",
 	"misc_limits.max_category_channels_reached": "Osiągnięto limit {count, plural, one {# kanału} few {# kanałów} many {# kanałów} other {# kanału}} w kategorii.",
 	"misc_limits.max_friends_reached": "Osiągnięto limit {count, plural, one {# znajomego} few {# znajomych} many {# znajomych} other {# znajomego}}.",

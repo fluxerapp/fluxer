@@ -36,6 +36,7 @@ import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
 import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {
+	getCustomBadgeCatalog,
 	getEnforcementDecisionRepository,
 	getGuildDiscoveryRepository,
 	getInstanceConfigRepository,
@@ -178,7 +179,7 @@ export class AdminService {
 			auditService: this.auditService,
 			discoveryRepository: getGuildDiscoveryRepository(),
 			enforcement: this.enforcementService,
-			instanceConfigRepository: getInstanceConfigRepository(),
+			customBadgeCatalog: getCustomBadgeCatalog(),
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
@@ -239,6 +240,7 @@ export class AdminService {
 		});
 		this.badgeService = new AdminBadgeService({
 			instanceConfigRepository: getInstanceConfigRepository(),
+			catalog: getCustomBadgeCatalog(),
 			entityAssetService: this.entityAssetService,
 			assetDeletionQueue: this.assetDeletionQueue,
 			snowflakeService: snowflake,

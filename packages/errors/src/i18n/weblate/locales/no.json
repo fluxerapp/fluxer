@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Ugyldig forespørsel.",
 	"misc.invalid_snowflake": "Ugyldig snowflake-ID.",
 	"misc_limits.max_applications_reached": "Du har nådd grensen på {limit, plural, one {# app} other {# apper}}.",
-	"misc_limits.max_badges_reached": "Du har nådd grensen på {count, plural, one {# merke} other {# merker}} for denne typen.",
+	"misc_limits.max_badges_reached": "Grensen er {count, plural, one {# merke} other {# merker}}.",
 	"misc_limits.max_bookmarks_reached": "Du har nådd grensen på {count, plural, one {# lagret melding} other {# lagrede meldinger}}.",
 	"misc_limits.max_category_channels_reached": "Du har nådd grensen på {count, plural, one {# kategorikanal} other {# kategorikanaler}}.",
 	"misc_limits.max_friends_reached": "Du har nådd grensen på {count, plural, one {# venn} other {# venner}}.",

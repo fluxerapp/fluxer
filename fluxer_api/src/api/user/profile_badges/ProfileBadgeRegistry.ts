@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
-import type {BuiltInBadgeImages, CustomBadgeDefinition} from '@app/api/instance/InstanceConfigRepository';
+import type {CustomBadge} from '@app/api/instance/custom_badges/CustomBadgeRepository';
+import type {BuiltInBadgeImages} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import type {VisiblePremiumBadge} from '@app/api/user/profile_badges/PremiumBadgeMasking';
 import {
@@ -22,7 +23,7 @@ export interface ProfileBadgeEnvironment {
 	premiumInfoUrl: string | null;
 	marketingUrl: string;
 	mediaUrl: string;
-	customBadges: ReadonlyArray<CustomBadgeDefinition>;
+	customBadges: ReadonlyArray<Pick<CustomBadge, 'id' | 'name' | 'description' | 'asset' | 'href'>>;
 	builtInImages: BuiltInBadgeImages;
 }
 

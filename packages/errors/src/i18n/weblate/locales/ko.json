@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "요청이 올바르지 않아요.",
 	"misc.invalid_snowflake": "스노플레이크가 올바르지 않아요.",
 	"misc_limits.max_applications_reached": "애플리케이션은 최대 {limit, plural, other {#개}}까지 등록할 수 있어요.",
-	"misc_limits.max_badges_reached": "이 유형의 배지는 최대 {count, plural, other {#개}}까지 만들 수 있어요.",
+	"misc_limits.max_badges_reached": "배지는 최대 {count, plural, other {#개}}까지예요.",
 	"misc_limits.max_bookmarks_reached": "북마크는 최대 {count, plural, other {#개}}까지 등록할 수 있어요.",
 	"misc_limits.max_category_channels_reached": "카테고리 채널은 최대 {count, plural, other {#개}}까지 만들 수 있어요.",
 	"misc_limits.max_friends_reached": "친구는 최대 {count, plural, other {#명}}까지 추가할 수 있어요.",

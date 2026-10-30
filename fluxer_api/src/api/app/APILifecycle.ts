@@ -32,6 +32,7 @@ import {
 } from '@app/api/middleware/ServiceRegistry';
 import {
 	getCacheService,
+	getCustomBadgeCatalog,
 	getInstanceConfigRepository,
 	getKVAccountDeletionQueue,
 	getReportRepository,
@@ -267,6 +268,8 @@ export function createInitializer(
 			await initializeRefreshCache(profileSubstringBlocklistCache, 'Profile substring blocklist cache', logger);
 			await initializeServiceSingletons(dependencies);
 			logger.info('Service singletons initialized');
+			await getCustomBadgeCatalog().initialize();
+			logger.info('Custom badge catalog initialized');
 			if (!config.dev.testModeEnabled) {
 				jsConnectionManager = new JetStreamConnectionManager({
 					url: config.nats.jetStreamUrl,

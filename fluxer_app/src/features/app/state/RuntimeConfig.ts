@@ -686,6 +686,8 @@ class RuntimeConfig {
 			appPublic: resolution.snapshot.appPublic,
 			notice: resolution.snapshot.notice,
 			guildBadges: resolution.snapshot.guildBadges,
+			guildBadgesPartial: resolution.snapshot.guildBadgesPartial,
+			customBadgesVersion: resolution.snapshot.customBadgesVersion,
 			builtInGuildBadgeImages: resolution.snapshot.builtInGuildBadgeImages,
 			limits: resolution.snapshot.limits,
 		});
@@ -922,6 +924,14 @@ class RuntimeConfig {
 
 	get guildBadges(): ReadonlyArray<InstanceGuildBadge> {
 		return this.activeRuntime?.snapshot.guildBadges ?? [];
+	}
+
+	get guildBadgesPartial(): boolean {
+		return this.activeRuntime?.snapshot.guildBadgesPartial ?? false;
+	}
+
+	get customBadgesVersion(): string | null {
+		return this.activeRuntime?.snapshot.customBadgesVersion ?? null;
 	}
 
 	get builtInGuildBadgeImages(): InstanceBuiltInGuildBadgeImages {

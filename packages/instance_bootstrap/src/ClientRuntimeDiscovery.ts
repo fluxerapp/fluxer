@@ -63,6 +63,8 @@ export interface ClientRuntimeDiscovery {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
 	readonly guildBadges: ReadonlyArray<InstanceGuildBadge>;
+	readonly guildBadgesPartial: boolean;
+	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 }
 
@@ -84,6 +86,8 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		domainMigration: document.domainMigration,
 		notice: document.notice ?? null,
 		guildBadges: document.guildBadges ?? [],
+		guildBadgesPartial: document.guildBadgesPartial ?? false,
+		customBadgesVersion: document.customBadgesVersion ?? null,
 		builtInGuildBadgeImages: document.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES,
 	};
 }

@@ -3753,6 +3753,84 @@
 			"options": ""
 		},
 		{
+			"name": "custom_badges",
+			"columns": [
+				{
+					"name": "badge_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "position",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				},
+				{
+					"name": "asset",
+					"type": "text"
+				},
+				{
+					"name": "href",
+					"type": "text"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((badge_id))",
+			"options": ""
+		},
+		{
+			"name": "custom_badges_by_position",
+			"columns": [
+				{
+					"name": "badge_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "position",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				},
+				{
+					"name": "asset",
+					"type": "text"
+				},
+				{
+					"name": "href",
+					"type": "text"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((type), position)",
+			"options": "CLUSTERING ORDER BY (position ASC) AND gc_grace_seconds = 86400"
+		},
+		{
 			"name": "data_service_search_index_files",
 			"columns": [
 				{

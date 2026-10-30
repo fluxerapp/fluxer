@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Neteisinga užklausa.",
 	"misc.invalid_snowflake": "Neteisingas snowflake.",
 	"misc_limits.max_applications_reached": "Pasiekei {limit, plural, one {# programos} few {# programų} many {# programos} other {# programų}} ribą.",
-	"misc_limits.max_badges_reached": "Pasiekei šio tipo {count, plural, one {# ženklelio} few {# ženklelių} many {# ženklelio} other {# ženklelių}} ribą.",
+	"misc_limits.max_badges_reached": "Riba yra {count, plural, one {# ženklelis} few {# ženkleliai} many {# ženklelio} other {# ženklelių}}.",
 	"misc_limits.max_bookmarks_reached": "Pasiekei {count, plural, one {# žymės} few {# žymių} many {# žymės} other {# žymių}} ribą.",
 	"misc_limits.max_category_channels_reached": "Pasiekei {count, plural, one {# kategorijos kanalo} few {# kategorijos kanalų} many {# kategorijos kanalo} other {# kategorijos kanalų}} ribą.",
 	"misc_limits.max_friends_reached": "Pasiekei {count, plural, one {# draugo} few {# draugų} many {# draugo} other {# draugų}} ribą.",

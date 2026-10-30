@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Neplatný požadavek.",
 	"misc.invalid_snowflake": "Neplatný identifikátor Snowflake.",
 	"misc_limits.max_applications_reached": "Dosáhli jste limitu {limit, plural, one {# aplikace} few {# aplikací} many {# aplikace} other {# aplikací}}.",
-	"misc_limits.max_badges_reached": "Dosáhli jste limitu {count, plural, one {# odznaku} few {# odznaků} many {# odznaku} other {# odznaků}} pro tento typ.",
+	"misc_limits.max_badges_reached": "Limit je {count, plural, one {# odznak} few {# odznaky} many {# odznaku} other {# odznaků}}.",
 	"misc_limits.max_bookmarks_reached": "Dosáhli jste limitu {count, plural, one {# záložky} few {# záložek} many {# záložky} other {# záložek}}.",
 	"misc_limits.max_category_channels_reached": "Dosáhli jste limitu {count, plural, one {# kanálu} few {# kanálů} many {# kanálu} other {# kanálů}} v kategorii.",
 	"misc_limits.max_friends_reached": "Dosáhli jste limitu {count, plural, one {# přítele} few {# přátel} many {# přítele} other {# přátel}}.",

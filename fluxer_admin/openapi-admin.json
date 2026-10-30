@@ -1195,8 +1195,55 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Lists the user and guild badges defined on this instance, in display order. Requires BADGE_LIST permission.",
-				"security": [{"adminApiKey": []}]
+				"description": "Lists one page of the user and guild badges defined on this instance, in display order, with the badge settings and the built-in badge images. Pass next as after to get the following page. With query, it lists badges whose ID is the query or whose name holds it, and looks at up to 5,000 badges for each page. Requires BADGE_LIST permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "type",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Only list badges of this type. Without it the list holds every user badge, then every guild badge",
+							"allOf": [{"$ref": "#/components/schemas/CustomBadgeTypeSchema"}]
+						},
+						"description": "Only list badges of this type. Without it the list holds every user badge, then every guild badge"
+					},
+					{
+						"name": "query",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Only list badges with this ID, or with this text anywhere in the name, ignoring case",
+							"type": "string"
+						},
+						"description": "Only list badges with this ID, or with this text anywhere in the name, ignoring case"
+					},
+					{
+						"name": "ids",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Up to 100 badge IDs separated by commas. Only these badges are listed, and the page has no next. Cannot be sent with query or after",
+							"type": "string",
+							"pattern": "^[0-9]{1,20}(?:,[0-9]{1,20}){0,99}$"
+						},
+						"description": "Up to 100 badge IDs separated by commas. Only these badges are listed, and the page has no next. Cannot be sent with query or after"
+					},
+					{
+						"name": "after",
+						"in": "query",
+						"required": false,
+						"schema": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeCursorType"}]},
+						"description": "Opaque cursor from the next field of a previous page"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Most badges to return, from 1 to 200", "default": "100", "type": "string"},
+						"description": "Most badges to return, from 1 to 200"
+					}
+				]
 			},
 			"post": {
 				"operationId": "create_admin_badge",
@@ -1246,7 +1293,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a user or guild badge and uploads its image to the media proxy. Each type has at most 10 badges. Creates audit log entry. Requires BADGE_CREATE permission.",
+				"description": "Creates a user or guild badge and uploads its image to the media proxy. The new badge is shown after every other badge of its type. Creates audit log entry. Requires BADGE_CREATE permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -1429,11 +1476,125 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Sets the display order of the custom badges. The body lists every user and guild badge on this instance exactly once, in the new order. Creates audit log entry. Requires BADGE_UPDATE permission.",
+				"description": "Sets the display order of the custom badges. The body lists every user and guild badge on this instance exactly once, in the new order. It works on instances with up to 1,000 badges. Larger instances move badges one at a time with PATCH /admin/badges/order. The badges are written in groups. A failed request can leave part of the new order. Sending the same request again finishes it. Responds with the first page of badges. Creates audit log entry. Requires BADGE_UPDATE permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReorderCustomBadgesRequest"}}}
+				}
+			},
+			"patch": {
+				"operationId": "move_admin_badge",
+				"summary": "Move custom badge",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminCustomBadgeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Moves one badge within the badges of its type. Send direction to move it up or down one place or to the first or last place, or send after_id to show it right after another badge of the same type. Creates audit log entry. Requires BADGE_UPDATE permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MoveCustomBadgeRequest"}}}
+				}
+			}
+		},
+		"/admin/badges/settings": {
+			"patch": {
+				"operationId": "update_admin_badge_settings",
+				"summary": "Update custom badge settings",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/AdminCustomBadgeSettingsResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Sets how many custom badges one user or one community can be given. Users can have up to 1,000 and communities up to 200. Lowering a limit keeps badges already given. A change that adds a badge to a user or community over the limit fails with MAX_BADGES. Creates audit log entry. Requires BADGE_UPDATE permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateCustomBadgeSettingsRequest"}}}
 				}
 			}
 		},
@@ -8603,7 +8764,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Replaces the custom badges assigned to a user. Every ID must be a user badge, and a user can have at most 10. Creates audit log entry. Requires USER_UPDATE_BADGES permission.",
+				"description": "Replaces the custom badges assigned to a user. Every ID must be a user badge. A change that adds a badge fails with MAX_BADGES when the user would have more than the max_per_user badge setting allows. Creates audit log entry. Requires USER_UPDATE_BADGES permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -19725,6 +19886,7 @@
 				"properties": {
 					"id": {"description": "The ID of the badge", "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
 					"type": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeTypeSchema"}]},
+					"position": {"allOf": [{"$ref": "#/components/schemas/CustomBadgePositionType"}]},
 					"name": {"type": "string", "description": "The name of the badge"},
 					"description": {
 						"nullable": true,
@@ -19734,17 +19896,69 @@
 					"asset_url": {"type": "string", "description": "URL of the badge image, served as WebP by the media proxy"},
 					"href": {"nullable": true, "description": "URL opened when the badge is clicked, or null", "type": "string"}
 				},
-				"required": ["id", "type", "name", "description", "asset_url", "href"],
+				"required": ["id", "type", "position", "name", "description", "asset_url", "href"],
 				"additionalProperties": false
+			},
+			"UpdateCustomBadgeSettingsRequest": {
+				"type": "object",
+				"properties": {
+					"max_per_user": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 1000,
+						"description": "Most custom badges one user can be given"
+					},
+					"max_per_guild": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 200,
+						"description": "Most custom badges one community can be given"
+					}
+				}
+			},
+			"AdminCustomBadgeSettingsResponse": {
+				"type": "object",
+				"properties": {
+					"max_per_user": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 1000,
+						"description": "Most custom badges one user can be given"
+					},
+					"max_per_guild": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 200,
+						"description": "Most custom badges one community can be given"
+					}
+				},
+				"required": ["max_per_user", "max_per_guild"],
+				"additionalProperties": false
+			},
+			"MoveCustomBadgeRequest": {
+				"type": "object",
+				"properties": {
+					"badge_id": {
+						"description": "The ID of the badge to move",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+					},
+					"direction": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeMoveDirectionSchema"}]},
+					"after_id": {
+						"description": "Show the badge right after this badge of the same type, or first when null. Send either this or direction",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+					}
+				},
+				"required": ["badge_id"]
 			},
 			"ReorderCustomBadgesRequest": {
 				"type": "object",
 				"properties": {
 					"badge_ids": {
-						"maxItems": 200,
+						"maxItems": 1000,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of every custom badge on this instance, user and guild, in the new display order"
+						"description": "IDs of every custom badge on this instance, user and guild, in the new display order. Instances with more than 1000 badges move badges one at a time"
 					}
 				},
 				"required": ["badge_ids"]
@@ -19755,8 +19969,18 @@
 					"badges": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminCustomBadgeResponse"},
-						"description": "Badges defined on this instance, in display order"
+						"description": "One page of badges, in display order"
 					},
+					"next": {
+						"nullable": true,
+						"description": "Pass this as after to get the next page, or null when there are no more badges to look at. A search page can hold fewer badges than the limit and still have a next page",
+						"allOf": [{"$ref": "#/components/schemas/CustomBadgeCursorType"}]
+					},
+					"version": {
+						"type": "string",
+						"description": "Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved"
+					},
+					"settings": {"$ref": "#/components/schemas/AdminCustomBadgeSettingsResponse"},
 					"built_in": {
 						"maxItems": 5,
 						"type": "array",
@@ -19764,7 +19988,7 @@
 						"description": "Every built-in badge and the image this instance shows for it"
 					}
 				},
-				"required": ["badges", "built_in"],
+				"required": ["badges", "next", "version", "settings", "built_in"],
 				"additionalProperties": false
 			},
 			"BuiltInBadgeKindSchema": {
@@ -19801,6 +20025,21 @@
 					}
 				},
 				"required": ["type", "name", "image"]
+			},
+			"CustomBadgeCursorType": {
+				"type": "string",
+				"pattern": "^[gu]-?[0-9]{1,19}$",
+				"description": "Opaque cursor from the next field of a previous page"
+			},
+			"CustomBadgeTypeSchema": {
+				"description": "Where the badge is shown",
+				"x-enumNames": ["User", "Guild"],
+				"x-enumDescriptions": [
+					"Shown on the profiles of the users it is assigned to",
+					"Shown next to the names of the communities it is assigned to"
+				],
+				"enum": ["user", "guild"],
+				"type": "string"
 			},
 			"AdminAuditLogResponseSchema": {
 				"type": "object",
@@ -20310,16 +20549,6 @@
 					"Personal notes DM channel"
 				]
 			},
-			"CustomBadgeTypeSchema": {
-				"description": "Where the badge is shown",
-				"x-enumNames": ["User", "Guild"],
-				"x-enumDescriptions": [
-					"Shown on the profiles of the users it is assigned to",
-					"Shown next to the names of the communities it is assigned to"
-				],
-				"enum": ["user", "guild"],
-				"type": "string"
-			},
 			"AdminBuiltInBadgeImageResponse": {
 				"type": "object",
 				"properties": {
@@ -20337,6 +20566,23 @@
 				},
 				"required": ["kind", "asset_url", "built_in_asset"],
 				"additionalProperties": false
+			},
+			"CustomBadgeMoveDirectionSchema": {
+				"description": "Where to move the badge",
+				"x-enumNames": ["Up", "Down", "First", "Last"],
+				"x-enumDescriptions": [
+					"Swap places with the badge shown before it",
+					"Swap places with the badge shown after it",
+					"Show it before every other badge of its type",
+					"Show it after every other badge of its type"
+				],
+				"enum": ["up", "down", "first", "last"],
+				"type": "string"
+			},
+			"CustomBadgePositionType": {
+				"type": "string",
+				"pattern": "^-?[0-9]{1,19}$",
+				"description": "Display position of the badge. Badges are shown in ascending order of this value"
 			},
 			"BanProfileSubstringRequest": {
 				"type": "object",
@@ -22618,16 +22864,16 @@
 				]
 			},
 			"CustomBadgeIdListResponse": {
-				"maxItems": 10,
+				"maxItems": 1000,
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
 				"description": "IDs of the custom badges assigned to it"
 			},
 			"CustomBadgeIdsType": {
-				"maxItems": 10,
+				"maxItems": 1000,
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SnowflakeType"},
-				"description": "IDs of the badges to assign, replacing the current ones"
+				"description": "IDs of the badges to assign, replacing the current ones. The badge settings set how many a user or community can have"
 			},
 			"GuildOperations": {
 				"type": "integer",
@@ -26376,7 +26622,7 @@
 					"This IP address cannot be added to the blocklist.",
 					"This network block belongs to an enforcement decision. End the decision to remove it.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
-					"You've reached the maximum of {count, plural, one {# badge} other {# badges}} for this type.",
+					"The limit is {count, plural, one {# badge} other {# badges}}.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 					"This community has reached its active thread limit of {count}.",
 					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",

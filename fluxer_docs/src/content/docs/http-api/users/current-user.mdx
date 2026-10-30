@@ -88,7 +88,7 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 | accent_color? | ?integer | Packed 24-bit RGB color (0-16777215), or null to clear |
 | timezone?<sup>8</sup> | ?string | IANA timezone identifier (1-128 characters), or null to clear |
 | timezone_privacy_flags? | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) for the timezone |
-| hidden_profile_badges?<sup>12</sup> | array[string] | The full list of [badge keys](/http-api/users/#hiding-badges) to hide from other people, at most 18 |
+| hidden_profile_badges?<sup>12</sup> | array[string] | The full list of [badge keys](/http-api/users/#hiding-badges) to hide from other people, at most 1008 |
 | premium_badge_hidden?<sup>13</sup> | boolean | Deprecated. Use the hidden badge list |
 | premium_badge_masked? | boolean | Whether to show a lifetime badge as an ordinary subscription badge |
 | premium_badge_timestamp_hidden? | boolean | Whether to hide the premium activation time |

@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Ongeldig verzoek.",
 	"misc.invalid_snowflake": "Ongeldige snowflake.",
 	"misc_limits.max_applications_reached": "Je hebt het maximum van {limit, plural, one {# app} other {# apps}} bereikt.",
-	"misc_limits.max_badges_reached": "Je hebt het maximum van {count, plural, one {# badge} other {# badges}} voor dit type bereikt.",
+	"misc_limits.max_badges_reached": "De limiet is {count, plural, one {# badge} other {# badges}}.",
 	"misc_limits.max_bookmarks_reached": "Je hebt het maximum van {count, plural, one {# opgeslagen bericht} other {# opgeslagen berichten}} bereikt.",
 	"misc_limits.max_category_channels_reached": "Je hebt het maximum van {count, plural, one {# kanaal in een categorie} other {# kanalen in een categorie}} bereikt.",
 	"misc_limits.max_friends_reached": "Je hebt het maximum van {count, plural, one {# vriend} other {# vrienden}} bereikt.",

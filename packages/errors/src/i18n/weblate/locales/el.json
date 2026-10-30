@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Μη έγκυρο αίτημα.",
 	"misc.invalid_snowflake": "Μη έγκυρο snowflake.",
 	"misc_limits.max_applications_reached": "Έχεις φτάσει το μέγιστο των {limit} {limit, plural, one {εφαρμογής} other {εφαρμογών}}.",
-	"misc_limits.max_badges_reached": "Έχεις φτάσει το μέγιστο των {count} {count, plural, one {σήματος} other {σημάτων}} για αυτόν τον τύπο.",
+	"misc_limits.max_badges_reached": "Το όριο είναι {count} {count, plural, one {σήμα} other {σήματα}}.",
 	"misc_limits.max_bookmarks_reached": "Έχεις φτάσει το μέγιστο των {count} {count, plural, one {σελιδοδείκτη} other {σελιδοδεικτών}}.",
 	"misc_limits.max_category_channels_reached": "Έχεις φτάσει το μέγιστο των {count} {count, plural, one {καναλιού κατηγορίας} other {καναλιών κατηγορίας}}.",
 	"misc_limits.max_friends_reached": "Έχεις φτάσει το μέγιστο των {count} {count, plural, one {φίλου} other {φίλων}}.",

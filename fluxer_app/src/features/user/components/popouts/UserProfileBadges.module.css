@@ -143,3 +143,32 @@
 	width: 1rem;
 	height: 1rem;
 }
+
+.moreButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 0.375rem;
+	padding: 0 0.375rem;
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+	font: inherit;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.moreButtonDesktop {
+	min-width: 1.5rem;
+	height: 1.5rem;
+	font-size: 0.75rem;
+}
+
+.moreButtonMobile {
+	min-width: 2rem;
+	height: 2rem;
+	font-size: 0.875rem;
+}

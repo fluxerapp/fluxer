@@ -13,6 +13,7 @@ import type {
 	QueuedAssetType,
 } from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {isCustomBadgeAssetReferenced} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -34,7 +35,7 @@ interface AssetReferenceRepositories {
 	guildRepository: Pick<GuildRepository, 'findUnique' | 'getMember' | 'getRole'>;
 	instanceConfigRepository: Pick<
 		InstanceConfigRepository,
-		'readStoredBrandingAssetKeys' | 'readStoredCustomBadgeAssetKeys'
+		'readStoredBrandingAssetKeys' | 'readStoredCustomBadgeReferences'
 	>;
 }
 
@@ -185,7 +186,7 @@ async function isQueuedAssetStillCurrent(
 		return (await deps.instanceConfigRepository.readStoredBrandingAssetKeys()).has(item.s3Key);
 	}
 	if (item.s3Key.startsWith('custom-badges/')) {
-		return (await deps.instanceConfigRepository.readStoredCustomBadgeAssetKeys()).has(item.s3Key);
+		return isCustomBadgeAssetReferenced(deps.instanceConfigRepository, item.s3Key);
 	}
 	if (item.s3Key.startsWith('role-icons/')) {
 		return isRoleIconStillCurrent(item, deps);

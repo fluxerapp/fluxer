@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Virheellinen pyyntö.",
 	"misc.invalid_snowflake": "Virheellinen Snowflake-tunnus.",
 	"misc_limits.max_applications_reached": "Olet saavuttanut sovellusten enimmäismäärän: {limit, plural, one {# sovellus} other {# sovellusta}}.",
-	"misc_limits.max_badges_reached": "Olet saavuttanut tämän tyypin merkkien enimmäismäärän: {count, plural, one {# merkki} other {# merkkiä}}.",
+	"misc_limits.max_badges_reached": "Raja on {count, plural, one {# merkki} other {# merkkiä}}.",
 	"misc_limits.max_bookmarks_reached": "Olet saavuttanut tallennettujen viestien enimmäismäärän: {count, plural, one {# viesti} other {# viestiä}}.",
 	"misc_limits.max_category_channels_reached": "Luokan kanavien enimmäismäärä on saavutettu: {count, plural, one {# kanava} other {# kanavaa}}.",
 	"misc_limits.max_friends_reached": "Olet saavuttanut kaverien enimmäismäärän: {count, plural, one {# kaveri} other {# kaveria}}.",

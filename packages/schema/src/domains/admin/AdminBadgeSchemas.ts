@@ -3,12 +3,17 @@
 import {
 	BUILT_IN_BADGE_KINDS,
 	CUSTOM_BADGE_DESCRIPTION_MAX_LENGTH,
+	CUSTOM_BADGE_LOOKUP_IDS_MAX,
 	CUSTOM_BADGE_NAME_MAX_LENGTH,
+	CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+	CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	CUSTOM_BADGE_REORDER_IDS_MAX,
+	CUSTOM_BADGES_PER_GUILD_CEILING,
+	CUSTOM_BADGES_PER_USER_CEILING,
 	CustomBadgeTypes,
-	MAX_CUSTOM_BADGES_PER_ENTITY,
-	MAX_CUSTOM_BADGES_PER_TYPE,
 } from '@fluxer/constants/src/BadgeConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -40,9 +45,20 @@ const CustomBadgeImageType = z
 	.max(16_000_000)
 	.describe('The badge image as a base64 data URL. PNG, JPEG, GIF, WebP and SVG images are accepted');
 
+export const CustomBadgePositionType = z
+	.string()
+	.regex(/^-?[0-9]{1,19}$/)
+	.describe('Display position of the badge. Badges are shown in ascending order of this value');
+
+export const CustomBadgeCursorType = z
+	.string()
+	.regex(/^[gu]-?[0-9]{1,19}$/)
+	.describe('Opaque cursor from the next field of a previous page');
+
 export const AdminCustomBadgeResponse = z.object({
 	id: SnowflakeStringType.describe('The ID of the badge'),
 	type: CustomBadgeTypeSchema,
+	position: CustomBadgePositionType,
 	name: z.string().describe('The name of the badge'),
 	description: z.string().nullable().describe('Text shown under the name when hovering over the badge, or null'),
 	asset_url: z.string().describe('URL of the badge image, served as WebP by the media proxy'),
@@ -76,8 +92,60 @@ export const AdminBuiltInBadgeImageResponse = z.object({
 
 export type AdminBuiltInBadgeImageResponse = z.infer<typeof AdminBuiltInBadgeImageResponse>;
 
+export const AdminCustomBadgeSettingsResponse = z.object({
+	max_per_user: z
+		.number()
+		.int()
+		.min(1)
+		.max(CUSTOM_BADGES_PER_USER_CEILING)
+		.describe('Most custom badges one user can be given'),
+	max_per_guild: z
+		.number()
+		.int()
+		.min(1)
+		.max(CUSTOM_BADGES_PER_GUILD_CEILING)
+		.describe('Most custom badges one community can be given'),
+});
+
+export type AdminCustomBadgeSettingsResponse = z.infer<typeof AdminCustomBadgeSettingsResponse>;
+
+export const UpdateCustomBadgeSettingsRequest = AdminCustomBadgeSettingsResponse.partial();
+
+export type UpdateCustomBadgeSettingsRequest = z.infer<typeof UpdateCustomBadgeSettingsRequest>;
+
+export const AdminCustomBadgeListQuery = z.object({
+	type: CustomBadgeTypeSchema.optional().describe(
+		'Only list badges of this type. Without it the list holds every user badge, then every guild badge',
+	),
+	query: createStringType(1, 64)
+		.optional()
+		.describe('Only list badges with this ID, or with this text anywhere in the name, ignoring case'),
+	ids: z
+		.string()
+		.regex(new RegExp(`^[0-9]{1,20}(?:,[0-9]{1,20}){0,${CUSTOM_BADGE_LOOKUP_IDS_MAX - 1}}$`))
+		.optional()
+		.describe(
+			`Up to ${CUSTOM_BADGE_LOOKUP_IDS_MAX} badge IDs separated by commas. Only these badges are listed, and the page has no next. Cannot be sent with query or after`,
+		),
+	after: CustomBadgeCursorType.optional(),
+	limit: createQueryIntegerType({
+		defaultValue: CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+		minValue: 1,
+		maxValue: CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	}).describe(`Most badges to return, from 1 to ${CUSTOM_BADGE_PAGE_LIMIT_MAX}`),
+});
+
+export type AdminCustomBadgeListQuery = z.infer<typeof AdminCustomBadgeListQuery>;
+
 export const AdminCustomBadgeListResponse = z.object({
-	badges: z.array(AdminCustomBadgeResponse).describe('Badges defined on this instance, in display order'),
+	badges: z.array(AdminCustomBadgeResponse).describe('One page of badges, in display order'),
+	next: CustomBadgeCursorType.nullable().describe(
+		'Pass this as after to get the next page, or null when there are no more badges to look at. A search page can hold fewer badges than the limit and still have a next page',
+	),
+	version: z
+		.string()
+		.describe('Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved'),
+	settings: AdminCustomBadgeSettingsResponse,
 	built_in: z
 		.array(AdminBuiltInBadgeImageResponse)
 		.max(BUILT_IN_BADGE_KINDS.length)
@@ -117,8 +185,10 @@ export const CustomBadgeIdParam = z.object({
 
 export const CustomBadgeIdsType = z
 	.array(SnowflakeType)
-	.max(MAX_CUSTOM_BADGES_PER_ENTITY)
-	.describe('IDs of the badges to assign, replacing the current ones');
+	.max(CUSTOM_BADGES_PER_USER_CEILING)
+	.describe(
+		'IDs of the badges to assign, replacing the current ones. The badge settings set how many a user or community can have',
+	);
 
 export const UpdateUserCustomBadgesRequest = z.object({
 	badge_ids: CustomBadgeIdsType,
@@ -129,15 +199,42 @@ export type UpdateUserCustomBadgesRequest = z.infer<typeof UpdateUserCustomBadge
 export const ReorderCustomBadgesRequest = z.object({
 	badge_ids: z
 		.array(SnowflakeType)
-		.max(MAX_CUSTOM_BADGES_PER_TYPE * 2)
-		.describe('IDs of every custom badge on this instance, user and guild, in the new display order'),
+		.max(CUSTOM_BADGE_REORDER_IDS_MAX)
+		.describe(
+			`IDs of every custom badge on this instance, user and guild, in the new display order. Instances with more than ${CUSTOM_BADGE_REORDER_IDS_MAX} badges move badges one at a time`,
+		),
 });
 
 export type ReorderCustomBadgesRequest = z.infer<typeof ReorderCustomBadgesRequest>;
 
+export const CustomBadgeMoveDirectionSchema = withOpenApiType(
+	createNamedStringLiteralUnion(
+		[
+			['up', 'Up', 'Swap places with the badge shown before it'],
+			['down', 'Down', 'Swap places with the badge shown after it'],
+			['first', 'First', 'Show it before every other badge of its type'],
+			['last', 'Last', 'Show it after every other badge of its type'],
+		],
+		'Where to move the badge',
+	),
+	'CustomBadgeMoveDirection',
+);
+
+export const MoveCustomBadgeRequest = z.object({
+	badge_id: SnowflakeType.describe('The ID of the badge to move'),
+	direction: CustomBadgeMoveDirectionSchema.optional(),
+	after_id: SnowflakeType.nullable()
+		.optional()
+		.describe(
+			'Show the badge right after this badge of the same type, or first when null. Send either this or direction',
+		),
+});
+
+export type MoveCustomBadgeRequest = z.infer<typeof MoveCustomBadgeRequest>;
+
 export const CustomBadgeIdListResponse = z
 	.array(SnowflakeStringType)
-	.max(MAX_CUSTOM_BADGES_PER_ENTITY)
+	.max(CUSTOM_BADGES_PER_USER_CEILING)
 	.describe('IDs of the custom badges assigned to it');
 
 export const BuiltInBadgeKindParam = z.object({

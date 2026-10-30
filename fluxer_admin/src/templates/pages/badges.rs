@@ -4,7 +4,8 @@ use crate::{
     acl,
     api::types::{
         AdminCustomBadge, AdminCustomBadgeList, BADGE_IMAGE_MAX_BYTES, BADGE_IMAGE_TYPES,
-        BadgeMove, BuiltInBadgeImage, CustomBadgeType,
+        BADGES_PER_GUILD_CEILING, BADGES_PER_USER_CEILING, BadgeAssignment, BadgeMove,
+        BuiltInBadgeImage, CustomBadgeType,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -13,8 +14,9 @@ use crate::{
             empty_state::empty_state_full,
             error_display::error_alert,
             form::{
-                FORM_INPUT_CLASS, FORM_LABEL_CLASS, FORM_SELECT_CLASS, csrf_input, danger_button,
-                secondary_button, submit_button,
+                FORM_INPUT_CLASS, FORM_LABEL_CLASS, FORM_SELECT_CLASS, csrf_input,
+                danger_button_for, form_actions, secondary_button, secondary_button_for,
+                submit_button,
             },
             page_container::{card_with_header, page_header},
         },
@@ -29,10 +31,95 @@ struct BadgePermissions {
     delete: bool,
 }
 
+pub const BADGE_PAGE_SIZE: u32 = 50;
+
+#[derive(Clone, Debug, Default)]
+pub struct BadgePageState {
+    pub badge_type: CustomBadgeType,
+    pub query: Option<String>,
+    pub after: Option<String>,
+    pub trail: Vec<Option<String>>,
+}
+
+fn is_cursor(value: &str) -> bool {
+    let rest = value.strip_prefix(['g', 'u']).unwrap_or("");
+    let digits = rest.strip_prefix('-').unwrap_or(rest);
+    !digits.is_empty() && digits.len() <= 19 && digits.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+impl BadgePageState {
+    pub fn parse(
+        badge_type: Option<&str>,
+        query: Option<&str>,
+        after: Option<&str>,
+        trail: Option<&str>,
+    ) -> Self {
+        let cursor = |value: &str| is_cursor(value).then(|| value.to_owned());
+        Self {
+            badge_type: badge_type
+                .and_then(CustomBadgeType::parse)
+                .unwrap_or(CustomBadgeType::User),
+            query: query
+                .map(str::trim)
+                .filter(|query| !query.is_empty())
+                .map(|query| query.chars().take(64).collect()),
+            after: after.and_then(cursor),
+            trail: trail
+                .unwrap_or("")
+                .split(',')
+                .filter(|entry| !entry.is_empty())
+                .map(cursor)
+                .collect(),
+        }
+    }
+
+    fn encode(&self, after: Option<&str>, trail: &[Option<String>]) -> String {
+        let mut url = format!("?type={}", self.badge_type.as_str());
+        if let Some(query) = &self.query {
+            url.push_str("&q=");
+            url.push_str(&urlencoding::encode(query));
+        }
+        if let Some(after) = after {
+            url.push_str("&after=");
+            url.push_str(after);
+        }
+        if !trail.is_empty() {
+            let joined: Vec<&str> = trail
+                .iter()
+                .map(|entry| entry.as_deref().unwrap_or("-"))
+                .collect();
+            url.push_str("&trail=");
+            url.push_str(&joined.join(","));
+        }
+        url
+    }
+
+    pub fn current_query(&self) -> String {
+        self.encode(self.after.as_deref(), &self.trail)
+    }
+
+    fn next_query(&self, next: &str) -> String {
+        let mut trail = self.trail.clone();
+        trail.push(self.after.clone());
+        self.encode(Some(next), &trail)
+    }
+
+    fn previous_query(&self) -> Option<String> {
+        let mut trail = self.trail.clone();
+        let previous = trail.pop()?;
+        Some(self.encode(previous.as_deref(), &trail))
+    }
+
+    fn type_query(badge_type: CustomBadgeType) -> String {
+        format!("?type={}", badge_type.as_str())
+    }
+}
+
 pub fn badges_page(
     config: &AdminConfig,
     auth: &AuthContext,
     badges: Option<&AdminCustomBadgeList>,
+    state: &BadgePageState,
     csrf_token: &str,
 ) -> Markup {
     let acls = auth.acls();
@@ -44,24 +131,121 @@ pub fn badges_page(
     let content = html! {
         (page_header(
             "Badges",
-            Some("Badges that you give to users and guilds. Users show them on their profile, and guilds show them next to their name. You can make up to 100 badges of each type."),
+            Some("Badges that you give to users and guilds. Users show them on their profile, and guilds show them next to their name."),
         ))
         @match badges {
             None => (error_alert("Failed to load badges.")),
             Some(list) => {
                 div class="space-y-6" {
-                    (badge_section(config, list, CustomBadgeType::User, &permissions, csrf_token))
-                    (badge_section(config, list, CustomBadgeType::Guild, &permissions, csrf_token))
-                    (built_in_section(config, list, CustomBadgeType::User, &permissions, csrf_token))
-                    (built_in_section(config, list, CustomBadgeType::Guild, &permissions, csrf_token))
+                    (badge_section(config, list, state, &permissions, csrf_token))
+                    (limits_card(config, list, state, &permissions, csrf_token))
+                    (built_in_section(config, list, CustomBadgeType::User, state, &permissions, csrf_token))
+                    (built_in_section(config, list, CustomBadgeType::Guild, state, &permissions, csrf_token))
                     @if permissions.create {
-                        (create_form(config, csrf_token))
+                        (create_form(config, state, csrf_token))
                     }
                 }
             }
         }
     };
     admin_layout(config, auth, "Badges", "badges", None, content)
+}
+
+const TAB_CLASS: &str = "rounded-lg px-3 py-2 font-medium text-sm";
+const TAB_ACTIVE_CLASS: &str = "rounded-lg bg-neutral-900 px-3 py-2 font-medium text-sm text-white";
+
+fn type_tabs(config: &AdminConfig, state: &BadgePageState) -> Markup {
+    html! {
+        nav class="mb-4 flex flex-wrap gap-2" aria-label="Badge type" {
+            @for badge_type in [CustomBadgeType::User, CustomBadgeType::Guild] {
+                a href={(config.base_path) "/badges" (BadgePageState::type_query(badge_type))}
+                    class=(if badge_type == state.badge_type { TAB_ACTIVE_CLASS } else { TAB_CLASS })
+                    aria-current=[(badge_type == state.badge_type).then_some("page")] {
+                    (section_title(badge_type))
+                }
+            }
+        }
+    }
+}
+
+fn search_form(config: &AdminConfig, state: &BadgePageState) -> Markup {
+    html! {
+        form method="get" action={(config.base_path) "/badges"} class="mb-4 flex flex-wrap items-end gap-2" {
+            input type="hidden" name="type" value=(state.badge_type.as_str());
+            label class="flex min-w-0 flex-1 flex-col gap-1" for="badge-search" {
+                span class=(FORM_LABEL_CLASS) { "Search" }
+                input type="search" id="badge-search" name="q" value=(state.query.as_deref().unwrap_or(""))
+                    maxlength="64" placeholder="Name or ID" class=(FORM_INPUT_CLASS);
+            }
+            (secondary_button("Search"))
+            @if state.query.is_some() {
+                a href={(config.base_path) "/badges" (BadgePageState::type_query(state.badge_type))}
+                    class=(BADGE_ACTION_BUTTON_CLASS) { "Clear" }
+            }
+        }
+    }
+}
+
+fn pagination(config: &AdminConfig, list: &AdminCustomBadgeList, state: &BadgePageState) -> Markup {
+    let previous = state.previous_query();
+    html! {
+        @if previous.is_some() || list.next.is_some() || state.after.is_some() {
+            nav class="mt-4 flex flex-wrap gap-2" aria-label="Pages" {
+                @if state.after.is_some() {
+                    a href={(config.base_path) "/badges" (state.encode(None, &[]))} class=(BADGE_ACTION_BUTTON_CLASS) { "First page" }
+                }
+                @if let Some(previous) = previous {
+                    a href={(config.base_path) "/badges" (previous)} class=(BADGE_ACTION_BUTTON_CLASS) { "Previous" }
+                }
+                @if let Some(next) = &list.next {
+                    a href={(config.base_path) "/badges" (state.next_query(next))} class=(BADGE_ACTION_BUTTON_CLASS) { "Next" }
+                }
+            }
+        }
+    }
+}
+
+fn limits_card(
+    config: &AdminConfig,
+    list: &AdminCustomBadgeList,
+    state: &BadgePageState,
+    permissions: &BadgePermissions,
+    csrf_token: &str,
+) -> Markup {
+    let settings = list.settings;
+    card_with_header(
+        "Limits",
+        html! {
+            p class="mb-4 text-sm text-neutral-600" {
+                "How many badges one user or one guild can be given. Lowering a limit keeps badges already given. A user or guild over the limit can lose badges but cannot get new ones."
+            }
+            p class="mb-4 text-sm text-neutral-600" {
+                "Profiles and guild data list every badge given, and older app versions show them all in one row. High limits make that data larger."
+            }
+            @if permissions.update {
+                form method="post" action={(config.base_path) "/badges/settings" (state.current_query())} class="flex flex-col gap-3" {
+                    (csrf_input(csrf_token))
+                    label class="flex flex-col gap-1" for="badge-limit-user" {
+                        span class=(FORM_LABEL_CLASS) { "Badges per user" }
+                        input type="number" id="badge-limit-user" name="max_per_user" required
+                            min="1" max=(BADGES_PER_USER_CEILING) value=(settings.max_per_user) class=(FORM_INPUT_CLASS);
+                        span class="text-neutral-500 text-xs" { "From 1 to " (BADGES_PER_USER_CEILING) "." }
+                    }
+                    label class="flex flex-col gap-1" for="badge-limit-guild" {
+                        span class=(FORM_LABEL_CLASS) { "Badges per guild" }
+                        input type="number" id="badge-limit-guild" name="max_per_guild" required
+                            min="1" max=(BADGES_PER_GUILD_CEILING) value=(settings.max_per_guild) class=(FORM_INPUT_CLASS);
+                        span class="text-neutral-500 text-xs" { "From 1 to " (BADGES_PER_GUILD_CEILING) "." }
+                    }
+                    div { (submit_button("Save limits")) }
+                }
+            } @else {
+                p class="text-sm text-neutral-800" {
+                    "Users can have up to " (settings.max_per_user) " badges and guilds up to " (settings.max_per_guild) "."
+                }
+            }
+        },
+    )
 }
 
 fn section_title(badge_type: CustomBadgeType) -> &'static str {
@@ -74,26 +258,35 @@ fn section_title(badge_type: CustomBadgeType) -> &'static str {
 fn badge_section(
     config: &AdminConfig,
     list: &AdminCustomBadgeList,
-    badge_type: CustomBadgeType,
+    state: &BadgePageState,
     permissions: &BadgePermissions,
     csrf_token: &str,
 ) -> Markup {
-    let badges: Vec<&AdminCustomBadge> = list.of_type(badge_type).collect();
+    let badges = &list.badges;
+    let empty_text = if state.query.is_some() {
+        "No badges on this page match the search."
+    } else {
+        "No badges of this type yet."
+    };
     card_with_header(
-        section_title(badge_type),
+        "Custom badges",
         html! {
+            (type_tabs(config, state))
+            (search_form(config, state))
             @if badges.is_empty() {
-                (empty_state_full(None, "No badges of this type yet.", None))
+                (empty_state_full(None, empty_text, None))
             } @else {
                 div class="divide-y divide-neutral-100" {
                     @for (index, badge) in badges.iter().enumerate() {
-                        (badge_row(config, badge, permissions, csrf_token, BadgePosition {
-                            first: index == 0,
-                            last: index + 1 == badges.len(),
+                        (badge_row(config, badge, state, permissions, csrf_token, BadgePosition {
+                            first: index == 0 && state.after.is_none(),
+                            last: index + 1 == badges.len() && list.next.is_none(),
+                            reorder: state.query.is_none(),
                         }))
                     }
                 }
             }
+            (pagination(config, list, state))
         },
     )
 }
@@ -146,6 +339,7 @@ fn built_in_section(
     config: &AdminConfig,
     list: &AdminCustomBadgeList,
     badge_type: CustomBadgeType,
+    state: &BadgePageState,
     permissions: &BadgePermissions,
     csrf_token: &str,
 ) -> Markup {
@@ -161,7 +355,7 @@ fn built_in_section(
             }
             div class="divide-y divide-neutral-100" {
                 @for badge in list.built_in_of_type(badge_type) {
-                    (built_in_row(config, badge, permissions, csrf_token))
+                    (built_in_row(config, badge, state, permissions, csrf_token))
                 }
             }
         },
@@ -171,6 +365,7 @@ fn built_in_section(
 fn built_in_row(
     config: &AdminConfig,
     badge: &BuiltInBadgeImage,
+    state: &BadgePageState,
     permissions: &BadgePermissions,
     csrf_token: &str,
 ) -> Markup {
@@ -190,18 +385,22 @@ fn built_in_row(
             @if permissions.update {
                 div class="flex flex-wrap items-start gap-2" {
                     details class="rounded-lg border border-neutral-200 open:basis-full" {
-                        summary class="cursor-pointer rounded-lg px-3 py-2 font-medium text-sm" { "Replace image" }
+                        summary class="cursor-pointer rounded-lg px-3 py-2 font-medium text-sm" {
+                            "Replace image" span class="sr-only" { ", " (badge.label()) }
+                        }
                         form method="post" enctype="multipart/form-data"
-                            action={(base) "/badges/built-in/" (badge.kind) "?_csrf=" (csrf_token)}
+                            action={(base) "/badges/built-in/" (badge.kind) (state.current_query()) "&_csrf=" (csrf_token)}
                             class="flex flex-col gap-3 border-neutral-200 border-t p-3" {
                             (image_field(&prefix, true))
                             div { (submit_button("Replace image")) }
                         }
                     }
                     @if badge.asset_url.is_some() {
-                        form method="post" action={(base) "/badges/built-in/" (badge.kind) "/reset"} {
+                        form method="post" action={(base) "/badges/built-in/" (badge.kind) "/reset" (state.current_query())} {
                             (csrf_input(csrf_token))
-                            button type="submit" class=(BADGE_ACTION_BUTTON_CLASS) { "Use the built-in image" }
+                            button type="submit" class=(BADGE_ACTION_BUTTON_CLASS) {
+                                "Use the built-in image" span class="sr-only" { ", " (badge.label()) }
+                            }
                         }
                     }
                 }
@@ -213,23 +412,21 @@ fn built_in_row(
 struct BadgePosition {
     first: bool,
     last: bool,
+    reorder: bool,
 }
 
 fn move_form(
     config: &AdminConfig,
     badge: &AdminCustomBadge,
     direction: BadgeMove,
+    state: &BadgePageState,
     csrf_token: &str,
 ) -> Markup {
-    let label = match direction {
-        BadgeMove::Up => "Move up",
-        BadgeMove::Down => "Move down",
-    };
     html! {
         form method="post"
-            action={(config.base_path) "/badges/" (badge.id) "/move/" (direction.as_str())} {
+            action={(config.base_path) "/badges/" (badge.id) "/move/" (direction.as_str()) (state.current_query())} {
             (csrf_input(csrf_token))
-            (secondary_button(label))
+            (secondary_button_for(direction.label(), &badge.name))
         }
     }
 }
@@ -237,6 +434,7 @@ fn move_form(
 fn badge_row(
     config: &AdminConfig,
     badge: &AdminCustomBadge,
+    state: &BadgePageState,
     permissions: &BadgePermissions,
     csrf_token: &str,
     position: BadgePosition,
@@ -245,7 +443,7 @@ fn badge_row(
     html! {
         div class="flex flex-col gap-4 py-4 first:pt-0 last:pb-0" {
             div class="flex items-start gap-3" {
-                img src=(badge.image_url()) alt=""
+                img src=(badge.image_url()) alt="" loading="lazy"
                     class="h-10 w-10 shrink-0 rounded object-contain";
                 div class="flex min-w-0 flex-col gap-1" {
                     span class="font-medium text-neutral-900" { (badge.name) }
@@ -263,9 +461,11 @@ fn badge_row(
                 div class="flex flex-wrap items-start gap-2" {
                     @if permissions.update {
                         details class="rounded-lg border border-neutral-200 open:basis-full" {
-                            summary class="cursor-pointer rounded-lg px-3 py-2 font-medium text-sm" { "Edit" }
+                            summary class="cursor-pointer rounded-lg px-3 py-2 font-medium text-sm" {
+                                "Edit" span class="sr-only" { ", " (badge.name) }
+                            }
                             form method="post" enctype="multipart/form-data"
-                                action={(base) "/badges/" (badge.id) "?_csrf=" (csrf_token)}
+                                action={(base) "/badges/" (badge.id) (state.current_query()) "&_csrf=" (csrf_token)}
                                 class="flex flex-col gap-3 border-neutral-200 border-t p-3" {
                                 (badge_fields(&badge.id, Some(badge)))
                                 (image_field(&badge.id, false))
@@ -273,17 +473,19 @@ fn badge_row(
                             }
                         }
                     }
-                    @if permissions.update && !position.first {
-                        (move_form(config, badge, BadgeMove::Up, csrf_token))
+                    @if permissions.update && position.reorder && !position.first {
+                        (move_form(config, badge, BadgeMove::First, state, csrf_token))
+                        (move_form(config, badge, BadgeMove::Up, state, csrf_token))
                     }
-                    @if permissions.update && !position.last {
-                        (move_form(config, badge, BadgeMove::Down, csrf_token))
+                    @if permissions.update && position.reorder && !position.last {
+                        (move_form(config, badge, BadgeMove::Down, state, csrf_token))
+                        (move_form(config, badge, BadgeMove::Last, state, csrf_token))
                     }
                     @if permissions.delete {
-                        form method="post" action={(base) "/badges/" (badge.id) "/delete"}
+                        form method="post" action={(base) "/badges/" (badge.id) "/delete" (state.current_query())}
                             onsubmit="return confirm('Delete this badge? Everyone it was given to stops showing it.')" {
                             (csrf_input(csrf_token))
-                            (danger_button("Delete badge"))
+                            (danger_button_for("Delete badge", &badge.name))
                         }
                     }
                 }
@@ -337,12 +539,12 @@ fn image_field(prefix: &str, required: bool) -> Markup {
     }
 }
 
-fn create_form(config: &AdminConfig, csrf_token: &str) -> Markup {
+fn create_form(config: &AdminConfig, state: &BadgePageState, csrf_token: &str) -> Markup {
     card_with_header(
         "Create a badge",
         html! {
             form method="post" enctype="multipart/form-data"
-                action={(config.base_path) "/badges?_csrf=" (csrf_token)}
+                action={(config.base_path) "/badges" (state.current_query()) "&_csrf=" (csrf_token)}
                 class="flex flex-col gap-3" {
                 label class="flex flex-col gap-1" for="badge-new-type" {
                     span class=(FORM_LABEL_CLASS) { "Given to" }
@@ -359,32 +561,110 @@ fn create_form(config: &AdminConfig, csrf_token: &str) -> Markup {
     )
 }
 
-pub fn custom_badge_list(badges: &[&AdminCustomBadge]) -> Markup {
+pub fn custom_badge_assignment(
+    config: &AdminConfig,
+    assignment: &BadgeAssignment,
+    targets: &BadgeAssignmentTargets<'_>,
+    can_edit: bool,
+    csrf_token: &str,
+) -> Markup {
+    let held = assignment.assigned.len();
+    let save_form_id = format!("badge-assign-save-{}", targets.tab);
+    let picked_ids = assignment
+        .picked
+        .iter()
+        .map(|badge| badge.id.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+    let over_limit = usize::try_from(assignment.limit).is_ok_and(|limit| held > limit);
     html! {
-        @if badges.is_empty() {
-            p class="text-sm text-neutral-500" { "No badges given." }
-        } @else {
-            div class="flex flex-wrap gap-3" {
-                @for badge in badges {
-                    span class="inline-flex items-center gap-2 text-sm text-neutral-800" {
-                        img src=(badge.image_url()) alt="" class="h-5 w-5 object-contain";
-                        (badge.name)
+        p class="mb-3 text-sm text-neutral-600" {
+            (held) " of up to " (assignment.limit) " " (targets.noun) " given. "
+            a href={(config.base_path) "/badges?type=" (targets.badge_type.as_str())} class="text-blue-600 underline" { "Open badges" }
+        }
+        @if over_limit {
+            p class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" {
+                "This is more than the limit of " (assignment.limit) ". Removing badges works, but new ones cannot be added until it is under the limit."
+            }
+        }
+        @if can_edit {
+            form method="get" action=(targets.search_action) class="mb-4 flex flex-wrap items-end gap-2"
+                onsubmit=(pick_script(&save_form_id)) {
+                input type="hidden" name="tab" value=(targets.tab);
+                input type="hidden" name="badge_pick" value=(picked_ids);
+                label class="flex min-w-0 flex-1 flex-col gap-1" for={"badge-assign-search-" (targets.tab)} {
+                    span class=(FORM_LABEL_CLASS) { "Find badges to add" }
+                    input type="search" id={"badge-assign-search-" (targets.tab)} name="badge_q"
+                        value=(assignment.query.as_deref().unwrap_or("")) maxlength="64"
+                        placeholder="Name or ID" class=(FORM_INPUT_CLASS);
+                }
+                (secondary_button("Search"))
+            }
+            form method="post" action=(targets.save_action) id=(save_form_id) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    @if assignment.assigned.is_empty() {
+                        p class="text-sm text-neutral-500" { "No badges given." }
+                    } @else {
+                        fieldset class="space-y-2" {
+                            legend class=(FORM_LABEL_CLASS) { "Given" }
+                            (badge_checkboxes(&assignment.assigned, true, false))
+                        }
                     }
+                    @if !assignment.picked.is_empty() {
+                        fieldset class="space-y-2" {
+                            legend class=(FORM_LABEL_CLASS) { "Selected to add" }
+                            (badge_checkboxes(&assignment.picked, true, true))
+                        }
+                    }
+                    @if !assignment.candidates.is_empty() {
+                        fieldset class="space-y-2" {
+                            legend class=(FORM_LABEL_CLASS) {
+                                (if assignment.query.is_some() { "Matches" } else { "Add" })
+                            }
+                            (badge_checkboxes(&assignment.candidates, false, true))
+                            @if assignment.more_candidates {
+                                p class="text-neutral-500 text-xs" { "More badges match. Search to narrow the list." }
+                            }
+                        }
+                    } @else if assignment.query.is_some() && assignment.search_incomplete {
+                        p class="text-sm text-neutral-500" { "No match among the badges checked so far. More badges may match. Search for a longer part of the name or for the badge ID." }
+                    } @else if assignment.query.is_some() {
+                        p class="text-sm text-neutral-500" { "No other badges match the search." }
+                    }
+                    (form_actions(html! { (submit_button("Save badges")) }))
                 }
             }
+        } @else {
+            (custom_badge_list(&assignment.assigned))
+            p class="mt-2 text-xs text-neutral-500" { (targets.permission_note) }
         }
     }
 }
 
-pub fn custom_badge_picker(badges: &[&AdminCustomBadge], assigned: &[String]) -> Markup {
+pub struct BadgeAssignmentTargets<'a> {
+    pub badge_type: CustomBadgeType,
+    pub noun: &'a str,
+    pub tab: &'a str,
+    pub search_action: &'a str,
+    pub save_action: &'a str,
+    pub permission_note: &'a str,
+}
+
+fn pick_script(save_form_id: &str) -> String {
+    format!(
+        "var f=document.getElementById('{save_form_id}');if(f){{this.elements.badge_pick.value=Array.prototype.map.call(f.querySelectorAll('input[data-candidate]:checked'),function(i){{return i.value;}}).join(',');}}"
+    )
+}
+
+fn badge_checkboxes(badges: &[AdminCustomBadge], checked: bool, candidate: bool) -> Markup {
     html! {
         div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
             @for badge in badges {
                 label class="flex items-center gap-2 text-sm text-neutral-800" {
-                    input type="checkbox" name="badge_ids[]" value=(badge.id)
-                        checked[assigned.contains(&badge.id)]
+                    input type="checkbox" name="badge_ids[]" value=(badge.id) checked[checked] data-candidate[candidate]
                         class="h-4 w-4 rounded border-neutral-300";
-                    img src=(badge.image_url()) alt="" class="h-5 w-5 object-contain";
+                    img src=(badge.image_url()) alt="" loading="lazy" class="h-5 w-5 object-contain";
                     (badge.name)
                 }
             }
@@ -392,11 +672,19 @@ pub fn custom_badge_picker(badges: &[&AdminCustomBadge], assigned: &[String]) ->
     }
 }
 
-pub fn no_badges_defined(config: &AdminConfig, label: &str) -> Markup {
+fn custom_badge_list(badges: &[AdminCustomBadge]) -> Markup {
     html! {
-        p class="text-sm text-neutral-500" {
-            "No " (label) " are defined yet. "
-            a href={(config.base_path) "/badges"} class="text-blue-600 underline" { "Open badges" }
+        @if badges.is_empty() {
+            p class="text-sm text-neutral-500" { "No badges given." }
+        } @else {
+            div class="flex flex-wrap gap-3" {
+                @for badge in badges {
+                    span class="inline-flex items-center gap-2 text-sm text-neutral-800" {
+                        img src=(badge.image_url()) alt="" loading="lazy" class="h-5 w-5 object-contain";
+                        (badge.name)
+                    }
+                }
+            }
         }
     }
 }

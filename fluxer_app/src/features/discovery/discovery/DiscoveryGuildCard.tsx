@@ -144,6 +144,7 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({
 							<GuildBadge
 								features={nameBadgeFeatures}
 								badgeIds={guild.badge_ids}
+								expandable={false}
 								tooltipPosition="bottom"
 								data-flx="discovery.discovery.discovery-guild-card.guild-badge"
 							/>

@@ -12,11 +12,11 @@ import {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisi
 import {EnforcementNoticeDelivery} from '@app/api/enforcement/EnforcementNoticeDelivery';
 import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
+	getCustomBadgeCatalog,
 	getDiscriminatorService,
 	getEnforcementDecisionRepository,
 	getEntityAssetService,
 	getGuildDiscoveryRepository,
-	getInstanceConfigRepository,
 	getInviteRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {queuePaymentDisputeClosures} from '@app/api/payment_disputes/PaymentDisputeEnforcement';
@@ -136,7 +136,7 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		auditService,
 		discoveryRepository: getGuildDiscoveryRepository(),
 		enforcement: enforcementService,
-		instanceConfigRepository: getInstanceConfigRepository(),
+		customBadgeCatalog: getCustomBadgeCatalog(),
 	});
 	return {auditService, banManagementService, userService, guildService};
 }

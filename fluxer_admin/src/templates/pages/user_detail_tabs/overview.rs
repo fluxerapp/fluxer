@@ -3,7 +3,7 @@
 use crate::{
     acl, admin_flags,
     api::types::{
-        AdminCustomBadgeList, AdminUser, CustomBadgeType, LimitConfigResponse,
+        AdminUser, BadgeAssignment, CustomBadgeType, LimitConfigResponse,
         ListUserChangeLogResponse, account_tier_label,
     },
     config::AdminConfig,
@@ -13,7 +13,7 @@ use crate::{
         page_container::{card_with_header, detail_row},
     },
     templates::pages::{
-        badges::{custom_badge_list, custom_badge_picker, no_badges_defined},
+        badges::{BadgeAssignmentTargets, custom_badge_assignment},
         enforcement_decision::suspension_label,
     },
     utils::{
@@ -28,7 +28,7 @@ use maud::{Markup, html};
 pub struct OverviewSources<'a> {
     pub change_log: Option<&'a ListUserChangeLogResponse>,
     pub limit_config: Option<&'a LimitConfigResponse>,
-    pub custom_badges: Option<&'a AdminCustomBadgeList>,
+    pub custom_badges: Option<&'a BadgeAssignment>,
 }
 
 pub fn overview_tab(
@@ -467,33 +467,30 @@ fn custom_badges_card(
     user: &AdminUser,
     admin_acls: &[String],
     csrf_token: &str,
-    badges: &AdminCustomBadgeList,
+    assignment: &BadgeAssignment,
 ) -> Markup {
-    let definitions: Vec<_> = badges.of_type(CustomBadgeType::User).collect();
-    let assigned: Vec<_> = definitions
-        .iter()
-        .copied()
-        .filter(|badge| user.badge_ids.contains(&badge.id))
-        .collect();
     let can_edit = acl::has_permission(admin_acls, acl::USER_UPDATE_BADGES);
+    let search_action = format!("{}/users/{}", config.base_path, user.id);
+    let save_action = format!(
+        "{}/users/{}?action=update_badges&tab=overview",
+        config.base_path, user.id
+    );
     card_with_header(
         "Badges",
-        html! {
-            @if definitions.is_empty() {
-                (no_badges_defined(config, "user badges"))
-            } @else if can_edit {
-                form method="post" action={(config.base_path) "/users/" (user.id) "?action=update_badges&tab=overview"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-4" {
-                        (custom_badge_picker(&definitions, &user.badge_ids))
-                        (form_actions(html! { (submit_button("Save badges")) }))
-                    }
-                }
-            } @else {
-                (custom_badge_list(&assigned))
-                p class="mt-2 text-xs text-neutral-500" { "You need the user badges permission to change these." }
-            }
-        },
+        custom_badge_assignment(
+            config,
+            assignment,
+            &BadgeAssignmentTargets {
+                badge_type: CustomBadgeType::User,
+                noun: "user badges",
+                tab: "overview",
+                search_action: &search_action,
+                save_action: &save_action,
+                permission_note: "You need the user badges permission to change these.",
+            },
+            can_edit,
+            csrf_token,
+        ),
     )
 }
 

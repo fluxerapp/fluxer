@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Permintaan tidak valid.",
 	"misc.invalid_snowflake": "Snowflake tidak valid.",
 	"misc_limits.max_applications_reached": "Kamu telah mencapai batas maksimal {limit} {limit, plural, other {aplikasi}}.",
-	"misc_limits.max_badges_reached": "Kamu telah mencapai batas maksimal {count} {count, plural, other {lencana}} untuk jenis ini.",
+	"misc_limits.max_badges_reached": "Batasnya adalah {count} {count, plural, other {lencana}}.",
 	"misc_limits.max_bookmarks_reached": "Kamu telah mencapai batas maksimal {count} {count, plural, other {bookmark}}.",
 	"misc_limits.max_category_channels_reached": "Kamu telah mencapai batas maksimal {count} {count, plural, other {saluran kategori}}.",
 	"misc_limits.max_friends_reached": "Kamu telah mencapai batas maksimal {count} {count, plural, other {teman}}.",

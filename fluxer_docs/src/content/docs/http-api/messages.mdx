@@ -709,7 +709,7 @@ To get the next page, set `before` to the `pinned_at` of the last item. Skip mes
 | banner | ?string | The guild banner hash |
 | description | ?string | The discovery description, or null when the guild isn't in discovery |
 | features | array of strings | `VERIFIED`, `PARTNERED` and `DISCOVERABLE` from [guild features](/http-api/guilds/#guild-features) |
-| badge_ids | array[snowflake] | The [custom badges](/http-api/instance/#guild-badge-object) of the guild |
+| badge_ids | array[snowflake] | The [custom badges](/http-api/instance/#guild-badge-object) of the guild. Look them up with [List guild badges](/http-api/instance/#list-guild-badges) |
 | approximate_member_count | ?integer | About how many members the guild has |
 | approximate_presence_count | ?integer | About how many members are online |
 | discoverable | boolean | Whether you can join through [Join discovery guild](/http-api/discovery/#join-discovery-guild) |

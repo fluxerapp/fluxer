@@ -4,7 +4,7 @@ import {createTestCustomBadge} from '@app/api/admin/tests/AdminTestUtils';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {createGuild} from '@app/api/message/tests/MessageTestUtils';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getCustomBadgeCatalog} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -46,7 +46,7 @@ describe('custom badges', () => {
 
 	test('stores an uploaded image reference and serves it as a profile badge until deleted', async () => {
 		const badge = await createTestCustomBadge(harness, admin.token, 'user', 'Translator');
-		const [stored] = await getInstanceConfigRepository().getCustomBadges();
+		const stored = await getCustomBadgeCatalog().getById(badge.id);
 		expect(stored?.asset).toMatch(new RegExp(`^custom-badges/${badge.id}/[0-9a-f]{8}\\.png$`));
 		expect(badge.asset_url).toMatch(new RegExp(`/custom-badges/${badge.id}/[0-9a-f]{8}\\.webp$`));
 
@@ -88,26 +88,6 @@ describe('custom badges', () => {
 			.patch(`/admin/guilds/${guild.id}`)
 			.body({badge_ids: [userBadge.id]})
 			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_BADGE')
-			.execute();
-	});
-
-	test('allows 100 badges of a type and refuses the next one', async () => {
-		const template = await createTestCustomBadge(harness, admin.token, 'user');
-		const [stored] = await getInstanceConfigRepository().getCustomBadges();
-		await getInstanceConfigRepository().updateCustomBadges((current) => [
-			...current,
-			...Array.from({length: 98}, (_, index) => ({
-				...stored!,
-				id: (BigInt(template.id) + BigInt(index + 1)).toString(),
-				name: `Badge ${index}`,
-			})),
-		]);
-		await createTestCustomBadge(harness, admin.token, 'user', 'Last one');
-		await createTestCustomBadge(harness, admin.token, 'guild', 'Other type');
-		await createBuilder(harness, admin.token)
-			.post('/admin/badges')
-			.body({type: 'user', name: 'One too many', image: getPngDataUrl()})
-			.expect(HTTP_STATUS.BAD_REQUEST, 'MAX_BADGES')
 			.execute();
 	});
 

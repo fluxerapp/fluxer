@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Geçersiz istek.",
 	"misc.invalid_snowflake": "Geçersiz snowflake.",
 	"misc_limits.max_applications_reached": "{limit, plural, one {# uygulama} other {# uygulama}} sınırına ulaştın.",
-	"misc_limits.max_badges_reached": "Bu tür için {count, plural, one {# rozet} other {# rozet}} sınırına ulaştın.",
+	"misc_limits.max_badges_reached": "Sınır {count, plural, one {# rozet} other {# rozet}}.",
 	"misc_limits.max_bookmarks_reached": "{count, plural, one {# yer işareti} other {# yer işareti}} sınırına ulaştın.",
 	"misc_limits.max_category_channels_reached": "{count, plural, one {# kategori kanalı} other {# kategori kanalı}} sınırına ulaştın.",
 	"misc_limits.max_friends_reached": "{count, plural, one {# arkadaş} other {# arkadaş}} sınırına ulaştın.",

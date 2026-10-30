@@ -18,7 +18,7 @@ export const CrosspostSourceGuildResponse = z.object({
 		.array(GuildFeatureSchema)
 		.describe('The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only'),
 	badge_ids: CustomBadgeIdListResponse.describe(
-		'IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document',
+		'IDs of the custom badges assigned to the source community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return',
 	),
 	approximate_member_count: Int32Type.nullable().describe(
 		'Approximate number of members in the source community, or null when unavailable',

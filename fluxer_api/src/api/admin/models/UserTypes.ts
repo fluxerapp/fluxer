@@ -39,7 +39,7 @@ async function buildAdminProfileBadges(
 		Config.instance.selfHosted || user.isBot
 			? null
 			: loadOperatorPassEntitlementState(getOperatorPassRepository(), user.id),
-		loadProfileBadgeEnvironment(),
+		loadProfileBadgeEnvironment(user.badgeIds),
 	]);
 	return buildOperatorProfileBadges({
 		user,

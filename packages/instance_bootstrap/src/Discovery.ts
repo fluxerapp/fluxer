@@ -146,6 +146,8 @@ export interface InstanceDiscoveryDocument {
 	readonly domainMigration: InstanceDomainMigration | null;
 	readonly notice?: InstanceNotice | null;
 	readonly guildBadges?: ReadonlyArray<InstanceGuildBadge>;
+	readonly guildBadgesPartial?: boolean;
+	readonly customBadgesVersion?: string | null;
 	readonly builtInGuildBadgeImages?: InstanceBuiltInGuildBadgeImages;
 }
 
@@ -310,6 +312,8 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		domainMigration: parseInstanceDomainMigration(source.domain_migration),
 		notice: parseNotice(source.notice),
 		guildBadges: parseGuildBadges(source.guild_badges),
+		guildBadgesPartial: source.guild_badges_partial === true,
+		customBadgesVersion: readNonEmptyString(source, 'custom_badges_version'),
 		builtInGuildBadgeImages: parseBuiltInGuildBadgeImages(source.built_in_guild_badge_images),
 	};
 }
@@ -724,6 +728,7 @@ function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
 		if (id == null || name == null || assetUrl == null) {
 			return [];
 		}
+		const position = readNonEmptyString(source, 'position');
 		return [
 			{
 				id,
@@ -731,6 +736,7 @@ function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
 				description: readNonEmptyString(source, 'description'),
 				asset_url: assetUrl,
 				href: readAbsoluteHTTPURL(source, 'href'),
+				...(position != null && /^-?[0-9]{1,19}$/.test(position) ? {position} : {}),
 			},
 		];
 	});

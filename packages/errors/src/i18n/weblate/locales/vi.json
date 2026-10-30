@@ -438,7 +438,7 @@
 	"misc.invalid_request_generic": "Yêu cầu không hợp lệ.",
 	"misc.invalid_snowflake": "ID Snowflake không hợp lệ.",
 	"misc_limits.max_applications_reached": "Bạn đã đạt tối đa {limit} {limit, plural, other {ứng dụng}}.",
-	"misc_limits.max_badges_reached": "Bạn đã đạt tối đa {count} {count, plural, other {huy hiệu}} cho loại này.",
+	"misc_limits.max_badges_reached": "Giới hạn là {count} {count, plural, other {huy hiệu}}.",
 	"misc_limits.max_bookmarks_reached": "Bạn đã đạt tối đa {count} {count, plural, other {tin nhắn đã lưu}}.",
 	"misc_limits.max_category_channels_reached": "Bạn đã đạt tối đa {count} {count, plural, other {danh mục}}.",
 	"misc_limits.max_friends_reached": "Bạn đã đạt tối đa {count} {count, plural, other {bạn bè}}.",
