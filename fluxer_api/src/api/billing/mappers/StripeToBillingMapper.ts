@@ -207,7 +207,7 @@ function safeMetadata(m: Stripe.Metadata | null | undefined): Map<string, string
 	return new Map(entries);
 }
 
-export function computeStripeUpdatedAt(
+function computeStripeUpdatedAt(
 	obj: {
 		created?: number | null;
 		status_transitions?: object | null;

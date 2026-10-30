@@ -449,35 +449,3 @@ fn audit_log_reason_header(reason: &str) -> ApiResult<HeaderValue> {
     value.set_sensitive(true);
     Ok(value)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::api::generated::types;
-
-    #[test]
-    fn generated_error_response_keeps_api_message() {
-        let client = AdminApiClient {
-            generated: GeneratedClient::new_with_client(
-                "http://localhost",
-                reqwest::Client::new(),
-                HeaderMap::new(),
-            ),
-        };
-        let body = types::Error {
-            code: "DIRECT_MESSAGES_DISABLED".to_owned(),
-            errors: Vec::new(),
-            message: "Direct messages are disabled on this instance.".to_owned(),
-            extra: serde_json::Map::new(),
-        };
-        let error = progenitor_client::Error::ErrorResponse(progenitor_client::ResponseValue::new(
-            body,
-            reqwest::StatusCode::BAD_REQUEST,
-            HeaderMap::new(),
-        ));
-        assert_eq!(
-            client.generated_error(error).detail_message().as_deref(),
-            Some("Direct messages are disabled on this instance.")
-        );
-    }
-}

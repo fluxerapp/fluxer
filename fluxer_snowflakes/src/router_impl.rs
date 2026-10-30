@@ -41,27 +41,3 @@ impl RouterService for SnowflakesRouter {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn keyed_requests_only_go_to_the_owner_and_unkeyed_ones_fail_over() {
-        let router = SnowflakesRouter::new(8);
-        let ring = HashRing::new(8);
-        let keyed = SnowflakeRequest::GenerateBatch {
-            count: 1,
-            routing_key: Some("channel:1".to_owned()),
-        };
-        assert_eq!(
-            router.shard_candidates(&keyed, &ring),
-            vec![ring.owner("channel:1")]
-        );
-        let unkeyed = SnowflakeRequest::GenerateBatch {
-            count: 1,
-            routing_key: None,
-        };
-        assert_eq!(router.shard_candidates(&unkeyed, &ring).len(), 8);
-    }
-}

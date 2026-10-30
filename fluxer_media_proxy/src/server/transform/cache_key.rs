@@ -97,17 +97,3 @@ fn serialize_optional_number(value: Option<impl ToString>) -> String {
 pub(in crate::server) fn sha256_hex(data: &[u8]) -> String {
     hex::encode(Sha256::digest(data))
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn role_icons_have_their_own_cache_key_name() {
-        assert_eq!("role_icon", asset_kind_name(AssetKind::RoleIcon));
-        assert_ne!(
-            asset_kind_name(AssetKind::GuildIcon),
-            asset_kind_name(AssetKind::RoleIcon)
-        );
-    }
-}

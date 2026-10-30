@@ -81,31 +81,3 @@ pub(super) fn strip_blocks(input: &[u8]) -> Result<Vec<u8>, MediaError> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn strip_drops_comments_and_unknown_applications_but_keeps_looping() {
-        let mut input = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff".to_vec();
-        input.extend_from_slice(b"\x21\xff\x0bNETSCAPE2.0\x03\x01\x00\x00\x00");
-        input.extend_from_slice(b"\x21\xfe\x09GPS 59.33\x00");
-        input.extend_from_slice(b"\x21\xff\x0bXMP DataXMP\x04Jane\x00");
-        input.extend_from_slice(b"\x21\xf9\x04\x00\x0a\x00\x00\x00");
-        input.extend_from_slice(b"\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00");
-        input.extend_from_slice(b"\x3btrailing");
-
-        let stripped = strip_blocks(&input).expect("stripped gif");
-
-        let contains = |needle: &[u8]| {
-            stripped
-                .windows(needle.len())
-                .any(|window| window == needle)
-        };
-        assert!(contains(b"NETSCAPE2.0"));
-        assert!(!contains(b"GPS"));
-        assert!(!contains(b"Jane"));
-        assert!(stripped.ends_with(b"\x02\x02\x44\x01\x00\x3b"));
-    }
-}

@@ -48,7 +48,7 @@ export function voiceJoinCommand(webApp: string, baseDomain: string, token: stri
 	return `curl -fsSL https://fluxer.dev/install.sh | sh -s -- voice ${instance} ${token}`;
 }
 
-export const VOICE_NODE_AUDIENCE = 'fluxer-voice-node';
+const VOICE_NODE_AUDIENCE = 'fluxer-voice-node';
 export const VOICE_NODE_PATH = '/voice/node';
 
 const CLAIM_STALE_MS = 2 * 60 * 1000;
@@ -127,7 +127,7 @@ function signatureMatches(parts: NodeTokenParts, secret: string): boolean {
 	return expected.length === parts.signature.length && timingSafeEqual(expected, parts.signature);
 }
 
-export type EndpointVerifier = (
+type EndpointVerifier = (
 	endpoint: string,
 	keys: {apiKey: string; apiSecret: string},
 	internalEndpoint: string | null,
@@ -152,12 +152,6 @@ const verifyNodeEndpoint: EndpointVerifier = async (endpoint, keys, internalEndp
 	await probeLiveKit(base, options);
 	await checkLiveKitKeys(base, keys, options);
 };
-
-let endpointVerifier: EndpointVerifier = verifyNodeEndpoint;
-
-export function setVoiceNodeEndpointVerifierForTesting(verifier: EndpointVerifier | null): void {
-	endpointVerifier = verifier ?? verifyNodeEndpoint;
-}
 
 function asApiError(error: unknown): Error {
 	if (!(error instanceof VoiceEndpointError)) return error as Error;
@@ -254,7 +248,7 @@ export class VoiceNodeService {
 			}
 			if (servers.some((server) => server.apiKey === body.api_key)) throw new VoiceServerApiKeyInUseError();
 			const endpoint = this.checkEndpoint(body.endpoint, row.hostname);
-			await endpointVerifier(
+			await verifyNodeEndpoint(
 				endpoint,
 				{apiKey: body.api_key, apiSecret: body.api_secret},
 				row.internal_endpoint,
@@ -371,7 +365,7 @@ export class VoiceNodeService {
 		const updated: VoiceServerRecord = {...server, updatedAt: new Date()};
 		if (body.endpoint !== undefined && body.endpoint !== server.endpoint) {
 			updated.endpoint = this.checkEndpoint(body.endpoint, server.pinnedHostname);
-			await endpointVerifier(updated.endpoint, server, server.internalEndpoint, true).catch((error: unknown) => {
+			await verifyNodeEndpoint(updated.endpoint, server, server.internalEndpoint, true).catch((error: unknown) => {
 				throw asApiError(error);
 			});
 		}

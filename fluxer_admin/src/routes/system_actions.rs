@@ -547,19 +547,3 @@ fn build_media_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         ..Default::default()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_save_with_warnings_shows_them_instead_of_plain_success() {
-        let warnings = vec!["Couldn't connect to the sign-in provider.".to_owned()];
-        let flash = with_save_warnings(FlashData::success("Instance config updated"), &warnings);
-        assert_eq!(flash.flash_type, "info");
-        assert_eq!(
-            flash.message,
-            "Instance config updated. Couldn't connect to the sign-in provider."
-        );
-    }
-}

@@ -75,12 +75,6 @@ impl AppState {
             signature_log: WouldDenyLog::new(),
         }
     }
-
-    #[cfg(test)]
-    pub(in crate::server) fn with_external_client(mut self, client: reqwest::Client) -> Self {
-        self.media.external_client = reqwest_middleware::ClientBuilder::new(client).build();
-        self
-    }
 }
 
 impl MediaRuntime {

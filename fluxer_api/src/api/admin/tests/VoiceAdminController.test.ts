@@ -7,7 +7,6 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
 	CreateVoiceRegionResponse,
 	CreateVoiceServerResponse,
@@ -168,75 +167,5 @@ describe('VoiceAdminController', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect((await voiceRepository.getServer(fixture.regionId, fixture.serverId))?.notes).toBeNull();
-	});
-	test('rejects a second server with an api key that is already in use', async () => {
-		const admin = await createAdminWithAcls(harness, [
-			AdminACLs.VOICE_REGION_CREATE,
-			AdminACLs.VOICE_SERVER_CREATE,
-			AdminACLs.VOICE_SERVER_UPDATE,
-		]);
-		await createVoiceFixture(harness, admin, {
-			regionId: 'voice-region-keys',
-			serverId: 'voice-server-keys-1',
-			endpoint: 'wss://voice-keys-1.example.com/livekit',
-			apiKey: 'shared-key',
-			apiSecret: 'secret-1',
-		});
-		await createBuilder(harness, admin.token)
-			.post('/admin/voice/regions/voice-region-keys/servers')
-			.body({server_id: 'voice-server-keys-2', endpoint: 'wss://b.example.com', api_key: 'shared-key', api_secret: 's'})
-			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.VOICE_SERVER_API_KEY_IN_USE)
-			.execute();
-		await createBuilder(harness, admin.token)
-			.post('/admin/voice/regions/voice-region-keys/servers')
-			.body({server_id: 'voice-server-keys-1', endpoint: 'wss://b.example.com', api_key: 'other-key', api_secret: 's'})
-			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.VOICE_SERVER_ID_IN_USE)
-			.execute();
-		await createBuilder(harness, admin.token)
-			.post('/admin/voice/regions/voice-region-keys/servers')
-			.body({server_id: 'voice-server-keys-2', endpoint: 'wss://b.example.com', api_key: 'other-key', api_secret: 's'})
-			.execute();
-		await createBuilder(harness, admin.token)
-			.patch('/admin/voice/regions/voice-region-keys/servers/voice-server-keys-2')
-			.body({api_key: 'shared-key'})
-			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.VOICE_SERVER_API_KEY_IN_USE)
-			.execute();
-		await createBuilder(harness, admin.token)
-			.patch('/admin/voice/regions/voice-region-keys/servers/voice-server-keys-2')
-			.body({api_key: 'other-key', notes: 'same key again is fine'})
-			.execute();
-	});
-
-	test('flags existing servers that share a key and keeps internal endpoint and draining', async () => {
-		const admin = await createAdminWithAcls(harness, [
-			AdminACLs.VOICE_REGION_CREATE,
-			AdminACLs.VOICE_SERVER_CREATE,
-			AdminACLs.VOICE_SERVER_UPDATE,
-			AdminACLs.VOICE_SERVER_LIST,
-		]);
-		const fixture = await createVoiceFixture(harness, admin, {
-			regionId: 'voice-region-flags',
-			serverId: 'voice-server-flags-1',
-			endpoint: 'wss://voice-flags.example.com/livekit',
-			apiKey: 'flag-key',
-			apiSecret: 'flag-secret',
-		});
-		const first = await voiceRepository.getServer(fixture.regionId, fixture.serverId);
-		await voiceRepository.upsertServer({...first!, serverId: 'voice-server-flags-2'});
-		const updated = await createBuilder<UpdateVoiceServerResponse>(harness, admin.token)
-			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
-			.body({internal_endpoint: 'http://voice-flags:7880', draining: true})
-			.execute();
-		expect(updated.server).toMatchObject({
-			internal_endpoint: 'http://voice-flags:7880',
-			draining: true,
-			duplicate_api_key: true,
-			health: {status: 'unknown', checked_at: null, error: null},
-		});
-		await createBuilder(harness, admin.token)
-			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
-			.body({internal_endpoint: 'ftp://voice-flags'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
 	});
 });

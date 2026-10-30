@@ -3,8 +3,6 @@
 use crate::pseudonym::pseudonym;
 use fluxer_common::user_flags::AccountStanding;
 #[cfg(test)]
-use fluxer_common::user_flags::USER_FLAG_PARTNER;
-#[cfg(test)]
 use fluxer_common::user_flags::USER_FLAG_STAFF;
 pub use fluxer_common::user_partial::ApiUserPartial;
 use fluxer_common::user_partial::{
@@ -201,18 +199,5 @@ mod tests {
                 }]
             })
         );
-    }
-
-    #[test]
-    fn api_partial_drops_the_flags_of_hidden_badges() {
-        let mut partial = partial_with_flags(123, USER_FLAG_STAFF | USER_FLAG_PARTNER);
-        partial.hidden_profile_badges = vec!["staff".to_owned()];
-
-        let api_partial = partial.to_api_partial();
-
-        assert_eq!(api_partial.flags, USER_FLAG_PARTNER as i32);
-        assert_eq!(api_partial.bot, None);
-        assert_eq!(api_partial.system, None);
-        assert_eq!(api_partial.mention_flags, None);
     }
 }

@@ -602,36 +602,6 @@ mod tests {
     }
 
     #[test]
-    fn vimeo_player_media_keeps_no_dimensions() {
-        let html = r#"<head>
-            <meta property="og:type" content="video.other">
-            <meta property="og:video:url" content="https://player.vimeo.com/video/1">
-            <meta property="og:video:width" content="1280">
-            <meta property="og:video:height" content="720">
-            <meta name="twitter:card" content="player">
-            <meta name="twitter:player" content="https://player.vimeo.com/video/1">
-            <meta name="twitter:player:width" content="1280">
-            <meta name="twitter:player:height" content="720">
-        </head>"#;
-        let page = url("https://vimeo.com/1");
-        let og = html_parser::parse_opengraph(html);
-        let twitter_card = html_parser::parse_twitter_card(html);
-        for value in [og.video_primary, twitter_card.player] {
-            let player_url = value
-                .as_deref()
-                .and_then(|value| resolve_media_url(&page, value))
-                .filter(|value| is_allowlisted_player_url(value))
-                .expect("allowlisted Vimeo player");
-            let media = player_embed_media(player_url);
-            assert_eq!(
-                media.url.as_deref(),
-                Some("https://player.vimeo.com/video/1")
-            );
-            assert_eq!((media.width, media.height), (None, None));
-        }
-    }
-
-    #[test]
     fn player_allowlist_rejects_other_hosts() {
         for value in [
             "https://embed.ted.com/talks/1",

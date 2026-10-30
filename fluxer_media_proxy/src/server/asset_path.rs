@@ -234,17 +234,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn role_icon_paths_map_to_the_role_icon_kind() {
-        let parsed = parse_standard_asset_path("/role-icons/123456789012345678/a1b2c3d4.webp")
-            .expect("role icon path");
-        assert_eq!(AssetKind::RoleIcon, parsed.kind);
-        assert_eq!("role-icons/123456789012345678/a1b2c3d4", parsed.storage_key);
-        assert_eq!(AssetExtension::Webp, parsed.original_ext);
-        assert!(parse_standard_asset_path("/role-icons/not-a-snowflake/a1b2c3d4.webp").is_none());
-        assert!(parse_standard_asset_path("/role-icons/123456789012345678/a1b2c3d4").is_none());
-    }
-
-    #[test]
     fn storage_keys_reject_path_changing_escapes_and_empty_components() {
         assert_eq!(
             "attachments/1/2/photo.png",

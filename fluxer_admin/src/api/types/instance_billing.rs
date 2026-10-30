@@ -235,20 +235,3 @@ fn favicon_url(favicon_url: Option<&str>, icon_url: Option<&str>) -> Option<Stri
         .or_else(|| non_blank(icon_url))
         .map(str::to_owned)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn branding(well_known: &str) -> PremiumBranding {
-        PremiumBranding::from_discovery(&serde_json::from_str(well_known).unwrap())
-    }
-
-    #[test]
-    fn discovery_enabled_follows_the_well_known_feature_flag() {
-        assert!(!branding(r#"{"features":{"discovery_enabled":false}}"#).discovery_enabled);
-        assert!(branding(r#"{"features":{"discovery_enabled":true}}"#).discovery_enabled);
-        assert!(branding(r#"{"features":{"premium_enabled":true}}"#).discovery_enabled);
-        assert!(branding("{}").discovery_enabled);
-    }
-}

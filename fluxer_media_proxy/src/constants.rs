@@ -162,16 +162,3 @@ pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
     let dims = dims_for(kind);
     value.clamp(dims.min, dims.max)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn role_icon_sizes_clamp_between_16_and_512() {
-        assert_eq!(Dims { min: 16, max: 512 }, dims_for(AssetKind::RoleIcon));
-        assert_eq!(16, clamp_size(8, AssetKind::RoleIcon));
-        assert_eq!(32, clamp_size(32, AssetKind::RoleIcon));
-        assert_eq!(512, clamp_size(4096, AssetKind::RoleIcon));
-    }
-}

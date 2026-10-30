@@ -67,11 +67,7 @@ export class VoiceEndpointError extends Error {
 
 type Resolve = (host: string) => Promise<Array<string>>;
 
-let resolveHost: Resolve = async (host) => (await lookup(host, {all: true, verbatim: true})).map((r) => r.address);
-
-export function setVoiceEndpointResolverForTesting(resolver: Resolve | null): void {
-	resolveHost = resolver ?? (async (host) => (await lookup(host, {all: true, verbatim: true})).map((r) => r.address));
-}
+const resolveHost: Resolve = async (host) => (await lookup(host, {all: true, verbatim: true})).map((r) => r.address);
 
 function bareHost(url: URL): string {
 	return url.hostname.replace(/^\[|\]$/g, '');
@@ -96,7 +92,7 @@ export function parseNodeEndpoint(endpoint: string): URL {
 	return url;
 }
 
-export async function resolveCheckedAddress(url: URL, allowPrivate: boolean): Promise<string> {
+async function resolveCheckedAddress(url: URL, allowPrivate: boolean): Promise<string> {
 	const host = bareHost(url);
 	const addresses = isIP(host) ? [host] : await resolveHost(host).catch(() => []);
 	if (addresses.length === 0) {
