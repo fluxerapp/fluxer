@@ -32,8 +32,8 @@ export const KEYBOARD_HINTS_DESCRIPTOR = msg({
 	comment: 'Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.',
 });
 export const SHOW_NEKO_DESCRIPTOR = msg({
-	message: 'Display Neko',
-	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor. Display used to order entry above other Neko options.',
+	message: 'Show Neko',
+	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor.',
 });
 export const USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR = msg({
 	message: 'Use Fluxer Sans on Windows',
