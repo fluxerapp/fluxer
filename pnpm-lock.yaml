@@ -112,8 +112,8 @@ catalogs:
       specifier: 2.2.2
       version: 2.2.2
     '@sapphi-red/web-noise-suppressor':
-      specifier: 0.4.1
-      version: 0.4.1
+      specifier: 0.4.0
+      version: 0.4.0
     '@simplewebauthn/browser':
       specifier: 14.0.0
       version: 14.0.0
@@ -1435,7 +1435,7 @@ importers:
         version: 1.4.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@sapphi-red/web-noise-suppressor':
         specifier: 'catalog:'
-        version: 0.4.1
+        version: 0.4.0
       '@simplewebauthn/browser':
         specifier: 'catalog:'
         version: 14.0.0
@@ -6273,8 +6273,8 @@ packages:
       selfsigned:
         optional: true
 
-  '@sapphi-red/web-noise-suppressor@0.4.1':
-    resolution: {integrity: sha512-hy2GnF079+zi4n9BZUf+GGIQ1IofApAk6rgGMyMQ3soHfz/GKu1pcCsmePyIHVvUuv1LrFudw9BmmBqoOKay5w==}
+  '@sapphi-red/web-noise-suppressor@0.4.0':
+    resolution: {integrity: sha512-vkBEL/VDkbeP3qqSRQFRtPLGa19a38JUzO6J0r5D/MQSumrlERy671DAMaETgY6etXjDCoJcD7JBIaXnuGVtVw==}
 
   '@shikijs/core@4.5.0':
     resolution: {integrity: sha512-6CIgwq+bt2JZ3OSjb/nBkkwEf/CfpHcbam+Mg5Pllco7HAGRQ2/EFhZrrJtbyNTgKwknfVS+llsXGygiDGwJWw==}
@@ -15760,7 +15760,7 @@ snapshots:
       '@rspack/core': 2.3.0(@swc/helpers@0.5.23)
       '@rspack/dev-middleware': 2.0.6(@rspack/core@2.3.0(@swc/helpers@0.5.23))
 
-  '@sapphi-red/web-noise-suppressor@0.4.1': {}
+  '@sapphi-red/web-noise-suppressor@0.4.0': {}
 
   '@shikijs/core@4.5.0':
     dependencies:
