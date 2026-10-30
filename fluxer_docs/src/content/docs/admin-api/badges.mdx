@@ -6,7 +6,7 @@ description: Admin API routes for making custom badges and giving them to users 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A custom badge is an image that instance admins make and give out. A user badge shows on the [profile](/http-api/users/#profile-badge-object) of each account it's given to, after the built-in badges. A guild badge shows next to the guild name, after its verified, partnered or discoverable badge, and [instance discovery](/http-api/instance/#guild-badge-object) lists every guild badge for clients.
+A custom badge is an image that instance admins make and give out. A user badge shows on the [profile](/http-api/users/#profile-badge-object) of each account it's given to, after the built-in badges. A guild badge shows next to the guild name in place of its verified, partnered or discoverable badge, and [instance discovery](/http-api/instance/#guild-badge-object) lists every guild badge for clients.
 
 You can make up to 100 badges of each type, and an account or guild can have up to 10. Give badges with [Update user badges](/admin-api/users/#update-user-badges) and the `badge_ids` field of [Update guild](/admin-api/guilds/#update-guild). Deleting a badge takes it off everyone who had it. You can change the display order with [Reorder badges](#reorder-badges) or the Move up and Move down buttons on the Badges page of the admin panel.
 

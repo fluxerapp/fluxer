@@ -207,28 +207,26 @@ export const GuildBadge = observer(function GuildBadge({
 	onLightSurface = false,
 }: GuildBadgeProps) {
 	const size = variant === 'large' ? 24 : 20;
-	const builtIn = (
-		<BuiltInGuildBadge
-			features={features}
-			variant={variant}
-			size={size}
-			tooltipPosition={tooltipPosition}
-			showTooltip={showTooltip}
-			forceDarkTheme={forceDarkTheme}
-			onLightSurface={onLightSurface}
-			data-flx="guild.guild-badge.built-in-guild-badge"
-		/>
-	);
 	useEffect(() => {
 		if (badgeIds.length > 0) revalidateUnknownBadges(badgeIds);
 	}, [badgeIds]);
 	const customBadges = assignedCustomBadges(badgeIds).slice(0, customBadgeLimit);
 	if (customBadges.length === 0) {
-		return builtIn;
+		return (
+			<BuiltInGuildBadge
+				features={features}
+				variant={variant}
+				size={size}
+				tooltipPosition={tooltipPosition}
+				showTooltip={showTooltip}
+				forceDarkTheme={forceDarkTheme}
+				onLightSurface={onLightSurface}
+				data-flx="guild.guild-badge.built-in-guild-badge"
+			/>
+		);
 	}
 	return (
 		<span className={styles.badgeRow} data-flx="guild.guild-badge.badge-row">
-			{builtIn}
 			{customBadges.map((badge) => (
 				<CustomGuildBadge
 					key={badge.id}
