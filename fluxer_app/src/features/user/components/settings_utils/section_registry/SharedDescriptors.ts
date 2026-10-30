@@ -33,7 +33,7 @@ export const KEYBOARD_HINTS_DESCRIPTOR = msg({
 });
 export const SHOW_NEKO_DESCRIPTOR = msg({
 	message: 'Display Neko',
-	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor.',
+	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor. Display used to order entry above other Neko options.',
 });
 export const USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR = msg({
 	message: 'Use Fluxer Sans on Windows',
