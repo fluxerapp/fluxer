@@ -609,3 +609,13 @@ export function getPersistentStorageBackend(): PersistentStorageBackend {
 export function installPersistentStorageBackend(backend: PersistentStorageBackend): void {
 	sharedBackend = backend;
 }
+
+export function switchToMemoryPersistentStorageBackend(): PersistentStorageBackend {
+	const current = getPersistentStorageBackend();
+	if (current.kind === PersistentStorageBackendKind.MEMORY) {
+		return current;
+	}
+	const memory = createMemoryBackend();
+	sharedBackend = memory;
+	return memory;
+}

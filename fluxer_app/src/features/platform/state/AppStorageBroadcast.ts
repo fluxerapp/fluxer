@@ -32,25 +32,45 @@ interface LockManagerLike {
 	request<T>(name: string, callback: () => Promise<T>): Promise<T>;
 }
 
-class AppStorageLockUnavailableError extends Error {
-	public constructor(name: string, options?: ErrorOptions) {
-		super(`Web Locks could not serialise app storage operation ${name}`, options);
-		this.name = 'AppStorageLockUnavailableError';
+function readLockManager(): LockManagerLike | null | undefined {
+	try {
+		return (globalThis.navigator as {locks?: LockManagerLike | null} | undefined)?.locks;
+	} catch {
+		return null;
 	}
 }
 
 function resolveLockManager(): LockManagerLike | null {
-	const locks = (globalThis.navigator as {locks?: LockManagerLike | null} | undefined)?.locks;
+	const locks = readLockManager();
 	if (locks == null || typeof locks.request !== 'function') {
 		return null;
 	}
 	return locks;
 }
 
+const inTabLockTails = new Map<string, Promise<void>>();
+const reportedLockFailures = new Set<string>();
+
+function withInTabLock<T>(name: string, operation: () => Promise<T>): Promise<T> {
+	const previous = inTabLockTails.get(name) ?? Promise.resolve();
+	const result = previous.then(operation);
+	const tail = result.then(
+		() => undefined,
+		() => undefined,
+	);
+	inTabLockTails.set(name, tail);
+	void tail.then(() => {
+		if (inTabLockTails.get(name) === tail) {
+			inTabLockTails.delete(name);
+		}
+	});
+	return result;
+}
+
 export async function withAppStorageLock<T>(name: string, operation: () => Promise<T>): Promise<T> {
 	const locks = resolveLockManager();
 	if (locks === null) {
-		return operation();
+		return withInTabLock(name, operation);
 	}
 	let started = false;
 	try {
@@ -62,7 +82,11 @@ export async function withAppStorageLock<T>(name: string, operation: () => Promi
 		if (started) {
 			throw error;
 		}
-		throw new AppStorageLockUnavailableError(name, {cause: error});
+		if (!reportedLockFailures.has(name)) {
+			reportedLockFailures.add(name);
+			console.warn(`[AppStorage] Web Locks could not serialise ${name}, serialising within this tab`, error);
+		}
+		return withInTabLock(name, operation);
 	}
 }
 

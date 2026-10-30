@@ -18,6 +18,7 @@ import {
 import {
 	getPersistentStorageBackend,
 	PersistentStorageBackendKind,
+	switchToMemoryPersistentStorageBackend,
 } from '@app/features/platform/state/PersistentStorageBackend';
 import {PersistentStorageWriteQueue} from '@app/features/platform/state/PersistentStorageWriteQueue';
 import {
@@ -73,6 +74,13 @@ interface LoadedScopeCache {
 	readonly deletedKeys: Set<string>;
 }
 
+export interface AppStorageScopeActivation {
+	readonly scope: string;
+	readonly failure: Error | null;
+}
+
+type AppStorageDegradedListener = (reason: Error) => void;
+
 export const GLOBAL_APP_STORAGE_SCOPE = 'global';
 export const UNAUTHENTICATED_APP_STORAGE_SCOPE = 'unauthenticated';
 
@@ -116,6 +124,8 @@ const deletedKeys = new Set<string>();
 const listeners = new Set<{listener: StorageChangeListener; options: StorageSubscriptionOptions}>();
 const beforeScopeChangeListeners = new Set<AppStorageScopeListener>();
 const scopeChangeListeners = new Set<AppStorageScopeListener>();
+const degradedListeners = new Set<AppStorageDegradedListener>();
+let degradedReason: Error | null = null;
 
 function isContentAppStorageKey(key: string): boolean {
 	return resolveLegacyAppStorageKey(key)?.row.fanout === 'content';
@@ -683,6 +693,9 @@ export async function initializeAppStorage(): Promise<void> {
 		}
 		replayRawMirror(activeScope);
 		storageInitialized = true;
+		if (getPersistentStorageBackend().kind === PersistentStorageBackendKind.MEMORY) {
+			markAppStorageDegraded(new Error('IndexedDB is not available in this browser'));
+		}
 		notifyListeners({key: null, oldValue: null, newValue: null, source: 'external'});
 	})
 		.catch((error: unknown) => {
@@ -719,20 +732,73 @@ async function activateScopeWithinTransition(previousScope: string, nextScope: s
 	}
 }
 
-export async function activateAppStorageScope(scope: string | null): Promise<void> {
+function toError(value: unknown): Error {
+	return value instanceof Error ? value : new Error(String(value));
+}
+
+export function getAppStorageDegradedReason(): Error | null {
+	return degradedReason;
+}
+
+export function subscribeAppStorageDegraded(listener: AppStorageDegradedListener): () => void {
+	degradedListeners.add(listener);
+	return () => {
+		degradedListeners.delete(listener);
+	};
+}
+
+function markAppStorageDegraded(reason: Error): void {
+	if (degradedReason !== null) {
+		return;
+	}
+	degradedReason = reason;
+	for (const listener of [...degradedListeners]) {
+		try {
+			listener(reason);
+		} catch (error) {
+			console.error('[AppStorage] A degraded storage listener failed', error);
+		}
+	}
+}
+
+async function activateScopeInMemory(
+	previousScope: string,
+	nextScope: string,
+	cause: Error,
+): Promise<AppStorageScopeActivation> {
+	const retainedGlobalEntries = [...scopedCache].filter(([key]) => isGlobalStorageKey(key));
+	const memory = switchToMemoryPersistentStorageBackend();
+	storageEventType = 'memory';
+	await memory.setMany(retainedGlobalEntries.map(([key, value]) => ({scope: GLOBAL_APP_STORAGE_SCOPE, key, value})));
+	markAppStorageDegraded(cause);
+	try {
+		await activateScopeWithinTransition(previousScope, nextScope);
+	} catch (error) {
+		console.error('[AppStorage] Failed to activate the storage scope in memory', error);
+		return {scope: activeScope, failure: toError(error)};
+	}
+	return {scope: activeScope, failure: cause};
+}
+
+export async function activateAppStorageScope(scope: string | null): Promise<AppStorageScopeActivation> {
 	const nextScope = normalizeAppStorageScope(scope);
-	await runTransition(async () => {
+	return runTransition(async (): Promise<AppStorageScopeActivation> => {
 		const previousScope = activeScope;
 		if (!scopedStorageEngaged) {
 			activeScope = nextScope;
-			return;
+			return {scope: activeScope, failure: null};
 		}
-		await withAppStorageLock(APP_STORAGE_SCOPE_LOCK_NAME, () =>
-			activateScopeWithinTransition(previousScope, nextScope),
-		);
-	}).catch((error: unknown) => {
-		countTelemetryEvent(TelemetryEvent.STORAGE_SCOPE_ACTIVATION_FAILED, 1, nextScope);
-		console.error('[AppStorage] Failed to activate the storage scope', error);
+		try {
+			await withAppStorageLock(APP_STORAGE_SCOPE_LOCK_NAME, () =>
+				activateScopeWithinTransition(previousScope, nextScope),
+			);
+			return {scope: activeScope, failure: null};
+		} catch (error) {
+			const cause = toError(error);
+			countTelemetryEvent(TelemetryEvent.STORAGE_SCOPE_ACTIVATION_FAILED, 1, nextScope);
+			console.error('[AppStorage] Failed to activate the storage scope, keeping it in memory', cause);
+			return activateScopeInMemory(previousScope, nextScope, cause);
+		}
 	});
 }
 

@@ -30,6 +30,7 @@ import {
 	type SessionCredentialMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
 import AppStorage, {
+	type AppStorageScopeActivation,
 	activateAppStorageScope,
 	deleteAppStorageScope,
 	getAppStorageScope,
@@ -91,7 +92,7 @@ export interface AuthSessionDependencies {
 	readonly abortRuntimeSnapshot: (prepared: PreparedRuntimeConfig) => Promise<void>;
 	readonly deactivateRuntime: () => Promise<void>;
 	readonly allowsCrossInstanceSwitching: () => boolean;
-	readonly activateStorageScope: (accountKey: string | null) => Promise<void>;
+	readonly activateStorageScope: (accountKey: string | null) => Promise<AppStorageScopeActivation>;
 	readonly resetClientState: (options: ResetClientStateOptions, accountScope?: string) => Promise<void>;
 	readonly deleteAccountStorageScope: (accountKey: string) => Promise<void>;
 	readonly closeLayers: () => void | Promise<void>;

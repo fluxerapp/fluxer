@@ -36924,6 +36924,11 @@ msgstr "Deze bot vraagt om beheerdersrechten. Geef deze alleen als je de ontwikk
 msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
 msgstr "Deze browser kan geen geanimeerde {avifFormatLabel}-bestanden bijsnijden. Upload in plaats daarvan een GIF of WebP."
 
+#. Notice shown when the browser refuses to store app data and the app keeps it in memory for this tab.
+#: src/features/platform/hooks/useAppStorageDegradedNotice.ts
+msgid "This browser can't save Fluxer's data. You'll need to sign in again after you close it."
+msgstr "Deze browser kan de gegevens van Fluxer niet opslaan. Je moet opnieuw inloggen nadat je hem hebt gesloten."
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts
 msgid "This browser console is a developer tool."

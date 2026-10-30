@@ -21,7 +21,10 @@ import type {
 	SessionCredentialMirror,
 	StoredSessionMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
-import {UNAUTHENTICATED_APP_STORAGE_SCOPE} from '@app/features/platform/state/PersistentStorage';
+import {
+	type AppStorageScopeActivation,
+	UNAUTHENTICATED_APP_STORAGE_SCOPE,
+} from '@app/features/platform/state/PersistentStorage';
 import type {UserSettingsAccountTransitionCheckpoint} from '@app/features/user/state/UserSettings';
 
 export class AuthSessionRuntimeUnavailableError extends Error {
@@ -53,6 +56,13 @@ export interface AuthSessionCheckpointState {
 	readonly restore: (snapshot: AuthSessionSnapshot) => void;
 }
 
+function scopeActivationError(label: string, failure: Error | null): Error {
+	if (failure === null) {
+		return new Error(`Storage scope did not activate ${label}`);
+	}
+	return new Error(`Storage scope did not activate ${label}: ${failure.name}: ${failure.message}`, {cause: failure});
+}
+
 export interface AuthSessionCheckpointDependencies {
 	readonly accountStorage: AuthSessionAccountStorage;
 	readonly credentialMirror: SessionCredentialMirror;
@@ -61,7 +71,7 @@ export interface AuthSessionCheckpointDependencies {
 	readonly resolveAndPrepareRuntimeSnapshot: (snapshot: RuntimeConfigSnapshot) => Promise<PreparedRuntimeConfig>;
 	readonly prepareRuntimeSnapshot: (snapshot: RuntimeConfigSnapshot) => Promise<PreparedRuntimeConfig>;
 	readonly deactivateRuntime: () => Promise<void>;
-	readonly activateStorageScope: (accountKey: string | null) => Promise<void>;
+	readonly activateStorageScope: (accountKey: string | null) => Promise<AppStorageScopeActivation>;
 	readonly captureSyncedUserSettingsCheckpoint: () => Promise<UserSettingsAccountTransitionCheckpoint>;
 	readonly restoreSyncedUserSettingsCheckpoint: (checkpoint: UserSettingsAccountTransitionCheckpoint) => Promise<void>;
 	readonly captureLocalPresenceIntent: () => AccountPresenceIntent | null;
@@ -83,9 +93,9 @@ export class AuthSessionCheckpointManager {
 
 	async activateStorageScope(accountKey: string | null): Promise<void> {
 		const label = accountKey ?? UNAUTHENTICATED_APP_STORAGE_SCOPE;
-		await this.dependencies.activateStorageScope(accountKey);
+		const activation = await this.dependencies.activateStorageScope(accountKey);
 		if (this.currentStorageScope() !== label) {
-			throw new Error(`Storage scope did not activate ${label}`);
+			throw scopeActivationError(label, activation.failure);
 		}
 	}
 
