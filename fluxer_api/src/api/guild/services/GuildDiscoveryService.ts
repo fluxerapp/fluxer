@@ -452,6 +452,9 @@ export class GuildDiscoveryService {
 				for (const guild of guilds) {
 					const counts = freshCounts.get(BigInt(guild.id) as GuildID);
 					if (counts) {
+						if (counts.memberCount > 0) {
+							guild.member_count = counts.memberCount;
+						}
 						guild.online_count = counts.onlineCount;
 					}
 				}
