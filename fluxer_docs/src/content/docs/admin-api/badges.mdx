@@ -46,7 +46,7 @@ You can make up to 100 badges of each type, and an account or guild can have up 
 | --- | --- | --- |
 | kind | string | The built-in badge<sup>1</sup> |
 | asset_url | ?string | The replacement image as WebP from the media proxy, or null when the built-in image is used |
-| built_in_asset | ?string | The hash of the built-in image at `{static_cdn}/badges/{hash}.webp`, or null for a guild badge, which clients draw themselves |
+| built_in_asset | ?string | The hash of the built-in image at `{static_cdn}/badges/{hash}.webp`, or null for a guild badge |
 
 <sup>1</sup> One of the profile badges `staff` and `premium`, or one of the guild badges `guild_verified`, `guild_partnered` and `guild_discoverable`
 
@@ -185,11 +185,18 @@ Uploads an image and shows it everywhere the built-in badge appears, then return
 
 <sup>1</sup> The same formats and limits as [Create badge](#create-badge)
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The badges of both types |
+| built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [List badges](#list-badges) response body | The image was replaced |
+| 200 | response body | The image was replaced |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` for an unknown `kind` |
 | 400 | [error response](/admin-api/#error-response) | `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT` or `FAILED_TO_UPLOAD_IMAGE` for a bad image |
 
@@ -201,11 +208,18 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 Goes back to the built-in image for a badge, deletes the uploaded one and returns the same body as [List badges](#list-badges). You need `badge:update`.
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The badges of both types |
+| built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [List badges](#list-badges) response body | The built-in image is used again |
+| 200 | response body | The built-in image is used again |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` for an unknown `kind` |
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

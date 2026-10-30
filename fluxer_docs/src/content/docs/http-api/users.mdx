@@ -519,8 +519,8 @@ One badge on a [full user profile](#full-user-profile-object). The API picks the
 | key | string | The badge's identity, equal to `kind` for built-in badges and `custom:{id}` for a custom badge. Use it as the list key |
 | kind<sup>1</sup> | string | The badge type |
 | label | string | The badge description in your locale, for the tooltip and alt text. A custom badge uses its name |
-| asset<sup>2</sup> | ?string | The 16-character hex hash of the badge image, or null for a text badge, a custom badge or a built-in badge with a replaced image |
-| asset_url<sup>3</sup> | ?string | The image URL of a custom badge or of a built-in badge whose image the instance admins replaced, or null for other badges |
+| asset<sup>2</sup> | ?string | The hex hash of the badge image, or null for a text badge, a custom badge or a replaced built-in image |
+| asset_url<sup>3</sup> | ?string | The image URL of a custom badge or a built-in badge with a replaced image, or null for other badges |
 | aspect_ratio | ?number | Image width divided by height, or null for a square badge |
 | caption | ?string | Short text the badge stands for, shown in place of the image when `asset` is null |
 | href | ?string | The URL a click opens, or null |
