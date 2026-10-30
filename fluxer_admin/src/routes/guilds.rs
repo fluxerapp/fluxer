@@ -535,6 +535,15 @@ async fn guild_tab(
     request: Request,
 ) -> Response {
     let config = state.config();
+    if let Some(redirect) = htmx::tab_page_redirect(
+        request.headers(),
+        request.uri().query(),
+        &format!("{}/guilds", config.base_path),
+        &guild_id,
+        &tab,
+    ) {
+        return redirect;
+    }
     let csrf_token = csrf::get_csrf_token(&request);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let admin_acls = auth.0.acls();

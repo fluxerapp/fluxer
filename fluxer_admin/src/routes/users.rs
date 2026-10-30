@@ -20,7 +20,7 @@ use crate::{
 use axum::{
     Router,
     extract::{Path, Query, Request, State},
-    http::HeaderMap,
+    http::{HeaderMap, Uri},
     response::{Html, IntoResponse, Response},
     routing::get,
 };
@@ -312,8 +312,19 @@ async fn user_tab(
     auth: axum::Extension<AuthContext>,
     csrf: axum::Extension<CsrfToken>,
     Path((user_id, tab)): Path<(String, String)>,
+    headers: HeaderMap,
+    uri: Uri,
 ) -> Response {
     let config = state.config();
+    if let Some(redirect) = htmx::tab_page_redirect(
+        &headers,
+        uri.query(),
+        &format!("{}/users", config.base_path),
+        &user_id,
+        &tab,
+    ) {
+        return redirect;
+    }
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let user = client
         .get_user_by_id(&user_id)

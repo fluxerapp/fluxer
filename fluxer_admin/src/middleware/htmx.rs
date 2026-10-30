@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::middleware::flash::{self, FlashData};
+use crate::{
+    middleware::flash::{self, FlashData},
+    templates::components::detail_tabs::detail_page_href,
+};
 use axum::{
     extract::Request,
     http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header},
     middleware::Next,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
 };
 
 const HX_RESWAP: HeaderName = HeaderName::from_static("hx-reswap");
@@ -17,6 +20,46 @@ pub fn is_htmx_request(headers: &HeaderMap) -> bool {
         .get("HX-Request")
         .and_then(|value| value.to_str().ok())
         .is_some_and(|value| value == "true")
+}
+
+pub fn is_history_restore(headers: &HeaderMap) -> bool {
+    headers
+        .get("HX-History-Restore-Request")
+        .and_then(|value| value.to_str().ok())
+        .is_some_and(|value| value == "true")
+}
+
+pub fn tab_page_redirect(
+    headers: &HeaderMap,
+    query: Option<&str>,
+    base_url: &str,
+    entity_id: &str,
+    tab: &str,
+) -> Option<Response> {
+    if is_htmx_request(headers) && !is_history_restore(headers) {
+        return None;
+    }
+    let plain = |value: &str| {
+        !value.is_empty()
+            && value
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    };
+    if !plain(entity_id) {
+        return None;
+    }
+    let tab = if plain(tab) { tab } else { "overview" };
+    let mut href = detail_page_href(base_url, entity_id, tab);
+    let extra: Vec<&str> = query
+        .unwrap_or("")
+        .split('&')
+        .filter(|pair| !pair.is_empty() && pair.split('=').next().is_some_and(|key| key != "tab"))
+        .collect();
+    if !extra.is_empty() {
+        href.push(if href.contains('?') { '&' } else { '?' });
+        href.push_str(&extra.join("&"));
+    }
+    Some(Redirect::to(&href).into_response())
 }
 
 pub fn htmx_target(headers: &HeaderMap) -> Option<String> {
