@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -387,7 +388,23 @@ func (a *App) adminClient(inst *instance.Instance, p *engine.Project) *adminapi.
 	return c
 }
 
+var bootStarting = host.BootUnitStarting
+
 func (a *App) Locked(ctx context.Context, inst *instance.Instance, fn func() error) error {
+	l, err := inst.Lock(ctx)
+	if errors.Is(err, instance.ErrLocked) && bootStarting(ctx, inst.Project()) {
+		l, err = a.waitForBootStart(ctx, inst)
+	}
+	if errors.Is(err, instance.ErrLocked) {
+		return ui.Refused("Another rexctl command is changing this instance.", "Wait for it to finish, then try again.")
+	}
+	if err != nil {
+		return err
+	}
+	return a.holding(ctx, inst, l, fn)
+}
+
+func (a *App) lockedNow(ctx context.Context, inst *instance.Instance, fn func() error) error {
 	l, err := inst.Lock(ctx)
 	if errors.Is(err, instance.ErrLocked) {
 		return ui.Refused("Another rexctl command is changing this instance.", "Wait for it to finish, then try again.")
@@ -396,6 +413,33 @@ func (a *App) Locked(ctx context.Context, inst *instance.Instance, fn func() err
 		return err
 	}
 	return a.holding(ctx, inst, l, fn)
+}
+
+func (a *App) waitForBootStart(ctx context.Context, inst *instance.Instance) (*instance.Lock, error) {
+	var l *instance.Lock
+	err := a.UI.Step(ctx, "Waiting for Fluxer to finish starting", func(ctx context.Context, s *ui.Step) error {
+		deadline := time.Now().Add(bootLockWait)
+		for {
+			got, err := inst.Lock(ctx)
+			if err == nil {
+				l = got
+				s.Done("Fluxer finished starting.")
+				return nil
+			}
+			if !errors.Is(err, instance.ErrLocked) {
+				return err
+			}
+			if time.Now().After(deadline) || !bootStarting(ctx, inst.Project()) {
+				return err
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(2 * time.Second):
+			}
+		}
+	})
+	return l, err
 }
 
 func (a *App) holding(ctx context.Context, inst *instance.Instance, l *instance.Lock, fn func() error) error {

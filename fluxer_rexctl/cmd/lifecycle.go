@@ -683,7 +683,7 @@ func bootLocked(ctx context.Context, app *App, inst *instance.Instance, fn func(
 			return app.holding(ctx, inst, l, fn)
 		}
 		if !errors.Is(err, instance.ErrLocked) || time.Now().After(deadline) {
-			return app.Locked(ctx, inst, fn)
+			return app.lockedNow(ctx, inst, fn)
 		}
 		select {
 		case <-ctx.Done():

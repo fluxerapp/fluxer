@@ -186,6 +186,24 @@ func unitIs(ctx context.Context, rootless bool, name, state string) bool {
 	return strings.TrimSpace(string(out)) == state
 }
 
+func BootUnitStarting(ctx context.Context, project string) bool {
+	if !BootUnitSupported() {
+		return false
+	}
+	name := project + ".service"
+	for _, user := range []bool{false, true} {
+		args := []string{"is-active", name}
+		if user {
+			args = append([]string{"--user"}, args...)
+		}
+		out, _ := exec.CommandContext(ctx, "systemctl", args...).Output()
+		if strings.TrimSpace(string(out)) == "activating" {
+			return true
+		}
+	}
+	return false
+}
+
 func CheckBootUnit(ctx context.Context, u BootUnit) (BootUnitState, error) {
 	if !BootUnitSupported() {
 		return BootUnitState{}, nil
