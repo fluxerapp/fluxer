@@ -715,7 +715,9 @@ func defaultRoute() bool {
 }
 
 func newStopCmd(app *App) *cobra.Command {
-	return newBootableCmd(app, "stop", "Stop your instance", runStop, runBootStop)
+	c := newBootableCmd(app, "stop", "Stop your instance", runStop, runBootStop)
+	c.Long = "Stop Fluxer and keep its containers. Fluxer stays stopped until you run rexctl start. To remove the containers too, run rexctl down."
+	return c
 }
 
 func runStop(ctx context.Context, app *App) error {
@@ -753,6 +755,62 @@ func runStop(ctx context.Context, app *App) error {
 			return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl stop again.")
 		}
 		app.UI.Info("Run rexctl start to start it again.")
+		return nil
+	})
+}
+
+func newDownCmd(app *App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "down",
+		Short: "Stop your instance and remove its containers",
+		Long:  "Stop Fluxer and remove its containers and networks, like docker compose down. Your data, settings, backups and images stay. Fluxer stays stopped until you run rexctl start, which creates the containers again.",
+		Args:  noArgs,
+		RunE: func(c *cobra.Command, _ []string) error {
+			return runDown(c.Context(), app)
+		},
+	}
+}
+
+func runDown(ctx context.Context, app *App) error {
+	inst, err := app.Instance()
+	if err != nil {
+		return err
+	}
+	return app.Locked(ctx, inst, func() error {
+		if err := managed(inst); err != nil {
+			return err
+		}
+		p, err := app.Named(ctx, inst)
+		if err != nil {
+			return err
+		}
+		if p.Engine.TooOld {
+			return ui.Refused("rexctl can't create Fluxer's containers again with this version of Podman.", "Run rexctl stop to stop Fluxer and keep its containers.")
+		}
+		err = app.UI.Step(ctx, "Removing Fluxer's containers", func(ctx context.Context, s *ui.Step) error {
+			switch n := len(inst.State.Voice); {
+			case n == 1:
+				s.Info("Removing the voice server %s too. Calls on it end.", inst.State.Voice[0].ID)
+			case n > 1:
+				s.Info("Removing %d voice servers too. Calls on them end.", n)
+			}
+			eachVoiceServer(app, inst, "removing", func(srv *instance.VoiceServer) error {
+				return voiceProject(p.Engine, inst, srv).DownWithin(context.WithoutCancel(ctx), false, deploy.VoiceStopTimeout)
+			})
+			if err := p.Down(ctx, false); err != nil {
+				return ui.Wrap(engineFailure(err), "Couldn't remove Fluxer's containers.", "Run rexctl status to see what's still running.")
+			}
+			s.Done("Stopped Fluxer and removed its containers and networks.")
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		inst.State.Stopped = true
+		if err := inst.Save(); err != nil {
+			return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl down again.")
+		}
+		app.UI.Info("Your data and settings are kept. Run rexctl start to start Fluxer again.")
 		return nil
 	})
 }

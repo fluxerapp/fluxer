@@ -262,6 +262,14 @@ rexctl doctor [flags]
 
   Print JSON.
 
+## rexctl down
+
+Stop Fluxer and remove its containers and networks, like docker compose down. Your data, settings, backups and images stay. Fluxer stays stopped until you run rexctl start, which creates the containers again.
+
+```sh
+rexctl down
+```
+
 ## rexctl eject
 
 Writes every setting into the instance folder for docker compose and stops rexctl from changing the instance. Fluxer keeps running. Run rexctl takeover to hand it back.
@@ -763,7 +771,7 @@ rexctl status [flags]
 
 ## rexctl stop
 
-Stop your instance.
+Stop Fluxer and keep its containers. Fluxer stays stopped until you run rexctl start. To remove the containers too, run rexctl down.
 
 ```sh
 rexctl stop
@@ -783,7 +791,7 @@ rexctl takeover [flags]
 
 ## rexctl uninstall
 
-Remove Fluxer from this machine.
+Remove Fluxer from this machine, with its data and backups unless you pass --keep-data. To stop Fluxer and keep everything, run rexctl stop or rexctl down.
 
 ```sh
 rexctl uninstall [flags]

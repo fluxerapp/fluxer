@@ -329,13 +329,13 @@ A voice machine doesn't upgrade with the Fluxer machine. Run `rexctl upgrade` th
 
 ## Stop, restart and back up
 
-`rexctl stop` on the Fluxer machine stops the voice servers there too, and calls on them end. `rexctl start` starts them again. `rexctl restart` restarts Fluxer and leaves running voice servers alone.
+`rexctl stop` on the Fluxer machine stops the voice servers there too, and calls on them end. `rexctl down` removes their containers as well. `rexctl start` starts them again. `rexctl restart` restarts Fluxer and leaves running voice servers alone.
 
 `rexctl backup` keeps the voice servers of the instance, with their keys. `rexctl restore` writes their files again, starts them and opens their ports in the firewall. A server added after the backup is removed by the restore.
 
 Changing `network.ipv6` with `rexctl config set` rebuilds Fluxer's network. rexctl stops the voice servers on the machine first and starts them again afterwards, and calls on them end.
 
-On a voice machine, `rexctl stop`, `rexctl restart`, `rexctl logs` and `rexctl backup` don't apply. Docker runs each server as `fluxer-voice-<id>-livekit-1`, and the edge as `fluxer-voice-edge-edge-1`.
+On a voice machine, `rexctl stop`, `rexctl down`, `rexctl restart`, `rexctl logs` and `rexctl backup` don't apply. Docker runs each server as `fluxer-voice-<id>-livekit-1`, and the edge as `fluxer-voice-edge-edge-1`.
 
 ```sh
 docker logs fluxer-voice-fra-server-1-livekit-1
