@@ -37,6 +37,8 @@ export interface VoiceServerRecord {
 	draining: boolean;
 	pinnedHostname: string | null;
 	pinnedSoftLimit: boolean;
+	publicIpv4: string | null;
+	publicIpv6: string | null;
 	createdAt: Date | null;
 	updatedAt: Date | null;
 }

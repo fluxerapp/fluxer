@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 const (
@@ -24,6 +26,8 @@ const (
 	NodeAudience  = "fluxer-voice-node"
 	NodePath      = "/voice/node"
 	nodeTokenLife = 2 * time.Minute
+
+	AddressesCodeVersion = 2
 )
 
 const (
@@ -180,6 +184,7 @@ func deref(list *[]string) []string {
 
 type PreviewRequest struct {
 	PublicIPv4    string `json:"public_ipv4,omitempty"`
+	PublicIPv6    string `json:"public_ipv6,omitempty"`
 	RegionID      string `json:"region_id,omitempty"`
 	CPUCount      int    `json:"cpu_count,omitempty"`
 	MemoryBytes   uint64 `json:"memory_bytes,omitempty"`
@@ -196,15 +201,16 @@ type Preview struct {
 		New        bool     `json:"new"`
 		Source     string   `json:"source"`
 	} `json:"region"`
-	Latitude          *float64 `json:"latitude"`
-	Longitude         *float64 `json:"longitude"`
-	Hostname          *string  `json:"hostname"`
-	SuggestedHostname string   `json:"suggested_hostname"`
-	SoftLimit         *int     `json:"soft_connection_limit"`
-	WebhookURL        string   `json:"webhook_url"`
-	APICodeVersion    int      `json:"api_code_version"`
-	Release           string   `json:"release"`
-	ExpiresAt         string   `json:"expires_at"`
+	Latitude          *float64              `json:"latitude"`
+	Longitude         *float64              `json:"longitude"`
+	Hostname          *string               `json:"hostname"`
+	SuggestedHostname string                `json:"suggested_hostname"`
+	SoftLimit         *int                  `json:"soft_connection_limit"`
+	WebhookURL        string                `json:"webhook_url"`
+	APICodeVersion    int                   `json:"api_code_version"`
+	Release           string                `json:"release"`
+	ExpiresAt         string                `json:"expires_at"`
+	TurnServers       []settings.TurnServer `json:"turn_servers"`
 }
 
 type JoinRequest struct {
@@ -217,6 +223,7 @@ type JoinRequest struct {
 	Longitude  *float64 `json:"longitude,omitempty"`
 	SoftLimit  int      `json:"soft_connection_limit,omitempty"`
 	PublicIPv4 string   `json:"public_ipv4,omitempty"`
+	PublicIPv6 string   `json:"public_ipv6,omitempty"`
 }
 
 type Joined struct {
@@ -228,15 +235,18 @@ type Joined struct {
 }
 
 type Node struct {
-	RegionID  string   `json:"region_id"`
-	ServerID  string   `json:"server_id"`
-	Endpoint  string   `json:"endpoint"`
-	Latitude  *float64 `json:"latitude"`
-	Longitude *float64 `json:"longitude"`
-	IsActive  bool     `json:"is_active"`
-	Draining  bool     `json:"draining"`
-	SoftLimit *int     `json:"soft_connection_limit"`
-	Health    struct {
+	RegionID   string                 `json:"region_id"`
+	ServerID   string                 `json:"server_id"`
+	Endpoint   string                 `json:"endpoint"`
+	Latitude   *float64               `json:"latitude"`
+	Longitude  *float64               `json:"longitude"`
+	IsActive   bool                   `json:"is_active"`
+	Draining   bool                   `json:"draining"`
+	SoftLimit  *int                   `json:"soft_connection_limit"`
+	Turn       *[]settings.TurnServer `json:"turn_servers"`
+	PublicIPv4 *string                `json:"public_ipv4"`
+	PublicIPv6 *string                `json:"public_ipv6"`
+	Health     struct {
 		Status    string  `json:"status"`
 		CheckedAt *string `json:"checked_at"`
 		Error     *string `json:"error"`
@@ -256,10 +266,12 @@ func (c *Client) Join(ctx context.Context, api, token string, req JoinRequest) (
 }
 
 type NodeUpdate struct {
-	Endpoint  *string  `json:"endpoint,omitempty"`
-	Draining  *bool    `json:"draining,omitempty"`
-	Latitude  *float64 `json:"latitude,omitempty"`
-	Longitude *float64 `json:"longitude,omitempty"`
+	Endpoint   *string  `json:"endpoint,omitempty"`
+	PublicIPv4 *string  `json:"public_ipv4,omitempty"`
+	PublicIPv6 *string  `json:"public_ipv6,omitempty"`
+	Draining   *bool    `json:"draining,omitempty"`
+	Latitude   *float64 `json:"latitude,omitempty"`
+	Longitude  *float64 `json:"longitude,omitempty"`
 }
 
 func (c *Client) GetNode(ctx context.Context, nodeURL, key, secret string) (*Node, error) {

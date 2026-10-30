@@ -23,9 +23,12 @@ services:
           udp_port: ${FLUXER_VOICE_UDP_PORT:-7882}
           use_external_ip: ${FLUXER_VOICE_USE_EXTERNAL_IP:-true}
           node_ip: "${FLUXER_VOICE_NODE_IP:-}"
+          ips:
+            includes: ${FLUXER_VOICE_ICE_IPS:-[]}
           stun_servers:
             - ${FLUXER_LIVEKIT_STUN_PRIMARY:-stun.l.google.com:19302}
             - ${FLUXER_LIVEKIT_STUN_SECONDARY:-stun1.l.google.com:19302}
+          turn_servers: ${FLUXER_LIVEKIT_TURN_SERVERS:-[]}
         turn:
           enabled: false
         webhook:

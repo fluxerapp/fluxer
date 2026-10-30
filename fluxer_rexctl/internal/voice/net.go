@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +31,16 @@ var cloudflareRanges = []string{
 	"173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22", "141.101.64.0/18",
 	"108.162.192.0/18", "190.93.240.0/20", "188.114.96.0/20", "197.234.240.0/22", "198.41.128.0/17",
 	"162.158.0.0/15", "104.16.0.0/13", "104.24.0.0/14", "172.64.0.0/13", "131.0.72.0/22",
+	"2400:cb00::/32", "2606:4700::/32", "2803:f800::/32", "2405:b500::/32", "2405:8100::/32",
+	"2a06:98c0::/29", "2c0f:f248::/32",
+}
+
+var unusableIPv6 = []netip.Prefix{
+	netip.MustParsePrefix("fc00::/7"),
+	netip.MustParsePrefix("2002::/16"),
+	netip.MustParsePrefix("2001::/32"),
+	netip.MustParsePrefix("2001:db8::/32"),
+	netip.MustParsePrefix("3fff::/20"),
 }
 
 func IsCloudflare(addr string) bool {
@@ -76,16 +87,146 @@ func DefaultRouteIPv4() string {
 	return ""
 }
 
+func DefaultRouteIPv6() string {
+	conn, err := net.Dial("udp6", "[2001:db8::1]:9")
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+	if a, ok := conn.LocalAddr().(*net.UDPAddr); ok {
+		return a.IP.String()
+	}
+	return ""
+}
+
+func TemporaryIPv6() []string {
+	data, err := os.ReadFile("/proc/net/if_inet6")
+	if err != nil {
+		return nil
+	}
+	return parseIfInet6(string(data))
+}
+
+func parseIfInet6(data string) []string {
+	var out []string
+	for _, line := range strings.Split(data, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 5 || len(fields[0]) != 32 {
+			continue
+		}
+		flags, err := strconv.ParseUint(fields[4], 16, 32)
+		if err != nil || flags&0x01 == 0 {
+			continue
+		}
+		raw, err := hex.DecodeString(fields[0])
+		if err != nil {
+			continue
+		}
+		if ip, ok := netip.AddrFromSlice(raw); ok {
+			out = append(out, ip.String())
+		}
+	}
+	return out
+}
+
+func IsIPv4(addr string) bool {
+	ip, err := netip.ParseAddr(addr)
+	return err == nil && ip.Is4()
+}
+
+func IsIPv6(addr string) bool {
+	ip, err := netip.ParseAddr(addr)
+	return err == nil && ip.Is6() && !ip.Is4In6()
+}
+
+func GlobalIPv6(addr string) bool {
+	ip, err := netip.ParseAddr(addr)
+	if err != nil || !ip.Is6() || ip.Is4In6() || ip.Zone() != "" || !ip.IsGlobalUnicast() {
+		return false
+	}
+	for _, p := range unusableIPv6 {
+		if p.Contains(ip) {
+			return false
+		}
+	}
+	return true
+}
+
+func UsableIPv6(addr string, local, temporary []string) bool {
+	if !GlobalIPv6(addr) {
+		return false
+	}
+	ip := netip.MustParseAddr(addr).String()
+	return slices.Contains(local, ip) && !slices.Contains(temporary, ip)
+}
+
+func StableIPv6(observed string, local, temporary []string) string {
+	if UsableIPv6(observed, local, temporary) {
+		return netip.MustParseAddr(observed).String()
+	}
+	seen, err := netip.ParseAddr(observed)
+	if err != nil || !GlobalIPv6(observed) {
+		return ""
+	}
+	net64, _ := seen.Prefix(64)
+	for _, a := range local {
+		if ip, err := netip.ParseAddr(a); err == nil && net64.Contains(ip) && UsableIPv6(a, local, temporary) {
+			return ip.String()
+		}
+	}
+	return ""
+}
+
+func MachineIPv6(observed string) string {
+	local, temporary := InterfaceAddresses(), TemporaryIPv6()
+	if observed != "" {
+		return StableIPv6(observed, local, temporary)
+	}
+	return StableIPv6(DefaultRouteIPv6(), local, temporary)
+}
+
+const (
+	FamilyNone = ""
+	FamilyIPv4 = "ipv4"
+	FamilyIPv6 = "ipv6"
+	FamilyDual = "dual"
+)
+
+func FamilyOf(ipv4, ipv6 string) string {
+	switch {
+	case ipv4 != "" && ipv6 != "":
+		return FamilyDual
+	case ipv4 != "":
+		return FamilyIPv4
+	case ipv6 != "":
+		return FamilyIPv6
+	}
+	return FamilyNone
+}
+
+func NodeIPs(ipv4, ipv6 string) string {
+	var parts []string
+	for _, ip := range []string{ipv4, ipv6} {
+		if ip != "" {
+			parts = append(parts, ip)
+		}
+	}
+	return strings.Join(parts, ",")
+}
+
 type Reachability struct {
 	PublicIPv4 string
+	PublicIPv6 string
 	BehindNAT  bool
 	CGNAT      bool
 }
 
-func Assess(publicIPv4 string, local []string, routeIP string) Reachability {
-	r := Reachability{PublicIPv4: publicIPv4}
+func (r Reachability) Family() string { return FamilyOf(r.PublicIPv4, r.PublicIPv6) }
+
+func Assess(publicIPv4, publicIPv6 string, local []string, routeIP string) Reachability {
+	r := Reachability{PublicIPv4: publicIPv4, PublicIPv6: publicIPv6}
 	r.BehindNAT = publicIPv4 != "" && !slices.Contains(local, publicIPv4)
-	r.CGNAT = IsCGNAT(routeIP)
+	r.CGNAT = publicIPv4 != "" && IsCGNAT(routeIP)
 	return r
 }
 
@@ -96,7 +237,12 @@ type DNSAnswer struct {
 
 type Resolver func(ctx context.Context, name string) (DNSAnswer, error)
 
-var dohServers = []string{"https://1.1.1.1/dns-query", "https://8.8.8.8/resolve"}
+var dohServers = []string{
+	"https://1.1.1.1/dns-query",
+	"https://8.8.8.8/resolve",
+	"https://[2606:4700:4700::1111]/dns-query",
+	"https://[2001:4860:4860::8888]/resolve",
+}
 
 func PublicLookup(hc *http.Client) Resolver {
 	return func(ctx context.Context, name string) (DNSAnswer, error) {
@@ -172,26 +318,69 @@ const (
 	HostnameElsewhere
 	HostnameIPv6Elsewhere
 	HostnameProxied
+	HostnameIPv4Front
+	HostnameNoA
+	HostnameNoAAAA
 )
 
-func CheckHostname(answer DNSAnswer, publicIPv4 string, ownIPv6 []string) HostnameCheck {
-	if len(answer.A) == 0 {
-		return HostnameMissing
-	}
-	if !slices.ContainsFunc(answer.A, func(a string) bool { return !IsCloudflare(a) }) {
+func (h HostnameCheck) Usable() bool {
+	return h == HostnameOK || h == HostnameIPv4Front || h == HostnameNoA || h == HostnameNoAAAA
+}
+
+func CheckHostname(answer DNSAnswer, publicIPv4, publicIPv6 string, ownIPv6 []string) HostnameCheck {
+	all := slices.Concat(answer.A, answer.AAAA)
+	if len(all) > 0 && !slices.ContainsFunc(all, func(a string) bool { return !IsCloudflare(a) }) {
 		return HostnameProxied
+	}
+	own := func(a string) bool {
+		ip, err := netip.ParseAddr(a)
+		if err != nil {
+			return false
+		}
+		return slices.ContainsFunc(append([]string{publicIPv6}, ownIPv6...), func(o string) bool {
+			p, err := netip.ParseAddr(o)
+			return err == nil && p == ip
+		})
+	}
+	if publicIPv4 == "" && publicIPv6 != "" {
+		if len(answer.AAAA) == 0 {
+			return HostnameMissing
+		}
+		if !all6(answer.AAAA, own) {
+			return HostnameElsewhere
+		}
+		if len(answer.A) > 0 {
+			return HostnameIPv4Front
+		}
+		return HostnameOK
+	}
+	if len(answer.A) == 0 {
+		if publicIPv6 != "" && len(answer.AAAA) > 0 && all6(answer.AAAA, own) {
+			return HostnameNoA
+		}
+		return HostnameMissing
 	}
 	for _, a := range answer.A {
 		if a != publicIPv4 {
 			return HostnameElsewhere
 		}
 	}
-	for _, a := range answer.AAAA {
-		if !slices.Contains(ownIPv6, a) {
-			return HostnameIPv6Elsewhere
-		}
+	if !all6(answer.AAAA, own) {
+		return HostnameIPv6Elsewhere
+	}
+	if publicIPv6 != "" && len(answer.AAAA) == 0 {
+		return HostnameNoAAAA
 	}
 	return HostnameOK
+}
+
+func all6(records []string, own func(string) bool) bool {
+	for _, a := range records {
+		if !own(a) {
+			return false
+		}
+	}
+	return true
 }
 
 func HTTPBase(endpoint string) string {

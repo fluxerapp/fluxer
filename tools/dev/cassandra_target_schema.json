@@ -10438,6 +10438,14 @@
 				{
 					"name": "pinned_soft_limit",
 					"type": "boolean"
+				},
+				{
+					"name": "public_ipv4",
+					"type": "text"
+				},
+				{
+					"name": "public_ipv6",
+					"type": "text"
 				}
 			],
 			"primary_key": "((region_id), server_id)",

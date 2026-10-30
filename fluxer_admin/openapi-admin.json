@@ -13256,7 +13256,9 @@
 					"draining": {
 						"description": "Whether placement sends new calls elsewhere while calls on this server finish",
 						"type": "boolean"
-					}
+					},
+					"public_ipv4": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/VoicePublicIpv4Type"}]},
+					"public_ipv6": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/VoicePublicIpv6Type"}]}
 				}
 			},
 			"UpdateVoiceServerResponse": {
@@ -13321,6 +13323,16 @@
 							"draining": {
 								"type": "boolean",
 								"description": "Whether placement sends new calls elsewhere while calls on this server finish"
+							},
+							"public_ipv4": {
+								"nullable": true,
+								"description": "Public IPv4 address LiveKit gives to clients, or null when none is known",
+								"type": "string"
+							},
+							"public_ipv6": {
+								"nullable": true,
+								"description": "Public IPv6 address LiveKit gives to clients, or null when none is known",
+								"type": "string"
 							},
 							"health": {
 								"description": "Health of the server as this API node last saw it",
@@ -13426,6 +13438,16 @@
 						"default": false,
 						"description": "Whether placement sends new calls elsewhere while calls on this server finish",
 						"type": "boolean"
+					},
+					"public_ipv4": {
+						"default": null,
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/VoicePublicIpv4Type"}]
+					},
+					"public_ipv6": {
+						"default": null,
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/VoicePublicIpv6Type"}]
 					}
 				},
 				"required": ["server_id", "endpoint", "api_key", "api_secret"]
@@ -13492,6 +13514,16 @@
 							"draining": {
 								"type": "boolean",
 								"description": "Whether placement sends new calls elsewhere while calls on this server finish"
+							},
+							"public_ipv4": {
+								"nullable": true,
+								"description": "Public IPv4 address LiveKit gives to clients, or null when none is known",
+								"type": "string"
+							},
+							"public_ipv6": {
+								"nullable": true,
+								"description": "Public IPv6 address LiveKit gives to clients, or null when none is known",
+								"type": "string"
 							},
 							"health": {
 								"description": "Health of the server as this API node last saw it",
@@ -25675,6 +25707,16 @@
 						"type": "boolean",
 						"description": "Whether placement sends new calls elsewhere while calls on this server finish"
 					},
+					"public_ipv4": {
+						"nullable": true,
+						"description": "Public IPv4 address LiveKit gives to clients, or null when none is known",
+						"type": "string"
+					},
+					"public_ipv6": {
+						"nullable": true,
+						"description": "Public IPv6 address LiveKit gives to clients, or null when none is known",
+						"type": "string"
+					},
 					"health": {
 						"description": "Health of the server as this API node last saw it",
 						"allOf": [{"$ref": "#/components/schemas/VoiceServerHealthResponse"}]
@@ -25706,6 +25748,8 @@
 					"allowed_user_ids",
 					"internal_endpoint",
 					"draining",
+					"public_ipv4",
+					"public_ipv6",
 					"health",
 					"duplicate_api_key",
 					"created_at",
@@ -25789,6 +25833,18 @@
 					"updated_at"
 				],
 				"additionalProperties": false
+			},
+			"VoicePublicIpv6Type": {
+				"type": "string",
+				"format": "ipv6",
+				"pattern": "^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$",
+				"description": "Public IPv6 address LiveKit gives to clients"
+			},
+			"VoicePublicIpv4Type": {
+				"type": "string",
+				"format": "ipv4",
+				"pattern": "^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$",
+				"description": "Public IPv4 address LiveKit gives to clients"
 			},
 			"APIErrorCode": {
 				"type": "string",

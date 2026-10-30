@@ -451,7 +451,7 @@ func (p *Project) wrap(op string, err error) error {
 	return &Error{Op: op, Class: ClassOf(err), Err: err}
 }
 
-func (e *Engine) EnsureNetwork(ctx context.Context, name, project, key string) error {
+func (e *Engine) EnsureNetwork(ctx context.Context, name, project, key string, ipv6 bool) error {
 	c, err := e.api()
 	if err != nil {
 		return err
@@ -461,12 +461,35 @@ func (e *Engine) EnsureNetwork(ctx context.Context, name, project, key string) e
 	} else if !cerrdefs.IsNotFound(err) {
 		return err
 	}
-	_, err = c.NetworkCreate(ctx, name, client.NetworkCreateOptions{
+	opts := client.NetworkCreateOptions{
 		Driver: "bridge",
 		Labels: map[string]string{api.ProjectLabel: project, api.NetworkLabel: key},
-	})
+	}
+	if ipv6 {
+		opts.EnableIPv6 = &ipv6
+	}
+	_, err = c.NetworkCreate(ctx, name, opts)
 	if cerrdefs.IsConflict(err) {
 		return nil
 	}
 	return err
+}
+
+func (e *Engine) NetworkIPv6(ctx context.Context, name string) (bool, bool, error) {
+	c, err := e.api()
+	if err != nil {
+		return false, false, err
+	}
+	res, err := c.NetworkInspect(ctx, name, client.NetworkInspectOptions{})
+	if cerrdefs.IsNotFound(err) {
+		return false, false, nil
+	}
+	if err != nil {
+		return false, false, err
+	}
+	return true, res.Network.EnableIPv6, nil
+}
+
+func (e *Engine) IPv6Voice() bool {
+	return e.Kind == Docker && !e.Rootless && AtLeast(e.Version, MinDockerIPv6)
 }

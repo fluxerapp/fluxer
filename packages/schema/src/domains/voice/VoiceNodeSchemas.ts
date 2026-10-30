@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {VoiceServerHealthResponse} from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
+import {
+	VoicePublicIpv4Type,
+	VoicePublicIpv6Type,
+	VoiceServerHealthResponse,
+} from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
 import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
@@ -14,8 +18,25 @@ const LatitudeType = z.number().min(-90).max(90);
 const LongitudeType = z.number().min(-180).max(180);
 const SoftLimitType = z.number().int().min(1).max(2147483647);
 
+export const VoiceTurnServer = z.object({
+	host: z.string().describe('Hostname or IPv4 address of the TURN server'),
+	port: z.number().int().describe('Port of the TURN server'),
+	protocol: z.enum(['udp', 'tcp', 'tls']).describe('Transport clients use to connect to the TURN server'),
+	username: z.string().optional().describe('Fixed TURN username'),
+	credential: z.string().optional().describe('Fixed TURN password'),
+	secret: z.string().optional().describe('Shared secret LiveKit signs short-lived TURN credentials with'),
+	ttl: z.number().int().optional().describe('Lifetime of the signed credentials in seconds'),
+});
+
+export type VoiceTurnServer = z.infer<typeof VoiceTurnServer>;
+
+const TurnServersType = z
+	.array(VoiceTurnServer)
+	.describe('TURN servers of the instance, for the LiveKit configuration of the voice server');
+
 export const VoiceJoinPreviewRequest = z.object({
 	public_ipv4: z.ipv4().nullable().optional().describe('Public IPv4 address of the voice machine'),
+	public_ipv6: z.ipv6().nullable().optional().describe('Public IPv6 address of the voice machine'),
 	region_id: VoiceIdType.optional().describe('Existing region the operator asked for'),
 	cpu_count: z.number().int().min(1).max(4096).optional().describe('CPU count of the voice machine'),
 	memory_bytes: z.number().int().min(0).optional().describe('Memory of the voice machine in bytes'),
@@ -45,6 +66,7 @@ export const VoiceJoinPreviewResponse = z.object({
 	api_code_version: z.number().int().describe('Version of the API server code'),
 	release: z.string().describe('Fluxer release of the API, or an empty string for a development build'),
 	expires_at: z.string().describe('ISO 8601 timestamp when the token stops working'),
+	turn_servers: TurnServersType,
 });
 
 export type VoiceJoinPreviewResponse = z.infer<typeof VoiceJoinPreviewResponse>;
@@ -60,6 +82,7 @@ export const VoiceJoinRequest = z
 		longitude: LongitudeType.optional(),
 		soft_connection_limit: SoftLimitType.optional(),
 		public_ipv4: z.ipv4().optional().describe('Public IPv4 address of the voice machine'),
+		public_ipv6: z.ipv6().optional().describe('Public IPv6 address of the voice machine'),
 	})
 	.refine((data) => (data.latitude === undefined) === (data.longitude === undefined), {
 		error: 'Latitude and longitude must both be provided or both be omitted',
@@ -74,6 +97,7 @@ export const VoiceJoinResponse = z.object({
 	endpoint: z.string().describe('Endpoint of the new server'),
 	webhook_url: z.string().describe('URL the server sends LiveKit webhooks to'),
 	node_url: z.string().describe('URL of the node routes for this server'),
+	turn_servers: TurnServersType,
 });
 
 export type VoiceJoinResponse = z.infer<typeof VoiceJoinResponse>;
@@ -87,6 +111,9 @@ export const VoiceNodeResponse = z.object({
 	is_active: z.boolean().describe('Whether an admin keeps the server turned on'),
 	draining: z.boolean().describe('Whether placement sends new calls elsewhere'),
 	soft_connection_limit: z.number().nullable().describe('Soft connection limit, or null'),
+	public_ipv4: z.string().nullable().describe('Public IPv4 address the server last reported, or null'),
+	public_ipv6: z.string().nullable().describe('Public IPv6 address the server last reported, or null'),
+	turn_servers: TurnServersType,
 	health: VoiceServerHealthResponse.describe('Health of the server as this API node last saw it'),
 });
 
@@ -99,6 +126,14 @@ export const UpdateVoiceNodeRequest = z
 		latitude: LatitudeType.nullable().optional(),
 		longitude: LongitudeType.nullable().optional(),
 		soft_connection_limit: SoftLimitType.nullable().optional(),
+		public_ipv4: z
+			.union([VoicePublicIpv4Type, z.literal('')])
+			.optional()
+			.describe('Public IPv4 address, or an empty string for none'),
+		public_ipv6: z
+			.union([VoicePublicIpv6Type, z.literal('')])
+			.optional()
+			.describe('Public IPv6 address, or an empty string for none'),
 	})
 	.strict()
 	.refine((data) => (data.latitude === undefined) === (data.longitude === undefined), {

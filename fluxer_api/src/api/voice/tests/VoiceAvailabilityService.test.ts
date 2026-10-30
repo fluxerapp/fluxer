@@ -50,6 +50,8 @@ function createServer(overrides: Partial<VoiceServerRecord> = {}): VoiceServerRe
 		internalEndpoint: null,
 		pinnedHostname: null,
 		pinnedSoftLimit: false,
+		publicIpv4: null,
+		publicIpv6: null,
 		draining: false,
 		restrictions: {
 			vipOnly: false,

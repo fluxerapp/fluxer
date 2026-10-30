@@ -310,7 +310,7 @@ The second STUN host LiveKit asks to find its public IP address, as `host:port`.
 
 ### `FLUXER_LIVEKIT_TURN_SERVERS`
 
-TURN relays LiveKit offers to browsers and apps, as a JSON array of objects with `host`, `port`, `protocol` and optional `username` and `credential`, such as `[{"host":"turn.example.com","port":3478,"protocol":"udp","username":"fluxer","credential":"secret"}]`. Use `udp`, `tcp` or `tls` for `protocol`. Set it when browsers and apps can't connect to the LiveKit ports directly, such as behind Cloudflare Tunnel. When it's empty, LiveKit offers no TURN relay. The default is `[]`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_TURN_SERVERS`.
+TURN servers that browsers and apps get when they join a call, as a JSON array of objects with `host`, `port` and `protocol`, and either `username` and `credential` or `secret` with an optional `ttl`, such as `[{"host":"turn.example.com","port":3478,"protocol":"udp","secret":"a-long-random-secret"}]`. Use `udp`, `tcp` or `tls` for `protocol`, and a hostname or an IPv4 address for `host`. With `secret`, LiveKit makes short-lived credentials for each participant in the form coturn checks with `use-auth-secret`, and `ttl`, a whole number from 1, sets how many seconds they last. The bundled voice server and the servers you add with rexctl voice add give these to clients, and rexctl restarts the added servers one at a time when the list changes. A server that joined with rexctl voice join gets the list when it joins and on each rexctl upgrade in its voice folder, unless the instance runs an older release than the rexctl there. Set it when callers can't connect to a voice server directly, such as from networks that allow only port 443. When it's empty, clients get no TURN server. A value the API can't read stops it from starting, and rexctl config set refuses one. The default is `[]`. With rexctl, use `rexctl config set FLUXER_LIVEKIT_TURN_SERVERS`.
 
 ## Standalone voice servers
 
@@ -342,7 +342,11 @@ The UDP port for media on this host. LiveKit listens on the same port inside the
 
 ### `FLUXER_VOICE_NODE_IP`
 
-The public IPv4 address LiveKit gives to clients. Set `FLUXER_VOICE_USE_EXTERNAL_IP` to `false` with it.
+The public addresses LiveKit gives to clients. Give an IPv4 address, an IPv6 address, or both with a comma between them, such as `203.0.113.7,2001:db8::7`. Set `FLUXER_VOICE_USE_EXTERNAL_IP` to `false` with it. LiveKit offers an IPv6 address only when the server's Docker network has IPv6.
+
+### `FLUXER_VOICE_ICE_IPS`
+
+The address ranges LiveKit may offer to clients, as a JSON array of ranges such as `["::/0"]`. rexctl sets it to the families in `FLUXER_VOICE_NODE_IP`, so a server with only IPv6 offers no private IPv4 address of its container. Use `[]` to offer every address.
 
 ### `FLUXER_VOICE_USE_EXTERNAL_IP`
 
@@ -383,6 +387,10 @@ These go in `edge.env` next to `voice-edge.compose.yml` in the voice folder of t
 ### `FLUXER_VOICE_EDGE_IP`
 
 The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then answers clients that send no server name with the certificate for that address, which browsers need.
+
+### `FLUXER_VOICE_NETWORK_IPV6`
+
+Whether the voice network gets IPv6. Use `true` or `false`. rexctl sets it to `true` when it creates the network on a machine with a public IPv6 address. Docker can't add IPv6 to a network that already exists.
 
 ### `FLUXER_VOICE_EDGE_EMAIL`
 

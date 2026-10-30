@@ -3,12 +3,14 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"net/netip"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,6 +35,8 @@ type voiceFlags struct {
 	HasCoords   bool
 	Hostname    string
 	IP          string
+	IPv6        string
+	NoIPv6      bool
 	TCPPort     int
 	UDPPort     int
 	SoftLimit   int
@@ -58,6 +62,8 @@ func addVoiceOverrideFlags(c *cobra.Command, f *voiceFlags) {
 	fl.Float64Var(&f.Lat, "lat", 0, "latitude of the server")
 	fl.Float64Var(&f.Long, "long", 0, "longitude of the server")
 	fl.StringVar(&f.IP, "ip", "", "public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine")
+	fl.StringVar(&f.IPv6, "ipv6", "", "public IPv6 address LiveKit gives to clients")
+	fl.BoolVar(&f.NoIPv6, "no-ipv6", false, "give clients only the IPv4 address, even when this machine has IPv6")
 	fl.IntVar(&f.TCPPort, "tcp-port", 0, "TCP port for media")
 	fl.IntVar(&f.UDPPort, "udp-port", 0, "UDP port for media")
 	fl.IntVar(&f.SoftLimit, "soft-limit", 0, "connections above which placement prefers another server")
@@ -95,8 +101,17 @@ func validateVoiceFlags(c *cobra.Command, f *voiceFlags) error {
 	if f.IP != "" {
 		ip, err := netip.ParseAddr(f.IP)
 		if err != nil || !ip.Is4() {
-			return ui.Usage(fmt.Sprintf("Pass --ip as an IPv4 address. %s isn't one.", f.IP))
+			return ui.Usage(fmt.Sprintf("Pass --ip as an IPv4 address. %s isn't one. Pass an IPv6 address with --ipv6.", f.IP))
 		}
+	}
+	if f.IPv6 != "" {
+		if f.NoIPv6 {
+			return ui.Usage("Pass --ipv6 or --no-ipv6, not both.")
+		}
+		if !voice.GlobalIPv6(f.IPv6) {
+			return ui.Usage(fmt.Sprintf("Pass --ipv6 as a public IPv6 address. %s isn't one.", f.IPv6))
+		}
+		f.IPv6 = netip.MustParseAddr(f.IPv6).String()
 	}
 	for _, p := range []int{f.TCPPort, f.UDPPort, f.HTTPPort} {
 		if p < 0 || p > 65535 {
@@ -289,6 +304,13 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 		publicIP, _ = host.PublicIPv4(pctx)
 		cancel()
 	}
+	nodeIPv6, err := addIPv6(ctx, app, e, inst, publicIP, f)
+	if err != nil {
+		return nil, err
+	}
+	if nodeIPv6 != "" && nodeIP == "" {
+		nodeIP = publicIP
+	}
 	memory := f.Memory
 	if memory == "" {
 		memory = strings.TrimSpace(inst.Setting("FLUXER_LIVEKIT_MEMORY_LIMIT"))
@@ -348,6 +370,7 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 				TCPPort:   tcp,
 				UDPPort:   udp,
 				NodeIP:    nodeIP,
+				NodeIPv6:  nodeIPv6,
 				IPPinned:  f.IP != "",
 				BindIP:    bindIP,
 				Image:     image,
@@ -364,6 +387,35 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 		})
 	}
 	return plans, nil
+}
+
+func addIPv6(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, publicIP string, f *voiceFlags) (string, error) {
+	v6 := detectIPv6(ctx, f)
+	if v6 == "" {
+		return "", nil
+	}
+	on, _ := strconv.ParseBool(strings.TrimSpace(inst.State.Settings[settings.IPv6]))
+	_, has6, err := e.NetworkIPv6(ctx, inst.Project()+"_fluxer")
+	if err != nil {
+		return "", engineFailure(err)
+	}
+	why, fix := "", ""
+	switch {
+	case !e.IPv6Voice():
+		why, fix = ipv6EngineText(e), fmt.Sprintf("Upgrade Docker to %s or later.", engine.MinDockerIPv6)
+	case !on || !has6:
+		why, fix = "network.ipv6 is off", "Run rexctl config set network.ipv6 true first."
+	case bindAddress(f.IP, voice.InterfaceAddresses()) != "":
+		why, fix = "--ip binds the ports to one IPv4 address", "Leave out --ip."
+	}
+	if why == "" {
+		return v6, nil
+	}
+	if publicIP == "" {
+		return "", ui.Refused("This machine has only IPv6, and "+why+".", fix)
+	}
+	app.UI.Info("This machine has IPv6 too. The new servers offer only IPv4, because %s.", why)
+	return "", nil
 }
 
 func showVoiceAddSummary(app *App, inst *instance.Instance, region string, plans []plannedVoice, f *voiceFlags) {
@@ -387,6 +439,7 @@ func showVoiceAddSummary(app *App, inst *instance.Instance, region string, plans
 			{"Region", region},
 			{"Endpoint", s.Endpoint},
 			{"Public IPv4", ip},
+			{"Public IPv6", orNone(s.NodeIPv6)},
 			{"Ports", fmt.Sprintf("%d/tcp, %d/udp", s.TCPPort, s.UDPPort)},
 			{"LiveKit", s.Image},
 			{"Memory limit", fmt.Sprintf("%s of %s", s.Memory, voice.HumanBytes(hostMem))},
@@ -472,6 +525,13 @@ func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *e
 		lat, long := float32(f.Lat), float32(f.Long)
 		body.Latitude, body.Longitude = &lat, &long
 	}
+	if v4 := cmp.Or(srv.NodeIP, plan.publicIP); v4 != "" {
+		body.PublicIpv4 = &v4
+	}
+	if srv.NodeIPv6 != "" {
+		v6 := srv.NodeIPv6
+		body.PublicIpv6 = &v6
+	}
 	_, err = api.CreateVoiceServer(ctx, srv.Region, body)
 	if err != nil {
 		return ui.Wrap(adminapi.Explain(err), fmt.Sprintf("Couldn't register %s with your instance.", srv.ID), undo)
@@ -496,7 +556,7 @@ func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *e
 		return ui.Wrap(adminapi.Explain(err), fmt.Sprintf("%s runs, and it's still draining.", srv.ID), fmt.Sprintf("Clear Draining for %s in the admin panel.", srv.ID))
 	}
 	app.UI.OK("Added voice server %s at %s.", srv.ID, srv.Endpoint)
-	results := runTransportTests(ctx, srv.Endpoint, func() (string, error) {
+	results := runTransportTests(ctx, srv.Endpoint, serverPaths(saved), func() (string, error) {
 		return voice.TestToken(srv.Key, srv.Secret, voice.TestRoom(), time.Now()), nil
 	}, true)
 	reportTransports(app, results, true)

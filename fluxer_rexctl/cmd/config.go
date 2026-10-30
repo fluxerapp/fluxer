@@ -607,7 +607,7 @@ func deploymentDone(name string, value *string) string {
 	case settings.SecretName(name) || name == settings.StorageSecret:
 		return fmt.Sprintf("Saved %s.", name)
 	}
-	return fmt.Sprintf("Set %s to %s.", name, clip(settings.Mask(settings.Key{}, *value)))
+	return fmt.Sprintf("Set %s to %s.", name, clip(settings.Mask(settings.Key{Name: name}, *value)))
 }
 
 type adminChange struct {
@@ -792,6 +792,9 @@ func applySettings(ctx context.Context, app *App, inst *instance.Instance, e *en
 	if _, ok := changes[settings.VoicePublicIP]; ok && !r.change.Unchanged {
 		moveVoicePublicIP(ctx, app, inst, e, r.change.Applied)
 	}
+	if _, ok := changes[settings.TurnServersVar]; ok && r.change.Applied && !r.change.Unchanged && len(inst.State.Voice) > 0 {
+		upgradeLocalVoiceServers(ctx, app, inst, e)
+	}
 	if _, ok := changes[settings.VoiceBundled]; ok && r.change.Applied && !r.change.Unchanged {
 		restoreBundledVoiceServer(ctx, app, inst)
 	}
@@ -899,7 +902,7 @@ func newConfigRenderCmd(app *App) *cobra.Command {
 				if generated || settings.SecretName(name) {
 					s.Env[name] = settings.Masked
 				} else {
-					s.Env[name] = settings.Mask(settings.Key{}, value)
+					s.Env[name] = settings.Mask(settings.Key{Name: name}, value)
 				}
 			}
 			var e engine.Engine

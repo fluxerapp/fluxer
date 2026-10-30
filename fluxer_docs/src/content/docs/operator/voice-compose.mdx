@@ -54,7 +54,8 @@ Set at least these values in it:
 - `FLUXER_VOICE_API_KEY` to a key no other server of your instance uses, such as `fluxer-fra-server-1`.
 - `FLUXER_VOICE_API_SECRET` to the output of `openssl rand -hex 32`.
 - `FLUXER_VOICE_WEBHOOK_URL` to the webhook address.
-- `FLUXER_VOICE_NODE_IP` to the machine's public IPv4 address, and `FLUXER_VOICE_USE_EXTERNAL_IP` to `false`.
+- `FLUXER_VOICE_NODE_IP` to the machine's public IPv4 address, and `FLUXER_VOICE_USE_EXTERNAL_IP` to `false`. On a machine with IPv6, give both addresses with a comma between them, such as `203.0.113.7,2001:db8::7`. On a machine with only IPv6, give the IPv6 address. LiveKit offers the IPv6 address only when the server's Docker network has IPv6. On another machine, set `FLUXER_VOICE_NETWORK_IPV6` to `true` in `edge.env` before the edge starts for the first time. See [IPv6](/operator/voice-servers/#ipv6).
+- `FLUXER_LIVEKIT_TURN_SERVERS` to the same list as on the Fluxer machine, between single quotes, when your instance has TURN servers.
 
 A second server on the same machine needs another `FLUXER_VOICE_TCP_PORT` and `FLUXER_VOICE_UDP_PORT`, such as 7883 and 7884.
 

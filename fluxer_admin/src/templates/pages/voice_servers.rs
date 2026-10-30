@@ -210,6 +210,10 @@ fn server_card(
         .internal_endpoint
         .clone()
         .unwrap_or_else(|| "Same as the endpoint".to_string());
+    let addresses_str = addresses_text(
+        server.public_ipv4.as_deref().filter(|v| !v.is_empty()),
+        server.public_ipv6.as_deref().filter(|v| !v.is_empty()),
+    );
     let at_soft_limit = matches!(
         (server.soft_connection_limit, connection_count),
         (Some(limit), Some(count)) if limit > 0 && count >= limit
@@ -252,6 +256,7 @@ fn server_card(
             (data_field_text("Health", &health_str))
             (data_field_text("Draining", if server.draining { "Yes" } else { "No" }))
             (data_field_text("Internal URL", &internal_str))
+            (data_field_text("Addresses", &addresses_str))
         }
         @if server.duplicate_api_key {
             p class="mb-4 text-sm text-red-700" {
@@ -462,4 +467,13 @@ pub fn join_token_created_page(
         content,
         LayoutOptions::default(),
     )
+}
+
+fn addresses_text(ipv4: Option<&str>, ipv6: Option<&str>) -> String {
+    match (ipv4, ipv6) {
+        (Some(v4), Some(v6)) => format!("IPv4 {v4}, IPv6 {v6}"),
+        (Some(v4), None) => format!("IPv4 {v4}"),
+        (None, Some(v6)) => format!("IPv6 only, {v6}"),
+        (None, None) => "Not reported".to_string(),
+    }
 }

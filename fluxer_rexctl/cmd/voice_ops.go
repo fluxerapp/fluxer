@@ -5,6 +5,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -60,7 +61,7 @@ func writeVoiceServer(inst *instance.Instance, srv *instance.VoiceServer) error 
 
 func startVoiceServer(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer, s *ui.Step) error {
 	if srv.Network == voice.MachineNetwork {
-		if err := e.EnsureNetwork(ctx, voice.MachineNetwork, voice.EdgeProject, "voice"); err != nil {
+		if err := e.EnsureNetwork(ctx, voice.MachineNetwork, voice.EdgeProject, "voice", srv.NodeIPv6 != ""); err != nil {
 			return engineFailure(err)
 		}
 	}
@@ -277,13 +278,54 @@ func followVoicePublicIP(inst *instance.Instance) []*instance.VoiceServer {
 	var out []*instance.VoiceServer
 	for i := range inst.State.Voice {
 		srv := &inst.State.Voice[i]
-		if srv.Joined || srv.IPPinned || srv.NodeIP == ip {
+		if srv.Joined || srv.IPPinned || srv.NodeIP == ip || ip == "" && srv.NodeIPv6 != "" {
 			continue
 		}
 		srv.NodeIP = ip
 		out = append(out, srv)
 	}
 	return out
+}
+
+var machineIPv4 = host.PublicIPv4
+
+func followMachineIPv4(ctx context.Context, app *App, inst *instance.Instance) {
+	if inst.State.IsVoice() || strings.TrimSpace(inst.State.Settings[settings.VoicePublicIP]) != "" {
+		return
+	}
+	var due []*instance.VoiceServer
+	for i := range inst.State.Voice {
+		srv := &inst.State.Voice[i]
+		if !srv.Joined && !srv.IPPinned && srv.BindIP == "" && srv.NodeIP != "" && srv.NodeIPv6 != "" {
+			due = append(due, srv)
+		}
+	}
+	if len(due) == 0 {
+		return
+	}
+	pctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ip, err := machineIPv4(pctx)
+	cancel()
+	if err != nil || !voice.IsIPv4(ip) {
+		return
+	}
+	var moved []*instance.VoiceServer
+	for _, srv := range due {
+		if srv.NodeIP != ip {
+			srv.NodeIP = ip
+			moved = append(moved, srv)
+		}
+	}
+	if len(moved) == 0 {
+		return
+	}
+	if err := saveVoiceState(inst); err != nil {
+		app.UI.Warn(fmt.Sprintf("Couldn't give the voice servers this machine's new IPv4 address %s (%v).", ip, err), "Run rexctl start again.")
+		return
+	}
+	for _, srv := range moved {
+		app.UI.Info("Voice server %s now gives clients this machine's IPv4 address %s.", srv.ID, ip)
+	}
 }
 
 func moveVoicePublicIP(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, restart bool) {
@@ -341,28 +383,40 @@ func waitForEndpoint(ctx context.Context, base, edgeAddr string, insecure bool, 
 }
 
 type transportResult struct {
-	Transport voice.Transport
-	Err       error
+	Path voice.MediaPath
+	Err  error
 }
 
-func runTransportTests(ctx context.Context, endpoint string, token func() (string, error), insecure bool) []transportResult {
+func runTransportTests(ctx context.Context, endpoint string, paths []voice.MediaPath, token func() (string, error), insecure bool) []transportResult {
 	var out []transportResult
-	for _, t := range []voice.Transport{voice.TransportUDP, voice.TransportTCP} {
+	for _, p := range paths {
 		tok, err := token()
 		if err == nil {
-			err = voice.TestTransport(ctx, endpoint, tok, t, insecure, 20*time.Second)
+			err = voice.TestTransport(ctx, endpoint, tok, p, insecure, 20*time.Second)
 		}
-		out = append(out, transportResult{Transport: t, Err: err})
+		out = append(out, transportResult{Path: p, Err: err})
 	}
 	return out
+}
+
+func serverPaths(srv *instance.VoiceServer) []voice.MediaPath {
+	family := voice.FamilyOf(srv.NodeIP, srv.NodeIPv6)
+	if family == voice.FamilyNone {
+		family = voice.FamilyIPv4
+	}
+	return voice.MediaPaths(family, family)
 }
 
 func reportTransports(app *App, results []transportResult, local bool) bool {
 	ok := true
 	for _, r := range results {
-		name := strings.ToUpper(string(r.Transport))
+		name := r.Path.Name()
 		if r.Err == nil {
 			app.UI.OK("%s connects.", name)
+			continue
+		}
+		if errors.Is(r.Err, voice.ErrNoTurn) {
+			app.UI.Info("rexctl didn't test %s. The server gives clients no TURN server over UDP or TCP.", name)
 			continue
 		}
 		ok = false

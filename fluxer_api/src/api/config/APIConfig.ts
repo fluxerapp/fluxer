@@ -6,7 +6,7 @@ import type {
 	OperatorPassWithdrawalCountryTable,
 } from '@app/api/operator_pass/OperatorPassPrices';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
-import type {CachePurgeAdapterName, StoreProductSlotName} from '@fluxer/config/src/MasterConfig';
+import type {CachePurgeAdapterName, StoreProductSlotName, VoiceTurnServerConfig} from '@fluxer/config/src/MasterConfig';
 import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountIdentityConstants';
 import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import type {OperatorPassCurrency} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
@@ -220,6 +220,7 @@ export interface APIConfig {
 			longitude: number;
 		};
 		p2pStunUrls?: Array<string>;
+		turnServers: Array<VoiceTurnServerConfig>;
 		joinAllowPrivateEndpoints: boolean;
 		healthIntervalMs: number;
 	};

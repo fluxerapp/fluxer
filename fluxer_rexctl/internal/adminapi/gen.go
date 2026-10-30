@@ -1919,7 +1919,9 @@ type CreateVoiceServerRequestBody struct {
 	Longitude *float32 `json:"longitude,omitempty"`
 
 	// Notes Free-form admin notes about this server
-	Notes *string `json:"notes,omitempty"`
+	Notes      *string              `json:"notes,omitempty"`
+	PublicIpv4 *VoicePublicIpv4Type `json:"public_ipv4,omitempty"`
+	PublicIpv6 *VoicePublicIpv6Type `json:"public_ipv6,omitempty"`
 
 	// RequiredGuildFeatures Guild features required to use this server
 	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
@@ -3022,7 +3024,9 @@ type UpdateVoiceServerRequestBody struct {
 	Longitude *float32 `json:"longitude,omitempty"`
 
 	// Notes Free-form admin notes about this server, or null to clear them
-	Notes *string `json:"notes,omitempty"`
+	Notes      *string              `json:"notes,omitempty"`
+	PublicIpv4 *VoicePublicIpv4Type `json:"public_ipv4,omitempty"`
+	PublicIpv6 *VoicePublicIpv6Type `json:"public_ipv6,omitempty"`
 
 	// RequiredGuildFeatures Guild features required to use this server
 	RequiredGuildFeatures *[]string `json:"required_guild_features,omitempty"`
@@ -3201,6 +3205,12 @@ type VoiceP2pConfigUpdateRequest struct {
 	RolloutSalt         *string                              `json:"rollout_salt,omitempty"`
 }
 
+// VoicePublicIpv4Type Public IPv4 address LiveKit gives to clients
+type VoicePublicIpv4Type = string
+
+// VoicePublicIpv6Type Public IPv6 address LiveKit gives to clients
+type VoicePublicIpv6Type = string
+
 // VoiceRegionAdminResponse defines model for VoiceRegionAdminResponse.
 type VoiceRegionAdminResponse struct {
 	// AllowedGuildIds Guild IDs explicitly allowed to use this region
@@ -3277,6 +3287,12 @@ type VoiceServerAdminResponse struct {
 
 	// Notes Free-form admin notes about this server, or null when there are none
 	Notes *string `json:"notes"`
+
+	// PublicIpv4 Public IPv4 address LiveKit gives to clients, or null when none is known
+	PublicIpv4 *string `json:"public_ipv4"`
+
+	// PublicIpv6 Public IPv6 address LiveKit gives to clients, or null when none is known
+	PublicIpv6 *string `json:"public_ipv6"`
 
 	// RegionId ID of the region this server belongs to
 	RegionId string `json:"region_id"`

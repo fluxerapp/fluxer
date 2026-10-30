@@ -3,7 +3,9 @@
 package settings
 
 import (
+	"encoding/json"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
@@ -34,7 +36,29 @@ func Mask(key Key, value string) string {
 	if key.Secret {
 		return Masked
 	}
+	if key.Name == TurnServersVar || slices.Contains(key.Vars, TurnServersVar) {
+		return MaskTurnServers(value)
+	}
 	return maskUserinfo(value)
+}
+
+func MaskTurnServers(value string) string {
+	var list []map[string]any
+	if err := json.Unmarshal([]byte(value), &list); err != nil {
+		return Masked
+	}
+	for _, entry := range list {
+		for _, field := range []string{"secret", "credential"} {
+			if _, ok := entry[field]; ok {
+				entry[field] = Masked
+			}
+		}
+	}
+	out, err := json.Marshal(list)
+	if err != nil {
+		return Masked
+	}
+	return string(out)
 }
 
 func maskUserinfo(value string) string {

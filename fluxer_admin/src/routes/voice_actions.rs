@@ -104,16 +104,18 @@ pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
             },
         );
     }
-    if let Some(raw) = form.first("internal_endpoint") {
-        let trimmed = raw.trim();
-        body.insert(
-            "internal_endpoint".into(),
-            if trimmed.is_empty() {
-                serde_json::Value::Null
-            } else {
-                trimmed.into()
-            },
-        );
+    for field in ["internal_endpoint", "public_ipv4", "public_ipv6"] {
+        if let Some(raw) = form.first(field) {
+            let trimmed = raw.trim();
+            body.insert(
+                field.into(),
+                if trimmed.is_empty() {
+                    serde_json::Value::Null
+                } else {
+                    trimmed.into()
+                },
+            );
+        }
     }
     if form.contains_key("draining_field") {
         body.insert("draining".into(), form.bool_value("draining").into());

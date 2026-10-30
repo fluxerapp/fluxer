@@ -32,6 +32,7 @@ services:
 networks:
   voice:
     name: ${FLUXER_VOICE_NETWORK:-fluxer-voice}
+    enable_ipv6: ${FLUXER_VOICE_NETWORK_IPV6:-false}
 
 volumes:
   edge-data:

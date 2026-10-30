@@ -51,6 +51,8 @@ export interface VoiceServerRow {
 	draining: boolean | null;
 	pinned_hostname: string | null;
 	pinned_soft_limit: boolean | null;
+	public_ipv4: string | null;
+	public_ipv6: string | null;
 	created_at: Date | null;
 	updated_at: Date | null;
 }
@@ -74,6 +76,8 @@ export const VOICE_SERVER_COLUMNS = [
 	'draining',
 	'pinned_hostname',
 	'pinned_soft_limit',
+	'public_ipv4',
+	'public_ipv6',
 	'created_at',
 	'updated_at',
 ] as const satisfies ReadonlyArray<keyof VoiceServerRow>;

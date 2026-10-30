@@ -20,6 +20,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -373,6 +374,7 @@ func showVoiceStatus(ctx context.Context, app *App, e *engine.Engine, inst *inst
 		{"Endpoint", srv.Endpoint + ", " + reach},
 		{"Container", container},
 		{"Ports", fmt.Sprintf("%d/tcp, %d/udp", srv.TCPPort, srv.UDPPort)},
+		{"Addresses", addressesText(srv)},
 		{"Certificate", cert},
 		{"Calls", load},
 		{"LiveKit", srv.Image},
@@ -440,7 +442,7 @@ func newVoiceTestCmd(app *App) *cobra.Command {
 			ok := true
 			for _, srv := range servers {
 				app.UI.Info("Testing %s at %s", srv.ID, srv.Endpoint)
-				results := runTransportTests(ctx, srv.Endpoint, func() (string, error) {
+				results := runTransportTests(ctx, srv.Endpoint, serverPaths(srv), func() (string, error) {
 					return voice.TestToken(srv.Key, srv.Secret, voice.TestRoom(), time.Now()), nil
 				}, !owner.State.IsVoice())
 				ok = reportTransports(app, results, true) && ok
@@ -457,43 +459,101 @@ func newVoiceTestCmd(app *App) *cobra.Command {
 }
 
 func testRemoteVoiceServer(c *cobra.Command, app *App, id string) error {
-	return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
+	return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, inst *instance.Instance) error {
 		regions, err := api.VoiceRegions(ctx)
 		if err != nil {
 			return err
 		}
 		region := ""
+		server := voice.FamilyIPv4
 		for _, r := range regions {
 			for _, s := range r.Servers {
 				if s.ServerId == id {
 					region = r.Id
+					if f := voice.FamilyOf(stringOf(s.PublicIpv4), stringOf(s.PublicIpv6)); f != voice.FamilyNone {
+						server = f
+					}
 				}
 			}
 		}
 		if region == "" {
 			return ui.Refused(fmt.Sprintf("Your instance has no voice server called %s.", id), "Run rexctl voice list to see the servers.")
 		}
+		tester := voice.FamilyOf(voice.DefaultRouteIPv4(), globalOnly(voice.DefaultRouteIPv6()))
+		paths := withoutUnsetTurn(app, inst, id, remotePaths(server, tester))
+		for _, fam := range []string{voice.FamilyIPv4, voice.FamilyIPv6} {
+			if (server == fam || server == voice.FamilyDual) && tester != fam && tester != voice.FamilyDual {
+				app.UI.Info("This machine has no %s, and rexctl can't test %s over %s from here.", familyName(fam), id, familyName(fam))
+			}
+		}
+		if len(paths) == 0 {
+			return ui.Refused(fmt.Sprintf("This machine and %s have no address family in common.", id), "Run the test on a machine with "+familyName(server)+".")
+		}
 		var endpoint string
 		var results []transportResult
-		for _, t := range []voice.Transport{voice.TransportUDP, voice.TransportTCP} {
+		for _, p := range paths {
 			tok, err := api.VoiceTestToken(ctx, region, id)
 			if err == nil {
 				endpoint = tok.Endpoint
-				err = voice.TestTransport(ctx, tok.Endpoint, tok.Token, t, false, 20*time.Second)
+				err = voice.TestTransport(ctx, tok.Endpoint, tok.Token, p, false, 20*time.Second)
 			}
-			results = append(results, transportResult{Transport: t, Err: err})
+			results = append(results, transportResult{Path: p, Err: err})
 		}
 		app.UI.Info("Tested %s at %s from this machine.", id, endpoint)
 		if !reportTransports(app, results, false) {
-			if slices.ContainsFunc(results, func(r transportResult) bool { return errors.Is(r.Err, voice.ErrTokenRejected) }) {
+			switch {
+			case slices.ContainsFunc(results, func(r transportResult) bool { return errors.Is(r.Err, voice.ErrTokenRejected) }):
 				app.UI.Info("%s rejected a token signed with the API secret your instance has for it. Put the server's own secret back in the admin panel. It's FLUXER_VOICE_API_SECRET in voice/%s/.env in the rexctl folder on the machine that runs it.", id, id)
-			} else {
+			case slices.ContainsFunc(results, func(r transportResult) bool { return r.Path.Relay && errors.Is(r.Err, voice.ErrSignalling) }):
+				app.UI.Info("rexctl couldn't open the signalling connection to %s over IPv4. Callers with only IPv4 need an A record for its hostname at a machine that forwards ports 80 and 443 to it. See the voice servers guide.", id)
+			case slices.ContainsFunc(results, func(r transportResult) bool {
+				return r.Path.Relay && r.Err != nil && !errors.Is(r.Err, voice.ErrNoTurn)
+			}):
+				app.UI.Info("Media through your TURN server didn't connect. IPv4 through TURN needs a TURN server that hands out IPv6 relay addresses. See the voice servers guide.")
+			default:
 				app.UI.Info("Open the server's TCP and UDP ports in the firewall of its provider and on the machine itself.")
 			}
 			app.SetExit(ui.ExitFailed)
 		}
 		return nil
 	})
+}
+
+func remotePaths(server, tester string) []voice.MediaPath {
+	paths := voice.MediaPaths(server, tester)
+	if server == voice.FamilyIPv6 && (tester == voice.FamilyIPv4 || tester == voice.FamilyDual) {
+		paths = append(paths, voice.MediaPath{Transport: voice.TransportUDP, Family: voice.FamilyIPv4, Relay: true})
+	}
+	return paths
+}
+
+func withoutUnsetTurn(app *App, inst *instance.Instance, id string, paths []voice.MediaPath) []voice.MediaPath {
+	relay := func(p voice.MediaPath) bool { return p.Relay }
+	if inst == nil || inst.State == nil || inst.State.IsVoice() || !slices.ContainsFunc(paths, relay) {
+		return paths
+	}
+	if list, err := settings.ParseTurnServers(inst.Setting(settings.TurnServersVar)); err != nil || len(list) > 0 {
+		return paths
+	}
+	app.UI.Info("%s offers only IPv6, and your instance gives clients no TURN server. Callers with only IPv4 can't join calls on it, and rexctl doesn't test IPv4 through TURN.", id)
+	return slices.DeleteFunc(paths, relay)
+}
+
+func familyName(f string) string {
+	switch f {
+	case voice.FamilyIPv6:
+		return "IPv6"
+	case voice.FamilyDual:
+		return "IPv4 and IPv6"
+	}
+	return "IPv4"
+}
+
+func globalOnly(ip string) string {
+	if voice.GlobalIPv6(ip) {
+		return ip
+	}
+	return ""
 }
 
 func newVoiceHostnameCmd(app *App) *cobra.Command {
@@ -524,9 +584,9 @@ func newVoiceHostnameCmd(app *App) *cobra.Command {
 				if err != nil {
 					return voice.HostnameMissing
 				}
-				return voice.CheckHostname(answer, srv.NodeIP, voice.InterfaceAddresses())
+				return voice.CheckHostname(answer, srv.NodeIP, srv.NodeIPv6, voice.InterfaceAddresses())
 			}
-			if !waitForHostname(ctx, app, name, srv.NodeIP, check, false, true) {
+			if !waitForHostname(ctx, app, name, voice.Reachability{PublicIPv4: srv.NodeIP, PublicIPv6: srv.NodeIPv6}, check, false, true) {
 				return ui.Refused(fmt.Sprintf("%s doesn't point at this machine yet.", name), "Fix the DNS record, then run the same command again.")
 			}
 			e, err := app.Engine(ctx, inst)
@@ -815,4 +875,23 @@ func voiceCommandAllowed(path string) bool {
 		return true
 	}
 	return slices.Contains([]string{"voice", "uninstall", "upgrade", "auto-upgrade", "doctor", "status", "version", "docs", "use", "help", "completion"}, parts[1])
+}
+
+func stringOf(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
+}
+
+func addressesText(srv *instance.VoiceServer) string {
+	switch {
+	case srv.NodeIP != "" && srv.NodeIPv6 != "":
+		return "IPv4 " + srv.NodeIP + ", IPv6 " + srv.NodeIPv6
+	case srv.NodeIPv6 != "":
+		return "IPv6 only, " + srv.NodeIPv6
+	case srv.NodeIP != "":
+		return "IPv4 " + srv.NodeIP
+	}
+	return "found by LiveKit with STUN"
 }

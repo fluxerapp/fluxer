@@ -149,7 +149,7 @@ rexctl config set FLUXER_LIVEKIT_TURN_SERVERS '[{"host":"turn.example.com","port
 
 Without rexctl, put the same value in `.env` between single quotes and run `docker compose up -d`.
 
-LiveKit hands the relay to browsers and apps when they join a call, and they use it when they can't connect to LiveKit directly. Keep `FLUXER_LIVEKIT_USE_EXTERNAL_IP` at `true` so LiveKit tells them its public address. LiveKit opens the path to the relay from its own side, which most routers let through without open ports. If calls still don't connect, your router probably blocks this and you need to open TCP port 7881 and UDP port 7882 after all.
+LiveKit hands the relay to browsers and apps when they join a call, and they use it when they can't connect to LiveKit directly. Voice servers that rexctl adds or joins hand out the same relays. See [TURN servers](/operator/voice-servers/#turn-servers). Keep `FLUXER_LIVEKIT_USE_EXTERNAL_IP` at `true` so LiveKit tells them its public address. LiveKit opens the path to the relay from its own side, which most routers let through without open ports. If calls still don't connect, your router probably blocks this and you need to open TCP port 7881 and UDP port 7882 after all.
 
 On Kubernetes, add the relay to `livekit.extraConfig` in your values file.
 

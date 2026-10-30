@@ -280,6 +280,8 @@ export class AdminVoiceService {
 			draining: data.draining ?? false,
 			pinnedHostname: null,
 			pinnedSoftLimit: false,
+			publicIpv4: data.public_ipv4 ?? null,
+			publicIpv6: data.public_ipv6 ?? null,
 			restrictions: buildVoiceRestrictions(data),
 		});
 		await this.publishVoiceConfiguration({type: 'server_created', regionId: data.region_id, serverId: data.server_id});
@@ -323,6 +325,8 @@ export class AdminVoiceService {
 		if (data.notes !== undefined) updates.notes = data.notes;
 		if (data.internal_endpoint !== undefined) updates.internalEndpoint = data.internal_endpoint;
 		if (data.draining !== undefined) updates.draining = data.draining;
+		if (data.public_ipv4 !== undefined) updates.publicIpv4 = data.public_ipv4;
+		if (data.public_ipv6 !== undefined) updates.publicIpv6 = data.public_ipv6;
 		updates.restrictions = patchVoiceRestrictions(existing.restrictions, data);
 		updates.updatedAt = new Date();
 		await voiceRepository.upsertServer(updates);
@@ -411,6 +415,8 @@ export class AdminVoiceService {
 			allowed_user_ids: Array.from(server.restrictions.allowedUserIds).map((id) => id.toString()),
 			internal_endpoint: server.internalEndpoint,
 			draining: server.draining,
+			public_ipv4: server.publicIpv4,
+			public_ipv6: server.publicIpv6,
 			health: toHealthResponse(healthOf(getVoiceServerHealth(), server)),
 			duplicate_api_key: duplicates.has(server.apiKey),
 			created_at: server.createdAt?.toISOString() ?? null,

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,6 +24,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -48,7 +48,8 @@ func newVoiceJoinCmd(app *App) *cobra.Command {
 		Short: "Install a voice server on this machine and connect it to an instance",
 		Long: "Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at <domain>. " +
 			"Get the token with rexctl voice token on the Fluxer machine, or with Add a voice server in the admin panel. " +
-			"The token works once. rexctl also reads it from " + voiceTokenEnv + " or, with --token-stdin, from standard input.",
+			"The token works once. rexctl also reads it from " + voiceTokenEnv + " or, with --token-stdin, from standard input. " +
+			"The server offers IPv4 and IPv6 when the machine has both. On a machine with only IPv6, pass --hostname with an AAAA record that points here.",
 		Args: func(c *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return ui.Usage("Pass the domain of your Fluxer instance.")
@@ -164,6 +165,7 @@ type joinPlan struct {
 	edgeInst *instance.Instance
 	newEdge  bool
 	firewall host.Firewall
+	netIPv6  bool
 	hostMem  uint64
 	cpus     int
 	image    string
@@ -258,17 +260,18 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 	if f.IP != "" {
 		publicIP = f.IP
 	}
-	if publicIP == "" {
-		return ui.Refused("This machine has no public IPv4 address that rexctl can find.", "Voice servers need IPv4. Pass --ip if the address is known.")
+	publicIPv6 := detectIPv6(ctx, f)
+	if publicIP == "" && publicIPv6 == "" {
+		return ui.Refused("This machine has no public IPv4 or IPv6 address that rexctl can find.", "Pass --ip or --ipv6 if the address is known.")
 	}
-	reach, err := assessJoin(publicIP, f.IP, voice.InterfaceAddresses(), voice.DefaultRouteIPv4())
+	reach, err := assessJoin(app, publicIP, publicIPv6, f.IP, voice.InterfaceAddresses(), voice.DefaultRouteIPv4())
 	if err != nil {
 		return err
 	}
 	plan.reach = reach
 	plan.hostMem, plan.cpus = host.Hardware()
 	plan.preview, err = client.Preview(ctx, plan.disc.APIPublic, token, voice.PreviewRequest{
-		PublicIPv4: publicIP, RegionID: f.Region, CPUCount: plan.cpus, MemoryBytes: plan.hostMem, RexctlVersion: app.Version,
+		PublicIPv4: reach.PublicIPv4, PublicIPv6: reach.PublicIPv6, RegionID: f.Region, CPUCount: plan.cpus, MemoryBytes: plan.hostMem, RexctlVersion: app.Version,
 	})
 	if err != nil {
 		return joinError(err, plan.domain, "")
@@ -276,6 +279,13 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 	plan.image, plan.imageWhy = joinImage(app, plan.preview, f)
 	plan.firewall, _ = host.DetectFirewall(ctx)
 	if err := planEdge(ctx, app, e, inst, plan, f); err != nil {
+		return err
+	}
+	network := voice.MachineNetwork
+	if plan.edgeInst != nil {
+		network = plan.edgeInst.Project() + "_fluxer"
+	}
+	if err := planJoinIPv6(ctx, app, e, inst, plan, network, f); err != nil {
 		return err
 	}
 	id, err := chooseJoinID(plan.preview, f.ID, inst, voiceIDsInUse(ctx, e, inst, voice.JoinedProject("")))
@@ -317,10 +327,6 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 			soft = voice.SoftLimit(plan.cpus)
 		}
 	}
-	network := voice.MachineNetwork
-	if plan.edgeInst != nil {
-		network = plan.edgeInst.Project() + "_fluxer"
-	}
 	httpPort, httpBind := 0, ""
 	if f.NoEdge {
 		httpPort = f.HTTPPort
@@ -344,7 +350,8 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 		UDPPort:   udp,
 		HTTPPort:  httpPort,
 		HTTPBind:  httpBind,
-		NodeIP:    publicIP,
+		NodeIP:    plan.reach.PublicIPv4,
+		NodeIPv6:  plan.reach.PublicIPv6,
 		BindIP:    bindAddress(f.IP, voice.InterfaceAddresses()),
 		Image:     plan.image,
 		Pinned:    f.Image != "",
@@ -356,6 +363,7 @@ func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Eng
 		Instance:  plan.domain,
 		Edge:      plan.edge,
 		Joined:    true,
+		Turn:      settings.TurnServersValue(plan.preview.TurnServers),
 	}
 	if f.NoEdge {
 		plan.srv.Endpoint = strings.TrimRight(f.Endpoint, "/")
@@ -394,15 +402,69 @@ func chooseJoinID(preview *voice.Preview, flagID string, inst *instance.Instance
 	return voice.NextID(preview.Region.ID, taken), nil
 }
 
-func assessJoin(publicIP, flagIP string, local []string, routeIP string) (voice.Reachability, error) {
-	reach := voice.Assess(publicIP, local, routeIP)
-	if reach.CGNAT && flagIP == "" {
-		return reach, ui.Refused("This machine is behind CGNAT, a shared address that can't take incoming calls.", "Pass --ip with the machine's public address if it has one of its own.")
-	}
+func assessJoin(app *App, publicIP, publicIPv6, flagIP string, local []string, routeIP string) (voice.Reachability, error) {
+	reach := voice.Assess(publicIP, publicIPv6, local, routeIP)
 	if flagIP != "" {
 		reach.CGNAT = false
 	}
+	if reach.CGNAT && reach.PublicIPv6 != "" {
+		app.UI.Info("This machine is behind CGNAT on IPv4, a shared address that can't take incoming calls. The server uses IPv6 only.")
+		reach.PublicIPv4, reach.BehindNAT, reach.CGNAT = "", false, false
+	}
+	if reach.CGNAT {
+		return reach, ui.Refused("This machine is behind CGNAT, a shared address that can't take incoming calls.", "Pass --ip with the machine's public address if it has one of its own.")
+	}
 	return reach, nil
+}
+
+func detectIPv6(ctx context.Context, f *voiceFlags) string {
+	if f.NoIPv6 {
+		return ""
+	}
+	if f.IPv6 != "" {
+		return f.IPv6
+	}
+	pctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	seen, _ := host.PublicIPv6(pctx)
+	cancel()
+	return voice.MachineIPv6(seen)
+}
+
+func ipv6EngineText(e *engine.Engine) string {
+	switch {
+	case e.Kind != engine.Docker:
+		return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs %s", engine.MinDockerIPv6, e.Kind)
+	case e.Rootless:
+		return "voice servers on IPv6 need rootful Docker, and this machine runs Docker rootless"
+	}
+	return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs Docker %s", engine.MinDockerIPv6, e.Version)
+}
+
+func planJoinIPv6(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, plan *joinPlan, network string, f *voiceFlags) error {
+	exists, has6, err := e.NetworkIPv6(ctx, network)
+	if err != nil {
+		return engineFailure(err)
+	}
+	why, fix := "", ""
+	switch {
+	case !e.IPv6Voice():
+		why, fix = ipv6EngineText(e), fmt.Sprintf("Upgrade Docker to %s or later.", engine.MinDockerIPv6)
+	case plan.edgeInst != nil && !has6:
+		why, fix = "the network of the Fluxer instance on this machine has no IPv6", "On this machine, run rexctl config set network.ipv6 true."
+	case exists && !has6, !exists && plan.edge == voice.EdgeOwn && !plan.newEdge && inst.State.VoiceEdge != nil && !inst.State.VoiceEdge.IPv6:
+		why, fix = "the voice network on this machine was made without IPv6", "Remove the voice servers on this machine with rexctl voice remove --all, then join again."
+	case bindAddress(f.IP, voice.InterfaceAddresses()) != "":
+		why, fix = "--ip binds the ports to one IPv4 address", "Leave out --ip."
+	}
+	if plan.reach.PublicIPv6 != "" && why != "" {
+		if plan.reach.PublicIPv4 == "" {
+			return ui.Refused("This machine has only IPv6, and "+why+".", fix)
+		}
+		app.UI.Info("This machine has IPv6 too. The server offers only IPv4, because %s.", why)
+		plan.reach.PublicIPv6 = ""
+	}
+	plan.netIPv6 = plan.reach.PublicIPv6 != ""
+	return nil
 }
 
 func pickHTTPPort(taken map[host.Port]bool, tcp int, free func(int, string) bool) int {
@@ -507,29 +569,37 @@ func chooseAddress(ctx context.Context, app *App, plan *joinPlan, id string, f *
 	if name == "" {
 		name = pinned
 	}
+	only6 := plan.reach.PublicIPv4 == ""
 	resolve := hostnameLookup()
 	check := func(host string) voice.HostnameCheck {
 		answer, err := resolve(ctx, host)
 		if err != nil {
 			return voice.HostnameMissing
 		}
-		return voice.CheckHostname(answer, plan.reach.PublicIPv4, voice.InterfaceAddresses())
+		return voice.CheckHostname(answer, plan.reach.PublicIPv4, plan.reach.PublicIPv6, voice.InterfaceAddresses())
 	}
-	if name == "" && plan.preview.SuggestedHostname != "" && check(plan.preview.SuggestedHostname) == voice.HostnameOK {
+	if name == "" && plan.preview.SuggestedHostname != "" && check(plan.preview.SuggestedHostname).Usable() {
 		name = plan.preview.SuggestedHostname
+	}
+	if name == "" && only6 {
+		return ui.Refused("This machine has only IPv6, and a voice server on IPv6 needs a hostname.", fmt.Sprintf("Point a hostname at %s with an AAAA record, then pass it with --hostname.", plan.reach.PublicIPv6))
 	}
 	if name == "" {
 		plan.address, plan.ipCert = plan.reach.PublicIPv4, true
 		return nil
 	}
-	if pinned != "" {
-		if waitForHostname(ctx, app, name, plan.reach.PublicIPv4, check, f.DryRun, true) || f.DryRun {
+	if pinned != "" || only6 {
+		if waitForHostname(ctx, app, name, plan.reach, check, f.DryRun, true) || f.DryRun {
 			plan.address = name
 			return nil
 		}
-		return ui.Refused(fmt.Sprintf("The token needs the hostname %s, and it doesn't point at this machine yet.", name), "Point it at "+plan.reach.PublicIPv4+" with DNS only, then run the same command again.")
+		why := fmt.Sprintf("%s doesn't point at this machine yet.", name)
+		if pinned != "" {
+			why = fmt.Sprintf("The token needs the hostname %s, and it doesn't point at this machine yet.", name)
+		}
+		return ui.Refused(why, "Point it at "+addressText(plan.reach)+" with DNS only, then run the same command again.")
 	}
-	if waitForHostname(ctx, app, name, plan.reach.PublicIPv4, check, f.DryRun, false) {
+	if waitForHostname(ctx, app, name, plan.reach, check, f.DryRun, false) {
 		plan.address = name
 		return nil
 	}
@@ -538,9 +608,14 @@ func chooseAddress(ctx context.Context, app *App, plan *joinPlan, id string, f *
 	return nil
 }
 
-func waitForHostname(ctx context.Context, app *App, name, ipv4 string, check func(string) voice.HostnameCheck, dryRun, always bool) bool {
+func addressText(addrs voice.Reachability) string {
+	return ui.JoinAnd(slices.DeleteFunc([]string{addrs.PublicIPv4, addrs.PublicIPv6}, func(s string) bool { return s == "" }))
+}
+
+func waitForHostname(ctx context.Context, app *App, name string, addrs voice.Reachability, check func(string) voice.HostnameCheck, dryRun, always bool) bool {
 	result := check(name)
-	if result == voice.HostnameOK {
+	if result.Usable() {
+		hostnameNote(app, name, result)
 		return true
 	}
 	switch result {
@@ -549,11 +624,16 @@ func waitForHostname(ctx context.Context, app *App, name, ipv4 string, check fun
 	case voice.HostnameIPv6Elsewhere:
 		app.UI.Warn(fmt.Sprintf("%s has an AAAA record that points somewhere else.", name), "Remove that record. Let's Encrypt checks IPv6 first.")
 	default:
-		app.UI.Info("%s doesn't point at this machine yet. Add this record at your DNS provider:", name)
+		app.UI.Info("%s doesn't point at this machine yet. Add these records at your DNS provider:", name)
 		app.UI.Info("")
-		app.UI.Info("  %s.  A  %s", name, ipv4)
+		if addrs.PublicIPv4 != "" {
+			app.UI.Info("  %s.  A     %s", name, addrs.PublicIPv4)
+		}
+		if addrs.PublicIPv6 != "" {
+			app.UI.Info("  %s.  AAAA  %s", name, addrs.PublicIPv6)
+		}
 		app.UI.Info("")
-		app.UI.Info("On Cloudflare, set the record to DNS only.")
+		app.UI.Info("On Cloudflare, set the records to DNS only.")
 	}
 	if dryRun || !always && (app.UI.Yes() || !app.UI.Interactive()) {
 		return false
@@ -570,12 +650,24 @@ func waitForHostname(ctx context.Context, app *App, name, ipv4 string, check fun
 			return false
 		case <-time.After(15 * time.Second):
 		}
-		if check(name) == voice.HostnameOK {
+		if result := check(name); result.Usable() {
 			app.UI.OK("%s points at this machine.", name)
+			hostnameNote(app, name, result)
 			return true
 		}
 	}
 	return false
+}
+
+func hostnameNote(app *App, name string, result voice.HostnameCheck) {
+	switch result {
+	case voice.HostnameIPv4Front:
+		app.UI.Info("%s also has an A record for another machine. That machine has to forward ports 80 and 443 here for callers with only IPv4.", name)
+	case voice.HostnameNoA:
+		app.UI.Warn(fmt.Sprintf("%s has no A record.", name), "Callers with only IPv4 can't connect to this server until you add one that points at this machine.")
+	case voice.HostnameNoAAAA:
+		app.UI.Warn(fmt.Sprintf("%s has no AAAA record.", name), "Callers with only IPv6 can't connect to this server until you add one that points at this machine.")
+	}
 }
 
 func joinRegionText(p *voice.Preview, requested string) string {
@@ -630,7 +722,7 @@ func showJoinSummary(app *App, plan *joinPlan, f *voiceFlags) {
 		ports = append(ports, "80/tcp", "443/tcp")
 	}
 	fw := joinFirewallText(plan.firewall, len(ports), f.NoFirewall)
-	ip := s.NodeIP
+	ip := orNone(s.NodeIP)
 	if plan.reach.BehindNAT {
 		ip += ", behind NAT. Forward each port to the same port number on this machine."
 	}
@@ -640,6 +732,7 @@ func showJoinSummary(app *App, plan *joinPlan, f *voiceFlags) {
 		{"Endpoint", s.Endpoint},
 		{"Certificate", cert},
 		{"Public IPv4", ip},
+		{"Public IPv6", orNone(s.NodeIPv6)},
 		{"Ports", strings.Join(ports, ", ")},
 		{"Firewall", fw},
 		{"LiveKit", s.Image + ", " + plan.imageWhy},
@@ -659,6 +752,13 @@ func showJoinSummary(app *App, plan *joinPlan, f *voiceFlags) {
 	u.Info("Change any of these with flags. Run rexctl voice join --help to see them.")
 }
 
+func orNone(v string) string {
+	if v == "" {
+		return "none"
+	}
+	return v
+}
+
 func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Engine, inst *instance.Instance, token string, plan *joinPlan, f *voiceFlags) error {
 	srv := plan.srv
 	if existing := inst.State.VoiceServer(srv.ID); existing != nil {
@@ -673,7 +773,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 	if plan.edgeInst != nil {
 		inst.State.VoiceEdge = &instance.VoiceEdge{Instance: plan.edgeInst.Dir}
 	} else if inst.State.VoiceEdge == nil && srv.Edge == voice.EdgeOwn {
-		inst.State.VoiceEdge = &instance.VoiceEdge{Email: f.Email}
+		inst.State.VoiceEdge = &instance.VoiceEdge{Email: f.Email, IPv6: plan.netIPv6}
 	}
 	saved := inst.State.VoiceServer(srv.ID)
 	if err := saveVoiceState(inst); err != nil {
@@ -757,11 +857,14 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 	}
 	app.UI.OK("Voice server %s joined %s in region %s.", saved.ID, plan.domain, joined.RegionID)
 	waitForVoiceOrigin(ctx, app, client, plan.domain, saved.Endpoint)
-	results := runTransportTests(ctx, saved.Endpoint, func() (string, error) {
+	results := runTransportTests(ctx, saved.Endpoint, serverPaths(saved), func() (string, error) {
 		return voice.TestToken(saved.Key, saved.Secret, voice.TestRoom(), time.Now()), nil
 	}, false)
 	reportTransports(app, results, true)
 	app.UI.Info("Run rexctl voice test %s on the Fluxer machine to test from outside this network.", saved.ID)
+	if saved.NodeIP == "" {
+		app.UI.Info("%s", ipv6OnlyText(saved.ID, len(plan.preview.TurnServers) > 0))
+	}
 	if status, _, err := client.TestWebhook(ctx, saved.Webhook, saved.Key, saved.Secret, time.Now()); err != nil || status < 200 || status > 299 {
 		app.UI.Warn(fmt.Sprintf("%s doesn't accept a test webhook from %s.", plan.domain, saved.ID), "Run rexctl doctor to see why.")
 	} else {
@@ -782,6 +885,7 @@ func joinWithRetries(ctx context.Context, app *App, client *voice.Client, e *eng
 			APISecret:  saved.Secret,
 			SoftLimit:  saved.SoftLimit,
 			PublicIPv4: saved.NodeIP,
+			PublicIPv6: saved.NodeIPv6,
 		}
 		switch {
 		case plan.coords:
@@ -793,6 +897,9 @@ func joinWithRetries(ctx context.Context, app *App, client *voice.Client, e *eng
 		code := voice.CodeOf(err)
 		if err == nil {
 			return joined, nil
+		}
+		if code == voice.CodeEndpointUnreachable && saved.NodeIP == "" {
+			return nil, ui.Failed(fmt.Sprintf("%s couldn't connect to the server's endpoint (%s).", plan.domain, err), "The Fluxer machine may have no IPv6. On it, run rexctl config set network.ipv6 true, then run the same command here again.")
 		}
 		if plan.preview.ServerIDPinned {
 			return nil, pinnedJoinError(err, plan.domain, saved.ID)
@@ -842,6 +949,13 @@ func renameJoinedServer(ctx context.Context, app *App, e *engine.Engine, inst *i
 		s.Done("Started voice server %s.", next)
 		return nil
 	})
+}
+
+func ipv6OnlyText(id string, turn bool) string {
+	if turn {
+		return fmt.Sprintf("This server offers only IPv6. Callers with IPv6 connect to calls on it directly. Callers with only IPv4 can join through your TURN server when it hands out IPv6 relay addresses and an A record for the hostname points at a machine that forwards ports 80 and 443 here. Run rexctl voice test %s on the Fluxer machine to check, and see the voice servers guide.", id)
+	}
+	return "This server offers only IPv6. Callers with IPv6 connect to calls on it. Callers with only IPv4 can't, and your instance gives clients no TURN server. See the voice servers guide."
 }
 
 func pinnedJoinError(err error, domain, id string) error {
@@ -948,8 +1062,11 @@ func voiceEdgeSpec(inst *instance.Instance) engine.Spec {
 	if inst.State.VoiceEdge != nil && inst.State.VoiceEdge.Email != "" {
 		env["FLUXER_VOICE_EDGE_EMAIL"] = inst.State.VoiceEdge.Email
 	}
+	if inst.State.VoiceEdge != nil && inst.State.VoiceEdge.IPv6 {
+		env["FLUXER_VOICE_NETWORK_IPV6"] = "true"
+	}
 	for _, s := range inst.State.Voice {
-		if u, err := url.Parse(s.Endpoint); err == nil && s.Edge == voice.EdgeOwn && net.ParseIP(u.Hostname()) != nil {
+		if u, err := url.Parse(s.Endpoint); err == nil && s.Edge == voice.EdgeOwn && voice.IsIPv4(u.Hostname()) {
 			env["FLUXER_VOICE_EDGE_IP"] = u.Hostname()
 		}
 	}

@@ -38,6 +38,7 @@ import type {
 	VoiceJoinRequest,
 	VoiceJoinResponse,
 	VoiceNodeResponse,
+	VoiceTurnServer,
 } from '@fluxer/schema/src/domains/voice/VoiceNodeSchemas';
 import {lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 
@@ -199,7 +200,7 @@ export class VoiceNodeService {
 	}
 
 	async preview(row: VoiceJoinTokenRow, body: VoiceJoinPreviewRequest, clientIp: string | null) {
-		const point = await this.locate(body.public_ipv4 ?? clientIp);
+		const point = await this.locate(body.public_ipv4 ?? body.public_ipv6 ?? clientIp);
 		const region = await this.chooseRegion(row, body.region_id, point);
 		const servers = await this.deps.voiceRepository.listAllServers();
 		const response: VoiceJoinPreviewResponse = {
@@ -221,6 +222,7 @@ export class VoiceNodeService {
 			api_code_version: API_CODE_VERSION,
 			release: process.env.BUILD_VERSION?.trim() ?? '',
 			expires_at: row.expires_at.toISOString(),
+			turn_servers: turnServers(),
 		};
 		return response;
 	}
@@ -239,7 +241,7 @@ export class VoiceNodeService {
 			const point =
 				body.latitude !== undefined && body.longitude !== undefined
 					? {latitude: body.latitude, longitude: body.longitude}
-					: await this.locate(body.public_ipv4 ?? clientIp);
+					: await this.locate(body.public_ipv4 ?? body.public_ipv6 ?? clientIp);
 			const region = await this.chooseRegion(row, body.region_id, point);
 			const servers = await voiceRepository.listAllServers();
 			const serverId = row.server_id ?? body.server_id ?? this.suggestServerId(region.id, servers);
@@ -280,6 +282,8 @@ export class VoiceNodeService {
 				internalEndpoint: row.internal_endpoint,
 				pinnedHostname: row.hostname ?? null,
 				pinnedSoftLimit: row.soft_connection_limit != null,
+				publicIpv4: body.public_ipv4 ?? null,
+				publicIpv6: body.public_ipv6 ?? null,
 				softConnectionLimit: row.soft_connection_limit ?? body.soft_connection_limit ?? null,
 				notes: row.notes ?? `Joined with a join token on ${now.toISOString().slice(0, 10)}`,
 				restrictions: {
@@ -312,6 +316,7 @@ export class VoiceNodeService {
 				endpoint,
 				webhook_url: `${Config.endpoints.apiPublic}/webhooks/livekit`,
 				node_url: `${Config.endpoints.apiPublic}${VOICE_NODE_PATH}`,
+				turn_servers: turnServers(),
 			};
 		} catch (error) {
 			await joinTokenRepository.release(row, claimId).catch(() => false);
@@ -357,6 +362,9 @@ export class VoiceNodeService {
 			is_active: server.isActive,
 			draining: server.draining,
 			soft_connection_limit: server.softConnectionLimit,
+			public_ipv4: server.publicIpv4,
+			public_ipv6: server.publicIpv6,
+			turn_servers: turnServers(),
 			health: toHealthResponse(healthOf(this.deps.health, server)),
 		};
 	}
@@ -383,6 +391,8 @@ export class VoiceNodeService {
 		if (body.latitude !== undefined) updated.latitude = body.latitude;
 		if (body.longitude !== undefined) updated.longitude = body.longitude;
 		if (body.soft_connection_limit !== undefined) updated.softConnectionLimit = body.soft_connection_limit;
+		if (body.public_ipv4 !== undefined) updated.publicIpv4 = body.public_ipv4 || null;
+		if (body.public_ipv6 !== undefined) updated.publicIpv6 = body.public_ipv6 || null;
 		await this.deps.voiceRepository.upsertServer(updated);
 		await this.deps.publish(
 			JSON.stringify({type: 'server_updated', regionId: server.regionId, serverId: server.serverId}),
@@ -487,6 +497,10 @@ export class VoiceNodeService {
 			if (!used.has(id)) return id;
 		}
 	}
+}
+
+function turnServers(): Array<VoiceTurnServer> {
+	return Config.voice.turnServers.map((server) => ({...server}));
 }
 
 function emptyRestrictions(): VoiceRegionRecord['restrictions'] {

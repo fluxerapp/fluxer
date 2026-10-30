@@ -98,6 +98,7 @@ type Env struct {
 	HTTPPort      int
 	HTTPBind      string
 	NodeIP        string
+	NodeIPv6      string
 	BindIP        string
 	Image         string
 	Memory        string
@@ -105,11 +106,13 @@ type Env struct {
 	StunPrimary   string
 	StunSecondary string
 	LogLevel      string
+	TurnServers   string
 }
 
 func (e Env) Values() map[string]string {
 	useExternal := "true"
-	if e.NodeIP != "" {
+	nodeIP := NodeIPs(e.NodeIP, e.NodeIPv6)
+	if nodeIP != "" {
 		useExternal = "false"
 	}
 	out := map[string]string{
@@ -120,7 +123,8 @@ func (e Env) Values() map[string]string {
 		"FLUXER_VOICE_NETWORK":         e.Network,
 		"FLUXER_VOICE_TCP_PORT":        strconv.Itoa(e.TCPPort),
 		"FLUXER_VOICE_UDP_PORT":        strconv.Itoa(e.UDPPort),
-		"FLUXER_VOICE_NODE_IP":         e.NodeIP,
+		"FLUXER_VOICE_NODE_IP":         nodeIP,
+		"FLUXER_VOICE_ICE_IPS":         iceIPs(e.NodeIP, e.NodeIPv6),
 		"FLUXER_VOICE_USE_EXTERNAL_IP": useExternal,
 		"FLUXER_VOICE_BIND_IP":         e.BindIP,
 		"FLUXER_LIVEKIT_IMAGE":         orDefault(e.Image, DefaultImage),
@@ -136,12 +140,23 @@ func (e Env) Values() map[string]string {
 		"FLUXER_LIVEKIT_STUN_PRIMARY":   e.StunPrimary,
 		"FLUXER_LIVEKIT_STUN_SECONDARY": e.StunSecondary,
 		"FLUXER_LIVEKIT_LOG_LEVEL":      e.LogLevel,
+		"FLUXER_LIVEKIT_TURN_SERVERS":   e.TurnServers,
 	} {
 		if v != "" {
 			out[k] = v
 		}
 	}
 	return out
+}
+
+func iceIPs(v4, v6 string) string {
+	switch {
+	case v4 != "" && v6 == "":
+		return `["0.0.0.0/0"]`
+	case v4 == "" && v6 != "":
+		return `["::/0"]`
+	}
+	return "[]"
 }
 
 func (e Env) File() []byte {
@@ -153,9 +168,16 @@ func (e Env) File() []byte {
 	slices.Sort(keys)
 	var b strings.Builder
 	for _, k := range keys {
-		fmt.Fprintf(&b, "%s=%s\n", k, values[k])
+		fmt.Fprintf(&b, "%s=%s\n", k, envValue(values[k]))
 	}
 	return []byte(b.String())
+}
+
+func envValue(v string) string {
+	if strings.ContainsAny(v, " \"'{}[]$#\\") && !strings.Contains(v, "'") {
+		return "'" + v + "'"
+	}
+	return v
 }
 
 func orDefault(v, fallback string) string {

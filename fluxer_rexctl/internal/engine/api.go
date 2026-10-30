@@ -20,6 +20,8 @@ const (
 const (
 	MinPodman = "5.4.0"
 	MinDocker = "24.0.0"
+
+	MinDockerIPv6 = "27.0.0"
 )
 
 const DefaultReadyTimeout = 10 * time.Minute

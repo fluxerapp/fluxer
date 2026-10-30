@@ -232,8 +232,12 @@ func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi
 	if !slices.Contains(set.Vars, name) && !slices.Contains(custom, name) {
 		return Key{}, unknown(name)
 	}
+	validate := validText
+	if name == TurnServersVar {
+		validate = validTurnServers
+	}
 	return Key{Name: name, Kind: Raw, Type: "text", Vars: []string{name}, Secret: SecretName(name),
-		Stateful: generatedStateful(name), Validate: validText}, nil
+		Stateful: generatedStateful(name), Validate: validate}, nil
 }
 
 func unknown(name string) error {

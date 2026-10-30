@@ -40,6 +40,10 @@ pub struct VoiceServer {
     pub internal_endpoint: Option<String>,
     #[serde(default)]
     pub draining: bool,
+    #[serde(default)]
+    pub public_ipv4: Option<String>,
+    #[serde(default)]
+    pub public_ipv6: Option<String>,
     pub health: Option<VoiceServerHealth>,
     #[serde(default)]
     pub duplicate_api_key: bool,

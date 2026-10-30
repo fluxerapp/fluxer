@@ -46,9 +46,17 @@ func PublicIP(ctx context.Context) (string, error) {
 }
 
 func PublicIPv4(ctx context.Context) (string, error) {
+	return publicIPOver(ctx, "udp4")
+}
+
+func PublicIPv6(ctx context.Context) (string, error) {
+	return publicIPOver(ctx, "udp6")
+}
+
+func publicIPOver(ctx context.Context, network string) (string, error) {
 	var last error = ErrNoPublicIP
 	for _, server := range stunServers {
-		ip, err := stunQuery(ctx, "udp4", server)
+		ip, err := stunQuery(ctx, network, server)
 		if err == nil {
 			return ip.String(), nil
 		}

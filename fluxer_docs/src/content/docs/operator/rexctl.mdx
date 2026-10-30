@@ -1003,6 +1003,10 @@ rexctl voice add [flags]
 
   Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
 
+- `--ipv6 string`
+
+  Public IPv6 address LiveKit gives to clients.
+
 - `--lat float`
 
   Latitude of the server.
@@ -1022,6 +1026,10 @@ rexctl voice add [flags]
 - `--no-firewall`
 
   Leave the firewall on this machine alone.
+
+- `--no-ipv6`
+
+  Give clients only the IPv4 address, even when this machine has IPv6.
 
 - `--region string`
 
@@ -1053,7 +1061,7 @@ rexctl voice hostname <id> <host>
 
 ### rexctl voice join
 
-Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at \<domain>. Get the token with rexctl voice token on the Fluxer machine, or with Add a voice server in the admin panel. The token works once. rexctl also reads it from FLUXER_VOICE_JOIN_TOKEN or, with --token-stdin, from standard input.
+Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at \<domain>. Get the token with rexctl voice token on the Fluxer machine, or with Add a voice server in the admin panel. The token works once. rexctl also reads it from FLUXER_VOICE_JOIN_TOKEN or, with --token-stdin, from standard input. The server offers IPv4 and IPv6 when the machine has both. On a machine with only IPv6, pass --hostname with an AAAA record that points here.
 
 ```sh
 rexctl voice join <domain> [token] [flags]
@@ -1095,6 +1103,10 @@ rexctl voice join <domain> [token] [flags]
 
   Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
 
+- `--ipv6 string`
+
+  Public IPv6 address LiveKit gives to clients.
+
 - `--lat float`
 
   Latitude of the server.
@@ -1114,6 +1126,10 @@ rexctl voice join <domain> [token] [flags]
 - `--no-firewall`
 
   Leave the firewall on this machine alone.
+
+- `--no-ipv6`
+
+  Give clients only the IPv4 address, even when this machine has IPv6.
 
 - `--region string`
 

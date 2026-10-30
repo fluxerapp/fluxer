@@ -48,24 +48,27 @@ const (
 
 func VoiceEnv(inst *instance.Instance, srv *instance.VoiceServer) voice.Env {
 	env := voice.Env{
-		ID:         srv.ID,
-		Key:        srv.Key,
-		Secret:     srv.Secret,
-		WebhookURL: srv.Webhook,
-		Network:    srv.Network,
-		TCPPort:    srv.TCPPort,
-		UDPPort:    srv.UDPPort,
-		HTTPPort:   srv.HTTPPort,
-		HTTPBind:   srv.HTTPBind,
-		NodeIP:     srv.NodeIP,
-		BindIP:     srv.BindIP,
-		Image:      srv.Image,
-		Memory:     srv.Memory,
+		ID:          srv.ID,
+		Key:         srv.Key,
+		Secret:      srv.Secret,
+		WebhookURL:  srv.Webhook,
+		Network:     srv.Network,
+		TCPPort:     srv.TCPPort,
+		UDPPort:     srv.UDPPort,
+		HTTPPort:    srv.HTTPPort,
+		HTTPBind:    srv.HTTPBind,
+		NodeIP:      srv.NodeIP,
+		NodeIPv6:    srv.NodeIPv6,
+		BindIP:      srv.BindIP,
+		Image:       srv.Image,
+		Memory:      srv.Memory,
+		TurnServers: srv.Turn,
 	}
 	if !inst.State.IsVoice() {
 		env.StunPrimary = inst.Setting("FLUXER_LIVEKIT_STUN_PRIMARY")
 		env.StunSecondary = inst.Setting("FLUXER_LIVEKIT_STUN_SECONDARY")
 		env.LogLevel = inst.Setting("FLUXER_LIVEKIT_LOG_LEVEL")
+		env.TurnServers, _ = settings.NormalTurnServers(inst.Setting(settings.TurnServersVar))
 	}
 	return env
 }

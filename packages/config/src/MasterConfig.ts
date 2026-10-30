@@ -15,6 +15,16 @@ export const TAG_STYLE_NAMES = ['none', 'random'] as const;
 type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
 type SmtpTlsModeName = 'implicit' | 'starttls' | 'opportunistic' | 'none';
 
+export interface VoiceTurnServerConfig {
+	host: string;
+	port: number;
+	protocol: 'udp' | 'tcp' | 'tls';
+	username?: string;
+	credential?: string;
+	secret?: string;
+	ttl?: number;
+}
+
 interface SmtpConfig {
 	host: string;
 	port: number;
@@ -219,6 +229,7 @@ export interface MasterConfig {
 				longitude: number;
 			};
 			p2p_stun_urls?: Array<string>;
+			turn_servers?: Array<VoiceTurnServerConfig>;
 			join_allow_private_endpoints?: boolean;
 			health_interval_ms?: number;
 		};

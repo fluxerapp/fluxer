@@ -49,6 +49,8 @@ Behind 1:1 NAT, as on AWS, Google Cloud, Oracle Cloud or a home router, the publ
 rexctl voice add --ip 198.51.100.8
 ```
 
+When `network.ipv6` is on and the machine runs Docker 27 or later, `rexctl voice add` also gives the server the machine's public IPv6 address. Pass `--ipv6` to give the address yourself, or `--no-ipv6` to offer only IPv4. On a machine with only IPv6, it stops until you run `rexctl config set network.ipv6 true`.
+
 A server added without `--ip` follows `voice.public_ip`. When you change that setting with `rexctl config set`, rexctl gives these servers the new address and restarts them one at a time, as an upgrade does. When Fluxer is stopped, they get it at the next `rexctl start`. A server added with `--ip` keeps its address.
 
 After it adds a server, rexctl prints its TCP and UDP ports. Open them in your provider's firewall as well. The test at the end runs on the same machine and can't see that firewall.
@@ -83,14 +85,14 @@ The join command does this:
 
 1. Reads your instance's public settings from its domain and stops when voice is off there.
 2. Installs Docker when the machine has neither Docker nor Podman, as `rexctl install` does. On a machine with Podman older than 5.8.2 and no Fluxer instance, it stops. That Podman doesn't start voice servers again after a restart.
-3. Finds the machine's public IPv4 address, its CPU count, its memory and its firewall.
+3. Finds the machine's public IPv4 and IPv6 addresses, its CPU count, its memory and its firewall.
 4. Asks your instance for the server's ID, region and webhook address, without using the token.
 5. Picks free ports and a hostname or IP address for the endpoint.
 6. Shows a summary and asks once. Pass `--yes` to go ahead without asking.
 7. Raises the UDP buffer limits in `/etc/sysctl.d/61-fluxer-voice.conf`, which LiveKit needs for many calls. This needs root. Without root, rexctl shows the two commands to run with sudo. Then it starts an edge on ports 80 and 443 with Caddy, and the LiveKit server behind it.
 8. Opens the server's ports, and ports 80 and 443, in ufw or firewalld.
 9. Waits for a certificate, then registers the server with your instance. The token stops working once it's registered.
-10. Checks that browsers on your instance can connect to the server, that calls connect over UDP and TCP, and that your instance accepts the server's webhooks.
+10. Checks that browsers on your instance can connect to the server, that calls connect over UDP and TCP on each address family the server has, and that your instance accepts the server's webhooks.
 
 When a step fails, run the same command again with the same token. rexctl picks up where it stopped, because the token is used only once the server is registered.
 
@@ -113,12 +115,13 @@ A token can set the region, the server ID, the hostname, a soft limit and the re
 
 ## Hostnames and certificates
 
-With no hostname, the endpoint uses the machine's public IPv4 address, such as `wss://203.0.113.7/livekit-fra-server-1`. Caddy gets a short-lived Let's Encrypt certificate for that address. The certificate lasts about 6 days, and Caddy renews it before it expires. This needs ports 80 and 443 open to the internet and no DNS record.
+With no hostname, the endpoint uses the machine's public IPv4 address, such as `wss://203.0.113.7/livekit-fra-server-1`. A machine with only IPv6 needs a hostname. See [IPv6](#ipv6). Caddy gets a short-lived Let's Encrypt certificate for that address. The certificate lasts about 6 days, and Caddy renews it before it expires. This needs ports 80 and 443 open to the internet and no DNS record.
 
-To use a hostname, add an `A` record that points at the machine first.
+To use a hostname, add an `A` record that points at the machine first. On a machine with IPv6, you can add an `AAAA` record too.
 
 ```
-voice-fra.chat.example.com.  A  203.0.113.7
+voice-fra.chat.example.com.  A     203.0.113.7
+voice-fra.chat.example.com.  AAAA  2001:db8::7
 ```
 
 Then pass it when you join.
@@ -127,7 +130,7 @@ Then pass it when you join.
 rexctl voice join chat.example.com fvj_... --hostname voice-fra.chat.example.com
 ```
 
-When `voice-` followed by the region and your domain already points at the machine, rexctl uses it without being asked. When the hostname doesn't point at the machine yet, rexctl prints the record and waits up to 10 minutes. After that it uses the IP address and prints the command to switch later. With `--yes`, or without a terminal, it uses the IP address straight away.
+When `voice-` followed by the region and your domain already points at the machine, rexctl uses it without being asked. When the hostname doesn't point at the machine yet, rexctl prints the records and waits up to 10 minutes. After that it uses the IP address and prints the command to switch later. With `--yes`, or without a terminal, it uses the IP address straight away. A machine with only IPv6 has no IP address to fall back to. There rexctl waits up to 10 minutes for the `AAAA` record even with `--yes`, and stops when the record still doesn't point at the machine.
 
 A token made with `--hostname` works only with that hostname. rexctl stops when you pass another one. It waits up to 10 minutes for the name to point at the machine, also with `--yes`, and stops before it starts anything when the name still doesn't. Add the record, then run the same command again.
 
@@ -139,7 +142,63 @@ On Cloudflare, set this record to **DNS only**. `rexctl voice join` checks that 
 
 A server from `rexctl voice add` uses your instance's domain, which can stay proxied. Only signalling goes through Cloudflare. Audio and video go straight to the machine's IP address, which LiveKit gives to clients.
 
-Voice servers serve IPv4 only. A machine with only an IPv6 address can't run one.
+## IPv6
+
+`rexctl voice join` and `rexctl voice add` find the machine's public IPv6 address with STUN. When STUN gets no answer over IPv6, they use the address the machine sends from on its default route. They check that it's a global address on the machine, and skip temporary addresses, which change over time. Pass `--ipv6` to give the address yourself, or `--no-ipv6` to offer only IPv4.
+
+A voice server on IPv6 needs Docker 27 or later, and not rootless Docker. With Podman, rootless Docker or an older Docker, a machine with IPv4 and IPv6 offers only IPv4, and rexctl stops on a machine with only IPv6.
+
+### Machines with IPv4 and IPv6
+
+LiveKit gives clients both addresses for media. Callers first open a WebSocket to the endpoint, and that needs an address of their own family. With an `A` record and no `AAAA` record for the hostname, or with an IP address as the endpoint, callers with only IPv6 can't connect. An endpoint that is an IP address is always IPv4. To let callers with only IPv6 in, use a hostname with an `AAAA` record that points at the machine. When the hostname has an `AAAA` record, it has to point at the machine.
+
+`rexctl voice add` uses your instance's domain as the endpoint. Callers with only IPv6 need an `AAAA` record for that domain too.
+
+The bundled voice server gives clients the Fluxer machine's IPv6 address too when `network.ipv6` is on.
+
+When `voice.public_ip` is empty, servers added without `--ip` give clients the machine's IPv4 address as rexctl last found it. When the machine gets a new IPv4 address, they get it the next time rexctl starts Fluxer, with `rexctl start` or when the machine starts on a system with systemd, and at the next `rexctl upgrade` to a new release. `rexctl doctor` warns when a server gives clients an old address.
+
+### Machines with only IPv6
+
+- The server needs a hostname with an `AAAA` record that points at the machine. An endpoint can't be an IPv6 address, because browsers can't allow one in the content security policy of the web app.
+- The Fluxer machine needs IPv6 too. Your instance checks the server through its endpoint, and the server sends webhooks to your instance's public API address. Run `rexctl config set network.ipv6 true` on the Fluxer machine, and give the API address an `AAAA` record.
+- Callers with IPv6 connect directly. Callers with only IPv4 need a TURN server you run and a machine that forwards ports 80 and 443, and `rexctl voice join` says so once the server has joined. See [Callers with only IPv4](#callers-with-only-ipv4).
+- `install.sh` and `rexctl upgrade` download rexctl from GitHub, which has no IPv6 address. Copy the Linux build of rexctl to the machine yourself, such as with `scp` from a machine with IPv4 and IPv6, and run `rexctl voice join` with it. Before you run `rexctl upgrade` for a new release, copy that release's rexctl there the same way.
+
+### Callers with only IPv4
+
+Without a TURN server, a caller with only IPv4 can't join a call on a server with only IPv6. With a TURN server you run, they can when all of the following is in place.
+
+- **Signalling.** The browser or app opens a WebSocket to the endpoint before any audio flows, and a TURN server can't help with that. An `A` record for the hostname has to point at a machine with IPv4 that you run, and that machine has to forward TCP ports 80 and 443 to the voice machine without ending TLS, such as with the nginx `stream` module. rexctl accepts such an `A` record and says what the machine has to do. Without it, the caller's WebSocket fails and the call doesn't start.
+- **Media.** A TURN server with IPv4 and IPv6, set up as in [TURN servers](#turn-servers). The caller connects to it over IPv4, and it relays to the voice server over IPv6. For that the TURN server has to hand the caller an IPv6 relay address. A client can ask for one ([RFC 6156](https://www.rfc-editor.org/rfc/rfc6156)), but browsers don't. coturn then hands out IPv4 relay addresses, its default, and the call doesn't connect. Set `allocation-default-address-family="ipv6"` in coturn. Callers then get IPv6 relay addresses, and audio and video flow both ways, with the caller connected to coturn over UDP or, when UDP is blocked, over TCP.
+
+With `allocation-default-address-family="ipv6"`, the TURN server gives no useful relay for a voice server with only IPv4. Callers who need the TURN server can't connect to such a server with that setting. Your instance gives every voice server the same list of TURN servers. Use the setting only when every voice server of your instance has IPv6.
+
+`rexctl voice test <id>` on a Fluxer machine with IPv4 tries **IPv4 through TURN** for a server with only IPv6, when your instance has TURN servers. It opens the WebSocket over IPv4, which goes to the machine the `A` record points at, and connects media only through the TURN servers the voice server gives clients over UDP and TCP, which it connects to over IPv4. Like a browser, it asks for no address family, so it passes only when the TURN server hands out IPv6 relay addresses. When the instance has no TURN servers, the test skips this.
+
+### Machines that joined before
+
+A voice machine that joined before rexctl supported IPv6 has a voice network without IPv6, and Docker can't add IPv6 to it. Its servers offer only IPv4, and a new `rexctl voice join` there says so. To offer IPv6, remove the servers with `rexctl voice remove --all` and join again with new tokens.
+
+## TURN servers
+
+A TURN server relays call media for callers who can't connect to a voice server directly. rexctl doesn't install or run one. When you run your own, give it to your instance on the Fluxer machine.
+
+```sh
+rexctl config set FLUXER_LIVEKIT_TURN_SERVERS '[{"host":"turn.example.com","port":3478,"protocol":"udp","secret":"a-long-random-secret"},{"host":"turn.example.com","port":3478,"protocol":"tcp","secret":"a-long-random-secret"}]'
+```
+
+With `secret`, LiveKit gives each participant short-lived credentials in the form coturn checks with `use-auth-secret`. Set the same secret as `static-auth-secret` in coturn. `ttl` sets how many seconds the credentials last, as a whole number from 1. An entry can have `username` and `credential` in place of `secret`. Every text field has to be filled in. `host` has to be a hostname or an IPv4 address, and field names are lower case. The API doesn't start with a list it can't read, and `rexctl config set` refuses such a list before it changes anything.
+
+Voice servers that rexctl manages give the list to clients that join a call on them.
+
+- The bundled server gets it when Fluxer restarts with the new setting.
+- Servers from `rexctl voice add` get it when you change the setting with `rexctl config set`. rexctl restarts them one at a time, as an upgrade does.
+- Servers from `rexctl voice join` get it when they join, and again on each `rexctl upgrade` in their voice folder. When the instance runs an older release than the rexctl in that folder, the upgrade leaves the servers as they are. A server that uses the edge of the Fluxer instance on the same machine also gets it when you change the setting, and when you upgrade that instance to a new release. A changed list restarts them the same way. The voice machine keeps the list, with the secret, in `voice/<id>/.env`.
+
+On [Kubernetes](/operator/kubernetes/), the chart doesn't pass the setting to the API. Servers that join an instance there get the list only when you put `FLUXER_LIVEKIT_TURN_SERVERS` in `api.env` in your values.
+
+For a server you run by hand or added in the admin panel, copy the same entries into `rtc.turn_servers` in its LiveKit configuration. With `voice.compose.yml`, set `FLUXER_LIVEKIT_TURN_SERVERS` in its settings file.
 
 ## Ports and firewalls
 
@@ -162,8 +221,7 @@ Behind a router or another NAT, forward each port to the same port number on the
 ## Networks a voice server can't serve
 
 - **Shared address NAT (CGNAT, 100.64.0.0/10).** A machine with an address from 100.64.0.0/10 on its main network usually can't take incoming calls, and rexctl stops. Some providers use that range for private networks behind 1:1 NAT. When the machine has a public IPv4 address of its own, pass it with `--ip`. CGNAT behind a home router doesn't show on the machine. Run `rexctl voice test <id>` on the Fluxer machine to find it.
-- **IPv6 only.** Voice servers need a public IPv4 address.
-- **Networks that allow only port 443.** Some office and school networks block everything but HTTPS. Calls from there need TURN over TLS on port 443, which rexctl doesn't set up. See LiveKit's guide to [TURN](https://docs.livekit.io/transport/self-hosting/deployment/#improving-connectivity-with-turn).
+- **Networks that allow only port 443.** Some office and school networks block everything but HTTPS. Calls from there need TURN over TLS on port 443, which rexctl doesn't set up. Run your own and add it as in [TURN servers](#turn-servers), with `"protocol":"tls"` and `"port":443`.
 
 ## Machines with something else on ports 80 and 443
 
@@ -257,7 +315,7 @@ rexctl doctor
 
 `rexctl voice list` on the Fluxer machine shows every server of your instance with its health, and marks the ones that run on that machine. On a voice machine it shows the servers there.
 
-`rexctl voice test` joins a throwaway room and reports whether UDP and TCP connect. A test on the machine that runs the server can't see your provider's firewall or your router. On the Fluxer machine, `rexctl voice test <id>` tests a server on another machine from outside its network, with a token your instance signs. When the server rejects that token, your instance has another secret for it than the server has.
+`rexctl voice test` joins a throwaway room and reports whether UDP and TCP connect, over IPv4 and IPv6 when the server and the machine running the test both have them. When the test machine lacks a family the server has, it says so. A test on the machine that runs the server can't see your provider's firewall or your router. On the Fluxer machine, `rexctl voice test <id>` tests a server on another machine from outside its network, with a token your instance signs. When the server rejects that token, your instance has another secret for it than the server has.
 
 ## Upgrade
 

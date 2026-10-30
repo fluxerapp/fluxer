@@ -44,12 +44,8 @@ func runDNS(ctx context.Context, e *Env) Result {
 		return fail(fmt.Sprintf("%s doesn't point to this machine yet.", e.Domain),
 			fmt.Sprintf("Add an A record for it pointing to %s, then run rexctl doctor.", public))
 	}
-	if pointsHere(addrs, public) {
-		shown := public
-		if shown == "" {
-			shown = addrs[0].IP.String()
-		}
-		return pass(fmt.Sprintf("%s points to this machine (%s).", e.Domain, shown))
+	if matched := matchHere(addrs, public); len(matched) > 0 {
+		return pass(fmt.Sprintf("%s points to this machine (%s).", e.Domain, strings.Join(matched, ", ")))
 	}
 	if e.forwardsHere(ctx) {
 		return pass(fmt.Sprintf("%s points to %s, which forwards to this machine.", e.Domain, addrs[0].IP))
@@ -61,7 +57,7 @@ func runDNS(ctx context.Context, e *Env) Result {
 		fmt.Sprintf("Change its A record to %s, then run rexctl doctor.", public))
 }
 
-func pointsHere(addrs []net.IPAddr, public string) bool {
+func matchHere(addrs []net.IPAddr, public string) []string {
 	pub := net.ParseIP(public)
 	local := map[string]bool{}
 	if ifaces, err := net.InterfaceAddrs(); err == nil {
@@ -71,15 +67,13 @@ func pointsHere(addrs []net.IPAddr, public string) bool {
 			}
 		}
 	}
+	var matched []string
 	for _, a := range addrs {
-		if pub != nil && a.IP.Equal(pub) {
-			return true
-		}
-		if local[a.IP.String()] {
-			return true
+		if pub != nil && a.IP.Equal(pub) || local[a.IP.String()] {
+			matched = append(matched, a.IP.String())
 		}
 	}
-	return false
+	return matched
 }
 
 func (e *Env) forwardsHere(ctx context.Context) bool {

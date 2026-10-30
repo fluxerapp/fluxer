@@ -18,7 +18,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
-const StateSchema = generatedSchema + 1
+const StateSchema = generatedSchema + 2
 
 var ErrNewerState = errors.New("instance: state was written by a newer rexctl")
 
@@ -71,6 +71,7 @@ type VoiceServer struct {
 	HTTPPort  int       `json:"http_port,omitempty"`
 	HTTPBind  string    `json:"http_bind,omitempty"`
 	NodeIP    string    `json:"node_ip,omitempty"`
+	NodeIPv6  string    `json:"node_ipv6,omitempty"`
 	IPPinned  bool      `json:"pinned_node_ip,omitempty"`
 	BindIP    string    `json:"bind_ip,omitempty"`
 	Image     string    `json:"image"`
@@ -86,6 +87,7 @@ type VoiceServer struct {
 	Edge      string    `json:"edge,omitempty"`
 	Joined    bool      `json:"joined,omitempty"`
 	Drained   bool      `json:"drained,omitempty"`
+	Turn      string    `json:"turn_servers,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -93,6 +95,7 @@ type VoiceEdge struct {
 	Email    string   `json:"email,omitempty"`
 	Opened   []string `json:"opened,omitempty"`
 	Instance string   `json:"instance,omitempty"`
+	IPv6     bool     `json:"ipv6,omitempty"`
 }
 
 func (s *State) IsVoice() bool { return s != nil && s.Kind == KindVoice }

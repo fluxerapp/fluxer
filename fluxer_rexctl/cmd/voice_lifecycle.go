@@ -19,6 +19,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -161,6 +162,7 @@ func voiceServerStale(inst *instance.Instance, srv *instance.VoiceServer, image 
 
 func upgradeLocalVoiceServers(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) {
 	if len(inst.State.Voice) > 0 {
+		followMachineIPv4(ctx, app, inst)
 		image := instanceLiveKitImage(inst)
 		api := app.adminClient(inst, e.Named(inst.Project(), inst.Dir))
 		for i := range inst.State.Voice {
@@ -176,6 +178,7 @@ func upgradeLocalVoiceServers(ctx context.Context, app *App, inst *instance.Inst
 	}
 	for _, other := range voiceMachinesUsing(inst) {
 		err := app.Locked(ctx, other, func() error {
+			refreshJoinedServers(ctx, app, other, true)
 			for _, srv := range staleVoiceServers(other, ownLiveKitImage()) {
 				if err := upgradeVoiceServer(ctx, app, e, nil, other, srv, voiceTargetImage(srv, ownLiveKitImage()), defaultDrainTimeout); err != nil {
 					return err
@@ -269,6 +272,7 @@ func runVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instan
 		app.UI.Info("%s runs %s, older than this rexctl. Voice servers stay on their LiveKit release until the instance catches up.", domain, target)
 		return nil
 	}
+	refreshJoinedServers(ctx, app, inst, !dryRun)
 	pending := staleVoiceServers(inst, image)
 	if dryRun {
 		for _, s := range pending {
@@ -308,6 +312,38 @@ func runVoiceMachineUpgrade(ctx context.Context, app *App, inst *instance.Instan
 		}
 		return nil
 	})
+}
+
+func refreshJoinedServers(ctx context.Context, app *App, inst *instance.Instance, report bool) {
+	if len(inst.State.Voice) == 0 {
+		return
+	}
+	client := &voice.Client{HTTP: &http.Client{Timeout: 30 * time.Second}}
+	code := 0
+	if d, err := client.Discover(ctx, inst.State.Voice[0].Instance); err == nil {
+		code = d.APICodeVersion
+	}
+	for i := range inst.State.Voice {
+		srv := &inst.State.Voice[i]
+		if srv.NodeURL == "" {
+			continue
+		}
+		node, err := client.GetNode(ctx, srv.NodeURL, srv.Key, srv.Secret)
+		if err != nil {
+			app.UI.Detail("reading %s from %s: %v", srv.ID, srv.Instance, err)
+			continue
+		}
+		if node.Turn != nil {
+			srv.Turn = settings.TurnServersValue(*node.Turn)
+		}
+		if !report || code < voice.AddressesCodeVersion || stringOf(node.PublicIPv4) == srv.NodeIP && stringOf(node.PublicIPv6) == srv.NodeIPv6 {
+			continue
+		}
+		v4, v6 := srv.NodeIP, srv.NodeIPv6
+		if _, err := client.UpdateNode(ctx, srv.NodeURL, srv.Key, srv.Secret, voice.NodeUpdate{PublicIPv4: &v4, PublicIPv6: &v6}); err != nil {
+			app.UI.Detail("reporting the addresses of %s to %s: %v", srv.ID, srv.Instance, err)
+		}
+	}
 }
 
 func runVoiceMachineUninstall(ctx context.Context, app *App, inst *instance.Instance) error {
@@ -358,6 +394,7 @@ func voiceDirFlag(dir string) string {
 }
 
 func startLocalVoiceServers(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) {
+	followMachineIPv4(ctx, app, inst)
 	for _, v := range deploy.VoiceOnNetwork(inst) {
 		srv := &v.Server
 		p, err := e.Load(ctx, deploy.VoiceSpec(v.Owner, srv))

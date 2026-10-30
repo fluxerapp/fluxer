@@ -87,12 +87,15 @@ export function parseNodeEndpoint(endpoint: string): URL {
 		throw new VoiceEndpointError('invalid', 'The endpoint must not have credentials, a query or a fragment');
 	}
 	if (isIP(bareHost(url)) === 6) {
-		throw new VoiceEndpointError('invalid', 'An endpoint that is an IP address must be IPv4');
+		throw new VoiceEndpointError(
+			'invalid',
+			'An endpoint can be an IPv4 address but not an IPv6 address. Give a voice server on IPv6 a hostname with an AAAA record',
+		);
 	}
 	return url;
 }
 
-async function resolveCheckedAddress(url: URL, allowPrivate: boolean): Promise<string> {
+async function resolveCheckedAddresses(url: URL, allowPrivate: boolean): Promise<Array<string>> {
 	const host = bareHost(url);
 	const addresses = isIP(host) ? [host] : await resolveHost(host).catch(() => []);
 	if (addresses.length === 0) {
@@ -101,7 +104,7 @@ async function resolveCheckedAddress(url: URL, allowPrivate: boolean): Promise<s
 	if (!allowPrivate && addresses.some((address) => !isPublicIpAddress(address))) {
 		throw new VoiceEndpointError('private', `${host} resolves to an address that is not public`);
 	}
-	return addresses[0]!;
+	return addresses;
 }
 
 interface ProbeResponse {
@@ -165,18 +168,29 @@ function transportError(error: unknown): string {
 	return error instanceof Error ? error.message : 'connection failed';
 }
 
+async function requestAny(
+	url: URL,
+	addresses: Array<string | null>,
+	options: Omit<Parameters<typeof request>[1], 'address'>,
+): Promise<ProbeResponse> {
+	const errors: Array<string> = [];
+	for (const address of addresses) {
+		try {
+			return await request(url, {...options, address});
+		} catch (error) {
+			errors.push(address ? `${address}: ${transportError(error)}` : transportError(error));
+		}
+	}
+	throw new VoiceEndpointError('unreachable', errors.join(', '));
+}
+
 export async function probeLiveKit(
 	base: string,
 	options: {checkAddress: boolean; allowPrivate: boolean; timeoutMs: number},
 ): Promise<void> {
 	const url = withPath(base, '/');
-	const address = options.checkAddress ? await resolveCheckedAddress(url, options.allowPrivate) : null;
-	let response: ProbeResponse;
-	try {
-		response = await request(url, {method: 'GET', address, timeoutMs: options.timeoutMs});
-	} catch (error) {
-		throw new VoiceEndpointError('unreachable', transportError(error));
-	}
+	const addresses = options.checkAddress ? await resolveCheckedAddresses(url, options.allowPrivate) : [null];
+	const response = await requestAny(url, addresses, {method: 'GET', timeoutMs: options.timeoutMs});
 	if (response.status !== 200 || response.body.trim() !== 'OK') {
 		throw new VoiceEndpointError('unreachable', `HTTP ${response.status}`);
 	}
@@ -188,21 +202,15 @@ export async function checkLiveKitKeys(
 	options: {checkAddress: boolean; allowPrivate: boolean; timeoutMs: number},
 ): Promise<void> {
 	const url = withPath(base, '/twirp/livekit.RoomService/ListRooms');
-	const address = options.checkAddress ? await resolveCheckedAddress(url, options.allowPrivate) : null;
+	const addresses = options.checkAddress ? await resolveCheckedAddresses(url, options.allowPrivate) : [null];
 	const token = new AccessToken(keys.apiKey, keys.apiSecret, {ttl: 60});
 	token.addGrant({roomList: true});
-	let response: ProbeResponse;
-	try {
-		response = await request(url, {
-			method: 'POST',
-			address,
-			timeoutMs: options.timeoutMs,
-			headers: {Authorization: `Bearer ${await token.toJwt()}`, 'Content-Type': 'application/json'},
-			body: '{}',
-		});
-	} catch (error) {
-		throw new VoiceEndpointError('unreachable', transportError(error));
-	}
+	const response = await requestAny(url, addresses, {
+		method: 'POST',
+		timeoutMs: options.timeoutMs,
+		headers: {Authorization: `Bearer ${await token.toJwt()}`, 'Content-Type': 'application/json'},
+		body: '{}',
+	});
 	if (response.status === 401 || response.status === 403) {
 		throw new VoiceEndpointError('key_mismatch', `HTTP ${response.status}`);
 	}

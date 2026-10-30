@@ -69,6 +69,8 @@ export class VoiceDataInitializer {
 					draining: false,
 					pinnedHostname: null,
 					pinnedSoftLimit: false,
+					publicIpv4: null,
+					publicIpv6: null,
 					restrictions: {
 						vipOnly: false,
 						requiredGuildFeatures: new Set(),

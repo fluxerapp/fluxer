@@ -60,6 +60,10 @@ export const VoiceRegionAdminResponse = z.object({
 
 export type VoiceRegionAdminResponse = z.infer<typeof VoiceRegionAdminResponse>;
 
+export const VoicePublicIpv4Type = z.ipv4().describe('Public IPv4 address LiveKit gives to clients');
+
+export const VoicePublicIpv6Type = z.ipv6().describe('Public IPv6 address LiveKit gives to clients');
+
 export const VoiceServerAdminResponse = z.object({
 	region_id: z.string().describe('ID of the region this server belongs to'),
 	server_id: z.string().describe('Unique identifier for the voice server'),
@@ -80,6 +84,14 @@ export const VoiceServerAdminResponse = z.object({
 		.nullable()
 		.describe('URL the API uses for the control API and health checks, or null to use the endpoint'),
 	draining: z.boolean().describe('Whether placement sends new calls elsewhere while calls on this server finish'),
+	public_ipv4: z
+		.string()
+		.nullable()
+		.describe('Public IPv4 address LiveKit gives to clients, or null when none is known'),
+	public_ipv6: z
+		.string()
+		.nullable()
+		.describe('Public IPv6 address LiveKit gives to clients, or null when none is known'),
 	health: VoiceServerHealthResponse.describe('Health of the server as this API node last saw it'),
 	duplicate_api_key: z.boolean().describe('Whether another server uses the same API key'),
 	created_at: z.string().nullable().describe('ISO 8601 timestamp when the server was created'),
@@ -191,6 +203,8 @@ export const CreateVoiceServerRequestBody = z
 			.optional()
 			.default(false)
 			.describe('Whether placement sends new calls elsewhere while calls on this server finish'),
+		public_ipv4: VoicePublicIpv4Type.nullable().optional().default(null),
+		public_ipv6: VoicePublicIpv6Type.nullable().optional().default(null),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
 		error: 'Latitude and longitude must both be provided or both be omitted',
@@ -236,6 +250,8 @@ export const UpdateVoiceServerRequestBody = z
 			.boolean()
 			.optional()
 			.describe('Whether placement sends new calls elsewhere while calls on this server finish'),
+		public_ipv4: VoicePublicIpv4Type.nullable().optional(),
+		public_ipv6: VoicePublicIpv6Type.nullable().optional(),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
 		error: 'Latitude and longitude must both be provided or both be omitted',

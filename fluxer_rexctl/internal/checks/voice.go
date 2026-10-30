@@ -178,13 +178,21 @@ func runVoiceNodeIP(ctx context.Context, e *Env) Result {
 	if len(servers) == 0 || e.Engine == nil {
 		return skip("")
 	}
-	public, perr := e.publicAddress(ctx)
+	public4, err4 := host.PublicIPv4(ctx)
+	seen6, _ := host.PublicIPv6(ctx)
+	public6 := voice.MachineIPv6(seen6)
 	var problems []string
 	for _, s := range servers {
+		if s.NodeIPv6 != "" && public6 != "" && s.NodeIPv6 != public6 {
+			problems = append(problems, fmt.Sprintf("%s gives clients %s and this machine's public IPv6 address is %s", s.ID, s.NodeIPv6, public6))
+		}
 		if s.NodeIP != "" {
-			if perr == nil && s.NodeIP != public && s.BindIP == "" {
-				problems = append(problems, fmt.Sprintf("%s gives clients %s and this machine's public address is %s", s.ID, s.NodeIP, public))
+			if err4 == nil && s.NodeIP != public4 && s.BindIP == "" {
+				problems = append(problems, fmt.Sprintf("%s gives clients %s and this machine's public IPv4 address is %s", s.ID, s.NodeIP, public4))
 			}
+			continue
+		}
+		if s.NodeIPv6 != "" {
 			continue
 		}
 		if strings.Contains(strings.ToLower(e.voiceLogs(ctx, s, 300)), "could not resolve external ip") {

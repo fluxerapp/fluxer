@@ -179,6 +179,8 @@ export class VoiceRepository {
 			draining: server.draining,
 			pinned_hostname: server.pinnedHostname,
 			pinned_soft_limit: server.pinnedSoftLimit,
+			public_ipv4: server.publicIpv4,
+			public_ipv6: server.publicIpv6,
 			created_at: server.createdAt ?? new Date(),
 			updated_at: server.updatedAt ?? new Date(),
 		};
@@ -229,6 +231,8 @@ export class VoiceRepository {
 			draining: row.draining ?? false,
 			pinnedHostname: row.pinned_hostname ?? null,
 			pinnedSoftLimit: row.pinned_soft_limit ?? false,
+			publicIpv4: row.public_ipv4 ?? null,
+			publicIpv6: row.public_ipv6 ?? null,
 			createdAt: row.created_at,
 			updatedAt: row.updated_at,
 		};
