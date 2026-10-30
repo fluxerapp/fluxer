@@ -31,6 +31,7 @@ rexctl auto-upgrade on
 This runs `rexctl upgrade --yes` every day at about 04:00 with a systemd timer, or with cron on machines without systemd. Each run backs up your instance first and goes back to the version you had if the new one doesn't start. Run `rexctl auto-upgrade` to see when it runs next and how the last run went, and `rexctl auto-upgrade off` to stop it.
 
 - `--at 03:30` picks the time of day, in this machine's time zone. A systemd timer starts within 30 minutes after it, and cron starts at a fixed minute in that window.
+- `--at 06:00,18:00` upgrades at each of those times, here once in the morning and once in the evening.
 - `--day sun` upgrades once a week on that day. A weekly run that is skipped or fails waits a week, and you can run `rexctl upgrade` yourself at any time.
 - `--notify https://ntfy.sh/your-topic` posts to that address when an upgrade installs a new release or fails.
 - `--backup without-uploads` leaves uploads out of the backup before each upgrade.

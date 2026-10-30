@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -71,14 +72,14 @@ func newAutoUpgradeCmd(app *App) *cobra.Command {
 	on := &cobra.Command{
 		Use:   "on",
 		Short: "Upgrade Fluxer by itself every day or once a week",
-		Long: "Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the upgrade time. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.\n\n" +
+		Long: "Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Pass several times to --at, like 06:00,18:00, to run more than once on those days. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the first upgrade time of the day. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.\n\n" +
 			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m={{.text}} to the topic address.",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeOn(c.Context(), app, o)
 		},
 	}
-	on.Flags().StringVar(&o.At, "at", autoUpgradeDefault, "time of day to upgrade, as HH:MM in this machine's time zone")
+	on.Flags().StringVar(&o.At, "at", autoUpgradeDefault, "time of day to upgrade, as HH:MM in this machine's time zone. Separate several times with commas, like 06:00,18:00.")
 	on.Flags().StringVar(&o.Day, "day", "", "run once a week on this day, like sun. Leave it out to run every day.")
 	on.Flags().StringVar(&o.Backup, "backup", backup.ScopeFull, "what the backup before each upgrade holds, full or without-uploads. When an upgrade changes how uploads are stored, the backup includes them anyway.")
 	on.Flags().StringVar(&o.FullBackup, "full-backup", "", "pass monthly to also make a full backup with uploads on the 1st of every month")
@@ -153,6 +154,23 @@ func parseDay(s string) (string, error) {
 	return time.Weekday(d).String()[:3], nil
 }
 
+func parseTimes(s string) (string, error) {
+	var times []string
+	for _, part := range strings.Split(s, ",") {
+		t, err := time.Parse("15:04", strings.TrimSpace(part))
+		if err != nil {
+			return "", ui.Usage("Pass --at as a time of day like 04:00, or several times like 06:00,18:00.")
+		}
+		at := t.Format("15:04")
+		if slices.Contains(times, at) {
+			return "", ui.Usage(fmt.Sprintf("Pass %s only once in --at.", at))
+		}
+		times = append(times, at)
+	}
+	slices.Sort(times)
+	return strings.Join(times, ","), nil
+}
+
 func parseBackupScope(s string) (string, error) {
 	switch s {
 	case "", backup.ScopeFull:
@@ -164,11 +182,11 @@ func parseBackupScope(s string) (string, error) {
 }
 
 func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error {
-	t, err := time.Parse("15:04", o.At)
+	at, err := parseTimes(o.At)
 	if err != nil {
-		return ui.Usage("Pass --at as a time of day like 04:00.")
+		return err
 	}
-	at, notify := t.Format("15:04"), o.Notify
+	notify := o.Notify
 	day, err := parseDay(o.Day)
 	if err != nil {
 		return err
@@ -220,7 +238,7 @@ func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error
 		}
 		startDay, start, err := a.Start()
 		if err != nil {
-			return ui.Usage("Pass --at as a time of day like 04:00.")
+			return ui.Usage("Pass --at as a time of day like 04:00, or several times like 06:00,18:00.")
 		}
 		app.UI.OK("rexctl upgrades %s %s.", autoUpgradeTarget(inst), autoUpgradeWhen(a.Scheduler, startDay, start))
 		if fullBackup != "" {
@@ -363,11 +381,29 @@ func autoUpgradeWhen(s host.Scheduler, day, at string) string {
 	if long := host.DayLong(day); long != "" {
 		every = "every " + long
 	}
-	t, err := time.Parse("15:04", at)
-	if err != nil || s != host.Systemd {
+	times := host.Times(at)
+	if len(times) == 0 {
 		return every + " at " + at
 	}
-	return fmt.Sprintf("%s between %s and %s", every, at, t.Add(host.UpgradeWindow).Format("15:04"))
+	parts := make([]string, 0, len(times))
+	for _, t := range times {
+		part := "at " + t.At
+		if c, err := time.Parse("15:04", t.At); err == nil && s == host.Systemd {
+			part = fmt.Sprintf("between %s and %s", t.At, c.Add(host.UpgradeWindow).Format("15:04"))
+		}
+		if long := host.DayLong(t.Day); long != "" {
+			part = "on " + long + " " + part
+		}
+		parts = append(parts, part)
+	}
+	return every + " " + joinAnd(parts)
+}
+
+func joinAnd(parts []string) string {
+	if len(parts) < 2 {
+		return strings.Join(parts, "")
+	}
+	return strings.Join(parts[:len(parts)-1], ", ") + " and " + parts[len(parts)-1]
 }
 
 func leanBackupNote(app *App, s host.AutoUpgradeState, notify string) {

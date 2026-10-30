@@ -139,12 +139,67 @@ func (a AutoUpgrade) runAs() string {
 	return dirOwner(a.Dir)
 }
 
-func (a AutoUpgrade) clock() (int, int, error) {
-	t, err := time.Parse("15:04", a.At)
+type slot struct {
+	day, hour, minute int
+}
+
+type Time struct {
+	Day string
+	At  string
+}
+
+func Times(at string) []Time {
+	var out []Time
+	for _, part := range strings.Split(at, ",") {
+		f := strings.Fields(part)
+		switch len(f) {
+		case 1:
+			out = append(out, Time{At: f[0]})
+		case 2:
+			out = append(out, Time{Day: f[0], At: f[1]})
+		}
+	}
+	return out
+}
+
+func joinSlots(slots []slot) (string, string) {
+	if len(slots) == 0 {
+		return "", ""
+	}
+	day := dayName(slots[0].day)
+	parts := make([]string, 0, len(slots))
+	for _, s := range slots {
+		at := fmt.Sprintf("%02d:%02d", s.hour, s.minute)
+		if s.day != slots[0].day {
+			at = dayName(s.day) + " " + at
+		}
+		parts = append(parts, at)
+	}
+	return day, strings.Join(parts, ",")
+}
+
+func parseClock(at string) (int, int, error) {
+	t, err := time.Parse("15:04", at)
 	if err != nil {
-		return 0, 0, fmt.Errorf("host: %q is not a time of day", a.At)
+		return 0, 0, fmt.Errorf("host: %q is not a time of day", at)
 	}
 	return t.Hour(), t.Minute(), nil
+}
+
+func (a AutoUpgrade) clocks() ([][2]int, error) {
+	times := Times(a.At)
+	if len(times) == 0 {
+		return nil, fmt.Errorf("host: %q is not a time of day", a.At)
+	}
+	out := make([][2]int, 0, len(times))
+	for _, t := range times {
+		hour, minute, err := parseClock(t.At)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, [2]int{hour, minute})
+	}
+	return out, nil
 }
 
 func (a AutoUpgrade) weekday() (int, error) {
@@ -157,22 +212,32 @@ func (a AutoUpgrade) weekday() (int, error) {
 	return 0, fmt.Errorf("host: %q is not a day of the week", a.Day)
 }
 
-func (a AutoUpgrade) start() (int, int, int, error) {
-	hour, minute, err := a.clock()
+func (a AutoUpgrade) starts() ([]slot, error) {
+	clocks, err := a.clocks()
 	if err != nil {
-		return 0, 0, 0, err
+		return nil, err
 	}
 	day, err := a.weekday()
-	if err != nil || a.Scheduler != Cron {
-		return day, hour, minute, err
+	if err != nil {
+		return nil, err
 	}
-	offset := a.cronOffset()
-	if day < 0 {
-		m := (hour*60 + minute + offset) % minutesPerDay
-		return day, m / 60, m % 60, nil
+	out := make([]slot, 0, len(clocks))
+	for _, c := range clocks {
+		hour, minute := c[0], c[1]
+		if a.Scheduler != Cron {
+			out = append(out, slot{day, hour, minute})
+			continue
+		}
+		offset := a.cronOffset()
+		if day < 0 {
+			m := (hour*60 + minute + offset) % minutesPerDay
+			out = append(out, slot{day, m / 60, m % 60})
+			continue
+		}
+		m := (day*minutesPerDay + hour*60 + minute + offset) % minutesPerWeek
+		out = append(out, slot{m / minutesPerDay, m % minutesPerDay / 60, m % 60})
 	}
-	m := (day*minutesPerDay + hour*60 + minute + offset) % minutesPerWeek
-	return m / minutesPerDay, m % minutesPerDay / 60, m % 60, nil
+	return out, nil
 }
 
 func (a AutoUpgrade) cronOffset() int {
@@ -185,26 +250,38 @@ func (a AutoUpgrade) Requested(day, at string) (string, string) {
 	if a.Scheduler != Cron {
 		return day, at
 	}
-	t, err := time.Parse("15:04", at)
-	if err != nil {
-		return day, at
-	}
-	m := t.Hour()*60 + t.Minute() - a.cronOffset()
 	d, weekly := Weekday(day)
-	if !weekly {
-		m = (m + minutesPerDay) % minutesPerDay
-		return "", fmt.Sprintf("%02d:%02d", m/60, m%60)
+	var slots []slot
+	for _, t := range Times(at) {
+		hour, minute, err := parseClock(t.At)
+		if err != nil {
+			return day, at
+		}
+		m := hour*60 + minute - a.cronOffset()
+		if !weekly {
+			m = (m + minutesPerDay) % minutesPerDay
+			slots = append(slots, slot{-1, m / 60, m % 60})
+			continue
+		}
+		own := d
+		if t.Day != "" {
+			if od, ok := Weekday(t.Day); ok {
+				own = od
+			}
+		}
+		m = (own*minutesPerDay + m + minutesPerWeek) % minutesPerWeek
+		slots = append(slots, slot{m / minutesPerDay, m % minutesPerDay / 60, m % 60})
 	}
-	m = (d*minutesPerDay + m + minutesPerWeek) % minutesPerWeek
-	return dayName(m / minutesPerDay), fmt.Sprintf("%02d:%02d", m%minutesPerDay/60, m%60)
+	return joinSlots(slots)
 }
 
 func (a AutoUpgrade) Start() (string, string, error) {
-	day, hour, minute, err := a.start()
+	slots, err := a.starts()
 	if err != nil {
 		return "", "", err
 	}
-	return dayName(day), fmt.Sprintf("%02d:%02d", hour, minute), nil
+	day, at := joinSlots(slots)
+	return day, at, nil
 }
 
 func Weekday(s string) (int, bool) {
@@ -272,16 +349,18 @@ func (a AutoUpgrade) service(runAs string) string {
 	return b.String()
 }
 
-func (a AutoUpgrade) timer(day, hour, minute int) string {
+func (a AutoUpgrade) timer(slots []slot) string {
 	var b strings.Builder
 	b.WriteString("[Unit]\n")
-	fmt.Fprintf(&b, "Description=Upgrade Fluxer in %s %s\n", strings.ReplaceAll(a.Dir, "%", "%%"), every(day))
+	fmt.Fprintf(&b, "Description=Upgrade Fluxer in %s %s\n", strings.ReplaceAll(a.Dir, "%", "%%"), every(slots[0].day))
 	b.WriteString("\n[Timer]\n")
-	b.WriteString("OnCalendar=")
-	if day >= 0 {
-		b.WriteString(dayName(day) + " ")
+	for _, s := range slots {
+		b.WriteString("OnCalendar=")
+		if s.day >= 0 {
+			b.WriteString(dayName(s.day) + " ")
+		}
+		fmt.Fprintf(&b, "*-*-* %02d:%02d:00\n", s.hour, s.minute)
 	}
-	fmt.Fprintf(&b, "*-*-* %02d:%02d:00\n", hour, minute)
 	fmt.Fprintf(&b, "RandomizedDelaySec=%dmin\n", int(UpgradeWindow.Minutes()))
 	b.WriteString("Persistent=true\n")
 	b.WriteString("\n[Install]\n")
@@ -289,28 +368,34 @@ func (a AutoUpgrade) timer(day, hour, minute int) string {
 	return b.String()
 }
 
-func (a AutoUpgrade) cron(day, hour, minute int, runAs string) string {
+func (a AutoUpgrade) cron(slots []slot, runAs string) string {
 	if runAs == "" {
 		runAs = "root"
-	}
-	dow := "*"
-	if day >= 0 {
-		dow = strconv.Itoa(day)
 	}
 	log := cronQuote(a.Log)
 	var b strings.Builder
 	b.WriteString("SHELL=/bin/sh\n")
 	fmt.Fprintf(&b, "PATH=%s\n", cronPath)
-	fmt.Fprintf(&b, "%d %d * * %s %s %s %s --dir %s >%s 2>&1; echo \"%s$?\" >>%s\n", minute, hour, dow, runAs, cronQuote(a.Binary), a.upgradeArgs(), cronQuote(a.Dir), log, cronExitPrefix, log)
+	for _, s := range slots {
+		dow := "*"
+		if s.day >= 0 {
+			dow = strconv.Itoa(s.day)
+		}
+		fmt.Fprintf(&b, "%d %d * * %s %s %s %s --dir %s >%s 2>&1; echo \"%s$?\" >>%s\n", s.minute, s.hour, dow, runAs, cronQuote(a.Binary), a.upgradeArgs(), cronQuote(a.Dir), log, cronExitPrefix, log)
+	}
 	return b.String()
 }
 
 func (a AutoUpgrade) BackupStart() (string, error) {
-	hour, minute, err := a.clock()
+	clocks, err := a.clocks()
 	if err != nil {
 		return "", err
 	}
-	m := (hour*60 + minute + minutesPerDay - fullBackupLead) % minutesPerDay
+	first := minutesPerDay
+	for _, c := range clocks {
+		first = min(first, c[0]*60+c[1])
+	}
+	m := (first + minutesPerDay - fullBackupLead) % minutesPerDay
 	return fmt.Sprintf("%02d:%02d", m/60, m%60), nil
 }
 
@@ -344,7 +429,7 @@ func (a AutoUpgrade) backupCron(at, runAs string) string {
 	if runAs == "" {
 		runAs = "root"
 	}
-	hour, minute, _ := AutoUpgrade{At: at}.clock()
+	hour, minute, _ := parseClock(at)
 	log := cronQuote(a.BackupLog())
 	var b strings.Builder
 	b.WriteString("SHELL=/bin/sh\n")
@@ -380,7 +465,7 @@ func (a AutoUpgrade) files() ([][]byte, error) {
 	if !filepath.IsAbs(a.Binary) || !filepath.IsAbs(a.Dir) {
 		return nil, fmt.Errorf("host: automatic upgrades need absolute paths, got %q and %q", a.Binary, a.Dir)
 	}
-	day, hour, minute, err := a.start()
+	slots, err := a.starts()
 	if err != nil {
 		return nil, err
 	}
@@ -390,12 +475,12 @@ func (a AutoUpgrade) files() ([][]byte, error) {
 		if a.Rootless {
 			runAs = ""
 		}
-		return [][]byte{[]byte(a.service(runAs)), []byte(a.timer(day, hour, minute))}, nil
+		return [][]byte{[]byte(a.service(runAs)), []byte(a.timer(slots))}, nil
 	case Cron:
 		if !filepath.IsAbs(a.Log) {
 			return nil, fmt.Errorf("host: automatic upgrades need an absolute log path, got %q", a.Log)
 		}
-		return [][]byte{[]byte(a.cron(day, hour, minute, runAs))}, nil
+		return [][]byte{[]byte(a.cron(slots, runAs))}, nil
 	}
 	return nil, fmt.Errorf("host: no scheduler for automatic upgrades")
 }
@@ -567,8 +652,8 @@ func CheckAutoUpgrade(ctx context.Context, a AutoUpgrade, now time.Time) (AutoUp
 	if a.Scheduler == Cron {
 		s.Day, s.At = cronSchedule(data)
 		s.Backup = serviceBackup(data)
-		if hour, minute, err := (AutoUpgrade{At: s.At}).clock(); err == nil {
-			s.Next = nextRun(now, s.Day, hour, minute).Format(systemdTimeLayout)
+		if next, ok := nextRunOf(now, s.Day, s.At); ok {
+			s.Next = next.Format(systemdTimeLayout)
 		}
 		if info, err := os.Stat(a.Log); err == nil {
 			s.Last = info.ModTime().Format(systemdTimeLayout)
@@ -642,25 +727,29 @@ func parseShow(out []byte) map[string]string {
 }
 
 func timerSchedule(data []byte) (string, string) {
+	var slots []slot
 	for _, line := range strings.Split(string(data), "\n") {
 		v, ok := strings.CutPrefix(line, "OnCalendar=")
 		if !ok {
 			continue
 		}
 		f := strings.Fields(v)
-		day := ""
+		day := -1
 		if len(f) == 3 {
 			d, ok := Weekday(f[0])
 			if !ok {
 				continue
 			}
-			day, f = dayName(d), f[1:]
+			day, f = d, f[1:]
 		}
-		if len(f) == 2 && f[0] == "*-*-*" && len(f[1]) >= 5 {
-			return day, f[1][:5]
+		if len(f) != 2 || f[0] != "*-*-*" || len(f[1]) < 5 {
+			continue
+		}
+		if hour, minute, err := parseClock(f[1][:5]); err == nil {
+			slots = append(slots, slot{day, hour, minute})
 		}
 	}
-	return "", ""
+	return joinSlots(slots)
 }
 
 func backupTimerAt(data []byte) string {
@@ -674,6 +763,7 @@ func backupTimerAt(data []byte) string {
 }
 
 func cronSchedule(data []byte) (string, string) {
+	var slots []slot
 	for _, line := range strings.Split(string(data), "\n") {
 		f := strings.Fields(line)
 		if len(f) < 5 || strings.Contains(f[0], "=") {
@@ -684,17 +774,17 @@ func cronSchedule(data []byte) (string, string) {
 		if merr != nil || herr != nil {
 			continue
 		}
-		day := ""
+		day := -1
 		if f[4] != "*" {
 			d, err := strconv.Atoi(f[4])
 			if err != nil || d < 0 || d > 7 {
 				continue
 			}
-			day = dayName(d % 7)
+			day = d % 7
 		}
-		return day, fmt.Sprintf("%02d:%02d", hour, minute)
+		slots = append(slots, slot{day, hour, minute})
 	}
-	return "", ""
+	return joinSlots(slots)
 }
 
 func serviceBackup(data []byte) string {
@@ -721,6 +811,24 @@ func cronExit(log string) (bool, int) {
 	}
 	code, err := strconv.Atoi(strings.TrimSpace(v))
 	return err == nil, code
+}
+
+func nextRunOf(now time.Time, day, at string) (time.Time, bool) {
+	var best time.Time
+	for _, t := range Times(at) {
+		hour, minute, err := parseClock(t.At)
+		if err != nil {
+			return time.Time{}, false
+		}
+		d := day
+		if t.Day != "" {
+			d = t.Day
+		}
+		if next := nextRun(now, d, hour, minute); best.IsZero() || next.Before(best) {
+			best = next
+		}
+	}
+	return best, !best.IsZero()
 }
 
 func nextRun(now time.Time, day string, hour, minute int) time.Time {
