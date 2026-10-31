@@ -11,6 +11,11 @@ export async function awaitAll(tasks: ReadonlyArray<Promise<unknown>>, failureMe
 	throwCompletionErrors(errors, failureMessage);
 }
 
+export function startEarly<T>(task: Promise<T>): Promise<T> {
+	task.catch(() => {});
+	return task;
+}
+
 export async function runAllInOrder(
 	steps: ReadonlyArray<() => Promise<unknown>>,
 	failureMessage: string,

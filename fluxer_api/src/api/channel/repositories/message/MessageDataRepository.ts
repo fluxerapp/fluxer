@@ -25,6 +25,7 @@ import {
 	Messages,
 	MessagesByAuthorV2,
 } from '@app/api/Tables';
+import {startEarly} from '@app/api/utils/ConcurrencyUtils';
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
@@ -665,7 +666,11 @@ export class MessageDataRepository {
 		return repairedMessage;
 	}
 
-	async upsertMessage(data: MessageRow, oldData?: MessageRow | null): Promise<Message> {
+	async upsertMessage(
+		data: MessageRow,
+		oldData?: MessageRow | null,
+		alongsideChannelState?: () => Promise<void>,
+	): Promise<Message> {
 		const expectedBucket = BucketUtils.makeBucket(data.message_id);
 		if (data.bucket !== expectedBucket) {
 			throw new Error(
@@ -759,7 +764,12 @@ export class MessageDataRepository {
 			}),
 		);
 		await batch.execute(false);
-		await this.recordChannelStateForMessage(data.channel_id, data.message_id, data.bucket);
+		const channelStateTask = startEarly(
+			this.recordChannelStateForMessage(data.channel_id, data.message_id, data.bucket),
+		);
+		const alongsideTask = startEarly(alongsideChannelState ? alongsideChannelState() : Promise.resolve());
+		await channelStateTask;
+		await alongsideTask;
 		return new Message({...data, version: finalVersion});
 	}
 

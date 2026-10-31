@@ -63,6 +63,7 @@ import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {systemDmsHidden} from '@app/api/user/services/SystemDmMessage';
 import {isContentHidden, isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
+import {startEarly} from '@app/api/utils/ConcurrencyUtils';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {checkGuildVerificationWithResponse} from '@app/api/utils/GuildVerificationUtils';
 import {
@@ -137,35 +138,6 @@ export class MessageSendService {
 	}): void {
 		if (params.mentionChannels && params.mentionChannels.length > 0) {
 			params.requestCache.messageMentionChannels.set(params.messageId.toString(), params.mentionChannels);
-		}
-	}
-
-	private async cacheMessageNonceIfPresent(params: {
-		userId: UserID;
-		nonce?: string;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<void> {
-		if (!params.nonce) {
-			return;
-		}
-		try {
-			await this.deps.validationService.cacheMessageNonce({
-				userId: params.userId,
-				nonce: params.nonce,
-				channelId: params.channelId,
-				messageId: params.messageId,
-			});
-		} catch (error) {
-			Logger.warn(
-				{
-					userId: params.userId.toString(),
-					channelId: params.channelId.toString(),
-					messageId: params.messageId.toString(),
-					error,
-				},
-				'Message was persisted but nonce cache failed',
-			);
 		}
 	}
 
@@ -364,33 +336,44 @@ export class MessageSendService {
 		guildFeatures: Iterable<string> | null;
 	}): Promise<void> {
 		if (!attachments || attachments.length === 0) return;
+		const uploads = attachments.flatMap((attachment, index) =>
+			'upload_filename' in attachment && attachment.upload_filename
+				? [
+						{
+							index,
+							filename: attachment.filename,
+							pendingUploadTask: startEarly(
+								this.deps.attachmentUploadTraceRepository.getPendingUpload({
+									uploadKey: attachment.upload_filename,
+									userId: user.id,
+									channelId,
+								}),
+							),
+							metadataTask: startEarly(
+								this.deps.storageService.getObjectMetadata(Config.s3.buckets.uploads, attachment.upload_filename),
+							),
+						},
+					]
+				: [],
+		);
 		const uploadedAttachmentSizes: Array<{
 			size: number | bigint;
 		}> = [];
-		for (let index = 0; index < attachments.length; index++) {
-			const attachment = attachments[index];
-			if (!('upload_filename' in attachment) || !attachment.upload_filename) continue;
-			const pendingUpload = await this.deps.attachmentUploadTraceRepository.getPendingUpload({
-				uploadKey: attachment.upload_filename,
-				userId: user.id,
-				channelId,
-			});
+		for (const {index, filename, pendingUploadTask, metadataTask} of uploads) {
+			const pendingUpload = await pendingUploadTask;
 			if (!pendingUpload) {
 				throw InputValidationError.fromCode(
 					`attachments.${index}.upload_filename`,
 					ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
-					{filename: attachment.filename},
+					{filename},
 				);
 			}
-			const metadata = await this.deps.storageService.getObjectMetadata(
-				Config.s3.buckets.uploads,
-				attachment.upload_filename,
-			);
+			const metadata = await metadataTask;
 			if (!metadata) {
 				throw InputValidationError.fromCode(
 					`attachments.${index}.upload_filename`,
 					ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
-					{filename: attachment.filename},
+					{filename},
 				);
 			}
 			uploadedAttachmentSizes.push({size: metadata.contentLength});
@@ -680,267 +663,289 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: data.attachments,
 		});
-		const existingMessage = await this.deps.operationsHelpers.findExistingMessage({
+		return this.deps.operationsHelpers.sendOncePerNonce({
 			userId: user.id,
 			nonce: data.nonce,
 			expectedChannelId: channelId,
-		});
-		if (existingMessage) {
-			return {message: existingMessage, authChannel};
-		}
-		const referenceContext = await this.resolveReferenceContext({
-			data,
-			channelId,
-			channelIsThread: channel.isThread(),
-			isForwardMessage,
-			user,
-			viewer,
-		});
-		const {referencedMessage, referencedChannelGuildId, messageSnapshots} = referenceContext;
-		this.assertForwardableReference(isForwardMessage, referencedMessage);
-		if (isForwardMessage && messageSnapshots && guild) {
-			const snapshotHasEmbeds = messageSnapshots.some((s) => s.embeds.length > 0);
-			const snapshotHasAttachments = messageSnapshots.some((s) => s.attachments.length > 0);
-			if (snapshotHasEmbeds && !canEmbedLinks) {
-				throw new MissingPermissionsError();
-			}
-			if (snapshotHasAttachments && !canAttachFiles) {
-				throw new MissingPermissionsError();
-			}
-		}
-		if (isForwardMessage && messageSnapshots && this.snapshotsContainNsfwContent(messageSnapshots)) {
-			const guildNsfw = guild != null && guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
-			const destAllowsNsfw = (authChannel.thread?.parent ?? channel).isNsfw || guildNsfw;
-			if (!destAllowsNsfw) {
-				throw new NsfwContentRequiresAgeVerificationError();
-			}
-		}
-		if (data.message_reference && guild && !isForwardMessage) {
-			const hasReadHistory = await hasPermission(Permissions.READ_MESSAGE_HISTORY);
-			if (!hasReadHistory) {
-				assertMessageWithinHistoryCutoff({
-					message: referencedMessage,
-					guild,
-				});
-			}
-		}
-		if (data.message_reference && referencedMessage && !isForwardMessage) {
-			const replyableTypes: ReadonlySet<Message['type']> = new Set([MessageTypes.DEFAULT, MessageTypes.REPLY]);
-			if (!replyableTypes.has(referencedMessage.type)) {
-				throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.CANNOT_REPLY_TO_SYSTEM_MESSAGE);
-			}
-		}
-		this.ensureForwardGuildMatches({data, referencedChannelGuildId});
-		const dmRecipientId = this.getOneToOneDmRecipientId(channel, user.id);
-		if (dmRecipientId !== null) {
-			await assertMayStartConversation({
-				user,
-				targetId: dmRecipientId,
-				users: this.deps.userRepository,
-				messages: this.deps.channelRepository.messages,
-				channel,
-			});
-		}
-		await this.ensureAttachmentsExist({
-			attachments: data.attachments,
-			user,
-			channelId: uploadChannelId,
-			guildFeatures: guild?.features ?? null,
-		});
-		const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
-			user,
-			channelId,
-			data,
-		});
-		const dmNsfwContext = guild ? undefined : await this.deps.persistenceService.resolveDmNsfwContext(channel, user.id);
-		const messageId = forumStarter ? channelIdToMessageId(channel.id) : await this.generateMessageId(channel);
-		let mentionData: SendMentionData | undefined;
-		const shouldExtractMentions =
-			channel && !isForwardMessage && (data.content !== undefined || data.message_reference != null);
-		if (shouldExtractMentions) {
-			const mentionContent = data.content ?? '';
-			const mentions = await this.deps.mentionService.extractMentions({
-				content: mentionContent,
-				referencedMessage: referencedMessage || null,
-				message: {
-					id: messageId,
-					channelId,
-					authorId: user.id,
-					content: mentionContent,
-					flags: this.deps.validationService.calculateMessageFlags(data),
-				} as Message,
-				channelType: channel.type,
-				allowedMentions: data.allowed_mentions || null,
-				guild,
-				canMentionEveryone,
-			});
-			const {validUserIds, validRoleIds, validChannelMentions} = await this.deps.mentionService.validateMentions({
-				userMentions: mentions.userMentions,
-				roleMentions: mentions.roleMentions,
-				channelMentions: mentions.channelMentions,
-				channel,
-				message: {authorId: user.id, webhookId: null},
-				guild,
-				canMentionRoles: canMentionEveryone,
-			});
-			mentionData = {
-				flags: mentions.flags,
-				mentionUserIds: validUserIds,
-				mentionRoleIds: validRoleIds,
-				mentionChannelIds: validChannelMentions.map((mentionedChannel) => createChannelID(BigInt(mentionedChannel.id))),
-				mentionChannels: validChannelMentions,
-				mentionEveryone: mentions.mentionsEveryone || mentions.mentionsHere,
-				mentionHere: mentions.mentionsHere,
-			};
-		}
-		const messageReference = this.buildMessageReferencePayload({
-			data,
-			referencedMessage,
-			guild,
-			isForwardMessage,
-			referencedChannelGuildId,
-		});
-		if (slowmodeKey) {
-			const slowmodeResult = await this.deps.rateLimitService.checkLimit({
-				identifier: slowmodeKey,
-				maxAttempts: 1,
-				windowMs: channel.rateLimitPerUser! * 1000,
-			});
-			if (!slowmodeResult.allowed) {
-				throw new SlowmodeRateLimitError({
-					retryAfter: slowmodeResult.retryAfter,
-					retryAfterDecimal: slowmodeResult.retryAfterDecimal,
-				});
-			}
-		}
-		if (authChannel.thread && !forumStarter) {
-			await this.deps.threadActivity.beforeUserSend({
-				channel,
-				parent: authChannel.thread.parent,
-				state: authChannel.thread.state,
-				member: authChannel.thread.member,
-				userId: user.id,
-				isBot: user.isBot,
-			});
-		}
-		const suppressDmRecipientDelivery = dmRecipientId !== null && isDirectDeliverySuppressed(user);
-		const suppressDelivery = suppressDmRecipientDelivery || isContentHidden(user, messageId);
-		const channelHadMessages = channel.lastMessageId !== null;
-		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
-			messageId,
-			channelId,
-			user,
-			type: this.getMessageTypeForRequest(data),
-			content: data.content,
-			flags: this.deps.validationService.calculateMessageFlags(data),
-			embeds: data.embeds,
-			attachments: attachmentsToProcess,
-			attachmentUploadUserId: user.id,
-			uploadChannelId,
-			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
-			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
-			messageReference,
-			messageSnapshots,
-			guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
-			channel,
-			referencedMessage,
-			allowedMentions: data.allowed_mentions,
-			guild,
-			member,
-			hasPermission: guild ? hasPermission : undefined,
-			mentionData,
-			allowEmbeds: canEmbedLinks,
-			dmNsfwContext,
-			threadInsert: authChannel.thread !== undefined,
-		});
-		this.cacheMentionChannels({
-			requestCache,
-			messageId,
-			mentionChannels: mentionData?.mentionChannels,
-		});
-		if (!suppressDelivery) {
-			await this.settlePostCreateWork(messageId, [
-				{
-					step: 'update_dm_recipients',
-					promise: this.deps.processingService.updateDMRecipients({channel, channelId, messageId, requestCache}),
-				},
-				{
-					step: 'process_message_after_creation',
-					promise: this.deps.processingService.processMessageAfterCreation({
-						message,
-						channel,
-						guild,
-						user,
+			existing: (message) => ({message, authChannel}),
+			send: async (recordNonce) => {
+				const referenceContextTask = startEarly(
+					this.resolveReferenceContext({
 						data,
-						referencedMessage,
-						mentionHere: mentionData?.mentionHere ?? false,
+						channelId,
+						channelIsThread: channel.isThread(),
+						isForwardMessage,
+						user,
+						viewer,
 					}),
-				},
-				{
-					step: 'update_read_states',
-					promise: this.deps.processingService.updateReadStates({user, guild, channel, channelId, messageId}),
-				},
-				...(authChannel.thread && mentionData && mentionData.mentionUserIds.length > 0
-					? [
-							{
-								step: 'thread_mention_members',
-								promise: this.deps.threadActivity.addMentionedUsers({
+				);
+				const dmRecipientId = this.getOneToOneDmRecipientId(channel, user.id);
+				const conversationTask = startEarly(
+					dmRecipientId !== null
+						? assertMayStartConversation({
+								user,
+								targetId: dmRecipientId,
+								users: this.deps.userRepository,
+								messages: this.deps.channelRepository.messages,
+								channel,
+							})
+						: Promise.resolve(),
+				);
+				const attachmentsExistTask = startEarly(
+					this.ensureAttachmentsExist({
+						attachments: data.attachments,
+						user,
+						channelId: uploadChannelId,
+						guildFeatures: guild?.features ?? null,
+					}),
+				);
+				const dmNsfwContextTask = startEarly(
+					guild ? Promise.resolve(undefined) : this.deps.persistenceService.resolveDmNsfwContext(channel, user.id),
+				);
+				const messageIdTask = startEarly(
+					forumStarter ? Promise.resolve(channelIdToMessageId(channel.id)) : this.generateMessageId(channel),
+				);
+				const referenceContext = await referenceContextTask;
+				const {referencedMessage, referencedChannelGuildId, messageSnapshots} = referenceContext;
+				this.assertForwardableReference(isForwardMessage, referencedMessage);
+				if (isForwardMessage && messageSnapshots && guild) {
+					const snapshotHasEmbeds = messageSnapshots.some((s) => s.embeds.length > 0);
+					const snapshotHasAttachments = messageSnapshots.some((s) => s.attachments.length > 0);
+					if (snapshotHasEmbeds && !canEmbedLinks) {
+						throw new MissingPermissionsError();
+					}
+					if (snapshotHasAttachments && !canAttachFiles) {
+						throw new MissingPermissionsError();
+					}
+				}
+				if (isForwardMessage && messageSnapshots && this.snapshotsContainNsfwContent(messageSnapshots)) {
+					const guildNsfw = guild != null && guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
+					const destAllowsNsfw = (authChannel.thread?.parent ?? channel).isNsfw || guildNsfw;
+					if (!destAllowsNsfw) {
+						throw new NsfwContentRequiresAgeVerificationError();
+					}
+				}
+				if (data.message_reference && guild && !isForwardMessage) {
+					const hasReadHistory = await hasPermission(Permissions.READ_MESSAGE_HISTORY);
+					if (!hasReadHistory) {
+						assertMessageWithinHistoryCutoff({
+							message: referencedMessage,
+							guild,
+						});
+					}
+				}
+				if (data.message_reference && referencedMessage && !isForwardMessage) {
+					const replyableTypes: ReadonlySet<Message['type']> = new Set([MessageTypes.DEFAULT, MessageTypes.REPLY]);
+					if (!replyableTypes.has(referencedMessage.type)) {
+						throw InputValidationError.fromCode(
+							'message_reference',
+							ValidationErrorCodes.CANNOT_REPLY_TO_SYSTEM_MESSAGE,
+						);
+					}
+				}
+				this.ensureForwardGuildMatches({data, referencedChannelGuildId});
+				await conversationTask;
+				await attachmentsExistTask;
+				const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
+					user,
+					channelId,
+					data,
+				});
+				const dmNsfwContext = await dmNsfwContextTask;
+				const messageId = await messageIdTask;
+				let mentionData: SendMentionData | undefined;
+				const shouldExtractMentions =
+					channel && !isForwardMessage && (data.content !== undefined || data.message_reference != null);
+				if (shouldExtractMentions) {
+					const mentionContent = data.content ?? '';
+					const mentions = await this.deps.mentionService.extractMentions({
+						content: mentionContent,
+						referencedMessage: referencedMessage || null,
+						message: {
+							id: messageId,
+							channelId,
+							authorId: user.id,
+							content: mentionContent,
+							flags: this.deps.validationService.calculateMessageFlags(data),
+						} as Message,
+						channelType: channel.type,
+						allowedMentions: data.allowed_mentions || null,
+						guild,
+						canMentionEveryone,
+					});
+					const {validUserIds, validRoleIds, validChannelMentions} = await this.deps.mentionService.validateMentions({
+						userMentions: mentions.userMentions,
+						roleMentions: mentions.roleMentions,
+						channelMentions: mentions.channelMentions,
+						channel,
+						message: {authorId: user.id, webhookId: null},
+						guild,
+						canMentionRoles: canMentionEveryone,
+					});
+					mentionData = {
+						flags: mentions.flags,
+						mentionUserIds: validUserIds,
+						mentionRoleIds: validRoleIds,
+						mentionChannelIds: validChannelMentions.map((mentionedChannel) =>
+							createChannelID(BigInt(mentionedChannel.id)),
+						),
+						mentionChannels: validChannelMentions,
+						mentionEveryone: mentions.mentionsEveryone || mentions.mentionsHere,
+						mentionHere: mentions.mentionsHere,
+					};
+				}
+				const messageReference = this.buildMessageReferencePayload({
+					data,
+					referencedMessage,
+					guild,
+					isForwardMessage,
+					referencedChannelGuildId,
+				});
+				if (slowmodeKey) {
+					const slowmodeResult = await this.deps.rateLimitService.checkLimit({
+						identifier: slowmodeKey,
+						maxAttempts: 1,
+						windowMs: channel.rateLimitPerUser! * 1000,
+					});
+					if (!slowmodeResult.allowed) {
+						throw new SlowmodeRateLimitError({
+							retryAfter: slowmodeResult.retryAfter,
+							retryAfterDecimal: slowmodeResult.retryAfterDecimal,
+						});
+					}
+				}
+				if (authChannel.thread && !forumStarter) {
+					await this.deps.threadActivity.beforeUserSend({
+						channel,
+						parent: authChannel.thread.parent,
+						state: authChannel.thread.state,
+						member: authChannel.thread.member,
+						userId: user.id,
+						isBot: user.isBot,
+					});
+				}
+				const suppressDmRecipientDelivery = dmRecipientId !== null && isDirectDeliverySuppressed(user);
+				const suppressDelivery = suppressDmRecipientDelivery || isContentHidden(user, messageId);
+				const channelHadMessages = channel.lastMessageId !== null;
+				const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
+					messageId,
+					channelId,
+					user,
+					type: this.getMessageTypeForRequest(data),
+					content: data.content,
+					flags: this.deps.validationService.calculateMessageFlags(data),
+					embeds: data.embeds,
+					attachments: attachmentsToProcess,
+					attachmentUploadUserId: user.id,
+					uploadChannelId,
+					processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+					stickerIds: data.sticker_ids
+						? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId))
+						: undefined,
+					messageReference,
+					messageSnapshots,
+					guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
+					channel,
+					referencedMessage,
+					allowedMentions: data.allowed_mentions,
+					guild,
+					member,
+					hasPermission: guild ? hasPermission : undefined,
+					mentionData,
+					allowEmbeds: canEmbedLinks,
+					dmNsfwContext,
+					threadInsert: authChannel.thread !== undefined,
+				});
+				await recordNonce(messageId);
+				this.cacheMentionChannels({
+					requestCache,
+					messageId,
+					mentionChannels: mentionData?.mentionChannels,
+				});
+				if (!suppressDelivery) {
+					await this.settlePostCreateWork(messageId, [
+						{
+							step: 'update_dm_recipients',
+							promise: this.deps.processingService.updateDMRecipients({channel, channelId, messageId, requestCache}),
+						},
+						{
+							step: 'process_message_after_creation',
+							promise: this.deps.processingService.processMessageAfterCreation({
+								message,
+								channel,
+								guild,
+								user,
+								data,
+								referencedMessage,
+								mentionHere: mentionData?.mentionHere ?? false,
+							}),
+						},
+						{
+							step: 'update_read_states',
+							promise: this.deps.processingService.updateReadStates({user, guild, channel, channelId, messageId}),
+						},
+						...(authChannel.thread && mentionData && mentionData.mentionUserIds.length > 0
+							? [
+									{
+										step: 'thread_mention_members',
+										promise: this.deps.threadActivity.addMentionedUsers({
+											channel,
+											parent: authChannel.thread.parent,
+											isModerator: authChannel.thread.isModerator,
+											authorId: user.id,
+											mentionUserIds: mentionData.mentionUserIds,
+										}),
+									},
+								]
+							: []),
+					]);
+				}
+				await this.settlePostCreateWork(messageId, [
+					{
+						step: 'dispatch',
+						promise: suppressDelivery
+							? dispatchMessageCreateToUser({
+									gatewayService: this.deps.gatewayService,
 									channel,
-									parent: authChannel.thread.parent,
-									isModerator: authChannel.thread.isModerator,
-									authorId: user.id,
-									mentionUserIds: mentionData.mentionUserIds,
+									message,
+									userId: user.id,
+									currentUserId: user.id,
+									nonce: data.nonce,
+									tts: data.tts,
+									mentionHere: mentionData?.mentionHere ?? false,
+								})
+							: dispatchMessageCreateBroadcast({
+									gatewayService: this.deps.gatewayService,
+									channel,
+									message,
+									currentUserId: user.id,
+									nonce: data.nonce,
+									tts: data.tts,
+									mentionHere: mentionData?.mentionHere ?? false,
 								}),
-							},
-						]
-					: []),
-			]);
-		}
-		await this.settlePostCreateWork(messageId, [
-			{
-				step: 'dispatch',
-				promise: suppressDelivery
-					? dispatchMessageCreateToUser({
-							gatewayService: this.deps.gatewayService,
-							channel,
-							message,
-							userId: user.id,
-							currentUserId: user.id,
-							nonce: data.nonce,
-							tts: data.tts,
-							mentionHere: mentionData?.mentionHere ?? false,
-						})
-					: dispatchMessageCreateBroadcast({
-							gatewayService: this.deps.gatewayService,
-							channel,
-							message,
-							currentUserId: user.id,
-							nonce: data.nonce,
-							tts: data.tts,
-							mentionHere: mentionData?.mentionHere ?? false,
-						}),
+					},
+				]);
+				emitMessageCreated({
+					user,
+					message,
+					channel,
+					guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
+					guildOwnerId: guild?.owner_id ? createUserID(BigInt(guild.owner_id)) : null,
+					dmRecipientId,
+					channelHadMessages,
+					delivered: !suppressDelivery,
+					userRepository: this.deps.userRepository,
+				});
+				void enqueueDeferredEmbeds().catch((error) => {
+					Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
+				});
+				if (authChannel.thread) enqueueThreadSearchSync(channel.id, {activity: true});
+				if (channel.indexedAt != null && !suppressDmRecipientDelivery) {
+					void this.deps.searchService.indexMessage(message, user.isBot);
+				}
+				return {message, authChannel};
 			},
-		]);
-		await this.cacheMessageNonceIfPresent({userId: user.id, nonce: data.nonce, channelId, messageId});
-		emitMessageCreated({
-			user,
-			message,
-			channel,
-			guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
-			guildOwnerId: guild?.owner_id ? createUserID(BigInt(guild.owner_id)) : null,
-			dmRecipientId,
-			channelHadMessages,
-			delivered: !suppressDelivery,
-			userRepository: this.deps.userRepository,
 		});
-		void enqueueDeferredEmbeds().catch((error) => {
-			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
-		});
-		if (authChannel.thread) enqueueThreadSearchSync(channel.id, {activity: true});
-		if (channel.indexedAt != null && !suppressDmRecipientDelivery) {
-			void this.deps.searchService.indexMessage(message, user.isBot);
-		}
-		return {message, authChannel};
 	}
 
 	async sendWebhookMessage({
@@ -980,145 +985,158 @@ export class MessageSendService {
 			attachments: data.attachments,
 		});
 		const webhookActorId = createUserID(BigInt(webhook.id));
-		const existingMessage = await this.deps.operationsHelpers.findExistingMessage({
+		return this.deps.operationsHelpers.sendOncePerNonce({
 			userId: webhookActorId,
 			nonce: data.nonce,
 			expectedChannelId: channelId,
-		});
-		if (existingMessage) {
-			return existingMessage;
-		}
-		let referencedMessage: Message | null = null;
-		let messageSnapshots: Array<MessageSnapshot> | undefined;
-		if (data.message_reference) {
-			const referenceChannelId = isForwardMessage ? createChannelID(data.message_reference.channel_id!) : channelId;
-			if (referenceChannelId !== channelId) {
-				throw new UnknownMessageError();
-			}
-			referencedMessage = await this.deps.channelRepository.messages.getMessage(
-				referenceChannelId,
-				createMessageID(data.message_reference.message_id),
-			);
-			if (!referencedMessage) {
-				throw new UnknownMessageError();
-			}
-			if (isForwardMessage) {
-				messageSnapshots = await createMessageSnapshotsForForward(
-					referencedMessage,
-					null,
-					channelId,
-					this.deps.storageService,
-					this.deps.snowflakeService,
-					this.deps.limitConfigService,
-					this.getForwardMediaSelection(data),
+			existing: (message) => message,
+			send: async (recordNonce) => {
+				const messageIdTask = startEarly(
+					thread && forumStarter ? Promise.resolve(channelIdToMessageId(thread.id)) : this.generateMessageId(channel),
 				);
-			} else {
-				const replyableTypes: ReadonlySet<Message['type']> = new Set([MessageTypes.DEFAULT, MessageTypes.REPLY]);
-				if (!replyableTypes.has(referencedMessage.type)) {
-					throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.CANNOT_REPLY_TO_SYSTEM_MESSAGE);
+				const attachmentUploadUserIdTask = startEarly(
+					this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+				);
+				let referencedMessage: Message | null = null;
+				let messageSnapshots: Array<MessageSnapshot> | undefined;
+				if (data.message_reference) {
+					const referenceChannelId = isForwardMessage ? createChannelID(data.message_reference.channel_id!) : channelId;
+					if (referenceChannelId !== channelId) {
+						throw new UnknownMessageError();
+					}
+					referencedMessage = await this.deps.channelRepository.messages.getMessage(
+						referenceChannelId,
+						createMessageID(data.message_reference.message_id),
+					);
+					if (!referencedMessage) {
+						throw new UnknownMessageError();
+					}
+					if (isForwardMessage) {
+						messageSnapshots = await createMessageSnapshotsForForward(
+							referencedMessage,
+							null,
+							channelId,
+							this.deps.storageService,
+							this.deps.snowflakeService,
+							this.deps.limitConfigService,
+							this.getForwardMediaSelection(data),
+						);
+					} else {
+						const replyableTypes: ReadonlySet<Message['type']> = new Set([MessageTypes.DEFAULT, MessageTypes.REPLY]);
+						if (!replyableTypes.has(referencedMessage.type)) {
+							throw InputValidationError.fromCode(
+								'message_reference',
+								ValidationErrorCodes.CANNOT_REPLY_TO_SYSTEM_MESSAGE,
+							);
+						}
+					}
+					this.assertForwardableReference(isForwardMessage, referencedMessage);
 				}
-			}
-			this.assertForwardableReference(isForwardMessage, referencedMessage);
-		}
-		const messageReference = this.buildMessageReferencePayload({
-			data,
-			referencedMessage,
-			guild,
-			isForwardMessage,
-			referencedChannelGuildId: channel.guildId,
-		});
-		if (thread && !forumStarter) {
-			await this.deps.threadActivity.beforeWebhookSend(thread);
-		}
-		const messageId = thread && forumStarter ? channelIdToMessageId(thread.id) : await this.generateMessageId(channel);
-		let mentionData: SendMentionData | undefined;
-		const shouldExtractWebhookMentions =
-			channel && !isForwardMessage && (data.content !== undefined || data.message_reference != null);
-		if (shouldExtractWebhookMentions) {
-			const mentionContent = data.content ?? '';
-			const mentions = await this.deps.mentionService.extractMentions({
-				content: mentionContent,
-				referencedMessage: referencedMessage,
-				message: {
-					id: messageId,
+				const messageReference = this.buildMessageReferencePayload({
+					data,
+					referencedMessage,
+					guild,
+					isForwardMessage,
+					referencedChannelGuildId: channel.guildId,
+				});
+				if (thread && !forumStarter) {
+					await this.deps.threadActivity.beforeWebhookSend(thread);
+				}
+				const messageId = await messageIdTask;
+				let mentionData: SendMentionData | undefined;
+				const shouldExtractWebhookMentions =
+					channel && !isForwardMessage && (data.content !== undefined || data.message_reference != null);
+				if (shouldExtractWebhookMentions) {
+					const mentionContent = data.content ?? '';
+					const mentions = await this.deps.mentionService.extractMentions({
+						content: mentionContent,
+						referencedMessage: referencedMessage,
+						message: {
+							id: messageId,
+							channelId,
+							webhookId: webhook.id,
+							content: mentionContent,
+							flags: this.deps.validationService.calculateMessageFlags(data),
+						} as Message,
+						channelType: channel.type,
+						allowedMentions: data.allowed_mentions || null,
+						guild,
+					});
+					const {validUserIds, validRoleIds, validChannelMentions} = await this.deps.mentionService.validateMentions({
+						userMentions: mentions.userMentions,
+						roleMentions: mentions.roleMentions,
+						channelMentions: mentions.channelMentions,
+						channel,
+						message: {authorId: null, webhookId: webhook.id},
+						guild,
+					});
+					mentionData = {
+						flags: mentions.flags,
+						mentionUserIds: validUserIds,
+						mentionRoleIds: validRoleIds,
+						mentionChannelIds: validChannelMentions.map((mentionedChannel) =>
+							createChannelID(BigInt(mentionedChannel.id)),
+						),
+						mentionChannels: validChannelMentions,
+						mentionEveryone: mentions.mentionsEveryone || mentions.mentionsHere,
+						mentionHere: mentions.mentionsHere,
+					};
+				}
+				const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
+					messageId,
 					channelId,
 					webhookId: webhook.id,
-					content: mentionContent,
+					webhookName: username ?? webhook.name!,
+					webhookAvatar: avatar ?? webhook.avatarHash,
+					type: this.getMessageTypeForRequest(data),
+					content: data.content,
 					flags: this.deps.validationService.calculateMessageFlags(data),
-				} as Message,
-				channelType: channel.type,
-				allowedMentions: data.allowed_mentions || null,
-				guild,
-			});
-			const {validUserIds, validRoleIds, validChannelMentions} = await this.deps.mentionService.validateMentions({
-				userMentions: mentions.userMentions,
-				roleMentions: mentions.roleMentions,
-				channelMentions: mentions.channelMentions,
-				channel,
-				message: {authorId: null, webhookId: webhook.id},
-				guild,
-			});
-			mentionData = {
-				flags: mentions.flags,
-				mentionUserIds: validUserIds,
-				mentionRoleIds: validRoleIds,
-				mentionChannelIds: validChannelMentions.map((mentionedChannel) => createChannelID(BigInt(mentionedChannel.id))),
-				mentionChannels: validChannelMentions,
-				mentionEveryone: mentions.mentionsEveryone || mentions.mentionsHere,
-				mentionHere: mentions.mentionsHere,
-			};
-		}
-		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
-			messageId,
-			channelId,
-			webhookId: webhook.id,
-			webhookName: username ?? webhook.name!,
-			webhookAvatar: avatar ?? webhook.avatarHash,
-			type: this.getMessageTypeForRequest(data),
-			content: data.content,
-			flags: this.deps.validationService.calculateMessageFlags(data),
-			embeds: data.embeds,
-			attachments: this.attachmentsToProcess(data.attachments),
-			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
-			uploadChannelId: thread ? (webhook.channelId ?? undefined) : undefined,
-			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
-			messageReference,
-			messageSnapshots,
-			guildId: channel.guildId,
-			channel,
-			guild,
-			referencedMessage,
-			mentionData,
-			allowEmbeds: true,
-			threadInsert: thread != null,
+					embeds: data.embeds,
+					attachments: this.attachmentsToProcess(data.attachments),
+					attachmentUploadUserId: await attachmentUploadUserIdTask,
+					uploadChannelId: thread ? (webhook.channelId ?? undefined) : undefined,
+					stickerIds: data.sticker_ids
+						? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId))
+						: undefined,
+					messageReference,
+					messageSnapshots,
+					guildId: channel.guildId,
+					channel,
+					guild,
+					referencedMessage,
+					mentionData,
+					allowEmbeds: true,
+					threadInsert: thread != null,
+				});
+				await recordNonce(messageId);
+				this.cacheMentionChannels({
+					requestCache,
+					messageId,
+					mentionChannels: mentionData?.mentionChannels,
+				});
+				await this.deps.mentionService.handleMentionTasks({
+					guildId: channel.guildId,
+					message,
+					authorId: webhookActorId,
+					mentionHere: mentionData?.mentionHere ?? false,
+				});
+				await dispatchMessageCreateBroadcast({
+					gatewayService: this.deps.gatewayService,
+					channel,
+					message,
+					nonce: data.nonce,
+					mentionHere: mentionData?.mentionHere ?? false,
+				});
+				void enqueueDeferredEmbeds().catch((error) => {
+					Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
+				});
+				if (thread) enqueueThreadSearchSync(thread.id, {activity: true});
+				if (channel.indexedAt != null) {
+					void this.deps.searchService.indexMessage(message, false);
+				}
+				return message;
+			},
 		});
-		this.cacheMentionChannels({
-			requestCache,
-			messageId,
-			mentionChannels: mentionData?.mentionChannels,
-		});
-		await this.deps.mentionService.handleMentionTasks({
-			guildId: channel.guildId,
-			message,
-			authorId: webhookActorId,
-			mentionHere: mentionData?.mentionHere ?? false,
-		});
-		await dispatchMessageCreateBroadcast({
-			gatewayService: this.deps.gatewayService,
-			channel,
-			message,
-			nonce: data.nonce,
-			mentionHere: mentionData?.mentionHere ?? false,
-		});
-		await this.cacheMessageNonceIfPresent({userId: webhookActorId, nonce: data.nonce, channelId, messageId});
-		void enqueueDeferredEmbeds().catch((error) => {
-			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
-		});
-		if (thread) enqueueThreadSearchSync(thread.id, {activity: true});
-		if (channel.indexedAt != null) {
-			void this.deps.searchService.indexMessage(message, false);
-		}
-		return message;
 	}
 
 	async editWebhookMessage({
@@ -1217,76 +1235,76 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: data.attachments,
 		});
-		const existingMessage = await this.deps.operationsHelpers.findExistingMessage({
+		return this.deps.operationsHelpers.sendOncePerNonce({
 			userId: user.id,
 			nonce: data.nonce,
 			expectedChannelId: channelId,
+			existing: (message) => message,
+			send: async (recordNonce) => {
+				const {referencedMessage, referencedChannelGuildId, messageSnapshots} = await this.resolveReferenceContext({
+					data,
+					channelId,
+					channelIsThread: channel.isThread(),
+					isForwardMessage,
+					user,
+					viewer,
+				});
+				this.ensureForwardGuildMatches({data, referencedChannelGuildId});
+				await this.ensureAttachmentsExist({
+					attachments: data.attachments,
+					user,
+					channelId,
+					guildFeatures: null,
+				});
+				const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
+					user,
+					channelId,
+					data,
+				});
+				const messageId = createMessageID(await this.deps.snowflakeService.generateForChannel(channelId));
+				const messageReference = this.buildMessageReferencePayload({
+					data,
+					referencedMessage,
+					guild: null,
+					isForwardMessage,
+					referencedChannelGuildId,
+				});
+				const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
+					messageId,
+					channelId,
+					user,
+					type: this.getMessageTypeForRequest(data),
+					content: data.content,
+					flags: data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0,
+					embeds: data.embeds,
+					attachments: attachmentsToProcess,
+					attachmentUploadUserId: user.id,
+					processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+					stickerIds: data.sticker_ids
+						? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId))
+						: undefined,
+					messageReference,
+					messageSnapshots,
+					guildId: null,
+					channel,
+				});
+				await recordNonce(messageId);
+				await dispatchMessageCreateBroadcast({
+					gatewayService: this.deps.gatewayService,
+					channel,
+					message,
+					currentUserId: user.id,
+					nonce: data.nonce,
+					tts: data.tts,
+				});
+				void enqueueDeferredEmbeds().catch((error) => {
+					Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
+				});
+				if (channel.indexedAt != null) {
+					void this.deps.searchService.indexMessage(message, user.isBot);
+				}
+				return message;
+			},
 		});
-		if (existingMessage) {
-			return existingMessage;
-		}
-		const {referencedMessage, referencedChannelGuildId, messageSnapshots} = await this.resolveReferenceContext({
-			data,
-			channelId,
-			channelIsThread: channel.isThread(),
-			isForwardMessage,
-			user,
-			viewer,
-		});
-		this.ensureForwardGuildMatches({data, referencedChannelGuildId});
-		await this.ensureAttachmentsExist({
-			attachments: data.attachments,
-			user,
-			channelId,
-			guildFeatures: null,
-		});
-		const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
-			user,
-			channelId,
-			data,
-		});
-		const messageId = createMessageID(await this.deps.snowflakeService.generateForChannel(channelId));
-		const messageReference = this.buildMessageReferencePayload({
-			data,
-			referencedMessage,
-			guild: null,
-			isForwardMessage,
-			referencedChannelGuildId,
-		});
-		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
-			messageId,
-			channelId,
-			user,
-			type: this.getMessageTypeForRequest(data),
-			content: data.content,
-			flags: data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0,
-			embeds: data.embeds,
-			attachments: attachmentsToProcess,
-			attachmentUploadUserId: user.id,
-			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
-			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
-			messageReference,
-			messageSnapshots,
-			guildId: null,
-			channel,
-		});
-		await dispatchMessageCreateBroadcast({
-			gatewayService: this.deps.gatewayService,
-			channel,
-			message,
-			currentUserId: user.id,
-			nonce: data.nonce,
-			tts: data.tts,
-		});
-		void enqueueDeferredEmbeds().catch((error) => {
-			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
-		});
-		if (data.nonce) {
-			await this.deps.validationService.cacheMessageNonce({userId: user.id, nonce: data.nonce, channelId, messageId});
-		}
-		if (channel.indexedAt != null) {
-			void this.deps.searchService.indexMessage(message, user.isBot);
-		}
-		return message;
 	}
 }

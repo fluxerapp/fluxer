@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import {
-	assertAttachmentFileSizesWithinLimit,
-	MESSAGE_NONCE_TTL,
-} from '@app/api/channel/services/message/MessageHelpers';
+import {assertAttachmentFileSizesWithinLimit} from '@app/api/channel/services/message/MessageHelpers';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -33,13 +30,9 @@ import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/Ca
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
-import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export class MessageValidationService {
-	constructor(
-		private cacheService: ICacheService,
-		private limitConfigService: LimitConfigService,
-	) {}
+	constructor(private limitConfigService: LimitConfigService) {}
 
 	validateMessageContent(
 		data: MessageRequest | MessageUpdateRequest,
@@ -183,27 +176,6 @@ export class MessageValidationService {
 		assertAttachmentFileSizesWithinLimit(
 			attachments.map(({size}) => size),
 			maxFileSize,
-		);
-	}
-
-	async cacheMessageNonce({
-		userId,
-		nonce,
-		channelId,
-		messageId,
-	}: {
-		userId: UserID;
-		nonce: string;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<void> {
-		await this.cacheService.set(
-			`message-nonce:${userId}:${nonce}`,
-			{
-				channel_id: channelId.toString(),
-				message_id: messageId.toString(),
-			},
-			MESSAGE_NONCE_TTL,
 		);
 	}
 

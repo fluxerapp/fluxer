@@ -73,7 +73,7 @@ export class MessageService {
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
 	) {
-		this.validation = new MessageValidationService(cacheService, limitConfigService);
+		this.validation = new MessageValidationService(limitConfigService);
 		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
 		this.crosspostPropagation = new CrosspostPropagation({rateLimitService, workerService});
 		this.mention = new MessageMentionService(
