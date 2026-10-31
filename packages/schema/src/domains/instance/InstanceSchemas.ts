@@ -7,6 +7,7 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {
+	BUILT_IN_GUILD_BADGE_KINDS,
 	CUSTOM_BADGE_LOOKUP_IDS_MAX,
 	CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
 	CUSTOM_BADGE_PAGE_LIMIT_MAX,
@@ -463,6 +464,15 @@ export const InstanceBuiltInGuildBadgeImagesSchema = z.object({
 
 export type InstanceBuiltInGuildBadgeImages = z.infer<typeof InstanceBuiltInGuildBadgeImagesSchema>;
 
+export const InstanceHiddenBuiltInGuildBadgesSchema = z
+	.array(z.enum(BUILT_IN_GUILD_BADGE_KINDS))
+	.max(BUILT_IN_GUILD_BADGE_KINDS.length)
+	.describe(
+		'Built-in community badges this instance does not show. The community keeps the feature, such as being listed in discovery',
+	);
+
+export type InstanceHiddenBuiltInGuildBadges = z.infer<typeof InstanceHiddenBuiltInGuildBadgesSchema>;
+
 export const WellKnownFluxerResponse = z.object({
 	codename: z.string().optional().describe('Protocol generation spoken by this instance'),
 	api_code_version: z.number().int().describe('Version of the API server code'),
@@ -499,6 +509,7 @@ export const WellKnownFluxerResponse = z.object({
 	built_in_guild_badge_images: InstanceBuiltInGuildBadgeImagesSchema.optional().describe(
 		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
 	),
+	hidden_built_in_guild_badges: InstanceHiddenBuiltInGuildBadgesSchema.optional(),
 	voice_origins: z
 		.array(z.string())
 		.max(1000)

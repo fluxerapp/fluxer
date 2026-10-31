@@ -14,6 +14,7 @@ import {
 	AccountIdentityModes,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {BUILT_IN_GUILD_BADGE_KINDS} from '@fluxer/constants/src/BadgeConstants';
 import {LIMIT_KEYS, type LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {NO_BUILT_IN_GUILD_BADGE_IMAGES} from '@fluxer/instance_bootstrap/src/ClientRuntimeDiscovery';
 import {
@@ -36,6 +37,7 @@ import {
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGuildBadge,
+	type InstanceHiddenBuiltInGuildBadges,
 	type InstanceNotice,
 	type InstanceRegistration,
 	type InstanceServices,
@@ -81,6 +83,7 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly guildBadgesPartial: boolean;
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
 }
 
 export class InvalidRuntimeConfigSnapshotError extends Error {
@@ -605,6 +608,16 @@ function readBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadgeI
 	return {verified: read('verified'), partnered: read('partnered'), discoverable: read('discoverable')};
 }
 
+function readHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuildBadges {
+	if (value === undefined) {
+		return [];
+	}
+	if (!Array.isArray(value)) {
+		invalid('hiddenBuiltInGuildBadges', 'must be an array');
+	}
+	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
+}
+
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
 	const source = readRecord(value, 'root');
 	return {
@@ -641,5 +654,6 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 				? null
 				: readNonEmptyString(source, 'customBadgesVersion', 'customBadgesVersion'),
 		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
+		hiddenBuiltInGuildBadges: readHiddenBuiltInGuildBadges(source.hiddenBuiltInGuildBadges),
 	};
 }

@@ -35,9 +35,12 @@ The public description of one instance.
 | guild_badges_partial? | boolean | True when the instance has more guild badges than `guild_badges` lists |
 | custom_badges_version? | string | The badge catalog version. It changes whenever a badge is created, edited, deleted or moved |
 | built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
+| hidden_built_in_guild_badges?<sup>2</sup> | array[string] | The built-in guild badges the instance doesn't show: any of `verified`, `partnered` and `discoverable` |
 | voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies (at most 1000) |
 
 <sup>1</sup> An instance can have any number of guild badges. Discovery lists the first 100 in display order, and [List guild badges](#list-guild-badges) serves every one. A client that knows only `guild_badges` can't show a badge past the first 100
+
+<sup>2</sup> Guilds keep the feature behind a hidden badge, so a discoverable guild is still listed in discovery. When a guild has more than one of these badges, clients show the next one that isn't hidden
 
 ## Guild badge object
 

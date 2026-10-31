@@ -274,6 +274,23 @@ impl AdminApiClient {
         self.generated_value(response.into_inner())
     }
 
+    pub async fn set_built_in_badge_hidden(
+        &self,
+        kind: &str,
+        hidden: bool,
+    ) -> ApiResult<AdminCustomBadgeList> {
+        let kind: generated_types::HideableBuiltInBadgeKindSchema =
+            kind.parse().map_err(parse_error)?;
+        let client = self.generated();
+        let response = if hidden {
+            client.hide_admin_built_in_badge(kind).await
+        } else {
+            client.show_admin_built_in_badge(kind).await
+        }
+        .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
     pub async fn update_user_badges(&self, user_id: &str, ids: &[String]) -> ApiResult<AdminUser> {
         let body = generated_types::UpdateUserCustomBadgesRequest {
             badge_ids: badge_ids(ids),

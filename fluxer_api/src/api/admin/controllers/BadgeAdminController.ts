@@ -19,6 +19,7 @@ import {
 	BuiltInBadgeKindParam,
 	CreateCustomBadgeRequest,
 	CustomBadgeIdParam,
+	HideableBuiltInBadgeKindParam,
 	MoveCustomBadgeRequest,
 	ReorderCustomBadgesRequest,
 	ReplaceBuiltInBadgeImageRequest,
@@ -222,6 +223,60 @@ export function BadgeAdminController(app: HonoApp) {
 				targetType: 'badge',
 				targetId: 0n,
 				action: 'reset_built_in_badge_image',
+				metadata: {kind},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.put(
+		'/admin/badges/built-in/:kind/hidden',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		Validator('param', HideableBuiltInBadgeKindParam),
+		OpenAPI({
+			operationId: 'hide_admin_built_in_badge',
+			summary: 'Hide built-in community badge',
+			description:
+				'Stops clients on this instance from showing a built-in community badge. Communities keep the feature behind it, so a discoverable community stays listed in discovery. Creates audit log entry. Requires BADGE_UPDATE permission.',
+			responseSchema: AdminCustomBadgeListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {kind} = ctx.req.valid('param');
+			const response = await ctx.get('adminService').badgeService.setBuiltInBadgeHidden(kind, true);
+			await recordAdminWrite(ctx, {
+				targetType: 'badge',
+				targetId: 0n,
+				action: 'hide_built_in_badge',
+				metadata: {kind},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.delete(
+		'/admin/badges/built-in/:kind/hidden',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		Validator('param', HideableBuiltInBadgeKindParam),
+		OpenAPI({
+			operationId: 'show_admin_built_in_badge',
+			summary: 'Show built-in community badge',
+			description:
+				'Shows a hidden built-in community badge again. Creates audit log entry. Requires BADGE_UPDATE permission.',
+			responseSchema: AdminCustomBadgeListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {kind} = ctx.req.valid('param');
+			const response = await ctx.get('adminService').badgeService.setBuiltInBadgeHidden(kind, false);
+			await recordAdminWrite(ctx, {
+				targetType: 'badge',
+				targetId: 0n,
+				action: 'show_built_in_badge',
 				metadata: {kind},
 			});
 			return ctx.json(response);

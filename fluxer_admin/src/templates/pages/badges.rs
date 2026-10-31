@@ -343,16 +343,20 @@ fn built_in_section(
     permissions: &BadgePermissions,
     csrf_token: &str,
 ) -> Markup {
-    let title = match badge_type {
-        CustomBadgeType::User => "Built-in user badges",
-        CustomBadgeType::Guild => "Built-in guild badges",
+    let (title, intro) = match badge_type {
+        CustomBadgeType::User => (
+            "Built-in user badges",
+            "Upload an image to show it everywhere this badge appears. The badge keeps its name and meaning.",
+        ),
+        CustomBadgeType::Guild => (
+            "Built-in guild badges",
+            "Upload an image to show it everywhere this badge appears. The badge keeps its name and meaning. Hiding a badge only removes it from view, so a discoverable guild stays listed in discovery.",
+        ),
     };
     card_with_header(
         title,
         html! {
-            p class="mb-4 text-sm text-neutral-600" {
-                "Upload an image to show it everywhere this badge appears. The badge keeps its name and meaning."
-            }
+            p class="mb-4 text-sm text-neutral-600" { (intro) }
             div class="divide-y divide-neutral-100" {
                 @for badge in list.built_in_of_type(badge_type) {
                     (built_in_row(config, badge, state, permissions, csrf_token))
@@ -378,7 +382,13 @@ fn built_in_row(
                 div class="flex min-w-0 flex-col gap-1" {
                     span class="font-medium text-neutral-900" { (badge.label()) }
                     span class="text-sm text-neutral-600" {
-                        (if badge.asset_url.is_some() { "Shows your image" } else { "Shows the built-in image" })
+                        @if badge.hidden {
+                            "Hidden"
+                        } @else if badge.asset_url.is_some() {
+                            "Shows your image"
+                        } @else {
+                            "Shows the built-in image"
+                        }
                     }
                 }
             }
@@ -400,6 +410,15 @@ fn built_in_row(
                             (csrf_input(csrf_token))
                             button type="submit" class=(BADGE_ACTION_BUTTON_CLASS) {
                                 "Use the built-in image" span class="sr-only" { ", " (badge.label()) }
+                            }
+                        }
+                    }
+                    @if badge.badge_type() == CustomBadgeType::Guild {
+                        form method="post" action={(base) "/badges/built-in/" (badge.kind) (if badge.hidden { "/show" } else { "/hide" }) (state.current_query())} {
+                            (csrf_input(csrf_token))
+                            button type="submit" class=(BADGE_ACTION_BUTTON_CLASS) {
+                                (if badge.hidden { "Show badge" } else { "Hide badge" })
+                                span class="sr-only" { ", " (badge.label()) }
                             }
                         }
                     }

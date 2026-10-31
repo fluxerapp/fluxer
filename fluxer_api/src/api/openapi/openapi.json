@@ -38063,6 +38063,7 @@
 						"description": "Images this instance shows in place of the built-in verified, partnered and discoverable community badges",
 						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
 					},
+					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
 					"voice_origins": {
 						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies",
 						"maxItems": 1000,
@@ -38085,6 +38086,12 @@
 					"app_public"
 				],
 				"additionalProperties": false
+			},
+			"InstanceHiddenBuiltInGuildBadgesSchema": {
+				"maxItems": 3,
+				"type": "array",
+				"items": {"type": "string", "enum": ["verified", "partnered", "discoverable"]},
+				"description": "Built-in community badges this instance does not show. The community keeps the feature, such as being listed in discovery"
 			},
 			"InstanceBuiltInGuildBadgeImagesSchema": {
 				"type": "object",

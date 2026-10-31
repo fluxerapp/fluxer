@@ -103,6 +103,8 @@ import {
 	CustomBadgeTypes,
 	DEFAULT_CUSTOM_BADGES_PER_GUILD,
 	DEFAULT_CUSTOM_BADGES_PER_USER,
+	HIDEABLE_BUILT_IN_BADGE_KINDS,
+	type HideableBuiltInBadgeKind,
 } from '@fluxer/constants/src/BadgeConstants';
 import {resolveSmtpTlsMode, type SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
@@ -940,6 +942,7 @@ const StoredBuiltInBadgeImagesSchema = z
 const StoredCustomBadgesSchema = z.object({
 	badges: z.array(z.unknown()).default([]),
 	built_in: StoredBuiltInBadgeImagesSchema,
+	hidden_built_in: z.array(z.enum(HIDEABLE_BUILT_IN_BADGE_KINDS)).default([]),
 });
 
 const StoredLegacyCustomBadgesSchema = StoredCustomBadgesSchema.extend({
@@ -2223,6 +2226,24 @@ export class InstanceConfigRepository {
 			);
 		});
 		return config.built_in;
+	}
+
+	async getHiddenBuiltInBadges(): Promise<ReadonlySet<HideableBuiltInBadgeKind>> {
+		return new Set((await this.getStoredCustomBadges()).hidden_built_in);
+	}
+
+	async setBuiltInBadgeHidden(kind: HideableBuiltInBadgeKind, hidden: boolean): Promise<void> {
+		await this.updateStoredConfig(CUSTOM_BADGES_CONFIG_KEY, (raw) => {
+			const current = parseStoredConfig(StoredCustomBadgesSchema, raw, 'custom badges');
+			const next = new Set(current.hidden_built_in);
+			if (hidden) next.add(kind);
+			else next.delete(kind);
+			return validateStoredConfig(
+				StoredCustomBadgesSchema,
+				{...current, hidden_built_in: HIDEABLE_BUILT_IN_BADGE_KINDS.filter((item) => next.has(item))},
+				'custom badges',
+			);
+		});
 	}
 
 	async readLegacyCustomBadges(): Promise<ReadonlyArray<LegacyCustomBadge>> {

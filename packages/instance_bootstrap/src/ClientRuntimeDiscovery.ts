@@ -14,6 +14,7 @@ import type {
 	InstanceFeatures,
 	InstanceGif,
 	InstanceGuildBadge,
+	InstanceHiddenBuiltInGuildBadges,
 	InstanceNotice,
 	InstancePush,
 	InstanceRegistration,
@@ -66,6 +67,7 @@ export interface ClientRuntimeDiscovery {
 	readonly guildBadgesPartial: boolean;
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
 }
 
 export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocument): ClientRuntimeDiscovery {
@@ -89,6 +91,7 @@ export function projectClientRuntimeDiscovery(document: InstanceDiscoveryDocumen
 		guildBadgesPartial: document.guildBadgesPartial ?? false,
 		customBadgesVersion: document.customBadgesVersion ?? null,
 		builtInGuildBadgeImages: document.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES,
+		hiddenBuiltInGuildBadges: document.hiddenBuiltInGuildBadges ?? [],
 	};
 }
 

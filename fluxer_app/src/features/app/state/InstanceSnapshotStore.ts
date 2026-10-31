@@ -124,6 +124,7 @@ export function runtimeSnapshotFromDiscovery(document: InstanceDiscoveryDocument
 		guildBadgesPartial: discovery.guildBadgesPartial,
 		customBadgesVersion: discovery.customBadgesVersion,
 		builtInGuildBadgeImages: discovery.builtInGuildBadgeImages,
+		hiddenBuiltInGuildBadges: discovery.hiddenBuiltInGuildBadges,
 	});
 }
 

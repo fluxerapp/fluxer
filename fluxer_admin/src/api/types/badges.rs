@@ -62,6 +62,8 @@ pub struct BuiltInBadgeImage {
     pub asset_url: Option<String>,
     #[serde(default)]
     pub built_in_asset: Option<String>,
+    #[serde(default)]
+    pub hidden: bool,
 }
 
 impl BuiltInBadgeImage {

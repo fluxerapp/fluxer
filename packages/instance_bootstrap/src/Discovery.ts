@@ -12,6 +12,7 @@ import {
 	AccountIdentityModes,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {BUILT_IN_GUILD_BADGE_KINDS} from '@fluxer/constants/src/BadgeConstants';
 import {Headers as HttpHeader} from '@fluxer/constants/src/Headers';
 import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -30,6 +31,7 @@ import {
 	type InstanceFeatures,
 	type InstanceGif,
 	type InstanceGuildBadge,
+	type InstanceHiddenBuiltInGuildBadges,
 	type InstanceLegal,
 	type InstanceNotice,
 	type InstancePush,
@@ -149,6 +151,7 @@ export interface InstanceDiscoveryDocument {
 	readonly guildBadgesPartial?: boolean;
 	readonly customBadgesVersion?: string | null;
 	readonly builtInGuildBadgeImages?: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges?: InstanceHiddenBuiltInGuildBadges;
 }
 
 interface InstanceDiscoveryAttempt {
@@ -315,6 +318,7 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		guildBadgesPartial: source.guild_badges_partial === true,
 		customBadgesVersion: readNonEmptyString(source, 'custom_badges_version'),
 		builtInGuildBadgeImages: parseBuiltInGuildBadgeImages(source.built_in_guild_badge_images),
+		hiddenBuiltInGuildBadges: parseHiddenBuiltInGuildBadges(source.hidden_built_in_guild_badges),
 	};
 }
 
@@ -711,6 +715,13 @@ function parseBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadge
 		partnered: readNonEmptyString(source, 'partnered'),
 		discoverable: readNonEmptyString(source, 'discoverable'),
 	};
+}
+
+function parseHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuildBadges {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
 }
 
 function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
