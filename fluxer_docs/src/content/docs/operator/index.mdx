@@ -47,11 +47,7 @@ Once you've created the admin account, people can open your instance's address i
 
 ## Without a public IP address
 
-Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel such as Cloudflare Tunnel. Install with `--behind-proxy` and point the tunnel at `http://127.0.0.1:8080`. In this mode rexctl only checks that your domain resolves to some address.
-
-```sh
-curl -fsSL https://fluxer.dev/install.sh | sh -s -- install --behind-proxy --bind 127.0.0.1:8080
-```
+Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel such as Cloudflare Tunnel. Start the install with the [`--behind-proxy` command](#install) and point the tunnel at `http://127.0.0.1:8080`. In this mode rexctl only checks that your domain resolves to some address.
 
 Calls don't go through a tunnel, and they need a TURN server on a machine with a public address, as [Voice behind a tunnel](/operator/reverse-proxy/#voice-behind-a-tunnel) explains.
 
