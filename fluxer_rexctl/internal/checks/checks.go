@@ -107,6 +107,7 @@ var order = []string{
 	"certificate",
 	"discovery",
 	"app-proxy-discovery",
+	"media-proxy-spool",
 	"postgres-password",
 	"postgres-scram",
 	"livekit-ip",
