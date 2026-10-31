@@ -596,6 +596,8 @@ Checks the emailed code and signs in to the existing account, or creates the acc
 | consent?<sup>1</sup> | boolean | Whether the person accepted the terms of service, for a sign-up |
 | registration_url_code? | ?string | A registration URL code from an admin, for a sign-up (1-128 characters) |
 | invite_code? | ?string | An invite to open after sign-up (0-256 characters) |
+| username? | string | The username for a new account (1-32 characters, letters, digits and underscores). Ignored when signing in |
+| global_name? | string | The display name for a new account (1-32 characters). Ignored when signing in |
 
 <sup>1</sup> Needed when `consent_required` is true in the [identify registration](#identify-registration-object) object
 
