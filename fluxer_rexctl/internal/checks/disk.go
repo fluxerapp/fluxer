@@ -26,34 +26,49 @@ func init() {
 }
 
 func runDisk(ctx context.Context, e *Env) Result {
-	free, ok := e.freeDisk()
+	free, path, ok := e.freeDisk()
 	if !ok {
 		return skip("Couldn't read how much free disk space this machine has.")
 	}
 	if !e.installed() {
 		if free < diskNeededInstall {
-			return fail(fmt.Sprintf("This machine has %s of free disk space and Fluxer needs at least 20 GB.", freeGB(free)),
-				"Free up space on this machine, then run rexctl doctor.")
+			return fail(fmt.Sprintf("%s has %s of free disk space and Fluxer needs at least 20 GB there.", e.diskRole(path), freeGB(free)),
+				e.installDiskFix(path))
 		}
-		return pass(fmt.Sprintf("This machine has %s of free disk space.", freeGB(free)))
+		return pass(fmt.Sprintf("%s has %s of free disk space.", e.diskRole(path), freeGB(free)))
 	}
 	switch {
 	case free < diskCritical:
-		return fail(fmt.Sprintf("This machine has only %s of free disk space left.", freeGB(free)),
-			"Free up space on this machine, then run rexctl doctor.")
+		return fail(fmt.Sprintf("%s has only %s of free disk space left.", e.diskRole(path), freeGB(free)),
+			fmt.Sprintf("Free up space on the disk that holds %s, then run rexctl doctor.", path))
 	case free < diskLow:
-		return warn(fmt.Sprintf("This machine has %s of free disk space left and an upgrade needs about 10 GB.", freeGB(free)),
-			"Free up space on this machine before you upgrade.")
+		return warn(fmt.Sprintf("%s has %s of free disk space left and an upgrade needs about 10 GB.", e.diskRole(path), freeGB(free)),
+			fmt.Sprintf("Free up space on the disk that holds %s before you upgrade.", path))
 	}
-	return pass(fmt.Sprintf("This machine has %s of free disk space.", freeGB(free)))
+	return pass(fmt.Sprintf("%s has %s of free disk space.", e.diskRole(path), freeGB(free)))
 }
 
-func (e *Env) freeDisk() (uint64, bool) {
+func (e *Env) diskRole(path string) string {
+	if path != e.Dir {
+		return fmt.Sprintf("%s, where the container engine keeps Fluxer's images and data,", path)
+	}
+	return fmt.Sprintf("%s, the instance folder,", path)
+}
+
+func (e *Env) installDiskFix(path string) string {
+	if path != e.Dir {
+		return fmt.Sprintf("Free up space on the disk that holds %s, or move the container engine's data root to a bigger disk, then run rexctl doctor.", path)
+	}
+	return fmt.Sprintf("Free up space on the disk that holds %s, or pass --dir with a folder on a bigger disk.", path)
+}
+
+func (e *Env) freeDisk() (uint64, string, bool) {
 	paths := []string{e.Dir}
 	if store := e.imageStore(); store != e.Dir {
 		paths = append(paths, store)
 	}
 	var lowest uint64
+	var lowestPath string
 	found := false
 	for _, p := range paths {
 		free, err := host.FreeDisk(p)
@@ -61,10 +76,10 @@ func (e *Env) freeDisk() (uint64, bool) {
 			continue
 		}
 		if !found || free < lowest {
-			lowest, found = free, true
+			lowest, lowestPath, found = free, p, true
 		}
 	}
-	return lowest, found
+	return lowest, lowestPath, found
 }
 
 func (e *Env) imageStore() string {
