@@ -185,7 +185,9 @@ export const AdminUserBanRequest = z.object({
 	remove_evidence: z
 		.boolean()
 		.optional()
-		.describe('Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept'),
+		.describe(
+			'Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept',
+		),
 	block_networks: NetworkBlockRequest.optional(),
 });
 
