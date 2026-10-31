@@ -1636,7 +1636,7 @@ type AdminUserBanRequest struct {
 	// DurationHours Duration of the suspension in hours. Use 0 for a permanent suspension
 	DurationHours int `json:"duration_hours"`
 
-	// RemoveEvidence Remove the evidence messages after they are snapshotted into the decision
+	// RemoveEvidence Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept
 	RemoveEvidence *bool `json:"remove_evidence,omitempty"`
 }
 
@@ -1670,7 +1670,7 @@ type AdminUserDeletionScheduleRequest struct {
 	// Immediate Self-hosted instances only. Delete the account now instead of after days_until_deletion, with no notice email. This cannot be undone
 	Immediate *bool `json:"immediate,omitempty"`
 
-	// RemoveEvidence Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only
+	// RemoveEvidence Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept. Enforcement basis only
 	RemoveEvidence *bool `json:"remove_evidence,omitempty"`
 
 	// ReplacePendingDeletionAt pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account
