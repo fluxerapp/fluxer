@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Невалидна стойност за изчакването.",
 	"admin_and_system.invalid_timestamp": "Невалиден времеви печат.",
 	"admin_and_system.invalid_timezone_identifier": "Невалиден идентификатор на часовата зона.",
+	"admin_and_system.message_shred_preview_changed": "Тези съобщения са се променили след прегледа. Прегледайте ги отново.",
 	"admin_and_system.missing_acl": "Липсва ACL.",
 	"admin_and_system.moderation_basis_required": "Посочи основание за изтриването на съобщенията.",
 	"admin_and_system.must_be_iso_timestamp": "Трябва да е валиден ISO времеви печат.",

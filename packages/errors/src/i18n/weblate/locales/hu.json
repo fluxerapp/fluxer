@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Érvénytelen időtúllépési idő.",
 	"admin_and_system.invalid_timestamp": "Érvénytelen időbélyeg.",
 	"admin_and_system.invalid_timezone_identifier": "Érvénytelen időzóna-azonosító.",
+	"admin_and_system.message_shred_preview_changed": "Ezek az üzenetek az előnézet után megváltoztak. Kérj új előnézetet.",
 	"admin_and_system.missing_acl": "Hiányzó ACL.",
 	"admin_and_system.moderation_basis_required": "Add meg az üzenetek törlésének alapját.",
 	"admin_and_system.must_be_iso_timestamp": "Érvényes ISO-időbélyegnek kell lennie.",

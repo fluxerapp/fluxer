@@ -8,7 +8,8 @@ use crate::{
         client::{ApiError, ApiResult},
         generated::types::{
             EnforcementDecisionListResponse, EnforcementDecisionListResponseDecisionsItem,
-            EnforcementKindType, NetworkBlockCandidatesResponse,
+            EnforcementKindType, MessageShredPreviewResponse,
+            MessageShredPreviewResponseSkippedItemReason, NetworkBlockCandidatesResponse,
         },
         types::{AdminUser, AuditLogEntry, MessageShredStatusResponse},
     },
@@ -671,13 +672,15 @@ fn message_shred_card(
         (card_with_header("Message shredder", html! {
             div class="space-y-4" {
                 p class="text-sm text-neutral-600" {
-                    "Upload a CSV file with one channel_id,message_id pair per row. When a rule was broken, the first 50 messages are saved as evidence before they are removed, and every message for child safety and violent extremism reasons."
+                    "Upload a CSV file with one channel_id,message_id pair per row. You see exactly which messages will be deleted before anything is deleted. When a rule was broken, the first 50 messages are saved as evidence before they are removed, and every message for child safety and violent extremism reasons."
                 }
                 form method="post"
                     action={(base) "/users/" (user.id) "?action=message_shred&tab=moderation"}
+                    data-preview-action={(base) "/users/" (user.id) "?action=preview_message_shred&tab=moderation"}
                     id="message-shred-form" {
                     (csrf_input(csrf_token))
                     input type="hidden" name="csv_data" id="message-shred-csv-data";
+                    input type="hidden" name="preview_token" id="message-shred-preview-token";
                     div class="space-y-4" {
                         div class="space-y-2" {
                             (field_label("message-shred-file", "CSV file"))
@@ -693,11 +696,12 @@ fn message_shred_card(
                                 }
                             }
                         }
+                        div id=(MESSAGE_SHRED_PREVIEW_ID) {}
                         (basis_fields(&content_basis_fields("shred", user, prefill, true)))
                         button type="submit"
                             id="message-shred-submit"
                             class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-base font-medium text-white transition-all duration-150 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50" {
-                            span { "Shred messages" }
+                            span { "Preview messages" }
                         }
                     }
                 }
@@ -705,6 +709,87 @@ fn message_shred_card(
                 (message_shred_form_script())
             }
         }))
+    }
+}
+
+pub const MESSAGE_SHRED_PREVIEW_ID: &str = "message-shred-preview";
+const MESSAGE_SHRED_PREVIEW_ROWS: usize = 200;
+
+pub fn message_shred_preview(preview: &MessageShredPreviewResponse) -> Markup {
+    let count = u64::try_from(*preview.message_count).unwrap_or_default();
+    let requested = u64::try_from(*preview.requested).unwrap_or_default();
+    let hidden = preview
+        .messages
+        .len()
+        .saturating_sub(MESSAGE_SHRED_PREVIEW_ROWS);
+    html! {
+        div class="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4"
+            data-preview-token=(preview.preview_token)
+            data-message-count=(count) {
+            p class="text-sm font-medium text-neutral-900" {
+                @if count == 0 {
+                    "None of the " (count_noun(requested, "entry", "entries")) " match a message this user sent. Nothing would be deleted."
+                } @else {
+                    (count_noun(count, "message", "messages")) " will be deleted. Nothing has been deleted yet."
+                }
+            }
+            @if !preview.messages.is_empty() {
+                div class="max-h-96 overflow-auto rounded border border-neutral-200 bg-white" {
+                    table class="w-full text-left text-xs" {
+                        thead class="bg-neutral-100 text-neutral-600" {
+                            tr {
+                                th class="px-2 py-1" { "Sent" }
+                                th class="px-2 py-1" { "Channel" }
+                                th class="px-2 py-1" { "Message" }
+                                th class="px-2 py-1" { "Content" }
+                            }
+                        }
+                        tbody {
+                            @for message in preview.messages.iter().take(MESSAGE_SHRED_PREVIEW_ROWS) {
+                                tr class="border-t border-neutral-100 align-top" {
+                                    td class="whitespace-nowrap px-2 py-1" { (format_admin_timestamp(&message.timestamp)) }
+                                    td class="px-2 py-1 font-mono" { (message.channel_id.as_str()) }
+                                    td class="px-2 py-1 font-mono" { (message.message_id.as_str()) }
+                                    td class="px-2 py-1 break-words" {
+                                        (message.content)
+                                        @let attachments = u64::try_from(*message.attachment_count).unwrap_or_default();
+                                        @if attachments > 0 {
+                                            span class="text-neutral-500" { " (" (count_noun(attachments, "attachment", "attachments")) ")" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                @if hidden > 0 {
+                    p class="text-xs text-neutral-500" { "And " (count_noun(hidden as u64, "more message", "more messages")) "." }
+                }
+            }
+            @if !preview.skipped.is_empty() {
+                details class="text-sm text-neutral-700" {
+                    summary class="cursor-pointer" {
+                        (count_noun(preview.skipped.len() as u64, "entry", "entries")) " will be left alone"
+                    }
+                    ul class="mt-2 space-y-1 text-xs" {
+                        @for entry in &preview.skipped {
+                            li class="font-mono" {
+                                (entry.channel_id.as_str()) "," (entry.message_id.as_str()) " "
+                                span class="font-sans text-neutral-500" { (skipped_reason_label(&entry.reason)) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn skipped_reason_label(reason: &MessageShredPreviewResponseSkippedItemReason) -> &'static str {
+    match reason {
+        MessageShredPreviewResponseSkippedItemReason::NotFound => "not found in that channel",
+        MessageShredPreviewResponseSkippedItemReason::OtherAuthor => "sent by someone else",
+        MessageShredPreviewResponseSkippedItemReason::Duplicate => "listed twice",
     }
 }
 
@@ -851,9 +936,11 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 	if (!form) return;
 	var file = document.getElementById('message-shred-file');
 	var csvInput = document.getElementById('message-shred-csv-data');
+	var tokenInput = document.getElementById('message-shred-preview-token');
+	var preview = document.getElementById('message-shred-preview');
 	var submitButton = document.getElementById('message-shred-submit');
 	var fileName = document.getElementById('message-shred-file-name');
-	if (!file || !csvInput || !submitButton) return;
+	if (!file || !csvInput || !tokenInput || !preview || !submitButton) return;
 	var processing = false;
 	function toast(level, message) {
 		document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
@@ -875,10 +962,16 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 		var input = form.querySelector('input[name="_csrf"]');
 		return input ? input.value || '' : '';
 	}
-	function resetSubmit(label) {
+	function setButton(label) {
 		processing = false;
 		submitButton.disabled = false;
-		submitButton.querySelector('span').textContent = label || 'Shred messages';
+		submitButton.querySelector('span').textContent = label;
+	}
+	function clearPreview() {
+		tokenInput.value = '';
+		csvInput.value = '';
+		preview.innerHTML = '';
+		setButton('Preview messages');
 	}
 	file.addEventListener('change', function () {
 		if (fileName) {
@@ -886,55 +979,71 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 				? file.files[0].name
 				: 'No file chosen';
 		}
+		clearPreview();
 	});
 	form.addEventListener('submit', function (event) {
 		if (processing) {
 			event.preventDefault();
 			return;
 		}
-		var selected = file.files && file.files[0];
-		if (!selected) {
-			event.preventDefault();
-			toast('error', 'Please select a CSV file to continue.');
+		if (tokenInput.value && csvInput.value) {
+			processing = true;
+			submitButton.disabled = true;
+			submitButton.querySelector('span').textContent = 'Deleting...';
 			return;
 		}
 		event.preventDefault();
+		var selected = file.files && file.files[0];
+		if (!selected) {
+			toast('error', 'Please select a CSV file to continue.');
+			return;
+		}
 		processing = true;
 		submitButton.disabled = true;
-		submitButton.querySelector('span').textContent = 'Processing...';
+		submitButton.querySelector('span').textContent = 'Checking...';
 		var reader = new FileReader();
 		reader.onload = function () {
 			csvInput.value = reader.result || '';
-			toast('info', 'Queueing message shred...');
-			fetch(form.getAttribute('action') || window.location.href, {
+			var body = new URLSearchParams();
+			body.set('_csrf', csrfToken());
+			body.set('csv_data', csvInput.value);
+			fetch(form.getAttribute('data-preview-action'), {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 					'HX-Request': 'true',
-					'HX-Target': 'flash-container',
+					'HX-Target': 'message-shred-preview',
 					'X-CSRF-Token': csrfToken()
 				},
-				body: new URLSearchParams(new FormData(form)).toString()
+				body: body.toString()
 			}).then(function (response) {
 				var parsed = toastFromResponse(response);
-				if (!response.ok && !parsed) throw new Error('Failed to queue message shred.');
-				toast(
-					parsed ? parsed.level : response.ok ? 'success' : 'error',
-					parsed ? parsed.message : response.ok ? 'Message shred queued.' : 'Failed to queue message shred.'
-				);
-				resetSubmit();
-				if (response.ok) {
-					file.value = '';
-					if (fileName) fileName.textContent = 'No file chosen';
+				if (parsed) {
+					toast(parsed.level, parsed.message);
+					clearPreview();
+					return;
 				}
+				if (!response.ok) throw new Error('Failed to preview the messages.');
+				return response.text().then(function (html) {
+					preview.innerHTML = html;
+					var result = preview.firstElementChild;
+					var count = result ? Number(result.getAttribute('data-message-count')) || 0 : 0;
+					if (count > 0) {
+						tokenInput.value = result.getAttribute('data-preview-token') || '';
+						setButton(count === 1 ? 'Delete 1 message' : 'Delete ' + count + ' messages');
+					} else {
+						tokenInput.value = '';
+						setButton('Preview messages');
+					}
+				});
 			}).catch(function (error) {
-				toast('error', error && error.message ? error.message : 'Failed to queue message shred.');
-				resetSubmit();
+				toast('error', error && error.message ? error.message : 'Failed to preview the messages.');
+				clearPreview();
 			});
 		};
 		reader.onerror = function () {
-			resetSubmit();
+			clearPreview();
 			toast('error', 'Failed to read the CSV file. Please try again.');
 		};
 		reader.readAsText(selected);

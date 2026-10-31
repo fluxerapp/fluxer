@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "타임아웃 값이 유효하지 않아요.",
 	"admin_and_system.invalid_timestamp": "타임스탬프가 유효하지 않아요.",
 	"admin_and_system.invalid_timezone_identifier": "시간대 식별자가 유효하지 않아요.",
+	"admin_and_system.message_shred_preview_changed": "미리보기 이후 이 메시지들이 변경되었습니다. 다시 미리보기하세요.",
 	"admin_and_system.missing_acl": "ACL이 누락되었어요.",
 	"admin_and_system.moderation_basis_required": "메시지를 삭제할 근거를 입력해 주세요.",
 	"admin_and_system.must_be_iso_timestamp": "유효한 ISO 타임스탬프여야 해요.",

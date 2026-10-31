@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Nieprawidłowa wartość limitu czasu.",
 	"admin_and_system.invalid_timestamp": "Nieprawidłowy znacznik czasu.",
 	"admin_and_system.invalid_timezone_identifier": "Nieprawidłowy identyfikator strefy czasowej.",
+	"admin_and_system.message_shred_preview_changed": "Te wiadomości zmieniły się po podglądzie. Wyświetl podgląd ponownie.",
 	"admin_and_system.missing_acl": "Brak ACL-a.",
 	"admin_and_system.moderation_basis_required": "Podaj podstawę usunięcia wiadomości.",
 	"admin_and_system.must_be_iso_timestamp": "Wymagany prawidłowy znacznik czasu ISO.",

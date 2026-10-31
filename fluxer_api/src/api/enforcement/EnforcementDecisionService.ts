@@ -872,13 +872,15 @@ export class EnforcementDecisionService {
 		const reports = await this.loadReports(reportIds, subject);
 		const removed = removal?.type === 'messages' ? removal.entries : [];
 		const snapshotted = reason.handling === 'restricted' ? removed.length : EVIDENCE_LIMIT;
-		const evidence = await collectEvidence({
+		const collected = await collectEvidence({
 			subject: evidenceSubject(subject),
 			messages: removed.length > 0 ? removed.slice(0, snapshotted) : explicitEvidence,
 			path: removed.length > 0 ? 'entries' : 'decision.evidence',
 			reports,
 			channelRepository: this.deps.channelRepository,
 		});
+		const removedIds = new Set(removed.map((entry) => entry.message_id));
+		const evidence = removed.length > 0 ? collected.filter((message) => removedIds.has(message.message_id)) : collected;
 		if (removeEvidence && evidence.length === 0) {
 			throw InputValidationError.fromCode('remove_evidence', ValidationErrorCodes.ENFORCEMENT_EVIDENCE_REQUIRED);
 		}

@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Ongeldige time-outwaarde.",
 	"admin_and_system.invalid_timestamp": "Ongeldige tijdstempel.",
 	"admin_and_system.invalid_timezone_identifier": "Ongeldige tijdzone-ID.",
+	"admin_and_system.message_shred_preview_changed": "Deze berichten zijn gewijzigd na de voorvertoning. Bekijk ze opnieuw.",
 	"admin_and_system.missing_acl": "Een ACL ontbreekt.",
 	"admin_and_system.moderation_basis_required": "Geef een grondslag op om de berichten te verwijderen.",
 	"admin_and_system.must_be_iso_timestamp": "Moet een geldige ISO-tijdstempel zijn.",

@@ -582,6 +582,7 @@ These are the values of `code` inside `errors`.
 | `MESSAGE_HISTORY_CUTOFF_BEFORE_GUILD_CREATION` | Message history cutoff can't be before the community was created |
 | `MESSAGE_HISTORY_CUTOFF_IN_FUTURE` | Message history cutoff can't be in the future |
 | `MESSAGE_IDS_CANNOT_BE_EMPTY` | `message_ids` can't be empty |
+| `MESSAGE_SHRED_PREVIEW_CHANGED` | These messages changed after the preview. Preview them again |
 | `MODERATION_BASIS_REQUIRED` | Give a basis to delete the messages |
 | `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED` | Multiple files for index {index} aren't allowed |
 | `MUST_AGREE_TO_TOS_AND_PRIVACY_POLICY` | You need to accept the terms of service to create an account |

@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "قيمة المهلة غير صالحة.",
 	"admin_and_system.invalid_timestamp": "الطابع الزمني غير صالح.",
 	"admin_and_system.invalid_timezone_identifier": "معرف المنطقة الزمنية غير صالح.",
+	"admin_and_system.message_shred_preview_changed": "تغيّرت هذه الرسائل بعد المعاينة. اعرضها مرة أخرى.",
 	"admin_and_system.missing_acl": "قائمة التحكم بالوصول مفقودة.",
 	"admin_and_system.moderation_basis_required": "حدّد أساسًا لحذف الرسائل.",
 	"admin_and_system.must_be_iso_timestamp": "يجب أن يكون طابعًا زمنيًا ISO صالحًا.",

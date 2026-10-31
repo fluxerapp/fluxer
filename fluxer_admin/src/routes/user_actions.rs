@@ -8,7 +8,10 @@ use crate::{
         enforcement::ClosureRequest,
         generated::{
             snowflake,
-            types::{AdminUserFeatureLimitRequestLimit, AdminUserMessageShredRequestEntriesItem},
+            types::{
+                AdminUserFeatureLimitRequestLimit, AdminUserMessageShredRequestEntriesItem,
+                AdminUserMessageShredRequestPreviewToken,
+            },
         },
     },
     middleware::flash::FlashData,
@@ -474,19 +477,34 @@ pub async fn dispatch(
             "Failed to cancel bulk message deletion",
         ),
         "message_shred" => {
-            let entries = match parse_message_shred_csv(form.first("csv_data").unwrap_or_default())
-            {
-                Ok(entries) if entries.is_empty() => {
-                    return DispatchOutcome::error("The CSV has no channel_id,message_id rows.");
-                }
+            let entries = match message_shred_entries(form.first("csv_data").unwrap_or_default()) {
                 Ok(entries) => entries,
                 Err(error) => return DispatchOutcome::error(error),
+            };
+            let Some(preview_token) = form.clean("preview_token").and_then(|token| {
+                token
+                    .parse::<AdminUserMessageShredRequestPreviewToken>()
+                    .ok()
+            }) else {
+                return DispatchOutcome::error("Preview the messages before you delete them.");
             };
             let basis = match basis_from_form(form) {
                 Ok(basis) => basis,
                 Err(message) => return DispatchOutcome::error(message),
             };
-            match client.queue_message_shred(user_id, entries, &basis).await {
+            let entries = entries
+                .into_iter()
+                .map(
+                    |(channel_id, message_id)| AdminUserMessageShredRequestEntriesItem {
+                        channel_id: snowflake(&channel_id),
+                        message_id: snowflake(&message_id),
+                    },
+                )
+                .collect();
+            match client
+                .queue_message_shred(user_id, entries, &basis, preview_token)
+                .await
+            {
                 Ok(response) => DispatchOutcome {
                     flash: FlashData::success(removal_message(
                         "Message shred queued",
@@ -660,33 +678,58 @@ fn parse_dry_run(value: Option<&str>) -> bool {
     !matches!(value.map(|value| value.trim().to_ascii_lowercase()), Some(value) if value == "false" || value == "0")
 }
 
-fn parse_message_shred_csv(
-    csv: &str,
-) -> Result<Vec<AdminUserMessageShredRequestEntriesItem>, String> {
+pub(super) fn message_shred_entries(csv: &str) -> Result<Vec<(String, String)>, String> {
+    let entries = parse_message_shred_csv(csv)?;
+    if entries.is_empty() {
+        return Err("The CSV has no channel_id,message_id rows.".to_owned());
+    }
+    Ok(entries)
+}
+
+fn parse_message_shred_csv(csv: &str) -> Result<Vec<(String, String)>, String> {
     let mut entries = Vec::new();
-    for line in csv.trim().lines() {
+    for line in csv.trim_start_matches('\u{feff}').lines() {
         let trimmed = line.trim();
-        if trimmed.is_empty() || trimmed.eq_ignore_ascii_case("channel_id,message_id") {
+        if trimmed.is_empty() {
             continue;
         }
-        let parts: Vec<&str> = trimmed.split(',').collect();
+        let parts: Vec<&str> = trimmed.split(',').map(unquote).collect();
         if parts.len() != 2 {
             return Err(
                 "Each row must contain channel_id and message_id separated by a comma".to_owned(),
             );
         }
-        entries.push(AdminUserMessageShredRequestEntriesItem {
-            channel_id: snowflake(&parse_csv_snowflake(parts[0], "channel_id", trimmed)?),
-            message_id: snowflake(&parse_csv_snowflake(parts[1], "message_id", trimmed)?),
-        });
+        if parts[0].eq_ignore_ascii_case("channel_id")
+            && parts[1].eq_ignore_ascii_case("message_id")
+        {
+            continue;
+        }
+        entries.push((
+            parse_csv_snowflake(parts[0], "channel_id", trimmed)?,
+            parse_csv_snowflake(parts[1], "message_id", trimmed)?,
+        ));
     }
     Ok(entries)
+}
+
+fn unquote(value: &str) -> &str {
+    let value = value.trim();
+    value
+        .strip_prefix('"')
+        .and_then(|inner| inner.strip_suffix('"'))
+        .unwrap_or(value)
+        .trim()
 }
 
 fn parse_csv_snowflake(value: &str, field: &str, row: &str) -> Result<String, String> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
         return Err(format!("Invalid row format: {row}"));
+    }
+    if !trimmed.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err(format!(
+            "Invalid {field} on row: {row}. IDs must be whole numbers. A spreadsheet can round long IDs, so export them as text."
+        ));
     }
     match trimmed.parse::<u64>() {
         Ok(parsed) => Ok(parsed.to_string()),

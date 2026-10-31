@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Nilai batas waktu tidak valid.",
 	"admin_and_system.invalid_timestamp": "Timestamp tidak valid.",
 	"admin_and_system.invalid_timezone_identifier": "Pengenal zona waktu tidak valid.",
+	"admin_and_system.message_shred_preview_changed": "Pesan-pesan ini berubah setelah pratinjau. Pratinjau lagi.",
 	"admin_and_system.missing_acl": "ACL tidak ada.",
 	"admin_and_system.moderation_basis_required": "Berikan dasar untuk menghapus pesan.",
 	"admin_and_system.must_be_iso_timestamp": "Harus berupa ISO timestamp yang valid.",

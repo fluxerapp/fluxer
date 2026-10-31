@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Valore di timeout non valido.",
 	"admin_and_system.invalid_timestamp": "Timestamp non valido.",
 	"admin_and_system.invalid_timezone_identifier": "Identificatore del fuso orario non valido.",
+	"admin_and_system.message_shred_preview_changed": "Questi messaggi sono cambiati dopo l’anteprima. Rigenera l’anteprima.",
 	"admin_and_system.missing_acl": "ACL assente.",
 	"admin_and_system.moderation_basis_required": "Indica un fondamento per eliminare i messaggi.",
 	"admin_and_system.must_be_iso_timestamp": "Deve essere un timestamp ISO valido.",

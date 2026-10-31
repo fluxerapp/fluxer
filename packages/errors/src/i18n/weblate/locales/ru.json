@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Неверное значение тайм-аута.",
 	"admin_and_system.invalid_timestamp": "Неверная метка времени.",
 	"admin_and_system.invalid_timezone_identifier": "Неверный идентификатор часового пояса.",
+	"admin_and_system.message_shred_preview_changed": "Эти сообщения изменились после предпросмотра. Откройте предпросмотр ещё раз.",
 	"admin_and_system.missing_acl": "Отсутствует ACL.",
 	"admin_and_system.moderation_basis_required": "Укажи основание для удаления сообщений.",
 	"admin_and_system.must_be_iso_timestamp": "Требуется действительная метка времени ISO.",

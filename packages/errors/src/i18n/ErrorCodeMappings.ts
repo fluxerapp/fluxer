@@ -687,6 +687,7 @@ export const ErrorCodeToI18nKey = {
 		'admin_and_system.enforcement_rights_holder_not_allowed',
 	[ValidationErrorCodes.ENFORCEMENT_RIGHTS_HOLDER_REQUIRED]: 'admin_and_system.enforcement_rights_holder_required',
 	[ValidationErrorCodes.ENFORCEMENT_STATEMENT_NOT_ALLOWED]: 'admin_and_system.enforcement_statement_not_allowed',
+	[ValidationErrorCodes.MESSAGE_SHRED_PREVIEW_CHANGED]: 'admin_and_system.message_shred_preview_changed',
 	[ValidationErrorCodes.MODERATION_BASIS_REQUIRED]: 'admin_and_system.moderation_basis_required',
 	[ValidationErrorCodes.REPORT_OUTCOME_INVALID]: 'moderation_and_reports.report_outcome_invalid',
 	[APIErrorCodes.VALIDATION_ERROR]: 'http.validation_error',

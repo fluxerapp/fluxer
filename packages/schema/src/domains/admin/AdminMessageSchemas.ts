@@ -76,9 +76,48 @@ export type AdminMessageDetailQuery = z.infer<typeof AdminMessageDetailQuery>;
 export const AdminUserMessageShredRequest = z.object({
 	entries: z.array(MessageShredEntryType).min(1).max(1000),
 	basis: ModerationBasis,
+	preview_token: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/)
+		.optional()
+		.describe(
+			'The preview_token of a preview of the same entries. When given, exactly the previewed messages are removed, and the request is refused if they changed since the preview',
+		),
 });
 
 export type AdminUserMessageShredRequest = z.infer<typeof AdminUserMessageShredRequest>;
+
+export const AdminUserMessageShredPreviewRequest = z.object({
+	entries: z.array(MessageShredEntryType).min(1).max(1000),
+});
+
+export type AdminUserMessageShredPreviewRequest = z.infer<typeof AdminUserMessageShredPreviewRequest>;
+
+const MessageShredPreviewMessage = z.object({
+	channel_id: SnowflakeStringType,
+	message_id: SnowflakeStringType,
+	timestamp: z.string().describe('When the message was sent, as an ISO 8601 timestamp'),
+	content: z.string().describe('The start of the message text, up to 200 characters'),
+	attachment_count: Int32Type,
+});
+
+const MessageShredPreviewSkipped = z.object({
+	channel_id: SnowflakeStringType,
+	message_id: SnowflakeStringType,
+	reason: z
+		.enum(['not_found', 'other_author', 'duplicate'])
+		.describe('not_found when the message is not in that channel, other_author when someone else sent it'),
+});
+
+export const MessageShredPreviewResponse = z.object({
+	requested: Int32Type,
+	message_count: Int32Type.describe('How many messages a shred of these entries removes'),
+	messages: z.array(MessageShredPreviewMessage).describe('Every message a shred of these entries removes'),
+	skipped: z.array(MessageShredPreviewSkipped).describe('Entries a shred leaves alone, with the reason'),
+	preview_token: z.string().describe('Pass this with the shred to remove exactly these messages'),
+});
+
+export type MessageShredPreviewResponse = z.infer<typeof MessageShredPreviewResponse>;
 
 export const AdminUserMessageDeleteQuery = z.object({
 	dry_run: z

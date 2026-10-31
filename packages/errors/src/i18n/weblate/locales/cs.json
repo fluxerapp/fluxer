@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Neplatná hodnota časového limitu.",
 	"admin_and_system.invalid_timestamp": "Neplatné časové razítko.",
 	"admin_and_system.invalid_timezone_identifier": "Neplatný identifikátor časového pásma.",
+	"admin_and_system.message_shred_preview_changed": "Tyto zprávy se po náhledu změnily. Zobrazte náhled znovu.",
 	"admin_and_system.missing_acl": "ACL chybí.",
 	"admin_and_system.moderation_basis_required": "Uveďte základ pro smazání zpráv.",
 	"admin_and_system.must_be_iso_timestamp": "Je vyžadováno platné časové razítko ve formátu ISO.",

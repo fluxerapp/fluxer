@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Fecha de fin del aislamiento temporal no válida.",
 	"admin_and_system.invalid_timestamp": "Marca de tiempo no válida.",
 	"admin_and_system.invalid_timezone_identifier": "Identificador de zona horaria no válido.",
+	"admin_and_system.message_shred_preview_changed": "Estos mensajes han cambiado después de la vista previa. Vuelve a generar la vista previa.",
 	"admin_and_system.missing_acl": "Falta la ACL.",
 	"admin_and_system.moderation_basis_required": "Indica un fundamento para eliminar los mensajes.",
 	"admin_and_system.must_be_iso_timestamp": "Debe ser una marca de tiempo ISO válida.",

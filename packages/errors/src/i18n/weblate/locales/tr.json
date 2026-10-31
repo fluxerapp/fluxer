@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Geçersiz zaman aşımı değeri.",
 	"admin_and_system.invalid_timestamp": "Geçersiz zaman damgası.",
 	"admin_and_system.invalid_timezone_identifier": "Geçersiz saat dilimi tanımlayıcısı.",
+	"admin_and_system.message_shred_preview_changed": "Bu mesajlar önizlemeden sonra değişti. Önizlemeyi yeniden aç.",
 	"admin_and_system.missing_acl": "ACL eksik.",
 	"admin_and_system.moderation_basis_required": "Mesajları silmek için bir dayanak belirt.",
 	"admin_and_system.must_be_iso_timestamp": "Geçerli bir ISO zaman damgası olmalı.",

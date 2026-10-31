@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Ugyldig tidsavbruddsverdi.",
 	"admin_and_system.invalid_timestamp": "Ugyldig tidsstempel.",
 	"admin_and_system.invalid_timezone_identifier": "Ugyldig tidssoneidentifikator.",
+	"admin_and_system.message_shred_preview_changed": "Disse meldingene endret seg etter forhåndsvisningen. Forhåndsvis dem på nytt.",
 	"admin_and_system.missing_acl": "ACL mangler.",
 	"admin_and_system.moderation_basis_required": "Oppgi et grunnlag for å slette meldingene.",
 	"admin_and_system.must_be_iso_timestamp": "Må være et gyldig ISO-tidsstempel.",

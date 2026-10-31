@@ -1610,11 +1610,43 @@ Only `dry_run` set to `false`, `False` or `0` deletes messages, and any other va
 
 The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
 
+## Preview user message shred
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/message-shreds/preview" auditReason />
+
+Lists exactly the messages a shred of these entries deletes, without deleting anything or recording a decision. You need `message:shred`. A message is listed only when the account sent it in the named channel. Missing messages, messages someone else sent and repeated entries are returned in `skipped`. Pass `preview_token` to [Shred user messages](#shred-user-messages) to delete exactly these messages.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| entries | array[[message shred entry](#message-shred-entry-object) object] | The messages to check (1-1000) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| requested | integer | How many entries you sent |
+| message_count | integer | How many messages a shred deletes |
+| messages | array[object] | Each message a shred deletes, with `channel_id`, `message_id`, `timestamp`, `content` and `attachment_count`<sup>1</sup> |
+| skipped | array[object] | Each entry a shred leaves alone, with `channel_id`, `message_id` and a `reason` of `not_found`, `other_author` or `duplicate` |
+| preview_token | string | Pass this with the shred |
+
+<sup>1</sup> `content` holds the first 200 characters of the message
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The preview is ready |
+
+The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
+
 ## Shred user messages
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/message-shreds" auditReason />
 
-Queues a job that deletes the listed messages for good, with their reactions and attachments. You need `message:shred`. The job skips a message that is gone or isn't the account's, and you follow it with [Get message shred job](/admin-api/messages/#get-message-shred-job).
+Queues a job that deletes the listed messages for good, with their reactions and attachments. You need `message:shred`. The job skips a message that is gone or isn't the account's, and you follow it with [Get message shred job](/admin-api/messages/#get-message-shred-job). [Preview](#preview-user-message-shred) the entries first to see exactly what is deleted.
 
 ### JSON body
 
@@ -1622,8 +1654,11 @@ Queues a job that deletes the listed messages for good, with their reactions and
 | --- | --- | --- |
 | entries | array[[message shred entry](#message-shred-entry-object) object] | The messages to delete (1-1000) |
 | basis<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are removed |
+| preview_token?<sup>2</sup> | string | The `preview_token` from a preview of the same entries |
 
-<sup>1</sup> The `enforcement` basis records a content removal [decision](/admin-api/enforcement/), saves the first 50 entries as evidence and sends the notice
+<sup>1</sup> The `enforcement` basis records a content removal [decision](/admin-api/enforcement/), saves the first 50 deleted messages as evidence and sends the notice
+
+<sup>2</sup> With a token, only the previewed messages are deleted, and the shred is refused with `MESSAGE_SHRED_PREVIEW_CHANGED` when they changed since the preview
 
 ### Response body
 
@@ -1639,7 +1674,7 @@ Queues a job that deletes the listed messages for good, with their reactions and
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The job was queued |
-| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `MESSAGE_SHRED_PREVIEW_CHANGED` or a [decision validation code](/admin-api/enforcement/#validation) |
 
 The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
 

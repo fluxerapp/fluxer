@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Μη έγκυρη τιμή χρονικού ορίου.",
 	"admin_and_system.invalid_timestamp": "Μη έγκυρη χρονική σήμανση.",
 	"admin_and_system.invalid_timezone_identifier": "Μη έγκυρο αναγνωριστικό ζώνης ώρας.",
+	"admin_and_system.message_shred_preview_changed": "Αυτά τα μηνύματα άλλαξαν μετά την προεπισκόπηση. Κάνε ξανά προεπισκόπηση.",
 	"admin_and_system.missing_acl": "Λείπει ACL.",
 	"admin_and_system.moderation_basis_required": "Δώσε μια βάση για τη διαγραφή των μηνυμάτων.",
 	"admin_and_system.must_be_iso_timestamp": "Πρέπει να είναι έγκυρη χρονική σήμανση ISO.",

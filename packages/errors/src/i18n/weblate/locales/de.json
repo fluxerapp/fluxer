@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Ungültiger Timeout-Wert.",
 	"admin_and_system.invalid_timestamp": "Ungültiger Zeitstempel.",
 	"admin_and_system.invalid_timezone_identifier": "Ungültige Zeitzonen-ID.",
+	"admin_and_system.message_shred_preview_changed": "Diese Nachrichten haben sich nach der Vorschau geändert. Zeig die Vorschau erneut an.",
 	"admin_and_system.missing_acl": "ACL fehlt.",
 	"admin_and_system.moderation_basis_required": "Gib eine Grundlage an, um die Nachrichten zu löschen.",
 	"admin_and_system.must_be_iso_timestamp": "Es muss ein gültiger ISO-Zeitstempel sein.",

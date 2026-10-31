@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Invalid timeout value.",
 	"admin_and_system.invalid_timestamp": "Invalid timestamp.",
 	"admin_and_system.invalid_timezone_identifier": "Invalid time zone identifier.",
+	"admin_and_system.message_shred_preview_changed": "These messages changed after the preview. Preview them again.",
 	"admin_and_system.missing_acl": "Missing ACL.",
 	"admin_and_system.moderation_basis_required": "Give a basis to delete the messages.",
 	"admin_and_system.must_be_iso_timestamp": "Must be a valid ISO timestamp.",

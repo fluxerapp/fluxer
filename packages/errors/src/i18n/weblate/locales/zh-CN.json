@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "超时值无效。",
 	"admin_and_system.invalid_timestamp": "时间戳无效。",
 	"admin_and_system.invalid_timezone_identifier": "时区标识符无效。",
+	"admin_and_system.message_shred_preview_changed": "这些消息在预览后发生了变化。请重新预览。",
 	"admin_and_system.missing_acl": "缺少 ACL。",
 	"admin_and_system.moderation_basis_required": "请提供删除这些消息的依据。",
 	"admin_and_system.must_be_iso_timestamp": "必须是有效的 ISO 时间戳。",

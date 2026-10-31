@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "ค่าไทม์เอาต์ไม่ถูกต้อง",
 	"admin_and_system.invalid_timestamp": "การประทับเวลาไม่ถูกต้อง",
 	"admin_and_system.invalid_timezone_identifier": "ตัวระบุเขตเวลาไม่ถูกต้อง",
+	"admin_and_system.message_shred_preview_changed": "ข้อความเหล่านี้เปลี่ยนไปหลังการแสดงตัวอย่าง โปรดแสดงตัวอย่างอีกครั้ง",
 	"admin_and_system.missing_acl": "ACL หายไป",
 	"admin_and_system.moderation_basis_required": "ระบุเหตุผลรองรับในการลบข้อความ",
 	"admin_and_system.must_be_iso_timestamp": "ต้องเป็นการประทับเวลา ISO ที่ถูกต้อง",

@@ -183,6 +183,7 @@ export class AdminService {
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
+			channelRepository: this.channelRepository,
 			auditService: this.auditService,
 			enforcement: this.enforcementService,
 		});

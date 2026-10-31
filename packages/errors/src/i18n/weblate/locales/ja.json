@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "タイムアウトの値が無効です。",
 	"admin_and_system.invalid_timestamp": "タイムスタンプが無効です。",
 	"admin_and_system.invalid_timezone_identifier": "タイムゾーンIDが無効です。",
+	"admin_and_system.message_shred_preview_changed": "プレビューの後にこれらのメッセージが変更されました。もう一度プレビューしてください。",
 	"admin_and_system.missing_acl": "ACLがありません。",
 	"admin_and_system.moderation_basis_required": "メッセージを削除する根拠を指定してください。",
 	"admin_and_system.must_be_iso_timestamp": "有効なISOタイムスタンプである必要があります。",

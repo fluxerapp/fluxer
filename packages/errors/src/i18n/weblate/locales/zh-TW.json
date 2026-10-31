@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "逾時值無效。",
 	"admin_and_system.invalid_timestamp": "時間戳記無效。",
 	"admin_and_system.invalid_timezone_identifier": "時區識別碼無效。",
+	"admin_and_system.message_shred_preview_changed": "這些訊息在預覽後已變更。請重新預覽。",
 	"admin_and_system.missing_acl": "缺少存取控制清單 (ACL)。",
 	"admin_and_system.moderation_basis_required": "請提供刪除這些訊息的依據。",
 	"admin_and_system.must_be_iso_timestamp": "必須為有效的 ISO 時間戳記。",

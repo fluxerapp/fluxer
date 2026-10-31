@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Virheellinen aikakatkaisuarvo.",
 	"admin_and_system.invalid_timestamp": "Virheellinen aikaleima.",
 	"admin_and_system.invalid_timezone_identifier": "Virheellinen aikavyöhyketunnus.",
+	"admin_and_system.message_shred_preview_changed": "Nämä viestit muuttuivat esikatselun jälkeen. Esikatsele ne uudelleen.",
 	"admin_and_system.missing_acl": "ACL puuttuu.",
 	"admin_and_system.moderation_basis_required": "Anna peruste viestien poistamiselle.",
 	"admin_and_system.must_be_iso_timestamp": "On oltava kelvollinen ISO-aikaleima.",

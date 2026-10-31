@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Data de término da suspensão temporária inválida.",
 	"admin_and_system.invalid_timestamp": "Timestamp inválido.",
 	"admin_and_system.invalid_timezone_identifier": "Identificador de fuso horário inválido.",
+	"admin_and_system.message_shred_preview_changed": "Essas mensagens mudaram depois da prévia. Gere a prévia de novo.",
 	"admin_and_system.missing_acl": "ACL ausente.",
 	"admin_and_system.moderation_basis_required": "Informe um fundamento para excluir as mensagens.",
 	"admin_and_system.must_be_iso_timestamp": "Deve ser um timestamp ISO válido.",

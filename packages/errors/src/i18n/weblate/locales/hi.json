@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "अमान्य टाइमआउट वैल्यू।",
 	"admin_and_system.invalid_timestamp": "अमान्य टाइमस्टैम्प।",
 	"admin_and_system.invalid_timezone_identifier": "अमान्य टाइमज़ोन आइडेंटिफ़ायर।",
+	"admin_and_system.message_shred_preview_changed": "पूर्वावलोकन के बाद ये संदेश बदल गए। इनका फिर से पूर्वावलोकन करें।",
 	"admin_and_system.missing_acl": "ACL गायब है।",
 	"admin_and_system.moderation_basis_required": "मैसेज डिलीट करने का आधार बताएँ।",
 	"admin_and_system.must_be_iso_timestamp": "मान्य ISO टाइमस्टैम्प होना ज़रूरी है।",

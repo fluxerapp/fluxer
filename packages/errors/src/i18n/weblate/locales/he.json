@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "ערך פסק זמן שגוי.",
 	"admin_and_system.invalid_timestamp": "חותמת זמן שגויה.",
 	"admin_and_system.invalid_timezone_identifier": "מזהה אזור זמן שגוי.",
+	"admin_and_system.message_shred_preview_changed": "ההודעות האלה השתנו אחרי התצוגה המקדימה. יש להציג אותן שוב.",
 	"admin_and_system.missing_acl": "ACL חסר.",
 	"admin_and_system.moderation_basis_required": "יש לציין בסיס למחיקת ההודעות.",
 	"admin_and_system.must_be_iso_timestamp": "חייבת להיות חותמת זמן ISO תקינה.",

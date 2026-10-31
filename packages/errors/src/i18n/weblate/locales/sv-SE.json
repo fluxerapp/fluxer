@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Ogiltigt timeout-värde.",
 	"admin_and_system.invalid_timestamp": "Ogiltig tidsstämpel.",
 	"admin_and_system.invalid_timezone_identifier": "Ogiltig tidszonsidentifierare.",
+	"admin_and_system.message_shred_preview_changed": "De här meddelandena har ändrats efter förhandsvisningen. Förhandsvisa dem igen.",
 	"admin_and_system.missing_acl": "Åtkomstkontrollista saknas.",
 	"admin_and_system.moderation_basis_required": "Ange en grund för att radera meddelandena.",
 	"admin_and_system.must_be_iso_timestamp": "Måste vara en giltig ISO-tidsstämpel.",

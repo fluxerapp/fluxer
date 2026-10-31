@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Netinkama laiko intervalo reikšmė.",
 	"admin_and_system.invalid_timestamp": "Netinkama laiko žyma.",
 	"admin_and_system.invalid_timezone_identifier": "Netinkamas laiko juostos identifikatorius.",
+	"admin_and_system.message_shred_preview_changed": "Po peržiūros šios žinutės pasikeitė. Peržiūrėkite jas iš naujo.",
 	"admin_and_system.missing_acl": "Nėra ACL.",
 	"admin_and_system.moderation_basis_required": "Nurodyk žinučių ištrynimo pagrindą.",
 	"admin_and_system.must_be_iso_timestamp": "Turi būti galiojanti ISO laiko žyma.",

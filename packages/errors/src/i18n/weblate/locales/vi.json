@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Giá trị thời gian tạm khóa không hợp lệ.",
 	"admin_and_system.invalid_timestamp": "Mốc thời gian không hợp lệ.",
 	"admin_and_system.invalid_timezone_identifier": "Mã định danh múi giờ không hợp lệ.",
+	"admin_and_system.message_shred_preview_changed": "Các tin nhắn này đã thay đổi sau khi xem trước. Hãy xem trước lại.",
 	"admin_and_system.missing_acl": "Thiếu ACL.",
 	"admin_and_system.moderation_basis_required": "Hãy nêu căn cứ để xóa các tin nhắn.",
 	"admin_and_system.must_be_iso_timestamp": "Phải là mốc thời gian ISO hợp lệ.",

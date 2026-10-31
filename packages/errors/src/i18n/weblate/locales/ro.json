@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Valoarea de timeout este invalidă.",
 	"admin_and_system.invalid_timestamp": "Marca de timp este invalidă.",
 	"admin_and_system.invalid_timezone_identifier": "Identificatorul de fus orar este invalid.",
+	"admin_and_system.message_shred_preview_changed": "Aceste mesaje s-au schimbat după previzualizare. Previzualizează-le din nou.",
 	"admin_and_system.missing_acl": "ACL lipsă.",
 	"admin_and_system.moderation_basis_required": "Indică un temei pentru ștergerea mesajelor.",
 	"admin_and_system.must_be_iso_timestamp": "Trebuie să fie o marcă de timp ISO validă.",

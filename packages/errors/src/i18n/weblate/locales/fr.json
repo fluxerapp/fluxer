@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Date de fin de restriction temporaire non valide.",
 	"admin_and_system.invalid_timestamp": "Horodatage invalide.",
 	"admin_and_system.invalid_timezone_identifier": "Identifiant de fuseau horaire invalide.",
+	"admin_and_system.message_shred_preview_changed": "Ces messages ont changé après l’aperçu. Relance l’aperçu.",
 	"admin_and_system.missing_acl": "Liste de contrôle d'accès manquante.",
 	"admin_and_system.moderation_basis_required": "Indiquez un fondement pour supprimer les messages.",
 	"admin_and_system.must_be_iso_timestamp": "Doit être un horodatage ISO valide.",

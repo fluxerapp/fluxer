@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Nevažeća vrijednost za istek vremena.",
 	"admin_and_system.invalid_timestamp": "Nevažeća vremenska oznaka.",
 	"admin_and_system.invalid_timezone_identifier": "Nevažeći identifikator vremenske zone.",
+	"admin_and_system.message_shred_preview_changed": "Ove su se poruke promijenile nakon pregleda. Ponovno ih pregledaj.",
 	"admin_and_system.missing_acl": "Nedostaje ACL.",
 	"admin_and_system.moderation_basis_required": "Navedi osnovu za brisanje poruka.",
 	"admin_and_system.must_be_iso_timestamp": "Mora biti valjana ISO vremenska oznaka.",

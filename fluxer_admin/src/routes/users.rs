@@ -4,6 +4,7 @@ use crate::{
     acl,
     api::{
         client::{AdminApiClient, ApiResult, ApiResultExt},
+        generated::{snowflake, types::AdminUserMessageShredPreviewRequestEntriesItem},
         types::AdminUser,
     },
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
@@ -11,8 +12,9 @@ use crate::{
     state::AppState,
     templates::{
         self,
-        pages::user_detail_tabs::account::{
-            PASSWORD_RESET_LINK_RESULT_ID, password_reset_link_result,
+        pages::user_detail_tabs::{
+            account::{PASSWORD_RESET_LINK_RESULT_ID, password_reset_link_result},
+            moderation::{MESSAGE_SHRED_PREVIEW_ID, message_shred_preview},
         },
     },
     utils::forms::MultiValueForm,
@@ -228,6 +230,9 @@ async fn user_detail_post(
         return create_password_reset_link(&state, &headers, &auth.0, &csrf.0.0, &client, &user_id)
             .await;
     }
+    if action == "preview_message_shred" {
+        return preview_message_shred(&headers, &client, &user_id, &form).await;
+    }
     let outcome = super::user_actions::dispatch(&client, &user_id, action, &form).await;
     let mut redirect = if tab.is_empty() {
         format!("{base}/users/{user_id}")
@@ -242,6 +247,45 @@ async fn user_detail_post(
         return htmx::toast_response(&outcome.flash);
     }
     flash::redirect_with_flash(&redirect, outcome.flash, config.secure_cookies())
+}
+
+async fn preview_message_shred(
+    headers: &HeaderMap,
+    client: &AdminApiClient,
+    user_id: &str,
+    form: &MultiValueForm,
+) -> Response {
+    if !htmx::is_htmx_request(headers) || !htmx::targets(headers, MESSAGE_SHRED_PREVIEW_ID) {
+        return htmx::toast_response(&flash::FlashData::error(
+            "Previewing a message shred needs JavaScript.",
+        ));
+    }
+    let entries = match super::user_actions::message_shred_entries(
+        form.first("csv_data").unwrap_or_default(),
+    ) {
+        Ok(entries) => entries,
+        Err(error) => return htmx::toast_response(&flash::FlashData::error(error)),
+    };
+    let entries = entries
+        .into_iter()
+        .map(
+            |(channel_id, message_id)| AdminUserMessageShredPreviewRequestEntriesItem {
+                channel_id: snowflake(&channel_id),
+                message_id: snowflake(&message_id),
+            },
+        )
+        .collect();
+    match client.preview_message_shred(user_id, entries).await {
+        Ok(preview) => Html(message_shred_preview(&preview).into_string()).into_response(),
+        Err(error) => {
+            tracing::warn!(%error, user_id, "admin API request failed: preview message shred");
+            let message = match error.detail_message() {
+                Some(detail) => format!("Failed to preview the messages: {detail}"),
+                None => "Failed to preview the messages".to_owned(),
+            };
+            htmx::toast_response(&flash::FlashData::error(message))
+        }
+    }
 }
 
 async fn create_password_reset_link(

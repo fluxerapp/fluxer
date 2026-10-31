@@ -9940,7 +9940,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Queues bulk shredding of the given messages of a user, with attachment deletion. Returns a job ID to track progress asynchronously. With an enforcement basis the first 50 entries are snapshotted as the evidence of a content removal decision before the job is queued, every entry for child safety and violent extremism reasons, and the user is sent its notice. Requires MESSAGE_SHRED permission.",
+				"description": "Queues bulk shredding of the given messages of a user, with attachment deletion. Only messages the user sent in the named channel are removed. With preview_token from the preview route, exactly the previewed messages are removed, and the request is refused with MESSAGE_SHRED_PREVIEW_CHANGED when they changed since. Returns a job ID to track progress asynchronously. With an enforcement basis the first 50 entries are snapshotted as the evidence of a content removal decision before the job is queued, every entry for child safety and violent extremism reasons, and the user is sent its notice. Requires MESSAGE_SHRED permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -9954,6 +9954,74 @@
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserMessageShredRequest"}}}
+				}
+			}
+		},
+		"/admin/users/{user_id}/message-shreds/preview": {
+			"post": {
+				"operationId": "preview_admin_user_message_shred",
+				"summary": "Preview a message shred",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MessageShredPreviewResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists exactly the messages a shred of these entries removes: entries the user sent in that channel. Entries that are missing, sent by someone else or listed twice are returned in skipped and are never removed. Pass preview_token with the shred to remove exactly these messages. Nothing is removed and no decision is recorded. Requires MESSAGE_SHRED permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserMessageShredPreviewRequest"}}
+					}
 				}
 			}
 		},
@@ -14968,6 +15036,75 @@
 				"required": ["success", "dry_run", "channel_count", "message_count"],
 				"additionalProperties": false
 			},
+			"AdminUserMessageShredPreviewRequest": {
+				"type": "object",
+				"properties": {
+					"entries": {
+						"minItems": 1,
+						"maxItems": 1000,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
+								"message_id": {"$ref": "#/components/schemas/SnowflakeType"}
+							},
+							"required": ["channel_id", "message_id"]
+						}
+					}
+				},
+				"required": ["entries"]
+			},
+			"MessageShredPreviewResponse": {
+				"type": "object",
+				"properties": {
+					"requested": {"$ref": "#/components/schemas/Int32Type"},
+					"message_count": {
+						"description": "How many messages a shred of these entries removes",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"messages": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"channel_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"message_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"timestamp": {"type": "string", "description": "When the message was sent, as an ISO 8601 timestamp"},
+								"content": {"type": "string", "description": "The start of the message text, up to 200 characters"},
+								"attachment_count": {"$ref": "#/components/schemas/Int32Type"}
+							},
+							"required": ["channel_id", "message_id", "timestamp", "content", "attachment_count"],
+							"additionalProperties": false
+						},
+						"description": "Every message a shred of these entries removes"
+					},
+					"skipped": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"channel_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"message_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"reason": {
+									"type": "string",
+									"enum": ["not_found", "other_author", "duplicate"],
+									"description": "not_found when the message is not in that channel, other_author when someone else sent it"
+								}
+							},
+							"required": ["channel_id", "message_id", "reason"],
+							"additionalProperties": false
+						},
+						"description": "Entries a shred leaves alone, with the reason"
+					},
+					"preview_token": {
+						"type": "string",
+						"description": "Pass this with the shred to remove exactly these messages"
+					}
+				},
+				"required": ["requested", "message_count", "messages", "skipped", "preview_token"],
+				"additionalProperties": false
+			},
 			"AdminUserMessageShredRequest": {
 				"type": "object",
 				"properties": {
@@ -14984,7 +15121,12 @@
 							"required": ["channel_id", "message_id"]
 						}
 					},
-					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]}
+					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]},
+					"preview_token": {
+						"description": "The preview_token of a preview of the same entries. When given, exactly the previewed messages are removed, and the request is refused if they changed since the preview",
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$"
+					}
 				},
 				"required": ["entries", "basis"]
 			},

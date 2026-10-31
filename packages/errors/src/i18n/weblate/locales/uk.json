@@ -81,6 +81,7 @@
 	"admin_and_system.invalid_timeout_value": "Недійсне значення тайм-ауту.",
 	"admin_and_system.invalid_timestamp": "Недійсна мітка часу.",
 	"admin_and_system.invalid_timezone_identifier": "Недійсний ідентифікатор часового поясу.",
+	"admin_and_system.message_shred_preview_changed": "Ці повідомлення змінилися після попереднього перегляду. Перегляньте їх ще раз.",
 	"admin_and_system.missing_acl": "Немає ACL.",
 	"admin_and_system.moderation_basis_required": "Укажи підставу для видалення повідомлень.",
 	"admin_and_system.must_be_iso_timestamp": "Має бути дійсна мітка часу ISO.",
