@@ -11,8 +11,8 @@
 .bioClamped {
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 3;
-	line-clamp: 3;
+	-webkit-line-clamp: 5;
+	line-clamp: 5;
 	overflow: hidden;
 	mask-image: linear-gradient(#000, #000);
 	padding-block-start: 0.125rem;
