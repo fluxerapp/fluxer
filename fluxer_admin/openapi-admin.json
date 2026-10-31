@@ -7339,7 +7339,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Lists user and content reports from the report search index with pagination. Without a status filter the list covers reports of every status. A request that filters by status alone lists the reports with that status newest first and ignores sort_by and sort_order. A free-text query and the entity, category, reason and resolver filters narrow the results. Every response includes the total, offset and limit of the page. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.",
+				"description": "Lists user and content reports from the report search index with pagination. Without a status filter the list covers reports of every status. A free-text query and the entity, category, reason and resolver filters narrow the results. Every response includes the total, offset and limit of the page. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{

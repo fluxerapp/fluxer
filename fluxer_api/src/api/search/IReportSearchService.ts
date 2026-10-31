@@ -21,5 +21,4 @@ export interface IReportSearchService extends SchemaISearchAdapter<ReportSearchF
 			offset?: number;
 		},
 	): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByStatus(status: number, limit?: number, offset?: number): Promise<SchemaSearchResult<SearchableReport>>;
 }

@@ -174,26 +174,6 @@ function mapReportReasonFields(report: IARSubmission) {
 export class AdminReportService {
 	constructor(private readonly deps: AdminReportServiceDeps) {}
 
-	async listReports(status: number, acls: ReadonlySet<string>, limit?: number, offset?: number) {
-		const {reportService} = this.deps;
-		const requestedLimit = limit || 50;
-		const currentOffset = offset || 0;
-		const {reports, total} = await reportService.listReportsByStatus(status, requestedLimit, currentOffset);
-		const requestCache = createRequestCache();
-		const reportLookupCache = createReportLookupCache();
-		const reportResponses = await Promise.all(
-			reports.map((report: IARSubmission) =>
-				this.mapReportToResponse(report, false, requestCache, acls, reportLookupCache),
-			),
-		);
-		return {
-			reports: reportResponses,
-			total,
-			offset: currentOffset,
-			limit: requestedLimit,
-		};
-	}
-
 	listReportReasons(): AdminReportReasonsResponse {
 		return {
 			reasons: listReportReasons().map((reason) => ({

@@ -77,6 +77,8 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetId: '0',
 					metadata: {
 						status: 'pending',
+						sort_by: 'reported_at',
+						sort_order: 'desc',
 						limit: '1',
 						offset: '1',
 						result_count: '1',

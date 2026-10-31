@@ -247,10 +247,6 @@ export class ReportSearchService
 	): Promise<SchemaSearchResult<SearchableReport>> {
 		return this.search(query, filters, options);
 	}
-
-	listReportsByStatus(status: number, limit?: number, offset?: number): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {status}, {limit, offset});
-	}
 }
 
 export class AuditLogSearchService

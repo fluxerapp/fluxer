@@ -91,7 +91,6 @@ import {CannotReportOwnMessageError} from '@fluxer/errors/src/domains/channel/Ca
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
-import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -1304,28 +1303,6 @@ export class ReportService {
 			throw new UnknownReportError();
 		}
 		return report;
-	}
-
-	async listReportsByStatus(
-		status: number,
-		limit?: number,
-		offset?: number,
-	): Promise<{reports: Array<IARSubmission>; total: number}> {
-		if (!this.reportSearchService) {
-			throw new FeatureTemporarilyDisabledError();
-		}
-		const {hits, total} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
-		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));
-		const loaded = await Promise.all(reportIds.map((id) => this.reportRepository.getReport(id)));
-		const reports = loaded.filter((report): report is IARSubmission => report !== null);
-		const orphanedReportIds = reportIds.filter((_, index) => loaded[index] === null).map((id) => id.toString());
-		if (orphanedReportIds.length > 0) {
-			Logger.warn(
-				{orphanedReportIds, status},
-				'Report search index lists reports that are no longer stored, run refresh_search_index reports',
-			);
-		}
-		return {reports, total};
 	}
 
 	async resolveReport(
