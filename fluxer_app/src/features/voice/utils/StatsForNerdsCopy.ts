@@ -572,15 +572,15 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 	const [nativePlatform, displayShareEnvironment, permissions, mediaDevices, voiceSettings, desktop, codecs] =
 		await Promise.all([
 			getNativePlatform(),
-			getDisplayShareEnvironment().catch((error) => `error:${safeError(error).message ?? 'unknown'}`),
+			withTimeout('display share environment', getDisplayShareEnvironment()),
 			Promise.all([
-				queryPermission('microphone'),
-				queryPermission('camera'),
-				queryPermission('display-capture'),
-				queryPermission('speaker-selection'),
+				withTimeout('microphone permission', queryPermission('microphone')),
+				withTimeout('camera permission', queryPermission('camera')),
+				withTimeout('display capture permission', queryPermission('display-capture')),
+				withTimeout('speaker selection permission', queryPermission('speaker-selection')),
 			]),
-			collectMediaDevices(),
-			collectVoiceSettingsMetadata(),
+			withTimeout('media devices', collectMediaDevices()),
+			withTimeout('voice settings', collectVoiceSettingsMetadata()),
 			collectDesktopMetadata(),
 			collectCodecMetadata(),
 		]);
