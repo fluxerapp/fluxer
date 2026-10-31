@@ -89,15 +89,17 @@ function isFluxerAppExcludedURL(url: string) {
 	}
 }
 
+const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
+
 export function extractURLs(inputText: string) {
 	let text = inputText;
 	text = text.replace(/`[^`]*`/g, '');
 	text = text.replace(/```.*?```/gs, '');
 	text = text.replace(/\|\|([\s\S]*?)\|\|/g, ' $1 ');
 	text = text.replace(/\|\|/g, ' ');
-	text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$2');
+	text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, ' $2 ');
 	text = text.replace(/<https?:\/\/[^\s]+>/g, '');
-	const urls = text.match(URL_REGEX) || [];
+	const urls = (text.match(URL_REGEX) || []).map((url) => url.replace(TRAILING_PUNCTUATION, ''));
 	const seen = new Set<string>();
 	const result: Array<string> = [];
 	for (const url of urls) {
