@@ -2881,6 +2881,11 @@ msgstr "un minuto"
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Hay una nueva versión de escritorio disponible. Descarga el instalador y ejecútalo para actualizar {productName}."
 
+#. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "A number is added after your username, like {example}. You can change both later."
+msgstr "Se agrega un número después de tu nombre de usuario, como {example}. Puedes cambiar ambos más adelante."
+
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
@@ -10172,6 +10177,7 @@ msgstr "Menús contextuales"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Los menús contextuales se pueden abrir con un clic izquierdo (en botones) o un clic derecho (en otros elementos). Esto demuestra varios elementos del menú, incluyendo casillas de verificación, botones de opción, controles deslizantes y submenús."
 
+#. Button on the sign-up profile step that goes on to the email code.
 #. Button that confirms regenerating account recovery backup codes.
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
@@ -10181,6 +10187,7 @@ msgstr "Los menús contextuales se pueden abrir con un clic izquierdo (en botone
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
@@ -23759,6 +23766,11 @@ msgstr "Mi traductor"
 msgid "Nagbar overrides"
 msgstr "Estados forzados de la barra de avisos"
 
+#. Placeholder username used in the tag example on the sign-up profile step before the person types one.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "name"
+msgstr "nombre"
+
 #. Column header for custom emoji names.
 #. Field label in the theme details modal in Settings > Themes.
 #. Form field label for the name of the item being edited.
@@ -27214,6 +27226,11 @@ msgstr "Elige un proveedor de búsqueda inversa de imágenes"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
 msgid "Pick a translation provider"
 msgstr "Elige un proveedor de traducción"
+
+#. Hint under the username field at sign-up on instances where every username is unique.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Pick a username nobody else has. You can change it later."
+msgstr "Elige un nombre de usuario que nadie más tenga. Puedes cambiarlo más adelante."
 
 #. Title of the picker modal when choosing a web search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
@@ -37470,6 +37487,11 @@ msgstr "Esto está deshabilitado"
 msgid "This is how messages appear"
 msgstr "Así se ven los mensajes"
 
+#. Text under the heading of the sign-up step where a new person picks their display name and username.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "This is how other people will see you."
+msgstr "Así te verán las demás personas."
+
 #: src/features/channel/components/ChannelLayout.tsx
 msgid "This is not the channel you're looking for."
 msgstr "Este no es el canal que buscas."
@@ -42194,6 +42216,11 @@ msgstr "¡Te damos la bienvenida, {username}! Tu próxima conversación empieza 
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "Te damos la bienvenida, {username}. Nos alegra que estés aquí."
 
+#. Heading of the sign-up step where a new person picks their display name and username, before their account is created.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Welcome! Let's set up your profile"
+msgstr "¡Te damos la bienvenida! Configuremos tu perfil"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -43322,6 +43349,11 @@ msgstr "Guardaste un kit de recuperación."
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "You sign in with a code sent to your email. A password is optional."
 msgstr "Inicias sesión con un código enviado a tu correo electrónico. La contraseña es opcional."
+
+#. Note at the bottom of the sign-up profile step. Tells a new person how they sign in next time and where to add a password. email is their address.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "You sign in with a code we email to {email}. You can set a password later in Settings, under Account."
+msgstr "Inicias sesión con un código que enviamos a {email}. Puedes establecer una contraseña más adelante en Configuración, en Cuenta."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx

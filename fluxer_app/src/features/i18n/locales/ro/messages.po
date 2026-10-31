@@ -2881,6 +2881,11 @@ msgstr "un minut"
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Este disponibilă o nouă versiune pentru desktop. Descarcă programul de instalare și rulează-l pentru a actualiza {productName}."
 
+#. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "A number is added after your username, like {example}. You can change both later."
+msgstr "După numele de utilizator se adaugă un număr, de exemplu {example}. Le poți schimba pe amândouă mai târziu."
+
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
@@ -10172,6 +10177,7 @@ msgstr "Meniuri contextuale"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Meniurile contextuale pot fi deschise cu clic stânga (pe butoane) sau clic dreapta (pe alte elemente). Aceasta demonstrează diverse elemente de meniu, inclusiv casete de selectare, butoane radio, glisoare și submeniuri."
 
+#. Button on the sign-up profile step that goes on to the email code.
 #. Button that confirms regenerating account recovery backup codes.
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
@@ -10181,6 +10187,7 @@ msgstr "Meniurile contextuale pot fi deschise cu clic stânga (pe butoane) sau c
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
@@ -23759,6 +23766,11 @@ msgstr "Traducătorul meu"
 msgid "Nagbar overrides"
 msgstr "Suprascrieri Nagbar"
 
+#. Placeholder username used in the tag example on the sign-up profile step before the person types one.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "name"
+msgstr "nume"
+
 #. Column header for custom emoji names.
 #. Field label in the theme details modal in Settings > Themes.
 #. Form field label for the name of the item being edited.
@@ -27214,6 +27226,11 @@ msgstr "Alege un furnizor de căutare inversă a imaginii"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
 msgid "Pick a translation provider"
 msgstr "Alege un furnizor de traduceri"
+
+#. Hint under the username field at sign-up on instances where every username is unique.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Pick a username nobody else has. You can change it later."
+msgstr "Alege un nume de utilizator pe care nu îl mai are nimeni. Îl poți schimba mai târziu."
 
 #. Title of the picker modal when choosing a web search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
@@ -37470,6 +37487,11 @@ msgstr "Aceasta este dezactivată"
 msgid "This is how messages appear"
 msgstr "Așa apar mesajele"
 
+#. Text under the heading of the sign-up step where a new person picks their display name and username.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "This is how other people will see you."
+msgstr "Așa te vor vedea ceilalți."
+
 #: src/features/channel/components/ChannelLayout.tsx
 msgid "This is not the channel you're looking for."
 msgstr "Acesta nu este canalul pe care îl cauți."
@@ -42194,6 +42216,11 @@ msgstr "Bun venit, {username}! Următoarea ta conversație începe aici."
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "Bun venit, {username}. Ne bucurăm să te avem alături."
 
+#. Heading of the sign-up step where a new person picks their display name and username, before their account is created.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Welcome! Let's set up your profile"
+msgstr "Bun venit! Hai să îți configurăm profilul"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -43322,6 +43349,11 @@ msgstr "Ai salvat un kit de recuperare."
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "You sign in with a code sent to your email. A password is optional."
 msgstr "Te conectezi cu un cod trimis pe e-mailul tău. Parola este opțională."
+
+#. Note at the bottom of the sign-up profile step. Tells a new person how they sign in next time and where to add a password. email is their address.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "You sign in with a code we email to {email}. You can set a password later in Settings, under Account."
+msgstr "Te conectezi cu un cod pe care îl trimitem la {email}. Poți seta o parolă mai târziu în Setări, la Cont."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx

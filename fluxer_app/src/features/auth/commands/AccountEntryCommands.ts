@@ -92,7 +92,13 @@ interface VerifyEmailCodeRequest {
 	readonly consent: boolean;
 	readonly inviteCode: string | null;
 	readonly registrationUrlCode: string | null;
+	readonly profile: NewAccountProfile | null;
 	readonly snapshot: RuntimeConfigSnapshot;
+}
+
+export interface NewAccountProfile {
+	readonly globalName: string;
+	readonly username: string;
 }
 
 export async function verifyEmailCode({
@@ -101,6 +107,7 @@ export async function verifyEmailCode({
 	consent,
 	inviteCode,
 	registrationUrlCode,
+	profile,
 	snapshot,
 }: VerifyEmailCodeRequest): Promise<AccountEntryResult> {
 	const response = await instanceRequest<EntryTokenResponse | MfaLoginResponse | RegistrationPendingApprovalResponse>({
@@ -113,6 +120,7 @@ export async function verifyEmailCode({
 			consent,
 			...(inviteCode === null ? {} : {invite_code: inviteCode}),
 			...(registrationUrlCode === null ? {} : {registration_url_code: registrationUrlCode}),
+			...(profile === null ? {} : {global_name: profile.globalName, username: profile.username}),
 		},
 		headers: localeHeaders(),
 	});

@@ -579,6 +579,23 @@ function usernameFromEmail(email: string): string | undefined {
 	return deriveUsernameFromDisplayName(localPart) ?? undefined;
 }
 
+export async function assertRequestedProfileAllowed(
+	ctx: ApiContext,
+	deps: Pick<RegistrationDependencies, 'instanceConfigRepository'>,
+	params: {username: string | undefined; globalName: string | undefined},
+): Promise<void> {
+	const {username, globalName} = params;
+	if (username && isBlockedUsername(username)) throw new ContentBlockedError();
+	if (globalName && profileSubstringBlocklistCache.containsBannedSubstring('global_name', globalName)) {
+		throw new ContentBlockedError();
+	}
+	if (!username) return;
+	const accountIdentity = await deps.instanceConfigRepository.getAccountIdentity();
+	if (accountIdentity.tagStyle === TagStyles.NONE && (await isUsernameTaken(ctx.services.users, username))) {
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_ALREADY_TAKEN);
+	}
+}
+
 export async function resolveRegistrationUsername(params: {
 	users: ApiContext['services']['users'];
 	discriminatorService: Pick<DiscriminatorService, 'generateDiscriminator'>;

@@ -339,6 +339,8 @@ export class AuthRequestService {
 			consent: data.consent,
 			registrationUrlCode: data.registration_url_code,
 			inviteCode: data.invite_code,
+			username: data.username,
+			globalName: data.global_name,
 			request: params.request,
 			clientIp: params.clientIp,
 			requestCache: params.requestCache,

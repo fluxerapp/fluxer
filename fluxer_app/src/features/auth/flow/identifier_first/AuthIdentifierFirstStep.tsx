@@ -20,6 +20,12 @@ import {
 } from '@app/features/auth/flow/identifier_first/AuthIdentifierNameStep';
 import {AuthIdentifierPasswordStep} from '@app/features/auth/flow/identifier_first/AuthIdentifierPasswordStep';
 import {
+	AuthIdentifierProfileStep,
+	IdentifierProfileDraft,
+	PROFILE_STEP_DESCRIPTION_DESCRIPTOR,
+	PROFILE_STEP_HEADING_DESCRIPTOR,
+} from '@app/features/auth/flow/identifier_first/AuthIdentifierProfileStep';
+import {
 	type IdentifierStep,
 	offersInstantAccount,
 	parseIsoTimestamp,
@@ -132,6 +138,7 @@ export function AuthIdentifierFirstStep({
 	const [codeDraft] = useState(() => new IdentifierCodeDraft());
 	const [error, setError] = useState<string | null>(null);
 	const [nameDraft] = useState(() => new IdentifierNameDraft());
+	const [profileDraft] = useState(() => new IdentifierProfileDraft());
 	const [submitting, setSubmitting] = useState(false);
 	const [pendingApproval, setPendingApproval] = useState(false);
 	const [ageBlocked, setAgeBlocked] = useState(() => isAgeBlocked());
@@ -158,9 +165,10 @@ export function AuthIdentifierFirstStep({
 			nameDraft.setErrors(NO_INSTANT_ACCOUNT_ERRORS);
 			codeDraft.setStatus(null);
 			codeDraft.setCode('');
+			if (next.kind === 'email') profileDraft.setConfirmed(false);
 			setStep(next);
 		},
-		[codeDraft, nameDraft],
+		[codeDraft, nameDraft, profileDraft],
 	);
 
 	const run = useCallback(
@@ -199,7 +207,7 @@ export function AuthIdentifierFirstStep({
 			const sent = await AccountEntryCommands.sendEmailCode(ticket, registrationUrlCode, runtimeSnapshot);
 			const now = Date.now();
 			goTo({
-				kind: 'code',
+				kind: sent.purpose === 'sign_up' && !profileDraft.confirmed ? 'profile' : 'code',
 				email: address,
 				ticket,
 				purpose: sent.purpose,
@@ -207,7 +215,7 @@ export function AuthIdentifierFirstStep({
 				resendAvailableAt: parseIsoTimestamp(sent.resend_available_at, now + EMAIL_CODE_RESEND_FALLBACK_MS),
 			});
 		},
-		[goTo, registrationUrlCode, runtimeSnapshot],
+		[goTo, profileDraft, registrationUrlCode, runtimeSnapshot],
 	);
 
 	const renderHeading = (heading: ReactNode, description: ReactNode = null) => (
@@ -253,6 +261,23 @@ export function AuthIdentifierFirstStep({
 		);
 	}
 
+	if (step.kind === 'profile') {
+		return (
+			<AuthIdentifierProfileStep
+				draft={profileDraft}
+				runtimeSnapshot={runtimeSnapshot}
+				email={step.email}
+				heading={renderHeading(i18n._(PROFILE_STEP_HEADING_DESCRIPTOR), i18n._(PROFILE_STEP_DESCRIPTION_DESCRIPTOR))}
+				onContinue={() => {
+					setError(null);
+					setStep({...step, kind: 'code'});
+				}}
+				onBack={() => goTo({kind: 'email'})}
+				data-flx="auth.flow.identifier-first.profile-step-component"
+			/>
+		);
+	}
+
 	if (step.kind === 'code') {
 		const sentTo = i18n._(CODE_SENT_TO_DESCRIPTOR, {email: isolateBidi(step.email)});
 		const signingUp = step.purpose === 'sign_up';
@@ -274,6 +299,11 @@ export function AuthIdentifierFirstStep({
 				run={run}
 				finishEntry={finishEntry}
 				sendCode={sendCode}
+				profile={profileDraft.confirmed ? profileDraft.profile : null}
+				onProfileRejected={(caught) => {
+					profileDraft.rejectWith(caught, i18n);
+					setStep({...step, kind: 'profile'});
+				}}
 				passkeyAvailable={passkeyAvailable}
 				passkeyDisabled={passkeyDisabled}
 				onPasskeyLogin={onPasskeyLogin}

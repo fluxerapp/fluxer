@@ -30,6 +30,7 @@ import {
 	assertAccountCreationPastSetup,
 	assertRegistrationConsent,
 	assertRegistrationEmailDeliverable,
+	assertRequestedProfileAllowed,
 	createAccount,
 	enforceRegistrationRateLimits,
 	type RegistrationDependencies,
@@ -380,6 +381,8 @@ export async function verifyEmailCode(
 		consent: boolean | undefined;
 		registrationUrlCode: string | null | undefined;
 		inviteCode: string | null | undefined;
+		username?: string;
+		globalName?: string;
 		request: Request;
 		clientIp: string;
 		requestCache: RequestCache;
@@ -401,6 +404,7 @@ export async function verifyEmailCode(
 			await deps.instanceConfigRepository.getAppPublicConfig(),
 			params.consent,
 		);
+		await assertRequestedProfileAllowed(ctx, deps, {username: params.username, globalName: params.globalName});
 	}
 	const record = await consumeCode(ctx, {
 		ticketId: params.ticket,
@@ -413,6 +417,8 @@ export async function verifyEmailCode(
 			input: {
 				email: ticket.identifier,
 				emailProven: true,
+				username: params.username,
+				globalName: params.globalName,
 				consent: params.consent,
 				inviteCode: params.inviteCode,
 				registrationUrlCode: params.registrationUrlCode,

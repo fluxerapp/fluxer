@@ -2881,6 +2881,11 @@ msgstr "satu menit"
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Versi desktop baru sudah tersedia. Unduh penginstalnya, lalu jalankan untuk memperbarui {productName}."
 
+#. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "A number is added after your username, like {example}. You can change both later."
+msgstr "Sebuah angka ditambahkan setelah nama penggunamu, seperti {example}. Kamu bisa mengubah keduanya nanti."
+
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
@@ -10172,6 +10177,7 @@ msgstr "Menu konteks"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Menu konteks dapat dibuka dengan klik kiri (pada tombol) atau klik kanan (pada elemen lain). Ini menunjukkan berbagai item menu termasuk kotak centang, tombol radio, penggeser, dan submenu."
 
+#. Button on the sign-up profile step that goes on to the email code.
 #. Button that confirms regenerating account recovery backup codes.
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
@@ -10181,6 +10187,7 @@ msgstr "Menu konteks dapat dibuka dengan klik kiri (pada tombol) atau klik kanan
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
@@ -23759,6 +23766,11 @@ msgstr "Penerjemah saya"
 msgid "Nagbar overrides"
 msgstr "Penggantian bilah notifikasi"
 
+#. Placeholder username used in the tag example on the sign-up profile step before the person types one.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "name"
+msgstr "nama"
+
 #. Column header for custom emoji names.
 #. Field label in the theme details modal in Settings > Themes.
 #. Form field label for the name of the item being edited.
@@ -27214,6 +27226,11 @@ msgstr "Pilih penyedia pencarian gambar terbalik"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
 msgid "Pick a translation provider"
 msgstr "Pilih penyedia terjemahan"
+
+#. Hint under the username field at sign-up on instances where every username is unique.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Pick a username nobody else has. You can change it later."
+msgstr "Pilih nama pengguna yang belum dipakai orang lain. Kamu bisa mengubahnya nanti."
 
 #. Title of the picker modal when choosing a web search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
@@ -37470,6 +37487,11 @@ msgstr "Ini dinonaktifkan"
 msgid "This is how messages appear"
 msgstr "Begini tampilan pesan"
 
+#. Text under the heading of the sign-up step where a new person picks their display name and username.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "This is how other people will see you."
+msgstr "Begini orang lain akan melihatmu."
+
 #: src/features/channel/components/ChannelLayout.tsx
 msgid "This is not the channel you're looking for."
 msgstr "Ini bukan saluran yang kamu cari."
@@ -42194,6 +42216,11 @@ msgstr "Selamat datang, {username}! Obrolan berikutnya dimulai di sini."
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "Selamat datang, {username}. Senang kamu bergabung di sini."
 
+#. Heading of the sign-up step where a new person picks their display name and username, before their account is created.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Welcome! Let's set up your profile"
+msgstr "Selamat datang! Ayo siapkan profilmu"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -43322,6 +43349,11 @@ msgstr "Kamu sudah menyimpan kit pemulihan."
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "You sign in with a code sent to your email. A password is optional."
 msgstr "Kamu masuk dengan kode yang dikirim ke emailmu. Kata sandi bersifat opsional."
+
+#. Note at the bottom of the sign-up profile step. Tells a new person how they sign in next time and where to add a password. email is their address.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "You sign in with a code we email to {email}. You can set a password later in Settings, under Account."
+msgstr "Kamu masuk dengan kode yang kami kirim ke {email}. Kamu bisa mengatur kata sandi nanti di Pengaturan, bagian Akun."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx

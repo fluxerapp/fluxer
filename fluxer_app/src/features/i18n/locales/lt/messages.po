@@ -2881,6 +2881,11 @@ msgstr "minutę"
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Prieinama nauja darbalaukio versija. Atsisiųskite diegimo programą ir paleiskite ją, kad atnaujintumėte {productName}."
 
+#. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "A number is added after your username, like {example}. You can change both later."
+msgstr "Po naudotojo vardo pridedamas skaičius, pvz., {example}. Abu galėsite pakeisti vėliau."
+
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
@@ -10172,6 +10177,7 @@ msgstr "Kontekstiniai meniu"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Kontekstiniai meniu atidaromi kairiuoju pelės mygtuku (ant mygtukų) arba dešiniuoju pelės mygtuku (ant kitų elementų). Čia demonstruojami įvairūs meniu elementai, įskaitant žymimuosius langelius, radijo mygtukus, slankiklius ir submeniu."
 
+#. Button on the sign-up profile step that goes on to the email code.
 #. Button that confirms regenerating account recovery backup codes.
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
@@ -10181,6 +10187,7 @@ msgstr "Kontekstiniai meniu atidaromi kairiuoju pelės mygtuku (ant mygtukų) ar
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
@@ -23760,6 +23767,11 @@ msgstr "Mano vertėjas"
 msgid "Nagbar overrides"
 msgstr "Nagbaro perrašymai"
 
+#. Placeholder username used in the tag example on the sign-up profile step before the person types one.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "name"
+msgstr "vardas"
+
 #. Column header for custom emoji names.
 #. Field label in the theme details modal in Settings > Themes.
 #. Form field label for the name of the item being edited.
@@ -27215,6 +27227,11 @@ msgstr "Pasirinkite atvirkštinės vaizdų paieškos teikėją"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
 msgid "Pick a translation provider"
 msgstr "Pasirinkite vertimo teikėją"
+
+#. Hint under the username field at sign-up on instances where every username is unique.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Pick a username nobody else has. You can change it later."
+msgstr "Pasirinkite naudotojo vardą, kurio niekas kitas neturi. Vėliau galėsite jį pakeisti."
 
 #. Title of the picker modal when choosing a web search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
@@ -37471,6 +37488,11 @@ msgstr "Tai išjungta"
 msgid "This is how messages appear"
 msgstr "Štai kaip atrodo žinutės"
 
+#. Text under the heading of the sign-up step where a new person picks their display name and username.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "This is how other people will see you."
+msgstr "Taip jus matys kiti žmonės."
+
 #: src/features/channel/components/ChannelLayout.tsx
 msgid "This is not the channel you're looking for."
 msgstr "Tai ne tas kanalas, kurio ieškote."
@@ -42195,6 +42217,11 @@ msgstr "Sveiki, {username}! Jūsų kitas pokalbis prasideda čia."
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "Sveiki, {username}. Džiaugiamės, kad esate čia."
 
+#. Heading of the sign-up step where a new person picks their display name and username, before their account is created.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Welcome! Let's set up your profile"
+msgstr "Sveiki! Susikurkime jūsų profilį"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -43323,6 +43350,11 @@ msgstr "Išsaugojote atkūrimo rinkinį."
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "You sign in with a code sent to your email. A password is optional."
 msgstr "Prisijungiate naudodami kodą, išsiųstą jūsų el. paštu. Slaptažodis neprivalomas."
+
+#. Note at the bottom of the sign-up profile step. Tells a new person how they sign in next time and where to add a password. email is their address.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "You sign in with a code we email to {email}. You can set a password later in Settings, under Account."
+msgstr "Prisijungiate kodu, kurį siunčiame adresu {email}. Slaptažodį vėliau galite nustatyti skiltyje Nustatymai, Paskyra."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx

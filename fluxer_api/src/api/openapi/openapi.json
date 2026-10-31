@@ -37755,6 +37755,14 @@
 					"invite_code": {
 						"description": "Invite to open after the date of birth step, for sign-ups",
 						"type": ["string", "null"]
+					},
+					"username": {
+						"description": "For sign-ups, the username for the new account. Ignored when signing in",
+						"$ref": "#/components/schemas/UsernameType"
+					},
+					"global_name": {
+						"description": "For sign-ups, the display name shown to other people. Ignored when signing in",
+						"type": "string"
 					}
 				},
 				"required": ["ticket", "code"]

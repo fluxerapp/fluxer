@@ -2881,6 +2881,11 @@ msgstr "1 นาที"
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "มีเวอร์ชันเดสก์ท็อปใหม่พร้อมให้ดาวน์โหลดแล้ว โปรดดาวน์โหลดไฟล์ติดตั้งและเรียกใช้เพื่ออัปเดต {productName}"
 
+#. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "A number is added after your username, like {example}. You can change both later."
+msgstr "ระบบจะเติมตัวเลขต่อท้ายชื่อผู้ใช้ของคุณ เช่น {example} คุณเปลี่ยนทั้งสองอย่างได้ภายหลัง"
+
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
@@ -10172,6 +10177,7 @@ msgstr "เมนูบริบท"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "เมนูบริบทสามารถเปิดได้ด้วยการคลิกซ้าย (บนปุ่ม) หรือคลิกขวา (บนองค์ประกอบอื่น ๆ) ซึ่งจะแสดงรายการเมนูต่าง ๆ เช่น ช่องทำเครื่องหมาย ปุ่มตัวเลือก แถบเลื่อน และเมนูย่อย"
 
+#. Button on the sign-up profile step that goes on to the email code.
 #. Button that confirms regenerating account recovery backup codes.
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
@@ -10181,6 +10187,7 @@ msgstr "เมนูบริบทสามารถเปิดได้ด้
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
@@ -23759,6 +23766,11 @@ msgstr "นักแปลของฉัน"
 msgid "Nagbar overrides"
 msgstr "การแทนที่ค่า Nagbar"
 
+#. Placeholder username used in the tag example on the sign-up profile step before the person types one.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "name"
+msgstr "name"
+
 #. Column header for custom emoji names.
 #. Field label in the theme details modal in Settings > Themes.
 #. Form field label for the name of the item being edited.
@@ -27214,6 +27226,11 @@ msgstr "เลือกผู้ให้บริการค้นหารู
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
 msgid "Pick a translation provider"
 msgstr "เลือกผู้ให้บริการแปลภาษา"
+
+#. Hint under the username field at sign-up on instances where every username is unique.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Pick a username nobody else has. You can change it later."
+msgstr "เลือกชื่อผู้ใช้ที่ยังไม่มีใครใช้ คุณเปลี่ยนได้ภายหลัง"
 
 #. Title of the picker modal when choosing a web search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx
@@ -37470,6 +37487,11 @@ msgstr "ปิดใช้งานอยู่"
 msgid "This is how messages appear"
 msgstr "ลักษณะการแสดงผลของข้อความ"
 
+#. Text under the heading of the sign-up step where a new person picks their display name and username.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "This is how other people will see you."
+msgstr "คนอื่นจะเห็นคุณแบบนี้"
+
 #: src/features/channel/components/ChannelLayout.tsx
 msgid "This is not the channel you're looking for."
 msgstr "นี่ไม่ใช่ช่องที่คุณกำลังมองหา"
@@ -42194,6 +42216,11 @@ msgstr "ยินดีต้อนรับ {username}! การสนทน�
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "ยินดีต้อนรับ {username} พวกเราดีใจที่มีคุณอยู่ที่นี่"
 
+#. Heading of the sign-up step where a new person picks their display name and username, before their account is created.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "Welcome! Let's set up your profile"
+msgstr "ยินดีต้อนรับ! มาตั้งค่าโปรไฟล์ของคุณกัน"
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -43322,6 +43349,11 @@ msgstr "คุณบันทึกชุดกู้คืนแล้ว"
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "You sign in with a code sent to your email. A password is optional."
 msgstr "คุณลงชื่อเข้าใช้ด้วยรหัสที่ส่งไปยังอีเมลของคุณ รหัสผ่านเป็นทางเลือก"
+
+#. Note at the bottom of the sign-up profile step. Tells a new person how they sign in next time and where to add a password. email is their address.
+#: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
+msgid "You sign in with a code we email to {email}. You can set a password later in Settings, under Account."
+msgstr "คุณเข้าสู่ระบบด้วยรหัสที่เราส่งไปที่ {email} คุณตั้งรหัสผ่านได้ภายหลังในการตั้งค่า ที่หัวข้อบัญชี"
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
