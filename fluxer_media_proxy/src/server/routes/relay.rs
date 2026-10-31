@@ -157,7 +157,8 @@ pub(in crate::server) async fn relay_put(
                     app.metrics.relay().relay_upstream_failures_retryable.inc();
                     return relay_error(RelayError::UpstreamRetryable);
                 }
-                Err(SpoolError::Io(_)) => {
+                Err(SpoolError::Io(err)) => {
+                    warn!(error = %err, spool_dir = %app.cfg.upload_relay.spool_dir.display(), "upload relay couldn't spool the request body");
                     return relay_error(RelayError::InternalError);
                 }
             };
