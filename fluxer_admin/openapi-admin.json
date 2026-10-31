@@ -8952,7 +8952,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the evidence messages after they are snapshotted. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.",
+				"description": "Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the reported messages and the evidence you listed after they are snapshotted, and keeps the other messages from the reports. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -15369,7 +15369,7 @@
 					},
 					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]},
 					"remove_evidence": {
-						"description": "Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only",
+						"description": "Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept. Enforcement basis only",
 						"type": "boolean"
 					},
 					"block_networks": {"allOf": [{"$ref": "#/components/schemas/NetworkBlockRequest"}]},
@@ -15440,7 +15440,7 @@
 					},
 					"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]},
 					"remove_evidence": {
-						"description": "Remove the evidence messages after they are snapshotted into the decision",
+						"description": "Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept",
 						"type": "boolean"
 					},
 					"block_networks": {"allOf": [{"$ref": "#/components/schemas/NetworkBlockRequest"}]}

@@ -940,7 +940,7 @@ Suspends the account for some hours or permanently, records the [enforcement dec
 | --- | --- | --- |
 | duration_hours | integer | How many hours to suspend for, or `0` for permanently (0-8760) |
 | decision | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the account is suspended |
-| remove_evidence?<sup>1</sup> | boolean | Whether to delete the evidence messages after they are saved |
+| remove_evidence?<sup>1</sup> | boolean | Whether to delete the reported messages and the listed evidence once saved. Other report messages are kept |
 | block_networks?<sup>2</sup> | [network block request](#network-block-request) object | The account's addresses to block |
 
 <sup>1</sup> Needs `message:shred`
@@ -1097,7 +1097,7 @@ Closes the account, signs it out everywhere, schedules its deletion and returns 
 | days_until_deletion | integer | How many days until deletion, at least 14 (1-365) |
 | basis | [basis](/admin-api/enforcement/#basis) object | Why the account is closed |
 | replace_pending_deletion_at?<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule you replace |
-| remove_evidence?<sup>2</sup> | boolean | Whether to delete the evidence messages after they are saved |
+| remove_evidence?<sup>2</sup> | boolean | Whether to delete the reported messages and the listed evidence once saved. Other report messages are kept |
 | block_networks?<sup>2</sup> | [network block request](#network-block-request) object | The account's addresses to block |
 | immediate? | boolean | Whether to delete the account now |
 

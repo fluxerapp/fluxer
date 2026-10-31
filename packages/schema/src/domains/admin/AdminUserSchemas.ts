@@ -668,7 +668,7 @@ export const AdminUserDeletionScheduleRequest = z.object({
 	remove_evidence: z
 		.boolean()
 		.optional()
-		.describe('Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only'),
+		.describe('Remove the reported messages and the evidence you listed after they are snapshotted into the decision. Other messages from the reports are kept. Enforcement basis only'),
 	block_networks: NetworkBlockRequest.optional(),
 	immediate: z
 		.boolean()

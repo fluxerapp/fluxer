@@ -249,8 +249,8 @@ function canBlockNetworks(kind: EnforcementKind, endsAt: Date | null | undefined
 
 function reportOutcome(
 	report: IARSubmission,
-	{kind, removal, removeEvidence}: RecordDecisionParams,
-	evidence: ReadonlyArray<IARMessageContextRow>,
+	{kind, removal}: RecordDecisionParams,
+	removedEvidence: ReadonlyArray<IARMessageContextRow>,
 ): ReportItemOutcome | null {
 	if (kind === 'community_removal') {
 		return 'removed';
@@ -263,7 +263,7 @@ function reportOutcome(
 		const removed =
 			removal?.type === 'all_messages' ||
 			(removal?.type === 'messages' && removal.entries.some((entry) => entry.message_id === messageId)) ||
-			(removeEvidence && evidence.some((message) => message.message_id === messageId));
+			removedEvidence.some((message) => message.message_id === messageId);
 		if (removed) {
 			return 'removed';
 		}
@@ -281,7 +281,8 @@ export class EnforcementDecisionService {
 		params: RecordDecisionParams,
 		applyState: (decisionId: bigint) => Promise<void>,
 	): Promise<RecordedDecision> {
-		const {reports, evidence, removedMessageCount, internalNote, networkPlan} = await this.validate(params);
+		const {reports, evidence, removedEvidence, removedMessageCount, internalNote, networkPlan} =
+			await this.validate(params);
 		const {subject, kind, input, removal, profileReset, actor} = params;
 		const replacedDecisionId =
 			subject.type === 'user' && isAccountKind(kind) ? subject.user.enforcementDecisionId : null;
@@ -321,7 +322,7 @@ export class EnforcementDecisionService {
 			await this.clearReviewQueueFor(subject.user.id);
 		}
 		if (params.removeEvidence) {
-			await this.queueEvidenceRemoval(decision, evidence, actor.adminUserId);
+			await this.queueEvidenceRemoval(decision, removedEvidence, actor.adminUserId);
 		}
 		const carried = replacedDecisionId
 			? await this.takeOverNetworkBlocks(replacedDecisionId, decision, {keep: canBlockNetworks(kind, params.endsAt)})
@@ -334,7 +335,7 @@ export class EnforcementDecisionService {
 			...networks.blocked,
 		];
 		await this.resolveReports(
-			reports.map((report) => ({report, outcome: reportOutcome(report, params, evidence)})),
+			reports.map((report) => ({report, outcome: reportOutcome(report, params, removedEvidence)})),
 			actor,
 			internalNote,
 		);
@@ -830,6 +831,7 @@ export class EnforcementDecisionService {
 	}: RecordDecisionParams): Promise<{
 		reports: Array<IARSubmission>;
 		evidence: Array<IARMessageContextRow>;
+		removedEvidence: Array<IARMessageContextRow>;
 		removedMessageCount: number | null;
 		internalNote: string;
 		networkPlan: NetworkBlockPlan | null;
@@ -881,7 +883,12 @@ export class EnforcementDecisionService {
 		});
 		const removedIds = new Set(removed.map((entry) => entry.message_id));
 		const evidence = removed.length > 0 ? collected.filter((message) => removedIds.has(message.message_id)) : collected;
-		if (removeEvidence && evidence.length === 0) {
+		const chosenIds = new Set([
+			...explicitEvidence.map((entry) => entry.message_id),
+			...reports.flatMap((report) => (report.reportedMessageId !== null ? [report.reportedMessageId] : [])),
+		]);
+		const removedEvidence = removeEvidence ? evidence.filter((message) => chosenIds.has(message.message_id)) : [];
+		if (removeEvidence && removedEvidence.length === 0) {
 			throw InputValidationError.fromCode('remove_evidence', ValidationErrorCodes.ENFORCEMENT_EVIDENCE_REQUIRED);
 		}
 		if (reason.handling === 'restricted') {
@@ -909,9 +916,9 @@ export class EnforcementDecisionService {
 		if (removal?.type === 'messages') {
 			removedMessageCount = evidence.length + (await this.countOwnMessages(subject, removed.slice(snapshotted)));
 		} else if (removeEvidence) {
-			removedMessageCount = evidence.length;
+			removedMessageCount = removedEvidence.length;
 		}
-		return {reports, evidence, removedMessageCount, internalNote: actor.internalNote, networkPlan};
+		return {reports, evidence, removedEvidence, removedMessageCount, internalNote: actor.internalNote, networkPlan};
 	}
 
 	private async countOwnMessages(
