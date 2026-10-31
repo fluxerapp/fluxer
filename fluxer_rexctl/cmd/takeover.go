@@ -124,6 +124,7 @@ func takeoverDir(ctx context.Context, app *App, dir string, opts takeoverOptions
 	if err != nil {
 		return nil, nil, err
 	}
+	app.migrate(ctx, inst)
 	installTakeoverBootUnit(ctx, app, inst, e)
 	app.remember(inst.Dir)
 	if e != nil {
