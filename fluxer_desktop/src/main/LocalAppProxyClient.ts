@@ -163,7 +163,7 @@ export class DesktopLocalAppProxyClient {
 		const outboundRequest: DesktopOutboundHTTPRequest = {
 			body: body == null ? null : instrumentedRequestBody(body, request),
 			expectedOrigin: target.origin,
-			headers: outboundHeaders(request.headers, request.acceptEncoding),
+			headers: outboundHeaders(request.headers, request.acceptEncoding, body == null ? null : request.uploadTotalBytes),
 			maximumRequestBodyBytes: LOCAL_APP_PROXY_REQUEST_BODY_MAX_BYTES,
 			method: request.method,
 			originTrust: DesktopOriginTrust.REGISTERED,
@@ -209,13 +209,20 @@ export class DesktopLocalAppProxyClient {
 	}
 }
 
-function outboundHeaders(headers: Headers, acceptEncoding: string | null): Record<string, string> {
+function outboundHeaders(
+	headers: Headers,
+	acceptEncoding: string | null,
+	contentLength: number | null,
+): Record<string, string> {
 	const values: Record<string, string> = Object.create(null) as Record<string, string>;
 	headers.forEach((value, name) => {
 		values[name] = value;
 	});
 	if (acceptEncoding != null) {
 		values['Accept-Encoding'] = acceptEncoding;
+	}
+	if (contentLength != null) {
+		values['Content-Length'] = contentLength.toString();
 	}
 	return values;
 }

@@ -61,6 +61,10 @@ function isRefusedRequestHeader(name: string): boolean {
 	return CHROMIUM_REFUSED_REQUEST_HEADERS.has(normalized) || normalized.startsWith('proxy-');
 }
 
+function declaresContentLength(headers: Readonly<Record<string, string>>): boolean {
+	return Object.keys(headers).some((name) => name.toLowerCase() === 'content-length');
+}
+
 function decodedResponseHeaders(headers: Record<string, string | Array<string>>): http.IncomingHttpHeaders {
 	const result: http.IncomingHttpHeaders = {};
 	const decoded = headers['content-encoding'] != null;
@@ -183,7 +187,7 @@ export function sendThroughDesktopSession(request: DesktopSessionHTTPRequest): P
 			clientRequest.end(Buffer.from(requestBody));
 			return;
 		}
-		clientRequest.chunkedEncoding = true;
+		clientRequest.chunkedEncoding = !declaresContentLength(request.headers);
 		requestBody.on('error', (error: Error) => {
 			clientRequest.abort();
 			fail(error);
