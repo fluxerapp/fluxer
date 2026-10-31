@@ -33,7 +33,7 @@ rexctl picks every value and shows them in one summary before it changes anythin
 - **Endpoint.** A path on your domain, such as `wss://chat.example.com/livekit-default-server-2`. It needs no DNS record, no new certificate and no change to a proxy that forwards every path.
 - **Keys.** The key `fluxer-` followed by the ID, and a new random secret.
 - **Address, memory and image.** The same public address, LiveKit release and memory limit as the bundled server.
-- **Soft limit.** 75 connections per CPU. Placement prefers another server once a server holds this many.
+- **Soft limit.** 75 connections per CPU. Placement prefers another server once a server has this many.
 
 Add several at once with `--count`.
 
@@ -130,7 +130,7 @@ Then pass it when you join.
 rexctl voice join chat.example.com fvj_... --hostname voice-fra.chat.example.com
 ```
 
-When `voice-` followed by the region and your domain already points at the machine, rexctl uses it without being asked. When the hostname doesn't point at the machine yet, rexctl prints the records and waits up to 10 minutes. After that it uses the IP address and prints the command to switch later. With `--yes`, or without a terminal, it uses the IP address straight away. A machine with only IPv6 has no IP address to fall back to. There rexctl waits up to 10 minutes for the `AAAA` record even with `--yes`, and stops when the record still doesn't point at the machine.
+When `voice-` followed by the region and your domain already points at the machine, rexctl uses it without being asked. When the hostname doesn't point at the machine yet, rexctl prints the records and waits up to 10 minutes. After that it uses the IP address and prints the command to switch later. With `--yes`, or without a terminal, it uses the IP address right away. A machine with only IPv6 has no IP address to fall back to. There rexctl waits up to 10 minutes for the `AAAA` record even with `--yes`, and stops when the record still doesn't point at the machine.
 
 A token made with `--hostname` works only with that hostname. rexctl stops when you pass another one. It waits up to 10 minutes for the name to point at the machine, also with `--yes`, and stops before it starts anything when the name still doesn't. Add the record, then run the same command again.
 
@@ -140,7 +140,7 @@ rexctl voice hostname fra-server-1 voice-fra.chat.example.com
 
 On Cloudflare, set this record to **DNS only**. `rexctl voice join` checks that the name points at the machine before the edge asks Let's Encrypt for a certificate, and a proxied name points at Cloudflare. Remove any `AAAA` record that points somewhere else, because Let's Encrypt checks IPv6 first.
 
-A server from `rexctl voice add` uses your instance's domain, which can stay proxied. Only signalling goes through Cloudflare. Audio and video go straight to the machine's IP address, which LiveKit gives to clients.
+A server from `rexctl voice add` uses your instance's domain, which can stay proxied. Only signalling goes through Cloudflare. Audio and video go directly to the machine's IP address, which LiveKit gives to clients.
 
 ## IPv6
 
@@ -174,7 +174,7 @@ Without a TURN server, a caller with only IPv4 can't join a call on a server wit
 
 With `allocation-default-address-family="ipv6"`, the TURN server gives no useful relay for a voice server with only IPv4. Callers who need the TURN server can't connect to such a server with that setting. Your instance gives every voice server the same list of TURN servers. Use the setting only when every voice server of your instance has IPv6.
 
-`rexctl voice test <id>` on a Fluxer machine with IPv4 tries **IPv4 through TURN** for a server with only IPv6, when your instance has TURN servers. It opens the WebSocket over IPv4, which goes to the machine the `A` record points at, and connects media only through the TURN servers the voice server gives clients over UDP and TCP, which it connects to over IPv4. Like a browser, it asks for no address family, so it passes only when the TURN server hands out IPv6 relay addresses. When the instance has no TURN servers, the test skips this.
+`rexctl voice test <id>` on a Fluxer machine with IPv4 tries **IPv4 through TURN** for a server with only IPv6, when your instance has TURN servers. It opens the WebSocket over IPv4, which goes to the machine the `A` record points at, and connects media only through the TURN servers the voice server gives clients over UDP and TCP, which it connects to over IPv4. Like a browser, it asks for no address family, and it passes only when the TURN server hands out IPv6 relay addresses. When the instance has no TURN servers, the test skips this.
 
 ### Machines that joined before
 
@@ -225,11 +225,11 @@ Behind a router or another NAT, forward each port to the same port number on the
 
 ## Machines with something else on ports 80 and 443
 
-When another rexctl Fluxer instance holds ports 80 and 443 on the voice machine, the server uses that instance's domain and edge, such as `wss://other.example.com/livekit-fra-server-1`. You can't pass `--hostname` then.
+When another rexctl Fluxer instance uses ports 80 and 443 on the voice machine, the server uses that instance's domain and edge, such as `wss://other.example.com/livekit-fra-server-1`. You can't pass `--hostname` then.
 
 The server's files go in the voice folder, and the Fluxer instance stays the default folder. `rexctl voice status`, `rexctl voice test` and `rexctl voice remove` find the server by its ID. The server uses that instance's domain, and `rexctl voice hostname` doesn't apply to it. `rexctl upgrade` on the Fluxer instance upgrades it too. Other commands for it need `--dir` with the voice folder.
 
-When nginx or another program holds them, rexctl stops. Pass `--no-edge` and the public address of your own proxy.
+When nginx or another program uses them, rexctl stops. Pass `--no-edge` and the public address of your own proxy.
 
 ```sh
 rexctl voice join chat.example.com fvj_... --no-edge --endpoint wss://voice.example.com/livekit-fra-server-1

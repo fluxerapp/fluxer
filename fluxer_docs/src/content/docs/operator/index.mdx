@@ -10,7 +10,7 @@ rexctl installs Fluxer on one machine and keeps it running. To run Fluxer on a K
 
 ## What you need
 
-- A 64-bit Linux, macOS or Windows machine with at least 2 CPU cores, 4 GB of memory and 20 GB of free disk space. That's enough for about 1,000 people online at the same time. rexctl sizes Fluxer to the machine's memory and CPUs every time it starts, so a bigger machine needs no extra settings.
+- A 64-bit Linux, macOS or Windows machine with at least 2 CPU cores, 4 GB of memory and 20 GB of free disk space. That's enough for about 1,000 people online at the same time. rexctl sizes Fluxer to the machine's memory and CPUs every time it starts, and a bigger machine needs no extra settings.
 - On macOS and Windows, [Docker Desktop](https://docs.docker.com/desktop/). On Linux, rexctl installs Docker for you if it's missing.
 - A domain or subdomain for your instance, such as `chat.example.com`.
 - An `A` record for that domain pointing to the machine's public IP address. rexctl checks it before it asks for a certificate.
@@ -45,17 +45,37 @@ rexctl asks where you want to create your admin account. "Here in the terminal" 
 
 Once you've created the admin account, people can open your instance's address in a browser or enter it in the desktop and mobile apps.
 
+## Without a public IP address
+
+Behind CGNAT, or anywhere you can't forward ports, serve Fluxer through a tunnel such as Cloudflare Tunnel. Install with `--behind-proxy` and point the tunnel at `http://127.0.0.1:8080`. In this mode rexctl only checks that your domain resolves to some address.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- install --behind-proxy --bind 127.0.0.1:8080
+```
+
+Calls don't go through a tunnel, and they need a TURN server on a machine with a public address, as [Voice behind a tunnel](/operator/reverse-proxy/#voice-behind-a-tunnel) explains.
+
+To run Fluxer only on your own network, use a name that isn't on the public internet, such as `chat.home.arpa` or `fluxer.internal`. rexctl skips the DNS check for names like these and for IP addresses. Make the name resolve to the machine on every device, through your router's DNS or each device's hosts file. Only devices on your network can open the instance.
+
+Fluxer gets certificates for names ending in `.home.arpa`, `.internal`, `.local` or `.localhost` from its own local certificate authority. Browsers and apps don't trust it until you install its root certificate on each device. This command copies the root certificate out of the instance.
+
+```sh
+docker cp "$(docker ps --format '{{.Names}}' | grep -m1 edge)":/data/caddy/pki/authorities/local/root.crt fluxer-root.crt
+```
+
+For any other private name, run `rexctl config set FLUXER_EDGE_TLS internal` to use the same local certificate authority.
+
 ## Where Fluxer keeps its files
 
 Fluxer uses three places on the machine:
 
-- The instance folder holds your settings, the files rexctl makes for Docker, and backups. It's `/opt/fluxer` when you install as root and `~/fluxer` otherwise.
-- Docker's data root holds the images and all of Fluxer's data, such as the database, uploads and search index. It's `/var/lib/docker` on most Linux machines.
+- The instance folder has your settings, the files rexctl makes for Docker and your backups. It's `/opt/fluxer` when you install as root and `~/fluxer` otherwise.
+- Docker's data root has the images and all of Fluxer's data, such as the database, uploads and search index. It's `/var/lib/docker` on most Linux machines.
 - The backup folder is `backups` in the instance folder unless you choose another one with `rexctl backup location <folder>`.
 
-The install needs 20 GB free on the disk with the instance folder and on the disk with Docker's data root. If either one is short, rexctl names the path.
+The install needs 20 GB free on the disk with the instance folder and on the disk with Docker's data root. If either one is short, rexctl says which path it is.
 
-To put Fluxer on a second drive, set `data-root` in `/etc/docker/daemon.json` to a folder on that drive and restart Docker before you install, so Docker keeps the images and data there. Then start the install with `--dir` and a folder on the same drive:
+To put Fluxer on a second drive, set `data-root` in `/etc/docker/daemon.json` to a folder on that drive and restart Docker before you install. Docker then keeps the images and data on that drive. Start the install with `--dir` and a folder on the same drive.
 
 ```sh
 curl -fsSL https://fluxer.dev/install.sh | sh -s -- install --dir /mnt/data/fluxer

@@ -26,7 +26,7 @@ func newBackupCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "backup",
 		Short: "Back up your instance",
-		Long:  "Back up your instance in one file that restores on this machine or a new one. It holds the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.",
+		Long:  "Back up your instance in one file that restores on this machine or a new one. It has the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runBackup(c.Context(), app)

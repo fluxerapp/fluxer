@@ -346,7 +346,7 @@ The public addresses LiveKit gives to clients. Give an IPv4 address, an IPv6 add
 
 ### `FLUXER_VOICE_ICE_IPS`
 
-The address ranges LiveKit may offer to clients, as a JSON array of ranges such as `["::/0"]`. rexctl sets it to the families in `FLUXER_VOICE_NODE_IP`, so a server with only IPv6 offers no private IPv4 address of its container. Use `[]` to offer every address.
+The address ranges LiveKit may offer to clients, as a JSON array of ranges such as `["::/0"]`. rexctl sets it to the families in `FLUXER_VOICE_NODE_IP`, and a server with only IPv6 then offers no private IPv4 address of its container. Use `[]` to offer every address.
 
 ### `FLUXER_VOICE_USE_EXTERNAL_IP`
 
@@ -462,7 +462,7 @@ Whether data export and admin download links are presigned URLs to the object st
 
 ### `FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`
 
-Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent straight to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off. With rexctl, use `rexctl config set FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`.
+Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent directly to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off. With rexctl, use `rexctl config set FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`.
 
 ### `FLUXER_API_STORAGE_CHANGE_FEED_STREAM`
 
@@ -642,7 +642,7 @@ Hosts the Rust services other than the app-proxy connect to without the proxy, s
 
 ### `FLUXER_NODE_EXTRA_CA_CERTS`
 
-The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their containers. With Docker Compose they see the ca folder of your instance at `/etc/fluxer/ca`, and nothing else from the instance folder. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can hold only your own CA. The Rust services don't use it and take their CA certificates from `SSL_CERT_FILE`. The default is `/etc/ssl/certs/ca-certificates.crt`. With rexctl, use `rexctl config set FLUXER_NODE_EXTRA_CA_CERTS`.
+The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their containers. With Docker Compose they see the ca folder of your instance at `/etc/fluxer/ca`, and nothing else from the instance folder. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can have only your own CA. The Rust services don't use it and take their CA certificates from `SSL_CERT_FILE`. The default is `/etc/ssl/certs/ca-certificates.crt`. With rexctl, use `rexctl config set FLUXER_NODE_EXTRA_CA_CERTS`.
 
 ## Sign-in
 
@@ -838,7 +838,7 @@ Hostnames, separated by commas, of the push relay that Fluxer runs. When it's em
 
 ### `FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`
 
-Hostnames, separated by commas, of a push relay your instance runs itself. The push service sends mobile app notifications addressed to these hosts straight to APNs or FCM with its own credentials. With rexctl, use `rexctl config set FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`.
+Hostnames, separated by commas, of a push relay your instance runs itself. The push service sends mobile app notifications addressed to these hosts directly to APNs or FCM with its own credentials. With rexctl, use `rexctl config set FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`.
 
 ### `FLUXER_PUSH_SERVICE_PRIVATE_HOSTS`
 
@@ -1538,7 +1538,7 @@ The share of deleted space in a volume that makes SeaweedFS compact it, as a fra
 
 ### `FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`
 
-How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress holds up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this. The default is `5`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`.
+How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress uses up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this. The default is `5`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`.
 
 ### `FLUXER_SEAWEEDFS_VOLUME_MAX`
 
