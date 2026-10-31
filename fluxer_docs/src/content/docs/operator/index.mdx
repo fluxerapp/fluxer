@@ -45,6 +45,22 @@ rexctl asks where you want to create your admin account. "Here in the terminal" 
 
 Once you've created the admin account, people can open your instance's address in a browser or enter it in the desktop and mobile apps.
 
+## Where Fluxer keeps its files
+
+Fluxer uses three places on the machine:
+
+- The instance folder holds your settings, the files rexctl makes for Docker, and backups. It's `/opt/fluxer` when you install as root and `~/fluxer` otherwise.
+- Docker's data root holds the images and all of Fluxer's data, such as the database, uploads and search index. It's `/var/lib/docker` on most Linux machines.
+- The backup folder is `backups` in the instance folder unless you choose another one with `rexctl backup location <folder>`.
+
+The install needs 20 GB free on the disk with the instance folder and on the disk with Docker's data root. If either one is short, rexctl names the path.
+
+To put Fluxer on a second drive, set `data-root` in `/etc/docker/daemon.json` to a folder on that drive and restart Docker before you install, so Docker keeps the images and data there. Then start the install with `--dir` and a folder on the same drive:
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- install --dir /mnt/data/fluxer
+```
+
 ## After you install
 
 Once your instance is running, these pages help you look after it.
