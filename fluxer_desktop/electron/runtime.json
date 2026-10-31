@@ -1,7 +1,7 @@
 {
-	"releaseTag": "desktop-electron-runtime-44.9.1-fluxer.1",
-	"electronVersion": "44.9.1",
-	"electronRevision": "e02265be96c5e13ae43644ef482b718e1e800499",
+	"releaseTag": "desktop-electron-runtime-44.10.0-fluxer.1",
+	"electronVersion": "44.10.0",
+	"electronRevision": "dce120a548ef263f34ad5952e1fc701981172209",
 	"patches": [
 		{
 			"file": "patches/fix_synchronize_vaapi_surfaces_before_output.patch",
@@ -11,10 +11,10 @@
 	],
 	"linux": {
 		"x64": {
-			"archiveSha256": "ae36cae3dd723d94b414302598014beb6230a0c596ac6dc7a2dc95a6198a2568"
+			"archiveSha256": "09348e1c71afec82e6bf752e560aefe47d4ef80e255c8b1641148bbe1d7b4c46"
 		},
 		"arm64": {
-			"archiveSha256": "b9160781a6f06038ad96aff2c3d3d677162281e95bbe8572f2c8b3408f769df0"
+			"archiveSha256": "f077b2ab72bc14191a9e79c8f5251ca632fb5c497e705155ca2efbecdbd1fa74"
 		}
 	}
 }
