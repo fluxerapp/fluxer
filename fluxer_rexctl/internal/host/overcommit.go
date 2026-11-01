@@ -60,6 +60,27 @@ func overcommitAt(path string, root bool) OvercommitState {
 	return OvercommitOff
 }
 
+func FreeMemory() uint64 {
+	if runtime.GOOS != "linux" {
+		return 0
+	}
+	data, err := os.ReadFile("/proc/meminfo")
+	if err != nil {
+		return 0
+	}
+	var free uint64
+	for _, line := range strings.Split(string(data), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 || fields[0] != "MemAvailable:" && fields[0] != "SwapFree:" {
+			continue
+		}
+		if kb, err := strconv.ParseUint(fields[1], 10, 64); err == nil {
+			free += kb << 10
+		}
+	}
+	return free
+}
+
 func EnableOvercommit(ctx context.Context) error {
 	if _, err := output(ctx, false, "sh", "-c", "printf '"+OvercommitSetting+"\\n' > "+OvercommitFile); err != nil {
 		return err
