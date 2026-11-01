@@ -79,7 +79,6 @@ export const TrustedSitesSettings: React.FC = observer(() => {
 				{i18n._(TRUSTED_SITE_WARNING_DESCRIPTOR)}
 			</p>
 			<form
-				className={styles.trustedSiteForm}
 				onSubmit={(event) => {
 					event.preventDefault();
 					handleTrust();
@@ -94,21 +93,23 @@ export const TrustedSitesSettings: React.FC = observer(() => {
 					autoComplete="off"
 					spellCheck={false}
 					error={error ?? undefined}
+					rightElement={
+						<Button
+							type="submit"
+							compact
+							fitContent
+							disabled={value.trim() === ''}
+							data-flx="theme-settings.trusted-sites-settings.button.trust"
+						>
+							{i18n._(TRUST_DESCRIPTOR)}
+						</Button>
+					}
 					onChange={(event) => {
 						setValue(event.target.value);
 						setError(null);
 					}}
 					data-flx="theme-settings.trusted-sites-settings.input.site-address"
 				/>
-				<Button
-					type="submit"
-					variant="secondary"
-					fitContent
-					disabled={value.trim() === ''}
-					data-flx="theme-settings.trusted-sites-settings.button.trust"
-				>
-					{i18n._(TRUST_DESCRIPTOR)}
-				</Button>
 			</form>
 			{sites.length > 0 ? (
 				<div className={styles.list} data-flx="theme-settings.trusted-sites-settings.list">
