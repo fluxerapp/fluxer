@@ -17,6 +17,7 @@ use tokio::sync::{OwnedSemaphorePermit, TryAcquireError};
 
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 const MAX_ASSET_SIZE_BYTES: u64 = 100 * 1024 * 1024;
+const BUILD_ASSET_HASH_LEN: usize = 16;
 
 pub async fn proxy_assets(
     State(state): State<AppState>,
@@ -36,10 +37,7 @@ pub async fn proxy_assets(
         }
     };
 
-    if path
-        .split('/')
-        .any(|segment| matches!(segment, "" | "." | ".."))
-    {
+    if !is_build_asset_path(&path) {
         return StatusCode::NOT_FOUND.into_response();
     }
 
@@ -147,6 +145,55 @@ fn upstream_asset_body(
             Ok(Some((chunk, state)))
         },
     ))
+}
+
+fn is_build_asset_path(path: &str) -> bool {
+    let (module, file) = match path.split_once('/') {
+        Some((module, file)) => (Some(module), file),
+        None => (None, path),
+    };
+    if module.is_some_and(|module| !is_module_name(module)) {
+        return false;
+    }
+    let mut parts = file.split('.');
+    let Some(first) = parts.next() else {
+        return false;
+    };
+    let rest: Vec<&str> = parts.collect();
+    let (name, hash, extension) = if is_content_hash(first) {
+        ("", first, rest.as_slice())
+    } else {
+        match rest.split_first() {
+            Some((hash, extension)) => (first, *hash, extension),
+            None => return false,
+        }
+    };
+    name.bytes()
+        .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+        && is_content_hash(hash)
+        && !extension.is_empty()
+        && extension.iter().all(|part| {
+            !part.is_empty()
+                && part
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+        })
+}
+
+fn is_module_name(segment: &str) -> bool {
+    segment.strip_prefix("fluxer_").is_some_and(|rest| {
+        !rest.is_empty()
+            && rest
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+    })
+}
+
+fn is_content_hash(segment: &str) -> bool {
+    segment.len() == BUILD_ASSET_HASH_LEN
+        && segment
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 pub fn bundles_app_assets(static_dir: &str) -> bool {
