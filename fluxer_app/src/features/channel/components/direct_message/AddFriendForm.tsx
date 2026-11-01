@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {EXAMPLE_FLUXER_TAG_FULL, EXAMPLE_USERNAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
@@ -56,6 +54,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [errorCode, setErrorCode] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
+	const productName = RuntimeConfig.productName;
 	const friendRequestGate = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST);
 	if (!friendRequestGate.allowed) {
 		return (
@@ -87,7 +86,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		}
 		if (errorCode === APIErrorCodes.DISCRIMINATOR_REQUIRED) {
 			if (usernameOnly) return i18n._(ENTER_A_VALID_USERNAME_DESCRIPTOR);
-			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG_FULL});
+			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: `${productName}#0000`});
 		}
 		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
 			return getSendFriendRequestErrorMessage(i18n, errorCode, errorMessage);
@@ -142,7 +141,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 					type="text"
 					value={input}
 					onChange={handleInputChange}
-					placeholder={usernameOnly ? EXAMPLE_USERNAME : EXAMPLE_FLUXER_TAG_FULL}
+					placeholder={usernameOnly ? productName : `${productName}#0000`}
 					className={clsx(
 						styles.input,
 						!isMobile && styles.inputDesktop,
