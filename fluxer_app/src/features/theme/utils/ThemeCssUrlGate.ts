@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isAttachmentCdnUrl} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import {isAttachmentCdnUrl, parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {type CSSToken, TokenType, tokenize} from '@csstools/css-tokenizer';
 
 export const REJECTED_CSS_URL = 'data:,';
@@ -13,6 +13,23 @@ const ENCODED_SEPARATOR_PATTERN = /%2f|%5c|\\/i;
 const FRAGMENT_REFERENCE_PATTERN = /^#[^/\\:]*$/;
 const DATA_URL_PATTERN =
 	/^data:(image\/(png|jpeg|gif|webp|avif|svg\+xml)|font\/[a-z0-9.+-]+|application\/(font-woff2?|x-font-[a-z0-9]+|vnd\.ms-fontobject))[;,]/i;
+const SNOWFLAKE_PATTERN = /^[1-9][0-9]*$/;
+const ASSET_FILENAME_PATTERN = /^[a-z0-9_]+\.[a-z0-9]+$/i;
+const SNOWFLAKE_FILENAME_PATTERN = /^[1-9][0-9]*\.[a-z0-9]+$/i;
+const BRANDING_OWNER_PATTERN = /^[a-z0-9_-]{1,128}$/i;
+const MEDIA_ASSET_PARAM_PATTERN = /^[a-z0-9]{1,16}$/i;
+const MEDIA_ASSET_PARAMS = ['size', 'quality', 'animated', 'format'] as const;
+const OWNED_ASSET_PREFIXES: ReadonlySet<string> = new Set([
+	'avatars',
+	'icons',
+	'banners',
+	'splashes',
+	'embed-splashes',
+	'role-icons',
+]);
+const BRANDING_ASSET_PREFIXES: ReadonlySet<string> = new Set(['branding', 'branding-backdrops', 'custom-badges']);
+const MEMBER_ASSET_PREFIXES: ReadonlySet<string> = new Set(['avatars', 'banners']);
+const SNOWFLAKE_ASSET_PREFIXES: ReadonlySet<string> = new Set(['emojis', 'stickers']);
 const FONT_STYLESHEET_ORIGINS: ReadonlySet<string> = new Set([
 	'https://fonts.googleapis.com',
 	'https://api.fonts.coollabs.io',
@@ -93,6 +110,42 @@ function canonicalAttachmentUrl(value: string, mediaEndpoint: string): string | 
 	return `${url.origin}${url.pathname}${queryText ? `?${queryText}` : ''}`;
 }
 
+function isMediaAssetPath(segments: ReadonlyArray<string>): boolean {
+	const [prefix, ...rest] = segments;
+	if (SNOWFLAKE_ASSET_PREFIXES.has(prefix)) return rest.length === 1 && SNOWFLAKE_FILENAME_PATTERN.test(rest[0]);
+	if (prefix === 'guilds') {
+		const [guildId, users, userId, kind, filename] = rest;
+		return (
+			rest.length === 5 &&
+			SNOWFLAKE_PATTERN.test(guildId) &&
+			users === 'users' &&
+			SNOWFLAKE_PATTERN.test(userId) &&
+			MEMBER_ASSET_PREFIXES.has(kind) &&
+			ASSET_FILENAME_PATTERN.test(filename)
+		);
+	}
+	if (rest.length !== 2 || !ASSET_FILENAME_PATTERN.test(rest[1])) return false;
+	if (OWNED_ASSET_PREFIXES.has(prefix)) return SNOWFLAKE_PATTERN.test(rest[0]);
+	return BRANDING_ASSET_PREFIXES.has(prefix) && BRANDING_OWNER_PATTERN.test(rest[0]);
+}
+
+function canonicalMediaAssetUrl(value: string, mediaEndpoint: string): string | null {
+	if (ENCODED_SEPARATOR_PATTERN.test(value)) return null;
+	const endpoint = parseEndpoint(mediaEndpoint);
+	const url = parseUrl(value);
+	if (endpoint === null || url === null || url.hash !== '' || url.username !== '' || url.password !== '') return null;
+	if (url.origin !== endpoint.origin) return null;
+	const prefix = endpoint.basePath === '/' ? '/' : `${endpoint.basePath}/`;
+	if (!url.pathname.startsWith(prefix) || !isMediaAssetPath(url.pathname.slice(prefix.length).split('/'))) return null;
+	const query = new URLSearchParams();
+	for (const field of MEDIA_ASSET_PARAMS) {
+		const fieldValue = url.searchParams.get(field);
+		if (fieldValue !== null && MEDIA_ASSET_PARAM_PATTERN.test(fieldValue)) query.set(field, fieldValue);
+	}
+	const queryText = query.toString();
+	return `${url.origin}${url.pathname}${queryText ? `?${queryText}` : ''}`;
+}
+
 function isInstanceUrl(value: string, instanceOrigins: ReadonlySet<string> | undefined): boolean {
 	if (!instanceOrigins) return false;
 	const url = parseUrl(value);
@@ -131,7 +184,7 @@ function allowedValue(rawValue: string, inFontFace: boolean, policy: ThemeCssGat
 	if (/^blob:/i.test(value)) return policy.objectUrls.has(value) ? value : null;
 	if (isInstanceUrl(value, policy.instanceOrigins)) return value;
 	if (inFontFace) return isFontFile(value) ? value : null;
-	return canonicalAttachmentUrl(value, policy.mediaEndpoint);
+	return canonicalAttachmentUrl(value, policy.mediaEndpoint) ?? canonicalMediaAssetUrl(value, policy.mediaEndpoint);
 }
 
 function quoteCssString(value: string): string {
