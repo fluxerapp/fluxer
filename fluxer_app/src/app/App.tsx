@@ -50,6 +50,7 @@ import WindowsFont from '@app/features/theme/state/WindowsFont';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import {QuickCssEditorHost} from '@app/features/theme_settings/components/QuickCssEditorHost';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
+import {canTrustSites} from '@app/features/theme_settings/state/TrustedSites';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {useTextInputContextMenu} from '@app/features/ui/hooks/useTextInputContextMenu';
@@ -81,6 +82,7 @@ import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import React, {type ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 
+const NO_TRUSTED_SITES: ReadonlyArray<string> = [];
 const SKIP_TO_CONTENT_DESCRIPTOR = msg({
 	message: 'Skip to content',
 	comment: 'Accessible skip-link label for keyboard users.',
@@ -236,6 +238,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		themeLibraryLocalFiles: ThemeLibrary.localFiles,
 		themeLibraryRevision: ThemeLibrary.revision,
 		mediaEndpoint: RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint ?? '',
+		trustedSites: canTrustSites() ? ThemeSettingsState.trustedSites : NO_TRUSTED_SITES,
 		onMissingReferences: ThemeSettingsState.setMissingReferences,
 		onBlockedUrl: ThemeSettingsState.recordBlockedUrl,
 		onCssRejected: ThemeSettingsState.setCssRejected,

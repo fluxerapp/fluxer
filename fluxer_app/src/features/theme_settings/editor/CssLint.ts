@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import {trustableSiteOf} from '@app/features/theme/utils/ThemeCssUrlGate';
 import {findMissingThemeCssReferences} from '@app/features/theme/utils/ThemeCssUtils';
 import {THEME_VARIABLE_NAMES} from '@app/features/theme/variables/ThemeVariableManifest';
 import {getEnabledThemeVariables, getFileVariables} from '@app/features/theme_settings/editor/ThemeVariableInfo';
 import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
+import {canTrustSites} from '@app/features/theme_settings/state/TrustedSites';
 import {ensureSyntaxTree, syntaxTree} from '@codemirror/language';
 import {type Diagnostic, linter} from '@codemirror/lint';
 import {type EditorState, type Extension, StateEffect} from '@codemirror/state';
@@ -35,10 +37,21 @@ const MISSING_FILE_DESCRIPTOR = msg({
 	comment: 'Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.',
 });
 const BLOCKED_URL_DESCRIPTOR = msg({
-	message: 'Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image.',
+	message: 'Fluxer blocked loading {url}. Upload it as an asset.',
 	comment:
-		'Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".',
+		'Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".',
 });
+const BLOCKED_TRUSTABLE_URL_DESCRIPTOR = msg({
+	message: "Fluxer blocked loading {url}. Upload the file as an asset, or trust the site it's on.",
+	comment:
+		'Problem shown in the quick CSS editor on an image address on a site the person has not trusted. Assets are files uploaded under "Assets". Trusting a site lets quick CSS and themes load images from it.',
+});
+const TRUST_SITE_DESCRIPTOR = msg({
+	message: 'Trust {site}',
+	comment:
+		'Button on a blocked image address in the quick CSS editor. {site} is a web address like https://example.com. Lets quick CSS and themes load images from that site.',
+});
+const IMPORT_RULE_PATTERN = /@import\b[^;{}]*$/i;
 const CSS_REJECTED_DESCRIPTOR = msg({
 	message: "Fluxer couldn't apply this CSS. Check it for a broken comment, string or bracket.",
 	comment: 'Problem shown at the top of the quick CSS editor when the whole sheet was left out.',
@@ -286,14 +299,30 @@ export function lintCss(state: EditorState): Array<Diagnostic> {
 					: i18n._(MISSING_FILE_DESCRIPTOR, {path: problem.reference}),
 		});
 	}
+	const trustAllowed = canTrustSites();
 	for (const url of ThemeSettingsState.blockedUrls) {
+		const site = trustAllowed ? trustableSiteOf(url) : null;
 		let index = doc.indexOf(url);
 		while (index !== -1) {
+			const inImport = IMPORT_RULE_PATTERN.test(doc.slice(doc.lastIndexOf('\n', index) + 1, index));
+			const trustableSite = inImport ? null : site;
 			diagnostics.push({
 				from: index,
 				to: index + url.length,
 				severity: 'error',
-				message: i18n._(BLOCKED_URL_DESCRIPTOR, {url}),
+				message:
+					trustableSite === null
+						? i18n._(BLOCKED_URL_DESCRIPTOR, {url})
+						: i18n._(BLOCKED_TRUSTABLE_URL_DESCRIPTOR, {url}),
+				actions:
+					trustableSite === null
+						? undefined
+						: [
+								{
+									name: i18n._(TRUST_SITE_DESCRIPTOR, {site: trustableSite}),
+									apply: () => ThemeSettingsState.trustSite(trustableSite),
+								},
+							],
 			});
 			index = doc.indexOf(url, index + url.length);
 		}

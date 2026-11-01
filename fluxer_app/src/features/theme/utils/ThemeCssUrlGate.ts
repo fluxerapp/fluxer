@@ -13,6 +13,7 @@ const ENCODED_SEPARATOR_PATTERN = /%2f|%5c|\\/i;
 const FRAGMENT_REFERENCE_PATTERN = /^#[^/\\:]*$/;
 const DATA_URL_PATTERN =
 	/^data:(image\/(png|jpeg|gif|webp|avif|svg\+xml)|font\/[a-z0-9.+-]+|application\/(font-woff2?|x-font-[a-z0-9]+|vnd\.ms-fontobject))[;,]/i;
+const TRUSTABLE_HOST_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
 const SNOWFLAKE_PATTERN = /^[1-9][0-9]*$/;
 const ASSET_FILENAME_PATTERN = /^[a-z0-9_]+\.[a-z0-9]+$/i;
 const SNOWFLAKE_FILENAME_PATTERN = /^[1-9][0-9]*\.[a-z0-9]+$/i;
@@ -67,12 +68,14 @@ export interface ThemeCssGatePolicy {
 	readonly mediaEndpoint: string;
 	readonly objectUrls: ReadonlySet<string>;
 	readonly instanceOrigins?: ReadonlySet<string>;
+	readonly trustedSites?: ReadonlySet<string>;
 }
 
 export interface ThemeCssGateResult {
 	readonly css: string;
 	readonly rejected: boolean;
 	readonly blocked: ReadonlyArray<string>;
+	readonly blockedSites: ReadonlyArray<string>;
 	readonly keptMediaUrls: ReadonlyArray<string>;
 }
 
@@ -86,6 +89,7 @@ interface GatePass {
 	readonly css: string;
 	readonly changed: boolean;
 	readonly blocked: Array<string>;
+	readonly blockedSites: Array<string>;
 	readonly keptMediaUrls: Array<string>;
 }
 
@@ -146,6 +150,12 @@ function canonicalMediaAssetUrl(value: string, mediaEndpoint: string): string | 
 	return `${url.origin}${url.pathname}${queryText ? `?${queryText}` : ''}`;
 }
 
+export function trustableSiteOf(value: string): string | null {
+	const url = parseUrl(value.trim());
+	if (url === null || url.protocol !== 'https:' || url.username !== '' || url.password !== '') return null;
+	return TRUSTABLE_HOST_PATTERN.test(url.hostname) ? url.origin : null;
+}
+
 function isInstanceUrl(value: string, instanceOrigins: ReadonlySet<string> | undefined): boolean {
 	if (!instanceOrigins) return false;
 	const url = parseUrl(value);
@@ -184,6 +194,8 @@ function allowedValue(rawValue: string, inFontFace: boolean, policy: ThemeCssGat
 	if (/^blob:/i.test(value)) return policy.objectUrls.has(value) ? value : null;
 	if (isInstanceUrl(value, policy.instanceOrigins)) return value;
 	if (inFontFace) return isFontFile(value) ? value : null;
+	const site = trustableSiteOf(value);
+	if (site !== null && policy.trustedSites?.has(site)) return value;
 	return canonicalAttachmentUrl(value, policy.mediaEndpoint) ?? canonicalMediaAssetUrl(value, policy.mediaEndpoint);
 }
 
@@ -249,6 +261,7 @@ function runGatePass(css: string, policy: ThemeCssGatePolicy, signedUrls: Readon
 	const tokens = tokenize({css});
 	const replacements: Array<Replacement> = [];
 	const blocked: Array<string> = [];
+	const blockedSites = new Set<string>();
 	const keptMediaUrls = new Set<string>();
 	let fontFaceEndIndex = -1;
 
@@ -257,7 +270,11 @@ function runGatePass(css: string, policy: ThemeCssGatePolicy, signedUrls: Readon
 	const keepValue = (token: CSSToken, inFontFace: boolean): Replacement | null | undefined => {
 		const original = tokenValue(token);
 		const allowed = allowedValue(original, inFontFace, policy);
-		if (allowed === null) return null;
+		if (allowed === null) {
+			const site = inFontFace ? null : trustableSiteOf(original);
+			if (site !== null) blockedSites.add(site);
+			return null;
+		}
 		let next = allowed;
 		if (!inFontFace && canonicalAttachmentUrl(allowed, policy.mediaEndpoint) === allowed) {
 			if (!keptMediaUrls.has(allowed) && keptMediaUrls.size >= MAX_KEPT_MEDIA_URLS) return null;
@@ -377,7 +394,13 @@ function runGatePass(css: string, policy: ThemeCssGatePolicy, signedUrls: Readon
 		position = to;
 	}
 	output += css.slice(position);
-	return {css: output, changed: replacements.length > 0, blocked, keptMediaUrls: [...keptMediaUrls]};
+	return {
+		css: output,
+		changed: replacements.length > 0,
+		blocked,
+		blockedSites: [...blockedSites],
+		keptMediaUrls: [...keptMediaUrls],
+	};
 }
 
 function runGate(css: string, policy: ThemeCssGatePolicy, signedUrls: ReadonlyMap<string, string>): ThemeCssGateResult {
@@ -388,6 +411,7 @@ function runGate(css: string, policy: ThemeCssGatePolicy, signedUrls: ReadonlyMa
 		css: rejected ? '' : pass.css,
 		rejected,
 		blocked: [...new Set(pass.blocked)].filter((value) => value.trim() !== ''),
+		blockedSites: pass.blockedSites,
 		keptMediaUrls: rejected ? [] : check.keptMediaUrls,
 	};
 }
@@ -395,7 +419,12 @@ function runGate(css: string, policy: ThemeCssGatePolicy, signedUrls: ReadonlyMa
 let lastGate: {css: string; policyKey: string; result: ThemeCssGateResult} | null = null;
 
 export function gateThemeCss(css: string, policy: ThemeCssGatePolicy): ThemeCssGateResult {
-	const policyKey = JSON.stringify([policy.mediaEndpoint, [...policy.objectUrls], [...(policy.instanceOrigins ?? [])]]);
+	const policyKey = JSON.stringify([
+		policy.mediaEndpoint,
+		[...policy.objectUrls],
+		[...(policy.instanceOrigins ?? [])],
+		[...(policy.trustedSites ?? [])],
+	]);
 	if (lastGate?.css === css && lastGate.policyKey === policyKey) return lastGate.result;
 	const result = runGate(css, policy, new Map());
 	lastGate = {css, policyKey, result};

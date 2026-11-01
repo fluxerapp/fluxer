@@ -15348,6 +15348,11 @@ msgstr "Zadejte důvod banu"
 msgid "Enter a secure password"
 msgstr "Zadejte bezpečné heslo"
 
+#. Error under the "Site address" field in Settings > Themes when the text is not a valid https web address.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Enter a site address like https://example.com."
+msgstr "Zadejte adresu webu, například https://example.com."
+
 #. Validation error in the import-template form when the entered URL or code is malformed. {theOtherPlatform} is a third-party product name placeholder.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "Enter a valid {theOtherPlatform} template URL or code."
@@ -16791,10 +16796,15 @@ msgstr "Florida"
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer ke každému uživatelskému jménu přidá náhodné číslo, například alex#4821, aby mohlo stejné jméno používat více lidí."
 
-#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
 #: src/features/theme_settings/editor/CssLint.ts
-msgid "Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image."
-msgstr "Fluxer zablokoval načtení {url}. Nahrajte soubor jako prostředek, nebo pro obrázek použijte odkaz na přílohu."
+msgid "Fluxer blocked loading {url}. Upload it as an asset."
+msgstr "Fluxer zablokoval načtení {url}. Nahrajte ho jako prostředek."
+
+#. Problem shown in the quick CSS editor on an image address on a site the person has not trusted. Assets are files uploaded under "Assets". Trusting a site lets quick CSS and themes load images from it.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer blocked loading {url}. Upload the file as an asset, or trust the site it's on."
+msgstr "Fluxer zablokoval načtení {url}. Nahrajte soubor jako prostředek, nebo důvěřujte webu, na kterém je."
 
 #. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -19032,6 +19042,11 @@ msgstr "Rozmyslel(a) jsem si to"
 #: src/features/moderation/components/report/ReportStepDetails.tsx
 msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
 msgstr "Potvrzuji v dobré víře, že informace a tvrzení uvedená v tomto nahlášení jsou přesná a úplná."
+
+#. Checkbox label in the modal that applies a shared theme. {site} is a web address like https://example.com. When checked, the site is trusted when the theme is applied.
+#: src/features/theme/components/modals/ThemeAcceptModal.tsx
+msgid "I trust {site}"
+msgstr "Důvěřuji webu {site}"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx
@@ -25626,6 +25641,11 @@ msgstr "Tento kanál uvidí pouze vybraní členové a role, plus administráto�
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Only the selected ones"
 msgstr "Pouze vybrané"
+
+#. Warning in Settings > Themes and in the modal that applies a shared theme. Trusting a site lets quick CSS and themes load images from it, and CSS can make the browser load different images depending on what the app shows.
+#: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
+msgid "Only trust sites you know. A site you trust can see your IP address, when you have Fluxer open and some of what's on your screen."
+msgstr "Důvěřujte jen webům, které znáte. Web, kterému důvěřujete, uvidí vaši IP adresu, kdy máte Fluxer otevřený, a část toho, co máte na obrazovce."
 
 #. Body of the error modal shown when a non-Visionary user tries to rejoin a gated Plutonium community.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCommunityActions.tsx
@@ -33841,6 +33861,11 @@ msgstr "Jednotné přihlášení"
 msgid "Single user (all statuses)"
 msgstr "Jeden uživatel (všechny stavy)"
 
+#. Label of the field where you type a web address like https://example.com under "Trusted sites" in Settings > Themes.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Site address"
+msgstr "Adresa webu"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Size"
@@ -35132,6 +35157,11 @@ msgstr "Zastavit předčítání"
 #: src/features/voice/components/ActiveScreenShareMenu.tsx
 msgid "Stop streaming"
 msgstr "Zastavit streamování"
+
+#. Accessible label of the delete button on a row under "Trusted sites" in Settings > Themes. {site} is a web address.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Stop trusting {site}"
+msgstr "Přestat důvěřovat webu {site}"
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx
@@ -37875,6 +37905,11 @@ msgstr "Tento motiv je příliš velký na sdílení"
 msgid "This theme link is missing data."
 msgstr "Odkazu motivu chybí data."
 
+#. Shown in the modal that applies a shared theme in the desktop app, above a list of web addresses with a checkbox each.
+#: src/features/theme/components/modals/ThemeAcceptModal.tsx
+msgid "This theme loads images from sites you haven't trusted. Check the sites you trust to load their images."
+msgstr "Tento motiv načítá obrázky z webů, kterým nedůvěřujete. Zaškrtněte weby, kterým důvěřujete, aby se jejich obrázky načetly."
+
 #: src/features/theme/components/pages/ThemeAuthPageConfig.tsx
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Tento motiv mohl být odstraněn nebo je odkaz neplatný."
@@ -38573,6 +38608,16 @@ msgstr "Odstraňování problémů"
 msgid "True or false"
 msgstr "Pravda nebo nepravda"
 
+#. Button next to the "Site address" field under "Trusted sites" in Settings > Themes. Adds the site to the list.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Trust"
+msgstr "Důvěřovat"
+
+#. Button on a blocked image address in the quick CSS editor. {site} is a web address like https://example.com. Lets quick CSS and themes load images from that site.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Trust {site}"
+msgstr "Důvěřovat webu {site}"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Trust all"
@@ -38607,6 +38652,11 @@ msgstr "Důvěryhodné domény"
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Trusted domains cleared."
 msgstr "Důvěryhodné domény vymazány."
+
+#. Heading in the "Quick CSS" section of Settings > Themes in the desktop app.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Trusted sites"
+msgstr "Důvěryhodné weby"
 
 #. Hint under the empty search state in the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -42913,6 +42963,11 @@ msgstr "Účet si stále můžete vytvořit nebo se přihlásit. Pokud budou poz
 msgid "You can switch between one community and many communities later in the admin panel."
 msgstr "Mezi jednou komunitou a více komunitami můžete později přepínat v panelu pro správu."
 
+#. Error under the "Site address" field in Settings > Themes when the list of trusted sites is full.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "You can trust up to {count} sites."
+msgstr "Můžete důvěřovat nejvýše {count} webům."
+
 #. Warning shown when direct messages are turned off in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "You can turn direct messages and friend requests back on later in the admin panel."
@@ -44170,6 +44225,11 @@ msgstr "Tvůj poskytovatel nahlásil chybu."
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
 msgid "Your purchased gifts"
 msgstr "Vaše zakoupené dárky"
+
+#. Shown under the "Trusted sites" heading in Settings > Themes in the desktop app.
+#: src/features/theme_settings/components/TrustedSitesSettings.tsx
+msgid "Your quick CSS and themes can load images from these sites."
+msgstr "Vaše rychlé CSS a motivy mohou načítat obrázky z těchto webů."
 
 #. Title of the modal that shows a newly created account recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx

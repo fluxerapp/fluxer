@@ -40,6 +40,7 @@ interface CustomThemeStyleOptions {
 	themeLibraryLocalFiles: ReadonlyArray<ThemeLibraryLocalFileReference>;
 	themeLibraryRevision: number;
 	mediaEndpoint: string;
+	trustedSites: ReadonlyArray<string>;
 	onMissingReferences: (references: ReadonlyArray<string>) => void;
 	onBlockedUrl: (url: string) => void;
 	onCssRejected: (rejected: boolean) => void;
@@ -87,6 +88,7 @@ interface ThemeCssRequest {
 	assets: ReadonlyArray<ThemeLibraryAsset>;
 	localFiles: ReadonlyArray<ThemeLibraryLocalFileReference>;
 	mediaEndpoint: string;
+	trustedSites: ReadonlyArray<string>;
 	onMissingReferences: (references: ReadonlyArray<string>) => void;
 	onBlockedUrl: (url: string) => void;
 	onCssRejected: (rejected: boolean) => void;
@@ -240,7 +242,11 @@ async function applyThemeCssRequest(applier: ThemeCssApplier, request: ThemeCssR
 			revokeObjectUrls(objectUrls);
 			return;
 		}
-		const policy = {mediaEndpoint: request.mediaEndpoint, objectUrls: new Set(objectUrls)};
+		const policy = {
+			mediaEndpoint: request.mediaEndpoint,
+			objectUrls: new Set(objectUrls),
+			trustedSites: new Set(request.trustedSites),
+		};
 		const gated = gateThemeCss(resolved.css, policy);
 		for (const url of gated.blocked) request.onBlockedUrl(url);
 		const final = gated.rejected
@@ -317,6 +323,7 @@ export function useCustomThemeStyle({
 	themeLibraryLocalFiles,
 	themeLibraryRevision,
 	mediaEndpoint,
+	trustedSites,
 	onMissingReferences,
 	onBlockedUrl,
 	onCssRejected,
@@ -369,6 +376,7 @@ export function useCustomThemeStyle({
 			assets: themeLibraryAssets,
 			localFiles: themeLibraryLocalFiles,
 			mediaEndpoint,
+			trustedSites,
 			onMissingReferences,
 			onBlockedUrl,
 			onCssRejected,
@@ -382,6 +390,7 @@ export function useCustomThemeStyle({
 		themeLibraryLocalFiles,
 		themeLibraryRevision,
 		mediaEndpoint,
+		trustedSites,
 		onMissingReferences,
 		onBlockedUrl,
 		onCssRejected,

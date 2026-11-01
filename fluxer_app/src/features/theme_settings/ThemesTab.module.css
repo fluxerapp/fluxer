@@ -210,3 +210,14 @@
 		flex-wrap: wrap;
 	}
 }
+
+.trustedSiteForm {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--spacing-3);
+}
+
+.trustedSiteForm > :first-child {
+	flex: 1 1 auto;
+	min-width: 0;
+}

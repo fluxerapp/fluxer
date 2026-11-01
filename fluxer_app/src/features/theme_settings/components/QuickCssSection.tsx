@@ -10,6 +10,8 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import {TrustedSitesSettings} from '@app/features/theme_settings/components/TrustedSitesSettings';
+import {canTrustSites} from '@app/features/theme_settings/state/TrustedSites';
 import styles from '@app/features/theme_settings/ThemesTab.module.css';
 import {
 	OPEN_QUICK_CSS_EDITOR_DESCRIPTOR,
@@ -148,6 +150,7 @@ export const QuickCssSection: React.FC = observer(() => {
 					data-flx="theme-settings.quick-css-section.switch.sync-change"
 				/>
 			) : null}
+			{canTrustSites() ? <TrustedSitesSettings /> : null}
 		</SettingsSection>
 	);
 });

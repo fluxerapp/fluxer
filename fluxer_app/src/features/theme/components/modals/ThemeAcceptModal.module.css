@@ -112,3 +112,9 @@
 	justify-content: flex-end;
 	gap: 0.75rem;
 }
+
+.trustSites {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
