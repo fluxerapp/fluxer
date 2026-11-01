@@ -7,7 +7,6 @@ import {useArboriumHighlightedHtml} from '@app/features/code_highlighting/utils/
 import {COPY_CODE_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import styles from '@app/features/theme/components/modals/ThemeAcceptModal.module.css';
-import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
 import {gateThemeCss} from '@app/features/theme/utils/ThemeCssUrlGate';
 import {buildThemeCssFetchUrl} from '@app/features/theme/utils/ThemeUtils';
@@ -80,7 +79,6 @@ interface ThemeAcceptModalProps {
 
 export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, runtimeSnapshot}: ThemeAcceptModalProps) {
 	const {i18n} = useLingui();
-	useCustomCssSuspension();
 	const {username, instanceName} = useCurrentAccountLabels();
 	const target = ThemeEditTarget.target;
 	const [isApplying, setIsApplying] = useState(false);

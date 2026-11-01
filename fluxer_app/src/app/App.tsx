@@ -42,7 +42,6 @@ import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_sw
 import {useCustomThemeStyle, useInstanceCustomCss} from '@app/features/theme/hooks/useCustomThemeStyle';
 import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
-import CustomCssSuspension from '@app/features/theme/state/CustomCssSuspension';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import ThemeProfile from '@app/features/theme/state/ThemeProfile';
@@ -228,9 +227,8 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		hdrDisplayMode: Accessibility.hdrDisplayMode,
 		instanceThemeColor: instanceBrandStyle.themeColor,
 	});
-	const customCssSuspended = isAuthLayout || CustomCssSuspension.active;
-	useInstanceCustomCss(customCssSuspended ? null : instanceBrandStyle.customCss, getInstanceCssOrigins());
-	const userCssApplied = !customCssSuspended && !ThemeSettingsState.customCssOff;
+	useInstanceCustomCss(instanceBrandStyle.customCss, getInstanceCssOrigins());
+	const userCssApplied = !ThemeSettingsState.customCssOff;
 	useCustomThemeStyle({
 		enabledThemeCss: userCssApplied ? ThemeProfile.activeThemeCss : null,
 		customThemeCss: userCssApplied ? ThemeProfile.customThemeCss : null,

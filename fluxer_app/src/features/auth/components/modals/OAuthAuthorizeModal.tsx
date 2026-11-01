@@ -7,7 +7,6 @@ import {
 	OAuthAuthorizeFlowPanel,
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeFlowPanel';
 import {useAuthorizeFlow} from '@app/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow';
-import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -19,7 +18,6 @@ interface OAuthAuthorizeModalProps {
 }
 
 export const OAuthAuthorizeModal: React.FC<OAuthAuthorizeModalProps> = observer(({search}) => {
-	useCustomCssSuspension();
 	const {i18n} = useLingui();
 	const flow = useAuthorizeFlow({
 		search,

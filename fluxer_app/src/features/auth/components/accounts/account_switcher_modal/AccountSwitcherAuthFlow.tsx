@@ -34,7 +34,6 @@ import {
 	CANCEL_DESCRIPTOR,
 	SIGN_IN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import {flxElementClassName} from '@app/lib/react';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
@@ -135,7 +134,6 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 	onExit,
 	onLoginComplete,
 }: AccountSwitcherAuthFlowProps): React.ReactElement {
-	useCustomCssSuspension();
 	const {i18n} = useLingui();
 	const [selectedAuthStep, setSelectedAuthStep] = useState<AccountSwitcherAuthStep>(AccountSwitcherAuthStep.LOGIN);
 	const [, setCardVariant] = useState<AuthCardVariant>(AuthCardVariant.STANDARD);

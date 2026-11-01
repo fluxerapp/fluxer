@@ -9,7 +9,6 @@ import {
 	CODE_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -42,7 +41,6 @@ interface FormInputs {
 }
 
 export const MfaTotpDisableModal = observer(() => {
-	useCustomCssSuspension();
 	const {i18n} = useLingui();
 	const form = useForm<FormInputs>();
 	const onSubmit = async (data: FormInputs) => {

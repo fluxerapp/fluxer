@@ -10,7 +10,6 @@ import {
 	shouldApplyPasswordManagerIgnoreAttributes,
 	type TextareaWithPasswordManagerIgnoreAttributes,
 } from '@app/features/platform/utils/PasswordManagerAutocomplete';
-import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import scrollerStyles from '@app/features/theme/styles/Scroller.module.css';
 import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/CharacterCountAnnouncer';
 import styles from '@app/features/ui/components/form/FormInput.module.css';
@@ -127,7 +126,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 		const isCredentialField = isPasswordType || props.autoComplete === 'one-time-code';
 		const keepsValueOutOfDom = (sensitive || isCredentialField) && props.value !== undefined;
 		const [, rerenderValue] = useReducer((revision: number) => revision + 1, 0);
-		useCustomCssSuspension(isCredentialField);
 		const shouldIgnorePasswordManagers = useMemo(
 			() => shouldApplyPasswordManagerIgnoreAttributes(type, props.autoComplete),
 			[type, props.autoComplete],
