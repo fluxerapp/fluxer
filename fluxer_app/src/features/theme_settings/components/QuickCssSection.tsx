@@ -150,7 +150,9 @@ export const QuickCssSection: React.FC = observer(() => {
 					data-flx="theme-settings.quick-css-section.switch.sync-change"
 				/>
 			) : null}
-			{canTrustSites() ? <TrustedSitesSettings /> : null}
+			{canTrustSites() ? (
+				<TrustedSitesSettings data-flx="theme-settings.quick-css-section.trusted-sites-settings" />
+			) : null}
 		</SettingsSection>
 	);
 });
