@@ -193,6 +193,7 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 					label={i18n._(VERIFICATION_CODE_DESCRIPTOR)}
 					placeholder="XXXX-XXXX"
 					required={true}
+					sensitive
 					error={codeError ?? undefined}
 					data-flx="auth.backup-codes-view-modal.input.set-code"
 				/>

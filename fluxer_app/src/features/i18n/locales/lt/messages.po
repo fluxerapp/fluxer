@@ -16791,10 +16791,10 @@ msgstr "Florida"
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer prie kiekvieno naudotojo vardo prideda atsitiktinį numerį, pvz., alex#4821, kad tą patį vardą galėtų naudoti daug žmonių."
 
-#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".
 #: src/features/theme_settings/editor/CssLint.ts
-msgid "Fluxer blocked loading {url}. Upload it as an asset."
-msgstr "Fluxer užblokavo {url} įkėlimą. Įkelk kaip išteklį."
+msgid "Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image."
+msgstr "Fluxer užblokavo {url} įkėlimą. Įkelk failą kaip išteklį arba paveikslėliui naudok priedo nuorodą."
 
 #. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -16821,6 +16821,11 @@ msgstr "Fluxer negali atidaryti šio aplanko. Importuokite jį dar kartą, kad g
 msgid "Fluxer can't read this folder."
 msgstr "Fluxer negali perskaityti šio aplanko."
 
+#. Problem shown at the top of the quick CSS editor when the whole sheet was left out.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer couldn't apply this CSS. Check it for a broken comment, string or bracket."
+msgstr "Fluxer nepavyko pritaikyti šio CSS. Patikrink, ar nėra sugadinto komentaro, eilutės ar skliausto."
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -16840,6 +16845,11 @@ msgstr "Fluxer nepavyko pasiekti {instanceName} ir patikrinti, ar naršyklė pat
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "Fluxer nustojo tikrinti, ar naršyklė patvirtino šį prisijungimą. Ji neprarado jūsų kodo."
+
+#. Shown in the modal that applies a shared theme when the theme points at files the app will not load.
+#: src/features/theme/components/modals/ThemeAcceptModal.tsx
+msgid "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites."
+msgstr "Fluxer neįkels {count, plural, one {# failo} few {# failų} other {# failų}} iš kitų svetainių, į kurias nukreipia ši tema."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts

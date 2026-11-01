@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readAttachmentUrlSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {retainImage} from '@app/features/messaging/utils/ImageRetention';
 import {LRUCache} from 'lru-cache';
 
@@ -203,8 +204,17 @@ function startImageLoad(entry: ImageCacheEntry): void {
 	image.src = entry.src;
 }
 
+function hasLapsedAttachmentSignature(src: string): boolean {
+	const signature = readAttachmentUrlSignature(src);
+	return signature !== null && signature.expiresAtMs <= Date.now();
+}
+
 function scheduleRetryOrFail(entry: ImageCacheEntry): void {
-	if (entry.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT) {
+	if (entry.subscribers.size === 0) {
+		dropEntry(entry);
+		return;
+	}
+	if (entry.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT || hasLapsedAttachmentSignature(entry.src)) {
 		failEntry(entry);
 		return;
 	}
@@ -213,6 +223,10 @@ function scheduleRetryOrFail(entry: ImageCacheEntry): void {
 		clearRetryState(entry);
 		if (!ownsCacheKey(entry)) {
 			abandonEntry(entry);
+			return;
+		}
+		if (entry.subscribers.size === 0) {
+			dropEntry(entry);
 			return;
 		}
 		startImageLoad(entry);

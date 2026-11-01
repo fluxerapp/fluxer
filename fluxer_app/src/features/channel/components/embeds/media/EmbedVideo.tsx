@@ -17,6 +17,7 @@ import {
 } from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
@@ -37,6 +38,7 @@ import {
 	VideoPlayer,
 	type VideoPlayerMetadata,
 } from '@app/features/voice/components/media_player/components/VideoPlayer';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {useInAppMediaSoundCapture} from '@app/features/voice/hooks/useInAppMediaSoundCapture';
 import VideoVolume from '@app/features/voice/state/VideoVolume';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -217,6 +219,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
 		const isBlob = src.startsWith('blob:');
+		const handleVideoError = useAttachmentRefreshOnError(src);
 		const declaredLayout = resolveVideoLayout(getEffectiveVideoLayoutDimensions({width, height}, null), {
 			maxWidth,
 			maxHeight,
@@ -243,6 +246,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const [metadataProbeArmed, setMetadataProbeArmed] = useState(false);
 		const inlineVideoRef = useRef<HTMLVideoElement>(null);
 		useInAppMediaSoundCapture(inlineVideoRef);
+		useMediaSourceResume(inlineVideoRef, isPlayingInline);
 		useLayoutEffect(() => {
 			if (!isPlayingInline) return;
 			const inlineVideo = inlineVideoRef.current;
@@ -385,6 +389,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					}
 				},
 				() => {
+					handleVideoError();
 					if (active) setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource));
 				},
 			);
@@ -392,7 +397,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				active = false;
 				cleanup();
 			};
-		}, [loadedPosterSrc, posterSrc, shouldLoadMedia]);
+		}, [handleVideoError, loadedPosterSrc, posterSrc, shouldLoadMedia]);
 		const handleMobileTap = useCallback(() => {
 			const videoItems = attachmentsToViewerItems(mediaAttachments, {filterType: 'video'});
 			if (videoItems.length > 0) {
@@ -572,6 +577,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					src={resolveDesktopCrossOriginMediaURL(effectiveSrc)}
 					tabIndex={-1}
 					onLoadedMetadata={handleMetadataProbeLoaded}
+					onError={handleVideoError}
 					data-flx="channel.embeds.media.embed-video.metadata-probe"
 				>
 					<track kind="captions" data-flx="channel.embeds.media.embed-video.track" />
@@ -612,6 +618,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 									onClick={handleInlineVideoTap}
 									onEnded={handleInlineVideoEnded}
 									onLoadedMetadata={handleMetadataProbeLoaded}
+									onError={handleVideoError}
 									data-flx="channel.embeds.media.embed-video.inline-video"
 								/>
 								<button

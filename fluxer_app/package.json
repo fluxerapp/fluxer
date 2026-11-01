@@ -165,6 +165,7 @@
 		"@codemirror/search": "^6.7.2",
 		"@codemirror/state": "^6.7.6",
 		"@codemirror/view": "^6.43.15",
+		"@csstools/css-tokenizer": "4.0.2",
 		"@floating-ui/react": "catalog:",
 		"@floating-ui/react-dom": "catalog:",
 		"@fluxer/constants": "workspace:*",

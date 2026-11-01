@@ -7,7 +7,9 @@ import {useArboriumHighlightedHtml} from '@app/features/code_highlighting/utils/
 import {COPY_CODE_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import styles from '@app/features/theme/components/modals/ThemeAcceptModal.module.css';
+import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import ThemeEditTarget from '@app/features/theme/state/ThemeEditTarget';
+import {gateThemeCss} from '@app/features/theme/utils/ThemeCssUrlGate';
 import {buildThemeCssFetchUrl} from '@app/features/theme/utils/ThemeUtils';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import {useCurrentAccountLabels} from '@app/features/theme_settings/hooks/useCurrentAccountLabels';
@@ -18,7 +20,7 @@ import {CopyButton} from '@app/features/ui/components/CopyButton';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 const WE_COULDN_T_READ_THIS_THEME_IT_MAY_DESCRIPTOR = msg({
 	message: "We couldn't read this theme. It may be corrupted or invalid.",
@@ -49,7 +51,12 @@ const OPEN_IN_THEMES_DESCRIPTOR = msg({
 	message: 'Open in Themes',
 	comment: 'Button in the modal that applied a shared theme. Opens Settings > Themes.',
 });
+const BLOCKED_FILES_DESCRIPTOR = msg({
+	message: "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites.",
+	comment: 'Shown in the modal that applies a shared theme when the theme points at files the app will not load.',
+});
 const logger = new Logger('ThemeAcceptModal');
+const NO_OBJECT_URLS: ReadonlySet<string> = new Set();
 
 interface ThemeAcceptModalProps {
 	themeId: string;
@@ -58,6 +65,7 @@ interface ThemeAcceptModalProps {
 
 export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, runtimeSnapshot}: ThemeAcceptModalProps) {
 	const {i18n} = useLingui();
+	useCustomCssSuspension();
 	const {username, instanceName} = useCurrentAccountLabels();
 	const target = ThemeEditTarget.target;
 	const [isApplying, setIsApplying] = useState(false);
@@ -66,6 +74,10 @@ export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, run
 	const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
 	const [fetchError, setFetchError] = useState<string | null>(null);
 	const highlightedCss = useArboriumHighlightedHtml('css', css);
+	const blockedCount = useMemo(() => {
+		if (!css) return 0;
+		return gateThemeCss(css, {mediaEndpoint: runtimeSnapshot.mediaEndpoint, objectUrls: NO_OBJECT_URLS}).blocked.length;
+	}, [css, runtimeSnapshot]);
 	useEffect(() => {
 		let cancelled = false;
 		const fetchTheme = async () => {
@@ -160,6 +172,11 @@ export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, run
 						? i18n._(REPLACES_DESKTOP_QUICK_CSS_DESCRIPTOR)
 						: i18n._(REPLACES_ACCOUNT_QUICK_CSS_DESCRIPTOR, {username, instanceName})}
 				</p>
+				{blockedCount > 0 && (
+					<p className={styles.description} data-flx="theme.theme-accept-modal.blocked-files">
+						{i18n._(BLOCKED_FILES_DESCRIPTOR, {count: blockedCount})}
+					</p>
+				)}
 				<div className={styles.codeContainer} data-flx="theme.theme-accept-modal.code-container">
 					<CopyButton
 						value={css ?? ''}

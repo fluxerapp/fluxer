@@ -16791,10 +16791,10 @@ msgstr "Flórida"
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "O Fluxer adiciona um número aleatório a cada nome de usuário, como alex#4821, para que muitas pessoas possam usar o mesmo nome."
 
-#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".
 #: src/features/theme_settings/editor/CssLint.ts
-msgid "Fluxer blocked loading {url}. Upload it as an asset."
-msgstr "O Fluxer bloqueou o carregamento de {url}. Envie como um recurso."
+msgid "Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image."
+msgstr "O Fluxer bloqueou o carregamento de {url}. Envie o arquivo como um recurso ou use um link de anexo para uma imagem."
 
 #. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -16821,6 +16821,11 @@ msgstr "O Fluxer não pode abrir esta pasta. Importe novamente para continuar ac
 msgid "Fluxer can't read this folder."
 msgstr "O Fluxer não consegue ler esta pasta."
 
+#. Problem shown at the top of the quick CSS editor when the whole sheet was left out.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer couldn't apply this CSS. Check it for a broken comment, string or bracket."
+msgstr "O Fluxer não conseguiu aplicar este CSS. Verifique se há um comentário, uma string ou um colchete quebrado."
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -16840,6 +16845,11 @@ msgstr "O Fluxer não conseguiu acessar {instanceName} para verificar se o naveg
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "O Fluxer parou de verificar se o navegador aprovou este login. Ele não perdeu seu código."
+
+#. Shown in the modal that applies a shared theme when the theme points at files the app will not load.
+#: src/features/theme/components/modals/ThemeAcceptModal.tsx
+msgid "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites."
+msgstr "O Fluxer não vai carregar {count, plural, one {# arquivo} other {# arquivos}} em outros sites para os quais este tema aponta."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts

@@ -1132,6 +1132,9 @@ fn message_context_section(
         div class="overflow-hidden rounded-lg border border-neutral-200 bg-white" {
             div class="px-4 pt-4 pb-2 sm:px-6 sm:pt-6" {
                 h2 class="font-semibold text-base text-neutral-900" { "Message Context" }
+                p class="mt-1 text-neutral-500 text-sm" {
+                    "Attachment links expire after 5 minutes. Reload the page for new ones."
+                }
             }
             div class="py-2" {
                 (message_list(

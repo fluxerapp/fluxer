@@ -1361,6 +1361,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.15
         version: 6.43.15
+      '@csstools/css-tokenizer':
+        specifier: 4.0.2
+        version: 4.0.2
       '@floating-ui/react':
         specifier: 'catalog:'
         version: 0.27.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1)

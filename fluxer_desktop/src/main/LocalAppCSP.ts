@@ -35,7 +35,7 @@ const STYLE_SOURCES: ReadonlyArray<string> = Object.freeze([
 const FONT_SOURCES: ReadonlyArray<string> = Object.freeze([
 	'https://*.fluxer.app',
 	'https://fonts.gstatic.com',
-	'https://api.fonts.coollabs.io',
+	'https://cdn.fonts.coollabs.io',
 ]);
 
 const CONNECT_SOURCES: ReadonlyArray<string> = Object.freeze([
@@ -95,7 +95,7 @@ export function buildLocalAppCSP({nonce, cleartextInstanceOrigins = []}: LocalAp
 	extendFrom(media, cleartextSources);
 	directives.push(`media-src ${media.join(' ')}`);
 
-	const font = [SELF_SOURCE, 'data:'];
+	const font = [SELF_SOURCE, 'blob:', 'data:'];
 	extendFrom(font, FONT_SOURCES);
 	directives.push(`font-src ${font.join(' ')}`);
 

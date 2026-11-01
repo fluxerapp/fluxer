@@ -4,6 +4,8 @@ import {
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	REVERSE_IMAGE_SEARCH_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {SearchProviderPickerModal} from '@app/features/search/components/modals/SearchProviderPickerModal';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
 import {CopyLinkIcon, OpenMediaLinkIcon, SearchIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -46,12 +48,13 @@ interface ReverseImageSearchMenuOptions {
 	openLabel?: string;
 }
 
-const openReverseImageSearchWith = (engineId: string, url: string) => {
-	const target = ReverseImageSearch.buildSearchUrl(engineId, url);
+export async function openReverseImageSearchWith(engineId: string, url: string): Promise<void> {
+	const imageUrl = attachmentUrlMayNeedRefresh(url, Date.now()) ? await AttachmentUrlRefresher.refresh(url) : url;
+	const target = ReverseImageSearch.buildSearchUrl(engineId, imageUrl);
 	if (target) {
-		void openExternalUrl(target);
+		await openExternalUrl(target);
 	}
-};
+}
 
 export function buildReverseImageSearchMenuGroups(
 	imageUrl: string | null | undefined,
@@ -100,7 +103,7 @@ export function buildReverseImageSearchMenuGroups(
 		const handleDefault = () => {
 			const defaultEngine = ReverseImageSearch.defaultEngine;
 			if (defaultEngine) {
-				openReverseImageSearchWith(defaultEngine.id, imageUrl);
+				void openReverseImageSearchWith(defaultEngine.id, imageUrl);
 				onClose();
 				return;
 			}
@@ -110,7 +113,7 @@ export function buildReverseImageSearchMenuGroups(
 				modal(() => (
 					<SearchProviderPickerModal
 						mode="image"
-						onPick={(engineId) => openReverseImageSearchWith(engineId, targetImageUrl)}
+						onPick={(engineId) => void openReverseImageSearchWith(engineId, targetImageUrl)}
 						data-flx="ui.action-menu.items.search-menu-data.handle-default.search-provider-picker-modal"
 					/>
 				)),
@@ -125,7 +128,7 @@ export function buildReverseImageSearchMenuGroups(
 				),
 				onDefaultSearch: handleDefault,
 				onSearchWithEngine: (engine) => {
-					openReverseImageSearchWith(engine.id, imageUrl);
+					void openReverseImageSearchWith(engine.id, imageUrl);
 					onClose();
 				},
 			}),

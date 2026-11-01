@@ -35,9 +35,13 @@ const MISSING_FILE_DESCRIPTOR = msg({
 	comment: 'Problem shown in the quick CSS editor on a reference to a file on the computer that Fluxer cannot read.',
 });
 const BLOCKED_URL_DESCRIPTOR = msg({
-	message: 'Fluxer blocked loading {url}. Upload it as an asset.',
+	message: 'Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image.',
 	comment:
-		'Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".',
+		'Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".',
+});
+const CSS_REJECTED_DESCRIPTOR = msg({
+	message: "Fluxer couldn't apply this CSS. Check it for a broken comment, string or bracket.",
+	comment: 'Problem shown at the top of the quick CSS editor when the whole sheet was left out.',
 });
 const MISSING_SEMICOLON_DESCRIPTOR = msg({
 	message: 'Add ";" at the end of this line.',
@@ -293,6 +297,14 @@ export function lintCss(state: EditorState): Array<Diagnostic> {
 			});
 			index = doc.indexOf(url, index + url.length);
 		}
+	}
+	if (ThemeSettingsState.cssRejected) {
+		diagnostics.push({
+			from: 0,
+			to: Math.min(doc.length, 1),
+			severity: 'error',
+			message: i18n._(CSS_REJECTED_DESCRIPTOR),
+		});
 	}
 	return diagnostics.sort((left, right) => left.from - right.from);
 }

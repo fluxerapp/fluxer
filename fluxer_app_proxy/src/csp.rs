@@ -128,7 +128,7 @@ const STYLE_SOURCES: &[&str] = &[
 const FONT_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
     "https://fonts.gstatic.com",
-    "https://api.fonts.coollabs.io",
+    "https://cdn.fonts.coollabs.io",
 ];
 
 const CONNECT_SOURCES: &[&str] = &[
@@ -287,7 +287,7 @@ fn build_csp_directives(
 
     let mut style = vec!["'self'".to_owned(), "'unsafe-inline'".to_owned()];
     extend_from(&mut style, &config.extra_style_src, STYLE_SOURCES);
-    extend_runtime_sources(&mut style, runtime_sources, instance_sources, true, true);
+    extend_runtime_sources(&mut style, runtime_sources, instance_sources, true, false);
     directives.push(format!("style-src {}", style.join(" ")));
 
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
@@ -303,7 +303,7 @@ fn build_csp_directives(
     extend_runtime_sources(&mut media, runtime_sources, instance_sources, true, true);
     directives.push(format!("media-src {}", media.join(" ")));
 
-    let mut font = vec!["'self'".to_owned(), "data:".to_owned()];
+    let mut font = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut font, &config.extra_font_src, FONT_SOURCES);
     extend_runtime_sources(&mut font, runtime_sources, instance_sources, true, true);
     directives.push(format!("font-src {}", font.join(" ")));

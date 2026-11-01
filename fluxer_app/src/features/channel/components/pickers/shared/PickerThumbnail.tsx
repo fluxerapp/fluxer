@@ -22,7 +22,7 @@ export const PickerThumbnail: FC<PickerThumbnailProps> = observer(({src, alt, cl
 		<>
 			{!error && (
 				<img
-					src={src}
+					src={src || undefined}
 					ref={ref}
 					alt={alt}
 					className={className}

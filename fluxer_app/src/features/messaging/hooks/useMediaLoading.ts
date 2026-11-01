@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import AttachmentUrlRefresher, {sameAttachmentSource} from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {type SyntheticEvent, useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
@@ -101,7 +101,12 @@ function resolveMediaLoadingSourceState(
 	cached: boolean,
 ): MediaLoadingSourceState {
 	if (state.src === src && state.loadEnabled === loadEnabled) return state;
+	if (keepsLoadedState(state, src, loadEnabled)) return {...state, src};
 	return createMediaLoadingSourceState(src, loadEnabled, cached);
+}
+
+function keepsLoadedState(state: MediaLoadingSourceState, src: string, loadEnabled: boolean): boolean {
+	return state.loaded && state.loadEnabled === loadEnabled && sameAttachmentSource(state.src, src);
 }
 
 function sourceIdentityMatches(
@@ -164,7 +169,11 @@ export function useMediaLoading(
 			}
 		}
 		const cached = ImageCacheUtils.hasImage(src);
-		setSourceState(createMediaLoadingSourceState(src, loadEnabled, cached));
+		setSourceState((currentState) =>
+			keepsLoadedState(currentState, src, loadEnabled)
+				? {...currentState, src}
+				: createMediaLoadingSourceState(src, loadEnabled, cached),
+		);
 	}, [loadEnabled, sourceIdentity, src]);
 	const onLoad = useCallback(
 		(event: SyntheticEvent<MediaLoadingElement>) => {

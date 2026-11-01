@@ -10,6 +10,7 @@ import {
 	shouldApplyPasswordManagerIgnoreAttributes,
 	type TextareaWithPasswordManagerIgnoreAttributes,
 } from '@app/features/platform/utils/PasswordManagerAutocomplete';
+import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import scrollerStyles from '@app/features/theme/styles/Scroller.module.css';
 import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/CharacterCountAnnouncer';
 import styles from '@app/features/ui/components/form/FormInput.module.css';
@@ -19,7 +20,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {EyeIcon, EyeSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import React, {useCallback, useId, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useId, useLayoutEffect, useMemo, useReducer, useRef, useState} from 'react';
 
 const HIDE_PASSWORD_DESCRIPTOR = msg({
 	message: 'Hide password',
@@ -95,6 +96,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 	leftIcon?: React.ReactNode;
 	rightIcon?: React.ReactNode;
 	renderInput?: (args: RenderInputArgs) => React.ReactNode;
+	sensitive?: boolean;
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -113,6 +115,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			renderInput,
 			disabled,
 			readOnly,
+			sensitive,
 			...props
 		},
 		forwardedRef,
@@ -121,6 +124,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 		const disableAutofocus = shouldDisableAutofocusOnMobile();
 		const [showPassword, setShowPassword] = useState(false);
 		const isPasswordType = type === 'password';
+		const isCredentialField = isPasswordType || props.autoComplete === 'one-time-code';
+		const keepsValueOutOfDom = (sensitive || isCredentialField) && props.value !== undefined;
+		const [, rerenderValue] = useReducer((revision: number) => revision + 1, 0);
+		useCustomCssSuspension(isCredentialField);
 		const shouldIgnorePasswordManagers = useMemo(
 			() => shouldApplyPasswordManagerIgnoreAttributes(type, props.autoComplete),
 			[type, props.autoComplete],
@@ -154,6 +161,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			},
 			[forwardedRef],
 		);
+		useLayoutEffect(() => {
+			if (!keepsValueOutOfDom || !inputRef.current) return;
+			const nextValue = String(props.value ?? '');
+			if (inputRef.current.value !== nextValue) inputRef.current.value = nextValue;
+		});
 		const ariaInvalid = !!error;
 		const hasControlledValue = props.value !== undefined;
 		const shouldForceReadOnly = useMemo(
@@ -179,6 +191,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			() => ({
 				...props,
 				...(shouldIgnorePasswordManagers ? PASSWORD_MANAGER_IGNORE_ATTRIBUTES : {}),
+				...(keepsValueOutOfDom
+					? {
+							value: undefined,
+							onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+								props.onChange?.(event);
+								rerenderValue();
+							},
+						}
+					: {}),
 				autoFocus: disableAutofocus ? false : props.autoFocus,
 				disabled,
 				id: inputId,
@@ -191,6 +212,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			[
 				props,
 				shouldIgnorePasswordManagers,
+				keepsValueOutOfDom,
 				disableAutofocus,
 				disabled,
 				inputId,

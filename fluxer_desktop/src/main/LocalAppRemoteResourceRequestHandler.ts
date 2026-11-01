@@ -39,6 +39,15 @@ interface ForwardRemoteResourceRequest {
 	readonly signal: AbortSignal;
 }
 
+const RANGE_NOT_SATISFIABLE_STATUS = 416;
+
+function isRefusedMidFileRead(request: Request, response: Response): boolean {
+	if (request.method !== 'GET' || response.status < HttpStatus.BAD_REQUEST) return false;
+	if (response.status === RANGE_NOT_SATISFIABLE_STATUS) return false;
+	const start = /^bytes=(\d+)-/u.exec(request.headers.get('range') ?? '')?.[1];
+	return start !== undefined && Number(start) > 0;
+}
+
 export class DesktopLocalAppRemoteResourceRequestHandler {
 	private readonly proxyClient: DesktopLocalAppProxyClient;
 	private readonly runtimePlans: LocalAppRemoteResourceRuntimePlans;
@@ -97,6 +106,10 @@ export class DesktopLocalAppRemoteResourceRequestHandler {
 				uploadId,
 				uploadTotalBytes: readRequestContentLength(request.headers),
 			});
+			if (isRefusedMidFileRead(request, response)) {
+				await response.body?.cancel();
+				return Response.error();
+			}
 			const body = await this.proxyClient.responseBodyForMethod({
 				method: request.method,
 				response,

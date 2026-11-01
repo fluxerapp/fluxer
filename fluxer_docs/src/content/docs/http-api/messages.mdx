@@ -843,7 +843,7 @@ The rate limit is 10 requests per 10 seconds, on the `channel:attachment:upload:
 
 <RouteHeader method="POST" path="/v1/attachments/refresh-urls" bot />
 
-Signs 1 to 50 attachment URLs again, each valid for another 24 hours. OAuth2 tokens can't use this route.
+Signs 1 to 50 attachment URLs again. A refreshed URL is valid until its `ex`, which is 12 to 24 hours away. Check `ex` on each URL, because it isn't always a full day. OAuth2 tokens can't use this route.
 
 ### JSON body
 
@@ -863,7 +863,7 @@ Signs 1 to 50 attachment URLs again, each valid for another 24 hours. OAuth2 tok
 | --- | --- | --- |
 | 200 | response body | The URLs were signed |
 
-The rate limit is 20 requests per 10 seconds, on the `attachment:refresh_urls` bucket.
+The rate limit is 60 requests per 10 seconds, on the `attachment:refresh_urls` bucket.
 
 ## Create message
 

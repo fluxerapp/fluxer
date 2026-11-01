@@ -11,8 +11,10 @@ import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {
 	clampMediaTime,
 	getBufferedPercentage,
@@ -73,6 +75,8 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 }: MobileVideoViewerProps) {
 	const {i18n} = useLingui();
 	const videoRef = useRef<HTMLVideoElement>(null);
+	useMediaSourceResume(videoRef);
+	const handleVideoError = useAttachmentRefreshOnError(src);
 	useInAppMediaSoundCapture(videoRef);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [zoomState, setZoomState] = useState<ZoomState>('fit');
@@ -398,6 +402,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 					loop={loop}
 					muted={VideoVolume.isMuted}
 					onPointerUp={handleVideoPointerUp}
+					onError={handleVideoError}
 					data-flx="voice.mobile-video-viewer.video"
 				/>
 			</PanZoomSurface>

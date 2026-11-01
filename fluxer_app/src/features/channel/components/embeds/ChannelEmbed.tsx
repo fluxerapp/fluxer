@@ -12,6 +12,7 @@ import {
 	isDuplicateEmbedAtIndex,
 	isMediaMatureContent,
 	isValidMedia,
+	withFreshEmbedMediaUrls,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {SuppressEmbedsConfirmModal} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {RichEmbed} from '@app/features/channel/components/embeds/channel_embed/RichEmbed';
@@ -40,7 +41,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MessageAttachmentFlags, MessageEmbedTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -50,23 +51,32 @@ import {type FC, useCallback, useMemo} from 'react';
 
 const mediaFocusRingClass = messageStyles.mediaFocusRing;
 
-function withFreshEmbedMediaUrls(media: EmbedMedia | undefined): EmbedMedia | undefined {
-	if (!media) return media;
-	const url = AttachmentUrlRefresher.fresh(media.url);
-	const proxyUrl = media.proxy_url === undefined ? undefined : AttachmentUrlRefresher.fresh(media.proxy_url);
-	if (url === media.url && proxyUrl === media.proxy_url) return media;
-	return {...media, url, proxy_url: proxyUrl};
+function withFreshIconUrl<T extends {proxy_icon_url?: string | null}>(part: T | undefined): T | undefined {
+	if (!part?.proxy_icon_url) return part;
+	const proxyIconUrl = AttachmentUrlRefresher.fresh(part.proxy_icon_url);
+	return proxyIconUrl === part.proxy_icon_url ? part : {...part, proxy_icon_url: proxyIconUrl};
 }
 
 function withFreshEmbedUrls(embed: MessageEmbed): MessageEmbed {
+	const url = embed.url ? AttachmentUrlRefresher.fresh(embed.url) : embed.url;
 	const image = withFreshEmbedMediaUrls(embed.image);
 	const thumbnail = withFreshEmbedMediaUrls(embed.thumbnail);
 	const video = withFreshEmbedMediaUrls(embed.video);
 	const audio = withFreshEmbedMediaUrls(embed.audio);
-	if (image === embed.image && thumbnail === embed.thumbnail && video === embed.video && audio === embed.audio) {
+	const author = withFreshIconUrl(embed.author);
+	const footer = withFreshIconUrl(embed.footer);
+	if (
+		url === embed.url &&
+		image === embed.image &&
+		thumbnail === embed.thumbnail &&
+		video === embed.video &&
+		audio === embed.audio &&
+		author === embed.author &&
+		footer === embed.footer
+	) {
 		return embed;
 	}
-	return {...embed, image, thumbnail, video, audio};
+	return {...embed, url, image, thumbnail, video, audio, author, footer};
 }
 
 export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {

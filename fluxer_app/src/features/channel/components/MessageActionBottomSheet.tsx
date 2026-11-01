@@ -15,6 +15,7 @@ import {ExpressionPickerSheet} from '@app/features/expressions/components/modals
 import {COPY_LINK_DESCRIPTOR, OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CopyLinkIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -56,7 +57,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 		}, [linkUrl, onClose]);
 		const handleCopyLink = useCallback(async () => {
 			if (!linkUrl) return;
-			await TextCopyCommands.copy(i18n, linkUrl);
+			await TextCopyCommands.copy(i18n, await AttachmentUrlRefresher.refresh(linkUrl));
 			onClose();
 		}, [i18n, linkUrl, onClose]);
 		const handleAddReaction = useCallback(() => {

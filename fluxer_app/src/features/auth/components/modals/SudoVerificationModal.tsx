@@ -29,6 +29,7 @@ import {
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import {Button} from '@app/features/ui/button/Button';
 import buttonStyles from '@app/features/ui/button/Button.module.css';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -129,6 +130,7 @@ const holdsPasskeyFor = (matches: (rpId: string) => boolean): boolean =>
 const holdsMigratedPasskey = (): boolean => holdsPasskeyFor((rpId) => rpId === PASSKEY_MIGRATION_RP_ID);
 const holdsLegacyPasskey = (): boolean => holdsPasskeyFor((rpId) => rpId !== PASSKEY_MIGRATION_RP_ID);
 const SudoVerificationModal: React.FC = observer(() => {
+	useCustomCssSuspension();
 	const {i18n} = useLingui();
 	const {availableMethods, isVerifying, verificationFailed, rawError, lastUsedMfaMethod} = SudoPrompt;
 	const form = useForm<FormInputs>({defaultValues: {password: '', totp: ''}});

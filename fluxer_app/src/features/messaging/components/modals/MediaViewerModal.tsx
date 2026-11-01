@@ -16,10 +16,12 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {formatAttachmentDate} from '@app/features/messaging/utils/AttachmentExpiryUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
@@ -277,10 +279,28 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 });
 function withFreshViewerItemUrls(item: MediaViewerItem): MediaViewerItem {
 	if (!item) return item;
-	const src = AttachmentUrlRefresher.fresh(item.src);
-	const originalSrc = AttachmentUrlRefresher.fresh(item.originalSrc);
+	const src = AttachmentUrlRefresher.fresh(item.src, {refreshUnsigned: true});
+	const originalSrc = AttachmentUrlRefresher.fresh(item.originalSrc, {refreshUnsigned: true});
 	if (src === item.src && originalSrc === item.originalSrc) return item;
 	return {...item, src, originalSrc};
+}
+function resolveAdjacentPinUrls(items: ReadonlyArray<MediaViewerItem>, currentIndex: number, isOpen: boolean): string {
+	const count = items.length;
+	if (!isOpen || count <= 1) return '';
+	const adjacentIndices =
+		count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
+	const nowMs = Date.now();
+	return adjacentIndices
+		.map((index) => items[index])
+		.filter(
+			(item) =>
+				item != null &&
+				isViewerImageItem(item) &&
+				!item.src.startsWith('blob:') &&
+				!attachmentUrlMayNeedRefresh(item.src, nowMs),
+		)
+		.map(buildViewerMediaURL)
+		.join('\n');
 }
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
@@ -288,7 +308,8 @@ const MediaViewerModalComponent: FC = observer(() => {
 		MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
-	const currentItem = withFreshViewerItemUrls(items[currentIndex]);
+	const freshItems = items.map(withFreshViewerItemUrls);
+	const currentItem = freshItems[currentIndex];
 	const currentGifvIsActualGif = currentItem != null && isGifvRenderedAsImage(currentItem);
 	useBottomSheetBackHandler(isOpen, MediaViewerCommands.closeMediaViewer);
 	useEffect(() => {
@@ -298,23 +319,14 @@ const MediaViewerModalComponent: FC = observer(() => {
 			LayerManager.removeLayer('modal', 'media-viewer');
 		};
 	}, [isOpen]);
+	const adjacentPinUrls = resolveAdjacentPinUrls(freshItems, currentIndex, isOpen);
 	useEffect(() => {
-		if (!isOpen || items.length <= 1) return;
-		const count = items.length;
-		const adjacentIndices =
-			count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
-		const unpinCallbacks = adjacentIndices.map((index) => {
-			const item = items[index];
-			if (!item) return () => {};
-			AttachmentUrlRefresher.warm(item.src);
-			AttachmentUrlRefresher.warm(item.originalSrc);
-			if (!isViewerImageItem(item) || item.src.startsWith('blob:')) return () => {};
-			return ImageCacheUtils.pinImage(buildViewerMediaURL(item));
-		});
+		if (adjacentPinUrls.length === 0) return;
+		const unpinCallbacks = adjacentPinUrls.split('\n').map((url) => ImageCacheUtils.pinImage(url));
 		return () => {
 			for (const unpin of unpinCallbacks) unpin();
 		};
-	}, [isOpen, currentIndex, items]);
+	}, [adjacentPinUrls]);
 	const defaultName = useMemo(() => {
 		if (!currentItem) return '';
 		return untracked(() =>
@@ -492,9 +504,12 @@ const MediaViewerModalComponent: FC = observer(() => {
 		});
 	}, [forwardMediaSelection, message, sourceChannel]);
 	const imageSrc = useMemo(() => (currentItem ? buildViewerMediaURL(currentItem) : ''), [currentItem]);
+	const handleImageError = useAttachmentRefreshOnError(imageSrc);
+	const handleGifvVideoError = useAttachmentRefreshOnError(currentItem?.src);
+	const freshItemSources = freshItems.map((item) => item.src).join('\n');
 	const thumbnails = useMemo(() => {
 		const snappedThumbnailSize = snapMediaProxyImageSize(MEDIA_VIEWER_THUMBNAIL_SIZE);
-		return items.map((item, index) => {
+		return freshItems.map((item, index) => {
 			const name =
 				item.filename ||
 				item.originalSrc.split('/').pop()?.split('?')[0] ||
@@ -512,7 +527,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 				type: item.type,
 			};
 		});
-	}, [items, i18n.locale]);
+	}, [freshItemSources, items, i18n.locale]);
 	if (!isOpen || !currentItem) {
 		return null;
 	}
@@ -562,6 +577,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 							objectFit: 'contain',
 						}}
 						draggable={false}
+						onError={handleImageError}
 						data-flx="messaging.media-viewer-modal.render-media.gifv-image"
 					/>
 				);
@@ -580,6 +596,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					playsInline
 					controls={false}
 					aria-label={i18n._(ANIMATED_VIDEO_DESCRIPTOR)}
+					onError={handleGifvVideoError}
 					data-flx="messaging.media-viewer-modal.render-media.gifv-video"
 				>
 					<track kind="captions" data-flx="messaging.media-viewer-modal.render-media.track" />
@@ -661,6 +678,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					objectFit: 'contain',
 				}}
 				draggable={false}
+				onError={handleImageError}
 				data-flx="messaging.media-viewer-modal.render-media.image"
 			/>
 		);

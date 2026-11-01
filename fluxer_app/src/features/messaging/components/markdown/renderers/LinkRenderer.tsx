@@ -1076,7 +1076,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 			logger.warn('Invalid URL in link:', url);
 		}
 	}
-	const href = AttachmentUrlRefresher.fresh(url);
+	const href = AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
 	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
 	const showDestinationTooltip = text != null;
 	const linkElement = (

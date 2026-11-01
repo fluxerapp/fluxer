@@ -16791,10 +16791,10 @@ msgstr "Florida"
 msgid "Fluxer adds a random number to each username, like alex#4821, so many people can use the same name."
 msgstr "Fluxer thêm một số ngẫu nhiên vào mỗi tên người dùng, như alex#4821, để nhiều người có thể dùng cùng một tên."
 
-#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. Assets are files uploaded under "Assets".
+#. Problem shown in the quick CSS editor on a web address that the app is not allowed to load. An attachment link is a link to a file uploaded in a message, and it only works for images. Assets are files uploaded under "Assets".
 #: src/features/theme_settings/editor/CssLint.ts
-msgid "Fluxer blocked loading {url}. Upload it as an asset."
-msgstr "Fluxer đã chặn tải {url}. Hãy tải lên như một tài nguyên."
+msgid "Fluxer blocked loading {url}. Upload the file as an asset, or use an attachment link for an image."
+msgstr "Fluxer đã chặn tải {url}. Hãy tải tệp lên như một tài nguyên hoặc dùng liên kết tệp đính kèm cho hình ảnh."
 
 #. Problem shown in the quick CSS editor on a reference to an uploaded theme asset that does not exist.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -16821,6 +16821,11 @@ msgstr "Fluxer không thể mở thư mục này. Nhập lại để tiếp tụ
 msgid "Fluxer can't read this folder."
 msgstr "Fluxer không thể đọc thư mục này."
 
+#. Problem shown at the top of the quick CSS editor when the whole sheet was left out.
+#: src/features/theme_settings/editor/CssLint.ts
+msgid "Fluxer couldn't apply this CSS. Check it for a broken comment, string or bracket."
+msgstr "Fluxer không thể áp dụng CSS này. Hãy kiểm tra xem có chú thích, chuỗi hoặc dấu ngoặc nào bị hỏng không."
+
 #. Alert when the SMTP check fails and the mail server sent no reply. host is the mail server address.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "Fluxer couldn't connect to {host}."
@@ -16840,6 +16845,11 @@ msgstr "Fluxer không thể kết nối với {instanceName} để kiểm tra xe
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "Fluxer đã ngừng kiểm tra xem trình duyệt có phê duyệt đăng nhập này không. Mã của bạn vẫn còn nguyên."
+
+#. Shown in the modal that applies a shared theme when the theme points at files the app will not load.
+#: src/features/theme/components/modals/ThemeAcceptModal.tsx
+msgid "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites."
+msgstr "Fluxer sẽ không tải {count, plural, other {# tệp}} trên các trang khác mà chủ đề này liên kết tới."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts

@@ -22,6 +22,7 @@ import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {type ReactionEmoji, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
@@ -353,7 +354,7 @@ export function createMessageActionHandlers(
 	const handleCopyMessage = () => {
 		const content = getEffectiveContent(message);
 		if (content) {
-			TextCopyCommands.copy(i18n, content);
+			requestCopyMessageText(message, i18n);
 			onClose?.();
 		}
 	};
@@ -662,7 +663,7 @@ export function requestMessageForward(
 export function requestCopyMessageText(message: Message, i18n: I18n): void {
 	const content = getEffectiveContent(message);
 	if (!content) return;
-	void TextCopyCommands.copy(i18n, content);
+	void refreshAttachmentUrlsInText(content).then((text) => TextCopyCommands.copy(i18n, text));
 }
 
 export function requestMarkMessageUnread(message: Message): void {

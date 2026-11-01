@@ -116,7 +116,7 @@ pub(super) fn branding_section(
                     div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {
                         (custom_css_field(app_public.branding.custom_css.as_deref().unwrap_or("")))
                         p class="text-xs leading-5 text-neutral-500" {
-                            "Applies to every page of the web and desktop app, the sign-in pages included, for everyone on this instance. Each person's own theme and custom CSS load after it and can override it. Class names can change between releases, so prefer the color variables on :root."
+                            "Applies to the web and desktop app for everyone on this instance, except on sign-in pages and in security dialogs. The desktop app loads images and fonts for it only from this instance, Google Fonts and coolLabs Fonts. Each person's own theme and custom CSS load after it and can override it. Use the color variables on :root where you can, because class names can change between releases."
                         }
                     }
                     div class="flex flex-col gap-2 border-t border-neutral-200 pt-6" {

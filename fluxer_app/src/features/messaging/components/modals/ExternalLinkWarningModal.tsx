@@ -4,6 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import styles from '@app/features/messaging/components/modals/ExternalLinkWarningModal.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {useCustomCssSuspension} from '@app/features/theme/state/CustomCssSuspension';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
@@ -25,6 +26,7 @@ const LEAVING_PRODUCT_DESCRIPTOR = msg({
 	comment: 'External link warning title. productName is the Fluxer product name.',
 });
 export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
+	useCustomCssSuspension();
 	const {i18n} = useLingui();
 	const [trustDomain, setTrustDomain] = useState(false);
 	const initialFocusRef = useRef<HTMLButtonElement | null>(null);

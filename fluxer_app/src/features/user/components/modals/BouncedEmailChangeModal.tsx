@@ -152,6 +152,7 @@ export const BouncedEmailChangeModal = observer(() => {
 					placeholder="XXXX-XXXX"
 					required={true}
 					error={codeError ?? undefined}
+					sensitive
 					data-flx="user.bounced-email-change-modal.input.set-code"
 				/>
 			</Modal.InputGroup>

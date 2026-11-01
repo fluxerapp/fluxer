@@ -868,7 +868,7 @@ Whether uploads go through when a ClamAV scan fails, such as when Fluxer can't c
 
 ### `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`
 
-Keys that sign attachment URLs, separated by commas. Each is standard base64 that decodes to at least 32 bytes. The first entry signs and every entry verifies. To rotate keys, put the new key first. When it's empty, Fluxer returns unsigned attachment URLs. Keep it secret. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`.
+Keys that sign attachment URLs, separated by commas. Each is standard base64 that decodes to at least 32 bytes. The first entry signs and every entry verifies. To rotate keys, add the new key last and restart the stack. Then move it first and restart again. Every process can then verify the new key before any process signs with it. Remove the old key 24 hours later. Removing a key ends the data package links it signed. When it's empty, Fluxer returns unsigned attachment URLs. Keep it secret. With rexctl, use `rexctl config set FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`.
 
 ### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`
 

@@ -36,7 +36,7 @@ export interface BuildGifPickerGridDataInput {
 }
 
 function freshStoredUrl(url: string): string {
-	return AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
+	return AttachmentUrlRefresher.freshWhenReady(url, {refreshUnsigned: true}) ?? '';
 }
 
 function buildSkeletonGifPickerItems(count: number): Array<GifPickerGridItemData> {

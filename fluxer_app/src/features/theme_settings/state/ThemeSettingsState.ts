@@ -53,6 +53,7 @@ class ThemeSettingsState {
 	editorDirty = false;
 	missingReferences: ReadonlyArray<string> = [];
 	blockedUrls: ReadonlyArray<string> = [];
+	cssRejected = false;
 	themePreview: ThemePreview | null = null;
 	customCssOff = readCustomCssOff();
 	editorWindow: Window | null = null;
@@ -177,6 +178,10 @@ class ThemeSettingsState {
 	recordBlockedUrl(url: string): void {
 		if (this.blockedUrls.includes(url)) return;
 		this.blockedUrls = [...this.blockedUrls, url].slice(-BLOCKED_URL_LIMIT);
+	}
+
+	setCssRejected(rejected: boolean): void {
+		this.cssRejected = rejected;
 	}
 
 	setCustomCssOff(off: boolean): void {

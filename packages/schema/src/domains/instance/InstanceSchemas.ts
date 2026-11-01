@@ -84,7 +84,9 @@ export const InstanceBrandingSchema = z
 		custom_css: z
 			.string()
 			.nullable()
-			.describe('Optional stylesheet a self-hosted instance applies to every page of its web and desktop app'),
+			.describe(
+				'Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages',
+			),
 		upload_limit_message: z
 			.string()
 			.nullable()

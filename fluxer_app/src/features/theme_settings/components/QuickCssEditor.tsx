@@ -836,6 +836,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			return reaction(
 				() => [
 					ThemeSettingsState.blockedUrls,
+					ThemeSettingsState.cssRejected,
 					ThemeSettingsState.missingReferences,
 					ThemeLibrary.assets,
 					ThemeLibrary.localFiles,

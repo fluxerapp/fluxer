@@ -194,6 +194,7 @@ export const EmailChangeModal = observer(({user}: EmailChangeModalProps) => {
 					placeholder="XXXX-XXXX"
 					required={true}
 					error={originalCodeError ?? undefined}
+					sensitive
 					data-flx="user.email-change-modal.input.set-original-code"
 				/>
 			</Modal.InputGroup>
@@ -240,6 +241,7 @@ export const EmailChangeModal = observer(({user}: EmailChangeModalProps) => {
 					placeholder="XXXX-XXXX"
 					required={true}
 					error={newCodeError ?? undefined}
+					sensitive
 					data-flx="user.email-change-modal.input.set-new-code"
 				/>
 			</Modal.InputGroup>

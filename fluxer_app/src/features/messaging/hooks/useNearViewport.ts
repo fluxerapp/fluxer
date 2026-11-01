@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
 import {LRUCache} from 'lru-cache';
-import {createContext, useCallback, useContext, useEffect, useState} from 'react';
+import {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
 
 const DEFAULT_ROOT_MARGIN = '300px';
 const REMEMBERED_VIEWPORT_KEY_LIMIT = 1000;
@@ -86,5 +87,10 @@ export function useNearViewport<T extends Element>({
 		);
 		return stopObserving;
 	}, [disabled, element, isNearViewport, viewportKey, resolveScrollSurface, rootMargin, threshold]);
-	return {ref, isNearViewport};
+	const loadStartedRef = useRef(false);
+	const waitingForUrl =
+		!loadStartedRef.current && !!rememberKey && AttachmentUrlRefresher.freshWhenReady(rememberKey) === null;
+	const readyToLoad = isNearViewport && !waitingForUrl;
+	if (readyToLoad) loadStartedRef.current = true;
+	return {ref, isNearViewport: readyToLoad};
 }

@@ -23,7 +23,9 @@ import {MessageReactionsModal} from '@app/features/messaging/components/modals/M
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import MessagesState from '@app/features/messaging/state/MessagingMessages';
+import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessagePlaintextCopyText} from '@app/features/messaging/utils/MessagePlaintextCopyUtils';
 import {
 	buildMessageSelectionCopyTextForRange,
@@ -387,12 +389,12 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		}, [i18n.locale]);
 		const handleCopySelection = useCallback(async () => {
 			if (!selectionText) return;
-			await TextCopyCommands.copy(i18n, selectionText, true);
+			await TextCopyCommands.copy(i18n, await refreshAttachmentUrlsInText(selectionText), true);
 			onClose();
 		}, [selectionText, onClose, i18n]);
 		const handleCopyLink = useCallback(async () => {
 			if (!linkUrl) return;
-			await TextCopyCommands.copy(i18n, linkUrl, true);
+			await TextCopyCommands.copy(i18n, await AttachmentUrlRefresher.refresh(linkUrl), true);
 			onClose();
 		}, [linkUrl, onClose, i18n]);
 		const handleOpenLink = useCallback(() => {
