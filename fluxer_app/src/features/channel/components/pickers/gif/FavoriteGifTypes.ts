@@ -110,7 +110,9 @@ export function pickCanonicalPreviewFormat(
 const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
 
 export function stripOwnAttachmentSignature(url: string): string {
-	return isAttachmentCdnUrl(url, RuntimeConfig.mediaEndpoint) ? stripAttachmentSignature(url) : url;
+	const mediaEndpoint = RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint;
+	if (mediaEndpoint === undefined) return stripAttachmentSignature(url);
+	return isAttachmentCdnUrl(url, mediaEndpoint) ? stripAttachmentSignature(url) : url;
 }
 
 export function stripFavoriteGifEntrySignatures(entry: FavoriteGifEntry): FavoriteGifEntry {

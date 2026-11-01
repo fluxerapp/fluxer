@@ -51,6 +51,11 @@ export function sameAttachmentSource(first: string, second: string): boolean {
 	);
 }
 
+function isOwnAttachmentUrl(url: string): boolean {
+	const mediaEndpoint = RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint;
+	return mediaEndpoint !== undefined && isAttachmentCdnUrl(url, mediaEndpoint);
+}
+
 function isNewerThanUrl(entry: {expiresAtMs: number}, signature: AttachmentUrlSignature | null): boolean {
 	return signature === null || entry.expiresAtMs > signature.expiresAtMs;
 }
@@ -95,7 +100,7 @@ class AttachmentUrlRefresher {
 	}
 
 	fresh(url: string, options: {refreshUnsigned?: boolean} = {}): string {
-		if (!url || !isAttachmentCdnUrl(url, RuntimeConfig.mediaEndpoint)) return url;
+		if (!url || !isOwnAttachmentUrl(url)) return url;
 		const key = attachmentCacheKey(url);
 		if (key === null) return url;
 		void this.wakeups;
@@ -123,7 +128,7 @@ class AttachmentUrlRefresher {
 
 	freshWhenReady(url: string, options: {refreshUnsigned?: boolean} = {}): string | null {
 		const current = this.fresh(url, options);
-		if (!current || !isAttachmentCdnUrl(current, RuntimeConfig.mediaEndpoint)) return current;
+		if (!current || !isOwnAttachmentUrl(current)) return current;
 		const nowMs = Date.now();
 		if (nowMs < this.cooldownUntilMs) return current;
 		const signature = readAttachmentUrlSignature(current);
@@ -136,7 +141,7 @@ class AttachmentUrlRefresher {
 	}
 
 	warm(url: string): void {
-		if (!url || !isAttachmentCdnUrl(url, RuntimeConfig.mediaEndpoint)) return;
+		if (!url || !isOwnAttachmentUrl(url)) return;
 		const nowMs = Date.now();
 		if (!attachmentUrlNeedsRefresh(url, nowMs)) return;
 		const key = attachmentCacheKey(url);
@@ -150,7 +155,7 @@ class AttachmentUrlRefresher {
 	async refresh(url: string, options: {force?: boolean} = {}): Promise<string> {
 		if (!url) return url;
 		const target = unwrapDesktopLocalResourceURL(url);
-		if (!isAttachmentCdnUrl(target, RuntimeConfig.mediaEndpoint)) return url;
+		if (!isOwnAttachmentUrl(target)) return url;
 		const key = attachmentCacheKey(target);
 		if (key === null) return url;
 		const nowMs = Date.now();
