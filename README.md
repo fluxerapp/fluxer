@@ -133,7 +133,7 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 
 ## Other ways to run it
 
-- [Open Fluxer in a browser](https://fluxer.com), no install needed.
+- [Open Fluxer in a browser](https://fluxer.com/app), no install needed.
 - [Host your own instance][docs-selfhost] from this repository.
 
 ## Documentation
