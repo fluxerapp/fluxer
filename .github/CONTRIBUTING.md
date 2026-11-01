@@ -93,7 +93,7 @@ A build stops with an error when it finds one of the old names `PUBLIC_BUILD_VER
 
 Report bugs and request features at [feedback.fluxer.com](https://feedback.fluxer.com).
 
-Report security vulnerabilities privately through [fluxer.app/security](https://fluxer.app/security). Never post them publicly.
+Report security vulnerabilities privately through [fluxer.com/security](https://fluxer.com/security). Never post them publicly.
 
 Read the [operator documentation](https://fluxer.dev) for self-hosting questions.
 

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-The [Fluxer community guidelines](https://fluxer.app/guidelines) define the standards of conduct for this repository. They apply to issues, pull requests, reviews, discussions, commits, branch names and all submitted content.
+The [Fluxer community guidelines](https://fluxer.com/guidelines) define the standards of conduct for this repository. They apply to issues, pull requests, reviews, discussions, commits, branch names and all submitted content.
 
 They also apply to conduct outside this repository when that conduct creates a safety risk for anyone participating in it.
 

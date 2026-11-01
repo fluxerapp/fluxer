@@ -5,7 +5,7 @@ pub const DESKTOP_APP_ORIGIN: &str = "fluxer-app://app";
 pub(crate) const OPERATOR_WALL_PATH_PREFIX: &str = "/operator-wall/";
 
 pub const OUTBOUND_USER_AGENT: &str =
-    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)";
+    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)";
 pub const MAX_MEDIA_IMAGE_DIMENSION_DEFAULT: u32 = 16_384;
 pub const MAX_MEDIA_IMAGE_PIXELS_DEFAULT: usize =
     MAX_MEDIA_IMAGE_DIMENSION_DEFAULT as usize * MAX_MEDIA_IMAGE_DIMENSION_DEFAULT as usize;

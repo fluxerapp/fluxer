@@ -39,12 +39,12 @@ export const EXAMPLE_USERNAME_MENTION = '@username';
 export const EXAMPLE_FLUXER_TAG_FULL = 'Username#0000';
 export const EXAMPLE_USERNAME = 'Username';
 export const VISIONARY_LIFETIME_BADGE_LABEL = 'Visionary #42';
-export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.app';
+export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.com';
 export const EXAMPLE_GIF_URLS = `${EXAMPLE_URL}/gif1.gif\n${EXAMPLE_URL}/gif2.gif`;
 export const THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL = `https://${THE_OTHER_PLATFORM.toLowerCase()}.new/abcd1234`;
 const DESKTOP_DOWNLOAD_URLS: Record<string, string> = {
-	stable: 'https://fluxer.app/download',
-	canary: 'https://canary.fluxer.app/download',
+	stable: 'https://fluxer.com/download',
+	canary: 'https://canary.fluxer.com/download',
 	development: 'http://localhost:8088/download',
 };
 

@@ -6,12 +6,12 @@
 </p>
 
 <p align="center">
-  <a href="https://fluxer.app/download">
-    <img src="https://img.shields.io/badge/Download-fluxer.app-4641D9" alt="Download" /></a>
-  <a href="https://docs.fluxer.app">
-    <img src="https://img.shields.io/badge/Docs-docs.fluxer.app-blue" alt="Documentation" /></a>
-  <a href="https://fluxer.app/donate">
-    <img src="https://img.shields.io/badge/Donate-fluxer.app%2Fdonate-brightgreen" alt="Donate" /></a>
+  <a href="https://fluxer.com/download">
+    <img src="https://img.shields.io/badge/Download-fluxer.com-4641D9" alt="Download" /></a>
+  <a href="https://docs.fluxer.com">
+    <img src="https://img.shields.io/badge/Docs-docs.fluxer.com-blue" alt="Documentation" /></a>
+  <a href="https://fluxer.com/donate">
+    <img src="https://img.shields.io/badge/Donate-fluxer.com%2Fdonate-brightgreen" alt="Donate" /></a>
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-AGPLv3-purple" alt="AGPLv3 License" /></a>
 </p>
@@ -24,7 +24,7 @@
 # Fluxer
 
 > [!IMPORTANT]
-> Bug reports and feature requests have moved to [feedback.fluxer.com](https://feedback.fluxer.com). Sign in with your Fluxer account to post, vote and follow updates. GitHub Issues and Discussions are closed. Report security vulnerabilities privately through [fluxer.app/security](https://fluxer.app/security).
+> Bug reports and feature requests have moved to [feedback.fluxer.com](https://feedback.fluxer.com). Sign in with your Fluxer account to post, vote and follow updates. GitHub Issues and Discussions are closed. Report security vulnerabilities privately through [fluxer.com/security](https://fluxer.com/security).
 
 Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.
 
@@ -133,7 +133,7 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 
 ## Other ways to run it
 
-- [Open Fluxer in a browser](https://web.fluxer.app), no install needed.
+- [Open Fluxer in a browser](https://fluxer.com), no install needed.
 - [Host your own instance][docs-selfhost] from this repository.
 
 ## Documentation
@@ -174,7 +174,7 @@ Use of the Fluxer name and logo is covered by the
 [android-apk]: https://github.com/fluxerapp/flutter_client/releases
 [obtainium]: https://obtainium.imranr.dev/
 [ios-testflight]: https://testflight.apple.com/join/PKZR6pK9
-[docs]: https://docs.fluxer.app
-[docs-downloads]: https://docs.fluxer.app/downloads/overview/
-[docs-linux]: https://docs.fluxer.app/downloads/linux-repositories/
-[docs-selfhost]: https://docs.fluxer.app/operator/get-started/
+[docs]: https://docs.fluxer.com
+[docs-downloads]: https://docs.fluxer.com/downloads/overview/
+[docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/
+[docs-selfhost]: https://docs.fluxer.com/operator/get-started/

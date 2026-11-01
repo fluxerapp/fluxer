@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	docsURL                = "https://docs.fluxer.app/operator/"
+	docsURL                = "https://docs.fluxer.com/operator/"
 	changeHowFluxerRunsURL = docsURL + "running/#change-how-fluxer-runs"
 )
 

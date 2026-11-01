@@ -78,7 +78,7 @@ const REPORT_FLOW_LIBRARY: ReportFlowLibrary = {
 };
 
 const CRISIS_LINES_URL = 'https://befrienders.org';
-const COPYRIGHT_HELP_URL = 'https://fluxer.app/help/copyright';
+const COPYRIGHT_HELP_URL = 'https://fluxer.com/help/copyright';
 const ADMIN_LOCALE = 'en-US';
 
 assertValidReportFlowLibrary(REPORT_FLOW_LIBRARY);

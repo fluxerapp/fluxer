@@ -47,7 +47,7 @@ const PIX: BillingPaymentMethod = {kind: 'named', name: 'Pix'};
 const NO_METHOD: BillingPaymentMethod = {kind: 'none'};
 const CHARGE_AT = new Date('2026-11-12T08:00:00Z');
 const TIME_ZONE = 'Europe/Stockholm';
-const DONATION_MANAGE_URL = 'https://fluxer.app/donate/manage?email=operator%40example.com';
+const DONATION_MANAGE_URL = 'https://fluxer.com/donate/manage?email=operator%40example.com';
 const SUBSCRIPTION_ID = 'sub_1SJHDHFPC94Os7Fd';
 
 class CaptureEmailProvider implements IEmailProvider {
@@ -82,14 +82,14 @@ const config: EmailConfig = {
 	fromEmail: 'noreply@m.fluxer.com',
 	fromName: 'Fluxer',
 	replyTo: 'support@fluxer.com',
-	appBaseUrl: 'https://web.fluxer.app',
+	appBaseUrl: 'https://fluxer.com',
 	apiBaseUrl: 'https://api.fluxer.app',
 	appealsEmail: 'appeals@fluxer.com',
 	privacyEmail: 'privacy@fluxer.com',
 	safetyEmail: 'safety@fluxer.com',
 	supportEmail: 'support@fluxer.com',
 	productName: 'Fluxer',
-	marketingBaseUrl: 'https://fluxer.app',
+	marketingBaseUrl: 'https://fluxer.com',
 	staticCdnBaseUrl: values['static-base'],
 	legalAddress: 'Fluxer Platform AB, c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
 	brandLogo: true,
@@ -192,7 +192,7 @@ const SUSPENSION_NOTICE: EmailTemplateVariables['enforcement_notice'] = {
 	summary: 'We suspended your account until Oct 21, 2026, 10:00 AM UTC.',
 	effects: "You can't sign in or use Fluxer anywhere until then. Your account, messages and communities are kept.",
 	rule_title: 'Spam',
-	rule_url: 'https://fluxer.app/guidelines#6-spam-and-service-abuse',
+	rule_url: 'https://fluxer.com/guidelines#6-spam-and-service-abuse',
 	facts:
 		'We found that your account sent unwanted messages in bulk.\n2 messages in #general of Plant Club, between Oct 1, 2026, 9:00 AM UTC and Oct 2, 2026, 6:30 PM UTC.',
 	statement: 'You posted the same link in ten communities.',
@@ -213,7 +213,7 @@ const previews: Record<string, Preview> = {
 		service.send(
 			'operator_pass_waitlist_verification',
 			USER,
-			{confirmUrl: `https://fluxer.app/pass/confirm?token=${token}`},
+			{confirmUrl: `https://fluxer.com/pass/confirm?token=${token}`},
 			locale,
 		),
 	sale_open: (locale) => {
@@ -222,11 +222,11 @@ const previews: Record<string, Preview> = {
 			'operator_pass_sale_open',
 			USER,
 			{
-				checkoutUrl: 'https://web.fluxer.app/channels/@operator-pass',
+				checkoutUrl: 'https://fluxer.com/channels/@operator-pass',
 				priceFormatted: formatMinorUnitPrice(price.earlyBird, price.currency, locale),
 				priceRisesAt: new Date('2027-01-02T12:00:00Z'),
 				unsubscribeUrl: `https://api.fluxer.app/v1/operator-pass/waitlist/unsubscribe?token=${token}`,
-				unsubscribePageUrl: `https://fluxer.app/pass/unsubscribe?token=${token}`,
+				unsubscribePageUrl: `https://fluxer.com/pass/unsubscribe?token=${token}`,
 			},
 			locale,
 		);
@@ -285,7 +285,7 @@ const previews: Record<string, Preview> = {
 		service.send(
 			'donation_magic_link',
 			USER,
-			{manageUrl: `https://fluxer.app/donate/manage#token=${token}`, expiresAt: DATE},
+			{manageUrl: `https://fluxer.com/donate/manage#token=${token}`, expiresAt: DATE},
 			locale,
 		),
 	registration_approved: (locale) => service.send('registration_approved', USER, {}, locale),
@@ -297,7 +297,7 @@ const previews: Record<string, Preview> = {
 		service.send(
 			'donation_confirmation',
 			USER,
-			{amountCents: 1000, currency: 'eur', interval: 'month', manageUrl: 'https://fluxer.app/donate/manage'},
+			{amountCents: 1000, currency: 'eur', interval: 'month', manageUrl: 'https://fluxer.com/donate/manage'},
 			locale,
 		),
 	donation_confirmation_once: (locale) =>
@@ -308,7 +308,7 @@ const previews: Record<string, Preview> = {
 				amountCents: 2500,
 				currency: 'eur',
 				interval: 'once',
-				manageUrl: 'https://fluxer.app/donate/manage',
+				manageUrl: 'https://fluxer.com/donate/manage',
 				paidAt: DATE,
 				reference: '1234-5678',
 				receiptUrl: 'https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xRXhhbXBsZQ',
@@ -326,7 +326,7 @@ const previews: Record<string, Preview> = {
 				period: {start: DATE, end: new Date('2026-11-09T14:30:00Z')},
 				totals: {totalMinor: 1000, paidMinor: 1000, currency: 'EUR', tax: null, reverseCharge: false},
 				invoice: {url: INVOICE_URL, linkUntil: INVOICE_LINK_UNTIL, pdf: null},
-				manageUrl: 'https://fluxer.app/donate/manage',
+				manageUrl: 'https://fluxer.com/donate/manage',
 			},
 			locale,
 		),
@@ -354,7 +354,7 @@ const previews: Record<string, Preview> = {
 				amountMinor: 1000,
 				currency: 'EUR',
 				invoiceUrl: INVOICE_URL,
-				manageUrl: 'https://fluxer.app/donate/manage',
+				manageUrl: 'https://fluxer.com/donate/manage',
 			},
 			locale,
 		),
@@ -395,7 +395,7 @@ const previews: Record<string, Preview> = {
 				summary: 'We banned your account.',
 				effects: "You can't sign in or use Fluxer anywhere. You may not create or use other accounts.",
 				rule_title: 'Child safety',
-				rule_url: 'https://fluxer.app/guidelines#4-sexual-content-and-protection-of-minors',
+				rule_url: 'https://fluxer.com/guidelines#4-sexual-content-and-protection-of-minors',
 				facts: 'We found content or activity on your account that breaks our rules on protecting children.',
 				statement: null,
 			},

@@ -6,7 +6,7 @@ import pg from 'pg';
 
 const MAX_DIAGNOSTIC_FIELD_LENGTH = 128;
 const INVALID_PASSWORD_CODE = '28P01';
-const PASSWORD_MISMATCH_DOCS = 'https://docs.fluxer.app/operator/rexctl/#rexctl-doctor';
+const PASSWORD_MISMATCH_DOCS = 'https://docs.fluxer.com/operator/rexctl/#rexctl-doctor';
 const SYNCHRONOUS_COMMIT_LEVELS = new Set(['on', 'off', 'local', 'remote_write', 'remote_apply']);
 
 interface PostgresConnectionDiagnostic {

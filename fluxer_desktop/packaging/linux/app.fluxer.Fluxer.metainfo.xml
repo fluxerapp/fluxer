@@ -48,9 +48,9 @@
         </screenshot>
     </screenshots>
     <url type="bugtracker">https://feedback.fluxer.com</url>
-    <url type="homepage">https://fluxer.app</url>
-    <url type="donation">https://fluxer.app/donate</url>
-    <url type="contact">https://fluxer.app/company-information#contact</url>
+    <url type="homepage">https://fluxer.com</url>
+    <url type="donation">https://fluxer.com/donate</url>
+    <url type="contact">https://fluxer.com/company-information#contact</url>
     <url type="translate">https://weblate.fluxer.tools/</url>
     <url type="vcs-browser">https://github.com/fluxerapp/fluxer.git</url>
     <update_contact>fen@unix.dog</update_contact>
