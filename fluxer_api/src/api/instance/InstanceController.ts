@@ -80,7 +80,7 @@ function buildDiscoveryStaticInput(
 		deliveryState: runtime.emailDeliveryState,
 	});
 	const apiClientEndpoint = Config.endpoints.apiClient;
-	const apiPublicEndpoint = Config.endpoints.apiPublic;
+	const apiPublicEndpoint = Config.endpoints.apiPublicDiscovery;
 	let gifProvider: NatsGifProvider | undefined;
 	if (gifService !== undefined) {
 		gifProvider = gifService;

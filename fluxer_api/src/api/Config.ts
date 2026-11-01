@@ -395,6 +395,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		endpoints: {
 			apiPublic: master.endpoints.api,
+			apiPublicDiscovery: master.services.api.discovery_public_endpoint || master.endpoints.api,
 			apiClient: master.endpoints.api_client,
 			webApp: master.endpoints.app,
 			webAppOrigins: [...new Set([new URL(master.endpoints.app).origin, ...master.services.api.app_origin_aliases])],

@@ -65,6 +65,7 @@ var envVars = []envVar{
 	{"FLUXER_APP_ORIGIN_ALIASES", "address", "More web app origins, separated by commas, for an instance that serves the web app on more than one hostname. Each must be an http or https origin. The API allows each one through CORS and accepts it for sign-in handoff. For passkeys on these origins, list them and the web app origin in FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS."},
 	{"FLUXER_API_ENDPOINT", "address", "The public base URL of the API. When it's empty, Fluxer uses the public origin followed by /api."},
 	{"FLUXER_API_CLIENT_ENDPOINT", "address", "The API base URL Fluxer hands to clients. When it's empty, Fluxer uses the public origin followed by /api."},
+	{"FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT", "address", "The public API base URL Fluxer lists in instance discovery as `api_public`. When it's empty, Fluxer uses FLUXER_API_ENDPOINT. Webhooks, signed links and federation always use FLUXER_API_ENDPOINT."},
 	{"FLUXER_APP_ENDPOINT", "address", "The address of the web app, which Fluxer allows through CORS and uses in links. When it's empty, Fluxer uses the public origin."},
 	{"FLUXER_GATEWAY_ENDPOINT", "address", "The public WebSocket URL of the gateway, starting with `ws` or `wss`. When it's empty, Fluxer uses `wss` on the public host followed by /gateway, or `ws` when the public scheme is `http`."},
 	{"FLUXER_MEDIA_ENDPOINT", "address", "The public address of the media proxy. When it's empty, Fluxer uses the public origin followed by /media."},
