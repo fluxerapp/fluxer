@@ -5,6 +5,7 @@ package checks
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 )
@@ -37,7 +38,7 @@ func runClientIP(ctx context.Context, e *Env) Result {
 	if n < clientIPMinimum {
 		return skip("")
 	}
-	if ip == "" {
+	if ip == "" || !e.ownAddress(ctx, ip) {
 		return pass("People who use your instance show their own IP addresses.")
 	}
 	fix := "Turn on IPv6 for Docker on this machine, then run rexctl restart."
@@ -67,4 +68,36 @@ func sharedIP(users []clientIPUser, now time.Time) (string, int) {
 		}
 	}
 	return ips[0], len(ips)
+}
+
+func (e *Env) ownAddress(ctx context.Context, ip string) bool {
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return false
+	}
+	if parsed.IsLoopback() || parsed.IsPrivate() || parsed.IsLinkLocalUnicast() || parsed.IsUnspecified() {
+		return true
+	}
+	if public, err := e.publicAddress(ctx); err == nil && parsed.Equal(net.ParseIP(public)) {
+		return true
+	}
+	if ifaces, err := net.InterfaceAddrs(); err == nil {
+		for _, a := range ifaces {
+			if n, ok := a.(*net.IPNet); ok && n.IP.Equal(parsed) {
+				return true
+			}
+		}
+	}
+	if privateDomain(e.Domain) {
+		return false
+	}
+	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	addrs, _ := net.DefaultResolver.LookupIPAddr(lookupCtx, e.Domain)
+	for _, a := range addrs {
+		if a.IP.Equal(parsed) {
+			return true
+		}
+	}
+	return false
 }
