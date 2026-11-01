@@ -47,14 +47,19 @@ func runDNS(ctx context.Context, e *Env) Result {
 	if matched := matchHere(addrs, public); len(matched) > 0 {
 		return pass(fmt.Sprintf("%s points to this machine (%s).", e.Domain, strings.Join(matched, ", ")))
 	}
-	if e.forwardsHere(ctx) {
+	forwards, reason := e.forwardsHere(ctx)
+	if forwards {
 		return pass(fmt.Sprintf("%s points to %s, which forwards to this machine.", e.Domain, addrs[0].IP))
 	}
 	if perr != nil {
 		return skip(fmt.Sprintf("Couldn't find this machine's public IP address to compare with %s.", e.Domain))
 	}
-	return fail(fmt.Sprintf("%s points to %s and this machine is %s.", e.Domain, addrs[0].IP, public),
-		fmt.Sprintf("Change its A record to %s, then run rexctl doctor.", public))
+	problem := fmt.Sprintf("%s points to %s and this machine is %s.", e.Domain, addrs[0].IP, public)
+	if reason != "" {
+		return fail(problem+" "+reason,
+			fmt.Sprintf("If a proxy such as Cloudflare is in front of this machine, let requests to https://%s/_edge through without a challenge, then run rexctl doctor. Otherwise, change the A record to %s.", e.Domain, public))
+	}
+	return fail(problem, fmt.Sprintf("Change its A record to %s, then run rexctl doctor.", public))
 }
 
 func matchHere(addrs []net.IPAddr, public string) []string {
@@ -76,29 +81,42 @@ func matchHere(addrs []net.IPAddr, public string) []string {
 	return matched
 }
 
-func (e *Env) forwardsHere(ctx context.Context) bool {
+func (e *Env) forwardsHere(ctx context.Context) (bool, string) {
 	if e.Instance == nil || !e.running(ctx, "edge") {
-		return false
+		return false, ""
 	}
 	local, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/_edge")
 	if err != nil || local == "" {
-		return false
+		return false, ""
 	}
 	return servesEdge(ctx, e.Domain, local)
 }
 
-func servesEdge(ctx context.Context, domain, local string) bool {
+func servesEdge(ctx context.Context, domain, local string) (bool, string) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+domain+"/_edge", nil)
+	url := "https://" + domain + "/_edge"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return false
+		return false, ""
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return false
+		return false, fmt.Sprintf("rexctl couldn't open %s.", url)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		if strings.EqualFold(resp.Header.Get("Server"), "cloudflare") || resp.Header.Get("Cf-Ray") != "" {
+			return false, fmt.Sprintf("Cloudflare answered %s with status %d.", url, resp.StatusCode)
+		}
+		return false, fmt.Sprintf("Requests to %s get status %d.", url, resp.StatusCode)
+	}
 	remote, err := io.ReadAll(io.LimitReader(resp.Body, 1<<10))
-	return err == nil && resp.StatusCode == http.StatusOK && strings.TrimSpace(string(remote)) == local
+	if err != nil {
+		return false, fmt.Sprintf("rexctl couldn't open %s.", url)
+	}
+	if strings.TrimSpace(string(remote)) != local {
+		return false, fmt.Sprintf("Requests to %s get an answer from a different machine.", url)
+	}
+	return true, ""
 }
