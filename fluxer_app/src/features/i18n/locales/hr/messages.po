@@ -41954,7 +41954,7 @@ msgstr "Čekamo da..."
 msgid "Waiting for your desktop…"
 msgstr "Čekanje na radno okruženje…"
 
-#. Short status next to a slowly pulsing dot in the Operator Pass checkout dialog while the app waits for the payment to go through.
+#. Short status next to a loading indicator in the Operator Pass checkout dialog while the app waits for the payment to go through.
 #: src/features/premium/components/operator_pass/checkout/CheckoutWaitingStage.tsx
 msgid "Waiting for your payment"
 msgstr "Čekamo vašu uplatu"

@@ -219,6 +219,7 @@ interface RowView {
 	title: ReactNode;
 	meta: Array<ReactNode>;
 	links: Array<ReactNode>;
+	pages?: Array<ReactNode>;
 	action: ((describedBy: string) => ReactNode) | null;
 }
 
@@ -420,6 +421,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				}
 				const meta: Array<ReactNode> = [];
 				const links: Array<ReactNode> = [];
+				const pageLinks: Array<ReactNode> = [];
 				if (row.paused) meta.push(i18n._(PAUSED_PASS_DESCRIPTOR));
 				if (row.lockEndsAt) {
 					meta.push(
@@ -488,7 +490,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				if (pages.length > 1) {
 					for (const [index, page] of pages.entries()) {
 						if (!page.certificate_url) continue;
-						links.push(
+						pageLinks.push(
 							certificateLinks(
 								`page-${page.pass_id}`,
 								page.pass_id,
@@ -541,7 +543,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 								</>
 							)
 						: null;
-				return {title, meta, links, action};
+				return {title, meta, links, pages: pageLinks, action};
 			}
 			case 'offered': {
 				const name = getOperatorPassOfferUserName(row.offer.recipient);
@@ -580,7 +582,7 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 				};
 		}
 	};
-	const renderItem = (key: string, kind: string, {title, meta, links, action}: RowView) => {
+	const renderItem = (key: string, kind: string, {title, meta, links, pages = [], action}: RowView) => {
 		const titleId = `${baseId}-${key}-title`;
 		const metaIds = meta.map((_, index) => `${baseId}-${key}-meta-${index}`);
 		return (
@@ -606,6 +608,11 @@ export const OperatorPassHoldingsSection = observer(function OperatorPassHolding
 									{link}
 								</p>
 							))}
+						</div>
+					)}
+					{pages.length > 0 && (
+						<div className={styles.pages} data-flx="premium.operator-pass-holdings-section.pages">
+							{pages}
 						</div>
 					)}
 				</div>
