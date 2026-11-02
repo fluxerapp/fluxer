@@ -27,14 +27,40 @@ pub fn public_key_base64(key: &RsaKeyPair) -> String {
 }
 
 #[derive(Clone)]
-pub struct RequestSigner {
+pub struct HostKey {
+    host: String,
     key: Arc<RsaKeyPair>,
     key_id: String,
 }
 
+impl HostKey {
+    pub fn new(key: RsaKeyPair, key_id: String) -> anyhow::Result<Self> {
+        let host = Url::parse(&key_id)?
+            .host_str()
+            .ok_or_else(|| anyhow::anyhow!("key id has no host"))?
+            .to_owned();
+        Ok(Self {
+            host,
+            key: Arc::new(key),
+            key_id,
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct RequestSigner {
+    key: Arc<RsaKeyPair>,
+    key_id: String,
+    host_key: Option<HostKey>,
+}
+
 impl RequestSigner {
-    pub fn new(key: Arc<RsaKeyPair>, key_id: String) -> Self {
-        Self { key, key_id }
+    pub fn new(key: Arc<RsaKeyPair>, key_id: String, host_key: Option<HostKey>) -> Self {
+        Self {
+            key,
+            key_id,
+            host_key,
+        }
     }
 
     pub fn headers(&self, url: &Url, at: SystemTime) -> anyhow::Result<HeaderMap> {
@@ -52,19 +78,22 @@ impl RequestSigner {
             Some(query) => format!("{}?{query}", url.path()),
             None => url.path().to_owned(),
         };
+        let (key, key_id) = match &self.host_key {
+            Some(host_key) if host_key.host == host_name => (&host_key.key, &host_key.key_id),
+            _ => (&self.key, &self.key_id),
+        };
         let signing_string = format!("(request-target): get {target}\nhost: {host}\ndate: {date}");
-        let mut signature = vec![0; self.key.public().modulus_len()];
-        self.key
-            .sign(
-                &RSA_PKCS1_SHA256,
-                &SystemRandom::new(),
-                signing_string.as_bytes(),
-                &mut signature,
-            )
-            .map_err(|_| anyhow::anyhow!("failed to sign ActivityPub request"))?;
+        let mut signature = vec![0; key.public().modulus_len()];
+        key.sign(
+            &RSA_PKCS1_SHA256,
+            &SystemRandom::new(),
+            signing_string.as_bytes(),
+            &mut signature,
+        )
+        .map_err(|_| anyhow::anyhow!("failed to sign ActivityPub request"))?;
         let signature_header = format!(
             "keyId=\"{}\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date\",signature=\"{}\"",
-            self.key_id,
+            key_id,
             BASE64_STANDARD.encode(signature)
         );
 
