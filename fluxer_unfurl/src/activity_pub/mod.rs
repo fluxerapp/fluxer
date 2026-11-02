@@ -79,7 +79,11 @@ async fn resolve_activity_pub_post(
 ) -> Option<Vec<MessageEmbed>> {
     let post = fetcher::fetch_activity_pub(client, ap_url).await?;
     let author_actor = fetch_post_author_actor(client, &post).await;
-    if visibility::is_hidden_from_unauthed_web(&post, author_actor.as_ref()) {
+    if visibility::is_hidden_from_unauthed_web(
+        &post,
+        author_actor.as_ref(),
+        client.signer.is_some(),
+    ) {
         return None;
     }
     let mut context = build_context(client, url, Some(html)).await;
@@ -150,7 +154,11 @@ async fn fetch_activity_pub_reply_context(
 ) -> Option<types::ActivityPubReplyContext> {
     let parent = fetcher::fetch_activity_pub(client, parent_url).await?;
     let author_actor = fetch_post_author_actor(client, &parent).await;
-    if visibility::is_hidden_from_unauthed_web(&parent, author_actor.as_ref()) {
+    if visibility::is_hidden_from_unauthed_web(
+        &parent,
+        author_actor.as_ref(),
+        client.signer.is_some(),
+    ) {
         return None;
     }
     let author = match author_actor.as_ref() {
@@ -199,7 +207,11 @@ async fn fetch_activity_pub_quote_child(
         .or(post.misskey_quote.as_deref())?;
     let quote = fetcher::fetch_activity_pub(client, quote_url).await?;
     let author_actor = fetch_post_author_actor(client, &quote).await;
-    if visibility::is_hidden_from_unauthed_web(&quote, author_actor.as_ref()) {
+    if visibility::is_hidden_from_unauthed_web(
+        &quote,
+        author_actor.as_ref(),
+        client.signer.is_some(),
+    ) {
         return None;
     }
     let fallback = Url::parse(quote_url).ok()?;
