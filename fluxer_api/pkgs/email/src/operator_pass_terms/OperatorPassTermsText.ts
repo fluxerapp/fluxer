@@ -49,7 +49,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: "Before you pay, checkout checks every name and turns down any name that has words we don't allow in display names on Fluxer, or that looks like it comes from Fluxer, our team or another brand. The certificate only shows that you supported Fluxer, and it doesn't mean that we endorse you or your business in any way.",
+			text: "Before you pay, checkout checks every name and turns down any name that looks like it comes from Fluxer, our team or another brand, or that the certificate can't print, for example because it has emoji. The certificate only shows that you supported Fluxer, and it doesn't mean that we endorse you or your business in any way.",
 		},
 		{
 			kind: 'paragraph',
@@ -626,7 +626,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Innan du betalar kontrollerar kassan varje namn och säger nej till namn som innehåller ord som vi inte tillåter i visningsnamn på Fluxer, eller som ser ut att komma från Fluxer, vårt team eller ett annat varumärke. Certifikatet visar bara att du har stöttat Fluxer, och det betyder inte på något sätt att vi rekommenderar eller står bakom dig eller ditt företag.',
+			text: 'Innan du betalar kontrollerar kassan varje namn och säger nej till namn som ser ut att komma från Fluxer, vårt team eller ett annat varumärke, eller som certifikatet inte kan skriva ut, till exempel för att det innehåller emoji. Certifikatet visar bara att du har stöttat Fluxer, och det betyder inte på något sätt att vi rekommenderar eller står bakom dig eller ditt företag.',
 		},
 		{
 			kind: 'paragraph',
@@ -1198,7 +1198,7 @@ export const OPERATOR_PASS_TERMS_TEXT = {
 		},
 		{
 			kind: 'paragraph',
-			text: 'Antes do pagamento, a finalização da compra verifica cada nome e recusa qualquer nome que tenha palavras que não permitimos em nomes de exibição no Fluxer, ou que pareça vir do Fluxer, da nossa equipe ou de outra marca. O certificado mostra apenas que você apoiou o Fluxer, e ele não significa de forma alguma que recomendemos ou apoiemos você ou a sua empresa.',
+			text: 'Antes do pagamento, a finalização da compra verifica cada nome e recusa qualquer nome que pareça vir do Fluxer, da nossa equipe ou de outra marca, ou que o certificado não consiga imprimir, por exemplo porque tem emojis. O certificado mostra apenas que você apoiou o Fluxer, e ele não significa de forma alguma que recomendemos ou apoiemos você ou a sua empresa.',
 		},
 		{
 			kind: 'paragraph',

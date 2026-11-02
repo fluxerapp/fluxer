@@ -6,7 +6,6 @@ import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {OperatorPassPurchaseRow} from '@app/api/database/types/OperatorPassTypes';
-import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {getCacheService} from '@app/api/middleware/ServiceSingletons';
 import {OperatorPassCertificateService} from '@app/api/operator_pass/OperatorPassCertificateService';
@@ -18,7 +17,7 @@ import type {
 	OperatorPassCertificateLinkResponse,
 	OperatorPassPurchaseListResponse,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
-import {afterAll, beforeAll, expect, test, vi} from 'vitest';
+import {afterAll, beforeAll, expect, test} from 'vitest';
 
 let harness: ApiTestHarness;
 
@@ -174,9 +173,7 @@ test('only the buyer can replace a link, the old link stops at once, and the cop
 	});
 	await reset(stranger.token, giftedId).expect(404).execute();
 
-	vi.spyOn(profileSubstringBlocklistCache, 'containsBannedSubstring').mockReturnValue(true);
 	const {certificate_url: url} = await reset(buyer.token).execute();
-	vi.mocked(profileSubstringBlocklistCache.containsBannedSubstring).mockRestore();
 
 	const after = (await repository.findLatestCertificate(passId))!;
 	expect(url).toBe(`${Config.endpoints.marketing}/pass/c/${after.link_token}`);

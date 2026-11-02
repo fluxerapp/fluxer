@@ -21,14 +21,14 @@ const SINGLE_PASS_PRICE_DESCRIPTOR = msg({
 		'Note under the Operator Pass price when buying one pass. The price includes tax and is paid once, it never renews.',
 });
 const EARLY_BIRD_UNTIL_DESCRIPTOR = msg({
-	message: 'Early bird price until {date}.',
+	message: 'This early bird price is for purchases until {date}.',
 	comment:
-		'Note under the early bird Operator Pass price, saying the last day of the early bird price. {date} is a date such as January 1, 2027.',
+		'Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.',
 });
 const EARLY_BIRD_UNTIL_THEN_DESCRIPTOR = msg({
-	message: 'Early bird price until {date}, then {standardPrice}.',
+	message: 'This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}.',
 	comment:
-		'Note under the early bird Operator Pass price, saying the last day of the early bird price and the price after it. {date} is a date such as January 1, 2027, and {standardPrice} is the price with currency for the same number of passes after that date.',
+		'Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.',
 });
 const ON_SALE_FROM_DESCRIPTOR = msg({
 	message: 'On sale from {saleOpensAt}.',
@@ -73,7 +73,7 @@ export function OperatorPassPriceBlock({state, count, formatPrice}: OperatorPass
 					{state.standard_price_minor != null
 						? i18n._(EARLY_BIRD_UNTIL_THEN_DESCRIPTOR, {
 								date: formatOperatorPassEarlyBirdEnd(priceRisesAt),
-								standardPrice: formatPrice(state.standard_price_minor * count, state.currency),
+								standardPrice: formatPrice(state.standard_price_minor, state.currency),
 							})
 						: i18n._(EARLY_BIRD_UNTIL_DESCRIPTOR, {date: formatOperatorPassEarlyBirdEnd(priceRisesAt)})}
 				</span>

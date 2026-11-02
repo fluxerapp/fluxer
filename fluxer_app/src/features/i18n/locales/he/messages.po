@@ -14371,16 +14371,6 @@ msgstr "כל רשימה שנתית של Operators שאנחנו מפרסמים נ
 msgid "Early access to new features"
 msgstr "גישה מוקדמת לתכונות חדשות"
 
-#. Note under the early bird Operator Pass price, saying the last day of the early bird price and the price after it. {date} is a date such as January 1, 2027, and {standardPrice} is the price with currency for the same number of passes after that date.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "Early bird price until {date}, then {standardPrice}."
-msgstr "מחיר מוקדם עד {date}, ואחר כך {standardPrice}."
-
-#. Note under the early bird Operator Pass price, saying the last day of the early bird price. {date} is a date such as January 1, 2027.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "Early bird price until {date}."
-msgstr "מחיר מוקדם עד {date}."
-
 #. Heading of a slide in the Operator Pass checkout dialog about being invited to try new features before they are released. Plain, no hype. No trailing punctuation.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
 msgid "Early feature testing"
@@ -37479,6 +37469,16 @@ msgstr "במכשיר זה או במפתח האבטחה כבר קיים מפתח 
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "זו לא נראית כמו תגובת תבנית תקינה. ודא שהעתקת את מסמך ה-JSON בשלמותו."
+
+#. Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
+msgid "This early bird price is for purchases until {date}."
+msgstr "המחיר המוקדם הזה חל על רכישות עד {date} כולל."
+
+#. Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
+msgid "This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}."
+msgstr "המחיר המוקדם הזה חל על רכישות עד {date} כולל. Operator Pass שנקנה אחרי התאריך הזה עולה {standardPrice}."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx
