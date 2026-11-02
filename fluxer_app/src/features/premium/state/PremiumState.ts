@@ -22,7 +22,7 @@ class PremiumState {
 	}
 
 	setState(userId: string, state: PremiumStateResponse): void {
-		this.state = state;
+		this.state = {...state, billing: {...state.billing, documents: state.billing.documents ?? []}};
 		this.loadedForUserId = userId;
 		this.loading = false;
 	}
