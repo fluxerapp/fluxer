@@ -73,7 +73,7 @@ func newAutoUpgradeCmd(app *App) *cobra.Command {
 		Use:   "on",
 		Short: "Upgrade Fluxer by itself every day or once a week",
 		Long: "Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Pass several times to --at, like 06:00,18:00, to run more than once on those days. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the first upgrade time of the day. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.\n\n" +
-			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m={{.text}} to the topic address.",
+			"With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, and the message as both text and content, which Slack and Discord webhooks show as they are. For ntfy, add ?tpl=1&m={{.text}} to the topic address. Run rexctl auto-upgrade test-notify to send a test notice.",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runAutoUpgradeOn(c.Context(), app, o)
@@ -93,8 +93,37 @@ func newAutoUpgradeCmd(app *App) *cobra.Command {
 			return runAutoUpgradeOff(c.Context(), app)
 		},
 	}
-	c.AddCommand(on, off)
+	test := &cobra.Command{
+		Use:   "test-notify",
+		Short: "Send a test notice to the --notify address",
+		Long:  "Post a test notice to the address you passed to rexctl auto-upgrade on --notify, with status test. It looks like the notice after an upgrade, so you can check that it gets to you without waiting for a new release.",
+		Args:  noArgs,
+		RunE: func(c *cobra.Command, _ []string) error {
+			return runAutoUpgradeTestNotify(c.Context(), app)
+		},
+	}
+	c.AddCommand(on, off, test)
 	return c
+}
+
+func runAutoUpgradeTestNotify(ctx context.Context, app *App) error {
+	inst, err := app.Instance()
+	if err != nil {
+		return err
+	}
+	if inst.State.NotifyURL == "" {
+		return ui.Refused("rexctl has no address to send notices to.", "Run rexctl auto-upgrade on with --notify and your address.")
+	}
+	n := upgradeNotice{Instance: inst.Domain(), Status: "test", Release: inst.State.Release, Text: "This is a test notice from rexctl. It posts here when an upgrade installs a new release or fails."}
+	if n.Instance != "" {
+		n.Text = n.Instance + ": " + n.Text
+	}
+	n.Content = n.Text
+	if err := postNotice(ctx, inst.State.NotifyURL, n); err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't send a test notice to %s.", maskURL(inst.State.NotifyURL)), "Check the address, then run rexctl auto-upgrade on with --notify and the right one.")
+	}
+	app.UI.OK("Sent a test notice to %s.", maskURL(inst.State.NotifyURL))
+	return nil
 }
 
 func autoUpgradeFor(inst *instance.Instance, e *engine.Engine) (host.AutoUpgrade, error) {
@@ -249,7 +278,7 @@ func runAutoUpgradeOn(ctx context.Context, app *App, o autoUpgradeOptions) error
 			leanBackupNote(app, host.AutoUpgradeState{Day: day, At: at, Backup: scope}, notify)
 		}
 		if notify != "" {
-			app.UI.Info("rexctl tells %s when an upgrade installs a new release or fails.", maskURL(notify))
+			app.UI.Info("rexctl tells %s when an upgrade installs a new release or fails. Run rexctl auto-upgrade test-notify to send a test notice.", maskURL(notify))
 		}
 		app.UI.Info("Run rexctl auto-upgrade to see when it runs next and how the last run went.")
 		return nil
@@ -483,14 +512,22 @@ func maskURL(raw string) string {
 
 func notifyUpgrade(ctx context.Context, app *App, runErr error) {
 	if ctx.Err() != nil || errors.Is(runErr, context.Canceled) {
+		if app.outcome != "" {
+			app.UI.Info("rexctl was stopped, so it didn't send the notice.")
+		}
 		return
 	}
 	dir, err := app.Dir()
 	if err != nil {
+		app.UI.Warn(fmt.Sprintf("Couldn't find the instance to send the notice for (%v).", err), "")
 		return
 	}
 	inst, err := instance.Find(dir)
-	if err != nil || inst.State.NotifyURL == "" {
+	if err != nil {
+		app.UI.Warn(fmt.Sprintf("Couldn't load the notify address, so rexctl didn't send the notice (%v).", err), "")
+		return
+	}
+	if inst.State.NotifyURL == "" {
 		return
 	}
 	n := upgradeNotice{Instance: inst.Domain(), Release: inst.State.Release}
@@ -510,9 +547,10 @@ func notifyUpgrade(ctx context.Context, app *App, runErr error) {
 	}
 	n.Content = n.Text
 	if err := postNotice(ctx, inst.State.NotifyURL, n); err != nil {
-		app.UI.Warn(fmt.Sprintf("Couldn't tell %s how the upgrade went.", maskURL(inst.State.NotifyURL)), "")
-		app.UI.Detail("%v", err)
+		app.UI.Warn(fmt.Sprintf("Couldn't tell %s how the upgrade went (%v).", maskURL(inst.State.NotifyURL), err), "")
+		return
 	}
+	app.UI.Info("Told %s how the upgrade went.", maskURL(inst.State.NotifyURL))
 }
 
 func noticeText(err error) string {
@@ -538,6 +576,10 @@ func postNotice(ctx context.Context, rawURL string, n upgradeNotice) error {
 	req.Header.Set("User-Agent", "rexctl")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		var ue *url.Error
+		if errors.As(err, &ue) {
+			return ue.Err
+		}
 		return err
 	}
 	defer resp.Body.Close()
