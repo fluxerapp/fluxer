@@ -34,7 +34,7 @@ function renderDateTokens(markdown: string, language: string): string {
 
 function parseTermsMarkdown(markdown: string, language: string): Array<OperatorPassTermsBlock> {
 	const blocks: Array<OperatorPassTermsBlock> = [];
-	for (const chunk of renderDateTokens(markdown, language).split(/\n\s*\n/u)) {
+	for (const chunk of renderDateTokens(markdown, language).replaceAll('\\*', '*').split(/\n\s*\n/u)) {
 		const text = chunk.trim();
 		const heading = text.match(/^(#{2,3}) (.*?)(?:\s*\{#[^}]*\})?$/u);
 		if (!text || text.startsWith('<!--')) continue;
