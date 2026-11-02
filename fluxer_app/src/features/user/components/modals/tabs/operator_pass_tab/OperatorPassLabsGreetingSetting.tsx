@@ -14,6 +14,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/operator_pass_tab/OperatorPassWallSettings.module.css';
+import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -34,7 +35,7 @@ export const OperatorPassLabsGreetingSetting = observer(function OperatorPassLab
 	const {i18n} = useLingui();
 	const [saving, setSaving] = useState(false);
 	const labs = OperatorPassHoldings.passes?.labs;
-	if (!labs) return null;
+	if (!labs || Users.currentUser?.operatorPassSince == null) return null;
 	const handleChange = async (greeting: boolean) => {
 		setSaving(true);
 		try {
