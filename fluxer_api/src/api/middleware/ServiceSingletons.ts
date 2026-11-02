@@ -360,7 +360,7 @@ const getDefaultUnfurlerService = singleton(() => {
 		manager,
 		async () => instanceConfigRepository.getEffectiveYoutubeApiKey(),
 		async () => (await instanceConfigRepository.getEffectiveGifConfig()).klipy_api_key,
-		activityPubKeyId(Config.endpoints.apiPublic),
+		activityPubKeyId(Config.endpoints.apiPublicDiscovery),
 	);
 });
 
