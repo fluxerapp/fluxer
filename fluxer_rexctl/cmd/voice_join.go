@@ -1190,7 +1190,7 @@ func voiceOriginState(ctx context.Context, client *voice.Client, domain, origin 
 		return originUnknown
 	case !disc.ListsOrigins:
 		return originUnlisted
-	case !slices.Contains(disc.VoiceOrigins, origin):
+	case !slices.ContainsFunc(disc.VoiceOrigins, func(source string) bool { return voice.SourceCovers(source, origin) }):
 		return originPending
 	}
 	if ok, err := client.AllowsOrigin(ctx, domain, origin); err == nil && ok {

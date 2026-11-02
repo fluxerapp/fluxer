@@ -38073,7 +38073,7 @@
 					},
 					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
 					"voice_origins": {
-						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies",
+						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com",
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string"}

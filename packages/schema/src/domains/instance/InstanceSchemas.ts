@@ -516,7 +516,9 @@ export const WellKnownFluxerResponse = z.object({
 		.array(z.string())
 		.max(1000)
 		.optional()
-		.describe('Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies'),
+		.describe(
+			'Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com',
+		),
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;

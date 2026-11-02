@@ -59,6 +59,7 @@ import {
 	WellKnownFluxerResponse,
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {Hono} from 'hono';
+import {getDomain} from 'tldts';
 
 let discoveryValidators: DiscoveryValidators | null = null;
 
@@ -160,7 +161,38 @@ function listVoiceOrigins(): Array<string> {
 			if (origin) origins.add(origin);
 		}
 	}
-	return Array.from(origins).sort();
+	return collapseVoiceOrigins(origins);
+}
+
+function collapseVoiceOrigins(origins: Iterable<string>): Array<string> {
+	const groups = new Map<string, Array<URL>>();
+	const out = new Set<string>();
+	for (const origin of origins) {
+		const url = new URL(origin);
+		const domain = getDomain(url.hostname);
+		if (!domain) {
+			out.add(origin);
+			continue;
+		}
+		const key = `${url.protocol}//${domain}:${url.port}`;
+		groups.set(key, [...(groups.get(key) ?? []), url]);
+	}
+	for (const urls of groups.values()) {
+		if (urls.length === 1) {
+			out.add(urls[0].origin);
+			continue;
+		}
+		const labels = urls.map((url) => url.hostname.split('.').reverse());
+		let shared = 0;
+		while (labels.every((host) => shared < host.length && host[shared] === labels[0][shared])) shared++;
+		const parent = labels[0].slice(0, shared).reverse().join('.');
+		const port = urls[0].port ? `:${urls[0].port}` : '';
+		for (const url of urls) {
+			if (url.hostname === parent) out.add(url.origin);
+		}
+		out.add(`${urls[0].protocol}//*.${parent}${port}`);
+	}
+	return Array.from(out).sort();
 }
 
 function mapBuiltInGuildBadgeImagesForDiscovery(images: BuiltInBadgeImages): InstanceBuiltInGuildBadgeImages {
