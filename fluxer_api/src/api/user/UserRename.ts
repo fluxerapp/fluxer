@@ -38,12 +38,14 @@ async function chooseDiscriminator(
 	user: User,
 	uniqueUsernames: boolean,
 	{username, discriminator}: {username: string; discriminator?: number},
+	adminOverride: boolean,
 ): Promise<number> {
 	if (uniqueUsernames) return USERNAME_MODE_DISCRIMINATOR;
 	const result = await deps.discriminatorService.generateDiscriminator({
 		username,
 		requestedDiscriminator: discriminator,
 		user,
+		adminOverride,
 	});
 	if (!result.available || result.discriminator === -1) {
 		throw new TagAlreadyTakenError();
@@ -62,7 +64,7 @@ export async function renameUser(
 	const reservation = uniqueUsernames ? await reserveUsername({users, cache}, tag.username, user.id) : null;
 	let updatedUser: User;
 	try {
-		const discriminator = await chooseDiscriminator(deps, user, uniqueUsernames, tag);
+		const discriminator = await chooseDiscriminator(deps, user, uniqueUsernames, tag, reason === 'admin_action');
 		updatedUser = await users.patchUpsert(user.id, {username: tag.username, discriminator}, user.toRow());
 	} finally {
 		await reservation?.release();
