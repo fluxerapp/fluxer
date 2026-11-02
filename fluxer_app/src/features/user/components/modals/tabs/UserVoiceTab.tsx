@@ -98,7 +98,7 @@ const CUSTOM_DESCRIPTOR = msg({
 	comment: 'Voice input processing profile where the user configures processing manually.',
 });
 const CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Adjust each setting yourself: noise suppression, echo cancellation, and gain.',
+	message: 'Adjust noise suppression, echo cancellation, and gain yourself.',
 	comment: 'Description for the custom profile option in the voice tab.',
 });
 const PUSH_TO_TALK_LIMITED_DESCRIPTOR = msg({
@@ -342,12 +342,12 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 				<div className={styles.pttSettings} data-flx="user.voice-tab.render-ptt-controls.ptt-settings">
 					<p className={styles.pttSettingDescription} data-flx="user.voice-tab.render-ptt-controls.ptt-mute-note">
 						<Trans>
-							While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled.
+							While push-to-talk is on, your keybind controls your microphone, so the mute button is disabled.
 						</Trans>
 					</p>
 					<div className={styles.pttSettingRow} data-flx="user.voice-tab.render-ptt-controls.ptt-setting-row">
 						<KeybindRecorder
-							label={<Trans>Shortcut</Trans>}
+							label={<Trans>Keybind</Trans>}
 							labelPlacement="inline"
 							action="voice_push_to_talk"
 							value={pttCombo}
@@ -736,7 +736,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 					description={
 						<Trans>
 							Show the ID of each voice connection next to people in calls and in voice channels. With it off, each
-							device is named by its type instead.
+							device shows its type.
 						</Trans>
 					}
 					value={voiceSettings.showVoiceConnectionId}

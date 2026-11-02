@@ -14,14 +14,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	account_deletion_cancelled: {},
 	account_deletion_scheduled_inactivity: {deletion_date: 'Dec 1, 2026'},
 	account_deletion_scheduled_requested: {deletion_date: 'Dec 14, 2026'},
-	billing_credit_note: {
-		sellerAddress: 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
-		sellerEmail: 'support@fluxer.com',
-		amountFormatted: '$4.99',
-		numbered: 'yes',
-		invoiceNumber: 'B1Q2W3E4-0001',
-		upcoming: 'no',
-	},
+
 	bulk_message_deletion_completed: {message_count: 1240, channel_count: 18},
 	donation_cancellation_confirmation: {
 		sellerAddress: 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
@@ -29,8 +22,6 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		receivedFormatted: 'October 1, 2026 at 11:30 PM UTC',
 		endsAt: DATE,
 		reference: 'sub_123',
-		unpaid: 'no',
-		unpaidFormatted: '',
 	},
 	donation_card_expiring: {
 		sellerAddress: 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
@@ -43,7 +34,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		amountFormatted: '$4.99',
 		tax: 'yes',
 	},
-	donation_confirmation: {amount: '$5.00', interval: 'month', paidAt: DATE},
+	donation_confirmation: {amount: '$5.00', interval: 'month', paidAt: DATE, documentNumber: 'DN-000001'},
 	donation_magic_link: {minutes: 15},
 	donation_payment_failed: {reason: 'declined', attemptedAt: DATE, amountFormatted: '$5.00'},
 	donation_receipt: {
@@ -52,8 +43,8 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		periodStart: DATE,
 		periodEnd: DATE,
 		amountFormatted: '$5.00',
-		pdf: 'yes',
-		invoiceLinkUntil: DATE,
+		document: 'yes',
+		documentNumber: 'DN-000001',
 	},
 	donation_refund_receipt: {refundedAt: DATE, amountFormatted: '$5.00'},
 	donation_renewal_notice: {
@@ -112,44 +103,76 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	inactivity_warning: {deletionDate: DATE, lastActiveDate: DATE},
 	ip_authorization: {},
 	mfa_backup_codes_view: {minutes: 10},
-	operator_pass_invoice: {
-		paidAt: DATE,
-		amountFormatted: '$199.00',
-		taxFormatted: '$39.80',
-		pdf: 'no',
-		invoiceLinkUntil: DATE,
-	},
-	operator_pass_offer_accepted: {recipientName: 'Grace', remainingCount: 2},
+	operator_pass_offer_accepted: {recipientName: 'Grace', remainingCount: 2, visionary: 'no'},
 	operator_pass_offer_ended: {otherName: 'Grace', ended: 'declined'},
 	operator_pass_offer_received: {senderName: 'Ada', arrivesAt: '2026-10-12'},
-	operator_pass_perks_removed: {scope: 'temporary', until: DATE, automated: 'no'},
+	operator_pass_perks_removed: {
+		scope: 'temporary',
+		until: DATE,
+		automated: 'no',
+		visionary: 'yes',
+		cause: 'dispute',
+		disputeId: 'dp_test',
+		deadline: DATE,
+	},
 	operator_pass_purchase_confirmation: {
 		termsVersion: '2026-10-18',
 		orderDate: DATE,
 		quantity: 2,
 		priceFormatted: '$199',
+		taxFormatted: '$39.80',
+		business: 'yes',
+		document: 'yes',
+		documentNumber: 'OP-000001',
 		withdrawalEndsOn: '2026-11-08',
-		waiverConsentAt: DATE,
-		consentText: 'Deliver all 2 passes now.',
+		consentAt: DATE,
+		labs_name: 'Fluxer Labs',
 		wallName: 'Ada',
 		wallOptOut: 'no',
+		sellerAddress: 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
+		sellerPhone: '+46 79 101 18 18',
 		sellerEmail: 'support@fluxer.com',
 	},
-	operator_pass_refund_receipt: {orderDate: DATE, refundedAt: DATE, amountFormatted: '$199', full: 'yes'},
-	operator_pass_removal_notice: {replyDays: 7},
-	operator_pass_revoked: {cause: 'refund', lastPass: 'yes'},
+	operator_pass_refund_receipt: {
+		orderDate: DATE,
+		refundedAt: DATE,
+		amountFormatted: '$199',
+		delivered: 'yes',
+		passCount: 2,
+		lastPass: 'yes',
+		visionary: 'yes',
+	},
+	operator_pass_removal_notice: {replyDays: 7, visionary: 'yes'},
+	operator_pass_revoked: {cause: 'refund', lastPass: 'yes', visionary: 'yes'},
+	operator_pass_purchase_refused: {},
 	operator_pass_sale_open: {priceFormatted: '$199', priceEndsOn: '2027-01-01'},
 	operator_pass_waitlist_verification: {},
 	operator_pass_wall_hidden: {reason: 'guidelines'},
-	operator_pass_wall_name_replaced: {target: 'both', shown: 'username', reason: 'rights'},
-	operator_pass_welcome: {founderName: 'Hampus', deliveredAt: DATE, wallName: 'Ada', wallOptOut: 'no'},
+	operator_pass_wall_name_replaced: {target: 'both', shown: 'operator', reason: 'rights'},
+	operator_pass_visionary_notice: {visionaryDate: DATE, member: 'yes'},
+	operator_pass_visionary_turned_on: {
+		badge: 'no',
+		wallName: 'Ada',
+		wallOptOut: 'no',
+		member: 'no',
+		termsVersion: '2026-11-01',
+	},
+	operator_pass_welcome: {
+		founderName: 'Hampus',
+		deliveredAt: DATE,
+		wallName: 'Ada',
+		wallOptOut: 'no',
+		labs: 'none',
+	},
 	operator_pass_withdrawal_receipt: {
-		cancellation: 'no',
 		receivedAt: DATE,
 		orderDate: DATE,
 		amountFormatted: '$199',
-		lastPass: 'no',
-		refundViaDispute: 'no',
+		delivered: 'yes',
+		passCount: 2,
+		lastPass: 'yes',
+		visionary: 'yes',
+		refund: 'started',
 	},
 	password_change_verification: {minutes: 10},
 	password_reset: {},
@@ -187,8 +210,6 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		sellerAddress: 'c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
 		sellerEmail: 'support@fluxer.com',
 		premiumName: 'Plutonium',
-		numbered: 'yes',
-		invoiceNumber: 'B1Q2W3E4-0001',
 		owed: 'open',
 		amountFormatted: '$4.99',
 	},
@@ -222,8 +243,9 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		periodEnd: DATE,
 		amountFormatted: '$4.99',
 		taxFormatted: '$0.83',
-		pdf: 'yes',
-		invoiceLinkUntil: DATE,
+		business: 'no',
+		document: 'yes',
+		documentNumber: 'PL-000001',
 		renewal: 'month',
 		renewalFormatted: '$4.99',
 		renewalTax: 'included',
@@ -263,6 +285,15 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		plan: 'yearly',
 		giftEndsAt: DATE,
 		yearStartsAt: DATE,
+	},
+	plutonium_withdrawal_receipt: {
+		premiumName: 'Plutonium',
+		receivedAt: DATE,
+		purchasedAt: DATE,
+		gift: 'no',
+		amountFormatted: '$49.99',
+		refund: 'started',
+		brazil: 'no',
 	},
 	reauth_code: {minutes: 10},
 	registration_approved: {},
@@ -309,13 +340,15 @@ describe('EmailI18n locale files', () => {
 	});
 	it.each(LOCALES)('%s keeps every link tag of the source in every template field', (locale) => {
 		const messages: Partial<Record<EmailTemplateKey, EmailTemplate>> = EMAIL_I18N_LOCALE_MESSAGES[locale];
-		const tags = (text: string) => (text.match(/<\/?(mail|settings|dsa|arn)>/g) ?? []).sort();
+		const tags = (text: string) => (text.match(/<\/?(mail|settings|dsa|arn|labs)>/g) ?? []).sort();
 		for (const key of TEMPLATE_KEYS) {
 			const source: EmailTemplate = EMAIL_I18N_MESSAGES[key];
 			for (const [field, text] of Object.entries(source)) {
 				const translated = messages[key]?.[field] ?? '';
 				expect(tags(translated), `${key}.${field}`).toEqual(tags(text));
-				expect(translated, `${key}.${field}`).not.toMatch(/<(mail|settings|dsa|arn)>[^<]*<(mail|settings|dsa|arn)>/);
+				expect(translated, `${key}.${field}`).not.toMatch(
+					/<(mail|settings|dsa|arn|labs)>[^<]*<(mail|settings|dsa|arn|labs)>/,
+				);
 			}
 		}
 	});

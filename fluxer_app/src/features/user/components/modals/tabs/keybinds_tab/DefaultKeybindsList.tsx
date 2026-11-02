@@ -94,7 +94,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 		return (
 			<div className={styles.defaultsList} data-flx="user.keybinds-tab.default-keybinds-list.defaults-list">
 				<div className={styles.emptyState} data-flx="user.keybinds-tab.default-keybinds-list.empty-state">
-					<Trans>No shortcuts match that search.</Trans>
+					<Trans>No keybinds match that search.</Trans>
 				</div>
 			</div>
 		);

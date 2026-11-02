@@ -38,7 +38,7 @@ const WARNINGS_DESCRIPTOR = msg({
 	comment: 'Button in the status bar of the quick CSS editor that opens the list of problems.',
 });
 const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
+	message: 'Keybinds',
 	comment: 'Button in the status bar of the quick CSS editor that lists its keyboard shortcuts.',
 });
 

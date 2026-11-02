@@ -365,13 +365,13 @@ The secret of a server is `FLUXER_VOICE_API_SECRET` in `voice/<id>/.env` in the 
 
 | Check | What's wrong | What to do |
 | --- | --- | --- |
-| `voice-servers` | A container isn't running, or the endpoint doesn't answer through the edge. | Run `rexctl voice status <id>`. |
+| `voice-servers` | A container isn't running, or the endpoint doesn't respond through the edge. | Run `rexctl voice status <id>`. |
 | `voice-endpoints` | A server from `rexctl voice add` still uses an old domain or port of your instance. | Run `rexctl doctor --fix`. |
 | `voice-ports` | A port isn't published, another container publishes it, or the firewall on the machine closes it. | Open the port, and check your provider's firewall. |
 | `voice-node-ip` | The server gives clients another address than the machine's public address. | Set the right address. The steps follow this table. |
 | `voice-tls` | The certificate of an endpoint is missing or expires within 2 days. | Open ports 80 and 443. `docker logs fluxer-voice-edge-edge-1` shows the error from Let's Encrypt. |
 | `voice-registration` | The instance deleted the server, has another secret for it, or rejects the time on its requests. | Run `rexctl voice remove <id>` and join with a new token, put the secret back in the admin panel, or fix the clock. |
-| `voice-webhook` | The instance doesn't accept a signed test webhook. A rejection means it has another secret for the server. | Put the server's secret back in the admin panel, or check that the webhook address answers. |
+| `voice-webhook` | The instance doesn't accept a signed test webhook. A rejection means it has another secret for the server. | Put the server's secret back in the admin panel, or check that the webhook address responds. |
 | `voice-keys` | Two servers share an API key. | Give each server its own key. Remove the newer server and add it again. |
 | `voice-health` | The API can't connect to a server, or a server has been draining for more than an hour. | Run `rexctl voice status` on the machine that runs it. For a server stuck draining, clear Draining in the admin panel. |
 

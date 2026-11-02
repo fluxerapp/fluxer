@@ -948,6 +948,42 @@ export class MessageSendService {
 		});
 	}
 
+	async sendSystemGuildMessage(params: {
+		channel: Channel;
+		messageId: MessageID;
+		content: string;
+		mentionUserIds: Array<UserID>;
+	}): Promise<Message> {
+		const {channel, messageId, content, mentionUserIds} = params;
+		if (!channel.guildId) {
+			throw new CannotExecuteOnDmError();
+		}
+		const {message} = await this.deps.persistenceService.createMessage({
+			messageId,
+			channelId: channel.id,
+			userId: SYSTEM_USER_ID,
+			type: MessageTypes.DEFAULT,
+			content,
+			flags: 0,
+			guildId: channel.guildId,
+			channel,
+			mentionData: {
+				flags: 0,
+				mentionUserIds,
+				mentionRoleIds: [],
+				mentionChannelIds: [],
+				mentionEveryone: false,
+			},
+			allowEmbeds: false,
+		});
+		await this.deps.mentionService.handleMentionTasks({guildId: channel.guildId, message, authorId: SYSTEM_USER_ID});
+		await dispatchMessageCreateBroadcast({gatewayService: this.deps.gatewayService, channel, message});
+		if (channel.indexedAt != null) {
+			void this.deps.searchService.indexMessage(message, false);
+		}
+		return message;
+	}
+
 	async sendWebhookMessage({
 		webhook,
 		thread,

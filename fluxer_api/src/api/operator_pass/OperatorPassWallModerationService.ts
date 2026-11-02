@@ -27,7 +27,6 @@ const PENDING_LOOKUP_CONCURRENCY = 16;
 interface OperatorPassWallDecisionInput {
 	reason: OperatorPassWallDeclineReason;
 	note: string;
-	usernameDeclined: boolean;
 }
 
 export interface OperatorPassWallDecisionResult {
@@ -72,7 +71,6 @@ export class OperatorPassWallModerationService {
 					decline_reason: Db.set(null),
 					decline_note: Db.set(null),
 					decline_statement_id: Db.set(null),
-					username_declined: Db.set(false),
 					reviewed_at: Db.set(now),
 					reviewed_by: Db.set(adminId),
 					updated_at: Db.set(now),
@@ -107,12 +105,10 @@ export class OperatorPassWallModerationService {
 		const revision = await this.findRevision(userId, targetId);
 		const now = operatorPassNow();
 		const statementId = randomUUID();
-		let usernameWasDeclined = false;
 		const next = await this.entries.mutate(userId, now, adminId, (current) => {
 			if (!isOperatorPassWallListed(current) || current.pending_revision_id !== targetId) {
 				throw new UnknownOperatorPassWallEntryError();
 			}
-			usernameWasDeclined = current.username_declined;
 			return {
 				patch: {
 					pending_revision_id: Db.set(null),
@@ -126,7 +122,6 @@ export class OperatorPassWallModerationService {
 					decline_reason: Db.set(input.reason),
 					decline_note: Db.set(input.note),
 					decline_statement_id: Db.set(statementId),
-					username_declined: Db.set(current.username_declined || input.usernameDeclined),
 					reviewed_at: Db.set(now),
 					reviewed_by: Db.set(adminId),
 					updated_at: Db.set(now),
@@ -142,11 +137,7 @@ export class OperatorPassWallModerationService {
 			reason: input.reason,
 			note: input.note,
 			statementId,
-			usernameDeclined: input.usernameDeclined,
 		});
-		if (input.usernameDeclined && !usernameWasDeclined && next.live_revision_id == null) {
-			await this.publication.publishChanges([userId], 'preserve');
-		}
 		return {entry: next, revision, decision};
 	}
 
@@ -215,7 +206,6 @@ export class OperatorPassWallModerationService {
 			return {
 				patch: {
 					...liveRevisionPatch(personal),
-					username_declined: Db.set(current.username_declined || input.usernameDeclined),
 					decline_reason: Db.set(input.reason),
 					decline_note: Db.set(input.note),
 					decline_statement_id: Db.set(statementId),
@@ -232,7 +222,6 @@ export class OperatorPassWallModerationService {
 			reason: input.reason,
 			note: input.note,
 			statementId,
-			usernameDeclined: input.usernameDeclined,
 		});
 		if (personal) {
 			await this.recordBusinessEnded(userId, null, personal, adminId, now);

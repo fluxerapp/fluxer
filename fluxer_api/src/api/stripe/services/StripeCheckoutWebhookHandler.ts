@@ -6,7 +6,7 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
-import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {getBillingRepository, getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {getPaymentDisputeRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
@@ -16,7 +16,6 @@ import {
 } from '@app/api/operator_pass/OperatorPassFulfilmentService';
 import {flagPurchaseDuringDispute} from '@app/api/payment_disputes/PaymentDisputeReviews';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
-import {ensureB2BInvoiceForCheckout} from '@app/api/stripe/StripeB2BInvoice';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {
 	getFirstInvoicePaymentIntentId,
@@ -24,6 +23,7 @@ import {
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
+import {enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
 import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeDonationCheckoutFulfilment} from '@app/api/stripe/services/StripeDonationCheckoutFulfilment';
 import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
@@ -91,12 +91,10 @@ export class StripeCheckoutWebhookHandler {
 			if (session.payment_status !== 'unpaid') {
 				await this.flagOpenDisputes(session);
 			}
-			await this.issueB2BInvoice(session);
 			return;
 		}
 		if (session.metadata?.is_donation === 'true') {
 			await this.handleDonationCheckoutCompleted(session);
-			await this.issueB2BInvoice(session);
 			return;
 		}
 		if (session.payment_status === 'unpaid') {
@@ -116,17 +114,15 @@ export class StripeCheckoutWebhookHandler {
 		await this.fulfilCheckoutSession(session);
 	}
 
-	async handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session): Promise<void> {
+	async handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session, paidAt: Date): Promise<void> {
 		if (this.operatorPassFulfilment && isOperatorPassCheckoutSession(session)) {
-			await this.operatorPassFulfilment.handleAsyncPaymentSucceeded(session);
+			await this.operatorPassFulfilment.handleAsyncPaymentSucceeded(session, paidAt);
 			await this.flagOpenDisputes(session);
-			await this.issueB2BInvoice({...session, payment_status: 'paid'});
 			return;
 		}
 		if (session.metadata?.is_donation === 'true') {
 			Logger.info({sessionId: session.id}, 'Processing async payment succeeded for donation checkout session');
 			await this.handleDonationCheckoutCompleted(session);
-			await this.issueB2BInvoice({...session, payment_status: 'paid'});
 			return;
 		}
 		Logger.info({sessionId: session.id}, 'Processing async payment succeeded for checkout session');
@@ -141,7 +137,7 @@ export class StripeCheckoutWebhookHandler {
 
 	async handleAsyncPaymentFailed(session: Stripe.Checkout.Session): Promise<void> {
 		if (this.operatorPassFulfilment && isOperatorPassCheckoutSession(session)) {
-			this.operatorPassFulfilment.handleAsyncPaymentFailed(session);
+			await this.operatorPassFulfilment.handleAsyncPaymentFailed(session);
 			return;
 		}
 		if (session.metadata?.is_donation === 'true') {
@@ -258,10 +254,13 @@ export class StripeCheckoutWebhookHandler {
 			payment.euWithdrawalWaiverAcceptedAt ??
 			(Number.isNaN(metadataWaiverAcceptedAt?.getTime() ?? Number.NaN) ? null : metadataWaiverAcceptedAt) ??
 			(stripeTermsAccepted ? new Date() : null);
+		if (payment.isGift) {
+			await enqueueBillingEmail(getWorkerService(), {kind: 'gift_paid', id: session.id});
+		}
 		await this.userRepository.updatePayment({
 			...payment.toRow(),
 			stripe_customer_id: customerId,
-			payment_intent_id: extractId(session.payment_intent),
+			payment_intent_id: extractId(session.payment_intent) ?? (await this.firstInvoicePaymentIntentId(session)),
 			subscription_id: subscriptionId,
 			invoice_id: typeof session.invoice === 'string' ? session.invoice : null,
 			amount_cents: session.amount_total,
@@ -293,6 +292,13 @@ export class StripeCheckoutWebhookHandler {
 			Logger.debug({sessionId: context.session.id}, 'Checkout side effects already applied, finishing payment commit');
 			return 'continue';
 		}
+		if (!context.payment.isGift && context.isRecurring && (await this.hasSubscriptionEnded(context.subscriptionId))) {
+			Logger.warn(
+				{sessionId: context.session.id, subscriptionId: context.subscriptionId, userId: context.payment.userId},
+				'Checkout subscription ended before fulfilment, so no premium is granted',
+			);
+			return 'continue';
+		}
 		await this.syncCheckoutUserFields(context);
 		const result = context.payment.isGift
 			? await this.applyGiftCheckoutEffects(context)
@@ -306,6 +312,17 @@ export class StripeCheckoutWebhookHandler {
 			StripeCheckoutWebhookHandler.CHECKOUT_EFFECTS_APPLIED_TTL_SECONDS,
 		);
 		return 'continue';
+	}
+
+	private async hasSubscriptionEnded(subscriptionId: string | null): Promise<boolean> {
+		if (!subscriptionId || !this.stripe) return false;
+		try {
+			const subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
+			return subscription.status === 'canceled' || subscription.status === 'incomplete_expired';
+		} catch (error) {
+			Logger.warn({error, subscriptionId}, 'Failed to read the checkout subscription status before fulfilment');
+			return false;
+		}
 	}
 
 	private async syncCheckoutUserFields(context: CheckoutFulfilmentContext): Promise<void> {
@@ -525,6 +542,19 @@ export class StripeCheckoutWebhookHandler {
 		});
 	}
 
+	private async firstInvoicePaymentIntentId(session: Stripe.Checkout.Session): Promise<string | null> {
+		const invoiceId = extractId(session.invoice);
+		if (!invoiceId || !this.stripe) {
+			return null;
+		}
+		try {
+			return getFirstInvoicePaymentIntentId(await this.stripe.invoices.retrieve(invoiceId, {expand: ['payments']}));
+		} catch (err) {
+			Logger.warn({err, sessionId: session.id, invoiceId}, 'Failed to read the payment intent of a checkout invoice');
+			return null;
+		}
+	}
+
 	private async tryGetLatestChargeForSubscription(subscriptionId: string): Promise<string | null> {
 		if (!this.stripe) {
 			return null;
@@ -624,14 +654,6 @@ export class StripeCheckoutWebhookHandler {
 		const initialServerSeq = initialUser.giftInventoryServerSeq ?? 0;
 		const latestServerSeq = latestUser.giftInventoryServerSeq ?? 0;
 		return latestServerSeq > initialServerSeq;
-	}
-
-	private async issueB2BInvoice(session: Stripe.Checkout.Session): Promise<void> {
-		try {
-			await ensureB2BInvoiceForCheckout(this.stripe, session);
-		} catch (error) {
-			Logger.error({error, sessionId: session.id}, 'Failed to create the business invoice for a paid checkout');
-		}
 	}
 
 	private async handleDonationCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {

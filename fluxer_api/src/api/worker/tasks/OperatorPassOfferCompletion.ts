@@ -15,7 +15,6 @@ const operatorPassOfferCompletion: WorkerTaskHandler = async (_payload, helpers)
 		userRepository: deps.userRepository,
 		emailService: deps.emailService,
 		cacheService: deps.cacheService,
-		donationRepository: deps.donationRepository,
 		services: deps.operatorPassServices,
 	});
 	if (!fulfilment) {

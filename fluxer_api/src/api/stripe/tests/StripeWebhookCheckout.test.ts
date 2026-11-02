@@ -124,6 +124,77 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 		});
+		test('records the payment intent of the first invoice so a later refund marks the payment refunded', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_invoice_intent';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_test_1',
+					paymentIntentId: null,
+					invoiceId: 'in_premium_invoice_intent',
+					metadata: {},
+				}),
+			);
+			const completed = await userRepository.getPaymentByCheckoutSession(sessionId);
+			expect(completed?.paymentIntentId).toBe('pi_in_premium_invoice_intent');
+			await sendStripeWebhook(harness, {
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_pi_in_premium_invoice_intent',
+						payment_intent: 'pi_in_premium_invoice_intent',
+						amount: 2500,
+						amount_refunded: 2500,
+						refunded: true,
+					},
+				},
+			});
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('refunded');
+		});
+		test('grants no premium when the subscription was cancelled before the checkout webhook', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_cancelled_before_fulfilment';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			stripeHandlers = createStripeApiHandlers({subscriptions: {sub_cancelled_early: {status: 'canceled'}}});
+			server.use(...stripeHandlers.handlers);
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_cancelled_early',
+					metadata: {},
+				}),
+			);
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('completed');
+			const user = await userRepository.findUnique(createUserID(BigInt(account.userId)));
+			expect(user?.premiumType ?? null).toBeNull();
+			expect(user?.stripeSubscriptionId ?? null).toBeNull();
+		});
 		test('leaves a payment pending when its price ID is missing', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));

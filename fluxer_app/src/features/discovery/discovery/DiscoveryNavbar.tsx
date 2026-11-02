@@ -36,7 +36,7 @@ const DISCOVERY_SEARCH_DESCRIPTOR = msg({
 	comment: 'Accessible label for the search form in the Explore navigation bar.',
 });
 const SEARCH_RESULTS_FOR_DESCRIPTOR = msg({
-	message: 'Search results for “{query}”',
+	message: 'Search results for "{query}"',
 	comment: 'Heading in the Explore navigation bar when a search is active. {query} is the text the user searched for.',
 });
 

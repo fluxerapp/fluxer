@@ -30,7 +30,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useMemo, useRef, useState} from 'react';
+import {useCallback, useId, useMemo, useRef, useState} from 'react';
 
 export interface RecipientItem {
 	id: string;
@@ -129,6 +129,7 @@ interface RecipientListProps {
 
 export const RecipientList = observer((props: RecipientListProps) => {
 	const {i18n} = useLingui();
+	const listId = useId();
 	const [internalSearchQuery, setInternalSearchQuery] = useState('');
 	const searchQuery = props.searchQuery ?? internalSearchQuery;
 	const filteredRecipients = useMemo(() => {
@@ -200,6 +201,7 @@ export const RecipientList = observer((props: RecipientListProps) => {
 								})();
 								const groupChannel =
 									item.type === 'group_dm' && item.channelId ? Channels.getChannel(item.channelId) : null;
+								const itemId = `${listId}-${userId}`;
 								return (
 									<div key={userId} className={styles.friendItem} data-flx="app.recipient-list.friend-item">
 										<div className={styles.friendItemLeft} data-flx="app.recipient-list.friend-item-left">
@@ -213,15 +215,26 @@ export const RecipientList = observer((props: RecipientListProps) => {
 												/>
 											)}
 											<div className={styles.friendInfo} data-flx="app.recipient-list.friend-info">
-												<span className={styles.friendName} data-flx="app.recipient-list.friend-name">
+												<span
+													id={`${itemId}-name`}
+													className={styles.friendName}
+													data-flx="app.recipient-list.friend-name"
+												>
 													{displayName}
 												</span>
-												<span className={styles.friendSecondary} data-flx="app.recipient-list.friend-secondary">
+												<span
+													id={`${itemId}-secondary`}
+													className={styles.friendSecondary}
+													data-flx="app.recipient-list.friend-secondary"
+												>
 													{secondaryText}
 												</span>
 											</div>
 										</div>
 										<Button
+											id={`${itemId}-action`}
+											aria-labelledby={`${itemId}-action ${itemId}-name`}
+											aria-describedby={`${itemId}-secondary`}
 											small
 											variant="secondary"
 											onClick={() => props.onSend(item)}

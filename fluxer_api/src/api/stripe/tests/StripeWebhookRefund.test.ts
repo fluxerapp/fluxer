@@ -88,7 +88,7 @@ describe('Stripe Webhook Refund', () => {
 			useRefundListHandler(chargeId);
 			await sendStripeWebhook(harness, {
 				type: 'charge.refunded',
-				data: {object: {id: chargeId, payment_intent: paymentIntentId, amount_refunded: 2500}},
+				data: {object: {id: chargeId, payment_intent: paymentIntentId, amount_refunded: 2500, refunded: true}},
 			});
 			const updatedUser = await userRepository.findUnique(userId);
 			expect(updatedUser!.lastRefundAt).toBeNull();
@@ -119,6 +119,7 @@ describe('Stripe Webhook Refund', () => {
 						id: chargeId,
 						payment_intent: paymentIntentId,
 						amount_refunded: 2400,
+						refunded: true,
 						refunds: {object: 'list', has_more: false, url: `/v1/charges/${chargeId}/refunds`, data: refunds},
 					},
 				},
@@ -153,6 +154,7 @@ describe('Stripe Webhook Refund', () => {
 						payment_intent: 'pi_test_donation_not_indexed_101',
 						customer: donationCustomerId,
 						amount_refunded: 2500,
+						refunded: true,
 					},
 				},
 			});
@@ -200,6 +202,7 @@ describe('Stripe Webhook Refund', () => {
 						id: 'ch_test_refund_stripe_cus_only',
 						payment_intent: 'pi_test_gift_refund_stripe_cus',
 						amount_refunded: 2500,
+						refunded: true,
 					},
 				},
 			});
@@ -239,6 +242,7 @@ describe('Stripe Webhook Refund', () => {
 						id: 'ch_test_refund_gift_override_123',
 						payment_intent: 'pi_test_gift_refund_override',
 						amount_refunded: 2500,
+						refunded: true,
 					},
 				},
 			});
@@ -248,6 +252,85 @@ describe('Stripe Webhook Refund', () => {
 				.get('/users/@me')
 				.execute();
 			expect(updatedRedeemer.premium_type).toBe(UserPremiumTypes.LIFETIME);
+		});
+		test('keeps a gift code after a partial refund and revokes it once the whole charge is refunded', async () => {
+			const purchaser = await createTestAccount(harness);
+			const userRepository = new UserRepository();
+			await userRepository.createGiftCode({
+				code: 'GIFT_PARTIAL_REFUND',
+				duration_months: null,
+				duration_type: 'months',
+				duration_quantity: 12,
+				created_at: new Date(),
+				created_by_user_id: createUserID(BigInt(purchaser.userId)),
+				redeemed_at: null,
+				redeemed_by_user_id: null,
+				stripe_payment_intent_id: 'pi_test_gift_partial_refund',
+				visionary_sequence_number: null,
+				checkout_session_id: null,
+				version: 1,
+			});
+			useRefundListHandler('ch_test_gift_partial_refund');
+			const refundEvent = (amountRefunded: number, refunded: boolean) => ({
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_test_gift_partial_refund',
+						payment_intent: 'pi_test_gift_partial_refund',
+						amount: 4999,
+						amount_refunded: amountRefunded,
+						refunded,
+					},
+				},
+			});
+			await sendStripeWebhook(harness, refundEvent(100, false));
+			expect((await userRepository.findGiftCode('GIFT_PARTIAL_REFUND'))?.revokedAt ?? null).toBeNull();
+			await sendStripeWebhook(harness, refundEvent(4999, true));
+			expect((await userRepository.findGiftCode('GIFT_PARTIAL_REFUND'))?.revokedAt).not.toBeNull();
+		});
+		test('ends a gift after a partial withdrawal refund', async () => {
+			const purchaser = await createTestAccount(harness);
+			const userRepository = new UserRepository();
+			await userRepository.createGiftCode({
+				code: 'GIFT_PRO_RATA_WITHDRAWAL',
+				duration_months: null,
+				duration_type: 'months',
+				duration_quantity: 1,
+				created_at: new Date(),
+				created_by_user_id: createUserID(BigInt(purchaser.userId)),
+				redeemed_at: null,
+				redeemed_by_user_id: null,
+				stripe_payment_intent_id: 'pi_test_gift_pro_rata_withdrawal',
+				visionary_sequence_number: null,
+				checkout_session_id: null,
+				version: 1,
+			});
+			useRefundListHandler('ch_test_gift_pro_rata_withdrawal', [
+				{
+					id: 're_test_gift_pro_rata_withdrawal',
+					object: 'refund',
+					charge: 'ch_test_gift_pro_rata_withdrawal',
+					payment_intent: 'pi_test_gift_pro_rata_withdrawal',
+					amount: 4500,
+					currency: 'usd',
+					status: 'succeeded',
+					created: Math.floor(Date.now() / 1000),
+					metadata: {refund_kind: 'withdrawal', user_id: purchaser.userId},
+				},
+			]);
+			await sendStripeWebhook(harness, {
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_test_gift_pro_rata_withdrawal',
+						payment_intent: 'pi_test_gift_pro_rata_withdrawal',
+						amount: 4999,
+						amount_refunded: 4500,
+						refunded: false,
+					},
+				},
+			});
+			expect((await userRepository.findGiftCode('GIFT_PRO_RATA_WITHDRAWAL'))?.revokedAt).not.toBeNull();
 		});
 	});
 	describe('refund.updated', () => {

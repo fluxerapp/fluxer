@@ -6,11 +6,11 @@ description: Routes for saving, listing, changing and deleting your memes, and f
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A meme is an image, video or audio file you save to your account. Fluxer keeps its own copy, so the meme still works after the source message or URL is gone. Bot tokens get 403 `ACCESS_DENIED` on these routes, and you send a saved meme with `favorite_meme_id` in [Create message](/http-api/messages/#create-message).
+A meme is an image, video or audio file you save to your account. Fluxer keeps its own copy, and the meme still works after the source message or URL is gone. Bot tokens get 403 `ACCESS_DENIED` on these routes, and you send a saved meme with `favorite_meme_id` in [Create message](/http-api/messages/#create-message).
 
 ## Limits
 
-You can save up to `max_favorite_memes` memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). See [instance limits](/http-api/instance/#limit-keys). Fluxer compares the stored bytes, so saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
+You can save up to `max_favorite_memes` memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). See [instance limits](/http-api/instance/#limit-keys). Fluxer compares the stored bytes, and saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
 
 ## Meme object
 

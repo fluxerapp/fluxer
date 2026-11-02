@@ -30,7 +30,7 @@ const REMOVED_FROM_FAVORITE_GIFS_DESCRIPTOR = msg({
 	comment: 'Toast confirming a GIF was removed from favorites.',
 });
 const FAVORITE_GIF_LIMIT_REACHED_TITLE_DESCRIPTOR = msg({
-	message: 'Favorite GIF limit reached',
+	message: "You're at the favorite GIF limit",
 	comment: 'Title of the error modal shown when no more favorite GIFs can be added.',
 });
 const logger = new Logger('FavoriteGifs');

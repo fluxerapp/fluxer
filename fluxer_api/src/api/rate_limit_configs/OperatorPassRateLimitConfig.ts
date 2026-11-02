@@ -7,6 +7,7 @@ export const OperatorPassRateLimitConfigs = {
 	OPERATOR_PASS_STATE: {
 		bucket: 'operator_pass:state',
 		config: {limit: 60, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
 	} as RouteRateLimitConfig,
 	OPERATOR_PASS_CHECKOUT: {
 		bucket: 'operator_pass:checkout',
@@ -15,6 +16,15 @@ export const OperatorPassRateLimitConfigs = {
 	OPERATOR_PASS_PURCHASES: {
 		bucket: 'operator_pass:purchases',
 		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	OPERATOR_PASS_CERTIFICATE_LINK: {
+		bucket: 'operator_pass:certificate_link',
+		config: {limit: 60, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
+	OPERATOR_PASS_CERTIFICATE_LINK_RESET: {
+		bucket: 'operator_pass:certificate_link_reset',
+		config: {limit: 5, windowMs: ms('10 minutes')},
 	} as RouteRateLimitConfig,
 	OPERATOR_PASS_LISTING: {
 		bucket: 'operator_pass:listing',
@@ -27,6 +37,10 @@ export const OperatorPassRateLimitConfigs = {
 	OPERATOR_PASS_PASSES: {
 		bucket: 'operator_pass:passes',
 		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	OPERATOR_PASS_LABS_JOIN: {
+		bucket: 'operator_pass:labs_join',
+		config: {limit: 5, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	OPERATOR_PASS_OFFER: {
 		bucket: 'operator_pass:offer',

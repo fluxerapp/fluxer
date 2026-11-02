@@ -20,7 +20,7 @@ export function refundCooldownExpiresAt(user: Pick<User, 'lastRefundAt'>): Date 
 	return expiresAt.getTime() > Date.now() ? expiresAt : null;
 }
 
-export function refundWindowExpiresAt(paidAt: Date): Date {
+function refundWindowExpiresAt(paidAt: Date): Date {
 	return new Date(paidAt.getTime() + SELF_SERVE_REFUND_WINDOW_DAYS * MS_PER_DAY);
 }
 
@@ -62,6 +62,29 @@ export function latestRefundTarget<T extends {paidAt: Date | null}>(...targets: 
 		}
 	}
 	return latest;
+}
+
+export function isInsideRefundWindow(paidAt: Date | null, now: number = Date.now()): boolean {
+	return paidAt != null && refundWindowExpiresAt(paidAt).getTime() > now;
+}
+
+export function combinedRefundTarget<T extends RefundEligibilityTarget>(
+	latest: T,
+	targets: ReadonlyArray<T>,
+	now: number = Date.now(),
+): T {
+	const inWindow = targets.filter((target) => isInsideRefundWindow(target.paidAt, now));
+	if (inWindow.length <= 1) {
+		return latest;
+	}
+	const sameCurrency = inWindow.every((target) => target.currency === latest.currency);
+	return {
+		...latest,
+		amountPaidCents: sameCurrency
+			? inWindow.reduce((sum, target) => sum + (target.amountPaidCents ?? 0), 0)
+			: latest.amountPaidCents,
+		subscriptionId: latest.subscriptionId ?? inWindow.find((target) => target.subscriptionId)?.subscriptionId ?? null,
+	};
 }
 
 export function buildRefundEligibility({

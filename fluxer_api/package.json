@@ -9,7 +9,8 @@
 		"dev": "tsx watch --clear-screen=false src/AppEntrypoint.ts",
 		"start": "tsx src/AppEntrypoint.ts",
 		"start:worker": "tsx src/WorkerEntrypoint.ts",
-		"operator-relay": "node bin/operator-relay.mjs"
+		"operator-relay": "node bin/operator-relay.mjs",
+		"generate:operator-pass-name-data": "node scripts/GenerateOperatorPassNameData.mjs"
 	},
 	"dependencies": {
 		"@atproto/jwk-jose": "catalog:",
@@ -38,6 +39,7 @@
 		"@messageformat/parser": "catalog:",
 		"@nats-io/jetstream": "catalog:",
 		"@nats-io/transport-node": "catalog:",
+		"@pdf-lib/fontkit": "catalog:",
 		"@pkgs/cache": "workspace:*",
 		"@pkgs/captcha": "workspace:*",
 		"@pkgs/cassandra": "workspace:*",
@@ -59,9 +61,11 @@
 		"altcha-lib": "catalog:",
 		"archiver": "catalog:",
 		"argon2": "catalog:",
+		"bidi-js": "catalog:",
 		"bowser": "catalog:",
 		"cassandra-driver": "catalog:",
 		"emoji-regex": "catalog:",
+		"harfbuzzjs": "catalog:",
 		"hi-base32": "catalog:",
 		"hono": "catalog:",
 		"html-entities": "catalog:",

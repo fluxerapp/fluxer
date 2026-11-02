@@ -3,7 +3,7 @@
 import {msg} from '@lingui/core/macro';
 
 export const SHOW_KEYBOARD_SHORTCUTS_LIST_DESCRIPTOR = msg({
-	message: 'Show keyboard shortcuts list',
+	message: 'Show keybind list',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
 export const EDIT_MESSAGE_DESCRIPTOR = msg({

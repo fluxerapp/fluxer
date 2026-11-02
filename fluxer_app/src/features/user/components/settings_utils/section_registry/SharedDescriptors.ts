@@ -258,7 +258,7 @@ export const KEYBOARD_MODE_DESCRIPTOR = msg({
 });
 
 export const CONTEXT_MENU_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Context menu shortcuts',
+	message: 'Context menu keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
@@ -453,7 +453,7 @@ export const TWO_CLICKS_DESCRIPTOR = msg({
 });
 
 export const SHORTCUT_BADGES_DESCRIPTOR = msg({
-	message: 'Shortcut badges',
+	message: 'Keybind badges',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
@@ -715,6 +715,17 @@ export const PRIVACY_DESCRIPTOR = msg({
 
 export const AUTHORIZED_APPS_DESCRIPTOR = msg({
 	message: 'Authorized apps',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+
+export const KEYBINDS_DESCRIPTOR = msg({
+	message: 'Keybinds',
+	comment:
+		'Name of the settings tab where people set keyboard keys for actions. Also used as a settings search synonym.',
+});
+
+export const KEYBIND_DESCRIPTOR = msg({
+	message: 'Keybind',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 

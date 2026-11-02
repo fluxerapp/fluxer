@@ -77,14 +77,14 @@ The signature covers only the target and works until `FLUXER_MEDIA_PROXY_SECRET_
 | animated? | boolean | Whether animated output is requested |
 | download? | boolean | Whether the response has attachment disposition |
 
-When no transformation runs, Fluxer forwards `Range` to the origin, which can answer 200 or 206.
+When no transformation runs, Fluxer forwards `Range` to the origin, which can respond with 200 or 206.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | Complete external representation | The origin returned the file |
-| 206 | Selected external bytes | The origin or Fluxer answered a range |
+| 206 | Selected external bytes | The origin or Fluxer returned a range |
 | 400 | Bad Request | The path, target, redirect or transformation is invalid or not allowed |
 | 401 | Unauthorized | The signature is invalid |
 | 413 | Payload Too Large | The origin sent more than 500 MiB |

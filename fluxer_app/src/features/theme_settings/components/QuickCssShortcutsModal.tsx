@@ -14,7 +14,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const TITLE_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
+	message: 'Keybinds',
 	comment: 'Title of the dialog that lists the keyboard shortcuts of the quick CSS editor.',
 });
 const LEAVE_EDITOR_DESCRIPTOR = msg({

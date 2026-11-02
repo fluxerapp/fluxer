@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {OperatorPassCheckoutModal} from '@app/features/premium/components/modals/OperatorPassCheckoutModal';
+import {
+	OPERATOR_PASS_CHECKOUT_MODAL_KEY,
+	OperatorPassCheckoutModal,
+} from '@app/features/premium/components/modals/OperatorPassCheckoutModal';
+import OperatorPassCheckoutSession from '@app/features/premium/state/OperatorPassCheckoutSession';
+import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 
-const CHECKOUT_MODAL_KEY = 'operator-pass-checkout';
-
 let checkoutModalMount = 0;
 
-export function openCheckoutModal({canceled = false}: {canceled?: boolean} = {}): void {
+export function openCheckoutModal({canceled = false, sessionId}: {canceled?: boolean; sessionId?: string} = {}): void {
+	if (sessionId) OperatorPassCheckoutSession.adoptReturnedSession(sessionId, OperatorPassHoldings.count ?? 0);
+	else if (canceled) OperatorPassCheckoutSession.clear();
 	const mount = ++checkoutModalMount;
 	ModalCommands.pushWithKey(
 		modal(() => (
@@ -18,12 +23,11 @@ export function openCheckoutModal({canceled = false}: {canceled?: boolean} = {})
 				data-flx="premium.operator-pass-modal-commands.open-checkout-modal.operator-pass-checkout-modal"
 			/>
 		)),
-		CHECKOUT_MODAL_KEY,
+		OPERATOR_PASS_CHECKOUT_MODAL_KEY,
 	);
 }
 
 export function reopenCheckoutModalAfterReturn(): void {
-	const topModalKey = ModalCommands.getTopModalKey();
-	if (topModalKey !== null && topModalKey !== CHECKOUT_MODAL_KEY) return;
+	if (ModalCommands.getTopModalKey() !== null) return;
 	openCheckoutModal();
 }

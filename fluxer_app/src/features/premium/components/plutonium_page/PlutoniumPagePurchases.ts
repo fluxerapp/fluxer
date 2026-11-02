@@ -2,11 +2,35 @@
 
 import type {PriceIds} from '@app/features/premium/commands/PremiumCommands';
 import {
+	PURCHASE_BLOCKED_CLAIM_DESCRIPTOR,
+	PURCHASE_BLOCKED_VERIFY_DESCRIPTOR,
+} from '@app/features/premium/components/plutonium_page/PlutoniumPageMessages';
+import {PAYMENT_DISPUTE_OPEN_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {
 	areGiftPurchasesAvailable,
 	arePremiumPurchasesAvailable,
 	canServiceStripeSubscriptions,
+	getPremiumProductName,
 	shouldShowPremiumFeatures,
 } from '@app/features/premium/utils/PremiumUtils';
+import {type PurchaseBlockedReason, PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
+import type {I18n, MessageDescriptor} from '@lingui/core';
+
+const PURCHASE_BLOCKED_NOTES: Readonly<Record<PurchaseBlockedReason, MessageDescriptor>> = {
+	[PurchaseBlockedReasons.UNCLAIMED]: PURCHASE_BLOCKED_CLAIM_DESCRIPTOR,
+	[PurchaseBlockedReasons.EMAIL_UNVERIFIED]: PURCHASE_BLOCKED_VERIFY_DESCRIPTOR,
+};
+
+export function resolvePurchaseBlockedNote(
+	i18n: I18n,
+	blockedReason: PurchaseBlockedReason | null,
+	paymentDisputeOpen: boolean,
+): string | null {
+	if (blockedReason !== null) {
+		return i18n._(PURCHASE_BLOCKED_NOTES[blockedReason], {premiumProductName: getPremiumProductName()});
+	}
+	return paymentDisputeOpen ? i18n._(PAYMENT_DISPUTE_OPEN_DESCRIPTOR) : null;
+}
 
 type HeroMode = 'member-purchase' | 'member' | 'redeem-only' | 'purchase';
 

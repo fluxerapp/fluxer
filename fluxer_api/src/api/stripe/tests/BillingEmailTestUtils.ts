@@ -249,22 +249,6 @@ export function subscriptionDiscount(id: string, coupon: {duration: string}, end
 	return {id, object: 'discount', end, source: {type: 'coupon', coupon: {id: `co_${id}`, object: 'coupon', ...coupon}}};
 }
 
-export function creditNote(options: {id: string; invoiceId: string; balanceAmount: number | null}): StripeObject {
-	return {
-		id: options.id,
-		object: 'credit_note',
-		status: 'issued',
-		currency: 'usd',
-		total: options.balanceAmount ?? 499,
-		invoice: options.invoiceId,
-		pdf: `https://pay.stripe.com/credit_notes/${options.id}/pdf`,
-		customer_balance_transaction:
-			options.balanceAmount === null
-				? null
-				: {id: `cbtxn_${options.id}`, object: 'customer_balance_transaction', amount: -options.balanceAmount},
-	};
-}
-
 export function billingEmailTestContext() {
 	let harness: ApiTestHarness;
 	let stripe: StripeApiHandlers;

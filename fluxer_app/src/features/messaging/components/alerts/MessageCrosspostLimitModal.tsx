@@ -6,7 +6,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const PUBLISHING_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: 'Publishing limit reached',
+	message: 'This channel is at its publishing limit',
 	comment: 'Title of the alert shown when publishing a message from an announcement channel is rate limited.',
 });
 const CHANNEL_LIMIT_WITH_DURATION_DESCRIPTOR = msg({

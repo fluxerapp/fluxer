@@ -36,7 +36,7 @@ const BOOKMARK_MESSAGES_TO_SAVE_THEM_FOR_LATER_DESCRIPTOR = msg({
 	comment: 'Description text in the saved messages content popout.',
 });
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
-	message: "You've reached the end",
+	message: "You're at the end",
 	comment: 'Label in the saved messages content popout.',
 });
 const THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR = msg({

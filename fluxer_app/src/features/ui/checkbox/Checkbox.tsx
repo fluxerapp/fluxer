@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/checkbox/Checkbox.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -10,11 +9,8 @@ import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import {useCallback, useId, useMemo, useRef} from 'react';
 
-const LINK_SELECTOR = 'a[href], [role="link"]';
-const isLinkTarget = (target: EventTarget | null): target is Element =>
-	target instanceof Element && Boolean(target.closest(LINK_SELECTOR));
 const CheckboxTypes = {
 	BOX: 'box',
 	ROUND: 'round',
@@ -41,6 +37,8 @@ interface CheckboxBaseProps {
 	'aria-label'?: string;
 	'aria-describedby'?: string;
 	'aria-hidden'?: boolean;
+	'aria-invalid'?: boolean;
+	'aria-required'?: boolean;
 }
 
 type CheckboxWithLabelProps = CheckboxBaseProps & {
@@ -73,10 +71,11 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 		'aria-label': ariaLabel,
 		'aria-describedby': ariaDescribedBy,
 		'aria-hidden': ariaHidden,
+		'aria-invalid': ariaInvalid,
+		'aria-required': ariaRequired,
 	}) => {
 		const rootRef = useRef<React.ComponentRef<typeof CheckboxPrimitive.Root>>(null);
 		const checkboxRef = useRef<HTMLLabelElement>(null);
-		const labelRef = useRef<HTMLDivElement>(null);
 		const actualSize = size === 'small' ? 18 : size;
 		const checkIconSize = Math.floor(actualSize * 0.75);
 		const actualSizeRem = remFromPx(actualSize);
@@ -104,41 +103,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 			[disabled, noFocus, onFocus, readOnly],
 		);
 		const labelInteractive = !disabled && !readOnly && Boolean(children);
-		const [labelContainsLink, setLabelContainsLink] = useState(false);
-		useEffect(() => {
-			const container = labelRef.current;
-			const hasLink = Boolean(container?.querySelector(LINK_SELECTOR));
-			setLabelContainsLink((previous) => (previous === hasLink ? previous : hasLink));
-		}, [children]);
-		const labelHandlesFocus = labelInteractive && !labelContainsLink;
-		const labelFocusEnabled = labelHandlesFocus && !noFocus;
-		const labelTabIndex = labelHandlesFocus ? 0 : -1;
 
-		const handleLabelClick = useCallback(
-			(event: React.MouseEvent<HTMLDivElement>) => {
-				if (!labelInteractive) return;
-				if (isLinkTarget(event.target)) {
-					event.stopPropagation();
-					return;
-				}
-				event.preventDefault();
-				event.stopPropagation();
-				handleChange(!checked);
-				rootRef.current?.focus();
-			},
-			[checked, handleChange, labelInteractive],
-		);
-		const handleLabelKeyDown = useCallback(
-			(event: React.KeyboardEvent<HTMLDivElement>) => {
-				if (!labelInteractive || isLinkTarget(event.target)) return;
-				if (isKeyboardActivationKey(event.key)) {
-					event.preventDefault();
-					handleChange(!checked);
-					rootRef.current?.focus();
-				}
-			},
-			[checked, handleChange, labelInteractive],
-		);
 		const focusRingEnabled = !noFocus && !ariaHidden;
 		if (ariaHidden) {
 			return (
@@ -211,6 +176,8 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						style={{width: actualSizeRem, height: actualSizeRem}}
 						aria-label={ariaLabel}
 						aria-describedby={ariaDescribedBy}
+						aria-invalid={ariaInvalid}
+						aria-required={ariaRequired}
 						tabIndex={0}
 						id={checkboxId}
 						data-flx="ui.checkbox.checkbox.checkbox.shortcut-key-down"
@@ -230,30 +197,14 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						</CheckboxPrimitive.Indicator>
 					</CheckboxPrimitive.Root>
 					{children && (
-						<FocusRing
-							focusTarget={labelRef}
-							ringTarget={labelRef}
-							offset={-2}
-							ringClassName={styles.labelFocusRing}
-							enabled={labelFocusEnabled}
-							data-flx="ui.checkbox.checkbox.focus-ring--2"
+						<div
+							className={clsx(styles.label, labelInteractive && styles.labelInteractive)}
+							data-flx="ui.checkbox.checkbox.label"
 						>
-							<div
-								ref={labelRef}
-								className={clsx(styles.label, labelInteractive && styles.labelInteractive)}
-								tabIndex={labelTabIndex}
-								onClick={handleLabelClick}
-								onKeyDown={labelHandlesFocus ? handleLabelKeyDown : undefined}
-								role="checkbox"
-								aria-checked={checked}
-								aria-disabled={disabled || readOnly}
-								data-flx="ui.checkbox.checkbox.label"
-							>
-								<div className={styles.labelText} data-flx="ui.checkbox.checkbox.label-text">
-									{children}
-								</div>
+							<div className={styles.labelText} data-flx="ui.checkbox.checkbox.label-text">
+								{children}
 							</div>
-						</FocusRing>
+						</div>
 					)}
 				</label>
 			</FocusRing>

@@ -61,7 +61,7 @@ const PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 });
 const USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR = msg({
 	message:
-		'{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded.',
+		'{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background.',
 	comment: 'Label in the notifications.',
 });
 const REFRESH_PUSH_SUBSCRIPTION_DESCRIPTOR = msg({

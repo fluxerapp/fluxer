@@ -11,6 +11,7 @@ import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import type {
+	PlutoniumWithdrawalListResponse,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
@@ -26,12 +27,14 @@ interface MockStripeInvoice {
 	id: string;
 	object: 'invoice';
 	customer: string;
-	parent: {subscription_details: {subscription: string}} | null;
+	parent: {subscription_details: {subscription: string; metadata?: Record<string, string>}} | null;
+	billing_reason?: string;
 	amount_due: number;
 	amount_paid: number;
 	currency: string;
 	status: 'paid';
 	created: number;
+	lines?: {object: 'list'; data: Array<Record<string, unknown>>};
 	payments: {
 		object: 'list';
 		data: Array<{
@@ -60,6 +63,11 @@ function buildInvoice(opts: {
 	paidAtSecondsAgo: number;
 	paymentIntentId?: string;
 	chargeId?: string;
+	amount?: number;
+	billingReason?: string;
+	metadata?: Record<string, string>;
+	priceId?: string;
+	periodDays?: number;
 }): MockStripeInvoice {
 	const customerId = opts.customerId ?? MOCK_CUSTOMER_ID;
 	const subscriptionId = opts.subscriptionId === undefined ? MOCK_SUBSCRIPTION_ID : opts.subscriptionId;
@@ -70,12 +78,31 @@ function buildInvoice(opts: {
 		id: opts.id,
 		object: 'invoice',
 		customer: customerId,
-		parent: subscriptionId == null ? null : {subscription_details: {subscription: subscriptionId}},
-		amount_due: 2500,
-		amount_paid: 2500,
+		parent:
+			subscriptionId == null
+				? null
+				: {subscription_details: {subscription: subscriptionId, ...(opts.metadata ? {metadata: opts.metadata} : {})}},
+		...(opts.billingReason ? {billing_reason: opts.billingReason} : {}),
+		amount_due: opts.amount ?? 2500,
+		amount_paid: opts.amount ?? 2500,
 		currency: 'usd',
 		status: 'paid',
 		created: paidAt,
+		...(opts.periodDays
+			? {
+					lines: {
+						object: 'list',
+						data: [
+							{
+								amount: opts.amount ?? 2500,
+								period: {start: paidAt, end: paidAt + opts.periodDays * SECONDS_PER_DAY},
+								pricing: {price_details: {price: opts.priceId ?? 'price_monthly'}},
+								parent: null,
+							},
+						],
+					},
+				}
+			: {}),
 		payments: {
 			object: 'list',
 			data: [
@@ -190,6 +217,376 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.cancels_subscription).toBe(true);
 		});
 	});
+	describe('Plutonium withdrawal', () => {
+		const EU_CONSUMER = {eu_withdrawal_waiver_required: 'true', purchase_geoip_country_code: 'SE'};
+		test('withdraws an EU subscription on day 10 during a refund cooldown, refunds it and ends the subscription', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const refundKinds: Array<string | undefined> = [];
+			const deleted: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_create',
+						paidAtSecondsAgo: 10 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: EU_CONSUMER,
+					}),
+				]),
+				refundCreateHandler({
+					onRequest: (key) => refundKinds.push(key?.split(':')[0]),
+				}),
+				http.delete(`${STRIPE_API_BASE}/v1/subscriptions/:id`, ({params}) => {
+					deleted.push(String(params.id));
+					return HttpResponse.json({id: params.id, object: 'subscription', status: 'canceled'});
+				}),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+				first_refund_at: new Date(Date.now() - 5 * SECONDS_PER_DAY * 1000).toISOString(),
+			});
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toMatchObject([{id: MOCK_SUBSCRIPTION_ID, kind: 'subscription', amount_minor: 2500}]);
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Alex Lindqvist'})
+				.execute();
+			expect(response).toMatchObject({refunded_amount_cents: 2500, subscription_id: MOCK_SUBSCRIPTION_ID});
+			expect(refundKinds).toEqual(['plutonium-withdrawal']);
+			expect(deleted).toEqual([MOCK_SUBSCRIPTION_ID]);
+		});
+		test('keeps the withdrawal open after the subscription already ended and refunds without canceling', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const refundKinds: Array<string | undefined> = [];
+			const deleted: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_ended',
+						paidAtSecondsAgo: 10 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: EU_CONSUMER,
+					}),
+				]),
+				refundCreateHandler({onRequest: (key) => refundKinds.push(key?.split(':')[0])}),
+				http.delete(`${STRIPE_API_BASE}/v1/subscriptions/:id`, ({params}) => {
+					deleted.push(String(params.id));
+					return HttpResponse.json({id: params.id, object: 'subscription', status: 'canceled'});
+				}),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {stripe_customer_id: MOCK_CUSTOMER_ID, stripe_subscription_id: null});
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toMatchObject([{id: MOCK_SUBSCRIPTION_ID, kind: 'subscription'}]);
+			await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Alex Lindqvist'})
+				.execute();
+			expect(refundKinds).toEqual(['plutonium-withdrawal']);
+			expect(deleted).toEqual([]);
+		});
+		test('refunds a Brazilian Pix withdrawal in full', async () => {
+			server.use(
+				...createStripeApiHandlers({charges: {ch_in_create: {payment_method_details: {type: 'pix'}}}}).handlers,
+			);
+			const amounts: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_create',
+						paidAtSecondsAgo: 2 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: {withdrawal_country: 'BR'},
+					}),
+				]),
+				http.post(`${STRIPE_API_BASE}/v1/refunds`, async ({request}) => {
+					const amount = String((await request.formData()).get('amount'));
+					amounts.push(amount);
+					return HttpResponse.json({
+						id: 're_pix_withdrawal',
+						object: 'refund',
+						amount: Number(amount),
+						currency: 'brl',
+						status: 'succeeded',
+						created: Math.floor(Date.now() / 1000),
+						payment_intent: 'pi_in_create',
+						metadata: {},
+					});
+				}),
+				subscriptionDeleteHandler(),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Ana Souza'})
+				.execute();
+			expect(amounts).toEqual(['2500']);
+			expect(response.refunded_amount_cents).toBe(2500);
+		});
+		test('records a withdrawal whose refund Stripe refused, so pressing the button again refunds nothing', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			let refundRequests = 0;
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_create',
+						paidAtSecondsAgo: 3 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: EU_CONSUMER,
+					}),
+				]),
+				http.post(`${STRIPE_API_BASE}/v1/refunds`, () => {
+					refundRequests += 1;
+					return HttpResponse.json({error: {type: 'invalid_request_error', message: 'Refund refused'}}, {status: 400});
+				}),
+				subscriptionDeleteHandler(),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const first = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Alex Lindqvist'})
+				.execute();
+			expect(first.status).toBe('failed');
+			const second = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Alex Lindqvist'})
+				.execute();
+			expect(second).toEqual(first);
+			expect(refundRequests).toBe(1);
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toEqual([]);
+		});
+		test('lists an EU renewal only for a subscription started before checkout asked for the days used', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const renewal = (metadata: Record<string, string>) =>
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_renewal',
+						paidAtSecondsAgo: 2 * SECONDS_PER_DAY,
+						billingReason: 'subscription_cycle',
+						metadata,
+						priceId: 'price_monthly',
+						amount: 3000,
+						periodDays: 30,
+					}),
+					buildInvoice({
+						id: 'in_first',
+						paidAtSecondsAgo: 32 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata,
+						priceId: 'price_monthly',
+						amount: 3000,
+						periodDays: 30,
+					}),
+				]);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const list = () =>
+				createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token).get('/premium/withdrawals').execute();
+			server.use(renewal({...EU_CONSUMER, withdrawal_pro_rata: 'true'}));
+			expect(await list()).toEqual([]);
+			server.use(renewal(EU_CONSUMER));
+			expect(await list()).toMatchObject([{id: MOCK_SUBSCRIPTION_ID, amount_minor: 3000, paid_minor: 3000}]);
+		});
+		test('charges an EU subscription started under the current checkout for the days used', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_eu',
+						paidAtSecondsAgo: 2.5 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: {...EU_CONSUMER, withdrawal_pro_rata: 'true'},
+						amount: 3000,
+						periodDays: 30,
+					}),
+				]),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toMatchObject([{amount_minor: 2700, paid_minor: 3000}]);
+		});
+		test('lists no Brazilian renewal, only a first payment still inside its 7 days', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const brazil = {withdrawal_country: 'BR'};
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_renewal',
+						paidAtSecondsAgo: 2 * SECONDS_PER_DAY,
+						billingReason: 'subscription_cycle',
+						metadata: brazil,
+						priceId: 'price_monthly',
+						periodDays: 30,
+					}),
+					buildInvoice({
+						id: 'in_first',
+						paidAtSecondsAgo: 32 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: brazil,
+						priceId: 'price_monthly',
+						periodDays: 30,
+					}),
+				]),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toEqual([]);
+		});
+		test('refunds a UK consumer told about it at checkout the price less the days of Plutonium used', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const amounts: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_uk',
+						paidAtSecondsAgo: 2.5 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: {
+							eu_withdrawal_waiver_required: 'true',
+							purchase_geoip_country_code: 'GB',
+							withdrawal_pro_rata: 'true',
+						},
+						amount: 3000,
+						periodDays: 30,
+					}),
+				]),
+				http.post(`${STRIPE_API_BASE}/v1/refunds`, async ({request}) => {
+					const amount = String((await request.formData()).get('amount'));
+					amounts.push(amount);
+					return HttpResponse.json({
+						id: 're_uk',
+						object: 'refund',
+						amount: Number(amount),
+						currency: 'usd',
+						status: 'succeeded',
+						created: Math.floor(Date.now() / 1000),
+						payment_intent: 'pi_in_uk',
+						metadata: {},
+					});
+				}),
+				subscriptionDeleteHandler(),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const [open] = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toMatchObject({amount_minor: 2700, paid_minor: 3000});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Sam Taylor', quoted_at: open!.quoted_at})
+				.execute();
+			expect(amounts).toEqual(['2700']);
+			expect(response.refunded_amount_cents).toBe(2700);
+		});
+		test('refunds a UK consumer in full when checkout never told them about paying for the days used', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const amounts: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_uk',
+						paidAtSecondsAgo: 2.5 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: {eu_withdrawal_waiver_required: 'true', purchase_geoip_country_code: 'GB'},
+						amount: 3000,
+						periodDays: 30,
+					}),
+				]),
+				http.post(`${STRIPE_API_BASE}/v1/refunds`, async ({request}) => {
+					const amount = String((await request.formData()).get('amount'));
+					amounts.push(amount);
+					return HttpResponse.json({
+						id: 're_uk',
+						object: 'refund',
+						amount: Number(amount),
+						currency: 'usd',
+						status: 'succeeded',
+						created: Math.floor(Date.now() / 1000),
+						payment_intent: 'pi_in_uk',
+						metadata: {},
+					});
+				}),
+				subscriptionDeleteHandler(),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const [open] = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toMatchObject({amount_minor: 3000, paid_minor: 3000});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Sam Taylor', quoted_at: open!.quoted_at})
+				.execute();
+			expect(amounts).toEqual(['3000']);
+			expect(response.refunded_amount_cents).toBe(3000);
+		});
+		test('refuses a withdrawal after the withdrawal period and lists nothing', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			server.use(
+				invoiceListHandler([
+					buildInvoice({
+						id: 'in_old',
+						paidAtSecondsAgo: 25 * SECONDS_PER_DAY,
+						billingReason: 'subscription_create',
+						metadata: EU_CONSUMER,
+					}),
+				]),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const open = await createBuilder<PlutoniumWithdrawalListResponse>(harness, account.token)
+				.get('/premium/withdrawals')
+				.execute();
+			expect(open).toEqual([]);
+			await createBuilder(harness, account.token)
+				.post(`/premium/withdrawals/${MOCK_SUBSCRIPTION_ID}`)
+				.body({name: 'Alex Lindqvist'})
+				.expect(403, APIErrorCodes.STRIPE_REFUND_OUTSIDE_WINDOW)
+				.execute();
+		});
+	});
 	describe('POST /premium/refund-latest', () => {
 		test('refunds latest invoice (one-off purchase, no subscription)', async () => {
 			server.use(...createStripeApiHandlers().handlers);
@@ -206,6 +603,73 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.refund_id).toBe('re_test_self_serve');
 			expect(response.refunded_amount_cents).toBe(2500);
 			expect(response.subscription_id).toBeNull();
+		});
+		test('refunds every payment inside the 3-day window, such as an upgrade and the payment before it', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const refunded: Array<{paymentIntent: string; amount: number; subscription: string | undefined}> = [];
+			const deleted: Array<string> = [];
+			server.use(
+				invoiceListHandler([
+					buildInvoice({id: 'in_upgrade', paidAtSecondsAgo: 60 * 60, amount: 4500}),
+					buildInvoice({id: 'in_first', paidAtSecondsAgo: SECONDS_PER_DAY, amount: 499}),
+					buildInvoice({id: 'in_last_month', paidAtSecondsAgo: 31 * SECONDS_PER_DAY, amount: 499}),
+				]),
+				http.post(`${STRIPE_API_BASE}/v1/refunds`, async ({request}) => {
+					const params = Object.fromEntries((await request.formData()).entries()) as Record<string, string>;
+					refunded.push({
+						paymentIntent: params.payment_intent!,
+						amount: Number(params.amount),
+						subscription: params['metadata[subscription_id]'],
+					});
+					return HttpResponse.json({
+						id: `re_${params.payment_intent}`,
+						object: 'refund',
+						amount: Number(params.amount),
+						currency: 'usd',
+						status: 'succeeded',
+						created: Math.floor(Date.now() / 1000),
+						payment_intent: params.payment_intent,
+						metadata: {
+							refund_kind: 'self_serve',
+							user_id: params['metadata[user_id]'],
+							invoice_id: params['metadata[invoice_id]'],
+							subscription_id: params['metadata[subscription_id]'],
+						},
+					});
+				}),
+				http.delete(`${STRIPE_API_BASE}/v1/subscriptions/:id`, ({params}) => {
+					deleted.push(String(params.id));
+					return HttpResponse.json({id: params.id, object: 'subscription', status: 'canceled'});
+				}),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const eligibility = await createBuilder<SelfServeRefundEligibilityResponse>(harness, account.token)
+				.get('/premium/refund-eligibility')
+				.execute();
+			expect(eligibility).toMatchObject({eligible: true, invoice_id: 'in_upgrade', invoice_amount_paid_cents: 4999});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post('/premium/refund-latest')
+				.execute();
+			expect(refunded).toEqual([
+				{paymentIntent: 'pi_in_upgrade', amount: 4500, subscription: MOCK_SUBSCRIPTION_ID},
+				{paymentIntent: 'pi_in_first', amount: 499, subscription: MOCK_SUBSCRIPTION_ID},
+			]);
+			expect(deleted).toEqual([MOCK_SUBSCRIPTION_ID]);
+			expect(response).toMatchObject({
+				invoice_id: 'in_upgrade',
+				refunded_amount_cents: 4999,
+				invoice_amount_paid_cents: 4999,
+				subscription_id: MOCK_SUBSCRIPTION_ID,
+				status: 'succeeded',
+			});
+			await createBuilder(harness, account.token)
+				.post('/premium/refund-latest')
+				.expect(403, APIErrorCodes.STRIPE_REFUND_COOLDOWN_ACTIVE)
+				.execute();
 		});
 		test('requests one cent under the captured amount when the underlying charge was paid via PIX', async () => {
 			server.use(

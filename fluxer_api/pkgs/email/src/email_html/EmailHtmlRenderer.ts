@@ -123,7 +123,7 @@ interface InlineLink {
 
 type InlinePart = string | InlineLink;
 
-const INLINE_PATTERN = /<(mail|settings|dsa|arn)>([^<]*)<\/\1>|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+const INLINE_PATTERN = /<(mail|settings|dsa|arn|labs)>([^<]*)<\/\1>|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
 const CITED_LINK_HOSTS = ['digital-strategy.ec.europa.eu', 'www.arn.se'];
 
 export function emailLinkHosts(baseUrls: ReadonlyArray<string>): ReadonlySet<string> {

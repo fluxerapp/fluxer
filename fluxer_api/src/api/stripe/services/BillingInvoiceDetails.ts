@@ -4,13 +4,9 @@ import {Config} from '@app/api/Config';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {isProRataWithdrawal, plutoniumWithdrawalPeriod} from '@app/api/stripe/services/PlutoniumWithdrawal';
 import type {BillingTotals, PlutoniumPurchaseTerms} from '@pkgs/email/src/IEmailService';
-import {ms} from 'itty-time';
 import type Stripe from 'stripe';
-
-const INVOICE_LINK_LIFETIME_MS = ms('30 days');
-const INVOICE_LINK_API_MINIMUM_MS = ms('10 days');
-const WITHDRAWAL_PERIOD_MS = ms('14 days');
 
 export interface ChargedLine {
 	product: ProductInfo;
@@ -83,12 +79,6 @@ export function invoiceTotals(invoice: Stripe.Invoice): BillingTotals {
 	};
 }
 
-export function invoiceLinkUntil(invoice: Stripe.Invoice, now: number = Date.now()): Date {
-	const issued = unixToDate(invoice.due_date) ?? unixToDate(invoice.status_transitions?.finalized_at);
-	const base = issued?.getTime() ?? invoice.created * 1000;
-	return new Date(Math.max(base + INVOICE_LINK_LIFETIME_MS, now + INVOICE_LINK_API_MINIMUM_MS));
-}
-
 export function isDonationSubscription(subscription: Stripe.Subscription): boolean {
 	return subscription.metadata?.is_donation === 'true';
 }
@@ -115,16 +105,6 @@ export function isDonationInvoice(invoice: Stripe.Invoice): boolean {
 	return invoice.parent?.subscription_details?.metadata?.is_donation === 'true';
 }
 
-export function isOperatorPassInvoice(invoice: Stripe.Invoice): boolean {
-	if (invoice.metadata?.operator_pass === 'true') {
-		return true;
-	}
-	return (
-		invoice.billing_reason === 'subscription_create' &&
-		invoice.parent?.subscription_details?.metadata?.operator_pass === 'true'
-	);
-}
-
 function checkoutMetadata(invoice: Stripe.Invoice): Record<string, string> {
 	return {...invoice.metadata, ...invoice.parent?.subscription_details?.metadata};
 }
@@ -136,26 +116,39 @@ function renewalTax(tax: BillingTotals['tax']): 'included' | 'added' | 'none' {
 	return tax.behavior === 'inclusive' ? 'included' : 'added';
 }
 
+export function purchaseTermsFromMetadata(
+	metadata: Record<string, string>,
+	paidAt: Date,
+	renewal: PlutoniumPurchaseTerms['renewal'],
+): PlutoniumPurchaseTerms {
+	const period = plutoniumWithdrawalPeriod(metadata, paidAt);
+	const proRata = period !== null && period.rule !== 'brazil' && isProRataWithdrawal(metadata);
+	const recordedConsentAt =
+		metadata.eu_withdrawal_waiver_accepted === 'true' && metadata.eu_withdrawal_waiver_accepted_at
+			? new Date(metadata.eu_withdrawal_waiver_accepted_at)
+			: null;
+	const consentAt = recordedConsentAt ?? (proRata ? paidAt : null);
+	return {
+		renewal,
+		consentAt: consentAt && !Number.isNaN(consentAt.getTime()) ? consentAt : null,
+		withdrawalEndsOn: period?.endsOn ?? null,
+		withdrawalRule: period?.rule ?? null,
+		withdrawalProRata: proRata,
+		seller: billingSellerShown(),
+	};
+}
+
 export function plutoniumPurchaseTerms(invoice: Stripe.Invoice, line: ChargedLine): PlutoniumPurchaseTerms | null {
 	if (!line.product.isGift && invoice.billing_reason !== 'subscription_create') {
 		return null;
 	}
-	const metadata = checkoutMetadata(invoice);
-	const paidAt = invoicePaidAt(invoice);
-	const consentAt =
-		metadata.eu_withdrawal_waiver_accepted === 'true' && metadata.eu_withdrawal_waiver_accepted_at
-			? new Date(metadata.eu_withdrawal_waiver_accepted_at)
-			: null;
 	const tax = invoiceTotals(invoice).tax;
 	const interval = line.product.billingCycle === 'yearly' ? 'year' : 'month';
-	return {
-		renewal:
-			line.product.isGift || line.unitAmountMinor == null
-				? null
-				: {interval, amountMinor: line.unitAmountMinor, tax: renewalTax(tax)},
-		consentAt: consentAt && !Number.isNaN(consentAt.getTime()) ? consentAt : null,
-		withdrawalEndsAt:
-			metadata.eu_withdrawal_waiver_required === 'true' ? new Date(paidAt.getTime() + WITHDRAWAL_PERIOD_MS) : null,
-		seller: billingSellerShown(),
-	};
+	return purchaseTermsFromMetadata(
+		checkoutMetadata(invoice),
+		invoicePaidAt(invoice),
+		line.product.isGift || line.unitAmountMinor == null
+			? null
+			: {interval, amountMinor: line.unitAmountMinor, tax: renewalTax(tax)},
+	);
 }

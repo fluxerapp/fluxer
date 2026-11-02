@@ -46,14 +46,6 @@ const REACTIVATE_FAILED_MESSAGE_DESCRIPTOR = msg({
 	message: 'Something went wrong while reactivating your subscription. Please try again in a moment.',
 	comment: 'Body of the generic fallback error modal shown when reactivating a Plutonium subscription fails.',
 });
-const YOUR_SUBSCRIPTION_HAS_BEEN_SWITCHED_TO_YEARLY_BILLING_DESCRIPTOR = msg({
-	message: 'Your subscription has been switched to yearly billing.',
-	comment: 'Toast success shown after a Plutonium subscription is switched from monthly to yearly billing.',
-});
-const YOUR_SUBSCRIPTION_HAS_BEEN_SWITCHED_TO_MONTHLY_BILLING_DESCRIPTOR = msg({
-	message: 'Your subscription has been switched to monthly billing.',
-	comment: 'Toast success shown after a Plutonium subscription is switched from yearly to monthly billing.',
-});
 const YOUR_SUBSCRIPTION_WILL_SWITCH_TO_YEARLY_BILLING_DESCRIPTOR = msg({
 	message: 'Your subscription will switch to yearly billing at the next renewal.',
 	comment: 'Toast success shown after a Plutonium subscription is scheduled to switch to yearly billing.',
@@ -63,14 +55,8 @@ const YOUR_SUBSCRIPTION_WILL_SWITCH_TO_MONTHLY_BILLING_DESCRIPTOR = msg({
 	comment: 'Toast success shown after a Plutonium subscription is scheduled to switch to monthly billing.',
 });
 const BILLING_CYCLE_CHANGED_DESCRIPTORS = {
-	now: {
-		yearly: YOUR_SUBSCRIPTION_HAS_BEEN_SWITCHED_TO_YEARLY_BILLING_DESCRIPTOR,
-		monthly: YOUR_SUBSCRIPTION_HAS_BEEN_SWITCHED_TO_MONTHLY_BILLING_DESCRIPTOR,
-	},
-	period_end: {
-		yearly: YOUR_SUBSCRIPTION_WILL_SWITCH_TO_YEARLY_BILLING_DESCRIPTOR,
-		monthly: YOUR_SUBSCRIPTION_WILL_SWITCH_TO_MONTHLY_BILLING_DESCRIPTOR,
-	},
+	yearly: YOUR_SUBSCRIPTION_WILL_SWITCH_TO_YEARLY_BILLING_DESCRIPTOR,
+	monthly: YOUR_SUBSCRIPTION_WILL_SWITCH_TO_MONTHLY_BILLING_DESCRIPTOR,
 } as const;
 const YOUR_PENDING_BILLING_CHANGE_HAS_BEEN_CANCELED_DESCRIPTOR = msg({
 	message: 'Your pending billing change has been canceled.',
@@ -200,15 +186,12 @@ export const useSubscriptionActions = (countryCode?: string | null) => {
 		}
 	}, [countryCode, i18n]);
 	const handleChangeSubscriptionBillingCycle = useCallback(
-		async (
-			billingCycle: 'monthly' | 'yearly',
-			effectiveAt: PremiumCommands.SubscriptionBillingCycleChangeEffectiveAt = 'now',
-		) => {
+		async (billingCycle: 'monthly' | 'yearly') => {
 			setLoadingChangeBillingCycle(billingCycle);
 			try {
-				await PremiumCommands.changeSubscriptionBillingCycle(billingCycle, effectiveAt);
+				await PremiumCommands.changeSubscriptionBillingCycle(billingCycle);
 				await PremiumCommands.refreshPremiumState(countryCode ?? undefined);
-				ToastCommands.success(i18n._(BILLING_CYCLE_CHANGED_DESCRIPTORS[effectiveAt][billingCycle]));
+				ToastCommands.success(i18n._(BILLING_CYCLE_CHANGED_DESCRIPTORS[billingCycle]));
 			} catch (error) {
 				logger.error('Failed to change subscription billing cycle', error);
 				showPremiumActionErrorModal(

@@ -4,6 +4,8 @@ import {MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDes
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	INBOX_DESCRIPTOR,
+	KEYBIND_DESCRIPTOR,
+	KEYBINDS_DESCRIPTOR,
 	KEYBOARD_2_DESCRIPTOR as KEYBOARD_DESCRIPTOR,
 	KEYBOARD_SHORTCUTS_DESCRIPTOR,
 	PUSH_TO_TALK_DESCRIPTOR,
@@ -92,51 +94,51 @@ const NAVIGATE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const CONFIGURE_KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Configure keyboard shortcuts',
+	message: 'Configure keybinds',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
 const ADD_A_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Add a shortcut',
+	message: 'Add a keybind',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
 const DISABLE_BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Disable built-in shortcuts',
+	message: 'Disable built-in keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
 const SHORTCUT_CONFLICTS_DESCRIPTOR = msg({
-	message: 'Shortcut conflicts',
+	message: 'Keybind conflicts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ADD_CUSTOM_SHORTCUTS_DISABLE_BUILT_IN_SHORTCUTS_AND_DESCRIPTOR = msg({
-	message: 'Add custom shortcuts, disable built-in shortcuts, and sync shortcut preferences',
+	message: 'Add custom keybinds, disable built-in keybinds, and sync keybind preferences',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
 const BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Built-in shortcuts',
+	message: 'Built-in keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGES_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Message shortcuts',
+	message: 'Message keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const NAVIGATION_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Navigation shortcuts',
+	message: 'Navigation keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const CHAT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Chat shortcuts',
+	message: 'Chat keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const VOICE_AND_VIDEO_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Voice and video shortcuts',
+	message: 'Voice and video keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const REVIEW_THE_BUILT_IN_KEYBOARD_SHORTCUTS_BY_SECTION_DESCRIPTOR = msg({
-	message: 'Review the built-in keyboard shortcuts by section',
+	message: 'Review the built-in keybinds by section',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const PUSH_TO_TALK_KEY_DESCRIPTOR = msg({
@@ -153,7 +155,7 @@ const SET_PUSH_TO_TALK_KEY_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const MUTE_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Mute shortcut',
+	message: 'Mute keybind',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 const MUTE_DESCRIPTOR = msg({
@@ -166,15 +168,17 @@ const TOGGLE_MUTE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const SET_MUTE_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Set mute shortcut',
+	message: 'Set mute keybind',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 export const keybindsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'keybinds-shortcuts',
 		tabType: 'keybinds',
-		label: KEYBOARD_SHORTCUTS_DESCRIPTOR,
+		label: KEYBINDS_DESCRIPTOR,
 		keywords: [
+			KEYBINDS_DESCRIPTOR,
+			KEYBIND_DESCRIPTOR,
 			KEYBOARD_SHORTCUTS_DESCRIPTOR,
 			SHORTCUTS_DESCRIPTOR,
 			HOTKEYS_DESCRIPTOR,
@@ -233,14 +237,14 @@ export const keybindsIndex: Array<SearchableSettingDescriptor> = [
 		id: 'keybinds-ptt',
 		tabType: 'keybinds',
 		label: PUSH_TO_TALK_KEY_DESCRIPTOR,
-		keywords: [PUSH_TO_TALK_DESCRIPTOR, SHORTCUT_DESCRIPTOR, KEY_DESCRIPTOR],
+		keywords: [PUSH_TO_TALK_DESCRIPTOR, KEYBIND_DESCRIPTOR, SHORTCUT_DESCRIPTOR, KEY_DESCRIPTOR],
 		description: SET_PUSH_TO_TALK_KEY_DESCRIPTOR,
 	},
 	{
 		id: 'keybinds-mute',
 		tabType: 'keybinds',
 		label: MUTE_SHORTCUT_DESCRIPTOR,
-		keywords: [MUTE_DESCRIPTOR, SHORTCUT_DESCRIPTOR, TOGGLE_MUTE_DESCRIPTOR],
+		keywords: [MUTE_DESCRIPTOR, KEYBIND_DESCRIPTOR, SHORTCUT_DESCRIPTOR, TOGGLE_MUTE_DESCRIPTOR],
 		description: SET_MUTE_SHORTCUT_DESCRIPTOR,
 	},
 	{

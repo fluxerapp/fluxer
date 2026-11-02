@@ -71,8 +71,8 @@ export interface OperatorPassWaitlistJoinParams {
 	countryCode: string | null;
 	locale: string | null;
 	consentIp: string | null;
-	priceFeedback: OperatorPassPriceFeedback;
-	currency: OperatorPassCurrency;
+	priceFeedback: OperatorPassPriceFeedback | null;
+	currency: OperatorPassCurrency | null;
 }
 
 export type OperatorPassWaitlistSuppression = 'bounced' | 'unsubscribed';

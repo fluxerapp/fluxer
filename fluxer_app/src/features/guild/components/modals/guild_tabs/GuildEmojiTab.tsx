@@ -49,7 +49,7 @@ const NO_EMOJI_SLOTS_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the guild emoji tab.',
 });
 const EMOJI_SLOTS_FULL_DESCRIPTION_DESCRIPTOR = msg({
-	message: "You've reached the maximum number of emojis. Delete some existing emojis to make room.",
+	message: "You can't add more emojis. Delete some existing emojis to make room.",
 	comment: 'Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.',
 });
 const FAILED_TO_PREPARE_EMOJIS_DESCRIPTOR = msg({

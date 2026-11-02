@@ -115,12 +115,12 @@ Undefined bits are ignored.
 | os | string | The operating system the client runs on |
 | browser | string | The client library identifier |
 | device | string | The device or application identifier |
-| e2ee_capable?<sup>1</sup> | boolean | Whether the client can take part in end-to-end encrypted voice |
+| e2ee_capable?<sup>1</sup> | boolean | Whether the client can take part in voice with encrypted call media |
 | mobile?<sup>2</sup> | boolean | Whether the session is mobile (default false) |
 | latitude?<sup>3</sup> | string | The client latitude as a decimal string (1-32 characters) |
 | longitude?<sup>3</sup> | string | The client longitude as a decimal string (1-32 characters) |
 
-<sup>1</sup> A session without it is refused from an end-to-end encrypted voice channel with `VOICE_E2EE_REQUIRED`
+<sup>1</sup> A session without it is refused from a voice channel with encrypted call media with `VOICE_E2EE_REQUIRED`
 
 <sup>2</sup> Used only when `presence` is absent or null. Otherwise the [initial presence object](#initial-presence-object) decides
 
@@ -382,7 +382,7 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, sy
 
 Switching a guild between passive and active sends a [Guild Sync](/gateway/events/#guild-sync) unless the session already has one for that guild. Going passive also clears the [`threads`](/gateway/threads/#lazy-request-thread-options) subscription, and the next switch to active syncs again.
 
-A channel gets [Guild Member List Update](/gateway/events/#guild-member-list-update) only when you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it. Thread IDs here subscribe to nothing, so use [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options). Subscribing a channel to a range drops the session's other member list in that guild.
+A channel gets [Guild Member List Update](/gateway/events/#guild-member-list-update) only when you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it. Thread IDs here subscribe to nothing. Use [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options). Subscribing a channel to a range drops the session's other member list in that guild.
 
 ## Request Guild Counts
 
@@ -403,7 +403,7 @@ Opcode `15` requests the member and online counts for guilds.
 }
 ```
 
-Guilds the session is not connected to are skipped. Results arrive in one [Guild Counts Update](/gateway/events/#guild-counts-update), and a guild that does not answer within 2,000 ms is omitted.
+Guilds the session is not connected to are skipped. Results arrive in one [Guild Counts Update](/gateway/events/#guild-counts-update), and a guild that does not respond within 2,000 ms is left out.
 
 ## Request Channel Member Counts
 

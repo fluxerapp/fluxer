@@ -82,13 +82,13 @@ export class OperatorPassWallPublicationService {
 			return null;
 		}
 		const holder = resolveOperatorPassHolder(state, now);
-		if (!holder) {
+		if (!holder || (await this.holdsOnlyPreviewPassesBeforeSale(entry.user_id, now))) {
 			return null;
 		}
 		return {
 			entry: {
 				id: operatorPassWallPublicId(entry.user_id),
-				name: operatorPassWallShownName(entry, user),
+				name: operatorPassWallShownName(entry),
 				avatar: entry.live_avatar ?? null,
 				tier: getOperatorPassWallTier(entry.live_business ? 1 : holder.count, Config.operatorPass.wallTierMinimums),
 				...(isOperatorPassCountHidden(user.premiumFlags) ? {} : {count: holder.count}),
@@ -96,6 +96,24 @@ export class OperatorPassWallPublicationService {
 			},
 			since: holder.since.getTime(),
 		};
+	}
+
+	private async holdsOnlyPreviewPassesBeforeSale(userId: UserID, now: Date): Promise<boolean> {
+		const {saleOpensAt} = Config.operatorPass;
+		if (!saleOpensAt || now.getTime() >= saleOpensAt.getTime()) {
+			return false;
+		}
+		const held = (await this.repository.listUnitsByHolder(userId)).filter((unit) => unit.status === 'held');
+		if (held.length === 0) {
+			return false;
+		}
+		for (const unit of held) {
+			const purchase = unit.purchase_id ? await this.repository.findPurchase(unit.purchase_id) : null;
+			if (purchase?.preview_label == null) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	async snapshot(): Promise<OperatorPassWallSnapshot> {

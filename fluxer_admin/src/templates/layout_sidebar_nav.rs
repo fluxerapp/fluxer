@@ -268,6 +268,20 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 [acl::GIFT_CODES_GENERATE]
             ),
             item!(
+                "Visionary Email",
+                "/operator-pass-visionary",
+                "operator-pass-visionary",
+                [acl::OPERATOR_PASS_VISIONARY_NOTICE],
+                hosted
+            ),
+            item!(
+                "Operator Pass Preview",
+                "/operator-pass-preview",
+                "operator-pass-preview",
+                [acl::OPERATOR_PASS_PREVIEW, acl::OPERATOR_PASS_RESET],
+                hosted
+            ),
+            item!(
                 "Operator Pass Waitlist",
                 "/operator-pass-waitlist",
                 "operator-pass-waitlist",

@@ -7,6 +7,7 @@ import {AssetAdminController} from '@app/api/admin/controllers/AssetAdminControl
 import {AuditLogAdminController} from '@app/api/admin/controllers/AuditLogAdminController';
 import {BadgeAdminController} from '@app/api/admin/controllers/BadgeAdminController';
 import {BanAdminController} from '@app/api/admin/controllers/BanAdminController';
+import {BillingDocumentAdminController} from '@app/api/admin/controllers/BillingDocumentAdminController';
 import {BulkAdminController} from '@app/api/admin/controllers/BulkAdminController';
 import {CodesAdminController} from '@app/api/admin/controllers/CodesAdminController';
 import {DiscoveryAdminController} from '@app/api/admin/controllers/DiscoveryAdminController';
@@ -18,6 +19,7 @@ import {JobsAdminController} from '@app/api/admin/controllers/JobsAdminControlle
 import {LimitConfigAdminController} from '@app/api/admin/controllers/LimitConfigAdminController';
 import {MessageAdminController} from '@app/api/admin/controllers/MessageAdminController';
 import {OperatorPassAdminController} from '@app/api/admin/controllers/OperatorPassAdminController';
+import {OperatorPassPreviewAdminController} from '@app/api/admin/controllers/OperatorPassPreviewAdminController';
 import {PaymentDisputeAdminController} from '@app/api/admin/controllers/PaymentDisputeAdminController';
 import {ReportAdminController} from '@app/api/admin/controllers/ReportAdminController';
 import {SearchAdminController} from '@app/api/admin/controllers/SearchAdminController';
@@ -36,7 +38,9 @@ export function registerAdminControllers(app: HonoApp) {
 	BadgeAdminController(app);
 	EnforcementAdminController(app);
 	StoreBillingAdminController(app);
+	BillingDocumentAdminController(app);
 	OperatorPassAdminController(app);
+	OperatorPassPreviewAdminController(app);
 	PaymentDisputeAdminController(app);
 	CodesAdminController(app);
 	GuildAdminController(app);

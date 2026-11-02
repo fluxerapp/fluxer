@@ -31,7 +31,7 @@ import {
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
-import type {OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
+import type {OperatorPassCertificateRow, OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
 import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
@@ -42,6 +42,7 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Payment} from '@app/api/models/Payment';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {User} from '@app/api/models/User';
+import {getOperatorPassVisionaryPassId} from '@app/api/operator_pass/OperatorPassVisionaryService';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
@@ -54,6 +55,7 @@ import {
 import {ContentAddressedAttachmentCollector} from '@app/api/worker/utils/ContentAddressedAttachmentCollector';
 import {
 	buildUserDataJson,
+	getOperatorPassCertificateArchivePath,
 	mapOAuthApplication,
 	mapPayment,
 	mapSecurityData,
@@ -122,6 +124,7 @@ interface ArchiveParams {
 		last_active_at: Date | null;
 		last_active_ip: string | null;
 	};
+	operatorPassCertificates: Array<OperatorPassCertificateRow>;
 	storageService: IStorageService;
 }
 
@@ -347,6 +350,7 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 		oauthClients,
 		authorizedIps,
 		activityData,
+		operatorPassCertificates,
 		storageService,
 	} = params;
 	const userIdString = userId.toString();
@@ -403,6 +407,11 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 		if (collector) {
 			const manifest = collector.getManifest();
 			await archive.append(createArchiveJsonBuffer(manifest), {name: 'attachments_manifest.json'});
+		}
+		for (const certificate of operatorPassCertificates) {
+			if (certificate.pdf.length > 0) {
+				await archive.append(Buffer.from(certificate.pdf), {name: getOperatorPassCertificateArchivePath(certificate)});
+			}
 		}
 		await archive.append(createArchiveJsonBuffer(payments.map(mapPayment)), {
 			name: 'payments/payment_history.json',
@@ -576,6 +585,17 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			})),
 		);
 		const operatorPassOffers = await operatorPassRepository.listOffersByUser(userId);
+		const operatorPassCertificates: Array<OperatorPassCertificateRow> = [];
+		for (const purchase of operatorPassPurchases) {
+			for (const page of await operatorPassRepository.listCertificatesByPurchase(purchase.checkout_session_id)) {
+				operatorPassCertificates.push(...(await operatorPassRepository.listCertificateVersions(page.pass_id)));
+			}
+		}
+		const operatorPassVisionaryActivation = await operatorPassRepository.findVisionaryActivation(userId);
+		const operatorPassLabs = await operatorPassRepository.findLabsMember(userId);
+		operatorPassCertificates.push(
+			...(await operatorPassRepository.listCertificateVersions(getOperatorPassVisionaryPassId(userId))),
+		);
 		const guilds = await guildRepository.listGuilds(guildIds);
 		const guildsMap = new Map(guilds.map((guild) => [guild.id.toString(), guild]));
 		const guildMemberships = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
@@ -616,6 +636,9 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			operatorPassWallEvents,
 			operatorPassUnits,
 			operatorPassOffers,
+			operatorPassCertificates,
+			operatorPassVisionaryActivation,
+			operatorPassLabs,
 			oauthClients,
 			connections,
 			pinnedDms,
@@ -641,6 +664,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			oauthClients,
 			authorizedIps,
 			activityData,
+			operatorPassCertificates,
 			storageService,
 		});
 		Logger.debug(

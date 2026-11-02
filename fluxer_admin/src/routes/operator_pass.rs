@@ -16,10 +16,11 @@ use crate::{
     templates::{
         self,
         pages::{
+            operator_pass_visionary::{DELIVERIES_CSV_PATH, VISIONARY_CSV_PATH, VISIONARY_PATH},
             operator_pass_waitlist::{FOLLOWUP_CSV_PATH, followup_csv},
             operator_pass_wall::{
-                BUSINESS_CHECKS, BUSINESS_LOGO_MAX_BYTES, BUSINESS_NAME_MAX_CHARS, RELEASES_PATH,
-                TOOLS_PATH, WALL_PATH, WITHDRAWAL_CHANNELS,
+                BUSINESS_CHECKS, BUSINESS_LOGO_MAX_BYTES, BUSINESS_NAME_MAX_CHARS, REISSUE_REASONS,
+                RELEASES_PATH, TOOLS_PATH, WALL_PATH, WITHDRAWAL_CHANNELS,
             },
         },
     },
@@ -37,6 +38,12 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+struct DeliveriesQuery {
+    #[serde(default)]
+    month: String,
+}
+
+#[derive(Deserialize)]
 struct WallActionForm {
     #[serde(default)]
     _csrf: Option<String>,
@@ -48,8 +55,6 @@ struct WallActionForm {
     reason: String,
     #[serde(default)]
     note: String,
-    #[serde(default)]
-    username_declined: Option<String>,
     #[serde(default)]
     rule: String,
     #[serde(default)]
@@ -66,6 +71,12 @@ struct WallActionForm {
     received_at: String,
     #[serde(default)]
     channel: String,
+    #[serde(default)]
+    pass_index: String,
+    #[serde(default)]
+    holder_name: String,
+    #[serde(default)]
+    reissue_reason: String,
 }
 
 enum WallAction {
@@ -81,6 +92,7 @@ enum WallAction {
     Remove,
     Restore,
     Withdraw,
+    Reissue,
 }
 
 impl TryFrom<&str> for WallAction {
@@ -100,6 +112,7 @@ impl TryFrom<&str> for WallAction {
             "remove" => Ok(Self::Remove),
             "restore" => Ok(Self::Restore),
             "withdraw" => Ok(Self::Withdraw),
+            "reissue" => Ok(Self::Reissue),
             _ => Err(()),
         }
     }
@@ -172,6 +185,13 @@ struct EraseForm {
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .route(VISIONARY_PATH, get(operator_pass_visionary_page))
+        .route(
+            "/operator-pass-visionary/send",
+            post(operator_pass_visionary_send),
+        )
+        .route(VISIONARY_CSV_PATH, get(operator_pass_visionary_csv))
+        .route(DELIVERIES_CSV_PATH, get(operator_pass_deliveries_csv))
         .route("/operator-pass-waitlist", get(operator_pass_waitlist_page))
         .route(FOLLOWUP_CSV_PATH, get(operator_pass_waitlist_followup_csv))
         .route(WALL_PATH, get(operator_pass_wall_page))
@@ -262,6 +282,19 @@ fn is_purchase_id(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
 }
 
+const MAX_PASSES_PER_PURCHASE: u32 = 100;
+
+fn parse_reissue_pass_id(pass_index: &str, purchase_id: &str) -> Option<String> {
+    pass_index
+        .trim()
+        .parse::<u32>()
+        .ok()
+        .filter(|index| {
+            (1..=MAX_PASSES_PER_PURCHASE).contains(index) && is_purchase_id(purchase_id)
+        })
+        .map(|index| format!("{purchase_id}:{index}"))
+}
+
 fn is_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -288,6 +321,144 @@ fn parse_selected(values: &[String]) -> Vec<(String, String)> {
         .filter(|(user_id, revision_id)| is_snowflake(user_id) && is_snowflake(revision_id))
         .map(|(user_id, revision_id)| (user_id.to_owned(), revision_id.to_owned()))
         .collect()
+}
+
+#[derive(Deserialize)]
+struct VisionarySendForm {
+    #[serde(default)]
+    _csrf: Option<String>,
+    #[serde(default)]
+    expected_recipients: String,
+    #[serde(default)]
+    include_dm: Option<String>,
+}
+
+async fn operator_pass_visionary_page(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    csrf: axum::Extension<CsrfToken>,
+    flash: Option<axum::Extension<FlashData>>,
+) -> Response {
+    let config = state.config();
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let status = client
+        .get_operator_pass_visionary_notice_status()
+        .await
+        .log_error("load the Visionary Operator Pass email status");
+    let flash = flash.map(|flash| flash.0.to_flash_message());
+    let markup = templates::pages::operator_pass_visionary::operator_pass_visionary_page(
+        config,
+        &auth.0,
+        &csrf.0.0,
+        flash.as_ref(),
+        status.as_ref(),
+    );
+    Html(markup.into_string()).into_response()
+}
+
+async fn operator_pass_visionary_send(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Form(form): Form<VisionarySendForm>,
+) -> Response {
+    let config = state.config();
+    let back = format!("{}{VISIONARY_PATH}", config.base_path);
+    let Ok(expected) = form.expected_recipients.trim().parse::<u64>() else {
+        return flash::redirect_error(config, &back, "Type the number of accounts to email");
+    };
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let flash = match client
+        .send_operator_pass_visionary_notice(expected, form.include_dm.is_some())
+        .await
+    {
+        Ok(sent) => FlashData::success(format!(
+            "Queued the email to {} accounts as job {}",
+            sent.recipients, sent.job_id
+        )),
+        Err(error) => {
+            tracing::warn!(%error, "admin API request failed: send the Visionary Operator Pass email");
+            FlashData::error(error.refusal_message("The email was not sent"))
+        }
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
+}
+
+async fn operator_pass_visionary_csv(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+) -> Response {
+    let config = state.config();
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let Some((_, body)) = client
+        .get_operator_pass_visionary_activations_csv()
+        .await
+        .log_error("load the Visionary Operator Pass turn-ons")
+    else {
+        return (
+            StatusCode::BAD_GATEWAY,
+            "Could not load the Visionary turn-ons.",
+        )
+            .into_response();
+    };
+    (
+        [
+            (header::CONTENT_TYPE, "text/csv; charset=utf-8"),
+            (
+                header::CONTENT_DISPOSITION,
+                "attachment; filename=\"operator-pass-visionary-activations.csv\"",
+            ),
+            (header::CACHE_CONTROL, "private, no-store"),
+        ],
+        body,
+    )
+        .into_response()
+}
+
+fn is_delivery_month(month: &str) -> bool {
+    let bytes = month.as_bytes();
+    bytes.len() == 7
+        && bytes[4] == b'-'
+        && bytes
+            .iter()
+            .enumerate()
+            .all(|(index, byte)| index == 4 || byte.is_ascii_digit())
+        && matches!(month[5..].parse::<u8>(), Ok(1..=12))
+}
+
+async fn operator_pass_deliveries_csv(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Query(query): Query<DeliveriesQuery>,
+) -> Response {
+    let month = query.month.trim();
+    if !is_delivery_month(month) {
+        return (StatusCode::BAD_REQUEST, "Pick a month as YYYY-MM.").into_response();
+    }
+    let config = state.config();
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let Some((_, body)) = client
+        .get_operator_pass_deliveries_csv(month)
+        .await
+        .log_error("load the Operator Pass deliveries")
+    else {
+        return (
+            StatusCode::BAD_GATEWAY,
+            "Could not load the deliveries. The API request failed or this account lacks the user:lookup ACL.",
+        )
+            .into_response();
+    };
+    (
+        [
+            (header::CONTENT_TYPE, "text/csv; charset=utf-8".to_owned()),
+            (
+                header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"operator-pass-leveranser-{month}.csv\""),
+            ),
+            (header::CACHE_CONTROL, "private, no-store".to_owned()),
+        ],
+        body,
+    )
+        .into_response()
 }
 
 async fn operator_pass_waitlist_page(
@@ -454,11 +625,7 @@ async fn operator_pass_wall_action(
         .parse::<OperatorPassWallDeclineReasonSchema>()
         .ok()
         .filter(|_| !note.is_empty())
-        .map(|reason| WallDecision {
-            reason,
-            note,
-            username_declined: form.username_declined.is_some(),
-        });
+        .map(|reason| WallDecision { reason, note });
     let rule = form.rule.trim();
     let facts = form.facts.trim();
     let removal_ready = !rule.is_empty() && !facts.is_empty();
@@ -478,6 +645,13 @@ async fn operator_pass_wall_action(
             received_at,
             channel: &form.channel,
         });
+    let holder_name = form.holder_name.trim();
+    let reissue_pass_id = parse_reissue_pass_id(&form.pass_index, purchase_id).filter(|_| {
+        !holder_name.is_empty()
+            && REISSUE_REASONS
+                .iter()
+                .any(|(reason, _)| *reason == form.reissue_reason)
+    });
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = match WallAction::try_from(action.as_str()) {
         Ok(WallAction::Approve) if is_snowflake(revision_id) => client
@@ -534,15 +708,19 @@ async fn operator_pass_wall_action(
                 },
             )
             .await
-            .map(|_| "Removed the pass benefits and sent the statement of reasons".to_owned()),
+            .map(|_| "Removed the bonus and sent the statement of reasons".to_owned()),
         Ok(WallAction::Restore) => client
             .restore_operator_pass_perks(&user_id)
             .await
-            .map(|()| "Restored the pass benefits".to_owned()),
+            .map(|()| "Restored the bonus".to_owned()),
         Ok(WallAction::Withdraw) if let Some(withdrawal) = &withdrawal => client
             .withdraw_operator_pass_purchase(purchase_id, withdrawal)
             .await
             .map(|_| "Recorded the withdrawal and sent the receipt".to_owned()),
+        Ok(WallAction::Reissue) if let Some(pass_id) = &reissue_pass_id => client
+            .reissue_operator_pass_certificate(pass_id, holder_name, &form.reissue_reason)
+            .await
+            .map(|()| "Issued a new copy of the certificate page".to_owned()),
         Ok(WallAction::Approve)
         | Ok(WallAction::Decline)
         | Ok(WallAction::Revert)
@@ -550,7 +728,8 @@ async fn operator_pass_wall_action(
         | Ok(WallAction::Hide)
         | Ok(WallAction::RemovalNotice)
         | Ok(WallAction::Remove)
-        | Ok(WallAction::Withdraw) => {
+        | Ok(WallAction::Withdraw)
+        | Ok(WallAction::Reissue) => {
             return flash::redirect_error(config, &back, "Fill in every required field");
         }
         Err(()) => {
@@ -965,5 +1144,25 @@ async fn operator_pass_release_erase(
             tracing::warn!(%error, year, user_id, "admin API request failed: erase release name");
             flash::redirect_error(config, &back, error.refusal_message("Erasing failed"))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_reissue_pass_id;
+
+    #[test]
+    fn reissue_accepts_every_page_up_to_the_largest_purchase() {
+        assert_eq!(
+            parse_reissue_pass_id("26", "cs_test_a1").as_deref(),
+            Some("cs_test_a1:26")
+        );
+        assert_eq!(
+            parse_reissue_pass_id("100", "cs_test_a1").as_deref(),
+            Some("cs_test_a1:100")
+        );
+        assert_eq!(parse_reissue_pass_id("0", "cs_test_a1"), None);
+        assert_eq!(parse_reissue_pass_id("101", "cs_test_a1"), None);
+        assert_eq!(parse_reissue_pass_id("3", "cs test"), None);
     }
 }

@@ -151,12 +151,12 @@ export const VOICE_TOGGLE_DEAFEN_DESCRIPTOR = msg({
 		'Keyboard shortcut label. Toggles voice deafen, which controls whether the user hears voice chat. Distinct from microphone mute.',
 });
 export const VOICE_DEAFEN_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Deafen shortcut',
+	message: 'Deafen keybind',
 	comment:
 		'Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.',
 });
 export const VOICE_SET_DEAFEN_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Set deafen shortcut',
+	message: 'Set deafen keybind',
 	comment:
 		'Settings description for assigning the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.',
 });
@@ -332,8 +332,10 @@ export const VOICE_P2P_INDICATOR_DESCRIPTOR = msg({
 		'Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.',
 });
 export const VOICE_P2P_INDICATOR_TOOLTIP_DESCRIPTOR = msg({
-	message: 'Direct connection. Media is encrypted between participants.',
-	comment: 'Tooltip on the P2P indicator of a peer-to-peer call.',
+	message:
+		"Direct connection. Audio and video go directly between the people in the call, who can see each other's IP address.",
+	comment:
+		'Tooltip on the P2P indicator of a peer-to-peer call. Do not say or suggest that the call is end-to-end encrypted.',
 });
 export const VOICE_P2P_START_TITLE_DESCRIPTOR = msg({
 	message: 'Start in P2P mode?',
@@ -354,7 +356,7 @@ export const VOICE_P2P_LOWER_LATENCY_DESCRIPTOR = msg({
 	comment: 'Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.',
 });
 export const VOICE_P2P_STREAM_QUALITY_DESCRIPTOR = msg({
-	message: 'Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps.',
+	message: 'Everyone in the call gets Plutonium stream quality for free, with up to 4K source resolution and 60 fps.',
 	comment:
 		'Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.',
 });

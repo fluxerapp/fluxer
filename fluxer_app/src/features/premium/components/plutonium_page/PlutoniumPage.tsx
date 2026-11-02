@@ -3,25 +3,15 @@
 import {BACK_DESCRIPTOR, SAVE_PERCENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import '@app/app/fonts/radio_canada_big/radio-canada-big.css';
 import {Routes} from '@app/app/Routes';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/components/PurchaseDisclaimer';
 import {useCheckoutActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions';
-import {useCommunityActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useCommunityActions';
 import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
-import {useSubscriptionActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions';
-import {useSubscriptionStatus} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
-import {PurchaseHistorySection} from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistorySection';
-import {SelfServeRefundSection} from '@app/features/app/components/dialogs/components/plutonium/SelfServeRefundSection';
-import {SubscriptionCard} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard';
 import GeoIP from '@app/features/app/state/GeoIP';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import Guilds from '@app/features/guild/state/Guilds';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
-import {OperatorPassPurchasesSection} from '@app/features/premium/components/operator_pass/OperatorPassPurchasesSection';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
 import {PlutoniumPageAtom} from '@app/features/premium/components/plutonium_page/PlutoniumPageAtom';
 import {PlutoniumPageButton} from '@app/features/premium/components/plutonium_page/PlutoniumPageButton';
@@ -45,14 +35,10 @@ import {
 	GIFTED_THANKS_DESCRIPTOR,
 	GRACE_DESCRIPTOR,
 	LAPSED_DESCRIPTOR,
-	MANAGE_HEADING_DESCRIPTOR,
-	MANAGE_SUBSCRIPTION_DESCRIPTOR,
 	MEMBER_THANKS_DESCRIPTOR,
 	MONTHLY_PRICE_DESCRIPTOR,
 	PAGE_LABEL_DESCRIPTOR,
 	PRICE_OR_DESCRIPTOR,
-	PURCHASE_BLOCKED_CLAIM_DESCRIPTOR,
-	PURCHASE_BLOCKED_VERIFY_DESCRIPTOR,
 	REDEEM_GIFT_CODE_DESCRIPTOR,
 	REDEEM_ONLY_DESCRIPTOR,
 	SUBSCRIBE_MONTHLY_DESCRIPTOR,
@@ -62,33 +48,32 @@ import {
 	VISIONARY_THANKS_DESCRIPTOR,
 	YEARLY_PRICE_DESCRIPTOR,
 } from '@app/features/premium/components/plutonium_page/PlutoniumPageMessages';
-import {resolvePurchaseSurface} from '@app/features/premium/components/plutonium_page/PlutoniumPagePurchases';
+import {
+	resolvePurchaseBlockedNote,
+	resolvePurchaseSurface,
+} from '@app/features/premium/components/plutonium_page/PlutoniumPagePurchases';
 import {PlutoniumPageShowcase} from '@app/features/premium/components/plutonium_page/PlutoniumPageShowcase';
 import {usePurchaseAccountGate} from '@app/features/premium/hooks/usePurchaseAccountGate';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {forgetPurchaseIntent, type PurchasePlan, peekPurchaseIntent} from '@app/features/premium/state/PurchaseIntent';
-import {PAYMENT_DISPUTE_OPEN_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {yearlySavingsPercent} from '@app/features/premium/utils/PremiumSavings';
 import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
+import {getSubscriptionStatus} from '@app/features/premium/utils/SubscriptionStatus';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
-import {type PurchaseBlockedReason, PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
-import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {useLingui} from '@lingui/react/macro';
 import {GiftIcon, TicketIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 const PLAN_INTENT_UNAVAILABLE_DESCRIPTOR = msg({
 	message: "Purchases aren't available for your account right now.",
@@ -98,13 +83,8 @@ const GIFT_INTENT_UNAVAILABLE_DESCRIPTOR = msg({
 	message: "Gifts aren't available for your account right now.",
 	comment: 'Toast when someone arrives from a gift link but gift purchases are not available for this account.',
 });
-const PURCHASE_BLOCKED_NOTES: Readonly<Record<PurchaseBlockedReason, MessageDescriptor>> = {
-	[PurchaseBlockedReasons.UNCLAIMED]: PURCHASE_BLOCKED_CLAIM_DESCRIPTOR,
-	[PurchaseBlockedReasons.EMAIL_UNVERIFIED]: PURCHASE_BLOCKED_VERIFY_DESCRIPTOR,
-};
 
 const FOOTNOTE_ID = 'plutonium-page-tag-footnote';
-const MANAGE_ID = 'plutonium-page-manage';
 const COMPARE_ID = 'plutonium-page-compare';
 const SUBSCRIBE_ID = 'plutonium-page-subscribe';
 const PLACEHOLDER_PRICE = '...';
@@ -116,7 +96,6 @@ function splitTemplate(text: string, token: string): [string, string] {
 }
 
 export const PlutoniumPage = observer(function PlutoniumPage() {
-	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const currentUser = Users.currentUser;
 	const premiumState = PremiumState.loadedForUserId === currentUser?.id ? PremiumState.state : null;
@@ -125,33 +104,8 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 	const isMobile = MobileLayout.enabled;
 	const scrollerRef = useRef<HTMLDivElement | null>(null);
 	const [pendingPlan, setPendingPlan] = useState<PurchasePlan | null>(null);
-	const guilds = Guilds.getGuilds();
-	const visionaryGuild = useMemo(() => guilds.find((guild) => guild.features.has(GuildFeatures.VISIONARY)), [guilds]);
-	const subscriptionStatus = useSubscriptionStatus(currentUser, premiumState);
-	const {
-		priceIds,
-		monthlyPrice,
-		yearlyPrice,
-		currentSubscriptionPrice,
-		currentSubscriptionPriceLabel,
-		currentSubscriptionListPriceLabel,
-		isCurrentSubscriptionGrandfathered,
-	} = usePremiumData({premiumState});
-	const {
-		loadingPortal,
-		loadingCancel,
-		loadingReactivate,
-		loadingEndGrace,
-		loadingChangeBillingCycle,
-		loadingCancelPendingChange,
-		handleOpenCustomerPortal,
-		handleCancelSubscription,
-		handleEndPremiumGracePeriod,
-		handleReactivateSubscription,
-		handleChangeSubscriptionBillingCycle,
-		handleCancelPendingSubscriptionChange,
-	} = useSubscriptionActions(countryCode);
-	const {loadingRejoinCommunity, handleCommunityButtonClick} = useCommunityActions(visionaryGuild);
+	const subscriptionStatus = getSubscriptionStatus(currentUser, premiumState);
+	const {priceIds, monthlyPrice, yearlyPrice} = usePremiumData({premiumState});
 	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, isMobile, {
 		hasGiftTime: subscriptionStatus.isGiftSubscription,
 	});
@@ -168,23 +122,17 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
 	const hasBillingRelationship = subscriptionStatus.hasEverPurchased || premiumState?.billing.subscription != null;
 	const isMember = subscriptionStatus.shouldShowPremiumCard;
-	const {purchasesAvailable, giftPurchasesAvailable, canSubscribe, billingUnavailable, heroMode, showClosing} =
-		resolvePurchaseSurface({
-			priceIds,
-			userPurchaseDisabled,
-			isMember,
-			canStartSubscription: subscriptionStatus.canStartSubscription,
-			hasBillingRelationship,
-		});
+	const {purchasesAvailable, giftPurchasesAvailable, canSubscribe, heroMode, showClosing} = resolvePurchaseSurface({
+		priceIds,
+		userPurchaseDisabled,
+		isMember,
+		canStartSubscription: subscriptionStatus.canStartSubscription,
+		hasBillingRelationship,
+	});
 	const savingsPercent = yearlySavingsPercent(priceIds?.monthly_amount_minor, priceIds?.yearly_amount_minor);
 	const savingsLabel = savingsPercent != null ? i18n._(SAVE_PERCENT_DESCRIPTOR, {percent: savingsPercent}) : null;
 	const uploadSizes = resolveUploadSizes(i18n.locale);
-	const accountBlockedNote =
-		accountGate.blockedReason === null
-			? null
-			: i18n._(PURCHASE_BLOCKED_NOTES[accountGate.blockedReason], {premiumProductName: getPremiumProductName()});
-	const purchaseBlockedNote =
-		accountBlockedNote ?? (paymentDisputeOpen ? i18n._(PAYMENT_DISPUTE_OPEN_DESCRIPTOR) : null);
+	const purchaseBlockedNote = resolvePurchaseBlockedNote(i18n, accountGate.blockedReason, paymentDisputeOpen);
 	const startCheckout = useCallback(
 		(plan: PurchasePlan, onDismiss?: () => void) => {
 			if (purchaseDisabled || loadingCheckout) return;
@@ -232,49 +180,6 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 		}
 		RouterUtils.transitionTo(Routes.ME);
 	}, []);
-	const handleCancelSubscriptionConfirmed = useCallback(() => {
-		ModalCommands.push(
-			modal(() => (
-				<ConfirmModal
-					title={<Trans>Cancel subscription?</Trans>}
-					description={
-						<Trans>
-							You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history.
-						</Trans>
-					}
-					primaryText={<Trans>Cancel subscription</Trans>}
-					primaryVariant="danger"
-					secondaryText={<Trans>Keep subscription</Trans>}
-					onPrimary={async () => {
-						await handleCancelSubscription();
-					}}
-					data-flx="premium.plutonium-page.cancel-subscription.confirm-modal"
-				/>
-			)),
-		);
-	}, [handleCancelSubscription]);
-	const handleEndPremiumGracePeriodConfirmed = useCallback(() => {
-		ModalCommands.push(
-			modal(() => (
-				<ConfirmModal
-					title={<Trans>End grace period now?</Trans>}
-					description={
-						<Trans>
-							You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be
-							undone.
-						</Trans>
-					}
-					primaryText={<Trans>End grace period</Trans>}
-					primaryVariant="danger"
-					secondaryText={<Trans>Keep grace period</Trans>}
-					onPrimary={async () => {
-						await handleEndPremiumGracePeriod();
-					}}
-					data-flx="premium.plutonium-page.end-grace-period.confirm-modal"
-				/>
-			)),
-		);
-	}, [handleEndPremiumGracePeriod]);
 	if (!currentUser) return null;
 	const pricesLoaded = monthlyPrice !== PLACEHOLDER_PRICE && yearlyPrice !== PLACEHOLDER_PRICE;
 	const [monthlyBefore, monthlyAfter] = splitTemplate(
@@ -504,7 +409,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 					<div className={clsx(styles.actions, styles.heroActions)} data-flx="premium.plutonium-page.hero.actions">
 						<PlutoniumPageButton
 							variant="primary"
-							onClick={() => scrollToId(MANAGE_ID)}
+							onClick={PlutoniumPageCommands.openSubscriptionSettings}
 							directional
 							data-flx="premium.plutonium-page.hero.manage"
 						>
@@ -596,108 +501,6 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 					</div>
 				</section>
 				<div className={styles.sections} data-flx="premium.plutonium-page.sections">
-					{isMember && (
-						<section
-							id={MANAGE_ID}
-							className={clsx(styles.board, styles.managePanel)}
-							aria-labelledby={`${MANAGE_ID}-heading`}
-							data-flx="premium.plutonium-page.manage"
-						>
-							<h2
-								id={`${MANAGE_ID}-heading`}
-								className={styles.manageHeading}
-								data-flx="premium.plutonium-page.plutonium-page.manage-heading"
-							>
-								{i18n._(MANAGE_HEADING_DESCRIPTOR)}
-							</h2>
-							<div className={styles.manageSurface} data-flx="premium.plutonium-page.manage.surface">
-								<SubscriptionCard
-									locale={locale}
-									isVisionary={subscriptionStatus.isVisionary}
-									perksDisabled={subscriptionStatus.perksDisabled}
-									isGiftSubscription={subscriptionStatus.isGiftSubscription}
-									isGiftGrace={subscriptionStatus.isGiftGrace}
-									canSubscribe={canSubscribe}
-									storeSubscription={subscriptionStatus.storeSubscription}
-									premiumUntil={subscriptionStatus.actualPremiumUntil}
-									renewsAt={subscriptionStatus.renewsAt}
-									billingCycle={subscriptionStatus.billingCycle}
-									monthlyPrice={monthlyPrice}
-									yearlyPrice={yearlyPrice}
-									monthlyAmountMinor={priceIds?.monthly_amount_minor ?? null}
-									yearlyAmountMinor={priceIds?.yearly_amount_minor ?? null}
-									priceCurrency={priceIds?.currency ?? null}
-									currentSubscriptionAmountMinor={currentSubscriptionPrice?.amount_minor ?? null}
-									currentSubscriptionCurrency={currentSubscriptionPrice?.currency ?? null}
-									currentSubscriptionPriceLabel={currentSubscriptionPriceLabel}
-									currentSubscriptionListPriceLabel={currentSubscriptionListPriceLabel}
-									isCurrentSubscriptionGrandfathered={isCurrentSubscriptionGrandfathered}
-									pendingSubscriptionChange={premiumState?.billing.pending_subscription_change ?? null}
-									gracePeriodInfo={subscriptionStatus.gracePeriodInfo}
-									premiumWillCancel={subscriptionStatus.premiumWillCancel}
-									hasEverPurchased={subscriptionStatus.hasEverPurchased}
-									shouldUseCancelQuickAction={subscriptionStatus.shouldUseCancelQuickAction}
-									shouldUseReactivateQuickAction={subscriptionStatus.shouldUseReactivateQuickAction}
-									shouldUseChangePlanQuickAction={subscriptionStatus.shouldUseChangePlanQuickAction}
-									loadingPortal={loadingPortal}
-									loadingCancel={loadingCancel}
-									loadingReactivate={loadingReactivate}
-									loadingEndGrace={loadingEndGrace}
-									loadingChangeBillingCycle={loadingChangeBillingCycle}
-									loadingCancelPendingChange={loadingCancelPendingChange}
-									loadingRejoinCommunity={loadingRejoinCommunity}
-									scrollToPerks={() => scrollToId(COMPARE_ID)}
-									navigateToRedeemGift={PlutoniumPageCommands.openGiftInventorySettings}
-									handleStartSubscription={() => scrollToId(SUBSCRIBE_ID, 'center')}
-									handleOpenCustomerPortal={handleOpenCustomerPortal}
-									handleReactivateSubscription={handleReactivateSubscription}
-									handleCancelSubscription={handleCancelSubscriptionConfirmed}
-									handleEndPremiumGracePeriod={handleEndPremiumGracePeriodConfirmed}
-									handleChangeSubscriptionBillingCycle={handleChangeSubscriptionBillingCycle}
-									handleCancelPendingSubscriptionChange={handleCancelPendingSubscriptionChange}
-									handleCommunityButtonClick={handleCommunityButtonClick}
-									purchaseDisabled={purchaseDisabled}
-									purchaseDisabledTooltip={purchaseBlockedNote ?? undefined}
-									billingUnavailable={billingUnavailable}
-									data-flx="premium.plutonium-page.manage.subscription-card"
-								/>
-								{purchasesAvailable && (
-									<PurchaseDisclaimer
-										align="center"
-										isPremium
-										data-flx="premium.plutonium-page.plutonium-page.purchase-disclaimer"
-									/>
-								)}
-								{subscriptionStatus.hasEverPurchased &&
-									!billingUnavailable &&
-									premiumState?.billing.stripe_customer_id != null && (
-										<PurchaseHistorySection
-											premiumState={premiumState}
-											loadingPortal={loadingPortal}
-											handleOpenCustomerPortal={handleOpenCustomerPortal}
-											data-flx="premium.plutonium-page.manage.purchase-history"
-										/>
-									)}
-								{subscriptionStatus.hasEverPurchased &&
-									!RuntimeConfig.isSelfHosted() &&
-									premiumState != null &&
-									premiumState.subscription_provider !== 'app_store' && (
-										<SelfServeRefundSection
-											eligibility={premiumState.billing.refund_eligibility ?? null}
-											refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
-											data-flx="premium.plutonium-page.manage.self-serve-refund"
-										/>
-									)}
-								<OperatorPassPurchasesSection data-flx="premium.plutonium-page.manage.operator-pass-purchases" />
-							</div>
-						</section>
-					)}
-					{!isMember && (
-						<OperatorPassPurchasesSection
-							className={clsx(styles.board, styles.managePanel)}
-							data-flx="premium.plutonium-page.operator-pass-purchases"
-						/>
-					)}
 					<PlutoniumPageShowcase
 						uploadSize={uploadSizes.premium}
 						freeUploadSize={uploadSizes.free}

@@ -7,7 +7,6 @@ import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/Pwned
 import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {HttpResponse, http} from 'msw';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
@@ -186,6 +185,44 @@ describe('StripeSubscriptionService', () => {
 		});
 	});
 	describe('POST /premium/change-subscription', () => {
+		test.each([
+			['pix', 'yearly', 'month', 'now'],
+			['pix', 'yearly', 'month', 'period_end'],
+			['upi', 'monthly', 'year', 'now'],
+		] as const)(
+			'refuses a %s subscription switching to %s (%s now, %s), because its mandate covers one cycle and amount',
+			async (type, target, interval, effectiveAt) => {
+				const account = await createTestAccount(harness);
+				stripeHandlers = createStripeApiHandlers({
+					paymentMethods: {pm_mandate: {type}},
+					subscriptions: {
+						sub_mandate: {
+							price_id: interval === 'month' ? MOCK_PRICES.monthlyUsd : MOCK_PRICES.yearlyUsd,
+							interval,
+							item_id: 'si_mandate',
+							default_payment_method: 'pm_mandate',
+						},
+					},
+				});
+				server.use(...stripeHandlers.handlers);
+				await createBuilder(harness, account.token)
+					.post(`/test/users/${account.userId}/premium`)
+					.body({
+						stripe_subscription_id: 'sub_mandate',
+						premium_type: 1,
+						premium_billing_cycle: interval === 'month' ? 'monthly' : 'yearly',
+						premium_will_cancel: false,
+					})
+					.execute();
+				await createBuilder(harness, account.token)
+					.post('/premium/change-subscription')
+					.body({billing_cycle: target, effective_at: effectiveAt})
+					.expect(400, 'STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE')
+					.execute();
+				expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
+				expect(stripeHandlers.spies.updatedSubscriptionSchedules).toHaveLength(0);
+			},
+		);
 		test('switches an active monthly subscription to yearly billing', async () => {
 			const account = await createTestAccount(harness);
 			await createBuilder(harness, account.token)
@@ -221,77 +258,44 @@ describe('StripeSubscriptionService', () => {
 			expect(me.premium_will_cancel).toBe(false);
 			expect(me.premium_until).not.toBeNull();
 		});
-		test('switches an active yearly subscription to monthly billing', async () => {
+		test('schedules a yearly subscription to switch to monthly at the end of the paid year, even when asked for now', async () => {
 			const account = await createTestAccount(harness);
+			const currentPeriodStart = Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60;
+			const currentPeriodEnd = currentPeriodStart + 365 * 24 * 60 * 60;
+			stripeHandlers = createStripeApiHandlers({
+				subscriptions: {
+					sub_test_yearly: {
+						price_id: MOCK_PRICES.yearlyUsd,
+						interval: 'year',
+						item_id: 'si_test_yearly',
+						current_period_start: currentPeriodStart,
+						current_period_end: currentPeriodEnd,
+					},
+				},
+			});
+			server.use(...stripeHandlers.handlers);
 			await createBuilder(harness, account.token)
 				.post(`/test/users/${account.userId}/premium`)
 				.body({
-					stripe_subscription_id: 'sub_test_1',
+					stripe_subscription_id: 'sub_test_yearly',
 					premium_type: 1,
 					premium_billing_cycle: 'yearly',
 					premium_will_cancel: false,
 				})
 				.execute();
-			server.use(
-				http.get('https://api.stripe.com/v1/subscriptions/:id', ({params}) => {
-					const currentPeriodEnd = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
-					return HttpResponse.json({
-						id: params.id,
-						object: 'subscription',
-						customer: 'cus_test_1',
-						status: 'active',
-						trial_end: null,
-						items: {
-							object: 'list',
-							data: [
-								{
-									id: 'si_test_yearly',
-									object: 'subscription_item',
-									price: {
-										id: MOCK_PRICES.yearlyUsd,
-										object: 'price',
-										unit_amount: 2500,
-										currency: 'usd',
-										recurring: {
-											interval: 'year',
-											interval_count: 1,
-										},
-										type: 'recurring',
-										active: true,
-										livemode: false,
-									},
-									quantity: 1,
-									current_period_end: currentPeriodEnd,
-								},
-							],
-							has_more: false,
-							url: `/v1/subscription_items?subscription=${params.id}`,
-						},
-						cancel_at: null,
-						cancel_at_period_end: false,
-						canceled_at: null,
-						collection_method: 'charge_automatically',
-						created: Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60,
-						livemode: false,
-						metadata: {},
-						start_date: Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60,
-					});
-				}),
-			);
 			await createBuilder(harness, account.token)
 				.post('/premium/change-subscription')
-				.body({billing_cycle: 'monthly'})
+				.body({billing_cycle: 'monthly', effective_at: 'now'})
 				.expect(204)
 				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(1);
-			const update = stripeHandlers.spies.updatedSubscriptions[0];
-			expect(update?.params.items).toEqual([{id: 'si_test_yearly', price: MOCK_PRICES.monthlyUsd, quantity: '1'}]);
-			const me = await createBuilder<{
-				premium_billing_cycle: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_billing_cycle).toBe('monthly');
+			expect(
+				stripeHandlers.spies.updatedSubscriptions.some(
+					(update) => update.params.proration_behavior === 'always_invoice',
+				),
+			).toBe(false);
+			const scheduleUpdate = stripeHandlers.spies.updatedSubscriptionSchedules.at(-1);
+			expect(scheduleUpdate?.params.phases?.[0]?.end_date).toBe(String(currentPeriodEnd));
+			expect(scheduleUpdate?.params.phases?.[1]?.items?.[0]?.price).toBe(MOCK_PRICES.monthlyUsd);
 		});
 		test('schedules a canceling monthly subscription to switch to yearly at period end without immediate invoice', async () => {
 			const account = await createTestAccount(harness);

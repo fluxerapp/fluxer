@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, listTestEmails, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {OperatorPassPurchaseRow} from '@app/api/database/types/OperatorPassTypes';
+import type {OperatorPassPurchaseRow, OperatorPassUnitRow} from '@app/api/database/types/OperatorPassTypes';
 import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getCacheService,
@@ -11,14 +11,13 @@ import {
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
-import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
 import {type BillingCancelSource, enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
 import {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import {
 	BILLING_EMAIL_PRICES,
 	billingEmailTestContext,
-	creditNote,
 	DAY_SECONDS,
 	type InvoiceOptions,
 	invoiceLine,
@@ -34,6 +33,8 @@ import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import type {StripeApiHandlers, StripeWebhookEventData} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
@@ -96,11 +97,12 @@ describe('Stripe Webhook - billing emails', () => {
 			expect(receipts).toHaveLength(1);
 			expect(receipts[0]!.metadata).toMatchObject({
 				plan: 'monthly',
-				invoice_number: 'NUM-in_cus_paid',
+				invoice_number: expect.stringMatching(/^PL-\d{6}$/),
 				total_minor: '499',
-				invoice_url: 'https://invoice.stripe.com/i/in_cus_paid',
 				renewal: '',
 			});
+			expect(receipts[0]!.metadata.document).toBe(receipts[0]!.metadata.invoice_number);
+			expect(stripe.spies.retrievedCharges).toContain('ch_pi_in_cus_paid');
 		});
 
 		test('adds the purchase terms and withdrawal deadline to the first receipt of an EU consumer', async () => {
@@ -118,8 +120,27 @@ describe('Stripe Webhook - billing emails', () => {
 			});
 			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
 			expect(receipt!.metadata).toMatchObject({renewal: 'month', consent_at: acceptedAt});
-			const withdrawalEndsAt = new Date(receipt!.metadata.withdrawal_ends_at!).getTime();
-			expect(withdrawalEndsAt - Date.now()).toBeGreaterThan(13 * DAY_MS);
+			const withdrawalEndsOn = new Date(`${receipt!.metadata.withdrawal_ends_on!}T23:59:59Z`).getTime();
+			expect(withdrawalEndsOn - Date.now()).toBeGreaterThan(13 * DAY_MS);
+		});
+
+		test('gives a Brazilian Pix subscriber the 7-day withdrawal deadline and no EU consent paragraph', async () => {
+			const account = await createBuyer('cus_brl');
+			await invoiceWebhook('invoice.paid', {
+				id: 'in_brl',
+				customerId: 'cus_brl',
+				billingReason: 'subscription_create',
+				subscriptionMetadata: {
+					eu_withdrawal_waiver_required: 'false',
+					withdrawal_country: 'BR',
+					payment_method: 'pix',
+				},
+			});
+			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
+			expect(receipt!.metadata).toMatchObject({renewal: 'month', consent_at: ''});
+			const withdrawalEndsOn = new Date(`${receipt!.metadata.withdrawal_ends_on!}T23:59:59Z`).getTime();
+			expect(withdrawalEndsOn - Date.now()).toBeGreaterThan(6 * DAY_MS);
+			expect(withdrawalEndsOn - Date.now()).toBeLessThan(9 * DAY_MS);
 		});
 
 		test('names the new plan on an immediate switch from monthly to yearly', async () => {
@@ -169,11 +190,11 @@ describe('Stripe Webhook - billing emails', () => {
 			expect(receipt!.metadata).toMatchObject({reverse_charge: 'true', tax_minor: ''});
 		});
 
-		test('attaches the invoice PDF', async () => {
+		test('attaches the Fluxer invoice PDF, not the Stripe one', async () => {
 			const account = await createSubscriber('cus_pdf');
 			await invoiceWebhook('invoice.paid', renewal('cus_pdf', {invoicePdf: true}));
 			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
-			expect(receipt!.metadata.invoice_pdf).toBe('Invoice-NUM-in_cus_pdf.pdf');
+			expect(receipt!.metadata.document_pdf).toBe(`Fluxer-${receipt!.metadata.document}.pdf`);
 		});
 
 		test('sends a gift receipt without a service period', async () => {
@@ -187,6 +208,56 @@ describe('Stripe Webhook - billing emails', () => {
 			});
 			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
 			expect(receipt!.metadata).toMatchObject({plan: 'gift_1_year', period_start: ''});
+		});
+
+		test('sends no gift receipt for a checkout that a promotion code made free', async () => {
+			const account = await createBuyer('cus_free_gift');
+			stripe.put.checkoutSession({
+				id: 'cs_free_gift',
+				mode: 'payment',
+				subscription: null,
+				invoice: null,
+				payment_intent: null,
+				payment_status: 'paid',
+				amount_total: 0,
+				metadata: {price_id: BILLING_EMAIL_PRICES.gift1YearUsd, user_id: account.userId},
+			});
+			await sendBillingEmail({kind: 'gift_paid', id: 'cs_free_gift'}, createTestWorkerHelpers());
+			expect(await emailsOfType(account.email, 'plutonium_payment_receipt')).toHaveLength(0);
+		});
+
+		test('sends the gift receipt when reconciliation completes a gift whose webhook never came', async () => {
+			const account = await createBuyer('cus_stuck_gift');
+			stripe.put.checkoutSession({
+				id: 'cs_stuck_gift',
+				mode: 'payment',
+				subscription: null,
+				invoice: null,
+				payment_intent: 'pi_stuck_gift',
+				payment_status: 'paid',
+				amount_total: 4999,
+				metadata: {price_id: BILLING_EMAIL_PRICES.gift1YearUsd, user_id: account.userId},
+			});
+			const paymentRepository = new PaymentRepository();
+			await paymentRepository.createPayment({
+				checkout_session_id: 'cs_stuck_gift',
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: BILLING_EMAIL_PRICES.gift1YearUsd,
+				product_type: ProductType.GIFT_1_YEAR,
+				status: 'pending',
+				is_gift: true,
+				created_at: new Date(Date.now() - 11 * 60 * 1000),
+			});
+			const dependencies = getWorkerDependencies();
+			Object.assign(dependencies, {paymentRepository});
+			try {
+				await reconcileUserPayments({userId: account.userId}, createTestWorkerHelpers());
+			} finally {
+				Reflect.deleteProperty(dependencies, 'paymentRepository');
+			}
+			expect((await paymentRepository.getPaymentByCheckoutSession('cs_stuck_gift'))?.status).toBe('completed');
+			const [receipt] = await emailsOfType(account.email, 'plutonium_payment_receipt');
+			expect(receipt!.metadata).toMatchObject({plan: 'gift_1_year'});
 		});
 
 		test('sends the receipt in the buyer locale', async () => {
@@ -651,14 +722,20 @@ describe('Stripe Webhook - billing emails', () => {
 			expect(receipt!.metadata.subscription_reference).toBe('sub_cus_refund');
 		});
 
-		test('waits until a pending refund succeeds', async () => {
+		test('retries a pending refund until it succeeds and sends one receipt', async () => {
 			const account = await refundedPlutoniumBuyer();
-			await refundWebhook(
-				'refund.created',
-				stripeRefund({id: 're_slow', paymentIntentId: 'pi_in_refunded', status: 'pending'}),
-			);
+			stripe.put.refund(stripeRefund({id: 're_slow', paymentIntentId: 'pi_in_refunded', status: 'pending'}));
+			const retries: Array<Record<string, unknown>> = [];
+			const addJob = vi.fn(async (_task: string, payload: Record<string, unknown>) => {
+				retries.push(payload);
+				return 1n;
+			});
+			await sendBillingEmail({kind: 'refund', id: 're_slow'}, createTestWorkerHelpers({addJob}));
+			expect(retries).toEqual([{kind: 'refund', id: 're_slow', retry: 1}]);
 			expect(await emailsOfType(account.email, 'plutonium_refund_receipt')).toHaveLength(0);
-			await refundWebhook('refund.updated', stripeRefund({id: 're_slow', paymentIntentId: 'pi_in_refunded'}));
+			stripe.put.refund(stripeRefund({id: 're_slow', paymentIntentId: 'pi_in_refunded'}));
+			await sendBillingEmail(retries[0]!, createTestWorkerHelpers({addJob}));
+			expect(retries).toHaveLength(1);
 			expect(await emailsOfType(account.email, 'plutonium_refund_receipt')).toHaveLength(1);
 		});
 
@@ -703,6 +780,31 @@ describe('Stripe Webhook - billing emails', () => {
 			expect(receipt!.metadata).toMatchObject({interval: 'month', total_minor: '1000', locale: 'sv-SE'});
 		});
 
+		test('voids an open invoice when the donor cancels, so nothing more is charged', async () => {
+			stripe.put.subscription('sub_cus_donor_cancel', {
+				...plutoniumSubscription('cus_donor_cancel', {cancel_at_period_end: true}),
+				metadata: donationSubscription,
+			});
+			const invoice = stripeInvoice({
+				id: 'in_donation_unpaid',
+				customerId: 'cus_donor_cancel',
+				subscriptionId: 'sub_cus_donor_cancel',
+				status: 'open',
+				subscriptionMetadata: donationSubscription,
+				lines: [invoiceLine('price_donation_custom', {amount: 1000})],
+				total: 1000,
+			});
+			stripe.put.invoice(invoice);
+			await webhook(
+				subscriptionUpdated(await retrieveSubscription('sub_cus_donor_cancel'), {cancel_at_period_end: false}),
+			);
+			await sendStripeWebhook(harness, objectEvent('invoice.voided', {...invoice, status: 'void'}));
+			const voided = await getWorkerDependencies().stripe!.invoices.retrieve('in_donation_unpaid');
+			expect(voided.status).toBe('void');
+			expect(await emailsOfType(DONOR, 'donation_cancellation_confirmation')).toHaveLength(1);
+			expect(await emailsOfType(DONOR, 'donation_receipt')).toHaveLength(0);
+		});
+
 		test('tells the donor when a renewal payment fails', async () => {
 			await invoiceWebhook('invoice.payment_failed', {
 				id: 'in_donation_failed',
@@ -733,8 +835,16 @@ describe('Stripe Webhook - billing emails', () => {
 	});
 
 	describe('Operator Pass', () => {
-		async function operatorPassBuyer() {
+		async function operatorPassBuyer(patch: Partial<OperatorPassPurchaseRow> = {}) {
 			const account = await createTestAccount(harness);
+			stripe.put.checkoutSession({
+				id: 'cs_op',
+				mode: 'payment',
+				subscription: null,
+				invoice: null,
+				payment_intent: 'pi_op',
+				metadata: {operator_pass: 'true'},
+			});
 			await new OperatorPassRepository().createPurchase({
 				checkout_session_id: 'cs_op',
 				purchaser_id: createUserID(BigInt(account.userId)),
@@ -746,8 +856,60 @@ describe('Stripe Webhook - billing emails', () => {
 				payment_intent_id: 'pi_op',
 				created_at: new Date(),
 				version: 1,
+				...patch,
 			} as OperatorPassPurchaseRow);
 			return account;
+		}
+
+		async function deliveredTwoPassBuyer(secondHolder?: string) {
+			const deliveredAt = new Date(Date.now() - DAY_MS);
+			const account = await operatorPassBuyer({
+				quantity: 2,
+				amount_minor: 20000,
+				invoice_id: 'in_op',
+				invoice_number: 'OP-1',
+				delivered_at: deliveredAt,
+			});
+			const repository = new OperatorPassRepository();
+			for (const index of [1, 2]) {
+				await repository.createUnit({
+					pass_id: `cs_op:${index}`,
+					purchase_id: 'cs_op',
+					buyer_id: createUserID(BigInt(account.userId)),
+					holder_id: createUserID(BigInt(index === 2 && secondHolder ? secondHolder : account.userId)),
+					source: 'purchase',
+					status: 'held',
+					transferable: false,
+					delivered_at: deliveredAt,
+					first_delivered_at: deliveredAt,
+					paused_at: null,
+					ended_at: null,
+					end_reason: null,
+					withdrawal_country: null,
+					withdrawal_days: null,
+					version: 1,
+				});
+			}
+			stripe.put.paymentIntent({id: 'pi_op', object: 'payment_intent', status: 'succeeded', latest_charge: 'ch_pi_op'});
+			return {account, repository};
+		}
+
+		function refundCharge(amountRefunded: number) {
+			stripe.put.charge({
+				id: 'ch_pi_op',
+				object: 'charge',
+				amount: 20000,
+				amount_refunded: amountRefunded,
+				refunded: amountRefunded >= 20000,
+				currency: 'usd',
+				payment_intent: 'pi_op',
+			});
+		}
+
+		async function heldUnits(repository: OperatorPassRepository) {
+			return (await repository.listUnitsByPurchase('cs_op')).filter(
+				(unit: OperatorPassUnitRow) => unit.status === 'held',
+			);
 		}
 
 		test('emails the buyer once about a refund made in the Stripe dashboard', async () => {
@@ -759,21 +921,152 @@ describe('Stripe Webhook - billing emails', () => {
 			expect(receipts.map((receipt) => receipt.metadata.amount_minor)).toEqual(['19900']);
 		});
 
-		test('leaves refunds from a withdrawal to the withdrawal receipt', async () => {
-			const account = await operatorPassBuyer();
+		test('ends the pass a dashboard refund pays back before the refund receipt is written', async () => {
+			const {account, repository} = await deliveredTwoPassBuyer();
+			refundCharge(10000);
+			await refundWebhook('refund.created', stripeRefund({id: 're_op_one', paymentIntentId: 'pi_op', amount: 10000}));
+			expect(await heldUnits(repository)).toHaveLength(1);
+			const [receipt] = await emailsOfType(account.email, 'operator_pass_refund_receipt');
+			expect(receipt!.metadata).toMatchObject({
+				delivered: 'true',
+				pass_count: '1',
+				last_pass: 'false',
+			});
+		});
+
+		test('counts only the pass the second of two one-pass refunds ended', async () => {
+			const {account, repository} = await deliveredTwoPassBuyer();
+			refundCharge(10000);
+			await refundWebhook('refund.created', stripeRefund({id: 're_op_one', paymentIntentId: 'pi_op', amount: 10000}));
+			refundCharge(20000);
+			await refundWebhook('refund.created', stripeRefund({id: 're_op_two', paymentIntentId: 'pi_op', amount: 10000}));
+			expect(await heldUnits(repository)).toHaveLength(0);
+			const receipts = await emailsOfType(account.email, 'operator_pass_refund_receipt');
+			expect(receipts.map(({metadata}) => [metadata.pass_count, metadata.last_pass])).toEqual(
+				expect.arrayContaining([
+					['1', 'false'],
+					['1', 'true'],
+				]),
+			);
+		});
+
+		test('tells a buyer whose last own pass a refund ended that it was their last, even when a pass they gave away stays', async () => {
+			const transferee = await createTestAccount(harness);
+			const {account, repository} = await deliveredTwoPassBuyer(transferee.userId);
+			refundCharge(10000);
+			await refundWebhook('refund.created', stripeRefund({id: 're_op_one', paymentIntentId: 'pi_op', amount: 10000}));
+			expect((await heldUnits(repository)).map((unit) => String(unit.holder_id))).toEqual([transferee.userId]);
+			const [receipt] = await emailsOfType(account.email, 'operator_pass_refund_receipt');
+			expect(receipt!.metadata).toMatchObject({delivered: 'true', pass_count: '1', last_pass: 'true'});
+		});
+
+		test('says a refund smaller than one pass ended no pass', async () => {
+			const {account, repository} = await deliveredTwoPassBuyer();
+			refundCharge(500);
+			await refundWebhook('refund.created', stripeRefund({id: 're_op_small', paymentIntentId: 'pi_op', amount: 500}));
+			expect(await heldUnits(repository)).toHaveLength(2);
+			const [receipt] = await emailsOfType(account.email, 'operator_pass_refund_receipt');
+			expect(receipt!.metadata).toMatchObject({delivered: 'true', pass_count: '0'});
+		});
+
+		test('leaves the refund of a recorded withdrawal to the withdrawal receipt', async () => {
+			const account = await operatorPassBuyer({withdrawal_refund_id: 're_op_withdrawal'});
 			await refundWebhook(
 				'refund.created',
 				stripeRefund({
 					id: 're_op_withdrawal',
 					paymentIntentId: 'pi_op',
 					amount: 19900,
-					metadata: {checkout_session_id: 'cs_op', rejection_reason: 'operator_pass_withdrawal:cs_op'},
+					metadata: {
+						checkout_session_id: 'cs_op',
+						rejection_reason: 'operator_pass_withdrawal:all:2026-10-01T00:00:00.000Z',
+					},
 				}),
 			);
 			expect(await emailsOfType(account.email, 'operator_pass_refund_receipt')).toHaveLength(0);
 		});
 
-		test('sends the buyer the invoice of a purchase', async () => {
+		test.each([
+			[
+				'no refund receipt once a refusal with its own email is recorded',
+				'duplicate_refunded',
+				'operator_pass_names_missing',
+				0,
+			],
+			[
+				'no refund receipt while fulfilment still has to send the refusal email',
+				'pending',
+				'operator_pass_names_missing',
+				0,
+			],
+			['a refund receipt when the refusal has no email of its own', 'pending', 'operator_pass_removed', 1],
+		] as const)('sends %s', async (_case, status, reason, receipts) => {
+			const account = await operatorPassBuyer({status});
+			await refundWebhook(
+				'refund.created',
+				stripeRefund({
+					id: 're_op_refused',
+					paymentIntentId: 'pi_op',
+					amount: 19900,
+					metadata: {checkout_session_id: 'cs_op', rejection_reason: reason},
+				}),
+			);
+			expect(await emailsOfType(account.email, 'operator_pass_refund_receipt')).toHaveLength(receipts);
+		});
+
+		test('leaves the retry of a failed withdrawal refund to the withdrawal receipt', async () => {
+			const account = await operatorPassBuyer({withdrawn_at: new Date(), withdrawal_refund_id: 're_failed'});
+			await new OperatorPassRepository().createUnit({
+				pass_id: 'cs_op:1',
+				purchase_id: 'cs_op',
+				buyer_id: createUserID(BigInt(account.userId)),
+				holder_id: createUserID(BigInt(account.userId)),
+				source: 'purchase',
+				status: 'withdrawn',
+				transferable: false,
+				delivered_at: new Date(),
+				first_delivered_at: new Date(),
+				paused_at: null,
+				ended_at: new Date(),
+				end_reason: 'withdrawal',
+				withdrawal_country: null,
+				withdrawal_days: null,
+				version: 1,
+			});
+			for (const scope of ['all:2026-10-01T00:00:00.000Z', 'cs_op:1']) {
+				const retry = stripeRefund({
+					id: `re_retry_${scope.split(':')[0]}`,
+					paymentIntentId: 'pi_op',
+					amount: 19900,
+					metadata: {
+						checkout_session_id: 'cs_op',
+						rejection_reason: `operator_pass_withdrawal:${scope}`,
+						retry_of: scope === 'all:2026-10-01T00:00:00.000Z' ? 're_failed' : 're_failed_unit',
+					},
+				});
+				await refundWebhook('refund.created', retry);
+				await refundWebhook('refund.updated', retry);
+			}
+			expect(await emailsOfType(account.email, 'operator_pass_refund_receipt')).toHaveLength(0);
+		});
+
+		test('sends a refund receipt for a withdrawal refund whose withdrawal was never recorded', async () => {
+			const account = await operatorPassBuyer();
+			for (const scope of ['all:2026-10-01T00:00:00.000Z', 'cs_op:1']) {
+				await refundWebhook(
+					'refund.created',
+					stripeRefund({
+						id: `re_op_unrecorded_${scope.split(':')[0]}`,
+						paymentIntentId: 'pi_op',
+						amount: 19900,
+						metadata: {checkout_session_id: 'cs_op', rejection_reason: `operator_pass_withdrawal:${scope}`},
+					}),
+				);
+			}
+			expect(await emailsOfType(account.email, 'operator_pass_refund_receipt')).toHaveLength(2);
+		});
+
+		test('sends no email for a paid Operator Pass invoice, since the purchase confirmation has it', async () => {
 			const account = await createTestAccount(harness);
 			await invoiceWebhook('invoice.paid', {
 				id: 'in_op',
@@ -783,11 +1076,8 @@ describe('Stripe Webhook - billing emails', () => {
 				metadata: {operator_pass: 'true', operator_pass_purchaser_id: account.userId},
 				lines: [invoiceLine('price_operator_pass_inline', {amount: 19900})],
 			});
-			const [invoice] = await emailsOfType(account.email, 'operator_pass_invoice');
-			expect(invoice!.metadata).toMatchObject({
-				invoice_url: 'https://invoice.stripe.com/i/in_op',
-				total_minor: '19900',
-			});
+			const emails = await listTestEmails(harness, {recipient: account.email});
+			expect(emails.filter((email) => email.type.startsWith('operator_pass'))).toEqual([]);
 		});
 	});
 
@@ -895,37 +1185,6 @@ describe('Stripe Webhook - billing emails', () => {
 			await reverseGift(code);
 			const [notice] = await emailsOfType(account.email, 'plutonium_renewal_notice');
 			expect(notice!.metadata.variant).toBe('gift');
-		});
-	});
-
-	describe('credit notes', () => {
-		async function creditNoteWebhook(customerId: string, balanceAmount: number | null, patch: SubscriptionPatch = {}) {
-			const account = await createSubscriber(customerId);
-			stripe.put.subscription(`sub_${customerId}`, plutoniumSubscription(customerId, patch));
-			stripe.put.invoice(stripeInvoice(renewal(customerId)));
-			const note = creditNote({id: `cn_${customerId}`, invoiceId: `in_${customerId}`, balanceAmount});
-			stripe.put.creditNote(note);
-			await webhook(objectEvent('credit_note.created', note));
-			return emailsOfType(account.email, 'billing_credit_note');
-		}
-
-		test('tells the customer about credit added to their account', async () => {
-			const [email] = await creditNoteWebhook('cus_credit_note', 250);
-			expect(email!.metadata).toMatchObject({amount_minor: '250', invoice_number: 'NUM-in_cus_credit_note'});
-		});
-
-		test('says the credit comes off the next invoice of an active subscription', async () => {
-			const [email] = await creditNoteWebhook('cus_credit_active', 250);
-			expect(email!.metadata.upcoming_invoice).toBe('true');
-		});
-
-		test('offers a refund of the credit when the subscription has ended', async () => {
-			const [email] = await creditNoteWebhook('cus_credit_ended', 250, {status: 'canceled'});
-			expect(email!.metadata.upcoming_invoice).toBe('false');
-		});
-
-		test('sends nothing for a credit note paid out as a refund', async () => {
-			expect(await creditNoteWebhook('cus_refund_note', null)).toHaveLength(0);
 		});
 	});
 

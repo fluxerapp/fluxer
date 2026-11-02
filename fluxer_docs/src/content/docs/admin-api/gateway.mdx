@@ -28,7 +28,7 @@ A snapshot of the whole cluster. Each count and each `memory` value is a sum ove
 | process_count | integer | The number of Erlang processes running |
 | process_limit | integer | The maximum number of Erlang processes |
 | uptime_seconds | integer | The lowest uptime any polled node reported, in seconds |
-| node_count | integer | The number of nodes polled, including nodes that did not answer |
+| node_count | integer | The number of nodes polled, including nodes that did not respond |
 | nodes | array[[gateway node](#gateway-node-object) object] | The per-node breakdown (max 1000 entries) |
 
 <sup>1</sup> `healthy` when every polled node reported `healthy`, otherwise `degraded`.
@@ -78,7 +78,7 @@ A snapshot of the whole cluster. Each count and each `memory` value is a sum ove
 
 ## Gateway node object
 
-One node's statistics. A node that does not answer within 10 seconds is listed with status `unavailable`.
+One node's statistics. A node that does not respond within 10 seconds is listed with status `unavailable`.
 
 ### Structure
 
@@ -97,7 +97,7 @@ One node's statistics. A node that does not answer within 10 seconds is listed w
 | process_count | ?integer | The number of Erlang processes running |
 | process_limit | ?integer | The maximum number of Erlang processes |
 | uptime_seconds | ?integer | The seconds since this node started |
-| cluster_metrics? | [gateway cluster metrics](#gateway-cluster-metrics-object) object | How this node sees the cluster, absent when the node did not answer |
+| cluster_metrics? | [gateway cluster metrics](#gateway-cluster-metrics-object) object | How this node sees the cluster, absent when the node did not respond |
 
 <sup>1</sup> `healthy` or `unavailable`. An `unavailable` node has no `cluster_metrics`, and its counts and `memory` values are null.
 
@@ -134,7 +134,7 @@ The cluster as one node sees it. Each `_total` count starts at zero when the nod
 
 ## Node memory object
 
-Byte counts for one node, or summed over all polled nodes. Each count is a decimal string, or null for a node that did not answer.
+Byte counts for one node, or summed over all polled nodes. Each count is a decimal string, or null for a node that did not respond.
 
 ### Structure
 
@@ -222,7 +222,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" auditReason />
 
-Returns the live guild processes that use the most memory, largest first. Needs `gateway:memory_stats`. A node that does not answer within 5 seconds adds no entries.
+Returns the live guild processes that use the most memory, largest first. Needs `gateway:memory_stats`. A node that does not respond within 5 seconds adds no entries.
 
 ### Query parameters
 
@@ -250,7 +250,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/gateway/voice-state-counts" auditReason />
 
-Returns the [voice state count](#voice-state-count-object) object for every voice state in guild channels and calls. Needs `gateway:memory_stats`. A node that does not answer within 10 seconds counts as zero.
+Returns the [voice state count](#voice-state-count-object) object for every voice state in guild channels and calls. Needs `gateway:memory_stats`. A node that does not respond within 10 seconds counts as zero.
 
 ### Response
 
@@ -282,7 +282,7 @@ Reloads each given guild's live process from the database. Needs `gateway:reload
 | --- | --- | --- |
 | count<sup>1</sup> | integer | The number of live guild processes selected for reload |
 
-<sup>1</sup> Guilds with no live process are skipped and not counted. An owner node that fails or does not answer within 15 seconds adds 0, even though its reloads can still be running.
+<sup>1</sup> Guilds with no live process are skipped and not counted. An owner node that fails or does not respond within 15 seconds adds 0, even though its reloads can still be running.
 
 ### Response
 

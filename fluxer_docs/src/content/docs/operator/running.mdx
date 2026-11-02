@@ -97,7 +97,7 @@ Then change your domain's `A` record to the new machine's address.
 
 ## Run more than one instance on a host
 
-You can run more than one instance on the same machine. Each one needs three things of its own: a project name with `--project`, an instance directory with `--dir`, and an edge binding that doesn't clash with the others. Run the extra instances behind your own reverse proxy with `--behind-proxy` and a distinct `--bind`.
+You can run more than one instance on the same machine. Each one needs its own project name with `--project`, its own instance directory with `--dir` and an edge binding that doesn't clash with the others. Run the extra instances behind your own reverse proxy with `--behind-proxy` and a distinct `--bind`.
 
 ```sh
 rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bind 127.0.0.1:8081
@@ -175,7 +175,7 @@ rexctl config set <key> <value>
 
 The list includes the `FLUXER_*` environment variables Fluxer reads, and you set them the same way. If a variable has a shorter name, such as `sso.allow_private_addresses` for `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`, rexctl tells you to use that one. rexctl writes the change and restarts whatever needs it, and you never edit `.env` yourself.
 
-Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, and a resized machine needs no changes. The `memory.profile` setting pins a fixed size instead.
+Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, and a resized machine needs no changes. The `memory.profile` setting pins a fixed size.
 
 On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service. rexctl then removes the separate worker service and adds half of its memory limit to the api.
 

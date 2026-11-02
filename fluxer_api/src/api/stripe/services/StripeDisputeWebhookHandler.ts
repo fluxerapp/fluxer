@@ -2,6 +2,7 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import {getWithdrawalPeriodEndsAt} from '@app/api/billing/WithdrawalPeriod';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {BillingChargeRow} from '@app/api/database/types/BillingTypes';
 import type {OperatorPassPurchaseRow} from '@app/api/database/types/OperatorPassTypes';
@@ -18,6 +19,7 @@ import type {OperatorPassFulfilmentService} from '@app/api/operator_pass/Operato
 import {followOperatorPassWallStanding} from '@app/api/operator_pass/OperatorPassWallStanding';
 import {
 	type PaymentDisputeEnforcementService,
+	shouldBarAfterOperatorPassDispute,
 	shouldCloseAfterPaymentDispute,
 } from '@app/api/payment_disputes/PaymentDisputeEnforcement';
 import {
@@ -41,6 +43,15 @@ import type Stripe from 'stripe';
 type PlutoniumDisputeTarget =
 	| {kind: 'gift'; purchaserId: UserID; giftCode: GiftCode; payment: Payment | null}
 	| {kind: 'purchase'; purchaserId: UserID; payment: Payment | null};
+
+async function hasWithdrawalRefund(paymentIntentId: string): Promise<boolean> {
+	return (await getBillingRepository().refunds.listByPaymentIntent(paymentIntentId)).some(
+		(refund) =>
+			refund.metadata?.get('refund_kind') === 'withdrawal' &&
+			refund.status !== 'failed' &&
+			refund.status !== 'canceled',
+	);
+}
 
 export class StripeDisputeWebhookHandler {
 	constructor(
@@ -138,6 +149,10 @@ export class StripeDisputeWebhookHandler {
 	}
 
 	private async enforceAfterClose(review: PaymentDisputeReviewRow): Promise<void> {
+		if (shouldBarAfterOperatorPassDispute(review)) {
+			await this.disputeEnforcement.barOperatorPass(review);
+			return;
+		}
 		if (!shouldCloseAfterPaymentDispute(review)) {
 			return;
 		}
@@ -159,10 +174,10 @@ export class StripeDisputeWebhookHandler {
 		purchase: OperatorPassPurchaseRow,
 		dispute: Stripe.Dispute,
 	): Promise<PaymentDisputeSubject> {
-		const holderRemovals = this.operatorPassFulfilment
-			? await this.operatorPassFulfilment.repository.listRemovalHistory(purchase.purchaser_id)
-			: [];
-		return getOperatorPassDisputeSubject(purchase, dispute, holderRemovals);
+		const repository = this.operatorPassFulfilment?.repository;
+		const holderRemovals = repository ? await repository.listRemovalHistory(purchase.purchaser_id) : [];
+		const units = repository ? await repository.listUnitsByPurchase(purchase.checkout_session_id) : [];
+		return getOperatorPassDisputeSubject(purchase, dispute, holderRemovals, units);
 	}
 
 	private async resolvePlutoniumTarget(
@@ -201,7 +216,15 @@ export class StripeDisputeWebhookHandler {
 	private async findPlutoniumInvoiceNumber(
 		invoiceId: string | null,
 		charge: BillingChargeRow | null,
+		paymentIntentId: string,
 	): Promise<string | null> {
+		const documents = new BillingDocumentRepository();
+		const document =
+			(await documents.findDocumentBySource(`pi:${paymentIntentId}`)) ??
+			(invoiceId ? await documents.findDocumentBySource(`in:${invoiceId}`) : null);
+		if (document) {
+			return document.display_number;
+		}
 		const invoice = invoiceId ? await getBillingRepository().invoices.findById(invoiceId) : null;
 		return invoice?.number ?? charge?.receipt_number ?? null;
 	}
@@ -227,7 +250,11 @@ export class StripeDisputeWebhookHandler {
 				(target.kind === 'gift' ? target.giftCode.checkoutSessionId : null) ??
 				payment?.invoiceId ??
 				paymentIntentId,
-			invoiceNumber: await this.findPlutoniumInvoiceNumber(charge?.invoice_id ?? payment?.invoiceId ?? null, charge),
+			invoiceNumber: await this.findPlutoniumInvoiceNumber(
+				charge?.invoice_id ?? payment?.invoiceId ?? null,
+				charge,
+				paymentIntentId,
+			),
 			purchaserId: target.purchaserId,
 			isGift: target.kind === 'gift' || payment?.isGift === true,
 			paymentIntentId,
@@ -374,9 +401,19 @@ export class StripeDisputeWebhookHandler {
 			Logger.error({chargeId: charge.id}, 'Refund missing payment intent');
 			throw new StripeError('Refund missing payment intent');
 		}
-		const operatorPassPurchase = await this.findOperatorPassPurchase(paymentIntentId);
+		const operatorPassPurchase = await this.operatorPassFulfilment?.findRefundedPurchase(
+			paymentIntentId,
+			charge.metadata?.operator_pass === 'true',
+		);
 		if (operatorPassPurchase && this.operatorPassFulfilment) {
 			await this.operatorPassFulfilment.handleChargeRefunded(operatorPassPurchase, charge);
+			return;
+		}
+		if (!charge.refunded && !(await hasWithdrawalRefund(paymentIntentId))) {
+			Logger.info(
+				{chargeId: charge.id, paymentIntentId, amountRefunded: charge.amount_refunded, amount: charge.amount},
+				'Partial refund leaves the purchase in place',
+			);
 			return;
 		}
 		const giftCode = await this.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);

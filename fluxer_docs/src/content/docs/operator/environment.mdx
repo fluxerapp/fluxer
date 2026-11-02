@@ -322,7 +322,7 @@ These go in the settings file of a voice server from the voice folder of the com
 
 ### `FLUXER_VOICE_ID`
 
-The ID of the voice server, such as `fra-server-2`. Use lowercase letters, digits and dashes. The container answers as `voice-` followed by this ID on the voice network, and the edge routes `/livekit-` followed by this ID to it.
+The ID of the voice server, such as `fra-server-2`. Use lowercase letters, digits and dashes. The container uses `voice-` followed by this ID as its host name on the voice network, and the edge routes `/livekit-` followed by this ID to it.
 
 ### `FLUXER_VOICE_API_KEY`
 
@@ -390,7 +390,7 @@ These go in `edge.env` next to `voice-edge.compose.yml` in the voice folder of t
 
 ### `FLUXER_VOICE_EDGE_IP`
 
-The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then answers clients that send no server name with the certificate for that address, which browsers need.
+The public IPv4 address of the voice machine, when an endpoint uses that address and not a hostname. The edge then gives clients that send no server name the certificate for that address, which browsers need.
 
 ### `FLUXER_VOICE_NETWORK_IPV6`
 
@@ -1026,7 +1026,7 @@ Whether the gateway asks the push service to clear a channel's push notification
 
 ### `FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`
 
-How long the gateway waits for the push service to answer one push request, in milliseconds. When it's empty, the gateway uses `100000`. With rexctl, use `rexctl config set FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`.
+How long the gateway waits for the push service to respond to one push request, in milliseconds. When it's empty, the gateway uses `100000`. With rexctl, use `rexctl config set FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`.
 
 ### `FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES`
 
@@ -1150,7 +1150,7 @@ How long a client may take over a whole request to the API, in milliseconds from
 
 ### `FLUXER_API_MAX_INFLIGHT_REQUESTS`
 
-How many requests the API handles at once before it answers new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`. With rexctl, use `rexctl config set FLUXER_API_MAX_INFLIGHT_REQUESTS`.
+How many requests the API handles at once before it responds to new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`. With rexctl, use `rexctl config set FLUXER_API_MAX_INFLIGHT_REQUESTS`.
 
 ### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
@@ -1263,6 +1263,14 @@ How many days the daily retention job keeps a resolved report, from 1 to 36500. 
 ### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
 Whether the report retention job only counts what it would delete and changes nothing. Use `true` or `false`. When it's empty, the worker uses `false`. With rexctl, use `rexctl config set FLUXER_REPORT_RETENTION_DRY_RUN`.
+
+### `FLUXER_AGE_POLICY_ENABLED`
+
+Whether the apps need an age check before they show mature content to people in the regions in `FLUXER_AGE_POLICY_RESTRICTED_REGIONS`. Use `true` or `false`. When it's empty, the age check is on only when `FLUXER_AGE_POLICY_RESTRICTED_REGIONS` is set. With rexctl, use `rexctl config set FLUXER_AGE_POLICY_ENABLED`.
+
+### `FLUXER_AGE_POLICY_RESTRICTED_REGIONS`
+
+The regions where the apps need an age check before they show mature content, separated by commas. Use a country code such as `GB` or a country and region code such as `US-MS`. When it's empty and `FLUXER_AGE_POLICY_ENABLED` is `true`, Fluxer uses `GB` and `BR`. With rexctl, use `rexctl config set FLUXER_AGE_POLICY_RESTRICTED_REGIONS`.
 
 ## Billing
 
@@ -1891,7 +1899,7 @@ The join token for `rexctl voice join` when the command line doesn't have one. O
 
 ### `REXCTL_RELEASE_URL`
 
-The URL of the release index that rexctl and its install scripts download releases from. When it's empty, they use `https://fluxer.dev/rexctl/release.json`. Another server must answer the same queries as that address, including `version` and `format=sh`.
+The URL of the release index that rexctl and its install scripts download releases from. When it's empty, they use `https://fluxer.dev/rexctl/release.json`. Another server must respond to the same queries as that address, including `version` and `format=sh`.
 
 ### `REXCTL_IMAGE_SET`
 
@@ -1915,11 +1923,11 @@ Set it to any value to make rexctl ask questions as plain text prompts and print
 
 ### `DOCKER_HOST`
 
-The engine address rexctl tries first, such as `unix:///run/user/1000/podman/podman.sock`. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't answer. When it's empty, rexctl uses the current Docker context and then looks for a Docker or Podman socket.
+The engine address rexctl tries first, such as `unix:///run/user/1000/podman/podman.sock`. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't respond. When it's empty, rexctl uses the current Docker context and then looks for a Docker or Podman socket.
 
 ### `DOCKER_CONTEXT`
 
-The Docker context rexctl tries first when `DOCKER_HOST` is empty. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't answer. When it's empty, rexctl uses the current context of the Docker CLI.
+The Docker context rexctl tries first when `DOCKER_HOST` is empty. rexctl reads it for install, takeover and restore, and when the engine an instance uses doesn't respond. When it's empty, rexctl uses the current context of the Docker CLI.
 
 ### `DOCKER_CONFIG`
 
@@ -2163,7 +2171,7 @@ The URL the gateway sends API RPC requests to. When it's empty, the gateway uses
 
 ### `FLUXER_GATEWAY_NATS_RPC_ENABLED`
 
-Whether the gateway answers RPC requests over NATS. The gateway answers the API only over NATS RPC and must keep it turned on.
+Whether the gateway responds to RPC requests over NATS. The gateway responds to the API only over NATS RPC and must keep it turned on.
 
 ### `FLUXER_GIF_SERVICE_SUBJECT`
 
@@ -2389,6 +2397,14 @@ The community Operator Pass holders join.
 
 The role Operator Pass holders get in that community.
 
+#### `FLUXER_LABS_VISIONARY_ROLE_ID`
+
+The role Visionary holders get in that community.
+
+#### `FLUXER_LABS_OPERATORS_CHANNEL_ID`
+
+The channel in that community where Fluxer greets new Operator Pass holders.
+
 #### `FLUXER_OPERATOR_PASS_GRACE_MINUTES`
 
 The grace period of the Operator Pass sale, in minutes.
@@ -2396,6 +2412,10 @@ The grace period of the Operator Pass sale, in minutes.
 #### `FLUXER_OPERATOR_PASS_MAX_QUANTITY`
 
 The largest Operator Pass quantity in one purchase.
+
+#### `FLUXER_OPERATOR_PASS_PREVIEW_IPS`
+
+IP addresses and CIDR ranges, separated by commas, that see the Operator Pass sale open before it opens and buy at no cost, in addition to the list in the admin panel.
 
 #### `FLUXER_OPERATOR_PASS_PRICE_BRL_ENABLED`
 
@@ -2472,10 +2492,6 @@ The standard Operator Pass price in TRY.
 #### `FLUXER_OPERATOR_PASS_STANDARD_PRICE_USD`
 
 The standard Operator Pass price in USD.
-
-#### `FLUXER_OPERATOR_PASS_STOPPED_COUNTRIES`
-
-Countries where Operator Pass sales are stopped.
 
 #### `FLUXER_OPERATOR_PASS_TRANSFER_LOCK_HOURS`
 

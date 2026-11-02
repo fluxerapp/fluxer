@@ -3,7 +3,6 @@
 import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {AGE_RESTRICTED_GEOS} from '@fluxer/instance_bootstrap/src/AgeGeos';
 import type {GeoEntry, GeolocationResponse, InstanceAgePolicy} from '@fluxer/instance_bootstrap/src/Types';
 import {compareStructural, makeAutoObservable, reaction, runInAction} from 'mobx';
 
@@ -30,15 +29,9 @@ interface ActiveRuntimeContext {
 }
 
 function ageTablesFor(policy: InstanceAgePolicy | null): AgeTables {
-	if (policy == null) {
-		return {restricted: AGE_RESTRICTED_GEOS};
-	}
 	const restricted: Array<GeoEntry> = [];
-	for (const geo of policy.geos) {
-		const entry: GeoEntry = {countryCode: geo.country_code, regionCode: geo.region_code};
-		if (geo.action !== 'block') {
-			restricted.push(entry);
-		}
+	for (const geo of policy?.geos ?? []) {
+		restricted.push({countryCode: geo.country_code, regionCode: geo.region_code});
 	}
 	return {restricted};
 }
@@ -81,7 +74,7 @@ class GeoIP {
 	regionCode: string | null = null;
 	latitude: string | null = null;
 	longitude: string | null = null;
-	ageRestrictedGeos: ReadonlyArray<GeoEntry> = AGE_RESTRICTED_GEOS;
+	ageRestrictedGeos: ReadonlyArray<GeoEntry> = [];
 	resolution: GeoIPResolution = 'pending';
 	private generation = 0;
 	private instanceKey: string | null = null;

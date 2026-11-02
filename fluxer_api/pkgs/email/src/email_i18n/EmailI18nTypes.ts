@@ -45,8 +45,6 @@ interface CancellationVariables extends SellerVariables {
 	receivedFormatted: string;
 	endsAt: Date;
 	reference: string;
-	unpaid: YesNo;
-	unpaidFormatted: string;
 }
 
 export type ReportReceivedTargetKind = 'message' | 'user' | 'guild';
@@ -86,16 +84,11 @@ export interface EmailTemplateVariables {
 		message_count: number;
 		channel_count: number;
 	};
-	billing_credit_note: SellerVariables & {
-		amountFormatted: string;
-		numbered: YesNo;
-		invoiceNumber: string;
-		upcoming: YesNo;
-	};
 	donation_confirmation: {
 		amount: string;
 		interval: string;
 		paidAt: Date;
+		documentNumber: string;
 	};
 	donation_magic_link: {
 		minutes: number;
@@ -113,8 +106,8 @@ export interface EmailTemplateVariables {
 		periodStart: Date;
 		periodEnd: Date;
 		amountFormatted: string;
-		pdf: YesNo;
-		invoiceLinkUntil: Date;
+		document: YesNo;
+		documentNumber: string;
 	};
 	donation_renewal_notice: UpcomingChargeVariables;
 	donation_refund_receipt: {
@@ -178,20 +171,14 @@ export interface EmailTemplateVariables {
 	mfa_backup_codes_view: {
 		minutes: number;
 	};
-	operator_pass_invoice: {
-		paidAt: Date;
-		amountFormatted: string;
-		taxFormatted: string;
-		pdf: YesNo;
-		invoiceLinkUntil: Date;
-	};
 	operator_pass_offer_accepted: {
 		recipientName: string;
 		remainingCount: number;
+		visionary: 'yes' | 'no';
 	};
 	operator_pass_offer_ended: {
 		otherName: string;
-		ended: 'withdrawn' | 'declined' | 'cancelled';
+		ended: 'withdrawn' | 'declined' | 'cancelled' | 'unavailable';
 	};
 	operator_pass_offer_received: {
 		senderName: string;
@@ -201,32 +188,48 @@ export interface EmailTemplateVariables {
 		scope: 'permanent' | 'temporary';
 		until: Date;
 		automated: 'yes' | 'no';
+		visionary: 'yes' | 'no';
+		cause: 'dispute' | 'other';
+		disputeId: string;
+		deadline: Date;
 	};
 	operator_pass_purchase_confirmation: {
 		termsVersion: string;
 		orderDate: Date;
 		quantity: number;
 		priceFormatted: string;
+		taxFormatted: string;
+		business: YesNo;
+		document: YesNo;
+		documentNumber: string;
 		withdrawalEndsOn: string;
-		waiverConsentAt: Date;
-		consentText: string;
+		consentAt: Date;
+		labs_name: string;
 		wallName: string;
 		wallOptOut: 'yes' | 'no';
+		sellerAddress: string;
+		sellerPhone: string;
 		sellerEmail: string;
 	};
 	operator_pass_refund_receipt: {
 		orderDate: Date;
 		refundedAt: Date;
 		amountFormatted: string;
-		full: YesNo;
+		delivered: YesNo;
+		passCount: number;
+		lastPass: YesNo;
+		visionary: YesNo;
 	};
 	operator_pass_removal_notice: {
 		replyDays: number;
+		visionary: 'yes' | 'no';
 	};
 	operator_pass_revoked: {
-		cause: 'refund' | 'dispute' | 'withdrawal';
+		cause: 'refund' | 'dispute' | 'withdrawal' | 'visionary';
 		lastPass: 'yes' | 'no';
+		visionary: 'yes' | 'no';
 	};
+	operator_pass_purchase_refused: Record<string, never>;
 	operator_pass_sale_open: {
 		priceFormatted: string;
 		priceEndsOn: string;
@@ -240,19 +243,33 @@ export interface EmailTemplateVariables {
 		shown: 'previous' | 'username' | 'operator';
 		reason: 'guidelines' | 'impersonation' | 'rights' | 'age_suitability';
 	};
+	operator_pass_visionary_notice: {
+		visionaryDate: Date;
+		member: YesNo;
+	};
+	operator_pass_visionary_turned_on: {
+		badge: YesNo;
+		wallName: string;
+		wallOptOut: YesNo;
+		member: YesNo;
+		termsVersion: string;
+	};
 	operator_pass_welcome: {
 		founderName: string;
 		deliveredAt: Date;
 		wallName: string;
 		wallOptOut: 'yes' | 'no';
+		labs: 'visionary' | 'member' | 'none';
 	};
 	operator_pass_withdrawal_receipt: {
-		cancellation: 'yes' | 'no';
 		receivedAt: Date;
 		orderDate: Date;
 		amountFormatted: string;
+		delivered: 'yes' | 'no';
+		passCount: number;
 		lastPass: 'yes' | 'no';
-		refundViaDispute: 'yes' | 'no';
+		visionary: 'yes' | 'no';
+		refund: 'started' | 'dispute' | 'already';
 	};
 	password_change_verification: {
 		minutes: number;
@@ -268,14 +285,14 @@ export interface EmailTemplateVariables {
 	plutonium_cancellation_confirmation: CancellationVariables & {
 		premiumName: string;
 		plan: BillingRecurringPlanName;
+		unpaid: YesNo;
+		unpaidFormatted: string;
 	};
 	plutonium_card_expiring: CardExpiringVariables & {
 		premiumName: string;
 	};
 	plutonium_ended_unpaid: SellerVariables & {
 		premiumName: string;
-		numbered: YesNo;
-		invoiceNumber: string;
 		owed: 'none' | 'stopped' | 'open' | 'unknown';
 		amountFormatted: string;
 	};
@@ -304,13 +321,14 @@ export interface EmailTemplateVariables {
 		periodEnd: Date;
 		amountFormatted: string;
 		taxFormatted: string;
-		pdf: YesNo;
-		invoiceLinkUntil: Date;
+		business: YesNo;
+		document: YesNo;
+		documentNumber: string;
 		renewal: 'month' | 'year' | 'none';
 		renewalFormatted: string;
 		renewalTax: 'included' | 'added' | 'none';
 		consentAt: Date;
-		withdrawalEndsAt: Date;
+		withdrawalEndsAt: Date | string;
 		invoiceNumber: string;
 		sellerAddress: string;
 		sellerEmail: string;
@@ -325,6 +343,15 @@ export interface EmailTemplateVariables {
 		partial: YesNo;
 		requestedFormatted: string;
 		reference: string;
+	};
+	plutonium_withdrawal_receipt: {
+		premiumName: string;
+		receivedAt: Date;
+		purchasedAt: Date;
+		gift: YesNo;
+		amountFormatted: string;
+		refund: 'started' | 'manual';
+		brazil: YesNo;
 	};
 	plutonium_renewal_notice: UpcomingChargeVariables & {
 		premiumName: string;

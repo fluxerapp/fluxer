@@ -6,8 +6,11 @@ import {HttpError} from '@app/features/platform/types/EndpointError';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
 import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {
+	countOperatorPassCertificateNameCharacters,
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
 	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
 	type OperatorPassOfferResponse,
 	type OperatorPassPassesResponse,
@@ -35,8 +38,8 @@ export function isOperatorPassAvailable(): boolean {
 	return !RuntimeConfig.isSelfHosted();
 }
 
-export function hasOperatorPassProfileBadge(user: {operatorPassSince: unknown}): boolean {
-	return isOperatorPassAvailable() && user.operatorPassSince != null;
+export function keepsOperatorsThroughVisionary(user: {premiumType: number | null} | null | undefined): boolean {
+	return isOperatorPassAvailable() && user?.premiumType === UserPremiumTypes.LIFETIME;
 }
 
 export function formatOperatorPassDateTime(iso: string): string {
@@ -48,13 +51,15 @@ export function formatOperatorPassDateTime(iso: string): string {
 	}).format(new Date(iso));
 }
 
-export function formatOperatorPassLongDate(iso: string): string {
-	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long'}).format(new Date(iso));
+export function formatOperatorPassLongDate(iso: string, timeZone?: string): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long', timeZone}).format(new Date(iso));
 }
 
-export function formatOperatorPassDate(iso: string): string {
-	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'medium'}).format(new Date(iso));
+export function formatOperatorPassDate(iso: string, timeZone?: string): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'medium', timeZone}).format(new Date(iso));
 }
+
+export const OPERATOR_PASS_VISIONARY_DATE_TIME_ZONE = 'UTC';
 
 interface OperatorPassCalendarDay {
 	year: number;
@@ -121,13 +126,27 @@ export function formatOperatorPassSinceDate(iso: string | Date): string {
 	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'long'}).format(new Date(iso));
 }
 
-export type OperatorPassWallNameProblem = 'required' | 'too_long';
+export type OperatorPassWallNameProblem = 'required' | 'too_long' | 'rejected';
 
 export function getOperatorPassWallNameProblem(name: string, optOut: boolean): OperatorPassWallNameProblem | null {
 	if (optOut) return null;
 	const trimmed = normalizeOperatorPassWallName(name);
 	if (trimmed.length === 0) return 'required';
 	if (trimmed.length > OPERATOR_PASS_WALL_NAME_MAX_LENGTH) return 'too_long';
+	return null;
+}
+
+export type OperatorPassCertificateNameProblem = 'required' | 'too_long' | 'rejected';
+
+export function normalizeOperatorPassCertificateName(name: string): string {
+	return normalizeOperatorPassWallName(name.normalize('NFC'));
+}
+
+export function getOperatorPassCertificateNameProblem(name: string): OperatorPassCertificateNameProblem | null {
+	const trimmed = normalizeOperatorPassCertificateName(name);
+	if (trimmed.length === 0) return 'required';
+	if (countOperatorPassCertificateNameCharacters(trimmed) > OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH)
+		return 'too_long';
 	return null;
 }
 
@@ -161,4 +180,15 @@ export function isOperatorPassLastFreePass(
 		(offer) => offer.status === 'pending' || offer.status === 'accepted',
 	).length;
 	return holdings.count - offered <= 1;
+}
+
+export function isOperatorPassLastPurchase(
+	holdings: Pick<OperatorPassPassesResponse, 'count' | 'passes'> | null,
+	purchaseId: string,
+): boolean {
+	if (!holdings || holdings.count === 0) return false;
+	const fromPurchase = holdings.passes.filter(
+		(pass) => pass.purchase_id === purchaseId && pass.status === 'held',
+	).length;
+	return holdings.count - fromPurchase <= 0;
 }

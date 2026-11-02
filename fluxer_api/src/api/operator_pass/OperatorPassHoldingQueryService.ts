@@ -14,13 +14,20 @@ import {
 	loadOperatorPassEntitlementState,
 	resolveOperatorPassHolder,
 } from '@app/api/operator_pass/OperatorPassEntitlementService';
+import {getLabsGuildId, getLabsOperatorsChannelId} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {
+	getOperatorPassCertificateUrl,
 	getOperatorPassWithdrawalDeadline,
 	getOperatorPassWithdrawalEndsOn,
-	isOperatorPassUnitWithdrawable,
+	isOperatorPassSinglePassWithdrawable,
 } from '@app/api/operator_pass/OperatorPassPurchaseRules';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {operatorPassNow} from '@app/api/operator_pass/OperatorPassSchedule';
+import {
+	describeOperatorPassVisionary,
+	isOperatorPassVisionary,
+	resolveOperatorPassVisionarySince,
+} from '@app/api/operator_pass/OperatorPassVisionaryService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {UnknownOperatorPassOfferError} from '@fluxer/errors/src/domains/operator_pass/UnknownOperatorPassOfferError';
@@ -34,6 +41,7 @@ interface OperatorPassHoldingQueryDependencies {
 	repository: OperatorPassRepository;
 	userRepository: UserRepository;
 	findPurchase: (purchaseId: string) => Promise<OperatorPassPurchaseRow | null>;
+	isLabsMember: (userId: UserID) => Promise<boolean>;
 }
 
 const OPEN_OFFER_STATUSES: ReadonlyArray<OperatorPassOfferStatus> = ['pending', 'accepted'];
@@ -99,10 +107,13 @@ export class OperatorPassHoldingQueryService {
 
 	async describePasses(user: User): Promise<OperatorPassPassesResponse> {
 		const now = operatorPassNow();
-		const [units, offers, state] = await Promise.all([
+		const [units, offers, state, activation, labs, labsMember] = await Promise.all([
 			this.listHeldUnits(user.id),
 			this.deps.repository.listOffersByUser(user.id),
 			loadOperatorPassEntitlementState(this.deps.repository, user.id),
+			this.deps.repository.findVisionaryActivation(user.id),
+			this.deps.repository.findLabsMember(user.id),
+			this.deps.isLabsMember(user.id),
 		]);
 		const open = offers.filter(isOperatorPassOfferOpen);
 		const completed = offers
@@ -117,7 +128,7 @@ export class OperatorPassHoldingQueryService {
 		const passes: Array<OperatorPassUnitResponse> = units.map((unit) => {
 			const purchase = unit.purchase_id ? (purchases.get(unit.purchase_id) ?? null) : null;
 			const canPassOn = unit.transferable && unit.source === 'purchase';
-			const withdrawable = purchase !== null && isOperatorPassUnitWithdrawable(purchase, unit, now);
+			const withdrawable = purchase !== null && isOperatorPassSinglePassWithdrawable(purchase, unit, now);
 			const offer = open.find((candidate) => candidate.pass_id === unit.pass_id && candidate.sender_id === user.id);
 			const received = completed.findLast(
 				(candidate) => candidate.pass_id === unit.pass_id && candidate.recipient_id === user.id,
@@ -128,6 +139,10 @@ export class OperatorPassHoldingQueryService {
 				status: unit.status,
 				purchase_id: unit.purchase_id,
 				delivered_at: unit.delivered_at.toISOString(),
+				purchased_at:
+					unit.source === 'purchase' && purchase?.purchaser_id === user.id
+						? (purchase.purchased_at?.toISOString() ?? null)
+						: null,
 				paused: unit.paused_at != null,
 				can_pass_on: canPassOn,
 				transfer_lock_ends_at: canPassOn ? getOperatorPassTransferLockEndsAt(purchase, unit).toISOString() : null,
@@ -144,7 +159,28 @@ export class OperatorPassHoldingQueryService {
 				received_from: received ? mapOperatorPassOfferUser(users.get(received.sender_id)) : null,
 			};
 		});
+		const visionaryPage =
+			activation?.pass_id && activation.completed_at && !activation.ended_at
+				? await this.deps.repository.findLatestCertificateLink(activation.pass_id)
+				: null;
+		const visionary =
+			activation?.activated_at || isOperatorPassVisionary(user)
+				? describeOperatorPassVisionary({
+						user,
+						visionarySince:
+							activation?.visionary_since ?? (await resolveOperatorPassVisionarySince(this.deps.userRepository, user)),
+						activation,
+						removal: state.removal,
+						labsMember,
+						now,
+						certificateUrl:
+							visionaryPage?.link_token && visionaryPage.cancelled_at == null
+								? getOperatorPassCertificateUrl(visionaryPage.link_token)
+								: null,
+					})
+				: undefined;
 		return {
+			...(visionary ? {visionary} : {}),
 			count: isOperatorPassRemovalActive(state.removal, now) ? 0 : units.length,
 			recognition_count: resolveOperatorPassHolder(state, now)?.count ?? 0,
 			passes,
@@ -157,6 +193,14 @@ export class OperatorPassHoldingQueryService {
 			passed_on: completed
 				.filter((offer) => offer.sender_id === user.id && offer.recipient_id !== user.id)
 				.map((offer) => mapOperatorPassOffer(offer, users)),
+			labs: {
+				greeting: labs?.greeting !== false,
+				greeted: labs?.greeted_at != null,
+				left: labs?.left_at != null,
+				member: labsMember,
+				guild_id: getLabsGuildId()?.toString() ?? null,
+				operators_channel_id: getLabsOperatorsChannelId()?.toString() ?? null,
+			},
 		};
 	}
 

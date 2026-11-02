@@ -42,10 +42,6 @@ export const REDEEM_GIFT_CODE_DESCRIPTOR = msg({
 	message: 'Redeem a gift code',
 	comment: 'Plutonium page link that opens the gift code redemption settings.',
 });
-export const MANAGE_SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Manage subscription',
-	comment: 'Plutonium page hero button that scrolls to the subscription management panel.',
-});
 export const MEMBER_THANKS_DESCRIPTOR = msg({
 	message: "You're a {premiumProductName} member. Thanks for supporting an independent communication platform.",
 	comment: 'Plutonium page hero subtitle for members. premiumProductName is the paid tier name.',
@@ -75,10 +71,6 @@ export const REDEEM_ONLY_DESCRIPTOR = msg({
 	message: 'Have a gift code? Redeem it to unlock {premiumProductName}.',
 	comment:
 		'Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.',
-});
-export const MANAGE_HEADING_DESCRIPTOR = msg({
-	message: 'Your subscription',
-	comment: 'Heading of the subscription management panel on the Plutonium page.',
 });
 export const SHOWCASE_EXPRESSIONS_TITLE_DESCRIPTOR = msg({
 	message: 'Your emojis, everywhere',

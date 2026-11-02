@@ -32,7 +32,8 @@ const CONFIG: EmailConfig = {
 	productName: 'Fluxer',
 	marketingBaseUrl: 'https://example.com',
 	staticCdnBaseUrl: 'https://static.example.com/',
-	legalAddress: 'Fluxer Platform AB, c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
+	legalAddress:
+		'Fluxer Platform AB (org. no. 559537-3993, registered office Haninge, Sweden), c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
 	brandLogo: true,
 };
 
@@ -51,7 +52,6 @@ const REPORT_REFERENCE = {
 	channelName: '',
 } as const;
 const DECISION_ID = '1290874512349872640';
-const INVOICE_URL = 'https://invoice.stripe.com/i/acct_1Example/live_abc';
 const PAID_TOTALS = {
 	totalMinor: 999,
 	paidMinor: 499,
@@ -308,7 +308,7 @@ const EMAILS: Array<[string, string | null, Send]> = [
 	],
 	[
 		'plutonium_payment_receipt',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'plutonium_payment_receipt',
@@ -320,11 +320,18 @@ const EMAILS: Array<[string, string | null, Send]> = [
 					paidAt: DATE,
 					period: {start: DATE, end: DATE},
 					totals: PAID_TOTALS,
-					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
+					document: {
+						number: 'PL-000008',
+						issuedAt: DATE,
+						pdf: {filename: 'Fluxer-PL-000008.pdf', content: new Uint8Array([1]), contentType: 'application/pdf'},
+					},
+					business: false,
 					purchase: {
 						renewal: {interval: 'month', amountMinor: 999, tax: 'included'},
 						consentAt: DATE,
-						withdrawalEndsAt: DATE,
+						withdrawalEndsOn: '2026-10-23',
+						withdrawalRule: 'eu',
+						withdrawalProRata: true,
 						seller: true,
 					},
 				},
@@ -333,7 +340,7 @@ const EMAILS: Array<[string, string | null, Send]> = [
 	],
 	[
 		'plutonium_refund_receipt',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'plutonium_refund_receipt',
@@ -347,14 +354,18 @@ const EMAILS: Array<[string, string | null, Send]> = [
 					paidMinor: 4999,
 					paidAt: DATE,
 					currency: 'usd',
-					refundUrl: INVOICE_URL,
+					creditNote: {
+						number: 'KR-000009',
+						issuedAt: DATE,
+						pdf: {filename: 'Fluxer-KR-000009.pdf', content: new Uint8Array([1]), contentType: 'application/pdf'},
+					},
 				},
 				locale,
 			),
 	],
 	[
 		'plutonium_payment_failed',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'plutonium_payment_failed',
@@ -362,11 +373,9 @@ const EMAILS: Array<[string, string | null, Send]> = [
 				{
 					premiumName: 'Plutonium',
 					reason: 'action_required',
-					invoiceNumber: 'A1B2C3D4-0010',
 					attemptedAt: DATE,
 					amountMinor: 499,
 					currency: 'usd',
-					invoiceUrl: INVOICE_URL,
 					accessEndsAt: null,
 				},
 				locale,
@@ -374,18 +383,21 @@ const EMAILS: Array<[string, string | null, Send]> = [
 	],
 	[
 		'donation_receipt',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'donation_receipt',
 				USER,
 				{
 					interval: 'year',
-					invoiceNumber: 'A1B2C3D4-0011',
 					paidAt: DATE,
 					period: {start: DATE, end: DATE},
 					totals: {...PAID_TOTALS, paidMinor: 999, tax: null},
-					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
+					document: {
+						number: 'DN-000011',
+						issuedAt: DATE,
+						pdf: {filename: 'Fluxer-DN-000011.pdf', content: new Uint8Array([1]), contentType: 'application/pdf'},
+					},
 					manageUrl: MANAGE_URL,
 				},
 				locale,
@@ -398,41 +410,33 @@ const EMAILS: Array<[string, string | null, Send]> = [
 			service.send(
 				'donation_refund_receipt',
 				USER,
-				{reference: '1234-5678', refundedAt: DATE, amountMinor: 1000, currency: 'eur', refundUrl: null},
+				{
+					reference: 'DN-000011',
+					refundedAt: DATE,
+					amountMinor: 1000,
+					currency: 'eur',
+					creditNote: {
+						number: 'KG-000001',
+						issuedAt: DATE,
+						pdf: {filename: 'Fluxer-KG-000001.pdf', content: new Uint8Array([1]), contentType: 'application/pdf'},
+					},
+				},
 				locale,
 			),
 	],
 	[
 		'donation_payment_failed',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'donation_payment_failed',
 				USER,
 				{
 					reason: 'declined',
-					invoiceNumber: 'A1B2C3D4-0012',
 					attemptedAt: DATE,
 					amountMinor: 1000,
 					currency: 'eur',
-					invoiceUrl: INVOICE_URL,
 					manageUrl: MANAGE_URL,
-				},
-				locale,
-			),
-	],
-	[
-		'operator_pass_invoice',
-		INVOICE_URL,
-		(service, locale) =>
-			service.send(
-				'operator_pass_invoice',
-				USER,
-				{
-					invoiceNumber: 'A1B2C3D4-0013',
-					paidAt: DATE,
-					totals: {...PAID_TOTALS, paidMinor: 999, tax: null, reverseCharge: true},
-					invoice: {url: INVOICE_URL, linkUntil: DATE, pdf: null},
 				},
 				locale,
 			),
@@ -450,7 +454,26 @@ const EMAILS: Array<[string, string | null, Send]> = [
 					refundedAt: DATE,
 					amountMinor: 19900,
 					currency: 'usd',
-					full: false,
+					delivered: true,
+					passCount: 1,
+					lastPass: false,
+					visionary: false,
+					creditNote: null,
+				},
+				locale,
+			),
+	],
+	[
+		'operator_pass_visionary_notice',
+		'https://web.example.com/channels/@operator-pass?view=visionary',
+		(service, locale) =>
+			service.send(
+				'operator_pass_visionary_notice',
+				USER,
+				{
+					visionaryDate: DATE,
+					labsMember: false,
+					turnOnUrl: 'https://web.example.com/channels/@operator-pass?view=visionary',
 				},
 				locale,
 			),
@@ -571,7 +594,6 @@ const EMAILS: Array<[string, string | null, Send]> = [
 					receivedAt: DATE,
 					endsAt: DATE,
 					reference: 'sub_1Example',
-					unpaid: null,
 					seller: true,
 					manageUrl: MANAGE_URL,
 				},
@@ -587,11 +609,9 @@ const EMAILS: Array<[string, string | null, Send]> = [
 				USER,
 				{
 					premiumName: 'Plutonium',
-					invoiceNumber: 'A1B2C3D4-0015',
 					invoiceStatus: 'open',
 					amountMinor: 499,
 					currency: 'usd',
-					invoiceUrl: INVOICE_URL,
 					seller: true,
 				},
 				locale,
@@ -617,26 +637,8 @@ const EMAILS: Array<[string, string | null, Send]> = [
 			),
 	],
 	[
-		'billing_credit_note',
-		null,
-		(service, locale) =>
-			service.send(
-				'billing_credit_note',
-				USER,
-				{
-					amountMinor: 250,
-					currency: 'eur',
-					invoiceNumber: 'A1B2C3D4-0016',
-					pdfUrl: 'https://pay.stripe.com/credit_notes/acct_1Example/cn_1/pdf',
-					upcomingInvoice: true,
-					seller: true,
-				},
-				locale,
-			),
-	],
-	[
 		'plutonium_refund_receipt_subscription_ended',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'plutonium_refund_receipt',
@@ -650,7 +652,7 @@ const EMAILS: Array<[string, string | null, Send]> = [
 					paidMinor: 499,
 					paidAt: DATE,
 					currency: 'usd',
-					refundUrl: INVOICE_URL,
+					creditNote: null,
 					subscriptionEnded: {requestedAt: DATE, reference: 'sub_1Example'},
 				},
 				locale,
@@ -658,7 +660,7 @@ const EMAILS: Array<[string, string | null, Send]> = [
 	],
 	[
 		'plutonium_payment_failed_reminder',
-		INVOICE_URL,
+		null,
 		(service, locale) =>
 			service.send(
 				'plutonium_payment_failed',
@@ -666,11 +668,9 @@ const EMAILS: Array<[string, string | null, Send]> = [
 				{
 					premiumName: 'Plutonium',
 					reason: 'action_required',
-					invoiceNumber: 'A1B2C3D4-0018',
 					attemptedAt: DATE,
 					amountMinor: 499,
 					currency: 'usd',
-					invoiceUrl: INVOICE_URL,
 					accessEndsAt: null,
 					reminder: true,
 				},
@@ -828,11 +828,9 @@ function renewalNoticeText(patch: Partial<EmailSendParams['plutonium_renewal_not
 function endedUnpaidText(invoiceStatus: EmailSendParams['plutonium_ended_unpaid']['invoiceStatus']): Promise<string> {
 	return sentText('plutonium_ended_unpaid', {
 		premiumName: 'Plutonium',
-		invoiceNumber: 'A1B2C3D4-0015',
 		invoiceStatus,
 		amountMinor: 499,
 		currency: 'usd',
-		invoiceUrl: INVOICE_URL,
 		seller: true,
 	});
 }
@@ -871,30 +869,18 @@ describe('billing email wording', () => {
 	});
 
 	it('says an open invoice is still unpaid', async () => {
-		expect(await endedUnpaidText('open')).toContain('is still unpaid. You can pay it on the invoice page.');
-	});
-
-	it('offers a refund of credit when no invoice is coming up', async () => {
-		const text = await sentText('billing_credit_note', {
-			amountMinor: 250,
-			currency: 'eur',
-			invoiceNumber: null,
-			pdfUrl: null,
-			upcomingInvoice: false,
-			seller: true,
-		});
-		expect(text).toContain("If you'd like it refunded, reply to this email.");
+		const text = await endedUnpaidText('open');
+		expect(text).toContain('is still unpaid.');
+		expect(text).not.toContain('invoice page');
 	});
 
 	it('describes a plan change payment as a plan change', async () => {
 		const text = await sentText('plutonium_payment_failed', {
 			premiumName: 'Plutonium',
 			reason: 'action_required',
-			invoiceNumber: 'A1B2C3D4-0018',
 			attemptedAt: DATE,
 			amountMinor: 499,
 			currency: 'usd',
-			invoiceUrl: INVOICE_URL,
 			accessEndsAt: null,
 			planChange: true,
 		});
@@ -922,7 +908,7 @@ describe.each(EMAILS)('%s email', (_name, ctaUrl, send) => {
 			.replace(/<[^>]+>/g, ' ');
 		expect(factWords, 'bare email address in a fact row').not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
 		expect(message.text, 'URL in parentheses').not.toMatch(/\(https?:\/\//);
-		expect(message.text, 'raw markup').not.toMatch(/<\/?(mail|settings|dsa|arn)>|\]\(https?:/);
+		expect(message.text, 'raw markup').not.toMatch(/<\/?(mail|settings|dsa|arn|labs)>|\]\(https?:/);
 		expect(html).toContain(`<html lang="${locale}" dir="${direction}"`);
 		expect(html).toContain(`role="article" lang="${locale}" dir="${direction}"`);
 		expect(html).toContain(`<title>${escapeHtml(message.subject)}</title>`);

@@ -7,7 +7,6 @@ import type {
 	IBulkEmailSession,
 	IEmailService,
 } from '@pkgs/email/src/IEmailService';
-import {OPERATOR_PASS_TERMS_VERSION} from '@pkgs/email/src/operator_pass_terms/OperatorPassTerms';
 
 export interface SentEmailRecord {
 	to: string;
@@ -74,6 +73,9 @@ export class TestEmailService implements IEmailService {
 		params: EmailSendParams[K],
 		locale: string | null = null,
 	): Promise<boolean> {
+		if (this.bouncedEmails.has(email)) {
+			return Promise.resolve(false);
+		}
 		return this.handlers[templateKey](email, params, locale);
 	}
 
@@ -180,14 +182,15 @@ export class TestEmailService implements IEmailService {
 				manage_url: params.manageUrl,
 				paid_at: params.paidAt?.toISOString() ?? '',
 				reference: params.reference ?? '',
-				receipt_url: params.receiptUrl ?? '',
+				document: params.document?.number ?? '',
+				document_pdf: params.document?.pdf.filename ?? '',
 			});
 		},
 		donation_receipt: async (email, params, locale) => {
 			return this.record(email, 'donation_receipt', {
 				interval: params.interval,
-				invoice_number: params.invoiceNumber ?? '',
-				invoice_url: params.invoice?.url ?? '',
+				document: params.document?.number ?? '',
+				document_pdf: params.document?.pdf.filename ?? '',
 				...totalsMetadata(params.totals),
 				locale: locale ?? '',
 			});
@@ -197,13 +200,13 @@ export class TestEmailService implements IEmailService {
 				reference: params.reference ?? '',
 				amount_minor: String(params.amountMinor),
 				currency: params.currency,
+				credit_note: params.creditNote?.number ?? '',
 				locale: locale ?? '',
 			});
 		},
 		donation_payment_failed: async (email, params, locale) => {
 			return this.record(email, 'donation_payment_failed', {
 				reason: params.reason,
-				invoice_number: params.invoiceNumber ?? '',
 				amount_minor: String(params.amountMinor),
 				reminder: params.reminder ? 'true' : 'false',
 				locale: locale ?? '',
@@ -236,6 +239,9 @@ export class TestEmailService implements IEmailService {
 				delivered_at: params.deliveredAt.toISOString(),
 				wall_name: params.wallName ?? '',
 				pass_count: String(params.passCount),
+				certificate: params.certificate?.filename ?? '',
+				visionary: params.visionary ? 'yes' : 'no',
+				labs_member: params.labsMember ? 'yes' : 'no',
 			});
 		},
 		operator_pass_purchase_confirmation: async (email, params) => {
@@ -243,32 +249,35 @@ export class TestEmailService implements IEmailService {
 				invoice_number: params.invoiceNumber ?? '',
 				order_date: params.orderDate.toISOString(),
 				quantity: String(params.quantity),
-				amount_minor: String(params.amountMinor),
-				currency: params.currency,
-				withdrawal_days: params.withdrawalDays === null ? '' : String(params.withdrawalDays),
+				...totalsMetadata(params.totals),
+				document: params.document?.number ?? '',
+				document_pdf: params.document?.pdf.filename ?? '',
 				withdrawal_ends_on: params.withdrawalEndsOn ?? '',
-				waiver_consent_at: params.waiverConsentAt?.toISOString() ?? '',
+				withdrawal_country: params.withdrawalCountry ?? '',
+				consent_at: params.consentAt?.toISOString() ?? '',
 				wall_name: params.wallName ?? '',
 				unit_amount_minor: String(params.unitAmountMinor),
 				payment_method: params.paymentMethod ?? '',
-				consent_text: params.consentText ?? '',
-				country_consent: params.countryConsent ? 'yes' : 'no',
-				terms_version: OPERATOR_PASS_TERMS_VERSION,
+				delivery_box_text: params.deliveryBoxText ?? '',
+				terms_version: params.termsVersion,
 				attachment: 'application/pdf',
 			});
 		},
 		operator_pass_withdrawal_receipt: async (email, params) => {
 			return this.record(email, 'operator_pass_withdrawal_receipt', {
-				cancellation: String(params.cancellation),
 				name: params.name,
 				received_at: params.receivedAt.toISOString(),
 				invoice_number: params.invoiceNumber ?? '',
 				order_date: params.orderDate.toISOString(),
 				amount_minor: String(params.amountMinor),
 				currency: params.currency,
+				delivered: String(params.delivered),
+				pass_count: String(params.passCount),
 				last_pass: String(params.lastPass),
-				has_donation: String(params.hasDonation),
-				refund_via_dispute: String(params.refundViaDispute),
+				visionary: String(params.visionary),
+				refund: params.refund,
+				credit_note: params.creditNote?.number ?? '',
+				credit_note_pdf: params.creditNote?.pdf.filename ?? '',
 			});
 		},
 		operator_pass_offer_received: async (email, params) => {
@@ -281,6 +290,7 @@ export class TestEmailService implements IEmailService {
 			return this.record(email, 'operator_pass_offer_accepted', {
 				recipient_name: params.recipientName,
 				remaining_count: String(params.remainingCount),
+				visionary: params.visionary ? 'yes' : 'no',
 			});
 		},
 		operator_pass_offer_ended: async (email, params) => {
@@ -290,6 +300,28 @@ export class TestEmailService implements IEmailService {
 			return this.record(email, 'operator_pass_revoked', {
 				cause: params.cause,
 				last_pass: params.lastPass ? 'yes' : 'no',
+				visionary: params.visionary ? 'yes' : 'no',
+			});
+		},
+		operator_pass_visionary_notice: async (email, params) => {
+			return this.record(email, 'operator_pass_visionary_notice', {
+				visionary_date: params.visionaryDate.toISOString(),
+				labs_member: params.labsMember ? 'yes' : 'no',
+				turn_on_url: params.turnOnUrl,
+			});
+		},
+		operator_pass_visionary_turned_on: async (email, params) => {
+			return this.record(email, 'operator_pass_visionary_turned_on', {
+				badge_shown: params.badgeShown ? 'yes' : 'no',
+				wall_name: params.wallName ?? '',
+				labs_member: params.labsMember ? 'yes' : 'no',
+				terms_version: params.termsVersion,
+				certificate: params.certificate.filename,
+			});
+		},
+		operator_pass_purchase_refused: async (email, params) => {
+			return this.record(email, 'operator_pass_purchase_refused', {
+				...(params.creditNote ? {credit_note: params.creditNote.number} : {}),
 			});
 		},
 		operator_pass_removal_notice: async (email, params) => {
@@ -297,6 +329,7 @@ export class TestEmailService implements IEmailService {
 				rule: params.rule,
 				facts: params.facts,
 				reply_by: params.replyBy.toISOString(),
+				visionary: params.visionary ? 'yes' : 'no',
 			});
 		},
 		operator_pass_wall_hidden: async (email, params) => {
@@ -319,6 +352,8 @@ export class TestEmailService implements IEmailService {
 				facts: params.facts,
 				automated: String(params.automated),
 				until: params.until?.toISOString() ?? '',
+				visionary: params.visionary ? 'yes' : 'no',
+				dispute: params.dispute?.id ?? '',
 			});
 		},
 		payment_dispute_warning: async (email, params) => {
@@ -339,6 +374,9 @@ export class TestEmailService implements IEmailService {
 				blockers: params.blockers.join(','),
 			});
 		},
+		billing_support_alert: async (email, {subject, text}) => {
+			return this.record(email, 'billing_support_alert', {subject, text});
+		},
 		plutonium_payment_receipt: async (email, params, locale) => {
 			return this.record(email, 'plutonium_payment_receipt', {
 				premium_name: params.premiumName,
@@ -348,10 +386,10 @@ export class TestEmailService implements IEmailService {
 				period_start: params.period?.start.toISOString() ?? '',
 				period_end: params.period?.end.toISOString() ?? '',
 				...totalsMetadata(params.totals),
-				invoice_url: params.invoice?.url ?? '',
-				invoice_pdf: params.invoice?.pdf?.filename ?? '',
+				document: params.document?.number ?? '',
+				document_pdf: params.document?.pdf.filename ?? '',
 				renewal: params.purchase?.renewal?.interval ?? '',
-				withdrawal_ends_at: params.purchase?.withdrawalEndsAt?.toISOString() ?? '',
+				withdrawal_ends_on: params.purchase?.withdrawalEndsOn ?? '',
 				consent_at: params.purchase?.consentAt?.toISOString() ?? '',
 				locale: locale ?? '',
 			});
@@ -365,9 +403,25 @@ export class TestEmailService implements IEmailService {
 				amount_minor: String(params.amountMinor),
 				paid_minor: String(params.paidMinor),
 				currency: params.currency,
-				refund_url: params.refundUrl ?? '',
+				credit_note: params.creditNote?.number ?? '',
+				credit_note_pdf: params.creditNote?.pdf.filename ?? '',
 				subscription_ended_at: params.subscriptionEnded?.requestedAt.toISOString() ?? '',
 				subscription_reference: params.subscriptionEnded?.reference ?? '',
+				locale: locale ?? '',
+			});
+		},
+		plutonium_withdrawal_receipt: async (email, params, locale) => {
+			return this.record(email, 'plutonium_withdrawal_receipt', {
+				premium_name: params.premiumName,
+				name: params.name,
+				received_at: params.receivedAt.toISOString(),
+				purchased_at: params.purchasedAt.toISOString(),
+				gift: String(params.gift),
+				amount_minor: String(params.amountMinor),
+				currency: params.currency,
+				refund: params.refund,
+				brazil: String(params.brazil),
+				reference: params.reference,
 				locale: locale ?? '',
 			});
 		},
@@ -375,11 +429,9 @@ export class TestEmailService implements IEmailService {
 			return this.record(email, 'plutonium_payment_failed', {
 				premium_name: params.premiumName,
 				reason: params.reason,
-				invoice_number: params.invoiceNumber ?? '',
 				attempted_at: params.attemptedAt.toISOString(),
 				amount_minor: String(params.amountMinor),
 				currency: params.currency,
-				invoice_url: params.invoiceUrl ?? '',
 				access_ends_at: params.accessEndsAt?.toISOString() ?? '',
 				reminder: params.reminder ? 'true' : 'false',
 				plan_change: params.planChange ? 'true' : 'false',
@@ -420,6 +472,7 @@ export class TestEmailService implements IEmailService {
 			return this.record(email, 'plutonium_cancellation_confirmation', {
 				plan: params.plan,
 				...this.cancellationMetadata(params),
+				unpaid_minor: params.unpaid ? String(params.unpaid.totalMinor) : '',
 				locale: locale ?? '',
 			});
 		},
@@ -432,10 +485,8 @@ export class TestEmailService implements IEmailService {
 		},
 		plutonium_ended_unpaid: async (email, params, locale) => {
 			return this.record(email, 'plutonium_ended_unpaid', {
-				invoice_number: params.invoiceNumber ?? '',
 				invoice_status: params.invoiceStatus,
 				amount_minor: String(params.amountMinor),
-				invoice_url: params.invoiceUrl ?? '',
 				locale: locale ?? '',
 			});
 		},
@@ -449,29 +500,17 @@ export class TestEmailService implements IEmailService {
 				locale: locale ?? '',
 			});
 		},
-		billing_credit_note: async (email, params, locale) => {
-			return this.record(email, 'billing_credit_note', {
-				amount_minor: String(params.amountMinor),
-				currency: params.currency,
-				invoice_number: params.invoiceNumber ?? '',
-				pdf_url: params.pdfUrl ?? '',
-				upcoming_invoice: params.upcomingInvoice ? 'true' : 'false',
-				locale: locale ?? '',
-			});
-		},
-		operator_pass_invoice: async (email, params) => {
-			return this.record(email, 'operator_pass_invoice', {
-				invoice_number: params.invoiceNumber ?? '',
-				invoice_url: params.invoice.url,
-				...totalsMetadata(params.totals),
-			});
-		},
 		operator_pass_refund_receipt: async (email, params) => {
 			return this.record(email, 'operator_pass_refund_receipt', {
 				invoice_number: params.invoiceNumber ?? '',
 				amount_minor: String(params.amountMinor),
 				currency: params.currency,
-				full: params.full ? 'true' : 'false',
+				delivered: String(params.delivered),
+				pass_count: String(params.passCount),
+				last_pass: String(params.lastPass),
+				visionary: String(params.visionary),
+				credit_note: params.creditNote?.number ?? '',
+				credit_note_pdf: params.creditNote?.pdf.filename ?? '',
 			});
 		},
 		operator_pass_waitlist_verification: async (email, params) => {
@@ -525,7 +564,6 @@ export class TestEmailService implements IEmailService {
 			ends_at: params.endsAt.toISOString(),
 			reference: params.reference,
 			time_zone: params.timeZone ?? '',
-			unpaid_minor: params.unpaid ? String(params.unpaid.totalMinor) : '',
 		};
 	}
 

@@ -11,8 +11,6 @@ import {
 import {
 	type OperatorPassWaitlistBroadcast,
 	type OperatorPassWaitlistBroadcastDependencies,
-	type OperatorPassWaitlistBroadcastOptions,
-	type OperatorPassWaitlistBroadcastResult,
 	runOperatorPassWaitlistBroadcast,
 } from '@app/api/operator_pass/OperatorPassWaitlistBroadcast';
 import {buildOperatorPassUnsubscribeUrls} from '@app/api/operator_pass/OperatorPassWaitlistTokens';
@@ -67,21 +65,15 @@ const SALE_BROADCAST: OperatorPassWaitlistBroadcast = {
 	},
 };
 
-async function runOperatorPassSaleBroadcast(
-	deps: OperatorPassWaitlistBroadcastDependencies,
-	options: OperatorPassWaitlistBroadcastOptions = {},
-): Promise<OperatorPassWaitlistBroadcastResult> {
-	return runOperatorPassWaitlistBroadcast(deps, SALE_BROADCAST, options);
-}
-
 const operatorPassSaleBroadcast: WorkerTaskHandler = async (_payload, helpers) => {
 	const {kvClient, operatorPassRepository, emailService} = getWorkerDependencies();
-	const result = await runOperatorPassSaleBroadcast({
+	const deps: OperatorPassWaitlistBroadcastDependencies = {
 		kvClient,
 		operatorPassRepository,
 		emailService,
 		logger: helpers.logger,
-	});
+	};
+	const result = await runOperatorPassWaitlistBroadcast(deps, SALE_BROADCAST);
 	if (result.sent > 0 || result.failed > 0) {
 		helpers.logger.info({...result}, 'Operator Pass sale broadcast ran');
 	}

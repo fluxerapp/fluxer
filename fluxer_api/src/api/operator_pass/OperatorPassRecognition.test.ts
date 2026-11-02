@@ -8,7 +8,6 @@ import type {
 	OperatorPassUnitRow,
 	OperatorPassWallEventRow,
 } from '@app/api/database/types/OperatorPassTypes';
-import {DonationRepository} from '@app/api/donation/DonationRepository';
 import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {OperatorPassCheckoutService} from '@app/api/operator_pass/OperatorPassCheckoutService';
 import {
@@ -217,22 +216,20 @@ test('profile and holdings APIs expose separate recognition and ownership counts
 			.execute();
 		const badge = profile.profile_badges?.find((entry) => entry.kind === 'operator_pass');
 		expect(badge).toMatchObject({count: 10});
-		expect(badge?.details?.lines).toContain('Includes valid passes you have and passes you bought and passed on.');
+		expect(badge?.details?.lines).toContain(
+			'Counts the passes on this account and the passes it bought and passed on.',
+		);
 		const holdings = await createBuilder<OperatorPassPassesResponse>(harness, account.token)
 			.get('/operator-pass/passes')
 			.expect(200)
 			.execute();
 		expect(holdings).toMatchObject({count: 1, recognition_count: 10});
 		expect(holdings.passes).toHaveLength(1);
-		const checkout = new OperatorPassCheckoutService(
-			null,
-			repository,
-			new OperatorPassEntitlementService(repository),
-			new DonationRepository(),
-		);
+		const checkout = new OperatorPassCheckoutService(null, repository, new OperatorPassEntitlementService(repository));
 		const state = await checkout.getState({
 			user: await getUserRepository().findUniqueAssert(accountId),
 			countryCode: 'SE',
+			clientIp: null,
 		});
 		expect(state.holder).toMatchObject({count: 1, recognition_count: 10});
 	} finally {

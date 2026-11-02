@@ -11,6 +11,7 @@ import type {
 	OperatorPassRow,
 	OperatorPassUnitEventRow,
 	OperatorPassUnitRow,
+	OperatorPassVisionaryActivationRow,
 	OperatorPassWallDecisionRow,
 	OperatorPassWallEntryRow,
 	OperatorPassWallEventRow,
@@ -33,6 +34,7 @@ import type {
 	AdminOperatorPassReleaseFileResponse,
 	AdminOperatorPassRemovalResponse,
 	AdminOperatorPassUserResponse,
+	AdminOperatorPassVisionaryActivationResponse,
 	AdminOperatorPassWallEntryResponse,
 	AdminOperatorPassWallEventResponse,
 	AdminOperatorPassWallTimelineResponse,
@@ -73,6 +75,7 @@ export function mapRemovalHistory(
 export function mapPass(
 	pass: OperatorPassRow,
 	purchases: ReadonlyArray<OperatorPassPurchaseRow>,
+	canViewIp: boolean,
 ): NonNullable<AdminOperatorPassUserResponse['pass']> {
 	return {
 		granted_at: pass.granted_at.toISOString(),
@@ -85,8 +88,28 @@ export function mapPass(
 		terms_version: pass.terms_version ?? null,
 		waiver_consent_at: toIsoOrNull(pass.waiver_consent_at),
 		waiver_consent_version: pass.waiver_consent_version ?? null,
-		waiver_consent_ip: pass.waiver_consent_ip ?? null,
-		waiver_user_agent: pass.waiver_consent_user_agent ?? null,
+		waiver_consent_ip: canViewIp ? (pass.waiver_consent_ip ?? null) : null,
+		waiver_user_agent: canViewIp ? (pass.waiver_consent_user_agent ?? null) : null,
+	};
+}
+
+export function mapVisionaryActivation(
+	row: OperatorPassVisionaryActivationRow,
+): AdminOperatorPassVisionaryActivationResponse {
+	return {
+		visionary_since: toIsoOrNull(row.visionary_since),
+		visionary_sequence: row.visionary_sequence ?? null,
+		activated_at: toIsoOrNull(row.activated_at),
+		terms_version: row.terms_version ?? null,
+		terms_box_text: row.terms_box_text ?? null,
+		age_confirmed_at: toIsoOrNull(row.age_confirmed_at),
+		pass_id: row.pass_id ?? null,
+		certificate_number: row.certificate_number ?? null,
+		ended_at: toIsoOrNull(row.ended_at),
+		end_reason: row.end_reason ?? null,
+		notice_emailed_at: toIsoOrNull(row.notice_emailed_at),
+		notice_skip_reason: row.notice_skip_reason ?? null,
+		notice_dm_sent_at: toIsoOrNull(row.notice_dm_sent_at),
 	};
 }
 
@@ -158,7 +181,7 @@ export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null)
 		release_list_opt_in: entry.release_list_opt_in ?? false,
 		display_state: listed ? operatorPassWallDisplayState(entry, {removed: false}) : null,
 		review_state: listed ? operatorPassWallReviewState(entry) : null,
-		shown_name: listed && user ? operatorPassWallShownName(entry, user) : null,
+		shown_name: listed ? operatorPassWallShownName(entry) : null,
 		shown_avatar_url: entry.live_avatar
 			? operatorPassWallSnapshotUrl(entry.live_avatar, Math.max(...OPERATOR_PASS_WALL_AVATAR_SIZES))
 			: null,
@@ -177,7 +200,6 @@ export function mapWallEntry(entry: OperatorPassWallEntryRow, user: User | null)
 		declined_name: entry.declined_name ?? null,
 		decline_reason: entry.decline_reason ?? null,
 		decline_note: entry.decline_note ?? null,
-		username_declined: entry.username_declined,
 		hidden: entry.hidden,
 		legal_hold: entry.legal_hold,
 		left_wall_at: toIsoOrNull(entry.left_wall_at),

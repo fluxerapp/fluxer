@@ -38,7 +38,7 @@ const FAILED_TO_DELETE_WEBHOOK_DESCRIPTOR = msg({
 	comment: 'Toast shown when deleting a webhook fails.',
 });
 const AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
-	message: 'Avatar is too large — pick one under {imageMaxSizeLabel}.',
+	message: 'Avatar is too large. Pick one under {imageMaxSizeLabel}.',
 	comment: 'Webhook avatar upload error. IMAGE_MAX_SIZE_LABEL is a formatted file-size limit.',
 });
 const WEBHOOK_DESCRIPTOR = msg({

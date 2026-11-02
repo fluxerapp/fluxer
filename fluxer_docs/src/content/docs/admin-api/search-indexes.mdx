@@ -78,7 +78,7 @@ An unknown or expired `job_id` returns the not found structure, and every other 
 
 <RouteHeader method="POST" path="/v1/admin/search/indexes/{index_name}/refreshes" auditReason />
 
-Queues a rebuild of the index and returns its `job_id`. You need the `guild:lookup` [ACL](/admin-api/#acl-evaluation). A failed rebuild is not retried, so queue a new one. While an `all` rebuild runs, queueing `all` again returns its `job_id`.
+Queues a rebuild of the index and returns its `job_id`. You need the `guild:lookup` [ACL](/admin-api/#acl-evaluation). A failed rebuild is not retried, and you have to queue a new one. While an `all` rebuild runs, queueing `all` again returns its `job_id`.
 
 ### Path parameters
 

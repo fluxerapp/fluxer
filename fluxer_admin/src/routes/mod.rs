@@ -17,6 +17,7 @@ mod limit_config_actions;
 mod message_actions;
 pub mod messages;
 pub mod operator_pass;
+pub mod operator_pass_preview;
 pub mod payment_disputes;
 pub mod registrations;
 pub mod reports;
@@ -69,6 +70,10 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(applications::router())
         .merge(codes::router())
         .merge(operator_pass::router().route_layer(from_fn_with_state(state.clone(), hosted_only)))
+        .merge(
+            operator_pass_preview::router()
+                .route_layer(from_fn_with_state(state.clone(), hosted_only)),
+        )
         .merge(payment_disputes::router())
         .merge(discovery::router())
         .merge(enforcement::router())

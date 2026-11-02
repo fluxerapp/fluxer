@@ -2,6 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import {Config} from '@app/api/Config';
+import type {AgePolicyConfig} from '@app/api/config/APIConfig';
 import type {NatsGifProvider} from '@app/api/gif/NatsGifProvider';
 import {withAccountIdentitySetupLock} from '@app/api/instance/AccountIdentitySetupLock';
 import {type CustomBadge, compareBigInts} from '@app/api/instance/custom_badges/CustomBadgeRepository';
@@ -47,9 +48,12 @@ import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
 import type {AccountsConfig, AuthConfig} from '@fluxer/schema/src/domains/admin/AccountsConfigSchemas';
 import type {CaptchaConfig} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {toDomainMigrationDiscovery} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
 import {
 	InstanceAccountIdentityResponse,
 	InstanceAccountIdentityUpdateRequest,
+	type InstanceAgePolicy,
+	type InstanceAgePolicyAction,
 	type InstanceBadge,
 	InstanceBadgesQuery,
 	InstanceBadgesResponse,
@@ -62,6 +66,12 @@ import type {Hono} from 'hono';
 import {getDomain} from 'tldts';
 
 let discoveryValidators: DiscoveryValidators | null = null;
+
+function toAgePolicyDiscovery(agePolicy: AgePolicyConfig): InstanceAgePolicy {
+	const geos = (entries: Array<GeoEntry>, action: InstanceAgePolicyAction) =>
+		entries.map((entry) => ({country_code: entry.countryCode, region_code: entry.regionCode, action}));
+	return {geos: geos(agePolicy.restricted, 'restrict')};
+}
 
 function buildDiscoveryStaticInput(
 	gifService: NatsGifProvider | undefined,
@@ -148,6 +158,7 @@ function buildDiscoveryStaticInput(
 			public_vapid_key: Config.push.publicVapidKey ?? null,
 		},
 		appPublic,
+		agePolicy: toAgePolicyDiscovery(Config.instance.agePolicy),
 	};
 }
 

@@ -3,6 +3,7 @@
 import {PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import {CaptchaProviderSchema} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
+import {CnpjSchema} from '@fluxer/schema/src/domains/premium/Cnpj';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -44,7 +45,7 @@ export const OperatorPassPriceFeedbackSchema = createNamedStringLiteralUnion(
 	'How the visitor feels about the early bird price they were shown',
 );
 
-export const OPERATOR_PASS_SOURCES = ['purchase', 'transfer', 'admin'] as const;
+export const OPERATOR_PASS_SOURCES = ['purchase', 'transfer', 'visionary', 'admin'] as const;
 
 export type OperatorPassSource = (typeof OPERATOR_PASS_SOURCES)[number];
 
@@ -52,6 +53,7 @@ export const OperatorPassHolderSourceSchema = createNamedStringLiteralUnion(
 	[
 		['purchase', 'PURCHASE', 'Bought the pass'],
 		['transfer', 'TRANSFER', 'Received from another holder through Pass it on'],
+		['visionary', 'VISIONARY', 'Came with Visionary and was turned on by the account'],
 		['admin', 'ADMIN', 'Granted by staff'],
 	],
 	'How the Operator Pass was obtained',
@@ -59,10 +61,10 @@ export const OperatorPassHolderSourceSchema = createNamedStringLiteralUnion(
 
 const OperatorPassPurchaseBlockedReasons = {
 	NOT_ON_SALE: 'not_on_sale',
-	COUNTRY_UNAVAILABLE: 'country_unavailable',
 	...PurchaseBlockedReasons,
 	PURCHASE_DISABLED: 'purchase_disabled',
 	PAYMENT_DISPUTE_OPEN: 'payment_dispute_open',
+	EMAIL_UNDELIVERABLE: 'email_undeliverable',
 	REMOVED: 'removed',
 } as const;
 
@@ -71,11 +73,6 @@ export type OperatorPassPurchaseBlockedReason = ValueOf<typeof OperatorPassPurch
 export const OperatorPassPurchaseBlockedReasonSchema = createNamedStringLiteralUnion(
 	[
 		[OperatorPassPurchaseBlockedReasons.NOT_ON_SALE, 'NOT_ON_SALE', 'Sales have not opened yet'],
-		[
-			OperatorPassPurchaseBlockedReasons.COUNTRY_UNAVAILABLE,
-			'COUNTRY_UNAVAILABLE',
-			'The pass is not on sale in the country of the buyer right now',
-		],
 		[PurchaseBlockedReasons.EMAIL_UNVERIFIED, 'EMAIL_UNVERIFIED', 'The account email is not verified'],
 		[PurchaseBlockedReasons.UNCLAIMED, 'UNCLAIMED', 'The account is not claimed'],
 		[
@@ -87,6 +84,11 @@ export const OperatorPassPurchaseBlockedReasonSchema = createNamedStringLiteralU
 			OperatorPassPurchaseBlockedReasons.PAYMENT_DISPUTE_OPEN,
 			'PAYMENT_DISPUTE_OPEN',
 			'A payment dispute the account made is open, purchases come back when it closes',
+		],
+		[
+			OperatorPassPurchaseBlockedReasons.EMAIL_UNDELIVERABLE,
+			'EMAIL_UNDELIVERABLE',
+			'Emails to the account address bounced, so the purchase confirmation cannot be delivered',
 		],
 		[
 			OperatorPassPurchaseBlockedReasons.REMOVED,
@@ -101,10 +103,53 @@ export const OPERATOR_PASS_WALL_NAME_MAX_LENGTH = 32;
 
 export const OPERATOR_PASS_MAX_QUANTITY = 100;
 
-export const OPERATOR_PASS_WAIVER_CONSENT_VERSION = 'eu-2026-10-16b';
+export const OPERATOR_PASS_DELIVERY_WAIVER_VERSION = 'delivery-waiver-2026-10-30';
 
-export const OPERATOR_PASS_COUNTRY_CONSENT_PREFIX = 'country-';
-export const OPERATOR_PASS_COUNTRY_CONSENT_VERSION = `${OPERATOR_PASS_COUNTRY_CONSENT_PREFIX}2026-10-16b`;
+export const OPERATOR_PASS_DELIVERY_COUNTRY_VERSION = 'delivery-country-2026-10-30';
+
+export const OPERATOR_PASS_DELIVERY_BUSINESS_VERSION = 'delivery-business-2026-10-30';
+
+export const OPERATOR_PASS_VISIONARY_BOX_VERSION = 'visionary-terms-2026-10-31';
+
+export const OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH = 48;
+
+export const OPERATOR_PASS_CERTIFICATE_NAME_MAX_CODE_UNITS = OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH * 8;
+
+const GRAPHEMES = new Intl.Segmenter('en', {granularity: 'grapheme'});
+
+export function countOperatorPassCertificateNameCharacters(name: string): number {
+	let count = 0;
+	for (const _ of GRAPHEMES.segment(name)) {
+		count++;
+	}
+	return count;
+}
+
+export function truncateOperatorPassCertificateName(name: string): string {
+	let end = 0;
+	let count = 0;
+	for (const {segment} of GRAPHEMES.segment(name)) {
+		if (count === OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH) break;
+		end += segment.length;
+		count++;
+	}
+	return name.slice(0, end);
+}
+
+export const OperatorPassCertificateNameType = z
+	.string()
+	.normalize('NFC')
+	.trim()
+	.min(1)
+	.max(OPERATOR_PASS_CERTIFICATE_NAME_MAX_CODE_UNITS)
+	.refine(
+		(name) => countOperatorPassCertificateNameCharacters(name) <= OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
+		'The name can have at most 48 characters',
+	)
+	.regex(/^[^\r\n]*$/u, 'The name cannot contain line breaks')
+	.describe(
+		'Name printed on one page of the Operator certificate, 1 to 48 characters without line breaks. A character is a grapheme cluster, counted after Unicode NFC normalization',
+	);
 
 export const OperatorPassWallNameType = z
 	.string()
@@ -129,7 +174,7 @@ export const OperatorPassWallDeclineReasonSchema = createNamedStringLiteralUnion
 		['rights', 'RIGHTS', 'It uses a name or image the holder has no right to use'],
 		['age_suitability', 'AGE_SUITABILITY', 'It is not suitable for the youngest people allowed to use Fluxer'],
 	],
-	"Why staff declined a name or avatar on the Operators' wall, under section 2.1 of the Operator Pass terms",
+	"Why staff declined a name or avatar on the Operators' wall, under section 3.1 of the Operator Pass terms",
 );
 
 const OperatorPassCountryCode = createStringType(2, 2).describe(
@@ -165,21 +210,17 @@ export const OperatorPassHolderResponse = z.object({
 
 export const OperatorPassWithdrawalRuleResponse = z.object({
 	country: z.string().describe('Two-letter code of the country whose withdrawal right applies'),
-	days: z.number().int().describe('Days after payment the buyer can withdraw for a full refund'),
+	days: z
+		.number()
+		.int()
+		.describe(
+			'Days the buyer can withdraw for a full refund, even after delivery. The period ends on the last of these days counted from the day the certificate is delivered, and withdrawal_ends_at and withdrawal_ends_on on each purchase give the exact deadline',
+		),
 });
 
 export type OperatorPassWithdrawalRuleResponse = z.infer<typeof OperatorPassWithdrawalRuleResponse>;
 
 export type OperatorPassHolderResponse = z.infer<typeof OperatorPassHolderResponse>;
-
-export const OperatorPassDonationOptionsResponse = z.object({
-	currency: OperatorPassCurrencySchema.describe('Currency of the optional monthly donation'),
-	presets_minor: z.array(z.number().int()).describe('Suggested monthly donation amounts in minor units'),
-	min_minor: z.number().int().describe('Smallest monthly donation in minor units'),
-	max_minor: z.number().int().describe('Largest monthly donation in minor units'),
-});
-
-export type OperatorPassDonationOptionsResponse = z.infer<typeof OperatorPassDonationOptionsResponse>;
 
 export const OperatorPassStateResponse = z.object({
 	phase: OperatorPassPhaseSchema,
@@ -196,14 +237,18 @@ export const OperatorPassStateResponse = z.object({
 		.int()
 		.describe('Most passes one checkout can buy, FLUXER_OPERATOR_PASS_MAX_QUANTITY, 25 by default'),
 	withdrawal_rule: OperatorPassWithdrawalRuleResponse.nullable().describe(
-		'A withdrawal right that cannot be waived, for buyers in a country that has one, null otherwise. Checkout shows the matching box text then',
+		'A country rule that keeps the right of withdrawal after delivery, null when the right ends once the certificate is delivered',
 	),
+	standard_price_minor: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Price of one pass after the early bird phase in minor units, null when no standard price is set'),
 	quote: z.string().describe('Signed price quote to send back with checkout'),
 	holder: OperatorPassHolderResponse.nullable().describe('The passes held by the current account, null otherwise'),
 	purchase_blocked_reason: OperatorPassPurchaseBlockedReasonSchema.nullable().describe(
 		'Why the current account cannot buy passes, null when it can',
 	),
-	donation: OperatorPassDonationOptionsResponse,
 });
 
 export type OperatorPassStateResponse = z.infer<typeof OperatorPassStateResponse>;
@@ -218,23 +263,29 @@ export const OperatorPassCheckoutRequest = z.object({
 		.describe('How many passes to buy, all of them are delivered to the account of the buyer'),
 	country_code: OperatorPassCountryCode.optional(),
 	quote: z.string().max(2048).optional().describe('Quote from the state response the buyer saw'),
-	donation_amount_minor: z
-		.number()
-		.int()
-		.positive()
-		.nullable()
-		.optional()
-		.describe('Optional monthly donation in minor units of the pass currency'),
-	waiver_consent: z
+	delivery_consent: z
 		.boolean()
 		.optional()
 		.describe(
-			'Whether the buyer ticked the required box asking for delivery as soon as they pay and acknowledging that the bonus is not part of what they pay for. Outside a withdrawal_rule country the box also acknowledges losing the right of withdrawal once the passes are delivered. Must be true',
+			'Whether the buyer ticked the box asking for the certificate to be delivered as soon as they pay. Outside a withdrawal_rule country the box also acknowledges that the right of withdrawal ends once the certificate is delivered. Must be true',
+		),
+	certificate_names: z
+		.array(OperatorPassCertificateNameType)
+		.max(OPERATOR_PASS_MAX_QUANTITY)
+		.optional()
+		.describe(
+			'The names printed on the certificate. Give one name to print it on every page, or one name per pass in page order. Left out or empty, every page gets the account display name, or the username when there is none',
 		),
 	wall_name: OperatorPassWallNameType.nullish().describe(
 		"Name for the Operators' wall, required unless wall_opt_out is true. Keeps the current name when the account is already listed",
 	),
 	wall_opt_out: z.boolean().optional().describe("Whether the buyer chose not to be listed on the Operators' wall"),
+	labs_greeting: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the system user welcomes the buyer by name in #operators in Fluxer Labs once the certificate is delivered. Left out, the choice the account made before stays, and a new account is welcomed',
+		),
 	consent_locale: z
 		.string()
 		.max(16)
@@ -244,14 +295,25 @@ export const OperatorPassCheckoutRequest = z.object({
 		.boolean()
 		.optional()
 		.describe(
-			"Whether the buyer ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true when quantity is above 1",
+			"Whether the buyer ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true for every purchase",
 		),
+	is_business: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the pass is bought for a business. When true, the payment page requires a billing address for the invoice. When false or omitted, billing address collection is left to Stripe (auto)',
+		),
+	cnpj: CnpjSchema.optional(),
 });
 
 export type OperatorPassCheckoutRequest = z.infer<typeof OperatorPassCheckoutRequest>;
 
 export const OperatorPassCheckoutResponse = z.object({
 	url: z.url().describe('Stripe checkout URL to redirect the buyer to'),
+	session_id: z
+		.string()
+		.describe('ID of the Stripe checkout session, to look the purchase up with GET /operator-pass/purchases'),
+	expires_at: z.iso.datetime().describe('When the checkout session expires if nobody pays'),
 });
 
 export type OperatorPassCheckoutResponse = z.infer<typeof OperatorPassCheckoutResponse>;
@@ -282,8 +344,12 @@ export type OperatorPassWaitlistChallengeResponse = z.infer<typeof OperatorPassW
 export const OperatorPassWaitlistRequest = z.strictObject({
 	email: OperatorPassEmail.describe('Email address to put on the waitlist'),
 	country_code: OperatorPassCountryCode.optional(),
-	price_feedback: OperatorPassPriceFeedbackSchema,
-	currency: OperatorPassCurrencySchema.describe('Currency of the early bird price the visitor was shown'),
+	price_feedback: OperatorPassPriceFeedbackSchema.optional().describe(
+		'How the visitor feels about the early bird price. Left out where the pass is not on sale yet',
+	),
+	currency: OperatorPassCurrencySchema.optional().describe(
+		'Currency of the early bird price the visitor was shown. Left out with price_feedback',
+	),
 });
 
 export type OperatorPassWaitlistRequest = z.infer<typeof OperatorPassWaitlistRequest>;
@@ -442,12 +508,16 @@ export const OperatorPassPurchaseStatusSchema = createNamedStringLiteralUnion(
 export const OperatorPassPurchaseResponse = z.object({
 	id: z.string().describe('Identifier of the purchase, the Stripe checkout session ID'),
 	status: OperatorPassPurchaseStatusSchema,
+	order_number: z
+		.string()
+		.nullable()
+		.describe('Order number shown on the purchase confirmation and the withdrawal receipt, null when not known'),
 	quantity: z.number().int().describe('How many passes the purchase bought'),
 	amount_minor: z.number().int().describe('Price paid for the passes in minor units, tax included'),
 	currency: OperatorPassCurrencySchema,
 	purchased_at: z.iso.datetime().nullable().describe('When the payment settled, null while pending'),
-	delivered_at: z.iso.datetime().nullable().describe('When the passes were delivered, null while pending'),
-	waiver_consent_at: z.iso.datetime().nullable().describe('When the buyer ticked the box at checkout'),
+	delivered_at: z.iso.datetime().nullable().describe('When the certificate was delivered, null while pending'),
+	waiver_consent_at: z.iso.datetime().nullable().describe('When the buyer ticked the boxes at checkout'),
 	withdrawal_country: z
 		.string()
 		.nullable()
@@ -456,23 +526,109 @@ export const OperatorPassPurchaseResponse = z.object({
 		.datetime()
 		.nullable()
 		.describe(
-			'When the right of withdrawal ends, null when the purchase has none: delivered passes outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco',
+			'When the right of withdrawal ends, null when the purchase has none: a delivered certificate outside a withdrawal_country. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco',
 		),
 	withdrawal_ends_on: z.iso
 		.date()
 		.nullable()
 		.optional()
 		.describe(
-			'The last day of the cancel window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones',
+			'The last day the buyer can withdraw, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones',
 		),
+	certificate_available: z
+		.boolean()
+		.describe('Whether the purchase has at least one certificate page that is not cancelled'),
 	withdrawn_at: z.iso.datetime().nullable().describe('When the buyer last withdrew'),
-	has_donation: z.boolean().describe('Whether a monthly donation was added at checkout'),
+	pages: z
+		.array(
+			z.object({
+				pass_id: z.string().describe('ID of the pass the page belongs to'),
+				name: z
+					.string()
+					.describe(
+						'The name on the newest copy of this page, which is the name chosen at checkout unless the page was issued again with a new name',
+					),
+				certificate_url: z
+					.string()
+					.nullable()
+					.describe(
+						'The private link of this page on the marketing site, which shows the page and opens its PDF. Null when the page has no link',
+					),
+			}),
+		)
+		.describe('Certificate pages of the purchase that are not cancelled, in page order. Empty before delivery'),
 	can_withdraw: z
 		.boolean()
-		.describe('Whether the whole purchase can be withdrawn now, only while paid passes are not delivered yet'),
+		.describe(
+			'Whether the withdraw button for the purchase is available now, before delivery or while a country rule keeps the right of withdrawal',
+		),
+	refundable_minor: z
+		.number()
+		.int()
+		.describe(
+			'What withdrawing from the whole purchase now refunds, in minor units, tax included. It leaves out passes already refunded or withdrawn, and is 0 when can_withdraw is false',
+		),
+	certificate_emailed: z.boolean().describe('Whether the email with the certificate attached was sent'),
+	refusal_reason: z
+		.enum(['removed', 'names_missing', 'email_undeliverable'])
+		.nullable()
+		.describe(
+			'Why the purchase was refunded before delivery, null when it was not refused. Only names_missing also sends the buyer an email that explains the refusal',
+		),
 });
 
 export type OperatorPassPurchaseResponse = z.infer<typeof OperatorPassPurchaseResponse>;
+
+export const OperatorPassCertificateFileResponse = z
+	.file()
+	.describe('The newest stored copy of one Operator certificate page as a PDF');
+
+export const OperatorPassCertificateTokenParam = z.object({
+	token: z
+		.string()
+		.regex(/^[A-Za-z0-9_-]{22}$/)
+		.describe('The random code in the link of a certificate page'),
+});
+
+export type OperatorPassCertificateTokenParam = z.infer<typeof OperatorPassCertificateTokenParam>;
+
+export const OperatorPassCertificateStatusSchema = createNamedStringLiteralUnion(
+	[
+		['valid', 'VALID', 'The page is a valid Operator certificate'],
+		['cancelled', 'CANCELLED', 'The page was cancelled and is no longer a valid Operator certificate'],
+	],
+	'Status of an Operator certificate page',
+);
+
+export const OperatorPassCertificateSourceSchema = createNamedStringLiteralUnion(
+	[
+		['purchase', 'PURCHASE', 'The pass was bought'],
+		['visionary', 'VISIONARY', 'The pass came with Visionary'],
+	],
+	'How the pass on an Operator certificate page was obtained',
+);
+
+export const OperatorPassCertificateResponse = z.object({
+	number: z.number().int().describe('The certificate number'),
+	status: OperatorPassCertificateStatusSchema,
+	name: z.string().nullable().describe('The name on the newest copy of the page, null when the page is cancelled'),
+	source: OperatorPassCertificateSourceSchema,
+	paid_at: z.iso
+		.datetime()
+		.describe('When the pass was paid for, or the date the account got Visionary for a Visionary page'),
+	issued_at: z.iso
+		.datetime()
+		.nullable()
+		.describe('When the newest copy of the page, which carries this link, was issued, null when the page is cancelled'),
+});
+
+export type OperatorPassCertificateResponse = z.infer<typeof OperatorPassCertificateResponse>;
+
+export const OperatorPassCertificateLinkResponse = z.object({
+	certificate_url: z.string().describe('The new private link of the certificate page'),
+});
+
+export type OperatorPassCertificateLinkResponse = z.infer<typeof OperatorPassCertificateLinkResponse>;
 
 export const OperatorPassPurchaseListResponse = z.array(OperatorPassPurchaseResponse);
 
@@ -483,6 +639,20 @@ export const OperatorPassPurchaseIdParam = z.object({
 });
 
 export type OperatorPassPurchaseIdParam = z.infer<typeof OperatorPassPurchaseIdParam>;
+
+export const OperatorPassPurchaseListQuery = z.object({
+	session_id: z
+		.string()
+		.trim()
+		.min(1)
+		.max(256)
+		.optional()
+		.describe(
+			'Checkout session the buyer just returned from. If it is paid and the payment webhook has not arrived yet, the purchase is fulfilled before the list is returned.',
+		),
+});
+
+export type OperatorPassPurchaseListQuery = z.infer<typeof OperatorPassPurchaseListQuery>;
 
 export const OperatorPassWithdrawRequest = z.object({
 	name: z.string().trim().min(1).max(200).describe('Name of the buyer who withdraws'),
@@ -538,8 +708,16 @@ export const OperatorPassUnitResponse = z.object({
 	id: z.string().describe('ID of the pass'),
 	source: z.enum(OPERATOR_PASS_SOURCES).describe('How the account got the pass'),
 	status: OperatorPassUnitStatusSchema,
-	purchase_id: z.string().nullable().describe('The purchase that paid for the pass, null for a staff grant'),
+	purchase_id: z
+		.string()
+		.nullable()
+		.describe('The purchase that paid for the pass, null for a staff grant or the pass that came with Visionary'),
 	delivered_at: z.iso.datetime().describe('When the pass reached this account'),
+	purchased_at: z.iso
+		.datetime()
+		.nullable()
+		.optional()
+		.describe('When the payment for the purchase settled, null when the account did not buy this pass itself'),
 	paused: z.boolean().describe('Whether the pass is paused while a payment dispute is open'),
 	can_pass_on: z.boolean().describe('Whether the pass can be passed on. Received and staff granted passes cannot'),
 	transfer_lock_ends_at: z.iso
@@ -551,14 +729,14 @@ export const OperatorPassUnitResponse = z.object({
 		.datetime()
 		.nullable()
 		.describe(
-			'When the cancel window for this pass closes, null when it has none. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco',
+			'When the withdrawal window for this pass closes, null when it has none. Under a country rule this is the end of withdrawal_ends_on in America/Rio_Branco',
 		),
 	withdrawal_ends_on: z.iso
 		.date()
 		.nullable()
 		.optional()
 		.describe(
-			'The last day of the cancel window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones',
+			'The last day of the withdrawal window under a country rule, as YYYY-MM-DD in America/Rio_Branco. Show it as is, without converting time zones',
 		),
 	offer: OperatorPassOfferResponse.nullable().describe('The open offer for this pass, null when none'),
 	received_from: OperatorPassOfferUserResponse.nullable()
@@ -567,6 +745,136 @@ export const OperatorPassUnitResponse = z.object({
 });
 
 export type OperatorPassUnitResponse = z.infer<typeof OperatorPassUnitResponse>;
+
+export const OperatorPassVisionaryStateSchema = createNamedStringLiteralUnion(
+	[
+		['available', 'AVAILABLE', 'The account has Visionary and can turn on the Operator Pass that comes with it'],
+		['on', 'ON', 'The account turned on the Operator Pass that comes with Visionary'],
+		['ended', 'ENDED', 'The pass ended because the Visionary of the account ended'],
+		['unavailable', 'UNAVAILABLE', 'The account has Visionary but cannot turn the pass on, see reason'],
+	],
+	'State of the Operator Pass that comes with Visionary',
+);
+
+export const OperatorPassVisionaryUnavailableReasonSchema = createNamedStringLiteralUnion(
+	[
+		[
+			'removed',
+			'REMOVED',
+			'The pass was removed from the account permanently under section 8 of the Operator Pass terms',
+		],
+		['not_open', 'NOT_OPEN', 'Turning the pass on opens when Operator Pass sales open'],
+	],
+	'Why the account cannot turn on the Operator Pass that comes with Visionary',
+);
+
+export const OperatorPassVisionaryResponse = z.object({
+	state: OperatorPassVisionaryStateSchema,
+	reason: OperatorPassVisionaryUnavailableReasonSchema.nullable().describe('Why state is unavailable, null otherwise'),
+	since: z.iso
+		.datetime()
+		.describe('The date the account got Visionary. The certificate, the badge and the wall order use this date'),
+	pass_id: z.string().nullable().describe('ID of the pass once it is turned on, null before'),
+	certificate_number: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Number of the certificate page once the pass is turned on, null before'),
+	certificate_url: z
+		.string()
+		.nullable()
+		.describe(
+			'The private link of the certificate page on the marketing site once the pass is on, null before, after it ends or when the page has no link',
+		),
+	labs_member: z.boolean().describe('Whether the account is in Fluxer Labs, where the pass gives the Operator role'),
+	terms_version: z
+		.string()
+		.describe('The Operator Pass terms version to send back when turning the pass on, or the one accepted once on'),
+});
+
+export type OperatorPassVisionaryResponse = z.infer<typeof OperatorPassVisionaryResponse>;
+
+export const OperatorPassVisionaryTurnOnRequest = z.object({
+	certificate_name: OperatorPassCertificateNameType,
+	show_badge: z
+		.boolean()
+		.describe('Whether to show the Operator badge on the profile. Ignored when the account already has the badge'),
+	wall: z
+		.discriminatedUnion('opted_out', [
+			z.object({opted_out: z.literal(true)}),
+			z.object({opted_out: z.literal(false), name: OperatorPassWallNameType}),
+		])
+		.optional()
+		.describe(
+			"The choice for the Operators' wall. Ignored when the account already made a choice, and treated as not listed when left out",
+		),
+	labs_greeting: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the system user welcomes the account by name in #operators in Fluxer Labs once the pass is on. Left out, the choice the account made before stays, and a new account is welcomed',
+		),
+	terms_accepted: z
+		.boolean()
+		.describe('Whether the account ticked the box that accepts the Operator Pass terms. Must be true'),
+	age_confirmed: z
+		.boolean()
+		.describe(
+			"Whether the account ticked \"I'm 18 or older, or have a parent's or guardian's permission.\" Must be true",
+		),
+	terms_version: z.string().max(64).describe('The version of the Operator Pass terms the account was shown'),
+	box_text_version: z.string().max(64).describe('The version of the terms box text the account was shown'),
+	consent_locale: z
+		.string()
+		.max(16)
+		.optional()
+		.describe('Locale the client used to show the box text. The activation records the box text in this locale'),
+});
+
+export type OperatorPassVisionaryTurnOnRequest = z.infer<typeof OperatorPassVisionaryTurnOnRequest>;
+
+export const OperatorPassLabsResponse = z.object({
+	greeting: z
+		.boolean()
+		.describe(
+			'Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered. On unless the account turned it off',
+		),
+	greeted: z.boolean().describe('Whether the account was already welcomed in #operators. Nobody is welcomed twice'),
+	left: z
+		.boolean()
+		.describe('Whether the account left Fluxer Labs or was removed from it, so passes no longer add it to Labs'),
+	member: z.boolean().describe('Whether the account is in Fluxer Labs now'),
+	guild_id: SnowflakeStringType.nullable().describe('ID of the Fluxer Labs community, null when it is not set up'),
+	operators_channel_id: SnowflakeStringType.nullable().describe(
+		'ID of the #operators channel in Fluxer Labs, null when it is not set up',
+	),
+});
+
+export type OperatorPassLabsResponse = z.infer<typeof OperatorPassLabsResponse>;
+
+export const OperatorPassLabsJoinResponse = z.object({
+	status: z
+		.enum(['joined', 'left', 'banned', 'unavailable'])
+		.describe(
+			'joined: the account is in Fluxer Labs with the Operator role. left: the account left Fluxer Labs or was removed from it before, so it is not added again and can join with the invite. banned: the account is banned from Fluxer Labs. unavailable: the account cannot be added right now',
+		),
+	guild_id: SnowflakeStringType.nullable().describe('ID of the Fluxer Labs community, null when it is not set up'),
+	operators_channel_id: SnowflakeStringType.nullable().describe(
+		'ID of the #operators channel in Fluxer Labs, null when it is not set up',
+	),
+});
+
+export type OperatorPassLabsJoinResponse = z.infer<typeof OperatorPassLabsJoinResponse>;
+
+export const OperatorPassLabsGreetingRequest = z.object({
+	greeting: z
+		.boolean()
+		.describe(
+			'Whether the system user welcomes the account by name in #operators in Fluxer Labs when a pass is delivered',
+		),
+});
+
+export type OperatorPassLabsGreetingRequest = z.infer<typeof OperatorPassLabsGreetingRequest>;
 
 export const OperatorPassPassesResponse = z.object({
 	count: z.number().int().describe('How many passes the account holds now'),
@@ -583,6 +891,10 @@ export const OperatorPassPassesResponse = z.object({
 		.array(OperatorPassOfferResponse)
 		.optional()
 		.describe('Completed offers the account made, the passes it passed on, oldest first'),
+	visionary: OperatorPassVisionaryResponse.optional().describe(
+		'The Operator Pass that comes with Visionary. Left out when the account never had Visionary',
+	),
+	labs: OperatorPassLabsResponse.describe('The place in Fluxer Labs that comes with the pass'),
 });
 
 export type OperatorPassPassesResponse = z.infer<typeof OperatorPassPassesResponse>;
@@ -611,7 +923,7 @@ export const OperatorPassOfferCreateRequest = z.object({
 		.boolean()
 		.optional()
 		.describe(
-			'Must be true when this is the last pass on the account, because passing it on removes the badge and the wall listing',
+			'Must be true when this is the last pass on the account, because passing it on removes the badge, the wall listing and #operators from the account',
 		),
 });
 
@@ -625,6 +937,12 @@ export const OperatorPassOfferAcceptRequest = z.object({
 		"Name for the Operators' wall, required unless wall_opt_out is true. Keeps the current name when the account is already listed",
 	),
 	wall_opt_out: z.boolean().optional().describe("Whether the recipient chose not to be listed on the Operators' wall"),
+	labs_greeting: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the system user welcomes the recipient by name in #operators in Fluxer Labs once the pass reaches them. Left out, the choice the account made before stays, and a new account is welcomed',
+		),
 });
 
 export type OperatorPassOfferAcceptRequest = z.infer<typeof OperatorPassOfferAcceptRequest>;
@@ -632,11 +950,7 @@ export type OperatorPassOfferAcceptRequest = z.infer<typeof OperatorPassOfferAcc
 export const OperatorPassWallDisplayStateSchema = createNamedStringLiteralUnion(
 	[
 		['live', 'LIVE', 'The wall shows the approved name and avatar'],
-		[
-			'fallback',
-			'FALLBACK',
-			'The wall shows the username, or Operator, with the default avatar until a name is approved',
-		],
+		['fallback', 'FALLBACK', 'The wall shows Operator with the default avatar until a name is approved'],
 		['hidden', 'HIDDEN', 'Staff hid the listing for now'],
 		['removed', 'REMOVED', 'The listing is off the wall under section 8 of the Operator Pass terms'],
 	],
@@ -712,7 +1026,7 @@ export type OperatorPassListingUpdateRequest = z.infer<typeof OperatorPassListin
 
 export const OperatorPassWallOperatorResponse = z.object({
 	id: z.string().describe('Stable public ID of the entry, not the user ID'),
-	name: z.string().describe('The name shown: the approved name, or the username or Operator as fallback'),
+	name: z.string().describe('The name shown: the approved name, or Operator as fallback'),
 	avatar: z.string().nullable().describe('SHA-256 of the approved avatar snapshot, null for the default avatar'),
 	avatar_url: z
 		.url()

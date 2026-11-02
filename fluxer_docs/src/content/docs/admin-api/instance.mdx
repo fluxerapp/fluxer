@@ -109,7 +109,7 @@ Admission and dispatch tuning for the Gateway cluster.
 | max_concurrent_guild_starts | integer | Guild starts admitted at once (1-10000, default 256) |
 | gateway_dispatch_relay_shards | integer | Dispatch relay shard count (1-10000, default 32) |
 | gateway_dispatch_relay_max_queue | integer | Dispatch relay queue limit (0-1000000, default 50000) |
-| voice_e2ee_scope | string | `guild_feature_only` or `platform_wide` (default `guild_feature_only`) |
+| voice_e2ee_scope | string | Which voice channels encrypt call media with a room key that the server issues, `guild_feature_only` or `platform_wide` (default `guild_feature_only`). This isn't end-to-end encryption |
 
 ## Push relay configuration object
 
@@ -468,7 +468,7 @@ Stripe billing for premium. Each `effective_` field gives the value in use.
 
 <sup>2</sup> True when billing is on, a Stripe secret key is set, the premium mode is `mirror` and at least one currency has a monthly and a yearly price
 
-<sup>3</sup> With billing emails on, the instance emails receipts, refund notices and failed or unconfirmed payment notices for premium, donations and Operator Pass purchases. See [billing emails](#billing-emails)
+<sup>3</sup> With billing emails on, the instance emails receipts, refund notices, credit notes, failed or unconfirmed payment notices, renewal reminders, expiring card notices and cancellation confirmations for premium and donations. It also emails gift notices for premium and refund notices for Operator Pass purchases. See [billing emails](#billing-emails)
 
 ### Billing emails
 
@@ -476,11 +476,12 @@ When `billing_emails` is on, turn off the matching Stripe customer emails, or bu
 
 - Settings > Business > Customer emails > Payments: **Successful payments** and **Refunds**
 - Revenue recovery > Emails: **Send emails when card payments fail** and **Send a Stripe-hosted link for customers to confirm their payments when required**, and with it **Send reminders if payment confirmation isn't completed**
+- Settings > Billing > Subscriptions and emails: **Send emails about upcoming renewals** and **Send emails about expiring cards**
 - Settings > Billing > Subscriptions and emails > Manage invoices sent to customers: **Send credit notes to customers**
 
-Keep **Send emails about upcoming renewals** and **Send emails about expiring cards** on. Gifts redeemed on a paying subscription are Stripe trials, so also turn off **Send a reminder email 7 days before a free trial ends**.
+Gifts redeemed on a paying subscription are Stripe trials, and the instance sends its own notice before the gift time ends. Also turn off **Send a reminder email 7 days before a free trial ends**.
 
-The webhook endpoint at `webhook_url` must receive these events for the emails: `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed`, `invoice.payment_action_required`, `refund.created`, `refund.updated` and `charge.refunded`. Billing itself also needs the `checkout.session.*`, `customer.subscription.*`, `invoice.*`, `charge.dispute.*` and `refund.failed` events.
+The webhook endpoint at `webhook_url` must receive these events for the emails: `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed`, `invoice.payment_action_required`, `refund.created`, `refund.updated`, `charge.refunded`, `credit_note.created`, `customer.subscription.updated` and `customer.subscription.deleted`. Billing itself also needs the `checkout.session.*`, `customer.subscription.*`, `invoice.*`, `charge.dispute.*` and `refund.failed` events.
 
 ## Billing price set object
 
@@ -564,7 +565,7 @@ The limit configuration in use, with the defaults and the metadata an editor nee
 
 | Field | Type | Description |
 | --- | --- | --- |
-| limit_config | [limit configuration](#limit-configuration-object) object | Configuration in use on the API node that answered |
+| limit_config | [limit configuration](#limit-configuration-object) object | Configuration in use on the API node that handled the request |
 | limit_config_json | string | The same document as JSON indented by two spaces |
 | self_hosted | boolean | Whether the instance runs in self-hosted mode |
 | defaults | map[string, map[string, integer]] | Default limits, by rule ID and then by limit key |

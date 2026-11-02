@@ -5,8 +5,8 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-const DARK_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} — dark theme preview'});
-const LIGHT_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} — light theme preview'});
+const DARK_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} (dark theme preview)'});
+const LIGHT_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} (light theme preview)'});
 
 interface StickerPreviewProps {
 	imageUrl: string;

@@ -48,24 +48,64 @@ export const PURCHASES_PAUSED_TITLE_DESCRIPTOR = msg({
 	message: 'Purchases paused',
 	comment: 'Dialog title when checkout is refused because a payment dispute this account made is still open.',
 });
-export const OPERATOR_PASS_CHARACTERISTICS_DESCRIPTOR = msg({
+export const OPERATOR_PASS_OFFER_BONUS_DESCRIPTOR = msg({
 	message:
-		"A spot on the Operators' wall, whenever you want it, and the Operator badge, for life, as long as we run {productName}.",
+		"With a pass on your account, you have the Operator badge, a spot on the Operators' wall and #operators in {labsName}.",
 	comment:
-		"What an Operator Pass gives, shown at checkout and when someone offers you a pass. The Operators' wall is the list of Operators on the homepage. Whenever you want it means the buyer can choose not to be listed and join the wall later. Operator is the badge name. For life means for as long as the official service and website run, and the part after it says so. {productName} is the product name.",
+		"Line in the dialog for an Operator Pass someone passed on to you. The Operators' wall is the list of Operators on the homepage. Operator is the badge name and #operators is a channel name, keep both as is. {labsName} is the community name. Name these things plainly and never call them a bonus, a perk, free or included.",
 });
 export const OPERATOR_PASS_LISTING_UNCHANGED_DESCRIPTOR = msg({
 	message: "Your Operators' wall listing stays the same.",
 	comment:
 		"Line for someone who already has an Operator Pass and gets another one, at checkout or when accepting an offer. The Operators' wall is the list of Operators on the homepage.",
 });
+export const OPERATOR_PASS_AGE_CONFIRMATION_DESCRIPTOR = msg({
+	message: "I'm 18 or older, or have a parent's or guardian's permission.",
+	comment:
+		'Required checkbox in the Operator Pass checkout dialog for every purchase, and in the dialog where a Visionary turns on the Operator Pass that comes with Visionary. The person confirms their age or that a parent or guardian allows it.',
+});
 export const OPERATOR_PASS_REQUIRED_BOX_DESCRIPTOR = msg({
 	message: 'Check this box to continue.',
 	comment:
 		'Error under a required checkbox in the Operator Pass checkout dialog or the dialog for an Operator Pass someone offered you, shown when they try to continue without checking it.',
 });
-export const OPERATOR_PASS_OPEN_LABS_DESCRIPTOR = msg({
-	message: 'Open {labsName}',
+export const OPEN_OPERATORS_DESCRIPTOR = msg({
+	message: 'Open #operators',
 	comment:
-		'Button in the Operator Pass dialog and on the page after an Operator Pass purchase. It opens the invite to {labsName}, the community that has #operators and the Operator role.',
+		'Button after an Operator Pass purchase, in the Operator Pass dialog and in the Operator Pass settings. It takes the person to #operators, a channel in the Fluxer Labs community, and adds them to Fluxer Labs first when the pass allows it. Keep #operators as is, it is the channel name.',
+});
+export const WALL_SAVE_FAILED_DESCRIPTOR = msg({
+	message: "Couldn't save. Try again.",
+	comment: "Toast when saving the Operators' wall settings or the welcome in #operators failed.",
+});
+export const SUBSCRIPTION_SECTION_DESCRIPTOR = msg({
+	message: 'Subscription',
+	comment: 'Name of the section in the Subscriptions settings tab that shows the Plutonium subscription.',
+});
+export const PAYMENT_METHODS_SECTION_DESCRIPTOR = msg({
+	message: 'Payment methods',
+	comment: 'Heading of the section in the Payments settings tab for the cards and other payment methods on file.',
+});
+export const REFUNDS_SECTION_DESCRIPTOR = msg({
+	message: 'Refunds',
+	comment:
+		'Heading of the section in the Payments settings tab that lists purchases the user can still get money back for.',
+});
+export const RECEIPTS_SECTION_DESCRIPTOR = msg({
+	message: 'Receipts',
+	comment: 'Heading of the section in the Payments settings tab that lists the receipts for past payments.',
+});
+export const OPERATOR_PASS_PASSES_SECTION_DESCRIPTOR = msg({
+	message: 'Your passes',
+	comment: 'Name of the section in the Operator Pass settings tab that lists the Operator Passes the account holds.',
+});
+export const OPERATOR_PASS_WALL_SECTION_DESCRIPTOR = msg({
+	message: "Operators' wall",
+	comment:
+		"Heading of the Operators' wall section in the Operator Pass settings tab. Operators' wall is the name of a section of the homepage.",
+});
+export const OPERATOR_PASS_LABS_SECTION_DESCRIPTOR = msg({
+	message: 'Fluxer Labs',
+	comment:
+		'Name of the section in the Operator Pass settings tab about the Fluxer Labs community. Fluxer Labs is the name of a community, keep it as is.',
 });

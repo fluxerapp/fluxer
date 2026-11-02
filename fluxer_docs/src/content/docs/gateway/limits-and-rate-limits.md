@@ -50,7 +50,7 @@ One WebSocket runs at most four of the following commands at once, and each one 
 
 A command sent while all four slots are busy is dropped with no result and no close. If you send more Request Guild Members commands while one is running, only the most recent waits and the rest are dropped. A command that times out after sending some of its events does not send the rest.
 
-Request Guild Counts and Request Channel Member Counts leave out a guild that does not answer within 2,000 ms.
+Request Guild Counts and Request Channel Member Counts leave out a guild that does not respond within 2,000 ms.
 
 ## Replay and backpressure
 

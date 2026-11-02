@@ -32,6 +32,7 @@ const closePaymentDisputeAccounts: WorkerTaskHandler = async (payload, helpers) 
 		oauth2Tokens: new OAuth2TokenRepository(),
 		systemDm: null,
 		enforcement: enforcementService,
+		operatorPass: deps.operatorPassServices,
 	});
 	const failed = await service.closeWaitingAccounts(reviews);
 	if (failed > 0 && purchaserId) {

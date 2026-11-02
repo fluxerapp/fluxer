@@ -18,9 +18,6 @@ import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownT
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {OperatorPassHoldingsSection} from '@app/features/premium/components/operator_pass/OperatorPassHoldingsSection';
-import OperatorPassHoldings from '@app/features/premium/state/OperatorPassHoldings';
-import {hasOperatorPassProfileBadge, isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -28,6 +25,7 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import UnsavedChanges from '@app/features/ui/state/UnsavedChanges';
+import * as OwnProfileBadgesCommands from '@app/features/user/commands/OwnProfileBadgesCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import styles from '@app/features/user/components/modals/tabs/MyProfileTab.module.css';
@@ -39,7 +37,6 @@ import {
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
 import {BIO_MARKDOWN_PARSER_FLAGS, BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
 import {UsernameSection} from '@app/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection';
-import {OperatorPassWallSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/OperatorPassWallSettings';
 import {PerGuildPremiumUpsell} from '@app/features/user/components/modals/tabs/my_profile_tab/PerGuildPremiumUpsell';
 import {
 	assignProfileAssetUploadPatch,
@@ -576,6 +573,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				}
 				const newUser = await UserCommands.update(updateData);
 				UserProfileCommands.clearCurrentUserProfiles();
+				void OwnProfileBadgesCommands.refresh();
 				const savedBio = newUser.bio || null;
 				commitProfileFormValues(
 					{
@@ -705,6 +703,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		}
 	}, [flashTrigger, lastFlashTrigger]);
 	useEffect(() => {
+		void OwnProfileBadgesCommands.refresh();
 		return () => {
 			UnsavedChangesCommands.clearUnsavedChanges(MY_PROFILE_TAB_ID);
 		};
@@ -732,8 +731,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	);
 	const badgePreview = useProfileBadgePreview(badgePreviewRequest);
 	if (!user) return null;
-	const holdsOperatorPasses =
-		hasOperatorPassProfileBadge(user) || (OperatorPassHoldings.passes?.passes.length ?? 0) > 0;
 	const guilds = Guilds.getGuilds();
 	const selectedGuild = selectedGuildId ? guilds.find((g) => g.id === selectedGuildId) : null;
 	const isPerGuildProfileCustomizationDisabled = isPerGuildProfile && !hasPerGuildProfiles;
@@ -1015,12 +1012,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 							onToggleVariant={handleBadgeVariantToggle}
 							data-flx="user.my-profile-tab.my-profile-tab-component.profile-badge-settings"
 						/>
-					)}
-					{isOperatorPassAvailable() && !isPerGuildProfile && holdsOperatorPasses && (
-						<OperatorPassWallSettings data-flx="user.my-profile-tab.my-profile-tab-component.operator-pass-wall-settings" />
-					)}
-					{isOperatorPassAvailable() && !isPerGuildProfile && (
-						<OperatorPassHoldingsSection data-flx="user.my-profile-tab.my-profile-tab-component.operator-pass-holdings" />
 					)}
 				</Form>
 			</SettingsTabContainer>

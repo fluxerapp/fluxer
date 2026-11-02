@@ -2,6 +2,7 @@
 
 import {createUserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
+import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {createGiftCodeRow, generateUniqueGiftCode, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
@@ -9,6 +10,7 @@ import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {syncStripeCustomerEmail} from '@app/api/stripe/StripeCustomer';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
 import {bumpGiftInventory} from '@app/api/user/GiftInventory';
 import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -149,6 +151,7 @@ async function reconcileStuckGiftPayment(payment: Payment, purchaser: User, stri
 			has_ever_purchased: true,
 		});
 	}
+	await enqueueBillingEmail(getWorkerService(), {kind: 'gift_paid', id: payment.checkoutSessionId});
 	Logger.info(
 		{checkoutSessionId: payment.checkoutSessionId, giftCode, userId: purchaser.id.toString()},
 		'Reconciled stuck gift payment',
@@ -231,6 +234,9 @@ async function reconcileMissingPaymentRecords(
 			{checkoutSessionId: session.id, userId: user.id.toString(), isGift, giftCode},
 			'Created missing payment record during reconciliation',
 		);
+		if (isGift) {
+			await enqueueBillingEmail(getWorkerService(), {kind: 'gift_paid', id: session.id});
+		}
 		if (isGift && !giftCode) {
 			const recoveredPayment = await paymentRepository.getPaymentByCheckoutSession(session.id);
 			if (recoveredPayment) {

@@ -49,8 +49,11 @@ export const VoiceE2EEIndicator = observer(function VoiceE2EEIndicator({
 			</Tooltip>
 		);
 	}
-	const gatewayStatus = computeChannelE2EEStatus(guildId, channelId, {emptyChannelStatus: 'encrypted'});
-	const status = gatewayStatus;
+	const dmCallEncrypted = MediaEngine.channelId === channelId && MediaEngine.room?.isE2EEEnabled === true;
+	const knownEncrypted = guildId !== null || dmCallEncrypted;
+	const status = knownEncrypted
+		? computeChannelE2EEStatus(guildId, channelId, {emptyChannelStatus: guildId === null ? 'none' : 'encrypted'})
+		: 'none';
 	if (status === 'none') return null;
 	const isEncrypted = status === 'encrypted';
 	const encryptedDescriptor =

@@ -88,7 +88,7 @@ A voice server is one LiveKit deployment in one region, identified by its `regio
 | draining | boolean | Whether new calls go to other servers while calls already on this one keep going |
 | public_ipv4 | ?string | The public IPv4 address LiveKit gives to clients, or null when none is known |
 | public_ipv6 | ?string | The public IPv6 address LiveKit gives to clients, or null when none is known |
-| health | [health](#voice-server-health-object) object | The server's health as the API node that answered last saw it |
+| health | [health](#voice-server-health-object) object | The server's health as the API node that handled the request last saw it |
 | duplicate_api_key | boolean | Whether another server uses the same `api_key` |
 | created_at | ?ISO8601 timestamp | When the server was created |
 | updated_at | ?ISO8601 timestamp | When the server last changed |
@@ -563,14 +563,14 @@ Registers the server and uses the token.
 
 <sup>1</sup> Send both coordinates or neither
 
-Fluxer resolves the endpoint's host, refuses it when any address is private unless `FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS` is true, and connects to the addresses it checked, one after another until one answers. `GET` on the endpoint's path must answer `OK` within 10 seconds with a certificate Fluxer trusts, and the room service must accept the key and secret. Then Fluxer saves the server, active and not draining, and the token stops working. The response has `server_id`, `region_id`, `endpoint`, `webhook_url`, `node_url` and `turn_servers`.
+Fluxer resolves the endpoint's host, refuses it when any address is private unless `FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS` is true, and connects to the addresses it checked, one after another until one responds. `GET` on the endpoint's path must return `OK` within 10 seconds with a certificate Fluxer trusts, and the room service must accept the key and secret. Then Fluxer saves the server, active and not draining, and the token stops working. The response has `server_id`, `region_id`, `endpoint`, `webhook_url`, `node_url` and `turn_servers`.
 
 `turn_servers` is the list in `FLUXER_LIVEKIT_TURN_SERVERS` on the instance, as objects with `host`, `port`, `protocol` and either `username` and `credential` or `secret` and `ttl`. It's empty when the setting is. rexctl puts it in the LiveKit configuration of the server.
 
 | Status | Code | Condition |
 | --- | --- | --- |
 | 400 | `VOICE_JOIN_ENDPOINT_INVALID` | The endpoint isn't `wss://`, uses an IPv6 address, a private address or another hostname than the token's |
-| 400 | `VOICE_JOIN_ENDPOINT_UNREACHABLE` | The endpoint didn't answer `OK`, with the status or error in `detail` |
+| 400 | `VOICE_JOIN_ENDPOINT_UNREACHABLE` | The endpoint didn't return `OK`, with the status or error in `detail` |
 | 400 | `VOICE_JOIN_KEY_MISMATCH` | The server refused the key and secret |
 | 401 | `VOICE_JOIN_TOKEN_INVALID` | The token is unknown, used, expired or revoked |
 | 404 | `UNKNOWN_VOICE_REGION` | No region has the ID in `region_id` |
@@ -598,11 +598,11 @@ Returns the server's `region_id`, `server_id`, `endpoint`, `latitude`, `longitud
 
 <RouteHeader method="PATCH" path="/v1/voice/node" unauthenticated />
 
-Takes `endpoint`, `draining`, `latitude`, `longitude`, `soft_connection_limit`, `public_ipv4` and `public_ipv6`, and returns the server like `GET`. An empty string for `public_ipv4` or `public_ipv6` clears it. Fluxer checks a new endpoint the same way as a join. When the server has an internal endpoint, Fluxer also tries the new public endpoint and logs a warning when it doesn't answer, without refusing the change. A new endpoint must keep the token's hostname, and a server can't change a soft connection limit the token set. A server can't change its region, its restrictions, `internal_endpoint` or `is_active`. A server an admin turned off stays off.
+Takes `endpoint`, `draining`, `latitude`, `longitude`, `soft_connection_limit`, `public_ipv4` and `public_ipv6`, and returns the server like `GET`. An empty string for `public_ipv4` or `public_ipv6` clears it. Fluxer checks a new endpoint the same way as a join. When the server has an internal endpoint, Fluxer also tries the new public endpoint and logs a warning when it doesn't respond, without refusing the change. A new endpoint must keep the token's hostname, and a server can't change a soft connection limit the token set. A server can't change its region, its restrictions, `internal_endpoint` or `is_active`. A server an admin turned off stays off.
 
 <RouteHeader method="DELETE" path="/v1/voice/node" unauthenticated />
 
-Removes the server and answers 204.
+Removes the server and returns 204.
 
 Every node route can fail with these errors.
 

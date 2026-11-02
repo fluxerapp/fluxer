@@ -489,7 +489,7 @@ export const WellKnownFluxerResponse = z.object({
 	limits: LimitConfigResponse.describe('Limit configuration with rules and trait definitions'),
 	push: InstancePushSchema,
 	app_public: InstanceAppPublicSchema.describe('Public application configuration for client-side features'),
-	age_policy: InstanceAgePolicySchema.optional().describe('Regional age policy for this instance'),
+	age_policy: InstanceAgePolicySchema,
 	notice: InstanceNoticeSchema.nullable()
 		.optional()
 		.describe('Notice from the instance administrator, or null when there is none'),
